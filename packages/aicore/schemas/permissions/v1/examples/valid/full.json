@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:aicore:permissions:v1",
+  "filesystem": [
+    "project",
+    "state"
+  ],
+  "network": false,
+  "secrets": [
+    "env://API_TOKEN"
+  ],
+  "shell": true,
+  "env": [
+    "PATH",
+    "HOME"
+  ],
+  "profile": "trusted-local"
+}

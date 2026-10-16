@@ -1,0 +1,9 @@
+{
+  "confirmed": [
+    {
+      "finding": "F1",
+      "fix": "fix it"
+    }
+  ],
+  "rejected": []
+}

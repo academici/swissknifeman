@@ -1,0 +1,145 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.4",
+  "title": "Фокус review: блок focus из review_recommendation и risk.json в промпте reviewer; suggested_model_class повышает маршрут reviewer при допуске (ROUTE_UPGRADED); закрытие фазы P9",
+  "status": "done",
+  "summary": "По knowledge/p9-prompt#focus: блок focus, повышение класса reviewer только вверх и с проверкой допуска, маяк ROUTE_UPGRADED, manifest reviewer с focus; тесты. Пункт закрывает фазу: phase.validation P9.",
+  "why": "Аудит П6.3. Риск: понижение класса reviewer — запрещено.",
+  "scope": {
+    "include": [
+      "prompts.py (reviewer)",
+      "engine.py (маршрут reviewer)",
+      "tests",
+      "phase.validation P9"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P9.3"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p9-prompt#focus",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p9-prompt#checks",
+      "why": "проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p7-review#risk",
+      "why": "risk.json",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/b1f6c69dec7945a819607bd19824d585c743bf8f5a34bd82a6a7b0a372923651",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы и run-options — только аддитивно (D1)",
+    "phase.validation P9 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тесты → блок → маршрут → V1 → phase.validation P9.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "фокус review"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-15T03:37:46Z",
+    "finished_at": "2026-10-15T04:53:10Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-d16fecc30265028072dd597e-P9.4",
+    "notes": "No code change this round. V11 failed on the candidate, but the output given had no fail line (tail only). I ran the orch unit's tests, validate and standalone, cli-smoke, contracts and secrets matrix steps with a temporary HOME/SKM_HOME. All passed (873 orch tests OK). The orch lint step was skipped because pipx/ruff are not installed in this environment. The failure was not reproduced. The candidate stays as it was: a `focus` block in the reviewer prompt from review_recommendation.focus and risk.json features, a reviewer route upgrade only upward and only when admitted (beacon ROUTE_UPGRADED, route_overrides), docs in conductor.md and CHANGELOG, and tests in tests/test_conductor_focus.py.\nChanged: CHANGELOG.md, packages/orch/docs/conductor.md, packages/orch/lib/orch/conductor/engine.py, packages/orch/lib/orch/conductor/prompts.py, packages/orch/tests/test_conductor_focus.py\nEvidence: /tmp/orch-test.txt, /tmp/orch-validate.txt, /tmp/orch-rest.txt",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T04:53:10Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V1.json"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-15T04:53:10Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V11.json"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-15T04:53:10Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V12.json"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-15T04:53:10Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V13.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V1.json",
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V11.json",
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V12.json",
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P9.4/evidence/V13.json"
+    ]
+  },
+  "updated_at": "2026-10-15T04:53:10Z"
+}

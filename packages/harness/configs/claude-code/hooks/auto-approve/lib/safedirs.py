@@ -35,15 +35,33 @@ def _repo_root():
     return None
 
 
-def _config_path(home):
-    """Internal documentation."""
+def config_candidates(home):
+    """The safe-dirs.json ladder, nearest first (the same order as `harness safe-dirs`)."""
     env = os.environ.get("SKM_SAFE_DIRS_CONFIG")
     if env:
-        return env
-    root = _repo_root()
-    if root and os.path.isfile(os.path.join(root, "safe-dirs.json")):
-        return os.path.join(root, "safe-dirs.json")
-    return os.path.join(home, ".swissknifeman", "safe-dirs.json")
+        return [env]
+    skm_home = os.environ.get("SKM_HOME", "")
+    if skm_home and os.path.isabs(skm_home):
+        base = os.path.join(skm_home, "config")
+    else:
+        xdg = os.environ.get("XDG_CONFIG_HOME", "")
+        base = os.path.join(xdg if xdg and os.path.isabs(xdg) else os.path.join(home, ".config"),
+                            "swissknifeman")
+    found = [os.path.join(base, "harness", "safe-dirs.json")]
+    root = _repo_root()  # legacy rung
+    if root:
+        found.append(os.path.join(root, "safe-dirs.json"))
+    found.append(os.path.join(home, ".swissknifeman", "safe-dirs.json"))
+    return found
+
+
+def _config_path(home):
+    """The first existing file of the ladder; the new place when none exists (nothing loads: fail-closed)."""
+    found = config_candidates(home)
+    for path in found:
+        if os.path.isfile(path):
+            return path
+    return found[0]
 
 
 def load_allowlist(home, path=None):
@@ -75,16 +93,33 @@ def load_allowlist(home, path=None):
             "protect_git": bool(cfg.get("protect_git", True))}
 
 
+def _state_file(home, owner, name):
+    """Candidate files of an owner's registry, first the owner's own state file (the XDG state directory of
+    swissknifeman, or ``$SKM_HOME/state``), then the legacy ``~/.swissknifeman/<name>`` (not under ``SKM_HOME``).
+    The same ladder as ``aicore.state.locations``; this hook library is stdlib-only and stands alone."""
+    skm_home = os.environ.get("SKM_HOME", "")
+    if skm_home and os.path.isabs(skm_home):
+        return [os.path.join(skm_home, "state", owner, name)]
+    base = os.environ.get("XDG_STATE_HOME", "")
+    if not (base and os.path.isabs(base)):
+        base = os.path.join(home, ".local", "state")
+    return [os.path.join(base, "swissknifeman", owner, name),
+            os.path.join(home, ".swissknifeman", name)]
+
+
 def _registered_projects(home):
-    """Internal documentation."""
-    try:
-        with open(os.path.join(home, ".swissknifeman", "projects.json"),
-                  encoding="utf-8") as f:
-            data = json.load(f)
-        return [p["path"] for p in data.get("projects", [])
-                if isinstance(p, dict) and isinstance(p.get("path"), str)]
-    except (OSError, ValueError, AttributeError):
-        return []
+    """Paths of the projects the skiller registry knows (first existing file of the ladder)."""
+    for path in _state_file(home, "skiller", "projects.json"):
+        if not os.path.isfile(path):
+            continue
+        try:  # the first existing file decides; an unreadable one does not fall through to a staler legacy file
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+            return [p["path"] for p in data.get("projects", [])
+                    if isinstance(p, dict) and isinstance(p.get("path"), str)]
+        except (OSError, ValueError, AttributeError):
+            return []
+    return []
 
 
 def _expand_tilde(path, home):

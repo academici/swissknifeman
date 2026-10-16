@@ -1,0 +1,22 @@
+top = 1
+[a.b]
+c = 1
+"d e" = 2
+f.g = 3
+inline = { x = 1 }
+text = """
+multi
+[not.a.header]
+"""
+arr = [
+  1,
+  # key = fake
+  2,
+]
+after = 1
+[[items]]
+name = "x"
+[[items]]
+name = "y"
+[tail]
+'lit key' = 1

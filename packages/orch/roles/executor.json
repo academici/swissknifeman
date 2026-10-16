@@ -6,9 +6,9 @@
   "description": "Read the required `reads` and the files named in `hints`; treat hints as leads, not facts.",
   "instructions": [
     {
-      "path": "packages/orch/roles/executor.md",
+      "path": "roles/executor.md",
       "purpose": "canonical role text",
-      "sha256": "6bb94764347efa69c58879c658bdfccbc459749fe6e04d6c9ce35d091d9875db"
+      "sha256": "1988da1f4bf2a51961b95c77dca80dfebaec80c60ece2590752499447730c272"
     }
   ],
   "tools": {

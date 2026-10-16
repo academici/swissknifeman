@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T155603Z-b00fdd:P12.10:checks.3:V1",
+  "check_id": "V1",
+  "subject": "PLAN3.P12.10",
+  "candidate": {
+    "head": "82fe9b619051ca945292bc54dee10d9749e91b72",
+    "dirty_digest": "9ea86dd12e2bb068eec67ad1bbbfe2206f97bc525f9af3813fe91386c452dc82"
+  },
+  "started_at": "2026-10-13T17:22:57Z",
+  "procedure": {
+    "procedure": "Сверить каждую строку knowledge/hub-p12#e1e2 с кодом и тестами; таблица «тезис → файл/тест → статус» в notes finish; расхождение — исправление у владельца или plan.py log."
+  },
+  "verdict": "pass",
+  "observation": "reported by the executor: pass",
+  "producer": {
+    "kind": "executor",
+    "actor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    }
+  },
+  "finished_at": "2026-10-13T17:22:57Z"
+}

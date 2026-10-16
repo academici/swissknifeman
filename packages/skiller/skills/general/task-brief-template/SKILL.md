@@ -19,6 +19,8 @@ sha256: ""
 
 # Task Brief Template
 
+Machine form: `orch/schemas/exec/v1/execution-input.schema.json` (`replaced_by`); this template stays the human brief.
+
 Activate when the task is ambiguous or spans multiple subsystems.
 
 ## Brief template

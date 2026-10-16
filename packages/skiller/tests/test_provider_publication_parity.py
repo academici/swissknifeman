@@ -12,11 +12,12 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from core import find_repo_root
+from aicore.provider.manifest import default_manifest_path, ProviderManifestError
+from aicore.util.repo import find_repo_root
 from skiller.common import Env
-from skiller.publication import run_codex_native_install
-from skiller.publication import validate_publication_capabilities
-from core import ProviderId, ProviderManifestError
+from aicore.content.publication import validate_publication_capabilities
+from aicore.delivery.distribution import run_codex_native_install
+from aicore.provider.values import ProviderId
 from skiller.registry import (build_claude_publication, build_codex_publication,
                               build_registry)
 from skiller.skillset import do_sync
@@ -64,20 +65,20 @@ class TestProviderPublicationParity(unittest.TestCase):
         self.assertTrue(set(policy["skills"]).issubset(expected_ids))
 
         registry, metadata, buckets = build_registry(self.env)
-        claude = build_claude_publication(self.env, metadata, buckets, registry)
         codex = build_codex_publication(self.env, metadata, buckets, registry)
         catalog_ids = tuple(sorted(f"{item['bucket']}/{item['name']}" for item in registry["skills"]))
         self.assertEqual(catalog_ids, expected_ids)
         self.assertEqual(tuple(sorted(buckets)), expected_buckets)
 
-        claude_marketplace = json.loads(next(item.managed_bytes for item in claude
-                                             if item.target.name == "marketplace.json"))
-        codex_marketplace = json.loads(next(item.managed_bytes for item in codex
-                                            if item.target.name == "marketplace.json"))
+        indexes = fx.hub_indexes(self.env, metadata, buckets, registry)
+        claude_marketplace, codex_marketplace = indexes["claude"], indexes["codex"]
         claude_names = {item["name"] for item in claude_marketplace["plugins"]}
         codex_names = {item["name"] for item in codex_marketplace["plugins"]}
         expected_plugins = (set(expected_buckets) - private_buckets) \
-            | {policy["core_plugin"], "generate-skill", "skm"}
+            | {policy["core_plugin"], "generate-skill"}
+        umbrella = self.repo_root / "configs" / "umbrella.json"  # the plugins of the hub root (skm)
+        if umbrella.is_file():
+            expected_plugins.update(item["name"] for item in json.loads(umbrella.read_text()).get("plugins", []))
         expected_plugins.update(
             json.loads((package / ".codex-plugin" / "plugin.json").read_text())["name"]
             for package in (self.repo_root / "packages").glob("*")
@@ -135,7 +136,7 @@ class TestProviderPublicationParity(unittest.TestCase):
                                          for path in manifest.get("skills", [])))
 
     def test_manifest_gate_refuses_missing_unsupported_and_catalog_mismatch_before_write(self):
-        source = json.loads((Path(__file__).resolve().parents[3] / "configs/provider-capabilities.json").read_text())
+        source = json.loads(default_manifest_path().read_text())
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             sentinel = root / "sentinel"
@@ -192,18 +193,20 @@ class TestProviderPublicationParity(unittest.TestCase):
                 do_sync(env, project, {"dry_run": True, "no_core": True}, register=False)
             self.assertEqual(_snapshot(project), before)
 
-            with mock.patch("skiller.common.now_iso",
-                            return_value="2026-07-23T12:57:20Z"), \
+            with mock.patch("aicore.delivery.materialize.now_iso",
+                            return_value="2026-07-23T12:57:20Z") as first_clock, \
                     contextlib.redirect_stdout(io.StringIO()):
                 do_sync(env, project, {"no_core": True}, register=False)
+            self.assertTrue(first_clock.called)  # the manifest was written with the frozen time
             self.assertTrue((project / ".claude/skills/code-style/SKILL.md").is_file())
             codex_skill = project / ".agents/skills/code-style/SKILL.md"
             self.assertTrue(codex_skill.is_file())
             applied = _snapshot(project)
-            with mock.patch("skiller.common.now_iso",
-                            return_value="2026-07-23T12:57:21Z"), \
+            with mock.patch("aicore.delivery.materialize.now_iso",
+                            return_value="2026-07-23T12:57:21Z") as second_clock, \
                     contextlib.redirect_stdout(io.StringIO()):
                 do_sync(env, project, {"no_core": True}, register=False)
+            second_clock.assert_not_called()  # an unchanged manifest keeps its installed_at
             self.assertEqual(_snapshot(project), applied)
 
             codex_skill.write_text("local drift\n", encoding="utf-8")

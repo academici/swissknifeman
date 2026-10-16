@@ -22,6 +22,7 @@ from .projects import cmd_namespaces, cmd_projects
 from .provision.service import cmd_service
 from .provision.start import cmd_start, cmd_status
 from .provision.sync import cmd_sync
+from .topology import cmd_topology
 from .verify import cmd_verify
 from .provision.workspace import cmd_workspace
 
@@ -46,6 +47,7 @@ COMMANDS = {
     "doctor": cmd_doctor,
     "verify": cmd_verify,
     "analyze": cmd_analyze,
+    "topology": cmd_topology,
 }
 
 

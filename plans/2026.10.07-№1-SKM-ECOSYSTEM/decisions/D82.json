@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D82",
+  "title": "Conformance kit: сценарий crash для плагина, native без declared, маршруты umbrella",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Что достраивается в conformance плагина и движка в P12 (E59, R13, R30)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "aicore ext conformance: сценарий crash (без продвижения курсора, повторная доставка), --manifest с путём вне репозитория; orch.py conformance --binding native: declared сценарии покрыты тестом или golden-трассой, иначе declared с причиной; cao и claude-only — declared с причиной (триггер паритета orch); swissknifeman conformance plugin|engine.",
+      "pros": "Команды применимы к чужому плагину и привязке; перечни R13/R30 закрыты тестом или решением."
+    }
+  ],
+  "context": "knowledge/hub-p12#conformance",
+  "decision": "A — aicore ext conformance: сценарий crash (без продвижения курсора, повторная доставка), --manifest с путём вне репозитория; orch.py conformance --binding native: declared сценарии покрыты тестом или golden-трассой, иначе declared с причиной; cao и claude-only — declared с причиной (триггер паритета orch); swissknifeman conformance plugin|engine.",
+  "rationale": "Детализация P12 (2026-10-13): knowledge/hub-p12#conformance; агентское решение в рамках утверждённого плана.",
+  "applies_to": [
+    "P12.5"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

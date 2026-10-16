@@ -1,0 +1,443 @@
+"""Start one role as a child process and read what it returned.
+
+The prompt goes on stdin; stdout is written as it comes into the raw stream file (``<step>.jsonl`` or ``.txt``) and
+stderr beside it, both under the ignored runtime folder of the run. The final text, the session, the model and the
+token usage are read back from the stream by its transport: ``text`` (stdout is the answer), ``jsonl`` (the
+stream-json of claude-code and grok: ``system/init`` and ``result``; the event stream of codex: ``thread.started``,
+``item.completed`` agent messages and ``turn.completed`` / ``turn.failed``). ``acp`` is not driven by the conductor.
+
+A failed role is classified here from normalized signals (see ``aicore.provider.errors``): the stream gives the
+structured ones (``is_error``, ``http_status``, ``retry_category``, ``api_retries``, the ``limit_*`` of a rate-limit
+event, ``terminal``) and the text of the failure (``fatal_text``); the process gives ``exit_code`` and ``stderr_tail``.
+Text of tools and of model answers never enters a signal. Deciding what to do about the failure is the engine's job.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+import json
+import math
+import os
+from pathlib import Path
+import shutil
+import signal
+import subprocess
+import threading
+import time
+from typing import Callable, Mapping, Optional
+
+from aicore.provider import errors as provider_errors
+from aicore.util.redact import env_secrets, redact_text
+
+STDERR_TAIL_CHARS = 4000
+
+
+@dataclass
+class RoleRun:
+    """Outcome of one role process. ``error`` is a stable code when the run itself failed."""
+
+    exit: Optional[int]
+    text: str = ""
+    session: Optional[str] = None
+    model: Optional[str] = None
+    usage: dict = field(default_factory=lambda: {"input": 0, "cached": 0, "output": 0})
+    duration_s: float = 0.0
+    raw: Optional[str] = None
+    error: Optional[str] = None
+    detail: Optional[str] = None
+    lingered: bool = False  # the final result was out but the process did not exit: it was reaped after the grace
+    error_doc: Optional[dict] = None  # error/v1 of a failed role the rules of aicore recognize (``provider`` known)
+    api_retries: int = 0  # how many times the provider CLI itself repeated the request (claude ``api_retry`` events)
+    denials: list = field(default_factory=list)  # ``[{tool_name}]``: tool calls refused without a prompt (never their input)
+
+
+def available(argv: list) -> bool:
+    """Whether the command of ``argv`` can be started (an absolute path or a command on PATH)."""
+    if not argv:
+        return False
+    command = argv[0]
+    if os.sep in command:
+        return os.path.isfile(command) and os.access(command, os.X_OK)
+    return shutil.which(command) is not None
+
+
+def _usage(found: object) -> dict:
+    if not isinstance(found, dict):
+        return {"input": 0, "cached": 0, "output": 0}
+    def count(*keys: str) -> int:
+        return sum(found[key] for key in keys if isinstance(found.get(key), int))
+    # ``cached`` (cache reads) is reported apart: it re-counts the whole context each turn and is not spend
+    return {"input": count("input_tokens", "cache_creation_input_tokens"),
+            "cached": count("cache_read_input_tokens", "cached_input_tokens"), "output": count("output_tokens")}
+
+
+def parse_stream(transport: str, data: str) -> dict:
+    """``{text, session, model, usage, is_error, signals, denials}`` of a captured stdout.
+
+    ``is_error`` rests on ``result.is_error`` whatever its ``subtype`` (``success`` can come with ``is_error: true``)
+    or on a codex ``turn.failed``; codex ``error`` events are notifications, not a failure. ``signals`` holds only the
+    normalized failure signals the stream gives (see ``aicore.provider.errors.SIGNAL_TYPES``). ``denials`` are the tool
+    calls Claude refused without asking (``--permission-prompts none``): the ``permission_denied`` system messages and
+    ``result.permission_denials``, once per ``tool_use_id``; only the tool name is kept, ``tool_input`` may hold secrets.
+    """
+    if transport == "text":
+        return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
+                "is_error": False, "signals": {}, "denials": []}
+    found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False,
+             "signals": {}, "denials": []}
+    denied: dict = {}  # tool_use_id -> tool name, in order of first sight
+    signals, retry_status, retries, last = found["signals"], None, 0, {}  # last: the final terminal event only
+    messages = []
+    for raw in data.splitlines():
+        try:
+            doc = json.loads(raw)
+        except ValueError:
+            continue
+        if not isinstance(doc, dict):
+            continue
+        kind = doc.get("type")
+        if kind == "system" and doc.get("subtype") == "init":
+            found["session"] = doc.get("session_id") or found["session"]
+            found["model"] = doc.get("model") or found["model"]
+        elif kind == "system" and doc.get("subtype") == "permission_denied":
+            _deny(denied, doc)
+        elif kind == "result":
+            for entry in doc.get("permission_denials") if isinstance(doc.get("permission_denials"), list) else []:
+                _deny(denied, entry)
+            found["text"] = doc.get("result") if isinstance(doc.get("result"), str) else found["text"]
+            found["session"] = doc.get("session_id") or found["session"]
+            found["usage"] = _usage(doc.get("usage"))
+            found["is_error"] = bool(doc.get("is_error"))
+            last = {"terminal": True}
+            if found["is_error"]:
+                if isinstance(doc.get("result"), str):
+                    last["fatal_text"] = doc["result"]
+                if _is_int(doc.get("api_error_status")):
+                    last["http_status"] = doc["api_error_status"]
+        elif kind == "system" and doc.get("subtype") == "api_retry":  # claude: the CLI repeated the request itself
+            retries += 1
+            if isinstance(doc.get("error"), str):
+                signals["retry_category"] = doc["error"]
+            retry_status = doc["error_status"] if _is_int(doc.get("error_status")) else None
+        elif kind == "rate_limit_event" and isinstance(doc.get("rate_limit_info"), dict):  # claude: quota telemetry
+            info = doc["rate_limit_info"]
+            for name, key in (("limit_status", "status"), ("limit_window", "rateLimitType")):
+                if isinstance(info.get(key), str):
+                    signals[name] = info[key]
+            reset = info.get("resetsAt")
+            if isinstance(reset, (int, float)) and not isinstance(reset, bool) and math.isfinite(reset):
+                signals["limit_resets_at"] = int(reset)
+        elif kind == "turn.failed":  # codex: the only fatal outcome; there is no structured code, only the text
+            found["is_error"] = True
+            last = {"terminal": True}
+            error = doc.get("error")
+            if isinstance(error, dict) and isinstance(error.get("message"), str):
+                last["fatal_text"] = error["message"]
+        elif kind == "thread.started":  # codex exec --json
+            found["session"] = doc.get("thread_id") or found["session"]
+        elif kind == "item.completed" and isinstance(doc.get("item"), dict):
+            item = doc["item"]
+            if item.get("type") in ("agent_message", "assistant_message") and isinstance(item.get("text"), str):
+                messages.append(item["text"])
+        elif kind == "turn.completed":  # a turn that completes after a failed one is the outcome
+            found["is_error"] = False
+            last = {"terminal": True}
+            usage = _usage(doc.get("usage"))
+            found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
+    found["denials"] = [{"tool_name": name} for name in denied.values()]
+    if not found["text"] and messages:
+        found["text"] = messages[-1]
+    signals.update(last)
+    if retries:
+        signals["api_retries"] = retries
+        if "http_status" not in signals and retry_status is not None:
+            signals["http_status"] = retry_status
+    if found["is_error"]:
+        signals["is_error"] = True
+    return found
+
+
+def _deny(denied: dict, doc: object) -> None:
+    """Note one refused tool call; the system message and the final result name the same call by ``tool_use_id``."""
+    if isinstance(doc, dict) and isinstance(doc.get("tool_name"), str) and doc["tool_name"]:
+        denied.setdefault(doc.get("tool_use_id") if isinstance(doc.get("tool_use_id"), str) else f"#{len(denied)}",
+                          doc["tool_name"])
+
+
+def _is_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def partial_usage(data: str) -> dict:
+    """Tokens of a stream that ended without its ``result`` line (a cancelled or stopped role): the usage of each
+    assistant message, counted once per message id; the result line wins when there is one."""
+    parsed = parse_stream("jsonl", data)
+    if any(parsed["usage"].values()):
+        return parsed["usage"]
+    total, seen = {"input": 0, "cached": 0, "output": 0}, {}
+    for raw in data.splitlines():
+        try:
+            doc = json.loads(raw)
+        except ValueError:
+            continue
+        message = doc.get("message") if isinstance(doc, dict) and doc.get("type") == "assistant" else None
+        if isinstance(message, dict) and isinstance(message.get("usage"), dict):
+            seen[message.get("id") or len(seen)] = _usage(message["usage"])
+    for usage in seen.values():
+        for key in total:
+            total[key] += usage[key]
+    return total
+
+
+def activity(pid: Optional[int], raw_path: Path) -> str:
+    """What a running role does now, for a beacon: its last command (from the stream) and the processes of its
+    session other than the provider CLI, the longest-running first."""
+    parts = []
+    last = _last_command(raw_path)
+    if last:
+        parts.append(f"last command: {last}")
+    if pid:
+        try:
+            listing = subprocess.run(["ps", "-eo", "pid=,ppid=,etimes=,args="], capture_output=True, text=True,
+                                     timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            listing = ""
+        table = {}
+        for line in listing.splitlines():
+            fields = line.split(None, 3)
+            if len(fields) == 4 and all(field.isdigit() for field in fields[:3]):
+                table[int(fields[0])] = (int(fields[1]), int(fields[2]), fields[3])
+        below, grew = {pid}, True
+        while grew:  # the whole tree under the provider CLI: its tool shells may sit in sessions of their own
+            grew = False
+            for number, (parent, _seconds, _args) in table.items():
+                if parent in below and number not in below:
+                    below.add(number)
+                    grew = True
+        rows = [(table[number][1], table[number][2]) for number in below if number != pid and number in table]
+        rows = [row for row in rows if not row[1].startswith(("ps ", "/bin/sh -c ps"))]
+        if rows:
+            shown = ", ".join(f"{args[:120]} ({seconds}s)" for seconds, args in sorted(rows, reverse=True)[:3])
+            parts.append(f"running: {shown}")
+        else:
+            parts.append("no child process: the model call itself is silent")
+    return "; ".join(parts) or "nothing observed"
+
+
+def _last_command(raw_path: Path, tail: int = 200_000) -> str:
+    """The input of the last tool call in the stream (a command, a file), shortened."""
+    try:
+        with open(raw_path, "rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - tail))
+            data = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+    found = ""
+    for raw in data.splitlines():
+        try:
+            doc = json.loads(raw)
+        except ValueError:
+            continue
+        message = doc.get("message") if isinstance(doc, dict) else None
+        for block in (message.get("content") if isinstance(message, dict) else None) or []:
+            if isinstance(block, dict) and block.get("type") == "tool_use":
+                given = block.get("input") or {}
+                value = given.get("command") or given.get("file_path") or given.get("path") or given.get("pattern") \
+                    if isinstance(given, dict) else given
+                found = f"{block.get('name', 'tool')}: {' '.join(str(value or '').split())[:160]}"
+    return found
+
+
+def _kill(process: subprocess.Popen) -> None:
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        return
+    try:
+        process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+        process.wait()
+
+
+def _group_alive(pgid: int) -> bool:
+    """Whether a process of group ``pgid`` still runs; a zombie (dead, waiting for a parent that is not the conductor)
+    does not count. Without ``/proc`` the group counts as alive while ``killpg(pgid, 0)`` reaches it."""
+    proc = Path("/proc")
+    if not proc.is_dir():
+        try:
+            os.killpg(pgid, 0)
+        except (ProcessLookupError, PermissionError):
+            return False
+        return True
+    for entry in proc.iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            fields = (entry / "stat").read_text(encoding="utf-8", errors="replace").rsplit(")", 1)[1].split()
+        except (OSError, IndexError):
+            continue
+        if len(fields) > 2 and fields[2] == str(pgid) and fields[0] not in ("Z", "X"):
+            return True
+    return False
+
+
+def _reap_group(pgid: int, grace_s: float = 5.0) -> bool:
+    """End what a finished role left in its process group (a server or a watcher started in the background): SIGTERM,
+    then SIGKILL after ``grace_s``. True when something was left. A process that left the group (``setsid``) is not
+    reached; the conductor has no handle on it."""
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError):
+        return False
+    deadline = time.monotonic() + grace_s
+    while time.monotonic() < deadline:
+        if not _group_alive(pgid):
+            return True
+        time.sleep(0.1)
+    try:
+        os.killpg(pgid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
+    return True
+
+
+POLL_S = 5  # how often a running role is looked at
+RESULT_GRACE_S = 30  # how long a process may live on after its final ``result`` line (a provider CLI waits for its
+# background tasks, for example a monitor loop that never ends, even though the role has answered)
+_RESULT_LINE = (b'"type":"result"', b'"type": "result"')
+
+
+def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: int, idle_timeout_s: int,
+          cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
+          result_grace_s: float = 0) -> Optional[str]:
+    """Feed ``prompt`` and wait for the child; ``None`` when it ended, else why it was stopped.
+
+    ``timeout_s`` is a ceiling on the whole run, ``idle_timeout_s`` a limit on the silence of the output file; 0 switches
+    either off (the default of the conductor: a long role is reported by beacons, never stopped). ``on_tick(elapsed,
+    idle, pid)`` is called on every look at the child. With ``result_grace_s`` > 0 a child that is still alive that long
+    after its final ``result`` line is given up as ``lingering`` (the answer is complete). Every growth of the stream is stamped in ``<stream>.times``
+    (``seconds-since-start size`` per line): providers whose stream has no times of its own can be profiled with it.
+    """
+    writer = threading.Thread(target=_feed, args=(process, prompt.encode("utf-8")), daemon=True)
+    writer.start()
+    started = last_growth = time.monotonic()
+    size = -1
+    times = raw_path.with_name(raw_path.name + ".times")
+    seen, answered = 0, None
+    while True:
+        try:
+            process.wait(timeout=POLL_S)
+            return None
+        except subprocess.TimeoutExpired:
+            pass
+        if cancel is not None and cancel.is_set():
+            return "cancelled"
+        now = time.monotonic()
+        try:
+            current = raw_path.stat().st_size
+        except OSError:
+            current = size
+        if current != size:
+            size, last_growth = current, now
+            if result_grace_s > 0 and answered is None:
+                seen, found = _scan_result(raw_path, seen)
+                answered = now if found else None
+            try:
+                with open(times, "a", encoding="utf-8") as handle:
+                    handle.write(f"{now - started:.1f} {current}\n")
+            except OSError:
+                pass
+        if answered is not None and now - answered >= result_grace_s:
+            return "lingering"
+        if on_tick is not None:
+            on_tick(now - started, now - last_growth, process.pid)
+        if timeout_s > 0 and now - started > timeout_s:
+            return f"no result within {timeout_s} s"
+        if idle_timeout_s > 0 and now - last_growth > idle_timeout_s:
+            return f"no output for {idle_timeout_s} s"
+
+
+def _scan_result(raw_path: Path, offset: int) -> tuple:
+    """``(new offset, whether a final result line is in the stream)``, reading only what was added since ``offset``."""
+    try:
+        with open(raw_path, "rb") as handle:
+            handle.seek(offset)
+            data = handle.read()
+    except OSError:
+        return offset, False
+    return offset + len(data), any(marker in data for marker in _RESULT_LINE)
+
+
+def _feed(process: subprocess.Popen, data: bytes) -> None:
+    try:
+        process.stdin.write(data)
+        process.stdin.close()
+    except (BrokenPipeError, OSError, ValueError):
+        pass
+
+
+def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: int, raw_path: Path,
+             env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0,
+             cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
+             result_grace_s: float = RESULT_GRACE_S, provider: Optional[str] = None) -> RoleRun:
+    """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child.
+
+    ``provider`` (an aicore provider id such as ``claude-code``) lets a failed run be classified into ``error_doc``;
+    without it only ``error`` and ``detail`` are set.
+    """
+    if transport == "acp":
+        return RoleRun(exit=None, error="TRANSPORT_UNSUPPORTED", detail="the conductor does not drive acp roles")
+    if not available(argv):
+        return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=f"{argv[0] if argv else '-'} not found")
+    raw_path = Path(raw_path)
+    raw_path.parent.mkdir(parents=True, exist_ok=True)
+    err_path = raw_path.with_suffix(".stderr")
+    started = time.monotonic()
+    with open(raw_path, "wb") as out, open(err_path, "wb") as err:
+        try:
+            process = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=out, stderr=err, cwd=str(cwd),
+                                       env=None if env is None else dict(env), start_new_session=True)
+        except OSError as error:
+            return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=redact_text(str(error), secrets=env_secrets(env)),
+                           raw=str(raw_path))
+        try:
+            stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel,
+                            on_tick=on_tick, result_grace_s=result_grace_s if transport != "text" else 0)
+        except BaseException:
+            _kill(process)
+            raise
+        lingered = stopped == "lingering"
+        if lingered:
+            _kill(process)
+        elif not stopped:
+            _reap_group(process.pid)  # the role ended; what it started in the background must not outlive it
+        elif stopped:
+            _kill(process)
+            usage = partial_usage(raw_path.read_text(encoding="utf-8", errors="replace")) if transport == "jsonl" else None
+            return RoleRun(exit=process.returncode, error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
+                           duration_s=time.monotonic() - started, raw=str(raw_path),
+                           **({"usage": usage} if usage else {}))
+    duration = time.monotonic() - started
+    parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
+    run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
+                  usage=parsed["usage"], duration_s=duration, raw=str(raw_path), lingered=lingered,
+                  api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"])
+    if lingered:
+        run.exit = 0
+    if (process.returncode != 0 and not lingered) or parsed["is_error"]:
+        stderr = redact_text(err_path.read_text(encoding="utf-8", errors="replace").strip(),
+                             secrets=env_secrets(env))  # the raw .stderr file keeps what the role printed
+        tail = stderr.splitlines()[-3:]
+        run.error, run.detail = "ROLE_FAILED", f"exit {process.returncode}" + (f": {' | '.join(tail)}" if tail else "")
+        if provider:
+            signals = {**parsed["signals"], "exit_code": process.returncode, "stderr_tail": stderr[-STDERR_TAIL_CHARS:]}
+            found = provider_errors.classify_signals(provider, signals, now=time.time())
+            run.error_doc = found.to_dict() if found else None
+    elif not run.text:
+        run.error, run.detail = "ROLE_OUTPUT_EMPTY", "the role returned no final text"
+    return run

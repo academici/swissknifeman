@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "sample",
+  "title": "Sample",
+  "kind": "plugin",
+  "version": "0.1.0",
+  "stability": "beta",
+  "destination": "hub",
+  "requires": [],
+  "provides": {}
+}

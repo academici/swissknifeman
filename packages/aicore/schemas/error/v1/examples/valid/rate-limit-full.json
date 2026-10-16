@@ -1,0 +1,11 @@
+{
+  "class": "rate_limit",
+  "code": "RATE_LIMITED",
+  "retryable": true,
+  "safe_message": "provider rate limit reached",
+  "retry_after_s": 30,
+  "scope": "request",
+  "provider": "codex",
+  "request_id": "req_0123",
+  "diagnostic_ref": "@run/artifacts/stderr-1.txt"
+}

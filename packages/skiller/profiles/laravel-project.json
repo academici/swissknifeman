@@ -7,10 +7,10 @@
   "harness_presets": ["base", "laravel"],
   "mcp": ["context7"],
   "model_tiers": {
-    "reviewer": "opus",
-    "spec-writer": "opus",
-    "orchestrator": "opus",
-    "slice-builder": "sonnet",
-    "test-writer": "sonnet"
+    "reviewer": "frontier",
+    "spec-writer": "frontier",
+    "orchestrator": "frontier",
+    "slice-builder": "implementation",
+    "test-writer": "implementation"
   }
 }

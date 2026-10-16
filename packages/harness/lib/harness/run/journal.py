@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import subprocess
-from pathlib import Path
 
 from harness.run import plan_reader, task_paths, worker
 
@@ -84,9 +83,9 @@ def classify(*, pre_launch, outcome=None, item_status=None):
 
 
 
-def _build_argv(*, plan_dir, item_id, run_id, event_type, note, task,
+def _build_argv(*, plan_dir, item_id, run_id, event_type, note, planner,
                 session_id=None, cost_usd=None, num_turns=None, duration_ms=None):
-    argv = ["python3", str(plan_reader.plan_script(task)), "log",
+    argv = ["python3", str(plan_reader.plan_script(planner)), "log",
             str(plan_dir), item_id, "--type", event_type, "--summary", note,
             "--actor", DRIVER_ACTOR, "--ref", f"run:{run_id}"]
     metrics = [f"{key}={value}" for key, value in (
@@ -97,10 +96,10 @@ def _build_argv(*, plan_dir, item_id, run_id, event_type, note, task,
     return argv
 
 
-def _resolve_task_root(monorepo_root, plan_dir):
+def _resolve_planner_root():
     try:
-        return task_paths.task_root(Path(plan_dir).resolve(), monorepo_root=monorepo_root)
-    except task_paths.TaskUnavailable as exc:
+        return task_paths.planner_root()
+    except task_paths.PlannerUnavailable as exc:
         raise JournalUnavailable(f"{exc} (process CLI log not available)") from exc
 
 
@@ -124,8 +123,7 @@ def _build_note(run_id, category, *, outcome=None, refusal_detail=None):
 
 
 def maybe_write(plan_dir, item_id, *, run_id, pre_launch=False,
-                refusal_detail=None, outcome=None, item_status=None, monorepo_root=None,
-                timeout=30):
+                refusal_detail=None, outcome=None, item_status=None, timeout=30):
     """Internal documentation."""
     if not run_id:
         raise ValueError("run_id is required for the driver line (discriminator IR2)")
@@ -136,10 +134,10 @@ def maybe_write(plan_dir, item_id, *, run_id, pre_launch=False,
 
     event_type = _EVENT_TYPE[category]
     note = _build_note(run_id, category, outcome=outcome, refusal_detail=refusal_detail)
-    task = _resolve_task_root(monorepo_root, plan_dir)
+    planner = _resolve_planner_root()
     argv = _build_argv(
         plan_dir=plan_dir, item_id=item_id, run_id=run_id, event_type=event_type, note=note,
-        task=task,
+        planner=planner,
         session_id=(outcome or {}).get("session_id"),
         cost_usd=(outcome or {}).get("total_cost_usd"),
         num_turns=(outcome or {}).get("num_turns"),

@@ -1,11 +1,13 @@
 """exec/v1 schema registry, semantic validation and document digests."""
 from __future__ import annotations
 
-from hashlib import sha256
-import json
+from datetime import datetime
 from pathlib import Path
 import re
 from typing import Callable, NamedTuple
+
+import aicore
+from aicore.util import digest as canonical
 
 from orch import CONTRACT_VERSION
 from orch import schema
@@ -15,6 +17,12 @@ KINDS = (
     "execution-input", "run-policy", "role-manifest", "capability-record", "run-event",
     "stage-result", "effect-receipt", "check-evidence", "launch-plan",
 )
+# aicore contracts that exec/v1 schemas reference (transitively); they join the registry for $ref resolution.
+AICORE_CONTRACTS = ("error", "artifact-ref", "digest", "common", "permissions", "capability-support")
+# Identity keys, one per level of the idempotency hierarchy; values of different levels never coincide.
+KEY_FIELDS = ("submission_id", "run_id", "attempt_id", "call_id", "event_id")
+# The required part of an execution input; a condensed brief pins it by digest.
+REQUIRED_PART = ("goal", "scope", "acceptance", "constraints", "decisions", "route", "result_contract", "escalation")
 # Plan bridges add their own stricter phrases.
 LIFECYCLE_PHRASES = ("report_api", "report API")
 
@@ -32,7 +40,9 @@ SEMANTIC: dict[str, Callable[[object], list[Issue]]] = {}
 def load_registry() -> schema.Registry:
     """Load the cached registry from this package, independent of the current cwd."""
     directory = Path(__file__).resolve().parents[2] / "schemas" / "exec" / "v1"
-    return schema.load_registry(directory, urn_prefix=URN_PREFIX, kinds=KINDS)
+    foundation = Path(aicore.__file__).resolve().parents[2] / "schemas"
+    extras = tuple(foundation / name / "v1" for name in AICORE_CONTRACTS)
+    return schema.load_registry(directory, urn_prefix=URN_PREFIX, kinds=KINDS, extra_dirs=extras)
 
 
 def semantic_checks(doc: object, kind: str) -> list[Issue]:
@@ -45,6 +55,8 @@ def semantic_checks(doc: object, kind: str) -> list[Issue]:
     check = SEMANTIC.get(kind)
     if check is not None:
         issues.extend(check(doc))
+    if isinstance(doc, dict):
+        issues.extend(_key_reuse(doc))
     return issues
 
 
@@ -59,12 +71,11 @@ def validate(doc: object, kind: str, registry: schema.Registry | None = None) ->
 
 
 def canonical_digest(doc: dict) -> str:
-    """Hash canonical JSON without digest or the derived suffix of input_id."""
+    """Bare sha256 hex of the canonical JSON without digest or the derived suffix of input_id."""
     payload = {key: value for key, value in doc.items() if key != "digest"}
     if isinstance(payload.get("input_id"), str):
         payload["input_id"] = payload["input_id"].rsplit("@", 1)[0]
-    encoded = json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    return sha256(encoded.encode("utf-8")).hexdigest()
+    return canonical.sha256_hex(canonical.canonical_json_bytes(payload))
 
 
 def _walk(value: object, path: str = ""):
@@ -84,8 +95,14 @@ def _execution_input(doc: object) -> list[Issue]:
         return []
     issues = []
     digest, input_id = doc.get("digest"), doc.get("input_id")
-    if isinstance(digest, str) and digest != canonical_digest(doc):
-        issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest does not match canonical JSON"))
+    if isinstance(digest, str):
+        try:
+            matches = digest == canonical_digest(doc)
+        except (TypeError, ValueError):  # not canonical JSON (floats, lone surrogates): the schema check reports it
+            issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest cannot be computed: document is not canonical JSON"))
+        else:
+            if not matches:
+                issues.append(Issue("/digest", "DIGEST_MISMATCH", "digest does not match canonical JSON"))
     if isinstance(input_id, str) and isinstance(digest, str) and not input_id.endswith("@" + digest[:12]):
         issues.append(Issue("/input_id", "INPUT_ID", "input_id must end with @digest[:12]"))
     scope, result_contract = doc.get("scope"), doc.get("result_contract")
@@ -217,6 +234,92 @@ SEMANTIC.update({
 })
 
 
+def required_digest(doc: dict) -> str:
+    """Bare sha256 hex of the canonical JSON of the required part of an execution input."""
+    part = {key: doc[key] for key in REQUIRED_PART if key in doc}
+    return canonical.sha256_hex(canonical.canonical_json_bytes(part))
+
+
+_TS = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?Z", re.ASCII)
+
+
+def _parse_ts(value: object) -> tuple[datetime, str] | None:
+    """Whole seconds and the fraction digits of a ``ts`` value (the schema allows any number of digits)."""
+    match = _TS.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        return None
+    try:
+        return datetime.strptime(match.group(1), "%Y-%m-%dT%H:%M:%S"), match.group(2) or ""
+    except ValueError:  # a pattern-valid value that is not a calendar time; the schema check cannot tell
+        return None
+
+
+def _ts_before(first: tuple[datetime, str], second: tuple[datetime, str]) -> bool:
+    width = max(len(first[1]), len(second[1]))
+    return (first[0], first[1].ljust(width, "0")) < (second[0], second[1].ljust(width, "0"))
+
+
+def _condensed(doc: dict) -> list[Issue]:
+    condensed = doc.get("condensed")
+    if not isinstance(condensed, dict) or not isinstance(condensed.get("required_digest"), str):
+        return []
+    try:
+        matches = condensed["required_digest"] == required_digest(doc)
+    except (TypeError, ValueError):  # not canonical JSON (floats, lone surrogates): the schema check reports it
+        return [Issue("/condensed/required_digest", "CONDENSED_REQUIRED_DRIFT",
+                      "required_digest cannot be computed: the required part is not canonical JSON")]
+    if matches:
+        return []
+    return [Issue("/condensed/required_digest", "CONDENSED_REQUIRED_DRIFT",
+                  "required_digest does not match the canonical JSON of the required part")]
+
+
+def _capability_freshness(doc: dict) -> list[Issue]:
+    issues = []
+    observed, fresh = _parse_ts(doc.get("observed_at")), _parse_ts(doc.get("fresh_until"))
+    if observed is not None and fresh is not None and _ts_before(fresh, observed):
+        issues.append(Issue("/fresh_until", "CAPABILITY_FRESHNESS", "fresh_until is earlier than observed_at"))
+    source, status = doc.get("source"), doc.get("status")
+    if isinstance(source, str) and isinstance(status, str):
+        # declared and probed records keep their own source; an inferred source only backs a declared record.
+        consistent = status == "declared" if source == "inferred" else source == status
+        if not consistent:
+            issues.append(Issue("/source", "CAPABILITY_FRESHNESS", f"source {source} contradicts status {status}"))
+    return issues
+
+
+def _fallback_declared(doc: dict) -> list[Issue]:
+    on_error = doc.get("on_error")
+    if not isinstance(on_error, dict) or doc.get("fallback_routes"):
+        return []
+    return [Issue(f"/on_error/{name}/action", "FALLBACK_UNDECLARED",
+                  "action fallback_route requires a non-empty fallback_routes")
+            for name, rule in on_error.items()
+            if isinstance(rule, dict) and rule.get("action") == "fallback_route"]
+
+
+def _key_reuse(doc: dict) -> list[Issue]:
+    """Report identity keys of different levels that carry the same value."""
+    issues = []
+    seen: dict[str, str] = {}
+    for name in KEY_FIELDS:
+        value = doc.get(name)
+        if not isinstance(value, str):
+            continue
+        if value in seen:
+            issues.append(Issue(f"/{name}", "KEY_REUSED", f"{name} repeats the value of {seen[value]}"))
+        else:
+            seen[value] = name
+    return issues
+
+
+def _owner_epoch(doc: dict) -> list[Issue]:
+    value = doc.get("owner_epoch")
+    if isinstance(value, int) and not isinstance(value, bool) and value < 1:
+        return [Issue("/owner_epoch", "EPOCH_INVALID", "owner_epoch must be at least 1")]
+    return []
+
+
 def _attempt_range(doc: dict, *, event: bool = False) -> list[Issue]:
     issues = []
     for name, minimum in (("attempt", 1), ("seq", 0)) if event else (("attempt", 1),):
@@ -227,13 +330,13 @@ def _attempt_range(doc: dict, *, event: bool = False) -> list[Issue]:
 
 
 def _run_event(doc: object) -> list[Issue]:
-    return _attempt_range(doc, event=True) if isinstance(doc, dict) else []
+    return _attempt_range(doc, event=True) + _owner_epoch(doc) if isinstance(doc, dict) else []
 
 
 def _stage_result(doc: object) -> list[Issue]:
     if not isinstance(doc, dict):
         return []
-    issues = _attempt_range(doc)
+    issues = _attempt_range(doc) + _owner_epoch(doc)
     commits = doc.get("commits")
     if isinstance(commits, list):
         seen = set()
@@ -266,11 +369,16 @@ def _stage_result(doc: object) -> list[Issue]:
 def _effect_receipt(doc: object) -> list[Issue]:
     if not isinstance(doc, dict):
         return []
+    issues = _owner_epoch(doc)
     reconcile = doc.get("reconcile")
     if doc.get("outcome") == "unknown" and isinstance(reconcile, dict) and reconcile.get("method") == "none":
-        return [Issue("/reconcile/method", "RECEIPT_RECONCILE",
-                      "unknown effect outcome requires a reconciliation method")]
-    return []
+        issues.append(Issue("/reconcile/method", "RECEIPT_RECONCILE",
+                            "unknown effect outcome requires a reconciliation method"))
+    precondition = doc.get("precondition")
+    if isinstance(precondition, dict) and precondition.get("matched") is False and doc.get("outcome") != "failed":
+        issues.append(Issue("/precondition/matched", "PRECONDITION_MISMATCH",
+                            "a precondition that did not match requires outcome failed"))
+    return issues
 
 
 def _check_evidence(doc: object) -> list[Issue]:
@@ -310,3 +418,19 @@ SEMANTIC.update({
     "check-evidence": _check_evidence,
     "launch-plan": _launch_plan,
 })
+
+
+def _with(base: Callable[[object], list[Issue]], *extra: Callable[[dict], list[Issue]]):
+    """Extend the checks of a kind with checks that only look at documents shaped as objects."""
+    def check(doc: object) -> list[Issue]:
+        issues = base(doc)
+        if isinstance(doc, dict):
+            for more in extra:
+                issues.extend(more(doc))
+        return issues
+    return check
+
+
+SEMANTIC["execution-input"] = _with(SEMANTIC["execution-input"], _condensed)
+SEMANTIC["run-policy"] = _with(SEMANTIC["run-policy"], _fallback_declared)
+SEMANTIC["capability-record"] = _with(SEMANTIC["capability-record"], _capability_freshness)

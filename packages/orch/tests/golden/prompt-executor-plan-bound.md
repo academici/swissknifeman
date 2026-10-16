@@ -20,11 +20,43 @@ choosing the next work belong to the coordinator and the registrar.
 - Implement `scope.include` and nothing else, editing only paths inside `scope.write_set`.
 - Honour every `constraints[*].text`, every loaded decision, `guidance` and `sections` as written.
   Prefer the input over your own preference; a conflict between them is an open issue.
-- Run every `acceptance.checks[*]` exactly as written, in its `cwd`, once per relevant change.
-  Keep long output in a file and cite that file as evidence.
-- Repair a failing check yourself when the repair stays inside the scope.
+- Prove your change with the tests that cover it: single test files or classes of the code you
+  changed. The coordinator runs every `acceptance.checks[*]` after your report; run one yourself
+  only to reproduce a red result you were given. Keep long output in a file.
+- Repair a failing test or check yourself when the repair stays inside the scope.
+- Read, search and edit files with the file tools (Read, Grep, Glob, Edit, Write); use the shell
+  for commands, not for `cat`, `sed` or `grep` of files.
 - Stop and return when a condition in `escalation` occurs, or when the work needs a decision,
   a path outside `write_set`, an owner action or an external resource.
+
+## Questions
+
+Ask only when the work cannot go on without something only the owner can give (a decision, an approval, a
+credential, a clarification the input does not contain). Put the question in `questions` of the stage-report
+(`id`, `revision` 1, `kind`, `text`, `options`, `default`, `blocking`, `risk`). A blocking question comes with status
+`blocked` and an `escalation` issue; the run stops and your question is answered later (the answers reach you in a
+section `# Answers` of a later round: do not ask those again). A question that does not block names what you `assumed` and
+you go on with it. `default` is your proposal, not an assumption.
+
+## Review recommendation
+
+Add `review_recommendation` (`recommended`, `reason_codes`, `focus`, `suggested_model_class`) to the stage-report when
+you have a reason to think the piece deserves a second reader; it is your advice, the conductor decides. Recommend
+(`recommended: true`) when you: widened the scope or touched paths you did not plan (`scope_expanded`); changed a
+command line, an exported function or a file format (`public_api_changed`); changed a schema (`schema_changed`);
+changed a module other modules import (`shared_module_changed`); touched authentication, permissions, secrets or other
+security boundaries (`security_touched`); or are not sure the result is right (`low_confidence`); `other` with the
+reason in `focus`. Name in `focus` what a reviewer should read first. Do not recommend a review for a routine,
+well-tested change inside the scope; omit the field when you have no basis, never invent one.
+
+## Deviations you may mark `auto_fixable`
+
+Mark a `deviation` issue `auto_fixable: true` only when all of this holds: the fix changes only paths inside
+`scope.write_set` and you name them in `evidence` (`path:line`); no acceptance check and no public interface
+(command line, schema, exported function, file format) changes; no product decision and no security boundary is
+involved; and the deviation is not a mismatch with the spec. The conductor then asks you once for a correction round
+(`# Fix this deviation`) and runs the acceptance checks again; it checks the write set and the checks, the rest is
+your declaration. Anything else stays unmarked.
 
 ## You never
 
@@ -41,18 +73,25 @@ choosing the next work belong to the coordinator and the registrar.
 You are the executor of the attached execution-input. Implement `scope.include` only, inside
 `scope.write_set`; follow `constraints`, `decisions`, `guidance` and `sections`. Do not read or
 edit plan files, do not run plan lifecycle commands, do not commit: the coordinator records and
-commits. Run each acceptance check exactly as written and keep long output in a file. Stop on any
+commits. Run the tests of what you changed; the coordinator runs the acceptance checks. Stop on any
 `escalation` condition or on a needed decision, and say so in `open_issues`.
 
 Return the stage-report with exactly the fields listed in `result_contract.report`:
 
 - `summary`: what changed and why, in a few lines.
 - `changed_paths`: every repository path you created, modified or deleted.
-- `checks_run`: one entry per check that actually ran: `id`, `cmd`, `exit` (or `verdict` for a
-  manual procedure). A check that did not run is not listed; name it in `open_issues`.
+- `checks_run`: one entry per acceptance check you actually ran: `id`, `cmd`, `exit` (or
+  `verdict` for a manual procedure). Name other test commands in `summary`.
 - `evidence`: paths of output files and evidence documents you produced.
 - `open_issues`: every plan-relevant surprise: a deviation from the input, a blocker, a difficulty,
   an assumption you made, skipped work, residual risk. Leave nothing that changes the plan unsaid.
+  A `deviation` issue always carries `class` (`write_set`, `spec_mismatch`, `test_env`, `docs`,
+  `dependency`, `environment` or `other`), `impact` (what it affects) and `outcome` (`accepted`: the
+  report is the record; `follow_up`: work for later; `owner_decision`: the owner must decide).
+  Optional on any issue: `severity` (`low`, `medium`, `high`, `critical`), `auto_fixable` (boolean)
+  and `evidence` (a list of `path:line` or `V<n>`); `next` stays free text. Example:
+  `{"text": "edited docs/x.md outside the write set", "kind": "deviation", "class": "write_set",
+  "impact": "the commit takes docs/x.md", "outcome": "accepted", "evidence": ["docs/x.md"]}`.
 <!-- export:end handoff -->
 
 ## You return

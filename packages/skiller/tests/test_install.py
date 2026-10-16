@@ -13,11 +13,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import core
-
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-CORE_PARENT = Path(core.__file__).resolve().parents[1]
+# scripts/test.sh exports the located foundation; the installer copy in the synthetic host has no sibling.
+AICORE_ROOT = Path(os.environ.get("AICORE_ROOT") or PACKAGE_ROOT.parent / "aicore")
 HOST_CONFIG = {
     "schema_version": 1,
     "default_command_plugins": ["plugin-a"],
@@ -97,13 +96,13 @@ class InstallScriptCase(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def run_installer(self, *args, **extra_env):
+    def run_installer(self, *args, stdin=None, timeout=None, **extra_env):
         env = {k: v for k, v in os.environ.items()
                if k not in {"SKILLER_HOST_CONFIG", "SKILLER_MARKETPLACE_ROOT"}}
         env.update({
             "HOME": str(self.home),
             "PATH": f"{self.fake_bin}:{env['PATH']}",
-            "PYTHONPATH": str(CORE_PARENT),
+            "AICORE_ROOT": str(AICORE_ROOT),
             "CODEX_STUB_LOG": str(self.log),
             "GROK_STUB_LOG": str(self.grok_log),
             **extra_env,
@@ -115,10 +114,40 @@ class InstallScriptCase(unittest.TestCase):
             capture_output=True,
             text=True,
             check=False,
+            stdin=stdin,
+            timeout=timeout,
         )
 
     def lines(self, path):
         return path.read_text(encoding="utf-8").splitlines()
+
+    def test_force_on_a_terminal_does_not_wait_for_the_topology_question(self):
+        import pty
+        master, slave = pty.openpty()  # a terminal on stdin, no answer will ever come
+        self.addCleanup(os.close, master)
+        self.addCleanup(os.close, slave)
+        result = self.run_installer("--force", stdin=slave, timeout=120)  # a prompt would end in TimeoutExpired
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("skiller topology init", result.stdout + result.stderr)
+
+    def test_install_does_not_seed_the_legacy_registry(self):
+        import sys
+        result = self.run_installer()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((self.home / ".swissknifeman" / "projects.json").exists())
+
+        sys.path.insert(0, str(PACKAGE_ROOT / "lib"))
+        try:
+            from skiller.common import Env
+            from skiller.state import save_db
+            env = Env(root=PACKAGE_ROOT, home=self.home)
+            save_db(env, {"version": 1, "projects": []})
+            self.assertEqual(env.db_file, env.state_dir / "projects.json")
+            self.assertTrue((env.state_dir / "projects.json").exists())
+            self.assertFalse((self.home / ".swissknifeman" / "projects.json").exists())
+        finally:
+            sys.path.remove(str(PACKAGE_ROOT / "lib"))
 
     def test_default_install_adds_core_and_host_command_plugins(self):
         result = self.run_installer()

@@ -1,0 +1,34 @@
+{
+  "schema": "orch-conductor-review-verdict/v1",
+  "item": "P11.3",
+  "selector": "grok/grok-4.7/high",
+  "rounds": [
+    {
+      "round": 1,
+      "provider": "grok",
+      "model": "grok-4.7",
+      "effort": "high",
+      "session": "01a12b8f-d12a-7fd0-bd09-e3a1ca6aa839",
+      "verdict": "ATTENTION",
+      "turns": 33,
+      "usage": {
+        "input": 6870330,
+        "output": 101141
+      },
+      "findings": [
+        {
+          "id": "F1",
+          "severity": "Major",
+          "location": "packages/analyst/lib/analyst/ecosystem_events.py:160",
+          "failure_scenario": "a JSON float in otherwise valid data escapes the ValueError handler: ingest exits 1 with a traceback instead of exit 2 ANALYST_EVENT_INVALID, and delivery retries until dead-letter.",
+          "reproduction": "planner.item.finished with data.deviation_count 1.5: INGEST_EXIT 1, TypeError: canonical JSON values must not use floats"
+        }
+      ],
+      "outcome": "F1 reproduced by the session (float in data -> TypeError, exit 1) and fixed: TypeError -> ANALYST_EVENT_INVALID exit 2, test added; V1-V5 green. One round, no re-review.",
+      "output": "**Bug** — `packages/analyst/lib/analyst/ecosystem_events.py:160`. A JSON float in otherwise valid `data` escapes the `ValueError` handler. `ingest` exits 1 with a traceback instead of exit 2 `ANALYST_EVENT_INVALID`.\n\n`build_record` calls `digest_json(data)` at line 115. `aicore.util.digest.canonical_value` raises `TypeError` for every float, including `1.0`. `validate_document` accepts the document because envelope `data` is an unconstrained object. The `except ValueError` around `build_record` does not catch `TypeError`, so stdout stays empty and no journal line is written. Delivery classifies that as `PROCESS_EXIT` and retries until dead-letter. Events built by `aicore.ext.events.build_event` cannot contain floats, so current planner/orch emission is unaffected. Direct `events ingest` of any document that did not pass through `build_event` is affected.\n\nReproduction (`planner.item.finished` with `data.deviation_count` of `1.5`):\n\n```text\nVALIDATE_STDOUT []\nINGEST_EXIT 1\nINGEST_STDOUT ''\nTypeError: canonical JSON values must not use floats\n```\n\nThe traceback ends in `digest.py` `canonical_value`, called from `ecosystem_events.py` line 115. The same shape with `item_id` removed:\n\n```text\nCONTROL_EXIT 2\nCONTROL_STDOUT ''\nCONTROL_STDERR ANALYST_EVENT_INVALID: data.plan_id and data.item_id are required\n```\n\nJournal keys, flock idempotency, skip-on-other-type, subscriber stdout, span mapping, and metric labels matched the contract in the review. No other reproduced findings.\n\nLocal changes: 23 files. 1 bug, 0 suggestions, 0 nits. Notes: `/tmp/grok-vostrikov/grok-review-9fed5b98.md` and `/tmp/grok-vostrikov/grok-review-summary-9fed5b98.md`.",
+      "stream": ".swissknifeman/state/orch/review-streams/2026.10.07-№1-SKM-ECOSYSTEM/P11.3/review-grok.jsonl",
+      "stream_history": "6be28669:plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.3/review-grok.jsonl"
+    }
+  ],
+  "note": "Written when the raw review stream left the plan artifacts; the stream stays in git history at stream_history and locally under stream."
+}

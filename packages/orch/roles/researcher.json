@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "researcher",
+  "title": "Researcher",
+  "description": "Ask the allowed sources for what the question needs, one question per call; read the repository files that bear on it.",
+  "instructions": [
+    {
+      "path": "roles/researcher.md",
+      "purpose": "canonical role text",
+      "sha256": "b34f0e1e71d601ae865fecb1e2f2db1a26f73907d2193f60f34efadcd897cdfe"
+    }
+  ],
+  "tools": {
+    "filesystem": "read",
+    "shell": "read_only",
+    "network": "allowed",
+    "plan_api": "none"
+  },
+  "write_authority": "none",
+  "result_shape": "research-result",
+  "model_class_min": "implementation",
+  "forbidden_inputs": [
+    "lifecycle_instructions",
+    "report_api",
+    "plan_write"
+  ]
+}

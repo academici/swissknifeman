@@ -1,0 +1,142 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P10",
+  "title": "orch и мосты",
+  "design": "detailed",
+  "goal": "orch — модуль на aicore (валидатор, digest, каталог моделей, конфиг, события, плагины), автономный (standalone pass), с исследованиями в packages/orch/docs/research; мосты planner-orch, orch-skiller, orch-harness — юниты хаба bridges/<id>/ с поиском партнёров по окружению и PATH и корнями мостов planner из конфига; порт «источник работы» orch:work-source через aicore.ext.plugins (claim с владельцем, бриф-артефакт по digest, регистрация с fencing и evidence-gate) и CLI цикла orch.py source; exec/v1 minor — идентичность событий, owner_epoch, иерархия ключей, launch-plan с digest-ами, config digest, considered[], решением политики и proof, свежесть capability, sandbox на permissions/v1, таблица действий по классу ошибки, condense и artifact-ref; reducer с property-тестами и watch(run_id, after_seq); пакеты политик run-policy и конфиг [orch] с выбором движка без тихой деградации; события orch.run.*; conformance движков; поиск соседей по путям удалён.",
+  "context": "D3, D6, D16, D20, D21, D33, D34, D60 конкретизированы решениями D61–D66 (детализация 2026-10-10). Факты кода, правила, проверки, сверка E1/E2, отложенное, документация, upgrade — knowledge/orch-p10; поля exec/v1, иерархия ключей и модель инвариантов исполнения — knowledge/orch-p10-contracts; aicore, reducer, повторы, журнал, эффекты, конфиг, пакеты политик, prepare и explain, события, conformance — knowledge/orch-p10-runtime; мосты, поиск партнёров, корни мостов planner, порт work-source, тесты и e2e — knowledge/orch-p10-bridges. Внешние предпосылки (форма claim и fencing, состояние CAO 2.5.3) — research/P10-perplexity.md. Движок исполнения (run, живой watch, cancel, resume привязок) — вне плана (Plan 2 оркестрации). План исполняет стабильный plan.py из live-папки: новый движок клона не запускается мутирующими глаголами на plans/ этого репозитория. Внешнее ревью E1: E04, E08–E11, E19, E21, E23–E26, E38, E44, E54–E57, E59; E2: R07, R09, R10, R20–R30, R32.",
+  "scope": {
+    "include": [
+      "orch на aicore: локатор, общий валидатор и digest, каталог моделей aicore, автономность (standalone pass), перенос корневого orch/ в packages/orch/docs/research",
+      "мосты в хабе bridges/<id>/: unit.json kind bridge, проверки ecosystem-units, поиск партнёров без путей соседей, корни мостов planner из конфига, хаб-раннер тестов мостов",
+      "exec/v1 minor: event_id, causation, owner_epoch, иерархия ключей, error/v1 и artifact-ref в событиях и результатах, skill-digest и версии модулей",
+      "exec/v1 minor: launch-plan с digest-ами, config digest, considered[], решением политики, proof и explain; capability-record source, свежесть, remediation; run-policy version, sandbox (permissions/v1), on_error, fallback_routes, budgets, condense; execution-input condensed и commit",
+      "reducer: event_id, STALE_EPOCH, событие неизвестной версии, property-тесты; retry.decide и таблица действий; журнал run и watch(run_id, after_seq); повторная проверка предусловия перед эффектом",
+      "конфиг [orch] и выбор движка; пакеты политик run-policy с version и cases; orch.py policy",
+      "prepare: digest-ы, considered[] и tie-break, решение политики, proof, свежесть capability, chain отказов, verify_resume, explain; skill-digest через мост orch-skiller",
+      "события orch.run.* со схемами data и фикстурами производителя",
+      "порт orch:work-source: контракт, плагин моста planner-orch (claim, brief, register), fencing и evidence-gate, бриф-артефакт по digest, CLI orch.py source, e2e",
+      "conformance движков (R30), тест записи только в run и --out (R32), тест «MCP не шина» (R24), раздел Non-goals (R23)",
+      "документация orch и мостов, инструкции orch через каталог harness, ADR 0057–0062, CHANGELOG"
+    ],
+    "exclude": [
+      "native-движок и адаптер CAO: run, живой watch, cancel, resume, results привязок (Plan 2 оркестрации)",
+      "bin/orch, bin/planner, umbrella CLI, doctor orch и мостов, запись путей партнёров установкой (P12)",
+      "harness/run (legacy-драйвер) и подписчик analyst на orch.run.* (P11)",
+      "exec/v2 и смена URN контрактов"
+    ]
+  },
+  "depends_on": [
+    "P9"
+  ],
+  "deliverables": [
+    "orch на aicore, автономен (standalone pass)",
+    "bridges/planner-orch, bridges/orch-skiller, bridges/orch-harness — юниты хаба с тестами",
+    "порт orch:work-source с fencing и evidence-gate, CLI orch.py source, e2e",
+    "exec/v1 minor-поля протокола исполнения, доказанные aicore schema compat",
+    "конфиг [orch], пакеты политик run-policy, события orch.run.*",
+    "conformance движков и архитектурные тесты R24, R32",
+    "ADR 0057–0062"
+  ],
+  "items": [
+    "P10.1",
+    "P10.2",
+    "P10.3",
+    "P10.4",
+    "P10.5",
+    "P10.6",
+    "P10.7",
+    "P10.8",
+    "P10.9",
+    "P10.10",
+    "P10.11",
+    "P10.12",
+    "P10.13"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P10.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P10.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P10.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P10.4",
+        "P10.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P10.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P10.7"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B7",
+      "items": [
+        "P10.8"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B8",
+      "items": [
+        "P10.9"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B9",
+      "items": [
+        "P10.10"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B10",
+      "items": [
+        "P10.11"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B11",
+      "items": [
+        "P10.12",
+        "P10.13"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-11T12:38:07Z",
+    "result": "done_with_deviations",
+    "summary": "13 item(s): 4 done, 9 done_with_deviations"
+  }
+}

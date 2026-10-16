@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# aicore — command line of the shared foundation. Thin launcher: all logic is in lib/aicore (python3 -m aicore).
+#
+# Groups:
+#   config <args>   layered module configuration: show, explain, set, unset, init, example, paths
+set -euo pipefail
+# --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
+_skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+while [ "$_skm_guard_dir" != "/" ] && [ ! -e "$_skm_guard_dir/.swissknifeman-dev" ]; do _skm_guard_dir="$(dirname "$_skm_guard_dir")"; done
+if [ -e "$_skm_guard_dir/.swissknifeman-dev" ] && [ "${SKM_DEV_ALLOW_LIVE:-}" != "1" ]; then
+  _skm_real_home="$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)' 2>/dev/null || true)"
+  if [ -z "$_skm_real_home" ] || [ "$(readlink -f "${HOME:-/}")" = "$(readlink -f "$_skm_real_home")" ]; then
+    echo "SKM_DEV_GUARD: $_skm_guard_dir is a development clone; run inside scripts/dev-sandbox.sh or set SKM_DEV_ALLOW_LIVE=1" >&2
+    exit 3
+  fi
+fi
+unset _skm_guard_dir _skm_real_home
+# --- end dev-clone guard ---
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: aicore requires python3 (apt install python3 / brew install python3)" >&2
+  exit 1
+fi
+
+exec env PYTHONPATH="$ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" python3 -m aicore "$@"

@@ -31,6 +31,17 @@
       "items": { "$ref": "#/definitions/relpath" },
       "description": "Glob patterns of sibling plugin directories (a directory holding .claude-plugin/plugin.json, except Skiller itself) aggregated into the marketplace. Empty or absent: no siblings."
     },
+    "bucket_aliases": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/name" },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": { "$ref": "#/definitions/name" }
+      },
+      "description": "Skill buckets provided by the host (declared with \"provided_by\": \"host\" in the library's buckets.json): bucket name mapped to the host plugins whose skills it expands to on connect, vendor and sync. Absent: host buckets have no modules here."
+    },
     "default_command_plugins": {
       "type": "array",
       "items": { "$ref": "#/definitions/name" },

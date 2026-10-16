@@ -1,0 +1,8 @@
+{
+  "description": "brain — Obsidian vault for the ecosystem: vault lookup, document sync and notes from ecosystem events; skill brain-locator.",
+  "name": "brain",
+  "skills": [
+    "./skills"
+  ],
+  "version": "0.1.0"
+}

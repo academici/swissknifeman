@@ -4,7 +4,7 @@
 
 `harness doctor --provider-audit [--json]` is read-only. `settings_audit.py` remains the named Claude Code checker behind `harness doctor --settings`; provider audit never universalizes Claude merge rules.
 
-Validated catalog `sha256:0a08f08d9cd4ea81745ea2cf3a85975f64748ead25525b29373143f9d8b44d8d`: 3 profiles, 26 semantic surfaces, 7 MCP descriptors and 44 agent roles.
+Validated catalog `sha256:26b30154b872eb44c92ab17789f6f17939ef57982b603175940b32af079e7bdd`: 3 profiles, 26 semantic surfaces, 7 MCP descriptors and 44 agent roles.
 
 Reports retain missing/extra and expected/actual duplicate identities. Full access is only explicit `self-host-apply` for a trusted repository; project, fleet-project and fleet-defaults selection are rejected. Secret references are value-free.
 
@@ -21,7 +21,7 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/codex/mcp/bindings.json | `sha256:7cfaa92d8314f01a20d52f227a0bbda2495f11b4b508bd5376c22670a0de8772` |
 | source:configs/common/agent-packs/roles.json | `sha256:cab36fb368e089614ebba5a25359fd3ba6bd05b683dbe7a166e831aa8335ff1d` |
 | source:configs/common/mcp/catalog.json | `sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419` |
-| source:configs/common/profile-catalog.json | `sha256:0a08f08d9cd4ea81745ea2cf3a85975f64748ead25525b29373143f9d8b44d8d` |
+| source:configs/common/profile-catalog.json | `sha256:26b30154b872eb44c92ab17789f6f17939ef57982b603175940b32af079e7bdd` |
 | source:configs/cursor/agent-packs/consumer-mapping.json | `sha256:314f0935b254c8a7e814cfa1ae476b99e373d0fffeb4de91fabf8c756708d67e` |
 | source:configs/cursor/config/profile-bindings.json | `sha256:8772a33bbdf9d5082bc12457d135e2a29c3faf945a5f8f3c11a9954695bf1594` |
 | source:configs/cursor/hooks/lifecycle-context-bindings.json | `sha256:f346a3e406d9da765b875b16cfca6a686172b6e3f94100830710c200f19d9668` |
@@ -30,7 +30,7 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/grok/config/profile-bindings.json | `sha256:3917201ee56b3b9b8c2ea88c9a42d1560a784510eabd92039092a3c3648a50fd` |
 | source:configs/grok/hooks/lifecycle-context-bindings.json | `sha256:aaeb65d2fc2717c66736e80ca33fa35e2889394d574a6a766e6d08e7f1c948f3` |
 | source:configs/grok/mcp/bindings.json | `sha256:a6d49601aa1729a8aee745a53f8110dd6f59b55851248a607c49da1b32edc89d` |
-| render-manifest:all-provider-qualified-outputs | `sha256:1ef2926cffb5036034b65c1f23426559983d593dc1ca9d2e684f680abf453904` |
+| render-manifest:all-provider-qualified-outputs | `sha256:b3074f0ba3ad28417982c0a06bb54016746336a136980d1af9d493f59f8cda99` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 
@@ -56,7 +56,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | claude-code | lifecycle.notification | `sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00` | — | harness.lifecycle.notification | native-binding:global-hook | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | lifecycle.pack-guard | `sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e` | — | harness.lifecycle.pack-guard | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | lifecycle.plan-guard | `sha256:0bf5800b008c1b773af44982fe8a310db971429f1d0e1eef2e808a60d47da15a` | — | harness.lifecycle.plan-guard | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
-| claude-code | lifecycle.plan-regen | `sha256:720f98a5475cb154714b6cb9e4dd70194b3225481b113b11b421ae2a5b8cb01b` | — | harness.lifecycle.plan-regen | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
+| claude-code | lifecycle.plan-regen | `sha256:d51fcb747b9ffeff08befb583d000fa33efbae5129f2a08083b3694f1f1c7890` | — | harness.lifecycle.plan-regen | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | lifecycle.review-gate | `sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368` | — | harness.lifecycle.review-gate | native-binding:global-hook | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
 | claude-code | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | native-binding:project-settings | supported | `HARNESS_ACTIVATION_NATIVE` |
@@ -82,7 +82,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | codex | lifecycle.notification | `sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00` | — | harness.lifecycle.notification | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | lifecycle.pack-guard | `sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e` | — | harness.lifecycle.pack-guard | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.plan-guard | `sha256:0bf5800b008c1b773af44982fe8a310db971429f1d0e1eef2e808a60d47da15a` | — | harness.lifecycle.plan-guard | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
-| codex | lifecycle.plan-regen | `sha256:720f98a5475cb154714b6cb9e4dd70194b3225481b113b11b421ae2a5b8cb01b` | — | harness.lifecycle.plan-regen | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| codex | lifecycle.plan-regen | `sha256:d51fcb747b9ffeff08befb583d000fa33efbae5129f2a08083b3694f1f1c7890` | — | harness.lifecycle.plan-regen | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | lifecycle.review-gate | `sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368` | — | harness.lifecycle.review-gate | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
@@ -108,7 +108,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | cursor | lifecycle.notification | `sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00` | — | harness.lifecycle.notification | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | cursor | lifecycle.pack-guard | `sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e` | — | harness.lifecycle.pack-guard | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | lifecycle.plan-guard | `sha256:0bf5800b008c1b773af44982fe8a310db971429f1d0e1eef2e808a60d47da15a` | — | harness.lifecycle.plan-guard | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
-| cursor | lifecycle.plan-regen | `sha256:720f98a5475cb154714b6cb9e4dd70194b3225481b113b11b421ae2a5b8cb01b` | — | harness.lifecycle.plan-regen | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| cursor | lifecycle.plan-regen | `sha256:d51fcb747b9ffeff08befb583d000fa33efbae5129f2a08083b3694f1f1c7890` | — | harness.lifecycle.plan-regen | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | cursor | lifecycle.review-gate | `sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368` | — | harness.lifecycle.review-gate | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | cursor | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | artifact:project:.cursor/rules/swissknifeman-router.mdc | supported | `HARNESS_CURSOR_STATIC_RULE` |
 | cursor | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | artifact:project:.cursor/hooks.json+.cursor/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
@@ -134,7 +134,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | grok | lifecycle.notification | `sha256:c9e55167aaf018fdc0109cea4553c2c2911d53f709e49d400ed367a8b0683a00` | — | harness.lifecycle.notification | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | grok | lifecycle.pack-guard | `sha256:05b5c33e3cb01e7ce424631d35b8485adcf77ba6b66a78bd8bf73dfbaa6b9c8e` | — | harness.lifecycle.pack-guard | artifact:project:.grok/hooks/swissknifeman.json+.grok/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | grok | lifecycle.plan-guard | `sha256:0bf5800b008c1b773af44982fe8a310db971429f1d0e1eef2e808a60d47da15a` | — | harness.lifecycle.plan-guard | artifact:project:.grok/hooks/swissknifeman.json+.grok/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
-| grok | lifecycle.plan-regen | `sha256:720f98a5475cb154714b6cb9e4dd70194b3225481b113b11b421ae2a5b8cb01b` | — | harness.lifecycle.plan-regen | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
+| grok | lifecycle.plan-regen | `sha256:d51fcb747b9ffeff08befb583d000fa33efbae5129f2a08083b3694f1f1c7890` | — | harness.lifecycle.plan-regen | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | grok | lifecycle.review-gate | `sha256:a8bdf4c8d37277ab0a8976ee7cfcf215f5ee8e63f4bb69163dca1796ebe44368` | — | harness.lifecycle.review-gate | artifact:project:.grok/hooks/swissknifeman.json+.grok/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | grok | lifecycle.router | `sha256:3579aac732a227a565edc6175dbfa4ddc27767a10af3aa7fb70091ca4915f283` | — | harness.lifecycle.router | artifact:project:.grok/hooks/swissknifeman.json+.grok/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | grok | lifecycle.run-report | `sha256:9b92c0ff639e64772a2961e198f3f9d7b93bf120a6aed8e1350a5f0fa6bea13b` | — | harness.lifecycle.run-report | artifact:project:.grok/hooks/swissknifeman.json+.grok/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |

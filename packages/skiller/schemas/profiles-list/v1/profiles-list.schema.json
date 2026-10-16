@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:skiller:profiles-list:v1",
+  "title": "profiles-list",
+  "description": "Output of `skiller profiles --json`: the project-type profiles delivered with skiller, keyed by profile id.",
+  "type": "object",
+  "properties": {
+    "$schema": {"description": "Contract identifier.", "const": "urn:swissknifeman:skiller:profiles-list:v1"},
+    "profiles": {
+      "description": "Profile documents keyed by profile id (the file stem under profiles/).",
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9][A-Za-z0-9._-]*$": {
+          "description": "One profile document as stored in profiles/<id>.json.",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["$schema", "profiles"],
+  "additionalProperties": false
+}

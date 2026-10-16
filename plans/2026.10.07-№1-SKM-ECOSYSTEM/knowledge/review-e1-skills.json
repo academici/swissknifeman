@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "review-e1-skills",
+  "title": "E1: skills как артефакты",
+  "sections": [
+    {
+      "id": "register",
+      "title": "Тезисы",
+      "text": "Вердикты: **ПРИНЯТ** — фиксируется как есть; **АДАПТИРОВАН** — принят принцип в форме нашей архитектуры; **ОТЛОЖЕН** — с триггером, не в объёме плана; **ОТКЛОНЁН** — с причиной; **НЕПРИМЕНИМ** — основан на документах или компонентах, которых в плане нет.\n\n| ID | Тезис E1 | Вердикт | Обоснование и что уже есть | Куда в плане | Проверка при аудите |\n| --- | --- | --- | --- | --- | --- |\n| E27 | Skill как артефакт: digest, provenance, license, совместимость, capabilities; операции discover…publish; materialize с манифестом и receipt | АДАПТИРОВАН | Уже: frontmatter (version, requires, adapters, risk, sha256), skills.json, skills-lock.json, provider-artifacts lock, registry/validate/resolve/vendor/eval/budget. Пробелы: license, совместимость по агентам, требуемые инструменты, provenance upstream, receipt «какие skill-digest участвовали в run». inputs/outputs schema для инструкционных skills — ОТКЛОНЁН (неприменимо) | P5, P8, P10 | Таблица пробелов закрыта или перенесена решением |"
+    }
+  ],
+  "applies_to": [
+    "P5",
+    "P8"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "artifacts": [],
+  "contract_version": "1.0.0",
+  "discovery_surface": ".agents/skills",
+  "publication_unit": "planner",
+  "version": "0.30.0",
+  "writer": "none"
+}

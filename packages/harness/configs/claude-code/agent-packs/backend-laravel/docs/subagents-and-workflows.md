@@ -1,8 +1,8 @@
 # Guideline: subagents and workflow in {{PACK_PREFIX}}
 
 How {{PACK_PREFIX}} uses subagents and Workflow-orchestration. Operationalizes
-skill `php:laravel-subagents` + lessons overnight-run under the project canon.
-Context and references - skill `php:laravel-subagents`.
+skill `laravel-architecture:laravel-subagents` + lessons overnight-run under the project canon.
+Context and references - skill `laravel-architecture:laravel-subagents`.
 
 > [!info] Artifacts in the repository
 > - Agents (build): `.claude/agents/{{PACK_PREFIX}}-{slice-builder,test-writer,reviewer}.md` (+ opt. `spec-writer`)
@@ -17,11 +17,11 @@ switch manually):
 
 | Command | Profile | Model/effort (commands) |
 |:--|:--|:--|
-| `/task:dev` | adaptive dev-loop (slice→impl→test→risk-review) | Opus/high (planning); subagents - by risk |
-| `/task:design` | design: research-fanout + plan/ADR, no code | Opus/high |
-| `/task:review` | read-only adversarial-review, severity-enum | Opus/xhigh |
-| `/task:research` | multi-source research (RAG) | Opus/high |
-| `/task:fix` | minor edit: single-agent, without fan-out | Sonnet/medium |
+| `/planner:dev` | adaptive dev-loop (slice→impl→test→risk-review) | Opus/high (planning); subagents - by risk |
+| `/planner:design` | design: research-fanout + plan/ADR, no code | Opus/high |
+| `/planner:review` | read-only adversarial-review, severity-enum | Opus/xhigh |
+| `/planner:research` | multi-source research (RAG) | Opus/high |
+| `/planner:fix` | minor edit: single-agent, without fan-out | Sonnet/medium |
 
 **Or directly:** orchestrator builds machine-readable PLAN (slices + `risk` + `skills`) and runs
 Workflow `{{PACK_PREFIX}}-dev-loop` with `args.slices` (see below). The scope of the slices is decided by a person.
@@ -30,7 +30,7 @@ Workflow `{{PACK_PREFIX}}-dev-loop` with `args.slices` (see below). The scope of
 
 ```mermaid
 flowchart TD
-  U["/task:dev «what we are building»"] --> O["Orchestrator → PLAN:<br/>slices + risk + model/effort/skills"]
+  U["/planner:dev «what we are building»"] --> O["Orchestrator → PLAN:<br/>slices + risk + model/effort/skills"]
   O -. "heavy reading on demand" .-> REC["recon-subagents (read-only, isolated):<br/>route-mapper · db-impact · blade-review<br/>test-verifier · security-review<br/>→ to top summary only, main does not swell"]
   O --> SET["Setup: env-preflight<br/>(database drivers, version PHP) + one thread"]
   SET --> BUILD{"Build: next slice"}
@@ -46,13 +46,13 @@ flowchart TD
 ```
 
 Key: **model/effort subagents are set at cutoff risk and interrupt the session** (Sonnet impl / Opus+xhigh
-on HIGH-review / Haiku trivial); **fan-out — only on research-phase** (`/task:design|research`), not on
+on HIGH-review / Haiku trivial); **fan-out — only on research-phase** (`/planner:design|research`), not on
 coding. Delegate heavy reconnaissance recon-subagents - they read in their window and send a summary to the top.
 
 ## When to call subagents
 
 Subagent value - **context isolation and fresh perspective**, is not parallelism.
-Threshold (from `php:laravel-subagents`):
+Threshold (from `laravel-architecture:laravel-subagents`):
 
 - **Yes:** task ≥3 domains/layers; whole feature (migrations→models→logic→routes→tests);
   extensive examination of dozens of files; review of risky (authorization, money,
@@ -81,7 +81,7 @@ test framework {{TEST_FRAMEWORK}}, canon access-layer.
 > `opus`), a per-slice still to be confirmed `risk`. Foundation (contracts/models) write it yourself - don’t knock cheap models.
 
 Plugin swissknifeman gives more `Explore` (read-only research), `Plan`
-(architectural plan), `system:code-coordinator` (cross-project analysis),
+(architectural plan), `maind:code-coordinator` (cross-project analysis),
 `php:laravel-reviewer`/`php:laravel-test-writer` (general, Pest-oriented -
 for {{PACK_PREFIX}} prefer design ones `{{PACK_PREFIX}}-*`).
 

@@ -1,0 +1,166 @@
+{
+  "schema_version": "model-catalog/v1",
+  "catalog_version": "1.0.0",
+  "providers": [
+    {
+      "provider_id": "claude-code",
+      "class_selectors": {
+        "economy": [
+          "m-small"
+        ],
+        "implementation": [
+          "m-mid"
+        ],
+        "frontier": [
+          "m-big"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-10-10",
+        "source": "test fixture",
+        "verification": "synthetic names for orch tests",
+        "entries": [
+          {
+            "id": "m-small",
+            "roles": [
+              "economy"
+            ]
+          },
+          {
+            "id": "m-mid",
+            "roles": [
+              "implementation"
+            ]
+          },
+          {
+            "id": "m-big",
+            "roles": [
+              "frontier"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "provider_id": "codex",
+      "class_selectors": {
+        "economy": [
+          "x-small"
+        ],
+        "implementation": [
+          "x-mid",
+          "x-alt"
+        ],
+        "frontier": [
+          "x-big"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-10-10",
+        "source": "test fixture",
+        "verification": "synthetic names for orch tests",
+        "entries": [
+          {
+            "id": "x-small",
+            "roles": [
+              "economy"
+            ]
+          },
+          {
+            "id": "x-mid",
+            "roles": [
+              "implementation"
+            ]
+          },
+          {
+            "id": "x-big",
+            "roles": [
+              "frontier"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "provider_id": "grok",
+      "class_selectors": {
+        "economy": [
+          "g-small"
+        ],
+        "implementation": [
+          "g-mid"
+        ],
+        "frontier": [
+          "g-big"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-10-10",
+        "source": "test fixture",
+        "verification": "synthetic names for orch tests",
+        "entries": [
+          {
+            "id": "g-small",
+            "roles": [
+              "economy"
+            ]
+          },
+          {
+            "id": "g-mid",
+            "roles": [
+              "implementation"
+            ]
+          },
+          {
+            "id": "g-big",
+            "roles": [
+              "frontier"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

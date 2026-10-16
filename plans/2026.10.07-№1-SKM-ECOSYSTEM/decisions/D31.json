@@ -1,0 +1,41 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D31",
+  "title": "Раскладка aicore по подсистемам и shim core через sys.modules",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Как разложить код aicore внутри packages/aicore и как держать совместимость импортов core.* для потребителей (44 файла в core, 135 импортов в analyst, harness, maind, skiller, task, scripts), не трогая их до их фаз?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Подпакеты по подсистемам §4: lib/aicore/{util,provider,artifacts}/ и lib/aicore/usage.py, перенос git mv (история сохраняется). core/ остаётся переходным пакетом: core/__init__.py — shim, который импортирует aicore и регистрирует в sys.modules старые имена модулей как те же объекты (core.io is aicore.util.io, core.provider.lock is aicore.artifacts.lock), и сохраняет плоский фасад core.__all__ без изменений; в core остаются ещё не перенесённые модули (config_paths, gitignore_policy → P4; runs, pathology, codegraph_telemetry → P11) и их тесты. Код и тесты aicore импортируют только aicore и stdlib. Потребители не переводятся на импорт aicore в P3 (P8 skiller, P9 task, P11 maind/analyst/harness); правятся только жёсткие пути к перенесённым данным — через API aicore. Данные провайдеров (configs/provider-*.json) переезжают в packages/aicore/configs/ и ищутся от файла пакета, не от корня монорепозитория. Окно shim — до удаления core/ (P11), тест идентичности модулей и фасада.",
+      "pros": "Потребители не ломаются; mock.patch('core.provider.lock.X') продолжает действовать на реальный модуль; aicore автономен; git log --follow работает"
+    },
+    {
+      "id": "B",
+      "text": "Плоский aicore (все модули на верхнем уровне) и файлы-реэкспорты core/<name>.py с from aicore.x import *",
+      "cons": "Не совпадает с подсистемами §4; star-реэкспорт не переносит приватные имена и ломает mock.patch по пути core.*; 30 файлов-обёрток"
+    },
+    {
+      "id": "C",
+      "text": "Сразу переписать импорты всех потребителей на aicore",
+      "cons": "Дублирует работу фаз P8/P9/P11 и раздувает P3; плоские импорты from core import X требуют ручного разбора"
+    }
+  ],
+  "decision": "A — Подпакеты по подсистемам §4: lib/aicore/{util,provider,artifacts}/ и lib/aicore/usage.py, перенос git mv (история сохраняется). core/ остаётся переходным пакетом: core/__init__.py — shim, который импортирует aicore и регистрирует в sys.modules старые имена модулей как те же объекты (core.io is aicore.util.io, core.provider.lock is aicore.artifacts.lock), и сохраняет плоский фасад core.__all__ без изменений; в core остаются ещё не перенесённые модули (config_paths, gitignore_policy → P4; runs, pathology, codegraph_telemetry → P11) и их тесты. Код и тесты aicore импортируют только aicore и stdlib. Потребители не переводятся на импорт aicore в P3 (P8 skiller, P9 task, P11 maind/analyst/harness); правятся только жёсткие пути к перенесённым данным — через API aicore. Данные провайдеров (configs/provider-*.json) переезжают в packages/aicore/configs/ и ищутся от файла пакета, не от корня монорепозитория. Окно shim — до удаления core/ (P11), тест идентичности модулей и фасада.",
+  "rationale": "Решение детализации P3 (dev-режим: архитектурные решения принимает агент); факты кода — knowledge/aicore-p3 §facts.",
+  "applies_to": [
+    "P3",
+    "P4",
+    "P8.1",
+    "P9.3",
+    "P11.1",
+    "P11.12"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

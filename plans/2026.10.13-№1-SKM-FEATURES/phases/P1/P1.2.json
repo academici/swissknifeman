@@ -1,0 +1,178 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.2",
+  "title": "aicore.util.paths: resolve_path на stdlib realpath(strict=ALLOW_MISSING); is_within fail-closed на 3.9–3.14; units, overlays, plugins, materialize; Python 3.14 в CI-матрице",
+  "status": "done_with_deviations",
+  "summary": "Добавить aicore.util.paths.resolve_path по knowledge/p1-fixes#paths (os.path.realpath strict=ALLOW_MISSING, fallback — strict resolve существующего префикса без '..' в хвосте), перевести на него is_within, is_within_lexical (родитель), aicore/ext/units.py _inside, overlays.py, plugins.py; safe_copy_skill пропускает элементы с ELOOP через ignore copytree; тесты цикла, висячей ссылки, ветки без ALLOW_MISSING и эмуляции нестрогого resolve 3.13; TEST_PYTHONS = 3.9,3.13,3.14 и перегенерация workflow.",
+  "why": "N1 (аудит 1.3.3), D3, C1. Риск безопасности: fail-open проверки вложенности путей на Python ≥3.13 — symlink escape при доставке skills и обнаружении модулей. Риск: resolve_path меняет нормализацию путей для всех вызовов is_within — существующие тесты aicore и skiller (connect, vendor, module_skills, doctor) должны остаться зелёными.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/util/paths.py",
+      "aicore/ext/units.py, overlays.py, plugins.py",
+      "aicore/delivery/materialize.py",
+      "тесты aicore",
+      "scripts/ci-matrix.py и .github/workflows/modules.yml"
+    ],
+    "exclude": [
+      "установка Python 3.13 на машину",
+      "изменение вызывающих в skiller (используют is_within без изменений сигнатуры)"
+    ]
+  },
+  "decisions": [
+    "D3"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p1-fixes#paths",
+      "why": "дизайн resolve_path и тест эмуляции",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/paths.py",
+      "why": "текущая реализация",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/test_util.py",
+      "section": "test_path_resolution_errors_fail_closed",
+      "why": "тест цикла",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "why": "свой _inside со строки ~80",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/util/paths.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/overlays.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/plugins.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/delivery/materialize.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/test_util.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/ext/test_units.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/delivery/test_materialize.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/ext/**",
+      "change": "any",
+      "note": "тесты overlays/plugins на цикл"
+    },
+    {
+      "path": "scripts/ci-matrix.py",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/modules.yml",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "stdlib, Python 3.9+: без os.path.ALLOW_MISSING и Path.is_relative_to новых версий за пределами уже используемого",
+    "Fail closed: любая ошибка разрешения пути → False/пропуск, никогда True",
+    "Сначала тест эмуляции, который падает на текущем коде, затем исправление"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты (эмуляция 3.13 и ветка без ALLOW_MISSING падают на текущем коде) → resolve_path → is_within/is_within_lexical → units/overlays/plugins → materialize → ci-matrix и workflow → V1–V3. Своего обходчика symlink не писать (D3).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "cd packages/aicore && HOME=$(mktemp -d) PYTHONPATH=lib:. python3 -m unittest tests.test_util tests.ext.test_units tests.delivery.test_materialize",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "grep -q 'TEST_PYTHONS = \"3.9,3.13,3.14\"' scripts/ci-matrix.py && python3 scripts/ci-matrix.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "resolve_path",
+    "is_within fail-closed на 3.9–3.14"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T20:16:56Z",
+    "finished_at": "2026-10-13T20:31:22Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "f7b77ea6-4f64-4c2b-a08e-d6d608f212f2"
+    },
+    "notes": "resolve_path на realpath(ALLOW_MISSING)/strict-fallback; is_within, is_within_lexical, units/overlays/plugins, safe_copy_skill (ELOOP skip); тесты: цикл, висячая ссылка, ветка без ALLOW_MISSING, эмуляция 3.13; TEST_PYTHONS 3.9,3.13,3.14 + workflow",
+    "deviations": [
+      "resolve_path без abspath: нормализация link/.. до разрешения симлинков открывала выход из корня"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T20:31:22Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T20:31:22Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T20:31:22Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T20:31:22Z"
+}

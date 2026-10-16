@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D56",
+  "title": "Переименование task → planner: одно переименование по репозиторию и переходные алиасы (плагин совместимости task, SKM_TASK_ROOT, task:<id>)",
+  "date": "2026-10-09",
+  "status": "accepted",
+  "question": "Как переименовать task в planner (D9) и удержать /task:* и SKM_TASK_ROOT на один minor, если пространство имён команд Claude Code — имя манифеста плагина, вызов команды из команды через Skill запрещён флагом disable-model-invocation, а нативный renames маркетплейса переписывает enabledPlugins и сразу убирает старые команды?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Одно переименование по всему репозиторию: git mv packages/task → packages/planner, lib/task → lib/planner (импорт planner, D27), unit.json id planner, плагины Claude и Codex planner, id команд planner:*, Codex и Cursor skills planner-*, Grok prefix-hold planner, рендер команд параметризован константами модуля; dev-skill task-development-philosophy → planner-development-philosophy; все потребители (harness, orch, aicore, analyst, maind, skiller, brain, хаб) переводятся в том же пункте. Не меняются: URN urn:swissknifeman:task:plan:*, поле task_files, имена контрактов task-plan-*, история (CHANGELOG прошлых версий, releases/, plans/, orch/ исследования, packages/artifex). Алиасы на один minor: (1) плагин совместимости task (packages/planner/aliases/task: только commands — сгенерированные копии команд planner с первой строкой-предупреждением, без skills), своя запись маркетплейса через plugin_dirs хоста; renames {task: planner} добавляется в маркетплейс при снятии алиаса; (2) окружение: PLANNER_ROOT, затем SKM_TASK_ROOT с предупреждением SKM_TASK_ROOT_DEPRECATED у потребителей (harness run, orch bridge discovery); диспетчер мостов planner экспортирует PLANNER_ROOT и PLANNER_PLAN_PY, а на окно — и TASK_ROOT, TASK_PLAN_PY; (3) разбор строк команд: task:<id> принимается как planner:<id> с предупреждением (parse_next_carrier, review_selection, harness router, agent-router, worker). Codex, Cursor, Grok — без алиасов: проектные проекции обновляет upgrade (P13). Снятие алиасов — следующий minor после слияния (триггер в knowledge/planner-p9#deferred).",
+      "pros": "Ровно D9; /task:* продолжают работать с предупреждением; без вызова команды из команды; после окна — штатная миграция enabledPlugins через renames",
+      "cons": "Генерируемые копии 10 команд на одно окно; два плагина в маркетплейсе на окно"
+    },
+    {
+      "id": "B",
+      "text": "Сразу renames {task: planner} в маркетплейсе без плагина совместимости",
+      "cons": "/task:* перестают работать сразу — нарушает окно D9"
+    },
+    {
+      "id": "C",
+      "text": "Плагин task с командами-заглушками, вызывающими /planner:* через Skill",
+      "cons": "Вызов моделью заблокирован disable-model-invocation целевых команд (research/P9-perplexity.md)"
+    },
+    {
+      "id": "D",
+      "text": "Переименовать только папку и импорт, оставив плагин и команды task",
+      "cons": "Расходится с D9 (/planner:*), коллизия имён остаётся"
+    }
+  ],
+  "context": "Факты — knowledge/planner-p9#facts и knowledge/planner-p9-rename. Внешние предпосылки (research/P9-perplexity.md, документация Claude Code host-marketplace и skills): marketplace.json поддерживает renames {old: new} с переписыванием enabledPlugins; полей alias/deprecated в plugin.json нет; disable-model-invocation блокирует вызов команды моделью через Skill; рекомендация на переходный релиз — две записи (старая и новая), старые команды — сгенерированные копии с предупреждением; renames — при снятии старой записи. Команды task несут disable-model-invocation: true.",
+  "decision": "A — Одно переименование по всему репозиторию: git mv packages/task → packages/planner, lib/task → lib/planner (импорт planner, D27), unit.json id planner, плагины Claude и Codex planner, id команд planner:*, Codex и Cursor skills planner-*, Grok prefix-hold planner, рендер команд параметризован константами модуля; dev-skill task-development-philosophy → planner-development-philosophy; все потребители (harness, orch, aicore, analyst, maind, skiller, brain, хаб) переводятся в том же пункте. Не меняются: URN urn:swissknifeman:task:plan:*, поле task_files, имена контрактов task-plan-*, история (CHANGELOG прошлых версий, releases/, plans/, orch/ исследования, packages/artifex). Алиасы на один minor: (1) плагин совместимости task (packages/planner/aliases/task: только commands — сгенерированные копии команд planner с первой строкой-предупреждением, без skills), своя запись маркетплейса через plugin_dirs хоста; renames {task: planner} добавляется в маркетплейс при снятии алиаса; (2) окружение: PLANNER_ROOT, затем SKM_TASK_ROOT с предупреждением SKM_TASK_ROOT_DEPRECATED у потребителей (harness run, orch bridge discovery); диспетчер мостов planner экспортирует PLANNER_ROOT и PLANNER_PLAN_PY, а на окно — и TASK_ROOT, TASK_PLAN_PY; (3) разбор строк команд: task:<id> принимается как planner:<id> с предупреждением (parse_next_carrier, review_selection, harness router, agent-router, worker). Codex, Cursor, Grok — без алиасов: проектные проекции обновляет upgrade (P13). Снятие алиасов — следующий minor после слияния (триггер в knowledge/planner-p9#deferred).",
+  "rationale": "Решение детализации P9 (dev-режим: архитектурные решения принимает агент). D9 требует /planner:* и окно для /task:*; пространство имён — имя манифеста, вызов через Skill заблокирован disable-model-invocation, renames убирает старые команды сразу (research/P9-perplexity.md); остаются две записи на окно и renames при снятии. Факты — knowledge/planner-p9#facts, дизайн — knowledge/planner-p9-rename.",
+  "applies_to": [
+    "P9.1",
+    "P9.2",
+    "P9.11",
+    "P9.12"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

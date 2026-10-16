@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import parse_frontmatter
+from aicore.util.text import parse_frontmatter
 
 from tests import fixtures as fx
 

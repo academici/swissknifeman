@@ -1,0 +1,151 @@
+{
+  "schema": "exclusive-groups/v1",
+  "groups": {
+    "php-architecture": {
+      "description": "Not more than two of the PHP architecture skills together; choose by decision level.",
+      "max": 2,
+      "members": [
+        "php/laravel",
+        "php/laravel-structure",
+        "php/dependency-injection",
+        "php/repositories",
+        "php/php-patterns",
+        "laravel-architecture/modular-architecture",
+        "architect/codebase-design",
+        "architect/architecture"
+      ]
+    },
+    "architect-stage": {
+      "description": "One architect skill per stage: terms and invariants, system boundaries, module design, technology choice; never attached together automatically.",
+      "max": 1,
+      "members": [
+        "architect/domain-modeling",
+        "architect/architecture",
+        "architect/codebase-design",
+        "architect/tech-stack-selection"
+      ]
+    },
+    "vue-core": {
+      "description": "One Vue core skill: `vue` is a reference, the other two are merged.",
+      "max": 1,
+      "members": [
+        "frontend-vue/vue",
+        "frontend-vue/vue-best-practices",
+        "frontend-vue/vue-composition-api"
+      ]
+    },
+    "pinia": {
+      "description": "Only the conventions skill is inserted; `pinia` stays a reference.",
+      "max": 1,
+      "members": [
+        "frontend-vue/pinia",
+        "frontend-vue/pinia-stores"
+      ]
+    },
+    "vitest": {
+      "description": "A reference plus one task skill.",
+      "max": 2,
+      "members": [
+        "frontend-vue/vitest",
+        "frontend-vue/vitest-vue",
+        "frontend-vue/vue-testing-best-practices"
+      ]
+    },
+    "js-style": {
+      "description": "One style skill by the project config: upstream opinion conflicts with project policy.",
+      "max": 1,
+      "members": [
+        "frontend-linting/antfu",
+        "frontend-linting/eslint-flat-config",
+        "frontend-linting/js-code-style"
+      ]
+    },
+    "docker": {
+      "description": "The router is not loaded with its children; only the needed children.",
+      "router": "devops/docker",
+      "members": [
+        "devops/docker",
+        "devops/docker-dev-prod",
+        "devops/docker-php",
+        "devops/docker-postgres",
+        "devops/docker-services",
+        "devops/docker-vite"
+      ]
+    },
+    "vite": {
+      "description": "The generic `vite` is not a mandatory neighbour of the specialised skills.",
+      "router": "frontend-vite/vite",
+      "members": [
+        "frontend-vite/vite",
+        "frontend-vite/vite-module-loader",
+        "frontend-vite/vite-multi-build",
+        "frontend-vite/vitepress"
+      ]
+    },
+    "authz": {
+      "description": "Mutually exclusive by the project dependency or config.",
+      "max": 1,
+      "members": [
+        "laravel-auth/laravel-permissions",
+        "azguard/azguard"
+      ]
+    },
+    "realtime": {
+      "description": "Together only for end-to-end realtime; selection of both is explicit.",
+      "max": 1,
+      "members": [
+        "laravel-data-layer/laravel-broadcasting",
+        "frontend-backend/laravel-echo-client"
+      ]
+    },
+    "php-packages": {
+      "description": "The router does not pull the bodies of its children.",
+      "router": "php-packages/laravel-packages",
+      "members": [
+        "php-packages/laravel-packages",
+        "php-packages/laravel-package-compatibility",
+        "php-packages/laravel-package-docs",
+        "php-packages/laravel-package-expressive",
+        "php-packages/laravel-package-generate-skill",
+        "php-packages/laravel-package-release",
+        "php-packages/laravel-package-scaffold",
+        "php-packages/laravel-package-service-provider",
+        "php-packages/laravel-package-testing"
+      ]
+    },
+    "founder-pipeline": {
+      "description": "Sequential stages of a workflow, not one prompt: discovery, market evidence, risk, adversarial check, synthesis.",
+      "max": 1,
+      "members": [
+        "founder/idea-discovery",
+        "founder/competitive-analysis",
+        "founder/customer-discovery",
+        "founder/risk-assessment",
+        "founder/adversarial-check",
+        "founder/idea-audit"
+      ]
+    },
+    "pm-pipeline": {
+      "description": "Sequential workflow stages, not a giant prompt.",
+      "max": 1,
+      "members": [
+        "founder/new-project",
+        "founder/startup-lifecycle",
+        "pm/product",
+        "pm/brd",
+        "pm/prd-from-brd",
+        "pm/product-roadmap"
+      ]
+    },
+    "quality-split": {
+      "description": "Correctness and risk, needless complexity, plans and specs, safe migration: never one quality prompt.",
+      "max": 1,
+      "members": [
+        "quality/code-review",
+        "quality/code-simplifier",
+        "quality/artifact-review",
+        "quality/refactoring-plan"
+      ]
+    }
+  }
+}

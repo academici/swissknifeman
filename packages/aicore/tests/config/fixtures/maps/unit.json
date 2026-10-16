@@ -1,0 +1,4 @@
+{
+  "id": "maps",
+  "provides": {"config": "configs/config.schema.json"}
+}

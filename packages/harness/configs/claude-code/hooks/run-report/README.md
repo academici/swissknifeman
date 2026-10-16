@@ -27,13 +27,13 @@ official. docks: SessionEnd gets `transcript_path`+`session_id`+`cwd` and can wr
 |:--|:--|
 | `run-report.py` | SessionEnd-hook: stdin → transcript → `<git-root>/.claude/runs/<sid>.json` (atomic, retention) |
 | `_lib.py` | protective **lowercase** transcript parser (without slurp) — tested separately |
-| `env.ini` | `ENABLED` (kill-switch) + `RUNS_KEEP` (retention). Per-project override in `.claude/run-report.env.ini` |
+| `env.ini` | `ENABLED` (kill-switch) + `RUNS_KEEP` (retention). Per-project override: `[harness.hooks.run_report] enabled / runs_keep` in `.swissknifeman/config.toml` (carrier `.swissknifeman/hooks.env`; the legacy `.claude/run-report.env.ini` is still read) |
 
 ## Installation / enable
 
 ```bash
 harness hooks --global                      # copies the hook to ~/.claude/hooks/run-report/
-harness hooks --target . --run-report on     # include in the project (env.ini + registration SessionEnd)
+harness hooks --target . --run-report on     # include in the project (config + hooks.env + registration SessionEnd)
 maind analyze --project <id>                 # analysis of accumulated run-report'ov
 ```
 

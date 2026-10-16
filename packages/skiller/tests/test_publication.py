@@ -5,12 +5,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 from skiller.host import load_host
 from skiller.publication import PublicationCatalog, build_publication_catalog
 from skiller.registry import (build_claude_publication, build_plugin_manifests,
                               build_registry)
-from tests.fixtures import make_registry
+from tests.fixtures import hub_indexes, make_registry
 
 
 def _artifact_digest(artifacts, repo_root):
@@ -31,7 +31,7 @@ class TestPublicationCatalog(unittest.TestCase):
             catalog = build_publication_catalog(
                 registry=registry, bucket_meta=metadata, bucket_dirs=buckets,
                 core_skills=(), core_plugin="core", package_version="0.1.0", siblings=(),
-                generate_skill_description="Meta-skill", skm_present=False)
+                generate_skill_description="Meta-skill")
             self.assertIsInstance(catalog, PublicationCatalog)
             self.assertEqual([unit.unit_id for unit in catalog.units],
                              ["bucket:devops", "bucket:php", "bucket:quality", "generate-skill"])
@@ -87,8 +87,7 @@ class TestRepositoryBootstrapExclusion(unittest.TestCase):
         self.assertNotIn("repository-bootstrap", buckets)
 
         artifacts = build_claude_publication(env, metadata, buckets, registry)
-        marketplace = json.loads(next(item.managed_bytes for item in artifacts
-                                      if item.target.name == "marketplace.json"))
+        marketplace = hub_indexes(env, metadata, buckets, registry)["claude"]
         names = {plugin["name"] for plugin in marketplace["plugins"]}
         self.assertNotIn("repository-bootstrap", names)
         for artifact in artifacts:

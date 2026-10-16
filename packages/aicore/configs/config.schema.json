@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:config:v1",
+  "title": "aicore config",
+  "description": "Settings of the aicore extension layer: event delivery, subscriptions, external plugins and instruction overlays.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "events": {
+      "type": "object",
+      "description": "How emitted events are delivered to subscribers.",
+      "additionalProperties": false,
+      "properties": {
+        "delivery": {
+          "type": "string",
+          "enum": ["background", "sync", "off"],
+          "default": "background",
+          "description": "How emit starts delivery: in a detached process, before emit returns, or not at all (events are only journaled)."
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 30,
+          "description": "Default deadline of one subscriber run, in seconds."
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 3,
+          "description": "Delivery attempts of one event to one subscriber before it is moved to the dead-letter list."
+        }
+      }
+    },
+    "subscriptions": {
+      "type": "object",
+      "description": "Event subscriptions by id. A module subscription declared in unit.json has the id <module>:<name> and can be switched off here.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*(:[a-z][a-z0-9-]*)?$": {
+          "type": "object",
+          "description": "One subscription.",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "description": "Event type patterns the subscription receives (shell-style wildcards, case-sensitive).",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "run": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "description": "Command of the subscriber as an argument vector; it receives the event on standard input.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "plugin": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$",
+              "description": "Id of a subscriber plugin to call instead of run.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "projects": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "default": [],
+              "description": "Absolute project roots the subscription applies to; empty means every project.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "timeout_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600,
+              "description": "Deadline of this subscriber run, in seconds; the default is events.timeout_seconds.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Switch the subscription off without removing it."
+            }
+          }
+        }
+      }
+    },
+    "plugins": {
+      "type": "object",
+      "description": "External plugins by id. A plugin is a program described by an extension manifest.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "description": "One plugin.",
+          "additionalProperties": false,
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Path of the extension manifest (extension.json), absolute or starting with ~.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "trusted": {
+              "type": "boolean",
+              "default": false,
+              "description": "Let the plugin receive secrets and the full environment.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "timeout_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600,
+              "default": 60,
+              "description": "Deadline of one plugin call, in seconds.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Switch the plugin off without removing it."
+            }
+          }
+        }
+      }
+    },
+    "overlays": {
+      "type": "object",
+      "description": "Instruction overlays by slot <module>:<slot>: files added to the slot, in layer order.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "description": "Overlay files of the slot; a relative path is resolved from the folder of the config file that lists it."
+        }
+      }
+    },
+    "providers": {
+      "type": "object",
+      "description": "Provider settings. selection (project layer): which provider surfaces (Claude Code, Codex, ...) are rolled out into the project. available (machine, invocation, flags): whether orch may route roles to a provider, independent of selection. The owner of the form is aicore.provider.",
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "type": "string",
+          "pattern": "^1\\.[0-9]+\\.[0-9]+$",
+          "default": "1.0.0",
+          "description": "Version of the provider configuration contract the section is written for.",
+          "x-skm-layers": ["project"]
+        },
+        "selection": {
+          "type": "object",
+          "description": "Provider selection by provider id.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "Selection of one provider.",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Roll the provider surfaces out into the project.",
+                  "x-skm-layers": ["project"]
+                }
+              }
+            }
+          }
+        },
+        "available": {
+          "type": "object",
+          "description": "Provider availability for routing by provider id. A provider that is not listed is available.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "Availability of one provider.",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Let orch route roles to the provider; false makes every route on it unavailable (PROVIDER_DISABLED). Delivery of provider surfaces (selection) is not affected.",
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

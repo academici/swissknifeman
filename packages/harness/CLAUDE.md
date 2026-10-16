@@ -27,7 +27,7 @@ Agent packs render templates, upgrade only safe managed files, write conflicts a
 Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit English diagnostics.
 <!-- instruction:harness.cross-package-boundaries -->
 ## harness.cross-package-boundaries
-Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher. Also, never break paths already installed on consumers.
+Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path. Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher. Also, never break paths already installed on consumers.
 <!-- instruction:harness.validation-release -->
 ## harness.validation-release
 Run `bash scripts/test.sh` and `bash scripts/validate.sh` before release; regenerate the umbrella registry after changing harness plugin commands.
@@ -39,7 +39,7 @@ Run `bash scripts/test.sh` and `bash scripts/validate.sh` before release; regene
 <!-- semantic:harness.claude-code.safe-dirs -->
 <!-- instruction:harness.claude-code.config-surfaces -->
 ## harness.claude-code.config-surfaces
-Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`. Also, installed Claude hooks live under `~/.claude/hooks/`, reading state owned by `skiller` under `~/.swissknifeman/`.
+Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`. Also, installed Claude hooks live under `~/.claude/hooks/`, reading the registries that `skiller` and `maind` own in the aicore state directory (`~/.swissknifeman/` only as the legacy place).
 <!-- instruction:harness.claude-code.lifecycle-surfaces -->
 ## harness.claude-code.lifecycle-surfaces
 Claude Code lifecycle surfaces include `PreToolUse` auto-approval, memory, notify, agent-router, run-report, output style, statusline, review-gate on `SubagentStop`, and project `plansDirectory` registrations; a global mode may only lower a strict check to warn, never raise it.

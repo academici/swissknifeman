@@ -5,13 +5,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 from skiller.common import Env
 from skiller.host import load_host
-from skiller.publication import (_codex_skill_runtime_files,
-                                 assert_root_bootstrap_set_completeness,
-                                 load_repository_bootstrap_config,
-                                 render_repository_bootstrap_projections)
+from skiller.publication import (
+    assert_root_bootstrap_set_completeness, load_repository_bootstrap_config,
+    render_repository_bootstrap_projections)
+from aicore.content.publication import skill_runtime_files as _codex_skill_runtime_files
+from tests.fixtures import hub_indexes
 from skiller.registry import (build_codex_publication, build_registry,
                               build_repository_bootstrap_publication, _sibling_plugins)
 
@@ -51,9 +52,8 @@ class TestCodexPublication(unittest.TestCase):
         second = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
         self.assertEqual(first, second)
         paths = [item.target.relative_to(self.repo_root).as_posix() for item in first]
-        self.assertIn(".agents/plugins/marketplace.json", paths)
-        marketplace = json.loads(next(item.managed_bytes for item in first
-                                      if item.target.name == "marketplace.json"))
+        self.assertNotIn(".agents/plugins/marketplace.json", paths)  # assembled from unit.json
+        marketplace = hub_indexes(self.env, self.metadata, self.buckets, self.registry)["codex"]
         self.assertEqual(marketplace["name"], self.golden["marketplace_name"])
         names = [plugin["name"] for plugin in marketplace["plugins"]]
         self.assertEqual(names, sorted(names))
@@ -70,7 +70,7 @@ class TestCodexPublication(unittest.TestCase):
         manifests = [item for item in first if item.target.name == "plugin.json"]
         self.assertTrue(manifests)
         # D27: per-unit manifest version now comes from configs/publication-versions.json —
-        # a bumped unit (core/skm) diverges from the frozen default every other unit keeps.
+        # a bumped unit (core) diverges from the frozen default every other unit keeps.
         versions = json.loads((self.package_root / "configs" /
                                "publication-versions.json").read_text(encoding="utf-8"))
         unit_versions, default_version = versions["units"], versions["default_unit_version"]
@@ -172,8 +172,7 @@ class TestCodexPublication(unittest.TestCase):
                       if skill["bucket"] == "repository-bootstrap"}
         self.assertEqual(member_ids, set())
         first = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
-        marketplace = json.loads(next(item.managed_bytes for item in first
-                                      if item.target.name == "marketplace.json"))
+        marketplace = hub_indexes(self.env, self.metadata, self.buckets, self.registry)["codex"]
         names = {plugin["name"] for plugin in marketplace["plugins"]}
         self.assertNotIn("repository-bootstrap", names)
         self.assertFalse(any(item.publication_unit_id in {"bucket:repository-bootstrap",
@@ -269,23 +268,21 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         from skiller.host import load_host
         self.config = load_repository_bootstrap_config(self.repo_root, load_host(self.package_root))
 
-    def test_config_names_exactly_fourteen_sorted_unique_identities(self):
+    def test_config_names_exactly_the_declared_sorted_unique_identities(self):
         identities = [row["identity"] for row in self.config["identities"]]
-        self.assertEqual(len(identities), 14)
+        self.assertEqual(len(identities), 15)
         self.assertEqual(identities, sorted(identities))
-        self.assertEqual(len(set(identities)), 14)
+        self.assertEqual(len(set(identities)), 15)
 
-    def test_renders_exactly_28_class_a_projections_byte_identical_shape(self):
+    def test_renders_exactly_the_declared_class_a_projections_byte_identical_shape(self):
         artifacts = build_repository_bootstrap_publication(self.env)
-        self.assertEqual(len(artifacts), 30)  # 28 class-A + 1 class-B + 1 lock
+        self.assertEqual(len(artifacts), 31)  # 30 class-A (2 per identity) + 1 lock
         by_provider = {}
         lock_artifact = None
         for artifact in artifacts:
             if artifact.provider == "lock":
                 lock_artifact = artifact
                 continue
-            if artifact.identity == "workflow-craft":
-                continue  # class-B (P1.5), asserted separately below
             by_provider.setdefault(artifact.provider, set()).add(artifact.identity)
         self.assertEqual(by_provider.keys(), {"claude", "codex"})
         self.assertEqual(by_provider["claude"], {row["identity"] for row in self.config["identities"]})
@@ -293,9 +290,9 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
         self.assertIsNotNone(lock_artifact)
         self.assertEqual(lock_artifact.target, self.repo_root / self.config["lock_path"])
         lock_data = json.loads(lock_artifact.managed_bytes)
-        self.assertEqual(len(lock_data["records"]), 29)  # 28 class-A + 1 class-B
+        self.assertEqual(len(lock_data["records"]), 30)  # class-A only
         for artifact in artifacts:
-            if artifact.provider == "lock" or artifact.identity == "workflow-craft":
+            if artifact.provider == "lock":
                 continue
             body = artifact.managed_bytes.decode("utf-8")
             record = next(row for row in self.config["identities"]
@@ -308,17 +305,16 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
             self.assertIn(f"canonical: {record['canonical']}", body)
             self.assertIn("## Provenance (root-bootstrap, P1.2)", canonical_body)
 
-    def test_targets_are_exactly_the_declared_29_and_globally_unique(self):
+    def test_targets_are_exactly_the_declared_and_globally_unique(self):
         artifacts = build_repository_bootstrap_publication(self.env)
         targets = [item.target for item in artifacts if item.provider != "lock"]
-        self.assertEqual(len(targets), 29)  # 28 class-A + 1 class-B
-        self.assertEqual(len(set(targets)), 29)
+        self.assertEqual(len(targets), 30)  # class-A only
+        self.assertEqual(len(set(targets)), 30)
         expected = set()
         for row in self.config["identities"]:
             identity = row["identity"]
             expected.add(self.repo_root / ".claude" / "skills" / identity / "SKILL.md")
             expected.add(self.repo_root / ".agents" / "skills" / identity / "SKILL.md")
-        expected.add(self.repo_root / ".agents" / "skills" / "workflow-craft" / "SKILL.md")
         self.assertEqual(set(targets), expected)
 
     def test_second_render_is_byte_identical_noop(self):
@@ -328,54 +324,56 @@ class TestRepositoryBootstrapPublication(unittest.TestCase):
                          [(a.target, a.managed_bytes) for a in second])
 
 
-@unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
-                     "no host bootstrap config (standalone)")
-class TestClassBRootBootstrapProjection(unittest.TestCase):
-    """P1.5 (D43): the one class-B record (`workflow-craft`) — thin, Codex-only, provenance-
-    hashed, precondition-gated. Class-A byte/count guards are asserted separately above."""
+class ClassBPreconditionCase(unittest.TestCase):
+    """The class-B precondition fails closed when the unit owning the canonical is enabled."""
 
-    def setUp(self):
-        self.package_root = Path(__file__).resolve().parents[1]
-        self.repo_root = find_repo_root(self.package_root) or self.package_root
-        self.env = Env(self.package_root)
+    def test_precondition_fails_closed_when_owning_unit_is_enabled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root, package_root = _build_isolated_bootstrap_fixture(Path(tmp))
+            with self.assertRaises(ValueError) as ctx:
+                render_repository_bootstrap_projections(
+                    repo_root=repo_root, package_root=package_root, donor_enabled={"general": True})
+            self.assertIn("precondition violated", str(ctx.exception))
+            self.assertIn("beta", str(ctx.exception))
 
-    def _class_b_artifacts(self):
-        artifacts = build_repository_bootstrap_publication(self.env)
-        return [item for item in artifacts if item.identity == "workflow-craft"]
-
-    def test_workflow_craft_is_codex_only_and_thin(self):
-        artifacts = self._class_b_artifacts()
-        providers = {item.provider for item in artifacts}
-        self.assertEqual(providers, {"codex"})  # declared asymmetry (D43) — no Claude target
-        [artifact] = artifacts
-        self.assertEqual(artifact.target,
-                         self.repo_root / ".agents" / "skills" / "workflow-craft" / "SKILL.md")
-        body = artifact.managed_bytes.decode("utf-8")
-        canonical = self.package_root / "skills" / "general" / "workflow-craft" / "SKILL.md"
-        canonical_body = canonical.read_text(encoding="utf-8")
-        canonical_sha256 = hashlib.sha256(canonical.read_bytes()).hexdigest()
-        # thin: no copied canon body (a paragraph unique to the canonical procedure text)
-        self.assertNotIn("Match the 4 canonical templates first", body)
-        self.assertIn("Match the 4 canonical templates first", canonical_body)
-        self.assertIn(f"canonical_sha256: {canonical_sha256}", body)
-        self.assertIn(f"canonical: {canonical.relative_to(self.repo_root).as_posix()}", body)
-
-    def test_precondition_fails_closed_when_donor_bucket_is_enabled(self):
-        with self.assertRaises(ValueError) as ctx:
+    def test_module_owned_canonical_is_gated_by_its_module(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root, package_root = _build_isolated_bootstrap_fixture(Path(tmp))
+            moved = repo_root / "modules" / "mod" / "skills" / "beta"
+            moved.parent.mkdir(parents=True)
+            (package_root / "skills" / "general" / "beta").rename(moved)
+            path = repo_root / "configs" / "repository-bootstrap-skills.json"
+            config = json.loads(path.read_text(encoding="utf-8"))
+            config["class_b"][0]["canonical"] = "modules/mod/skills/beta/SKILL.md"
+            path.write_text(json.dumps(config), encoding="utf-8")
             render_repository_bootstrap_projections(
-                repo_root=self.repo_root, package_root=self.package_root,
-                donor_enabled={"general": True})
-        self.assertIn("precondition", str(ctx.exception))
-        self.assertIn("workflow-craft", str(ctx.exception))
+                repo_root=repo_root, package_root=package_root, donor_enabled={"general": True})
+            with self.assertRaises(ValueError):
+                render_repository_bootstrap_projections(
+                    repo_root=repo_root, package_root=package_root, donor_enabled={"mod": True})
 
-    def test_lock_carries_source_and_rendered_hash_for_class_b(self):
-        artifacts = build_repository_bootstrap_publication(self.env)
-        lock_artifact = next(item for item in artifacts if item.provider == "lock")
-        lock_data = json.loads(lock_artifact.managed_bytes)
-        record = next(item for item in lock_data["records"] if item["identity"] == "workflow-craft")
-        self.assertEqual(record["source_class"], "public-bucket")
-        self.assertTrue(record["canonical_sha256"])
-        self.assertTrue(record["rendered_sha256"])
+
+class TestClassBRootBootstrapProjection(unittest.TestCase):
+    """The class-B record of a skill that moved into a module plugin is gone: the plugin is
+    its only carrier. The donor of a class-B canonical is derived from its path."""
+
+    def test_donor_of_bucket_and_module_canonicals(self):
+        from skiller.publication import _class_b_donor_bucket
+        self.assertEqual(_class_b_donor_bucket("pkg/skills/general/x/SKILL.md"), "general")
+        self.assertEqual(_class_b_donor_bucket("modules/mod/skills/x/SKILL.md"), "mod")
+        with self.assertRaises(ValueError):
+            _class_b_donor_bucket("bootstrap/docs/x/SKILL.md")
+
+    @unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
+                         "no host bootstrap config (standalone)")
+    def test_moved_skill_has_no_root_projection(self):
+        package_root = Path(__file__).resolve().parents[1]
+        env = Env(package_root)
+        config = load_repository_bootstrap_config(find_repo_root(package_root) or package_root,
+                                                  load_host(package_root))
+        self.assertEqual(config.get("class_b", []), [])
+        self.assertNotIn("workflow-craft",
+                         {item.identity for item in build_repository_bootstrap_publication(env)})
 
 
 @unittest.skipUnless(load_host(Path(__file__).resolve().parents[1]).bootstrap,
@@ -393,7 +391,6 @@ class RootBootstrapCompletenessCase(unittest.TestCase):
 
     def test_undeclared_directory_is_named_as_a_failure(self):
         package_root = Path(__file__).resolve().parents[1]
-        repo_root = find_repo_root(package_root) or package_root
         env = Env(package_root)
         artifacts = build_repository_bootstrap_publication(env)
         with tempfile.TemporaryDirectory() as tmp:

@@ -3,7 +3,7 @@ import re
 import sys
 from pathlib import Path
 
-from core import safe_load_json
+from aicore.util.io import safe_load_json
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 _REPO_ROOT = _PACKAGE_ROOT.parent.parent

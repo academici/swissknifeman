@@ -1,0 +1,158 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/orch/docs/events.md",
+    "packages/orch/lib/orch/conductor/application/loop.py",
+    "packages/orch/lib/orch/conductor/engine.py",
+    "packages/orch/lib/orch/conductor/infrastructure/beacon_events.py",
+    "packages/orch/lib/orch/conductor/infrastructure/work_source.py",
+    "packages/orch/lib/orch/conductor/policies/allowance.py",
+    "packages/orch/lib/orch/conductor/policies/retry_policy.py",
+    "packages/orch/lib/orch/conductor/policies/routing.py",
+    "packages/orch/lib/orch/conductor/stages/execute.py",
+    "packages/orch/lib/orch/conductor/stages/finish.py",
+    "packages/orch/lib/orch/conductor/stages/review.py",
+    "packages/orch/lib/orch/events.py",
+    "packages/orch/schemas/event-data/v1/orch.agent.questioned.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.deviation.recorded.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.deviation.resolved.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.input.rebuilt.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.provider.fallback.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.provider.quota-exhausted.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.provider.rate-limited.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.review.added.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.run.waiting.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.run.warning.schema.json",
+    "packages/orch/schemas/event-data/v1/orch.work.blocked.schema.json",
+    "packages/orch/tests/fixtures/events/orch.agent.questioned/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.agent.questioned/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.agent.questioned/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.agent.questioned/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.recorded/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.recorded/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.recorded/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.recorded/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.resolved/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.resolved/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.resolved/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.deviation.resolved/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.input.rebuilt/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.input.rebuilt/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.input.rebuilt/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.input.rebuilt/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.provider.fallback/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.provider.fallback/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.provider.fallback/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.provider.fallback/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.provider.quota-exhausted/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.provider.quota-exhausted/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.provider.quota-exhausted/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.provider.quota-exhausted/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.provider.rate-limited/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.provider.rate-limited/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.provider.rate-limited/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.provider.rate-limited/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.review.added/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.review.added/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.review.added/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.review.added/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.run.waiting/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.run.waiting/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.run.waiting/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.run.waiting/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.run.warning/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.run.warning/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.run.warning/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.run.warning/valid-minimal.json",
+    "packages/orch/tests/fixtures/events/orch.work.blocked/invalid-contract.json",
+    "packages/orch/tests/fixtures/events/orch.work.blocked/invalid-unknown-field.json",
+    "packages/orch/tests/fixtures/events/orch.work.blocked/valid-full.json",
+    "packages/orch/tests/fixtures/events/orch.work.blocked/valid-minimal.json",
+    "packages/orch/tests/test_characterization.py",
+    "packages/orch/tests/test_conductor.py",
+    "packages/orch/tests/test_conductor_autofix.py",
+    "packages/orch/unit.json"
+  ],
+  "checks_run": [],
+  "evidence": [
+    "/tmp/p122.out"
+  ],
+  "open_issues": [
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/orch/unit.json",
+        "packages/orch/docs/events.md"
+      ],
+      "impact": "names differ from knowledge/p12-observability#types; the telemetry exporter (P12.5) and analyst (P12.4) must use the hyphenated names",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Event types are orch.provider.rate-limited and orch.provider.quota-exhausted (hyphen), not rate_limited/quota_exhausted as in the design table: the event/v1 type pattern ^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){2,}$ forbids underscores."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/unit.json",
+        "packages/orch/docs/events.md"
+      ],
+      "impact": "the commit takes unit.json and docs/events.md",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Edited outside the declared write_set: packages/orch/unit.json (provides.events), packages/orch/docs/events.md, packages/orch/lib/orch/conductor/engine.py (method bindings), new packages/orch/lib/orch/conductor/infrastructure/beacon_events.py are inside conductor/**; unit.json and docs/events.md are outside."
+    },
+    {
+      "impact": "analyst cannot join questions to agent runs by id, only by step",
+      "kind": "assumption",
+      "next": "none",
+      "text": "agent.questioned carries no agent_run_id: the agent run is already closed when the questions of its report are recorded. It is emitted only for questions new in the round (a resume walking the round again adds none)."
+    },
+    {
+      "impact": "limited resolved coverage",
+      "kind": "assumption",
+      "next": "extend if another resolution path appears",
+      "text": "deviation.recorded is emitted when an auto_fixable correction round starts, or at finish for the deviations of the final report; deviation_id is <item>/dev-<n>, numbered by text in item.state['deviation_ids']. deviation.resolved only for autofixed deviations carried as accepted. A follow_up closed otherwise is not resolved."
+    },
+    {
+      "impact": "residual coverage gap",
+      "kind": "note",
+      "next": "none",
+      "text": "Provider events only for error classes rate_limit and quota; a transient wait gives none. LIMIT_OVER and CAPACITY_GATED events have no dedicated test (run.warning RUN_SLOW, provider.quota-exhausted via PROVIDER_WAIT and provider.fallback via the fallback scenario are tested)."
+    },
+    {
+      "impact": "compatibility with next pieces",
+      "kind": "note",
+      "next": "see text",
+      "text": "For P12.3: redaction can be applied in beacon_events.beacon_event and roles.agent_event before events.emit; new events carry only codes and ids, no free text. For P12.4/P12.5: use hyphenated provider type names."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/docs/events.md",
+        "packages/orch/unit.json"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/orch/docs/events.md, packages/orch/unit.json"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "conductor/infrastructure/beacon_events.py",
+      "stages/execute.py deviation recorded/resolved ids",
+      "stages/finish.py work.blocked and deviation emission",
+      "event type naming with hyphens"
+    ],
+    "reason_codes": [
+      "scope_expanded",
+      "schema_changed",
+      "public_api_changed",
+      "shared_module_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Added 11 beacon events (orch.agent.questioned, run.warning, run.waiting, work.blocked, review.added, deviation.recorded/resolved, provider.rate-limited/quota-exhausted/fallback, input.rebuilt): closed event-data/v1 schemas, valid/invalid fixtures, EVENT_TYPES and unit.json, emission next to each beacon through conductor/infrastructure/beacon_events.py (subject <run>/<item>, correlationid = run id), sequence tests on characterization scenarios, deviation and run.warning tests, docs/events.md and CHANGELOG. Tests run: test_events, test_characterization (incl. new EventSequenceTests), test_boundaries, test_conductor_questions, test_conductor_advisor, test_conductor_autofix, test_conductor RunClockTests, all green. V1 not run by me."
+}

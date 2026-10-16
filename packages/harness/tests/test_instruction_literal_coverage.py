@@ -7,17 +7,15 @@ import unittest
 from unittest.mock import patch
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from harness.instructions import (
     CATALOG_VERSION, CONTRACT_VERSION, PROVIDERS, SCOPES,
-    InstructionRequest, apply_instructions, check_instructions, load_catalog,
+    InstructionRequest, apply_instructions, check_instructions, load_catalog, package_file,
     plan_instructions, validate_catalog, validate_literal_coverage,
 )
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 DATA = Path(__file__).resolve().parent / "fixtures_data/instruction-literal-coverage-v1.json"
 
 
@@ -134,8 +132,8 @@ class LiteralCoverageProvenanceTests(unittest.TestCase):
         self.assertEqual(diagnostics[0].code, "INSTRUCTION_PROVENANCE_INVALID")
 
     def test_current_fixture_source_edit_changes_provenance(self):
-        source_path = REPO_ROOT / json.loads(
-            DATA.read_text(encoding="utf-8"))["provenance"]["source"]
+        source_path = package_file(json.loads(
+            DATA.read_text(encoding="utf-8"))["provenance"]["source"])
         text = source_path.read_text(encoding="utf-8") + "\n<!-- P2.6 edit outside §2 -->\n"
         with patch("harness.instructions._literal_coverage_source_text", return_value=text):
             diagnostics = validate_literal_coverage(load_catalog())

@@ -1,0 +1,132 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P9",
+  "title": "planner: переименование, конфиг, оверлеи, события",
+  "design": "detailed",
+  "goal": "packages/planner (бывший task) — модуль на aicore с переходным окном для /task:* и SKM_TASK_ROOT: одно переименование по всему репозиторию с плагином совместимости task; stdlib-ядро движка работает без aicore, а конфиг, события, оверлеи и внешние проверки идут через planner.integration; секция [planner] по инвентаризации D15 со слоем plan.settings и config.example.toml (schema_version, R04); сценарий оркестрации по умолчанию (D16) и один владелец попытки пункта (E04); события planner.* после фиксации со схемами данных и сверкой с потребителем brain (E44); оверлеи слотов всех команд; точка внешних проверок planner:check; workflow-craft в плагине planner; старые планы читаются (URN не меняются, plan/v1 — только минорно); planner автономен (standalone без core).",
+  "context": "D2, D6, D9, D15, D16, D21 (E04), D27, D30, D33, D34, D40, D52 конкретизированы решениями D56–D60 (детализация 2026-10-09). Факты кода, правила, проверки, сверка E1/E2, отложенное, upgrade-заметки, документация — knowledge/planner-p9; переименование и алиасы — knowledge/planner-p9-rename; aicore, локатор, рендер, standalone — knowledge/planner-p9-aicore; конфиг и инвентаризация D15 — knowledge/planner-p9-config; исполнение, события, оверлеи, внешние проверки, e2e — knowledge/planner-p9-ext; workflow-craft и совместимость — knowledge/planner-p9-compat. Внешние предпосылки (renames маркетплейса Claude Code, disable-model-invocation и Skill, загрузка плагина из directory-маркетплейса) — research/P9-perplexity.md. План исполняет стабильный plan.py из live-папки: новый движок клона не запускается мутирующими глаголами на plans/ этого репозитория. Ревью E1: E04, E44 (+E15, E22, E30–E33); E2: R04.",
+  "scope": {
+    "include": [
+      "переименование task → planner по всему репозиторию (модуль, команды, проекции, потребители, хаб, инструкции, docs) и переходные алиасы",
+      "перевод на aicore: planner.integration, Python-локатор, рендер на aicore, снимок каталога моделей, standalone без core",
+      "инвентаризация констант и политик → конфиг [planner] со слоем plan.settings; config.example.toml с schema_version (R04)",
+      "сценарий оркестрации по умолчанию и один владелец попытки пункта; минорное поле plan/v1",
+      "события planner.* и схемы данных; сверка с потребителем brain; e2e план → заметка",
+      "оверлеи слотов команд; точка внешних проверок planner:check",
+      "перенос workflow-craft из skiller",
+      "фикстуры совместимости старых планов; aicore schema compat для контрактов из нескольких документов",
+      "документация, инструкции planner через каталог harness, ADR 0052–0056"
+    ],
+    "exclude": [
+      "мосты к orch и их перенос в bridges/planner-orch, digest моста, проверка имени сценария по профилям orch (P10)",
+      "bin/planner, группа umbrella CLI, поиск aicore у установки из кеша плагина, doctor planner (P12)",
+      "снятие алиасов и renames маркетплейса (следующий minor после слияния), upgrade guide (P13)",
+      "смена URN urn:swissknifeman:task:plan:* и мажорные изменения plan/v1"
+    ]
+  },
+  "depends_on": [
+    "P5",
+    "P6"
+  ],
+  "deliverables": [
+    "packages/planner: модуль planner с плагином совместимости task на окно",
+    "конфиг [planner] и config.example.toml",
+    "события planner.* со схемами event-data/v1",
+    "оверлеи слотов команд и точка расширения planner:check",
+    "planner автономен (standalone без core)",
+    "ADR 0052–0056"
+  ],
+  "items": [
+    "P9.1",
+    "P9.2",
+    "P9.3",
+    "P9.4",
+    "P9.5",
+    "P9.6",
+    "P9.7",
+    "P9.8",
+    "P9.9",
+    "P9.10",
+    "P9.11",
+    "P9.12"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P9.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P9.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P9.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P9.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P9.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P9.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B7",
+      "items": [
+        "P9.7",
+        "P9.8"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B8",
+      "items": [
+        "P9.9"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B9",
+      "items": [
+        "P9.10"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B10",
+      "items": [
+        "P9.11",
+        "P9.12"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-10T09:21:25Z",
+    "result": "done_with_deviations",
+    "summary": "12 item(s): 1 done, 11 done_with_deviations"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "item": "P11.11",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "A file layer already sets [maind] and the legacy node file still contains settings (registry.json may already exist). load_config emits MAIND_LEGACY_CONFIG saying those legacy settings are ignored. maind doctor still prints 'warn maind.config: settings are read from the legacy node file'. Text mode shows only that sentence: run_checks captures the true warning first, and _warn_legacy then suppresses the second load, so the operator is told the live settings come from the legacy file.",
+          "id": "F1",
+          "location": "packages/maind/lib/maind/doctor.py:80",
+          "reproduction": "static trace of resolve_settings (_has_file_settings → ignored=True), _warn_legacy empty-parts message, and _config_results; not executed",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "scratch test reusing DoctorContractCase (tmp HOME/SKM_HOME): write <skm>/config/config.toml with 'schema_version = 1' and '[maind.node] name = \"x\"', keep the legacy node file with settings, run cmd_doctor --json",
+            "exit": 0,
+            "observed": "maind.config status=warn, observed 'settings are read from the legacy node file'; evidence line says 'its settings are ignored because [maind] is set'"
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "<config>/harness/safe-dirs.json and a legacy safe-dirs file both exist. The active file is the new location (state_candidates()[0]), and the legacy file is only in rest. harness doctor --json still returns warn with observed 'safe-dirs is read from <the new file>, not the current location' and remediation 'Move it to <config>/harness/safe-dirs.json'. Following that remediation leaves the legacy file in place, so the same warn remains.",
+          "id": "F2",
+          "location": "packages/harness/lib/harness/doctor.py:175",
+          "reproduction": "static trace of _safe_dirs_check against state_candidates(); not executed",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "tmp HOME + SKM_HOME; create <skm>/config/harness/safe-dirs.json and $HOME/.swissknifeman/safe-dirs.json; run harness doctor --json from an empty cwd",
+            "exit": 0,
+            "observed": "harness.safe-dirs warn: 'safe-dirs is read from <skm>/config/harness/safe-dirs.json, not the current location'; remediation 'Move it to <config>/harness/safe-dirs.json'; evidence lists active=new file and legacy=old file"
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "The candidate from 6e9e2af4 includes commits 86831680 and bfe957c9. bfe957c9 kills an in-flight reviewer when the first acceptance row is not green (REVIEW_CANCELLED) and changes the orch boundary skip plus the orch-debug publication identity. Those paths are outside this item's include list and write set. Item checks V1–V7 do not run packages/orch/tests/test_conductor.py. Accepting the candidate as P11.11 treats that conductor control-flow change as part of the doctor work.",
+          "id": "F3",
+          "location": "packages/orch/lib/orch/conductor/engine.py:818",
+          "reproduction": "git log --oneline 6e9e2af4..HEAD and git status --porcelain; engine.py is clean in the worktree and present in bfe957c9",
+          "severity": "Major"
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a131e9-4221-7f83-ae17-18b16a14777a",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261012T201258Z-36e8fa/P11.11/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2"
+        ],
+        "rejected": [
+          {
+            "finding": "F3",
+            "reason": "Not part of the candidate. Commits 86831680 and bfe957c9 are already in branch history ahead of the base revision. The item's working-tree change touches no packages/orch file. Acceptance runs on the tree, so this is not a defect of the doctor change."
+          }
+        ],
+        "session": "955da64f-1f70-46c5-8c0f-a210b6994e26"
+      },
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 2,
+      "session": "01a131f8-fecb-76c1-8756-eb228c33311f",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261012T201258Z-36e8fa/P11.11/streams/review.2.jsonl",
+      "triage": null,
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261012T201258Z-36e8fa",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

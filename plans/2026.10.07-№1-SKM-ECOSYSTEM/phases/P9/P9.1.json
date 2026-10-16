@@ -1,0 +1,354 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.1",
+  "title": "Начало фазы; переименование task → planner по всему репозиторию: модуль, команды и проекции, потребители, хаб, golden",
+  "status": "done_with_deviations",
+  "summary": "sync-main и golden check; git mv packages/task → packages/planner, lib/task → lib/planner, dev-skill planner-development-philosophy, проекции task-* → planner-*; id модуля, плагины Claude/Codex/Grok, id команд planner:*, константы MODULE_ID и COMMAND_NAMESPACE в каталоге, рендере и next; окружение мостов PLANNER_ROOT/PLANNER_PLAN_PY; все потребители (harness, orch, aicore, analyst, maind, skiller, brain) и хаб (ecosystem-units, release-units, skiller-host, bootstrap, маркетплейсы, CI, скрипты, docs, инструкции scope planner) переведены; URN urn:swissknifeman:task:plan:* и task_files не тронуты; golden перезахвачен с причиной.",
+  "why": "D9 и D56: имя planner без коллизии со встроенными Task* Claude Code; все следующие пункты P9 работают в окончательных путях. Жёсткие риски: (1) слепая замена «task» сломает URN urn:swissknifeman:task:plan:* (планы во всех проектах) или поле task_files — страхуют список неизменяемого и счётчик URN (V2); (2) пропущенный потребитель (хук harness, поиск в orch, worker) молча перестанет находить движок — страхуют grep полноты и тесты соседей (V2, V5); (3) ручная правка генерируемого разойдётся с генератором — только генераторы (V3).",
+  "scope": {
+    "include": [
+      "scripts/dev-clone.sh sync-main и python3 scripts/golden.py check (начало фазы)",
+      "переносы git mv: packages/task → packages/planner; lib/task → lib/planner; dev-skills/task-development-philosophy → planner-development-philosophy; adapters/{codex,cursor}/skills/task-* → planner-*; docs/task → docs/planner; scripts/test-task-plugin-cache-revision.py → test-planner-plugin-cache-revision.py; фрагменты инструкций harness packages/task → packages/planner",
+      "packages/planner/**: импорты planner, константы модуля, id команд, плагины, тексты (имя Planner, <Planner package root>), окружение мостов PLANNER_ROOT/PLANNER_PLAN_PY, регенерация проекций рендером",
+      "потребители: harness, orch, aicore (строки runtime.py и evidence), analyst, maind, skiller (тесты, docs, названные правки команд в 4 skills), brain (тест)",
+      "хаб: configs/{ecosystem-units,ecosystem-baseline,release-units,skiller-host,repository-bootstrap-skills,config-inventory}.json, маркетплейсы и bootstrap генератором, .github/workflows, scripts/*, tests/golden, docs, README.md, .swissknife.json репозитория, инструкции (scope planner, генератор harness)",
+      "строки CHANGELOG (корневой и модулей с CHANGELOG)"
+    ],
+    "exclude": [
+      "алиасы /task:*, SKM_TASK_ROOT, TASK_ROOT/TASK_PLAN_PY и разбор task:<id> (P9.2)",
+      "перевод на aicore и перенос runtime-выражения Codex из aicore (P9.3)",
+      "смысл правил инструкций и страниц docs (P9.11)",
+      "история: прошлые разделы CHANGELOG, releases/, plans/, корневой orch/, packages/artifex, ADR",
+      "URN urn:swissknifeman:task:plan:*, поле task_files, версия 0.28.3"
+    ]
+  },
+  "decisions": [
+    "D9",
+    "D27",
+    "D30",
+    "D56"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#rules",
+      "why": "общие правила фазы (п.1 — начало фазы, п.8 — генераторы, п.10 — линия)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9#facts",
+      "why": "где живёт имя task и кто его потребляет",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-rename#mapping",
+      "why": "таблица старое → новое и константы модуля",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-rename#keep",
+      "why": "что не трогать",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-rename#procedure",
+      "why": "порядок шагов 1–12",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-rename#consumers",
+      "why": "правки в других модулях",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-rename#hub",
+      "why": "правки хаба",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-rename#verify",
+      "why": "grep полноты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-instructions#instructions",
+      "why": "как правится scope инструкций и чем регенерируется",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/command_render.py",
+      "why": "литералы task: строки 29–90 (константы, карта next, регулярные выражения), 640–900 (артефакты Codex, Claude, Cursor, Grok), 1515–1535 (корень Codex)",
+      "required": true
+    },
+    {
+      "path": "packages/task/lib/task/command_catalog.py",
+      "why": "_COMMAND_ID_RE и путь команды по id",
+      "required": true
+    },
+    {
+      "path": "packages/task/configs/command-routing.json",
+      "why": "command_id, source и evidence-пути команд",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/run/task_paths.py",
+      "why": "порядок поиска движка у потребителя",
+      "required": true
+    },
+    {
+      "path": "packages/orch/bridges/task/discovery.py",
+      "why": "тот же поиск у orch",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "why": "SCOPES, TARGETS, COMMON_IDS, провайдерные id (строки 30–150)",
+      "required": true
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "why": "module_aliases, transitional_roots, version_sources, path_allow, ownership",
+      "required": true
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "why": "ключи хоста с task",
+      "required": true
+    },
+    {
+      "path": "tests/golden/cases.json",
+      "why": "случаи plan-* и путь демо-плана",
+      "required": false
+    },
+    {
+      "path": "scripts/docs-sync.sh",
+      "why": "пара каталогов docs модуля",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/task/**",
+      "change": "delete",
+      "note": "переносится git mv в packages/planner"
+    },
+    {
+      "path": "packages/planner/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/**",
+      "change": "modify",
+      "note": "только ссылки на task, поиск движка и scope инструкций"
+    },
+    {
+      "path": "packages/orch/**",
+      "change": "modify",
+      "note": "только поиск движка, тесты и описание в stage-result"
+    },
+    {
+      "path": "packages/aicore/**",
+      "change": "modify",
+      "note": "только строки runtime.py, evidence provider-capabilities и тесты"
+    },
+    {
+      "path": "packages/analyst/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/**",
+      "change": "modify",
+      "note": "тесты, docs, названные правки 4 skills; skills.json и индексы — registry"
+    },
+    {
+      "path": "packages/brain/**",
+      "change": "modify",
+      "note": "тест архитектуры, CHANGELOG"
+    },
+    {
+      "path": "configs/**",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/**",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "modify",
+      "note": "только golden.py capture с причиной и правка cases/generation"
+    },
+    {
+      "path": "docs/**",
+      "change": "any"
+    },
+    {
+      "path": ".github/workflows/**",
+      "change": "modify"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "change": "modify",
+      "note": "только skiller registry"
+    },
+    {
+      "path": ".agents/**",
+      "change": "any",
+      "note": "только генераторы"
+    },
+    {
+      "path": ".claude/skills/**",
+      "change": "any",
+      "note": "только генератор bootstrap"
+    },
+    {
+      "path": ".cursor/rules/**",
+      "change": "modify",
+      "note": "только генераторы"
+    },
+    {
+      "path": "bootstrap/publication-lock.json",
+      "change": "modify",
+      "note": "только skiller registry"
+    },
+    {
+      "path": "AGENTS.md",
+      "change": "modify",
+      "note": "только генератор"
+    },
+    {
+      "path": "CLAUDE.md",
+      "change": "modify",
+      "note": "только генератор"
+    },
+    {
+      "path": "README.md",
+      "change": "modify"
+    },
+    {
+      "path": ".swissknife.json",
+      "change": "modify"
+    },
+    {
+      "path": ".swissknifeman/provider-artifacts.lock.json",
+      "change": "modify",
+      "note": "только генератор"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "URN urn:swissknifeman:task:plan:* и поле task_files не меняются: замены — точечные, не массовые s/task/planner/",
+    "Генерируемое (проекции, publication-lock, маркетплейсы, bootstrap, инструкции, ownership.md, docs/planner) — только генераторами; golden — capture с причиной «task renamed to planner» только для изменившихся случаев",
+    "Смысл правил и текстов не меняется: только имя, пути и id",
+    "Исторические документы не меняются: packages/*/docs/audits/**, ADR, прошлые разделы CHANGELOG, releases/"
+  ],
+  "guidance": "Исполнитель: implementation/xhigh.\n\nПорядок — knowledge/planner-p9-rename §procedure, шаги 1–12. Советы:\n- Сначала все `git mv` (шаг 2), отдельной группой; затем правки. Каталог `packages/task` после шага 2 не существует — все пути чтения после переноса — `packages/planner/…`.\n- Python-импорты: `git grep -nE '(^|\\s)(from|import) task\\b|\"task\\.(plan|command|review|session)' packages/planner` — список мест; mock-цели `task.…` → `planner.…` (правило фазы п.12).\n- Строки команд: `git grep -nE 'task:(plan-|design|dev|fix|review|research|make-workflow)|/task:' packages/planner` и §mapping; `next` в `plan/lifecycle.py`, `plan/parallel.py`, `plan/views.py` — через `COMMAND_NAMESPACE`.\n- Рендер: `python3 packages/planner/scripts/render-provider-commands.py --write --root .` после правок канона; ошибки `--check` читать как список недоделанного.\n- Потребители: `git grep -nE 'packages/task|lib/task|/task:|task:plan-|SKM_TASK_ROOT|\"task\"' -- packages ':!packages/planner' ':!packages/artifex'` — по §consumers; в harness `run/task_paths.py` порядок `PLANNER_ROOT` → сосед `planner` → монорепозиторий (без `SKM_TASK_ROOT` — его вернёт P9.2).\n- Инструкции: правка каталога harness и `instructions.py`, затем генератор в песочнице (knowledge/brain-p7-instructions#instructions); `golden.py check` покажет случаи генераторов инструкций.\n- Хаб: §hub; `skiller registry` в песочнице (`SB=$(scripts/dev-sandbox.sh new --name p9-reg-$$ | tail -1) && scripts/dev-sandbox.sh run \"$SB\" -- packages/skiller/bin/skiller registry; scripts/dev-sandbox.sh remove \"$SB\"`); `python3 scripts/ecosystem-units.py render`; `baseline --update` (`standalone.planner` = `fail` до P9.3 — `plan.py log`).\n- Golden: сначала правка `tests/golden/{cases,generation}.json` (пути, id генератора `planner-provider-commands`), затем `golden.py check` → `capture --only <ids> --reason \"task renamed to planner\"`.\n- В конце §verify (V2) и строки CHANGELOG: корневой — «planner: the task module is renamed to planner (commands /planner:*, PLANNER_ROOT); plan URNs are unchanged»; maind, analyst, brain — свои.\n- V5 долгий (harness ~3 мин): запускать в фоне и дождаться.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test -d packages/planner && test ! -e packages/task && ! git grep -nE 'packages/task|lib/task|/task:|\\btask:(plan-[a-z]+|design|dev|fix|review|research|make-workflow)\\b|SKM_TASK_ROOT|TASK_PLAN_PY|<Task package root>|task-development-philosophy|\"name\": \"task\"' -- ':!plans/**' ':!releases/**' ':!orch/**' ':!packages/artifex/**' ':!CHANGELOG.md' ':!docs/architecture/decisions/**' ':!**/docs/audits/**' && test \"$(git grep -h -o 'urn:swissknifeman:task:plan' -- packages/planner | wc -l)\" -ge 288 && python3 -c 'import json; u = json.load(open(\"packages/planner/unit.json\")); assert u[\"id\"] == \"planner\", u[\"id\"]; assert json.load(open(\"packages/planner/.claude-plugin/plugin.json\"))[\"name\"] == \"planner\"; assert json.load(open(\"packages/planner/.codex-plugin/plugin.json\"))[\"name\"] == \"planner\"'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 packages/planner/scripts/render-provider-commands.py --check --root . && bash scripts/docs-sync.sh --check && (cd packages/harness && PYTHONPATH=\"$PWD/lib:$(cd ../.. && pwd)\" python3 -m harness.instructions --check)",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "set -e; bash packages/harness/scripts/test.sh; bash packages/harness/scripts/validate.sh; bash packages/orch/scripts/test.sh; bash packages/aicore/scripts/test.sh; for m in analyst maind brain; do bash packages/$m/scripts/test.sh; done; SB=$(scripts/dev-sandbox.sh new --name p9-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "packages/planner (бывший packages/task) с командами /planner:*",
+    "потребители и хаб на planner"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "xhigh"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T17:39:07Z",
+    "finished_at": "2026-10-09T19:14:45Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "xhigh",
+      "session": "7bcbaf0d-7651-4496-a0e6-a720d4d77cc5"
+    },
+    "notes": "task → planner выполнено по всему репозиторию: git mv (packages/task, lib/task, dev-skill, adapters skills, docs/task, harness-фрагменты, bootstrap-проекции, тест плагина), MODULE_ID/COMMAND_NAMESPACE в lib/planner/__init__.py и рендер/каталог/next/review_selection на них, PLANNER_ROOT/PLANNER_PLAN_PY, потребители (harness, orch, aicore, analyst, maind, skiller, brain), хаб (ecosystem-units, release-units, skiller-host, bootstrap, маркетплейсы, CI, скрипты, docs, инструкции scope planner), golden перезахвачен с причиной «task renamed to planner». URN urn:swissknifeman:task:plan:* — 288 строк как до пункта; task_files не тронуты. Проекции и инструкции — только генераторами.",
+    "deviations": [
+      "V2 запретил остатки: правлена одна историческая строка CHANGELOG пакета агентов backend-laravel; запись legacy_runtime_links для task не оставлена (вернёт P9.2); ключ job task в CI оставлен (имя проверки может быть обязательным в защите ветки).",
+      "Закреплённые хэши APPROVED_*_SHA256 манифеста provider-capabilities.json в aicore/tests и byte_digest skiller claude-publication-golden пересчитаны по процедуре тестов: diff — только переименование путей, id адаптеров, имени модуля; поддержка и уровни не менялись.",
+      "Провайдерные проекции перегенерированы с нуля (старый lock владельца task.codex давал ownership-conflict); из provider-artifacts.lock.json удалены 4 осиротевшие записи packages/task/*; вне task_files пункта затронуты install.sh, .codex/config.toml.example, bootstrap/skills/release-discipline/SKILL.md (добавлены через --path)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T19:14:45Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T19:14:45Z"
+}

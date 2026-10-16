@@ -1,5 +1,5 @@
 {
- "catalog_version": "1.0.0",
+ "catalog_version": "1.4.0",
  "launch": {
   "scout": {
    "claude-code": {
@@ -14,7 +14,9 @@
      "--effort",
      "{effort}",
      "--tools",
-     "",
+     "Read,Grep,Glob",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 300,
@@ -48,6 +50,11 @@
     "effort": "high",
     "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--rw",
+     "{cwd}",
+     "--",
      "claude",
      "-p",
      "--output-format",
@@ -57,8 +64,14 @@
      "{model}",
      "--effort",
      "{effort}",
+     "--tools",
+     "Bash,Read,Edit,Write,Grep,Glob",
      "--permission-mode",
      "acceptEdits",
+     "--allowedTools",
+     "Bash",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 3600,
@@ -104,6 +117,11 @@
     "effort": "medium",
     "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--rw",
+     "{cwd}",
+     "--",
      "claude",
      "-p",
      "--output-format",
@@ -113,8 +131,14 @@
      "{model}",
      "--effort",
      "{effort}",
+     "--tools",
+     "Bash,Read,Edit,Write,Grep,Glob",
      "--permission-mode",
      "acceptEdits",
+     "--allowedTools",
+     "Bash",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 1800,
@@ -169,8 +193,12 @@
      "{model}",
      "--effort",
      "{effort}",
+     "--tools",
+     "Bash,Read,Grep,Glob",
      "--disallowedTools",
      "Edit,Write,NotebookEdit",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 1800,
@@ -200,14 +228,86 @@
    "grok": {
     "model_class": "implementation",
     "effort": "high",
-    "transport": "acp",
+    "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--rw",
+     "{cwd}/vendor",
+     "--",
      "grok",
-     "agent",
-     "stdio"
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write",
+     "--output-format",
+     "streaming-messages-json"
+    ],
+    "timeout_s": 3600,
+    "model_set": "supported"
+   }
+  },
+  "triager": {
+   "claude-code": {
+    "model_class": "implementation",
+    "effort": "medium",
+    "transport": "jsonl",
+    "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--",
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--tools",
+     "Bash,Read,Grep,Glob",
+     "--permission-mode",
+     "acceptEdits",
+     "--allowedTools",
+     "Bash",
+     "--disallowedTools",
+     "Edit,Write,NotebookEdit",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
     ],
     "timeout_s": 1800,
-    "model_set": "unknown"
+    "model_set": "supported"
+   },
+   "codex": {
+    "model_class": "implementation",
+    "effort": "medium",
+    "transport": "jsonl",
+    "argv": [
+     "codex",
+     "-a",
+     "never",
+     "exec",
+     "--json",
+     "--sandbox",
+     "read-only",
+     "--model",
+     "{model}",
+     "-c",
+     "model_reasoning_effort=\"{effort}\"",
+     "-"
+    ],
+    "timeout_s": 1800,
+    "model_set": "supported"
    }
   },
   "registrar": {
@@ -227,6 +327,10 @@
      "{effort}",
      "--tools",
      "Bash,Read",
+     "--allowedTools",
+     "Bash(python3 *orch.py source register *)",
+     "--permission-prompts",
+     "none",
      "--no-session-persistence"
     ],
     "timeout_s": 600,
@@ -251,6 +355,133 @@
      "-"
     ],
     "timeout_s": 600,
+    "model_set": "supported"
+   }
+  },
+  "report-fixer": {
+   "claude-code": {
+    "model_class": "economy",
+    "effort": "low",
+    "transport": "jsonl",
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--tools",
+     "",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
+    ],
+    "timeout_s": 600,
+    "model_set": "supported"
+   },
+   "codex": {
+    "model_class": "economy",
+    "effort": "low",
+    "transport": "jsonl",
+    "argv": [
+     "codex",
+     "-a",
+     "never",
+     "exec",
+     "--json",
+     "--sandbox",
+     "read-only",
+     "--model",
+     "{model}",
+     "-c",
+     "model_reasoning_effort=\"{effort}\"",
+     "--ephemeral",
+     "-"
+    ],
+    "timeout_s": 600,
+    "model_set": "supported"
+   },
+   "grok": {
+    "model_class": "economy",
+    "effort": "low",
+    "transport": "jsonl",
+    "argv": [
+     "grok",
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write,run_terminal_command",
+     "--output-format",
+     "streaming-messages-json"
+    ],
+    "timeout_s": 600,
+    "model_set": "supported"
+   }
+  },
+  "researcher": {
+   "claude-code": {
+    "model_class": "implementation",
+    "effort": "medium",
+    "transport": "jsonl",
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--tools",
+     "Bash,Read,Grep,Glob",
+     "--allowedTools",
+     "Bash(python3 *orch.py research query *)",
+     "Bash(python3 *orch.py --config * research query *)",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
+    ],
+    "timeout_s": 1800,
+    "model_set": "supported"
+   }
+  },
+  "advisor": {
+   "claude-code": {
+    "model_class": "frontier",
+    "effort": "high",
+    "transport": "jsonl",
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--tools",
+     "Bash,Read,Grep,Glob",
+     "--allowedTools",
+     "Bash(python3 *orch.py research query *)",
+     "Bash(python3 *orch.py --config * research query *)",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
+    ],
+    "timeout_s": 1800,
     "model_set": "supported"
    }
   }

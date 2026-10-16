@@ -1,0 +1,18 @@
+# A configuration document with a little of everything.
+schema_version = 1
+
+title = "Example"   # trailing comment
+enabled = true
+count = 42
+ratio = 0.25
+
+[analyst]
+mode = 'literal'
+
+[analyst.recompute]
+candidate_min_n = 5
+names = ["a", "b", 'c']
+
+[analyst."quoted key"]
+"a.b" = 1
+'single' = 2

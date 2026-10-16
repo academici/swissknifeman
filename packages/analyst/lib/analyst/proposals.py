@@ -26,8 +26,10 @@ import json
 import os
 from pathlib import Path
 
-from .common import (atomic_write_json, atomic_write_text, die, now_iso,
-                     parse_args, read_ndjson, safe_load_json, sanitize)
+from aicore.util.cli import parse_args
+from aicore.util.io import atomic_write_json, atomic_write_text, read_ndjson, safe_load_json
+from aicore.util.term import die, now_iso
+from aicore.util.text import sanitize
 
 PROPOSAL_SCHEMA_VERSION = 1
 PROPOSAL_TYPES = ("stack-pack", "project-override", "docs")
@@ -38,13 +40,12 @@ TITLE_SLUG_MAX = 40
 # suggestions on WHAT and HOW to apply - fixed here (analyst NEVER writes here).
 _HANDOFF_STEPS = {
     "stack-pack": (
-        "edits - ONLY in the pack harness: packages/harness/configs/claude-code/agent-packs/"
-        "<pack>/ (person, by skill system/agent-packs); analyst does NOT write to agent-packs/",
-        "pack version + entry in it CHANGELOG.md "
-        "(packages/harness/configs/claude-code/agent-packs/<pack>/CHANGELOG.md)",
+        "edits - ONLY in the harness agent-pack sources (see `harness agent-packs list`) "
+        "<pack> (person, by skill system/agent-packs); analyst does NOT write to agent-packs/",
+        "pack version + entry in the pack CHANGELOG.md (in the harness agent-pack sources)",
         "rollout for projects: `harness agent-packs upgrade --pack <pack> --target <project>` "
         "(user_owned-the pack will not touch project files - D11 base+overlay)",
-        "bash packages/harness/scripts/validate.sh",
+        "the harness validation (`validate.sh` of the harness repository)",
     ),
     "project-override": (
         "edits - ONLY in override/extension-zone of the TARGET project: user_owned-files "
@@ -56,9 +57,9 @@ _HANDOFF_STEPS = {
     ),
     "docs": (
         "edits - in target documentation: docs/reference.md · docs/roadmap.md (umbrella) or "
-        "packages/<pkg>/docs/ (per-package, standalone-assembly); analyst does NOT write to docs/",
+        "the docs/ folder of the owning module (per-module, standalone-assembly); analyst does NOT write to docs/",
         "per-package edits - run if necessary scripts/docs-sync.sh (umbrella unit)",
-        "if the proposal is about the package itself analyst — note in packages/analyst/CLAUDE.md",
+        "if the proposal is about the analyst module itself — note in its CLAUDE.md",
     ),
 }
 

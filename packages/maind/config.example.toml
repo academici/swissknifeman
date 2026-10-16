@@ -1,0 +1,203 @@
+# maind configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[maind]
+
+[maind.node]
+# Node id. String.
+# id = <string>
+
+# Human name of the node. String.
+# name = <string>
+
+# Node role in a multi-node setup. One of: "primary", "secondary", "mirror".
+# role = <string>
+
+# Free-form description of the node. String.
+# description = <string>
+
+[maind.memory]
+# Run and use the memory daemon. Boolean.
+# enabled = true
+
+# standalone: this node runs its own daemon; host: the only daemon of the machine; client: no daemon, use memory.url. One of: "standalone", "host", "client".
+# role = "standalone"
+
+# Address of the memory host; required when role is client and must not be a loopback address. String.
+# url = <string>
+
+# HTTP port of the daemon. Integer >= 1 and <= 65535.
+# http_port = 4111
+
+# Stream port of the daemon. Integer >= 1 and <= 65535.
+# stream_port = 4112
+
+# Interface the daemon binds to: an address, or auto for the LAN address of the machine. String.
+# bind_host = <string>
+
+# Daemon configuration file, relative to the module root or absolute. String.
+# config_path = "config/memory/iii-config.yaml"
+
+# Data directory handed to the memory daemon. String.
+# data_dir = "./data"
+
+# Path of a file holding the bearer secret of the daemon (never the secret itself). String.
+# secret_file = <string>
+
+[maind.memory.digest]
+# Total size of a digest, in characters. Integer >= 1.
+# budget_chars = 4000
+
+# Size of one digest item, in characters. Integer >= 1.
+# item_max_chars = 500
+
+# Maximum shared (cross-project) items in a digest; 0 keeps cross-project context off. Integer >= 0.
+# shared_max = 0
+
+[maind.graph]
+# Build and serve the project graph. Boolean.
+# enabled = true
+
+# Graph layout: federation (one graph per project plus a thin index) or disabled. Retired values (memory, graphify, networkx) are read as federation. One of: "federation", "disabled".
+# adapter = "federation"
+
+# Where project graphs live: hub (in the node data directory) or project-local. String.
+# store_layout = <string>
+
+# Persist the in-memory graph to disk. Boolean.
+# persist = <boolean>
+
+# File of the persisted graph, relative to the module root or absolute. String.
+# persist_path = <string>
+
+[maind.graph.links]
+# Manual links of the project to other projects, by the id of the linked project (ids with a dot cannot be written here). Meant for the project layer.
+# [maind.graph.links.example]
+
+# Edge type of the link (uses, knows, relates_to, belongs_to, depends_on, provided_by or requires). String.
+# Allowed in layers: project, invocation.
+# type = "relates_to"
+
+# Plane of the link: code, doc, meta or runtime. String.
+# Allowed in layers: project, invocation.
+# plane = "runtime"
+
+# Why the projects are linked. String.
+# Allowed in layers: project, invocation.
+# note = <string>
+
+[maind.code_graph]
+# Enable the code graph for projects that do not say. Boolean.
+# enabled_default = false
+
+# Code graph engine. String.
+# engine = "serena"
+
+# Executable that starts the engine. String.
+# command = "uvx"
+
+# Arguments of the MCP server command; {root} is the project root. Array of strings.
+# args = ["--from", "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd", "serena", "start-mcp-server", "--context", "ide-assistant", "--project", "{root}", "--enable-web-dashboard", "false"]
+
+# Arguments of the indexing command; {root} is the project root. Array of strings.
+# index_args = ["--from", "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd", "serena", "project", "index", "{root}"]
+
+# Name of the MCP server entry. String.
+# server_name = "serena"
+
+# Paths the engine does not index. Array of strings.
+# ignores = ["vendor", "node_modules", "packages", "storage", "bootstrap/cache", "public/build", "dist", ".git"]
+
+# Paths ignored in a workspace project (its packages/* are indexed). Array of strings.
+# workspace_ignores = ["vendor", "node_modules", "**/vendor", "**/node_modules", "storage", "bootstrap/cache", "public/build", "dist", ".git"]
+
+# Prompt given to the model when the project is activated. String.
+# initial_prompt = "Navigate through the code of this project via symbol-tools Serena (get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations) instead of reading entire files - this is more accurate and saves tokens. Related package code ecosystems live in their own projects; inter-project communications - in mAInd (maind graph)."
+
+# Prompt given to the model for a workspace project. String.
+# workspace_prompt = "This project is workspace: his code + locally developed ecosystem packages for packages/* form a SINGLE graph. Lead the navigation symbol-tools Serena (get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations). Folders packages/* — these are REAL package repositories (via symlink): having found an improvement in package, offer it and, BY CONFIRMATION of the user, edit directly to packages/<package>/… — the change will affect the package itself and all its consumers."
+
+# Warm up the index in the background when the graph is turned on. Boolean.
+# pre_index = false
+
+# Install the session-end hook that commits feature facts to shared memory. Boolean.
+# feature_log_hook = <boolean>
+
+[maind.code_graph.language_by_type]
+# Language of the engine by project type; the built-in table applies while this is empty.
+# Language of the project type. String.
+# example = <string>
+
+[maind.code_graph.embed]
+# Embedder command as an argument vector. Array of strings.
+# command = <array>
+
+[maind.agents]
+# Keep the agent registry. Boolean.
+# registry_enabled = true
+
+# Heartbeat interval of an agent, in milliseconds. Integer >= 1.
+# heartbeat_interval_ms = 30000
+
+# Idle time after which an agent counts as stale, in milliseconds. Integer >= 1.
+# max_idle_ms = 300000
+
+[maind.integrations]
+# Links to related tools, by id.
+# [maind.integrations.example]
+
+# Use the integration. Boolean.
+# enabled = <boolean>
+
+# Sync skills with the integration. Boolean.
+# skills_sync = <boolean>
+
+# Sync the project list with the integration. Boolean.
+# projects_sync = <boolean>
+
+# Direction of the sync. One of: "import", "export", "bidirectional".
+# sync_direction = <string>
+
+# Location of the integration (for brain, its vault). String.
+# path = <string>
+
+[maind.mcp]
+# Write a portable .mcp.json.example next to every real .mcp.json and keep the real file out of git. Boolean.
+# emit_example = true
+
+[maind.mcp.perplexity_web]
+# Roll the bridge out into projects. Boolean.
+# enabled = <boolean>
+
+# Browser pool model: default or a literal (shared), per-project or per-namespace. String.
+# pool = <string>
+
+# Machine-local path of the bridge start script. String.
+# bin = <string>
+
+# Name of the MCP server entry. String.
+# server_name = <string>
+
+[maind.observability]
+# Service name in logs and telemetry. String.
+# service_name = "maind"
+
+# Log level. One of: "debug", "info", "warn", "error".
+# log_level = "info"
+
+# Collect metrics. Boolean.
+# metrics_enabled = true
+
+# Collect traces. Boolean.
+# traces_enabled = false
+
+# Install the session-start health hook. Boolean.
+# session_start_health_hook = false
+
+# Days to keep session logs. Integer >= 1.
+# session_log_retention_days = <integer>
+
+# Days to keep code graph logs. Integer >= 1.
+# serena_log_retention_days = <integer>

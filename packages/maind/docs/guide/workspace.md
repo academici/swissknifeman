@@ -70,7 +70,7 @@ Entry - mirror `mcpconfig` (load → merge → write), **additive and idempotent
 
 - lists are merged union with grandfather - **other people's entries are saved**;
 - custom `defaultMode` **does not fray** (is set only if not specified);
-- before recording - `.bak`, the record itself is atomic (`tmp` + `os.replace`);
+- before recording - a backup under `.swissknifeman/backups/`, the record itself is atomic (`tmp` + `os.replace`);
 - broken JSON settings → stop, don't touch the file;
 - repeated `sync` without registry changes → «is already relevant», file is not overwritten.
 

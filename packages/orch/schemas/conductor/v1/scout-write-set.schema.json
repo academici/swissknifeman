@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:scout-write-set:v1",
+  "title": "scout-write-set",
+  "description": "Optional closed block at the end of a context-scout answer: the paths and tests the scout expects the work to touch. A hint for the executor and for labelling deviations; it never widens the write set of the plan.",
+  "type": "object",
+  "properties": {
+    "paths": {
+      "description": "Expected repository-relative paths or globs of the change.",
+      "type": "array",
+      "items": {
+        "description": "Path or glob.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "tests": {
+      "description": "Expected repository-relative test paths.",
+      "type": "array",
+      "items": {
+        "description": "Test path.",
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "required": [
+    "paths",
+    "tests"
+  ],
+  "additionalProperties": false
+}

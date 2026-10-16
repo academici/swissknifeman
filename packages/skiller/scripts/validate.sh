@@ -6,6 +6,28 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+# The first Python block imports skiller.host, which needs `core` and, through it, `aicore`.
+export PYTHONPATH="$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}"
+
 # P4.2: the generate-skill snippet is a generated projection of the EN canonical
 # template. Keep this as integration-only composition: ownership of both predicates
 # stays in their dedicated scripts. Isolated legacy validator fixtures intentionally
@@ -21,8 +43,8 @@ from pathlib import Path
 
 root = Path(sys.argv[1])  # package root (skills/, lib/, buckets.json)
 # marketplace.json — in root monorepo; source-plugin paths are relative to the repo root.
-# (Canon - core.repo.find_repo_root; here is a self-contained take: heredoc is chasing
-#  before installation PYTHONPATH on core — we do not consciously import.)
+# (Canon - aicore.util.repo.find_repo_root; here is a self-contained take: the heredoc
+#  does not import the package on purpose.)
 def _repo_root(p):
     for cand in (p, *p.parents):
         if (cand / ".git").exists():
@@ -148,7 +170,7 @@ TRIG_HAS_TRIGGER_BY_KEY = {}  # 'bucket/name' -> bool(trigger in description+whe
 def _collect_block_scalar(lines, start):
     """Indent lines YAML-block scalar starting from lines[start] → (lines, next_i).
     Empty ones are stored as hyphens; tails are trimmed (clip-chomp). Mirrors
-    lib/skiller/common.py::_collect_block_scalar (gate should read as generate)."""
+    aicore.util.text._collect_block_scalar (gate should read as generate)."""
     block, i = [], start
     while i < len(lines):
         ln = lines[i]
@@ -172,8 +194,8 @@ def parse_frontmatter(path):
     Collects YAML-block scalars (`key: |` / `key: >` + opt. Chomp) and cuts BOM
     (utf-8-sig) — ELSE `description: >` gives gate marker only '>', and Cyrillic/
     real length (block) descriptions are not checked = false green. Reads the same way
-    like generate-path lib/skiller/common.py::parse_frontmatter (conscious
-    self-contained take: heredoc chases to PYTHONPATH on core, not imported)."""
+    like generate-path aicore.content.skill.read_frontmatter (conscious
+    self-contained take: the heredoc does not import the package)."""
     lines = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -626,10 +648,21 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
                           f"without its own anchor, the verdict cannot go rotten "
                           f"(update-upstreams.sh: AUDIT_STALE)")
 
+# Buckets the library leaves to the host (`"provided_by": "host"` in buckets.json): no catalog
+# under skills/, profiles and presets may still name them.
+HOST_BUCKETS = set()
+try:
+    _bucket_json = json.loads((root / "buckets.json").read_text(encoding="utf-8"))
+    if isinstance(_bucket_json, dict):
+        HOST_BUCKETS = {name for name, meta in _bucket_json.items()
+                        if isinstance(meta, dict) and meta.get("provided_by") == "host"}
+except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+    pass  # reported by the buckets.json section below
+
 # --- 3. profiles/*.json ---------------------------------------------------
-# Taxonomy Canon - core.project.PROJECT_TYPES; here is a self-contained take
-# (heredoc chases to PYTHONPATH on core — we do not consciously import; hold
-#  in sync with core/project.py). Links to presets/packs/mcp live in the package
+# Taxonomy Canon - aicore.util.project.PROJECT_TYPES; here is a self-contained take
+# (the heredoc does not import the package on purpose; hold in sync with
+#  aicore/util/project.py). Links to presets/packs/mcp live in the package
 # configured environment publisher — checked only when available in this host.
 PROJECT_TYPE_IDS = {
     "obsidian-vault", "laravel-project", "php-package", "dart-flutter",
@@ -637,7 +670,7 @@ PROJECT_TYPE_IDS = {
 }
 AA_MODES = {"strict", "permissive", "bypass", "off"}
 MEM_MODES = {"file", "federation", "agentmemory", "off"}
-MODEL_TIERS = {"inherit", "opus", "sonnet", "haiku"}
+MODEL_TIERS = {"inherit", "economy", "implementation", "frontier", "opus", "sonnet", "haiku"}  # classes (aicore model catalog) or names
 # Host-selected publisher; no repository partner names or fixed package layout.
 hc_dir = None
 _host = None
@@ -670,7 +703,7 @@ if profiles_dir.is_dir():
             errors.append(f"{rel}: buckets must be a non-empty array")
         elif buckets != ["*"]:
             for b in buckets:
-                if not (root / "skills" / b).is_dir():
+                if not (root / "skills" / b).is_dir() and b not in HOST_BUCKETS:
                     errors.append(f"{rel}: unknown bucket: {b}")
         # --- extended options keys: agent_pack/presets/mcp/hooks/model_tiers ---
         pack = data.get("agent_pack")
@@ -866,7 +899,12 @@ else:
         # Alias-bucket (P7.5, merging buckets - mechanism without application, D14): metadata-
         # entry WITHOUT skills/<bucket>, `alias_of` points to the target bucket. Not orphan.
         is_alias = isinstance(meta, dict) and meta.get("alias_of")
-        if b not in bucket_dirs and not is_alias:
+        provided_by = meta.get("provided_by") if isinstance(meta, dict) else None
+        if provided_by is not None and provided_by != "host":
+            errors.append(f"buckets.json: {b}: provided_by must be \"host\"")
+        if provided_by == "host" and b in bucket_dirs:
+            errors.append(f"buckets.json: {b}: provided by the host, but skills/{b}/ exists")
+        if b not in bucket_dirs and not is_alias and provided_by != "host":
             errors.append(f"buckets.json: entry without skills/ dir: {b}")
         if is_alias and meta["alias_of"] not in bucket_dirs:
             errors.append(f"buckets.json: {b}: alias_of points to a non-existent "
@@ -881,17 +919,17 @@ else:
 # Checking: name==file (kebab), non-empty description, extends/buckets/include
 # resolve, cycles in extends no. Catalog optional (graceful skip).
 presets_dir = root / "presets"
+skill_names, skill_paths = set(), set()
+for skill_md in skill_files:
+    fm = parse_frontmatter(skill_md) or {}
+    nm = (fm.get("name", "") or "").strip().strip('"').strip("'")
+    if nm:
+        skill_names.add(nm)
+    parts = skill_md.parent.relative_to(root).parts
+    if len(parts) >= 3 and parts[0] == "skills":
+        skill_paths.add("/".join(parts[1:]))  # bucket/rel
+preset_names = {p.stem for p in presets_dir.glob("*.json")} if presets_dir.is_dir() else set()
 if presets_dir.is_dir():
-    skill_names, skill_paths = set(), set()
-    for skill_md in skill_files:
-        fm = parse_frontmatter(skill_md) or {}
-        nm = (fm.get("name", "") or "").strip().strip('"').strip("'")
-        if nm:
-            skill_names.add(nm)
-        parts = skill_md.parent.relative_to(root).parts
-        if len(parts) >= 3 and parts[0] == "skills":
-            skill_paths.add("/".join(parts[1:]))  # bucket/rel
-    preset_names = {p.stem for p in presets_dir.glob("*.json")}
     preset_extends = {}
     for pf in sorted(presets_dir.glob("*.json")):
         rel = pf.relative_to(root)
@@ -915,7 +953,7 @@ if presets_dir.is_dir():
                 errors.append(f"{rel}: extends unknown preset '{parent}'")
         preset_extends[pf.stem] = [e for e in ext if e in preset_names]
         for b in data.get("buckets", []) or []:
-            if b not in bucket_dirs:
+            if b not in bucket_dirs and b not in HOST_BUCKETS:
                 errors.append(f"{rel}: unknown bucket '{b}'")
         for tok in data.get("include", []) or []:
             if tok not in skill_names and tok not in skill_paths:
@@ -949,6 +987,43 @@ if presets_dir.is_dir():
                 pstack.pop()
 
 
+# --- 6c. budget-configs/*.json (test configs of `skiller budget`) ---------
+# Same reference semantics as presets: buckets ∈ skills/ catalogs ∪ host buckets, include and exclude
+# tokens ∈ skill names ∪ bucket/rel (exclude may also name a bucket), presets ∈ presets/.
+budget_configs_dir = root / "budget-configs"
+if budget_configs_dir.is_dir():
+    for bc in sorted(budget_configs_dir.glob("*.json")):
+        rel = bc.relative_to(root)
+        try:
+            data = json.loads(bc.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            errors.append(f"{rel}: invalid JSON: {e}")
+            continue
+        if not isinstance(data, dict):
+            errors.append(f"{rel}: must be a JSON object")
+            continue
+        for key in ("buckets", "include", "exclude", "presets"):
+            if not isinstance(data.get(key, []), list):
+                errors.append(f"{rel}: {key} must be a list")
+        lists = {key: data[key] if isinstance(data.get(key), list) else [] for key in
+                 ("buckets", "include", "exclude", "presets")}
+        for b in lists["buckets"]:
+            if b not in bucket_dirs and b not in HOST_BUCKETS:
+                errors.append(f"{rel}: unknown bucket '{b}'")
+        for tok in lists["include"]:
+            if tok not in skill_names and tok not in skill_paths:
+                errors.append(f"{rel}: include '{tok}' does not resolve into skill "
+                              f"(need name or bucket/rel)")
+        for tok in lists["exclude"]:
+            if tok not in skill_names and tok not in skill_paths and tok not in bucket_dirs \
+                    and tok not in HOST_BUCKETS:
+                errors.append(f"{rel}: exclude '{tok}' does not resolve into a skill or a bucket "
+                              f"(need name, bucket/rel or bucket)")
+        for name in lists["presets"]:
+            if name not in preset_names:
+                errors.append(f"{rel}: unknown preset '{name}'")
+
+
 # --- 7. plugin manifests (.claude-plugin/) ----------------------------------
 def expected_skills_dirs(plugin_root):
     """Same algorithm as sync.sh: parents of skill dirs, ./-prefixed."""
@@ -968,10 +1043,6 @@ plugin_roots = {b: root / "skills" / b for b in bucket_dirs
                if not (isinstance(bucket_meta.get(b), dict)
                        and bucket_meta[b].get("private_source_only"))}
 plugin_roots["generate-skill"] = root / "generate-skill"
-# Management plugin (command person CLI, without skills) — is validated as a regular plugin,
-# if the directory exists; registry.py adds it to marketplace.json synchronously.
-if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
-    plugin_roots["skm"] = root / "skm"
 
 # Neighboring monorepo packages (packages/<name>, except swissknifeman) — command/MCP-plugins
 # without skills-fields; them plugin.json — source of truth, registry adds them to marketplace.
@@ -1255,13 +1326,20 @@ echo "CLI + shell scripts: syntax OK"
 # --- 12. lib/skiller package + unit/integration tests --------------------------
 [[ -d "$REPO_ROOT/lib/skiller" ]] || {
   echo "ERROR: lib/skiller package missing" >&2; exit 1; }
-# MONOREPO_ROOT (two levels above the package) — to import the package `core`;
-# optional: in standalone-directory layout core no, the path is not added.
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import skiller.cli" || {
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c "import skiller.cli" || {
   echo "ERROR: lib/skiller fails to import" >&2; exit 1; }
-"$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "tests skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
+fi
+
+# --- 12a. selection.json sidecars (skill-selection/v1, D10) + exclusive groups --------
+# Schema of every sidecar, `conflicts` and `exclusive_group` references, the group table.
+if [ -x "$REPO_ROOT/bin/skiller" ]; then
+  "$REPO_ROOT/bin/skiller" selection check || {
+    echo "ERROR: selection.json / exclusive-groups.json are invalid" >&2; exit 1; }
+fi
 
 # --- 12b. registry drift-gate (skills.json/_index.md/manifests vs sources) ----
 # Rebuilds the registry IN MEMORY and checks it against committed artifacts. Catches the quiet one
@@ -1358,10 +1436,8 @@ PY
 # ran" and "gate passed" are not the same thing. The expected inventory comes from the
 # host config (default command plugins + sibling plugin dirs); without a host the
 # gate has nothing to compare and is skipped explicitly.
-_CORE_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$_CORE_ROOT/core" ] || _CORE_ROOT=""
 _host_rc=0
-PYTHONPATH="$REPO_ROOT/lib${_CORE_ROOT:+:$_CORE_ROOT}" python3 -c \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c \
   'import sys; from pathlib import Path; from skiller.host import load_host; sys.exit(0 if load_host(Path(sys.argv[1])).default_command_plugins else 3)' \
   "$REPO_ROOT" || _host_rc=$?
 if [ "$_host_rc" -ne 0 ] && [ "$_host_rc" -ne 3 ]; then
@@ -1374,7 +1450,7 @@ elif ! command -v codex >/dev/null 2>&1; then
 else
   codex_version="$(codex --version 2>/dev/null || echo unknown)"
   _codex_gate_log="$(mktemp)"
-  if (cd "$REPO_ROOT" && PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${_CORE_ROOT:+:$_CORE_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+  if (cd "$REPO_ROOT" && PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}" \
       python3 -m unittest tests.test_codex_consumer_acceptance -v) > "$_codex_gate_log" 2>&1; then
     echo "Codex publication consumer-acceptance: GREEN (codex ${codex_version})"
   else

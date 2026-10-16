@@ -1,0 +1,197 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.7",
+  "title": "aicore.delivery.materialize: управляемые копии skills, маркер, манифест, skills-lock и синхронизация",
+  "status": "done_with_deviations",
+  "summary": "Перенести из skiller/common.py (MANIFEST, MANIFEST_VERSION, AGENT_DEFAULTS, SKILL_MANAGED_MARKER, маркер, safe_copy_skill, write_skill_manifest) и skiller/skillset.py (lock-функции, sync_skillset и его помощники) в aicore/delivery/materialize.py; skiller (skillset.plan_sync/do_sync, vendor, connect, status, update, delivery) — через реэкспорт; тесты aicore; удалить гипотезы common.py, skillset.py, delivery.py.",
+  "why": "D40, E27 (materialize с манифестом и receipt): физическая доставка skill-копий с маркером, манифестом и lock — механика, которую получат модули со skills (P7, P8). Жёсткие риски: (1) потеря проверки containment при копировании (safe_copy_skill отказывает на путь вне корня); (2) изменение формата .swissknifeman-manifest.json или skills-lock.json — тесты test_skillset/test_lock и golden; (3) patch skiller.skillset.safe_copy_skill перестаёт действовать на sync_skillset.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/delivery/materialize.py (таблица content-p5-delivery#allocation и content-p5-delivery#design)",
+      "packages/skiller/lib/skiller/{common.py, skillset.py}: реэкспорт перенесённых имён; вызывающие (vendor, connect, status, update, delivery, lock, hub) не переписываются",
+      "packages/aicore/tests/delivery/test_materialize.py; test_architecture: sync_skillset, safe_copy_skill",
+      "packages/skiller/tests/test_skillset.py:225 — patch на aicore.delivery.materialize.safe_copy_skill",
+      "configs/ecosystem-units.json: удалить гипотезы common.py, skillset.py, delivery.py; render; CHANGELOG aicore"
+    ],
+    "exclude": [
+      "выбор набора (resolve_skillset, пресеты, plan_sync, do_sync), vendor-оркестрация (skiller, P8)",
+      "новые места служебных файлов (.swissknifeman/state/) — P8",
+      "пост-теговая доставка флоту delivery.py (хаб, P12)"
+    ]
+  },
+  "depends_on": [
+    "P5.6"
+  ],
+  "decisions": [
+    "D40",
+    "D41"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/content-p5-delivery#allocation",
+      "why": "таблица materialize",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5-delivery#design",
+      "why": "materialize: правило «политика — не переносить», тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#migration",
+      "why": "реэкспорт, patch-цели",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/common.py",
+      "why": "строки 25–167",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/skillset.py",
+      "why": "load_lock … sync_skillset … _sync_report_counts",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_skillset.py",
+      "why": "поведение синхронизации и patch на строке 225",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/delivery/materialize.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/skillset.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "modify",
+      "note": "только цели импортов/патчей"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только render"
+    }
+  ],
+  "rules": [
+    "Перенос — по knowledge/content-p5 content-p5#migration: тела функций дословно, имена и сигнатуры строго по content-p5-delivery#allocation, старые имена в skiller/task — реэкспорт; отклонение от таблицы — только через plan.py log с причиной (решение остаётся D40)",
+    "aicore импортирует только stdlib и aicore.*; слои подпакетов — content-p5#migration п.10 (test_subpackage_layering); новые импорты в skiller/task/harness — aicore.*, после первого import core модуля; shim core новых алиасов не получает",
+    "Перед переносом каждой функции прочитать тело: обращение к политике skiller (config, host, state, бакеты, пресеты) — функция не переносится, запись plan.py log с причиной; die/warn/is_within/atomic_write_* — из aicore.util",
+    "Форматы .swissknifeman-manifest.json, skills-lock.json и .gitignore-блока, маркер <!-- swissknifeman:managed --> — без изменений",
+    "python3 scripts/golden.py check — без перезахвата: расхождение байтов генерации или вывода CLI — дефект переноса, чинится в пункте (D23)",
+    "Цели mock.patch в тестах skiller/task переносятся на модуль aicore, если патчится вызов внутри перенесённой функции (content-p5#migration п.5); каждый такой тест после правки проверяет, что mock действительно вызван",
+    "Пункт удаляет из configs/ecosystem-units.json гипотезы P5 по своим файлам, перегенерирует docs/architecture/ownership.md (ecosystem-units.py render) и при improvements обновляет базовую линию (baseline --update)",
+    "CLI skiller в dev-клоне блокирует guard (SKM_DEV_GUARD) — skiller validate.sh (внутри: test.sh, registry --check, Codex consumer acceptance) запускается только через scripts/dev-sandbox.sh, как в V-команде; прямой запуск вне песочницы даёт ложное «registry is out of date»",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: прочитать `common.py:25–167` и функции `skillset.py` из таблицы, отметить внешние имена каждой → `delivery/materialize.py`: константы → маркер (`split_bom`, `mark_skill_managed`, `strip_skill_managed_marker`) → `safe_copy_skill`, `write_skill_manifest` → lock (`load_lock`, `lock_problem`, `hash_label`, `write_lock`, `dir_sha256`) → `remove_path`, `write_gitignore`, `remove_our_gitignore`, `write_manifest`, `sync_report_counts`, `sync_skillset` → в `common.py` и `skillset.py` — реэкспорт под старыми именами (`from aicore.delivery.materialize import mark_skill_managed as _mark_skill_managed`, …) → прогон skiller в песочнице; patch `skiller.skillset.safe_copy_skill` → `aicore.delivery.materialize.safe_copy_skill` (и проверить, что mock вызван) → тесты aicore (content-p5-delivery#design) → `test_content_primitives_are_defined_once` += `sync_skillset`, `safe_copy_skill`, `write_skill_manifest` → карта → CHANGELOG aicore.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p5-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "test -z \"$(git grep -n -E '^def (safe_copy_skill|write_skill_manifest|sync_skillset|load_lock|write_lock|strip_skill_managed_marker)\\b' -- packages/skiller/lib)\" && test -z \"$(git grep -n -E 'lib/skiller/(common|skillset|delivery)\\.py' -- configs/ecosystem-units.json)\" && git grep -q 'aicore.delivery.materialize.safe_copy_skill' -- packages/skiller/tests/test_skillset.py && PYTHONPATH=packages/aicore/lib python3 -c 'from aicore.delivery.materialize import MANIFEST, AGENT_DEFAULTS, SKILL_MANAGED_MARKER, safe_copy_skill, sync_skillset; assert MANIFEST == \".swissknifeman-manifest.json\" and AGENT_DEFAULTS[\"claude\"] == \".claude/skills\"'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.delivery.materialize",
+    "skiller skillset/common — реэкспорт",
+    "карта P5 для delivery закрыта"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T16:57:35Z",
+    "finished_at": "2026-10-08T17:15:41Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "4e863c18-d28b-4fb2-b512-ab2408971b7f"
+    },
+    "notes": "aicore.delivery.materialize: маркер, safe_copy_skill, write_skill_manifest, lock (load/lock_problem/write), sync_skillset, gitignore, manifest, счётчики отчёта; skiller common/skillset — реэкспорт, plan_sync и выбор набора остались; гипотезы common.py, skillset.py, delivery.py удалены из карты; CHANGELOG aicore.",
+    "deviations": [
+      "sync_skillset: параметр planner, в skiller — functools.partial; перенесены константы lock и gitignore; цели patch на aicore"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T17:15:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T17:15:41Z"
+}

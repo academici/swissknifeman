@@ -2,9 +2,11 @@
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
@@ -42,17 +44,19 @@ class DoctorCase(unittest.TestCase):
     def test_runs_on_real_env_reports_presets(self):
         env = fx.real_env(self.tmp)
         _out, text = run(cmd_doctor, env, [])
-        self.assertIn("harness doctor:", text)
-        self.assertIn("MCP-presets", text)
-
-        self.assertIn("permissions-presets", text)
+        self.assertIn("harness.environment", text)
+        _out, text = run(cmd_doctor, env, ["--json"])
+        evidence = json.loads(text)[0]["evidence"]
+        self.assertTrue(any(line.startswith("mcp-presets: ") for line in evidence))
+        self.assertTrue(any(line.startswith("permissions-presets: ") for line in evidence))
 
     def test_runs_when_script_missing_no_crash(self):
 
         _root, env = fx.make_root(self.tmp)
         out, text = run(cmd_doctor, env, [])
-        self.assertNotIsInstance(out, SystemExit)
-        self.assertIn("harness doctor:", text)
+        self.assertIsInstance(out, SystemExit)          # a failed check exits 1, nothing crashes
+        self.assertEqual(out.code, 1)
+        self.assertRegex(text, r"(?m)^fail harness\.environment: ")
 
     def test_run_report_hook_stale_when_not_installed(self):
 
@@ -60,7 +64,7 @@ class DoctorCase(unittest.TestCase):
         env = fx.real_env(self.tmp)
         out, text = run(cmd_doctor, env, [])
         self.assertNotIsInstance(out, SystemExit)
-        self.assertIn("hook run-report rotten", text)
+        self.assertRegex(text, r"(?m)^warn harness\.hooks: ")
         self.assertIn("harness hooks --global", text)
 
     def test_route_evidence_guidance_line_present(self):
@@ -80,7 +84,7 @@ class DoctorCase(unittest.TestCase):
         for name in ("run-report.py", "_lib.py", "_usage.py"):
             (dst / name).write_text((src / name).read_text(encoding="utf-8"), encoding="utf-8")
         _out, text = run(cmd_doctor, env, [])
-        self.assertNotIn("rotten", text)
+        self.assertNotIn("stale", text)
 
 
 class SettingsCase(unittest.TestCase):
@@ -101,14 +105,27 @@ class SettingsCase(unittest.TestCase):
         run(write_json, f, {"a": 1}, True)
         self.assertFalse(f.exists())
 
-    def test_write_json_creates_and_backups(self):
-        f = self.tmp / "x.json"
+    def test_write_json_creates_and_keeps_the_old_copy_in_the_project_backups(self):
+        (self.tmp / ".git").mkdir()
+        f = self.tmp / ".claude" / "x.json"
         run(write_json, f, {"a": 1}, False)
         self.assertEqual(json.loads(f.read_text())["a"], 1)
+        self.assertFalse((self.tmp / ".swissknifeman" / "backups").exists())
 
         run(write_json, f, {"a": 2}, False)
-        self.assertTrue(Path(f"{f}.bak").exists())
         self.assertEqual(json.loads(f.read_text())["a"], 2)
+        self.assertFalse(Path(f"{f}.bak").exists())
+        copies = sorted((self.tmp / ".swissknifeman" / "backups").glob("*/.claude/x.json"))
+        self.assertEqual([json.loads(path.read_text())["a"] for path in copies], [1])
+
+    def test_write_json_outside_a_project_keeps_the_copy_in_the_machine_state(self):
+        skm = self.tmp / "skm"
+        f = self.tmp / "loose" / "x.json"
+        run(write_json, f, {"a": 1}, False)
+        with unittest.mock.patch.dict(os.environ, {"SKM_HOME": str(skm)}):
+            run(write_json, f, {"a": 2}, False)
+        self.assertFalse(Path(f"{f}.bak").exists())
+        self.assertEqual(len(list((skm / "state" / "backups").glob("*/**/x.json"))), 1)
 
     def test_write_text_dry_and_real(self):
         f = self.tmp / "t.txt"
@@ -160,7 +177,7 @@ class CliDispatchCase(unittest.TestCase):
     def test_doctor_dispatch_runs(self):
         out, text = run(cli.main, [str(fx.PACKAGE_ROOT), "doctor"])
         self.assertNotIsInstance(out, SystemExit)
-        self.assertIn("harness doctor:", text)
+        self.assertIn("harness.environment", text)
 
     def test_apply_is_alias_for_permissions(self):
         self.assertIs(cli.COMMANDS["apply"], cli.COMMANDS["permissions"])

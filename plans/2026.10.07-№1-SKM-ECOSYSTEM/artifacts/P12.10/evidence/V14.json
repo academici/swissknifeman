@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T155603Z-b00fdd:P12.10:checks.3:V14",
+  "check_id": "V14",
+  "subject": "PLAN3.P12.10",
+  "candidate": {
+    "head": "82fe9b619051ca945292bc54dee10d9749e91b72",
+    "dirty_digest": "9ea86dd12e2bb068eec67ad1bbbfe2206f97bc525f9af3813fe91386c452dc82"
+  },
+  "started_at": "2026-10-13T17:59:21Z",
+  "procedure": {
+    "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T17:59:25Z"
+}

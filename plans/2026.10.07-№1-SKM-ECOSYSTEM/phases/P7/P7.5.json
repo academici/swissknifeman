@@ -1,0 +1,238 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.5",
+  "title": "Инструкции модуля brain через каталог harness: scope brain, CLAUDE.md, AGENTS.md, .cursor и .grok",
+  "status": "done_with_deviations",
+  "summary": "Добавить в каталог инструкций harness scope brain (TARGETS, COMMON_IDS, фрагмент packages/brain/common.md, записи catalog.json, строка инвентаря контракта), обновить фикстуры и сгенерированную справку, применить проекции в песочнице: появляются packages/brain/{CLAUDE.md,AGENTS.md,.cursor-instructions.mdc,.grok-instructions.md}; instructions check clean; golden перезахвачен только для изменившихся генераторов harness.",
+  "why": "Контракт модуля (architecture §3) требует CLAUDE.md и AGENTS.md, а они генерируются harness — ручные файлы нарушили бы правило плана о генерируемых файлах и покраснели бы в instructions check. Жёсткие риски: (1) каталог хранит sha256 фрагментов и литералы совместимости — расхождение ломает тесты harness; (2) применение проекций трогает lock провайдерских артефактов — только через harness instructions apply в песочнице; (3) бюджет первого хода корня не должен вырасти.",
+  "scope": {
+    "include": [
+      "packages/harness/configs/common/instructions/packages/brain/common.md (шесть секций §instructions дословно)",
+      "packages/harness/lib/harness/instructions.py: TARGETS[\"brain\"], COMMON_IDS[\"brain\"]",
+      "packages/harness/configs/common/instructions/catalog.json: scope brain (по образцу analyst), catalog_version minor",
+      "packages/harness/docs/reference/provider-instruction-contract.md: строка инвентаря brain",
+      "packages/harness/tests/** и fixtures_data: по смыслу; scripts/generate-provider-instructions.py — перегенерация справки и фикстуры покрытия",
+      "проекции: packages/brain/{CLAUDE.md,AGENTS.md,.cursor-instructions.mdc,.grok-instructions.md}, .swissknifeman/provider-artifacts.lock.json — только harness instructions apply",
+      "tests/golden: capture только изменившихся генераторов harness с причиной",
+      "CHANGELOG brain и корневой CHANGELOG.md (строка harness)"
+    ],
+    "exclude": [
+      "другие scope каталога",
+      "изменение текста существующих секций",
+      "корневые CLAUDE.md и AGENTS.md (не меняются: scope brain не закреплён в root)"
+    ]
+  },
+  "depends_on": [
+    "P7.4"
+  ],
+  "decisions": [
+    "D49"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/brain-p7#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-instructions#instructions",
+      "why": "что добавить, тексты секций, порядок применения",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "why": "TARGETS и COMMON_IDS (строки ~41–100); как scope проецируется",
+      "required": true
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+      "why": "образец фрагмента",
+      "required": true
+    },
+    {
+      "path": "packages/harness/docs/reference/provider-instruction-contract.md",
+      "why": "таблица инвентаря scope",
+      "required": true
+    },
+    {
+      "path": "packages/analyst/CLAUDE.md",
+      "why": "как выглядит сгенерированная проекция модуля",
+      "required": true
+    },
+    {
+      "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/phases/P2/P2.4.json",
+      "why": "прецедент: guidance — шаги добавления секции в каталог, apply в песочнице, бюджет",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/catalog.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/docs/reference/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify",
+      "note": "строка harness: своего CHANGELOG у harness нет"
+    },
+    {
+      "path": "packages/brain/CLAUDE.md",
+      "change": "create",
+      "note": "только harness instructions apply"
+    },
+    {
+      "path": "packages/brain/AGENTS.md",
+      "change": "create",
+      "note": "только harness instructions apply"
+    },
+    {
+      "path": "packages/brain/.cursor-instructions.mdc",
+      "change": "create",
+      "note": "только harness instructions apply"
+    },
+    {
+      "path": "packages/brain/.grok-instructions.md",
+      "change": "create",
+      "note": "только harness instructions apply"
+    },
+    {
+      "path": "packages/brain/CHANGELOG.md",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": ".swissknifeman/provider-artifacts.lock.json",
+      "change": "modify",
+      "note": "только harness instructions apply"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "modify",
+      "note": "только capture изменившихся генераторов harness"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/brain-p7 §rules (stdlib + aicore, Python 3.9, POSIX; тесты только с временным HOME и копией фикстуры хранилища; граница модулей; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge/brain-p7, указанные в reads; имена функций, коды ошибок, ключи конфига, пути и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "lib/brain импортирует только stdlib, brain.* и aicore.*; skiller и maind обращаются к brain только через CLI (python3 scripts/ecosystem-units.py check без новых нарушений базовой линии)",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Тексты шести секций — дословно из knowledge/brain-p7 §instructions; порядок order 1–6",
+    "Файлы проекций и lock меняются только `harness instructions apply` в песочнице на этом дереве; ручная правка запрещена",
+    "Golden: перед захватом `python3 scripts/golden.py check` показывает, какие генераторы разошлись; захватываются только генераторы harness, чьи выходы законно изменились, с причиной «brain module instruction scope»; расхождение в чужом генераторе — дефект",
+    "Бюджет первого хода корня не растёт (V5)"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: фрагмент `packages/brain/common.md` по образцу analyst (маркеры `<!-- instruction:<id> -->`, заголовки `## <id>`) → instructions.py: `TARGETS[\"brain\"]` (четыре пути §instructions), `COMMON_IDS[\"brain\"]` (шесть id по порядку) → catalog.json (≈130 KB, в контекст не включён — читать фрагментами: `grep -n '\"id\": \"analyst' …` и соседние строки): scope `brain` после `analyst` (структура как у analyst: `claude_target`, `codex_target`, секции с intent «Apply this source-derived instruction: …», obligations must/brain.maintainer/preserve/brain.all, sources с sha256 нового фрагмента, compatibility_assertions — ключевые литералы каждого текста); `catalog_version` — minor; если валидатор хранит версию или список scope константой — обновить → контракт: строка инвентаря → `bash packages/harness/scripts/test.sh` — фикстуры (`instruction-compatibility-v1.json`, `instruction-literal-coverage-v1.json`) поправить по смыслу; `python3 scripts/generate-provider-instructions.py` (перегенерировать справку и покрытие) → песочница: `SB=$(scripts/dev-sandbox.sh new --name p75 | tail -1)`; `scripts/dev-sandbox.sh run \"$SB\" -- packages/harness/bin/harness instructions plan --target \"$PWD\" --json` (ожидаются только цели packages/brain/*); `… instructions apply --target \"$PWD\" --authorize <эти цели>`; `… instructions check --target \"$PWD\"`; remove → `python3 scripts/golden.py check` → capture только harness-генераторов из расхождения → корневой CHANGELOG.md (harness — Added: brain instruction scope) и CHANGELOG brain → V1–V5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/harness/scripts/test.sh && bash packages/harness/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p7-ins-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- packages/harness/bin/harness instructions check --target \"$PWD\"; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "for f in packages/brain/CLAUDE.md packages/brain/AGENTS.md packages/brain/.cursor-instructions.mdc packages/brain/.grok-instructions.md; do test -f \"$f\" || exit 1; done; for id in brain.identity brain.layout brain.module-boundaries brain.vault-safety brain.engineering-invariants brain.validation-release; do grep -q \"## $id\" packages/brain/CLAUDE.md || exit 1; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone brain && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && bash packages/brain/scripts/test.sh && bash packages/brain/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p7-bud-$$ | tail -1) && out=$(scripts/dev-sandbox.sh run \"$SB\" -- packages/skiller/bin/skiller budget --first-turn --target \"$PWD\" 2>&1); scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; printf '%s\\n' \"$out\" | grep -E '^Total:' | grep -q 'OK'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "scope brain в каталоге инструкций harness",
+    "packages/brain/{CLAUDE.md,AGENTS.md,.cursor-instructions.mdc,.grok-instructions.md}"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T10:32:33Z",
+    "finished_at": "2026-10-09T11:31:41Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1bb1eb5c-897d-469a-a32c-4304245ec00f"
+    },
+    "notes": "scope brain в каталоге harness (1.5.0): 6 секций, 4 пустых провайдерских фрагмента, строки контракта (+artifex), фикстуры, справка, проекции packages/brain/* и lock через harness instructions apply, golden только harness-instructions-check и harness-provider-instructions; ревью grok-4.7 P7.4+P7.5 в 2 раунда, найденное исправлено",
+    "deviations": [
+      "ecosystem-baseline.json updated for brain paths in harness catalog; P7.4 hygiene defect (plan IDs in brain tests) and Grok-review findings in P7.4 notes.py fixed here"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T11:31:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T11:31:41Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T11:31:41Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T11:31:41Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T11:31:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T11:31:41Z"
+}

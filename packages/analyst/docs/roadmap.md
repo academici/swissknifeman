@@ -65,7 +65,7 @@ curated`:
 #### Alternative (if the criterion still fails)
 
 Do nothing - Update Log + Known Deviations and so human readable
-`/task:plan-design`/review of the new plan (Required Reads are already referred to Completion Notes
+`/planner:plan-design`/review of the new plan (Required Reads are already referred to Completion Notes
 previous items). Automation is justified only with real volume, not «for growth The».
 
 #### Source

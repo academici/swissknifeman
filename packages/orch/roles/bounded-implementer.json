@@ -6,9 +6,9 @@
   "description": "Implement only this unit, exactly as the input describes it, inside `scope.write_set`.",
   "instructions": [
     {
-      "path": "packages/orch/roles/bounded-implementer.md",
+      "path": "roles/bounded-implementer.md",
       "purpose": "canonical role text",
-      "sha256": "1c434862ec3eb482efc9f3b459316751f1f1be0a49d0884eea0dc53c57f23ff4"
+      "sha256": "3b407e3810c6b800c4dcfe7a48674798c65513d651ea5e4f7d29d4648223e876"
     }
   ],
   "tools": {

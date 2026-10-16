@@ -11,10 +11,15 @@ import sys
 from . import agents as agents_mod
 from . import memory as memory_mod
 from . import projects as projects_mod
-from .common import parse_args
+from aicore.util.cli import parse_args
+from aicore.util.digest import canonical_json_bytes, sha256_tagged
 from .config import load_config
 
-PROTOCOL_VERSION = "2024-11-05"
+# Newest first. A revision is added only after its changelog is checked for mandatory stdio/tools
+# server behaviour: 2025-06-18 only drops batching and adds optional features (HTTP-only header
+# requirements); 2025-03-26 would require accepting JSON-RPC batches, which this server does not.
+SUPPORTED_PROTOCOL_VERSIONS = ("2025-06-18", "2024-11-05")
+PROTOCOL_VERSION = SUPPORTED_PROTOCOL_VERSIONS[0]
 SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 
 # Trimming target - BELOW warning-threshold Claude Code (10 000 tokens), and not under the default
@@ -400,9 +405,11 @@ def dispatch(env, config, req, default_scope="global"):
     req_id = req.get("id")
     if method == "initialize":
         params = req.get("params") or {}
-        version = params.get("protocolVersion") or PROTOCOL_VERSION
+        requested = params.get("protocolVersion")
+        version = requested if requested in SUPPORTED_PROTOCOL_VERSIONS else PROTOCOL_VERSION
         return _result(req_id, {"protocolVersion": version,
-                                "capabilities": {"tools": {}}, "serverInfo": SERVER_INFO})
+                                "capabilities": {"tools": {"listChanged": False}},
+                                "serverInfo": SERVER_INFO})
     if method in ("notifications/initialized", "initialized"):
         return None
     if method == "tools/list":
@@ -476,7 +483,27 @@ def _default_scope_from_cwd(env, config):
     return private_scope(proj) if proj else GLOBAL_SCOPE
 
 
+def tools_digest(tools=None):
+    """Tagged digest of the tools/list payload: [{name, description, inputSchema}] in list order."""
+    items = [{"name": t["name"], "description": t["description"], "inputSchema": t["inputSchema"]}
+             for t in (TOOLS if tools is None else tools)]
+    return sha256_tagged(canonical_json_bytes(items))
+
+
+def _cmd_mcp_tools(argv):
+    opts, _ = parse_args(argv, {"--json": "bool"})
+    digest = tools_digest()
+    if opts["json"]:
+        print(json.dumps({"tools_digest": digest, "tools": TOOLS}, ensure_ascii=False, indent=2))
+    else:
+        print(f"tools_digest: {digest}")
+        for tool in TOOLS:
+            print(tool["name"])
+
+
 def cmd_mcp(env, argv):
+    if argv and argv[0] == "tools":
+        return _cmd_mcp_tools(argv[1:])
     opts, _ = parse_args(argv, {"--scope": "str"})
     config, _src = load_config(env)
     default_scope = (opts["scope"] or os.environ.get("MAIND_SCOPE")

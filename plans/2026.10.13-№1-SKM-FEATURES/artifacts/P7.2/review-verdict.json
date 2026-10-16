@@ -1,0 +1,18 @@
+{
+  "selector": "grok/grok-4.7/high",
+  "session": "01a13af3-aef9-72c3-975f-6192249747c5",
+  "route_proof": {"modelId": "grok-4.7", "contextWindowTokens": 256000, "source": "~/.grok/sessions/<cwd>/<session>/{updates.jsonl,signals.json}", "note": "reasoning_effort not recorded in the session files; high is the launch argument"},
+  "scope": "P7.1 (245a0772e) and the working tree of P7.2; one general review at the owner's request",
+  "stream": ".swissknifeman/state/reviews/P7-grok.jsonl",
+  "round": 1,
+  "verdict": "findings",
+  "findings": [
+    {"id": "F1", "severity": "Major", "item": "P7.2", "summary": "red_first read only checks.1; after an auto-fix the first check round is checks.2, so red_first stayed false", "executor": "confirmed", "action": "fixed: _first_checks takes the lowest checks.N that ran; test"},
+    {"id": "F2", "severity": "Major", "item": "P7.2", "summary": "executor_recommended read only the last report; a correction that omits the field cleared a recommendation of round 1", "executor": "confirmed", "action": "fixed: _recommended is true when any executor round advised a review; e2e test"},
+    {"id": "F3", "severity": "Major", "item": "P7.2", "summary": "a stop at the preflight of the added reviewer lost REVIEW_ADDED and the plan note on resume", "executor": "confirmed", "action": "fixed: risk.announced is set after the routes are resolved and the beacon and note are out; resume test"},
+    {"id": "F4", "severity": "Minor", "item": "P7.2", "summary": "diff_lines counted untracked binary files and symlinks as text lines (numstat counts 0 and 1)", "executor": "confirmed", "action": "fixed: symlink = 1 line, binary = 0; test against git numstat"}
+  ],
+  "corrections": 1,
+  "after_correction": "affected tests green (python3 scripts/affected-tests.py --run); no second review round (review_rounds_max reached for the correction budget)",
+  "residual": "overlap_review is frozen before the dynamic decision; threshold 0 adds a review to every scored piece (by design); packs review-only and frontend-bounded are scored when their policy review is off"
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:planner:event-data:planner-item-started:v1",
+  "title": "planner.item.started",
+  "description": "Data of the planner.item.started event. An item was started or resumed.",
+  "type": "object",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "description": "Id of the plan the event belongs to.",
+      "minLength": 1
+    },
+    "short_id": {
+      "type": "string",
+      "description": "Short id of the plan such as PLAN7.",
+      "pattern": "^PLAN[1-9][0-9]*$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the item.",
+      "minLength": 1
+    },
+    "repository": {
+      "type": "string",
+      "description": "Repository the plan belongs to.",
+      "minLength": 1
+    },
+    "item_id": {
+      "type": "string",
+      "description": "Id of the item.",
+      "minLength": 1
+    },
+    "phase_id": {
+      "type": "string",
+      "description": "Id of the phase of the item.",
+      "minLength": 1
+    },
+    "executor": {
+      "type": "object",
+      "description": "Who runs the item.",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Provider of the session.",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "description": "Model of the session.",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "description": "Reasoning effort of the session.",
+          "minLength": 1
+        },
+        "session": {
+          "type": "string",
+          "description": "Provider session id.",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider",
+        "model"
+      ],
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "description": "Route of the item.",
+      "properties": {
+        "class": {
+          "type": "string",
+          "description": "Route class.",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "description": "Route effort.",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "resumed": {
+      "type": "boolean",
+      "description": "True when an in-progress item was resumed."
+    },
+    "take_over": {
+      "type": "boolean",
+      "description": "True when the attempt was taken over from another session."
+    }
+  },
+  "required": [
+    "plan_id",
+    "title",
+    "item_id",
+    "phase_id",
+    "executor"
+  ],
+  "additionalProperties": false
+}

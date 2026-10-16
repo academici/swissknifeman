@@ -50,12 +50,12 @@ Integration - **opt-in via the path in the config**, with mild degradation:
 ```mermaid
 flowchart LR
   subgraph alone["everyone for themselves"]
-    A1["maind: yours config.json"]
+    A1["maind: your registry.json"]
     A2["brain: yours discovery"]
     A3["swissknifeman: your registry"]
   end
   subgraph together["are linked through paths in the config (opt-in)"]
-    T["config.json ↔ brain maind_config_path ↔ project skills-lock"]
+    T["registry.json ↔ brain maind_config_path ↔ project skills-lock"]
   end
   alone -. "add path" .-> together
   together -. "remove path" .-> alone
@@ -95,8 +95,8 @@ sequenceDiagram
   participant skm as swissknifeman
   participant proj as project
   participant brain
-  Dev->>maind: maind onboard &lt;project&gt;
-  maind->>maind: register in config.json
+  Dev->>maind: maind onboard PROJECT
+  maind->>maind: register in registry.json
   maind->>skm: integrate (skills + hooks)
   skm->>proj: .claude/skills + hooks + skills-lock.json
   maind->>proj: deploy — agent-memory MCP (scope project:id) [+ code graph/Serena]
@@ -107,9 +107,27 @@ sequenceDiagram
   maind-->>Dev: report (steps · deployed · graph)
 ```
 
+## Partner modules and degradation
+
+maind imports only itself and `aicore`. Other modules are reached through their public commands with JSON output, found by
+`aicore.util.partners`: `SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`, then `<name>` on `PATH` (the old
+`MAIND_HARNESS_BIN`, `MAIND_SKM_BIN`, `MAIND_BRAIN_BIN`, `MAIND_ANALYST_BIN` and `MAIND_BIN` are read with one deprecation
+warning). A missing partner is `PARTNER_UNAVAILABLE: <partner> not found (set SKM_<P>_ROOT or put <partner> on PATH)` on
+stderr and the step is skipped.
+
+| Partner | What maind asks | Without the partner |
+|:--|:--|:--|
+| `harness` | `mcp catalog`, `profiles resolve`, `hooks codex-lifecycle fragment\|validate`, `instructions scopes\|plan\|check\|apply`, `hooks show`, `hooks --memory` (all `--json`) | provider steps of deploy, sync and workspace are skipped; hub servers still deploy |
+| `analyst` | `runs show\|codegraph --json` (contracts `run-lookup/v1`, `run-codegraph/v1`) | `maind analyze` marks the source `run-report` unavailable (confidence low) |
+| `skiller` | `profiles --json` and the capability commands of `maind run` | the step is skipped |
+| `brain` | `vault --json` (vault location), used when `integrations.brain.path` and the `brain` project `vault_path` are not set | no vault path (a warning) |
+
+The pure MCP projection (`McpServer`, `plan_mcp_projection`, `render_mcp_projection`) is `aicore.provider.mcp`; harness
+only supplies the catalog. Run the module tests with partners wired using `bash scripts/test-integration.sh` from the hub.
+
 ## Config and data flow
 
-maind — **reader everyone** key files and **writer** only `config.json`, MCP-configs
+maind — **reader everyone** key files and **writer** only `registry.json` (`<state>/maind/registry.json`), MCP-configs
 project and **own** `.claude/settings.local.json` (hub trust in ecosystem projects,
 see [Workspace](./guide/workspace)). Project skills described `skills-lock.json` (composes
 swissknifeman + Laravel Boost, swissknifeman wins). brain holds his `<vault>/.projects.json`
@@ -117,7 +135,7 @@ for docs-watcher.
 
 ```mermaid
 flowchart LR
-  MJ["config.json — project registry (writes maind)"]
+  MJ["registry.json — project registry (writes maind)"]
   PJ["&lt;vault&gt;/.projects.json — docs-watcher (brain)"]
   SL["skills-lock.json — skill map (skiller lock)"]
   BJ["boost.json — Laravel Boost"]
@@ -146,7 +164,8 @@ contract, and not separate correspondence. Each layer is a separate command main
 
 | What | Where does he live? | Who writes |
 |:--|:--|:--|
-| Project Registry | `config.json` (at the root of the monorepo) | maind (`projects.write_config` — sole writer) |
+| Project Registry | `registry.json` in the maind state directory (legacy: `config.json` at the root of the monorepo) | maind (`projects.write_registry` — sole writer) |
+| Node settings | `[maind]` table of the layered config (`config.example.toml`) | a person (`swissknifeman config set`) |
 | Trust Claude to projects | `<maind>/.claude/settings.local.json` | maind (`workspace sync` from the registry) |
 | Shared memory | agent-memory demon (buckets `project:<id>`/`ns:<name>`/`global`) | projects are written to their `project:<id>`, cross-ref — in `ns:<group>` |
 | Connection graph | `data/graphs/<id>.db` + `_index.db` (federation) | maind `derive` from composer/Brain/override/skills |

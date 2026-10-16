@@ -1,0 +1,6 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "router",
+  "decision": "ROUTER_ONLY",
+  "exclusive_group": "pm-pipeline"
+}

@@ -7,7 +7,7 @@ The binary is now a thin launcher: checks the environment and calls
 Modules:
   common    — die/warn/now_iso/confirm, parsing frontmatter and flag'ov
   config    — .swissknife.json, profiles, autodetect, resolve_selection
-  state     — ~/.swissknifeman/projects.json, registry_git_state
+  state     — <state>/skiller/projects.json, registry_git_state
   hub       — root hub generation, artifact detection
   boost     — sync boost.json::skills for Laravel Boost
   connect   — channel plugin marketplace

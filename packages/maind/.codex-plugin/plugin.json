@@ -1,0 +1,8 @@
+{
+  "description": "mAInd hub — thin face above CLI: onboarding projects into the ecosystem academici (skills + memory + graph + MCP), sync, status, communication health; skills: local-topology, swissknifeman-locator, cross-project-coordinator, shared-memory.",
+  "name": "maind",
+  "skills": [
+    "./skills"
+  ],
+  "version": "0.6.1"
+}

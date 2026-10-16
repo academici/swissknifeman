@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "base",
+  "title": "Sample foundation",
+  "kind": "foundation",
+  "version": "1.0.0-rc.1",
+  "stability": "development",
+  "destination": "own-repo",
+  "requires": [],
+  "provides": {}
+}

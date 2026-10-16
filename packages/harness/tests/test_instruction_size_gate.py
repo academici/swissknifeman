@@ -1,12 +1,10 @@
 """P2.1 gate: every instruction projection stays inside its size class ceiling."""
 from dataclasses import replace
-import importlib
 from pathlib import Path
 import tempfile
 import unittest
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from harness.instructions import (
@@ -27,24 +25,11 @@ def request(operation, root, **changes):
     return replace(base, **changes)
 
 
-def _skiller_budget():
-    """Internal documentation."""
-    lib = REPO_ROOT / "packages/skiller/lib"
-    if not (lib / "skiller/budget.py").is_file():
-        return None
-    if str(lib) not in sys.path:
-        sys.path.insert(0, str(lib))
-    try:
-        return importlib.import_module("skiller.budget")
-    except ImportError:
-        return None
-
-
 class CanonSizeLimitTests(unittest.TestCase):
     def test_limits_are_named_constants_per_artifact_class(self):
         self.assertEqual(canon_size_limits("root"),
                          (ROOT_CANON_LINE_LIMIT, ROOT_CANON_TOKEN_LIMIT))
-        for scope_id in ("skiller", "harness", "maind", "analyst", "task", "artifex"):
+        for scope_id in ("skiller", "harness", "maind", "analyst", "planner", "brain", "orch"):
             self.assertEqual(canon_size_limits(scope_id),
                              (PACKAGE_CANON_LINE_LIMIT, PACKAGE_CANON_TOKEN_LIMIT))
 
@@ -62,20 +47,12 @@ class CanonSizeTokenEstimateTests(unittest.TestCase):
         self.assertGreater(estimate_tokens("hello world" * 10),
                            estimate_tokens("hello worl" * 10))
 
-    def test_token_estimate_matches_skiller_formula(self):
-        """Internal documentation."""
-        budget = _skiller_budget()
-        if budget is None:
-            self.skipTest("skiller.budget not available (standalone-layout)")
-        samples = [
-            "",
-            "plain latin instruction text",
-            "Russian text of the canon of instructions",
-            "mixed mixed text with `code` and links",
-            (REPO_ROOT / "CLAUDE.md").read_text(encoding="utf-8"),
-            (REPO_ROOT / "packages/harness/CLAUDE.md").read_text(encoding="utf-8"),
-        ]
-        for sample in samples:
+    def test_token_estimate_is_the_aicore_function(self):
+        """The canon gate and the skill budget share one formula: the function of the foundation itself."""
+        import aicore.content.budget as budget
+        self.assertIs(estimate_tokens, budget.estimate_tokens)
+        for sample in ("", "plain latin instruction text", "Русский текст канона инструкций",
+                       "mixed text with `code` и ссылками"):
             self.assertEqual(estimate_tokens(sample), budget.estimate_tokens(sample))
 
 

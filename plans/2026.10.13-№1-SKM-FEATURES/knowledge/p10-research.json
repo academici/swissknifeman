@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "p10-research",
+  "title": "P10: research и advisor — источники, researcher, триггеры, advisor",
+  "sections": [
+    {
+      "id": "facts",
+      "title": "Факты кода",
+      "text": "Код на HEAD aed8924b9:\n\n- Пункт planner имеет `rag: {need: none|optional|required, status: not_needed|pending|complete|failed, notes?, captures?}` (`planner/schemas/plan/v1/item.schema.json`); в execution-input (exec/v1: `goal, why, scope, guidance, sections, constraints, decisions, acceptance, reads, context_refs, upstream, lessons, hints, route, result_contract, escalation, condensed`) его **нет**; мост `bridges/planner-orch/brief.py` строит input.\n- Папка `plans/<plan>/research/` есть в планах (PLAN3, PLAN4 — `research/q/` с запросами этого дизайна).\n- Perplexity на машине: MCP stdio-сервер `~/projects/packages/perplexity-web-mcp/start.sh` (инструменты `search`, `search_advanced`, `search_deep`, `login`; daemon с пулом вкладок, ответ `BROWSER_BUSY` при нехватке вкладок); минимальный stdio-клиент — `packages/orch/docs/research/tools/pplx_stdio.py` (JSON-RPC initialize → tools/call). CLAUDE.md: маршрут `perplexity-web` раньше `WebSearch`.\n- Роли orch: `orch/roles/*.json|md` (context-scout, executor, bounded-implementer, reviewer, triager, registrar), launch-catalog по ролям, схема `role-manifest` (`permissions.network none|allowed`).\n- Вопросы (P6.4) — режимы `queue|deny|defaults`; режим `advisor` зарезервирован. Коррекции и triage — `engine` (`_allowance`, `_triage`)."
+    },
+    {
+      "id": "sources",
+      "title": "Источники research",
+      "text": "**P10.1.** `[orch.research]` в `orch/configs/config.schema.json` (аддитивно):\n\n- `policy`: `required | conditional | off` (умолч. `conditional`; project+);\n- `sources.<id>`: `kind: command | filesystem | mcp-stdio` (http/vector — вне PLAN4, без потребителя), `argv` (command, mcp-stdio — **только** defaults/machine/invocation/flags), `tool` (mcp-stdio: имя инструмента, умолч. `search`), `roots` (filesystem; project+), `capabilities: [search, citations, synthesis, deep]`, `timeout_s` (умолч. 600), `concurrency` (умолч. 1 — Perplexity daemon отвечает BROWSER_BUSY при перегрузе), `order` (int, лесенка).\n\nАдаптеры — `orch/lib/orch/research/` (`sources.py`): `command` — argv + запрос на stdin, JSON на stdout; `filesystem` — поиск по `roots` (rg-подобный stdlib-обход, только чтение); `mcp-stdio` — обобщённый stdlib-клиент JSON-RPC (initialize → notifications/initialized → tools/call {name: tool, arguments: {query}}), по образцу `pplx_stdio.py`; ответ нормализуется в `{text, sources: [url], raw_ref}`; `BROWSER_BUSY`/таймаут → повтор с задержкой до 3 раз, затем `SOURCE_UNAVAILABLE`. CLI `orch.py research query --source ID --query-file F [--json]` и `orch.py research sources [--json]`. Пример machine-конфига в docs: `perplexity` = `mcp-stdio` с `argv [\"~/projects/packages/perplexity-web-mcp/start.sh\"]`, `order` 1 (ответ на вопрос владельца 7 части аудита). Тест: project задаёт `argv` → CONFIG_LAYER_FORBIDDEN; фейковый mcp-stdio сервер (python-скрипт в фикстурах) → нормализованный ответ."
+    },
+    {
+      "id": "researcher",
+      "title": "Роль researcher",
+      "text": "**P10.2.** Роль `researcher` (`orch/roles/researcher.json|md`; permissions: filesystem read_only, shell read_only, network allowed, plan_api none; класс `implementation`): получает вопрос и разрешённые источники; инструменты — чтение файлов и только `Bash(python3 *orch.py research query *)` (launch-catalog claude-code: `--tools Bash,Read,Grep,Glob --allowedTools \"Bash(python3 *orch.py research query *)\"`; codex — `--sandbox read-only` + network через сам orch-процесс вне песочницы невозможен → codex-маршрут researcher не объявляется). Результат — закрытый `research-result/v1` (`orch/schemas/conductor/v1/research-result.schema.json`): `{query, claims: [{text, sources: [url|path]}], contradictions: [str], unknowns: [str], sources_used: [source id]}`; каждое утверждение с источником (иначе — в unknowns). Сохранение: plan-bound — через work source register в `plans/<plan>/research/<item>-<n>.json` (мост planner-orch: `add-artifact` роль input); adhoc — orch-artifacts. Тест e2e: фейковый источник command → research-result с claims и sources."
+    },
+    {
+      "id": "triggers",
+      "title": "Триггеры по rag пункта",
+      "text": "**P10.3.** Поле execution-input `research: {need: none|optional|required, notes?}` (аддитивно, exec/v1); мост `brief.py` переносит `item.rag.need/notes`. Политика: `required` — стадия research перед executor каждого пункта; `conditional` — стадия только при `research.need == required` пункта (решение проектировщика плана, без эвристик conductor); `off` — никогда. Результат стадии — блок промпта executor `research` (claims с источниками; P9 manifest kind `research`). Существующие skills `verify-claims`, `query-craft`, `mcp-advisor` остаются процедурами; «лесенка» источников — `order` в конфиге. Тест golden: пункт с need none → стадии нет; required → есть."
+    },
+    {
+      "id": "advisor",
+      "title": "Роль advisor",
+      "text": "**P10.4.** Роль `advisor` (read-only, network allowed, класс `frontier`; инструменты — чтение и `orch.py research query`). Триггеры (conductor, детерминированно): блокирующий вопрос при `orch.conductor.questions = advisor`; исчерпание `check_fixes` при красных checks до blocked; triage отклонил находку ≥ Major (несогласие reviewer/triager). Вход — проблема (вопрос/красный check/находка), локальные доказательства (diff, отчёты), разрешённые источники. Результат `advice/v1`: `{problem_ref, options: [{id, text, pros, cons}], recommendation: option id, confidence: low|medium|high, sources: [..], needs_owner: bool, category?: security|destructive|public-api|scope-expansion|other}`. Применение: `needs_owner` или `category ∈ orch.advisor.human_gate` (умолч. `[security, destructive, public-api, scope-expansion]`) → как `queue` (blocked, вопрос владельцу с советом); иначе: вопрос — resolution `by: advisor` (P6.4 binding), красный check — correction-раунд с советом, находка — повторный triage с советом. Лимиты: `orch.advisor.enabled` (умолч. false), `max_rounds` (умолч. 2 на пункт). Каждый совет — `agents/<id>/` (P6.2) с `causation` = исходная проблема; файл `advice-<n>.json` в артефактах. Тест e2e: вопрос в режиме advisor → advice needs_owner false → resume с решением; needs_owner true → blocked."
+    },
+    {
+      "id": "checks",
+      "title": "Вход и проверки фазы",
+      "text": "Фаза P10 — вход по D6: протокол вопросов P6 работает, а журналы P6–P9 показывают блокирующие вопросы, повторно красные checks или отклонённые Major-находки, которые совет/исследование закрыли бы; иначе фаза ждёт (решение записывается в журнал). Пункты — `python3 scripts/affected-tests.py --run`; широкий прогон — phase.validation (P10.4). Первый пункт сверяет knowledge/p10-research#facts."
+    }
+  ],
+  "applies_to": [
+    "P10"
+  ]
+}

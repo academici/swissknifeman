@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "orchestration-p11",
+  "title": "Orchestration: фаза P11",
+  "sections": [
+    {
+      "id": "orchestration",
+      "title": "Orchestration",
+      "text": "```json\n{\n \"scenario\": \"full\",\n \"options\": {\n  \"reviewer\": \"grok/grok-4.7/high\",\n  \"rules\": [\n   \"Не коммить и не меняй план: коммит, регистрацию и plan.py log делает дирижёр.\",\n   \"Расхождение с knowledge и отклонение от дизайна опиши в open_issues отчёта, а не в plan.py log.\",\n   \"Не запускай установщики и CLI модулей с реальным HOME: только tmp HOME и SKM_HOME или песочница.\",\n   \"Не правь live-папку ~/projects/packages/swissknifeman и не запускай проверки пункта целиком: их гонит дирижёр.\",\n   \"Красное в зоне модуля чини в пункте; чужое красное вне scope назови в open_issues.\"\n  ],\n  \"limits\": {\n   \"review_rounds\": 2,\n   \"corrections\": 2,\n   \"check_fixes\": 1,\n   \"retries\": 1,\n   \"check_timeout_s\": 1800\n  },\n  \"on_blocked\": \"stop\",\n  \"stages\": [\n   {\n    \"role\": \"context-scout\",\n    \"provider\": \"claude-code\",\n    \"model_class\": \"economy\"\n   },\n   {\n    \"role\": \"registrar\",\n    \"provider\": \"claude-code\",\n    \"model_class\": \"economy\"\n   }\n  ],\n  \"checks\": {\n   \"overlap_review\": true\n  },\n  \"review\": {\n   \"final_correction\": true\n  },\n  \"instructions\": {\n   \"isolate_roles\": [\n    \"executor\",\n    \"triager\",\n    \"context-scout\",\n    \"registrar\"\n   ]\n  }\n }\n}\n```"
+    }
+  ],
+  "applies_to": [
+    "P11"
+  ]
+}

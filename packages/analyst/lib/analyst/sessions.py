@@ -7,7 +7,7 @@ Reference logic - scratchpad-script `analyze_sessions.py` (session 4af788f3, SCR
 REPO - only the extract of the algorithm has been moved here):
   - `first_turn_overhead` = input + cache_creation FIRST assistant-session records
     (not the sum of all - a single source of mathematics now `core.usage.feed_event`,
-    see edit `core/usage.py`, no need to duplicate it here);
+    see edit `aicore/usage.py`, no need to duplicate it here);
   - `fresh_per_turn` = (Σinput + Σcache_creation) / turns (`turns` = number
     assistant-events, `core.usage.finish(...)["msgs"]`);
   - transcript path: `~/.claude/projects/<encoded-cwd>/<session_id>.jsonl`.
@@ -33,9 +33,11 @@ import statistics
 from datetime import date, datetime
 from pathlib import Path
 
-from core import usage as core_usage
+from aicore import usage as core_usage
 
-from .common import HOME, die, parse_args, warn
+from aicore.util.cli import parse_args
+from aicore.util.env import HOME
+from aicore.util.term import die, warn
 
 TREND_WARN_MULT = 1.2   # >20% increase in median week-over-week (TK)
 TOP_ANOMALIES = 5
@@ -215,7 +217,7 @@ def _print_human(rep):
 
 # ── CLI ────────────────────────────────────────────────────────────────────────────
 def _project_path(env, opts):
-    """--project ID → local_path from the registry config.json (same pattern as
+    """--project ID → local_path from the maind project registry (same pattern as
     `token_report._cmd_all_projects`/`scan.enabled_projects` — do not duplicate the resolve).
     Without --project — current directory (like everyone else P1 analyst)."""
     pid = opts.get("project")
@@ -223,14 +225,10 @@ def _project_path(env, opts):
         return os.getcwd()
     from .scan import enabled_projects, load_projects
 
-    cfg = env.default_config
-    if not Path(cfg).is_file():
-        die(f"project registry not found: {cfg} — --project needed config.json "
-            "(monorepo ecosystem root)")
-    projects = enabled_projects(load_projects(cfg))
+    projects = enabled_projects(load_projects())
     match = next((p for p in projects if p["id"] == pid), None)
     if match is None:
-        die(f"project '{pid}' not found in enabled-registry: {cfg}")
+        die(f"project '{pid}' not found in the enabled maind registry")
     return os.path.expanduser(match["local_path"])
 
 
@@ -244,7 +242,7 @@ def cmd_sessions(env, argv):
         print("analyst sessions [--project P] [--weeks N] [--json]\n"
               "  Weekly medians first_turn_overhead/fresh-per-turn from the living\n"
               "  jsonl-session transcripts (~/.claude/projects/<encoded-cwd>/*.jsonl).\n"
-              "  --project P — resolve local_path by id from config.json (node registry);\n"
+              "  --project P — resolve local_path by id from the maind project registry;\n"
               "  without --project — current directory.\n"
               "  Warn in stderr, if median first_turn_overhead weeks rose >20%\n"
               "  to previous week (relapse-signal context-incident).")

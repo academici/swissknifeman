@@ -1,0 +1,32 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "KEEP",
+  "also": [
+    "SLIM"
+  ],
+  "roles": [
+    "executor"
+  ],
+  "triggers": {
+    "paths": [
+      "database/migrations/**"
+    ],
+    "deps": [
+      "composer:laravel/framework"
+    ]
+  },
+  "requires_tools": [
+    "Bash"
+  ],
+  "conflicts": [
+    "php/repositories"
+  ],
+  "exclusive_group": "php-architecture",
+  "max_tokens": 1500,
+  "replaced_by": "orch/roles/executor.md",
+  "evidence": {
+    "eval_report": null,
+    "verified_at": "2026-10-14"
+  }
+}

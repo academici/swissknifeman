@@ -1,0 +1,86 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P1",
+  "title": "Базовая линия и срочные исправления: is_within, ссылки skiller, изоляция ролей в launch-catalog, честная недоступность Grok-executor, честная декларация сети",
+  "design": "detailed",
+  "goal": "Замер исходного состояния (baseline.json) и исправления без изменения формата конфигов: fail-closed is_within на stdlib realpath(ALLOW_MISSING) (N1, D3); проверка budget-configs и негативные фикстуры ссылок skiller (N6 опровергнут, C2); изоляция bounded-implementer, --permission-prompts none, запрет --bare в launch-catalog (N4, D15); честная недоступность acp-маршрутов Grok (N3, D4); песочницы провайдеров с instructions.sandbox off|prefer|require и правдивой отчётностью сети (N5, D5).",
+  "context": "audits/perplexity-audit.md — часть 4, Фаза 0 (П0.0–П0.6), находки 1.3.3 N1, N3–N6, N8, N17; поправки — knowledge/audit-review#corrections. Решения D3 (проверка N1 без Python 3.13 на машине), D5 (сеть). Не зависит от PLAN3 P13: формат конфигов не меняется.",
+  "scope": {
+    "include": [
+      "baseline.json",
+      "aicore.util.paths",
+      "skiller validate",
+      "orch launch-catalog",
+      "orch dry-run и preflight",
+      "orch sandbox.py и instructions.sandbox",
+      "scripts/ci-matrix.py: Python 3.14"
+    ],
+    "exclude": [
+      "acp-транспорт (D4)",
+      "Landlock TCP (D5)",
+      "изменение системной конфигурации AppArmor (действие владельца)"
+    ]
+  },
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "baseline.json",
+    "is_within fail-closed на всех версиях Python",
+    "валидатор ссылок skiller",
+    "launch-catalog с изоляцией ролей"
+  ],
+  "items": [
+    "P1.1",
+    "P1.2",
+    "P1.3",
+    "P1.4",
+    "P1.5",
+    "P1.6"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P1.1",
+        "P1.2",
+        "P1.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P1.4",
+        "P1.5",
+        "P1.6"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-13T21:07:54Z",
+    "result": "done_with_deviations",
+    "summary": "6 item(s): 3 done, 3 done_with_deviations"
+  }
+}

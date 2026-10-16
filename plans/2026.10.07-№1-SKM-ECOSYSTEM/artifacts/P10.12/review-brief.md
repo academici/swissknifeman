@@ -1,0 +1,12 @@
+Read-only review of the uncommitted working-tree change for plan item P10.12 (documentation of orch and bridges) in this repository.
+Scope (ignore other dirty files such as planner-development-philosophy SKILL.md and bootstrap/publication-lock.json):
+- packages/orch/docs/architecture.md (Non-goals, MCP rule), packages/orch/README.md
+- docs/architecture/{ecosystem,contracts}.md, docs/develop.md, CHANGELOG.md, docs/architecture/decisions/{0057..0062}-*.md and decisions/README.md
+- harness instruction scope `orch`: packages/harness/configs/common/instructions/{catalog.json,packages/orch/*}, lib/harness/instructions.py, tests, fixtures, docs/reference/provider-instruction-contract.md, generated packages/orch/{CLAUDE.md,AGENTS.md,.cursor-instructions.mdc,.grok-instructions.md}, tests/golden, configs/ecosystem-baseline.json
+Check: (1) every factual claim in the new docs/ADRs matches the code (error codes, keys, paths, event names, schema URNs: verify with grep); (2) the four orch instruction texts equal verbatim the required text:
+ identity: "`orch` is the engine-neutral orchestration module: it owns the `exec/v1` contracts, the Engine Port, run-policy packs and the launch catalog; it prepares runs and drives a work source, and it starts no engine process yet."
+ module-boundaries: "Import only `orch` and `aicore`; never name partner modules in the core: planner, skiller and harness are reached only through the bridges under the hub `bridges/` and the `orch:work-source` extension point."
+ engineering-invariants: "Keep Python 3.9 compatibility, English diagnostics, `PortError` codes in the order of `docs/engine-port.md`, pure `prepare` and reducer functions, and change `exec/v1` only by optional fields proven by `aicore schema compat`."
+ validation-release: "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`, then `python3 scripts/ecosystem-units.py check` and `python3 scripts/ecosystem-units.py standalone orch` from the hub root; use Russian Conventional Commit messages."
+ (module-boundaries deliberately omits the word "partner" count differences; any wording deviation is a finding); (3) product files in English with no plan IDs/PLAN<N>/plans/ paths/home paths; (4) catalog/lock/generated consistency (run `git status`, `python3 scripts/golden.py check`, `python3 scripts/ecosystem-units.py check`).
+Report each finding with a reproduction (command output). A finding without reproduction is at most plausible. Do not modify any file. End with a verdict line: GREEN or FINDINGS.

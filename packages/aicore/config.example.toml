@@ -1,0 +1,88 @@
+# aicore configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[aicore]
+
+[aicore.events]
+# How emit starts delivery: in a detached process, before emit returns, or not at all (events are only journaled). One of: "background", "sync", "off".
+# delivery = "background"
+
+# Default deadline of one subscriber run, in seconds. Integer >= 1 and <= 3600.
+# timeout_seconds = 30
+
+# Delivery attempts of one event to one subscriber before it is moved to the dead-letter list. Integer >= 1 and <= 100.
+# max_attempts = 3
+
+[aicore.subscriptions]
+# Event subscriptions by id. A module subscription declared in unit.json has the id <module>:<name> and can be switched off here.
+# [aicore.subscriptions.example]
+
+# Event type patterns the subscription receives (shell-style wildcards, case-sensitive). Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# on = <array>
+
+# Command of the subscriber as an argument vector; it receives the event on standard input. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# run = <array>
+
+# Id of a subscriber plugin to call instead of run. String.
+# Allowed in layers: defaults, machine, invocation, flags.
+# plugin = <string>
+
+# Absolute project roots the subscription applies to; empty means every project. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# projects = []
+
+# Deadline of this subscriber run, in seconds; the default is events.timeout_seconds. Integer >= 1 and <= 3600.
+# Allowed in layers: defaults, machine, invocation, flags.
+# timeout_seconds = <integer>
+
+# Switch the subscription off without removing it. Boolean.
+# enabled = true
+
+[aicore.plugins]
+# External plugins by id. A plugin is a program described by an extension manifest.
+# [aicore.plugins.example]
+
+# Path of the extension manifest (extension.json), absolute or starting with ~. String.
+# Allowed in layers: defaults, machine, invocation, flags.
+# manifest = <string>
+
+# Let the plugin receive secrets and the full environment. Boolean.
+# Allowed in layers: defaults, machine, invocation, flags.
+# trusted = false
+
+# Deadline of one plugin call, in seconds. Integer >= 1 and <= 3600.
+# Allowed in layers: defaults, machine, invocation, flags.
+# timeout_seconds = 60
+
+# Switch the plugin off without removing it. Boolean.
+# enabled = true
+
+[aicore.overlays]
+# Instruction overlays by slot <module>:<slot>: files added to the slot, in layer order.
+# Overlay files of the slot; a relative path is resolved from the folder of the config file that lists it. Array of strings.
+# "module:example" = []
+
+[aicore.providers]
+# Version of the provider configuration contract the section is written for. String.
+# Allowed in layers: project.
+# contract_version = "1.0.0"
+
+[aicore.providers.selection]
+# Provider selection by provider id.
+# [aicore.providers.selection.example]
+
+# Roll the provider surfaces out into the project. Boolean.
+# Allowed in layers: project.
+# enabled = <boolean>
+
+[aicore.providers.available]
+# Provider availability for routing by provider id. A provider that is not listed is available.
+# [aicore.providers.available.example]
+
+# Let orch route roles to the provider; false makes every route on it unavailable (PROVIDER_DISABLED). Delivery of provider surfaces (selection) is not affected. Boolean.
+# Allowed in layers: defaults, machine, invocation, flags.
+# enabled = true

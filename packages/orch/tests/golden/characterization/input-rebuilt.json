@@ -1,0 +1,489 @@
+{
+ "progress": [
+  {
+   "event": "run.start",
+   "message": "plan T; items W1"
+  },
+  {
+   "event": "item.start",
+   "item": "W1",
+   "message": "Work W1"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "brief"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "brief",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "prepare"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "prepare",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout"
+  },
+  {
+   "agent": "agent-<run>-1",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout",
+   "verdict": "mapped"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
+   "reason_code": "RESULT_HEALED",
+   "role": "context-scout",
+   "stage": "scout"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "agent": "agent-<run>-2",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.1"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.1",
+   "verdict": "red V1"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.2"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "the plan changed during the piece: input PLAN9.W1@<digest> is used from now on",
+   "reason_code": "INPUT_REBUILT"
+  },
+  {
+   "agent": "agent-<run>-3",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.2",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.2"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.2",
+   "verdict": "green"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1"
+  },
+  {
+   "agent": "agent-<run>-4",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "GREEN 0 finding(s)"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register",
+   "verdict": "recorded gate pass"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "commit"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "commit",
+   "verdict": "committed <digest>"
+  },
+  {
+   "event": "item.end",
+   "item": "W1",
+   "outcome": "done"
+  },
+  {
+   "event": "run.end",
+   "message": "observer report <project>/.swissknifeman/orch/reports/<run>/observer.md",
+   "outcome": "finished"
+  }
+ ],
+ "state": {
+  "agents": 4,
+  "claims": {
+   "item-W1": {
+    "orch_run": "run-<digest>",
+    "ref": "W1",
+    "submission": "sub-<run>-item-W1",
+    "title": "Work W1"
+   }
+  },
+  "executor_session": "executor-session-2",
+  "executor_session_route": "claude-code/sonnet/high",
+  "items": {
+   "W1": {
+    "adopted": [],
+    "autofix_at": [],
+    "check_fixes_at": [
+     1
+    ],
+    "check_fixes_used": 1,
+    "corrections_at": [],
+    "corrections_used": 0,
+    "executor_started": true,
+    "expected": null,
+    "orch_run": "run-<digest>",
+    "outcome": "done",
+    "plan_notes": [],
+    "retries_used": 0,
+    "source_paths": [],
+    "steps": {
+     "brief": {
+      "ended": "<time>",
+      "result": {
+       "artifacts_dir": "plans/T/artifacts/W1",
+       "base": "<digest>",
+       "input_id": "PLAN9.W1@<digest>",
+       "input_path": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/input.json"
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "checks.1": {
+      "ended": "<time>",
+      "result": [
+       {
+        "cmd": "test -f out/W1.txt",
+        "evidence": "plans/T/artifacts/W1/evidence/V1.json",
+        "exit": 1,
+        "green": false,
+        "id": "V1",
+        "kind": "acceptance",
+        "log": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/checks/1/V1.log",
+        "seconds": 0.0,
+        "tail": ""
+       }
+      ],
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "red V1"
+     },
+     "checks.2": {
+      "ended": "<time>",
+      "result": [
+       {
+        "cmd": "test -f out/W1.txt",
+        "evidence": "plans/T/artifacts/W1/evidence/V1.json",
+        "exit": 0,
+        "green": true,
+        "id": "V1",
+        "kind": "acceptance",
+        "log": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/checks/2/V1.log",
+        "seconds": 0.0,
+        "tail": ""
+       }
+      ],
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "green"
+     },
+     "commit": {
+      "ended": "<time>",
+      "result": {
+       "outcome": "committed",
+       "sha": "<digest>"
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "committed <digest>"
+     },
+     "executor.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-2",
+       "attempts": 1,
+       "changed": [],
+       "exit": 0,
+       "model": "fake-model",
+       "report": {
+        "changed_paths": [
+         "out/W1.txt"
+        ],
+        "checks_run": [
+         {
+          "cmd": "test -f out/W1.txt",
+          "exit": 0,
+          "id": "V1"
+         }
+        ],
+        "evidence": [],
+        "open_issues": [],
+        "status": "done",
+        "summary": "made W1"
+       },
+       "session": "executor-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/executor.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "executor",
+      "route": "claude-code/sonnet/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "done"
+     },
+     "executor.2": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-3",
+       "attempts": 1,
+       "changed": [
+        "out/W1.txt"
+       ],
+       "exit": 0,
+       "model": "fake-model",
+       "report": {
+        "changed_paths": [
+         "out/W1.txt"
+        ],
+        "checks_run": [
+         {
+          "cmd": "test -f out/W1.txt",
+          "exit": 0,
+          "id": "V1"
+         }
+        ],
+        "evidence": [],
+        "open_issues": [],
+        "status": "done",
+        "summary": "made W1"
+       },
+       "session": "executor-session-2",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/executor.2.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "executor",
+      "route": "claude-code/sonnet/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "done"
+     },
+     "prepare": {
+      "ended": "<time>",
+      "result": {
+       "refusals": [
+        {
+         "reason_code": "INDEPENDENT_PROVIDER",
+         "stage_id": "review"
+        }
+       ],
+       "stages": [
+        {
+         "effort": "high",
+         "model": "haiku",
+         "provider": "claude-code",
+         "role": "context-scout",
+         "stage_id": "condense"
+        },
+        {
+         "effort": "high",
+         "model": "sonnet",
+         "provider": "claude-code",
+         "role": "executor",
+         "stage_id": "primary"
+        }
+       ]
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "register": {
+      "ended": "<time>",
+      "result": {
+       "gate": "pass",
+       "outcome": "recorded"
+      },
+      "role": "registrar",
+      "route": "orch/conductor",
+      "status": "done",
+      "verdict": "recorded gate pass"
+     },
+     "review.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-4",
+       "attempts": 1,
+       "exit": 0,
+       "findings": {
+        "findings": [],
+        "verdict": "GREEN"
+       },
+       "model": "fake-model",
+       "session": "reviewer-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "reviewer",
+      "route": "grok/grok-4.7/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "GREEN 0 finding(s)"
+     },
+     "scout": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-1",
+       "attempts": 1,
+       "cache": ".swissknifeman/state/orch/conductor/cache/scout/W1/<digest>.txt",
+       "exit": 0,
+       "hit": false,
+       "model": null,
+       "session": null,
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/scout.txt",
+       "text": "a context map line — why it matters\nUnknowns:\n- none",
+       "usage": {
+        "cached": 0,
+        "input": 0,
+        "output": 0
+       }
+      },
+      "role": "context-scout",
+      "route": "claude-code/haiku/low",
+      "status": "done",
+      "verdict": "mapped"
+     }
+    },
+    "tokens": {
+     "cached": 0,
+     "input": 300,
+     "output": 30
+    }
+   }
+  },
+  "on_blocked": "stop",
+  "questions": {
+   "W1": {}
+  },
+  "status": "finished",
+  "tokens": {
+   "cached": 0,
+   "input": 300,
+   "output": 30
+  }
+ }
+}

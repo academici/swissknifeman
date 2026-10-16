@@ -14,7 +14,8 @@ change it names, verified by the unit's own checks.
 
 - Implement only this unit, exactly as the input describes it, inside `scope.write_set`.
 - Follow the carried decisions and constraints without reinterpreting them.
-- Run the unit's acceptance checks exactly as written; keep long output in a file.
+- Prove the unit with the tests that cover it; the coordinator runs the unit's acceptance checks
+  after your report. Keep long output in a file.
 - Stop when the unit cannot be finished as designed and describe why in `open_issues`.
 
 ## You never

@@ -5,15 +5,17 @@ import json
 from pathlib import Path
 import re
 
-ROLES = ("scout", "executor", "bounded-implementer", "reviewer", "registrar")
+ROLES = ("scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
+         "researcher", "advisor")
 PROVIDERS = ("claude-code", "codex", "grok")
 MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")
 TRANSPORTS = ("text", "jsonl", "acp")
 MODEL_SETS = ("supported", "unknown")
-PLACEHOLDERS = frozenset({"model", "effort", "cwd"})
+PLACEHOLDERS = frozenset({"model", "effort", "cwd", "orch"})
 ENTRY_KEYS = frozenset({"model_class", "effort", "transport", "argv", "timeout_s", "model_set"})
-CATALOG_PATH = Path(__file__).resolve().parents[2] / "configs" / "launch-catalog.json"
+ORCH_ROOT = Path(__file__).resolve().parents[2]
+CATALOG_PATH = ORCH_ROOT / "configs" / "launch-catalog.json"
 _PLACEHOLDER_RE = re.compile(r"\{(\w+)\}")
 
 
@@ -95,5 +97,6 @@ def build_argv(catalog: dict, role: str, provider: str, *, model: str | None = N
         raise _invalid("effort", f"must be one of {', '.join(EFFORTS)}")
     if found["model_set"] == "supported" and not model:
         raise _invalid("model", f"role {role!r} on {provider!r} needs a model")
-    values = {"model": model or "", "effort": effort, "cwd": str(cwd)}
+    # `{orch}` is this package root, so an entry can call a launcher shipped under `scripts/`.
+    values = {"model": model or "", "effort": effort, "cwd": str(cwd), "orch": str(ORCH_ROOT)}
     return [_PLACEHOLDER_RE.sub(lambda m: values[m[1]], arg) for arg in found["argv"]]

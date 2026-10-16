@@ -1,24 +1,32 @@
 """Command manager. Entry point: main(argv) -> calls cmd_*(env, args)."""
 import sys
 
+from aicore.config import ConfigError
+from aicore.util.term import die
+
 from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
+from .describe import cmd_describe
+from .quality.compat import cmd_compat
 from .doctor import cmd_doctor
 from .quality.analyze import cmd_analyze_run
 from .quality.audit import cmd_bucket_audit
 from .quality.eval import cmd_eval
 from .integrate import cmd_integrate
 from .listing import cmd_list
+from .profiles_list import cmd_profiles
 from .lock import cmd_lock
 from .registry import cmd_registry
 from .resolve import cmd_resolve
+from .select import cmd_select
+from .selection import cmd_selection
 from .release import cmd_release
 from .release_attestation import cmd_attest, cmd_version
 from .delivery import cmd_deliver
 from .skillset import cmd_init, cmd_sync
 from .status import cmd_status
-from .topology import cmd_topology
+from .topology_alias import cmd_topology
 from .update import cmd_update
 from .vendor import cmd_vendor
 
@@ -36,8 +44,13 @@ COMMANDS = {
     "analyze-run": cmd_analyze_run,
     "eval": cmd_eval,
     "list": cmd_list,
+    "profiles": cmd_profiles,
     "registry": cmd_registry,
     "resolve": cmd_resolve,
+    "describe": cmd_describe,
+    "compat": cmd_compat,
+    "selection": cmd_selection,
+    "select": cmd_select,
     "doctor": cmd_doctor,
     "topology": cmd_topology,
     "release": cmd_release,
@@ -62,4 +75,7 @@ def main(argv=None):
     if handler is None:
         print(f"Unknown command: {cmd}", file=sys.stderr)
         sys.exit(1)
-    handler(env, args)
+    try:
+        handler(env, args)
+    except ConfigError as exc:
+        die(str(exc))

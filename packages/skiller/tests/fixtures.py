@@ -9,6 +9,18 @@ import json
 from skiller.common import Env
 
 
+def hub_indexes(env, metadata, buckets, registry):
+    """The root Claude marketplace and the Codex index, assembled from the unit.json of the host
+    packages and the skiller catalog rendered in memory: {"claude": dict, "codex": dict}."""
+    from skiller.registry import assemble_marketplace, build_claude_publication
+    catalogs = {a.target: a.managed_bytes
+                for a in build_claude_publication(env, metadata, buckets, registry)
+                if a.target.name == "catalog.json"}
+    files = assemble_marketplace(env, catalogs)
+    return {"claude": json.loads(files[".claude-plugin/marketplace.json"]),
+            "codex": json.loads(files[".agents/plugins/marketplace.json"])}
+
+
 def write_skill(skill_dir, name, *, version="0.1.0", description="desc",
                 requires=None, body="Body.\n"):
     """Create a skill directory with SKILL.md (frontmatter + body)."""

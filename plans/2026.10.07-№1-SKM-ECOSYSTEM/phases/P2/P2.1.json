@@ -1,0 +1,289 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "Контракт модуля: схемы unit/v1 и check-result/v1 в aicore, unit.json модулей, проверка manifests",
+  "status": "done_with_deviations",
+  "summary": "В начале фазы влить origin/main (scripts/dev-clone.sh sync-main). Создать packages/aicore (unit.json, README, схемы unit/v1 и check-result/v1 с фикстурами), unit.json у analyst, harness, maind, orch, skiller, task, конфиг configs/ecosystem-units.json (без ownership — P2.2) и scripts/ecosystem-units.py с проверкой manifests и командой list; тесты и шаг CI.",
+  "why": "Контракт модуля должен существовать до переноса кода (E01, E49): все следующие фазы и проверки (границы, автономность, doctor, umbrella CLI) читают unit.json. Риск — дрейф версии между unit.json и существующими носителями: проверка требует равенства с источником из version_sources, а не ручной синхронизации.",
+  "scope": {
+    "include": [
+      "dev-clone.sh sync-main перед правками (начало фазы)",
+      "packages/aicore/{unit.json,README.md,schemas/README.md}",
+      "packages/aicore/schemas/unit/v1/unit.schema.json и examples/{valid,invalid}",
+      "packages/aicore/schemas/check-result/v1/check-result.schema.json и examples/{valid,invalid}",
+      "unit.json у analyst, harness, maind, orch, skiller, task по §manifests",
+      "configs/ecosystem-units.json: targets, module_aliases, retired, foundation, transitional_roots, version_sources (ownership/path_patterns/standalone — пустые или по умолчанию, заполняет P2.2/P2.3)",
+      "scripts/ecosystem-units.py: check (пока только manifests и schemas-профиль aicore), list",
+      "scripts/test-ecosystem-units.py",
+      "регистрация конфига в configs/config-inventory.json",
+      "шаг hygiene.yml"
+    ],
+    "exclude": [
+      "карта принадлежности, boundaries, schemas-проверка всего репозитория (P2.2)",
+      "standalone (P2.3)",
+      "код aicore и перенос core (P3)",
+      "генерация plugin.json из unit.json (P5/P12)",
+      "CHANGELOG и docs (P2.6)"
+    ]
+  },
+  "decisions": [
+    "D2",
+    "D17",
+    "D18",
+    "D19",
+    "D25",
+    "D27",
+    "D28"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/modules-p2#facts",
+      "why": "текущее состояние модулей, версий, валидатора",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#layout",
+      "why": "что создаётся",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#unit-schema",
+      "why": "поля схем unit/v1 и check-result/v1",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#manifests",
+      "why": "значения unit.json по модулям",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#ecosystem-config",
+      "why": "формат configs/ecosystem-units.json",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#checks",
+      "why": "общий вид CLI, правила и коды manifests и schemas",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/schema.py",
+      "why": "закрытый профиль и API load_registry/validate",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/capability-record.schema.json",
+      "why": "образец стиля схемы (URN, description у каждого свойства)",
+      "required": true
+    },
+    {
+      "path": "scripts/public-hygiene.py",
+      "why": "стиль корневого stdlib-скрипта (git ls-files, правила как данные)",
+      "required": false
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "why": "регистрация нового конфига",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/README.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/README.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/check-result/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/maind/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/task/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-ecosystem-units.py",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/hygiene.yml",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Первое действие пункта: scripts/dev-clone.sh sync-main на чистом дереве; DEV_CLONE_CONFLICT — разрешить конфликт по смыслу обеих сторон и записать plan.py log",
+    "Схемы — только ключевые слова закрытого профиля orch.schema; additionalProperties: false; description у каждого свойства; $schema draft 2020-12 только в корне",
+    "Версии в unit.json копируются из источника version_sources; проверка падает при расхождении — исправлять unit.json, не источник",
+    "Stdlib, совместимость с Python 3.9; скрипт не запускает CLI модулей и не пишет вне --root",
+    "Продуктовые файлы на английском; без ID плана, PLAN<N>.* и путей в plans/ (public-hygiene)",
+    "Новые packages/aicore не должны ломать существующие обходы packages/* (docs-sync, install, harness SCOPES, тесты) — прогнать затронутые наборы"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: sync-main → схемы и фикстуры → unit.json (7 шт.) → configs/ecosystem-units.json → ecosystem-units.py (каркас argparse с подкомандами check/list; check сейчас = manifests + профиль aicore-схем; модульная структура функций, чтобы P2.2/P2.3 добавили map/schemas/boundaries/render/standalone/baseline без переписывания) → тесты → CI.\n\nВалидатор: `sys.path.insert(0, str(root / 'packages/orch/lib'))`; `from orch.schema import load_registry, validate`; `registry = load_registry(root / 'packages/aicore/schemas/unit/v1', urn_prefix='urn:swissknifeman:aicore:', kinds=('unit',))`; `validate(doc, 'unit', registry)` → список issues (path, code, message). Для check-result — отдельный registry своего каталога.\n\nДиапазон `^X.Y[.Z]`: npm caret — для X>0: >=X.Y.Z <(X+1).0.0; для X=0: >=0.Y.Z <0.(Y+1).0. Реализовать маленькой функцией с тестами (0.1.0 удовлетворяет ^0.1, 0.2.0 — нет, 1.4.2 удовлетворяет ^1.2).\n\nТесты на временных деревьях: `git init` в tmp, минимальные packages/<x>/unit.json + lib/<x>/__init__.py + package.json, копия схем aicore и `packages/orch/lib/orch/schema.py` (или указать --root на tmp и отдельный путь к валидатору — решить в коде, главное без зависимости тестов от реального репозитория, кроме одного теста «реальный репозиторий: check → 0»).\n\nШаг CI в hygiene.yml по образцу соседних: `python3 scripts/test-ecosystem-units.py -v` и `python3 scripts/ecosystem-units.py check`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-ecosystem-units.py -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "for m in aicore analyst harness maind orch skiller task; do test -f packages/$m/unit.json || exit 1; done; test ! -e packages/artifex/unit.json && python3 scripts/ecosystem-units.py list --json | python3 -c 'import json,sys; d=json.load(sys.stdin); ids=sorted(m[\"id\"] for m in (d[\"modules\"] if isinstance(d,dict) else d)); sys.exit(0 if ids==[\"aicore\",\"analyst\",\"harness\",\"maind\",\"orch\",\"skiller\",\"task\"] else 1)'",
+      "expect": "exit 0 (7 модулей, artifex без манифеста)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 -c 'import json; d=json.load(open(\"packages/harness/unit.json\")); d[\"version\"]=\"9.9.9\"; json.dump(d, open(\"/tmp/skm-p21-unit.json\",\"w\"))' && cp packages/harness/unit.json /tmp/skm-p21-orig.json && cp /tmp/skm-p21-unit.json packages/harness/unit.json && python3 scripts/ecosystem-units.py check 2>&1 | grep -q ECOSYSTEM_UNIT_VERSION; rc=$?; cp /tmp/skm-p21-orig.json packages/harness/unit.json; rm -f /tmp/skm-p21-unit.json /tmp/skm-p21-orig.json; test $rc -eq 0 && git diff --quiet -- packages/harness/unit.json",
+      "expect": "exit 0 (дрейф версии ловится, файл восстановлен)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/test-config-inventory.py -v && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "grep -q 'scripts/ecosystem-units.py check' .github/workflows/hygiene.yml && grep -q 'scripts/test-ecosystem-units.py' .github/workflows/hygiene.yml",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/harness/scripts/test.sh",
+      "expect": "exit 0 (новая папка packages/aicore и unit.json не ломают наборы, обходящие packages/*)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "packages/aicore со схемами unit/v1 и check-result/v1",
+    "unit.json у 7 модулей",
+    "configs/ecosystem-units.json",
+    "scripts/ecosystem-units.py check|list + тесты",
+    "шаг CI"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T02:27:12Z",
+    "finished_at": "2026-10-08T02:45:43Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "5a0feca4-7e79-4f72-a853-76100a174237"
+    },
+    "notes": "aicore skeleton with unit/v1 and check-result/v1 schemas and fixtures, unit.json for 7 modules, configs/ecosystem-units.json, scripts/ecosystem-units.py (check, list), 39 tests, hygiene.yml step. Also green: task validate.sh, root hygiene suites.",
+    "deviations": [
+      "dev-clone.sh sync-main denied by the permission classifier; origin/main delta is plans/-only (1 commit), merge left to the owner"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-08T02:45:43Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T02:45:43Z"
+}

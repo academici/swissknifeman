@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:config-explain:v1",
+  "title": "config-explain",
+  "type": "object",
+  "description": "Where every effective setting of a module comes from: the layers consulted and, per key, the winning layer, file and line and the lower values it overrides. Output of `aicore config explain <module> --json`; produced by `ResolvedConfig.explain_json`.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:config-explain:v1",
+      "description": "Schema identifier."
+    },
+    "module": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Module id whose configuration is explained."
+    },
+    "project": {
+      "type": ["string", "null"],
+      "description": "Project root the project layer was read from, or null when no project was given."
+    },
+    "config_file_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Version of the config file format the explaining swissknifeman reads."
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Layers from the lowest to the highest priority.",
+      "items": {
+        "$ref": "#/$defs/layer",
+        "description": "One layer."
+      }
+    },
+    "entries": {
+      "type": "array",
+      "description": "One entry per key that has a value, in schema order.",
+      "items": {
+        "$ref": "#/$defs/entry",
+        "description": "One key."
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "module",
+    "project",
+    "config_file_version",
+    "layers",
+    "entries"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "layer": {
+      "type": "object",
+      "description": "One configuration layer.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$",
+          "description": "Layer name: defaults, machine, project, env, invocation, flags or the name of an extra layer."
+        },
+        "file": {
+          "type": ["string", "null"],
+          "description": "File the layer is read from, or null when it has none."
+        },
+        "present": {
+          "type": "boolean",
+          "description": "True when the layer contributed anything; a file that does not exist or is empty is not present."
+        }
+      },
+      "required": ["name", "file", "present"],
+      "additionalProperties": false
+    },
+    "setting": {
+      "type": "object",
+      "description": "A value that a layer gave to a key and a higher layer overrode.",
+      "properties": {
+        "layer": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$",
+          "description": "Layer that set the value."
+        },
+        "file": {
+          "type": ["string", "null"],
+          "description": "File of the layer, or null."
+        },
+        "line": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "description": "1-based line of the key in the file, or null when unknown."
+        },
+        "source": {
+          "type": ["string", "null"],
+          "description": "Environment variable name, `--config`, `flag`, extra layer name, `_unset` for a reset or `_append` for an extension; null for files and defaults."
+        },
+        "value": {
+          "description": "The value the layer gave: a JSON scalar or array; null for a reset (`_unset`). A secret key shows its reference, never the secret."
+        }
+      },
+      "required": ["layer", "file", "line", "source", "value"],
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "description": "The effective value of one key and its origin.",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$",
+          "description": "Dotted key relative to the module section."
+        },
+        "value": {
+          "description": "The effective value: a JSON scalar or array. A secret key shows its reference, never the secret."
+        },
+        "layer": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$",
+          "description": "Layer the effective value comes from."
+        },
+        "file": {
+          "type": ["string", "null"],
+          "description": "File of that layer, or null."
+        },
+        "line": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "description": "1-based line of the key in the file, or null when unknown."
+        },
+        "source": {
+          "type": ["string", "null"],
+          "description": "Environment variable name, `--config`, `flag`, extra layer name or `_append`; null for files and defaults."
+        },
+        "secret": {
+          "type": "boolean",
+          "description": "True when the key holds a secret reference."
+        },
+        "default": {
+          "description": "The default of the schema; absent when the key has none."
+        },
+        "overridden": {
+          "type": "array",
+          "description": "Lower values this one overrides, nearest layer first.",
+          "items": {
+            "$ref": "#/$defs/setting",
+            "description": "One overridden value."
+          }
+        }
+      },
+      "required": ["key", "value", "layer", "file", "line", "source", "secret", "overridden"],
+      "additionalProperties": false
+    }
+  }
+}

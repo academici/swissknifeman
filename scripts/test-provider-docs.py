@@ -16,14 +16,14 @@ provider_docs = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(provider_docs)
 
 MANIFEST_SPEC = importlib.util.spec_from_file_location(
-    "test_provider_manifest", ROOT / "core/tests/provider/test_manifest.py")
+    "test_provider_manifest", ROOT / "packages/aicore/tests/provider/test_manifest.py")
 manifest_snapshot = importlib.util.module_from_spec(MANIFEST_SPEC)
 MANIFEST_SPEC.loader.exec_module(manifest_snapshot)
 
 
 def snapshot(root):
-    """Hash repository artifacts only, excluding live VCS and maind runtime state."""
-    excluded = (root / ".git", root / "packages/maind/data")
+    """Hash repository artifacts only, excluding live VCS, conductor/maind runtime state."""
+    excluded = (root / ".git", root / ".swissknifeman", root / "packages/maind/data")
     return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in sorted(root.rglob("*")) if path.is_file()
             and "__pycache__" not in path.relative_to(root).parts
@@ -60,12 +60,12 @@ class ProviderDocsTests(unittest.TestCase):
             root = Path(directory)
             (root / "configs").mkdir()
             (root / "docs").mkdir()
-            (root / "packages/task/configs").mkdir(parents=True)
+            (root / "packages/planner/configs").mkdir(parents=True)
             (root / "packages/harness/configs/common/instructions").mkdir(parents=True)
             # The generator intentionally consumes these bounded sources; copy exact fixtures.
             for relative in (
-                "configs/provider-capabilities.json",
-                "packages/task/configs/command-routing.json",
+                "packages/aicore/configs/provider-capabilities.json",
+                "packages/planner/configs/command-routing.json",
                 "packages/harness/configs/common/profile-catalog.json",
                 "packages/harness/configs/common/instructions/catalog.json",
             ):
@@ -85,12 +85,12 @@ class ProviderDocsTests(unittest.TestCase):
             self.assertEqual(provider_docs.run("check", root), 0)
 
     def test_manifest_is_not_an_output_of_the_generator(self):
-        # configs/provider-capabilities.json is the generator's INPUT (P5.2, D-provenance):
+        # packages/aicore/configs/provider-capabilities.json is the generator's INPUT (P5.2, D-provenance):
         # a hand-written SSOT with no owning generator, so `root.generated-artifacts`
         # ("regenerate through the owning tool") does not apply to it. This is a structural
         # assertion about expected_outputs(), not a text-presence check.
         expected = provider_docs.expected_outputs(ROOT)
-        self.assertNotIn(ROOT / "configs/provider-capabilities.json", expected)
+        self.assertNotIn(ROOT / "packages/aicore/configs/provider-capabilities.json", expected)
         guide = expected[ROOT / "docs/provider-support.md"].decode()
         self.assertIn("no generator", guide)
         self.assertIn("root.generated-artifacts", guide)
@@ -98,9 +98,9 @@ class ProviderDocsTests(unittest.TestCase):
     def test_internal_markdown_links_resolve_and_examples_keep_provider_syntax_separate(self):
         readme = provider_docs.expected_outputs(ROOT)[ROOT / "README.md"].decode()
         guide = provider_docs.expected_outputs(ROOT)[ROOT / "docs/provider-support.md"].decode()
-        self.assertIn("Claude Code: /task:fix <brief>", guide)
-        self.assertIn("Codex:       $ task:fix <brief>", guide)
-        self.assertNotIn("Codex:       /task:", guide)
+        self.assertIn("Claude Code: /planner:fix <brief>", guide)
+        self.assertIn("Codex:       $ planner:fix <brief>", guide)
+        self.assertNotIn("Codex:       /planner:", guide)
         self.assertIn("Full access is never a project or fleet default", guide)
         import re
         for source_path, text in ((ROOT / "README.md", readme),

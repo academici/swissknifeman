@@ -14,7 +14,12 @@ import json
 import os
 from pathlib import Path
 
-from ..common import atomic_write_json, backup_file, die, parse_args
+from aicore.util.io import atomic_write_json
+from aicore.util.partners import PartnerUnavailable
+from aicore.util.term import die, warn
+from .. import harness_link
+from aicore.util.cli import parse_args
+from ..common import save_backup
 from ..config import load_config
 
 DEFAULT_MODE = "acceptEdits"
@@ -144,7 +149,7 @@ def sync(env, config, *, allow=True, mode=True, dry=False, backup=True):
     }
     if not dry and changed:
         if backup:
-            backup_file(path)
+            save_backup(path, project=env.root)
         atomic_write_json(path, merged)
     return result
 
@@ -165,22 +170,21 @@ def trusted_dirs(env):
 def provider_trust(context, *, trusted, profile_id="workspace-contained",
                    operation_id=None, target_identity=None, origin="operation"):
     """Evaluate P5 trust/security per already-resolved effective provider, no writes."""
-    harness_root = Path(__file__).resolve().parents[3].parent / "harness"
-    import sys
-    harness_lib = str(harness_root / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
-    from harness.profiles import load_catalog, resolve_profile
-    catalog = load_catalog(harness_root / "configs/common/profile-catalog.json")
     rows = []
     for provider in context.provider_context.effective_providers:
-        resolution = resolve_profile(catalog, provider_id=provider.provider_id,
-                                     profile_id=profile_id, target_scope="project",
-                                     trusted=trusted, operation_id=operation_id,
-                                     target_identity=target_identity, origin=origin,
-                                     effective_provider=provider)
-        rows.append({"provider_id": provider.provider_id.value, "green": resolution.green,
-                     "diagnostics": [item.code for item in resolution.diagnostics]})
+        try:
+            resolution = harness_link.resolve_profile(
+                provider.provider_id.value, profile_id, target_scope="project", trusted=trusted,
+                operation_id=operation_id, target_identity=target_identity, origin=origin,
+                enabled=provider.enabled)
+        except PartnerUnavailable as error:
+            # Trust cannot be established without harness: the provider stays non-green.
+            warn(str(error))
+            rows.append({"provider_id": provider.provider_id.value, "green": False,
+                         "diagnostics": ["PARTNER_UNAVAILABLE"]})
+            continue
+        rows.append({"provider_id": provider.provider_id.value, "green": resolution["green"],
+                     "diagnostics": [item["code"] for item in resolution["diagnostics"]]})
     return tuple(rows)
 
 

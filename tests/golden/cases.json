@@ -1,0 +1,277 @@
+{
+  "schema": "golden-cases/v1",
+  "captured_from": "fe31f5a5b17a",
+  "reason": "unit versions bumped for v0.30.0",
+  "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
+  "setup": [
+    {
+      "from": "packages/planner/tests/engine/fixtures/demo-plan",
+      "to": "plans/2026.10.05-№1-GOLD"
+    }
+  ],
+  "normalize": [
+    {
+      "name": "repo-path",
+      "type": "repo",
+      "token": "<REPO>",
+      "reason": "absolute path of the repository differs per machine and clone"
+    },
+    {
+      "name": "sandbox-path",
+      "type": "sandbox",
+      "token": "<SANDBOX>",
+      "reason": "sandbox directory name carries the pid"
+    },
+    {
+      "name": "home-path",
+      "type": "home",
+      "token": "<HOME>",
+      "reason": "real home carries the user name"
+    },
+    {
+      "name": "sha256",
+      "type": "regex",
+      "pattern": "\\b[0-9a-f]{64}\\b",
+      "replace": "<SHA256>",
+      "reason": "content digests change with every edit of a hashed file"
+    },
+    {
+      "name": "git-sha-paren",
+      "type": "regex",
+      "pattern": "\\([0-9a-f]{7,12}\\)",
+      "replace": "(<SHA>)",
+      "reason": "git sha in a version string changes with every commit"
+    },
+    {
+      "name": "git-sha-after-version",
+      "type": "regex",
+      "pattern": "(\\bv?\\d+\\.\\d+\\.\\d+[-+ ])[0-9a-f]{7,12}\\b",
+      "replace": "\\1<SHA>",
+      "reason": "git sha next to a semver changes with every commit"
+    },
+    {
+      "name": "iso-time",
+      "type": "regex",
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d+)?Z?",
+      "replace": "<TS>",
+      "reason": "timestamps change per run"
+    }
+  ],
+  "cases": [
+    {
+      "id": "swissknifeman-help",
+      "argv": [
+        "bin/swissknifeman",
+        "--help"
+      ]
+    },
+    {
+      "id": "skiller-help",
+      "argv": [
+        "packages/skiller/bin/skiller",
+        "--help"
+      ]
+    },
+    {
+      "id": "harness-help",
+      "argv": [
+        "packages/harness/bin/harness",
+        "--help"
+      ]
+    },
+    {
+      "id": "maind-help",
+      "argv": [
+        "packages/maind/bin/maind",
+        "--help"
+      ]
+    },
+    {
+      "id": "analyst-help",
+      "argv": [
+        "packages/analyst/bin/analyst",
+        "--help"
+      ]
+    },
+    {
+      "id": "plan-help",
+      "argv": [
+        "python3",
+        "packages/planner/scripts/plan.py",
+        "--help"
+      ]
+    },
+    {
+      "id": "orch-help",
+      "argv": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "--help"
+      ]
+    },
+    {
+      "id": "swissknifeman-unknown-subcommand",
+      "argv": [
+        "bin/swissknifeman",
+        "no-such-subcommand"
+      ]
+    },
+    {
+      "id": "skiller-unknown-subcommand",
+      "argv": [
+        "packages/skiller/bin/skiller",
+        "no-such-subcommand"
+      ]
+    },
+    {
+      "id": "harness-unknown-subcommand",
+      "argv": [
+        "packages/harness/bin/harness",
+        "no-such-subcommand"
+      ]
+    },
+    {
+      "id": "maind-unknown-subcommand",
+      "argv": [
+        "packages/maind/bin/maind",
+        "no-such-subcommand"
+      ]
+    },
+    {
+      "id": "analyst-unknown-subcommand",
+      "argv": [
+        "packages/analyst/bin/analyst",
+        "no-such-subcommand"
+      ]
+    },
+    {
+      "id": "plan-unknown-subcommand",
+      "argv": [
+        "python3",
+        "packages/planner/scripts/plan.py",
+        "no-such-subcommand"
+      ]
+    },
+    {
+      "id": "orch-unknown-subcommand",
+      "argv": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "no-such-subcommand"
+      ]
+    },
+    {
+      "id": "skiller-resolve-ok",
+      "argv": [
+        "packages/skiller/bin/skiller",
+        "resolve",
+        "general/verify-claims",
+        "--json"
+      ]
+    },
+    {
+      "id": "skiller-resolve-missing",
+      "argv": [
+        "packages/skiller/bin/skiller",
+        "resolve",
+        "no-such/skill",
+        "--json"
+      ]
+    },
+    {
+      "id": "harness-permissions-list",
+      "argv": [
+        "packages/harness/bin/harness",
+        "permissions",
+        "--list"
+      ]
+    },
+    {
+      "id": "harness-mcp-list",
+      "argv": [
+        "packages/harness/bin/harness",
+        "mcp",
+        "--list"
+      ]
+    },
+    {
+      "id": "harness-agent-packs-list",
+      "argv": [
+        "packages/harness/bin/harness",
+        "agent-packs",
+        "list"
+      ]
+    },
+    {
+      "id": "harness-instructions-check",
+      "argv": [
+        "packages/harness/bin/harness",
+        "instructions",
+        "check",
+        "--target",
+        "{REPO}",
+        "--json"
+      ]
+    },
+    {
+      "id": "orch-launch-list",
+      "argv": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "launch",
+        "list"
+      ]
+    },
+    {
+      "id": "orch-validate-valid",
+      "argv": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "validate",
+        "execution-input",
+        "packages/orch/fixtures/exec/v1/valid/execution-input/adhoc.json"
+      ]
+    },
+    {
+      "id": "orch-validate-invalid",
+      "argv": [
+        "python3",
+        "packages/orch/scripts/orch.py",
+        "validate",
+        "execution-input",
+        "packages/orch/fixtures/exec/v1/invalid/execution-input/missing-goal.json"
+      ]
+    },
+    {
+      "id": "plan-show",
+      "argv": [
+        "python3",
+        "packages/planner/scripts/plan.py",
+        "show",
+        "2026.10.05-№1-GOLD",
+        "--plans-root",
+        "{SANDBOX}/plans"
+      ]
+    },
+    {
+      "id": "plan-check",
+      "argv": [
+        "python3",
+        "packages/planner/scripts/plan.py",
+        "check",
+        "2026.10.05-№1-GOLD",
+        "--plans-root",
+        "{SANDBOX}/plans"
+      ]
+    },
+    {
+      "id": "analyst-status",
+      "cwd": "{SANDBOX}/projects",
+      "note": "Read an empty sandbox project; checkout lessons must not affect this fixture.",
+      "argv": [
+        "{REPO}/packages/analyst/bin/analyst",
+        "status"
+      ]
+    }
+  ]
+}

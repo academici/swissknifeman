@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.8.0",
   "provenance": {
     "captured_before_renderer": true
   },
@@ -13,13 +13,13 @@
       ],
       "assertions": [
         "`swissknifeman` is the umbrella repository and control layer",
-        "`skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages.",
+        "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages.",
         "`swissknifeman`",
         "`skiller`",
         "`harness`",
         "`maind`",
         "`analyst`",
-        "`task`",
+        "`planner`",
         "names are not roles"
       ]
     },
@@ -30,8 +30,9 @@
         "codex"
       ],
       "assertions": [
-        "Keep `core/` as shared stdlib primitives, the five package roots as independent tools, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.",
-        "`core/`",
+        "Keep the modules as independent folders under `packages/`, the links between them in `bridges/`, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.",
+        "`packages/`",
+        "`bridges/`",
         "`.claude-plugin/marketplace.json`",
         "`docs/`"
       ]
@@ -44,9 +45,9 @@
       ],
       "assertions": [
         "Read the relevant package guide before changing `packages/<name>/`",
-        "`task` remains plugin-only and has no standalone CLI.",
+        "`planner` remains plugin-only and has no standalone CLI.",
         "`packages/<name>/`",
-        "`task`",
+        "`planner`",
         "maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`"
       ]
     },
@@ -58,13 +59,13 @@
       ],
       "assertions": [
         "Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router",
-        "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group.",
+        "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group.",
         "`swissknifeman skills|env|maind|analyst|setup|doctor`",
         "`skiller`",
         "`harness`",
         "`maind`",
         "`analyst`",
-        "`task`",
+        "`planner`",
         "cross-package onboarding lives once in `maind/onboard.py`",
         "the umbrella owns the `swissknifeman` launcher alias"
       ]
@@ -76,10 +77,10 @@
         "codex"
       ],
       "assertions": [
-        "Put shared primitives in `core/`",
-        "package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback.",
-        "`core/`",
-        "`core`",
+        "Put shared primitives in `packages/aicore/`",
+        "module Python runtime stays stdlib-only and reaches `aicore` through the `lib/` folder of that module on `PYTHONPATH`.",
+        "`packages/aicore/`",
+        "`aicore`",
         "`PYTHONPATH`",
         "bash launchers resolve the repository root independently",
         "deduplicate rather than maintain parallel implementations"
@@ -120,7 +121,7 @@
         "codex"
       ],
       "assertions": [
-        "Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task."
+        "Planner commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate planner."
       ]
     },
     {
@@ -229,6 +230,18 @@
       ]
     },
     {
+      "id": "root.module-folders",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Every `packages/<id>/` folder is an independent module described by its `unit.json`",
+        "reaches other modules only through bridges (`bridges/`) or events, never by import or path",
+        "Check boundaries with `python3 scripts/ecosystem-units.py check`."
+      ]
+    },
+    {
       "id": "root.claude-code.native-surfaces",
       "provider_ids": [
         "claude-code"
@@ -272,7 +285,7 @@
         "canonical skill and command content stays under `packages/skiller/skills/`",
         "`.agents/skills/*`",
         "`packages/skiller/skills/`",
-        "`packages/task/commands/`"
+        "`packages/planner/commands/`"
       ]
     },
     {
@@ -290,7 +303,7 @@
         "codex"
       ],
       "assertions": [
-        "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
+        "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Planner workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
       ]
     },
     {
@@ -402,7 +415,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync.",
+        "Keep skiller settings in `[skiller]` (connect and legacy vendor selection) and `[skiller.sync]` (skill-granular vendor sync) of `.swissknifeman/config.toml`",
         "`.swissknife.json`",
         "`.swissknifeman/config.json`",
         "runtime validation stays manual and does not read them as a live contract"
@@ -448,7 +461,7 @@
         "`config.resolve_selection`",
         "`skillset.do_sync`",
         "`harness`",
-        "keep token math in `budget.py` as the single source"
+        "keep token math in `aicore.content.budget` as the single source; `budget.py` composes it with skiller selection"
       ]
     },
     {
@@ -604,10 +617,13 @@
         "codex"
       ],
       "assertions": [
+        "Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+        "`harness`",
+        "`aicore`",
+        "`aicore.util.partners`",
         "Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher.",
         "`skiller`",
         "`.swissknife.json:memory_brain`",
-        "`harness`",
         "never break paths already installed on consumers"
       ]
     },
@@ -713,12 +729,16 @@
         "codex"
       ],
       "assertions": [
+        "Import only `maind` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+        "`maind`",
+        "`aicore`",
+        "`aicore.util.partners`",
         "Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized.",
         "`federation.graph_reader`",
         "`federation`",
         "`disabled`",
         "never treat `graphify` as a live tool name",
-        "manual graph links live only in `<repo>/.maind.graph.json`"
+        "manual graph links live only in `[maind.graph.links.<id>]` of the project configuration"
       ]
     },
     {
@@ -825,6 +845,10 @@
         "codex"
       ],
       "assertions": [
+        "Import only `analyst` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path.",
+        "`analyst`",
+        "`aicore`",
+        "`aicore.util.partners`",
         "Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules.",
         "`cmd_*`",
         "The documented exception is `extract_pathologies`"
@@ -883,8 +907,8 @@
         "claude-code"
       ],
       "assertions": [
-        "Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
-        "`.claude/analyst`",
+        "Claude Code capture reads project lessons from `.swissknifeman/analyst` (legacy `.swissknife/analyst` and `.claude/analyst`), run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
+        "`.swissknifeman/analyst`",
         "`.claude/runs`",
         "`~/.claude/projects/<encoded-cwd>/*.jsonl`"
       ]
@@ -900,20 +924,20 @@
       ]
     },
     {
-      "id": "task.identity",
+      "id": "planner.identity",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "`task` is the plugin-only package for task-intent commands and executable plan protocol",
-        "it has no `bin/`, standalone CLI, or installer.",
-        "`task`",
+        "`planner` is the plugin package for intent commands and the executable plan protocol; its command line is `scripts/plan.py` (no `bin/` yet).",
+        "`planner`",
+        "`scripts/plan.py`",
         "`bin/`"
       ]
     },
     {
-      "id": "task.command-catalog",
+      "id": "planner.command-catalog",
       "provider_ids": [
         "claude-code",
         "codex"
@@ -925,7 +949,7 @@
       ]
     },
     {
-      "id": "task.plan-protocol",
+      "id": "planner.plan-protocol",
       "provider_ids": [
         "claude-code",
         "codex"
@@ -937,34 +961,34 @@
       ]
     },
     {
-      "id": "task.plan-files",
+      "id": "planner.plan-files",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
+        "Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
         "`plan.json`",
-        "`python3 <task>/scripts/plan.py`",
+        "`python3 <planner>/scripts/plan.py`",
         "`plan.py next|show|context`"
       ]
     },
     {
-      "id": "task.layout",
+      "id": "planner.layout",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
+        "Keep command Markdown in `commands/`, the plan engine in `lib/planner/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`.",
         "`commands/`",
-        "`lib/task/plan/`",
+        "`lib/planner/plan/`",
         "`scripts/plan.py`",
         "`tests/`"
       ]
     },
     {
-      "id": "task.schema-ownership",
+      "id": "planner.schema-ownership",
       "provider_ids": [
         "claude-code",
         "codex"
@@ -977,39 +1001,70 @@
       ]
     },
     {
-      "id": "task.engineering-invariants",
+      "id": "planner.engineering-invariants",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics.",
-        "`lib/task/`"
+        "Keep `lib/planner/plan/` stdlib-only and runnable without aicore; import aicore only in `lib/planner/integration/` and the projection renderer; keep English diagnostics.",
+        "`lib/planner/plan/`",
+        "`lib/planner/integration/`"
       ]
     },
     {
-      "id": "task.validation-release",
+      "id": "planner.configuration",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages.",
-        "`bash packages/task/scripts/validate.sh`"
+        "Read planner settings only through `planner.plan.settings` (schema defaults, machine, project, `plan.settings`, environment, `--config`); change keys in `configs/config.schema.json` and regenerate `config.example.toml` with `aicore config example`.",
+        "`planner.plan.settings`",
+        "`configs/config.schema.json`",
+        "`config.example.toml`",
+        "`aicore config example`"
       ]
     },
     {
-      "id": "task.claude-code.slash-projection",
+      "id": "planner.events-and-extensions",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Emit `planner.*` events only after the plan lock is released, through `planner.integration.events`, with data that follow `schemas/event-data/v1`; overlay slots and the `planner:check` point are declared in `unit.json`.",
+        "`planner.*`",
+        "`planner.integration.events`",
+        "`schemas/event-data/v1`",
+        "`unit.json`",
+        "`planner:check`"
+      ]
+    },
+    {
+      "id": "planner.validation-release",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Before release run `bash packages/planner/scripts/validate.sh` and `python3 scripts/ecosystem-units.py standalone planner`, and use Russian Conventional Commit messages.",
+        "`bash packages/planner/scripts/validate.sh`",
+        "`python3 scripts/ecosystem-units.py standalone planner`"
+      ]
+    },
+    {
+      "id": "planner.claude-code.slash-projection",
       "provider_ids": [
         "claude-code"
       ],
       "assertions": [
-        "Claude Code projects the Task command catalog as `/task:*` commands.",
-        "`/task:*`"
+        "Claude Code projects the planner command catalog as `/planner:*` commands.",
+        "`/planner:*`"
       ]
     },
     {
-      "id": "task.claude-code.model-pins",
+      "id": "planner.claude-code.model-pins",
       "provider_ids": [
         "claude-code"
       ],
@@ -1020,93 +1075,134 @@
       ]
     },
     {
-      "id": "artifex.identity",
+      "id": "brain.identity",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "`artifex` is the standalone deterministic supervisor package",
-        "its package runtime is the sole live implementation after G1.",
-        "`artifex`"
+        "`brain` is the ecosystem module for the Obsidian vault",
+        "the vault belongs to a person, so brain adds notes and never rewrites their files.",
+        "`brain`"
       ]
     },
     {
-      "id": "artifex.layout",
+      "id": "brain.layout",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates.",
-        "`bin/artifex`",
-        "`lib/artifex/`",
-        "`tests/`"
+        "Keep `bin/brain` as the launcher, `lib/brain/` as stdlib-only logic on `aicore`",
+        "temporary-directory tests with the synthetic vault in `tests/fixtures/vault`.",
+        "`bin/brain`",
+        "`lib/brain/`",
+        "`tests/fixtures/vault`"
       ]
     },
     {
-      "id": "artifex.runtime-boundaries",
+      "id": "brain.module-boundaries",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep provider adapters additive over one shared supervisor contract",
-        "use bounded fresh processes and never make package runtime import `plans/**`.",
-        "`plans/**`"
+        "Import only `brain` and `aicore`",
+        "take the vault path from `brain vault` resolution (configuration `brain.vault_path`), never from a hardcoded path.",
+        "`brain.vault_path`"
       ]
     },
     {
-      "id": "artifex.provenance",
+      "id": "brain.vault-safety",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep generation and source hashes explicit",
-        "plan-local runtime remains immutable non-importable evidence rather than a package dependency."
+        "Write to the vault only through `brain note`",
+        "never overwriting a file) and an explicit `brain docs push`",
+        "keep notes outside the synced `docs`, `docs-public` and `plans` folders.",
+        "`brain note`",
+        "`brain docs push`"
       ]
     },
     {
-      "id": "artifex.engineering-invariants",
+      "id": "brain.engineering-invariants",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate.",
-        "`lib/artifex/`"
+        "Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes",
+        "exit 65 for invalid event data and 75 for temporary failures.",
+        "`BrainError`"
       ]
     },
     {
-      "id": "artifex.validation-release",
+      "id": "brain.validation-release",
       "provider_ids": [
         "claude-code",
         "codex"
       ],
       "assertions": [
-        "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages.",
+        "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`",
+        "use Russian Conventional Commit messages.",
         "`bash scripts/test.sh`",
-        "`bash scripts/validate.sh`"
+        "`bash scripts/validate.sh`",
+        "`python3 scripts/ecosystem-units.py standalone brain`"
       ]
     },
     {
-      "id": "artifex.claude-code.package-scope",
+      "id": "orch.identity",
       "provider_ids": [
-        "claude-code"
-      ],
-      "assertions": [
-        "Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."
-      ]
-    },
-    {
-      "id": "artifex.codex.package-scope",
-      "provider_ids": [
+        "claude-code",
         "codex"
       ],
       "assertions": [
-        "Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it.",
-        "`codex -C packages/artifex`"
+        "`orch` is the engine-neutral orchestration module",
+        "its conductor (`scripts/conduct.py`) starts the roles of a run as child processes.",
+        "`orch`",
+        "`exec/v1`"
+      ]
+    },
+    {
+      "id": "orch.module-boundaries",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Import only `orch` and `aicore`",
+        "the `orch:work-source` extension point.",
+        "`orch`",
+        "`aicore`",
+        "`bridges/`"
+      ]
+    },
+    {
+      "id": "orch.engineering-invariants",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Keep Python 3.9 compatibility, English diagnostics",
+        "proven by `aicore schema compat`.",
+        "`PortError`",
+        "`docs/engine-port.md`",
+        "`aicore schema compat`"
+      ]
+    },
+    {
+      "id": "orch.validation-release",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`",
+        "use Russian Conventional Commit messages.",
+        "`python3 scripts/ecosystem-units.py standalone orch`"
       ]
     }
   ]

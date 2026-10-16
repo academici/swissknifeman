@@ -1,0 +1,36 @@
+{
+  "causationid": "11111111111111111111111111111111",
+  "correlationid": "cnd-1",
+  "data": {
+    "agent_run_id": "agent-1-1",
+    "attempt": 1,
+    "config_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "duration_ms": 12500,
+    "item": "P1.1",
+    "options_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "prompt_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "role": "executor",
+    "route": {
+      "effort": "medium",
+      "model": "m",
+      "model_class": "implementation",
+      "provider": "claude-code"
+    },
+    "run_id": "cnd-1",
+    "step": "execute.1",
+    "tokens": {
+      "cached": 5,
+      "input": 10,
+      "output": 3
+    },
+    "work_id": "P1.1@abc"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-agent-finished:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "cnd-1/P1.1/agent-1-1",
+  "time": "2026-10-15T10:00:00.000Z",
+  "type": "orch.agent.finished"
+}

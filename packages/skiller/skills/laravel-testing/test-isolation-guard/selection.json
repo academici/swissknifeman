@@ -1,0 +1,13 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "tool",
+  "decision": "SCRIPT",
+  "also": [
+    "POLICY"
+  ],
+  "triggers": {
+    "paths": [
+      "database/migrations/**"
+    ]
+  }
+}

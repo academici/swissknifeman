@@ -1,44 +1,22 @@
-"""Fleet scan of codegraph MCP usage from Claude/Cursor run-reports (read-only)."""
+"""Fleet scan of codegraph MCP usage from Claude/Cursor run-reports (read-only), read through analyst."""
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 
-from core.codegraph_telemetry import scan_run_report
+from .analyst_source import codegraph_reports
 
-_RUN_DIRS = (".claude/runs", ".cursor/runs", ".codex/runs")
 _MAX_REPORTS = 40
-
-
-def _load_reports(project_path: Path, limit: int = _MAX_REPORTS):
-    rows = []
-    for rel in _RUN_DIRS:
-        runs = project_path / rel
-        if not runs.is_dir():
-            continue
-        if "cursor" in rel:
-            provider = "cursor"
-        elif "codex" in rel:
-            provider = "codex"
-        else:
-            provider = "claude-code"
-        for fp in sorted(runs.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
-            try:
-                data = json.loads(fp.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            if not isinstance(data, dict):
-                continue
-            rows.append((fp.stat().st_mtime, provider, data))
-    rows.sort(key=lambda item: item[0], reverse=True)
-    return rows[:limit]
 
 
 def scan_project(project_path, *, limit: int = _MAX_REPORTS):
     """Summarize recent codegraph usage for one project directory."""
     path = Path(os.path.expanduser(str(project_path)))
-    reports = _load_reports(path, limit=limit)
+    data, problem = codegraph_reports(path, limit=limit)
+    if problem is not None:
+        return {"status": "unavailable", "reason": problem["code"], "sessions": 0, "code_sessions": 0,
+                "calls": 0, "by_op": {}, "by_provider": {}}
+    reports = data["reports"]
     sessions = len(reports)
     code_sessions = 0
     calls = 0
@@ -46,8 +24,9 @@ def scan_project(project_path, *, limit: int = _MAX_REPORTS):
     by_provider = {"claude-code": {"sessions": 0, "code_sessions": 0, "calls": 0},
                    "cursor": {"sessions": 0, "code_sessions": 0, "calls": 0},
                    "codex": {"sessions": 0, "code_sessions": 0, "calls": 0}}
-    for _mtime, provider, report in reports:
-        summary = scan_run_report(report)
+    for row in reports:
+        provider, summary = row["provider"], row["summary"]
+        summary = {"calls": int(summary.get("calls") or 0), "by_op": summary.get("by_op") or {}}
         prov = by_provider.setdefault(provider, {"sessions": 0, "code_sessions": 0, "calls": 0})
         prov["sessions"] += 1
         if summary["calls"]:
@@ -58,6 +37,7 @@ def scan_project(project_path, *, limit: int = _MAX_REPORTS):
         for op, cnt in (summary.get("by_op") or {}).items():
             by_op[op] = by_op.get(op, 0) + cnt
     return {
+        "status": "ok",
         "sessions": sessions,
         "code_sessions": code_sessions,
         "calls": calls,
@@ -77,6 +57,9 @@ def fleet_summary(projects):
         if not local:
             continue
         snap = scan_project(local)
+        if snap["status"] == "unavailable":
+            rows.append({"id": project["id"], **snap})
+            continue
         if not snap["sessions"]:
             continue
         rows.append({"id": project["id"], **snap})
@@ -99,6 +82,9 @@ def usage_note(snapshot):
     totals = snapshot.get("totals") or {}
     sessions = int(totals.get("sessions") or 0)
     if sessions <= 0:
+        unavailable = [row for row in snapshot.get("projects") or [] if row.get("status") == "unavailable"]
+        if unavailable:
+            return f"analyst unavailable ({unavailable[0].get('reason', 'PARTNER_UNAVAILABLE')})"
         return "no run-report'ov"
     code_sessions = int(totals.get("code_sessions") or 0)
     calls = int(totals.get("calls") or 0)
@@ -112,6 +98,8 @@ def format_project_line(row, code_enabled: bool):
     code_sessions = int(row.get("code_sessions") or 0)
     calls = int(row.get("calls") or 0)
     flag = "code:on" if code_enabled else "code:off"
+    if row.get("status") == "unavailable":
+        return f"{sid}[{flag}] unavailable ({row.get('reason', 'PARTNER_UNAVAILABLE')})"
     if sessions == 0:
         return None
     pct = 100 * code_sessions / sessions if sessions else 0

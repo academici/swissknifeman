@@ -1,0 +1,238 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.12",
+  "title": "Документация orch и мостов: docs orch (Non-goals, MCP не шина), README мостов, инструкции orch через каталог harness, ecosystem и contracts, develop, ADR 0057–0062, CHANGELOG",
+  "status": "done_with_deviations",
+  "summary": "packages/orch/docs (architecture с разделом Non-goals и правилом MCP, engine-port, contracts, configuration, run-policies, work-source, conformance, events, index) и копия docs/orch через docs-sync; README orch; bridges/README.md и README мостов; scope orch в каталоге инструкций harness (4 секции, тексты дословно) и генерация CLAUDE.md/AGENTS.md/.cursor/.grok orch; docs/architecture/{ecosystem,contracts}.md, docs/develop.md; ADR 0057–0062 и каталог decisions/README.md; итоговая строка CHANGELOG.",
+  "why": "D24 (документация с решениями); R23 (Non-goals) и R24 (MCP не шина) требуют записи в docs orch; правило плана о генерируемых инструкциях. Риск: инструкции правятся руками — только генератор harness; сайт публикует исследования — docs/research исключён (P10.1).",
+  "scope": {
+    "include": [
+      "packages/orch/docs/**, packages/orch/README.md, docs/orch/** (docs-sync)",
+      "bridges/README.md, bridges/*/README.md",
+      "packages/harness/configs/common/instructions/{catalog.json, packages/orch/common.md}, packages/harness/tests/fixtures_data/instruction-*-v1.json, packages/harness/docs/reference/provider-instruction-contract.md (инвентарь scope)",
+      "packages/orch/{CLAUDE.md, AGENTS.md, .cursor-instructions.mdc, .grok-instructions.md} (генератор)",
+      "docs/architecture/{ecosystem,contracts,index}.md, docs/develop.md, docs/architecture/decisions/{0057..0062}-*.md, decisions/README.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "изменения кода (кроме исправлений, найденных docs-impact)"
+    ]
+  },
+  "depends_on": [
+    "P10.11"
+  ],
+  "decisions": [
+    "D61",
+    "D62",
+    "D63",
+    "D64",
+    "D65",
+    "D66",
+    "D24"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/orch-p10#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#facts",
+      "why": "факты кода на начало фазы: файлы, функции, точки изменения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#docs",
+      "why": "состав документации, тексты инструкций, ADR",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-instructions#instructions",
+      "why": "как добавляется scope инструкций через каталог harness и генератор",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#upgrade",
+      "why": "заметки upgrade для docs",
+      "required": true
+    },
+    {
+      "path": "docs/architecture/decisions/0056-execution-scenario-and-one-owner-per-attempt.md",
+      "why": "формат ADR",
+      "required": true
+    },
+    {
+      "path": "docs/architecture/decisions/README.md",
+      "why": "каталог ADR",
+      "required": true
+    },
+    {
+      "path": "packages/orch/docs/architecture.md",
+      "why": "текущая архитектура orch",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/orch/**",
+      "change": "any",
+      "note": "только через scripts/docs-sync.sh"
+    },
+    {
+      "path": "bridges/README.md",
+      "change": "any",
+      "note": "файл появляется в P10.3 (перенос мостов)"
+    },
+    {
+      "path": "bridges/*/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/tests/fixtures_data/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/docs/reference/provider-instruction-contract.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/CLAUDE.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/AGENTS.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/.cursor-instructions.mdc",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/.grok-instructions.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/ecosystem.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/contracts.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/index.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/develop.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/decisions/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только golden генератора инструкций, capture с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Тексты секций инструкций — дословно из knowledge/orch-p10#docs; файлы инструкций orch — только генератором harness",
+    "docs/orch — только scripts/docs-sync.sh; docs/research orch на сайт не попадает"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: docs orch по §docs (architecture: зависимость от aicore, мосты, порт, Non-goals, MCP) → README orch → bridges/README.md и README мостов (сверить с кодом: глаголы, op, коды отказов, поиск партнёров) → `bash scripts/docs-sync.sh` → инструкции: scope orch в catalog.json + фрагмент common.md + инвентарь в provider-instruction-contract.md + фикстуры покрытия → применение генератором (knowledge/brain-p7-instructions#instructions) → `python3 scripts/golden.py capture --only harness-provider-instructions --reason \"orch instruction scope\"`, если генератор изменил golden → docs/architecture и develop.md → ADR 0057–0062 + каталог → `git fetch -q origin && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD` → V1–V3 → итоговая строка CHANGELOG.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "for n in 0057 0058 0059 0060 0061 0062; do ls docs/architecture/decisions/$n-*.md >/dev/null || exit 1; grep -q \"$n\" docs/architecture/decisions/README.md || exit 1; done && grep -q '^## Non-goals' packages/orch/docs/architecture.md && test -f packages/orch/CLAUDE.md && test -f packages/orch/AGENTS.md && test -f bridges/README.md && test ! -e docs/orch/research",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "git fetch -q origin && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD && bash packages/harness/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "документация orch и мостов",
+    "инструкции orch",
+    "ADR 0057–0062"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-11T09:38:54Z",
+    "finished_at": "2026-10-11T09:54:28Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "cea22213-7ca0-4eb3-819c-d20b2d1dfc9d"
+    },
+    "notes": "Docs orch (Non-goals, MCP rule), README, ecosystem/contracts/develop, ADR 0057-0062, harness scope orch (catalog 1.7.0, 4 sections verbatim, generated instructions), golden recaptured, baseline updated, CHANGELOG. grok-4.7 review: 3 findings fixed.",
+    "deviations": [
+      "V3 golden check lists only owner-dirty files (two planner-development-philosophy SKILL.md, bootstrap/publication-lock.json); every other V3 part and all case diffs are green"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T09:54:28Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T09:54:28Z"
+      },
+      {
+        "id": "V3",
+        "exit": 1,
+        "at": "2026-10-11T09:54:28Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T09:54:28Z"
+}

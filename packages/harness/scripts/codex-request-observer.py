@@ -8,7 +8,7 @@ import sys
 import threading
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
-from core.provider.request_lifecycle import Observer, status
+from aicore.provider.request_lifecycle import Observer, status
 
 
 def main(argv=None):

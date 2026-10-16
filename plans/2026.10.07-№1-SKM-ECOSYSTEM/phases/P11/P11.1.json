@@ -1,0 +1,328 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.1",
+  "title": "Начало фазы; аналитика запусков из core в analyst; aicore.util.partners; команда analyst runs; maind analyze через analyst; хаб-раннер test-integration.sh",
+  "status": "done_with_deviations",
+  "summary": "sync-main и golden check; git mv core/{runs,pathology,codegraph_telemetry}.py и их тестов в analyst (run_reports, pathology, codegraph); фасад core без этих имён; новый aicore.util.partners (поиск партнёра, run_partner_json, PARTNER_UNAVAILABLE); команды analyst runs show|codegraph --json с контрактами run-lookup/v1 и run-codegraph/v1; maind analyze и codegraph_usage получают отчёты через analyst и деградируют без него; хаб-раннер scripts/test-integration.sh; строки ownership перенесённых файлов удалены.",
+  "why": "D68, D67; карта P2 (core/runs, pathology, codegraph_telemetry → analyst, P11) — первый перенос, без которого core не удалить (P11.12). Жёсткие риски: (1) maind analyze без analyst — деградация с причиной, команда не падает (тест); (2) старые тесты maind патчат find_run_report и после правки перестанут патчить — переписать на поддельный партнёр (rules п.15); (3) раннеры модулей сбрасывают переменные партнёров — test-integration.sh должен реально запускать тесты с партнёром, а не пропускать их.",
+  "scope": {
+    "include": [
+      "scripts/dev-clone.sh sync-main, python3 scripts/golden.py check",
+      "git mv core/{runs,pathology,codegraph_telemetry}.py и core/tests/test_{runs,find_run_report,pathology,codegraph_telemetry}.py в packages/analyst (имена — knowledge/hub-p11-analyst#runs), затем импорты aicore в перенесённом",
+      "core/__init__.py и core/tests/test_shim.py: фасад без перенесённых имён",
+      "потребители внутри analyst: digest, events, readers/{codex,cursor}, token_report, common",
+      "packages/aicore/lib/aicore/util/partners.py и тесты; README aicore (раздел util)",
+      "analyst runs show|codegraph --json, схемы run-lookup/v1 и run-codegraph/v1, provides.contracts, тесты",
+      "maind: analysis/analyze.py, codegraph_usage.py через analyst; common.py без реэкспорта find_run_report*; тесты с поддельным партнёром",
+      "scripts/test-integration.sh; проброс SKM_*_ROOT, SKM_*_BIN, PLANNER_* в scripts/test.sh maind, analyst, harness",
+      "configs/ecosystem-units.json (ownership core/runs…), render, baseline; CHANGELOG.md и packages/maind/CHANGELOG.md"
+    ],
+    "exclude": [
+      "остальные импорты core в analyst (P11.2) и maind (P11.4)",
+      "подписчик событий analyst (P11.3)",
+      "skiller quality/analyze.py и audit.py (D68, отложено)"
+    ]
+  },
+  "depends_on": [
+    "P10.13"
+  ],
+  "decisions": [
+    "D67",
+    "D68",
+    "D31"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-analyst#partners",
+      "why": "API aicore.util.partners и test-integration.sh",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-analyst#runs",
+      "why": "перенос, имена файлов, команды analyst runs, переход maind",
+      "required": true
+    },
+    {
+      "path": "core/runs.py",
+      "why": "RunReportLookup, find_run_report_result, find_analytics_events",
+      "required": true
+    },
+    {
+      "path": "core/__init__.py",
+      "why": "фасад и _ALIASES shim",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/analysis/analyze.py",
+      "why": "источник run-report в maind analyze",
+      "required": true
+    },
+    {
+      "path": "packages/maind/lib/maind/codegraph_usage.py",
+      "why": "_load_reports и scan_run_report",
+      "required": true
+    },
+    {
+      "path": "scripts/test-bridges.sh",
+      "why": "образец хаб-раннера с переменными партнёров",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "core/runs.py",
+      "change": "delete",
+      "note": "git mv в analyst"
+    },
+    {
+      "path": "core/pathology.py",
+      "change": "delete"
+    },
+    {
+      "path": "core/codegraph_telemetry.py",
+      "change": "delete"
+    },
+    {
+      "path": "core/tests/test_runs.py",
+      "change": "delete"
+    },
+    {
+      "path": "core/tests/test_find_run_report.py",
+      "change": "delete"
+    },
+    {
+      "path": "core/tests/test_pathology.py",
+      "change": "delete"
+    },
+    {
+      "path": "core/tests/test_codegraph_telemetry.py",
+      "change": "delete"
+    },
+    {
+      "path": "core/__init__.py",
+      "change": "modify"
+    },
+    {
+      "path": "core/tests/test_shim.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/lib/analyst/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/analyst/schemas/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/analyst/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/partners.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/util/test_partners.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/analysis/analyze.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/codegraph_usage.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/lib/maind/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/maind/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-integration.sh",
+      "change": "create"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Перенесённые файлы сначала git mv без правок (отдельный шаг), затем правки импортов",
+    "maind analyze и codegraph_usage не падают без analyst: источник unavailable с причиной PARTNER_UNAVAILABLE или PARTNER_FAILED"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: `scripts/dev-clone.sh sync-main` (чистое дерево) → `python3 scripts/golden.py check` → git mv шести файлов (knowledge/hub-p11-analyst#runs) → импорты в перенесённом (`aicore.util.io`, `aicore.provider.values`) и в analyst → фасад core и test_shim → `aicore/util/partners.py` + тест → `analyst runs show|codegraph` + схемы + `provides.contracts` + тест → maind `analyze.py`, `codegraph_usage.py`, `common.py`, тесты с поддельным analyst (`SKM_ANALYST_BIN` на скрипт во временном каталоге) → `scripts/test-integration.sh` (+ проброс переменных в раннерах модулей) → `configs/ecosystem-units.json` (удалить строки ownership перенесённых путей) → `python3 scripts/ecosystem-units.py render` → `python3 scripts/ecosystem-units.py baseline --update`, если нарушения изменились → CHANGELOG (корень: «analyst: run analytics moved from core; `analyst runs show|codegraph --json`; aicore.util.partners»; maind: «analyze reads run reports through analyst») → V1–V6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/analyst/scripts/test.sh && bash packages/analyst/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "test ! -e core/runs.py && test ! -e core/pathology.py && test ! -e core/codegraph_telemetry.py && test -f packages/analyst/lib/analyst/run_reports.py && test -f packages/analyst/lib/analyst/pathology.py && test -f packages/analyst/lib/analyst/codegraph.py && test -f packages/aicore/lib/aicore/util/partners.py && test -f packages/analyst/schemas/run-lookup/v1/run-lookup.schema.json && test -f packages/analyst/schemas/run-codegraph/v1/run-codegraph.schema.json && ! grep -rnE 'find_run_report|scan_run_report|find_analytics_events|core\\.(runs|pathology|codegraph_telemetry)' packages/maind/lib && ! grep -rnE 'core\\.(runs|pathology|codegraph_telemetry)' packages/analyst/lib",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "bash scripts/test-integration.sh",
+      "expect": "exit 0; последняя строка integration: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "PYTHONPATH=. python3 -m unittest discover -s core/tests && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "аналитика запусков в analyst, команда analyst runs",
+    "aicore.util.partners",
+    "scripts/test-integration.sh"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-11T12:46:30Z",
+    "finished_at": "2026-10-11T13:05:51Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "0c230eb3-dae7-4152-a91a-3d61527aec3d"
+    },
+    "notes": "Run analytics moved to analyst (run_reports, pathology, codegraph); core facade without them; aicore.util.partners; analyst runs show|codegraph with run-lookup/v1 and run-codegraph/v1; maind analyze and codegraph_usage read through analyst and degrade with PARTNER_* reasons; scripts/test-integration.sh (analyst 338, maind 625, harness 745 tests, real analyst exercised). ownership rows removed, render done, baseline unchanged (56). Fact for P11.2: analyst still imports core (common, promote, sessions, doctor); bin/analyst whitelist gained runs. Docs and CHANGELOGs updated. Hard risk: public CLI contracts (new, alpha) - task:review recommended.",
+    "deviations": [
+      "sync-main skipped (nothing to merge); RunReportLookup gained path/status; real-analyst tests skip unless SKM_ANALYST_ROOT/BIN set; golden analyst-help recaptured; git mv committed separately"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-11T13:05:51Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T13:05:51Z"
+}

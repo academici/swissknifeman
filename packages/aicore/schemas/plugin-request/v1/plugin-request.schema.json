@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:plugin-request:v1",
+  "title": "plugin-request",
+  "description": "What the host writes to the standard input of a plugin: one JSON object, then end of input.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:plugin-request:v1",
+      "description": "Schema identifier of the document."
+    },
+    "protocol": {
+      "const": "1",
+      "description": "Protocol version."
+    },
+    "op": {
+      "enum": [
+        "describe",
+        "invoke",
+        "event"
+      ],
+      "description": "describe asks for identity, invoke calls an extension point, event delivers an event. invoke needs point and input, event needs event (checked by the host)."
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "description": "Id of the call; the response repeats it."
+    },
+    "deadline_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Time the plugin has, in milliseconds."
+    },
+    "point": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$",
+      "description": "Extension point being called (invoke)."
+    },
+    "input": {
+      "type": "object",
+      "description": "Input of the call (invoke)."
+    },
+    "event": {
+      "$ref": "urn:swissknifeman:aicore:event:v1",
+      "description": "The event being delivered (event)."
+    },
+    "context": {
+      "type": "object",
+      "description": "Facts about the call.",
+      "properties": {
+        "project_root": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Root of the project, or null outside a project."
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Delivery attempt, from 1."
+        },
+        "trusted": {
+          "type": "boolean",
+          "description": "Whether the plugin is trusted on this machine."
+        }
+      },
+      "required": [
+        "project_root",
+        "attempt",
+        "trusted"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "$schema",
+    "protocol",
+    "op",
+    "request_id",
+    "deadline_ms",
+    "context"
+  ],
+  "additionalProperties": false
+}

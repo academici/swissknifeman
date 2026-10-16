@@ -1,0 +1,143 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "aicore: classify_signals по нормализованным сигналам, правила signal_any/signal_not_in, evidence в error/v1, правила Claude и Codex из первичных источников",
+  "status": "done",
+  "summary": "aicore.provider.errors: classify_signals(provider_id, signals, now, rules) и расширение match правил (signal_any, signal_not_in, retry_after_from); classify_failure остаётся обёрткой; error/v1 — необязательное evidence; provider-errors.json — правила таблицы knowledge/provider-errors#signals (структурные раньше текстовых) с источником в тесте каждого правила.",
+  "why": "Аудит П1.1, 2.16, N2, E6, D7. Риск: правило без источника классифицирует чужую ошибку — каждое правило с тестом на точной строке/сигнале из документации или исходника.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/provider/errors.py",
+      "packages/aicore/configs/provider-errors.json",
+      "packages/aicore/schemas/error/v1/error.schema.json и фикстуры",
+      "packages/aicore/tests/provider/test_errors.py",
+      "docs aicore (provider errors)"
+    ],
+    "exclude": [
+      "извлечение сигналов из потоков (P2.2)",
+      "решение повтора (P2.3, P2.5)"
+    ]
+  },
+  "depends_on": [
+    "P1.1"
+  ],
+  "decisions": [
+    "D7"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/provider-errors#signals",
+      "why": "сигналы, API, таблица правил",
+      "required": true
+    },
+    {
+      "ref": "knowledge/provider-errors#facts",
+      "why": "код errors.py",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-13#claude",
+      "why": "источники Claude",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-13#codex",
+      "why": "источники Codex",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/provider/errors.py",
+      "why": "текущий код",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/provider/errors.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/configs/provider-errors.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/schemas/error/v1/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/provider/test_errors.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/fixtures/**",
+      "change": "any",
+      "note": "фикстуры error/v1"
+    },
+    {
+      "path": "packages/aicore/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "@plan/artifacts/P2.1/review-verdict.json",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Только stdlib; error/v1 и provider-errors/v1 меняются аддитивно",
+    "Сырой текст провайдера не копируется в safe_message"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты правил (падают) → разбор match → classify_signals → evidence в схеме → правила → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "classify_signals",
+    "правила с источниками"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T02:32:44Z",
+    "finished_at": "2026-10-14T03:17:08Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "8f5319ab-6291-4ee5-aed3-9ecc37393022"
+    },
+    "notes": "classify_signals + signal_any/signal_not_in/retry_after_from + error/v1 evidence; 21 packaged rules (Claude structured, Codex text), each tested on its source string/signal; Grok review round 1: 6 findings reproduced, 5 fixed (is_error gate, terminal status first, typed not_in, empty maps, per-signal text, content_filter rule), 1 pre-existing text rule kept (note P2.5). Deviation: Claude 'prompt is too long' context rule not added (no primary source in the pack); changelog in packages/aicore/CHANGELOG.md and docs/architecture/contracts.md (aicore has no docs/).",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T03:17:08Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T03:17:08Z"
+}

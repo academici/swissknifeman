@@ -1,0 +1,8 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "tool",
+  "decision": "SCRIPT",
+  "also": [
+    "KEEP"
+  ]
+}

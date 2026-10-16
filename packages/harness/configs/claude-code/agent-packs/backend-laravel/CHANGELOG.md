@@ -138,7 +138,7 @@ including monorepo) supplanted `IS_LARAVEL_PACKAGE` (app-vs-src, monorepo couldn
   `{prefix}-security-review` (auth/policy/injection/secrets/IDOR). All `optional`, model `{{MODEL_RECON}}`
   (default `haiku`). Operationalizes «heavy reading - to subagent» (skill `context-economy` §8). New
   install-files `.claude/agents/{prefix}-{route-mapper,db-impact,blade-review,test-verifier,security-review}.md`.
-- **Guide `subagents-and-workflows.md` updated**: section «How tasks are set» (`/task:*` + `args.slices`),
+- **Guide `subagents-and-workflows.md` updated**: section «How tasks are set» (`/planner:*` + `args.slices`),
   **mermaid-process diagram dev-loop** (Setup→Build[impl→test→risk-review]→Verify + recon-delegation),
   recon-agents and risk-adaptive reviewer in the agents table; hardcode `pint`/phpstan → `{{CHECK_CMD}}`.
 

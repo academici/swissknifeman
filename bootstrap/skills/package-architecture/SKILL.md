@@ -93,7 +93,7 @@ Claude Code's own automatic prompt caching. Full canon — `docs/guide/skills-ar
 
 Installed as a symlink into `~/.local/bin` via `./install.sh`; it derives the registry path from
 its own `readlink -f` (no path config needed; repo moved → rerun install.sh). State:
-`~/.swissknifeman/projects.json` (version 1, records keyed by path+channel) — populated
+`<state>/skiller/projects.json` (version 1, records keyed by path+channel; the legacy `~/.swissknifeman/projects.json` is a warned fallback) — populated
 automatically on connect/vendor/update; disk is always the source of truth, records are replay
 defaults.
 
@@ -113,17 +113,25 @@ a plugin (connect, `enabledPlugins`) and vendored (vendor, manifest `source_path
 `swissknifeman skills status`, not duplicated per package. Sync invariant: only `managed: true`
 records are touched — foreign/manual `skills-lock.json` entries survive `sync`.
 
-**Topology (`topology`, `lib/skiller/topology.py`).** Global map of the local environment
-`~/.swissknifeman/topology.json` (version 1): three hub nodes `brain`/`swissknifeman`/
+**Topology (`maind topology`; `skiller topology` is a deprecated alias).** Global map of the local environment
+`<state>/maind/topology.json` (version 1; legacy `~/.swissknifeman/topology.json` is a warned fallback): three hub nodes `brain`/`swissknifeman`/
 `projects_base` (roles `docs-hub`/`skills-hub`/`workspace`). `init` — interactive collection
 (autodetected defaults: swissknifeman = registry root, projects_base = common ancestor of paths
-in `projects.json`, brain = `~/Vaults/Brain`), atomic write with `.bak` backup, `created_at`
+in `projects.json`, brain = `~/Vaults/Brain`), atomic write with an `aicore.state.backup` backup, `created_at`
 preserved. `show [--json]` — print. The file is machine-specific, not committed into projects.
 Offered on `install.sh` (TTY). The distributed skill `skills/system/local-topology` explains the
 scheme and resolves nodes from this file.
 
 `scripts/connect-claude.sh` and `sync.sh` are one-release deprecation wrappers. Brain-sync was
 removed: brain is an ordinary consuming project.
+
+## Umbrella CLI `swissknifeman`
+
+The root CLI finds modules by `unit.json` and holds no module logic: `swissknifeman units` lists them, `install
+[--profile minimal|standard|full] [--dry-run]` installs by profile, `doctor [--unit ID] [--json]` aggregates the read-only
+`provides.doctor` probes, `conformance plugin <extension.json>|engine` checks a plugin or an engine, and
+`release bundle --root R --tag T --out DIR` writes the release files. A module with `provides.cli` is a command group of its
+own id; the former groups and skiller verbs are aliases in `configs/umbrella.json`. Details: `docs/reference/umbrella.md`.
 
 ## Generated artifacts — never hand-edited
 

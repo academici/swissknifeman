@@ -1,0 +1,14 @@
+{
+  "specversion": "1.0",
+  "id": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "source": "urn:swissknifeman:module:planner",
+  "type": "planner.plan.closed",
+  "time": "2026-10-09T09:15:30.250Z",
+  "subject": "2026.01.15-DEMO-PLAN",
+  "datacontenttype": "application/json",
+  "data": {
+    "plan_id": "2026.01.15-DEMO-PLAN",
+    "status": "done",
+    "title": "Ecosystem split"
+  }
+}

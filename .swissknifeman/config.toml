@@ -1,0 +1,5 @@
+schema_version = 1
+
+# The planner finds the bridges of this repository in bridges/ (relative to the project root).
+[planner.bridges]
+roots = ["bridges"]

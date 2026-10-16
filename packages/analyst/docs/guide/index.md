@@ -25,7 +25,7 @@ staged-draft (not in `skills/`), and only an abstract lesson comes out.
 
 ## Privacy
 
-Raw materials (raw-run transcript) — **LOCAL-only**, in `<project>/.claude/analyst/`. Out - into memory
+Raw materials (raw-run transcript) — **LOCAL-only**, in `<project>/.swissknifeman/analyst/`. Out - into memory
 [mAInd](/maind/guide/memory) on `curated` and in cross-project index - goes only **abstracted**
 `trigger → action` (+ links to evidence). Secrets - only by reference, not by value.
 

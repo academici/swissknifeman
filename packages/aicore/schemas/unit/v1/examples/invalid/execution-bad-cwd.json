@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "sample",
+  "title": "Sample capability module",
+  "kind": "capability",
+  "version": "0.2.0",
+  "stability": "beta",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Shared helpers."}
+  ],
+  "execution": {"project": "required", "cwd": "home", "writes": "project"},
+  "provides": {
+    "cli": ["bin/sample"],
+    "plugins": [{"name": "sample", "manifest": ".claude-plugin/plugin.json"}],
+    "contracts": [
+      {"id": "urn:swissknifeman:sample:data", "path": "schemas/data/v1", "version": "v1", "stability": "alpha"}
+    ],
+    "doctor": [
+      {"id": "sample.environment", "category": "environment", "probe": ["bin/sample", "doctor"], "output": "text"}
+    ],
+    "events": ["sample.item.done"],
+    "overlay_slots": ["intro"],
+    "extension_points": [{"id": "hook", "description": "Extra step before completion."}]
+  },
+  "subscribes": [
+    {"id": "notify", "on": ["sample.item.*"], "run": ["bin/notify"], "timeout_seconds": 20, "description": "Tell a person."}
+  ],
+  "permissions": {"filesystem": ["project", "state"], "network": false, "secrets": ["env://TOKEN"], "shell": true, "env": ["PATH"], "profile": "trusted-local"},
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"],
+    "standalone_setup": [["bash", "bin/sample", "registry"]]
+  }
+}

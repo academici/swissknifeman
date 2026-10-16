@@ -13,7 +13,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "packages/harness/lib"))
-sys.path.insert(0, str(REPO_ROOT))
 
 from harness.cursor_render import check_cursor_rules, write_cursor_rules  # noqa: E402
 

@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D5",
+  "title": "Слоёный конфиг и стандартные места состояния",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Как унифицировать конфиги и служебные файлы?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Слои: defaults модуля → ~/.config/swissknifeman/config.json → <project>/.swissknifeman/config.json → SKM_<MODULE>_<KEY> → флаги; схемы по модулям; config show --explain. Состояние: XDG-места, проект .swissknifeman/{config.json,state/,backups/}; SKM_HOME для изоляции; *.env.ini, .swissknife.json, .maind*.json, ~/.swissknifeman, ~/.maind, *.bak переезжают по таблице (knowledge/architecture §5)"
+    }
+  ],
+  "decision": "A — Слои: defaults модуля → ~/.config/swissknifeman/config.json → <project>/.swissknifeman/config.json → SKM_<MODULE>_<KEY> → флаги; схемы по модулям; config show --explain. Состояние: XDG-места, проект .swissknifeman/{config.json,state/,backups/}; SKM_HOME для изоляции; *.env.ini, .swissknife.json, .maind*.json, ~/.swissknifeman, ~/.maind, *.bak переезжают по таблице (knowledge/architecture §5)",
+  "rationale": "M3; M4.",
+  "applies_to": [
+    "P4",
+    "P8.4",
+    "P9.4",
+    "P13",
+    "P11.5",
+    "P11.9"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "owner"
+}

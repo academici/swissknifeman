@@ -1,0 +1,85 @@
+{
+  "item": "P12.8",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "The unit job always passes a base (modules.yml:47-48: the pull-request base sha, or HEAD~1 on push) into `aicore schema compat --base REF --root packages/<id>/schemas --unit packages/<id>/unit.json`. On this tree that command exits 1 for harness (`SCHEMA_COMPAT_BASE_INVALID: codex-lifecycle/v1 at the base: unknown schema kind: 'codex-lifecycle'`), planner (unresolved `$ref` `urn:swissknifeman:task:plan:extension:orchestration.options:v1`), and skiller (`profiles-list/v1 at the base: unknown schema kind: 'profiles-list'`). Those three units are outside `standalone.tools`, so `continue-on-error` stays false and the Modules workflow fails on every push and pull request. analyst and maind fail the same way; their jobs are allowed to fail. A local run without `--base-ref` skips the step, and V1–V4 never pass a base, so those checks stay green while CI is red.",
+          "id": "F1",
+          "location": "scripts/ci-matrix.py:311",
+          "reproduction": "HOME=$(mktemp -d) SKM_HOME=$HOME/skm bash packages/aicore/bin/aicore schema compat --base HEAD --root packages/harness/schemas --unit packages/harness/unit.json  # exit 1; the same argv with packages/planner/schemas and packages/skiller/schemas also exits 1. aicore and orch exit 0.",
+          "severity": "Blocker",
+          "triage_reproduction": {
+            "cmd": "HOME=$(mktemp -d) SKM_HOME=$(mktemp -d) bash packages/aicore/bin/aicore schema compat --base HEAD --root packages/<u>/schemas --unit packages/<u>/unit.json  # u = harness, planner, skiller",
+            "exit": 1,
+            "observed": "harness: SCHEMA_COMPAT_BASE_INVALID codex-lifecycle/v1 unknown schema kind; planner: plan/v1 unresolved $ref urn:swissknifeman:task:plan:extension:orchestration.options:v1; skiller: profiles-list/v1 unknown schema kind. aicore and orch exit 0. modules.yml always passes --base-ref (PR base sha or HEAD~1), and these units are not tools, so continue-on-error is false."
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "`run --unit planner --step contracts` prints `ok planner contracts` and exits 0. `packages/planner/schemas/plan/v1` holds 22 schema documents; `load_contract` and `load_contract_set` both raise SchemaProfileError because of the unresolved `$ref` `urn:swissknifeman:task:plan:extension:orchestration.options:v1`. The bridge file `bridges/planner-orch/schemas/run-options.schema.json` is not under `provides.contracts` and is never loaded. The fallback only checks that each file is JSON and has an `$id`, which all 22 do, so a profile violation that keeps `$id` stays green. The same function accepts skiller's declared path `schema` (not a `v<N>` directory) after `json.loads` only: `packages/skiller/schema/swissknifeman-config.schema.json` is draft-07 with `patternProperties` and is never passed to `load_contract`.",
+          "id": "F2",
+          "location": "scripts/ci-matrix.py:255",
+          "reproduction": "Loaded scripts/ci-matrix.py and called contracts() for every unit: planner returned `ok 3 contract(s)`. A direct load of packages/planner/schemas/plan/v1 raised SchemaProfileError from both load_contract and load_contract_set; all 22 files still have `$id`.",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "python3 scripts/ci-matrix.py run --unit planner --step contracts; plus PYTHONPATH=packages/aicore/lib python3 -c \"from aicore.util import schema as s; s.load_contract_set('packages/planner/schemas/plan/v1')\"",
+            "exit": 0,
+            "observed": "run prints 'ok planner contracts 0.0' and exits 0, while load_contract_set raises SchemaProfileError: unresolved reference urn:swissknifeman:task:plan:extension:orchestration.options:v1. The fallback at ci-matrix.py:252-257 swallows the profile error and only checks JSON syntax and $id."
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "`secrets()` calls `public_hygiene.check` and `content_violations` and never calls `plan_reference_violations`. A tracked file under `packages/brain/` that contains a concrete plan id such as `2026.10.07-№1-SKM` makes `python3 scripts/public-hygiene.py` exit 1, while `python3 scripts/ci-matrix.py run --unit brain --step secrets` prints `ok`. `.github/workflows/hygiene.yml` still runs the full script, so the repository-wide gate remains; the module step does not implement it.",
+          "id": "F3",
+          "location": "scripts/ci-matrix.py:333",
+          "reproduction": "Static: public-hygiene.py main() is `check + content_violations + plan_reference_violations`; secrets() stops after the first two.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "sed -n 325,345p scripts/ci-matrix.py; grep -n 'plan_reference_violations' scripts/public-hygiene.py scripts/ci-matrix.py",
+            "exit": 0,
+            "observed": "public-hygiene.py main() = check + content_violations + plan_reference_violations. secrets() in ci-matrix.py (line ~333) calls only module.check + module.content_violations, never plan_reference_violations."
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "high",
+          "failure_scenario": "The changelog and the usage text at scripts/ci-matrix.py:14 say a bridge runs `lint`, `test`, `cli-smoke`, and `contracts`. `build_steps` omits lint and cli-smoke for every bridge. `steps` for orch-harness, orch-skiller, and planner-orch is only `test` and `contracts`, so `resolve_role.py --help` and the other bridge CLIs are not run. The adopted bridge steps are test and contracts, and test_bridge_with_lib_and_cli_still_has_only_test_and_contracts locks that; the published description says the extra steps run.",
+          "id": "F4",
+          "location": "CHANGELOG.md:7",
+          "reproduction": "build_steps on the real hub: orch-harness, orch-skiller, and planner-orch each returned ['test', 'contracts'].",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "python3 scripts/ci-matrix.py steps planner-orch; python3 scripts/ci-matrix.py steps orch-harness",
+            "exit": 0,
+            "observed": "Both list only 'test' and 'contracts'. The usage text (ci-matrix.py:14) and CHANGELOG.md:7 claim a bridge also runs lint and cli-smoke."
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a135d8-de98-7d70-a454-fbe08cc71c28",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261013T151746Z-4f7242/P12.8/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2",
+          "F3",
+          "F4"
+        ],
+        "rejected": [],
+        "session": "deb841e9-6508-44a5-9980-3a9fa3a5654b"
+      },
+      "verdict": "RED"
+    }
+  ],
+  "run": "cnd-20261013T151746Z-4f7242",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

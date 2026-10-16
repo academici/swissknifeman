@@ -1,0 +1,7 @@
+{
+  "capability": "agent.subagents",
+  "provider": "claude-code",
+  "dimension": "quota",
+  "level": "native",
+  "source": "declared"
+}

@@ -1,0 +1,117 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+  "contract_version": "exec/v1",
+  "input_id": "PLAN9.P1.2@e44275188eb4",
+  "digest": "e44275188eb4dcd852f42b80e81379192894afa74c870559ef4faa60236d1c73",
+  "provenance": {
+    "kind": "plan",
+    "plan": "PLAN9",
+    "plan_dir": "plans/2026.10.05-№9-DEMO",
+    "item": "P1.2",
+    "source_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+    "generated_by": {
+      "tool": "plan-bridge brief",
+      "task_version": "0.28.3"
+    }
+  },
+  "goal": "Add the greet command: `demo greet NAME` prints `Hello, NAME`.",
+  "why": "Owner requirement R1.",
+  "scope": {
+    "include": [
+      "demo/cli.py greet subcommand",
+      "unit test"
+    ],
+    "exclude": [
+      "packaging"
+    ],
+    "write_set": [
+      "demo/cli.py",
+      "tests/test_cli.py"
+    ],
+    "read_only": false
+  },
+  "guidance": "Use argparse subparsers like the existing `version` command.",
+  "constraints": [
+    {
+      "text": "stdlib only",
+      "source": "plan.rules[0]"
+    },
+    {
+      "text": "English diagnostics",
+      "source": "item.rules[0]"
+    }
+  ],
+  "decisions": [
+    {
+      "ref": "D1",
+      "loaded": true,
+      "title": "CLI framework",
+      "status": "accepted",
+      "decision": "argparse"
+    }
+  ],
+  "acceptance": {
+    "checks": [
+      {
+        "id": "V1",
+        "cmd": "python3 -m unittest tests.test_cli",
+        "expect": "exit 0",
+        "kind": "acceptance"
+      }
+    ],
+    "deliverables": [
+      "greet subcommand",
+      "test"
+    ]
+  },
+  "reads": [
+    {
+      "path": "demo/cli.py",
+      "why": "existing commands",
+      "required": true,
+      "exists": true,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "context_refs": [
+    {
+      "kind": "pack",
+      "ref": "PLAN9.P1.2",
+      "path": "plans/2026.10.05-№9-DEMO/context/P1.2.json"
+    }
+  ],
+  "upstream": [
+    {
+      "ref": "P1.1",
+      "title": "CLI skeleton",
+      "status": "done",
+      "summary": "argparse skeleton"
+    }
+  ],
+  "route": {
+    "minimum": {
+      "class": "implementation",
+      "effort": "high"
+    }
+  },
+  "result_contract": {
+    "report": [
+      "summary",
+      "changed_paths",
+      "checks_run",
+      "evidence",
+      "open_issues"
+    ],
+    "write_authority": "code_scope",
+    "commit_owner": "coordinator",
+    "plan_mutation": "forbidden"
+  },
+  "escalation": [
+    "A required read is missing or contradicts the goal",
+    "An acceptance check cannot pass without leaving scope"
+  ],
+  "research": {
+    "need": "required",
+    "notes": "Check the current CLI flags of the provider against its documentation."
+  }
+}

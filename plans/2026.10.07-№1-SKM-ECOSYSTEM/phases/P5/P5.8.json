@@ -1,0 +1,235 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.8",
+  "title": "aicore.release: аттестация, версии и CHANGELOG; скрипты хаба без импорта skiller",
+  "status": "done_with_deviations",
+  "summary": "git mv skiller/release_attestation.py → aicore/release/attestation.py и тест; PACKAGE_ROOT → параметр package_root; функции версий и CHANGELOG из skiller/release.py → aicore/release/{version,changelog}.py, parse_released и регулярные выражения из scripts/verify-tag.py → changelog.py; skiller release.py и тонкий release_attestation.py (PACKAGE_ROOT, cmd_attest, cmd_version, реэкспорт); scripts/verify-tag.py и scripts/version-guard.py импортируют aicore.release; тесты; удалить гипотезы release.py и release_attestation.py.",
+  "why": "D40: аттестация выпуска уже нужна хабу (verify-tag, version-guard тянут lib skiller через sys.path) и skiller (delivery, attest) — два потребителя; разбор CHANGELOG продублирован в verify-tag. Жёсткие риски: (1) после переноса Path(__file__).parents[2] указывал бы на aicore — константа убирается, префикс пакета передаётся явно; (2) изменение digest/tree_digest аттестаций — тесты аттестации и releases/v*.json; (3) расхождение префикса пакета у хаба (должен быть packages/skiller).",
+  "scope": {
+    "include": [
+      "git mv packages/skiller/lib/skiller/release_attestation.py packages/aicore/lib/aicore/release/attestation.py и packages/skiller/tests/test_release_attestation.py packages/aicore/tests/release/test_attestation.py (отдельный коммит), затем правки",
+      "packages/aicore/lib/aicore/release/{version,changelog}.py",
+      "новый тонкий packages/skiller/lib/skiller/release_attestation.py; packages/skiller/lib/skiller/release.py на aicore",
+      "scripts/verify-tag.py, scripts/version-guard.py (импорт aicore.release, package_root=ROOT / \"packages/skiller\")",
+      "packages/aicore/tests/release/{__init__,test_attestation,test_version,test_changelog}.py",
+      "configs/ecosystem-units.json: удалить гипотезы release.py и release_attestation.py; render; CHANGELOG aicore"
+    ],
+    "exclude": [
+      "cmd_release, cmd_attest, cmd_version (CLI skiller), host version_files (P12)",
+      "SBOM, подписи, release train (D26, отложено)",
+      "пост-теговая доставка (skiller delivery.py, P12)"
+    ]
+  },
+  "depends_on": [
+    "P5.7"
+  ],
+  "decisions": [
+    "D40",
+    "D26"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/content-p5-release#design",
+      "why": "модули, сигнатуры, хаб, тесты — реализуется дословно",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5-release#allocation",
+      "why": "таблица aicore.release, package_root",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#migration",
+      "why": "git mv, реэкспорт",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/release_attestation.py",
+      "why": "исходник; PACKAGE_ROOT, _package_rel, _in_package",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/release.py",
+      "why": "исходник версий и CHANGELOG",
+      "required": true
+    },
+    {
+      "path": "scripts/verify-tag.py",
+      "why": "parse_changelog и импорт check",
+      "required": true
+    },
+    {
+      "path": "scripts/version-guard.py",
+      "why": "импорт attestation",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/release/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/release_attestation.py",
+      "change": "any",
+      "note": "git mv, затем тонкий модуль"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/release.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/delivery.py",
+      "change": "modify",
+      "note": "только импорты build/check/digest при необходимости"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any",
+      "note": "перенос test_release_attestation, цели импортов"
+    },
+    {
+      "path": "scripts/verify-tag.py",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/version-guard.py",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-verify-tag.py",
+      "change": "modify",
+      "note": "только если тест импортирует перенесённые имена"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только render"
+    }
+  ],
+  "rules": [
+    "Перенос — по knowledge/content-p5 content-p5#migration: тела функций дословно, имена и сигнатуры строго по content-p5-release#allocation, старые имена в skiller/task — реэкспорт; отклонение от таблицы — только через plan.py log с причиной (решение остаётся D40)",
+    "aicore импортирует только stdlib и aicore.*; слои подпакетов — content-p5#migration п.10 (test_subpackage_layering); новые импорты в skiller/task/harness — aicore.*, после первого import core модуля; shim core новых алиасов не получает",
+    "git mv файла и теста — отдельным коммитом без правок содержимого, затем коммит правок",
+    "aicore.release не содержит PACKAGE_ROOT и строки packages/skiller: префикс пакета — параметр package_root (None → пустой префикс); skiller передаёт свой PACKAGE_ROOT, хаб — ROOT / \"packages/skiller\"",
+    "Сообщения, коды выхода и вывод verify-tag.py, version-guard.py и skiller release/attest/version — без изменений (их тесты проходят без правки ожиданий)",
+    "python3 scripts/golden.py check — без перезахвата: расхождение байтов генерации или вывода CLI — дефект переноса, чинится в пункте (D23)",
+    "Цели mock.patch в тестах skiller/task переносятся на модуль aicore, если патчится вызов внутри перенесённой функции (content-p5#migration п.5); каждый такой тест после правки проверяет, что mock действительно вызван",
+    "Пункт удаляет из configs/ecosystem-units.json гипотезы P5 по своим файлам, перегенерирует docs/architecture/ownership.md (ecosystem-units.py render) и при improvements обновляет базовую линию (baseline --update)",
+    "CLI skiller в dev-клоне блокирует guard (SKM_DEV_GUARD) — skiller validate.sh (внутри: test.sh, registry --check, Codex consumer acceptance) запускается только через scripts/dev-sandbox.sh, как в V-команде; прямой запуск вне песочницы даёт ложное «registry is out of date»",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: коммит `git mv` (файл и тест) → `release/attestation.py`: импорты aicore (`atomic_write_json`, `find_repo_root`, `SKILL_IGNORE` из `aicore.content.skill`, `die`, `parse_flags`); удалить `PACKAGE_ROOT`; `_package_rel(root, package_root)`, `_in_package(relative, root, package_root)`; протянуть `package_root=None` через `build`, `check` и внутренние вызовы (`_expected_plugin_version`, места с `_in_package`); вырезать `cmd_attest`, `cmd_version` → тонкий `skiller/release_attestation.py`: `PACKAGE_ROOT = Path(__file__).resolve().parents[2]`, `cmd_attest`/`cmd_version` передают `package_root=PACKAGE_ROOT`, реэкспорт `digest`, `tree_digest`, `build`, `check`, `check_transition`, `version_errors` (для `delivery.py` — обёртки `build`/`check` с `package_root=PACKAGE_ROOT`, чтобы поведение `deliver` не изменилось) → перенесённый тест: импорты `aicore.release.attestation` → `release/version.py`, `release/changelog.py` (+ `parse_released` из verify-tag) → `skiller/release.py` на aicore (`sync_version_files(root, version, host.version_files)`) → `scripts/verify-tag.py`: `sys.path` → `packages/aicore/lib`, `from aicore.release.attestation import check`, `check(..., package_root=Path(repo_root) / \"packages/skiller\")`, разбор CHANGELOG — `aicore.release.changelog`; `scripts/version-guard.py` аналогично → `python3 scripts/test-verify-tag.py && python3 scripts/test-version-guard.py` → тесты aicore (content-p5-release#design) → карта → CHANGELOG aicore.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p5-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/test-verify-tag.py && python3 scripts/test-version-guard.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "test -f packages/aicore/lib/aicore/release/attestation.py && test -f packages/aicore/tests/release/test_attestation.py && test ! -e packages/skiller/tests/test_release_attestation.py && test -z \"$(git grep -n 'packages/skiller/lib' -- scripts/verify-tag.py scripts/version-guard.py)\" && test -z \"$(git grep -n -E 'PACKAGE_ROOT|packages/skiller' -- packages/aicore/lib/aicore/release)\" && test -z \"$(git grep -n -E 'lib/skiller/release(_attestation)?\\.py' -- configs/ecosystem-units.json)\" && test -z \"$(git grep -n -E '^def (classify_bump|bump_version|read_unreleased_section|tree_digest)\\b' -- packages/skiller/lib scripts)\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.release (attestation, version, changelog)",
+    "скрипты хаба на aicore.release",
+    "skiller release/attest/version — тонкие CLI"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T17:51:27Z",
+    "finished_at": "2026-10-08T17:59:14Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "fb18de3e-94e8-44eb-a614-09810f99fb00"
+    },
+    "notes": "aicore.release: attestation (package_root вместо PACKAGE_ROOT), version, changelog (parse_released, release_changelog); skiller release.py/release_attestation.py тонкие (PACKAGE_ROOT, cmd_attest, cmd_version, обёртки build/check); verify-tag.py и version-guard.py на aicore.release; тесты aicore/tests/release; гипотезы release.py и release_attestation.py удалены, карта перегенерирована; CHANGELOG aicore. Жёсткие риски (digest аттестаций, префикс пакета хаба): проверено V1–V5, golden без перезахвата.",
+    "deviations": [
+      "UNRELEASED_SECTION_RE/NEXT_HEADING_RE в changelog.py; package_path вместо package_root в цикле build; fixture перенесён в aicore; test-task-plugin-cache-revision на aicore.release"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T17:59:14Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T17:59:14Z"
+}

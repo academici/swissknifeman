@@ -18,8 +18,21 @@ hook_field() {
   printf '%s' "$HOOK_INPUT" | jq -r "$1 // empty" 2>/dev/null
 }
 
+# Value of KEY from the committed carrier <project>/.swissknifeman/hooks.env (provider key first).
+read_hooks_env() {
+  local key="$1" dir="${2:-}" f v
+  f="$dir/.swissknifeman/hooks.env"
+  [ -n "$dir" ] && [ -f "$f" ] || return 1
+  v="$(grep -E "^${key}__CLAUDE_CODE=" "$f" | head -1 | cut -d= -f2- | tr -d ' \r')"
+  [ -n "$v" ] || v="$(grep -E "^${key}=" "$f" | head -1 | cut -d= -f2- | tr -d ' \r')"
+  [ -n "$v" ] || return 1
+  printf '%s' "$v"
+}
+
 read_mode() {
   local dir="$1" f m
+  m="$(read_hooks_env AUTO_APPROVE_MODE "${CLAUDE_PROJECT_DIR:-${HOOK_CWD:-}}")" || m=""
+  [ -n "$m" ] && { printf '%s' "$m"; return 0; }
   for f in "${CLAUDE_PROJECT_DIR:+$CLAUDE_PROJECT_DIR/.claude/auto-approve.env.ini}" "$dir/env.ini"; do
     [ -n "$f" ] && [ -f "$f" ] || continue
     m="$(grep -E '^[[:space:]]*MODE[[:space:]]*=' "$f" | head -1 \

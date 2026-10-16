@@ -1,6 +1,6 @@
 # Agents
 
-Register of running node agents - in `~/.maind/agents.json` (atomic record). Status
+Register of running node agents - in `<state>/maind/agents.json` (atomic record). Status
 agent **not stored**, and is derived when reading from the age of the last The heartbeat and liveliness
 pid — file stores only facts.
 

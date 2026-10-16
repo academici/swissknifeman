@@ -3,18 +3,40 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.tests.provider.test_config import catalog, config, layer
+from aicore.provider.config import (
+    CapabilitySupport, NativeExtension, ProviderConfigCatalog, ProviderConfigLayer)
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.values import (
+    CapabilityId, ConfigSource, NativeExtensionId, ProviderId, SupportLevel)
 from skiller.common import Env
 from skiller.config import load_config, provider_config_layer, resolve_provider_config
 from skiller.config import resolve_distribution_providers
 
 
+def catalog():
+    return ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX),
+        (CapabilitySupport(CapabilityId("instructions.project"), ProviderId.CLAUDE_CODE, SupportLevel.NATIVE),
+         CapabilitySupport(CapabilityId("skills.repository"), ProviderId.CODEX, SupportLevel.NATIVE),
+         CapabilitySupport(CapabilityId("hooks.lifecycle"), ProviderId.CODEX, SupportLevel.UNSUPPORTED)),
+        (NativeExtension(NativeExtensionId("claude-code.fixture-native"), ProviderId.CLAUDE_CODE),
+         NativeExtension(NativeExtensionId("codex.fixture-native"), ProviderId.CODEX)))
+
+
+def config(selection):
+    return {"contract_version": "1.0.0", "selection": selection}
+
+
+def layer(kind, value, path=None):
+    paths = {"operation": "/", "project": "/providers", "fleet-project": "/projects/0/providers", "fleet-defaults": "/providers/defaults"}
+    carriers = {"operation": "operation", "project": ".swissknife.json", "fleet-project": "config.json", "fleet-defaults": "config.json"}
+    return ProviderConfigLayer(ConfigSource(kind, f"{kind}:demo", carriers[kind], path or paths[kind]), value)
+
+
 class TestProviderConfigAdapter(unittest.TestCase):
     def test_distribution_uses_root_manifest_projection(self):
-        root = Path(__file__).resolve().parents[3]
         result = resolve_distribution_providers(
             {"providers": config({"codex": {"enabled": True}})}, project_id="manifest",
-            manifest_path=root / "configs/provider-capabilities.json")
+            manifest_path=default_manifest_path())
         self.assertTrue(next(row for row in result.effective
                              if row.provider_id.value == "codex").enabled)
 

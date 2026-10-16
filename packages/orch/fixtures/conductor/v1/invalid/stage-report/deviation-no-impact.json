@@ -1,0 +1,31 @@
+{
+  "status": "done_with_deviations",
+  "summary": "Changed a file outside the write set.",
+  "changed_paths": [
+    "a.py",
+    "docs/x.md"
+  ],
+  "checks_run": [
+    {
+      "id": "V1",
+      "cmd": "python3 -m unittest",
+      "exit": 0
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "text": "Edited docs/x.md outside the write set.",
+      "kind": "deviation",
+      "next": "widen the write set of later items",
+      "class": "write_set",
+      "outcome": "accepted",
+      "severity": "low",
+      "auto_fixable": false,
+      "evidence": [
+        "docs/x.md",
+        "V1"
+      ]
+    }
+  ]
+}

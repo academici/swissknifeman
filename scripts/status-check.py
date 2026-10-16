@@ -20,8 +20,8 @@ PACKAGE_DIRS = {
     "harness": "packages/harness",
     "maind": "packages/maind",
     "analyst": "packages/analyst",
-    "task": "packages/task",
-    "core": "core",
+    "planner": "packages/planner",
+    "aicore": "packages/aicore",
 }
 
 ROW_RE = re.compile(r"^\|(.+)\|$")

@@ -1,0 +1,10 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "contract",
+  "decision": "KEEP",
+  "triggers": {
+    "paths": [
+      "database/migrations/**"
+    ]
+  }
+}

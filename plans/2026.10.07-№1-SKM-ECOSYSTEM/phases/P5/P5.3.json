@@ -1,0 +1,196 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.3",
+  "title": "aicore.content.publication: примитивы публикации (артефакт целого файла, манифесты, Codex plugin.json, lock, runtime-файлы skill); skiller на них",
+  "status": "done_with_deviations",
+  "summary": "Создать aicore/content/publication.py: package_rel, manifest_bytes, distribution_catalog и validate_publication_capabilities, render_whole_file, capability_requirements, codex_plugin_manifest, codex_marketplace_entry, publication_lock, skill_runtime_files, contained; перевести skiller/publication.py (сборщики артефактов, Codex bundle и lock) и registry.py (_manifest_text) на них без изменения байтов; тесты aicore; убрать гипотезу registry.py.",
+  "why": "D40: общая механика публикации нужна skiller и task (одинаковые Codex plugin.json и publication-lock), позже — хабу (P12). Жёсткие риски: (1) изменение провенанса или хешей в adapters/codex/**/publication-lock.json и маркетплейсах — golden skiller-registry; (2) смена порядка ключей при сериализации (skiller — порядок вставки); (3) ошибочная потеря проверки containment у runtime-файлов skill.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/content/publication.py (таблица content-p5-publication#allocation aicore.content.publication)",
+      "packages/skiller/lib/skiller/publication.py: _render_artifact, _render_codex_artifact, _codex_bundle_lock, _render_codex_bundle, _codex_plugin_manifest, _codex_marketplace_entry, _manifest_text, package_rel, validate_publication_capabilities, _distribution_catalog, _codex_skill_runtime_files, _contained — через aicore (реэкспорт старых имён)",
+      "packages/skiller/lib/skiller/registry.py: _manifest_text → manifest_bytes",
+      "packages/aicore/tests/content/test_publication.py; test_architecture: codex_plugin_manifest, render_whole_file, manifest_bytes",
+      "configs/ecosystem-units.json: удалить гипотезу registry.py; render; CHANGELOG aicore"
+    ],
+    "exclude": [
+      "виды юнитов и тексты описаний skiller, маркетплейсы, sibling-плагины, root bootstrap (остаются, D40)",
+      "планы распространения и connect-артефакты Codex (P5.6), task (P5.4)",
+      "генерация plugin.json модулей из unit.json (P12)"
+    ]
+  },
+  "depends_on": [
+    "P5.2"
+  ],
+  "decisions": [
+    "D40"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/content-p5-publication#allocation",
+      "why": "таблица aicore.content.publication",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5-publication#design",
+      "why": "сигнатуры, сериализация, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#migration",
+      "why": "реэкспорт, байт-в-байт",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "why": "исходник (строки 31–90, 362–660, 860–990)",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/artifacts/artifact.py",
+      "why": "ArtifactRenderRequest, plan_artifact_render",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_codex_publication.py",
+      "why": "что проверяется в Codex-публикации",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/content/publication.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/registry.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "modify",
+      "note": "только цели импортов/патчей"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только render"
+    }
+  ],
+  "rules": [
+    "Перенос — по knowledge/content-p5 content-p5#migration: тела функций дословно, имена и сигнатуры строго по content-p5-publication#allocation, старые имена в skiller/task — реэкспорт; отклонение от таблицы — только через plan.py log с причиной (решение остаётся D40)",
+    "aicore импортирует только stdlib и aicore.*; слои подпакетов — content-p5#migration п.10 (test_subpackage_layering); новые импорты в skiller/task/harness — aicore.*, после первого import core модуля; shim core новых алиасов не получает",
+    "Идентификаторы артефактов, идентичности адаптеров (_CLAUDE_ADAPTER, _CODEX_ADAPTER, _CURSOR_ADAPTER), параметры провенанса и id источников (skiller.publication.source{i}, skiller.publication.meta) остаются в skiller и передаются в render_whole_file аргументами",
+    "manifest_bytes(data) у skiller сериализует в порядке вставки; sort_keys=True — только по явному аргументу",
+    "codex_marketplace_entry сохраняет отказ на путь без ./ или с .. (ValueError, текст дословно)",
+    "python3 scripts/golden.py check — без перезахвата: расхождение байтов генерации или вывода CLI — дефект переноса, чинится в пункте (D23)",
+    "Цели mock.patch в тестах skiller/task переносятся на модуль aicore, если патчится вызов внутри перенесённой функции (content-p5#migration п.5); каждый такой тест после правки проверяет, что mock действительно вызван",
+    "Пункт удаляет из configs/ecosystem-units.json гипотезы P5 по своим файлам, перегенерирует docs/architecture/ownership.md (ecosystem-units.py render) и при improvements обновляет базовую линию (baseline --update)",
+    "CLI skiller в dev-клоне блокирует guard (SKM_DEV_GUARD) — skiller validate.sh (внутри: test.sh, registry --check, Codex consumer acceptance) запускается только через scripts/dev-sandbox.sh, как в V-команде; прямой запуск вне песочницы даёт ложное «registry is out of date»",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: `content/publication.py` — `package_rel`, `manifest_bytes`, `distribution_catalog` (кеш модуля как `_DISTRIBUTION_CATALOG`), `validate_publication_capabilities`, `render_whole_file` (content-p5-publication#design), `capability_requirements`, `codex_plugin_manifest`, `codex_marketplace_entry`, `publication_lock`, `skill_runtime_files` (тело `_codex_skill_runtime_files`; `SKILL_IGNORE` — из `aicore.content.skill`, `die` — `aicore.util.term`), `contained` → skiller `publication.py`: `_render_artifact` и `_render_codex_artifact` строят `source_records` как раньше и вызывают `render_whole_file(artifact_id=…, target=target.relative_to(repo_root).as_posix(), sources=source_records, adapter=_CLAUDE_ADAPTER|_CODEX_ADAPTER, parameters={…}, rendered=…)`; `_codex_bundle_lock` строит записи и зовёт `publication_lock(unit.unit_id, unit.content_version, records)`; `_codex_plugin_manifest`/`_codex_marketplace_entry`/`_manifest_text`/`package_rel`/`validate_publication_capabilities`/`_codex_skill_runtime_files`/`_contained` — реэкспорт → `registry.py` `_manifest_text` → `manifest_bytes` → прогон `skiller registry --check` через golden и skiller-тесты → тесты aicore (content-p5-publication#design) → `test_content_primitives_are_defined_once` += `render_whole_file`, `codex_plugin_manifest`, `publication_lock` → карта (запись registry.py) → CHANGELOG aicore.\n\n`_distribution_artifact` в этом пункте не трогать (переносится в P5.6).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p5-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "test -z \"$(git grep -n -E '^def (_manifest_text|_codex_plugin_manifest|_codex_marketplace_entry|_codex_skill_runtime_files|_contained|package_rel|validate_publication_capabilities)\\b' -- packages/skiller/lib)\" && PYTHONPATH=packages/aicore/lib python3 -c 'from aicore.content.publication import render_whole_file, manifest_bytes, codex_plugin_manifest, publication_lock, capability_requirements, skill_runtime_files; assert manifest_bytes({\"b\": 1, \"a\": \"ё\"}) == \"{\\n  \\\"b\\\": 1,\\n  \\\"a\\\": \\\"ё\\\"\\n}\\n\".encode(); assert list(codex_plugin_manifest(\"n\", \"1.0.0\", \"d\", [\"./x\"])) == [\"name\", \"version\", \"description\", \"skills\"]'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.content.publication",
+    "skiller publication и registry на примитивах aicore без изменения байтов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T15:49:08Z",
+    "finished_at": "2026-10-08T15:56:37Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "e0dcf3b3-829e-487d-8b17-157ca87c059b"
+    },
+    "notes": "aicore.content.publication создан; skiller publication/registry на нём, байты и golden без изменений; гипотеза registry.py удалена; ownership перегенерирован; baseline без изменений (улучшений нет)",
+    "deviations": [
+      "нейтральная идентичность шлюза в aicore; удалены мёртвые _CURSOR_ADAPTER/_PUBLICATION_ADAPTERS; registry decode; цель mock.patch в test_host_publication"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T15:56:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T15:56:37Z"
+}

@@ -6,7 +6,11 @@ calibration by false-positive-rate more **not carried out** (is a separate resea
 on activity profiles + field data, see `roadmap`). This page is a single reference: where
 the parameter is what it does and in which direction to turn it.
 
-Rule: thresholds change **only in the source module** (single source, not local magic).
+The nine recompute and digest thresholds (candidate/curated gates, `deprecate_conf`, pathology window and hits)
+are settings: change them with `swissknifeman config set analyst.<table>.<key> <value>` (see README, Configuration).
+Every other parameter below is a model parameter.
+
+Rule: model parameters change **only in the source module** (single source, not local magic).
 After editing - `bash scripts/validate.sh` (determinism of recalculation is tested).
 
 ## Confidence-arithmetic

@@ -27,8 +27,9 @@ After - connect projects: `maind onboard <path>` (see skill `ecosystem-integrati
 ./install.sh
 ```
 
-Creates a symlink `~/.local/bin/maind → bin/maind` and status directory `~/.maind`
-(`projects.json`, `agents.json`). Options: `--bin-dir DIR`, `--force`. Check: `maind doctor`.
+Creates a symlink `~/.local/bin/maind → bin/maind`; a fresh machine also gets `registry.json` from
+`configs/registry.example.json` in the state directory (nothing is created when a registry or the legacy
+node file already exists). Options: `--bin-dir DIR`, `--force`. Check: `maind doctor`.
 
 ## Manual memory (without systemd)
 

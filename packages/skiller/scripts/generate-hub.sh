@@ -3,7 +3,7 @@
 # source reading priorities + search rules + (where needed) skill index.
 #
 # Thin launcher: all the logic is in lib/skiller/hub.py (importable and testable,
-# see tests/test_hub.py), only resolve here PYTHONPATH, as in bin/skiller.
+# see tests/test_hub.py), only resolve here PYTHONPATH (aicore locator), as in bin/skiller.
 #
 # Installation Data Sources (merge):
 #   .claude/settings.local.json / settings.json -> enabledPlugins."<bucket>@swissknifeman"
@@ -45,11 +45,24 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# Root monorepo (two levels above the package) gives the package `core`; in standalone-
-# directory layout core is not nearby - the path is not added (the same technique as in
-# bin/skiller: core not yet PYTHONPATH, therefore resolve on bash-side).
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
 
-exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+exec env PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m skiller.hub "$REPO_ROOT" "$@"

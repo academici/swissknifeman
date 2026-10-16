@@ -1,0 +1,30 @@
+{
+  "checks": [
+    {
+      "id": "license",
+      "status": "warn",
+      "detail": "no vendored code: N/A (patterns/specs reference, no vendored code)"
+    },
+    {
+      "id": "provenance",
+      "status": "warn",
+      "detail": "reference-only: files[] are links to specs, nothing is vendored"
+    },
+    {
+      "id": "injection",
+      "status": "ok",
+      "detail": "no dangerous-instruction pattern"
+    },
+    {
+      "id": "budget",
+      "status": "ok",
+      "detail": "3165 tokens of 8000"
+    },
+    {
+      "id": "tools",
+      "status": "ok",
+      "detail": "0 allowed-tools, all known"
+    }
+  ],
+  "verdict": "clean"
+}

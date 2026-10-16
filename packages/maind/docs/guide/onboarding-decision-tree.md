@@ -82,7 +82,7 @@ in `.claude/skills/`). Channel selection concerns **only skills** — memory/gra
 |:--|:--|:--|
 | **permissions-presets** | base, laravel, php, node, python, docker, … | autodetect by stack; merge in `settings.json` |
 | **MCP-servers** | context7, playwright, fetch, github, … | dev-default `context7` (except obsidian) + profile + `--mcp` |
-| **auto-approve** | strict / permissive / bypass / off | `.claude/auto-approve.env.ini` + PreToolUse-hook |
+| **auto-approve** | strict / permissive / bypass / off | `[harness.hooks.auto_approve]` → `.swissknifeman/hooks.env` + PreToolUse-hook |
 | **brain-memory** | file / federation / agentmemory / off | `.swissknife.json` + memory-hook |
 
 ### PHP-tools: PAO (invariant for php/laravel-projects)

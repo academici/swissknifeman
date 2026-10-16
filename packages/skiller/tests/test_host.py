@@ -24,6 +24,7 @@ SCHEMA = Path(__file__).resolve().parents[1] / "schema" / "host.schema.json"
 FULL = {
     "schema_version": 1,
     "plugin_dirs": ["vendor/*"],
+    "bucket_aliases": {"env-skills": ["plugin-a"]},
     "default_command_plugins": ["plugin-a"],
     "version_files": [{"path": "vendor/plugin-a/configs/routing.json", "key": "plugin_version"}],
     "machine_plugins": {

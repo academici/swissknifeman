@@ -1,16 +1,11 @@
 {
   "name": "@academici/swissknifeman",
-  "version": "0.19.2",
+  "version": "0.19.3",
   "private": true,
   "license": "MIT",
   "description": "Universal personal registry AI-skills and snippets: one source of truth, installation in any project and any IDE",
   "type": "module",
   "scripts": {
-    "docs:sync": "bash ../../scripts/docs-sync.sh",
-    "docs:dev": "npm run docs:sync && vitepress dev ../../docs",
-    "docs:build": "npm run docs:sync && npm run docs:link-nm && vitepress build ../../docs",
-    "docs:link-nm": "[ -e ../../node_modules ] || ln -s \"$(pwd)/node_modules\" ../../node_modules",
-    "docs:preview": "vitepress preview ../../docs",
     "docs:standalone:dev": "vitepress dev docs",
     "docs:standalone:build": "vitepress build docs",
     "docs:standalone:preview": "vitepress preview docs"

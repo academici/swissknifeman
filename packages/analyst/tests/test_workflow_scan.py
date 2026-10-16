@@ -3,11 +3,12 @@ import io
 import json
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 from analyst.common import Env
 from analyst import workflow_scan
+from tests.maind_stub import install_maind_stub
 
 
 class TestWorkflowScan(unittest.TestCase):
@@ -17,9 +18,9 @@ class TestWorkflowScan(unittest.TestCase):
         self.local = self.base / "local"
         self.vault = self.base / "vault"
         self.local.mkdir(); self.vault.mkdir()
-        (self.base / "config.json").write_text(json.dumps({"projects": [{
+        self.registry = [{
             "id": "alpha", "enabled": True, "local_path": str(self.local), "vault_path": str(self.vault),
-        }]}), encoding="utf-8")
+        }]
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -41,7 +42,7 @@ class TestWorkflowScan(unittest.TestCase):
         self._script(self.local, "plans/A/workflows/wf-a.js", body)
         self._script(self.vault, "plans/A/workflows/wf-a.js", body)
         self._script(self.local, "plans/archive/B/workflows/wf-b.js", "export const meta = { name: 'archive' }; const verify = true;")
-        sources, missing, diagnostics = workflow_scan.inventory(workflow_scan.load_projects(self.base / "config.json"))
+        sources, missing, diagnostics = workflow_scan.inventory(workflow_scan.load_projects(self.registry))
         self.assertFalse(missing or diagnostics)
         self.assertEqual(len(sources), 2)
         mirrored = next(row for row in sources if len(row["aliases"]) == 2)
@@ -65,6 +66,7 @@ class TestWorkflowScan(unittest.TestCase):
 
     def test_command_is_reproducible_and_writes_only_requested_report(self):
         self._script(self.local, "plans/A/workflows/wf-a.js", "export const meta = { name: 'x' }; const review = true;")
+        install_maind_stub(self, self.registry)
         env = Env(self.base, "workflow-scan", home=self.base / "home")
         output = self.base / "report"
         first = io.StringIO()
@@ -77,6 +79,16 @@ class TestWorkflowScan(unittest.TestCase):
         self.assertEqual(one, (output / "workflow-fleet-report.json").read_bytes())
         self.assertEqual(json.loads(first.getvalue()), json.loads(second.getvalue()))
         self.assertTrue((output / "workflow-fleet-report.md").is_file())
+
+    def test_templates_come_from_planner_root_and_degrade_without_it(self):
+        templates = self.base / "planner" / "workflows"
+        self._script(templates, "wf-one.js", "export const meta = { name: 'one' }; const review = true;")
+        found = workflow_scan.template_sources({"PLANNER_ROOT": str(self.base / "planner")})
+        self.assertEqual([row["template"] for row in found], ["wf-one.js"])
+        err = io.StringIO()
+        with redirect_stderr(err):
+            self.assertEqual(workflow_scan.template_sources({}), [])
+        self.assertIn("PARTNER_UNAVAILABLE: planner workflow templates not found", err.getvalue())
 
 
 if __name__ == "__main__":

@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261014T173854Z-697e72:P9.3:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN4.P9.3",
+  "candidate": {
+    "head": "ebe9e2e632501d47a37d7b01c2e01cf3a567d52c",
+    "dirty_digest": "9209b429f625fea70e033067f80bb755297bb1be52b393163d17a27dd9d958a2"
+  },
+  "started_at": "2026-10-14T19:11:51Z",
+  "procedure": {
+    "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-14T19:11:51Z"
+}

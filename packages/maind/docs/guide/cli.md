@@ -40,7 +40,7 @@ maind namespaces [--json]              # namespace-ecosystem groups and their me
 maind deploy [--project ID | --all] [--with-code] [--dry-run]   # MCP-hub servers (= sync --only mcp)
 maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,memory,memory-hook,health-hook,health-doc,ecosystem-skill] \
            [--mode install|update|auto] [--dry-run] [--json]        # roll out controlled artifacts
-maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthcheck project connection with the hub
+maind health [--cwd | --project ID] [--plan-repair | --apply-repair] [--strict] [--json]     # healthcheck project connection with the hub
 maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # trust Claude to ecosystem projects
 maind workspace status [--json]
 maind run <project> <capability> [-- args]   # pull command brain / swissknifeman
@@ -55,7 +55,9 @@ maind migrate from-brain <.projects.json> [--force]
 maind migrate from-agentmemory <dir> [--force]
 
 maind mcp                              # run as MCP-server (stdio)
-maind doctor [--quiet]                 # environment diagnostics
+maind mcp tools [--json]               # tool list and tools_digest (contract mcp-tools/v1)
+maind topology show|init [--json]      # machine map of hub nodes (<state>/maind/topology.json)
+maind doctor [--quiet] [--json]        # environment diagnostics; --json prints a list of check-result/v1
 maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json]  # fleet-project audit
 maind doctor --context [--json]        # fleet-aggregation always-on footprint of the first move
                                         #   (skiller budget --first-turn for each project)
@@ -63,7 +65,7 @@ maind doctor --skill-drift             # drift ecosystem-mcp/ecosystem-setup fro
 maind doctor --channel-drift           # duplicate channel skiller (connect+vendor for one bucket)
 maind doctor --gitignore-drift [--project ID] [--block] [--json]
                                         # .gitignore/tracking of each project vs service file map
-                                        #   (configs/gitignore-policy.json); --block — ready lines .gitignore
+                                        #   (packages/aicore/configs/gitignore-policy.json); --block — ready lines .gitignore
                                         #   maind sync provisioner gitignore appends those lines
 maind verify [--json]                  # proof of work of 3 planes: write real or empty
 maind analyze [--cwd | --project ID] [--session ID] [--no-health] [--json]
@@ -76,6 +78,22 @@ Absolute `files_changed` outside the selected project are also considered a conf
 report is excluded from RED-reasons and returns as `ATTENTION` with
 `RUN_REPORT_PROJECT_MISMATCH`; lack of trusted report lowers confidence, but does not prove
 product error.
+
+## Machine topology
+
+`maind topology show [--json]` prints the three hub nodes (`brain`, `swissknifeman`, `projects_base`) of the machine map
+`<state>/maind/topology.json`; `maind topology init [--brain PATH] [--swissknifeman PATH] [--projects-base PATH] [--yes]` writes it (the previous file
+is kept through `aicore.state.backup`). The legacy `~/.swissknifeman/topology.json` is read, with one warning, while the new
+file does not exist. `skiller topology` is an alias that prints `SKILLER_TOPOLOGY_MOVED` and calls `maind topology`. The
+connected-project registry is `skiller list --json`.
+
+## Doctor
+
+`maind doctor --json` prints a list of `check-result/v1` documents: `maind.environment` (the Python floor is
+`aicore.MIN_PYTHON`, 3.9), `maind.config`, `maind.registry`, `maind.memory`, `maind.mcp` (with `tools_digest` and
+`protocol_versions`) and `maind.health`; the text form prints `<status> <check_id>: <observed>` and exits 1 when a check
+fails. The probe writes nothing and prints no secret. Repair is separate: `maind health --plan-repair` (read-only) and
+`maind health --apply-repair`.
 
 ## How it works
 

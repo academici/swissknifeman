@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D67",
+  "title": "Связи модулей хаба: публичная команда партнёра с JSON, поиск через aicore.util.partners, без папки bridges/",
+  "date": "2026-10-11",
+  "status": "accepted",
+  "question": "Как maind, analyst и harness обращаются друг к другу и к planner, brain, skiller без импорта и путей (D2, D3), чтобы check --strict был зелёным, а отсутствие партнёра не ломало команды?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Партнёр вызывается процессом через свою публичную команду с JSON-выходом; форма выхода — контракт партнёра (schemas/<name>/v1 у партнёра, тест партнёра). Поиск — aicore.util.partners.partner_command(name): устаревшие env потребителя (с предупреждением) → SKM_<NAME>_BIN → SKM_<NAME>_ROOT/bin/<name> → PATH; planner — PLANNER_PLAN_PY → PLANNER_ROOT/scripts/plan.py → SKM_TASK_ROOT (устар.) → planner на PATH; без шагов «соседняя папка» и «корень монорепозитория». Отсутствие — PARTNER_UNAVAILABLE и деградация. Хаб-раннер scripts/test-integration.sh гоняет тесты модулей с партнёрами хаба. Хуки в проектах повторяют лестницу кодом. Папка bridges/ не создаётся.",
+      "pros": "Нет новой адаптерной прослойки; контракт у владельца данных; прецедент brain vault --json (D49)"
+    },
+    {
+      "id": "B",
+      "text": "Мосты bridges/maind-harness, bridges/analyst-maind и т. д. с адаптерным кодом в хабе.",
+      "cons": "Мост без собственной логики — лишний слой и ещё одно место поиска партнёров"
+    }
+  ],
+  "context": "knowledge/hub-p11#facts: 56 нарушений --strict; maind импортирует harness в процессе, analyst читает config.json maind и импортирует planner, хуки harness ищут maind, planner, analyst по путям монорепозитория. Мосты P10 (D62) уже ищут партнёров по окружению и PATH.",
+  "decision": "A — Партнёр вызывается процессом через свою публичную команду с JSON-выходом; форма выхода — контракт партнёра (schemas/<name>/v1 у партнёра, тест партнёра). Поиск — aicore.util.partners.partner_command(name): устаревшие env потребителя (с предупреждением) → SKM_<NAME>_BIN → SKM_<NAME>_ROOT/bin/<name> → PATH; planner — PLANNER_PLAN_PY → PLANNER_ROOT/scripts/plan.py → SKM_TASK_ROOT (устар.) → planner на PATH; без шагов «соседняя папка» и «корень монорепозитория». Отсутствие — PARTNER_UNAVAILABLE и деградация. Хаб-раннер scripts/test-integration.sh гоняет тесты модулей с партнёрами хаба. Хуки в проектах повторяют лестницу кодом. Папка bridges/ не создаётся.",
+  "rationale": "D3 уточняется: bridges/ — когда есть адаптерная логика, не принадлежащая ни одной стороне (planner-orch); здесь контракт и логика у партнёра. Порядок поиска совпадает с мостами P10 (SKM_<P>_ROOT) и не знает раскладки хаба.",
+  "applies_to": [
+    "P11.1",
+    "P11.2",
+    "P11.4",
+    "P11.6",
+    "P11.7",
+    "P11.8",
+    "P11.9"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

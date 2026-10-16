@@ -91,7 +91,7 @@ cd /path/to/swissknifeman
 agent --workspace "$(pwd)" \
       --model composer-2.5 \
       --force --sandbox disabled --trust --approve-mcps \
-      'task:plan-run <PLAN-ID> <Pn.m>'
+      'planner:plan-run <PLAN-ID> <Pn.m>'
 ```
 
 ### IDE checklist (required for trusted)
@@ -126,5 +126,5 @@ First ship: `security.safe-dirs` (`beforeShellExecution`, `failClosed: true`) in
 ## See also
 
 - [Adapter Cursor](/skiller/adapters/cursor) — full integration cycle
-- [Provider model roles](/task/reference/provider-model-roles) — pins and inventory
+- [Provider model roles](/planner/reference/provider-model-roles) — pins and inventory
 - [Permissions Claude Code](./claude) — sibling-provider (others surfaces)

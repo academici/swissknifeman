@@ -1,6 +1,6 @@
 <!-- instruction:harness.claude-code.config-surfaces -->
 ## harness.claude-code.config-surfaces
-Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`. Also, installed Claude hooks live under `~/.claude/hooks/`, reading state owned by `skiller` under `~/.swissknifeman/`.
+Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`. Also, installed Claude hooks live under `~/.claude/hooks/`, reading the registries that `skiller` and `maind` own in the aicore state directory (`~/.swissknifeman/` only as the legacy place).
 <!-- instruction:harness.claude-code.lifecycle-surfaces -->
 ## harness.claude-code.lifecycle-surfaces
 Claude Code lifecycle surfaces include `PreToolUse` auto-approval, memory, notify, agent-router, run-report, output style, statusline, review-gate on `SubagentStop`, and project `plansDirectory` registrations; a global mode may only lower a strict check to warn, never raise it.

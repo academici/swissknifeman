@@ -37,3 +37,14 @@ Unknowns:
 ```
 
 Use repository-relative paths. Keep `Unknowns:` even when it is empty (`- none`).
+
+After the unknowns, add one optional closed block that hints where the work will land:
+
+````text
+```json write-set
+{"paths": ["glob or path the change is expected to touch"], "tests": ["test path expected to change or run"]}
+```
+````
+
+Both lists are repository-relative; `[]` when you cannot tell. The block is a hint for the executor and for
+labelling a deviation; it never widens the write set of the input. Leave it out rather than guess.

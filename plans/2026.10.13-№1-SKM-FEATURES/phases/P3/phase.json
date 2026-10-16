@@ -1,0 +1,78 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Конфигурация: доступность провайдеров на машине, явный проект, одна точка выбора модели, explain",
+  "design": "detailed",
+  "goal": "aicore.providers.available (machine) управляет маршрутизацией orch независимо от selection (D13); единое определение проекта resolve_project и PROJECT_CONTEXT_REQUIRED в orch; модели задаются классами и разрешаются каталогом aicore (harness, agent-packs, skiller профили), orch.py route explain; aicore config explain --all; config_digest и options_digest в run.json и событиях.",
+  "context": "audits/perplexity-audit.md — Фаза 2 (П2.1–П2.3, П2.5, П2.6), 2.3, 2.4, E1, N7; дизайн — knowledge/p3-config; D1 (только аддитивно), D13. П2.4 вне PLAN4 (D1).",
+  "scope": {
+    "include": [
+      "aicore config.schema.json: aicore.providers.available",
+      "определение проекта во всех точках входа",
+      "model_tiers и agent-packs по классам",
+      "route explain",
+      "config explain --all",
+      "digest в run.json"
+    ],
+    "exclude": [
+      "удаление .swissknife.json (PLAN3 P13)",
+      "миграция schema_version (PLAN3 P13)"
+    ]
+  },
+  "depends_on": [
+    "P1"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "machine-доступность провайдеров",
+    "одна точка выбора модели",
+    "route explain"
+  ],
+  "items": [
+    "P3.1",
+    "P3.2",
+    "P3.3",
+    "P3.4",
+    "P3.5"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P3.1",
+        "P3.2",
+        "P3.3",
+        "P3.4",
+        "P3.5"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-14T07:29:00Z",
+    "result": "done_with_deviations",
+    "summary": "5 item(s): 5 done_with_deviations"
+  }
+}

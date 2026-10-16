@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # install.sh installs the skiller CLI (formerly swissknifeman).
 #
-# It creates <bin-dir>/skiller -> <repo>/bin/skiller and the ~/.swissknifeman
-# state directory. connect/vendor/update maintain projects.json.
+# It creates <bin-dir>/skiller -> <repo>/bin/skiller. connect/vendor/update
+# maintain the project registry (projects.json) in the skiller state directory.
 #
 # The umbrella install.sh owns the `swissknifeman` alias, so rerunning this
 # installer never replaces the root router. Standalone installs expose `skiller` only.
@@ -24,8 +24,40 @@
 #
 # Has the repository moved? Just restart./install.sh from a new location.
 set -euo pipefail
+# --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
+_skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+while [ "$_skm_guard_dir" != "/" ] && [ ! -e "$_skm_guard_dir/.swissknifeman-dev" ]; do _skm_guard_dir="$(dirname "$_skm_guard_dir")"; done
+if [ -e "$_skm_guard_dir/.swissknifeman-dev" ] && [ "${SKM_DEV_ALLOW_LIVE:-}" != "1" ]; then
+  _skm_real_home="$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)' 2>/dev/null || true)"
+  if [ -z "$_skm_real_home" ] || [ "$(readlink -f "${HOME:-/}")" = "$(readlink -f "$_skm_real_home")" ]; then
+    echo "SKM_DEV_GUARD: $_skm_guard_dir is a development clone; run inside scripts/dev-sandbox.sh or set SKM_DEV_ALLOW_LIVE=1" >&2
+    exit 3
+  fi
+fi
+unset _skm_guard_dir _skm_real_home
+# --- end dev-clone guard ---
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
 CLI="$REPO_ROOT/bin/skiller"
 BIN_DIR="$HOME/.local/bin"
 FORCE=false
@@ -60,9 +92,8 @@ done
 command -v python3 >/dev/null 2>&1 || \
   echo "WARN: python3 not found - CLI will require it at startup" >&2
 
-mkdir -p "$BIN_DIR" "$HOME/.swissknifeman"
-[[ -f "$HOME/.swissknifeman/projects.json" ]] || \
-  printf '{\n  "version": 1,\n  "projects": []\n}\n' > "$HOME/.swissknifeman/projects.json"
+mkdir -p "$BIN_DIR"
+# The project registry is created by skiller on first connect (<state>/skiller/projects.json).
 
 # We install a symlink, silently replacing YOURS (old clone or former name swissknifeman);
 # we don't touch someone else's file without --force/confirmation.
@@ -88,10 +119,16 @@ install_link() {  # $1 — name in BIN_DIR
 
 install_link skiller          # main CLI (alias swissknifeman — umbrella install.sh)
 
-# Local Environment Map (~/.swissknifeman/topology.json) — machine-specific
+# Local Environment Map (<state>/maind/topology.json, `maind topology`) — machine-specific
 # (path to Brain-volta, swissknifeman and project database), is therefore created
 # interactive, rather than sitting silently. We suggest setting it up immediately if available. TTY.
-if [[ ! -f "$HOME/.swissknifeman/topology.json" && -t 0 ]]; then
+_topology_state="${SKM_HOME:+$SKM_HOME/state}"
+if [[ -z "$_topology_state" ]]; then
+  _topology_state="${XDG_STATE_HOME:-}"
+  [[ "$_topology_state" == /* ]] || _topology_state="$HOME/.local/state"
+  _topology_state="$_topology_state/swissknifeman"
+fi
+if [[ ! -f "$_topology_state/maind/topology.json" && ( -n "${SKM_HOME:-}" || ! -f "$HOME/.swissknifeman/topology.json" ) && "$FORCE" != true && -t 0 ]]; then
   read -r -p "Configure local environment map (skiller topology init)? [y/N] " ans
   [[ "$ans" =~ ^[yY] ]] && "$CLI" topology init || true
 fi
@@ -114,12 +151,9 @@ echo "Check: skiller doctor"
 HOST_ROOT="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
 [[ -n "$HOST_ROOT" ]] || HOST_ROOT="$REPO_ROOT"
 MARKETPLACE_ROOT="${SKILLER_MARKETPLACE_ROOT:-$HOST_ROOT}"
-# The shared `core` foundation sits two levels above the package (see bin/skiller).
-CORE_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[[ -d "$CORE_ROOT/core" ]] || CORE_ROOT=""
 
 host_python() {  # stdin: python reading the host through skiller modules
-  PYTHONPATH="$REPO_ROOT/lib${CORE_ROOT:+:$CORE_ROOT}${PYTHONPATH:+:$PYTHONPATH}" python3 - "$REPO_ROOT"
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" python3 - "$REPO_ROOT"
 }
 
 # Basic `core` + host command plugins — machine bootstrap Codex: after installing the

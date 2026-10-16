@@ -1,0 +1,25 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/planner-orch/schemas/run-options.schema.json",
+    "packages/orch/docs/conductor.md",
+    "packages/orch/lib/orch/conductor/engine.py",
+    "packages/orch/lib/orch/conductor/options.py",
+    "packages/orch/lib/orch/conductor/prompts.py",
+    "packages/orch/schemas/conductor/v1/run-options.schema.json",
+    "packages/orch/tests/test_conductor_skills_auto.py",
+    "packages/orch/tests/test_conductor_skills_checks.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "Полная проверка V1 остаётся за координатором.",
+      "kind": "note",
+      "next": "Координатор перезапускает V1 и V2.",
+      "text": "Тесты запускались напрямую через unittest с PYTHONPATH=lib:../aicore/lib:tests, а не через scripts/test.sh. Приёмочные V1 и V2 не запускались: их выполняет координатор."
+    }
+  ],
+  "status": "done",
+  "summary": "Исправлена красная проверка V1: test_boundaries запрещает слова skiller/harness в ядре orch. В prompts.py:171 комментарий переписан без имени соседнего пакета. В tests/test_conductor_skills_checks.py:79 пример replaced_by теперь 'configs/claude-code/hooks/git-guardrails' (проверка _is_role_contract от префикса не зависит). Поведение не менялось. Прогнаны test_boundaries, test_conductor_skills_checks, test_conductor_skills_auto, test_conductor_prompts: 50 тестов, все прошли."
+}

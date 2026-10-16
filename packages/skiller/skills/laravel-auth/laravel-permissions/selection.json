@@ -1,0 +1,9 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "KEEP",
+  "conflicts": [
+    "azguard/azguard"
+  ],
+  "exclusive_group": "authz"
+}

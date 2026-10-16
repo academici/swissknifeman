@@ -1,0 +1,51 @@
+{
+  "changed_paths": [
+    "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/review-brief.md",
+    "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/argv.json",
+    "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/launch.json",
+    "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/review-verdict.json",
+    "plans/2026.10.07-№1-SKM-ECOSYSTEM/knowledge/audit-p11-2026-10-13.json"
+  ],
+  "checks_run": [],
+  "evidence": [
+    ".swissknifeman/state/review/P11.15/review-grok-4.7.stream.jsonl",
+    ".swissknifeman/state/review/P11.15/review-grok-4.7.stderr",
+    ".swissknifeman/state/review/P11.15/repro.txt",
+    ".swissknifeman/state/review/P11.15/final-report.txt",
+    "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.15/review-verdict.json"
+  ],
+  "open_issues": [
+    {
+      "impact": "Item should finish done_with_deviations; one owner correction after the verdict (outside this item), then bounded re-review of the findings only.",
+      "kind": "pending",
+      "next": "Coordinator records the findings per owner; the correction goes through the canon/generator for F5 and F6 and updates projections and lock plus golden.",
+      "text": "Verdict is RED: F1 medium P11.6 (hooks safedirs.py:99 and memory common.sh:68 read only legacy projects.json/topology.json, so onboarded projects never reach the allowlist and the memory hook resolves bare names); F2 low P11.6 (skiller install.sh:125 legacy topology path); F3 low P11.9 (harness safe-dirs help safedirs.py:272 names the old safe-dirs path); F4 medium P11.13 (docs/core/index.md:40 runs unittest on missing core/tests); F5 medium P11.6 (bootstrap/skills/package-architecture/SKILL.md:116 and skiller docs: stale topology implementation and paths); F6 low P11.13 (docs/reference.md:33 and provider docs and config _doc name core.provider.* instead of aicore.provider.*)."
+    },
+    {
+      "impact": "V2 passes on file existence, but the plan has no document or artifact registration until the coordinator acts.",
+      "kind": "deviation",
+      "next": "Coordinator registers the document (move the file aside and run add-document --file, or accept it as is), then add-artifact for the four artifacts with role output, and plan.py log.",
+      "text": "knowledge/audit-p11-2026-10-13.json was written directly into the knowledge directory (it is in write_set) instead of via plan.py add-document, because the executor rules forbid plan mutation. The document is not yet registered in the plan, and add-document may refuse an id that already exists. Likewise add-artifact (brief, argv, launch, verdict) and plan.py log were not run."
+    },
+    {
+      "impact": "None functional; ro-run.py is identical in both places.",
+      "kind": "deviation",
+      "next": "none",
+      "text": "The verb is `plan.py bridge orch launch`: the bridge is named `orch` in `plan.py bridge list`, not `planner-orch`. Its argv points ro-run.py at the clone's packages/orch (byte-identical to the live copy) rather than the live folder named in the knowledge example. I used the verb output unchanged."
+    },
+    {
+      "impact": "Those contracts rest on the P11.14 wide run only.",
+      "kind": "note",
+      "next": "none",
+      "text": "The reviewer did not re-run module suites, golden files, doctor filesystem snapshots or the MCP and analyst event commands; the doctor probe-writes-nothing contract and the idempotent analyst subscriber were not independently exercised."
+    },
+    {
+      "impact": "Reproductions stay available after /tmp is cleaned.",
+      "kind": "note",
+      "next": "none",
+      "text": "The reviewer's reproduction transcript is outside the repo at /tmp/p11-review-repro.txt; I copied it to the state directory as repro.txt."
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Independent read-only Grok 4.7 xhigh pass over P11 (base a2e89b866..HEAD 89c858ecd) via the planner-orch launch verb. Route confirmed (init.model grok-4.7, argv/summary effort xhigh, exit 0, result success, no subagents). Verdict RED, 6 findings (3 medium, 3 low; owners P11.6, P11.9, P11.13). Wrote brief, argv, launch, review-verdict.json (reviewer report verbatim) and knowledge audit-p11-2026-10-13; product tree untouched. No targeted tests were needed or run."
+}

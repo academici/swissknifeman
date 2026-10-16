@@ -13,7 +13,7 @@ the agent still scored - a guarantee is where the prose is «follow the skill» 
 | `warn` | violation → hint for context (`additionalContext`), subagent is NOT blocked; DOWNLOADS any `strict`-check before `warn` (upgrade `warn`→`strict` disabled by global mode) |
 | `strict` | strict-checks are blocked (see «Semantics `exit 2`» below); warn-checks, as usual, only suggest |
 
-Per-project override: `.claude/review-gate.env.ini` (`MODE=...`).
+Per-project override: `[harness.hooks.review_gate] mode` in `.swissknifeman/config.toml` (carrier `REVIEW_GATE_MODE` in `.swissknifeman/hooks.env`; the legacy `.claude/review-gate.env.ini` `MODE=...` is still read).
 
 ## Contents - `checks/`, set and mode - `config.json`
 
@@ -36,7 +36,7 @@ harness (`checks/<name>.sh`); machine announces ONLY dialing and per-check mode:
 | Code | Verification | Default mode | What it does |
 |:--|:--|:--|:--|
 | G1 | `generated-assets` | `strict` | diff touches header file `swissknifeman:generated` → violation (edit belongs to the pack, is being edited override-file) |
-| G2 | `plan-check` | `strict` | diff touched `plans/<ID>/` with a `plan.json` → run `packages/task/scripts/plan.py check`; errors → violation (plan dirs without `plan.json` are skipped) |
+| G2 | `plan-check` | `strict` | diff touched `plans/<ID>/` with a `plan.json` → run `plan.py check` (found through `PLANNER_PLAN_PY`, `PLANNER_ROOT` or `planner` on PATH; skipped when none); errors → violation (plan dirs without `plan.json` are skipped) |
 | W1 | `tests-touched` | `warn` | diff touches `packages/*/lib/**` without `packages/*/tests/**` (heuristics - there are legal exceptions, so there are always `warn`, never `strict`) |
 
 Unknown name in `checks[]` — apparent configuration error (the dispatcher prints it and

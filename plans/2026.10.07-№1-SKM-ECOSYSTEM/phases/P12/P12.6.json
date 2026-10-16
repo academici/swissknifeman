@@ -1,0 +1,216 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.6",
+  "title": "Состав выпуска: aicore release bundle — compat-manifest/v1, пакет схем, аттестация, SHA256SUMS; swissknifeman release bundle",
+  "status": "done_with_deviations",
+  "summary": "aicore release bundle --root --tag --out пишет compat.json (compat-manifest/v1 из unit.json модулей и мостов), детерминированный schemas-<tag>.tar.gz с index.json, release-attestation.json (aicore.release.attestation.build по HEAD, tag — метка) и SHA256SUMS; swissknifeman release bundle маршрутизирует туда; release без bundle остаётся у skiller.",
+  "why": "D83, D26, E41; knowledge/hub-p12#release. Риски: (1) недетерминированный архив (mtime, порядок, uid) — два запуска сравниваются побайтно; (2) attestation.build требует тег — tag в bundle только метка, аттестация по ref HEAD; (3) запись вне --out запрещена.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/release/bundle.py, CLI aicore release bundle",
+      "packages/aicore/schemas/compat-manifest/v1; contracts в aicore/unit.json",
+      "packages/aicore/tests/release/test_bundle.py",
+      "scripts/umbrella.py: release bundle; тест; CHANGELOG"
+    ],
+    "exclude": [
+      "SBOM, подписи, SLSA (по триггеру)",
+      "публикация выпуска"
+    ]
+  },
+  "depends_on": [
+    "P12.5"
+  ],
+  "decisions": [
+    "D83",
+    "D26"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#release",
+      "why": "состав выпуска, формат, детерминизм",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/release/attestation.py",
+      "why": "build(root, tag, ref=…) и формат release-attestation/v1",
+      "required": true
+    },
+    {
+      "path": "configs/release-units.json",
+      "why": "политика версий выпуска",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-ops#register",
+      "why": "строка E41",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/release/bundle.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/release/__init__.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/schemas/compat-manifest/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "configs/umbrella.json",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "scripts/test-umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/1d060f15871196a595a6537a89896ffb94d056d18e38b8bfa6f9da07f8fb7566",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "bundle пишет только в --out; непустой --out → OUT_NOT_EMPTY, код 2"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: compat-manifest/v1 → bundle.py (compat, архив схем, аттестация, SHA256SUMS) → CLI aicore release bundle → тест на фикстуре хаба (состав, детерминизм, sha256sum -c, схема) → umbrella release bundle (алиас release остаётся у skiller) → CHANGELOG → V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "H=$(mktemp -d) && for n in a b; do HOME=$H SKM_HOME=$H/skm bin/swissknifeman release bundle --root . --tag v0.0.0-p12 --out $H/$n || exit 1; done && (cd $H/a && sha256sum -c --quiet SHA256SUMS) && test -f $H/a/compat.json && cmp $H/a/schemas-v0.0.0-p12.tar.gz $H/b/schemas-v0.0.0-p12.tar.gz && cmp $H/a/compat.json $H/b/compat.json",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/test-umbrella.py && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore release bundle",
+    "compat-manifest/v1"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T14:00:01Z",
+    "finished_at": "2026-10-13T14:27:19Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-bc87afa23c2b5978754cfa5b-P12.6",
+    "notes": "Added aicore.release.bundle and the CLI group `aicore release bundle --root --tag --out`. It writes compat.json (compat-manifest/v1 from unit.json of packages/* and bridges/*), a deterministic schemas-<tag>.tar.gz with index.json {id,version,path,sha256}, release-attestation.json (attestation.build at ref HEAD; the tag is only a label) and SHA256SUMS. A non-empty --out gives OUT_NOT_EMPTY (exit 2); a bad tag gives TAG_INVALID (exit 2). Everything is built in memory and written to --out only after all steps succeed. New contract packages/aicore/schemas/compat-manifest/v1 (schema, 2 valid and 4 invalid examples), listed in aicore unit.json provides.contracts. The `release` alias in configs/umbrella.json now routes `bundle` to aicore; other release words stay with skiller. Added tests test_bundle.py (10 tests) and TestReleaseBundleRoute (2 tests). Golden help cases recaptured for the changed alias description. Both CHANGELOGs updated. Narrow tests run and green: aicore tests.release.test_bundle, tests.test_contracts, tests.test_architecture; scripts/test-umbrella.py (57); golden.py check; public-hygiene; ecosystem-units.py check; aicore schema compat --base origin/ecosystem-split (0 errors). Manual V2-equivalent run of the real hub: two runs are byte-identical for tar.gz and compat.json, and sha256sum -c passes.\nChanged: CHANGELOG.md, configs/umbrella.json, packages/aicore/CHANGELOG.md, packages/aicore/lib/aicore/cli.py, packages/aicore/lib/aicore/release/bundle.py, packages/aicore/schemas/README.md, packages/aicore/schemas/compat-manifest/v1/compat-manifest.schema.json, packages/aicore/schemas/compat-manifest/v1/examples/invalid/bad-stability.json, packages/aicore/schemas/compat-manifest/v1/examples/invalid/bad-version.json, packages/aicore/schemas/compat-manifest/v1/examples/invalid/extra-field.json, packages/aicore/schemas/compat-manifest/v1/examples/invalid/missing-bridges.json, packages/aicore/schemas/compat-manifest/v1/examples/valid/empty.json, packages/aicore/schemas/compat-manifest/v1/examples/valid/hub.json, packages/aicore/tests/release/test_bundle.py, packages/aicore/unit.json, scripts/test-umbrella.py, tests/golden/cases.json, tests/golden/cli/swissknifeman-help.txt, tests/golden/cli/swissknifeman-unknown-subcommand.txt, tests/golden/generation.json",
+    "deviations": [
+      "packages/aicore/schemas/README.md is outside write_set but tests/test_contracts.py requires every contract to be listed there, so I added the compat-manifest row.",
+      "changed outside the write set: packages/aicore/schemas/README.md"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T14:27:19Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.6/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T14:27:19Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.6/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T14:27:19Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.6/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.6/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.6/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.6/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-13T14:27:19Z"
+}

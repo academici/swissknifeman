@@ -6,11 +6,10 @@ import tempfile
 import unittest
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
-from core.provider.artifact import sha256_digest
-from core.provider.lock import parse_lock
+from aicore.artifacts.artifact import sha256_digest
+from aicore.artifacts.lock import parse_lock
 from harness.instructions import (
     CATALOG_VERSION, CONTRACT_VERSION, InstructionRequest, InstructionValidationError,
     adopt_instructions, check_instructions, rollback_adoption,

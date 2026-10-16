@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:bridge:v1",
+  "title": "Bridge",
+  "description": "Manifest of one named bridge (bridges/<name>/bridge.json); the only place that knows its partner.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker, always urn:swissknifeman:task:plan:bridge:v1.",
+      "minLength": 1,
+      "const": "urn:swissknifeman:task:plan:bridge:v1"
+    },
+    "name": {
+      "type": "string",
+      "description": "Bridge name; equals its directory name under bridges/.",
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "partner": {
+      "type": "string",
+      "description": "Partner the bridge connects to.",
+      "minLength": 1
+    },
+    "direction": {
+      "type": "string",
+      "description": "out: this package calls the partner; in: the partner feeds this package; both.",
+      "minLength": 1,
+      "enum": [
+        "out",
+        "in",
+        "both"
+      ]
+    },
+    "contract": {
+      "type": "string",
+      "description": "Partner contract id or version the bridge speaks.",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "description": "One line on what the bridge connects.",
+      "minLength": 1
+    },
+    "entrypoints": {
+      "type": "object",
+      "description": "Verb to script path relative to the bridge directory; verbs match ^[a-z][a-z0-9-]*$, at least one, checked by the dispatcher."
+    },
+    "requires": {
+      "type": "object",
+      "description": "Optional hints on how the partner is found.",
+      "properties": {
+        "cli": {
+          "type": "string",
+          "description": "Partner command or script the bridge calls.",
+          "minLength": 1
+        },
+        "env": {
+          "type": "string",
+          "description": "Environment variable that points at the partner root.",
+          "minLength": 1
+        },
+        "min_version": {
+          "type": "string",
+          "description": "Lowest partner version the bridge supports.",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "extends": {
+      "type": "object",
+      "description": "Extension slots of the plan schema this bridge supplies: slot name to a JSON Schema file inside the bridge (closed profile, references to its own $defs only).",
+      "properties": {
+        "orchestration.options": {
+          "type": "string",
+          "description": "Schema of orchestration.options: the run options of the execution engine this bridge connects.",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "$schema",
+    "name",
+    "partner",
+    "direction",
+    "contract",
+    "summary",
+    "entrypoints"
+  ],
+  "additionalProperties": false
+}

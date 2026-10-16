@@ -12,7 +12,7 @@ analyst digest [--cwd | --session UUID] [--project ID] [--dry-run] [--json]
 
 Deterministically extracts candidate lessons from fresh `run-report` run on high-precision signals
 (**resolved-failure** «command crashed and then passed»; explicit **dev-loop workarounds**) →
-`.claude/analyst/lessons/ephemeral/` (LOCAL). `--dry-run`/`--json` — preview without recording.
+`.swissknifeman/analyst/lessons/ephemeral/` (LOCAL). `--dry-run`/`--json` — preview without recording.
 
 ## `analyst scan` (P2)
 
@@ -20,11 +20,26 @@ Deterministically extracts candidate lessons from fresh `run-report` run on high
 analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]
 ```
 
-Cross-project aggregator: bypasses the registry `config.json:projects[]`, reads per-project lessons,
+Cross-project aggregator: bypasses the maind project registry (`maind projects list --json`), reads per-project lessons,
 greedy-Jaccard-clusters and detects patterns that repeat in **≥N projects** (default 3),
-→ draft-sentences in `~/.swissknifeman/analyst/suggestions/` + index `index/by_pattern/`.
+→ draft-sentences in `<state>/analyst/suggestions/` + index `index/by_pattern/`.
 **Namespace-isolated**. Reconciliation: orphaned artifacts are removed **strictly in scope run**
 (`--no-prune` turns off, `--dry-run` shows). More details - [Life cycle](./lifecycle).
+
+## `analyst orch report`
+
+```
+analyst orch report [--plan P] [--run R] [--json] [--planned FILE] [--baseline FILE]
+```
+
+Read-only report on the runs of orch, read through its contracts only: the `orch.*` events of the project journal
+(`event/v1`), the artifacts of a piece (`plans/<plan>/artifacts/<item>/stage-report.json`, `review-verdict.json`; only
+with `--plan`) and the run folder of the conductor (`risk.json`, `prompts/*.manifest.json`). Sections: tokens (by role,
+by model, by skill), review (rounds, findings by severity, reviews added by risk), deviations (by class and outcome,
+recorded and resolved), providers (waits, fallbacks), long stages, prompt budgets over their limit, plan against actual
+per piece (`--planned` is a JSON object `{item: {duration_ms, tokens}}`) and the comparison with the PLAN3 deviation
+baseline (`--baseline` is a JSON file with `plan3_deviations`). A source that is missing or unreadable is listed in
+`problems`; nothing is guessed.
 
 ## `analyst workflow-scan`
 
@@ -34,7 +49,7 @@ analyst workflow-scan [--project ID] --output DIR|FILE.json --now ISO [--json]
 
 Read-only inventory workflow-scripts only from explicit ones `local_path`/`vault_path` plan-root
 enabled-projects. The command hashes the bytes before parsing, saves aliases mirrors, believes Rule of
-Three on different plans and compares static features with four Task templates. JavaScript
+Three on different plans and compares static features with four planner templates. JavaScript
 not executed, absolute paths, prompts and script bodies are not included in the report. Result
 `workflow-fleet-report/v1` can only offer a proven refinement of an existing slot;
 fifth template-family and changing the stage matrix remain `report-only`.
@@ -46,7 +61,7 @@ analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [
 ```
 
 Cross-project pattern (`index/by_pattern/`) → **DRAFT** skill `SKILL.ru.md` + `draft.meta.json`
-in `~/.swissknifeman/analyst/drafts/<pattern_id>/`. **NOT** writes in `skills/`, **NOT** generates EN-canon,
+in `<state>/analyst/drafts/<pattern_id>/`. **NOT** writes in `skills/`, **NOT** generates EN-canon,
 **NOT** registers - the promotion to the bucket is made by a person. Re-suggest protected from manual edits
 (`--force` overwrites); orphaned drafts - warning, not deletion. Details -
 [suggest →](./suggest).
@@ -116,10 +131,42 @@ without flag - current directory. Warn in stderr as the week's median increases 
 adjacent) week - signal context-economy-relapse (permanent alternative to one-time measurement
 `skiller budget --first-turn` / `maind doctor --context`).
 
+## `analyst runs`
+
+```
+analyst runs show --project DIR [--session ID] [--project-id ID] [--json]
+analyst runs codegraph --project DIR [--limit N] [--json]
+```
+
+Read-only access to the run reports of a project. `runs show` prints the provenance-checked run report (the newest, or the one
+of `--session`), its code graph usage summary and the neutral analytics events; the exit is 0 also when there is no report
+(`lookup.status` is `found`, `rejected` or `missing`, with the rejection code as `reason`). `runs codegraph` prints the code
+graph summaries of the newest run reports of Claude Code, Cursor and Codex. With `--json` the output is the contract
+`run-lookup/v1` or `run-codegraph/v1` (`packages/analyst/schemas`). Other modules (`maind analyze`, the code graph usage
+report) read it through `aicore.util.partners` instead of importing analyst.
+
+## `analyst events`
+
+```
+analyst events ingest --event -|FILE
+analyst events list [--type T] [--since ISO] [--json]
+```
+
+`ingest` is the handler of the subscription `run-events` declared in `unit.json`: it receives one event of the types
+`planner.item.finished`, `planner.phase.closed`, `planner.plan.closed`, `orch.run.finished` and `orch.run.refused`, checks
+the envelope and appends one line `{event_id, type, occurred_at, source, project, subject, outcome, data_digest}` to
+`ecosystem-events.jsonl` in the analyst state directory, under a file lock and once per `event_id`. The values of `data` are
+never copied, only their digest. Another event type exits 0 and prints `skip` to stderr; an invalid event exits 2 with
+`ANALYST_EVENT_INVALID`. `list` prints the recorded events and the counts per type and outcome; `analyst status` shows the
+same counters. Registering the subscription in a project is a hub step.
+
 ## `analyst doctor`
 
 ```
-analyst doctor
+analyst doctor [--json]
 ```
 
-Environment diagnostics (python / core / maind).
+Environment diagnostics as `check-result/v1`: `analyst.environment` (Python floor `aicore.MIN_PYTHON`, writable state
+directory), `analyst.partners` (`maind` and `planner` are optional; `skip` when neither is found, `warn` for one) and
+`analyst.events` (the analytics journal of the current project). `--json` prints a list of documents, the text form prints
+`<status> <check_id>: <observed>`; exit 1 means a `fail`. The probe writes nothing.

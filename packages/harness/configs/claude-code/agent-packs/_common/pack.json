@@ -12,7 +12,7 @@
   },
   "interview": [
     { "id": "PACK_PREFIX", "q": "Project agent name prefix (like a stack pack)?", "default": "{project_dirname}", "kind": "slug" },
-    { "id": "MODEL_ORCHESTRATOR", "q": "Orchestrator model?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] }
+    { "id": "MODEL_ORCHESTRATOR", "q": "Orchestrator model?", "default": "inherit", "enum": ["inherit", "economy", "implementation", "frontier", "opus", "sonnet", "haiku"] }
   ],
   "files": [
     { "src": "agents/orchestrator.md", "target": ".claude/agents/{PACK_PREFIX}-orchestrator.md", "kind": "template", "role": "agent" },

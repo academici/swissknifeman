@@ -10,9 +10,15 @@ import sys
 import tempfile
 from pathlib import Path
 
-from .common import (DB_VERSION, atomic_write_json, host_command_text, host_install_suffix,
-                     is_within, parse_flags, warn)
-from .host import host_command
+from aicore import MIN_PYTHON
+from aicore.config import ConfigError
+from .common import DB_VERSION, host_command_text, host_install_suffix
+from aicore.util.cli import parse_flags
+from aicore.util.io import atomic_write_json
+from aicore.util.paths import is_within
+from aicore.util.term import warn
+from .host import host_command, load_host
+from .module_skills import check_collisions, host_bucket_plugins
 from .state import registry_git_state
 
 
@@ -107,7 +113,7 @@ def _vendor_drift(env):
     """Drift vendor-skills by fleet: registered mode=vendor projects whose set
     has parted ways with the CURRENT registry (add — new skill has appeared, update — sha256 has changed,
     remove — fell out of the config). Dry plan_sync, does not write anything. Connect-only projects
-    (without .swissknifeman/config.json) are skipped - the update comes from marketplace
+    (without [skiller.sync]) are skipped - the update comes from marketplace
     itself. Returns [(project_name, plan), ...] only for those who have drift."""
     from .config import load_config
     from .publication import build_vendor_distribution_plan
@@ -125,8 +131,8 @@ def _vendor_drift(env):
         if not pdir.is_dir():
             continue
         try:
-            cfg = load_skillset_config(pdir)
-        except SystemExit as exc:
+            cfg = load_skillset_config(pdir, env)
+        except (SystemExit, ConfigError) as exc:
             drifted.append((p.get("id") or pdir.name,
                             {"errors": [str(exc) or type(exc).__name__]}))
             continue
@@ -311,7 +317,7 @@ def _provider_distribution_doctor(env, target):
     from .connect import prepare_connect_selection
     from .publication import build_connect_distribution_plan, build_vendor_distribution_plan
     from .skillset import DEFAULT_SKILLS_PATH, load_skillset_config
-    from core import find_repo_root
+    from aicore.util.repo import find_repo_root
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
     _core_donor_diagnostics(env)
@@ -323,9 +329,9 @@ def _provider_distribution_doctor(env, target):
         print("  [ok ] marketplace plan: " + ", ".join(item.provider_id for item in connect))
     except SystemExit as exc:
         print(f"  [warn] marketplace plan blocked: {exc}")
-    cfg = load_skillset_config(target)
+    cfg = load_skillset_config(target, env)
     if cfg is None:
-        print("  [ok ] vendor plan: no .swissknifeman/config.json")
+        print("  [ok ] vendor plan: no [skiller.sync] in .swissknifeman/config.toml")
         return
     try:
         vendor = build_vendor_distribution_plan(
@@ -563,8 +569,8 @@ def _print_effective_source_report(report):
 # install/discover of the DECLARED fixture (all repo marketplace units minus exactly the
 # three donor buckets `general`/`research`/`oss-dev`, D42-conformant), asserting
 # catalog-wide identity uniqueness — never a list of named IDs — plus a negative fixture
-# that proves the nine excluded core/donor pairs and the class-B `workflow-craft`
-# precondition are diagnosed, not silently dropped. Materialization is confined to a
+# that proves the nine excluded core/donor pairs and the class-B
+# preconditions (when the host declares any) are diagnosed, not silently dropped. Materialization is confined to a
 # caller-owned `tempfile.TemporaryDirectory`; canonical bytes are always read from the
 # real `package_root` (never copied into a live profile/cache/home).
 _DONOR_BUCKETS = _CORE_DONOR_BUCKETS
@@ -590,7 +596,7 @@ def declared_fixture_unit_set(catalog, *, repo_root, package_root=None):
     fixture = _fixture_catalog(catalog)
     units = sorted({unit.plugin_id for unit in fixture.units} |
                    {sibling.name for sibling in catalog.sibling_plugins})
-    from .publication import package_rel
+    from aicore.content.publication import package_rel
     prefix = package_rel(repo_root, package_root or Path(__file__).resolve().parents[2])
     identity_source = f"{prefix + '/' if prefix else ''}lib/skiller/registry.py::build_catalog"
     per_provider = {
@@ -613,7 +619,7 @@ def _sibling_identities(repo_root, sibling, *, manifest_name):
     """Read-only, D44-ordered: a sibling package's OWN plugin manifest names its declared
     `skills` root(s) — never a blind recursive walk of the package. Returns the immediate
     subdirectory names that carry a SKILL.md (empty when the manifest declares `commands`
-    only, e.g. `task`'s Claude side — commands are a different identity space)."""
+    only, e.g. `planner`'s Claude side — commands are a different identity space)."""
     manifest_path = repo_root / sibling.source_path / manifest_name
     if not manifest_path.is_file():
         return ()
@@ -724,8 +730,8 @@ def catalog_wide_collisions(carrier_map):
 def negative_fixture_diagnostics(catalog, *, repo_root, package_root, tmp_root):
     """The D51 negative fixture: `core` and every donor bucket enabled together. Proves the
     nine core/donor pairs surface as named D42 diagnostics (never silently dropped) and
-    that the class-B `workflow-craft` precondition fails closed when its donor bucket
-    (`general`) is enabled. Returns `(nine_pairs, workflow_craft_error)`."""
+    that a class-B precondition fails closed when its owning unit is enabled
+    (`None` when the host declares no class-B record). Returns `(nine_pairs, class_b_error)`."""
     from .publication import render_repository_bootstrap_projections
 
     worst_case = _worst_case_enabled(catalog)
@@ -737,15 +743,19 @@ def negative_fixture_diagnostics(catalog, *, repo_root, package_root, tmp_root):
     host = replace(load_host(package_root), root=tmp_root)
     if host.bootstrap is None:
         return pairs, None
+    from .publication import _class_b_donor_bucket, load_repository_bootstrap_config
+    class_b = load_repository_bootstrap_config(repo_root, host).get("class_b", [])
+    if not class_b:
+        return pairs, None
     try:
         render_repository_bootstrap_projections(
             repo_root=tmp_root, package_root=fixture_package_root,
             host=host,
-            donor_enabled={"general": True})
-        workflow_craft_error = None
+            donor_enabled={_class_b_donor_bucket(row["canonical"]): True for row in class_b})
+        class_b_error = None
     except ValueError as exc:
-        workflow_craft_error = str(exc)
-    return pairs, workflow_craft_error
+        class_b_error = str(exc)
+    return pairs, class_b_error
 
 
 def reconcile_remediation_collisions(collisions, *, positive_maps, negative_pairs,
@@ -757,7 +767,7 @@ def reconcile_remediation_collisions(collisions, *, positive_maps, negative_pair
     A record whose `classes` include `unit-vs-unit` (a core↔donor-bucket pair) is D42's
     permanent, by-construction diagnostic — it never closes; it classifies `still-measured`
     iff the exact (identity, donor) pair is still among `negative_pairs`. A pure
-    `root-vs-unit` record (the 16 deleted root duplicates, or class-B `workflow-craft`)
+    `root-vs-unit` record (the 16 deleted root duplicates, or a class-B record)
     classifies `resolved` iff the positive fixture no longer shows it as a live collision
     (root-vs-unit) AND every one of its owner items is terminal; `still-measured` if it is
     still a live collision in the positive fixture; otherwise `unowned-or-unexplained`."""
@@ -792,7 +802,7 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
     (D42 nine pairs + class-B precondition) → D62 reconciliation against the frozen
     `remediation-map.json`. Returns a plain dict — the CLI/tests decide what to print or
     persist; this function never writes outside the `tempfile.TemporaryDirectory` it owns."""
-    from core import find_repo_root
+    from aicore.util.repo import find_repo_root
     from .registry import build_catalog, build_registry
     from .publication import assert_root_bootstrap_set_completeness
 
@@ -823,7 +833,7 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
                 tmp_root, root_artifacts)
 
     with tempfile.TemporaryDirectory() as tmp:
-        negative_pairs, workflow_craft_error = negative_fixture_diagnostics(
+        negative_pairs, class_b_error = negative_fixture_diagnostics(
             catalog, repo_root=repo_root, package_root=root, tmp_root=Path(tmp))
 
     return {
@@ -832,7 +842,7 @@ def run_effective_runtime_gate(env, *, terminal_owner_items=("P1.2", "P1.3", "P1
         "collisions_by_provider": collisions_by_provider,
         "undeclared_by_provider": undeclared_by_provider,
         "negative_pairs": negative_pairs,
-        "workflow_craft_precondition_error": workflow_craft_error,
+        "class_b_precondition_error": class_b_error,
     }
 
 
@@ -882,7 +892,8 @@ def cmd_doctor(env, argv):
         _delegate_settings_doctor(env, opts)
         return
     if opts.get("context"):
-        from .budget import first_turn_report, format_first_turn_report
+        from .budget import first_turn_report
+        from aicore.content.budget import format_first_turn_report
         from .config import resolve_target
         provider = opts.get("provider") or "claude-code"
         if provider not in {"claude-code", "codex", "cursor", "grok"}:
@@ -918,7 +929,7 @@ def cmd_doctor(env, argv):
                 print(f"{diagnostic['code']}: {', '.join(values)}")
         return
     if opts.get("effective_source"):
-        from core import find_repo_root
+        from aicore.util.repo import find_repo_root
         repo_root = find_repo_root(env.root) or env.root
         diagnostics = gather_effective_source_diagnostics(env, repo_root=repo_root)
         report = build_effective_source_report(diagnostics)
@@ -943,8 +954,8 @@ def cmd_doctor(env, argv):
         print(f"  positive fixture: codex {len(result['positive_maps']['codex'])} identities, "
               f"claude-code {len(result['positive_maps']['claude-code'])} identities")
         print(f"  negative fixture: {len(result['negative_pairs'])} D42 pairs, "
-              f"workflow-craft precondition error: "
-              f"{'yes' if result['workflow_craft_precondition_error'] else 'NO (BUG)'}")
+              f"class-B precondition error: "
+              f"{'yes' if result['class_b_precondition_error'] else 'n/a (no class-B record)'}")
         if opts.get("fixture_out"):
             atomic_write_json(Path(opts["fixture_out"]), result["fixture_unit_set"])
         if opts.get("carrier_out"):
@@ -970,7 +981,8 @@ def cmd_doctor(env, argv):
             issues += 1
 
     print(f"skiller doctor (registry: {root})")
-    check(sys.version_info >= (3, 8), f"python3 {sys.version.split()[0]}")
+    floor = ".".join(str(part) for part in MIN_PYTHON)
+    check(sys.version_info >= tuple(MIN_PYTHON), f"python3 {sys.version.split()[0]} (>= {floor})")
 
     link = Path(os.path.expanduser("~/.local/bin/skiller"))
     resolved = Path(os.path.realpath(link)) if link.exists() else None
@@ -1015,6 +1027,23 @@ def cmd_doctor(env, argv):
             bad.append(p.name)
     check(profiles and not bad, f"profiles are loading ({len(profiles)})",
           f"broken: {', '.join(bad)}")
+
+    # Buckets the library leaves to the host (`provided_by: host`): which plugins stand behind
+    # them here, and that no library catalog or plugin takes the same name.
+    host_buckets = host_bucket_plugins(env)
+    if host_buckets:
+        aliases = load_host(root).bucket_aliases
+        for bucket, plugins in host_buckets.items():
+            behind = ", ".join(plugins) if plugins else "(no host modules here)"
+            print(f"  [ok ] host buckets: {bucket} -> {behind}")
+            for plugin in aliases.get(bucket, ()):
+                if plugin not in plugins:
+                    print(f"  [warn] host bucket '{bucket}': plugin '{plugin}' not found")
+    try:
+        check_collisions(env)
+    except SystemExit:
+        check(False, "bucket names do not clash with host module plugins",
+              "rename the library bucket or the plugin")
 
     # Host environment command (environment Claude Code — permissions/MCP/hooks) —
     # OPTIONAL dependency: apply_permissions/_run_environment graceful-skip if it's not

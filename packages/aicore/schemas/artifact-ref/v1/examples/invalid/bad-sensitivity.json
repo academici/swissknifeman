@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:aicore:artifact-ref:v1",
+  "digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "size": 1,
+  "media_type": "text/plain",
+  "sensitivity": "secret"
+}

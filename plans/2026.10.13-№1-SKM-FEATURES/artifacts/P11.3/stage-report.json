@@ -1,0 +1,57 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/orch/lib/orch/conductor/application/loop.py",
+    "packages/orch/lib/orch/conductor/engine.py",
+    "packages/orch/lib/orch/conductor/infrastructure/files.py",
+    "packages/orch/lib/orch/conductor/infrastructure/work_source.py",
+    "packages/orch/lib/orch/conductor/stages/advice.py",
+    "packages/orch/lib/orch/conductor/stages/checks_stage.py",
+    "packages/orch/lib/orch/conductor/stages/close.py",
+    "packages/orch/lib/orch/conductor/stages/finish.py",
+    "packages/orch/lib/orch/conductor/stages/review.py",
+    "packages/orch/tests/test_boundaries.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "other",
+      "evidence": [
+        "packages/orch/lib/orch/conductor/stages/checks_stage.py:94"
+      ],
+      "impact": "The invariant holds for path building, source verbs and plan transitions. The evidence files are still physically written by the checks runner.",
+      "kind": "deviation",
+      "next": "If the phase review wants file writes covered as well, let checks return the evidence and let work_source write it.",
+      "outcome": "follow_up",
+      "severity": "low",
+      "text": "conductor/checks.py still writes the evidence files itself, into the folder work_source.evidence_dir gives it. The architecture test checks where artifact paths are built and orch.py source command lines are built or run, not every file write by a module that receives such a path."
+    },
+    {
+      "impact": "The phase is closed only once the conductor's V1 and V11-V13 are green.",
+      "kind": "note",
+      "next": "coordinator runs V1, then V11-V13 once",
+      "text": "phase.validation P11 (V11 ci-matrix run --all, V12 units/golden/hygiene, V13 schema compat) was not run by me: the run rules of this item forbid heavy runs for the executor. item.rules[2] wants it once, after V1."
+    },
+    {
+      "impact": "A future command line built from a forwarded args list would slip through the rule.",
+      "kind": "note",
+      "next": "Widen the rule if such code appears.",
+      "text": "The closer's command line (stages/close.py) now comes from work_source.closer_command, but the test rule would not catch a new `[python3, orch.py, *args]` list elsewhere, because only the args list starts with \"source\". The register arguments themselves are covered."
+    },
+    {
+      "impact": "Consistent with the file; a phase reviewer may translate it.",
+      "kind": "assumption",
+      "next": "none",
+      "text": "CHANGELOG.md entry is written in English, like the neighbouring Unreleased entries, although plan.rules[9] asks for Russian in documentation."
+    },
+    {
+      "impact": "The commit of this piece should not attribute it to the executor.",
+      "kind": "note",
+      "next": "coordinator",
+      "text": "plans/.../phases/P11/P11.3.json is modified in the working tree; it is not mine (plan state of the coordinator)."
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Only infrastructure/work_source.py now writes into the artifact folder of a piece and builds or runs orch.py source command lines (knowledge/p11-refactor#fs). Test first: tests/test_boundaries.py got test_plan_artifacts_and_transitions_only_in_the_work_source_module. It is an AST rule over packages/orch/lib/orch/conductor/** except work_source.py: no `/` path that names item.artifacts, artifacts, artifacts_dir or orch-artifacts; no literal [\"source\", <verb>, ...] command line; no call of _orch/run_orch. A companion test proves each form is seen. It was red on 7 places (loop.py:228, files.py:20, advice.py:63, checks_stage.py:94, finish.py:40 and :52, review.py:180). Moved into work_source.py: FALLBACK_ARTIFACTS (still re-exported by engine.py), open_artifacts (item.artifacts from the brief), write_artifact (stage-report.json, review-verdict.json, advice-N.json), evidence_dir (the evidence folder passed to the checks), register_args (the source register arguments) and closer_command (the command line of the model registrar, out of stages/close.py). All are bound on Conductor like the other layer functions. Behaviour unchanged: bash scripts/test.sh -p test_boundaries.py green; bash scripts/test.sh -p 'test_c[oh]*.py' (characterization, test_conductor*, test_contracts*, test_conformance: 545 tests) green. Repeat conformance on fake engines: orch.py conformance with a temporary HOME exited 0 (33 PASS, 10 DECLARED, 5 N/A, no FAIL; output in /tmp, not in the repo). CHANGELOG.md got a 'Changed' entry for P11."
+}

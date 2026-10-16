@@ -14,21 +14,27 @@ thresholds N adaptive to project activity for low-activity (adaptive_thresholds,
 import json
 import os
 
+from aicore.config import ConfigError
+
 from . import confidence as C
 from . import lessons
-from .common import die, now_iso, parse_args, parse_iso
+from aicore.util.cli import parse_args
+from aicore.util.term import die, now_iso, parse_iso
+from .settings import DEFAULT_THRESHOLDS, load_thresholds
 
 # ── numeric gates state-machine (§5) ────────────────────────────────────────
-CANDIDATE_MIN_N = 15        # volume of observations for cars ephemeral→candidate
-CANDIDATE_MIN_CONF = 0.6
-CURATED_MIN_N = 50         # numeric threshold «ready for curated» (but the transition is human)
-CURATED_MIN_CONF = 0.8
-CURATED_MIN_PASSRATE = 0.95
-DEPRECATE_CONF = 0.6       # drawdown below → soft-demo (candidate) / flag (curated)
-CANDIDATE_MIN_N_FLOOR = 3   # lower adaptive threshold bar candidate (D2)
+# Defaults of the user-tunable gates (the values live in settings.Thresholds; a project, machine or
+# environment setting overrides them through the `thresholds` argument of the functions below).
+CANDIDATE_MIN_N = DEFAULT_THRESHOLDS.candidate_min_n        # volume of observations for cars ephemeral→candidate
+CANDIDATE_MIN_CONF = DEFAULT_THRESHOLDS.candidate_min_conf
+CURATED_MIN_N = DEFAULT_THRESHOLDS.curated_min_n         # numeric threshold «ready for curated» (but the transition is human)
+CURATED_MIN_CONF = DEFAULT_THRESHOLDS.curated_min_conf
+CURATED_MIN_PASSRATE = DEFAULT_THRESHOLDS.curated_min_passrate
+DEPRECATE_CONF = DEFAULT_THRESHOLDS.deprecate_conf       # drawdown below → soft-demo (candidate) / flag (curated)
+CANDIDATE_MIN_N_FLOOR = DEFAULT_THRESHOLDS.candidate_min_n_floor   # lower adaptive threshold bar candidate (D2)
 
 
-def adaptive_thresholds(project_sessions):
+def adaptive_thresholds(project_sessions, thresholds=DEFAULT_THRESHOLDS):
     """Thresholds N transitions adapted to the overall project activity (D2, tuning.md).
 
     Inactive project (Σ sessions_total all events < CURATED_MIN_N) physically not
@@ -40,10 +46,11 @@ def adaptive_thresholds(project_sessions):
 
     When project_sessions ≥ CURATED_MIN_N enough data → static (15, 50).
     Net: (int) → (int, int). Deterministic. The threshold is never higher than the static one."""
-    if project_sessions >= CURATED_MIN_N:
-        return CANDIDATE_MIN_N, CURATED_MIN_N
-    cand = max(CANDIDATE_MIN_N_FLOOR, int(project_sessions) // 5)
-    cur = max(cand, round(cand * CURATED_MIN_N / CANDIDATE_MIN_N))
+    t = thresholds
+    if project_sessions >= t.curated_min_n:
+        return t.candidate_min_n, t.curated_min_n
+    cand = max(t.candidate_min_n_floor, int(project_sessions) // 5)
+    cur = max(cand, round(cand * t.curated_min_n / t.candidate_min_n))
     return cand, cur
 
 
@@ -102,36 +109,41 @@ def snapshot_fields(agg, conf, now_ts):
 
 # ── numeric state-machine (clean: state+numbers → solution) ────────────────────
 def decide_transition(state, agg, conf,
-                      candidate_min_n=CANDIDATE_MIN_N, curated_min_n=CURATED_MIN_N):
+                      candidate_min_n=None, curated_min_n=None, thresholds=DEFAULT_THRESHOLDS):
     """(new_state, action, note) by numbers. curated — NOT auto (flag only «ready»).
 
     candidate_min_n/curated_min_n — effective thresholds N (default static;
     recompute_project transmits adaptive ones from the project activity, see adaptive_thresholds).
     action ∈ {promote, deprecate, curated-ready, curated-decay, unchanged}."""
+    t = thresholds
+    if candidate_min_n is None:
+        candidate_min_n = t.candidate_min_n
+    if curated_min_n is None:
+        curated_min_n = t.curated_min_n
     N = agg["N"]
     tt = agg["tests_total"]
     if state == "ephemeral":
-        if N >= candidate_min_n and conf >= CANDIDATE_MIN_CONF and tt >= 1:
-            return "candidate", "promote", f"N≥{candidate_min_n} & conf≥{CANDIDATE_MIN_CONF} & tests≥1"
+        if N >= candidate_min_n and conf >= t.candidate_min_conf and tt >= 1:
+            return "candidate", "promote", f"N≥{candidate_min_n} & conf≥{t.candidate_min_conf} & tests≥1"
         return "ephemeral", "unchanged", ""
     if state == "candidate":
-        if conf < DEPRECATE_CONF:
-            return "deprecated", "deprecate", f"conf {conf:.2f} < {DEPRECATE_CONF} (soft)"
+        if conf < t.deprecate_conf:
+            return "deprecated", "deprecate", f"conf {conf:.2f} < {t.deprecate_conf} (soft)"
         pr = _passrate(tt, agg["tests_passed"])
-        if N >= curated_min_n and conf >= CURATED_MIN_CONF and pr >= CURATED_MIN_PASSRATE:
+        if N >= curated_min_n and conf >= t.curated_min_conf and pr >= t.curated_min_passrate:
             # invariant P1: in curated is moved ONLY by a person - there is only a flag here
             return "candidate", "curated-ready", f"numbers for curated yes (N≥{curated_min_n}) — need a person"
         return "candidate", "unchanged", ""
     if state == "curated":
-        if conf < DEPRECATE_CONF:
+        if conf < t.deprecate_conf:
             # curated man-blessed: not auto-demoting, marking for review
-            return "curated", "curated-decay", f"conf {conf:.2f} < {DEPRECATE_CONF} — for human review"
+            return "curated", "curated-decay", f"conf {conf:.2f} < {t.deprecate_conf} — for human review"
         return "curated", "unchanged", ""
     return state, "unchanged", ""
 
 
 # ── application (IO) ──────────────────────────────────────────────────────────
-def recompute_project(project_path, now_ts, *, dry_run=False):
+def recompute_project(project_path, now_ts, *, dry_run=False, thresholds=DEFAULT_THRESHOLDS):
     """Recalculate all active (not deprecated) lessons from events.ndjson. Returns
     list of results. dry_run — only counts, does not write anything to disk."""
     events = lessons.read_events(project_path)
@@ -143,7 +155,7 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
         if lid:
             by_id.setdefault(lid, []).append(e)
     # adaptive thresholds based on total project activity (low-active does not stick to ephemeral)
-    cand_min, cur_min = adaptive_thresholds(project_sessions)
+    cand_min, cur_min = adaptive_thresholds(project_sessions, thresholds)
 
     results = []
     for L, st in lessons.list_lessons(project_path):
@@ -157,7 +169,7 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
             continue
         agg = aggregate_events(evs, now_ts)
         conf = C.confidence(agg["S"], agg["N"], agg["days_since"])
-        new_state, action, note = decide_transition(st, agg, conf, cand_min, cur_min)
+        new_state, action, note = decide_transition(st, agg, conf, cand_min, cur_min, thresholds)
         results.append({"id": lid, "state": st, "new_state": new_state,
                         "confidence": round(conf, 4), "tier": C.tier(conf),
                         "action": action, "note": note,
@@ -202,7 +214,11 @@ def cmd_recompute(env, argv):
         die("--now: pending ISO UTC view 2026-07-01T00:00:00Z")
 
     ppath = os.getcwd()
-    results = recompute_project(ppath, now_ts, dry_run=opts["dry_run"])
+    try:
+        thresholds = load_thresholds(ppath)
+    except ConfigError as err:
+        die(str(err))
+    results = recompute_project(ppath, now_ts, dry_run=opts["dry_run"], thresholds=thresholds)
 
     if opts["json"]:
         print(json.dumps({"now": now_ts, "dry_run": opts["dry_run"],

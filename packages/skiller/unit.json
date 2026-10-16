@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "skiller",
+  "title": "Skill registry, delivery and quality gates",
+  "kind": "capability",
+  "version": "0.19.3",
+  "stability": "beta",
+  "destination": "own-repo",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: util, provider, artifacts, config, state, content, delivery, release."}
+  ],
+  "provides": {
+    "cli": ["bin/skiller"],
+    "install": ["install.sh"],
+    "config": "configs/config.schema.json",
+    "plugins": [
+      {"name": "skiller", "catalog": ".claude-plugin/catalog.json"}
+    ],
+    "contracts": [
+      {"id": "urn:skiller", "path": "schema", "version": "v1", "stability": "beta"},
+      {"id": "urn:swissknifeman:skiller:profiles-list", "path": "schemas/profiles-list/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:skiller:projects-list", "path": "schemas/projects-list/v1", "version": "v1", "stability": "alpha"}
+    ],
+    "doctor": [
+      {"id": "skiller.environment", "category": "environment", "probe": ["bin/skiller", "doctor"], "output": "text"}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"],
+    "standalone_setup": [["bash", "bin/skiller", "registry"]]
+  }
+}

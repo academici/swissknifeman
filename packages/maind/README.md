@@ -20,7 +20,7 @@ Node-memory daemon and documentation build.
                  │  agent-memory daemon (Node, 4111/4112)             │
    maind start ─▶│   buckets: project:<id> · ns:<name> · global          │
                  │  data/graphs/*  (graph per project + _index.db, stdlib)│
-                 │  ~/.maind/  agents.json · projects.json             │
+                 │  <state>/maind/  registry.json · agents.json        │
                  │  maind mcp  (stdio JSON-RPC: 11 tools)              │
                  └───────▲────────────▲────────────▲──────────────────┘
             MCP/HTTP     │            │            │
@@ -46,7 +46,7 @@ Through the hub they go **three independent binding mechanisms**, all work accor
 
 ```bash
 git clone <repo> maind && cd maind
-./install.sh                       # symlink ~/.local/bin/maind + directory ~/.maind
+./install.sh                       # symlink ~/.local/bin/maind
 maind doctor                       # environment check
 
 # Memory (optional, needed Node):
@@ -78,19 +78,39 @@ maind projects list
 | `maind agents <list\|register\|heartbeat\|kill>` | agent registry |
 | `maind projects <list\|sync --from brain>` | project registry |
 | `maind migrate <from-brain\|from-agentmemory>` | import from brain / agent-memory |
-| `maind mcp` | run maind like MCP-server (stdio) |
-| `maind doctor` | environment diagnostics |
+| `maind mcp [tools [--json]]` | run maind like MCP-server (stdio); `tools` prints the tool list and `tools_digest` |
+| `maind topology <show\|init> [--json]` | machine map of the hub nodes (`<state>/maind/topology.json`) |
+| `maind health [--plan-repair\|--apply-repair]` | check a project's connection; repair is read-only or applied |
+| `maind doctor [--json]` | environment diagnostics; `--json` is a list of `check-result/v1` |
 
 ---
 
-## Config `config.json`
+## Config: settings and registry
 
-Main node config - `config.json` **at the root of the monorepo** (not in package maind; resolver
-goes up to the directory with `packages/`). Legacy-name `.maind.json` is still being picked up.
-Superset `.projects.json` from `brain`. If there is no config, maind reads legacy `.projects.json`
-in mode read-only (with migration warning).
-Full diagram - in [config.example.json](config.example.json). Key sections: `node`,
-`memory`, `graph`, `agents`, `projects[]`, `integrations`, `mcp`, `observability`.
+The node config has two parts with different writers:
+
+- **Settings** (what a person edits: `node`, `memory`, `graph`, `code_graph`, `agents` timings,
+  `integrations`, `mcp` policy, `observability`) — the `[maind]` table of the layered config (the
+  machine `config.toml`, the project's `.swissknifeman/config.toml`, `SKM_MAIND_*` variables).
+  Schema `configs/config.schema.json`; every key with its default is in
+  [config.example.toml](config.example.toml).
+- **Registry** (what maind writes: `projects[]`, `namespaces`, `agents.definitions`, `mcp.servers`,
+  `providers`, `role_packs`) — `<state>/maind/registry.json`, written only by maind. Template:
+  [configs/registry.example.json](configs/registry.example.json). Superset `.projects.json` from `brain`.
+
+Until `swissknifeman upgrade` moves the values, the legacy node file (`config.json` at the root of
+the monorepo, or `.maind.json`) is read with one `MAIND_LEGACY_CONFIG` warning: its settings while no
+`[maind]` table is set, its registry while there is no `registry.json` (maind then writes the
+registry back into that file). If there is no config at all, maind reads legacy `.projects.json` in
+mode read-only (with migration warning).
+
+## Partners
+
+maind imports only itself and `aicore`. It reaches `harness`, `analyst`, `skiller` and `brain` through their public
+commands with JSON output, found by `aicore.util.partners` (`SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`, then `PATH`;
+the old `MAIND_*_BIN` variables work with one warning). A missing partner prints `PARTNER_UNAVAILABLE: <partner> not found
+(set SKM_<P>_ROOT or put <partner> on PATH)` and the step degrades: provider steps are skipped without harness, `maind
+analyze` marks the run report unavailable without analyst. Details: [docs/ecosystem.md](docs/ecosystem.md).
 
 ## Memory (scopes)
 
@@ -109,7 +129,7 @@ facade `federation.graph_reader`. `graph.adapter`: `federation` (default) | `dis
 
 ## MCP
 
-`maind mcp` — stdio JSON-RPC server (11 tools): memory (`store`/`recall`/`forget`), graph
+`maind mcp` — stdio JSON-RPC server (11 tools; protocol versions `2025-06-18` and `2024-11-05`, the requested one when supported, otherwise the newest): memory (`store`/`recall`/`forget`), graph
 (`query`/`neighbors`/`path`/`project`), `memory_links`, `agents_list`, `projects_list`,
 `projects_status`. Client connection (`.mcp.json`):
 
@@ -132,13 +152,28 @@ the same CLI. Plugin **MCP-does not support the server**: hub tools gives per-pr
 
 ---
 
+## Skills
+
+The plugin ships the skills `cross-project-coordinator`, `local-topology`, `shared-memory` and
+`swissknifeman-locator`, and the agent `code-coordinator` (`maind:code-coordinator`). They live in
+`packages/maind/skills/` and are released with the module.
+A project gets them through the `system` bucket of `skiller`: `skiller connect` enables the plugin `maind` and
+`skiller sync` copies the skills into the project; the plugin can also be installed on its own.
+
 ## Development
 
 ```bash
 scripts/test.sh          # unittest (no third party dependencies and no live daemon)
 scripts/validate.sh      # py_compile + bash -n + JSON + tests
+bash scripts/test-integration.sh   # from the hub root: tests with partners wired
 npm run docs:dev         # documentation (VitePress)
 ```
+
+**Scope of the tests.** maind is an auxiliary tool: it reads and writes data (memory, graph, registry) and is not part of the core.
+Its tests are run **only while maind itself is developed** (`scripts/test.sh`, `scripts/validate.sh` here); they are not part of the
+verification of the core: `ecosystem-units standalone --baseline` and `scripts/test-integration.sh` skip it unless `--with-tools` is
+given, CI tests it in a separate job that does not block the core, and `scripts/affected-tests.py` adds it only when its own files
+changed (`standalone.tools` in `configs/ecosystem-units.json`).
 
 Conventions: stdlib-only Python, context via `Env` (without modular globals), atomic
 entry JSON, Russian-language messages. More details - [CONTRIBUTING.md](CONTRIBUTING.md).

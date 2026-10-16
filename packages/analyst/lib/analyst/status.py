@@ -7,26 +7,32 @@ after gave the SAME confidence (aggregate depends only on the amounts and age of
 import json
 import os
 
+from aicore.config import ConfigError
+
 from . import lessons
+from .ecosystem_events import status_summary
 from . import recompute as R
-from .common import atomic_write_text, die, parse_args, parse_iso
+from aicore.util.cli import parse_args
+from aicore.util.io import atomic_write_text
+from aicore.util.term import die, parse_iso
+from .settings import DEFAULT_THRESHOLDS, load_thresholds
 
 
 # ── status ────────────────────────────────────────────────────────────────────
-def _is_curated_ready(lesson, curated_min_n=None):
+def _is_curated_ready(lesson, curated_min_n=None, thresholds=DEFAULT_THRESHOLDS):
     """The candidate entered the NUMBERS for curated (threshold recompute)? Transition is still a person.
-    curated_min_n — effective (adaptive) threshold; None → static CURATED_MIN_N."""
+    curated_min_n — effective (adaptive) threshold; None → static curated_min_n of `thresholds`."""
     conf = lesson.get("confidence")
     if conf is None:
         return False
     if curated_min_n is None:
-        curated_min_n = R.CURATED_MIN_N
+        curated_min_n = thresholds.curated_min_n
     n = int(lesson.get("sessions_total", 0) or 0)
     tt = int(lesson.get("tests_total", 0) or 0)
     tp = int(lesson.get("tests_passed", 0) or 0)
     pr = (tp / tt) if tt > 0 else 0.0
-    return (n >= curated_min_n and conf >= R.CURATED_MIN_CONF
-            and pr >= R.CURATED_MIN_PASSRATE)
+    return (n >= curated_min_n and conf >= thresholds.curated_min_conf
+            and pr >= thresholds.curated_min_passrate)
 
 
 def _last_ts(records, pred):
@@ -42,7 +48,7 @@ def _last_ts(records, pred):
     return best[1] if best else None
 
 
-def build_status(project_path):
+def build_status(project_path, thresholds=DEFAULT_THRESHOLDS):
     """Lesson Story Summary (read-only, without mutations). Dates - from append-only audit.ndjson."""
     counts = {st: 0 for st in lessons.STATES}
     promote_failed = 0
@@ -50,12 +56,12 @@ def build_status(project_path):
     events = lessons.read_events(project_path)
     # adaptive threshold curated — is the same as what I would use recompute (project activity)
     project_sessions = sum(int(e.get("sessions_total", 0) or 0) for e in events)
-    _, cur_min = R.adaptive_thresholds(project_sessions)
+    _, cur_min = R.adaptive_thresholds(project_sessions, thresholds)
     for L, st in lessons.list_lessons(project_path):
         counts[st] += 1
         if L.get("promote_failed"):
             promote_failed += 1
-        if st == "candidate" and _is_curated_ready(L, cur_min):
+        if st == "candidate" and _is_curated_ready(L, cur_min, thresholds):
             curated_ready += 1
     audit = lessons.read_audit(project_path)
     return {
@@ -78,7 +84,12 @@ def cmd_status(env, argv):
               "  Read-only summary: counters by state, curated-ready, promote_failed,\n"
               "  number of events, dates of last digest/recompute. Doesn't change anything.")
         return
-    st = build_status(os.getcwd())
+    ppath = os.getcwd()
+    try:
+        st = build_status(ppath, load_thresholds(ppath))
+    except ConfigError as err:
+        die(str(err))
+    st["ecosystem_events"] = status_summary(env)
     if opts["json"]:
         print(json.dumps(st, ensure_ascii=False, indent=2))
         return
@@ -91,7 +102,10 @@ def cmd_status(env, argv):
           + ("  → forwarded: analyst promote --retry-failed" if st["promote_failed"] else ""))
     print(f"  events:        {st['events']}")
     print(f"  last digest:    {st['last_digest'] or '—'}")
-    print(f"  last recompute: {st['last_recompute'] or '—'}\n")
+    print(f"  last recompute: {st['last_recompute'] or '—'}")
+    eco = st["ecosystem_events"]
+    print(f"  ecosystem events: {eco['total']} (last {eco['days']} days)"
+          + "".join(f"\n    {kind:<24}{n}" for kind, n in sorted(eco["by_type"].items())) + "\n")
 
 
 # ── compact ─────────────────────────────────────────────────────────────────

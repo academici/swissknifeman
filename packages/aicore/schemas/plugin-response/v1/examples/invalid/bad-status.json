@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:aicore:plugin-response:v1",
+  "protocol": "1",
+  "request_id": "0123456789abcdef0123456789abcdef",
+  "status": "done"
+}

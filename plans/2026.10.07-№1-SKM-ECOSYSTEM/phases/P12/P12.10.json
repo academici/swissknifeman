@@ -1,0 +1,163 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.10",
+  "title": "Закрытие фазы: phase.validation (CI-матрица всех модулей, хаб, e2e и smoke в песочнице, совместимость схем, бюджет первого хода), сверка E1/E2",
+  "status": "done",
+  "summary": "Пункт получает и проходит phase.validation P12 (cadence phase): ci-matrix run --all --include-tools; check --strict, render, golden, гигиена, тесты скриптов хаба, test-integration; e2e и smoke-installed в песочнице; aicore schema compat и docs-impact против origin/ecosystem-split; skiller budget --first-turn (и --with-plugins). Красное чинится у владельца; сверка каждой строки knowledge/hub-p12#e1e2 с кодом — таблица в notes. Push не делать.",
+  "why": "Архитектура §12: P12 готова, когда CI-матрица зелёная; D26, D24. Риск: исправления после прохода — повторить затронутые шаги прохода до finish.",
+  "scope": {
+    "include": [
+      "phase.validation",
+      "исправления красного у владельца",
+      "сверка e1e2"
+    ],
+    "exclude": [
+      "push (публикацию ветки делает владелец)",
+      "новые функции"
+    ]
+  },
+  "depends_on": [
+    "P12.9"
+  ],
+  "decisions": [
+    "D26",
+    "D85"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#e1e2",
+      "why": "сверка тезисов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#deferred",
+      "why": "что отложено и не проверяется",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "**",
+      "change": "any",
+      "note": "исправления красного у владельца"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/89764ebb9484e17fb76152ff2246b269df1084403ac294b00cecc090a6664d0c",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Бюджет первого хода: цель 16K, предупреждение 23K (правило root.claude-code.context-budget); результат в notes"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: phase.validation P12 по порядку V11–V15 → красное у владельца, затем повтор затронутых шагов → числа skiller budget --first-turn и --with-plugins (V15) в notes → сверка e1e2 построчно (таблица «тезис: где в коде/тест») → finish. Push не делать.",
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "Сверить каждую строку knowledge/hub-p12#e1e2 с кодом и тестами; таблица «тезис → файл/тест → статус» в notes finish; расхождение — исправление у владельца или plan.py log.",
+      "expect": "все строки с файлом или тестом",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "зелёная CI-матрица (локально)",
+    "сверка E1/E2 P12"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T15:56:04Z",
+    "finished_at": "2026-10-13T17:59:37Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-78a5ef02603a3aba7acbe250-P12.10",
+    "notes": "Сверка knowledge/hub-p12#e1e2 с кодом (V1), таблица «тезис → файл/тест → статус» для notes finish.\n\n| Тезис | Файл / тест | Статус |\n| --- | --- | --- |\n| E16 содержимое хаба | scripts/umbrella.py, bin/swissknifeman, scripts/ci-matrix.py, .github/workflows/modules.yml, docs/install-profiles.md, docs/examples/, scripts/smoke-installed.sh; тесты scripts/test-umbrella.py, test-ci-matrix.py, test-smoke-installed.py | OK. Прогон ci-matrix run --all — V11 у дирижёра; в прошлом прогоне exit 0 |\n| E28/D25 doctor по unit.json | scripts/umbrella.py (doctor), configs/schemas/umbrella-doctor.schema.json; scripts/test-umbrella.py (doctor --json по схеме, probe через provides.doctor) | OK |\n| E36 umbrella — композиция | scripts/test-umbrella.py::test_new_module_appears_without_code_change (стр. 238), ::test_no_module_ids_in_the_umbrella_source (стр. 675) | OK |\n| E41/D26 checksums, compat-манифест, пакет схем | packages/aicore/lib/aicore/release/bundle.py; packages/aicore/tests/release/test_bundle.py::test_sha256sum_accepts_the_bundle (sha256sum -c) | OK |\n| E42 reusable workflows | не реализовано, отложено по триггеру «вынос в репозитории» (knowledge/hub-p12#deferred) | отложено |\n| E43 матрица компонента | .github/workflows/modules.yml, scripts/ci-matrix.py (list/steps/run/--check), scripts/test-ci-matrix.py; test.yml и validate.yml удалены (D85) | OK |\n| E45/D24 ADR | docs/architecture/decisions/0072..0078 (7 файлов) + README индекс | OK |\n| E50 опубликованная форма | scripts/smoke-installed.sh, scripts/test-smoke-installed.py; V13 (smoke-installed OK) | OK; WARN по packages/maind/install.sh:109, см. open_issues |\n| E58 профили установки | configs/install-profiles.json; install.sh → swissknifeman install --profile full; scripts/test-umbrella.py (default profile, profile errors, installer options), scripts/test-root-install.py | OK |\n| E59, R13 conformance плагина | packages/aicore/lib/aicore/ext/conformance.py (SCENARIOS включает crash, стр. 39/245/360); packages/aicore/tests/ext/test_conformance.py, test_delivery.py; alias conformance в configs/umbrella.json | OK |\n| R30 conformance движка | packages/orch/scripts/orch.py conformance --binding native: 15 PASS, 1 N/A, declared 0; packages/orch/tests/test_native_conformance.py | OK. Declared остаются только у cao и claude-only (отложено по ADR 0062) |\n| R10 schema compat в CI | scripts/ci-matrix.py шаг schema-compat (стр. 136, 415) → modules.yml | OK, с оговоркой про базовый ref в open_issues |\n| R31 MCP conformance в CI | packages/maind/tests/test_mcp_conformance.py (SKM_REQUIRE_MCP_SDK=1); modules.yml стр. 63-69: SDK ставится, переменная = 1 для maind на Python 3.13 | OK |\n\nБюджет первого хода (V15, песочница): skiller budget --first-turn — Total 2790 (цель ≤16000, предупреждение >23000), OK; --with-plugins — 2790, OK (плагинов не включено, в песочнице их 0). Прошлые evidence V11–V15 в plans/.../artifacts/P12.10/evidence/ все с exit 0 (V15 записал только exit, чисел там нет; числа сняты повторным запуском в песочнице). Файлов продукта не менял; V1 закрывается этой таблицей.\nChanged: CHANGELOG.md, packages/planner/lib/planner/plan/check.py, packages/planner/tests/engine/test_actors_attempts.py",
+    "pending": [
+      "packages/maind/install.sh:109 (подъём ../..) и SKILL.md:35 ломки в установленной форме; smoke-installed печатает WARN, а не FAIL. Не исправлено, потому что это правка у владельца maind."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T17:59:37Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V1.json"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-13T17:59:37Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V11.json"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-13T17:59:37Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V12.json"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-13T17:59:37Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V13.json"
+      },
+      {
+        "id": "V14",
+        "exit": 0,
+        "at": "2026-10-13T17:59:37Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V14.json"
+      },
+      {
+        "id": "V15",
+        "exit": 0,
+        "at": "2026-10-13T17:59:37Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V15.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V11.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V12.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V13.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V14.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.10/evidence/V15.json"
+    ]
+  },
+  "updated_at": "2026-10-13T17:59:37Z"
+}

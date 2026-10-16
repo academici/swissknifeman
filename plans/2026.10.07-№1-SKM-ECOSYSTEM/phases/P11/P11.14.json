@@ -1,0 +1,203 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.14",
+  "title": "Закрытие фазы: широкий прогон, standalone всех модулей, check --strict, test-integration, e2e событий и источника работы, совместимость контрактов, бюджет первого хода, сверка E1 и E2, push",
+  "status": "done",
+  "summary": "Широкий прогон по knowledge/hub-p11#checks; standalone --baseline и каждого модуля; check --strict; scripts/test-integration.sh; e2e plan-events (с analyst), work-source и module-skills в песочнице; aicore schema compat против origin/ecosystem-split; golden, гигиена, docs-impact; skiller budget --first-turn; сверка каждой строки knowledge/hub-p11#e1e2 с кодом (таблица в notes); push в origin ecosystem-split.",
+  "why": "Правило плана: конец фазы — тесты и проверки автономности зелёные, сверка реестров E1/E2, push. Риск: красное в соседних модулях после удаления core и перевода связей — чинится здесь у владельца (dev-режим).",
+  "scope": {
+    "include": [
+      "запуск проверок и исправление красного у владельца",
+      "CHANGELOG.md (итог фазы — если не дописан в P11.13)",
+      "configs/ecosystem-baseline.json (standalone)"
+    ],
+    "exclude": [
+      "новая функциональность"
+    ]
+  },
+  "depends_on": [
+    "P11.13"
+  ],
+  "decisions": [
+    "D76"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11",
+      "why": "правила, проверки, сверка e1e2, отложенное, документация, upgrade фазы целиком",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-ops#register",
+      "why": "строки реестра для фазы: E28, E37 — что принято и проверка при аудите",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-config#register",
+      "why": "строки реестра для фазы: E30 — что принято и проверка при аудите",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-execution#register",
+      "why": "строки реестра для фазы: R31 (и R32 без изменений) — что принято и проверка при аудите",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "строки реестра для фазы: R11, R15 — что принято и проверка при аудите",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-deferred#register",
+      "why": "строки реестра для фазы: R46, R57 без изменений — что принято и проверка при аудите",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "**",
+      "change": "any",
+      "note": "исправления красного у владельца"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/7f552eb2d17ca1729bdd81d8787746df0ece01b1b1fcecb292ece9fa56423f33",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Каждая строка таблицы knowledge/hub-p11#e1e2 подтверждена кодом или тестом; неподтверждённое — исправить или plan.py log с решением",
+    "push — только после зелёного широкого прогона: git push origin ecosystem-split"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: широкий прогон (V1) → песочницы planner и skiller (V2, V3) → граница и автономность (V4) → e2e в песочнице (V5) → совместимость и документация (V6) → `skiller budget --first-turn` и `--with-plugins` (цель 16K, предупреждение 23K — правило root.claude-code.context-budget; результат в notes) → сверка e1e2 построчно (в notes finish — таблица «тезис: где в коде/тест») → finish. Push в origin не делать: публикацию ветки выполняет владелец (решение наблюдателя, записано в плане).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "set -e; for m in aicore brain orch analyst maind harness; do bash packages/$m/scripts/test.sh; bash packages/$m/scripts/validate.sh; done; bash scripts/test-bridges.sh; bash scripts/test-integration.sh; for t in scripts/test-*.py; do python3 \"$t\"; done; bash scripts/test-bootstrap-machine.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p11-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p11-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone --baseline && for m in aicore skiller planner orch maind analyst harness brain; do python3 scripts/ecosystem-units.py standalone $m || exit 1; done && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p11-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bash scripts/e2e-plan-events.sh && bash scripts/e2e-work-source.sh && bash scripts/e2e-module-skills.sh'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строки e2e … OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD",
+      "expect": "exit 0; нет ломающих изменений",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "фаза P11 проверена и запушена"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T00:32:44Z",
+    "finished_at": "2026-10-13T03:20:16Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-24d5a551e0b8132a9b1b4b43-P11.14",
+    "notes": "Removed the stale `core/` shim reference from README.md line 88 (broken link made test-provider-docs.py fail in V1). Targeted: scripts/test-provider-docs.py OK, public-hygiene.py 0 violations, test-public-hygiene.py OK.\nChanged: README.md",
+    "pending": [
+      "Push to origin not performed (owner action per guidance)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T03:20:16Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T03:20:16Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T03:20:16Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T03:20:16Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-13T03:20:16Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-13T03:20:16Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V6.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V4.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V5.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.14/evidence/V6.json"
+    ]
+  },
+  "updated_at": "2026-10-13T03:20:16Z"
+}

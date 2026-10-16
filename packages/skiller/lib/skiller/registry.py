@@ -4,23 +4,33 @@ import json
 import sys
 from pathlib import Path
 
-from core import atomic_write_text, find_repo_root, safe_load_json
+from aicore.util.io import atomic_write_text, safe_load_json
+from aicore.util.repo import find_repo_root
 
-from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
-                     parse_inline_list, skill_content_hash)
+from aicore.content import marketplace as hub_marketplace
+from aicore.content.skill import (
+    describe_skill, read_frontmatter as parse_frontmatter, skill_content_hash)
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
+from aicore.util.text import parse_inline_list
 from .config import CORE_PLUGIN, CORE_SKILLS
 from .host import host_plugin_dirs, load_host
-from .publication import (SiblingPlugin, package_rel, assert_root_bootstrap_set_completeness,
-                          build_publication_catalog, render_claude_publication,
-                          render_codex_publication, render_repository_bootstrap_projections)
+from .module_skills import check_collisions, host_bucket_plugins
+from .quality.compat import is_quarantined
+from .selection import read_sidecar, registry_selection
+from aicore.content.publication import manifest_bytes
 
-OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
+from .publication import (
+    PLUGIN_CATALOG_PATH, SiblingPlugin, assert_root_bootstrap_set_completeness, build_publication_catalog,
+    render_claude_publication, render_codex_publication, render_repository_bootstrap_projections)
 
 
 def build_registry(env):
     """Assemble structure skills.json from skills/**/SKILL.md and references.
     Returns (registry_dict, bucket_meta, bucket_dirs)."""
     root = env.root
+    check_collisions(env)
+    package_license = _package_license(root)
     skills = []
     references = []
 
@@ -54,6 +64,19 @@ def build_registry(env):
             # only SKILL.md). Complements sha256, see common.skill_content_hash.
             "content_sha256": skill_content_hash(skill_md.parent),
         }
+        # E27: one reader of frontmatter and upstream.json (aicore describe_skill); the package
+        # license is the default. A skill that cannot be described keeps the old entry shape
+        # (validate reports it), so a broken fixture does not crash generation.
+        try:
+            described = describe_skill(skill_md.parent, skill_id=name)
+        except ValueError:
+            described = None
+        entry["license"] = (described.license if described else None) or package_license
+        if described and described.compatibility:
+            entry["compatibility"] = described.compatibility
+        allowed = (fm.get("allowed-tools") or fm.get("allowed_tools") or "")
+        if isinstance(allowed, str) and allowed.strip():
+            entry["allowed_tools"] = allowed.strip()
         # Graph/meta fields: optional, omitted when empty (same as upstream fields)
         for list_key in ("tags", "requires", "produces_for"):
             vals = parse_inline_list(fm.get(list_key, ""))
@@ -65,6 +88,17 @@ def build_registry(env):
         level = (fm.get("level") or "").strip()
         if level:
             entry["level"] = level
+        # Selection policy (D10): selection.json beside SKILL.md → `selection` (omitted without a sidecar).
+        # The schema is checked by `skiller selection check`; a broken file is a clear error here.
+        try:
+            sidecar = read_sidecar(skill_md.parent)
+        except ValueError as exc:
+            die(f"broken selection.json: {exc}")
+        if sidecar:
+            entry["selection"] = registry_selection(sidecar)
+        # Quarantine (P8.6): compat-report.json with verdict quarantine keeps the skill out of the runtime.
+        if is_quarantined(skill_md.parent):
+            entry["quarantined"] = True
         # Provenance: upstream.json next to SKILL.md marks an external skill
         upstream_file = skill_md.parent / "upstream.json"
         if upstream_file.exists():
@@ -125,9 +159,12 @@ def build_registry(env):
     # Not «orphan» (forgotten directory), is an explicit migration record.
     alias_entries = {b: m for b, m in bucket_meta.items()
                      if isinstance(m, dict) and m.get("alias_of")}
+    # Host-provided buckets: metadata only, the skills live in the host's module plugins.
+    host_entries = {b for b, m in bucket_meta.items()
+                    if isinstance(m, dict) and m.get("provided_by") == "host"}
     missing = [b for b in bucket_dirs if b not in bucket_meta]
     orphans = [b for b in bucket_meta
-              if b not in bucket_dirs and b not in alias_entries]
+              if b not in bucket_dirs and b not in alias_entries and b not in host_entries]
     if missing:
         die(f"buckets.json: missing entries for: {', '.join(missing)}")
     if orphans:
@@ -183,158 +220,11 @@ def _repo_root(pkg_root):
     return find_repo_root(pkg_root) or pkg_root
 
 
-def _legacy_build_plugin_manifests(env, bucket_meta, bucket_dirs):
-    """Calculate ALL plugin-manifests WITHOUT entry: [(path, data_dict)] in order of entry;
-    last element - marketplace.json (repo root). Clean (source of truth for
-    write_plugin_manifests and registry --check drift-gate). source-paths from the repo root."""
-    root = env.root
-    repo_root = _repo_root(root)
-    # Package prefix relative to the host root, empty in standalone layouts.
-    rel_pkg = package_rel(repo_root, root)
-    prefix = f"./{rel_pkg}" if rel_pkg else "."
-
-    def src(sub):
-        """Plugin source path relative to the host root."""
-        return f"{prefix}/{sub}" if rel_pkg else f"./{sub}"
-
-    manifests = []
-
-    def write_json(path, data):
-        manifests.append((path, data))
-
-    def skills_dirs(plugin_root):
-        """Dirs (relative, ./-prefixed) whose subdirs contain SKILL.md files."""
-        dirs = set()
-        for skill_md in plugin_root.rglob("SKILL.md"):
-            rel = skill_md.parent.parent.relative_to(plugin_root)
-            dirs.add("./" if str(rel) == "." else f"./{rel.as_posix()}")
-        return sorted(dirs)
-
-    marketplace_plugins = []
-    for bucket in bucket_dirs:
-        bucket_dir = root / "skills" / bucket
-        dirs = skills_dirs(bucket_dir)
-        if not dirs:
-            continue
-        meta = bucket_meta[bucket]
-        write_json(bucket_dir / ".claude-plugin" / "plugin.json", {
-            "name": bucket,
-            "description": meta["description"],
-            "skills": dirs[0] if len(dirs) == 1 else dirs,
-        })
-        marketplace_plugins.append({
-            "name": bucket,
-            "source": src(f"skills/{bucket}"),
-            "description": meta["description"],
-            "category": meta.get("category", ""),
-            "tags": meta.get("tags", []),
-            "package": "skiller",
-        })
-
-    # Alias-buckets: old name
-    # of the bucket remains marketplace-plugin (13 projects on enabledPlugins — back-compat), but
-    # without your skills/<bucket>. Same technique as the supervised `core` below: marketplace-
-    # entry source:"./" + explicit skills[]-list of links to skills that now physically live in
-    # target bucket (`alias_of` in buckets.json). Field `alias_of` in the entry itself - mark in
-    # metadata that is read update.py/status.py for a hint «bucket X now Y».
-    # bucket_dirs does not contain alias-names (no physical directory) — separate pass on
-    # bucket_meta. Empty, no merges announced yet → alive registry-diff does not change.
-    for name in sorted(bucket_meta):
-        meta = bucket_meta[name]
-        if not isinstance(meta, dict) or not meta.get("alias_of"):
-            continue
-        alias_paths = [src(f"skills/{s}") for s in meta.get("skills", [])
-                       if (root / "skills" / s / "SKILL.md").is_file()]
-        if not alias_paths:
-            continue
-        marketplace_plugins.append({
-            "name": name,
-            "source": "./",
-            "skills": alias_paths,
-            "description": meta.get("description")
-                or f"Alias: bucket moved to '{meta['alias_of']}'",
-            "category": meta.get("category", ""),
-            "tags": meta.get("tags", []),
-            "package": "skiller",
-            "alias_of": meta["alias_of"],
-        })
-
-    # Curated Light core-plugin: token-saving ALWAYS-ON core (== CORE_SKILLS),
-    # which connect distributes to each project INSTEAD of whole buckets general+oss-dev.
-    # marketplace-entry source:"./" (repo root = root marketplace) + explicit skills[] =
-    # FULL set of plugin: EXACTLY listed skills are loaded, default scan <source>/skills/
-    # is not mixed. Confirmed by official document (verified 2026-07-02, RAG):
-    # https://code.claude.com/docs/en/plugin-marketplaces#advanced-plugin-entries —
-    # «With a marketplace-root source, the listed paths are the complete set for that entry,
-    # and other directories in the shared skills/ folder don't load.» Fallback to default
-    # scan («If none of the listed paths exist, the default scan runs instead») is also safe:
-    # default scan is <repo>/skills/ (which is not in this repo), and not recursion throughout
-    # tree. Skills physically live in their buckets - there are only links along the way, no copies.
-    core_skill_paths = [src(f"skills/{cs}") for cs in CORE_SKILLS
-                        if (root / "skills" / cs / "SKILL.md").is_file()]
-    if core_skill_paths:
-        marketplace_plugins.append({
-            "name": CORE_PLUGIN,
-            "source": "./",   # repo root = root marketplace; skills[] — paths from it
-            "skills": core_skill_paths,
-            "description": "Curated always-on core: token-economy skills (context-economy, "
-                           "anti-drift, verify-claims, …) — lean replacement for the "
-                           "general+oss-dev buckets in every project",
-            "category": "meta",
-            "tags": ["core", "token-economy", "always-on"],
-            "package": "skiller",
-        })
-
-    meta_skill_dir = root / "generate-skill"
-    meta_fm = parse_frontmatter(meta_skill_dir / "generate-skill" / "SKILL.md")
-    write_json(meta_skill_dir / ".claude-plugin" / "plugin.json", {
-        "name": "generate-skill",
-        "description": meta_fm.get("description", "Meta-skill for creating new skills"),
-        "skills": "./",
-    })
-    marketplace_plugins.append({
-        "name": "generate-skill",
-        "source": src("generate-skill"),
-        "description": meta_fm.get("description", "Meta-skill for creating new skills"),
-        "category": "meta",
-        "tags": ["meta", "authoring"],
-        "package": "skiller",
-    })
-
-    # Management plugin: command person skiller CLI (directory skm/ with static
-    # plugin.json + commands/). Not a skill bucket - add an entry to marketplace manually,
-    # to install `skm@swissknifeman` gave slash-skill management commands.
-    if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
-        marketplace_plugins.append({
-            "name": "skm",
-            "source": src("skm"),
-            "description": "skiller CLI — managing project skills: buckets "
-                           "(connect/vendor), integrate, status",
-            "category": "meta",
-            "tags": ["cli", "skills", "management"],
-            "package": "skiller",
-        })
-
-    # Sibling plugin entries declared by the host config, with host-relative paths.
-    for pkg in host_plugin_dirs(repo_root, root, load_host(root)):
-        pj = pkg / ".claude-plugin" / "plugin.json"
-        data = json.loads(pj.read_text(encoding="utf-8"))
-        marketplace_plugins.append({
-            "name": data.get("name", pkg.name),
-            "source": f"./{pkg.relative_to(repo_root).as_posix()}",
-            "description": data.get("description", ""),
-            "category": data.get("category", "ecosystem"),
-            "tags": data.get("keywords", []),
-            "package": pkg.name,
-        })
-
-    # marketplace.json — in the ROOT monorepo (one manifest for all plugins in the repo), and not in the package.
-    write_json(repo_root / ".claude-plugin" / "marketplace.json", {
-        "name": MARKETPLACE,
-        "owner": OWNER,
-        "plugins": sorted(marketplace_plugins, key=lambda p: p["name"]),
-    })
-    return manifests
+def _package_license(root):
+    """The library license from package.json: the default for skills that declare none."""
+    package = safe_load_json(root / "package.json", on_error=lambda e: die(f"package.json: {e}"))
+    value = package.get("license")
+    return value if isinstance(value, str) and value else "MIT"
 
 
 def _package_version(root):
@@ -407,7 +297,6 @@ def build_catalog(env, bucket_meta, bucket_dirs, registry=None):
         core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
         package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root, load_host(root)),
         generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
-        skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
         unit_versions=unit_versions, default_unit_version=default_unit_version,
     )
 
@@ -441,10 +330,6 @@ def build_plugin_manifests(env, bucket_meta, bucket_dirs, registry=None):
             for artifact in build_claude_publication(env, bucket_meta, bucket_dirs, registry)]
 
 
-def _manifest_text(data):
-    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-
-
 def _has_repository_bootstrap_config(root):
     """Standalone/fixture roots predating carry no root-bootstrap config — skip the
     renderer entirely rather than fail closed on a file that was never meant to exist there."""
@@ -475,15 +360,41 @@ def _prune_publication_artifacts(artifacts):
         path.unlink()
 
 
+def hub_units(env):
+    """Modules whose `provides.plugins` make the hub marketplace: the `packages/` of the host root
+    plus this package, which is always present (a layout without its unit.json gets the default)."""
+    root = env.root
+    repo_root = _repo_root(root)
+    units = {}
+    if (repo_root / "packages").is_dir():
+        units = hub_marketplace.discover({"SKM_UNITS_PATH": str(repo_root / "packages")})
+    own = units.get("skiller")
+    if own is None or own.root.resolve() != root.resolve():
+        units["skiller"] = hub_marketplace.Unit("skiller", root, {"provides": {"plugins": [
+            {"name": "skiller", "catalog": PLUGIN_CATALOG_PATH}]}})
+    return units
+
+
+def assemble_marketplace(env, catalogs=None):
+    """{repo-relative path: bytes} of the root Claude marketplace and the Codex index. `catalogs`
+    ({path: bytes}) replaces catalog files that are not (yet) on disk."""
+    return hub_marketplace.assemble(hub_units(env), _repo_root(env.root), catalogs=catalogs)
+
+
 def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     """Write all plugin-manifests + marketplace.json (atomically). Returns the number of plugins."""
     manifests = build_plugin_manifests(env, bucket_meta, bucket_dirs)
     for path, data in manifests:
-        atomic_write_text(path, _manifest_text(data))
+        atomic_write_text(path, manifest_bytes(data).decode("utf-8"))
     codex_artifacts = build_codex_publication(env, bucket_meta, bucket_dirs)
     _prune_publication_artifacts(codex_artifacts)
     for artifact in codex_artifacts:
         atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
+    # The root Claude marketplace and the Codex index come from the unit.json of the modules; the
+    # skiller catalog written above is one of their inputs.
+    indexes = assemble_marketplace(env)
+    for relative, data in indexes.items():
+        atomic_write_text(_repo_root(env.root) / relative, data.decode("utf-8"))
     if _has_repository_bootstrap_config(env.root):
         bootstrap_artifacts = build_repository_bootstrap_publication(env)
         for artifact in bootstrap_artifacts:
@@ -495,8 +406,8 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         if completeness_failures:
             die("root-bootstrap root-set completeness:\n" +
                 "\n".join(f"  - {item}" for item in completeness_failures))
-    # number of plugins = size marketplace.plugins (latest manifest - marketplace.json)
-    return len(manifests[-1][1]["plugins"])
+    # number of plugins = size of the Claude marketplace.plugins
+    return len(json.loads(indexes[hub_marketplace.CLAUDE_INDEX])["plugins"])
 
 
 def check_drift(env):
@@ -524,11 +435,17 @@ def check_drift(env):
             drift.append(rel)
 
     _cmp(root / "skills.json", json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
-    _cmp(root / "skills" / "_index.md", render_index(registry, bucket_meta))
-    for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs, registry):
-        _cmp(path, _manifest_text(data))
+    _cmp(root / "skills" / "_index.md",
+         render_index(registry, bucket_meta, host_bucket_plugins(env)))
+    claude_artifacts = build_claude_publication(env, bucket_meta, bucket_dirs, registry)
+    for artifact in claude_artifacts:
+        _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
     for artifact in build_codex_publication(env, bucket_meta, bucket_dirs, registry):
         _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
+    indexes = assemble_marketplace(env, {a.target: a.managed_bytes for a in claude_artifacts
+                                         if a.target.name == "catalog.json"})
+    for relative, data in indexes.items():
+        _cmp(repo_root / relative, data.decode("utf-8"))
     if _has_repository_bootstrap_config(root):
         bootstrap_artifacts = build_repository_bootstrap_publication(env)
         for artifact in bootstrap_artifacts:
@@ -549,10 +466,15 @@ def check_drift(env):
     return drift
 
 
-def render_index(registry, bucket_meta):
+def render_index(registry, bucket_meta, host_buckets=None):
     """Markdown-registry for discovery (skills/_index.md): skills on buckets + tag matrix.
-    Entirely generated from skills.json — human-readable face of the machine registry."""
+    Entirely generated from skills.json — human-readable face of the machine registry.
+    `host_buckets` ({bucket: plugins}) adds one line per bucket the host provides."""
     skills = registry["skills"]
+    host_buckets = dict(host_buckets or {})
+    for name, meta in bucket_meta.items():
+        if isinstance(meta, dict) and meta.get("provided_by") == "host":
+            host_buckets.setdefault(name, ())
     by_bucket = {}
     for s in skills:
         by_bucket.setdefault(s["bucket"], []).append(s)
@@ -575,7 +497,12 @@ def render_index(registry, bucket_meta):
         "",
         "## Skills for buckets",
     ]
-    for bucket in sorted(by_bucket):
+    for bucket in sorted(set(by_bucket) | set(host_buckets)):
+        if bucket not in by_bucket:
+            plugins = host_buckets[bucket]
+            lines += ["", f"### {bucket} — provided by host modules: {', '.join(plugins)}"
+                      if plugins else f"### {bucket} — provided by the host"]
+            continue
         desc = bucket_meta.get(bucket, {}).get("description", "")
         items = sorted(by_bucket[bucket], key=lambda s: s["name"])
         lines += ["", f"### {bucket} — {desc} ({len(items)})", "",
@@ -733,7 +660,7 @@ def cmd_registry(env, argv):
         print(f"  levels (level): {', '.join(parts)}; without level: {untagged}")
 
     atomic_write_text(root / "skills" / "_index.md",
-                      render_index(registry, bucket_meta))
+                      render_index(registry, bucket_meta, host_bucket_plugins(env)))
     print("Updated skills/_index.md (tag matrix)")
 
     n_plugins = write_plugin_manifests(env, bucket_meta, bucket_dirs)

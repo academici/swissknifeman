@@ -1,0 +1,19 @@
+exit: 1
+--- stdout ---
+{
+  "schema": "skiller.resolve/v1",
+  "requested": [
+    "no-such/skill"
+  ],
+  "provider": null,
+  "skills": [],
+  "diagnostics": [
+    {
+      "code": "SKILL_UNKNOWN",
+      "severity": "error",
+      "skill": "no-such/skill"
+    }
+  ]
+}
+--- stderr ---
+

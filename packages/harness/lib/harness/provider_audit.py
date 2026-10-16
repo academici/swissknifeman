@@ -12,9 +12,10 @@ import json
 from pathlib import Path
 import tempfile
 
-from core import (ArtifactActionKind, EffectiveProvider, ProviderId, SupportLevel,
-                  apply_plan, load_provider_manifest, plan_artifact_lock,
-                  serialize_lock, support_for)
+from aicore.provider.manifest import default_manifest_path
+from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.provider.manifest import load_provider_manifest, support_for
+from aicore.provider.values import EffectiveProvider, ProviderId, SupportLevel
 from .agentpacks import (cursor_consumer_targets, load_claude_role_bindings,
                          load_cursor_agent_consumer_mapping, plan_agent_artifact,
                          semantic_agent_roles)
@@ -152,7 +153,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
     root = Path(package_root)
     fixture = _fixture(fixture_path or root / "tests/fixtures_data/provider-harness-cases.json")
     manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        default_manifest_path())
     manifest = load_provider_manifest(manifest_path)
     catalog_path = root / "configs/common/profile-catalog.json"
     catalog = load_catalog(catalog_path, capability_manifest=manifest)

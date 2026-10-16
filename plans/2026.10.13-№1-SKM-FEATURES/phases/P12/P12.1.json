@@ -1,0 +1,130 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.1",
+  "title": "События orch.agent.started/finished/failed и поля run_id, work_id, agent_run_id, route, prompt_sha256, config/options digest, error, tokens в событиях orch",
+  "status": "done_with_deviations",
+  "summary": "По knowledge/p12-observability#fields: схемы event-data/v1, EVENT_TYPES, эмиссия в _role и стадиях, subject/causationid/correlationid; контрактные фикстуры.",
+  "why": "Аудит П11.1, мысли 5, 10.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/events.py",
+      "packages/orch/schemas/event-data/v1/",
+      "conductor (эмиссия)",
+      "tests"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P11.3"
+  ],
+  "decisions": [
+    "D14"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p12-observability#fields",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p12-observability#facts",
+      "why": "код",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/events.py",
+      "why": "эмиссия",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/events.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/event-data/v1/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/a443f103094cf4be7f232307c6ee646e119839198fcc9f79a5d683eed0dec3bb",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала сверка facts. Порядок: фикстуры → схемы → эмиссия → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "события агентов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-15T10:31:53Z",
+    "finished_at": "2026-10-15T10:40:56Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-6df43b8fe933e1b7c6ddaf31-P12.1",
+    "notes": "Added orch.agent.started/finished/failed (closed event-data/v1 schemas, valid/invalid fixtures, unit.json, EVENT_TYPES), emitted from roles.agent_start/agent_end so every agent run incl. report-fixer is covered. Subject <run>/<item>/<agent_run_id>, correlationid = run id, causationid of finished/failed = started event id. stage.finished got optional work_id, item, config_digest. events.emit takes correlationid and returns the event id. Test in test_conductor.DigestTests; docs/events.md and CHANGELOG updated. Tests run: test_events, DigestTests, test_conductor_agents, test_characterization, test_boundaries (all green). V1 ran once, exit 0, before the last edits (duration_ms rename, docs, CHANGELOG); the coordinator must rerun it.\nChanged: CHANGELOG.md, packages/orch/docs/events.md, packages/orch/lib/orch/conductor/engine.py, packages/orch/lib/orch/conductor/infrastructure/roles.py, packages/orch/lib/orch/events.py, packages/orch/schemas/event-data/v1/orch.agent.failed.schema.json, packages/orch/schemas/event-data/v1/orch.agent.finished.schema.json, packages/orch/schemas/event-data/v1/orch.agent.started.schema.json, packages/orch/schemas/event-data/v1/orch.run.stage.finished.schema.json, packages/orch/tests/fixtures/events/orch.agent.failed/invalid-error-class.json, packages/orch/tests/fixtures/events/orch.agent.failed/invalid-no-error.json, packages/orch/tests/fixtures/events/orch.agent.failed/valid-full.json, packages/orch/tests/fixtures/events/orch.agent.failed/valid-minimal.json, packages/orch/tests/fixtures/events/orch.agent.finished/invalid-tokens.json, packages/orch/tests/fixtures/events/orch.agent.finished/invalid-unknown-field.json, packages/orch/tests/fixtures/events/orch.agent.finished/valid-full.json, packages/orch/tests/fixtures/events/orch.agent.finished/valid-minimal.json, packages/orch/tests/fixtures/events/orch.agent.started/invalid-no-route.json, packages/orch/tests/fixtures/events/orch.agent.started/invalid-prompt-digest.json, packages/orch/tests/fixtures/events/orch.agent.started/invalid-unknown-field.json, packages/orch/tests/fixtures/events/orch.agent.started/valid-full.json, packages/orch/tests/fixtures/events/orch.agent.started/valid-minimal.json, packages/orch/tests/test_conductor.py, packages/orch/unit.json",
+    "deviations": [
+      "Edited packages/orch/unit.json (events list), packages/orch/docs/events.md and packages/orch/lib/orch/conductor/engine.py (method binding) outside the declared write_set; unit.json must list provided events and the contract test checks it.",
+      "changed outside the write set: packages/orch/docs/events.md, packages/orch/unit.json"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T10:40:56Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P12.1/evidence/V1.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P12.1/evidence/V1.json"
+    ]
+  },
+  "updated_at": "2026-10-15T10:40:56Z"
+}

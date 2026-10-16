@@ -1,0 +1,16 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "router",
+  "decision": "ROUTER_ONLY",
+  "conflicts": [
+    "php-packages/laravel-package-compatibility",
+    "php-packages/laravel-package-docs",
+    "php-packages/laravel-package-expressive",
+    "php-packages/laravel-package-generate-skill",
+    "php-packages/laravel-package-release",
+    "php-packages/laravel-package-scaffold",
+    "php-packages/laravel-package-service-provider",
+    "php-packages/laravel-package-testing"
+  ],
+  "exclusive_group": "php-packages"
+}

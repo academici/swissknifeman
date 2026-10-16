@@ -8,9 +8,8 @@ import unittest
 from orch import contracts
 
 ORCH = Path(__file__).resolve().parents[1]
-REPO = ORCH.parents[1]
 ROLES = ORCH / "roles"
-ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "registrar")
+ROLE_IDS = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "researcher", "advisor")
 
 
 def _manifest(role: str) -> dict:
@@ -18,7 +17,7 @@ def _manifest(role: str) -> dict:
 
 
 class RoleManifestTests(unittest.TestCase):
-    def test_exactly_five_manifests(self):
+    def test_exactly_the_known_manifests(self):
         self.assertEqual(sorted(p.stem for p in ROLES.glob("*.json")), sorted(ROLE_IDS))
 
     def test_manifests_are_valid_and_named_after_role_id(self):
@@ -32,7 +31,8 @@ class RoleManifestTests(unittest.TestCase):
         for role in ROLE_IDS:
             for item in _manifest(role)["instructions"]:
                 with self.subTest(role=role, path=item["path"]):
-                    path = REPO / item["path"]
+                    self.assertTrue(item["path"].startswith("roles/"))
+                    path = ORCH / item["path"]
                     self.assertTrue(path.is_file())
                     self.assertEqual(item["sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
 

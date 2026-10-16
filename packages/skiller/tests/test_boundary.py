@@ -15,14 +15,15 @@ SELF = "tests/test_boundary.py"
 ALLOWLIST = "tests/boundary_allowlist.json"
 BOOTSTRAP = "skills/repository-bootstrap"
 
-PACKAGE_NAMES = "task|orch|harness|maind|analyst|artifex|skiller"
-PARTNER_NAMES = "task|orch|harness|maind|analyst|artifex"
+PACKAGE_NAMES = "planner|orch|harness|maind|analyst|skiller"
+PARTNER_NAMES = "planner|orch|harness|maind|analyst"
 PATH_TOKEN = re.compile(rf"packages/({PACKAGE_NAMES})\b")
 CODE_TOKENS = (
     ("C1", PATH_TOKEN),
     ("C2", re.compile(rf"^\s*(from|import)\s+({PARTNER_NAMES})\b")),
-    ("C3", re.compile(r"\b(orch|harness|maind|analyst|artifex)\b")),
-    ("C4", re.compile(r"[\"']task[\"']|/task:")),
+    # maind is a declared partner: `skiller topology` is an alias reaching it by process.
+    ("C3", re.compile(r"\b(orch|harness|analyst)\b")),
+    ("C4", re.compile(r"[\"']planner[\"']|/planner:")),
     ("C5", re.compile(rf"\.\./({PARTNER_NAMES})\b")),
     ("C6", re.compile(r"find_monorepo_root|sibling_bin")),
 )
@@ -122,10 +123,10 @@ class BoundaryScannerTests(unittest.TestCase):
     def test_code_tokens_and_line_diagnostics(self):
         samples = {
             "C1": "packages/skiller/lib/module.py",
-            "C2": "  from task.module import value",
-            "C3": "use maind CLI",
-            "C4": "plugin = 'task'",
-            "C5": "../task/commands",
+            "C2": "  from planner.module import value",
+            "C3": "use harness CLI",
+            "C4": "plugin = 'planner'",
+            "C5": "../planner/commands",
             "C6": "root = find_monorepo_root(path)",
         }
         for code, line in samples.items():
@@ -135,7 +136,7 @@ class BoundaryScannerTests(unittest.TestCase):
                                  [f"lib/module.py:2: {code}: "
                                   + next(p.search(line).group(0).strip()
                                          for c, p in CODE_TOKENS if c == code)])
-        for line in ("import orch.api", '"task"', "/task:plan-run", "sibling_bin(root)"):
+        for line in ("import orch.api", '"planner"', "/planner:plan-run", "sibling_bin(root)"):
             with self.subTest(line=line):
                 self.write("lib/module.py", line)
                 self.assertIn("lib/module.py", violations(self.root))
@@ -150,21 +151,21 @@ class BoundaryScannerTests(unittest.TestCase):
     def test_content_tool_names_allowed_but_repository_paths_rejected(self):
         paths = [f"{directory}/example.md" for directory in (
             "skills/general/example", "references", "docs/guide", "generate-skill",
-            "skm", "adapters", "provider-skills", "prompts", ".swissknifeman.example")]
+            "adapters", "provider-skills", "prompts", ".swissknifeman.example")]
         paths += ["README.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md", "SKILL_TEMPLATE.md"]
         for relative in paths:
-            self.write(relative, "orch harness maind analyst artifex 'task' /task:dev\n")
+            self.write(relative, "orch harness maind analyst 'planner' /planner:dev\n")
         self.assertEqual(violations(self.root), {})
         for relative in paths:
-            self.write(relative, "packages/task/commands\n")
+            self.write(relative, "packages/planner/commands\n")
         self.assertEqual(set(violations(self.root)), set(paths))
         self.assertTrue(all(": K1:" in hits[0] for hits in violations(self.root).values()))
 
     def test_shared_core_and_unrelated_package_names_stay_allowed(self):
         lines = ("from core.paths import find_repo_root", "import core",
-                 "$MONOREPO_ROOT/core/provider.py", "packages/core",
-                 "packages/vitest", "packages/taskboard", "orchestration",
-                 "harnessing", "Maind", "task:plan-run", "task = 'example'")
+                 "$REPO_ROOT/core/provider.py", "packages/core",
+                 "packages/vitest", "packages/plannerboard", "orchestration",
+                 "harnessing", "Maind", "maind topology", "planner:plan-run", "task = 'example'")
         self.write("lib/module.py", "\n".join(lines))
         self.assertEqual(violations(self.root), {})
 
@@ -182,18 +183,18 @@ class BoundaryScannerTests(unittest.TestCase):
             "lib/__pycache__/module.py", "node_modules/example/file.txt",
             "docs/audits/old.md", "docs/.vitepress/cache/file.txt", "docs/.vitepress/dist/file.txt"]
         for relative in paths:
-            self.write(relative, "packages/task harness")
+            self.write(relative, "packages/planner harness")
         self.write("lib/binary.dat", "")
-        (self.root / "lib/binary.dat").write_bytes(b"\xff packages/task")
+        (self.root / "lib/binary.dat").write_bytes(b"\xff packages/planner")
         self.allow({})
         self.assertEqual(violations(self.root), {})
-        self.write("docs/audits-current.md", "packages/task")
+        self.write("docs/audits-current.md", "packages/planner")
         self.assertIn("docs/audits-current.md", violations(self.root))
 
     def test_bootstrap_is_one_structural_entry_even_when_empty(self):
         (self.root / BOOTSTRAP).mkdir(parents=True)
         self.assertEqual(set(violations(self.root)), {BOOTSTRAP})
-        self.write(BOOTSTRAP + "/example/SKILL.md", "packages/task")
+        self.write(BOOTSTRAP + "/example/SKILL.md", "packages/planner")
         self.assertEqual(set(violations(self.root)), {BOOTSTRAP})
         self.allow({BOOTSTRAP: "P8.6: move repository-only skills to their owners"})
         self.assertEqual(boundary_errors(self.root), [])
@@ -204,8 +205,8 @@ class BoundaryScannerTests(unittest.TestCase):
         self.assertEqual(len(boundary_errors(self.root)), 1)
 
     def test_allowlist_skips_whole_file_and_retains_other_failures(self):
-        self.write("lib/module.py", "harness\npackages/task")
-        self.write("lib/new.py", "maind")
+        self.write("lib/module.py", "harness\npackages/planner")
+        self.write("lib/new.py", "orch")
         self.allow({"lib/module.py": "P8.5: delegate through host commands"})
         errors = boundary_errors(self.root)
         self.assertEqual(len(errors), 1)

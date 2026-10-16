@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:planner:check-plugin:input:v1",
+  "title": "planner check plugin input",
+  "description": "Input of the planner:check extension point: which plan to check. The plugin reads the plan data itself from plan_dir (or through plan.py export).",
+  "type": "object",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "description": "Id of the plan to check.",
+      "minLength": 1
+    },
+    "short_id": {
+      "type": "string",
+      "description": "Short id of the plan such as PLAN7.",
+      "minLength": 1
+    },
+    "plan_dir": {
+      "type": "string",
+      "description": "Absolute path of the plan folder.",
+      "pattern": "^(/|[A-Za-z]:[\\\\/])"
+    },
+    "plans_root": {
+      "type": "string",
+      "description": "Absolute path of the plans folder that holds the plan.",
+      "pattern": "^(/|[A-Za-z]:[\\\\/])"
+    },
+    "project_root": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Root of the project the plans folder belongs to; null for a folder outside a project."
+    },
+    "planner_version": {
+      "type": "string",
+      "description": "Version of the planner module that calls the plugin.",
+      "minLength": 1
+    },
+    "schema_urn_prefix": {
+      "type": "string",
+      "description": "Prefix of the plan schema ids; the plan data follows these schemas.",
+      "const": "urn:swissknifeman:task:plan:"
+    }
+  },
+  "required": [
+    "plan_id",
+    "short_id",
+    "plan_dir",
+    "plans_root",
+    "project_root",
+    "planner_version",
+    "schema_urn_prefix"
+  ],
+  "additionalProperties": false
+}

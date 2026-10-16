@@ -1,7 +1,8 @@
 """analyst scan — cross-project aggregator (P2): lesson patterns across projects.
 
-The CAM package discovers projects through an existing registry config.json (at the root of the monorepo):
-projects[].{local_path, namespaces, enabled}. Reading per-project lessons (.claude/analyst/lessons/),
+The package discovers projects through the maind project registry (`maind projects list --json`,
+contract projects-list/v1): projects[].{local_path, namespaces, enabled}. Reading per-project lessons
+(<project>/.swissknifeman/analyst/lessons/),
 clusters by Jaccard (stdlib) and detects patterns that repeat in ≥N projects → writes
 draft-OFFERS (not skills!) in ~/.swissknifeman/analyst/suggestions/ + index by_pattern/.
 
@@ -14,7 +15,10 @@ import os
 from pathlib import Path
 
 from . import lessons
-from .common import atomic_write_json, atomic_write_text, now_iso, safe_load_json, sanitize
+from aicore.util.io import atomic_write_json, atomic_write_text, safe_load_json
+from aicore.util.partners import PartnerError, PartnerUnavailable, run_partner_json
+from aicore.util.term import die, now_iso
+from aicore.util.text import sanitize
 
 # Lessons involved in pattern detection (deprecated is excluded - we do not replicate the demoted one).
 SCAN_STATES = ("curated", "candidate", "ephemeral")
@@ -22,15 +26,11 @@ DEFAULT_MIN_PROJECTS = 3     # cross-project pattern - only when ≥N projects (
 DEFAULT_THRESHOLD = 0.5      # Jaccard-threshold «same pattern»
 
 
-# ── project registry (config.json, read it ourselves) ───────────────────────────────
-def load_projects(config_path):
-    """[{id, local_path, namespaces, enabled}] from config.json. [] if the file/no key.
-    Reading the registry directly (stdlib) — analyst does not depend on lib maind."""
-    data = safe_load_json(Path(config_path), None)
-    if not isinstance(data, dict):
-        return []
+# ── project registry (maind `projects list --json`, contract projects-list/v1) ──────
+def normalize_projects(rows):
+    """[{id, local_path, namespaces, enabled}] from registry records; malformed rows are skipped."""
     out = []
-    for pr in (data.get("projects") or []):
+    for pr in (rows if isinstance(rows, list) else []):
         if not isinstance(pr, dict) or not pr.get("id"):
             continue
         out.append({
@@ -40,6 +40,24 @@ def load_projects(config_path):
             "enabled": bool(pr.get("enabled", True)),
         })
     return out
+
+
+def registry_rows():
+    """Raw registry records from the maind partner. Without maind: PARTNER_UNAVAILABLE and exit."""
+    try:
+        rows = run_partner_json("maind", ["projects", "list", "--json"], legacy_env=("MAIND_BIN",))
+    except PartnerUnavailable as exc:
+        die(f"{exc}; the cross-project scan needs the project registry")
+    except PartnerError as exc:
+        die(str(exc))
+    if not isinstance(rows, list):
+        die("PARTNER_BAD_OUTPUT: maind projects printed a non-list registry")
+    return rows
+
+
+def load_projects():
+    """Normalized registry projects (see normalize_projects) of the maind partner."""
+    return normalize_projects(registry_rows())
 
 
 def enabled_projects(projects, namespace=None):
@@ -222,14 +240,15 @@ def prune_artifacts(env, stale_ids):
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def cmd_scan(env, argv):
     """analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]
-    — cross-project lesson patterns (config.json) → suggestions/ (namespace-isolated)."""
-    from .common import die, parse_args, warn
+    — cross-project lesson patterns (maind project registry) → suggestions/ (namespace-isolated)."""
+    from aicore.util.cli import parse_args
+    from aicore.util.term import warn
     opts, _ = parse_args(argv, {"--min-projects": "str", "--namespace": "str",
                                 "--threshold": "str", "--no-prune": "bool",
                                 "--dry-run": "bool", "--json": "bool"})
     if opts["help"]:
         print("analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]\n"
-              "  Bypass config.json:projects[] → per-project lessons → Jaccard-clusters → patterns in ≥N\n"
+              "  Bypass the maind project registry → per-project lessons → Jaccard-clusters → patterns in ≥N\n"
               "  projects (namespace-isolated) → draft-sentences in ~/.swissknifeman/analyst/.\n"
               "  Reconciliation: Orphaned index+suggestion files (disappeared patterns) are removed\n"
               "  STRICTLY in scope run (--no-prune turns off; --dry-run does not write anything and\n"
@@ -245,11 +264,7 @@ def cmd_scan(env, argv):
     except ValueError:
         die(f"--threshold is waiting for a number, received: {opts['threshold']}")
 
-    cfg = env.default_config
-    if not Path(cfg).is_file():
-        die(f"project registry not found: {cfg} — cross-project scan needed config.json "
-            "(monorepo ecosystem root)")
-    projects = enabled_projects(load_projects(cfg), opts["namespace"] or None)
+    projects = enabled_projects(load_projects(), opts["namespace"] or None)
     if not projects:
         warn("no enabled-projects in the registry"
              + (f" for namespace {opts['namespace']}" if opts["namespace"] else ""))

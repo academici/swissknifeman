@@ -10,7 +10,8 @@ import unittest
 from orch import launch
 
 ROOT = Path(__file__).resolve().parents[1]
-CLAUDE_SCOUT = ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools", "", "--no-session-persistence"]
+CLAUDE_SCOUT = ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools", "Read,Grep,Glob",
+                "--permission-prompts", "none", "--no-session-persistence"]
 CODEX_SCOUT = ["codex", "-a", "never", "exec", "--sandbox", "read-only", "--model", "gpt-5.6-luna", "-c",
                'model_reasoning_effort="low"', "--ephemeral", "-"]
 
@@ -30,7 +31,8 @@ class LaunchCatalogTests(unittest.TestCase):
 
     def test_repository_catalog_is_valid_and_complete(self):
         rows = [(role, provider) for role, providers in self.catalog["launch"].items() for provider in providers]
-        self.assertEqual(len(rows), 13)
+        self.assertEqual(len(rows), 20)
+        self.assertEqual({provider for role, provider in rows if role == "triager"}, {"claude-code", "codex"})
         self.assertEqual({role for role, _ in rows}, set(launch.ROLES))
         self.assertNotIn(("scout", "grok"), rows)
 
@@ -47,6 +49,48 @@ class LaunchCatalogTests(unittest.TestCase):
         argv = launch.build_argv(self.catalog, "executor", "claude-code", model="sonnet", effort="xhigh", cwd="/w")
         self.assertEqual(argv[argv.index("--effort") + 1], "xhigh")
         self.assertEqual(launch.build_argv(self.catalog, "executor", "grok"), ["grok", "agent", "stdio"])
+
+    def test_grok_reviewer_runs_read_only_under_landlock(self):
+        argv = launch.build_argv(self.catalog, "reviewer", "grok", model="m-1", effort="xhigh", cwd="/w")
+        split = argv.index("--")
+        self.assertEqual(argv[:split], ["python3", str(launch.ORCH_ROOT / "scripts" / "ro-run.py"), "--rw", "/w/vendor"])
+        self.assertTrue((launch.ORCH_ROOT / "scripts" / "ro-run.py").is_file())
+        grok = argv[split + 1:]
+        self.assertEqual(grok[:3], ["grok", "--cwd", "/w"])
+        for flag, value in (("--prompt-file", "/dev/stdin"), ("--model", "m-1"), ("--effort", "xhigh"),
+                            ("--permission-mode", "bypassPermissions"), ("--disallowed-tools", "search_replace,write"),
+                            ("--output-format", "streaming-messages-json")):
+            self.assertEqual(grok[grok.index(flag) + 1], value)
+        self.assertEqual(launch.entry(self.catalog, "reviewer", "grok")["transport"], "jsonl")
+
+    def test_claude_code_roles_list_their_tools(self):
+        # --tools cuts the start-up context of an isolated role from ≈14 K to ≈7 K tokens (measured, P12 prep);
+        # --allowedTools alone only skips the permission prompt and leaves every tool definition in the context.
+        for role, tools in {"executor": "Bash,Read,Edit,Write,Grep,Glob", "reviewer": "Bash,Read,Grep,Glob",
+                            "triager": "Bash,Read,Grep,Glob", "researcher": "Bash,Read,Grep,Glob",
+                            "advisor": "Bash,Read,Grep,Glob"}.items():
+            argv = launch.build_argv(self.catalog, role, "claude-code", model="sonnet")
+            self.assertIn("--tools", argv, role)
+            self.assertEqual(argv[argv.index("--tools") + 1], tools, role)
+
+    def test_claude_code_print_roles_never_prompt(self):
+        # --permission-prompts none: a headless role must not wait for an answer nobody gives (denied instead).
+        claude = [(role, entry) for role, providers in self.catalog["launch"].items()
+                  for provider, entry in providers.items() if provider == "claude-code" and "-p" in entry["argv"]]
+        self.assertTrue(claude)
+        for role, entry in claude:
+            argv = entry["argv"]
+            self.assertEqual(argv[argv.index("--permission-prompts") + 1], "none", role)
+            self.assertNotIn("--bare", argv, role)  # D15: bare does not read the subscription OAuth
+
+    def test_bounded_implementer_is_confined_like_executor(self):
+        argv = launch.build_argv(self.catalog, "bounded-implementer", "claude-code", model="sonnet", cwd="/w")
+        self.assertTrue(argv[1].endswith("ro-run.py"))
+        self.assertIn("--", argv)  # ro-run refuses a command line without it
+        self.assertEqual(argv[argv.index("--") + 1], "claude")
+        self.assertEqual(argv[argv.index("--rw") + 1], "/w")
+        self.assertEqual(argv[argv.index("--tools") + 1], "Bash,Read,Edit,Write,Grep,Glob")
+        self.assertEqual(argv[argv.index("--allowedTools") + 1], "Bash")
 
     def test_bare_is_forbidden(self):
         self.assertIn("--bare", self.broken(lambda l: l["scout"]["codex"]["argv"].append("--bare")))

@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D27",
+  "title": "Имена Python-пакетов модулей",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Нужно ли пространство имён (skm.*) или уникальные имена импортов, чтобы избежать конфликтов при будущей pip-публикации (E15)? Сейчас импорты task, orch, analyst, harness, maind, brain — общие слова.",
+  "options": [
+    {
+      "id": "A",
+      "text": "Единое пространство имён skm.<module> (namespace package)",
+      "pros": "Нет конфликтов; единообразно",
+      "cons": "Переписать все импорты"
+    },
+    {
+      "id": "B",
+      "text": "Уникальные имена skm_<module>",
+      "pros": "Проще namespace packages",
+      "cons": "Тоже массовое переименование"
+    },
+    {
+      "id": "C",
+      "text": "Оставить как есть до pip-публикации",
+      "cons": "Переименование позже, отдельной ломающей сменой"
+    }
+  ],
+  "decision": "Вариант C с инвариантом: импорт-имена модулей остаются <id> (aicore, skiller, planner, orch, maind, analyst, harness, brain); id модуля = имя папки = единственный верхний пакет lib/<id>/ (проверяет scripts/ecosystem-units.py check, P2.1). Обёртки bin/ ставят свой lib и aicore первыми в sys.path, поэтому одноимённый pip-пакет окружения не перекрывает модуль. Имена дистрибутивов на будущее — skm-<id> (на PyPI свободны: skm-aicore, skm-planner проверены 2026-10-08; голые aicore, skiller, planner, orch, maind, analyst, harness, brain, task, skm заняты). Пространство имён skm.<id> — отдельным решением по триггеру: pip-публикация модулей или in-process расширения (D19 уровень 2); переименование тогда — одна механическая смена с shim на один minor.",
+  "rationale": "Python-импорты модулей внутренние: расширения только out-of-process (D19), модули не pip-пакеты, публикация — non-goal плана. Массовое переименование сейчас удвоило бы работу P3 (core→aicore) и P9 (task→planner) без потребителя. Риск конфликта имён реален только при pip-установке (имена на PyPI заняты — проверено напрямую по pypi.org/pypi/<name>/json) и закрыт триггером и порядком sys.path.",
+  "applies_to": [
+    "P2",
+    "P9.1"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

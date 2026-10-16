@@ -25,12 +25,10 @@ laravel-livewire/livewire-blade-attributes
 php/production-readiness-checklist
 frontend-vue/vue-router-best-practices
 laravel-data-layer/laravel-data
-system/agent-packs
 pm/pm-super-skill
 blender/mcp-blender
 laravel-architecture/eloquent-accessors
 architect/codebase-design
-system/session-observer
 oss-dev/issue-triage
 frontend-tailwind/dark-mode
 frontend/filepond-upload

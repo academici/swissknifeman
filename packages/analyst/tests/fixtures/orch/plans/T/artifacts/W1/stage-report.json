@@ -1,0 +1,23 @@
+{
+  "changed_paths": [],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "impact": "i",
+      "kind": "deviation",
+      "next": "n",
+      "outcome": "accepted",
+      "text": "d1"
+    },
+    {
+      "class": "docs",
+      "kind": "deviation",
+      "outcome": "follow_up",
+      "text": "d2"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "s"
+}

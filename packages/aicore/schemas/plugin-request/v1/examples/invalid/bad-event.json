@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:aicore:plugin-request:v1",
+  "protocol": "1",
+  "op": "event",
+  "request_id": "0123456789abcdef0123456789abcdef",
+  "deadline_ms": 5000,
+  "context": {
+    "project_root": "/work/project",
+    "attempt": 1,
+    "trusted": false
+  },
+  "event": {
+    "type": "planner.plan.closed"
+  }
+}

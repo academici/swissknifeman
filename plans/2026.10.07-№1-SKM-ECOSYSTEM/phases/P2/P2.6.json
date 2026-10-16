@@ -1,0 +1,217 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.6",
+  "title": "Документация архитектуры: ecosystem, contracts, ADR, таблицы распределения",
+  "status": "done_with_deviations",
+  "summary": "Создать долговечную документацию архитектуры на английском: docs/architecture/{index,ecosystem,contracts}.md, ADR docs/architecture/decisions/ (README с форматом и индексом + по ADR на решения D1–D9, D11, D14–D30), таблицы распределения skills и служебных файлов, навигация vitepress; обновить docs/develop.md (ecosystem-units, standalone, golden-цикл) и CHANGELOG [Unreleased] за фазу.",
+  "why": "План архивируется после закрытия, а архитектура и решения должны жить в репозитории (D24, E45); инвентаризация контрактов и политика эволюции (E13, E35) нужны P3–P10 как точка сверки. Риск — разойтись с планом или протащить в продуктовые файлы ID плана: содержимое берётся из knowledge/architecture и решений, ссылки — только на номера ADR и файлы репозитория.",
+  "scope": {
+    "include": [
+      "docs/architecture/index.md, ecosystem.md, contracts.md",
+      "docs/architecture/decisions/README.md и NNNN-<slug>.md",
+      "навигация docs/.vitepress/config.*",
+      "docs/develop.md: раздел ветки — проверки и golden-цикл",
+      "CHANGELOG.md [Unreleased]: итоги P2.1–P2.5 и этого пункта",
+      "ссылки на ownership.md (генерируется P2.2, не правится)"
+    ],
+    "exclude": [
+      "README модулей и package docs (P12)",
+      "изменение решений: расхождение архитектуры и кода записывается plan.py log, а не правится в ADR молча",
+      "Structurizr/C4 (D24: отклонено)"
+    ]
+  },
+  "depends_on": [
+    "P2.2",
+    "P2.3",
+    "P2.5"
+  ],
+  "decisions": [
+    "D24",
+    "D17",
+    "D18",
+    "D23",
+    "D27",
+    "D28",
+    "D29",
+    "D30"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/modules-p2#docs",
+      "why": "структура файлов, формат ADR, состав контрактов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture",
+      "why": "источник ecosystem.md (§1–§15), таблицы §5.3 и §8",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-contracts",
+      "why": "инвентаризация контрактов (E13) и политика эволюции (E35)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#golden",
+      "why": "абзац «Жизненный цикл (D30)» для docs/develop.md",
+      "required": true
+    },
+    {
+      "path": "docs/develop.md",
+      "section": "Ecosystem split branch (temporary)",
+      "why": "куда дописать проверки",
+      "required": true
+    },
+    {
+      "path": "docs/.vitepress/config.mts",
+      "why": "навигация",
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "section": "[Unreleased]",
+      "why": "формат записей",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "docs/architecture/index.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/ecosystem.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/contracts.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/decisions/README.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/architecture/decisions/*.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/.vitepress/config.mts",
+      "change": "modify"
+    },
+    {
+      "path": "docs/develop.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Английский; без ID плана, PLAN<N>.* и путей в plans/ (scripts/public-hygiene.py); решения — номерами ADR",
+    "ADR: Status, Context, Decision, Alternatives considered, Consequences, Supersedes/Superseded by; 15–40 строк; содержание из принятого варианта решения и rationale, без новых утверждений",
+    "ecosystem.md не копирует ownership.md — ссылается на него",
+    "Диаграммы — mermaid",
+    "Ссылки внутри docs — относительные, без префикса пакета (root.docs-build)"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nСоответствие ADR ↔ решения плана: прочитать `plan.py show <plan> D<n>` для каждого (принятый вариант, rationale, supersede). Нумерация 0001… по возрастанию D: D1→0001 … D9→0009, D11→0010, D14→0011 … D30→0027 — индекс в README. В ADR вместо «D17» писать «ADR 0014»; если решение плана ссылается на PLAN2 (предыдущий план), писать «supersedes the earlier orchestration-prep decisions on …» без ID.\n\ncontracts.md: таблица инвентаризации (строки review-e1-contracts §inventory + unit/v1, check-result/v1, plan/v1, bridge.json, urn:skiller:*, provider manifests), затем по разделу на каждый существующий контракт с политикой эволюции (поля D18). Для draft-07 схем skiller указать «migrate to 2020-12 when skiller contracts move (stage: content and delivery)».\n\nПроверить сборку docs, если окружение позволяет (`cd packages/skiller && npm ci && npm run docs:build`); если сети/npm нет — записать в plan.py log и полагаться на проверку ссылок V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "for f in index ecosystem contracts ownership; do test -s docs/architecture/$f.md || exit 1; done; n=$(ls docs/architecture/decisions/[0-9][0-9][0-9][0-9]-*.md | wc -l); test \"$n\" -ge 27",
+      "expect": "exit 0 (файлы есть, ≥27 ADR)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "for f in docs/architecture/decisions/[0-9][0-9][0-9][0-9]-*.md; do for h in '## Status' '## Context' '## Decision' '## Consequences'; do grep -q \"^$h\" \"$f\" || { echo \"$f: $h\"; exit 1; }; done; b=$(basename \"$f\"); grep -q \"$b\" docs/architecture/decisions/README.md || { echo \"index: $b\"; exit 1; }; done",
+      "expect": "exit 0 (каждый ADR по формату и в индексе)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 - <<'PY'\nimport re, sys, pathlib\nroot = pathlib.Path('docs/architecture')\nbad = []\nfor md in root.rglob('*.md'):\n    for target in re.findall(r'\\]\\(([^)#\\s]+)', md.read_text(encoding='utf-8')):\n        if '://' in target or target.startswith('/'):\n            continue\n        if not (md.parent / target).exists():\n            bad.append(f'{md}: {target}')\nprint('\\n'.join(bad)); sys.exit(1 if bad else 0)\nPY",
+      "expect": "exit 0 (относительные ссылки docs/architecture разрешаются)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/public-hygiene.py && python3 scripts/ecosystem-units.py render --check && grep -q 'architecture/' docs/.vitepress/config.mts",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "sed -n '/## \\[Unreleased\\]/,/^## \\[[0-9]/p' CHANGELOG.md | grep -q 'unit.json' && grep -q 'ecosystem-units.py' docs/develop.md && grep -q 'golden.py' docs/develop.md",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "docs/architecture (ecosystem, contracts, ADR, ownership)",
+    "таблицы распределения в docs",
+    "docs/develop.md и CHANGELOG"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T04:45:16Z",
+    "finished_at": "2026-10-08T04:55:03Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "1b6cafa1-ac68-404a-8c35-2d73ef15a999"
+    },
+    "notes": "docs/architecture: index, ecosystem (principles, layout, mermaid links, skill and service-file tables, stages, rollback), contracts (inventory + per-contract evolution policy), 27 ADRs 0001-0027 with README index; vitepress nav/sidebar; develop.md module checks and golden cycle; CHANGELOG Unreleased. V1-V5 green, docs:build green, golden check/ecosystem-units check/hygiene green.",
+    "deviations": [
+      "public-hygiene exemption for tests/golden/ (red since P2.5); dead link removed in packages/orch/docs/contracts.md so docs:build passes"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T04:55:03Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T04:55:03Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T04:55:03Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T04:55:03Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T04:55:03Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T04:55:03Z"
+}

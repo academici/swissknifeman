@@ -17,7 +17,7 @@ from orch.contracts import LIFECYCLE_PHRASES
 from orch.port import PortError, RunState
 from orch.render import render_task_block
 
-from tests.test_prepare import ROUTING, fixture, roles
+from tests.test_prepare import MODEL_CATALOG, fixture, roles
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUTS = (("plan-bound", "solo"), ("adhoc", "solo"), ("review-only", "review-only"))
@@ -43,7 +43,7 @@ class PortabilityTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.catalog = catalog.Catalog(ROUTING)
+        self.catalog = catalog.Catalog.load(MODEL_CATALOG)
 
     def prepare(self, input_doc: dict, policy: str, binding: str, provider: str) -> tuple[dict, Path]:
         out = Path(self.tmp.name) / f"{binding}-{provider}-{input_doc['input_id']}"

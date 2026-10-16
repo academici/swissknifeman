@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D4",
+  "title": "aicore — фундамент и граница обобщения",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Что входит в aicore и где граница?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Подсистемы util, config, state, provider (с каталогом моделей), artifacts, content, delivery, release, ext, unit, usage (knowledge/architecture §4). В aicore переносится только то, чем пользуются ≥2 модуля или что нужно каждому модулю по контракту; остальное остаётся в модуле; новый модуль собирается шаблоном aicore unit new"
+    }
+  ],
+  "decision": "A — Подсистемы util, config, state, provider (с каталогом моделей), artifacts, content, delivery, release, ext, unit, usage (knowledge/architecture §4). В aicore переносится только то, чем пользуются ≥2 модуля или что нужно каждому модулю по контракту; остальное остаётся в модуле; новый модуль собирается шаблоном aicore unit new",
+  "rationale": "M2, M3 (максимально гибкий фундамент) + принцип §1.7 против преждевременного обобщения.",
+  "applies_to": [
+    "P3",
+    "P4",
+    "P5",
+    "P6"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "owner"
+}

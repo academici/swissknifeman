@@ -1,0 +1,65 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P4",
+  "title": "Лимиты времени run и лимиты review на batch",
+  "design": "detailed",
+  "goal": "limits.run_warn_s (7200) по активному времени run → маяк RUN_SLOW без остановки; run_timeout_s (0) → RUN_TIMEOUT; лимиты review_rounds_batch, corrections_batch, findings_batch с семантикой цели/потолка; Blocker при исчерпании → REVIEW_LIMIT.",
+  "context": "audits/perplexity-audit.md — Фаза 3 (П3.1, П3.2), 2.11, 2.14; дизайн — knowledge/p4-limits.",
+  "scope": {
+    "include": [
+      "orch options.py, run-options.schema.json, progress.py, engine.py"
+    ],
+    "exclude": [
+      "agent_warn_s (отклонено аудитом)"
+    ]
+  },
+  "depends_on": [
+    "P2"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "RUN_SLOW",
+    "batch-лимиты review"
+  ],
+  "items": [
+    "P4.1",
+    "P4.2"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P4.1",
+        "P4.2"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-14T09:23:21Z",
+    "result": "done",
+    "summary": "2 item(s): 2 done"
+  }
+}

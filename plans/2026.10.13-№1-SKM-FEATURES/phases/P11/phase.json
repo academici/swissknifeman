@@ -1,0 +1,70 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P11",
+  "title": "Рефакторинг engine.py: characterization, вынос stages/policies/infrastructure/application, мутации плана только через work source",
+  "design": "detailed",
+  "goal": "Characterization-снимки поведения conductor; engine.py разделён на application/domain/stages/policies/infrastructure без изменения поведения; запись артефактов и переходы плана — только infrastructure/work_source.py (архитектурный тест).",
+  "context": "audits/perplexity-audit.md — Фаза 10 (П10.1–П10.3), 2.19, мысль 7; дизайн — knowledge/p11-refactor. После P2–P10 (все крупные правки engine.py).",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/**"
+    ],
+    "exclude": [
+      "изменение поведения conductor"
+    ]
+  },
+  "depends_on": [
+    "P2",
+    "P4",
+    "P6",
+    "P7"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "engine.py разделён",
+    "characterization-тесты"
+  ],
+  "items": [
+    "P11.1",
+    "P11.2",
+    "P11.3"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P11.1",
+        "P11.2",
+        "P11.3"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-15T10:28:19Z",
+    "result": "done_with_deviations",
+    "summary": "3 item(s): 1 done, 2 done_with_deviations"
+  }
+}

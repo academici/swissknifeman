@@ -1,19 +1,29 @@
 {
   "schema_version": 1,
-  "plugin_dirs": ["packages/*"],
-  "default_command_plugins": ["task"],
-  "version_files": [{"path": "packages/task/configs/command-routing.json", "key": "plugin_version"}],
+  "plugin_dirs": ["packages/*", "packages/planner/aliases/*", "plugins/*"],
+  "bucket_aliases": {"system": ["maind", "harness", "analyst", "brain"]},
+  "default_command_plugins": ["planner"],
+  "version_files": [{"path": "packages/planner/configs/command-routing.json", "key": "plugin_version"}],
   "machine_plugins": {
-    "grok": [{"name": "task", "path": "packages/task", "holds": ["packages/task/adapters/grok/prefix-hold"]}]
+    "grok": [{"name": "planner", "path": "packages/planner", "holds": ["packages/planner/adapters/grok/prefix-hold"]}]
   },
-  "runtime_projection_plugins": ["task"],
-  "codex_link_roots": ["packages/task/adapters/codex/skills"],
-  "legacy_runtime_links": [{"link": "packages/task", "plugin": "task", "source": "packages/task"}],
+  "runtime_projection_plugins": ["planner"],
+  "codex_link_roots": ["packages/planner/adapters/codex/skills"],
+  "legacy_runtime_links": [{"link": "packages/planner", "plugin": "planner", "source": "packages/planner"}],
   "commands": {
     "permissions": {"argv": ["packages/harness/bin/harness", "permissions"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
     "settings_doctor": {"argv": ["packages/harness/bin/harness", "doctor", "--settings"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
     "environment": {"argv": ["packages/harness/bin/harness"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
     "environment_doctor": {"argv": ["packages/harness/bin/harness", "--help"], "env_override": "SKM_HARNESS_BIN", "install_hint": "packages/harness/install.sh"},
+    "brain_docs": {
+      "argv": [
+        "packages/brain/bin/brain",
+        "docs",
+        "integrate"
+      ],
+      "env_override": "SKM_BRAIN_BIN",
+      "install_hint": "packages/brain/bin/brain"
+    },
     "trace_doctor": {"argv": ["packages/analyst/bin/analyst", "doctor"], "install_hint": "packages/analyst/install.sh"}
   },
   "mcp_servers": {"maind": {"tools": 11, "instructions_tokens": 0}},

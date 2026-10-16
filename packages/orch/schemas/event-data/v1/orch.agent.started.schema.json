@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-agent-started:v1",
+  "title": "orch.agent.started",
+  "description": "An agent run (a role process) of a piece of work started.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the piece of work (the input id of the work source)."
+    },
+    "item": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Reference of the piece of work in its plan."
+    },
+    "agent_run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the agent run (agents/<id>/ of the piece)."
+    },
+    "role": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Role the agent ran as."
+    },
+    "step": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Step of the piece the agent ran for."
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Attempt of the step, at least one."
+    },
+    "route": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider"
+      ],
+      "additionalProperties": false,
+      "description": "Route of the agent: provider, model class, model, effort."
+    },
+    "prompt_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Digest of the rendered prompt (prompt-manifest/v1)."
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the effective orch configuration."
+    },
+    "options_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the merged run options of the piece."
+    }
+  },
+  "required": [
+    "run_id",
+    "work_id",
+    "agent_run_id",
+    "role",
+    "route"
+  ],
+  "additionalProperties": false
+}

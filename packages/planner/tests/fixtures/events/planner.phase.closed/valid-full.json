@@ -1,0 +1,21 @@
+{
+  "causationid": "3a4ac924afa747af8e657576233f939d",
+  "data": {
+    "closed_at": "2026-10-07T00:00:21Z",
+    "phase_id": "P1",
+    "plan_id": "2026.10.07-№1-LIFE",
+    "repository": "r",
+    "result": "done",
+    "short_id": "PLAN1",
+    "summary": "2 item(s): 2 done",
+    "title": "One"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:planner:event-data:planner-phase-closed:v1",
+  "id": "102d5f8e83ee477dbbe342a1f302689b",
+  "source": "urn:swissknifeman:module:planner",
+  "specversion": "1.0",
+  "subject": "2026.10.07-№1-LIFE",
+  "time": "2026-10-10T04:29:23.083Z",
+  "type": "planner.phase.closed"
+}

@@ -11,7 +11,9 @@ Universe = actually installed skills (agent layouts) ∪ `boost.json::skills`.
 The file is committed to the project - this is lock-external skill map (like composer.lock)."""
 import json
 
-from .common import atomic_write_json, die, parse_flags, warn
+from aicore.util.cli import parse_flags
+from aicore.util.io import atomic_write_json
+from aicore.util.term import die, warn
 from .config import resolve_target
 
 # Layouts where agents place skills (claude — flat, others - on their own paths).

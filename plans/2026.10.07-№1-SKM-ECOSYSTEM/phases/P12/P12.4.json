@@ -1,0 +1,330 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.4",
+  "title": "Маркетплейс и Codex-индекс из unit.json: aicore.content.marketplace, plugin-catalog/v1, catalog skiller, aicore marketplace build --check",
+  "status": "done_with_deviations",
+  "summary": "aicore.content.marketplace.assemble(units, hub_root) собирает корневые .claude-plugin/marketplace.json и .agents/plugins/marketplace.json из provides.plugins всех модулей; skiller registry пишет packages/skiller/.claude-plugin/catalog.json (plugin-catalog/v1) и зовёт assemble; planner объявляет planner и алиас task; CLI aicore marketplace build --hub --check; байты совпадают с прежними, кроме отличий в open_issues.",
+  "why": "D81; knowledge/hub-p12#marketplace. Риски: (1) байтовая регрессия маркетплейса ломает enabledPlugins 13+ проектов — сравнение с HEAD до правки; (2) потребители поля package и Codex-индекса (configs/release-units.json, aicore/release/attestation.py:230, skiller connect.py:474, hub.py, aicore/delivery/distribution.py) — их тесты зелёные; (3) plugin_dirs не удалять — им пользуется module_skills.py.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/content/marketplace.py, CLI aicore marketplace",
+      "packages/aicore/schemas/plugin-catalog/v1; contracts в aicore/unit.json",
+      "skiller: registry.py и publication.py → catalog.json + assemble; unit.json skiller (catalog)",
+      "provides.plugins planner (planner, task); проверка остальных модулей",
+      "перегенерация обоих индексов и golden skiller-registry в песочнице"
+    ],
+    "exclude": [
+      "удаление plugin_dirs из configs/skiller-host.json",
+      "поведение connect/vendor"
+    ]
+  },
+  "depends_on": [
+    "P12.3"
+  ],
+  "decisions": [
+    "D81",
+    "D17"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#marketplace",
+      "why": "контракт, алгоритм сборки, инвариант байтов, риски",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/registry.py",
+      "why": "_legacy_build_plugin_manifests: строки 212–362",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "why": "Codex-индекс: строки 340–390",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/content/publication.py",
+      "why": "codex_marketplace_entry",
+      "required": true
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "why": "plugin_dirs и что ещё их читает",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/module_skills.py",
+      "why": "plugin_dirs для бакета system — не трогать",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/content/marketplace.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/schemas/plugin-catalog/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/release/attestation.py",
+      "change": "modify",
+      "note": "только если меняется поле package"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/delivery/distribution.py",
+      "change": "modify",
+      "note": "только при изменении формы индекса"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/registry.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/connect.py",
+      "change": "modify",
+      "note": "только потребители поля package"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/hub.py",
+      "change": "modify",
+      "note": "то же"
+    },
+    {
+      "path": "packages/skiller/.claude-plugin/catalog.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/brain/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "change": "modify"
+    },
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/release-units.json",
+      "change": "modify",
+      "note": "только если меняется поле package"
+    },
+    {
+      "path": "packages/skiller/skills.json",
+      "change": "modify",
+      "note": "генерируется registry"
+    },
+    {
+      "path": "packages/skiller/skills/_index.md",
+      "change": "modify",
+      "note": "генерируется registry"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "change": "modify",
+      "note": "plugins с source/catalog: проверка путей без plugin[manifest] (P12.1 открыла эту форму в unit/v1)"
+    },
+    {
+      "path": "packages/skiller/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/3cbd3581e456fda2712b2c66a39270b9cf78c54bf80393d57f1f51323877215e",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/a355c50ed5f4845db3b48b5b2e1283a4c49b0df31cbf4f6b9c53c39c56815225",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "skiller registry запускается только в песочнице: SB=$(scripts/dev-sandbox.sh new --name reg | tail -1); scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/bin/skiller registry",
+    "Перед правкой сохранить байты обоих корневых индексов (cp во временную папку) и после перегенерации сравнить; каждое отличие — open_issues с причиной"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: снимок обоих индексов → plugin-catalog/v1 → aicore.content.marketplace (assemble, дубликаты, сортировка, owner) + CLI build --check + тесты на фикстуре → skiller: вынести построение записей в catalog.json, codex-поля из publication.py, вызов assemble → provides.plugins planner (task) и проверка остальных модулей → registry в песочнице → сравнение со снимком → golden skiller-registry при отличиях → тесты потребителей → V1–V4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore marketplace build --hub . --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.content.marketplace и plugin-catalog/v1",
+    "маркетплейс и Codex-индекс из unit.json"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T12:57:57Z",
+    "finished_at": "2026-10-13T13:34:43Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-1227ee899910837b02b70edb-P12.4",
+    "notes": "Маркетплейс и Codex-индекс собираются из unit.json. Новый aicore.content.marketplace (assemble, build --check, дубликаты → MARKETPLACE_DUPLICATE) и схема plugin-catalog/v1; контракт объявлен в aicore/unit.json; CLI `aicore marketplace build --hub ROOT [--check]`. skiller пишет packages/skiller/.claude-plugin/catalog.json и вызывает assemble; unit.json skiller объявляет catalog. planner объявляет planner и алиас task (source aliases/task); analyst, brain, harness и maind уже объявляли свои плагины. plugin_dirs не тронут (нужен module_skills.py). В этой сессии: в scripts/ecosystem-units.py (_check_paths) добавлена обработка provides.plugins с source/catalog вместо обязательного manifest, иначе V4 падал с KeyError (раньше это был блокер за пределами write_set). Байты против HEAD: .agents/plugins/marketplace.json идентичен; .claude-plugin/marketplace.json отличается одной строкой: package записи task теперь planner (было task). Golden skiller-registry перезахвачен с этой причиной. Тесты: test_marketplace (aicore, 13), skiller test_marketplace_catalog, test_bucket_alias, test_publication, test_host_publication, test_codex_publication, test_provider_publication_parity, scripts/test-ecosystem-units.py (148) — все OK; aicore schema compat: 0 errors, 1 warning (oneOf у provides.plugins.items), 4 notes.\nChanged: .claude-plugin/marketplace.json, CHANGELOG.md, packages/aicore/CHANGELOG.md, packages/aicore/lib/aicore/cli.py, packages/aicore/lib/aicore/content/marketplace.py, packages/aicore/schemas/README.md, packages/aicore/schemas/plugin-catalog/v1/examples/invalid/bad-source.json, packages/aicore/schemas/plugin-catalog/v1/examples/invalid/codex-without-policy.json, packages/aicore/schemas/plugin-catalog/v1/examples/invalid/extra-field.json, packages/aicore/schemas/plugin-catalog/v1/examples/invalid/missing-required.json, packages/aicore/schemas/plugin-catalog/v1/examples/valid/bucket.json, packages/aicore/schemas/plugin-catalog/v1/examples/valid/hub-root-entries.json, packages/aicore/schemas/plugin-catalog/v1/plugin-catalog.schema.json, packages/aicore/tests/content/test_marketplace.py, packages/aicore/unit.json, packages/planner/unit.json, packages/skiller/.claude-plugin/catalog.json, packages/skiller/lib/skiller/publication.py, packages/skiller/lib/skiller/registry.py, packages/skiller/tests/fixtures.py, packages/skiller/tests/fixtures_data/claude-publication-golden.json, packages/skiller/tests/test_codex_publication.py, packages/skiller/tests/test_host_publication.py, packages/skiller/tests/test_marketplace_catalog.py, packages/skiller/tests/test_provider_publication_parity.py, packages/skiller/tests/test_publication.py, packages/skiller/unit.json, scripts/ecosystem-units.py, tests/golden/cases.json, tests/golden/generation.json\nEvidence: plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/stage-report.json",
+    "deviations": [
+      "scripts/ecosystem-units.py (_check_paths) read plugin['manifest'] unconditionally, so any provides.plugins entry with `source` or `catalog` (allowed by unit/v1 since P12.1) crashed `ecosystem-units.py check`. Fixed in this session: for `source` it probes <source>/.claude-plugin/plugin.json, for `catalog` the catalog file; the manifest-name check is skipped for both. scripts/test-ecosystem-units.py (148 tests) passes, but I added no test for the new branch because the test file is outside write_set.",
+      "configs/umbrella.json has no `marketplace` key (the design takes owner/name from it). assemble() resolves name/owner as: explicit arguments, then configs/umbrella.json#marketplace if present, then a top-level `marketplace` {name, owner} block of a plugin-catalog. skiller's catalog.json carries that block, so the CLI --check reproduces the bytes without configs.",
+      "plugin-catalog/v1 differs from the knowledge sketch: (1) the `codex` object accepts optional source, description, category, tags besides required install_policy/auth, because the Codex entries of core and skm differ from their Claude entries; (2) an optional top-level `marketplace` block; (3) skills[] paths are module-relative (assemble prefixes the module path) because skiller's boundary test K1 rejects 'packages/skiller' inside the module; source './' still means the hub root; (4) the document key is `schema`, as in the knowledge text, while other aicore contracts use `$schema`.",
+      "aicore.content may not import aicore.ext (layering test), so the CLI loads units with its own marketplace.discover() on top of aicore.config.units.unit_dirs instead of aicore.ext.units.discover_units. Semantics are the same (SKM_UNITS_PATH, first id wins). The CLI sets SKM_UNITS_PATH to <hub>/packages when unset, and its main() lives in marketplace.py because no other aicore file for it was in the write set.",
+      "changed outside the write set: packages/aicore/schemas/README.md"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T13:34:43Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T13:34:43Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T13:34:43Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T13:34:43Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V4.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/evidence/V4.json"
+    ]
+  },
+  "updated_at": "2026-10-13T13:34:43Z"
+}

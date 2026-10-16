@@ -79,10 +79,12 @@ guess_bucket() {
 
 echo "=== SCAN ==="
 candidates=()
+present=0
 while IFS= read -r scan_path; do
   expanded="${scan_path/#\~/$HOME}"
   for path in $expanded; do
     [[ -e "$path" ]] || continue
+    present=$((present + 1))
     while IFS= read -r -d '' file; do
       should_exclude "$file" && continue
       case "$file" in
@@ -97,6 +99,9 @@ while IFS= read -r scan_path; do
     done < <(find "$path" -type f \( -name "*.php" -o -name "*.yml" -o -name "*.yaml" -o -name "*.sh" -o -name ".env.example" \) -print0 2>/dev/null)
   done
 done <<< "$scan_paths"
+
+# "Nothing found" and "nothing to look at" are different outcomes (a hosted CI runner has none of the local projects)
+[[ "$present" -gt 0 ]] || echo "WARN: SCAN_PATHS_ABSENT: none of the scan_paths of $CONFIG exist on this machine" >&2
 
 echo ""
 echo "=== ANALYZE: ${#candidates[@]} candidates (threshold >= $THRESHOLD) ==="

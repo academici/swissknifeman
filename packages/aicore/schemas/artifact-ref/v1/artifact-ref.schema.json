@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:artifact-ref:v1",
+  "title": "artifact-ref",
+  "description": "Reference to data that does not travel inside an event or a document: its digest, size and kind.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:artifact-ref:v1",
+      "description": "Schema identifier of the document."
+    },
+    "digest": {
+      "$ref": "urn:swissknifeman:aicore:digest:v1",
+      "description": "Tagged SHA-256 digest of the bytes of the content."
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Size of the content in bytes."
+    },
+    "media_type": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/media_type",
+      "description": "Media type of the content."
+    },
+    "sensitivity": {
+      "enum": [
+        "normal",
+        "sensitive"
+      ],
+      "description": "Whether the content may hold private data."
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[^\\x00-\\x1f]{1,255}$",
+      "description": "Name for people."
+    },
+    "location": {
+      "enum": [
+        "project",
+        "machine"
+      ],
+      "description": "Where a copy lives in the blob store; absent means with the producer."
+    }
+  },
+  "required": [
+    "$schema",
+    "digest",
+    "size",
+    "media_type",
+    "sensitivity"
+  ],
+  "additionalProperties": false
+}

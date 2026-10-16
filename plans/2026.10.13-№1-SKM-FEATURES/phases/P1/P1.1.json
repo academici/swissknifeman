@@ -1,0 +1,104 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "Базовая линия: baseline.json — шаги ci-matrix, тесты модулей, skills в токенах, первый ход, провайдеры, deviations PLAN3",
+  "status": "done",
+  "summary": "Собрать plans/2026.10.13-№1-SKM-FEATURES/artifacts/P1.1/baseline.json по схеме knowledge/p1-fixes#baseline разовым скриптом artifacts/P1.1/collect.py и зарегистрировать как output-артефакт пункта; ничего в продукте не менять.",
+  "why": "Аудит П0.0; мерило для P5 (доля deviation без impact/next, N9), P8/P13 (токены skills, N12) и P2 (провайдеры). Риск: шаг ci-matrix красный из-за окружения — записать как есть, не чинить в пункте.",
+  "scope": {
+    "include": [
+      "artifacts/P1.1/collect.py",
+      "artifacts/P1.1/baseline.json",
+      "plan.py add-artifact"
+    ],
+    "exclude": [
+      "исправление красных шагов",
+      "прогон на Python 3.13/3.14 (D3)"
+    ]
+  },
+  "reads": [
+    {
+      "ref": "knowledge/p1-fixes#baseline",
+      "why": "схема baseline.json и источники полей",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-review#corrections",
+      "why": "C1, C10: Python 3.12, CI недоступен",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "section": "Фаза 0. Базовая линия и срочные исправления (до P13, независимо)",
+      "why": "П0.0 исходный",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P1.1/collect.py",
+      "change": "create"
+    },
+    {
+      "path": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P1.1/baseline.json",
+      "change": "create"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "@plan/artifacts/P1.1/baseline.json",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Все CLI модулей — с временным HOME/SKM_HOME",
+    "collect.py — stdlib, разовый, не продукт; повторный запуск перезаписывает baseline.json"
+  ],
+  "guidance": "Исполнитель: implementation/low. Порядок: collect.py → запуск (ci-matrix run --all ≈ 10–20 мин) → baseline.json → plan.py add-artifact PLAN4 P1.1 <path> --role output → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 -c \"import json,sys; d=json.load(open(sys.argv[1])); req={'commit','python','units','tests','ecosystem_units_check','skills','first_turn','providers','plan3_deviations'}; assert req<=set(d), req-set(d); assert d['skills']['count']>=200 and d['skills']['tokens']>0; assert all(isinstance(v,dict) and v for v in d['units'].values()); assert set(d['plan3_deviations'])>={'finish_events','deviation_events','deviations_without_impact_or_next'}\" plans/2026.10.13-№1-SKM-FEATURES/artifacts/P1.1/baseline.json",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "baseline.json"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "low"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T20:16:56Z",
+    "finished_at": "2026-10-13T20:27:14Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "f7b77ea6-4f64-4c2b-a08e-d6d608f212f2"
+    },
+    "notes": "baseline.json: 9 модулей ci-matrix 42 ok / 11 skip (lint без ruff), тесты 5421, 209 skills / 285761 токенов, first-turn 2790 OK, 167/167 deviation PLAN3 без impact/next",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T20:27:14Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T20:27:14Z"
+}

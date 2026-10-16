@@ -99,6 +99,38 @@
       ],
       "additionalProperties": false,
       "description": "Observed execution route."
+    },
+    "event_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/eventId",
+      "description": "Key of this event; an identical repeat is ignored, different content under the same key is a conflict."
+    },
+    "causation_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/eventId",
+      "description": "Key of the event that caused this one."
+    },
+    "correlation_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/submissionId",
+      "description": "Submission this event belongs to."
+    },
+    "owner_epoch": {
+      "type": "integer",
+      "description": "Owner epoch of the run when the event was produced, at least one; an event of an older epoch is stale."
+    },
+    "attempt_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/attemptId",
+      "description": "Key of the stage attempt."
+    },
+    "call_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/callId",
+      "description": "Key of the provider call."
+    },
+    "error": {
+      "$ref": "urn:swissknifeman:aicore:error:v1",
+      "description": "Normalized failure record for provider_error, quota_block, auth_block, timeout and failed events."
+    },
+    "raw": {
+      "$ref": "urn:swissknifeman:aicore:artifact-ref:v1",
+      "description": "Raw transport fragment kept as an artifact; raw_ref stays the path-and-line form."
     }
   },
   "required": [

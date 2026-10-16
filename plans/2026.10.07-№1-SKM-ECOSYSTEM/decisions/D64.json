@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D64",
+  "title": "exec/v1 minor: протокол исполнения — идентичность событий, fencing, иерархия ключей, launch-plan с proof и explain, свежесть capability, sandbox, таблица действий по классу ошибки, artifact-ref",
+  "date": "2026-10-10",
+  "status": "accepted",
+  "question": "Какими полями exec/v1 закрывает D20, D21 и тезисы E1/E2 фазы, не ломая v1?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Поля и проверки — knowledge/orch-p10-contracts (перечень по документам, иерархия ключей с префиксами sub-/att-/call-/evt-, семантические коды KEY_REUSED, CONDENSED_REQUIRED_DRIFT, CAPABILITY_FRESHNESS, PRECONDITION_MISMATCH, FALLBACK_UNDECLARED). Ссылки на контракты aicore ($ref urn:swissknifeman:aicore:*:v1) разрешает валидатор aicore (D61). Существующие документы остаются валидными; aicore schema compat --base origin/ecosystem-split не сообщает о ломающих изменениях; changelog контрактов в docs/contracts.md.",
+      "pros": "Совместимо с v1; одна таксономия ошибок и один словарь permissions в экосистеме"
+    },
+    {
+      "id": "B",
+      "text": "exec/v2",
+      "cons": "Ломает потребителей (planner-orch, фикстуры) без нужды"
+    }
+  ],
+  "context": "Правило эволюции exec/v1 (docs/contracts.md): minor — только необязательные поля, новые $defs и расширение enum, $id и contract_version не меняются; aicore schema compat (P6.2) — механическое доказательство (R10). Инвентаризация пробелов — knowledge/review-e1-contracts §inventory. Классы ошибок — aicore error/v1 (D36: context_limit), permissions/v1 (R09), artifact-ref/v1 (R07), capability-support/v1 (source, fresh_until, remediation).",
+  "decision": "A — Поля и проверки — knowledge/orch-p10-contracts (перечень по документам, иерархия ключей с префиксами sub-/att-/call-/evt-, семантические коды KEY_REUSED, CONDENSED_REQUIRED_DRIFT, CAPABILITY_FRESHNESS, PRECONDITION_MISMATCH, FALLBACK_UNDECLARED). Ссылки на контракты aicore ($ref urn:swissknifeman:aicore:*:v1) разрешает валидатор aicore (D61). Существующие документы остаются валидными; aicore schema compat --base origin/ecosystem-split не сообщает о ломающих изменениях; changelog контрактов в docs/contracts.md.",
+  "rationale": "D18, D20, D21, D35, D36; правило плана о minor-изменениях контрактов; R10.",
+  "applies_to": [
+    "P10.4",
+    "P10.5",
+    "P10.6",
+    "P10.8",
+    "P10.12",
+    "P10.13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

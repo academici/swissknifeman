@@ -1,0 +1,25 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D2",
+  "title": "Error language",
+  "date": "2026-10-05",
+  "status": "open",
+  "question": "Diagnostics in English or Russian?",
+  "options": [
+    {
+      "id": "A",
+      "text": "English"
+    },
+    {
+      "id": "B",
+      "text": "Russian"
+    }
+  ],
+  "applies_to": [
+    "P1"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  }
+}

@@ -1,8 +1,11 @@
 """Internal documentation."""
+import io
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from harness import reviewroles as rr
 
@@ -57,16 +60,16 @@ class ReviewRolesTestCase(unittest.TestCase):
 
         self._orig_package_root = rr._PACKAGE_ROOT
         self._orig_roles_json = rr._ROLES_JSON
-        self._orig_skills_json = rr._SKILLS_JSON
+        self._orig_skills_index_path = rr.skills_index_path
         rr._PACKAGE_ROOT = self.root
         rr._ROLES_JSON = self.roles_json
-        rr._SKILLS_JSON = self.skills_json
+        rr.skills_index_path = lambda: self.skills_json
         self.addCleanup(self._restore_globals)
 
     def _restore_globals(self):
         rr._PACKAGE_ROOT = self._orig_package_root
         rr._ROLES_JSON = self._orig_roles_json
-        rr._SKILLS_JSON = self._orig_skills_json
+        rr.skills_index_path = self._orig_skills_index_path
 
     def _registry(self, role_overrides=None, review_version="1.0.0"):
         role = dict(_REVIEW_ROLE)
@@ -159,15 +162,24 @@ class ReviewRolesTestCase(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertTrue(violations)
 
-    def test_missing_skills_json_gives_one_diagnostic_violation(self):
+    def test_missing_skill_index_skips_the_skills_check_with_a_partner_note(self):
+        rr.skills_index_path = lambda: None
+        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            violations, code = self._run(self._registry())
+        self.assertEqual(code, 0)
+        self.assertEqual([v for v in violations if v.check == "skills"], [])
+        self.assertIn("PARTNER_UNAVAILABLE: skiller not found", stderr.getvalue())
 
-
-        rr._SKILLS_JSON = self.root / "does-not-exist" / "skills.json"
+    def test_skill_missing_from_the_index_is_a_violation(self):
+        self.skills_json.write_text(json.dumps({"skills": [{"name": "other"}]}), encoding="utf-8")
         violations, code = self._run(self._registry())
         self.assertEqual(code, 1)
-        skills_violations = [v for v in violations if v.check == "skills"]
-        self.assertEqual(len(skills_violations), 1)
-        self.assertIn("skill index not available", skills_violations[0].message)
+        self.assertEqual(len([v for v in violations if v.check == "skills"]), 1)
+
+    def test_skill_index_is_found_through_skm_skiller_root(self):
+        rr.skills_index_path = self._orig_skills_index_path
+        with mock.patch.dict(os.environ, {"SKM_SKILLER_ROOT": str(self.root)}):
+            self.assertEqual(rr.skills_index_path(), self.skills_json)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,8 @@ Three link plans (see constants.GRAPH_PLANES), each with his own `via`:
 - code     — composer.json / package.json (+ path-repos): `project ─requires→ package`,
              `package ─provided_by→ project`, cross `project ─depends_on→ project`.
 - doc      — Brain frontmatter `uses:/used_by:` (READ only vault, without duplicates).
-- override — `<repo>/.maind.graph.json` for connections that are not in the code/docks (runtime/API).
+- override — `[maind.graph.links]` of the project config (legacy `<repo>/.maind.graph.json`) for
+             connections that are not in the code/docks (runtime/API).
 - skills   — skills-lock.json: `project ─uses→ skill ─provided_by→ tool` (swissknifeman/boost).
 
 Everyone derive_project_graph builds the project store AGAIN (idempotent, no accumulation
@@ -13,9 +14,12 @@ import json
 import os
 from pathlib import Path
 
-from core import parse_frontmatter
+from aicore.config import ConfigError, resolve
+from aicore.state import project_config_file
+from aicore.util.text import parse_frontmatter
 
-from .common import warn
+from aicore.util.term import warn
+from .config import settings_schema
 from .federation import rebuild_index, store_path
 from .graph import Graph
 from .namespaces import link_allowed
@@ -224,20 +228,60 @@ def derive_doc(g, project, config):
     return edges
 
 
-# ── plan: override (.maind.graph.json) ───────────────────────────────────────
-def derive_override(g, project, config):
-    """`<repo>/.maind.graph.json` → declared cross-ribs (via=override)."""
-    local = project.get("local_path")
-    if not local:
-        return 0
+# ── plan: override ([maind.graph.links] / legacy .maind.graph.json) ──────────
+_warned_graph_links = set()
+
+
+def _toml_override_links(local):
+    """Links of the ``[maind.graph.links.<project>]`` tables of the project layer, or None when the
+    project layer has no ``[maind.graph]`` table."""
+    root = Path(os.path.expanduser(local))
+    if not project_config_file(root).is_file():
+        return None
+    try:
+        resolved = resolve("maind", schema=settings_schema(), project=root)
+        entries = resolved.explain()
+    except ConfigError as exc:
+        warn(f"override {root}: {exc} — pass")
+        return None
+    if not any(e.layer == "project" and e.key.startswith("graph.") for e in entries):
+        return None
+    links = resolved.get("graph.links") or {}
+    return [{"to": name, "type": spec.get("type", "relates_to"),
+             "plane": spec.get("plane", "runtime"), "note": spec.get("note")}
+            for name, spec in links.items()]
+
+
+def _legacy_override_links(local):
     f = Path(os.path.expanduser(local)) / ".maind.graph.json"
     data = _load_json(f)
     if not data:
+        return None, f
+    if str(f) not in _warned_graph_links:
+        _warned_graph_links.add(str(f))
+        warn(f"MAIND_LEGACY_GRAPH_LINKS: reading links from {f}; move them to "
+             f"[maind.graph.links.<project>] in .swissknifeman/config.toml (swissknifeman upgrade)")
+    return list(data.get("links") or []), f
+
+
+def derive_override(g, project, config):
+    """``[maind.graph.links]`` of the project (legacy: ``<repo>/.maind.graph.json``) → declared
+    cross-ribs (via=override). The legacy file is read only while the project layer has no
+    ``[maind.graph]`` table."""
+    local = project.get("local_path")
+    if not local:
         return 0
+    links = _toml_override_links(local)
+    source = project_config_file(Path(os.path.expanduser(local)))
+    if links is None:
+        links, source = _legacy_override_links(local)
+        if links is None:
+            return 0
+    f = source
     pid = project["id"]
     pnode = f"project:{pid}"
     edges = 0
-    for link in data.get("links") or []:
+    for link in links:
         to = link.get("to")
         if not to:
             continue

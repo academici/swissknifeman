@@ -1,0 +1,170 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.9",
+  "title": "Оверлеи инструкций: resolve_overlays и render_overlays по слотам модулей; CLI aicore ext overlays",
+  "status": "done_with_deviations",
+  "summary": "aicore.ext.overlays по ext-p6-config §overlays (D47): слот <module>:<slot> проверяется по provides.overlay_slots, источники — ключ overlays конфига по слоям, относительные пути от файла слоя, лимит 32 KiB, предупреждения OVERLAY_MISSING/OVERLAY_INVALID, размеченный блок; CLI `aicore ext overlays SLOT [--json] [--strict]`.",
+  "why": "D6/D47: человек дописывает правила к командам модулей, не трогая модуль; общие проекции и golden не меняются. Риски: раздувание контекста (лимит), утечка домашнего пути в вывод (печать с ~), молчаливое игнорирование опечатки в слоте (OVERLAY_SLOT_UNKNOWN).",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/ext/overlays.py; cli.py (ext overlays); errors.py (OVERLAY_*)",
+      "tests/ext/test_overlays.py"
+    ],
+    "exclude": [
+      "вызов оверлеев из команд planner (P9)",
+      "встраивание в vendor-проекции (по потребителю, D47)"
+    ]
+  },
+  "depends_on": [
+    "P6.3",
+    "P6.6"
+  ],
+  "decisions": [
+    "D47",
+    "D43"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/ext-p6#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-config#overlays",
+      "why": "API, формат блока, CLI, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-config#section",
+      "why": "ключ overlays и пути от файла слоя",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/settings.py",
+      "why": "ExtSettings.overlays (P6.6)",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "why": "overlay_slots модулей",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/ext/overlays.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/cli.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/errors.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/__init__.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/cli.py",
+      "change": "any",
+      "note": "только строка USAGE группы ext; файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/ext-p6 §rules (stdlib, Python 3.9, POSIX, контракты, тесты без реального HOME, секреты, английский в продукте, CHANGELOG aicore, красное чинится в пункте)",
+    "Дизайн — разделы knowledge ext-p6-*, указанные в reads; имена функций, коды ошибок, пути файлов и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "Слои aicore: ext → util, state, config; util/state/config/provider/artifacts/content/delivery/release/usage не импортируют ext; верхний aicore/cli.py импортирует группы лениво (test_subpackage_layering)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии, тексты ошибок) — на английском; без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Формат блока render_overlays — дословно ext-p6-config §overlays; пути печатаются с ~ вместо домашнего каталога",
+    "Неизвестный модуль или слот — ExtError OVERLAY_SLOT_UNKNOWN (CLI exit 1); отсутствующий файл — предупреждение и пропуск; --strict превращает предупреждения в exit 1",
+    "Суммарный текст > 32768 байт UTF-8 — ExtError OVERLAY_TOO_LARGE"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: overlays.py (Overlay, OverlaySet, resolve_overlays, render_overlays) → tests/ext/test_overlays.py по §overlays → CLI `ext overlays` и строка USAGE группы ext (`plugins, overlays, status`) → CHANGELOG. Фикстура модуля demo (слот plan) создана в P6.6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "T=$(mktemp -d) && R=$PWD/packages/aicore/tests/ext/fixtures && mkdir -p $T/home/config && echo 'Always write tests first.' > $T/rule.md && export SKM_HOME=$T/home HOME=$T PYTHONPATH=packages/aicore/lib SKM_UNITS_PATH=$R/units:$PWD/packages && printf 'schema_version = 1\\n[aicore.overlays]\\n\"demo:plan\" = [\"%s/rule.md\"]\\n' \"$T\" > $T/home/config/config.toml && python3 -m aicore ext overlays demo:plan > $T/out.txt && grep -q 'Always write tests first.' $T/out.txt && grep -q '<!-- overlays: demo:plan -->' $T/out.txt && { python3 -m aicore ext overlays demo:nope 2>/dev/null; test $? = 1; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.ext.overlays",
+    "`aicore ext overlays`"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T06:04:09Z",
+    "finished_at": "2026-10-09T06:22:56Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "bea59beb-6b45-4e5e-84ea-03da9213d2b7"
+    },
+    "notes": "aicore.ext.overlays (resolve/render/describe), aicore ext overlays SLOT [--project] [--json] [--strict], OVERLAY_* codes, 33 tests; aicore suite 1358 green.",
+    "deviations": [
+      "project-layer overlays confined to the project; settings.collapse_home shared helper (see logged deviations)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T06:22:56Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T06:22:56Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T06:22:56Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T06:22:56Z"
+}

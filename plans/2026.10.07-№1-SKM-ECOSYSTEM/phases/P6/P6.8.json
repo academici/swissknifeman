@@ -1,0 +1,207 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.8",
+  "title": "Внешние плагины: манифест до запуска, describe-handshake, вызов точек расширения, плагины-подписчики, trusted; CLI aicore ext plugins|status; doctor",
+  "status": "done_with_deviations",
+  "summary": "aicore.ext.plugins по ext-p6-plugins §plugins: load_manifest (проверка до запуска), registered_plugins (словарь plugins конфига), describe_plugin (сверка id/version/kind/protocol/capabilities_digest/transport), invoke_point, плагины-подписчики в доставке P6.7, list_plugins; CLI ext plugins list|describe|invoke и ext status; provides.doctor aicore.ext; фикстуры плагинов; тест R14 «манифест, затем запуск».",
+  "why": "D19/D45, E18, E19, R14, E40. Жёсткие риски: (1) запуск кода до проверки манифеста (R14) — тест с файлом-меткой; (2) handshake пропущен или сверяет не всё — отказ до invoke; (3) entrypoint вне каталога манифеста (обход пути); (4) секреты недоверенному плагину.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/ext/plugins.py; delivery.py (подписки plugin=); cli.py (группа ext: plugins, status); errors.py (PLUGIN_*)",
+      "aicore/cli.py: группа ext; unit.json provides.doctor",
+      "фикстуры tests/ext/fixtures/plugins/{echo,sub,bad-*}/; tests/ext/test_plugins.py"
+    ],
+    "exclude": [
+      "conformance (P6.10)",
+      "оверлеи (P6.9)",
+      "kind secret-resolver (отложено, D45)",
+      "точки расширения конкретных модулей (P9 и далее)"
+    ]
+  },
+  "depends_on": [
+    "P6.5",
+    "P6.7"
+  ],
+  "decisions": [
+    "D45",
+    "D19",
+    "D43"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/ext-p6#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-plugins#plugins",
+      "why": "API плагинов, CLI, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#extension",
+      "why": "поля манифеста",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#protocol",
+      "why": "протокол 1 и describe",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-plugins#environment",
+      "why": "trusted, секреты, профиль",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-config#section",
+      "why": "ключи plugins конфига",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/delivery.py",
+      "why": "место подключения подписок plugin= (P6.7)",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "why": "extension_points модулей",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/digest.py",
+      "why": "digest_json для capabilities_digest",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/ext/plugins.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/delivery.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/cli.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/errors.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/__init__.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/cli.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/ext-p6 §rules (stdlib, Python 3.9, POSIX, контракты, тесты без реального HOME, секреты, английский в продукте, CHANGELOG aicore, красное чинится в пункте)",
+    "Дизайн — разделы knowledge ext-p6-*, указанные в reads; имена функций, коды ошибок, пути файлов и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "Слои aicore: ext → util, state, config; util/state/config/provider/artifacts/content/delivery/release/usage не импортируют ext; верхний aicore/cli.py импортирует группы лениво (test_subpackage_layering)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии, тексты ошибок) — на английском; без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Порядок жёсткий: load_manifest (схема, kind-требования, entrypoint внутри каталога и исполним, протокол, requires, профиль) → describe → сверка → invoke/event; любое несоответствие — ExtError до следующего шага, процесс плагина для invoke не запускается",
+    "describe перед каждым использованием, без кеша (D45); capabilities_digest = aicore.util.digest.digest_json(manifest[\"provides\"])",
+    "untrusted плагин не получает permissions.env и секреты; trusted — только env:// ссылки; read-only профиль — PLUGIN_PROFILE_UNAVAILABLE",
+    "Плагин вызывается только для точек, объявленных модулями в extension_points (<module>:<id>); подписка plugin= — только kind subscriber и on ⊆ provides.events",
+    "Фикстуры: tests/ext/fixtures/plugins/echo/{extension.json, plugin.py} — kind command, points [\"demo:check\"], example_input {\"x\": 1}, invoke возвращает output = input; plugin.py пишет файлы-метки запуска и invoke в каталог из env FIXTURE_MARKS (если задан)"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: фикстуры плагинов (echo, sub — kind subscriber с events [\"demo.*\"], bad-schema, bad-entrypoint-escape, bad-protocol, bad-requires, bad-profile-readonly, bad-digest, bad-version) → `plugins.py`: Manifest, load_manifest, Registration, registered_plugins, describe_plugin, invoke_point, PluginResult, list_plugins → delivery.py: подписка plugin= через describe и op event → CLI: группа ext в aicore/cli.py (`ext   extensions: plugins, status` — P6.9/P6.10 дописывают), `ext plugins list|describe|invoke` (`invoke --json` → `{\"point\": …, \"results\": [{plugin, status, output, error, code, duration_ms}]}`), `ext status` (текст: строка на плагин с `profile: trusted-local, enforced: false`, затем сводка подписок) → unit.json provides.doctor `aicore.ext` → тесты ext-p6-plugins §plugins → CHANGELOG.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "T=$(mktemp -d) && R=$PWD/packages/aicore/tests/ext/fixtures && mkdir -p $T/home/config && export SKM_HOME=$T/home HOME=$T PYTHONPATH=packages/aicore/lib SKM_UNITS_PATH=$R/units:$PWD/packages && printf 'schema_version = 1\\n[aicore.plugins.echo]\\nmanifest = \"%s/plugins/echo/extension.json\"\\n' \"$R\" > $T/home/config/config.toml && python3 -m aicore ext plugins invoke demo:check --input '{\"x\": 1}' --json | python3 -c 'import json, sys; r = json.load(sys.stdin)[\"results\"]; assert len(r) == 1 and r[0][\"plugin\"] == \"echo\" and r[0][\"status\"] == \"ok\" and r[0][\"output\"] == {\"x\": 1}, r' && python3 -m aicore ext status | grep -q 'enforced: false' && python3 -c 'import json; d = json.load(open(\"packages/aicore/unit.json\")); assert any(c[\"id\"] == \"aicore.ext\" for c in d[\"provides\"][\"doctor\"])'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.ext.plugins",
+    "плагины-подписчики",
+    "`aicore ext plugins|status`",
+    "doctor aicore.ext"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T06:04:09Z",
+    "finished_at": "2026-10-09T06:18:54Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "bea59beb-6b45-4e5e-84ea-03da9213d2b7"
+    },
+    "notes": "aicore.ext.plugins: manifest-before-launch, describe handshake without cache, invoke_point, plugin subscribers in delivery, aicore ext plugins list|describe|invoke and ext status, doctor aicore.ext; 66 plugin tests; aicore suite 1325 green. Hard risk: process launch and secrets to plugins (task:review recommended).",
+    "deviations": [
+      "settings.plugin_timeouts_set added; extra error codes and helper API; ext group in ext/cli.py (see logged deviations)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T06:18:54Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T06:18:54Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T06:18:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T06:18:54Z"
+}

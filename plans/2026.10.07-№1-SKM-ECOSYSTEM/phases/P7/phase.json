@@ -1,0 +1,98 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P7",
+  "title": "brain: основа модуля",
+  "design": "detailed",
+  "goal": "packages/brain по контракту модуля: поиск хранилища из конфига [brain] (brain vault, brain project), doc-sync проекта ↔ хранилище, перенесённый из skiller/brain_sync (brain docs; skiller вызывает его командой хоста), skill brain-locator в плагине brain, cache-brain-docs.sh из maind, инструкции модуля через каталог harness, первый подписчик planner.plan.closed → заметка в хранилище (brain note, идемпотентно по event_id, событие brain.note.created), проверенный в песочнице на синтетическом хранилище и на копии реального.",
+  "context": "D7 уточнён решениями D49–D51 (детализация 2026-10-09). Факты кода, раскладка, CLI, конфиг, каталог, перенос brain_sync и skill, подписчик, модель инвариантов записи заметок, инструкции, проверки, сверка E1/E2, отложенное и заметки для upgrade — knowledge/brain-p7. События и доставка aicore — knowledge/ext-p6-events (P6). Внешних предпосылок, меняющих решения, нет (только код репозитория и формат внешнего хранилища, прочитанный локально). Ревью E1: E22, E44; E2: R06 (подписчик идемпотентен по event_id при повторной доставке по курсору).",
+  "scope": {
+    "include": [
+      "каркас brain по контракту модуля",
+      "конфиг [brain] и поиск хранилища и проекта",
+      "перенос brain_sync (brain docs) и вызов из skiller командой хоста",
+      "skill brain-locator и плагин brain",
+      "brain-части maind: cache-brain-docs.sh",
+      "инструкции модуля через каталог harness",
+      "первый подписчик planner.plan.closed → заметка; событие brain.note.created",
+      "идемпотентность заметки по event_id при повторной доставке (R06)",
+      "контрактные фикстуры потребителя (E44)",
+      "документация и ADR 0046–0048"
+    ],
+    "exclude": [
+      "код из ~/Vaults/Brain/brain (внешний CLI, docs-watcher, lib/brain)",
+      "испускание planner.plan.closed (P9)",
+      "maind.projects.brain_path и SIBLINGS brain (P11)",
+      "установка bin/brain на PATH (P12)",
+      "миграция .swissknife.json::memory_brain (P13)"
+    ]
+  },
+  "depends_on": [
+    "P6"
+  ],
+  "deliverables": [
+    "packages/brain",
+    "brain vault|project|docs|note|doctor",
+    "подписка brain:plan-notes и событие brain.note.created",
+    "плагин brain со skill brain-locator",
+    "ADR 0046–0048"
+  ],
+  "items": [
+    "P7.1",
+    "P7.2",
+    "P7.3",
+    "P7.4",
+    "P7.5",
+    "P7.6",
+    "P7.7"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P7.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P7.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P7.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P7.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P7.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P7.6",
+        "P7.7"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-09T13:17:52Z",
+    "result": "done_with_deviations",
+    "summary": "7 item(s): 1 done, 6 done_with_deviations"
+  }
+}

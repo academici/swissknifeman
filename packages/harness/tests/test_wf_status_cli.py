@@ -13,9 +13,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from harness.wf_status import project_slug  # noqa: E402
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # packages/harness
-MONOREPO_ROOT = PACKAGE_ROOT.parents[1]
+HUB_ROOT = PACKAGE_ROOT.parents[1]
 HARNESS_BIN = PACKAGE_ROOT / "bin" / "harness"
-SWISSKNIFEMAN_BIN = MONOREPO_ROOT / "bin" / "swissknifeman"
+SWISSKNIFEMAN_BIN = HUB_ROOT / "bin" / "swissknifeman"
 FIXTURE_DIR = PACKAGE_ROOT / "tests" / "fixtures" / "wf_run"
 RUN_ID = "wf_run"
 FAKE_PROJECT = "/tmp/fake-wf-status-project"
@@ -90,6 +90,7 @@ class HarnessWfStatusCliCase(unittest.TestCase):
         self.assertIn("runs not found", proc.stdout)
         self.assertNotIn("Traceback", proc.stdout)
 
+    @unittest.skipUnless(SWISSKNIFEMAN_BIN.is_file(), "the hub launcher is not around this module")
     def test_swissknifeman_wf_facade_reaches_harness(self):
         proc = _run(
             [str(SWISSKNIFEMAN_BIN), "wf", "status", "--run", RUN_ID],
@@ -97,11 +98,13 @@ class HarnessWfStatusCliCase(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn(f"run: {RUN_ID}", proc.stdout)
 
+    @unittest.skipUnless(SWISSKNIFEMAN_BIN.is_file(), "the hub launcher is not around this module")
     def test_swissknifeman_help_mentions_wf(self):
         proc = _run([str(SWISSKNIFEMAN_BIN), "--help"], {})
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("wf", proc.stdout)
 
+    @unittest.skipUnless(SWISSKNIFEMAN_BIN.is_file(), "the hub launcher is not around this module")
     def test_swissknifeman_env_doctor_still_works(self):
 
         proc = _run([str(SWISSKNIFEMAN_BIN), "env", "doctor"], {})

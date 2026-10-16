@@ -1,0 +1,9 @@
+{
+  "description": "Provider-neutral planner commands and executable plan protocol for Codex",
+  "name": "planner",
+  "skills": [
+    "./adapters/codex/skills",
+    "./skills"
+  ],
+  "version": "0.30.0"
+}

@@ -1,0 +1,134 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.2",
+  "title": "Подсказка write set: блок json write-set context-scout, раздел Expected paths у executor, class write_set для ожидаемых путей; plan.py check — write_set_no_tests",
+  "status": "done_with_deviations",
+  "summary": "context-scout.md и схема scout-write-set; _scout извлекает блок (без блока — RESULT_HEALED); prompts.executor — раздел Expected paths; deviation о путях вне write set помечает ожидаемые; planner check — warning write_set_no_tests.",
+  "why": "Аудит П4.2: 29% deviation PLAN3 — вне write set. Риск: подсказка не расширяет write set (авторизация плана не меняется).",
+  "scope": {
+    "include": [
+      "packages/orch/roles/context-scout.md",
+      "packages/orch/schemas/conductor/v1/scout-write-set.schema.json",
+      "packages/orch/lib/orch/conductor/engine.py (_scout, _execute)",
+      "packages/orch/lib/orch/conductor/prompts.py (executor)",
+      "packages/planner/lib/planner (check)"
+    ],
+    "exclude": [
+      "автоматическое расширение write set"
+    ]
+  },
+  "depends_on": [
+    "P5.1"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p5-deviations#writeset",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_scout",
+      "required": true,
+      "section": "_scout"
+    },
+    {
+      "path": "packages/orch/roles/context-scout.md",
+      "why": "контракт scout",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/roles/context-scout.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/scout-write-set.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/golden/**",
+      "change": "any",
+      "note": "промпты, захват с --reason"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify",
+      "note": "check"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы stage-report, log-event, read-* — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты → роль и схема → _scout → промпт → check → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "подсказка write set"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T09:29:23Z",
+    "finished_at": "2026-10-14T09:55:26Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "49b99fb7-8127-4a51-9732-3c393da4551b"
+    },
+    "notes": "scout-write-set schema+kind+fixtures; context-scout.md block; _hint takes it into state.expected (invalid/missing: RESULT_HEALED); executor 'Expected paths' section; outside-write-set deviation names expected paths; plan.py check write_set_no_tests; tests, docs, CHANGELOG. affected-tests green.",
+    "deviations": [
+      "fence tag 'json write-set' needed a fence-regex extension; extra files: docs, role manifest sha, fixtures, contract kinds"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T09:55:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T09:55:26Z"
+}

@@ -1,0 +1,480 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:maind:config:v1",
+  "title": "maind config",
+  "description": "Settings of the maind node: identity, memory daemon, graph, code graph, agent registry timings, integrations, MCP policy and observability. The fleet registry (projects, namespaces, agent definitions, MCP servers, provider selection, role packs) is machine-written state, not a setting.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "node": {
+      "type": "object",
+      "description": "Identity of this node.",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Node id."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human name of the node."
+        },
+        "role": {
+          "type": "string",
+          "description": "Node role in a multi-node setup.",
+          "enum": [
+            "primary",
+            "secondary",
+            "mirror"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Free-form description of the node."
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "description": "The agent-memory daemon of the node.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Run and use the memory daemon.",
+          "default": true
+        },
+        "role": {
+          "type": "string",
+          "description": "standalone: this node runs its own daemon; host: the only daemon of the machine; client: no daemon, use memory.url.",
+          "default": "standalone",
+          "enum": [
+            "standalone",
+            "host",
+            "client"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "description": "Address of the memory host; required when role is client and must not be a loopback address."
+        },
+        "http_port": {
+          "type": "integer",
+          "description": "HTTP port of the daemon.",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 4111
+        },
+        "stream_port": {
+          "type": "integer",
+          "description": "Stream port of the daemon.",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 4112
+        },
+        "bind_host": {
+          "type": "string",
+          "description": "Interface the daemon binds to: an address, or auto for the LAN address of the machine."
+        },
+        "config_path": {
+          "type": "string",
+          "description": "Daemon configuration file, relative to the module root or absolute.",
+          "default": "config/memory/iii-config.yaml"
+        },
+        "data_dir": {
+          "type": "string",
+          "description": "Data directory handed to the memory daemon.",
+          "default": "./data"
+        },
+        "secret_file": {
+          "type": "string",
+          "description": "Path of a file holding the bearer secret of the daemon (never the secret itself)."
+        },
+        "digest": {
+          "type": "object",
+          "description": "Size limits of the memory digest.",
+          "additionalProperties": false,
+          "properties": {
+            "budget_chars": {
+              "type": "integer",
+              "description": "Total size of a digest, in characters.",
+              "minimum": 1,
+              "default": 4000
+            },
+            "item_max_chars": {
+              "type": "integer",
+              "description": "Size of one digest item, in characters.",
+              "minimum": 1,
+              "default": 500
+            },
+            "shared_max": {
+              "type": "integer",
+              "description": "Maximum shared (cross-project) items in a digest; 0 keeps cross-project context off.",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        }
+      }
+    },
+    "graph": {
+      "type": "object",
+      "description": "The federation graph between projects.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Build and serve the project graph.",
+          "default": true
+        },
+        "adapter": {
+          "type": "string",
+          "description": "Graph layout: federation (one graph per project plus a thin index) or disabled. Retired values (memory, graphify, networkx) are read as federation.",
+          "default": "federation",
+          "enum": [
+            "federation",
+            "disabled"
+          ]
+        },
+        "store_layout": {
+          "type": "string",
+          "description": "Where project graphs live: hub (in the node data directory) or project-local."
+        },
+        "persist": {
+          "type": "boolean",
+          "description": "Persist the in-memory graph to disk."
+        },
+        "persist_path": {
+          "type": "string",
+          "description": "File of the persisted graph, relative to the module root or absolute."
+        },
+        "links": {
+          "type": "object",
+          "description": "Manual links of the project to other projects, by the id of the linked project (ids with a dot cannot be written here). Meant for the project layer.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z0-9_-]+$": {
+              "type": "object",
+              "description": "One declared link to the project named by the entry.",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Edge type of the link (uses, knows, relates_to, belongs_to, depends_on, provided_by or requires).",
+                  "default": "relates_to",
+                  "x-skm-layers": [
+                    "project",
+                    "invocation"
+                  ]
+                },
+                "plane": {
+                  "type": "string",
+                  "description": "Plane of the link: code, doc, meta or runtime.",
+                  "default": "runtime",
+                  "x-skm-layers": [
+                    "project",
+                    "invocation"
+                  ]
+                },
+                "note": {
+                  "type": "string",
+                  "description": "Why the projects are linked.",
+                  "x-skm-layers": [
+                    "project",
+                    "invocation"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "code_graph": {
+      "type": "object",
+      "description": "Policy of the per-project code graph (Serena).",
+      "additionalProperties": false,
+      "properties": {
+        "enabled_default": {
+          "type": "boolean",
+          "description": "Enable the code graph for projects that do not say.",
+          "default": false
+        },
+        "engine": {
+          "type": "string",
+          "description": "Code graph engine.",
+          "default": "serena"
+        },
+        "command": {
+          "type": "string",
+          "description": "Executable that starts the engine.",
+          "default": "uvx"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Arguments of the MCP server command; {root} is the project root.",
+          "default": [
+            "--from",
+            "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd",
+            "serena",
+            "start-mcp-server",
+            "--context",
+            "ide-assistant",
+            "--project",
+            "{root}",
+            "--enable-web-dashboard",
+            "false"
+          ]
+        },
+        "index_args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Arguments of the indexing command; {root} is the project root.",
+          "default": [
+            "--from",
+            "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd",
+            "serena",
+            "project",
+            "index",
+            "{root}"
+          ]
+        },
+        "server_name": {
+          "type": "string",
+          "description": "Name of the MCP server entry.",
+          "default": "serena"
+        },
+        "ignores": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Paths the engine does not index.",
+          "default": [
+            "vendor",
+            "node_modules",
+            "packages",
+            "storage",
+            "bootstrap/cache",
+            "public/build",
+            "dist",
+            ".git"
+          ]
+        },
+        "workspace_ignores": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Paths ignored in a workspace project (its packages/* are indexed).",
+          "default": [
+            "vendor",
+            "node_modules",
+            "**/vendor",
+            "**/node_modules",
+            "storage",
+            "bootstrap/cache",
+            "public/build",
+            "dist",
+            ".git"
+          ]
+        },
+        "initial_prompt": {
+          "type": "string",
+          "description": "Prompt given to the model when the project is activated.",
+          "default": "Navigate through the code of this project via symbol-tools Serena (get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations) instead of reading entire files - this is more accurate and saves tokens. Related package code ecosystems live in their own projects; inter-project communications - in mAInd (maind graph)."
+        },
+        "workspace_prompt": {
+          "type": "string",
+          "description": "Prompt given to the model for a workspace project.",
+          "default": "This project is workspace: his code + locally developed ecosystem packages for packages/* form a SINGLE graph. Lead the navigation symbol-tools Serena (get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations). Folders packages/* — these are REAL package repositories (via symlink): having found an improvement in package, offer it and, BY CONFIRMATION of the user, edit directly to packages/<package>/… — the change will affect the package itself and all its consumers."
+        },
+        "pre_index": {
+          "type": "boolean",
+          "description": "Warm up the index in the background when the graph is turned on.",
+          "default": false
+        },
+        "feature_log_hook": {
+          "type": "boolean",
+          "description": "Install the session-end hook that commits feature facts to shared memory."
+        },
+        "language_by_type": {
+          "type": "object",
+          "description": "Language of the engine by project type; the built-in table applies while this is empty.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "string",
+              "description": "Language of the project type."
+            }
+          }
+        },
+        "embed": {
+          "type": "object",
+          "description": "External embedder used by fleet analysis.",
+          "additionalProperties": false,
+          "properties": {
+            "command": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Embedder command as an argument vector."
+            }
+          }
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "description": "Agent registry timings.",
+      "additionalProperties": false,
+      "properties": {
+        "registry_enabled": {
+          "type": "boolean",
+          "description": "Keep the agent registry.",
+          "default": true
+        },
+        "heartbeat_interval_ms": {
+          "type": "integer",
+          "description": "Heartbeat interval of an agent, in milliseconds.",
+          "minimum": 1,
+          "default": 30000
+        },
+        "max_idle_ms": {
+          "type": "integer",
+          "description": "Idle time after which an agent counts as stale, in milliseconds.",
+          "minimum": 1,
+          "default": 300000
+        }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "description": "Links to related tools, by id.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "description": "One integration.",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Use the integration."
+            },
+            "skills_sync": {
+              "type": "boolean",
+              "description": "Sync skills with the integration."
+            },
+            "projects_sync": {
+              "type": "boolean",
+              "description": "Sync the project list with the integration."
+            },
+            "sync_direction": {
+              "type": "string",
+              "description": "Direction of the sync.",
+              "enum": [
+                "import",
+                "export",
+                "bidirectional"
+              ]
+            },
+            "path": {
+              "type": "string",
+              "description": "Location of the integration (for brain, its vault)."
+            }
+          }
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "description": "MCP policy of the node.",
+      "additionalProperties": false,
+      "properties": {
+        "emit_example": {
+          "type": "boolean",
+          "description": "Write a portable .mcp.json.example next to every real .mcp.json and keep the real file out of git.",
+          "default": true
+        },
+        "perplexity_web": {
+          "type": "object",
+          "description": "Hub-managed keyless perplexity-web bridge; the built-in defaults apply to keys left out (disabled, pool default, server name perplexity-web).",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Roll the bridge out into projects."
+            },
+            "pool": {
+              "type": "string",
+              "description": "Browser pool model: default or a literal (shared), per-project or per-namespace."
+            },
+            "bin": {
+              "type": "string",
+              "description": "Machine-local path of the bridge start script."
+            },
+            "server_name": {
+              "type": "string",
+              "description": "Name of the MCP server entry."
+            }
+          }
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "description": "Logging and telemetry of the node.",
+      "additionalProperties": false,
+      "properties": {
+        "service_name": {
+          "type": "string",
+          "description": "Service name in logs and telemetry.",
+          "default": "maind"
+        },
+        "log_level": {
+          "type": "string",
+          "description": "Log level.",
+          "default": "info",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ]
+        },
+        "metrics_enabled": {
+          "type": "boolean",
+          "description": "Collect metrics.",
+          "default": true
+        },
+        "traces_enabled": {
+          "type": "boolean",
+          "description": "Collect traces.",
+          "default": false
+        },
+        "session_start_health_hook": {
+          "type": "boolean",
+          "description": "Install the session-start health hook.",
+          "default": false
+        },
+        "session_log_retention_days": {
+          "type": "integer",
+          "description": "Days to keep session logs.",
+          "minimum": 1
+        },
+        "serena_log_retention_days": {
+          "type": "integer",
+          "description": "Days to keep code graph logs.",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

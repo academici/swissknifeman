@@ -1,0 +1,2811 @@
+{
+  "capabilities": [
+    {
+      "id": "agent-packs.lifecycle",
+      "intent": "Render, check, upgrade, remove and diagnose locked packs.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.agent-packs.lifecycle",
+          "diagnostic": "deterministic harness adapter satisfies claude-code agent-packs.lifecycle",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.agent-packs.lifecycle",
+          "diagnostic": "deterministic harness adapter satisfies codex agent-packs.lifecycle (bounded: role projections only)",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.agent-packs.lifecycle renders, checks, diagnoses and removes locked Codex role projections through the same semantic role catalog and the same byte-level classification the Claude projection uses",
+              "scope": "codex agent-packs.lifecycle over role projections .codex/agents/*.toml with a provider-qualified lock, excluding Claude-runtime pack members",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "covers role projections only: pack members that are Claude-runtime artifacts (.claude/workflows/*.js, .claude/rules/*, the review-gate shell hook and its ini) have no Codex projection and are excluded",
+            "a role that requires command.workflow-carrier is refused for Codex by the frozen renderer, so such roles are absent from the Codex projection",
+            "interview answers and pack versions stay shared with the Claude projection: the Codex lifecycle does not fork the pack catalog"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.agent-packs.lifecycle",
+          "diagnostic": "Cursor consumer mapping resolves role lifecycle over the shared .claude/agents projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role resolves through cursor consumer mapping to .claude/agents/*.md without creating a cursor-owned agents tree",
+              "scope": "cursor agent-packs.lifecycle consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "Cursor acts as a consumer mapping over .claude/agents/*.md with projection_owner=claude-code",
+            "Cursor disconnect/remove preserves .claude/agents; shared projection lifecycle stays owned by claude-code",
+            "no .cursor/agents directory is created"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.agent-packs.lifecycle",
+          "diagnostic": "Grok consumer mapping resolves role lifecycle over the shared .claude/agents projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role resolves through grok consumer mapping to .claude/agents/*.md without creating a grok-owned agents tree",
+              "scope": "grok agent-packs.lifecycle consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "Grok acts as a consumer mapping over .claude/agents/*.md with projection_owner=claude-code",
+            "Grok disconnect/remove preserves .claude/agents; shared projection lifecycle stays owned by claude-code",
+            "no .grok/agents directory is created"
+          ]
+        }
+      }
+    },
+    {
+      "id": "agents.catalog",
+      "intent": "Render semantic agent requirements into native targets.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.agents.catalog",
+          "diagnostic": "deterministic harness adapter satisfies claude-code agents.catalog",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.agents.catalog",
+          "diagnostic": "deterministic harness adapter satisfies codex agents.catalog",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.agents.catalog",
+          "diagnostic": "Cursor resolves semantic agent roles through the shared .claude/agents catalog projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role maps to a cursor-consumable .claude/agents target while preserving claude-code ownership",
+              "scope": "cursor agents.catalog consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "uses Cursor compatibility loading of the existing Claude-format role projection",
+            "does not introduce a Cursor-owned agents directory"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.agents.catalog",
+          "diagnostic": "Grok resolves semantic agent roles through the shared .claude/agents catalog projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role maps to a grok-consumable .claude/agents target while preserving claude-code ownership",
+              "scope": "grok agents.catalog consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "uses Grok compatibility loading of the existing Claude-format role projection",
+            "does not introduce a Grok-owned agents directory"
+          ]
+        }
+      }
+    },
+    {
+      "id": "analytics.legacy-migration",
+      "intent": "Plan, dry-run, check and copy-verify supported legacy analytics into the neutral store without changing source bytes.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "analyst.claude-legacy-migration",
+          "diagnostic": "bounded Claude legacy migration is available through explicit plan/dry-run/check/apply operations",
+          "evidence": [
+            {
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
+              "scope": "frozen neutral analytics readers, store and migration",
+              "source": "packages/analyst/docs/architecture.md",
+              "verified_at": "2026-07-22"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "supports only the frozen Claude SCHEMA=2 legacy source and never deletes source bytes"
+          ]
+        },
+        "codex": {
+          "diagnostic": "unsupported for Codex: there is no committed Codex legacy analytics carrier to migrate; fail closed instead of inventing one",
+          "evidence": [
+            {
+              "claim": "no committed Codex legacy analytics carrier exists to migrate, and new Codex evidence is normalized into the neutral store directly, so the migration intent does not apply to this provider",
+              "scope": "codex analytics.legacy-migration applicability",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "the intent does not apply to Codex: there is no legacy Codex analytics carrier to migrate",
+            "new Codex writes already target the neutral store",
+            "a future Codex legacy source would be an additive change, not a reopened verdict"
+          ]
+        },
+        "cursor": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor analytics.legacy-migration applicability",
+              "claim": "no committed legacy Cursor analytics carrier exists to migrate; new Cursor evidence is written directly to the neutral store"
+            }
+          ],
+          "limitations": [
+            "reason: not applicable — no legacy Cursor analytics carrier exists to migrate",
+            "new Cursor analytics evidence writes directly to the neutral store"
+          ],
+          "diagnostic": "unsupported for Cursor: no committed legacy Cursor analytics carrier exists; migration intent does not apply"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok analytics.legacy-migration applicability",
+              "claim": "no committed legacy Grok analytics carrier exists to migrate; new Grok evidence is written directly to the neutral store"
+            }
+          ],
+          "limitations": [
+            "reason: not applicable — no legacy Grok analytics carrier exists to migrate",
+            "new Grok analytics evidence writes directly to the neutral store"
+          ],
+          "diagnostic": "unsupported for Grok: no committed legacy Grok analytics carrier exists; migration intent does not apply"
+        }
+      }
+    },
+    {
+      "id": "analytics.normalized-events",
+      "intent": "Normalize allowlisted provider evidence into the project-local append-only neutral analytics event store with opaque provenance.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "analyst.claude-run-report-reader",
+          "diagnostic": "Claude SCHEMA=2 input is normalized only through the named fail-closed reader",
+          "evidence": [
+            {
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
+              "scope": "frozen neutral analytics readers, store and migration",
+              "source": "packages/analyst/docs/architecture.md",
+              "verified_at": "2026-07-22"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "bounded legacy SCHEMA=2 reader; raw provider paths and payload shapes remain reader-local"
+          ]
+        },
+        "codex": {
+          "adapter_id": "analyst.codex-capture-reader",
+          "diagnostic": "Codex capture input is normalized only through the named fail-closed reader",
+          "evidence": [
+            {
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
+              "scope": "frozen neutral analytics readers, store and migration",
+              "source": "packages/analyst/docs/architecture.md",
+              "verified_at": "2026-07-22"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "accepts only the committed Codex capture schema and evidenced semantic fields"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "analyst.cursor-capture-reader",
+          "diagnostic": "Cursor schema=1 hook envelopes are normalized only through the named fail-closed reader",
+          "evidence": [
+            {
+              "claim": "Cursor schema=1 run-summary envelopes are normalized through the named reader and rejected when raw output/reason markers violate the allowlist",
+              "scope": "cursor reader normalization, redaction and schema checks",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "normalizes only allowlisted Cursor schema=1 hook envelope fields",
+            "correlation key is conversation_id, persisted as normalized session_id",
+            "raw command output, prompts and transcript keys are refused fail-closed"
+          ]
+        },
+        "grok": {
+          "adapter_id": "analyst.grok-capture-reader",
+          "diagnostic": "Grok schema=1 hook envelopes are normalized only through the named fail-closed reader",
+          "evidence": [
+            {
+              "claim": "Grok schema=1 run-summary envelopes are normalized through the Codex-shaped reader and rejected when raw output/reason markers violate the allowlist",
+              "scope": "grok reader normalization, redaction and schema checks",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "normalizes only allowlisted schema=1 fields; session_id is required",
+            "reuses the Codex capture reader with provider_id grok",
+            "raw command output, prompts and transcript keys are refused fail-closed"
+          ]
+        }
+      }
+    },
+    {
+      "id": "analytics.run-report",
+      "intent": "Build a deterministic one-project/session run report from normalized semantic events while preserving contributing provenance.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "analyst.neutral-run-report",
+          "diagnostic": "provider-neutral run-report projection is available for Claude-origin normalized events",
+          "evidence": [
+            {
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
+              "scope": "frozen neutral analytics readers, store and migration",
+              "source": "packages/analyst/docs/architecture.md",
+              "verified_at": "2026-07-22"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "missing semantic evidence remains absent and is never inferred as zero"
+          ]
+        },
+        "codex": {
+          "adapter_id": "analyst.neutral-run-report",
+          "diagnostic": "provider-neutral run-report projection is available for Codex-origin normalized events",
+          "evidence": [
+            {
+              "claim": "the analytics contract and its implementation prove named provider readers, neutral run projection and bounded legacy migration",
+              "scope": "frozen neutral analytics readers, store and migration",
+              "source": "packages/analyst/docs/architecture.md",
+              "verified_at": "2026-07-22"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "missing semantic evidence remains absent and is never inferred as zero"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "analyst.neutral-run-report",
+          "diagnostic": "provider-neutral run-report projection is available for Cursor-origin normalized events",
+          "evidence": [
+            {
+              "claim": "the cursor schema=1 envelope path reaches neutral run-report through normalize -> append_event -> neutral_run_report without provider-specific fallback",
+              "scope": "cursor envelope to neutral run-report end-to-end chain",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires Cursor events normalized through analyst.cursor-capture-reader",
+            "missing semantic metrics remain omitted and are never inferred as zero"
+          ]
+        },
+        "grok": {
+          "adapter_id": "analyst.neutral-run-report",
+          "diagnostic": "provider-neutral run-report projection is available for Grok-origin normalized events",
+          "evidence": [
+            {
+              "claim": "the grok schema=1 envelope path reaches neutral run-report through normalize -> append_event -> neutral_run_report without provider-specific fallback",
+              "scope": "grok envelope to neutral run-report end-to-end chain",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires Grok events normalized through analyst.grok-capture-reader",
+            "missing semantic metrics remain omitted and are never inferred as zero"
+          ]
+        }
+      }
+    },
+    {
+      "id": "command.external-research",
+      "intent": "Use an explicitly available research or retrieval surface.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "planner.claude-code.external-research",
+          "diagnostic": "deterministic claude-code adapter satisfies command.external-research",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "availability still depends on an explicitly configured research surface"
+          ]
+        },
+        "codex": {
+          "adapter_id": "planner.codex.external-research",
+          "diagnostic": "deterministic codex adapter satisfies command.external-research",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "availability still depends on an explicitly configured research surface"
+          ]
+        },
+        "cursor": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "availability depends on an explicitly configured research surface and WebFetch permission token"
+          ],
+          "diagnostic": "deterministic cursor adapter satisfies command.external-research",
+          "adapter_id": "planner.cursor.external-research"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "availability depends on an explicitly configured research surface and WebFetch permission token"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies command.external-research",
+          "adapter_id": "planner.grok.external-research"
+        }
+      }
+    },
+    {
+      "id": "command.filesystem-read",
+      "intent": "Read declared repository and plan inputs.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "provider-native filesystem read"
+          },
+          "diagnostic": "native claude-code binding satisfies command.filesystem-read",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "binding": {
+            "surface": "provider-native filesystem read"
+          },
+          "diagnostic": "native codex binding satisfies command.filesystem-read",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies command.filesystem-read",
+          "binding": {
+            "surface": "provider-native filesystem read"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.filesystem-read",
+          "binding": {
+            "surface": "provider-native filesystem read"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "command.filesystem-write",
+      "intent": "Write only declared task or plan-item targets.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "provider-native filesystem write"
+          },
+          "diagnostic": "native claude-code binding satisfies command.filesystem-write",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "binding": {
+            "surface": "provider-native filesystem write"
+          },
+          "diagnostic": "native codex binding satisfies command.filesystem-write",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies command.filesystem-write",
+          "binding": {
+            "surface": "provider-native filesystem write"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.filesystem-write",
+          "binding": {
+            "surface": "provider-native filesystem write"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "command.git-read",
+      "intent": "Inspect declared repository history and diffs.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "provider-native Git read"
+          },
+          "diagnostic": "native claude-code binding satisfies command.git-read",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "binding": {
+            "surface": "provider-native Git read"
+          },
+          "diagnostic": "native codex binding satisfies command.git-read",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies command.git-read",
+          "binding": {
+            "surface": "provider-native Git read"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.git-read",
+          "binding": {
+            "surface": "provider-native Git read"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "command.git-write",
+      "intent": "Create only task-authorized commits.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "provider-native Git write"
+          },
+          "diagnostic": "native claude-code binding satisfies command.git-write",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "binding": {
+            "surface": "provider-native Git write"
+          },
+          "diagnostic": "native codex binding satisfies command.git-write",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies command.git-write",
+          "binding": {
+            "surface": "provider-native Git write"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.git-write",
+          "binding": {
+            "surface": "provider-native Git write"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "command.subagents",
+      "intent": "Run declared subagent and reviewer stages.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "provider-native subagents"
+          },
+          "diagnostic": "native claude-code binding satisfies command.subagents",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "binding": {
+            "surface": "provider-native subagents"
+          },
+          "diagnostic": "native codex binding satisfies command.subagents",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies command.subagents",
+          "binding": {
+            "surface": "provider-native subagents"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies command.subagents",
+          "binding": {
+            "surface": "provider-native subagents"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "command.workflow-carrier",
+      "intent": "Resolve a semantic orchestration carrier through the provider projection.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "Workflow({scriptPath})"
+          },
+          "diagnostic": "native claude-code binding satisfies command.workflow-carrier",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "adapter_id": "planner.codex.workflow-carrier",
+          "diagnostic": "deterministic codex adapter satisfies command.workflow-carrier",
+          "evidence": [
+            {
+              "claim": "the command routing mapping declares exact support levels for every v1 command capability",
+              "scope": "frozen planner command capability mappings",
+              "source": "packages/planner/configs/command-routing.json",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the generated carrier and native subagent binding"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "planner.cursor.workflow-carrier",
+          "diagnostic": "deterministic Cursor adapter provides a generated workflow instruction carrier over native subagents",
+          "evidence": [
+            {
+              "claim": "the Cursor command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog",
+              "scope": "cursor command.workflow-carrier generated instruction projection",
+              "source": "packages/planner/lib/planner/command_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "implemented as a generated instruction carrier over native Cursor subagents",
+            "does not create a provider-native workflow run store"
+          ]
+        },
+        "grok": {
+          "adapter_id": "planner.grok.workflow-carrier",
+          "diagnostic": "Grok workflow-carrier is a generated instruction carrier; Grok also has native Rhai workflows that remain provider-owned",
+          "evidence": [
+            {
+              "claim": "the Grok command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog",
+              "scope": "grok command.workflow-carrier generated instruction projection",
+              "source": "packages/planner/lib/planner/command_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "managed planner carrier is an instruction projection over native subagents",
+            "Grok-native Rhai workflow runs are not a swissknifeman workflows.status store"
+          ]
+        }
+      }
+    },
+    {
+      "id": "context.observer",
+      "intent": "Activate the read-oriented observer context policy.",
+      "support": {
+        "claude-code": {
+          "diagnostic": "unsupported claude-code context.observer; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "no committed native binding or deterministic adapter satisfies the frozen surface intent"
+          ]
+        },
+        "codex": {
+          "binding": {
+            "surface": "SessionStart",
+            "target": ".codex/hooks.json"
+          },
+          "diagnostic": "native codex binding satisfies context.observer",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": [
+            "activation remains subject to the frozen trust, approval and sandbox axes"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.context.observer",
+          "binding": {
+            "surface": "static Cursor rule",
+            "target": ".cursor/rules/swissknifeman-observer.mdc",
+            "alwaysApply": true
+          },
+          "diagnostic": "Cursor context.observer is carried by a static alwaysApply rule and does not depend on sessionStart.additional_context",
+          "evidence": [
+            {
+              "claim": "the Cursor rules renderer emits a deterministic alwaysApply observer carrier and provider audit validates the binding through lifecycle-context mappings",
+              "scope": "cursor context.observer static rule projection",
+              "source": "packages/harness/lib/harness/cursor_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "observer policy is carried only by the static managed rule",
+            "mechanical read-only enforcement remains launch-mode dependent",
+            "sessionStart.additional_context is intentionally not required"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.context.observer",
+          "binding": {
+            "surface": "SessionStart",
+            "target": ".grok/hooks/swissknifeman.json"
+          },
+          "diagnostic": "Grok context.observer uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+          "evidence": [
+            {
+              "claim": "Grok context.observer uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+              "scope": "grok context.observer Claude-shaped hook projection",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop)",
+            "handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok",
+            "inactive by default unless registered via harness hooks --provider grok"
+          ]
+        }
+      }
+    },
+    {
+      "id": "context.output-style",
+      "intent": "Select a provider-native output/context style.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "outputStyle"
+          },
+          "diagnostic": "native claude-code binding satisfies context.output-style",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": [
+            "activation remains subject to the frozen trust, approval and sandbox axes"
+          ]
+        },
+        "codex": {
+          "diagnostic": "unsupported codex context.output-style: no configuration key exists at the provider; fails closed with HARNESS_ACTIVATION_UNSUPPORTED",
+          "evidence": [
+            {
+              "claim": "the Codex configuration reference documents no output-style key, so no configuration binding or deterministic adapter can satisfy this surface",
+              "scope": "codex context.output-style configuration key",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "Codex documents no output-style configuration key",
+            "session style at Codex is a provider-owned behaviour with no project-scoped key to bind",
+            "if such a key appears, raising the level is an additive change"
+          ]
+        },
+        "cursor": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor context.output-style capability cap",
+              "claim": "Cursor exposes no project-scoped output-style binding in managed project configuration surfaces"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Cursor exposes no project-scoped output-style binding",
+            "repository rules can suggest formatting, but they are not provider-native output-style configuration"
+          ],
+          "diagnostic": "unsupported for Cursor: no project-scoped output-style binding exists"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok context.output-style capability cap",
+              "claim": "Grok exposes no project-scoped output-style binding in managed project configuration surfaces"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Grok exposes no project-scoped output-style binding",
+            "repository rules can suggest formatting, but they are not provider-native output-style configuration"
+          ],
+          "diagnostic": "unsupported for Grok: no project-scoped output-style binding exists"
+        }
+      }
+    },
+    {
+      "id": "context.plans-directory",
+      "intent": "Declare the project plan directory through a native configuration binding.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "plansDirectory"
+          },
+          "diagnostic": "native claude-code binding satisfies context.plans-directory",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": [
+            "activation remains subject to the frozen trust, approval and sandbox axes"
+          ]
+        },
+        "codex": {
+          "diagnostic": "unsupported codex context.plans-directory: no configuration key exists at the provider; fails closed with HARNESS_ACTIVATION_UNSUPPORTED",
+          "evidence": [
+            {
+              "claim": "the Codex configuration reference documents no plan-directory key, so no configuration binding or deterministic adapter can satisfy this surface",
+              "scope": "codex context.plans-directory configuration key",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "Codex documents no plan-directory configuration key",
+            "plan location for a Codex session is a repository convention, not a provider-bound setting",
+            "if such a key appears, raising the level is an additive change"
+          ]
+        },
+        "cursor": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor context.plans-directory capability cap",
+              "claim": "Cursor exposes no project-scoped plan-directory binding; plan paths remain repository convention only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Cursor exposes no project-scoped plan-directory binding",
+            ".cursor/plans is a repository convention, not a provider configuration surface"
+          ],
+          "diagnostic": "unsupported for Cursor: no project-scoped plans-directory binding exists"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok context.plans-directory capability cap",
+              "claim": "Grok exposes no project-scoped plan-directory binding; plan paths remain repository convention only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Grok exposes no project-scoped plan-directory binding",
+            ".grok/plans is a repository convention, not a provider configuration surface"
+          ],
+          "diagnostic": "unsupported for Grok: no project-scoped plans-directory binding exists"
+        }
+      }
+    },
+    {
+      "id": "doctor.environment",
+      "intent": "Diagnose harness prerequisites without mutation.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.doctor.environment",
+          "diagnostic": "deterministic harness adapter satisfies claude-code doctor.environment",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.doctor.environment",
+          "diagnostic": "deterministic harness adapter satisfies codex doctor.environment",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "cursor": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "requires the committed harness cursor adapter and managed-boundary checks"
+          ],
+          "diagnostic": "deterministic cursor adapter satisfies doctor.environment",
+          "adapter_id": "harness.cursor.doctor.environment"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "requires the committed harness grok adapter and managed-boundary checks"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies doctor.environment",
+          "adapter_id": "harness.grok.doctor.environment"
+        }
+      }
+    },
+    {
+      "id": "doctor.provider",
+      "intent": "Compose named provider validators and catalog diagnostics.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.doctor.provider",
+          "diagnostic": "deterministic harness adapter satisfies claude-code doctor.provider",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.doctor.provider",
+          "diagnostic": "deterministic harness adapter satisfies codex doctor.provider",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "cursor": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "reports the unmanaged approval-mode axis per D2",
+            "Claude-compat delivery depends on the user toggle \"Include Third-Party Plugins, Skills, and Other Configs\", so compat is not treated as a managed provider binding"
+          ],
+          "diagnostic": "deterministic cursor adapter satisfies doctor.provider",
+          "adapter_id": "harness.cursor.doctor.provider"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "reports the unmanaged approval-mode axis per D2",
+            "Claude-compat delivery depends on the user toggle \"Include Third-Party Plugins, Skills, and Other Configs\", so compat is not treated as a managed provider binding"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies doctor.provider",
+          "adapter_id": "harness.grok.doctor.provider"
+        }
+      }
+    },
+    {
+      "id": "instructions.project",
+      "intent": "Activate repository-scoped operator instructions after provider trust checks.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": "CLAUDE.md"
+          },
+          "diagnostic": "native Claude Code project instructions; activation remains trust-gated",
+          "evidence": [
+            {
+              "claim": "the instruction conformance report proves exact common semantic parity and provider-owned extensions across both native instruction targets",
+              "scope": "root and package instruction projections",
+              "source": "packages/harness/docs/reference/provider-instructions.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "binding": {
+            "surface": "AGENTS.md"
+          },
+          "diagnostic": "native Codex repository instruction chain; activation remains trust-gated",
+          "evidence": [
+            {
+              "claim": "the instruction conformance report proves exact common semantic parity and provider-owned extensions across both native instruction targets",
+              "scope": "root and package instruction projections",
+              "source": "packages/harness/docs/reference/provider-instructions.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies instructions.project",
+          "binding": {
+            "surface": ".cursor/rules/*.mdc"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies instructions.project",
+          "binding": {
+            "surface": "AGENTS.md+.grok/rules/*.md"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "lifecycle.auto-approval",
+      "intent": "Apply selected approval policy through a native lifecycle binding.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.auto-approval",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.auto-approval",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "binding": {
+            "approval_surface": "approval_policy",
+            "sandbox_surface": "sandbox_mode"
+          },
+          "diagnostic": "native codex binding satisfies lifecycle.auto-approval",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": [
+            "activation remains subject to the frozen trust, approval and sandbox axes"
+          ]
+        },
+        "cursor": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "bounded to the allowlist half only; approval mode axis is unmanaged per D2"
+          ],
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.auto-approval",
+          "adapter_id": "harness.cursor.lifecycle.auto-approval"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "project file carries [permission] deny only; [ui] permission_mode is user-level and is not written",
+            "launch mode is --permission-mode or --always-approve; deny rules still apply under always-approve"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.auto-approval",
+          "adapter_id": "harness.grok.lifecycle.auto-approval",
+          "binding": {
+            "approval_surface": "launch-flag",
+            "project_surface": "[permission] deny"
+          }
+        }
+      }
+    },
+    {
+      "id": "lifecycle.changelog-gate",
+      "intent": "Gate declared release-sensitive operations.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.changelog-gate",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.changelog-gate",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.changelog-gate",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.changelog-gate",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.lifecycle.changelog-gate refuses a git commit of a release-sensitive type without a staged changelog edit in mode strict, warns in warn, and is inactive by default",
+              "scope": "codex lifecycle.changelog-gate refusal on release-sensitive commits",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default",
+            "reads the commit type only from a -m message: an editor-composed message is not inspected",
+            "the non-blocking warning is delivered as a systemMessage hint, not byte-identical to Claude's hookSpecificOutput.additionalContext"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.changelog-gate",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.changelog-gate through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Cursor and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files",
+              "scope": "cursor lifecycle.changelog-gate shared-core routing and mode behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "reads release-sensitive commit type only from git commit -m messages",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.changelog-gate",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.changelog-gate through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files",
+              "scope": "grok lifecycle.changelog-gate shared-core routing and mode behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "reads release-sensitive commit type only from git commit -m messages",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.command-log",
+      "intent": "Record provider-native command execution evidence.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.command-log",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.command-log",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.command-log",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.command-log",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter `harness.codex.lifecycle.command-log` writes one provider-qualified command-log line per matched Bash tool call and is observed as a green `surface_map` row for codex",
+              "scope": "codex lifecycle.command-log surface, hook-native binding on PreToolUse",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls Codex exposes as `Bash`; a shell invocation routed through another tool name is out of the log",
+            "writes to a Codex-qualified log path; the Claude-side log at `~/.claude/logs/bash-commands.jsonl` is untouched"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.command-log",
+          "diagnostic": "deterministic cursor adapter captures afterShellExecution command envelopes",
+          "evidence": [
+            {
+              "claim": "Cursor lifecycle handler captures command_sha256, command_class, duration, sandbox and neutral outcome on afterShellExecution while omitting payload output",
+              "scope": "cursor lifecycle.command-log wire-shape and persistence checks",
+              "source": "packages/harness/tests/test_cursor_hook_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "captures only afterShellExecution payloads rendered through .cursor/hooks/lifecycle.py",
+            "correlates records by conversation_id (stored as session_id)",
+            "does not persist payload.output"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.command-log",
+          "diagnostic": "deterministic grok adapter captures PreToolUse Bash commands through the shared lifecycle handler",
+          "evidence": [
+            {
+              "claim": "Grok command-log reads PreToolUse tool_input.command for tool_name Bash and writes ~/.grok/logs/bash-commands.jsonl; it does not use Cursor afterShellExecution",
+              "scope": "grok lifecycle.command-log shared handler",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls Grok exposes as Bash on PreToolUse",
+            "writes the grok state log, not ~/.claude/logs/bash-commands.jsonl"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.tool-telemetry",
+      "intent": "Capture provider-native tool-call sidecar evidence for run-report enrichment.",
+      "support": {
+        "claude-code": {
+          "diagnostic": "unsupported claude-code lifecycle.tool-telemetry; run-report derives tool counts from the SessionEnd transcript instead",
+          "evidence": [
+            {
+              "claim": "Claude SessionEnd run-report extracts codegraph and tool counts from the transcript; a separate PreToolUse sidecar is redundant",
+              "scope": "claude-code lifecycle.tool-telemetry surface",
+              "source": "packages/harness/configs/claude-code/hooks/run-report/_lib.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "codegraph telemetry is derived from the SessionEnd transcript parser, not a PreToolUse hook"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.tool-telemetry",
+          "diagnostic": "deterministic harness adapter appends tool-call sidecar lines on PreToolUse for run-report merge",
+          "evidence": [
+            {
+              "claim": "Codex lifecycle handler records tool_name and codegraph counters to .codex/state/<session>.tools.jsonl and SessionEnd run-report merges the sidecar",
+              "scope": "codex lifecycle.tool-telemetry PreToolUse sidecar and run-report enrichment",
+              "source": "packages/harness/tests/test_codex_lifecycle_surfaces.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls exposed on the Codex PreToolUse boundary",
+            "merges into run-report at SessionEnd; empty sidecar yields transcript-only counts when available"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.tool-telemetry",
+          "diagnostic": "deterministic cursor adapter appends tool-call sidecar lines on preToolUse for run-report merge",
+          "evidence": [
+            {
+              "claim": "Cursor lifecycle handler records tool_name and codegraph counters to .cursor/state/<conversation>.tools.jsonl and sessionEnd run-report merges the sidecar",
+              "scope": "cursor lifecycle.tool-telemetry preToolUse sidecar and run-report enrichment",
+              "source": "packages/harness/tests/test_cursor_hook_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls exposed on the Cursor preToolUse boundary",
+            "merges into run-report at sessionEnd; uses conversation_id as the correlation key"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.tool-telemetry",
+          "diagnostic": "deterministic grok adapter records PreToolUse tool_name into .grok/state/<session>.tools.jsonl",
+          "evidence": [
+            {
+              "claim": "Grok tool-telemetry appends tool_name under .grok/state/<session_id>.tools.jsonl; SessionEnd run-report merges that sidecar",
+              "scope": "grok lifecycle.tool-telemetry shared handler",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "correlates records by session_id, not Cursor conversation_id",
+            "sidecar path is .grok/state, not .cursor/state"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.daemon-safety",
+      "intent": "Reject unsafe shared-daemon operations.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.daemon-safety",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.daemon-safety",
+          "evidence": [
+            {
+              "claim": "settings.global.json registers ~/.claude/hooks/daemon-safety/block-daemon-ops.sh on PreToolUse/Bash and apply-permissions.sh installs it, so the surface is satisfied by a committed deterministic adapter",
+              "scope": "claude-code lifecycle.daemon-safety registration already shipped by the harness global preset",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes",
+            "the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override",
+            "registered by the harness global preset (settings.global.json, PreToolUse/Bash) and installed by apply-permissions.sh; the record previously claimed no binding satisfied the surface, which was false"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.daemon-safety",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.daemon-safety",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.lifecycle.daemon-safety refuses a matched destructive daemon command with exit 2 and a reason, from the same pattern set as the shipped Claude hook",
+              "scope": "codex lifecycle.daemon-safety refusal on destructive shared-daemon commands",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "pattern-based refusal over declared destructive daemon operations: an operation phrased outside the pattern set passes",
+            "the escape hatch stays the documented environment kill switch (PERPLEXITY_DAEMON_GUARD=off), not a project override",
+            "the pattern set is embedded into the generated dispatcher, so a change of the Claude-side patterns requires regenerating the Codex artifact",
+            "Codex-side activation is project-scoped opt-in via harness hooks --provider codex, unlike the Claude side which is a machine-wide always-on install"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.daemon-safety",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.daemon-safety through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Cursor and Codex daemon-safety adapters consume one shared declarative policy core and fail closed with exit 2 in strict mode",
+              "scope": "cursor lifecycle.daemon-safety policy-core routing and enforcement behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive unless explicitly registered via harness hooks --provider cursor --daemon-safety",
+            "fail closed when the shared policy core is unreachable",
+            "uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.daemon-safety",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.daemon-safety through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex daemon-safety adapters consume one shared declarative policy core and fail closed with exit 2 in strict mode",
+              "scope": "grok lifecycle.daemon-safety policy-core routing and enforcement behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive unless explicitly registered via harness hooks --provider grok --daemon-safety",
+            "fail closed when the shared policy core is unreachable",
+            "uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.git-guardrails",
+      "intent": "Reject declared dangerous version-control operations.",
+      "support": {
+        "claude-code": {
+          "diagnostic": "unsupported claude-code lifecycle.git-guardrails; committed implementation is not registered by any preset or install branch",
+          "evidence": [
+            {
+              "claim": "the implementation is committed but nothing registers or installs it: no preset, apply-permissions.sh branch or harness hooks flag activates it",
+              "scope": "claude-code lifecycle.git-guardrails activation state",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "the implementation is committed (configs/claude-code/hooks/git-guardrails/block-dangerous-git.sh) but no registration ships: no preset, install branch or operator flag activates it, so the surface fails closed",
+            "activating it fleet-wide is a behaviour change of the live contour and is not part of the parity phase"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.git-guardrails",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.git-guardrails",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.lifecycle.git-guardrails refuses a matched dangerous git command in mode strict, warns in warn, and is inactive by default",
+              "scope": "codex lifecycle.git-guardrails refusal on declared dangerous version-control commands",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default",
+            "pattern-based refusal: a command phrased outside the declared pattern set passes",
+            "the Claude half of this surface stays unsupported (see its own record): only the Codex half is closed here"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.git-guardrails",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.git-guardrails through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Cursor and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling",
+              "scope": "cursor lifecycle.git-guardrails shared-core enforcement and warning behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "pattern-based refusal remains intentionally unchanged on this pass",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.git-guardrails",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.git-guardrails through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling",
+              "scope": "grok lifecycle.git-guardrails shared-core enforcement and warning behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "pattern-based refusal remains intentionally unchanged on this pass",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.memory",
+      "intent": "Activate selected memory lifecycle integration.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.memory",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.memory",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.memory",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.memory",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter `harness.codex.lifecycle.memory` activates the selected memory backend for a Codex session without writing memory state itself and without changing state paths owned by skiller",
+              "scope": "codex lifecycle.memory activation at SessionStart against unchanged `~/.swissknifeman` state ownership",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "per-project overrides are read from the Codex-side project files; Claude's `.claude/memory.*` overrides do not apply to a Codex session",
+            "the backend, its groups and its state remain owned by skiller/maind: this surface only activates them"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.memory",
+          "diagnostic": "deterministic cursor adapter activates lifecycle.memory through sessionStart env",
+          "evidence": [
+            {
+              "claim": "Cursor memory adapter emits sessionStart env activation from project-scoped memory mode without injecting additional_context or token values",
+              "scope": "cursor lifecycle.memory sessionStart environment activation",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "activation is explicit and mode-driven via .cursor/memory.env.ini",
+            "sessionStart additional_context is intentionally not used for this surface",
+            "memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.memory",
+          "diagnostic": "deterministic grok adapter activates lifecycle.memory through sessionStart env",
+          "evidence": [
+            {
+              "claim": "Grok memory adapter reads .grok/memory.env.ini on SessionStart and emits systemMessage from maind memory status; it does not inject additional_context",
+              "scope": "grok lifecycle.memory sessionStart environment activation",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "activation is explicit and mode-driven via .grok/memory.env.ini",
+            "sessionStart additional_context is intentionally not used for this surface",
+            "memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.notification",
+      "intent": "Notify on provider-native waiting or approval events.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.notification",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.notification",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "diagnostic": "unsupported codex lifecycle.notification: no managed project artifact can satisfy a machine-local, non-overridable surface; fails closed with HARNESS_ACTIVATION_UNSUPPORTED",
+          "evidence": [
+            {
+              "claim": "Codex exposes no Notification hook event and delivers notifications only through the user-scope notify key, which a project-scoped configuration may not override, so no managed project artifact can satisfy this surface",
+              "scope": "codex lifecycle.notification within the managed-project-artifact model",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "Codex has no Notification hook event",
+            "notifications are user-scope notify only, which a project-scoped configuration may not override, so the surface stays fail-closed under the managed-artifact model",
+            "replacement inside project scope: none; the operator may configure notify at machine level by hand"
+          ]
+        },
+        "cursor": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor lifecycle.notification capability cap",
+              "claim": "Cursor notification control is global CLI configuration and cannot be managed through repository-scoped bindings"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — notification settings are machine-global and not project-overridable",
+            "no repository-scoped binding can satisfy provider-native notification semantics"
+          ],
+          "diagnostic": "unsupported for Cursor: notifications are global-only and outside project-scoped control"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok lifecycle.notification capability cap",
+              "claim": "Grok notification control is global CLI configuration and cannot be managed through repository-scoped bindings"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — notification settings are machine-global and not project-overridable",
+            "no repository-scoped binding can satisfy provider-native notification semantics"
+          ],
+          "diagnostic": "unsupported for Grok: notifications are global-only and outside project-scoped control"
+        }
+      }
+    },
+    {
+      "id": "lifecycle.pack-guard",
+      "intent": "Guard managed agent-pack assets before mutation.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.pack-guard",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.pack-guard",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.pack-guard",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.pack-guard",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.lifecycle.pack-guard refuses an apply_patch over a managed generated asset in mode strict, warns in warn, and is inactive by default",
+              "scope": "codex lifecycle.pack-guard refusal over managed pack assets recorded in the project's pack lock",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; the operator enables a mode explicitly, as on the Claude side",
+            "matches only the Codex apply_patch tool: a mutation performed through a shell command is out of this gate",
+            "detects a touched managed path by a best-effort substring match over the serialized apply_patch tool_input, because the exact Codex apply_patch payload shape beyond tool_name is unverified"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.pack-guard",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.pack-guard through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Cursor and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict",
+              "scope": "cursor lifecycle.pack-guard managed-target guard behavior",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches managed targets through serialized preToolUse payload inspection",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.pack-guard",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.pack-guard through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict",
+              "scope": "grok lifecycle.pack-guard managed-target guard behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches managed targets through serialized preToolUse payload inspection",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.review-gate",
+      "intent": "Gate declared review-sensitive lifecycle completion.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.review-gate",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.review-gate",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.review-gate",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.review-gate",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.lifecycle.review-gate runs the project-declared check at SubagentStop and, in mode strict, exits 2 so the subagent continues with the violation text instead of finishing",
+              "scope": "codex lifecycle.review-gate enforcement at SubagentStop by preventing the subagent from stopping",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "enforcement means forced continuation with feedback, not cancellation of the subagent: neither provider can cancel it from this event",
+            "the loop-guard counter lives in the dispatcher (a per-session/agent attempt count capped at 3), because stop_hook_active is documented at neither provider as reliable",
+            "inactive by default, and the check command comes only from the machine-owned hook configuration shared with the Claude review-gate install"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.review-gate",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.review-gate via subagentStop continuation",
+          "evidence": [
+            {
+              "claim": "Cursor review-gate uses SubagentStop loop_count with loop_limit=3, emits actionable followup_message only for status=completed, and refuses unchanged repeated followups",
+              "scope": "cursor lifecycle.review-gate continuation behavior and dedup safeguards",
+              "source": "packages/harness/tests/test_cursor_lifecycle_gates.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "continuation followups are emitted only when subagentStop status is completed",
+            "if a Claude-compat review-gate registration is already present, Cursor-native continuation is skipped to avoid double triggering"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.review-gate",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.review-gate via subagentStop continuation",
+          "evidence": [
+            {
+              "claim": "Grok review-gate runs on SubagentStop, stores attempt counts in .grok/review-gate.state.json, exits 2 in strict mode, and otherwise emits systemMessage",
+              "scope": "grok lifecycle.review-gate continuation behavior and dedup safeguards",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "continuation followups are emitted only when subagentStop status is completed",
+            "if a Claude-compat review-gate registration is already present, Grok-native continuation is skipped to avoid double triggering"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.router",
+      "intent": "Project semantic routing into native lifecycle activation.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.router",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.router",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.router",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.router",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter `harness.codex.lifecycle.router` emits at most one non-authoritative routing bias line per prompt from the shared router catalog and never refuses a turn",
+              "scope": "codex lifecycle.router bias injection on UserPromptSubmit",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "delivers the bias as `systemMessage`, the form the generated Codex handler already uses, not as Claude's `hookSpecificOutput.additionalContext`",
+            "the `SessionStart` half of the Claude pair (static policy) is not part of this surface at Codex, where `SessionStart` is owned by `context.observer`"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.router",
+          "binding": {
+            "surface": "static Cursor rule",
+            "target": ".cursor/rules/swissknifeman-router.mdc",
+            "alwaysApply": false
+          },
+          "diagnostic": "Cursor lifecycle.router is a manual planner rule requiring explicit invocation",
+          "evidence": [
+            {
+              "claim": "the Cursor rules renderer generates a manual routing carrier with alwaysApply false and no description or globs; planner does not activate from ordinary prompts",
+              "scope": "cursor lifecycle.router explicit-only carrier",
+              "source": "packages/harness/lib/harness/cursor_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "routing bias is session-scoped through a static rule projection",
+            "Cursor provides no per-prompt project hook field for routing context injection",
+            "sessionStart.additional_context is intentionally not required"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.router",
+          "diagnostic": "Grok lifecycle.router uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+          "evidence": [
+            {
+              "claim": "Grok lifecycle.router uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
+              "scope": "grok lifecycle.router Claude-shaped hook projection",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop)",
+            "handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok",
+            "inactive by default unless registered via harness hooks --provider grok"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.run-report",
+      "intent": "Capture a provider-qualified run report at a native lifecycle boundary.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.run-report",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.run-report",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.run-report",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.run-report",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter `harness.codex.lifecycle.run-report` writes one provider-qualified run record per session end from the documented `SessionEnd` payload; the transcript is not parsed",
+              "scope": "codex lifecycle.run-report boundary capture at SessionEnd, without transcript-derived outcome extraction",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "captures the session boundary only: the Codex transcript format is unverified, so no outcome is extracted from `transcript_path`",
+            "`reason` is currently always `other` in Codex payloads, so the report cannot distinguish end causes",
+            "outcome depth comparable to the Claude report requires the neutral analytics path (`analytics.run-report`), not this hook"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.run-report",
+          "diagnostic": "deterministic cursor adapter captures sessionEnd reason with neutral outcome mapping",
+          "evidence": [
+            {
+              "claim": "Cursor lifecycle handler preserves the source reason enum and writes a neutral outcome envelope for the sessionEnd event",
+              "scope": "cursor lifecycle.run-report schema=1 envelope checks",
+              "source": "packages/harness/tests/test_cursor_hook_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "captures only documented sessionEnd fields and stores source reason under cursor.end_reason",
+            "maps reason to a neutral outcome (ok|failed|unknown) while preserving the original reason",
+            "uses conversation_id as the cross-event correlation key"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.run-report",
+          "diagnostic": "deterministic grok adapter writes a SessionEnd run record with provider_id grok",
+          "evidence": [
+            {
+              "claim": "Grok run-report writes .grok/runs/<session>.json on SessionEnd and stamps provider_id grok",
+              "scope": "grok lifecycle.run-report schema=1 envelope checks",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "provider_id is grok when the shared handler is rendered with state_dir=.grok",
+            "tool counts come from the .grok/state sidecar"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mcp.catalog",
+      "intent": "Render semantic MCP descriptors with secret references only.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.mcp.catalog",
+          "diagnostic": "deterministic harness adapter satisfies claude-code mcp.catalog",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.mcp.catalog",
+          "diagnostic": "deterministic harness adapter satisfies codex mcp.catalog",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies mcp.catalog",
+          "binding": {
+            "surface": ".cursor/mcp.json"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "claim": "Grok project .grok/config.toml [mcp_servers] is the native MCP catalog; Grok also merges .mcp.json and .cursor/mcp.json via compat",
+              "scope": "grok mcp.catalog",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies mcp.catalog",
+          "binding": {
+            "surface": ".grok/config.toml"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "security.safe-dirs",
+      "intent": "Maintain a fail-closed destructive-operation allowlist.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.security.safe-dirs",
+          "diagnostic": "deterministic harness adapter satisfies claude-code security.safe-dirs",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.security.safe-dirs",
+          "diagnostic": "deterministic harness adapter satisfies codex security.safe-dirs",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.security.safe-dirs reaches its verdict by calling the single allowlist verdict core used by the Claude hook, refuses fail-closed on any doubt, and does not project the sandbox configuration half",
+              "scope": "codex security.safe-dirs fail-closed refusal over the machine-owned allowlist, hook half only",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "covers the hook half only: sandbox_workspace_write.writable_roots is not projected, because the sandbox axis belongs to lifecycle.auto-approval",
+            "requires the harness checkout reachable from the project, since the verdict core is called rather than copied; an unreachable core is a refusal, not a pass",
+            "the allowlist itself stays machine-owned and is never written by this surface"
+          ]
+        },
+        "cursor": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            },
+            {
+              "source": "packages/harness/tests/test_cursor_hook_render.py",
+              "verified_at": "2026-09-17",
+              "scope": "cursor security.safe-dirs hook registration, native before/after wire shape and fail-closed verdict path",
+              "claim": "conformance covers native hooks.json v1 rendering, merge-preserving registration, pinned beforeShellExecution/afterShellExecution payload fixtures, and handler behavior without hard dependency on session_id"
+            }
+          ],
+          "limitations": [
+            "beforeShellExecution hook with failClosed:true calling shared verdict core"
+          ],
+          "diagnostic": "deterministic cursor adapter satisfies security.safe-dirs",
+          "adapter_id": "harness.cursor.security.safe-dirs"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "claim": "Grok safe-dirs is a PreToolUse Bash hook in .grok/hooks/swissknifeman.json that calls the shared safedirs verdict and fails closed when the harness checkout is unreachable",
+              "scope": "grok security.safe-dirs hook document and handler",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "limitations": [
+            "matcher is ^Bash$ on PreToolUse, not Cursor beforeShellExecution",
+            "unreachable harness checkout is a refusal, not a pass"
+          ],
+          "diagnostic": "deterministic grok adapter denies rm/rmdir on PreToolUse Bash through the shared allowlist core",
+          "adapter_id": "harness.grok.security.safe-dirs"
+        }
+      }
+    },
+    {
+      "id": "settings.audit",
+      "intent": "Read layered settings and report named policy conformance.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.settings.audit",
+          "diagnostic": "deterministic harness adapter satisfies claude-code settings.audit",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.settings.audit",
+          "diagnostic": "deterministic harness adapter satisfies codex settings.audit (bounded: Codex-specific check set)",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.settings.audit reads the documented Codex layers, reports named conformance findings with layer provenance, and reports an unreadable layer as a finding instead of asserting conformance",
+              "scope": "codex settings.audit over the documented Codex configuration layers, Codex-specific check set",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "the check set is Codex-specific and smaller than the Claude one: the 13 Claude checks are permission- and settings-shape rules with no Codex counterpart",
+            "layer content is parsed only where the interpreter provides tomllib (Python 3.11+); on 3.9 and 3.10 the layer is reported as unreadable, never as conforming",
+            "read-only, like the Claude auditor: nothing in ~/.codex or .codex is written"
+          ]
+        },
+        "cursor": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "read-only audit of documented layers; unreadable layer is a finding"
+          ],
+          "diagnostic": "deterministic cursor adapter satisfies settings.audit",
+          "adapter_id": "harness.cursor.settings.audit"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "read-only audit of documented layers; unreadable layer is a finding"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies settings.audit",
+          "adapter_id": "harness.grok.settings.audit"
+        }
+      }
+    },
+    {
+      "id": "settings.permissions",
+      "intent": "Render named permission/settings presets without replacing user-owned values.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.settings.permissions",
+          "diagnostic": "deterministic harness adapter satisfies claude-code settings.permissions",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.settings.permissions",
+          "diagnostic": "deterministic harness adapter satisfies codex settings.permissions",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "cursor": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "merge-only .cursor/permissions.json and .cursor/cli.json; deny floor survives --force"
+          ],
+          "diagnostic": "deterministic cursor adapter satisfies settings.permissions",
+          "adapter_id": "harness.cursor.settings.permissions"
+        },
+        "grok": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "merge-only .grok/config.toml [ui]/[permission]; deny floor survives --always-approve"
+          ],
+          "diagnostic": "deterministic grok adapter satisfies settings.permissions",
+          "adapter_id": "harness.grok.settings.permissions"
+        }
+      }
+    },
+    {
+      "id": "skills.repository",
+      "intent": "Load repository-owned skills and task adapters through the provider-native repository/plugin projection.",
+      "support": {
+        "claude-code": {
+          "binding": {
+            "surface": ".claude-plugin/marketplace.json"
+          },
+          "diagnostic": "native Claude Code repository/plugin skill projection is available",
+          "evidence": [
+            {
+              "claim": "skill publication conformance proves both native repository/plugin projections preserve one canonical skill inventory",
+              "scope": "dual-provider skill publication",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "codex": {
+          "binding": {
+            "surface": ".agents/plugins/marketplace.json"
+          },
+          "diagnostic": "native Codex repository/plugin skill projection is available",
+          "evidence": [
+            {
+              "claim": "skill publication conformance proves both native repository/plugin projections preserve one canonical skill inventory",
+              "scope": "dual-provider skill publication",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "native",
+          "limitations": []
+        },
+        "cursor": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [],
+          "diagnostic": "native cursor binding satisfies skills.repository",
+          "binding": {
+            "surface": ".agents/skills"
+          }
+        },
+        "grok": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native grok binding satisfies skills.repository",
+          "binding": {
+            "surface": ".agents/skills"
+          },
+          "limitations": []
+        }
+      }
+    },
+    {
+      "id": "workflows.status",
+      "intent": "Read and report provider-qualified workflow run status.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.workflows.status",
+          "diagnostic": "deterministic harness adapter satisfies claude-code workflows.status",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-07-21"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires the committed harness catalog, provider projection and managed-boundary checks"
+          ]
+        },
+        "codex": {
+          "diagnostic": "unsupported codex workflows.status: the reported object does not exist at Codex; fails closed with HARNESS_ACTIVATION_UNSUPPORTED",
+          "evidence": [
+            {
+              "claim": "the Claude surface parses the internal Claude Code workflow run directory, and the documented Codex surfaces expose no workflow-run store to read, so the surface has no Codex object to report",
+              "scope": "codex workflows.status as a reader of workflow run state",
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-07-30"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "the Claude surface reads an internal, undocumented Claude Code run directory; Codex documents no equivalent run store",
+            "the Codex orchestration carrier is a rendered instruction, not a runtime that leaves a run directory",
+            "session-level reporting for Codex is covered by analytics.run-report, which is adapted for both providers"
+          ]
+        },
+        "cursor": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "cursor workflows.status capability cap",
+              "claim": "Cursor exposes no provider-native workflow run store; generated workflow carriers are instruction-only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Cursor exposes no provider-native workflow run store to query",
+            "generated workflow carriers orchestrate native subagents but do not create a queryable run directory"
+          ],
+          "diagnostic": "unsupported for Cursor: no provider-native workflow status store exists"
+        },
+        "grok": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "grok workflows.status capability cap",
+              "claim": "Grok exposes no provider-native workflow run store; generated workflow carriers are instruction-only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Grok exposes no provider-native workflow run store to query",
+            "generated workflow carriers orchestrate native subagents but do not create a queryable run directory"
+          ],
+          "diagnostic": "unsupported for Grok: no provider-native workflow status store exists"
+        }
+      }
+    },
+    {
+      "id": "lifecycle.plan-guard",
+      "intent": "Block hand edits of files generated by plan.py inside a plan directory.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.plan-guard",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.plan-guard",
+          "evidence": [
+            {
+              "claim": "the harness conformance report supplies one exact support row and diagnostic for every provider and frozen surface",
+              "scope": "frozen provider-qualified harness surface matrix",
+              "source": "packages/harness/docs/reference/provider-harness.md",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "guards the Claude Edit, Write and MultiEdit tools only; a shell command that writes a generated file is out of this gate"
+          ]
+        },
+        "codex": {
+          "adapter_id": "harness.codex.lifecycle.plan-guard",
+          "diagnostic": "deterministic harness adapter satisfies codex lifecycle.plan-guard",
+          "evidence": [
+            {
+              "claim": "the deterministic adapter harness.codex.lifecycle.plan-guard refuses an apply_patch over a generated plan file when plan.json exists beside it, and passes the same patch without plan.json",
+              "scope": "codex lifecycle.plan-guard refusal over generated plan files",
+              "source": "packages/harness/tests/test_plan_guard.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches only the Codex apply_patch tool: a mutation performed through a shell command is out of this gate",
+            "detects a touched path from apply_patch file headers and plain path strings of the tool input"
+          ]
+        },
+        "cursor": {
+          "adapter_id": "harness.cursor.lifecycle.plan-guard",
+          "diagnostic": "deterministic cursor adapter satisfies lifecycle.plan-guard through the shared policy core",
+          "evidence": [
+            {
+              "claim": "the Cursor preToolUse adapter denies a Write over a generated plan file when plan.json exists beside it and allows the same Write without plan.json",
+              "scope": "cursor lifecycle.plan-guard generated-file guard behavior",
+              "source": "packages/harness/tests/test_plan_guard.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches Write and Delete tool inputs through plain path strings",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "grok": {
+          "adapter_id": "harness.grok.lifecycle.plan-guard",
+          "diagnostic": "deterministic grok adapter satisfies lifecycle.plan-guard through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Grok and Codex plan-guard adapters share one dispatcher and one policy core for generated plan files",
+              "scope": "grok lifecycle.plan-guard generated-file guard behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches only the apply_patch tool",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lifecycle.plan-regen",
+      "intent": "Check and re-render a planner plan after a JSON edit.",
+      "support": {
+        "claude-code": {
+          "adapter_id": "harness.claude-code.lifecycle.plan-regen",
+          "diagnostic": "deterministic harness adapter satisfies claude-code lifecycle.plan-regen",
+          "evidence": [
+            {
+              "claim": "a PostToolUse hook on a plan JSON edit returns plan.py check errors and does not render, and renders the views when only stale views are reported",
+              "scope": "claude-code lifecycle.plan-regen check and render behavior",
+              "source": "packages/harness/tests/test_plan_guard.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; harness hooks --plan-regen on enables it",
+            "needs plan.py: $TASK_PLAN_CLI or packages/planner/scripts/plan.py in the project",
+            "acts on Edit, Write and MultiEdit only"
+          ]
+        },
+        "codex": {
+          "diagnostic": "unsupported for Codex: no PostToolUse surface is mapped by the harness for lifecycle.plan-regen",
+          "evidence": [
+            {
+              "claim": "harness hooks.py maps no PostToolUse lifecycle surface for Codex",
+              "scope": "Codex lifecycle.plan-regen activation state",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "generated views are refreshed by plan.py mutations and plan.py render; run plan.py check after a hand edit of plan JSON"
+          ]
+        },
+        "cursor": {
+          "diagnostic": "unsupported for Cursor: no PostToolUse surface is mapped by the harness for lifecycle.plan-regen",
+          "evidence": [
+            {
+              "claim": "harness hooks.py maps no PostToolUse lifecycle surface for Cursor",
+              "scope": "Cursor lifecycle.plan-regen activation state",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "generated views are refreshed by plan.py mutations and plan.py render; run plan.py check after a hand edit of plan JSON"
+          ]
+        },
+        "grok": {
+          "diagnostic": "unsupported for Grok: no PostToolUse surface is mapped by the harness for lifecycle.plan-regen",
+          "evidence": [
+            {
+              "claim": "harness hooks.py maps no PostToolUse lifecycle surface for Grok",
+              "scope": "Grok lifecycle.plan-regen activation state",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "generated views are refreshed by plan.py mutations and plan.py render; run plan.py check after a hand edit of plan JSON"
+          ]
+        }
+      }
+    }
+  ],
+  "catalog_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "native_extensions": [],
+  "providers": [
+    {
+      "display_name": "Claude Code",
+      "id": "claude-code"
+    },
+    {
+      "display_name": "Codex",
+      "id": "codex"
+    },
+    {
+      "display_name": "Cursor",
+      "id": "cursor"
+    },
+    {
+      "display_name": "Grok",
+      "id": "grok"
+    }
+  ]
+}

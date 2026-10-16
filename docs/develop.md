@@ -2,7 +2,7 @@
 
 For the first task and the choice between direct work and Task start with [short route](./getting-started).
 Below is a detailed scenario Claude Code for work that needs a plan; it is not required for
-local reversible edits. Teams `task` are triggered by an explicit call.
+local reversible edits. Teams `planner` are triggered by an explicit call.
 
 One operational runbook: **how to actually conduct the development process** with Claude Code, when the project
 connected to the ecosystem academici. Not «what is installed», a «how to use it day after day» —
@@ -20,7 +20,7 @@ tries - repo rule «single source of truth > copies».
 ```
 setup ──▶ PLAN ──▶ EXECUTION ──▶ CHECK ──▶ RELEASE
   │        │           │             │           │
-onboarding  /task:design /task:dev     verify-     release-
+onboarding  /planner:design /planner:dev     verify-     release-
 skills+    task-brief-  dev-loop +    claims +    discipline
 MCP+memory template     review-gate   analyze     (validate→PR)
 +graph
@@ -46,8 +46,8 @@ Everything else in this runbook is a consequence of this principle.
 | Step | Command / tool | What's going on |
 |:--|:--|:--|
 | **Onboarding** | `swissknifeman setup <project>` | skills (CORE) + permissions + MCP + memory + graph with one command (→ `maind onboard`). Details: [ecosystem-integration](/maind/) |
-| **Plan** | `/task:design` · skill `task-brief-template` · `complex-task-orchestrator` | decompose into **vertical slices** with risk and DoD; plan - in `.claude/plans/<task>.md` (durable, primary source) |
-| **Execution** | `/task:dev` · dev-loop (agent-pack) | slice → impl → tests-to-green → risk-adaptive review-gate |
+| **Plan** | `/planner:design` · skill `task-brief-template` · `complex-task-orchestrator` | decompose into **vertical slices** with risk and DoD; plan - in `.claude/plans/<task>.md` (durable, primary source) |
+| **Execution** | `/planner:dev` · dev-loop (agent-pack) | slice → impl → tests-to-green → risk-adaptive review-gate |
 | **Verification** | `verify-claims` · `decision-verification` · `cross-layer-change-checklist` · `maind analyze` | facts - via RAG; affected layers - according to the checklist; post-run analysis of the run |
 | **Release** | skill `release-discipline` | `validate.sh` → `skiller registry` → `CHANGELOG [Unreleased]` → PR |
 
@@ -83,26 +83,26 @@ whenever you want **forget** past (unrelated task, accumulated noise). Durabilit
 Brief format for handoff — skill `session-handoff` (`.claude/handoffs/…`). Complete flow discipline -
 [context-economy](/skiller/guide/budget).
 
-## 4. Task management - plugin `task`
+## 4. Task management - plugin `planner`
 
-Plugin `task` — **default-on in each project** (connect-channel). Does not incur resident tax
+Plugin `planner` — **default-on in each project** (connect-channel). Does not incur resident tax
 (command descriptions are not injected into every request). That thin face above agent-packs/workflow: each
 command **kicks the model + reasoning effort + profile workflow**, interrupting the session settings - to
 do not switch manually.
 
 | Command | Pinits | For what |
 |:--|:--|:--|
-| `/task:design` | Opus / high | design → detailed technical specification/architecture |
-| `/task:dev` | Opus / high + dev-loop | development: vertical slices, risk-adaptive review-gate |
-| `/task:review` | high effort, risk-adaptive | code review |
-| `/task:research` | fan-out | research (breadth-first) |
-| `/task:fix` | — | spot bug fix |
+| `/planner:design` | Opus / high | design → detailed technical specification/architecture |
+| `/planner:dev` | Opus / high + dev-loop | development: vertical slices, risk-adaptive review-gate |
+| `/planner:review` | high effort, risk-adaptive | code review |
+| `/planner:research` | fan-out | research (breadth-first) |
+| `/planner:fix` | — | spot bug fix |
 
-**How phase is transferred to phase.** `/task:dev` is planning on Opus, cuts into slices (`model→service→
+**How phase is transferred to phase.** `/planner:dev` is planning on Opus, cuts into slices (`model→service→
 controller→test`, everyone at risk `LOW/MED/HIGH`), and if installed agent-pack — drives them through
 `*-dev-loop.js` (passes slices as `args.slices`). No pack - sequentially, one slice at a time.
 Fan-out on coding **not** is used (≈15× tokens; justified only on research). Text that
-`/task:dev` suggests when moving to the next phase - this is **brief** from section 3: do it
+`/planner:dev` suggests when moving to the next phase - this is **brief** from section 3: do it
 self-sufficient (target · DoD · files · solutions · dead ends · how to check).
 
 ## 5. Roles and agent-packs
@@ -128,7 +128,7 @@ Full ladder with measured magnitudes - [budget.md](/skiller/guide/budget) and sk
 |:--|:--|:--|
 | **Trim CLAUDE.md** | to ~92% injectable | ≤200 lines, only what will surprise the experienced; path-scoped rules `.claude/rules/` |
 | **Skill entry form** | is measured `skiller budget --first-turn` | short `description` + `when_to_use`; procedural bodies go to `context: fork`, a `paths:` do not count as automatic savings |
-| **Model routing** | to ~75% | Haiku (reconnaissance/routine) · Sonnet (default) · Opus (architecture/debug). Via `/model` or `/task:*` |
+| **Model routing** | to ~75% | Haiku (reconnaissance/routine) · Sonnet (default) · Opus (architecture/debug). Via `/model` or `/planner:*` |
 | **Audit MCP** | ~10–20k/server resident | keep 1–2 for the task, the rest - CLI; unused disable |
 | **Reconnaissance by subagents** | reads do not go to main-context | hard reading (cards, impact) — read-only to the subagent, summary only to top |
 | **Selective-input** | 5–50× | function slice/class, `tail -n`/`grep`, `git diff` — «point, don't paste» |
@@ -301,14 +301,14 @@ does not authorize a tag, push, publication, fleet rollout, or provider repair.
 
 **Gate docs-impact (CI, `.github/workflows/hygiene.yml`).** `scripts/docs-impact.py` stops
 change-set, which enters/removes/renames the package surface file (`packages/<pkg>/
-{bin,lib,commands,configs}/**`, `core/*.py`, root `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
+{bin,lib,commands,configs}/**`, root `bin/**`/`install.sh`/`scripts/*.{sh,py}`)
 or edits its interface paths (`bin`/`commands`/`configs`/`install.sh`), without editing docks
-**of the same package** (`packages/<pkg>/docs/**`; y `task` — second legal home `docs/task/**`;
+**of the same package** (`packages/<pkg>/docs/**`; y `planner` — second legal home `docs/planner/**`;
 root - `docs/*.md`) in the same range. Bypass - commit trailer `Docs-Not-Needed: <reason>`
 (reason is printed, an empty value is not considered bypass).
 Measured frequency (research/24-P8.4-refine-2026-07-27.md` §1–§2,
 tree `cd93dbc8`): **8 of 12** PR, **11 of 41** commit. Coverage Boundary: Gate **does NOT catch**
-changing the behavior of an existing module `lib/**`/`core/*.py`/`scripts/*.{sh,py}` without new
+changing the behavior of an existing module `lib/**`/`scripts/*.{sh,py}` without new
 file and without editing the interface - this is a conscious narrowing (form «any surface editing» painted
 100 % PR and would have filmed on the very first controversial evening), rather than full coverage.
 
@@ -334,14 +334,68 @@ Blocks are listed in `configs/managed-blocks.json`. `--check` prints `DRIFT`/`MI
 `--write` regenerates only the text between the managed markers (the block itself is inserted by hand once).
 Never edit a managed block directly — edit the source and run `--write`.
 
-**Package bridges.** A package core stays pure: it never names other repository packages. All knowledge
-about a partner lives in `<package>/bridges/<partner>/` (manifest `bridge.json`), which talks to the partner only
-through its public CLI/JSON. List bridges with `python3 packages/task/scripts/plan.py bridge list`
-(Task ↔ orchestrator: `packages/task/bridges/orch`, verbs `brief`, `register`, `register-review`). Boundary tests in the
-Task and orch test suites enforce the rule.
+**Partner commands.** A module imports only itself and `aicore`. When it needs data or a service of another module it calls
+the partner's public command with JSON output, found by `aicore.util.partners` (`SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`,
+then `PATH`; for planner `PLANNER_PLAN_PY` or `PLANNER_ROOT`). A missing partner is `PARTNER_UNAVAILABLE` on stderr and the command
+degrades; a test that needs a partner is skipped when none is found. `bash scripts/test-integration.sh` runs the tests of
+`harness` (and, with `--with-tools`, of the tools `analyst` and `maind`) with every partner wired from the hub layout, in a
+temporary `HOME`, so those tests run instead of being skipped. `maind` and `analyst` are auxiliary tools outside the core
+verification (`standalone.tools` in `configs/ecosystem-units.json`): `standalone --baseline` and the integration run skip them
+unless `--with-tools` is given, and CI tests them in a separate job that never blocks the core. There is no `core/` folder any more; code that imported it imports `aicore`.
+
+**Which tests to run.** Develop one module, test that module: `python3 scripts/affected-tests.py --run` (fast tier, `dev.test`
+of the touched units and of the bridges that require them; `--tier full` adds `dev.validate`; `--base REF` takes the changed paths from a
+diff; without `--run` it only prints the commands). A change of the foundation (`aicore`) affects every unit, a change of any other
+module affects only itself and its bridges: no module requires another one, so their tests never need to run for each other. A *tool*
+(`standalone.tools`, now `analyst` and `maind`) is tested only when its own files change, because it only reads data (and maind writes
+it) and is not part of the core; its tests run when the tool itself is developed (`bash packages/<tool>/scripts/test.sh`). The full pass of every non-tool unit
+(`--tier all --run`, plus `scripts/test-integration.sh`) is for the end of a phase or a release, not for each item; the quick pass runs
+for each item.
+
+**Bridges.** A package core stays pure: it never names other repository packages. All knowledge
+about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to
+its partners through their public CLI/JSON and finds them by environment variable or command on `PATH`, never by a
+neighbouring folder. The planner finds bridges through the `bridges.roots` setting (`.swissknifeman/config.toml` of this
+repository sets `["bridges"]`); list them with `python3 packages/planner/scripts/plan.py bridge list`
+(`planner-orch`: verbs `brief`, `register`, `register-review`, `commit`, `launch`; `orch-skiller`; `orch-harness`).
+Run the tests of every bridge with `bash scripts/test-bridges.sh` (it wires the partners from the hub layout, uses a temporary `HOME` and turns event delivery off). A missing partner is `BRIDGE_PARTNER_UNAVAILABLE` (exit 3) and the conformance tests are skipped; set the variable of the partner (`PLANNER_PLAN_PY`, `SKM_ORCH_ROOT`, `SKM_SKILLER_ROOT`, `SKM_HARNESS_ROOT`) to run them against another checkout. The end-to-end checks of the work-source cycle and the events are `scripts/e2e-work-source.sh` and `scripts/e2e-plan-events.sh`; run them in a sandbox (`scripts/dev-sandbox.sh`). The boundary check of `scripts/ecosystem-units.py`
+and the planner and orch test suites enforce the rule.
 
 Repair: list of violations `public-hygiene` — in Completion Notes closing item'ah, deletion
 artifacts made of wood - a separate decision of the owner (not auto-editing the gate).
+
+## CI matrix of modules
+
+`scripts/ci-matrix.py` is the one source of the CI steps of every module and bridge; the workflow
+`.github/workflows/modules.yml` and a developer's shell run the same steps
+([ADR 0078](architecture/decisions/0078-installed-form-smoke-and-ci-matrix.md)). Units are read from
+`packages/*/unit.json` and `bridges/*/unit.json`; nothing is listed by hand.
+
+| Steps of a module | `lint`, `test`, `validate`, `standalone`, `cli-smoke`, `contracts`, `schema-compat`, `secrets` |
+| --- | --- |
+| Steps of a bridge | `test`, `contracts` |
+
+```bash
+python3 scripts/ci-matrix.py list                          # the matrix of units
+python3 scripts/ci-matrix.py steps skiller                 # the steps of one unit
+python3 scripts/ci-matrix.py run --unit planner --step test --step contracts
+python3 scripts/ci-matrix.py run --all                     # every unit, tools excluded
+python3 scripts/ci-matrix.py --check --strict              # the workflow covers the matrix
+```
+
+The tests of a module run once per invocation: after a green `test` step the `validate` step runs with
+`SKM_VALIDATE_SKIP_TESTS=1` (the `validate.sh` of a module skips its test run; `--repeat-tests` turns this off), and
+`standalone` runs the tests in its copy once and then `validate` the same way.
+
+Each step runs with a throwaway `HOME` and `SKM_HOME` and prints `ok|fail|skip <unit> <step> <seconds>`; the exit code is
+1 when a step failed. `modules.yml` builds its matrix from `list --json`, tests on Python 3.9 and 3.13, marks the tools
+named by `standalone.tools` (`maind`, `analyst`) as `continue-on-error`, and has a `hub` job: `--check`,
+`ecosystem-units.py check --strict`, golden, `scripts/test-*.py`, `scripts/smoke-installed.sh` and
+`swissknifeman conformance engine`, the last two in a sandbox. `test.yml` and `validate.yml` no longer exist.
+
+The documentation site is built from `docs/`: `cd docs && npm ci && npm run docs:build` (the `docs:sync` script first copies
+`packages/<module>/docs` into `docs/<module>/`; those copies are ignored by git). `.github/workflows/docs.yml` runs the same
+commands with `working-directory: docs`.
 
 ## Scripts-FAQ
 
@@ -352,7 +406,7 @@ blank slate → new session, but do `/task`-text as a self-contained brief. See 
 **«Ran into context in the middle of a phase».** `/compact` (don't wait for auto-compaction). If this was a change of topic -
 `/clear` with a plan file.
 
-**«Starting a new feature».** `/task:design` → plan in `.claude/plans/` → `/clear` → `/task:dev`.
+**«Starting a new feature».** `/planner:design` → plan in `.claude/plans/` → `/clear` → `/planner:dev`.
 
 **«Analyzing someone else's audit/plan».** External verdicts to be checked via RAG (section 10), even if
 «looks full». Call a crutch a crutch (`[POSSIBLE-DEFECT]`), should not be presented as a solution.
@@ -405,6 +459,85 @@ The main changes have these dispositions:
 | Whole-plan-only close and old phase/audit findings reducers | Omitted; existing JSON lifecycle and `plan-close` semantics retained |
 | Registry/command locks, manifests and documentation copies | Regenerated from v3 canonical sources; obsolete copied v2 pages removed |
 
-Verification uses the Task, Harness, mAInd and Skiller validators, registry freshness and targeted
+Verification uses the planner, Harness, mAInd and Skiller validators, registry freshness and targeted
 route/workflow/memory/retirement tests. Archived PLAN1 may warn about old removed reads; it remains
 schema-valid historical data and is not rewritten by this reconciliation.
+
+## Ecosystem split branch (temporary)
+
+The ecosystem is being split into isolated modules on the long-lived branch `ecosystem-split`. This section
+describes how that work is isolated from a working machine. It is removed at cutover (the last phase of the plan).
+
+1. **Why a separate clone.** The live checkout `~/projects/packages/swissknifeman` stays on `main`. The CLIs in
+   `~/.local/bin`, the `swissknifeman` marketplace and the connected projects point to it, so a half-finished
+   branch must never run from there. The work happens in a second clone on the branch.
+2. **Setup on any computer.**
+   ```bash
+   git clone -b ecosystem-split https://github.com/academici/swissknifeman.git ~/projects/packages/swissknifeman-next
+   cd ~/projects/packages/swissknifeman-next && scripts/dev-clone.sh init
+   ```
+   `init` creates the untracked marker `.swissknifeman-dev` (never committed) and sets the upstream. It refuses
+   on `main`/`master` (`DEV_CLONE_ON_MAIN`) and is safe to repeat.
+3. **Guard.** While the marker exists, the entry points of the clone (`bin/swissknifeman`, the module CLIs, the
+   installers and `scripts/bootstrap-machine.sh`) refuse to run against the real `HOME`: exit code 3 and a
+   `SKM_DEV_GUARD` line in stderr. Run them inside a sandbox (next item). `SKM_DEV_ALLOW_LIVE=1` lifts the
+   guard and is a conscious exception, for example when deliberately switching the live installation over. The
+   test runners (`packages/*/scripts/test.sh`, `scripts/test-bootstrap-machine.sh`) use a throwaway `HOME`
+   themselves; running `python3 -m unittest` directly from the clone with the real `HOME` is refused by the
+   guard.
+4. **Sandbox.** `scripts/dev-sandbox.sh new [--name N] [--copy <project>]...` creates
+   `${TMPDIR:-/tmp}/skm-sandbox-<N>` with its own `HOME`/XDG directories and copies of the projects (the
+   originals are never modified) and prints its path. Use `run DIR -- <command>` to execute a command with that
+   environment (`packages/skiller/bin/skiller --help` passes the guard there), `source DIR/env.sh` for an
+   interactive shell, `list` to see sandboxes and `remove DIR` to delete one. `remove` deletes only a directory
+   named `skm-sandbox-*` that sits directly in `TMPDIR` and holds the `.skm-sandbox` marker. Provider CLIs
+   (`claude`, `codex`, `grok`) are not logged in inside a sandbox.
+   `scripts/e2e-module-skills.sh` uses a sandbox to check that the skills of the modules reach a project through
+   `skiller connect` and `skiller sync`.
+5. **Plan execution.** The plan lives in `plans/<PLAN-ID>` of the clone; its architecture is in the plan's
+   `knowledge/architecture.json`. It is executed by the stable `plan.py` of the live checkout, not by the
+   `plan.py` in the clone, so the engine keeps working while the layout changes:
+   `python3 ~/projects/packages/swissknifeman/packages/planner/scripts/plan.py <verb> <plan> ... --plans-root ~/projects/packages/swissknifeman-next/plans`.
+   The `/planner:*` commands are installed from the live checkout (`claude plugin install planner@swissknifeman
+   --scope local` in the clone). Do not edit the live checkout while a plan runs.
+6. **Phase rhythm.** At the start of a phase run `scripts/dev-clone.sh sync-main` (clean tree required; a
+   conflict stops with `DEV_CLONE_CONFLICT` and the file list, nothing is resolved automatically). Run the
+   package test runners and the standalone checks of the phase. At the end of the phase `git push origin
+   ecosystem-split` (no force). On another computer `scripts/dev-clone.sh status` shows the branch, whether the
+   marker is present and how far it is ahead of or behind `origin/main` and `origin/ecosystem-split`.
+7. **Module checks.** Every `packages/<id>/` folder is a module described by its `unit.json`
+   ([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
+   - `check [--strict] [--json]` runs the manifest, ownership-map, schema-identifier and boundary checks. Boundary
+     violations that exist today are recorded in `configs/ecosystem-baseline.json`: a new violation (or a larger count)
+     fails with `ECOSYSTEM_BOUNDARY_NEW`, a smaller one is reported as an improvement, and `--strict` fails on any. The baseline is empty and CI runs `check --strict`, so any violation fails; a path or import of
+     another module in code is never allowed, and `path_allow` holds only data with a reason.
+   - `baseline --update` recomputes the baseline and prints the difference. Commit it only together with the reason in
+     the commit message; a baseline update never hides a violation that was just introduced.
+   - `render [--check]` regenerates `docs/architecture/ownership.md` from `configs/ecosystem-units.json` and the
+     manifests; `--check` fails when the file differs.
+   - `standalone <id>... | --all | --baseline [--update-baseline]` runs the tests of a module in a copy of its folder
+     with a stand-in for `aicore` and its own `HOME`. `--baseline` runs the modules recorded as `pass` and fails if any
+     stops passing; it is the CI job `standalone`. Modules recorded as `fail` become autonomous in their own stages.
+   - `list [--json]` prints the modules with kind, version, destination, stability and requirements.
+
+   The tests are `python3 scripts/test-ecosystem-units.py`; CI runs the checks and `render --check` in the hygiene
+   workflow.
+8. **Golden cycle.** `scripts/golden.py` pins the behaviour that must survive the move: the output of 26 CLI cases
+   (`tests/golden/cases.json`, `tests/golden/cli/*.txt`, run in a throwaway sandbox with paths, hashes and timestamps
+   normalised) and sha256 digests of generated files plus the `--check` of each generator
+   (`tests/golden/generation.json`). It is migration scaffolding, not a CI step.
+   - `golden.py list` shows the cases; `golden.py check [--only ID,...]` compares and prints a diff per differing case
+     (exit 1).
+   - A case may set `cwd` using `{REPO}` or `{SANDBOX}`. Project-state readers such as `analyst status` run in
+     `{SANDBOX}/projects`, an empty project, with an absolute launcher path under `{REPO}`. An isolated `HOME`
+     alone does not isolate state stored in the checkout.
+   - Local bootstrap skills outside the generated catalog can make the registry completeness check fail in a
+     configured development checkout. Preserve them and verify the complete golden set in a clean tracked
+     worktree of the candidate; include any uncommitted candidate changes before checking it.
+   - At the start of a stage, after `scripts/dev-clone.sh sync-main`, run `golden.py check`. If `main` changed generated
+     output, run `golden.py capture --reason "sync main <sha>"` in a separate commit before moving any code.
+   - A stage that moves code must pass `golden.py check` byte for byte. An intended change of behaviour is recorded with
+     `golden.py capture --only ID,... --reason "..."` in the same change, with the explanation in the commit message.
+   - The fate of the fixtures after the merge is decided at the cutover.
+9. **Removal.** The guard blocks, the marker, `scripts/dev-clone.sh`, `scripts/dev-sandbox.sh` and this section
+   are removed at cutover. The module checks and `docs/architecture/` stay.

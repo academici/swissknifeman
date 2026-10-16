@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D19",
+  "title": "Модель расширений: уровни, манифест до запуска, handshake, доверие",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Как подключаются расширения и как не дать каждому модулю изобрести свой реестр (E05, E17–E19, E36, E40, E61)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Уровни: (1) out-of-process — сейчас единственный: внешние плагины-команды и мосты (JSON stdin/stdout, D6); (2) in-process через Python entry points — отложен до pip-упаковки модулей; (3) remote — отложен до распределённого исполнения. Каждое расширение имеет манифест, читаемый до запуска: id, kind, version, protocol min/max, requires (диапазоны контрактов), provides (capabilities со stability), permissions (fs, network, secrets, shell — объявляются), entrypoint. Перед использованием — вызов describe (handshake: protocol, id, version, capabilities digest, transport); несовместимое отклоняется до запуска. Внешний плагин запускается с очищенным окружением, получает секреты только по объявленным ссылкам, помечается trusted/untrusted; принудительная песочница (повторное использование packages/orch/scripts/ro-run.py, Landlock) — по триггеру сторонних плагинов. Обнаружение CLI и проверок модулей — по unit.json (provides.cli, provides.doctor), а не жёстким списком"
+    }
+  ],
+  "decision": "A — Уровни: (1) out-of-process — сейчас единственный: внешние плагины-команды и мосты (JSON stdin/stdout, D6); (2) in-process через Python entry points — отложен до pip-упаковки модулей; (3) remote — отложен до распределённого исполнения. Каждое расширение имеет манифест, читаемый до запуска: id, kind, version, protocol min/max, requires (диапазоны контрактов), provides (capabilities со stability), permissions (fs, network, secrets, shell — объявляются), entrypoint. Перед использованием — вызов describe (handshake: protocol, id, version, capabilities digest, transport); несовместимое отклоняется до запуска. Внешний плагин запускается с очищенным окружением, получает секреты только по объявленным ссылкам, помечается trusted/untrusted; принудительная песочница (повторное использование packages/orch/scripts/ro-run.py, Landlock) — по триггеру сторонних плагинов. Обнаружение CLI и проверок модулей — по unit.json (provides.cli, provides.doctor), а не жёстким списком",
+  "rationale": "E1 E17–E19, E40 адаптированы к stdlib и отсутствию pip-пакетов; уточняет D6.",
+  "applies_to": [
+    "P2",
+    "P6",
+    "P10.10",
+    "P12"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

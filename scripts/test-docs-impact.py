@@ -44,9 +44,9 @@ class DocsImpactTests(unittest.TestCase):
         self.assertEqual(missing_count(entries), 0)
 
     def test_e_editing_command_body_is_an_interface_trigger(self):
-        entries = [("M", "packages/task/commands/plan-run.md")]
+        entries = [("M", "packages/planner/commands/plan-run.md")]
         self.assertEqual(missing_count(entries), 1)
-        entries_with_docs = entries + [("M", "docs/task/index.md")]
+        entries_with_docs = entries + [("M", "docs/planner/index.md")]
         self.assertEqual(missing_count(entries_with_docs), 0)
 
     def test_f_non_surface_paths_are_never_triggers(self):
@@ -87,6 +87,36 @@ class DocsImpactTests(unittest.TestCase):
             ("A", "packages/maind/docs/z.md"),
         ]
         self.assertEqual(missing_count(entries), 1)
+
+    def test_foundation_docs_credit_aicore_only(self):
+        entries = [
+            ("A", "packages/aicore/lib/aicore/x.py"),
+            ("A", "docs/architecture/decisions/0099-x.md"),
+        ]
+        self.assertEqual(missing_count(entries), 0)
+        entries = [
+            ("A", "packages/maind/lib/maind/x.py"),
+            ("A", "docs/architecture/decisions/0099-x.md"),
+        ]
+        self.assertEqual(missing_count(entries), 1)
+
+    def test_a_package_removed_as_a_whole_needs_no_docs(self):
+        entries = [("D", "packages/gone/lib/gone/x.py"), ("D", "packages/gone/bin/gone")]
+        needed, credited = docs_impact.classify(entries, exists=lambda path: False)
+        self.assertIn("pkg:gone", credited)
+        needed, credited = docs_impact.classify(entries, exists=lambda path: True)  # the folder is still there
+        self.assertNotIn("pkg:gone", credited)
+        mixed = entries + [("A", "packages/gone/lib/gone/y.py")]
+        needed, credited = docs_impact.classify(mixed, exists=lambda path: False)
+        self.assertNotIn("pkg:gone", credited)
+
+    def test_the_worktree_mode_reads_uncommitted_and_untracked_changes(self):
+        import subprocess
+        import sys
+        done = subprocess.run([sys.executable, str(ROOT / "scripts/docs-impact.py"), "--base", "HEAD", "--worktree"],
+                              cwd=ROOT, capture_output=True, text=True)
+        self.assertIn(done.returncode, (0, 1), done.stderr)
+        self.assertTrue(done.stdout.startswith("docs-impact:"), done.stdout)
 
 
 if __name__ == "__main__":

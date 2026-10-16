@@ -1,0 +1,78 @@
+{
+  "changed_paths": [],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "spec_mismatch",
+      "impact": "P12.5 not implemented; phase P12 is not closed by this piece",
+      "kind": "deviation",
+      "outcome": "owner_decision",
+      "text": "Premise 'check the entry (D6)' is not confirmed: no consumer of telemetry is present in the repository or the input. Per plan.rules[10] this is a spec_mismatch and the piece stops."
+    },
+    {
+      "impact": "the gen_ai.* mapping cannot be written",
+      "kind": "escalation",
+      "next": "owner names the commit or allows reading the public repository",
+      "text": "ESCALATION: the pinned commit of semantic-conventions-genai is missing; the mapping cannot be written from memory (plan.rules[11], D7)."
+    },
+    {
+      "impact": "phase P12 stays open until the validation runs",
+      "kind": "note",
+      "next": "coordinator decides after Q1",
+      "text": "If P12.5 is deferred by D6, the design says P12.4 closes the phase and carries phase.validation P12 (V1, V11, V12, V13); the coordinator runs it."
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "QUESTION: Q1 D6 lets the OTel exporter start only when a consumer of telemetry appears or the owner decides. Is the scheduling of P12.5 in this run the owner decision, or is there a named consumer?"
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "QUESTION: Q2 The gen_ai.* mapping needs a pinned commit of open-telemetry/semantic-conventions-genai (D7, D14). Name the commit hash, or allow reading the public repository to pin its current head."
+    }
+  ],
+  "questions": [
+    {
+      "blocking": true,
+      "default": "b",
+      "id": "Q1",
+      "kind": "decision",
+      "options": [
+        {
+          "id": "a",
+          "label": "Owner decision: build the plugin now"
+        },
+        {
+          "id": "b",
+          "label": "Defer P12.5; P12.4 closes phase P12 (phase.validation P12)"
+        }
+      ],
+      "revision": 1,
+      "risk": "low",
+      "text": "D6 lets the OTel exporter start only when a consumer of telemetry appears or the owner decides. Is the scheduling of P12.5 in this run the owner decision, or is there a named consumer?"
+    },
+    {
+      "blocking": true,
+      "default": "a",
+      "id": "Q2",
+      "kind": "approval",
+      "options": [
+        {
+          "id": "a",
+          "label": "Owner names the commit"
+        },
+        {
+          "id": "b",
+          "label": "Executor reads the public repository (external resource) and pins its head"
+        }
+      ],
+      "revision": 1,
+      "risk": "medium",
+      "text": "The gen_ai.* mapping needs a pinned commit of open-telemetry/semantic-conventions-genai (D7, D14). Name the commit hash, or allow reading the public repository to pin its current head."
+    }
+  ],
+  "status": "blocked",
+  "summary": "Stopped before any change. The entry condition of D6 for the OTel plugin is not confirmed: the repository holds no consumer of the telemetry (only audits/perplexity-audit.md mentions telemetry-exporter), and the pinned commit of open-telemetry/semantic-conventions-genai that D7/D14 require for the gen_ai.* mapping is not in the input or the repository. No file was changed, no check was run, phase.validation P12 was not run."
+}

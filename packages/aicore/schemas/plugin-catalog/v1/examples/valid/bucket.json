@@ -1,0 +1,13 @@
+{
+  "schema": "urn:swissknifeman:aicore:plugin-catalog:v1",
+  "plugins": [
+    {
+      "name": "general",
+      "source": "skills/general",
+      "description": "General skills",
+      "category": "general",
+      "tags": ["core"],
+      "codex": {"install_policy": "explicit", "auth": "none"}
+    }
+  ]
+}

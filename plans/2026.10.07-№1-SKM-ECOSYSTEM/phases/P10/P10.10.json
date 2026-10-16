@@ -1,0 +1,313 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.10",
+  "title": "Порт orch:work-source: контракт work-source/v1, плагин моста planner-orch (claim, brief, register), fencing и evidence-gate, бриф-артефакт по digest, клиент и CLI orch.py source, события, e2e",
+  "status": "done_with_deviations",
+  "summary": "orch: schemas/work-source/v1 (input, output), unit.json extension_points work-source и контракт, lib/orch/worksource.py (WorkSource, PluginWorkSource через aicore.ext.plugins), CLI orch.py source claim|brief|prepare|register (run.json, launch-plan.json и квитанции в каталоге run, события orch.run.*). Мост planner-orch: extension.json (kind command, точка orch:work-source), worksource.py (op claim, brief, register), register.py --owner-session (REGISTER_STALE_OWNER) и --gate evidence (REGISTER_EVIDENCE_MISSING, REGISTER_EVIDENCE_RED), бриф в aicore.state.blobs + plan.py add-artifact, сверка сценария через orch.py policy show. e2e scripts/e2e-work-source.sh в песочнице.",
+  "why": "D63, D3, D16, D21, D60; E04, E19, E25, E38; research/P10-perplexity.md Q1. Модель владения и целостности — knowledge/orch-p10-contracts#invariants I2, I3, I11. Жёсткие риски: (1) take-over другой сессией между claim и register — старый run не должен закрыть пункт: REGISTER_STALE_OWNER до любых записей, тест и e2e; (2) закрытие по заявлению исполнителя — evidence-gate требует файлы check-evidence на каждый acceptance-чек; (3) потерянный ответ register — повтор с тем же attempt_id no-op (planner) и пропуск записанных log (мост); (4) повтор claim — детерминированные submission_id, run_id, attempt_id; (5) мост пишет в план мимо plan.py — запрещено, только вызовы plan.py.",
+  "scope": {
+    "include": [
+      "packages/orch/schemas/work-source/v1/*.schema.json, packages/orch/unit.json",
+      "packages/orch/lib/orch/{worksource,cli}.py",
+      "packages/orch/tests/{test_worksource.py, fixtures/work-source/**}",
+      "bridges/planner-orch/{extension.json, worksource.py, register.py, brief.py, README.md, unit.json (provides.cli), tests/**}",
+      "scripts/e2e-work-source.sh",
+      "packages/orch/docs/work-source.md (новая), index.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "автоматический take-over из orch",
+      "аренда claim по времени (отложено)",
+      "исполнение стадий движком (Plan 2): между source prepare и source register работает сессия (claude-only) или человек"
+    ]
+  },
+  "depends_on": [
+    "P10.9"
+  ],
+  "decisions": [
+    "D63",
+    "D62",
+    "D65",
+    "D60",
+    "D45"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/orch-p10#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#facts",
+      "why": "факты кода на начало фазы: файлы, функции, точки изменения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-bridges#worksource",
+      "why": "контракт, плагин, op, флаги register, клиент, CLI",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-bridges#tests",
+      "why": "тесты моста и orch, e2e",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-contracts#invariants",
+      "why": "I2, I3, I7, I11 и блокировки",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-contracts#keys",
+      "why": "форматы submission_id, run_id, attempt_id",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#events",
+      "why": "какие события испускает source",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#journal",
+      "why": "run.json, launch-plan.json, квитанции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-plugins#plugins",
+      "why": "манифест, describe, invoke, очищенное окружение",
+      "required": true
+    },
+    {
+      "path": "research/P10-perplexity.md",
+      "why": "внешние предпосылки claim и fencing",
+      "required": false
+    },
+    {
+      "path": "bridges/planner-orch/register.py",
+      "why": "текущая регистрация и порядок вызовов",
+      "required": true
+    },
+    {
+      "path": "bridges/planner-orch/brief.py",
+      "why": "сборка execution-input",
+      "required": true
+    },
+    {
+      "path": "packages/planner/tests/fixtures/plugins/check-demo/plugin.py",
+      "why": "образец обработчика протокола плагина",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/plugins.py",
+      "why": "find_registration, invoke_one",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/state/blobs.py",
+      "why": "put_json, blob_path",
+      "required": true
+    },
+    {
+      "path": "scripts/e2e-plan-events.sh",
+      "why": "образец e2e в песочнице",
+      "required": true
+    },
+    {
+      "path": "packages/planner/schemas/plan/v1/check-evidence.schema.json",
+      "why": "формат evidence для e2e",
+      "required": true
+    },
+    {
+      "path": "packages/planner/schemas/plan/v1/read-ready.schema.json",
+      "why": "структурный вывод next --parallel",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/work-source/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/worksource.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "bridges/planner-orch/extension.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/planner-orch/worksource.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/planner-orch/register.py",
+      "change": "any",
+      "note": "файл появляется в P10.3 (перенос мостов)"
+    },
+    {
+      "path": "bridges/planner-orch/brief.py",
+      "change": "any",
+      "note": "файл появляется в P10.3 (перенос мостов)"
+    },
+    {
+      "path": "bridges/planner-orch/unit.json",
+      "change": "any",
+      "note": "файл появляется в P10.3 (перенос мостов)"
+    },
+    {
+      "path": "bridges/planner-orch/README.md",
+      "change": "any",
+      "note": "файл появляется в P10.3 (перенос мостов)"
+    },
+    {
+      "path": "bridges/planner-orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "scripts/e2e-work-source.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/docs/work-source.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/docs/index.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Мост пишет в план только через plan.py; ни одной записи в файлы плана",
+    "REGISTER_STALE_OWNER и evidence-gate проверяются до первого вызова plan.py, изменяющего план",
+    "Без флагов --owner-session и --gate прямой register ведёт себя как раньше (тесты register не меняют ожиданий)",
+    "Тесты и e2e работают на временных планах во временном HOME; plans/ репозитория не трогаются"
+  ],
+  "guidance": "Исполнитель: frontier/high.\n\nПорядок: (1) схемы work-source/v1 + записи unit.json orch (extension_points, contracts) → `ecosystem-units.py check` (порт моста planner-orch теперь ссылается на существующую точку); (2) register.py: --owner-session и --gate evidence + тесты (stale после take-over, missing, red, pass, прежнее поведение без флагов); (3) brief: digest через aicore (уже с P10.3), blob и add-artifact в worksource.py; (4) worksource.py моста (claim, brief, register) + extension.json + тесты моста с регистрацией плагина во временном машинном конфиге; (5) orch: worksource.py клиент + тест с поддельным плагином; (6) CLI orch.py source claim|brief|prepare|register (run.json и квитанции через journal.write_doc; события после записи) + тесты; (7) scripts/e2e-work-source.sh (§tests) и прогон в песочнице; (8) docs work-source.md, README моста (таблица op и отказов); (9) V1–V5; (10) CHANGELOG («orch: work-source port with the planner-orch plugin; claim with an owner session, briefs as content-addressed artifacts, registration with owner fencing and an evidence gate»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash scripts/test-bridges.sh",
+      "expect": "exit 0; строка bridges: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p10-ws-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash scripts/e2e-work-source.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строка e2e work source: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p10-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "порт orch:work-source",
+    "плагин моста planner-orch с fencing и evidence-gate",
+    "orch.py source",
+    "e2e источника работы"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-11T05:09:38Z",
+    "finished_at": "2026-10-11T06:30:51Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "eb67f8dd-537d-4c39-9892-115c68c63bdc"
+    },
+    "notes": "orch:work-source port: contract work-source/v1 (input/output by op), extension point in orch unit.json, orch.worksource (PluginWorkSource via aicore.ext.plugins, WORK_SOURCE_UNAVAILABLE/FAILED), orch.py source claim|brief|prepare|register (run.json, launch-plan.json, receipts/register.json, orch.run.* events); bridge planner-orch plugin (extension.json, worksource.py, port in unit.json), register.py --owner-session (REGISTER_STALE_OWNER) and --gate evidence (MISSING/RED, planner load_evidence); planner finish --owner-session; e2e scripts/e2e-work-source.sh; docs work-source.md, bridge README, CHANGELOG. Review grok/grok-4.7/high: 6 findings fixed. Artifact: artifacts/P10.10/review-verdict.md. V5: golden red only on the owner's 3 uncommitted files.",
+    "deviations": [
+      "planner next/start/context use their own --json; claim starts with --no-scout",
+      "brief declared as an input by path without --id (planner input ids cite outputs); artifact_id returned to orch only; repeat reuses the stored brief by worker view (source_digest changes when the brief is declared)",
+      "fencing: also passes when result.attempt_id is this attempt; planner finish --owner-session added so it holds under the plan lock (review finding)",
+      "outside scope: aicore env layer ignores SKM_<MODULE>_ROOT; config-inventory entries for orch configs and extension.json (red since P10.7, hidden by V5); golden orch-help/unknown-subcommand recaptured"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T06:30:51Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T06:30:51Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T06:30:51Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-11T06:30:51Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-11T06:30:51Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T06:30:51Z"
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D14",
+  "title": "Формат пользовательского конфига: TOML для слоёв, JSON для состояния",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "В каком формате человек пишет конфиг машины и проекта (уточнение D5)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "TOML для слоёв, которые правит человек: ~/.config/swissknifeman/config.toml и <project>/.swissknifeman/config.toml; JSON — для генерируемого состояния, lock-файлов и defaults модулей. Модуль поставляет config.example.toml, генерируемый из схемы и defaults (CI проверяет расхождение); swissknifeman config init копирует example в слой машины или проекта. Чтение — tomllib (stdlib, Python ≥ 3.11 — минимальная версия экосистемы); запись командой config set — свой минимальный писатель подмножества TOML под наши схемы (детали в P4)",
+      "pros": "Комментарии и читаемость для ручной настройки; stdlib; тот же формат, что у Codex и Grok"
+    },
+    {
+      "id": "B",
+      "text": "JSON везде",
+      "cons": "Нет комментариев — example нельзя документировать прямо в файле"
+    },
+    {
+      "id": "C",
+      "text": "YAML",
+      "cons": "Нет в stdlib — новая зависимость во всех модулях"
+    }
+  ],
+  "context": "M5: «свой формат конфига, подобрать наиболее подходящий»; создаётся из example. Ограничение: только stdlib Python; на машине Python 3.12.",
+  "decision": "A — TOML для слоёв, которые правит человек: ~/.config/swissknifeman/config.toml и <project>/.swissknifeman/config.toml; JSON — для генерируемого состояния, lock-файлов и defaults модулей. Модуль поставляет config.example.toml, генерируемый из схемы и defaults (CI проверяет расхождение); swissknifeman config init копирует example в слой машины или проекта. Чтение — tomllib (stdlib, Python ≥ 3.11 — минимальная версия экосистемы); запись командой config set — свой минимальный писатель подмножества TOML под наши схемы (детали в P4)",
+  "rationale": "M5 делегирует выбор; stdlib-ограничение исключает YAML/JSON5; TOML даёт комментарии в example. Уточняет D5: места слоёв прежние, меняется формат файлов слоёв 2–3. Уточнено D35: минимум Python — 3.9; чтение TOML — tomllib при ≥ 3.11, иначе vendored tomli (форму решает P4).",
+  "applies_to": [
+    "P4",
+    "P13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

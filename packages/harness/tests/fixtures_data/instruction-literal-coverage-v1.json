@@ -1,12 +1,12 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.7.0",
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "71ed83a7edfa68cf132bb97e442335fa42aae08200046179b815724aef731719",
+    "source_sha256": "445cf4638a617c991293da2cd0b4ee029753d004215eec4679001c7c4d226c16",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 313
+    "literal_count": 362
   },
   "literals": [
     {
@@ -15,7 +15,7 @@
     },
     {
       "semantic_id": "root.ecosystem-identity",
-      "literal": "`skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages."
+      "literal": "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages."
     },
     {
       "semantic_id": "root.ecosystem-identity",
@@ -39,7 +39,7 @@
     },
     {
       "semantic_id": "root.ecosystem-identity",
-      "literal": "`task`"
+      "literal": "`planner`"
     },
     {
       "semantic_id": "root.ecosystem-identity",
@@ -47,11 +47,15 @@
     },
     {
       "semantic_id": "root.repository-layout",
-      "literal": "Keep `core/` as shared stdlib primitives, the five package roots as independent tools, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site."
+      "literal": "Keep the modules as independent folders under `packages/`, the links between them in `bridges/`, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site."
     },
     {
       "semantic_id": "root.repository-layout",
-      "literal": "`core/`"
+      "literal": "`packages/`"
+    },
+    {
+      "semantic_id": "root.repository-layout",
+      "literal": "`bridges/`"
     },
     {
       "semantic_id": "root.repository-layout",
@@ -67,7 +71,7 @@
     },
     {
       "semantic_id": "root.package-boundaries",
-      "literal": "`task` remains plugin-only and has no standalone CLI."
+      "literal": "`planner` remains plugin-only and has no standalone CLI."
     },
     {
       "semantic_id": "root.package-boundaries",
@@ -75,7 +79,7 @@
     },
     {
       "semantic_id": "root.package-boundaries",
-      "literal": "`task`"
+      "literal": "`planner`"
     },
     {
       "semantic_id": "root.package-boundaries",
@@ -87,7 +91,7 @@
     },
     {
       "semantic_id": "root.cli-routing",
-      "literal": "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group."
+      "literal": "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group."
     },
     {
       "semantic_id": "root.cli-routing",
@@ -111,7 +115,7 @@
     },
     {
       "semantic_id": "root.cli-routing",
-      "literal": "`task`"
+      "literal": "`planner`"
     },
     {
       "semantic_id": "root.cli-routing",
@@ -123,19 +127,19 @@
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "Put shared primitives in `core/`"
+      "literal": "Put shared primitives in `packages/aicore/`"
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback."
+      "literal": "module Python runtime stays stdlib-only and reaches `aicore` through the `lib/` folder of that module on `PYTHONPATH`."
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "`core/`"
+      "literal": "`packages/aicore/`"
     },
     {
       "semantic_id": "root.shared-core",
-      "literal": "`core`"
+      "literal": "`aicore`"
     },
     {
       "semantic_id": "root.shared-core",
@@ -191,7 +195,7 @@
     },
     {
       "semantic_id": "root.plan-lifecycle",
-      "literal": "Task commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate Task."
+      "literal": "Planner commands and their plan protocol apply only when explicitly invoked by the owner. Existing plan files, discovered skills, and ordinary work requests do not activate planner."
     },
     {
       "semantic_id": "root.development-validation",
@@ -254,6 +258,18 @@
       "literal": "package documentation builds standalone and in the umbrella aggregate; internal documentation links stay relative"
     },
     {
+      "semantic_id": "root.module-folders",
+      "literal": "Every `packages/<id>/` folder is an independent module described by its `unit.json`"
+    },
+    {
+      "semantic_id": "root.module-folders",
+      "literal": "reaches other modules only through bridges (`bridges/`) or events, never by import or path"
+    },
+    {
+      "semantic_id": "root.module-folders",
+      "literal": "Check boundaries with `python3 scripts/ecosystem-units.py check`."
+    },
+    {
       "semantic_id": "root.claude-code.native-surfaces",
       "literal": "Keep Claude Code compatibility surfaces in this extension: `.claude*`, `CLAUDE.md`, existing plugin commands, and managed Claude hooks remain provider-owned."
     },
@@ -311,7 +327,7 @@
     },
     {
       "semantic_id": "root.codex.bootstrap",
-      "literal": "`packages/task/commands/`"
+      "literal": "`packages/planner/commands/`"
     },
     {
       "semantic_id": "root.codex.launch-and-hook-integrity",
@@ -319,7 +335,7 @@
     },
     {
       "semantic_id": "root.codex.fresh-agent-execution",
-      "literal": "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Task workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
+      "literal": "Continue in the current session when context and capabilities suffice. Respect a separately requested design/review boundary. Planner workflow instructions load only after explicit owner invocation; an existing plan or handoff does not activate them."
     },
     {
       "semantic_id": "root.codex.package-scope-routing",
@@ -435,7 +451,7 @@
     },
     {
       "semantic_id": "skiller.configuration-ownership",
-      "literal": "Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync."
+      "literal": "Keep skiller settings in `[skiller]` (connect and legacy vendor selection) and `[skiller.sync]` (skill-granular vendor sync) of `.swissknifeman/config.toml`"
     },
     {
       "semantic_id": "skiller.configuration-ownership",
@@ -511,7 +527,7 @@
     },
     {
       "semantic_id": "skiller.module-boundaries",
-      "literal": "keep token math in `budget.py` as the single source"
+      "literal": "keep token math in `aicore.content.budget` as the single source; `budget.py` composes it with skiller selection"
     },
     {
       "semantic_id": "skiller.engineering-invariants",
@@ -715,6 +731,22 @@
     },
     {
       "semantic_id": "harness.cross-package-boundaries",
+      "literal": "Import only `harness` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path."
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
+      "literal": "`harness`"
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
+      "literal": "`aicore.util.partners`"
+    },
+    {
+      "semantic_id": "harness.cross-package-boundaries",
       "literal": "Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher."
     },
     {
@@ -724,10 +756,6 @@
     {
       "semantic_id": "harness.cross-package-boundaries",
       "literal": "`.swissknife.json:memory_brain`"
-    },
-    {
-      "semantic_id": "harness.cross-package-boundaries",
-      "literal": "`harness`"
     },
     {
       "semantic_id": "harness.cross-package-boundaries",
@@ -843,6 +871,22 @@
     },
     {
       "semantic_id": "maind.module-boundaries",
+      "literal": "Import only `maind` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path."
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
+      "literal": "`maind`"
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
+      "literal": "`aicore.util.partners`"
+    },
+    {
+      "semantic_id": "maind.module-boundaries",
       "literal": "Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized."
     },
     {
@@ -863,7 +907,7 @@
     },
     {
       "semantic_id": "maind.module-boundaries",
-      "literal": "manual graph links live only in `<repo>/.maind.graph.json`"
+      "literal": "manual graph links live only in `[maind.graph.links.<id>]` of the project configuration"
     },
     {
       "semantic_id": "maind.orchestration",
@@ -975,6 +1019,22 @@
     },
     {
       "semantic_id": "analyst.module-boundaries",
+      "literal": "Import only `analyst` and `aicore`; reach other modules only through their public commands found by `aicore.util.partners`, never by import or path."
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
+      "literal": "`analyst`"
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
+      "literal": "`aicore.util.partners`"
+    },
+    {
+      "semantic_id": "analyst.module-boundaries",
       "literal": "Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules."
     },
     {
@@ -1031,11 +1091,11 @@
     },
     {
       "semantic_id": "analyst.claude-code.capture-surfaces",
-      "literal": "Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`."
+      "literal": "Claude Code capture reads project lessons from `.swissknifeman/analyst` (legacy `.swissknife/analyst` and `.claude/analyst`), run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`."
     },
     {
       "semantic_id": "analyst.claude-code.capture-surfaces",
-      "literal": "`.claude/analyst`"
+      "literal": "`.swissknifeman/analyst`"
     },
     {
       "semantic_id": "analyst.claude-code.capture-surfaces",
@@ -1054,212 +1114,348 @@
       "literal": "`/analyst:*`"
     },
     {
-      "semantic_id": "task.identity",
-      "literal": "`task` is the plugin-only package for task-intent commands and executable plan protocol"
+      "semantic_id": "planner.identity",
+      "literal": "`planner` is the plugin package for intent commands and the executable plan protocol; its command line is `scripts/plan.py` (no `bin/` yet)."
     },
     {
-      "semantic_id": "task.identity",
-      "literal": "it has no `bin/`, standalone CLI, or installer."
+      "semantic_id": "planner.identity",
+      "literal": "`planner`"
     },
     {
-      "semantic_id": "task.identity",
-      "literal": "`task`"
-    },
-    {
-      "semantic_id": "task.identity",
-      "literal": "`bin/`"
-    },
-    {
-      "semantic_id": "task.command-catalog",
-      "literal": "Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort."
-    },
-    {
-      "semantic_id": "task.command-catalog",
-      "literal": "`commands/`"
-    },
-    {
-      "semantic_id": "task.command-catalog",
-      "literal": "each intent command declares its routed model class and effort"
-    },
-    {
-      "semantic_id": "task.plan-protocol",
-      "literal": "Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route."
-    },
-    {
-      "semantic_id": "task.plan-protocol",
-      "literal": "`plans/<PLAN-ID>/`"
-    },
-    {
-      "semantic_id": "task.plan-protocol",
-      "literal": "`plan-run` inherits the owner session route"
-    },
-    {
-      "semantic_id": "task.plan-files",
-      "literal": "Task plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <task>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers."
-    },
-    {
-      "semantic_id": "task.plan-files",
-      "literal": "`plan.json`"
-    },
-    {
-      "semantic_id": "task.plan-files",
-      "literal": "`python3 <task>/scripts/plan.py`"
-    },
-    {
-      "semantic_id": "task.plan-files",
-      "literal": "`plan.py next|show|context`"
-    },
-    {
-      "semantic_id": "task.layout",
-      "literal": "Keep command Markdown in `commands/`, the plan engine in `lib/task/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`."
-    },
-    {
-      "semantic_id": "task.layout",
-      "literal": "`commands/`"
-    },
-    {
-      "semantic_id": "task.layout",
-      "literal": "`lib/task/plan/`"
-    },
-    {
-      "semantic_id": "task.layout",
+      "semantic_id": "planner.identity",
       "literal": "`scripts/plan.py`"
     },
     {
-      "semantic_id": "task.layout",
+      "semantic_id": "planner.identity",
+      "literal": "`bin/`"
+    },
+    {
+      "semantic_id": "planner.command-catalog",
+      "literal": "Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort."
+    },
+    {
+      "semantic_id": "planner.command-catalog",
+      "literal": "`commands/`"
+    },
+    {
+      "semantic_id": "planner.command-catalog",
+      "literal": "each intent command declares its routed model class and effort"
+    },
+    {
+      "semantic_id": "planner.plan-protocol",
+      "literal": "Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route."
+    },
+    {
+      "semantic_id": "planner.plan-protocol",
+      "literal": "`plans/<PLAN-ID>/`"
+    },
+    {
+      "semantic_id": "planner.plan-protocol",
+      "literal": "`plan-run` inherits the owner session route"
+    },
+    {
+      "semantic_id": "planner.plan-files",
+      "literal": "Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers."
+    },
+    {
+      "semantic_id": "planner.plan-files",
+      "literal": "`plan.json`"
+    },
+    {
+      "semantic_id": "planner.plan-files",
+      "literal": "`python3 <planner>/scripts/plan.py`"
+    },
+    {
+      "semantic_id": "planner.plan-files",
+      "literal": "`plan.py next|show|context`"
+    },
+    {
+      "semantic_id": "planner.layout",
+      "literal": "Keep command Markdown in `commands/`, the plan engine in `lib/planner/plan/`, its launcher in `scripts/plan.py`, and isolated tests in `tests/`."
+    },
+    {
+      "semantic_id": "planner.layout",
+      "literal": "`commands/`"
+    },
+    {
+      "semantic_id": "planner.layout",
+      "literal": "`lib/planner/plan/`"
+    },
+    {
+      "semantic_id": "planner.layout",
+      "literal": "`scripts/plan.py`"
+    },
+    {
+      "semantic_id": "planner.layout",
       "literal": "`tests/`"
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "Treat `schemas/plan/v1/` and the `plan-protocol` skill as synchronized sources of the plan schema; validate with `scripts/plan.py check` and change both when the schema changes."
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "`schemas/plan/v1/`"
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "`plan-protocol`"
     },
     {
-      "semantic_id": "task.schema-ownership",
+      "semantic_id": "planner.schema-ownership",
       "literal": "change both when the schema changes"
     },
     {
-      "semantic_id": "task.engineering-invariants",
-      "literal": "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use English diagnostics."
+      "semantic_id": "planner.engineering-invariants",
+      "literal": "Keep `lib/planner/plan/` stdlib-only and runnable without aicore; import aicore only in `lib/planner/integration/` and the projection renderer; keep English diagnostics."
     },
     {
-      "semantic_id": "task.engineering-invariants",
-      "literal": "`lib/task/`"
+      "semantic_id": "planner.engineering-invariants",
+      "literal": "`lib/planner/plan/`"
     },
     {
-      "semantic_id": "task.validation-release",
-      "literal": "Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages."
+      "semantic_id": "planner.engineering-invariants",
+      "literal": "`lib/planner/integration/`"
     },
     {
-      "semantic_id": "task.validation-release",
-      "literal": "`bash packages/task/scripts/validate.sh`"
+      "semantic_id": "planner.configuration",
+      "literal": "Read planner settings only through `planner.plan.settings` (schema defaults, machine, project, `plan.settings`, environment, `--config`); change keys in `configs/config.schema.json` and regenerate `config.example.toml` with `aicore config example`."
     },
     {
-      "semantic_id": "task.claude-code.slash-projection",
-      "literal": "Claude Code projects the Task command catalog as `/task:*` commands."
+      "semantic_id": "planner.configuration",
+      "literal": "`planner.plan.settings`"
     },
     {
-      "semantic_id": "task.claude-code.slash-projection",
-      "literal": "`/task:*`"
+      "semantic_id": "planner.configuration",
+      "literal": "`configs/config.schema.json`"
     },
     {
-      "semantic_id": "task.claude-code.model-pins",
+      "semantic_id": "planner.configuration",
+      "literal": "`config.example.toml`"
+    },
+    {
+      "semantic_id": "planner.configuration",
+      "literal": "`aicore config example`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "Emit `planner.*` events only after the plan lock is released, through `planner.integration.events`, with data that follow `schemas/event-data/v1`; overlay slots and the `planner:check` point are declared in `unit.json`."
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`planner.*`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`planner.integration.events`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`schemas/event-data/v1`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`unit.json`"
+    },
+    {
+      "semantic_id": "planner.events-and-extensions",
+      "literal": "`planner:check`"
+    },
+    {
+      "semantic_id": "planner.validation-release",
+      "literal": "Before release run `bash packages/planner/scripts/validate.sh` and `python3 scripts/ecosystem-units.py standalone planner`, and use Russian Conventional Commit messages."
+    },
+    {
+      "semantic_id": "planner.validation-release",
+      "literal": "`bash packages/planner/scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "planner.validation-release",
+      "literal": "`python3 scripts/ecosystem-units.py standalone planner`"
+    },
+    {
+      "semantic_id": "planner.claude-code.slash-projection",
+      "literal": "Claude Code projects the planner command catalog as `/planner:*` commands."
+    },
+    {
+      "semantic_id": "planner.claude-code.slash-projection",
+      "literal": "`/planner:*`"
+    },
+    {
+      "semantic_id": "planner.claude-code.model-pins",
       "literal": "Claude Code command frontmatter pins routes; do not change those pins without explicit intent. `plan-run` inherits the owner session route."
     },
     {
-      "semantic_id": "task.claude-code.model-pins",
+      "semantic_id": "planner.claude-code.model-pins",
       "literal": "do not change those pins without explicit intent."
     },
     {
-      "semantic_id": "task.claude-code.model-pins",
+      "semantic_id": "planner.claude-code.model-pins",
       "literal": "`plan-run`"
     },
     {
-      "semantic_id": "artifex.identity",
-      "literal": "`artifex` is the standalone deterministic supervisor package"
+      "semantic_id": "brain.identity",
+      "literal": "`brain` is the ecosystem module for the Obsidian vault"
     },
     {
-      "semantic_id": "artifex.identity",
-      "literal": "its package runtime is the sole live implementation after G1."
+      "semantic_id": "brain.identity",
+      "literal": "the vault belongs to a person, so brain adds notes and never rewrites their files."
     },
     {
-      "semantic_id": "artifex.identity",
-      "literal": "`artifex`"
+      "semantic_id": "brain.identity",
+      "literal": "`brain`"
     },
     {
-      "semantic_id": "artifex.layout",
-      "literal": "Keep `bin/artifex` as a thin launcher, `lib/artifex/` as the runtime, `tests/` as isolated evidence, and `scripts/test.sh` plus `scripts/validate.sh` as package gates."
+      "semantic_id": "brain.layout",
+      "literal": "Keep `bin/brain` as the launcher, `lib/brain/` as stdlib-only logic on `aicore`"
     },
     {
-      "semantic_id": "artifex.layout",
-      "literal": "`bin/artifex`"
+      "semantic_id": "brain.layout",
+      "literal": "temporary-directory tests with the synthetic vault in `tests/fixtures/vault`."
     },
     {
-      "semantic_id": "artifex.layout",
-      "literal": "`lib/artifex/`"
+      "semantic_id": "brain.layout",
+      "literal": "`bin/brain`"
     },
     {
-      "semantic_id": "artifex.layout",
-      "literal": "`tests/`"
+      "semantic_id": "brain.layout",
+      "literal": "`lib/brain/`"
     },
     {
-      "semantic_id": "artifex.runtime-boundaries",
-      "literal": "Keep provider adapters additive over one shared supervisor contract"
+      "semantic_id": "brain.layout",
+      "literal": "`tests/fixtures/vault`"
     },
     {
-      "semantic_id": "artifex.runtime-boundaries",
-      "literal": "use bounded fresh processes and never make package runtime import `plans/**`."
+      "semantic_id": "brain.module-boundaries",
+      "literal": "Import only `brain` and `aicore`"
     },
     {
-      "semantic_id": "artifex.runtime-boundaries",
-      "literal": "`plans/**`"
+      "semantic_id": "brain.module-boundaries",
+      "literal": "take the vault path from `brain vault` resolution (configuration `brain.vault_path`), never from a hardcoded path."
     },
     {
-      "semantic_id": "artifex.provenance",
-      "literal": "Keep generation and source hashes explicit"
+      "semantic_id": "brain.module-boundaries",
+      "literal": "`brain.vault_path`"
     },
     {
-      "semantic_id": "artifex.provenance",
-      "literal": "plan-local runtime remains immutable non-importable evidence rather than a package dependency."
+      "semantic_id": "brain.vault-safety",
+      "literal": "Write to the vault only through `brain note`"
     },
     {
-      "semantic_id": "artifex.engineering-invariants",
-      "literal": "Keep `lib/artifex/` stdlib-only, resolve roots explicitly, use English diagnostics, and preserve one implementation rather than a plan-local duplicate."
+      "semantic_id": "brain.vault-safety",
+      "literal": "never overwriting a file) and an explicit `brain docs push`"
     },
     {
-      "semantic_id": "artifex.engineering-invariants",
-      "literal": "`lib/artifex/`"
+      "semantic_id": "brain.vault-safety",
+      "literal": "keep notes outside the synced `docs`, `docs-public` and `plans` folders."
     },
     {
-      "semantic_id": "artifex.validation-release",
-      "literal": "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh` and use Russian Conventional Commit messages."
+      "semantic_id": "brain.vault-safety",
+      "literal": "`brain note`"
     },
     {
-      "semantic_id": "artifex.validation-release",
+      "semantic_id": "brain.vault-safety",
+      "literal": "`brain docs push`"
+    },
+    {
+      "semantic_id": "brain.engineering-invariants",
+      "literal": "Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes"
+    },
+    {
+      "semantic_id": "brain.engineering-invariants",
+      "literal": "exit 65 for invalid event data and 75 for temporary failures."
+    },
+    {
+      "semantic_id": "brain.engineering-invariants",
+      "literal": "`BrainError`"
+    },
+    {
+      "semantic_id": "brain.validation-release",
+      "literal": "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "brain.validation-release",
+      "literal": "use Russian Conventional Commit messages."
+    },
+    {
+      "semantic_id": "brain.validation-release",
       "literal": "`bash scripts/test.sh`"
     },
     {
-      "semantic_id": "artifex.validation-release",
+      "semantic_id": "brain.validation-release",
       "literal": "`bash scripts/validate.sh`"
     },
     {
-      "semantic_id": "artifex.claude-code.package-scope",
-      "literal": "Claude Code guidance is an additive adapter over the shared Artifex contract and must not replace provider-neutral runtime rules."
+      "semantic_id": "brain.validation-release",
+      "literal": "`python3 scripts/ecosystem-units.py standalone brain`"
     },
     {
-      "semantic_id": "artifex.codex.package-scope",
-      "literal": "Codex package work starts with `codex -C packages/artifex`; package guidance is additive over the shared Artifex contract and does not replace it."
+      "semantic_id": "orch.identity",
+      "literal": "`orch` is the engine-neutral orchestration module"
     },
     {
-      "semantic_id": "artifex.codex.package-scope",
-      "literal": "`codex -C packages/artifex`"
+      "semantic_id": "orch.identity",
+      "literal": "its conductor (`scripts/conduct.py`) starts the roles of a run as child processes."
+    },
+    {
+      "semantic_id": "orch.identity",
+      "literal": "`orch`"
+    },
+    {
+      "semantic_id": "orch.identity",
+      "literal": "`exec/v1`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "Import only `orch` and `aicore`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "the `orch:work-source` extension point."
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "`orch`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "orch.module-boundaries",
+      "literal": "`bridges/`"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "Keep Python 3.9 compatibility, English diagnostics"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "proven by `aicore schema compat`."
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "`PortError`"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "`docs/engine-port.md`"
+    },
+    {
+      "semantic_id": "orch.engineering-invariants",
+      "literal": "`aicore schema compat`"
+    },
+    {
+      "semantic_id": "orch.validation-release",
+      "literal": "Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`"
+    },
+    {
+      "semantic_id": "orch.validation-release",
+      "literal": "use Russian Conventional Commit messages."
+    },
+    {
+      "semantic_id": "orch.validation-release",
+      "literal": "`python3 scripts/ecosystem-units.py standalone orch`"
     }
   ]
 }

@@ -1,4 +1,4 @@
-"""Task routing must not become resident through provider rule projections."""
+"""Planner routing must not become resident through provider rule projections."""
 from pathlib import Path
 import sys
 import unittest
@@ -20,8 +20,8 @@ class TaskOptInTests(unittest.TestCase):
                 self.assertNotIn("root.plan-lifecycle", target.ordered_semantic_ids)
                 self.assertNotIn("root.ecosystem-identity", target.ordered_semantic_ids)
         package = next(target for target in result.targets
-                       if target.scope_id == "task" and target.provider_id == "claude-code")
-        self.assertIn("task.engineering-invariants", package.ordered_semantic_ids)
+                       if target.scope_id == "planner" and target.provider_id == "claude-code")
+        self.assertIn("planner.engineering-invariants", package.ordered_semantic_ids)
 
     def test_cursor_task_routing_is_manual_without_automatic_triggers(self):
         path = ".cursor/rules/swissknifeman-router.mdc"

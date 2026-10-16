@@ -1,0 +1,152 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:launch-plan:v1",
+  "contract_version": "exec/v1",
+  "binding": "claude-only",
+  "run_id": "dry-0123456789ab",
+  "input_digest": "77492587d30e5c55384a8d8fecb924ef144942ea5ddf605d3262722d7a67d1d6",
+  "policy_id": "solo",
+  "dry_run": true,
+  "stages": [
+    {
+      "stage_id": "primary",
+      "role": "executor",
+      "kind": "primary",
+      "provider": "claude-code",
+      "transport": "prompt",
+      "prompt_ref": "fixtures/synthetic-prompt.md",
+      "delivery": {
+        "mode": "prompt_inline",
+        "paths": [],
+        "skills": [
+          {
+            "name": "synthetic-skill",
+            "digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+          }
+        ]
+      },
+      "env": {
+        "SYNTHETIC_MODE": "dry-run"
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "stage_id": "scout",
+      "capability": "stream",
+      "reason": "Capability stream is unsupported.",
+      "reason_code": "CAPABILITY_UNSUPPORTED",
+      "chain": [
+        {
+          "capability": "stream",
+          "reason": "Binding claude-only has no stream."
+        },
+        {
+          "capability": "terminal_signal",
+          "reason": "No terminal signal without a stream."
+        }
+      ]
+    }
+  ],
+  "created_at": "2026-10-05T17:00:00Z",
+  "submission_id": "sub-0123456789abcdef01234567",
+  "modules": [
+    {
+      "id": "orch",
+      "version": "0.1.0"
+    },
+    {
+      "id": "aicore",
+      "version": "0.1.0"
+    }
+  ],
+  "input_ref": {
+    "$schema": "urn:swissknifeman:aicore:artifact-ref:v1",
+    "digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "size": 2048,
+    "media_type": "application/json",
+    "sensitivity": "normal"
+  },
+  "digests": {
+    "input": "77492587d30e5c55384a8d8fecb924ef144942ea5ddf605d3262722d7a67d1d6",
+    "policy": "823412d1eacb67956220e532959f0104603057c88704863ca38e7cd188fda812",
+    "roles": "66cf5513b37462be52e7fe7b1791b7a6b704f97577680acc2f270e365a1b01e3",
+    "launch_catalog": "804fbe45e9280aaf0d0574d8e369c391cea8477b2da0c775aa01c5649e22cbf6",
+    "model_catalog": "e1f2769ccc007d6c2ece0ff1798e055b9c7527e409b4439d1c9346b6a1cb17d5",
+    "capabilities": "3fc0e5c4c484797a0035141c53252fba96ec5923ec719b5c73d2b9078b31bf08",
+    "config": "398e3f95f18fc90d8a04330e3717f6dc2fe2ed37eba96c186edce0e28f55da18"
+  },
+  "config": {
+    "digest": "398e3f95f18fc90d8a04330e3717f6dc2fe2ed37eba96c186edce0e28f55da18",
+    "values": {
+      "engine": "native",
+      "default_profile": "solo",
+      "capabilities.stale": "warn"
+    }
+  },
+  "decisions": [
+    {
+      "stage_id": "primary",
+      "kind": "binding",
+      "chosen": "claude-only",
+      "considered": [
+        {
+          "candidate": "native",
+          "accepted": false,
+          "reason_codes": [
+            "CAPABILITY_UNSUPPORTED"
+          ]
+        },
+        {
+          "candidate": "claude-only",
+          "accepted": true,
+          "reason_codes": []
+        }
+      ],
+      "tie_break": "declared-order"
+    },
+    {
+      "stage_id": "*",
+      "kind": "policy",
+      "chosen": "solo",
+      "considered": [
+        {
+          "candidate": "solo",
+          "accepted": true
+        }
+      ]
+    }
+  ],
+  "policy_decision": {
+    "decision": "allow",
+    "reason_codes": [
+      "POLICY_ALLOWED"
+    ],
+    "policy_digest": "823412d1eacb67956220e532959f0104603057c88704863ca38e7cd188fda812"
+  },
+  "proof": {
+    "capabilities": [
+      {
+        "binding": "claude-only",
+        "provider": "claude-code",
+        "source": "declared",
+        "observed_at": "2026-10-05T17:00:00Z",
+        "stale": false
+      },
+      {
+        "binding": "native",
+        "provider": "claude-code",
+        "source": "probed",
+        "observed_at": "2026-10-01T12:00:00Z",
+        "fresh_until": "2026-10-02T12:00:00Z",
+        "stale": true
+      }
+    ],
+    "warnings": [
+      {
+        "code": "CAPABILITY_STALE",
+        "message": "Probed record of native claude-code is stale."
+      }
+    ]
+  },
+  "digest": "eda85ecb51b0460c362c450b5ac47affad8cadca164d6703d038ac88d0727252"
+}

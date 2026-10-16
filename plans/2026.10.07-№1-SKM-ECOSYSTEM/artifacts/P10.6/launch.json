@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "python3",
+    "/home/vostrikov/projects/packages/swissknifeman/packages/orch/scripts/ro-run.py",
+    "--rw",
+    "/home/vostrikov/projects/packages/swissknifeman-next/vendor",
+    "--",
+    "grok",
+    "--cwd",
+    "/home/vostrikov/projects/packages/swissknifeman-next",
+    "--prompt-file",
+    "/dev/stdin",
+    "--model",
+    "grok-4.7",
+    "--effort",
+    "high",
+    "--permission-mode",
+    "bypassPermissions",
+    "--disallowed-tools",
+    "search_replace,write",
+    "--output-format",
+    "streaming-messages-json"
+  ],
+  "transport": "jsonl",
+  "timeout_s": 3600,
+  "model": "grok-4.7",
+  "model_class": "implementation"
+}

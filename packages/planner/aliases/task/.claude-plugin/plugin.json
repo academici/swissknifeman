@@ -1,0 +1,12 @@
+{
+  "name": "task",
+  "version": "0.30.0",
+  "description": "Deprecated compatibility alias of the planner plugin: /task:* commands for one minor release; use /planner:*.",
+  "author": {
+    "name": "Dmitry Vostrikov",
+    "email": "dv.vostrikov@gmail.com"
+  },
+  "commands": [
+    "./commands"
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P5",
+  "title": "aicore: контент и доставка",
+  "design": "detailed",
+  "goal": "aicore.content (модель skill и дескриптор skill-descriptor/v1, бюджет контекста, примитивы публикации и общая часть command_render, eval с контекстом eval-context/v1), aicore.delivery (Codex, Claude, планы распространения, управляемые копии) и aicore.release (аттестация, версии, CHANGELOG) обобщены из skiller и task по функциям (D40); skiller, task, harness и скрипты хаба используют их; сгенерированные артефакты и вывод CLI байт-в-байт прежние (golden без перезахвата, кроме правила инструкций в P5.9).",
+  "context": "D4 уточнён решением D40 по коду: граница проходит по функциям, политика библиотеки skiller и маршрутизация task остаются у владельцев (P8, P9), функции хаба — P12. Модель skill — D41 (E27, стандарт Agent Skills), контекст eval — D42 (R12). Факты, таблица распределения, техника переноса, модели и проверки — knowledge/content-p5. Внешние предпосылки (Agent Skills, вывод claude -p) проверены через perplexity 2026-10-08. CLI skiller в dev-клоне закрыт guard — validate.sh skiller только в scripts/dev-sandbox.sh.",
+  "scope": {
+    "include": [
+      "aicore.content.{skill,budget,publication,commands,eval}; aicore.delivery.{codex,claude,distribution,materialize}; aicore.release.{attestation,version,changelog}",
+      "перевод skiller (реэкспорт), task (command_render), harness (без копии формулы токенов), скриптов хаба verify-tag и version-guard",
+      "модель skill-артефакта: таблица пробелов E27 (D41)",
+      "провенанс результата eval: digest skill, модель и провайдер, версии банка и оценщика (R12, D42)",
+      "карта принадлежности без гипотез P5; документация, ADR 0037–0039"
+    ],
+    "exclude": [
+      "перенос skills по модулям (P7, P8)",
+      "registry.py, маркетплейсы, root bootstrap, host-конфиг, пост-теговая доставка флоту (P12); оркестрация connect/vendor/update/status/skillset (P8); command_render вне общей части (P9); resolve.py (P10); audit/analyze (P8, P11)",
+      "генерация plugin.json модулей из unit.json (P12)",
+      "новые места служебных файлов skiller (P8)"
+    ]
+  },
+  "depends_on": [
+    "P4"
+  ],
+  "deliverables": [
+    "aicore.content",
+    "aicore.delivery",
+    "aicore.release",
+    "контракты skill-descriptor/v1 и eval-context/v1",
+    "ADR 0037–0039"
+  ],
+  "items": [
+    "P5.1",
+    "P5.2",
+    "P5.3",
+    "P5.4",
+    "P5.5",
+    "P5.6",
+    "P5.7",
+    "P5.8",
+    "P5.9",
+    "P5.10"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P5.1",
+        "P5.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P5.3",
+        "P5.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P5.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P5.6",
+        "P5.7"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P5.8"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P5.9",
+        "P5.10"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-08T18:41:45Z",
+    "result": "done_with_deviations",
+    "summary": "10 item(s): 2 done, 8 done_with_deviations"
+  }
+}

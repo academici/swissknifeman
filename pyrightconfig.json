@@ -1,7 +1,7 @@
 {
   "typeCheckingMode": "off",
   "extraPaths": [
-    ".",
+    "packages/aicore/lib",
     "packages/skiller/lib",
     "packages/harness/lib",
     "packages/maind/lib"

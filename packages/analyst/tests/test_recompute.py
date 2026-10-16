@@ -71,6 +71,14 @@ class TestRecompute(unittest.TestCase):
         self.assertEqual(raw.count("\n"), 2)
         self.assertEqual(len(lessons.read_events(self.proj)), 2)
 
+    def test_events_follow_the_legacy_project_dir(self):
+        legacy = Path(self.proj) / ".swissknife" / "analyst" / "lessons"
+        legacy.mkdir(parents=True)
+        lid = _mk(self.proj, "ephemeral")
+        _ev(self.proj, lid, ts="2026-06-01T00:00:00Z")
+        self.assertEqual(Path(lessons.events_path(self.proj)).parent, legacy.parent)
+        self.assertEqual(len(lessons.read_events(self.proj)), 1)
+
     def test_no_events_lesson_untouched(self):
         lid = _mk(self.proj, "ephemeral")
         res = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z")

@@ -1,0 +1,172 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.2",
+  "title": "Risk score conductor: risk.score (чистая), [orch.conductor.risk] веса и шаблоны, review.dynamic и dynamic_threshold, REVIEW_ADDED и risk.json; закрытие фазы P7",
+  "status": "done_with_deviations",
+  "summary": "orch/lib/orch/conductor/risk.py; сбор фактов после executor-раунда; config [orch.conductor.risk]; run-options review.dynamic, review.dynamic_threshold; при пороге — маршруты reviewer/triager и штатный цикл review; маяк REVIEW_ADDED, plan note, risk.json; тесты unit и e2e. Пункт закрывает фазу: phase.validation P7.",
+  "why": "Аудит П6.2, N10: review окупается. Риски: (1) лишний review удорожает run — веса и порог в конфиге, risk.json для измерения; (2) маршруты reviewer в solo не разрешены — разрешать с проверкой доступности и gate.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/risk.py",
+      "engine.py (факты, _review_enabled, маршруты)",
+      "options.py",
+      "packages/orch/configs/config.schema.json",
+      "run-options схема и зеркало",
+      "tests, docs",
+      "phase.validation P7"
+    ],
+    "exclude": [
+      "LLM-оценка риска"
+    ]
+  },
+  "depends_on": [
+    "P7.1"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p7-review#risk",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p7-review#checks",
+      "why": "проверки фазы",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "why": "_review_enabled",
+      "required": true,
+      "section": "_review_enabled"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/risk.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/settings.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/test_risk.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты stage-report, config, run-options — только аддитивно (D1)",
+    "risk.score — чистая функция без I/O",
+    "phase.validation P7 — после V1–V2, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: unit risk → e2e solo+schema (падает) → config и options → engine → docs → V1–V2 → phase.validation P7.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "динамический review"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T14:33:44Z",
+    "finished_at": "2026-10-14T15:39:41Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "d28dd78b-d672-4a05-a090-92281ed71ce8"
+    },
+    "notes": "risk.py (чистая score), [orch.conductor.risk], review.dynamic/dynamic_threshold, динамическое добавление reviewer+triager, REVIEW_ADDED, risk.json; после ревью: red_first по первому прогону, рекомендация любого раунда, announced для resume, diff_lines как numstat. После коррекции V1 перезапущен: зелёный.",
+    "deviations": [
+      "golden prompt-executor-plan-bound.md и config.example.toml перегенерированы (держали V1 красным; golden устарел после executor.md в P7.1); V11 сужен до ci-matrix run --unit orch --unit planner-orch (изменённые модули, по просьбе владельца только нужные прогоны); коррекция по ревью grok (3 Major + 1 Minor) вошла в коммит executor, так как P7.2 к ревью не был закоммичен"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T15:39:41Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T15:39:41Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T15:39:41Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T15:39:41Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-14T15:39:41Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T15:39:41Z"
+}

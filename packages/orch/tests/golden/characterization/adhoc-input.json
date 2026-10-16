@@ -1,0 +1,373 @@
+{
+ "progress": [
+  {
+   "event": "run.start",
+   "message": "input <tmp>/input.json; items adhoc@<digest>"
+  },
+  {
+   "event": "item.start",
+   "item": "adhoc@<digest>",
+   "message": "Make out/adhoc.txt"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "brief"
+  },
+  {
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "brief",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "prepare"
+  },
+  {
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "prepare",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout"
+  },
+  {
+   "agent": "agent-<run>-1",
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout",
+   "verdict": "mapped"
+  },
+  {
+   "event": "info",
+   "item": "adhoc@<digest>",
+   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
+   "reason_code": "RESULT_HEALED",
+   "role": "context-scout",
+   "stage": "scout"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "agent": "agent-<run>-2",
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "checks.1"
+  },
+  {
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "checks.1",
+   "verdict": "green"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1"
+  },
+  {
+   "agent": "agent-<run>-3",
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "GREEN 0 finding(s)"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register"
+  },
+  {
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register",
+   "verdict": "recorded gate pass"
+  },
+  {
+   "event": "stage.start",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "commit"
+  },
+  {
+   "event": "stage.end",
+   "item": "adhoc@<digest>",
+   "role": "deterministic",
+   "stage": "commit",
+   "verdict": "no-op"
+  },
+  {
+   "event": "item.end",
+   "item": "adhoc@<digest>",
+   "outcome": "done"
+  },
+  {
+   "event": "run.end",
+   "message": "observer report <project>/.swissknifeman/orch/reports/<run>/observer.md",
+   "outcome": "finished"
+  }
+ ],
+ "state": {
+  "agents": 3,
+  "claims": {
+   "item-adhoc-9b97afced891": {
+    "orch_run": "run-<digest>",
+    "ref": "adhoc@<digest>",
+    "submission": "sub-<run>-item-adhoc-9b97afced891",
+    "title": "Make out/adhoc.txt"
+   }
+  },
+  "executor_session": "executor-session-1",
+  "executor_session_route": "claude-code/sonnet/high",
+  "items": {
+   "adhoc@9b97afced891": {
+    "adopted": [],
+    "autofix_at": [],
+    "check_fixes_at": [],
+    "check_fixes_used": 0,
+    "corrections_at": [],
+    "corrections_used": 0,
+    "executor_started": true,
+    "expected": null,
+    "orch_run": "run-<digest>",
+    "outcome": "done",
+    "plan_notes": [],
+    "retries_used": 0,
+    "source_paths": [],
+    "steps": {
+     "brief": {
+      "ended": "<time>",
+      "result": {
+       "artifacts_dir": ".swissknifeman/orch-artifacts/run-<digest>/adhoc@<digest>",
+       "base": "<digest>",
+       "input_id": "adhoc@<digest>",
+       "input_path": "<project>/.swissknifeman/state/orch/conductor/<run>/adhoc-9b97afced891/input.json"
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "checks.1": {
+      "ended": "<time>",
+      "result": [
+       {
+        "cmd": "test -f out/adhoc.txt",
+        "evidence": ".swissknifeman/orch-artifacts/run-<digest>/adhoc@<digest>/evidence/V1.json",
+        "exit": 0,
+        "green": true,
+        "id": "V1",
+        "kind": "acceptance",
+        "log": "<project>/.swissknifeman/state/orch/conductor/<run>/adhoc-9b97afced891/checks/1/V1.log",
+        "seconds": 0.0,
+        "tail": ""
+       }
+      ],
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "green"
+     },
+     "commit": {
+      "ended": "<time>",
+      "result": {
+       "outcome": "no-op",
+       "sha": null
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "no-op"
+     },
+     "executor.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-2",
+       "attempts": 1,
+       "changed": [
+        "out/adhoc.txt"
+       ],
+       "exit": 0,
+       "model": "fake-model",
+       "report": {
+        "changed_paths": [
+         "out/adhoc.txt"
+        ],
+        "checks_run": [
+         {
+          "cmd": "test -f out/adhoc.txt",
+          "exit": 0,
+          "id": "V1"
+         }
+        ],
+        "evidence": [],
+        "open_issues": [],
+        "status": "done",
+        "summary": "made adhoc"
+       },
+       "session": "executor-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/adhoc-9b97afced891/streams/executor.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "executor",
+      "route": "claude-code/sonnet/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "done"
+     },
+     "prepare": {
+      "ended": "<time>",
+      "result": {
+       "refusals": [],
+       "stages": [
+        {
+         "effort": "high",
+         "model": "sonnet",
+         "provider": "claude-code",
+         "role": "executor",
+         "stage_id": "primary"
+        }
+       ]
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "register": {
+      "ended": "<time>",
+      "result": {
+       "gate": "pass",
+       "outcome": "recorded"
+      },
+      "role": "registrar",
+      "route": "orch/conductor",
+      "status": "done",
+      "verdict": "recorded gate pass"
+     },
+     "review.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-3",
+       "attempts": 1,
+       "exit": 0,
+       "findings": {
+        "findings": [],
+        "verdict": "GREEN"
+       },
+       "model": "fake-model",
+       "session": "reviewer-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/adhoc-9b97afced891/streams/review.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "reviewer",
+      "route": "grok/grok-4.7/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "GREEN 0 finding(s)"
+     },
+     "scout": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-1",
+       "attempts": 1,
+       "cache": ".swissknifeman/state/orch/conductor/cache/scout/adhoc-9b97afced891/<digest>.txt",
+       "exit": 0,
+       "hit": false,
+       "model": null,
+       "session": null,
+       "stream": ".swissknifeman/state/orch/conductor/<run>/adhoc-9b97afced891/streams/scout.txt",
+       "text": "a context map line — why it matters\nUnknowns:\n- none",
+       "usage": {
+        "cached": 0,
+        "input": 0,
+        "output": 0
+       }
+      },
+      "role": "context-scout",
+      "route": "claude-code/haiku/low",
+      "status": "done",
+      "verdict": "mapped"
+     }
+    },
+    "tokens": {
+     "cached": 0,
+     "input": 200,
+     "output": 20
+    }
+   }
+  },
+  "on_blocked": "stop",
+  "questions": {
+   "adhoc@9b97afced891": {}
+  },
+  "status": "finished",
+  "tokens": {
+   "cached": 0,
+   "input": 200,
+   "output": 20
+  }
+ }
+}

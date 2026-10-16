@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:planner:check-plugin:output:v1",
+  "title": "planner check plugin output",
+  "description": "Output of a plugin at the planner:check extension point: the problems it found in the plan, at most 500.",
+  "type": "object",
+  "properties": {
+    "issues": {
+      "type": "array",
+      "description": "Problems found in the plan; empty when the plan passes. More than 500 issues make the output invalid.",
+      "items": {
+        "type": "object",
+        "description": "One problem.",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "description": "Whether the problem fails the plan check.",
+            "enum": [
+              "error",
+              "warning"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable code of the problem, set by the plugin.",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "message": {
+            "type": "string",
+            "description": "What is wrong.",
+            "minLength": 1
+          },
+          "ref": {
+            "type": "string",
+            "description": "Reference in the plan the problem belongs to, such as P1.2."
+          },
+          "path": {
+            "type": "string",
+            "description": "File the problem belongs to, relative to the plan folder."
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "issues"
+  ],
+  "additionalProperties": false
+}

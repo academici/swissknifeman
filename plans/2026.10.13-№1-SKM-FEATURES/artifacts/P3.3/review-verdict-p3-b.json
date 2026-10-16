@@ -1,0 +1,55 @@
+{
+  "selector": "grok/grok-4.7/high",
+  "session": "01a13951-6c6f-7283-abfe-dfecc7fa5559",
+  "scope": "P3.2+P3.3+P3.4",
+  "verdict": "ATTENTION",
+  "findings": [
+    {
+      "id": "P3.2-NONDIR",
+      "severity": "Major",
+      "confidence": "high",
+      "location": "packages/aicore/lib/aicore/state/locations.py:157",
+      "failure_scenario": "An explicit --project path or SKM_PROJECT_ROOT is returned as the project with no is_dir check (flag at line 157, environment at line 160), and marker search never runs. orch.project.find drops a non-directory (project.py:14) and require (project.py:21) raises PROJECT_CONTEXT_REQUIRED blaming the cwd, so a git repo is reported as having no .git while SKM_PROJECT_ROOT names a file or a missing path. planner.integration.overlays.project_root then returns None. skiller.config.find_project_root (config.py:448) returns that same non-directory with via SKM_PROJECT_ROOT.",
+      "basis": "ran",
+      "reproduction": "HOME=/tmp/tmp.aypl3LE9SE, cwd /tmp/tmp.aypl3LE9SE/p32/repo with .git a directory. SKM_PROJECT_ROOT=/tmp/tmp.aypl3LE9SE/p32/not-a-dir.txt (a file): find_project_root -> that file, is_dir False, exists True; orch.require -> PROJECT_CONTEXT_REQUIRED: no project found above /tmp/tmp.aypl3LE9SE/p32/repo (no .git or .swissknifeman); orch.find -> None; planner project_root -> None. SKM_PROJECT_ROOT=/tmp/tmp.aypl3LE9SE/p32/missing-dir (exists False): same PROJECT_CONTEXT_REQUIRED naming the repo. --project that file: PROJECT_CONTEXT_REQUIRED naming not-a-dir.txt. With the variable unset, orch.find -> ProjectContext root .../repo resolution git marker .git and planner project_root -> .../repo. skiller find_project_root(env file) -> (PosixPath('.../not-a-dir.txt'), 'SKM_PROJECT_ROOT')."
+    },
+    {
+      "id": "P3.2-SKILLER-MARKER",
+      "severity": "Minor",
+      "confidence": "high",
+      "location": "packages/aicore/lib/aicore/state/locations.py:167",
+      "failure_scenario": "skiller.config.find_project_root walks with resolve_project and PROJECT_MARKERS. Every marker except .swissknifeman matches on Path.exists, so a file named .claude or a directory named .swissknifeman/config.toml wins. The pre-change walk required .claude to be a directory and .swissknifeman/config.toml, .swissknife.json and .swissknifeman/config.json to be files, and kept walking to the real .git root. Home stop, a .git file, and .swissknife.json before .git in the same directory still match.",
+      "basis": "ran",
+      "reproduction": "Old walk reimplemented from 16da01afab^ skiller/config.py find_project_root and compared under HOME=/tmp/tmp.aypl3LE9SE. OK git-file: both (.../wt, .git). OK json-before-git: both (.../order, .swissknife.json). OK stop-at-home: both (None, None). OK home-git-file: both (.../home, .git). DIFF claude-file-nearer-than-git: old=(.../proj, .git) new=(.../proj/mid, .claude) where mid/.claude is a file and proj/.git is a directory. DIFF toml-dir-nearer-than-gitfile: old=(.../proj2, .git) new=(.../proj2/mid, .swissknifeman/config.toml) where that marker is a directory and proj2/.git is a file."
+    },
+    {
+      "id": "P3.3-EXPLAIN-CLAIM",
+      "severity": "Major",
+      "confidence": "high",
+      "location": "packages/orch/lib/orch/conductor/explain.py:96",
+      "failure_scenario": "route explain builds a claim with scenario and options only, and --plan/--item (lines 109-111) restores options.json but not claim.route. A real run takes executor effort from claim.route.effort (engine.py:988) and _route_minimum (engine.py:1020) stops when class or effort is below that route. explain reports the launch-catalog route and stop null for a run that stopped ROUTE_UNDERSHOOT, and effort high for a run that finished on effort low. Nothing was written: project and home snapshots were unchanged.",
+      "basis": "ran",
+      "reproduction": "ConductorCase, fake work source, HOME temp. conduct.py run --plan T --items W1 with claim route class frontier effort high: exit 1, item.end/run.end reason_code ROUTE_UNDERSHOOT, message 'the executor class implementation is below frontier required by W1' (run cnd-20261014T082656Z-777ffa). orch.py route explain --role executor --plan T --item W1 --json: exit 0, selected claude-code/sonnet class implementation effort high, sources.effort 'launch-catalog (default)', stop null. Second run W2 claim class implementation effort low: exit 0 outcome done; routes.json executor effort low model sonnet. explain --item W2: selected effort high, sources.effort 'launch-catalog (default)', stop null. MUTATION False."
+    },
+    {
+      "id": "P3.3-EXPLAIN-SANDBOX",
+      "severity": "Major",
+      "confidence": "high",
+      "location": "packages/orch/lib/orch/conductor/explain.py:85",
+      "failure_scenario": "A non-override candidate is judged with route_problem, which never applies Claude instructions.sandbox=require (engine.route_problem at 816). The run's _preflight does (engine.py:944-957) and stops SANDBOX_UNAVAILABLE when the sandbox cannot start and the launch-catalog executor argv contains --tools Bash. Fallback rows use _admit, so the same explain marks the reviewer claude-code fallback unavailable while the executor row that would be launched stays available with stop null. Reproduced only after removing [orch.conductor.argv] so the catalog argv is used; the test fixture's fake argv hides Bash.",
+      "basis": "ran",
+      "reproduction": "Same harness, config.toml without [orch.conductor.argv], item options instructions.sandbox=require, sandbox.probe patched to {available: false, reason: 'bwrap not found on PATH'}. conduct.py run --plan T --items W1: exit 1, item.end/run.end SANDBOX_UNAVAILABLE 'instructions.sandbox is require, and the sandbox cannot start (bwrap not found on PATH)' (run cnd-20261014T082700Z-ef6ed8). route explain --role executor --plan T --item W1 --json: exit 0, stop null, candidates [[stages, policy:full, claude-code, implementation, high, available true, problem null]]. explain --role reviewer: fallback_routes claude-code/frontier/high available false, problem 'SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start (bwrap not found on PATH)'. MUTATION False."
+    },
+    {
+      "id": "P3.3-EXPLAIN-STAGE-LAYER",
+      "severity": "Minor",
+      "confidence": "high",
+      "location": "packages/orch/lib/orch/conductor/explain.py:118",
+      "failure_scenario": "Any policy stage that names the role is truthy, so explain adds a candidate whose layer is that policy. full/policy.json executor and reviewer stages set role only (no provider, model_class, or effort). The printed provider, class and effort are the resolved route. In the same JSON, selected.sources attribute the executor provider to config:orch.conductor.provider (defaults) and the effort to launch-catalog, and the reviewer provider/model/effort to config:orch.conductor. The stages row still says layer policy:full for that route, and the reviewer stages row repeats the selector beside the real reviewer row.",
+      "basis": "ran",
+      "reproduction": "From the W1 explain JSON above (run cnd-20261014T082656Z-777ffa): executor candidates [[stages, policy:full, claude-code, implementation, high, true, null]] while selected.sources are provider 'config:orch.conductor.provider (defaults)', model_class 'launch-catalog (default)', effort 'launch-catalog (default)'. Reviewer explain on cnd-20261014T082700Z-ef6ed8: candidates [[stages, policy:full, grok, implementation, high, true, null], [reviewer, config:orch.conductor, grok, implementation, high, true, null], ...] and selected.sources provider/model/effort 'config:orch.conductor'."
+    }
+  ],
+  "stream": ".swissknifeman/state/orch/review-p3/stream-b.jsonl",
+  "disposition": "all findings reproduced or confirmed by reading the code; fixed in one --role fix commit"
+}

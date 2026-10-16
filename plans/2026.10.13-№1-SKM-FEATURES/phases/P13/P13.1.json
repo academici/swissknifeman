@@ -1,0 +1,113 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P13.1",
+  "title": "Раннеры eval claude/codex по aicore/configs/eval-runners.json; skiller eval matrix (классы × провайдеры × варианты) с --dry-run оценкой и отказом по --budget-usd; отчёт eval-matrix",
+  "status": "todo",
+  "summary": "По knowledge/p13-eval#matrix: данные раннеров, обобщённый run_case по шаблону argv, matrix CLI, оценка стоимости, метрики, отчёт; unit-тесты без сети; платный прогон — после подтверждения бюджета.",
+  "why": "Аудит П12.1–П12.2, D8. Риск: неконтролируемая стоимость — dry-run и отказ по бюджету до запуска.",
+  "scope": {
+    "include": [
+      "packages/aicore/configs/eval-runners.json",
+      "packages/aicore/lib/aicore/content/eval.py",
+      "packages/skiller/lib/skiller (eval matrix)",
+      "tests",
+      "отчёт в artifacts"
+    ],
+    "exclude": [
+      "прогоны без бюджета"
+    ]
+  },
+  "depends_on": [
+    "P12.5"
+  ],
+  "decisions": [
+    "D8"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p13-eval#matrix",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p13-eval#facts",
+      "why": "код",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/content/eval.py",
+      "why": "runner",
+      "required": true,
+      "section": "run_case"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/configs/eval-runners.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/content/eval.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/quality/eval.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P13.1/**",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Платные прогоны — только в пределах бюджета владельца (D8); id skills не удаляются (D1)"
+  ],
+  "guidance": "Исполнитель: implementation/high. Сначала проверить gate EVAL-BUDGET. Порядок: unit-тесты → раннеры → matrix и dry-run → V1 → платный прогон в бюджете → отчёт.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "eval matrix"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "owner_gate",
+    "gate": "EVAL-BUDGET",
+    "scope": "платные прогоны моделей в объёме бюджета, подтверждённого владельцем (D8)"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:59:46Z"
+}

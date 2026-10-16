@@ -1,0 +1,12 @@
+int_pos = +17
+int_under = 1_000_000
+hex = 0xDEAD_BEEF
+octal = 0o755
+binary = 0b1101
+flt = -3.14
+exp = 5e+22
+tiny = 1e-07
+inf_value = inf
+neg_inf = -inf
+zero = 0
+flag_off = false

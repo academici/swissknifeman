@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T142810Z-c2c8a3:P12.7:checks.2:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P12.7",
+  "candidate": {
+    "head": "9c8d1c47f2070bddd7001901c48b182b07d41059",
+    "dirty_digest": "cb6c762e572474c47f767e63c292c261c3b5581135cf8b887ce2acaa4928aed4"
+  },
+  "started_at": "2026-10-13T14:47:09Z",
+  "procedure": {
+    "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-smk-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash scripts/smoke-installed.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T14:47:14Z"
+}

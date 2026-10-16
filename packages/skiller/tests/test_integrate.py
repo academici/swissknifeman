@@ -24,8 +24,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.common import apply_permissions
 from skiller.host import clear_host_cache
-from skiller.integrate import cmd_integrate, _available_mcp, _default_mcp, _gather, _run_environment
+from skiller.integrate import (cmd_integrate, _available_mcp, _block_brain, _default_mcp, _gather,
+                               _run_environment)
 from skiller.registry import build_registry
+from skiller.skillset import load_skillset_config
 import tests.fixtures as fx
 
 
@@ -71,7 +73,7 @@ class IntegrateCase(unittest.TestCase):
         self.assertTrue(any(k.endswith("@swissknifeman")
                             for k in settings.get("enabledPlugins", {})))
         # registered in projects.json (in tmp home, not real)
-        db = json.loads((self.env.home / ".swissknifeman" / "projects.json").read_text())
+        db = json.loads(self.env.db_file.read_text())
         self.assertTrue(any(p["path"] == str(self.proj) for p in db["projects"]))
 
     # --- skills channel (connect vs vendor) ---------------------------------
@@ -83,8 +85,7 @@ class IntegrateCase(unittest.TestCase):
             ["--target", str(self.proj), "--bundle", "minimal",
              "--skills-channel", "vendor", "--yes"])
         # config vendor-mode materialized from project profile
-        cfg = json.loads(
-            (self.proj / ".swissknifeman" / "config.json").read_text())
+        cfg = load_skillset_config(self.proj, self.env)
         self.assertEqual(cfg["mode"], "vendor")
         self.assertIn("php", cfg["buckets"])  # laravel-project fixture profile
         # skills physically in the repo, in lock — managed:true, source swissknifeman
@@ -100,7 +101,7 @@ class IntegrateCase(unittest.TestCase):
                              json.loads(settings.read_text()))
         # registered as channel=vendor
         db = json.loads(
-            (self.env.home / ".swissknifeman" / "projects.json").read_text())
+            self.env.db_file.read_text())
         rec = next(p for p in db["projects"] if p["path"] == str(self.proj))
         self.assertEqual(rec["channel"], "vendor")
 
@@ -257,6 +258,76 @@ class HostDelegationCase(unittest.TestCase):
                       err.getvalue())
         self.assertEqual(_available_mcp(self.env), [])
         self.assertFalse(self.log.exists())
+
+
+class BrainDocsDelegationCase(unittest.TestCase):
+    """Block [9] hands document sync to the host's `brain_docs` command and survives its absence."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.tmp = Path(temporary.name)
+        self.env = fx.make_registry(self.tmp)[1]
+        self.target = self.tmp / "project"
+        self.log = self.tmp / "argv.log"
+        self.tool = self.tmp / "brain-fixture"
+        self.write_tool(0)
+        self.host = self.tmp / "host.json"
+        self.host.write_text(json.dumps({"schema_version": 1, "commands": {"brain_docs": {
+            "argv": ["bin/brain", "docs", "integrate"], "env_override": "SKM_BRAIN_BIN",
+            "install_hint": "bin/brain"}}}), encoding="utf-8")
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(self.host),
+                                               "SKM_BRAIN_BIN": str(self.tool)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(clear_host_cache)
+        clear_host_cache()
+
+    def write_tool(self, code, message=""):
+        self.tool.write_text(f"#!/usr/bin/env bash\nprintf '%s\\n' \"$*\" >> {self.log}\n"
+                             f"echo '{message}' >&2\nexit {code}\n", encoding="utf-8")
+        self.tool.chmod(self.tool.stat().st_mode | stat.S_IEXEC)
+
+    def block(self, choices, dry):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            _block_brain(self.env, self.target, choices, dry)
+        return out.getvalue(), err.getvalue()
+
+    def test_dry_run_passes_project_and_flag(self):
+        out, _ = self.block({"brain": True}, True)
+        self.assertIn("[9] Brain docs-sync", out)
+        self.assertIn(f"repo: {self.target}", out)
+        self.assertEqual(self.log.read_text(encoding="utf-8").splitlines(),
+                         [f"docs integrate --project {self.target} --dry-run"])
+
+    def test_apply_passes_project_only(self):
+        self.block({"brain": True}, False)
+        self.assertEqual(self.log.read_text(encoding="utf-8").splitlines(),
+                         [f"docs integrate --project {self.target}"])
+
+    def test_choice_off_does_nothing(self):
+        self.assertEqual(self.block({"brain": False}, False), ("", ""))
+        self.assertFalse(self.log.exists())
+
+    def test_missing_command_warns_and_continues(self):
+        with mock.patch.dict(os.environ, {"SKM_BRAIN_BIN": str(self.tmp / "absent")}):
+            out, err = self.block({"brain": True}, False)
+        self.assertIn("brain command not configured or not installed - skip (install: bin/brain)", err)
+        self.assertIn("Then: brain status", out)
+        self.assertFalse(self.log.exists())
+
+    def test_host_without_command_warns_and_continues(self):
+        self.host.write_text(json.dumps({"schema_version": 1}), encoding="utf-8")
+        clear_host_cache()
+        _, err = self.block({"brain": True}, False)
+        self.assertIn("brain command not configured or not installed - skip", err)
+
+    def test_failure_warns_with_stderr_and_does_not_raise(self):
+        self.write_tool(3, "VAULT_MISSING: gone")
+        _, err = self.block({"brain": True}, False)
+        self.assertIn("brain command returned the code 3", err)
+        self.assertIn("VAULT_MISSING: gone", err)
 
 
 if __name__ == "__main__":

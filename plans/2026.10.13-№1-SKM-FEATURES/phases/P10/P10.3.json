@@ -1,0 +1,187 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.3",
+  "title": "Стадия research по rag пункта: execution-input.research (мост brief), policy required|conditional|off, блок research в промпте executor; golden",
+  "status": "done",
+  "summary": "exec/v1 research (аддитивно), brief.py переносит item.rag, engine добавляет стадию по политике, блок промпта kind research; golden need none/required.",
+  "why": "Аудит П9.3 с поправкой: триггер — решение проектировщика (rag пункта), не эвристика conductor.",
+  "scope": {
+    "include": [
+      "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "bridges/planner-orch/brief.py",
+      "engine.py, prompts.py",
+      "tests"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P10.2"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p10-research#triggers",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "path": "bridges/planner-orch/brief.py",
+      "why": "построение input",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/brief.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/config.example.toml",
+      "change": "modify",
+      "note": "generated: aicore config example packages/orch --write"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/fixtures/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/lib/orch/settings.py",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "preflight: сопутствующие файлы новой схемы/роли (контракт, фикстуры, docs)"
+    },
+    {
+      "path": "packages/orch/lib/orch/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/roles/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/configs/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "packages/orch/schemas/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    },
+    {
+      "path": "bridges/planner-orch/**",
+      "change": "any",
+      "note": "preflight: write set = модуль orch целиком (+мост, golden)"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/7a9819200a905a613039901a513f9bb37e7b08dd168dac5303c0d8f0c64cf8a0",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты и config — только аддитивно (D1)",
+    "argv источников — только machine/invocation/flags"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: golden → схема → мост → стадия → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "стадия research"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-15T06:20:03Z",
+    "finished_at": "2026-10-15T06:34:31Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-c84471ac1d41976f3d43d215-P10.3",
+    "notes": "Research stage by the plan item's rag. exec/v1 execution-input gets the optional closed field research {need, notes?} (schema, valid/invalid fixtures, docs row). bridges/planner-orch brief.py carries item.rag.need/notes into research (no rag, no field). Conductor engine: _research_wanted follows orch.research.policy (default conditional: only research.need == required; required: every piece; off: never); the result of research.1 reaches every executor round as a new prompt block kind research (## Research: claims with sources, contradictions, unknowns; origin research-result:<file>; budget class retrieval), listed in the manifest. Tests: schema fixtures, brief mapping, prompt block + golden executor-research.md, e2e for need none/optional/required, default policy, off, required-with-none, no sources. Docs and CHANGELOG updated. Tests run: orch test_conductor_research, test_conductor_prompts, test_contracts_input, test_contracts_identity, test_conductor_input, test_conductor_contracts, test_adhoc (130 OK); bridges/planner-orch test_brief (56 OK), test_worksource (41 OK), test_conformance (6 OK), each with a temporary HOME/SKM_HOME. The acceptance check V1 (affected-tests --run), schema compat, golden and ecosystem-units check were not run by me.\nChanged: CHANGELOG.md, bridges/planner-orch/README.md, bridges/planner-orch/brief.py, bridges/planner-orch/tests/test_brief.py, packages/orch/docs/conductor.md, packages/orch/docs/contracts.md, packages/orch/docs/research.md, packages/orch/fixtures/exec/v1/invalid/execution-input/research-bad-need.json, packages/orch/fixtures/exec/v1/invalid/execution-input/research-extra-key.json, packages/orch/fixtures/exec/v1/valid/execution-input/research.json, packages/orch/lib/orch/conductor/engine.py, packages/orch/lib/orch/conductor/prompts.py, packages/orch/schemas/exec/v1/execution-input.schema.json, packages/orch/tests/fixtures/conductor/source/plugin.py, packages/orch/tests/golden/conductor-prompts/executor-research.md, packages/orch/tests/test_conductor_prompts.py, packages/orch/tests/test_conductor_research.py, packages/orch/tests/test_contracts_input.py",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T06:34:31Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.3/evidence/V1.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.3/evidence/V1.json"
+    ]
+  },
+  "updated_at": "2026-10-15T06:34:31Z"
+}

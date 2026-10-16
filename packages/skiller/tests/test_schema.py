@@ -9,7 +9,8 @@ import json
 import unittest
 from pathlib import Path
 
-from skiller.common import AGENT_DEFAULTS, CONFIG_KEYS
+from skiller.common import CONFIG_KEYS
+from aicore.delivery.materialize import AGENT_DEFAULTS
 from skiller.skillset import SKILLSET_KEYS
 
 SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schema"

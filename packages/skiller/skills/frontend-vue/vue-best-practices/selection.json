@@ -1,0 +1,11 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "SLIM",
+  "triggers": {
+    "paths": [
+      "**/*.vue"
+    ]
+  },
+  "exclusive_group": "vue-core"
+}

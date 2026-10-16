@@ -1,0 +1,15 @@
+{
+  "ts": "2026-10-11T20:15:03Z",
+  "run": "cnd-20261011T201500Z-a1b2c3",
+  "event": "stage.end",
+  "item": "P11.4",
+  "stage": "executor.1",
+  "role": "executor",
+  "route": "claude-code/claude-opus-5-5/high",
+  "verdict": "done",
+  "duration_s": 731.5,
+  "tokens": {
+    "input": 420000,
+    "output": 38000
+  }
+}

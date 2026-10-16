@@ -1,0 +1,60 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P1",
+  "title": "Рабочая среда: guard dev-клона, скрипт ветки, песочница, процесс",
+  "design": "detailed",
+  "goal": "Dev-клон ~/projects/packages/swissknifeman-next не может тронуть живое состояние (guard в точках входа при реальном HOME), ветка обслуживается scripts/dev-clone.sh (init, status, sync-main), ручные проверки идут в песочнице scripts/dev-sandbox.sh на копиях проектов, процесс описан в docs/develop.md.",
+  "context": "D10, D13; knowledge/dev-env-p1. Факты 2026-10-07: CLI в ~/.local/bin, маркетплейс swissknifeman, settings.local.json и вендорённые skills проектов, ~/.swissknifeman/topology.json указывают на live-папку.",
+  "scope": {
+    "include": [
+      "guard-блок в 11 точках входа",
+      "scripts/dev-clone.sh",
+      "scripts/dev-sandbox.sh",
+      "тесты и шаги CI",
+      "docs/develop.md, CHANGELOG"
+    ],
+    "exclude": [
+      "aicore.state и SKM_HOME (P4)",
+      "изменения логики CLI модулей"
+    ]
+  },
+  "deliverables": [
+    "guard dev-клона",
+    "скрипт ветки",
+    "песочница",
+    "описание процесса"
+  ],
+  "items": [
+    "P1.1",
+    "P1.2",
+    "P1.3"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P1.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P1.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P1.3"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-08T20:17:26Z",
+    "result": "done_with_deviations",
+    "summary": "3 item(s): 1 done, 2 done_with_deviations"
+  }
+}

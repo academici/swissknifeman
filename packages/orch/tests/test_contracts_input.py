@@ -27,6 +27,11 @@ EXPECTED = {
     "role-manifest/inline-body.json": "additional",
     "capability-record/declared-supported-no-doc.json": "CAPABILITY_EVIDENCE",
     "capability-record/bad-support.json": "enum",
+    "run-policy/fallback-undeclared.json": "FALLBACK_UNDECLARED",
+    "capability-record/fresh-before-observed.json": "CAPABILITY_FRESHNESS",
+    "execution-input/condensed-drift.json": "CONDENSED_REQUIRED_DRIFT",
+    "execution-input/research-bad-need.json": "enum",
+    "execution-input/research-extra-key.json": "additional",
 }
 
 
@@ -61,6 +66,14 @@ class InputContractTests(unittest.TestCase):
                     if kind == "execution-input":
                         self.assertEqual(doc["digest"], contracts.canonical_digest(doc))
                         self.assertTrue(doc["input_id"].endswith("@" + doc["digest"][:12]))
+
+    def test_read_may_name_the_pack_key_that_holds_it(self):
+        path = sorted((ROOT / "fixtures/exec/v1/valid/execution-input").glob("*.json"))[0]
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        doc["reads"] = [{"path": "a.md", "why": "w", "required": True, "exists": True, "included": "reads/1"}]
+        doc["digest"] = contracts.canonical_digest(doc)
+        doc["input_id"] = doc["input_id"].split("@")[0] + "@" + doc["digest"][:12]
+        self.assertEqual([i for i in contracts.validate(doc, "execution-input") if i.level == "error"], [])
 
     def test_invalid_fixtures_have_exactly_one_expected_error(self):
         paths = [path for kind in KINDS for path in (ROOT / "fixtures/exec/v1/invalid" / kind).glob("*.json")]

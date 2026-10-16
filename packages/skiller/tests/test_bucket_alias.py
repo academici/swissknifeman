@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.common import MARKETPLACE
+from aicore.delivery import MARKETPLACE
 from skiller.connect import do_connect
 from skiller.registry import (alias_migration_hints, build_registry,
                               load_bucket_aliases, write_plugin_manifests)

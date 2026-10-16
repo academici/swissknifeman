@@ -6,8 +6,12 @@ import sys
 from pathlib import Path
 
 from .agentpacks import list_packs
-from .common import die, parse_flags
+from aicore import MIN_PYTHON
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
 from .mcp import available_mcp
+
+RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
 
 
 _RUN_REPORT_FILES = ("run-report.py", "_lib.py", "_usage.py")
@@ -55,6 +59,134 @@ def _sha256(path):
         return hashlib.sha256(Path(path).read_bytes()).hexdigest()
     except OSError:
         return None
+
+
+def _result(check_id, status, observed, *, category="environment", evidence=None, remediation=None, repair=None):
+    doc = {"$schema": RESULT_SCHEMA, "check_id": check_id, "status": status,
+           "category": category, "observed": observed}
+    if evidence:
+        doc["evidence"] = evidence
+    if remediation:
+        doc["remediation"] = remediation
+    if repair:
+        doc["repair"] = repair
+    return doc
+
+
+def has_failure(results):
+    return any(doc["status"] == "fail" for doc in results)
+
+
+def render_text(results):
+    lines = []
+    for doc in results:
+        lines.append(f"{doc['status']} {doc['check_id']}: {doc['observed']}")
+        if doc.get("remediation"):
+            lines.append(f"  remediation: {doc['remediation']}")
+    return lines
+
+
+def _environment_check(env):
+    floor = ".".join(str(part) for part in MIN_PYTHON)
+    problems = []
+    evidence = [f"python3 {sys.version.split()[0]}"]
+    if sys.version_info < tuple(MIN_PYTHON):
+        problems.append(f"python3 >= {floor} is required")
+    cfg = env.configs_dir
+    if not cfg.is_dir():
+        problems.append(f"configs/claude-code/ is missing: {cfg}")
+    presets = sorted(p.stem.split(".", 1)[1] for p in cfg.glob("settings.*.json")) if cfg.is_dir() else []
+    mcp_presets = available_mcp(env)
+    packs = list_packs(env)
+    evidence.append(f"permissions-presets: {', '.join(presets) or 'none'}")
+    evidence.append(f"mcp-presets: {', '.join(mcp_presets) or 'none'}")
+    evidence.append(f"agent-packs: {', '.join(packs) or 'none'}")
+    if cfg.is_dir() and not presets:
+        problems.append("no permissions presets")
+    if not mcp_presets:
+        problems.append("no MCP presets")
+    if not env.apply_script.exists():
+        problems.append(f"scripts/apply-permissions.sh is missing: {env.apply_script}")
+    if not packs:
+        problems.append("no agent-packs")
+    if problems:
+        return _result("harness.environment", "fail", "; ".join(problems), evidence=evidence,
+                       remediation="Reinstall the harness module.")
+    return _result("harness.environment", "ok", f"python3 >= {floor}, configs, presets and agent-packs present",
+                   evidence=evidence)
+
+
+def _hooks_check(env):
+    hooks = env.home / ".claude" / "hooks"
+    missing = [name for name in ("notify", "auto-approve", "memory") if not (hooks / name).exists()]
+    if missing:
+        return _result("harness.hooks", "warn", f"hook files not installed: {', '.join(missing)}",
+                       category="integration", remediation="harness hooks --global")
+    evidence = []
+    stale = [f for f in _RUN_REPORT_FILES
+             if _sha256(env.configs_dir / "hooks" / "run-report" / f) != _sha256(hooks / "run-report" / f)]
+    evidence.append(f"review-gate: {_review_gate_state(hooks)}")
+    if stale:
+        return _result("harness.hooks", "warn", f"hook run-report is stale ({', '.join(stale)})",
+                       category="integration", evidence=evidence, remediation="harness hooks --global")
+    return _result("harness.hooks", "ok", "hook files installed globally (~/.claude/hooks/)",
+                   category="integration", evidence=evidence)
+
+
+def _hooks_env_check(project):
+    check = "harness.hooks-env"
+    if not (project / ".swissknifeman" / "config.toml").is_file():
+        return _result(check, "skip", "the current directory has no .swissknifeman/config.toml", category="config")
+    from aicore.config import ConfigError
+    from . import hooks_env
+    try:
+        state = hooks_env.hooks_state(project)
+    except ConfigError as error:
+        return _result(check, "fail", f"hook modes cannot be resolved: {error}", category="config",
+                       remediation="Fix [harness.hooks] in .swissknifeman/config.toml.")
+    evidence = [f"legacy: {path}" for path in state["legacy"]]
+    repair = {"plan": ["bin/harness", "hooks", "sync", "--target", str(project), "--dry-run"],
+              "apply": ["bin/harness", "hooks", "sync", "--target", str(project)]}
+    if state["stale"]:
+        return _result(check, "warn", f"{hooks_env.CARRIER_REL} does not match the project configuration",
+                       category="config", evidence=evidence, remediation="Run: harness hooks sync", repair=repair)
+    if state["legacy"]:
+        return _result(check, "warn", f"{hooks_env.CARRIER_REL} is current; legacy env.ini files are still read",
+                       category="config", evidence=evidence,
+                       remediation="Move the modes into [harness.hooks] and run: swissknifeman upgrade")
+    return _result(check, "ok", f"{hooks_env.CARRIER_REL} matches the project configuration", category="config")
+
+
+def _safe_dirs_check(env):
+    from .safedirs import state_candidates
+    found = [path for path in state_candidates(env) if path.is_file()]
+    if not found:
+        return _result("harness.safe-dirs", "ok", "no safe-dirs file; the defaults apply", category="state")
+    active, rest = found[0], found[1:]
+    try:
+        document = json.loads(active.read_text(encoding="utf-8"))
+        if not isinstance(document, dict):
+            raise ValueError("the root is not an object")
+    except (OSError, ValueError) as error:
+        return _result("harness.safe-dirs", "fail", f"{active} cannot be read: {error}", category="state",
+                       evidence=[f"active: {active}"], remediation="Fix or remove the file.")
+    evidence = [f"active: {active}"] + [f"legacy: {path}" for path in rest]
+    if active != state_candidates(env)[0]:
+        return _result("harness.safe-dirs", "warn", f"safe-dirs is read from {active}, not the current location",
+                       category="state", evidence=evidence,
+                       remediation="Move it to <config>/harness/safe-dirs.json (swissknifeman upgrade).")
+    if rest:
+        return _result("harness.safe-dirs", "warn",
+                       f"safe-dirs is read from {active}; leftover legacy file(s) are ignored",
+                       category="state", evidence=evidence,
+                       remediation="Remove the legacy file (swissknifeman upgrade).")
+    return _result("harness.safe-dirs", "ok", f"safe-dirs file {active}", category="state", evidence=evidence)
+
+
+def run_checks(env, project=None):
+    """The base doctor checks as ``check-result/v1`` documents (read-only)."""
+    project = Path(project or os.getcwd())
+    return [_environment_check(env), _hooks_check(env), _hooks_env_check(project), _safe_dirs_check(env)]
 
 
 def _cmd_doctor_settings(env, opts):
@@ -110,9 +242,10 @@ def cmd_doctor(env, argv):
         "--profile": "str", "--provider": "str", "--provider-audit": "bool",
     })
     if opts["help"]:
-        print("harness doctor [--settings [--provider claude-code|codex|cursor|grok] [--target P] "
+        print("harness doctor [--json] [--settings [--provider claude-code|codex|cursor|grok] [--target P] "
               "[--json] [--profile NAME] | --provider-audit]\n"
-              "  without flag: environment diagnostics harness (presets/script/hooks).\n"
+              "  without flag: environment diagnostics harness (presets/script/hooks); --json prints\n"
+              "              a list of check-result/v1 documents.\n"
               "  --settings: audit of settings layers of the selected provider\n"
               "              (without --provider is saved legacy-report Claude Code)\n"
               "              (report, --json, exit-code 0 clean / 1 warn / 2 error).")
@@ -131,48 +264,15 @@ def cmd_doctor(env, argv):
     if opts["settings"]:
         _cmd_doctor_settings(env, opts)
         return
-    ok = True
-
-    def line(good, msg):
-        nonlocal ok
-        ok = ok and good
-        print(f"  {'✓' if good else '✗'} {msg}")
-
-    print("harness doctor:")
-    cfg = env.configs_dir
-    line(cfg.is_dir(), f"configs/claude-code/ — {cfg}")
-    presets = sorted(p.stem.split(".", 1)[1] for p in cfg.glob("settings.*.json")) \
-        if cfg.is_dir() else []
-    line(bool(presets), f"permissions-presets: {', '.join(presets) or 'no'}")
-    line(bool(available_mcp(env)),
-         f"MCP-presets: {', '.join(available_mcp(env)) or 'no'}")
-    line(env.apply_script.exists(), f"scripts/apply-permissions.sh — {env.apply_script}")
-    line(bool(list_packs(env)), f"agent-packs: {', '.join(list_packs(env)) or 'no'}")
-
-    hooks = env.home / ".claude" / "hooks"
-    have = {d: (hooks / d).exists() for d in ("notify", "auto-approve", "memory")}
-    if all(have.values()):
-        print("  ✓ hook files installed globally (~/.claude/hooks/)")
+    results = run_checks(env)
+    if opts["json"]:
+        print(json.dumps(results, ensure_ascii=False, indent=2))
     else:
-        missing = [d for d, v in have.items() if not v]
-        print(f"  · hook files not installed: {', '.join(missing)} "
-              f"(put: harness hooks --global)")
-
-
-
-    rr_src = env.configs_dir / "hooks" / "run-report"
-    rr_dst = hooks / "run-report"
-    stale = [f for f in _RUN_REPORT_FILES if _sha256(rr_src / f) != _sha256(rr_dst / f)]
-    if stale:
-        print(f"  · hook run-report rotten ({', '.join(stale)}) — repeat harness hooks --global")
-
-    print(f"  · review-gate: {_review_gate_state(hooks)}")
-
-
-
-
-
-    print("  · route evidence: live model — from payload hook/`codex doctor --json`; "
-          "effort remains self-attested (the `--actor` declared to `plan.py start`)")
-
-    print("\nharness: OK" if ok else "\nharness: there are problems (see ✗)")
+        print("harness doctor:")
+        for line in render_text(results):
+            print(line)
+        print("\nroute evidence: live model - from payload hook/`codex doctor --json`; "
+              "effort remains self-attested (the `--actor` declared to `plan.py start`)")
+        print("harness: OK" if not has_failure(results) else "harness: there are problems (see fail)")
+    if has_failure(results):
+        sys.exit(1)

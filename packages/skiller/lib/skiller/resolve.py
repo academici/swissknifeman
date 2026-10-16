@@ -2,12 +2,15 @@
 import argparse
 import json
 
-from .common import die, resolve_requires_bfs, safe_load_json
+from aicore.content.skill import resolve_requires_bfs
+from aicore.util.io import safe_load_json
+from aicore.util.term import die
 
 
 def resolve_skills(registry, requested, provider=None):
     """Return the deterministic v1 response, including errors and partial results."""
     entries = registry["skills"] if isinstance(registry, dict) else registry
+    entries = [s for s in entries if not s.get("quarantined")]  # compat-report.json quarantine (P8.6)
     by_id = {f"{s['bucket']}/{s['name']}": s for s in entries}
     by_name = {}
     for identity, entry in sorted(by_id.items()):

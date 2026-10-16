@@ -6,7 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from core import ProviderId
+from aicore.provider.values import ProviderId
 from maind.provision import deploy
 from maind.config import merge_defaults
 from maind.provider_deploy import ProviderDeployError
@@ -144,9 +144,9 @@ class TestDeploy(unittest.TestCase):
             with mock.patch.object(deploy, "load_config", return_value=(cfg, None)), \
                     mock.patch.object(deploy, "health", return_value=True), \
                     mock.patch.object(deploy, "deploy_project", return_value=result), \
-                    mock.patch.object(deploy, "write_config") as write_config:
+                    mock.patch.object(deploy, "write_registry") as write_registry:
                 deploy.cmd_deploy(env, ["--project", "flexcrm"])
-            write_config.assert_not_called()
+            write_registry.assert_not_called()
 
     def test_claude_only_dry_run_reports_bootstrap_not_selected(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -284,7 +284,7 @@ class TestDeploy(unittest.TestCase):
     def test_graphify_absent_skipped(self):
         # There is no code graph command in PATH → skipped-not-installed, the rest is written.
         orig = deploy.shutil.which
-        deploy.shutil.which = lambda name: None
+        deploy.shutil.which = lambda name, *a, **k: None
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 _, env = make_repo(tmp)
@@ -301,7 +301,7 @@ class TestDeploy(unittest.TestCase):
     def test_graphify_present_written_serena_default(self):
         # Default code graph is Serena via uvx; {root} → project path. Let's mokay uvx.
         orig = deploy.shutil.which
-        deploy.shutil.which = lambda name: f"/usr/bin/{name}"
+        deploy.shutil.which = lambda name, *a, **k: f"/usr/bin/{name}"
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 _, env = make_repo(tmp)
@@ -320,7 +320,7 @@ class TestDeploy(unittest.TestCase):
     def test_graphify_override(self):
         # graphify_command/args/server_name → arbitrary code-intelligence MCP.
         orig = deploy.shutil.which
-        deploy.shutil.which = lambda name: f"/usr/bin/{name}"
+        deploy.shutil.which = lambda name, *a, **k: f"/usr/bin/{name}"
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 _, env = make_repo(tmp)

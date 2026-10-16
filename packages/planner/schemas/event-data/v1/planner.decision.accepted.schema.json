@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:planner:event-data:planner-decision-accepted:v1",
+  "title": "planner.decision.accepted",
+  "description": "Data of the planner.decision.accepted event. A decision was accepted.",
+  "type": "object",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "description": "Id of the plan the event belongs to.",
+      "minLength": 1
+    },
+    "short_id": {
+      "type": "string",
+      "description": "Short id of the plan such as PLAN7.",
+      "pattern": "^PLAN[1-9][0-9]*$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the decision.",
+      "minLength": 1
+    },
+    "repository": {
+      "type": "string",
+      "description": "Repository the plan belongs to.",
+      "minLength": 1
+    },
+    "decision_id": {
+      "type": "string",
+      "description": "Id of the decision.",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "description": "Accepted decision text, cut at 4096 characters with an ellipsis.",
+      "minLength": 1
+    },
+    "answered_by": {
+      "type": "string",
+      "description": "Who answered.",
+      "enum": [
+        "owner",
+        "agent"
+      ]
+    },
+    "applies_to": {
+      "type": "array",
+      "description": "References the decision applies to.",
+      "items": {
+        "type": "string",
+        "description": "Reference.",
+        "minLength": 1
+      }
+    }
+  },
+  "required": [
+    "plan_id",
+    "title",
+    "decision_id",
+    "decision"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-run-finished:v1",
+  "title": "orch.run.finished",
+  "description": "A run ended.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "submission_id": {
+      "type": "string",
+      "pattern": "^sub-[A-Za-z0-9._-]{1,120}$",
+      "description": "Idempotency key of the submission."
+    },
+    "ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference of the work inside its source."
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$",
+      "description": "Id of the attempt that owns the run."
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "done",
+        "done_with_deviations",
+        "blocked",
+        "refused"
+      ],
+      "description": "Outcome of the run."
+    },
+    "gate": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "missing",
+        "red",
+        "stale",
+        "none"
+      ],
+      "description": "State of the acceptance gate at the end of the run."
+    }
+  },
+  "required": [
+    "run_id",
+    "submission_id",
+    "ref",
+    "attempt_id",
+    "outcome",
+    "gate"
+  ],
+  "additionalProperties": false
+}

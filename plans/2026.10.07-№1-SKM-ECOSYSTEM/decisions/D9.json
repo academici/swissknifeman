@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D9",
+  "title": "task → planner с алиасами; URN схем неизменны",
+  "date": "2026-10-07",
+  "status": "accepted",
+  "question": "Переименование task?",
+  "options": [
+    {
+      "id": "A",
+      "text": "packages/planner, плагин и команды /planner:*, PLANNER_ROOT; переходный период один minor: /task:* и SKM_TASK_ROOT принимаются с предупреждением; URN urn:swissknifeman:task:plan:* не меняются",
+      "pros": "Нет коллизии со встроенными Task* Claude Code; старые планы во всех проектах читаются"
+    }
+  ],
+  "decision": "A — packages/planner, плагин и команды /planner:*, PLANNER_ROOT; переходный период один minor: /task:* и SKM_TASK_ROOT принимаются с предупреждением; URN urn:swissknifeman:task:plan:* не меняются",
+  "rationale": "M1 допустил переименование; M4 утвердил архитектуру.",
+  "applies_to": [
+    "P9.1",
+    "P9.2",
+    "P13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "owner"
+}

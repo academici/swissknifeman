@@ -39,7 +39,7 @@ flowchart LR
     axioma_doctrine["axioma-doctrine<br/>⊕90 ↻1233"]:::warm
     axioma_glossary["axioma-glossary<br/>⊕110 ↻1311"]:::hot
     axioma_stack["axioma-stack<br/>⊕105 ↻1309"]:::hot
-    ecosystem_map["ecosystem-map<br/>⊕47 ↻643"]:::warm
+    ecosystem_map["ecosystem-map<br/>⊕47 ↻649"]:::warm
   end
   subgraph azguard["azguard"]
     azguard["azguard<br/>⊕37 ↻1647"]:::mild
@@ -68,16 +68,16 @@ flowchart LR
   end
   subgraph devops["devops"]
     ci_cd["ci-cd<br/>⊕55 ↻1123"]:::warm
-    db_test_preflight["db-test-preflight<br/>⊕104 ↻1676"]:::hot
+    db_test_preflight["db-test-preflight<br/>⊕104 ↻1758"]:::hot
     docker["docker<br/>⊕66 ↻400"]:::warm
     docker_dev_prod["docker-dev-prod<br/>⊕42 ↻924"]:::warm
-    docker_php["docker-php<br/>⊕40 ↻767"]:::mild
+    docker_php["docker-php<br/>⊕40 ↻767"]:::warm
     docker_postgres["docker-postgres<br/>⊕43 ↻807"]:::warm
     docker_services["docker-services<br/>⊕48 ↻858"]:::warm
     docker_vite["docker-vite<br/>⊕39 ↻679"]:::mild
     gitops["gitops<br/>⊕35 ↻715"]:::mild
     makefile["makefile<br/>⊕43 ↻732"]:::warm
-    node_pnpm_preflight["node-pnpm-preflight<br/>⊕38 ↻228"]:::mild
+    node_pnpm_preflight["node-pnpm-preflight<br/>⊕38 ↻266"]:::mild
   end
   subgraph finance["finance"]
     finance_super_skill["finance-super-skill<br/>⊕105 ↻740"]:::hot
@@ -91,7 +91,7 @@ flowchart LR
     idea_discovery["idea-discovery<br/>⊕35 ↻1630"]:::mild
     new_project["new-project<br/>⊕31 ↻1447"]:::cool
     pitch_deck["pitch-deck<br/>⊕32 ↻1549"]:::mild
-    risk_assessment["risk-assessment<br/>⊕40 ↻1275"]:::mild
+    risk_assessment["risk-assessment<br/>⊕40 ↻1275"]:::warm
     startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1748"]:::warm
   end
   subgraph frontend["frontend"]
@@ -155,26 +155,25 @@ flowchart LR
   end
   subgraph general["general"]
     anti_drift["anti-drift<br/>⊕29 ↻1010"]:::cool
-    compact_responses["compact-responses<br/>⊕40 ↻227"]:::mild
+    compact_responses["compact-responses<br/>⊕40 ↻227"]:::warm
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕33 ↻630"]:::mild
     context_economy["context-economy<br/>⊕39 ↻488"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕32 ↻432"]:::mild
     git_commit_rules["git-commit-rules<br/>⊕30 ↻1077"]:::cool
-    git_safety["git-safety<br/>⊕84 ↻565"]:::warm
-    grill_with_docs["grill-with-docs<br/>⊕98 ↻858"]:::warm
+    git_safety["git-safety<br/>⊕84 ↻605"]:::warm
+    grill_with_docs["grill-with-docs<br/>⊕98 ↻858"]:::hot
     implement["implement<br/>⊕83 ↻543"]:::warm
     mcp_advisor["mcp-advisor<br/>⊕107 ↻3188"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1755"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻503"]:::warm
     project_map["project-map<br/>⊕83 ↻618"]:::warm
-    session_handoff["session-handoff<br/>⊕29 ↻590"]:::cool
+    session_handoff["session-handoff<br/>⊕29 ↻627"]:::cool
     shell["shell<br/>⊕73 ↻1989"]:::warm
     skills_ssot["skills-ssot<br/>⊕34 ↻942"]:::mild
     spec_interview["spec-interview<br/>⊕35 ↻725"]:::mild
-    task_brief_template["task-brief-template<br/>⊕47 ↻1176"]:::warm
+    task_brief_template["task-brief-template<br/>⊕47 ↻1212"]:::warm
     verify_claims["verify-claims<br/>⊕41 ↻341"]:::warm
-    workflow_craft["workflow-craft<br/>⊕48 ↻3617"]:::warm
-    writing_style["writing-style<br/>⊕98 ↻1819"]:::warm
+    writing_style["writing-style<br/>⊕98 ↻1819"]:::hot
   end
   subgraph laravel_architecture["laravel-architecture"]
     config_driven_abstraction["config-driven-abstraction<br/>⊕114 ↻460"]:::hot
@@ -208,7 +207,7 @@ flowchart LR
     health_checks["health-checks<br/>⊕31 ↻2298"]:::cool
     laravel_dusk["laravel-dusk<br/>⊕30 ↻980"]:::cool
     laravel_testing["laravel-testing<br/>⊕33 ↻3024"]:::mild
-    test_isolation_guard["test-isolation-guard<br/>⊕34 ↻1965"]:::mild
+    test_isolation_guard["test-isolation-guard<br/>⊕34 ↻2027"]:::mild
   end
   subgraph legal["legal"]
     legal_super_skill["legal-super-skill<br/>⊕93 ↻615"]:::warm
@@ -223,7 +222,7 @@ flowchart LR
     capacity_planning["capacity-planning<br/>⊕41 ↻2051"]:::warm
     incident_response["incident-response<br/>⊕41 ↻1817"]:::warm
     oncall_rotation["oncall-rotation<br/>⊕37 ↻1667"]:::mild
-    operations_cx_super_skill["operations-cx-super-skill<br/>⊕98 ↻597"]:::warm
+    operations_cx_super_skill["operations-cx-super-skill<br/>⊕98 ↻597"]:::hot
     postmortem["postmortem<br/>⊕43 ↻1883"]:::warm
     runbook["runbook<br/>⊕36 ↻1720"]:::mild
   end
@@ -286,7 +285,7 @@ flowchart LR
     venv_dependencies["venv-dependencies<br/>⊕33 ↻519"]:::mild
   end
   subgraph quality["quality"]
-    artifact_review["artifact-review<br/>⊕31 ↻784"]:::cool
+    artifact_review["artifact-review<br/>⊕31 ↻785"]:::cool
     code_review["code-review<br/>⊕29 ↻864"]:::cool
     code_simplifier["code-simplifier<br/>⊕33 ↻1233"]:::mild
     diagnosing_bugs["diagnosing-bugs<br/>⊕33 ↻946"]:::mild
@@ -314,15 +313,6 @@ flowchart LR
   subgraph security["security"]
     agent_security_super_skill["agent-security-super-skill<br/>⊕103 ↻675"]:::hot
   end
-  subgraph system["system"]
-    agent_packs["agent-packs<br/>⊕120 ↻2305"]:::hot
-    brain_locator["brain-locator<br/>⊕47 ↻1310"]:::warm
-    cross_project_coordinator["cross-project-coordinator<br/>⊕83 ↻1402"]:::warm
-    local_topology["local-topology<br/>⊕62 ↻1362"]:::warm
-    session_observer["session-observer<br/>⊕117 ↻1622"]:::hot
-    shared_memory["shared-memory<br/>⊕62 ↻1389"]:::warm
-    swissknifeman_locator["swissknifeman-locator<br/>⊕54 ↻1397"]:::warm
-  end
   subgraph voice_ai["voice-ai"]
     voice_ai["voice-ai<br/>⊕125 ↻3165"]:::hot
   end
@@ -331,7 +321,6 @@ flowchart LR
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
-  brain_locator -->|requires| local_topology
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
   build_loop -->|requires| mcp_blender
@@ -341,7 +330,6 @@ flowchart LR
   build_loop -->|requires| threading
   capacity_planning -->|requires| observability_design
   competitive_analysis -->|requires| idea_discovery
-  cross_project_coordinator -->|requires| local_topology
   customer_discovery -->|requires| idea_discovery
   dark_mode -->|requires| tailwind_conventions
   data_schema -->|requires| brd
@@ -401,9 +389,6 @@ flowchart LR
   release_engineering -->|requires| oss_development
   requirement_critic -->|requires| brd
   resolving_merge_conflicts -->|requires| git_commit_rules
-  session_observer -->|requires| shared_memory
-  shared_memory -->|requires| local_topology
-  swissknifeman_locator -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   tech_stack_selection -->|requires| ecosystem_reuse_gate
   test_isolation_guard -->|requires| laravel_testing
@@ -420,23 +405,22 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 217 skills · ⊕ always **11513** current (is always resident if you include the entire registry) · ↻ bodies 270562 current · ⌥ on-demand 824510 current (snippets + references).
+**Total:** 209 skills · ⊕ always **10920** current (is always resident if you include the entire registry) · ↻ bodies 256460 current · ⌥ on-demand 823694 current (snippets + references).
 
 ## By buckets
 
 | Bucket | Skills | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 21 | 1234 | 23093 | 7557 |
+| `general` | 20 | 1186 | 19589 | 7557 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
 | `blender-modeling` | 7 | 582 | 11542 | 13519 |
-| `devops` | 11 | 553 | 8909 | 16736 |
-| `system` | 7 | 545 | 10787 | 816 |
+| `devops` | 11 | 553 | 9029 | 16736 |
 | `php` | 17 | 531 | 18231 | 54365 |
 | `pm` | 10 | 462 | 10775 | 23510 |
 | `founder` | 10 | 430 | 14976 | 577 |
-| `axioma` | 4 | 352 | 4496 | 0 |
-| `quality` | 11 | 346 | 15467 | 6562 |
+| `axioma` | 4 | 352 | 4502 | 0 |
+| `quality` | 11 | 346 | 15468 | 6562 |
 | `frontend-vue` | 11 | 340 | 14761 | 257982 |
 | `frontend-linting` | 4 | 323 | 5818 | 18280 |
 | `php-packages` | 9 | 315 | 5388 | 507 |
@@ -449,7 +433,7 @@ flowchart LR
 | `blender` | 2 | 146 | 2231 | 1821 |
 | `research` | 2 | 132 | 826 | 20472 |
 | `laravel-livewire` | 1 | 128 | 1256 | 1071 |
-| `laravel-testing` | 4 | 128 | 8267 | 16534 |
+| `laravel-testing` | 4 | 128 | 8329 | 16534 |
 | `voice-ai` | 1 | 125 | 3165 | 0 |
 | `creative` | 1 | 111 | 687 | 26239 |
 | `sales` | 1 | 108 | 719 | 25593 |
@@ -486,11 +470,11 @@ The most expensive descriptions are resident in each request.
 | `livewire-blade-attributes` | laravel-livewire | 128 |
 | `voice-ai` | voice-ai | 125 |
 | `pm-super-skill` | pm | 120 |
-| `agent-packs` | system | 120 |
 | `eloquent-accessors` | laravel-architecture | 119 |
 | `mcp-blender` | blender | 118 |
 | `codebase-design` | architect | 117 |
-| `session-observer` | system | 117 |
+| `config-conventions` | blender-modeling | 114 |
+| `filepond-upload` | frontend | 114 |
 
 ## Top ↻ on-trigger (trigger price)
 
@@ -498,7 +482,6 @@ The heaviest bodies are loaded when using the skill.
 
 | Skill | Bucket | current |
 |---|---|--:|
-| `workflow-craft` | general | 3617 |
 | `mcp-advisor` | general | 3188 |
 | `voice-ai` | voice-ai | 3165 |
 | `modular-architecture` | laravel-architecture | 3112 |
@@ -508,3 +491,4 @@ The heaviest bodies are loaded when using the skill.
 | `vue-router-best-practices` | frontend-vue | 2569 |
 | `mcp-builder` | ai | 2560 |
 | `mutation-testing` | quality | 2552 |
+| `vue-best-practices` | frontend-vue | 2546 |

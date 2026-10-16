@@ -1,0 +1,244 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.6",
+  "title": "События planner.*: схемы data, испускание после фиксации, фикстуры, сверка с потребителем brain, e2e план → заметка",
+  "status": "done_with_deviations",
+  "summary": "unit.json provides.events (6 типов) и контракт event-data/v1 (схемы данных на тип); planner.integration.events.emit_all после снятия PlanLock в new_plan, start, finish, reconcile, decide (causationid по цепочке, повтор attempt без событий, events.enabled); фикстуры производителя; раннеры тестов с SKM_AICORE_EVENTS__DELIVERY=off; хаб-тест scripts/test-event-contracts.py (фикстуры потребителей против схемы производителя) и правка фикстуры brain counts.cancelled → skipped; scripts/e2e-plan-events.sh (план → события → заметка brain в песочнице).",
+  "why": "D6, D44, D51, D59; E44 — consumer-driven фикстуры: brain уже ждёт planner.plan.closed (P7), производителя нет. Жёсткие риски: (1) испускание внутри PlanLock + подписчик sync, вызывающий plan.py, — взаимная блокировка: испускание только после выхода из with, ast-тест и тест подписчика sync; (2) сбой журнала ломает команду плана — best-effort, одно предупреждение; (3) повтор finish порождает дубль заметки — повтор attempt событий не испускает, brain идемпотентен по id.",
+  "scope": {
+    "include": [
+      "packages/planner/unit.json (events, contracts), packages/planner/schemas/event-data/v1/*.schema.json",
+      "packages/planner/lib/planner/integration/events.py, plan/{ops,lifecycle}.py",
+      "packages/planner/tests/** (test_events.py, fixtures/events), scripts/validate.sh (env доставки)",
+      "scripts/test-event-contracts.py (хаб), scripts/e2e-plan-events.sh (хаб)",
+      "packages/brain/tests/fixtures/events/planner.plan.closed/valid-full.json (+README при необходимости), packages/brain/CHANGELOG.md"
+    ],
+    "exclude": [
+      "события units и gate (по триггеру)",
+      "artifacts в planner.plan.closed (пока не пишутся)"
+    ]
+  },
+  "depends_on": [
+    "P9.5"
+  ],
+  "decisions": [
+    "D6",
+    "D44",
+    "D51",
+    "D59"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#rules",
+      "why": "общие правила фазы (п.4 — тесты, п.13 — испускание после блокировки)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-ext#events",
+      "why": "типы, данные, испускание, тесты, сверка с потребителем",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-ext#e2e",
+      "why": "сквозная проверка",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#emit",
+      "why": "API emit, Event, read_events, лимиты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#model",
+      "why": "инварианты журнала и доставки (I5, I11)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-notes#subscriber",
+      "why": "ожидание потребителя planner.plan.closed",
+      "required": true
+    },
+    {
+      "path": "packages/brain/tests/fixtures/events/planner.plan.closed/valid-full.json",
+      "why": "фикстура потребителя",
+      "required": true
+    },
+    {
+      "path": "packages/brain/scripts/e2e-plan-note.sh",
+      "why": "подготовка хранилища и подписки в песочнице",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/lifecycle.py",
+      "why": "start, finish, _closure, reconcile, decide",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/ops.py",
+      "why": "new_plan",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/unit.schema.json",
+      "why": "форма provides.events и provides.contracts",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/unit.json",
+      "change": "any",
+      "note": "файл появляется в P9.1 (переименование)"
+    },
+    {
+      "path": "packages/planner/schemas/event-data/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/lib/planner/integration/events.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/planner/scripts/validate.sh",
+      "change": "any",
+      "note": "файл появляется в P9.1 (переименование)"
+    },
+    {
+      "path": "scripts/test-event-contracts.py",
+      "change": "create"
+    },
+    {
+      "path": "scripts/e2e-plan-events.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/brain/tests/fixtures/events/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/brain/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Ни одного вызова emit_all внутри with _mutation(...) / PlanLock",
+    "Сбой испускания не меняет код выхода и вывод команды плана",
+    "Производитель — источник правды о данных; расхождение с фикстурой потребителя правится у потребителя с plan.py log"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: схемы event-data/v1 (6 файлов, закрытый профиль, `$id` по §events) и записи `unit.json` → `ecosystem-units.py check` (правило events-prefix) → `integration/events.py` → копилка пар в `ops.new_plan` и функциях `lifecycle` + вызов `emit_all` после `with` → тесты `test_events.py` (включая sync-подписчика и ast-тест) → фикстуры производителя → `validate.sh` экспортирует `SKM_AICORE_EVENTS__DELIVERY=off` → хаб-тест `test-event-contracts.py` → правка фикстуры brain + тесты brain → `e2e-plan-events.sh` в песочнице → V1–V5 → CHANGELOG (корневой: «planner: planner.* events with data contracts»; brain: «Changed: plan-closed fixture follows the planner data contract»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/test-event-contracts.py && python3 -c 'import json; u = json.load(open(\"packages/planner/unit.json\")); e = set(u[\"provides\"][\"events\"]); assert e == {\"planner.plan.created\", \"planner.plan.closed\", \"planner.phase.closed\", \"planner.item.started\", \"planner.item.finished\", \"planner.decision.accepted\"}, e' && test \"$(ls packages/planner/schemas/event-data/v1/*.schema.json | wc -l)\" = 6",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "set -e; bash packages/brain/scripts/test.sh; bash packages/brain/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash scripts/e2e-plan-events.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строка e2e plan events: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "события planner.* и контракт event-data/v1",
+    "сверка с потребителем brain",
+    "e2e план → заметка"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-10T04:23:43Z",
+    "finished_at": "2026-10-10T05:00:29Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "79ec9b91-63dc-4a15-bc3a-6ee7268a0be8"
+    },
+    "notes": "planner.* events: six closed data schemas (event-data/v1) and unit.json provides.events/contracts; integration/events.emit_all (best-effort, one PLANNER_EVENT_NOT_EMITTED warning, events.enabled) called after the plan lock in new, start, finish, reconcile, decide with causation chain; repeated attempt emits nothing; test_events (18, incl. sync subscriber and ast test), producer fixtures, hub test-event-contracts.py, brain fixture/consumer fixed, e2e-plan-events.sh, validate.sh delivery off, CHANGELOG.",
+    "deviations": [
+      "event-data schema $id uses hyphens for the type dots (ecosystem-units E14 forbids dots)",
+      "brain consumer follows the producer contract beyond the fixture: counts skipped/blocked, status done, valid artifact-ref, valid-minimal gets status",
+      "root .gitignore ignores .swissknifeman/state/ and git engine tests exclude it; docs/planner regenerated by docs-sync; plan-structure Events section"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T05:00:29Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T05:00:29Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T05:00:29Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-10T05:00:29Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-10T05:00:29Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T05:00:29Z"
+}

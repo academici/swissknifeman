@@ -9,7 +9,7 @@ P3.2, see Completion Notes P3.1)."""
 import unittest
 from pathlib import Path
 
-from skiller.common import parse_frontmatter
+from aicore.content.skill import read_frontmatter as parse_frontmatter
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # the Skiller package
 SKILLS_ROOT = PACKAGE_ROOT / "skills"

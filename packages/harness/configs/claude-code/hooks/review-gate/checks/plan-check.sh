@@ -9,14 +9,25 @@ plan_dirs="$(printf '%s\n' "$changed" | grep -oE '^plans/[^/]+/' | sed -E 's#/$#
 [ -n "$plan_dirs" ] || exit 0
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-plan_py="$repo_root/packages/task/scripts/plan.py"
-[ -f "$plan_py" ] || exit 0   # No plan CLI in this tree.
+# Planner lookup: PLANNER_PLAN_PY -> PLANNER_ROOT/scripts/plan.py -> `planner` on PATH. Not found: skip the check.
+plan_cmd=()
+if [ -n "${PLANNER_PLAN_PY:-}" ] && [ -f "$PLANNER_PLAN_PY" ]; then
+  plan_cmd=(python3 "$PLANNER_PLAN_PY")
+elif [ -n "${PLANNER_ROOT:-}" ] && [ -f "$PLANNER_ROOT/scripts/plan.py" ]; then
+  plan_cmd=(python3 "$PLANNER_ROOT/scripts/plan.py")
+elif command -v planner >/dev/null 2>&1; then
+  plan_cmd=(planner)
+fi
+if [ "${#plan_cmd[@]}" -eq 0 ]; then
+  echo "plan-check: planner not found (set PLANNER_ROOT)" >&2
+  exit 0
+fi
 
 violations=0
 while IFS= read -r dir; do
   [ -n "$dir" ] || continue
   [ -f "$repo_root/$dir/plan.json" ] || continue
-  out="$(python3 "$plan_py" check "$repo_root/$dir" 2>&1)"; rc=$?
+  out="$("${plan_cmd[@]}" check "$repo_root/$dir" 2>&1)"; rc=$?
   if [ "$rc" -ne 0 ]; then
     first_error="$(printf '%s\n' "$out" | grep -i 'error' | head -1)"
     echo "$dir: plan.py check failed — ${first_error:-run plan.py check $dir}"

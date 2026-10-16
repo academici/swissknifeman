@@ -8,7 +8,7 @@ Changed bytes under an unchanged version are never re-fetched, so every shipped 
   version-guard.py bump <package|unit> [--part patch|minor|X.Y.Z]
 
 Version owners (configs/release-units.json): package units live in packages/<name>/package.json,
-skill units in packages/skiller/configs/publication-versions.json, `task` follows the umbrella
+skill units in packages/skiller/configs/publication-versions.json, `planner` follows the umbrella
 (CHANGELOG heading, bumped by `skiller release`). Run `skiller registry` after `bump`.
 """
 from __future__ import annotations
@@ -21,9 +21,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path[:0] = [str(ROOT), str(ROOT / "packages/skiller/lib")]
+sys.path[:0] = [str(ROOT), str(ROOT / "packages/aicore/lib")]
 
-from skiller import release_attestation as attestation  # noqa: E402
+from aicore.release import attestation  # noqa: E402
 
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 SHA = re.compile(r"^[0-9a-f]{12}$")
@@ -44,6 +44,8 @@ def latest_snapshot(since: str | None) -> dict:
         releases_pool = {v: releases[v] for v in tagged} or releases
     else:
         releases_pool = releases
+    if since is None and not releases_pool:
+        return {}  # no release line yet: nothing to compare against
     version = since.lstrip("v") if since else max(releases_pool, key=_key)
     if version not in releases:
         sys.exit(f"ERROR: no releases/v{version}.json")
@@ -87,7 +89,10 @@ def installed_drift(current: dict) -> list[str]:
 
 def cmd_status(args: argparse.Namespace) -> int:
     previous = latest_snapshot(args.since)
-    current = attestation.build(ROOT, None)
+    if not previous:
+        print("no baseline: releases/ holds no snapshot (first release of the line)")
+        return 0
+    current = attestation.build(ROOT, None, package_root=ROOT / "packages/skiller")
     print(f"baseline {previous['umbrella']['tag']}, working tree umbrella {current['umbrella']['version']}")
     rows = changed_units(previous, current)
     stale = [row for row in rows if row["state"] == "NOT-BUMPED"]
@@ -135,8 +140,8 @@ def cmd_bump(args: argparse.Namespace) -> int:
     name = args.unit
     package = ROOT / "packages" / name
     versions = json.loads(PUBLICATION_VERSIONS.read_text(encoding="utf-8"))
-    if name == "task" or name == "umbrella":
-        sys.exit("ERROR: task follows the umbrella version; bump it with `skiller release` (CHANGELOG heading)")
+    if name == "planner" or name == "umbrella":
+        sys.exit("ERROR: planner follows the umbrella version; bump it with `skiller release` (CHANGELOG heading)")
     if (package / "package.json").is_file():
         current = json.loads((package / "package.json").read_text(encoding="utf-8"))["version"]
         target = next_version(current, args.part)

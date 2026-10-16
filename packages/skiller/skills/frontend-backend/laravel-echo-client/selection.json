@@ -1,0 +1,6 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "KEEP",
+  "exclusive_group": "realtime"
+}

@@ -40,7 +40,7 @@ maind memory gc-install                     # hourly systemd --user timer on the
 `audit`/`prune` default to the current project's private scope; `--scope` or administrator
 `--all` explicitly selects a wider pool. `--ids id1,id2` additionally removes owner-selected
 repository duplicates in that selected pool. Pruning snapshots the exact records into
-`~/.maind/memory-backups/` (directory 0700, files 0600), rechecks candidates for concurrent
+`<state>/maind/memory-backups/` (directory 0700, files 0600), rechecks candidates for concurrent
 changes and verifies deletion. These local recovery snapshots expire after seven days during
 GC; they are never loaded into agent context. Recover by inspecting the snapshot and rewriting
 only still-useful entries with a fresh bounded TTL. Old journals should stay in repository files.
@@ -70,7 +70,7 @@ register the daemon as systemd-service: [`maind service install`](./systemd).
 ## Ports - from env/config
 
 `memory.resolve_ports` takes values by priority: **env** (`AGENTMEMORY_PORT` /
-`AGENTMEMORY_STREAM_PORT` / `AGENTMEMORY_URL`) → **`.maind.json`** (`memory.http_port` /
+`AGENTMEMORY_STREAM_PORT` / `AGENTMEMORY_URL`) → **`[maind.memory]`** (`http_port` /
 `stream_port` / `url`) → **default** `4111/4112`. No hardcodes - two nodes on one
 to the machine are routed to ports via `.env`.
 

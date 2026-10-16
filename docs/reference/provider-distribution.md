@@ -1,13 +1,13 @@
 # Provider distribution channels
 
 Cross-package SSOT for **which skill-distribution channels each provider supports**.
-Packages read this catalog through `core.provider.distribution`; they must not hardcode
+Packages read this catalog through `aicore.provider.distribution`; they must not hardcode
 provider-specific `if provider == "cursor"` skips in Python.
 
 ## Location
 
-- Catalog: [`configs/provider-distribution.json`](../../configs/provider-distribution.json)
-- Loader: `core/provider/distribution.py`
+- Catalog: [`packages/aicore/configs/provider-distribution.json`](../../packages/aicore/configs/provider-distribution.json)
+- Loader: `packages/aicore/lib/aicore/provider/distribution.py`
 - Primary consumer: `packages/skiller/lib/skiller/publication.py` (`build_connect_distribution_plan`, `build_vendor_distribution_plan`)
 
 ## Shape
@@ -25,10 +25,10 @@ Adding a fourth provider or a new channel means extending the JSON catalog and t
 
 | File | Role |
 |:--|:--|
-| `configs/provider-capabilities.json` | 37-capability matrix (native/adapted/unsupported) |
-| `configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
-| `configs/provider-projection.json` | Instruction/route/command projection policies |
-| `packages/task/configs/command-routing.json` | Task command routing SSOT |
+| `packages/aicore/configs/provider-capabilities.json` | 37-capability matrix (native/adapted/unsupported) |
+| `packages/aicore/configs/provider-distribution.json` | Skill connect/vendor/discovery channels |
+| `packages/aicore/configs/provider-projection.json` | Instruction/route/command projection policies |
+| `packages/planner/configs/command-routing.json` | planner command routing SSOT |
 | `packages/harness/configs/common/profile-catalog.json` | Harness profile catalog SSOT |
 | `config.json` (maind hub) | Fleet project registry, MCP inventory, `extra_servers` |
 

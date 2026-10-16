@@ -6,7 +6,7 @@ Hub control surface: shows WHERE distribution of optimizations is incomplete -
 - claude: size CLAUDE.md (>200 lines - constant tax on session context);
 - deny:   is there permissions.deny (garbage block _ide_helper/*.lock from context);
 - core:   have we arrived? CORE-token saving skills + default command plugins
-          (task → /task:*) — gives them away skiller connect into each project;
+          (task → /planner:*) — gives them away skiller connect into each project;
 - pao:    php/laravel-project (PHP≥8.3) without installed `laravel/pao` (and without
           committed opt-out) — token-saving output PHP-tests/analysis
           doesn't work (see SKM-AUDIT-004 P6, `..pao`);
@@ -44,7 +44,7 @@ CORE_SKILL_BUCKET = {
 # Command plugins that skiller connect distributes to EVERY project by default
 # (mirror skiller.config.DEFAULT_COMMAND_PLUGINS; duplicate locally - maind will not import skiller).
 # They arrive ONLY connect-channel (marketplace-plugin) → key enabledPlugins '<name>@<marketplace>'.
-DEFAULT_COMMAND_PLUGINS = ("task",)
+DEFAULT_COMMAND_PLUGINS = ("planner",)
 # Servers that maind rolls out normally - not candidates for revision.
 HUB_MCP = {"agentmemory", "maind"}
 
@@ -236,7 +236,7 @@ def run_audit(env, config, dim, as_json=False):
     dims = DIMS if dim in (None, "", "all") else (dim,)
     bad = [d for d in dims if d not in DIMS]
     if bad:
-        from ..common import die
+        from aicore.util.term import die
         die(f"--audit: {', '.join(bad)} (available: {', '.join(DIMS)}, all)")
     code_st = codegraph.settings(config)
     projs = listing(env, config)

@@ -67,14 +67,14 @@ generated and by what — [package-architecture]; the canonical Releases & Taggi
 ## Versioning and provider caches
 
 Provider caches are keyed by plugin version (`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>`).
-Changed bytes under an unchanged version are never re-fetched, so a stale `task` (or any unit)
+Changed bytes under an unchanged version are never re-fetched, so a stale `planner` (or any unit)
 keeps serving old commands until its version changes. Every shipped change to a unit needs a bump.
 
-- Owners (`configs/release-units.json`): `task` follows the **umbrella** (top released CHANGELOG
+- Owners (`configs/release-units.json`): `planner` follows the **umbrella** (top released CHANGELOG
   heading, set by `skiller release`); `maind`/`analyst`/`harness`/`skiller` own
   `packages/<name>/package.json` (+ `package-lock.json`, `.claude-plugin/plugin.json`);
   skill units own their entry in `packages/skiller/configs/publication-versions.json`.
-- Changing only `task` still means a new umbrella version: bump through `skiller release`, not by hand.
+- Changing only `planner` still means a new umbrella version: bump through `skiller release`, not by hand.
 - Check: `python3 scripts/version-guard.py status [--installed]` lists units whose content differs
   from the last `releases/v*.json` snapshot but keep the same version (exit 1), and with
   `--installed` the installed plugin versions that lag behind the repo.

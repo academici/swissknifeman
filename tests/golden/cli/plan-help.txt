@@ -1,0 +1,82 @@
+exit: 0
+--- stdout ---
+usage: plan.py [-h] [--output {text,json}] [--config FILE] VERB ...
+
+Planner plan (layout v4): authoring and lifecycle verbs.
+
+positional arguments:
+  VERB
+    new                 create a plan
+    config              show the effective [planner] configuration or explain
+                        where a value comes from
+    overlays            print the owner's overlay rules of a command slot
+                        (planner:<command>)
+    show                overview of a plan, or one document as canonical JSON
+    get                 read one document by reference (JSON envelope)
+    list                list document rows with filters (JSON envelope)
+    events              read journal events with filters (JSON envelope)
+    commits             read commits linked to a plan by Plan trailers (JSON
+                        envelope)
+    followups           read the follow_up and owner_decision leftovers of
+                        closed items (JSON envelope)
+    artifact            read artifact metadata and optional content (JSON
+                        envelope)
+    links               read typed links around a reference (JSON envelope)
+    neighborhood        read an item's graph and applicable documents (JSON
+                        envelope)
+    schema              read a document schema or the API catalog (JSON
+                        envelope)
+    bridge              list named bridges or run a bridge verb with its own
+                        arguments
+    set                 merge-patch plan, brief, a phase, item, decision or
+                        unit
+    apply               validate and apply a JSON array of {ref, patch} edits
+                        together
+    export              export the complete plan as a current-format JSON
+                        snapshot
+    import              import a current-format JSON snapshot into the
+                        specified directory
+    add-document        add a schema-backed knowledge document
+    link                add a typed link between two documents of the plan; a
+                        repeat is a no-op
+    unlink              remove a typed link between two documents of the plan;
+                        a missing link is a no-op
+    add-artifact        declare an input or output artifact of an item; a
+                        repeat is a no-op
+    push                append a value to an array field (dotted paths
+                        allowed)
+    add-phase           add a skeleton phase
+    add-item            add a skeleton item to a phase
+    add-decision        add a decision or open question
+    batches             replace the batches of a phase
+    check               check a plan; exit 1 on errors
+    render              regenerate the Markdown views
+    next                semantic next step
+    commit              create one scoped Git commit for an item or unit
+                        operation
+    start               start (or resume) items of one detailed phase
+    context             return complete JSON context (context/<item>.json)
+    finish              record the outcome of an item; closes the phase and
+                        the plan when complete
+    unit                split an item into units and move them: add | <U#>
+                        dispatch|return|accept|rework|reject
+    stats               scout, unit and friction numbers of a plan (read-only)
+    log                 record friction for an item or phase
+    decide              accept an open decision
+    supersede           mark an accepted decision as replacing another
+    grant               record an owner gate grant (note quotes the owner's
+                        message)
+    design-done         mark a phase detailed after check; prints the context
+                        report
+    reopen              reopen a finished item (owner amendment)
+    reconcile           close phases whose items are all terminal, then the
+                        plan (integrator)
+    archive             move a done plan to plans/archive/
+
+options:
+  -h, --help            show this help message and exit
+  --output {text,json}  structured success/error envelope
+  --config FILE         configuration file for this run: the invocation layer
+                        of [planner] (needs aicore)
+--- stderr ---
+

@@ -17,24 +17,19 @@ for f in bin/maind install.sh scripts/*.sh; do
 done
 
 echo "[3/6] JSON configs"
-# marketplace.json and config.example.json live at the monorepo root.
-for f in package.json .claude-plugin/plugin.json; do
+for f in package.json .claude-plugin/plugin.json configs/config.schema.json configs/registry.example.json; do
   [[ -f "$f" ]] && { python3 -m json.tool "$f" >/dev/null || err "broken JSON: $f"; }
 done
-# config.example.json is the hub configuration template at the monorepo root.
-CFG_EXAMPLE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || echo "$REPO_ROOT")/config.example.json"
-[[ -f "$CFG_EXAMPLE" ]] && { python3 -m json.tool "$CFG_EXAMPLE" >/dev/null || err "broken JSON: config.example.json"; }
 
 echo "[4/6] required files"
 for f in bin/maind lib/maind/__init__.py lib/maind/cli.py \
          config/memory/iii-config.yaml .env.example \
          .claude-plugin/plugin.json \
          commands/maind.md commands/onboard.md commands/sync.md \
+         configs/config.schema.json configs/registry.example.json config.example.toml \
          README.md LICENSE; do
   [[ -e "$f" ]] || err "no file: $f"
 done
-# config.example.json is required but lives at the monorepo root.
-[[ -e "$CFG_EXAMPLE" ]] || err "no file: config.example.json (monorepo root)"
 grep -q '^workers:' config/memory/iii-config.yaml || err "iii-config.yaml without workers:"
 
 echo "[5/6] slash-commands (frontmatter)"
@@ -61,7 +56,11 @@ sys.exit(1 if bad else 0)
 PY
 
 echo "[6/6] tests"
-scripts/test.sh
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "  skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  scripts/test.sh
+fi
 
 echo ""
 if [[ "$fail" -eq 0 ]]; then echo "validate: OK"; else echo "validate: FAILURE" >&2; exit 1; fi

@@ -27,11 +27,35 @@ def _report_root(cwd):
     return cwd
 
 
+def _carrier(cwd, key):
+    """Value of `key` in the committed carrier .swissknifeman/hooks.env (provider key first)."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except Exception:
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            found[k.strip()] = v.strip()
+    return found.get(key + "__CLAUDE_CODE", found.get(key))
+
+
 def _read_enabled(cwd):
     """Internal documentation."""
     enabled, keep, digest = True, _DEFAULT_KEEP, True
     if not cwd:
         return enabled, keep, digest
+    carried = _carrier(cwd, "RUN_REPORT_ENABLED")
+    if carried is not None:
+        enabled = carried.lower() not in ("off", "0", "false", "no")
+    carried_keep = _carrier(cwd, "RUN_REPORT_RUNS_KEEP")
+    if carried_keep is not None:
+        try:
+            keep = max(1, int(carried_keep))
+        except ValueError:
+            carried_keep = None
     f = Path(cwd) / ".claude" / "run-report.env.ini"
     try:
         text = f.read_text(encoding="utf-8")
@@ -42,9 +66,9 @@ def _read_enabled(cwd):
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = (x.strip() for x in line.split("=", 1))
-        if k == "ENABLED":
+        if k == "ENABLED" and carried is None:
             enabled = v.lower() not in ("off", "0", "false", "no")
-        elif k == "RUNS_KEEP":
+        elif k == "RUNS_KEEP" and carried_keep is None:
             try:
                 keep = max(1, int(v))
             except ValueError:
@@ -137,30 +161,17 @@ def _append_trend(cwd, sid, report):
 
 
 def _analyst_bin():
-    """Internal documentation."""
+    """Partner lookup (hook-side copy of aicore.util.partners): ANALYST_BIN (deprecated) -> SKM_ANALYST_BIN
+    -> SKM_ANALYST_ROOT/bin/analyst -> PATH; None when not found."""
     import shutil
-    env_bin = os.environ.get("ANALYST_BIN")
-    if env_bin and os.access(env_bin, os.X_OK):
-        return env_bin
-    found = shutil.which("analyst")
-    if found:
-        return found
-    candidates = []
-    topo = Path(os.path.expanduser("~/.swissknifeman/topology.json"))
-    try:
-        nodes = (json.loads(topo.read_text(encoding="utf-8")) or {}).get("nodes") or {}
-        skm = nodes.get("swissknifeman")
-        base = skm.get("path") if isinstance(skm, dict) else skm
-        if base:
-            candidates.append(Path(os.path.expanduser(base)) / "packages/analyst/bin/analyst")
-    except Exception:
-        pass
-    candidates.append(Path(os.path.expanduser(
-        "~/projects/packages/swissknifeman/packages/analyst/bin/analyst")))
-    for c in candidates:
-        if c.is_file() and os.access(c, os.X_OK):
-            return str(c)
-    return None
+    candidates = [os.environ.get("ANALYST_BIN"), os.environ.get("SKM_ANALYST_BIN")]
+    root = os.environ.get("SKM_ANALYST_ROOT")
+    if root:
+        candidates.append(os.path.join(os.path.expanduser(root), "bin", "analyst"))
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return candidate
+    return shutil.which("analyst")
 
 
 def _run_digest(cwd, sid):

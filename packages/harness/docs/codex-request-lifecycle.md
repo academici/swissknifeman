@@ -26,7 +26,7 @@ python3 <skm-root>/packages/harness/scripts/codex-request-observer.py \
 A view older than 60 seconds retains its last observed phase but reports `current_state=unknown`
 and `observation_stale=true`. Tool activity stays waiting-tool until the matching tool completes.
 Absence of events proves neither inference activity nor zero token expenditure. The observer
-uses the installed native protocol; it does not create a Task workflow or recover hidden events.
+uses the installed native protocol; it does not create a planner workflow or recover hidden events.
 
 This launcher is available for app-server clients that expose their launch command. Hosted
 clients and ordinary Codex CLI sessions are not automatically intercepted by repository code.

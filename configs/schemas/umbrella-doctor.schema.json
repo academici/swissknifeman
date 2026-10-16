@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:hub:umbrella-doctor:v1",
+  "title": "umbrella-doctor",
+  "description": "Output of swissknifeman doctor --json: check-result/v1 documents of the modules plus the module id.",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "umbrella-doctor/v1", "description": "Format identifier."},
+    "results": {
+      "type": "array",
+      "description": "Check results in module order; a synthetic fail stands for a probe failure or a missing result.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "$schema": {"const": "urn:swissknifeman:aicore:check-result:v1", "description": "check-result/v1 identifier."},
+          "check_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)*$", "description": "Check id."},
+          "status": {"enum": ["ok", "warn", "fail", "skip"], "description": "Outcome."},
+          "category": {"enum": ["environment", "config", "state", "content", "integration"], "description": "Diagnostic category."},
+          "observed": {"type": "string", "minLength": 1, "description": "What the check observed."},
+          "evidence": {"type": "array", "items": {"type": "string"}, "description": "Supporting facts."},
+          "remediation": {"type": "string", "minLength": 1, "description": "What to do to fix a warn or fail."},
+          "repair": {"type": "object", "description": "Machine-runnable repair as the module reported it; not run by the umbrella."},
+          "unit": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "Module that owns the check."}
+        },
+        "required": ["$schema", "check_id", "status", "category", "observed", "unit"],
+        "additionalProperties": false
+      }
+    },
+    "units_without_doctor": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "description": "Modules that declare no provides.doctor."
+    }
+  },
+  "required": ["schema", "results", "units_without_doctor"],
+  "additionalProperties": false
+}

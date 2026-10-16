@@ -1,0 +1,12 @@
+{
+  "verdict": "RED",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "Major",
+      "confidence": "high",
+      "location": "a:1",
+      "basis": "b"
+    }
+  ]
+}

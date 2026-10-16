@@ -9,7 +9,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from core import safe_load_json
+from aicore.config import ConfigError, resolve
+from aicore.util.io import safe_load_json
+from aicore.util.term import warn
+
+from .hooks_env import SCHEMA_FILE
 
 
 # lib/harness/settings_audit.py → <package>/configs/claude-code/settings-keys.json.
@@ -410,13 +414,32 @@ def available_profiles():
     return tuple(sorted(p.stem for p in _POLICY_DIR.glob("*.json")))
 
 
+_LEGACY_WARNED = set()
+
+
 def read_policy_declaration(target):
-    """Internal documentation."""
-    data = safe_load_json(Path(target) / ".swissknife.json", default=None)
+    """`policy_profile` of `[harness]` in the project configuration; the legacy
+    `.swissknife.json` key is read (one warning) only while the configuration does not set it."""
+    try:
+        name = resolve("harness", schema=SCHEMA_FILE, project=target,
+                       warn=lambda _message: None).get("policy_profile")
+    except ConfigError as error:
+        warn(f"HARNESS_CONFIG_INVALID: {error}")
+        name = None
+    if isinstance(name, str) and name:
+        return name
+    legacy = Path(target) / ".swissknife.json"
+    data = safe_load_json(legacy, default=None)
     if not isinstance(data, dict):
         return None
     name = data.get("policy_profile")
-    return name if isinstance(name, str) and name else None
+    if not (isinstance(name, str) and name):
+        return None
+    if str(legacy) not in _LEGACY_WARNED:
+        _LEGACY_WARNED.add(str(legacy))
+        warn(f"HARNESS_LEGACY_POLICY_PROFILE: {legacy} sets policy_profile; "
+             "move it to policy_profile under [harness] in .swissknifeman/config.toml")
+    return name
 
 
 def load_profile(env, name):
@@ -537,10 +560,10 @@ def check_4_policy_profile_conformance(ctx):
         return [Finding(
             id=4, level="info",
             title="policy-project profile not declared",
-            detail="V .swissknife.json no key policy_profile — effective reconciliation "
-                   "configuration with the expected policy is not running.",
-            hint=f"Declare the expected policy as a key policy_profile in .swissknife.json "
-                 f"(available: {avail}).",
+            detail="policy_profile is not set under [harness] in .swissknifeman/config.toml — "
+                   "effective reconciliation configuration with the expected policy is not running.",
+            hint=f"Declare the expected policy as `policy_profile` under `[harness]` in "
+                 f".swissknifeman/config.toml (available: {avail}).",
         )]
     if state.profile is None:
         avail = ", ".join(state.available) if state.available else "—"
@@ -548,7 +571,7 @@ def check_4_policy_profile_conformance(ctx):
             id=4, level="error",
             title=f"Unknown policy-profile «{state.name}»",
             detail=f"Profile not available: {avail}.",
-            hint="Check the name in .swissknife.json:policy_profile or create a profile "
+            hint="Check policy_profile under [harness] in .swissknifeman/config.toml or create a profile "
                  "in configs/claude-code/policy/.",
         )]
 

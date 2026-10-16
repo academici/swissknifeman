@@ -1,0 +1,154 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.2",
+  "title": "aicore.state.resolve_project: --project → SKM_PROJECT_ROOT → маркер; PROJECT_CONTEXT_REQUIRED в orch; skiller на общей реализации; project_resolution в run.json",
+  "status": "done_with_deviations",
+  "summary": "resolve_project(start, explicit, env, home, markers) → ProjectContext(root, resolution) в aicore.state.locations, find_project_root — обёртка; orch conduct.py и orch.py: глобальный --project и PROJECT_CONTEXT_REQUIRED; skiller config.find_project_root делегирует с своими маркерами; run.json — project_resolution, working_directory.",
+  "why": "Аудит П2.2, 2.3.5. Риски: (1) изменение поведения CLI без проекта — только команды, которым проект нужен; (2) skiller сохраняет свои маркеры (.claude/, .swissknife.json) и сигнатуру (path, via).",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/state/locations.py, __init__.py",
+      "packages/aicore/tests/state/**",
+      "packages/orch/lib/orch/conductor/cli.py, engine.py (run.json)",
+      "packages/orch/lib/orch/cli.py",
+      "packages/skiller/lib/skiller/config.py",
+      "golden CLI help"
+    ],
+    "exclude": [
+      "harness, maind, brain, planner (продолжают find_project_root)"
+    ]
+  },
+  "depends_on": [
+    "P3.1"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p3-config#project",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p3-config#facts",
+      "why": "вызовы",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/state/locations.py",
+      "why": "find_project_root",
+      "required": true,
+      "section": "find_project_root"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/config.py",
+      "why": "своя реализация",
+      "required": true,
+      "section": "find_project_root"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/state/locations.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/state/__init__.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any",
+      "note": "тесты resolve_project"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/config.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help conduct.py/orch.py, захват с --reason"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Сигнатура find_project_root и skiller.config.find_project_root не меняется"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты resolve_project (флаг, env, маркер, HOME, отсутствие) → API → orch → skiller → golden → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "resolve_project",
+    "PROJECT_CONTEXT_REQUIRED"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T06:44:55Z",
+    "finished_at": "2026-10-14T07:02:10Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0068d0be-1d1f-4fdc-8ee8-a533f18299ad"
+    },
+    "notes": "aicore.state.resolve_project/ProjectContext/ProjectContextRequired, find_project_root — обёртка; orch conduct.py и orch.py: глобальный --project, PROJECT_CONTEXT_REQUIRED; run.json project_resolution/working_directory; skiller find_project_root делегирует со своими маркерами и stop_at_home; golden help; docs, CHANGELOG.",
+    "deviations": [
+      "orch/project.py и tests/test_project.py вне task_files"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T07:02:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T07:02:10Z"
+}

@@ -6,7 +6,11 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .common import die, find_monorepo_root, parse_args, safe_load_json, warn
+from aicore.state import config_dir, state_dir
+from aicore.util.cli import parse_args
+from aicore.util.io import safe_load_json
+from aicore.util.repo import find_monorepo_root
+from aicore.util.term import die, warn
 from .settings import load_settings, remove_permission_rules, write_json
 
 SUBCOMMANDS = ("init", "list", "add", "remove", "prune-ask", "delete")
@@ -25,15 +29,47 @@ DEFAULT_CONFIG = {
 }
 
 
-def _state_file(env):
-    """Internal documentation."""
+def _registry_file(home, owner, name):
+    """The registry file of another module: its own state file (``<state>/<owner>/<name>``), else the legacy
+    ``~/.swissknifeman/<name>`` while only that one exists (never under ``SKM_HOME``, which switches legacy lookups off)."""
+    new = state_dir(owner, home=home) / name
+    legacy = Path(home) / ".swissknifeman" / name
+    if new.exists() or os.environ.get("SKM_HOME") or not legacy.exists():
+        return new
+    return legacy
+
+
+def new_state_file(env):
+    """`<config>/harness/safe-dirs.json` (`SKM_HOME` isolates it; a relative `SKM_HOME` is ignored)."""
+    environ = dict(os.environ)
+    try:
+        base = config_dir(env=environ, home=env.home)
+    except ValueError:
+        environ.pop("SKM_HOME", None)
+        base = config_dir(env=environ, home=env.home)
+    return base / "harness" / "safe-dirs.json"
+
+
+def state_candidates(env):
+    """The ladder, nearest first. Identical to the one in the auto-approve hook (parity test)."""
     override = os.environ.get("SKM_SAFE_DIRS_CONFIG")
     if override:
-        return Path(override)
-    root = find_monorepo_root(env.root)
+        return [Path(override)]
+    found = [new_state_file(env)]
+    root = find_monorepo_root(env.root)  # legacy rung until values move to the new place
     if root:
-        return root / "safe-dirs.json"
-    return env.home / ".swissknifeman" / "safe-dirs.json"
+        found.append(root / "safe-dirs.json")
+    found.append(_legacy_file(env))
+    return found
+
+
+def _state_file(env):
+    """The first existing file of the ladder; the new place when none exists."""
+    candidates = state_candidates(env)
+    for path in candidates:
+        if path.is_file():
+            return path
+    return candidates[0]
 
 
 def _legacy_file(env):
@@ -78,23 +114,10 @@ def cmd_init(env, opts):
     if f.exists():
         print(f"already exists: {f}")
         return
-    legacy = _legacy_file(env)
-    if legacy.exists() and legacy != f:
-
-
-        try:
-            data = json.loads(legacy.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            die(f"{legacy}: invalid JSON, migration not possible: {e}")
-        write_json(f, data, opts["dry_run"])
-        if not opts["dry_run"]:
-            legacy.rename(legacy.with_suffix(".json.migrated"))
-        print(f"  migrated from legacy: {legacy} → {f} "
-              f"(old file saved as {legacy.name}.migrated)")
-        return
     write_json(f, DEFAULT_CONFIG, opts["dry_run"])
-    print("  default: include_registered_projects=true (registry ~/.swissknifeman/"
-          "projects.json); explicit roots - harness safe-dirs add <path>")
+    print("  default: include_registered_projects=true (the skiller project registry, "
+          "<state>/skiller/projects.json); explicit roots - harness safe-dirs add <path>")
+    print(f"  sample roots: {env.root / 'configs' / 'safe-dirs.example.json'}")
 
 
 def cmd_list(env, _opts):
@@ -176,7 +199,7 @@ def cmd_prune_ask(env, opts):
     if opts["target"]:
         targets.append(Path(opts["target"]).expanduser())
     if opts["all_projects"]:
-        reg = safe_load_json(env.home / ".swissknifeman" / "projects.json", {}) or {}
+        reg = safe_load_json(_registry_file(env.home, "skiller", "projects.json"), {}) or {}
         targets += [Path(p["path"]) for p in reg.get("projects", [])
                     if isinstance(p, dict) and isinstance(p.get("path"), str)]
     for t in targets:
@@ -256,7 +279,7 @@ def cmd_safedirs(env, argv):
     }, max_pos=64)
     if opts["help"] or not pos:
         print("harness safe-dirs <init|list|add|remove|prune-ask|delete>\n"
-              "  init                          create ~/.swissknifeman/safe-dirs.json\n"
+              "  init                          create <config>/harness/safe-dirs.json\n"
               "  list                          effective allowlist through the eyes of a hook\n"
               "  add <path> [--exclude]        add root (or withdrawal)\n"
               "  remove <path> [--exclude]     remove root (or withdrawal)\n"

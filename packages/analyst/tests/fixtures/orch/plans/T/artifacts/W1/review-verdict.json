@@ -1,0 +1,25 @@
+{
+  "item": "W1",
+  "rounds": [
+    {
+      "findings": [
+        {
+          "id": "F1",
+          "severity": "Major"
+        },
+        {
+          "id": "F2",
+          "severity": "minor"
+        }
+      ],
+      "verdict": "FINDINGS"
+    },
+    {
+      "findings": [],
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-1",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7"
+}

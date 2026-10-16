@@ -7,14 +7,20 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
-from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
-                  ResolvedProviderConfig, detect_project_type, load_provider_manifest,
-                  provider_config_catalog,
-                  resolve_provider_config as resolve_shared_provider_config)
+from aicore.provider.config import (
+    ProviderConfigCatalog, ProviderConfigLayer, ResolvedProviderConfig,
+    resolve_provider_config as resolve_shared_provider_config)
+from aicore.provider.manifest import (
+    default_manifest_path, load_provider_manifest, provider_config_catalog)
+from aicore.provider.values import ConfigSource
+from aicore.state import ProjectContextRequired, resolve_project
+from aicore.util.project import detect_project_type
 
-from .common import (AGENT_DEFAULTS, confirm, die,
-                     parse_frontmatter_fields, warn)
+from aicore.content.skill import read_frontmatter_fields as parse_frontmatter_fields
+from aicore.delivery.materialize import AGENT_DEFAULTS
+from aicore.util.term import confirm, die, warn
 from .host import load_host
+from .module_skills import host_provided_buckets, module_skill_sources
 
 # CORE-distribution policy: token-saving skills that swissknifeman puts in
 # EVERY project by default (see deep_analysis §5–§6). Channels of different granularities:
@@ -35,7 +41,7 @@ def _load_core_policy():
         "resident_budget_target": 750,
         "core_plugin": "core",
         "core_buckets": ["general", "oss-dev"],
-        "default_exclude": ["system/shared-memory", "system/cross-project-coordinator"],
+        "default_exclude": ["shared-memory", "cross-project-coordinator"],
     }
     try:
         p = Path(__file__).resolve().parents[2] / "configs" / "core-policy.json"
@@ -90,10 +96,9 @@ DEFAULT_EXCLUDE = list(_CORE_POLICY["default_exclude"])
 # Minimum safe set for UNRECOGNIZED project type (autodetect → standalone).
 # DO NOT expand `["*"]` (= all buckets) default is «soulless dump of everything». Explicit
 # `--profile standalone` («put everything») remains available; auto-fallback puts only the core.
-# == CORE_BUCKETS (channel-independent consistency): used to include a bucket `system`
-# entirely, but he carries system/shared-memory and system/cross-project-coordinator — exactly those
-# hub duplicates, what CORE-politics drives through DEFAULT_EXCLUDE. Fallback should not retract
-# them back, so it matches CORE_BUCKETS.
+# == CORE_BUCKETS (channel-independent consistency): the host-provided bucket `system` carries
+# shared-memory and cross-project-coordinator — exactly those hub duplicates, what CORE-politics
+# drives through DEFAULT_EXCLUDE. Fallback should not retract them back, so it matches CORE_BUCKETS.
 MINIMAL_BUCKETS = list(CORE_BUCKETS)
 
 
@@ -142,7 +147,7 @@ class ProjectConfig(Mapping):
 
     project_type: str = field(default="", metadata={"json_type": str})
     buckets: list = field(default_factory=list, metadata={"json_type": list})
-    # Exact marketplace plugin set; `core`/`task` can be declared explicitly
+    # Exact marketplace plugin set; `core`/`planner` can be declared explicitly
     # for projects that intentionally need no profile buckets.
     plugins: list = field(default_factory=list, metadata={"json_type": list})
     exclude: list = field(default_factory=list, metadata={"json_type": list})
@@ -162,6 +167,8 @@ class ProjectConfig(Mapping):
     policy_profile: str = field(default="", metadata={"json_type": str})
     # Not a config key: without "json_type" in metadata field does not fall into CONFIG_KEYS.
     raw: Mapping = field(default_factory=dict, repr=False)
+    # Where the skiller keys came from ("config": [skiller]; "legacy": .swissknife.json); names the file in labels.
+    source: str = field(default="legacy", repr=False, compare=False)
 
     # Mapping-projection onto raw — read-only back-compat surface for consumers
     # (and tests), transmitting/reading the config with a dictionary. Values are taken from raw, and not
@@ -176,11 +183,11 @@ class ProjectConfig(Mapping):
         return len(self.raw)
 
     @classmethod
-    def from_raw(cls, data):
+    def from_raw(cls, data, source="legacy"):
         """Collect an object from what you read JSON WITHOUT validation (does it
         `validate_config` before assembly) and without normalizing values."""
         known = {f.name: f for f in fields(cls) if "json_type" in f.metadata}
-        return cls(raw=data, **{name: data[name] for name in known if name in data})
+        return cls(raw=data, source=source, **{name: data[name] for name in known if name in data})
 
     @classmethod
     def coerce(cls, config):
@@ -193,18 +200,22 @@ class ProjectConfig(Mapping):
 
     @classmethod
     def load(cls, env, target):
-        """Read `.swissknife.json` project: same messages `die`, same order
-        checks and the same empty config in the absence of a file as the previous one
-        `load_config` — the medium changes, not the behavior."""
-        cfg_file = target / ".swissknife.json"
-        if not cfg_file.exists():
+        """Read the skiller settings of a project: `[skiller]` in `.swissknifeman/config.toml`, else the
+        legacy `.swissknife.json` (same messages `die`, same order of checks, the empty config in the
+        absence of both as the previous `load_config`).
+
+        `raw` is the content of `.swissknife.json` (keys of other modules such as `providers` and
+        `memory_brain` stay in it) with the skiller keys replaced by the keys that were set in the
+        effective settings, so `cfg.get("buckets")` is absent when no layer set it. Legacy skiller keys
+        that `config.toml` overrides as a whole are dropped from `raw`."""
+        from . import settings
+        loaded = settings.load(target, env=env)
+        if loaded.legacy is None and loaded.source == "none":
             return cls()
-        try:
-            config = json.loads(cfg_file.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            die(f"{cfg_file}: invalid JSON: {e}")
-        validate_config(env, config, cfg_file)
-        return cls.from_raw(config)
+        raw = {key: value for key, value in (loaded.legacy or {}).items()
+               if key not in settings.SKILLER_KEYS or loaded.source == "legacy"}
+        raw.update(loaded.selection())
+        return cls.from_raw(raw, source="config" if loaded.source == "config" else "legacy")
 
 
 # Derived from fields ProjectConfig: one bearer name, the value is collected.
@@ -292,7 +303,7 @@ def resolve_provider_config(config, catalog: ProviderConfigCatalog, *, project_i
 def resolve_distribution_providers(config, *, project_id="local", manifest_path=None):
     """Resolve selected skill-distribution providers through the frozen P1 adapter."""
     manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        default_manifest_path())
     catalog = provider_config_catalog(load_provider_manifest(manifest_path))
     return resolve_provider_config(config, catalog, project_id=project_id)
 
@@ -317,8 +328,20 @@ def load_profile(env, name):
     return json.loads(f.read_text(encoding="utf-8"))
 
 
-def all_buckets(env):
+def library_buckets(env):
+    """Buckets that have a catalog under `skills/` (not the ones the host provides)."""
     return sorted(d.name for d in (env.root / "skills").iterdir() if d.is_dir())
+
+
+def all_buckets(env):
+    """Selectable bucket names: library catalogs plus the buckets the host provides."""
+    return sorted({*library_buckets(env), *host_provided_buckets(env)})
+
+
+def selectable_buckets(env):
+    """Names accepted as a bucket by vendor, sync and budget: every bucket plus the host
+    module plugins (a plugin name selects exactly that plugin's skills)."""
+    return sorted({*all_buckets(env), *module_skill_sources(env)})
 
 
 def _expand_presets_buckets(env, config):
@@ -336,10 +359,15 @@ def _expand_presets_buckets(env, config):
     from .skillset import resolve_presets  # lazy: avoid cyclic import
     pre_buckets, pre_include, _skipped = resolve_presets(env, names)
     if pre_include and not pre_buckets:
-        warn(".swissknife.json: presets contain only skill-granular 'include' without "
+        warn(f"{_where(config)}: presets contain only skill-granular 'include' without "
              "'buckets' — in bucket-granular channels (connect/legacy vendor) no effect; "
-             "for skill-level use vendor sync (.swissknifeman/config.json)")
+             "for skill-level use vendor sync ([skiller.sync] in .swissknifeman/config.toml)")
     return list(dict.fromkeys(pre_buckets))
+
+
+def _where(config):
+    """Name of the source of the selection keys, for labels: the legacy file or the `[skiller]` section."""
+    return "[skiller]" if config.source == "config" else ".swissknife.json"
 
 
 def resolve_selection(env, target, config, flag_profile, flag_items):
@@ -361,7 +389,7 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
         return items, flag_profile, "flag", "--profile", prof.get("include_meta", False)
     if config.plugins:
-        return list(config.plugins), None, "config", ".swissknife.json plugins", False
+        return list(config.plugins), None, "config", f"{_where(config)} plugins", False
     preset_buckets = _expand_presets_buckets(env, config)
     if config.buckets or preset_buckets:
         # (presets ∪ buckets) − exclude. exclude in bucket-granular channels skill-level
@@ -370,15 +398,15 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
         merged = list(dict.fromkeys(preset_buckets + list(config.buckets or [])))
         excl = set(config.exclude or [])
         items = [b for b in merged if b not in excl]
-        label = (".swissknife.json presets+buckets" if preset_buckets and config.buckets
-                 else ".swissknife.json presets" if preset_buckets
-                 else ".swissknife.json buckets")
+        label = (f"{_where(config)} presets+buckets" if preset_buckets and config.buckets
+                 else f"{_where(config)} presets" if preset_buckets
+                 else f"{_where(config)} buckets")
         return items, None, "config", label, False
     if config.project_type:
         prof = load_profile(env, config.project_type)
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
         return (items, config.project_type, "config",
-                ".swissknife.json project_type", prof.get("include_meta", False))
+                f"{_where(config)} project_type", prof.get("include_meta", False))
     name = autodetect(target)
     prof = load_profile(env, name)
     # Type not recognized (fallback profile standalone = `["*"]`) → DO NOT put everything in a row:
@@ -406,24 +434,22 @@ def resolve_profile_name(target, config, flag_profile):
 
 
 # --- project root discovery ----------------------------------------------------
+PROJECT_MARKERS = ((".swissknifeman/config.toml", "file"), (".swissknife.json", "file"),
+                   (".swissknifeman/config.json", "file"), (".claude", "dir"), (".git", "any"))
+
+
 def find_project_root(env, start=None):
-    """Nearest dir upward containing .swissknife.json, .claude/ or .git."""
-    p = (start or Path.cwd()).resolve()
-    home = env.home.resolve()
-    while True:
-        if str(p) == p.root:
-            return None, None
-        if (p / ".swissknife.json").is_file():
-            return p, ".swissknife.json"
-        if (p / ".swissknifeman" / "config.json").is_file():
-            return p, ".swissknifeman/config.json"
-        if (p / ".claude").is_dir():
-            return p, ".claude/"
-        if (p / ".git").exists():  # dir or file (worktree/submodule)
-            return p, ".git"
-        if p == home:
-            return None, None
-        p = p.parent
+    """``(root, via)`` of the nearest dir upward holding one of PROJECT_MARKERS (``via`` is the marker), else
+    ``(None, None)``. The search ends at the home directory; ``SKM_PROJECT_ROOT`` names the project outright. The
+    walk is ``aicore.state.resolve_project`` with these markers."""
+    try:
+        context = resolve_project((start or Path.cwd()).resolve(), env=os.environ, home=env.home.resolve(),
+                                  markers=PROJECT_MARKERS, stop_at_home=True)
+    except ProjectContextRequired as error:
+        die(str(error))
+    if context is None:
+        return None, None
+    return context.root, {".claude": ".claude/"}.get(context.marker, context.marker or "SKM_PROJECT_ROOT")
 
 
 def resolve_target(env, opts, allow_home_confirm=False):
@@ -436,9 +462,9 @@ def resolve_target(env, opts, allow_home_confirm=False):
     else:
         target, via = find_project_root(env)
         if target is None:
-            die("project root not found above CWD (was looking for .swissknife.json, "
-                ".claude/, .git). Go to project or create "
-                ".swissknife.json at its root.")
+            die("project root not found above CWD (was looking for .swissknifeman/config.toml, "
+                ".swissknife.json, .claude/, .git). Go to project or create "
+                ".swissknifeman/config.toml at its root.")
         if target == env.home.resolve() and allow_home_confirm:
             print("The project root was defined as the home directory.")
             if not confirm(f"Continue with {target}?"):

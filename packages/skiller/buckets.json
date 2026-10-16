@@ -344,7 +344,8 @@
     ]
   },
   "system": {
-    "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
+    "description": "Ecosystem environment skills provided by the host modules: topology and navigation, shared memory, agent packs, session observation, vault lookup",
+    "provided_by": "host",
     "category": "meta",
     "tags": [
       "topology",

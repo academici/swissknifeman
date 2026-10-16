@@ -1,0 +1,19 @@
+{
+  "selector": "grok/grok-4.7/high",
+  "session": "01a13951-6c6f-7663-b644-845e580f90c2",
+  "scope": "P3.1+P3.5",
+  "verdict": "ATTENTION",
+  "findings": [
+    {
+      "id": "p35-child-omits-project",
+      "severity": "Major",
+      "confidence": "high",
+      "location": "packages/orch/lib/orch/conductor/engine.py:186",
+      "failure_scenario": "Conductor._orch spawns orch.py with cwd=self.project and, at most, --config. It never passes the conductor's --project. The child resolves the project again (cli.py:617) and orch.run.started.project_resolution (cli.py:497) is that second answer. Started with --project from another directory, run.json.project_resolution is flag while the event says git. If SKM_PROJECT_ROOT names a different repository, the child writes the claim, the brief blob and orch.run.started there (resolution environment) and the conductor then stops BRIEF_UNAVAILABLE while reading that blob from the --project tree.",
+      "basis": "reproduced",
+      "reproduction": "HOME=$(mktemp -d) conductor run under packages/orch, PYTHONPATH=lib:../aicore/lib. (1) chdir elsewhere; conduct --project <git-repo> run --plan T --items W1 --json-lines. Outcome finished. run.json project_resolution=flag. orch.run.started.project_resolution=git (problems []). Captured child argv had no --project: python3 .../scripts/orch.py source claim --plan T --actor claude-code/sonnet --submission-id ... --item W1. (2) Same, with SKM_PROJECT_ROOT=<other git repo>. Exit 1, reason_code BRIEF_UNAVAILABLE, message No such file or directory: '<--project>/.swissknifeman/state/artifacts/sha256/4d4fa214ad22b41ddcd2512a7a0e4db94c2f1c4210149adf1dfd82ad246baeb4'. run.json project=the --project tree, project_resolution=flag. The started event is in the SKM_PROJECT_ROOT journal with project_resolution=environment; that tree holds the blob and orch/runs/.../receipts/release.json. The --project journal has no orch.run.started."
+    }
+  ],
+  "stream": ".swissknifeman/state/orch/review-p3/stream-a.jsonl",
+  "disposition": "all findings reproduced or confirmed by reading the code; fixed in one --role fix commit"
+}

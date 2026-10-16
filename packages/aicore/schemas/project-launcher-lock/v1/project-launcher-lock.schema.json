@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:project-launcher-lock:v1",
+  "title": "project-launcher-lock",
+  "type": "object",
+  "description": "Lock of the project-local launcher (.swissknifeman/launcher.lock.json), written by `swissknifeman project init|sync`. It is committed with the project and holds no machine-specific path, user name or hub location.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:project-launcher-lock:v1",
+      "description": "Schema identifier."
+    },
+    "protocol": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Launcher protocol of the managed files: the environment contract between the launcher and the hub."
+    },
+    "template_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 (lowercase hex) of the launcher template the managed launcher was written from."
+    },
+    "managed_files": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Project-relative POSIX paths that `project sync` owns and may replace.",
+      "items": {
+        "type": "string",
+        "pattern": "^\\.swissknifeman/[A-Za-z0-9._-]+$",
+        "description": "One managed file inside .swissknifeman/."
+      }
+    }
+  },
+  "required": ["$schema", "protocol", "template_sha256", "managed_files"],
+  "additionalProperties": false
+}

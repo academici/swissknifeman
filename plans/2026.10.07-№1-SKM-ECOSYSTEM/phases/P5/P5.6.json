@@ -1,0 +1,236 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.6",
+  "title": "aicore.delivery: Codex (TOML через aicore.config), Claude (плагины и слияние settings), планы распространения",
+  "status": "done_with_deviations",
+  "summary": "git mv skiller/native_codex.py → aicore/delivery/codex.py и тест; собственный TOML-парсер заменить на aicore.config.toml.loads; plugins.py → aicore/delivery/claude.py вместе с redacted_settings_preview и чистой enable_marketplace_plugins (слияние extraKnownMarketplaces/enabledPlugins из _do_connect_claude, тексты notes дословно); MARKETPLACE в aicore.delivery; планы распространения и Codex connect-артефакты → aicore/delivery/distribution.py (providers явным параметром); skiller — обёртки и реэкспорт; тесты; убрать гипотезы connect, vendor, update, status, native_codex, plugins, publication.",
+  "why": "D40: подключение плагинов к проекту — механика, общая для всех модулей с плагинами (архитектура §4 aicore.delivery); единый вход TOML (D35/D37) — у skiller был свой урезанный парсер. Жёсткие риски: (1) изменение вывода skiller connect (порядок notes и строк) — тесты connect/status/update; (2) поведение Codex-выбора на Python < 3.11 меняется с урезанного парсера на полный TOML — единственное допустимое изменение, фиксируется в CHANGELOG; (3) patch-цели subprocess/shutil у перенесённых функций.",
+  "scope": {
+    "include": [
+      "git mv packages/skiller/lib/skiller/native_codex.py packages/aicore/lib/aicore/delivery/codex.py и packages/skiller/tests/test_native_codex.py packages/aicore/tests/delivery/test_codex.py (отдельный коммит), затем правки; новый тонкий skiller/native_codex.py с реэкспортом",
+      "git mv packages/skiller/lib/skiller/plugins.py packages/aicore/lib/aicore/delivery/claude.py (отдельный коммит); тонкий skiller/plugins.py с реэкспортом; в claude.py — redacted_settings_preview, MarketplaceEnableResult, enable_marketplace_plugins",
+      "packages/aicore/lib/aicore/delivery/{__init__.py (MARKETPLACE), distribution.py}",
+      "packages/skiller/lib/skiller/{connect.py (_do_connect_claude зовёт enable_marketplace_plugins и печатает notes), publication.py (distribution — обёртки над aicore), common.py (MARKETPLACE — реэкспорт)}",
+      "packages/aicore/tests/delivery/{__init__,test_codex,test_claude,test_distribution}.py; test_architecture: enable_marketplace_plugins, connect_distribution_plan",
+      "configs/ecosystem-units.json: удалить гипотезы connect.py, vendor.py, update.py, status.py, native_codex.py, plugins.py, publication.py; render; CHANGELOG aicore"
+    ],
+    "exclude": [
+      "выбор плагинов, CORE, профили, печать отчёта connect, миграция вендор-копий, hub, реестр проектов (skiller, P8)",
+      "запись settings с .bak рядом → aicore.state.backup (P8)",
+      "переименование маркетплейса (P12/P13); materialize (P5.7)"
+    ]
+  },
+  "depends_on": [
+    "P5.5"
+  ],
+  "decisions": [
+    "D40",
+    "D35",
+    "D37"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/content-p5-delivery#allocation",
+      "why": "таблица aicore.delivery",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5-delivery#design",
+      "why": "codex, claude, distribution, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#migration",
+      "why": "git mv, реэкспорт, patch-цели",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/connect.py",
+      "why": "_do_connect_claude: слияние settings и печать",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "why": "ProviderDistributionPlan и планы (строки 655–1055)",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/native_codex.py",
+      "why": "исходник codex.py",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/toml.py",
+      "why": "loads(text, *, source)",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_provider_distribution.py",
+      "why": "ожидания планов распространения",
+      "required": false
+    },
+    {
+      "ref": "knowledge/content-p5-publication#allocation",
+      "why": "skill_runtime_files, render_whole_file, validate_publication_capabilities из P5.3 — на них опираются планы распространения",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/delivery/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/native_codex.py",
+      "change": "any",
+      "note": "git mv, затем тонкий модуль"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/plugins.py",
+      "change": "any",
+      "note": "git mv, затем тонкий модуль"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/connect.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/publication.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/common.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/budget.py",
+      "change": "modify",
+      "note": "только импорт plugins_summary, если меняется путь"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any",
+      "note": "перенос test_native_codex, цели импортов/патчей"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только render"
+    }
+  ],
+  "rules": [
+    "Перенос — по knowledge/content-p5 content-p5#migration: тела функций дословно, имена и сигнатуры строго по content-p5-delivery#allocation, старые имена в skiller/task — реэкспорт; отклонение от таблицы — только через plan.py log с причиной (решение остаётся D40)",
+    "aicore импортирует только stdlib и aicore.*; слои подпакетов — content-p5#migration п.10 (test_subpackage_layering); новые импорты в skiller/task/harness — aicore.*, после первого import core модуля; shim core новых алиасов не получает",
+    "git mv файлов и теста — отдельным коммитом без правок содержимого, затем коммит правок",
+    "enable_marketplace_plugins — чистая функция над словарём settings (мутирует его как раньше), без print и без файлового ввода-вывода; тексты notes — дословно прежние строки print веток маркетплейса; skiller печатает их в прежнем месте и порядке",
+    "TOML в aicore.delivery.codex — только aicore.config.toml.loads (тест test_toml_is_imported_in_one_place_only); _fallback_toml_loads и его тесты удаляются; изменение поведения на Python < 3.11 записывается в CHANGELOG aicore (Changed)",
+    "Коды и тексты SPUB_* и CODEX_SELECTION_* — дословно",
+    "python3 scripts/golden.py check — без перезахвата: расхождение байтов генерации или вывода CLI — дефект переноса, чинится в пункте (D23)",
+    "Цели mock.patch в тестах skiller/task переносятся на модуль aicore, если патчится вызов внутри перенесённой функции (content-p5#migration п.5); каждый такой тест после правки проверяет, что mock действительно вызван",
+    "Пункт удаляет из configs/ecosystem-units.json гипотезы P5 по своим файлам, перегенерирует docs/architecture/ownership.md (ecosystem-units.py render) и при improvements обновляет базовую линию (baseline --update)",
+    "CLI skiller в dev-клоне блокирует guard (SKM_DEV_GUARD) — skiller validate.sh (внутри: test.sh, registry --check, Codex consumer acceptance) запускается только через scripts/dev-sandbox.sh, как в V-команде; прямой запуск вне песочницы даёт ложное «registry is out of date»",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: коммит `git mv` (native_codex.py, test_native_codex.py, plugins.py) → `delivery/__init__.py`: `MARKETPLACE = \"swissknifeman\"` → `delivery/codex.py`: импорты aicore (`atomic_write_text` — `aicore.util.io`; `_contained_target`, `_writer_guard` — `aicore.artifacts.lock`), `SUFFIX = \"@\" + MARKETPLACE`, `_read`/`plan_selection` читают через `aicore.config.toml.loads(text, source=str(path))`; удалить `_fallback_toml_loads`, `_toml_loads` и их тесты в перенесённом `test_codex.py` (импорт `from aicore.delivery.codex import …`) → тонкий `skiller/native_codex.py` (реэкспорт `SUFFIX`, `codex_home`, `plan_selection`, `apply_selection`, `native_inventory`, `_read`; `hub.py` и `update.py` импортируют `_read`) → `delivery/claude.py`: тело `plugins.py` (`claude_bin`, `CLAUDE_BIN_ENV` из `aicore.content.eval`), `redacted_settings_preview`, `MarketplaceEnableResult`, `enable_marketplace_plugins(settings, *, marketplace, marketplace_root, plugins, fix_path_drift)`; тонкий `skiller/plugins.py` → `connect._do_connect_claude`: вместо блока слияния — вызов, затем `for note in result.notes: print(note)` в той точке, где раньше печатались ветки маркетплейса (сверить порядок с `test_*connect*`/`test_channel_parity.py`) → `delivery/distribution.py` по таблице; в `skiller/publication.py` — `selected_distribution_providers` и обёртки `build_vendor_distribution_plan(config, target, *, project_id, claude_path, codex_path)` → `vendor_distribution_plan(selected_distribution_providers(config, project_id=project_id), target, claude_path=…, codex_path=…)`, аналогично connect; `ProviderDistributionPlan`, `_distribution_artifact` (через `render_whole_file`), `run_codex_native_install` — реэкспорт → прогон skiller; patch-цели (`skiller.native_codex.*`, `skiller.publication.subprocess.run` для `run_codex_native_install` и т. п.) → aicore → тесты aicore (content-p5-delivery#design) → `test_content_primitives_are_defined_once` += `enable_marketplace_plugins`, `connect_distribution_plan`, `plan_selection` → карта → CHANGELOG aicore (Added aicore.delivery; Changed: Codex selection reads full TOML on Python < 3.11).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p5-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "test -f packages/aicore/lib/aicore/delivery/codex.py && test -f packages/aicore/tests/delivery/test_codex.py && test ! -e packages/skiller/tests/test_native_codex.py && test -z \"$(git grep -n -E 'tomllib|_fallback_toml_loads' -- packages/skiller/lib)\" && test -z \"$(git grep -n -E '^def (plan_selection|native_inventory|list_enabled_plugins|plugins_summary|_build_codex_connect_artifacts|_codex_bundle_artifacts|run_codex_native_install)\\b' -- packages/skiller/lib)\" && test -z \"$(git grep -n -E 'lib/skiller/(connect|vendor|update|status|native_codex|plugins|publication)\\.py' -- configs/ecosystem-units.json)\" && PYTHONPATH=packages/aicore/lib python3 -c 'from aicore.delivery.claude import enable_marketplace_plugins; s = {}; r = enable_marketplace_plugins(s, marketplace=\"swissknifeman\", marketplace_root=\"/repo\", plugins=[\"core\"], fix_path_drift=False); assert s[\"enabledPlugins\"] == {\"core@swissknifeman\": True} and r.added == (\"core\",) and s[\"extraKnownMarketplaces\"][\"swissknifeman\"] == {\"source\": {\"source\": \"directory\", \"path\": \"/repo\"}}'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.delivery.codex на едином TOML",
+    "aicore.delivery.claude: плагины и слияние settings",
+    "aicore.delivery.distribution",
+    "skiller connect/publication — обёртки"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T16:57:35Z",
+    "finished_at": "2026-10-08T17:08:34Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "4e863c18-d28b-4fb2-b512-ab2408971b7f"
+    },
+    "notes": "aicore.delivery: MARKETPLACE, codex (единый TOML), claude (плагины, redacted_settings_preview, enable_marketplace_plugins), distribution (планы vendor/connect, Codex-бандл, native install); skiller native_codex/plugins — реэкспорт, connect и publication — обёртки; гипотезы connect, vendor, update, status, native_codex, plugins, publication удалены из карты; CHANGELOG aicore.",
+    "deviations": [
+      "identity-параметр в distribution (DistributionIdentity); run_claude вместо _run_claude; цели patch перенесены на aicore"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T17:08:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T17:08:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T17:08:34Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T17:08:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T17:08:34Z"
+}

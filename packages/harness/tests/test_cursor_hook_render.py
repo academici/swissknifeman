@@ -11,9 +11,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import ProviderId
+from aicore.provider.values import ProviderId
 from harness.hooks import (LifecycleRequest, block_cursor_lifecycle,
                            plan_lifecycle, render_cursor_hook_handler,
                            render_cursor_hooks)

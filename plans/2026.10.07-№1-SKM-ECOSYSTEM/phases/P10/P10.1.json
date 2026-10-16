@@ -1,0 +1,234 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.1",
+  "title": "Начало фазы; перенос корневого orch/ в packages/orch/docs/research; пути ролей от корня модуля; standalone orch",
+  "status": "done_with_deviations",
+  "summary": "sync-main и golden check; git mv корневой папки orch/ (исследования PLAN2) в packages/orch/docs/research/ и правка ссылок (evidence seeds capability, docs и README orch, docs/reference.md хаба); ecosystem-units: transitional_roots без orch/, строка ownership orch/ удаляется, `orch` убирается из шаблона repo-escape; docs-sync не публикует docs/research; public-hygiene — исключение для исторических исследований; instructions[].path ролей — roles/<id>.md; standalone orch = pass и запись в линии.",
+  "why": "Архитектура §2 (корневая orch/ исчезает), карта P2 (orch/ → orch docs/research, P10); единственная причина standalone orch = fail — пути ролей от корня монорепозитория (knowledge/orch-p10#facts). Риск: исследования содержат дословные цитаты источников и пути — публикация на сайт и гигиена; решается исключением docs/research из docs-sync и записью public-hygiene с причиной, а не правкой текстов.",
+  "scope": {
+    "include": [
+      "scripts/dev-clone.sh sync-main, golden check",
+      "orch/** → packages/orch/docs/research/** (git mv), ссылки на orch/research в packages/orch/bindings/capabilities/*.json, packages/orch/README.md, packages/orch/docs/**, docs/reference.md",
+      "configs/ecosystem-units.json (transitional_roots, ownership, path_patterns repo-escape), configs/ecosystem-baseline.json, docs/architecture/ownership.md (генератор)",
+      "scripts/docs-sync.sh (исключение docs/research), scripts/public-hygiene.py (исключение с причиной)",
+      "packages/orch/roles/*.json (instructions[].path), packages/orch/lib/orch/render.py и тесты, читающие пути ролей",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "содержимое исследований (не редактируется)",
+      "фикстуры role-manifest (данные контракта; пути в них не проверяются на существование)",
+      "переход на aicore (P10.2)"
+    ]
+  },
+  "depends_on": [
+    "P9.12"
+  ],
+  "decisions": [
+    "D61",
+    "D12",
+    "D30"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/orch-p10#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#facts",
+      "why": "факты кода на начало фазы: файлы, функции, точки изменения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#aicore",
+      "why": "абзац «Роли»: пути instructions и потребители",
+      "required": true
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "why": "transitional_roots, ownership orch/, path_patterns repo-escape",
+      "required": true
+    },
+    {
+      "path": "scripts/docs-sync.sh",
+      "why": "как копируется packages/orch/docs на сайт",
+      "required": true
+    },
+    {
+      "path": "scripts/public-hygiene.py",
+      "why": "формат исключений с причиной (строка ~85)",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_role_manifests.py",
+      "why": "что проверяет путь и sha256 инструкций",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/render.py",
+      "why": "load_role: как разрешается путь инструкции",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "orch/**",
+      "change": "delete",
+      "note": "git mv в packages/orch/docs/research/"
+    },
+    {
+      "path": "packages/orch/docs/research/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/bindings/capabilities/*.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/*.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/render.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "docs/reference.md",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/docs-sync.sh",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/public-hygiene.py",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Исследования переносятся без правок содержимого (git mv отдельным коммитным шагом внутри пункта, затем правки ссылок)",
+    "sha256 инструкций ролей не меняется: меняется только path"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: `scripts/dev-clone.sh sync-main` на чистом дереве → `python3 scripts/golden.py check` → `git mv orch/research packages/orch/docs/research` и `mkdir -p packages/orch/docs/research/design && git mv orch/*.md packages/orch/docs/research/design/` (корневая `orch/` после этого пуста и исчезает; другие файлы, если появятся, — в `design/`) → `grep -rn 'orch/research\\|orch/DECISIONS\\|orch/README\\|orch/[A-Za-z0-9-]*\\.md' --exclude-dir=.git --exclude-dir=plans --exclude-dir=releases .` и правка ссылок: evidence[].ref в seeds `orch/research/perplexity/Q11.md` → `docs/research/perplexity/Q11.md` (путь от корня модуля orch), ссылки на `orch/<file>.md` → `docs/research/design/<file>.md`, docs и README orch, `docs/reference.md` → `configs/ecosystem-units.json`: убрать `orch/` из transitional_roots, удалить строку ownership `orch/`, убрать `orch` из regex `repo-escape` (`core|configs|scripts|bin`) с `plan.py log` → `scripts/docs-sync.sh`: не копировать `packages/orch/docs/research` в `docs/orch` (исключение в sync_pkg orch) → `scripts/public-hygiene.py`: исключение `packages/orch/docs/research/` с причиной «verbatim research record of the orchestration design» (только если гигиена что-то находит) → роли: `instructions[].path` = `roles/<id>.md` во всех `roles/*.json`; `render.load_role` и тесты разрешают путь от корня orch → `bash packages/orch/scripts/test.sh` → `python3 scripts/ecosystem-units.py render` → `python3 scripts/ecosystem-units.py standalone orch` (pass) → `python3 scripts/ecosystem-units.py standalone orch --update-baseline` → V1–V4 → CHANGELOG («orch: research moved into the module; role instruction paths are module-relative»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test ! -e orch && test -d packages/orch/docs/research/perplexity && test -d packages/orch/docs/research/design && ! grep -rqs '\"orch/research' packages/orch/bindings/capabilities && python3 -c 'import json, glob; bad = [f for f in glob.glob(\"packages/orch/roles/*.json\") for i in json.load(open(f))[\"instructions\"] if not i[\"path\"].startswith(\"roles/\")]; assert not bad, bad' && ! grep -q '\"orch/\"' configs/ecosystem-units.json",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py standalone orch",
+      "expect": "exit 0; строка standalone orch: pass",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "исследования orch в packages/orch/docs/research",
+    "standalone orch = pass"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-10T10:29:04Z",
+    "finished_at": "2026-10-10T10:34:38Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "b5123bc1-458d-4471-88af-0d51c20a9f8f"
+    },
+    "notes": "research moved to packages/orch/docs/research (design/ + research files), refs and role paths module-relative, standalone orch pass, baseline updated",
+    "deviations": [
+      "V4 red only at golden.py check: sha256 of owner's uncommitted edits (planner-development-philosophy SKILL copies, bootstrap/publication-lock.json) differs from golden digests; owner work left untouched. All other V4 parts (units check, render --check, public-hygiene, scripts/test-*.py) green. sync-main refused on dirty tree (behind 0, nothing to merge). Also: test_boundaries skips docs/research; scripts/test-ecosystem-units.py climb test switched from orch to scripts; public-hygiene needed no exclusion (0 violations); ecosystem.md orch row updated."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T10:34:38Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T10:34:38Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T10:34:38Z"
+      },
+      {
+        "id": "V4",
+        "exit": 1,
+        "at": "2026-10-10T10:34:38Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T10:34:38Z"
+}

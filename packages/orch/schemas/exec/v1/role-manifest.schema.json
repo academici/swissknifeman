@@ -144,7 +144,10 @@
         "context-map",
         "stage-report",
         "review-findings",
-        "registration-receipt"
+        "registration-receipt",
+        "triage-result",
+        "research-result",
+        "advice"
       ],
       "description": "Result shape."
     },

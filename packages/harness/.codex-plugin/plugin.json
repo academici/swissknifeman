@@ -1,0 +1,8 @@
+{
+  "description": "harness — environment settings Claude Code: presets permissions, auto-approve/bypass, MCP-servers and hooks (memory/notify). Thin face above CLI harness; skill agent-packs.",
+  "name": "harness",
+  "skills": [
+    "./skills"
+  ],
+  "version": "0.7.2"
+}

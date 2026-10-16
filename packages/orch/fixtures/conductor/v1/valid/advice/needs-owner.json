@@ -1,0 +1,11 @@
+{
+  "problem_ref": "checks:2",
+  "options": [
+    {"id": "widen", "text": "Widen the write set to the schema", "pros": [], "cons": ["scope grows"]}
+  ],
+  "recommendation": "widen",
+  "confidence": "low",
+  "sources": [],
+  "needs_owner": true,
+  "category": "scope-expansion"
+}

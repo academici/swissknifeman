@@ -8,10 +8,10 @@ diagnostics and registry maintenance. Installed by symlink in `~/.local/bin`
 ## Commands for projects
 
 All commands find the project root automatically - by moving up from the current one
-directories to the nearest marker: `.swissknife.json` → `.claude/` → `.git`
+directories to the nearest marker: `.swissknifeman/config.toml` → `.swissknife.json` → `.claude/` → `.git`
 (directory or file - worktree and submodule are considered). Nearest marker
 wins: submodule — is its own project; to move the root, put
-`.swissknife.json` to the desired directory. Inside the registry itself project-commands
+`.swissknifeman/config.toml` to the desired directory. Inside the registry itself project-commands
 refuse to work.
 
 ### `skiller connect`
@@ -21,12 +21,13 @@ Connects the project to the native one plugin marketplace Claude Code: writes
 in `.claude/settings.local.json`. Merge-only: explicit `false` does not fray,
 enabled above the profile is not disabled, backup in `*.bak`.
 
-Provider selection is taken from `.swissknife.json::providers`: in the absence
+The skill selection comes from `[skiller]` in `.swissknifeman/config.toml` (the legacy `.swissknife.json` is read
+with a warning). Provider selection is taken from `.swissknife.json::providers`: in the absence
 layer is saved legacy-mode only for Claude Code. Self-host checkout
 uses thin Codex marketplace, and external connect-project receives
 repo-contained marketplace and self-contained bundles only selected plugins,
 including runtime-skill files (`snippets/`, `references/`, scripts/assets).
-Project publication does not change user-level plugin state: basic `core` + `task`
+Project publication does not change user-level plugin state: basic `core` + `planner`
 sets machine `install.sh`, and profile Codex plugins are added only
 explicitly. Native manifest each bucket lists skill-directories explicitly, so Codex
 reveals them after installation. Dual-selection passes preflight all provider-targets
@@ -44,7 +45,7 @@ Machine installation registers the current checkout's marketplace in Codex.
 Its default plugin selection combines CORE policy with the host's
 `default_command_plugins`. Grok installs the sources and optional holds declared
 in `machine_plugins.grok` with `--trust`; standalone has no host machine plugins.
-The ecosystem host supplies Task (`/task:*`) and `prefix-hold`.
+The ecosystem host supplies planner (`/planner:*`) and `prefix-hold`.
 If a provider CLI is missing, its step is skipped.
 `--no-codex-plugins` and `--no-grok-plugins` opt out. Add a global Codex plugin
 with repeatable `./install.sh --codex-plugin NAME`.
@@ -54,6 +55,58 @@ for discovery and field definitions.
 
 `connect`, `sync`, `update`, `doctor` and `--dry-run` user-global Codex state not
 are changing. Profile plugins are not automatically installed globally.
+
+A bucket the library leaves to the host (`system`) expands into the host plugins named by `bucket_aliases`; see
+[Configuration](./configuration#host-provided-buckets).
+
+### `skiller describe`
+
+Prints the `skill-descriptor/v1` of one skill of the library or of a host module: name, version, license, digest,
+provenance, `requires`, adapters, and `compatibility` and `allowed_tools` when the skill declares them.
+
+```bash
+skiller describe SKILL [--project DIR] [--json]
+```
+
+`SKILL` is a name or `bucket/rel`. An unknown skill exits 1. See [Skill metadata](./configuration#skill-metadata).
+
+### `skiller list --deprecated`
+
+Lists the skills kept for compatibility (nothing is deleted): the audit decision is `DEPRECATE` or `DELETE`, or the content lives elsewhere now (`selection.replaced_by`). `--json` prints `{"deprecated": [{id, decision, replaced_by}]}`. Plain `skiller list` still lists registered projects.
+
+### `skiller select`
+
+The skills an orchestration role gets for a piece of work: a pure function over `skills.json` (the `selection` sidecars) and `configs/exclusive-groups.json`.
+
+```bash
+skiller select --role ROLE [--paths P…] [--deps D…] [--project DIR] [--include ID…] [--exclude ID…] [--tools T…] \
+  [--budget TOKENS] [--model-class C] [--provider P] [--policy explicit|auto] [--custom-dirs DIR…] [--json] [--explain]
+```
+
+Steps: explicit `--include` → path and dependency triggers (only under the policy `auto`) → filters: `role_not_allowed` (`selection.roles`), `excluded` (`--exclude`, wins over include), `tool_missing` (`requires_tools` against `--tools`), `kind_not_preloaded` (`router`, `reference`, `persona`: listed in `discoverable`), `duplicated_by_role_contract` (`replaced_by`) → `exclusive_group` (the group `max`) → `over_budget` (`--budget`; a body is never cut). An explicit include is exempt from the filters except `--exclude` and from the budget. `--project` adds the dependencies of its `composer.json`, `package.json` and `pyproject.toml`; the policy comes from `[skiller.selection] policy` (`explicit`, the default, or `auto`) unless `--policy` is given. The answer is `{included: [{id, name, path, reason, tokens}], excluded: [{id, reason, detail?}], discoverable, tokens, request}`; `--explain` adds the trace of every step. `--provider` and `--model-class` are echoed in `request` and do not change the selection yet.
+
+**Custom skills.** Beside the library, `select` and `describe` read user skills of the layout `<bucket>/<folder>/SKILL.md`: the machine directories of `[skiller] custom_dirs` (machine, invocation and flag layers only; `--custom-dirs DIR…` adds more) and the project's `<project>/.swissknifeman/skills/`. Precedence: library < machine < project. Every row carries `origin` (`library|machine|project`) and `digest`; `describe` prints both. A custom skill with the id of an earlier skill overrides it only when its `selection.replaces` names that id; otherwise the command fails with `EXTENSION_AMBIGUOUS`. Notes (`notes` in `--json`, `explain.custom`): `OVERRIDE`, `TRIGGER_OVERLAP` (another id with the same triggers), `DEPRECATED_REPLACED`, `DEPRECATED`.
+
+### `skiller compat`
+
+Quarantine checks of vendored skills (those with an `upstream.json`), deterministic and offline: `license` (allowed list `configs/licenses.json`), `provenance` (`audit.upstream_sha` and `files[]` well-formed; a `kind: reference-only` upstream passes with a warning), `injection` (patterns: reading `~/.ssh`, `~/.aws`, `.env`; disabling checks; `curl … | sh`; hiding actions from the user; ignoring instructions — a line that forbids the action is not flagged), `budget` (`selection.max_tokens` or 8000 tokens) and `tools` (unknown `allowed-tools` warn only).
+
+```bash
+skiller compat [bucket/folder…] [--write] [--json]   # exit 1 when something is quarantined (0 with --write)
+```
+
+`--write` saves `compat-report.json` (`{checks: [{id, status, detail}], verdict: clean|quarantine}`) beside `upstream.json`. A `quarantine` report makes `skiller registry` write `quarantined: true` into `skills.json`; `skiller select` excludes the skill (reason `quarantined`, even when included explicitly) and the resolver of `connect`/`vendor`/`sync` does not find it. No LLM scan.
+
+### `skiller selection`
+
+The selection policy of the library (`selection.json` beside each `SKILL.md`, contract `skill-selection/v1`; `skiller registry` copies it to `skills.json` as `selection`).
+
+```bash
+skiller selection report [--json]   # decisions against the audit summary 3.5 (configs/selection-summary.json)
+skiller selection check             # schema, conflicts, exclusive groups (configs/exclusive-groups.json); exit 1 on a problem
+```
+
+`report` lists the differences from the audit counts and does not fail; `check` is a gate of `validate.sh`. The sidecar is not part of the skill content: it is not hashed and not copied to consumers.
 
 ### `skiller resolve`
 
@@ -146,6 +199,19 @@ crossed path marketplace, status of vendor skills, SHA registry.
 Table of registered projects with status `ok|missing`. Entries never
 are not deleted automatically - only explicit `--prune`.
 
+### `skiller profiles [--json]`
+
+Read-only list of the project-type profiles delivered with skiller
+(`profiles/*.json`). `--json` prints one document with the schema
+`urn:swissknifeman:skiller:profiles-list:v1`.
+
+### `skiller topology`
+
+Deprecated alias of `maind topology`: the machine topology map moved to maind.
+The alias prints `SKILLER_TOPOLOGY_MOVED` to stderr and runs the maind command
+found on `PATH` (or through `SKM_MAIND_ROOT`); without maind it exits with
+`PARTNER_UNAVAILABLE`.
+
 ### `skiller analyze-run [--last | --session ID] [--project DIR] [--json] [--store]`
 
 Post-run analysis of the run JSONL-logs Claude Code (deterministic, no waste
@@ -183,7 +249,7 @@ fields measured only on Claude Code, and codex-thread deliberately continues to 
 unproven understatement.
 | `swissknifeman version` | git SHA + path to the registry |
 
-## Project map: `~/.swissknifeman/projects.json`
+## Project map: `<state>/skiller/projects.json`
 
 Replenishes automatically when `connect`/`vendor`/`update`. Records with a key
 (path, channel):

@@ -1,0 +1,36 @@
+{
+  "selector": "grok/grok-4.7/high",
+  "session": "01a13850-5324-7993-b24c-265f10eeeab4",
+  "route_proof": {
+    "modelId": "grok-4.7",
+    "reasoning_effort": "high",
+    "contextWindowTokens": 256000,
+    "source": "~/.grok/sessions/<cwd>/<session>/{chat_history.jsonl,updates.jsonl,signals.json}"
+  },
+  "stream": ".swissknifeman/state/reviews/P2.2-grok.jsonl",
+  "round": 1,
+  "verdict": "findings",
+  "findings": [
+    {
+      "severity": "high",
+      "file": "packages/orch/lib/orch/conductor/process.py",
+      "summary": "a Codex turn.completed after an earlier turn.failed kept is_error and fatal_text: exit 0 reported ROLE_FAILED and classified as quota",
+      "executor": "confirmed",
+      "action": "fixed: the last terminal event decides (signals of terminal events rebuilt per event; turn.completed clears is_error); test"
+    },
+    {
+      "severity": "medium",
+      "file": "packages/orch/lib/orch/conductor/process.py",
+      "summary": "a later Claude result with is_error false left fatal_text/http_status of an earlier error result; exit != 0 classified as quota from stale text",
+      "executor": "confirmed",
+      "action": "fixed with the same mechanism; two tests"
+    },
+    {
+      "severity": "low",
+      "file": "packages/orch/lib/orch/conductor/process.py",
+      "summary": "resetsAt 1e309 (Infinity) made int() raise OverflowError out of parse_stream/run_role",
+      "executor": "confirmed",
+      "action": "fixed: math.isfinite guard; test"
+    }
+  ]
+}

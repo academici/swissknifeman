@@ -1,0 +1,77 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "configs/ecosystem-baseline.json",
+    "packages/maind/CHANGELOG.md",
+    "packages/maind/bin/maind",
+    "packages/maind/lib/maind/**",
+    "packages/maind/scripts/test.sh",
+    "packages/maind/tests/**",
+    "packages/maind/unit.json",
+    "packages/skiller/bin/skiller",
+    "packages/skiller/lib/skiller/cli.py",
+    "packages/skiller/lib/skiller/profiles_list.py",
+    "packages/skiller/schemas/profiles-list/v1/profiles-list.schema.json",
+    "packages/skiller/tests/test_profiles_list.py",
+    "packages/skiller/unit.json",
+    "tests/golden/cases.json",
+    "tests/golden/generation.json",
+    "tests/golden/cli/skiller-help.txt",
+    "tests/golden/cli/skiller-unknown-subcommand.txt"
+  ],
+  "checks_run": [
+    {
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "exit": 0,
+      "id": "V1"
+    },
+    {
+      "cmd": "! grep -rnE ... && ! grep -rn 'SIBLINGS\\|MAIND_BRAIN_VAULT' packages/maind/lib",
+      "exit": 0,
+      "id": "V2"
+    },
+    {
+      "cmd": "check --strict --json filtered to packages/maind/ with target != harness",
+      "exit": 0,
+      "id": "V3"
+    },
+    {
+      "cmd": "dev-sandbox skiller validate.sh",
+      "exit": 0,
+      "id": "V4"
+    },
+    {
+      "cmd": "bash scripts/test-integration.sh",
+      "exit": 0,
+      "id": "V5"
+    },
+    {
+      "cmd": "ecosystem-units check; render --check; golden.py check; public-hygiene.py; scripts/test-*.py loop",
+      "exit": 1,
+      "id": "V6"
+    }
+  ],
+  "evidence": [
+    "/tmp/p114/maind.txt",
+    "/tmp/p114/validate.txt",
+    "/tmp/p114/skiller.txt",
+    "/tmp/p114/integ.txt",
+    "/tmp/p114/skv.txt"
+  ],
+  "open_issues": [
+    {
+      "impact": "V6 may fail whenever it runs while the conductor writes under .swissknifeman/state; no product defect.",
+      "kind": "note",
+      "next": "Conductor reruns V6 outside the active stream, or the test should exclude .swissknifeman/state (outside this item's write set).",
+      "text": "V6 part failed: scripts/test-provider-docs.py::test_committed_outputs_are_exact_and_check_is_no_write. It snapshots the whole tree before and after provider_docs check. The only file that differed was the conductor stream file for this very run (.swissknifeman/state/orch/conductor/.../P11.4/streams/executor.1-a2.jsonl). The earlier steps of V6 passed."
+    },
+    {
+      "impact": "Report lists changed_paths from git status, not from edits made in this run.",
+      "kind": "deviation",
+      "next": "none",
+      "text": "The work pre-existed in the working tree (a prior partial run); this run only verified it and ran the checks. Provider-docs failure aside, nothing else was red. The harness link in maind (provider_deploy, deploy, sync, workspace) is untouched as scoped (P11.8); a transitional helper maind/harness_path.py exists for it."
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "maind is on aicore: core imports, re-export layer, MONOREPO_ROOT, SIBLINGS and MAIND_BRAIN_VAULT are gone from lib/bin/scripts/tests. Partners are found through aicore.util.partners. skiller profiles --json is added with its schema and test. Docs, CHANGELOGs, baseline and goldens are updated. The work was already in the tree at the start of this run, so I made no new edits; I re-verified it."
+}

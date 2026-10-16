@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D13",
+  "title": "aicore.providers.available — доступность для маршрутизации, независимо от selection",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "providers.selection (project) управляет раскаткой поверхностей провайдера в проект (skills, плагины). Аудит строит доступность как available ∧ selection. Верно ли связывать маршрутизацию ролей с раскаткой поверхностей?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Нет: available (machine/invocation/flags) — может ли orch маршрутизировать роли на провайдера; итог маршрутизации = available ∧ бинарник найден ∧ не закрыт capacity gate; selection остаётся только про доставку поверхностей; проект ограничивает маршрутизацию своим ключом orch (stages/run-options), не selection",
+      "pros": "две независимые оси, нет скрытой связи"
+    },
+    {
+      "id": "B",
+      "text": "available ∧ selection",
+      "cons": "проект без раскатки Codex не может использовать Codex как reviewer"
+    }
+  ],
+  "decision": "A — Нет: available (machine/invocation/flags) — может ли orch маршрутизировать роли на провайдера; итог маршрутизации = available ∧ бинарник найден ∧ не закрыт capacity gate; selection остаётся только про доставку поверхностей; проект ограничивает маршрутизацию своим ключом orch (stages/run-options), не selection",
+  "rationale": "packages/aicore/configs/config.schema.json: selection — «Roll the provider surfaces out into the project».",
+  "applies_to": [
+    "P3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

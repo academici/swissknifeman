@@ -38,7 +38,7 @@ The logic of each preset is three-level:
 ::: tip rm is controlled by a hook, not ask-rules
 `rm`/`rmdir` in presets **are not in ask**: hard blocks them deny_hard
 auto-approve-hook, and inside the trusted directories (machine-owned allowlist
-`safe-dirs.json` at the root of the monorepo swissknifeman, command `harness safe-dirs`) —
+`safe-dirs.json` in the harness folder of the swissknifeman config directory, command `harness safe-dirs`) —
 skips.
 Static The ask-rule would only get in the way here: hook-`allow` does not penetrate ask
 from settings (official semantics permissions), and rm in safe-dirs would prompt
@@ -248,11 +248,11 @@ harness doctor --settings --target .
 # machine output (CI/fleet): single JSON, exit-code 0 clean / 1 warn / 2 error
 harness doctor --settings --target . --json
 
-# check with explicit policy-profile (overlaps .swissknife.json:policy_profile)
+# check with explicit policy-profile (overlaps `[harness] policy_profile`)
 harness doctor --settings --profile max-permissive
 ```
 
-Project declares expected policy as key `policy_profile` in `.swissknife.json`
+Project declares expected policy as key `policy_profile` under `[harness]` in `.swissknifeman/config.toml` (the legacy `.swissknife.json` key is read with a warning)
 (profiles - `configs/claude-code/policy/<name>.json`: `base`, `max-permissive`);
 doctor checks the fact against the declaration. Audit **doesn't fix anything** — writer remains
 `harness permissions`. The same audit is available from the skill registry by facade

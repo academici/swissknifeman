@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D80",
+  "title": "swissknifeman install с профилями из configs/install-profiles.json; install.sh — обёртка",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Как устанавливается экосистема и что такое профиль установки (E16, E58)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "unit/v1 minor: provides.install (argv, контракт --bin-dir/--force); профили minimal, standard (умолч.), full — данные; порядок по requires; модуль без install получает симлинки provides.cli; --dry-run; install.sh вызывает install --profile full с прежними флагами.",
+      "pros": "Установщик не держит список модулей; профили дают эталонные наборы без слоя конфига (слой — по триггеру)."
+    }
+  ],
+  "context": "knowledge/hub-p12#install",
+  "decision": "A — unit/v1 minor: provides.install (argv, контракт --bin-dir/--force); профили minimal, standard (умолч.), full — данные; порядок по requires; модуль без install получает симлинки provides.cli; --dry-run; install.sh вызывает install --profile full с прежними флагами.",
+  "rationale": "Детализация P12 (2026-10-13): knowledge/hub-p12#install; агентское решение в рамках утверждённого плана.",
+  "applies_to": [
+    "P12.1",
+    "P12.3"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

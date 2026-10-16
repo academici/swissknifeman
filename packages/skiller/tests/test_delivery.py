@@ -6,13 +6,13 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock
-from core.provider.runtime import codex_migrated_command_skill
-from skiller.common import MANIFEST, SKILL_MANAGED_MARKER
+from aicore.artifacts.lock import LOCK_RELATIVE_PATH, parse_lock
+from aicore.delivery.materialize import MANIFEST, SKILL_MANAGED_MARKER
+from aicore.provider.runtime import codex_migrated_command_skill
 from skiller.delivery import (deliver, project_readback, prune_provider_caches,
                               recover_lock, release_history, verify_surface)
 from skiller.host import parse_host
-from skiller.release_attestation import digest, tree_digest
+from aicore.release.attestation import digest, tree_digest
 
 
 def surface(files, source="vendor/plugin-a"):
@@ -255,7 +255,6 @@ class DeliveryTests(unittest.TestCase):
         result = SimpleNamespace(stdout="abc\n", returncode=0)
         with patch("skiller.delivery.find_repo_root", return_value=checkout), \
                 patch("skiller.delivery.check", return_value=[]), \
-                patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
                 patch("skiller.delivery.subprocess.run", return_value=result), \
                 patch("skiller.delivery.load_db", return_value={"projects": [{"path": str(good)}, {"path": str(bad)}]}), \
                 patch("skiller.delivery.recover_lock", return_value=([], [])), \
@@ -280,7 +279,6 @@ class DeliveryTests(unittest.TestCase):
         self.write(env.home / ".claude/plugins/installed_plugins.json", json.dumps({"plugins": {"plugin-a@swissknifeman": [installation]}}).encode())
         with patch("skiller.delivery.find_repo_root", return_value=checkout), \
                 patch("skiller.delivery.check", return_value=[]), \
-                patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
                 patch("skiller.delivery.subprocess.run", return_value=SimpleNamespace(stdout="abc\n", returncode=0)), \
                 patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "claude" else None), \
                 patch("skiller.delivery._run", return_value=(True, "updated")) as runner:
@@ -314,7 +312,6 @@ class DeliveryTests(unittest.TestCase):
         with patch("skiller.delivery.find_repo_root", return_value=checkout), \
                 patch("skiller.delivery.load_host", return_value=host), \
                 patch("skiller.delivery.check", return_value=[]), \
-                patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
                 patch("skiller.delivery.subprocess.run", side_effect=run), \
                 patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "grok" else None), \
                 patch("skiller.delivery._run", side_effect=fake):
@@ -365,7 +362,6 @@ class DeliveryTests(unittest.TestCase):
                     patch("skiller.delivery.load_host", return_value=parse_host(
                         {"schema_version": 1, "runtime_projection_plugins": plugins}, checkout)), \
                     patch("skiller.delivery.check", return_value=[]), \
-                    patch("skiller.delivery.build", side_effect=ValueError("no-history")), \
                     patch("skiller.delivery.subprocess.run", side_effect=run), \
                     patch("skiller.delivery.shutil.which", side_effect=lambda name: name if name == "codex" else None):
                 receipt = deliver(env, "v1.0.0")

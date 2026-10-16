@@ -9,13 +9,15 @@ import os
 import sys
 from pathlib import Path
 
-from ..common import (detect_project_type, die, docs_visibility_for, parse_args,
-                     sanitize)
+from aicore.util.project import detect_project_type, docs_visibility_for
+from aicore.util.term import die
+from aicore.util.cli import parse_args
+from aicore.util.text import sanitize
 from ..config import load_config
 from .deploy import deploy_project, mark_deployed
 from .orchestrate import run_capability
 from ..projects import get as get_project
-from ..projects import write_config
+from ..projects import write_registry
 
 
 def _infer_type(path):
@@ -42,7 +44,7 @@ def _register_namespaces(config, namespaces):
 
 
 def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
-    """(config, project, created). New path → record synthesis (+ write_config, if not dry).
+    """(config, project, created). New path → record synthesis (+ write_registry, if not dry).
     namespaces default - general `axioma` + yours `<id>` (several per project).
     At the same time registers these namespaces in the general registry `config["namespaces"]`, if there are any
     not yet (dict-registry, setdefault — idempotent, metadata is not overwritten)."""
@@ -79,7 +81,7 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     config["projects"] = list(config.get("projects") or []) + [proj]
     _register_namespaces(config, proj_namespaces)
     if not dry:
-        write_config(env, config)
+        write_registry(env, config)
     return config, proj, True
 
 
@@ -91,7 +93,8 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
     - **native**: return native auto-memory Claude Code (revert hook), MODE=off.
     - **off**: memory disabled (MODE=off, native do not touch).
     Idempotent; The already connected project also completes."""
-    from ..health import apply_memory_hook, configure_manual_memory, revert_memory_hook
+    from ..health import (apply_memory_hook, configure_manual_memory, hook_memory_mode,
+                          revert_memory_hook, set_hook_memory_mode)
     changed = False
     if mechanism == "maind":
         if namespaces and proj.get("namespaces") != list(namespaces):
@@ -103,21 +106,17 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
         if _register_namespaces(config, proj["namespaces"]):
             changed = True
         if changed and not dry:
-            write_config(env, config)
+            write_registry(env, config)
     wrote = False
+    skipped = None
     lp = proj.get("local_path")
     mode = {"maind": "maind", "manual": "manual", "native": "off",
             "off": "off"}.get(mechanism, "manual")
-    if lp and not dry:
-        cdir = Path(os.path.expanduser(lp)) / ".claude"
-        f = cdir / "memory.env.ini"
-        cur = f.read_text(encoding="utf-8") if f.is_file() else ""
-        if f"MODE={mode}" not in cur:
-            cdir.mkdir(parents=True, exist_ok=True)
-            f.write_text(f"# Project memory - mechanism '{mechanism}'.\n"
-                         f"# maind = demon + insulation by scope; native = auto-memory Claude Code.\n"
-                         f"MODE={mode}\n", encoding="utf-8")
-            wrote = True
+    if lp and not dry and hook_memory_mode(proj) != mode:
+        status, detail = set_hook_memory_mode(proj, mode)
+        wrote = status == "ok"
+        if status == "skip":
+            skipped = detail
     # maind → digest; manual → explicit only MCP; otherwise → native/revert.
     if mechanism == "maind":
         hook = apply_memory_hook(env, config, proj, "auto", dry)
@@ -126,7 +125,8 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="manual", dry=Fal
     else:
         hook = revert_memory_hook(env, config, proj, dry)
     return {"mechanism": mechanism, "namespaces": proj.get("namespaces"),
-            "memory_env_written": wrote, "changed": changed, "memory_hook": hook.get("status")}
+            "memory_env_written": wrote, "memory_env_skipped": skipped, "changed": changed,
+            "memory_hook": hook.get("status")}
 
 
 def onboard(env, config, project_or_path, opts):
@@ -196,7 +196,7 @@ def onboard(env, config, project_or_path, opts):
     if want_code and not (proj.get("code") or proj.get("graphify")):
         proj["code"] = True
         if not dry:
-            write_config(env, config)
+            write_registry(env, config)
     # Reuse the same P6 project context for deployment and instruction provisioning.
     from .sync import contexts, run_sync_contexts
     project_context = contexts(env, config, [proj])[0]
@@ -215,7 +215,7 @@ def onboard(env, config, project_or_path, opts):
                                 f"({', '.join(res['servers'])})"})
         if not dry:
             config = mark_deployed(config, proj["id"], res)
-            write_config(env, config)
+            write_registry(env, config)
 
     # Root and package instruction semantics are intentionally owned only by frozen P5.
     # Onboard supplies its already-effective context and explicit repair choice, then reports

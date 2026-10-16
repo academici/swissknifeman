@@ -7,7 +7,7 @@ having already distilled the transcript). digest takes ONLY high-precision signa
   A. resolved-failure — check (test/lint) fell and then passed in the same run
      («worked after N attempts») → lesson-gotcha with evidence test-pass;
   B. workaround — agent explicitly wrote a bypass in dev-loop-signal (devloop.workarounds);
-  C. pathology — detector `core.pathology.detect` found pathology With ready remediation
+  C. pathology — detector `analyst.pathology.detect` found pathology With ready remediation
      (file-reread/tool-error-loop/protected-write/no-verify) And the code RECIDATES: the same
      pathology encountered ≥2 times in the last 5 runs of the project. One-time operation -
      noise of one session, does not create a lesson (the rest is a signal for `maind analyze`, not for memory);
@@ -29,13 +29,18 @@ import os
 import re
 from pathlib import Path
 
-from core.pathology import detect as detect_pathologies
+from aicore.config import ConfigError
 
-from .common import die, find_run_report, parse_args, safe_load_json
+from aicore.util.cli import parse_args
+from aicore.util.io import safe_load_json
+from aicore.util.term import die
+from .pathology import detect as detect_pathologies
+from .run_reports import find_run_report
 from .lessons import (ACTIVE_STATES, add_candidate, audit_append,
                       classify_consolidation, event_append, jaccard,
                       new_lesson, similar_lessons)
 from .runs import neutral_run_report
+from .settings import DEFAULT_THRESHOLDS, load_thresholds
 
 _SIMILAR_CMD = 0.6   # threshold «essentially the same command» for pair fail→pass
 
@@ -85,14 +90,14 @@ def _is_real_check(cmd):
         return False
     return True
 
-# source run-report — single core.find_run_report (reveals ~ on the way)
+# source run-report — single run_reports.find_run_report (reveals ~ on the way)
 
-# ── signal C: recurrent pathologies (core.pathology + relapse rule) ─────────
-PATHOLOGY_WINDOW = 5     # relapse rule: window of how many last runs we look at
-PATHOLOGY_MIN_HITS = 2   # code must occur in at least this many runs of the window
+# ── signal C: recurrent pathologies (pathology + relapse rule) ─────────
+PATHOLOGY_WINDOW = DEFAULT_THRESHOLDS.pathology_window       # relapse rule: window of how many last runs we look at
+PATHOLOGY_MIN_HITS = DEFAULT_THRESHOLDS.pathology_min_hits   # code must occur in at least this many runs of the window
 
 # Codes with ready remediation → potential lesson (upon relapse). Other codes
-# core.pathology.detect — signals for analyze/dashboard, do NOT go into memory (no
+# pathology.detect — signals for analyze/dashboard, do NOT go into memory (no
 # specific «what to do», only diagnosis - nothing to teach the agent).
 _PATHOLOGY_REMEDIATIONS = {
     "file-reread": "keep the read card; to re-apply use "
@@ -133,11 +138,11 @@ def _recent_run_reports(project_path, current, limit=PATHOLOGY_WINDOW):
     return reports[:limit]
 
 
-def _pathology_hit_counts(project_path, current):
+def _pathology_hit_counts(project_path, current, thresholds=DEFAULT_THRESHOLDS):
     """{code: how many runs from the window contain ≥1 find this code}. detect driving
-    for each window run separately - it’s clean and cheap (see core/pathology.py)."""
+    for each window run separately - it’s clean and cheap (see pathology.py)."""
     counts = {}
-    for rr in _recent_run_reports(project_path, current):
+    for rr in _recent_run_reports(project_path, current, thresholds.pathology_window):
         for code in {f.get("code") for f in detect_pathologies(rr)}:
             counts[code] = counts.get(code, 0) + 1
     return counts
@@ -208,8 +213,8 @@ def extract_workarounds(run_report, *, scope, project):
     return out
 
 
-def extract_pathologies(run_report, project_path):
-    """Signal C: run pathologies (`core.pathology.detect`) with ready-made remediation
+def extract_pathologies(run_report, project_path, thresholds=DEFAULT_THRESHOLDS):
+    """Signal C: run pathologies (`analyst.pathology.detect`) with ready-made remediation
     And a relapse - the same code was encountered ≥PATHOLOGY_MIN_HITS times in the last
     PATHOLOGY_WINDOW project runs (current inclusive). One-time trigger
     lesson does not create (noise of one session); codes without remediation in _PATHOLOGY_REMEDIATIONS
@@ -234,17 +239,17 @@ def extract_pathologies(run_report, project_path):
         if not remediation or code in seen:
             continue
         if hit_counts is None:
-            hit_counts = _pathology_hit_counts(project_path, run_report)
+            hit_counts = _pathology_hit_counts(project_path, run_report, thresholds)
         hits = hit_counts.get(code, 0)
-        if hits < PATHOLOGY_MIN_HITS:
+        if hits < thresholds.pathology_min_hits:
             continue
         seen.add(code)
-        trigger = (f"recurrence of run pathology «{code}» ({hits}/{PATHOLOGY_WINDOW} "
+        trigger = (f"recurrence of run pathology «{code}» ({hits}/{thresholds.pathology_window} "
                   f"last runs): {f.get('evidence') or ''}")
         out.append(new_lesson(
             trigger=trigger, action=remediation, kind="gotcha", scope=scope,
             session_id=sid, project=project, detector=code,
-            evidence=[f"session:{sid}", f"recurred:{hits}/{PATHOLOGY_WINDOW}",
+            evidence=[f"session:{sid}", f"recurred:{hits}/{thresholds.pathology_window}",
                      f"metric:{_fmt_num(f.get('metric'))}",
                      f"threshold:{_fmt_num(f.get('threshold'))}"],
             meta={"severity": f.get("severity"), "data": f.get("data") or {}}))
@@ -276,7 +281,7 @@ def extract_workflow_relaunch(run_report, *, scope, project):
     return out
 
 
-def extract_candidates(run_report, *, scope, project, project_path=None):
+def extract_candidates(run_report, *, scope, project, project_path=None, thresholds=DEFAULT_THRESHOLDS):
     """All high-precision run candidates (A + B + C + D). Duplicates by id collapse onto records.
 
     project_path — optional (backwards compatible clean A/B-calls without path to
@@ -287,7 +292,7 @@ def extract_candidates(run_report, *, scope, project, project_path=None):
            + extract_workarounds(run_report, scope=scope, project=project)
            + extract_workflow_relaunch(run_report, scope=scope, project=project))
     if project_path is not None:
-        out += extract_pathologies(run_report, project_path)
+        out += extract_pathologies(run_report, project_path, thresholds)
     return out
 
 
@@ -305,6 +310,10 @@ def cmd_digest(env, argv):
         return
 
     ppath = os.getcwd()
+    try:
+        thresholds = load_thresholds(ppath)
+    except ConfigError as err:
+        die(str(err))
     rr = neutral_run_report(ppath, opts["session"] or None)
     # D90 projection has no raw-shaped bash/workflow/workaround evidence.  Digest consumes
     # it only once a future neutral semantic explicitly carries those fields; otherwise this
@@ -317,7 +326,7 @@ def cmd_digest(env, argv):
 
     project = Path(os.path.abspath(ppath)).name
     scope = f"project:{project}"
-    cands = extract_candidates(rr, scope=scope, project=project, project_path=ppath)
+    cands = extract_candidates(rr, scope=scope, project=project, project_path=ppath, thresholds=thresholds)
 
     if opts["dry_run"] or opts["json"]:
         payload = {"session": rr.get("session_id"), "project": project,

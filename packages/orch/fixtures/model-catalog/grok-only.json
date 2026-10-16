@@ -1,0 +1,59 @@
+{
+  "schema_version": "model-catalog/v1",
+  "catalog_version": "1.0.0",
+  "providers": [
+    {
+      "provider_id": "grok",
+      "class_selectors": {
+        "economy": [
+          "g-small"
+        ],
+        "implementation": [
+          "g-mid"
+        ],
+        "frontier": [
+          "g-big"
+        ]
+      },
+      "effort_selectors": {
+        "low": [
+          "low"
+        ],
+        "medium": [
+          "medium"
+        ],
+        "high": [
+          "high"
+        ],
+        "xhigh": [
+          "xhigh"
+        ]
+      },
+      "model_inventory": {
+        "verified_at": "2026-10-10",
+        "source": "test fixture",
+        "verification": "synthetic names for orch tests",
+        "entries": [
+          {
+            "id": "g-small",
+            "roles": [
+              "economy"
+            ]
+          },
+          {
+            "id": "g-mid",
+            "roles": [
+              "implementation"
+            ]
+          },
+          {
+            "id": "g-big",
+            "roles": [
+              "frontier"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

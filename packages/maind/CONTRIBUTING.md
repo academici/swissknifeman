@@ -34,7 +34,13 @@ scripts/validate.sh      # py_compile + bash -n + JSON + tests (what drives CI)
 
 - Style - `unittest`; fixtures in `tests/fixtures.py` (`make_repo` gives isolated `Env`
   with temporary HOME). Each new module `lib/maind/X.py` is followed by `tests/test_X.py`.
-- Tests do not touch the real node/demon/`~/.maind` — everything is in temporary directories.
+- Tests do not touch the real node/demon or its state directory — everything is in temporary directories.
+
+## Scope of the tests
+
+maind is an auxiliary tool outside the core verification: run its tests (`scripts/test.sh`, `scripts/validate.sh`) when you change
+maind; do not add them to the checks of other modules, of an item that does not touch maind, or of the core CI job (see
+`standalone.tools` in `configs/ecosystem-units.json`).
 
 ## Pull Request
 

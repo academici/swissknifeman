@@ -2,7 +2,7 @@
 import json
 import sys
 
-from core import atomic_write_text
+from aicore.util.io import atomic_write_text
 
 
 def sync_boost_json(target, skill_names, dry_run=False):

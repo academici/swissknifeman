@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:skiller:projects-list:v1",
+  "title": "projects-list",
+  "description": "Output of `skiller list --json`: the projects connected to skiller, from the registry <state>/skiller/projects.json.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Contract identifier.",
+      "const": "urn:swissknifeman:skiller:projects-list:v1"
+    },
+    "projects": {
+      "description": "Registry records, one per (path, channel, provider).",
+      "type": "array",
+      "items": {
+        "description": "One registry record: the stored fields plus name and connected_at.",
+        "type": "object",
+        "properties": {
+          "path": {
+            "description": "Absolute project directory.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Project directory name.",
+            "type": "string"
+          },
+          "channel": {
+            "description": "Delivery channel (connect or vendor).",
+            "type": "string"
+          },
+          "connected_at": {
+            "description": "ISO time of the first connection; empty when unknown.",
+            "type": "string"
+          },
+          "provider": {
+            "description": "Provider the project was delivered for.",
+            "type": "string"
+          },
+          "profile": {
+            "description": "Profile name; null when the project was connected without one."
+          },
+          "profile_source": {
+            "description": "Where the profile came from."
+          },
+          "plugins": {
+            "description": "Plugins enabled by connect.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "settings_file": {
+            "description": "Settings file written by connect."
+          },
+          "hub": {
+            "description": "Whether the project has hub artifacts.",
+            "type": "boolean"
+          },
+          "agent": {
+            "description": "Legacy vendor agent selection.",
+            "type": "string"
+          },
+          "buckets": {
+            "description": "Selected buckets.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude": {
+            "description": "Excluded skills.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "skills_path": {
+            "description": "Where vendored skills live in the project.",
+            "type": "string"
+          },
+          "target": {
+            "description": "Provider marketplace target path.",
+            "type": "string"
+          },
+          "source_hash": {
+            "description": "Hash of the delivery source.",
+            "type": "string"
+          },
+          "rendered_hash": {
+            "description": "Hash of the rendered delivery.",
+            "type": "string"
+          },
+          "repair": {
+            "description": "Repair evidence of the last sync.",
+            "type": "array"
+          },
+          "updated_at": {
+            "description": "ISO time of the last update.",
+            "type": "string"
+          },
+          "first_connected_at": {
+            "description": "ISO time of the first connection.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "name",
+          "channel",
+          "connected_at"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "projects"
+  ],
+  "additionalProperties": false
+}

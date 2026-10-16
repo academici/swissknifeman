@@ -17,6 +17,13 @@
 | 4 | исполнитель `ITEM_BLOCKED` за 18 с: `bwrap: setting up uid map: Permission denied`, работы нет | роль `executor` запускается под `ro-run.py` (Landlock), а поверх добавляется песочница Claude (bwrap), когда она доступна. Landlock запрещает `mount` и запись `/proc/<pid>/uid_map`, поэтому bwrap внутри него не стартует. Обе защиты стали активны вместе после включения AppArmor-профиля bwrap. Воспроизведено вне conductor | коммит `fix(orch): песочница провайдера заменяет Landlock-охрану…`: `strip_guard` в `roles.py`, исправленный расчёт `isolation` в `cli.py`, тесты `SandboxTests` | **крупное.** Выбрать одну модель изоляции исполнителя. Открыто: `scope.extra_paths`/`--allow-path` и каталог транскриптов shared-сессии не попадают в `sandbox`-блок Claude, потому что `extra_write_dirs` работал только с `ro-run`. Проверить до первого пункта с `extra_paths` |
 | 5 | `ROLE_LINGERED` и `attempt 1 failed at the provider (unknown: the role returned no final text)` у P3.2 | процесс провайдера жил 30 с после полного ответа, финального текста нет; сработал штатный повтор | не правлено, наблюдаю | смотреть, повторяется ли; если да — причина в формате ответа роли, а не в плане |
 | 6 | во время работы исполнителя в `git status` появляются нетрекаемые `.bash_profile`, `.bashrc`, `.claude/commands`, `.claude/hooks` и др. | песочница Claude (bwrap) на время запуска создаёт в рабочей папке пустые заглушки запрещённых путей; после завершения команды они исчезают (проверено: уже отсутствуют) | не правлено | не мешает: conductor коммитит по write set. Если заглушка попадёт в коммит пункта — добавить в игнор/фильтр снимка дерева |
+| 7 | follow-up групповой review: `ROUTE_UNDERSHOOT — the executor effort medium is below high required` за 1 с | `followup_input` (`review_plan.py`) жёстко задаёт `route.minimum.effort = high`, а решение D16 требует исполнителя sonnet/medium и в follow-up | обход: input пересобран через `orch input adhoc --effort medium --provenance review_followup` (тот же goal и scope). Код правится отдельным коммитом после прогона | мелкое: минимум follow-up должен брать эффорт маршрута исполнителя прогона, а не константу |
+
+## Review фазы P3
+
+Групповая review (codex/gpt-6.1-sol/high, 157 с): 0 Blocker, 3 Major, 4 Minor. Major — в follow-up, Minor — заметки плана
+(`P3.3`). Находки: откат чтения-после-записи затирает параллельного писателя (`aicore config/model.py`), устаревший preview
+остаётся применимым при изменении черновика (`PreviewDialog.tsx`), локальное состояние `ScalarListField` переживает discard.
 
 ## Прогон дальше
 

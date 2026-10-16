@@ -34,6 +34,11 @@ jobs:
       - name: Test docs-impact gate
         run: python3 scripts/test-docs-impact.py -v
 
+      # Shell errors only (the warnings are reviewed by hand); SC2148: sourced fragments such as the aicore locator
+      # carry no shebang on purpose. Skill snippets are content, not scripts of this repository.
+      - name: shellcheck (errors)
+        run: git ls-files -z '*.sh' ':!:plans/**' ':!:**/snippets/**' | xargs -0 shellcheck -S error -e SC2148
+
       # The tracked site copies docs/<module> of packages/<module>/docs must not lag (docs/planner did).
       - name: docs-sync (site copies are fresh)
         run: bash scripts/docs-sync.sh --check

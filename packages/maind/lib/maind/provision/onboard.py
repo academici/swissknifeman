@@ -224,7 +224,10 @@ def onboard(env, config, project_or_path, opts):
     instruction = run_sync_contexts(env, config, [project_context], only="instructions",
                                     mode=instruction_mode, dry=dry)[0]
     steps.append({"name": "instructions",
-                  "status": "ok" if instruction["status"] in ("ok", "dry") else "failed",
+                  # Provider-native instruction carriers belong only to the umbrella
+                  # monorepo. A consumer project's explicit n/a skip is successful
+                  # completion of this conditional onboarding step.
+                  "status": "ok" if instruction["status"] in ("ok", "dry", "skip") else "failed",
                   "detail": instruction["detail"]})
 
     # 3. derive graph from sources of truth (code/docks/override/skills) → project store + index

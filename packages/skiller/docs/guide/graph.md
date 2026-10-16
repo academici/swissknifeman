@@ -198,11 +198,9 @@ flowchart LR
   botkit -->|requires| laravel
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
-  build_loop -->|requires| mcp_blender
   build_loop -->|requires| model_rules
   build_loop -->|requires| parametric_config
   build_loop -->|requires| scene_conventions
-  build_loop -->|requires| threading
   capacity_planning -->|requires| observability_design
   competitive_analysis -->|requires| idea_discovery
   customer_discovery -->|requires| idea_discovery
@@ -234,8 +232,6 @@ flowchart LR
   issue_triage -->|requires| github_flow
   laravel_security_audit -->|requires| static_analysis
   legal_compliance -->|requires| architecture
-  mcp_blender -->|requires| version_gotchas
-  model_verification -->|requires| mcp_blender
   model_verification -->|requires| model_rules
   model_verification -->|requires| parametric_config
   modular_architecture -->|requires| laravel
@@ -249,8 +245,6 @@ flowchart LR
   observability_design -->|requires| architecture
   oss_governance -->|requires| oss_development
   parametric_config -->|requires| model_rules
-  parametric_config -->|requires| threading
-  parametric_config -->|requires| version_gotchas
   pitch_deck -->|requires| competitive_analysis
   pitch_deck -->|requires| go_to_market
   pitch_deck -->|requires| unit_economics
@@ -332,6 +326,7 @@ flowchart LR
   makefile -.->|feeds| docker_dev_prod
   makefile -.->|feeds| docker_services
   mcp_advisor -.->|feeds| context_economy
+  mcp_blender -.->|feeds| build_loop
   model_verification -.->|feeds| build_loop
   monetization_design -.->|feeds| brd
   mutation_testing -.->|feeds| code_review
@@ -361,13 +356,17 @@ flowchart LR
   tech_stack_selection -.->|feeds| release_engineering
   test_strategy -.->|feeds| code_review
   test_strategy -.->|feeds| playwright_e2e
+  threading -.->|feeds| build_loop
+  threading -.->|feeds| parametric_config
   to_issues -.->|feeds| implement
   unit_economics -.->|feeds| go_to_market
   verify_claims -.->|feeds| architecture
   verify_claims -.->|feeds| tech_stack_selection
+  version_gotchas -.->|feeds| mcp_blender
+  version_gotchas -.->|feeds| parametric_config
 ```
 
-**In the column:** 123 skills, 83 ribs requires, 91 ribs produces_for.
+**In the column:** 123 skills, 77 ribs requires, 96 ribs produces_for.
 
 ## Isolated skills (86)
 

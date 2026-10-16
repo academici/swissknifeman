@@ -848,9 +848,9 @@
       "bucket": "blender",
       "path": "skills/blender/mcp-blender/SKILL.md",
       "version": "0.1.0",
-      "description": "MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_scene_info), viewport display modes (tech/material/realism/xray), camera-via-helper principle, code-send & module-cache reset (del sys.modules), hiding obstructing objects for screenshot, parallel multi-agent work. Activate when working with Blender via MCP — building, viewport setup, screenshots.",
-      "sha256": "aad963556c09f3fdb5db9fa3fbafbbe7e8325d0cfbb98d06eafee05c3b542e88",
-      "content_sha256": "556025db53aea960ce414fffd7104bc27f8236f02b951fee76d43e46e95cad4b",
+      "description": "Use when working through Blender MCP: execution, object inspection, viewport setup and screenshots. Includes module reload, world-space units and exact visibility restoration.",
+      "sha256": "1e973969b0ca13a75d8e4483d30a05de4c98e0ab3c2078047fc7b9e0c95eaa1c",
+      "content_sha256": "51aaacac8bdf9d47d62bc31baa1792e392ab9e9e11860882c437c3ec3ebb34fe",
       "license": "MIT",
       "tags": [
         "blender",
@@ -862,9 +862,6 @@
         "camera",
         "screenshot",
         "orchestration"
-      ],
-      "requires": [
-        "version-gotchas"
       ],
       "produces_for": [
         "build-loop"
@@ -912,9 +909,9 @@
       "bucket": "blender-modeling",
       "path": "skills/blender-modeling/build-loop/SKILL.md",
       "version": "0.1.0",
-      "description": "Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recompute → incremental part build → verify geometry via get_object_info BEFORE screenshot → camera on changed zone → screenshot → propose rule fixes. Part docstring template, error-diagnosis table included. Activate on any part build/edit task in Blender.",
-      "sha256": "a476abe190f309251c28dba3fdee713c4cdb3432351d8ef47b1ff22a637e2dfe",
-      "content_sha256": "d08a6b6585b729f648af0f5f3f69ff9a6ac8113b56698b6fed171f698992f293",
+      "description": "Use for an incremental parametric part build or geometry fix: config preflight, scoped rebuild, evaluated geometry and affected interfaces, then framed visual evidence.",
+      "sha256": "c5c95f1c16fe7e607e4c7c0d103a2f83c941b59a1fcca840d141446c127bb9cc",
+      "content_sha256": "7f51114ca29f531b5df15192289540f059b86b4cb5d26b53190de3351d793a4a",
       "license": "MIT",
       "tags": [
         "blender",
@@ -928,12 +925,10 @@
         "sla"
       ],
       "requires": [
-        "mcp-blender",
         "parametric-config",
         "config-conventions",
         "scene-conventions",
-        "model-rules",
-        "threading"
+        "model-rules"
       ],
       "selection": {
         "kind": "procedure",
@@ -946,9 +941,9 @@
       "bucket": "blender-modeling",
       "path": "skills/blender-modeling/config-conventions/SKILL.md",
       "version": "0.1.0",
-      "description": "Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z0/wall/clearance); units mm; everything-from-formulas (no magic numbers in parts/); cross-config dependencies and end-to-end recompute; part-adding pattern. Activate on config.py edits, adding a param/part, cross-config questions, hardcoded sizes, reading another part's config.",
-      "sha256": "d1ae793fc67dff1c6833e5da3bf78c56e0bee4229b6e1a4c2814aff41cb51653",
-      "content_sha256": "4d72fa6b774915ad14b82dbaa90694f9287180cc410b533343d0a52db5fd9695",
+      "description": "Use for physical config fields, units and dependencies between parametric parts. Keeps purchased dimensions, design clearances and derived datums explicit.",
+      "sha256": "ffe73c36376334a2b3713da308eabc7ff012d64c3409e6c8eff2b3a6cdba2c83",
+      "content_sha256": "32855cc6ac95fe06409f3bde391b0e1fb1c44c60a374b874fc8f5aec73579ca3",
       "license": "MIT",
       "tags": [
         "blender",
@@ -977,9 +972,9 @@
       "bucket": "blender-modeling",
       "path": "skills/blender-modeling/model-rules/SKILL.md",
       "version": "0.1.0",
-      "description": "Use this template before any task on a model: read models/{name}/ai/rules.md, the model-specific rules file.",
-      "sha256": "8c94916d8f56010ec048c325bd981e30e2a67487d7c56c70c551af928d0ef7e4",
-      "content_sha256": "4191d7cd0bbc19386ddd8f373fe72a59c7548032145511392426478ecc3ba0d2",
+      "description": "Use for model work: read its existing models/{name}/ai/rules.md for construction, axes, interfaces and scoped verification. Use the short template only for a new model.",
+      "sha256": "02b6aca64032873ce0d4c8103f32fc998a54bfb4b824892e766fd162c6147d2d",
+      "content_sha256": "55f01ef698cb01f4c8a563453b24d8a911e13ad013ebb50a46ec158977bc9a46",
       "license": "MIT",
       "tags": [
         "blender",
@@ -1003,9 +998,9 @@
       "bucket": "blender-modeling",
       "path": "skills/blender-modeling/model-verification/SKILL.md",
       "version": "0.1.0",
-      "description": "Verify complete parametric Blender models with ordered provenance, config, inventory, evaluated-mesh, interface, visual-evidence, restore, and report gates. Use when preparing release/export, auditing every printable part and mating context, or checking changes to geometry or config.",
-      "sha256": "72a72e14d0eabb561a93e1c868f072412ffa513762605e774cc3d4f95e3ab7ce",
-      "content_sha256": "923b0214bed6f26eee296f8ddb18091356669db160c0ad61f983097ad7e756d5",
+      "description": "Use for final digital acceptance, export or a requested whole-model audit of a declared assembly. Covers provenance, inventory, evaluated geometry, interfaces, evidence and restore.",
+      "sha256": "fe115477a1ff607aea340adcba7ad3b3630aaba7b800bb01d8d5d48bad479ec1",
+      "content_sha256": "5216941792de266012cf7d69bf69201290edd446506b8f77d0e0eb87361d0971",
       "license": "MIT",
       "tags": [
         "blender",
@@ -1017,7 +1012,6 @@
         "sla"
       ],
       "requires": [
-        "mcp-blender",
         "model-rules",
         "parametric-config"
       ],
@@ -1035,9 +1029,9 @@
       "bucket": "blender-modeling",
       "path": "skills/blender-modeling/parametric-config/SKILL.md",
       "version": "0.1.0",
-      "description": "Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/tolerances/material/units mm), profile + revolve/extrude, invariant validation without launching Blender. Activate when editing models/*/config.py, profile.py, parts/*, check.py; adding a part param; questions about tolerances/units/radius matching for FDM/SLA printing.",
-      "sha256": "729e18540483566626739026e01fa08cd6e065cfafb43b2d112c2d5bcc3f105b",
-      "content_sha256": "a254064c02fc8a45fc1167603a8a9b6635beb2e4cde3dc1062cfa2fcc50e6513",
+      "description": "Use when editing parametric configs, derivations, profiles or builders. Covers pure versus bpy layers, mm conversion, profile construction and world-space invariants.",
+      "sha256": "85b4a5329892883e2c2a47b1d6ce4051710e10e415a67b47000f356d03f4517b",
+      "content_sha256": "008de053f2677e1a6d6c35c350a5ca4cedca3fbc313fb1b495a46d2efc9e37d3",
       "license": "MIT",
       "tags": [
         "blender",
@@ -1053,9 +1047,7 @@
         "3d"
       ],
       "requires": [
-        "threading",
-        "model-rules",
-        "version-gotchas"
+        "model-rules"
       ],
       "produces_for": [
         "build-loop"
@@ -1071,9 +1063,9 @@
       "bucket": "blender-modeling",
       "path": "skills/blender-modeling/scene-conventions/SKILL.md",
       "version": "0.1.0",
-      "description": "Parametric-model scene conventions: object prefixes (MESH_/CRV_/LGT_/MTL_), parenting hierarchy by physical belonging, collections, material assignment from config color field. Activate when creating scene objects/materials, setting parenting of subparts, questions about object names and grey material.",
-      "sha256": "16b1409295375547b4f38acb4c9440dba79febc9e6b6679495f68ad921e91a50",
-      "content_sha256": "7cd7aae9f0b1dcd15efe9dd92e0d216df8f97fd6501e9ee192d65bf12c155ce4",
+      "description": "Use when naming or parenting model objects, assigning materials, or defining scene ownership. Keeps owned cleanup and printable/reference inventory explicit.",
+      "sha256": "e8efac36c6ef2d2699d1ca885bf7d753e50be4fb8823df9328ed02f803a3c02e",
+      "content_sha256": "1373801662dd921d4e4f5bd96cf0d27b8a41effa74674271d6530475bb25a757",
       "license": "MIT",
       "tags": [
         "blender",

@@ -43,6 +43,9 @@ class TestOnboard(unittest.TestCase):
                 self.assertEqual(names["register"], "ok")
                 self.assertEqual(names["deploy"], "ok")
                 self.assertEqual(names["graph"], "ok")
+                # Instruction carriers are intentionally inapplicable outside the
+                # umbrella monorepo; that conditional skip must not make onboarding fail.
+                self.assertEqual(names["instructions"], "ok")
             finally:
                 onb.run_capability = orig
 

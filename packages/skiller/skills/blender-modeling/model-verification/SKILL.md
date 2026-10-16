@@ -2,11 +2,11 @@
 name: model-verification
 bucket: blender-modeling
 version: 0.1.0
-description: "Verify complete parametric Blender models with ordered provenance, config, inventory, evaluated-mesh, interface, visual-evidence, restore, and report gates. Use when preparing release/export, auditing every printable part and mating context, or checking changes to geometry or config."
+description: "Use for final digital acceptance, export or a requested whole-model audit of a declared assembly. Covers provenance, inventory, evaluated geometry, interfaces, evidence and restore."
 risk: write
 persona: oss-dev
 tags: [blender, cad, verification, evidence, release, fdm, sla]
-requires: [mcp-blender, model-rules, parametric-config]
+requires: [model-rules, parametric-config]
 produces_for: [build-loop]
 outputs: ["models/{model}/test/artifacts/verification/current/"]
 snippets: []
@@ -14,90 +14,82 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Model verification
+# Complete-model acceptance and export verification
 
-Verify a complete model through one portable lifecycle and one model-local
-instruction. Keep capture mechanics generic; keep inventory, interfaces, views,
-expected observations, thresholds, printer facts, and blockers model-local.
+Use this lifecycle for final acceptance/export or an explicitly requested audit
+of the declared assembly. An ordinary config/geometry edit uses `build-loop` and
+checks the changed zone and affected interfaces. The latest owner instruction
+and local model contract define required properties; this skill does not add a
+full variant matrix or arbitrary flexible-wire pose certificate.
 
-## Load the model contract
+## Load and declare the contract
 
-1. Read the active model and mode through the project's supported environment loader.
-2. Read the model rules, configuration, and model-local verification instruction.
-3. Validate that the instruction supplies the fields in
-   [references/model-local-template.md](references/model-local-template.md).
-4. Stop if no authoritative inventory or interface source exists. Do not reconstruct
-   product truth from a capture script or another model.
+Resolve the project root, model and mode through its loader. Read the model rules,
+configuration and local verification instruction; its fields are described in
+[model-local-template](references/model-local-template.md). Inventory, interfaces,
+thresholds, printer facts, required views and physical claims stay model-local.
+An absent authoritative inventory/interface source prevents a complete acceptance
+claim; independent work with known inputs may continue within the authorized scope.
 
-## Declare the run
+Declare a release candidate or diagnostic run before collecting evidence. Dirty
+source is `candidate-uncommitted`, not a committed release. A diagnostic collected
+after RED keeps its diagnostic-red result; correcting the source requires fresh
+applicable gates rather than promoting that failed run.
 
-- Use `release` for a candidate that may become GREEN.
-- Use `diagnostic` only when explicitly continuing after a known or discovered RED.
-- Label every diagnostic output `diagnostic-red`; never promote it.
-- Preserve dirty candidates as `candidate-uncommitted`; never call them committed releases.
+## Ordered lifecycle
 
-## Execute the ordered lifecycle
+1. **Provenance/preflight:** pin root and loaded paths; record model/mode/tool
+   versions, source/config state and hashes of declared build/acceptance inputs.
+2. **Pure gates:** configuration, derivation, inventory schema and cross-part checks
+   before building/capture.
+3. **Production build/inventory:** normal entrypoint in full/default mode; exact
+   owned final universe matches its SSOT. Preserve foreign objects outside that
+   universe; leaked tools or undeclared owned output remain failures.
+4. **Geometry/interfaces:** evaluated post-operation world-space measurements of
+   every final printable object and required real interface, with config-owned
+   tolerances. Check non-empty/nondegenerate geometry, documented components,
+   sane volume, actual boundary/self-intersection defects and required walls.
+   Preserve closed-cavity winding and nonzero small faces; bbox-only fit,
+   unchecked copies or a pretty render are insufficient.
+5. **Views/context:** readable technical and mating-context views needed for each
+   required printable part/property. Bought references support their declared
+   placement/interface checks; do not require separate views or tool calls for
+   every repeated reference merely because it is a mesh. Section/cut is supplemental,
+   never production topology/diameter/export proof.
+6. **Observed evidence:** inspect every required image and write a falsifiable
+   observation linked to its measured property. Missing, stale, occluded, edge-on
+   or ambiguous required evidence does not pass.
+7. **Report/restore:** one evidence-linked result per declared step; keep unknown
+   inputs and physical non-claims explicit. Restore scene/viewport in `finally`
+   and verify restoration before the aggregate verdict.
 
-Do not reorder or substitute later evidence for earlier gates.
+A failed provenance/pure/inventory/geometry gate stops expensive release capture.
+An authorized diagnostic may collect additional evidence while keeping RED. A
+failed build is fixed and retried within the task; this lifecycle adds no approval
+request for routine reversible correction.
 
-1. **Provenance/preflight:** resolve and pin the project root, reject foreign imports,
-   record model/mode/tool versions/source state, and hash configuration, builders,
-   inventory, local instruction, runner, shared skill/template, and every other declared input.
-2. **Plain-Python gates:** run configuration, derivation, inventory-schema, and
-   cross-part checks before capture.
-3. **Default production build:** build through the normal entry point in full/default
-   mode and compare the exact owned final universe with the model inventory.
-4. **Evaluated mesh and interfaces:** measure every final printable object and every
-   real interface in evaluated world space with config-owned tolerances. Reject bbox-only
-   fit claims and unchecked mirrors or siblings.
-5. **Isolated views:** capture readable primary and oblique technical views for every
-   final object; add detail/underside/interface views required by the local instruction.
-6. **Assembly contexts:** expose only each target and its real counterparts in the
-   prescribed technical, xray, or section view. Treat cut/section display as supplemental,
-   never as topology, diameter, interface, or export proof.
-7. **Expected-vs-observed analysis:** open every required image and record a falsifiable,
-   metric-linked observation. Missing, stale, edge-on, occluded, unreadable, or ambiguous
-   evidence is RED; screenshots never auto-pass themselves.
-8. **Report and restore:** emit one evidence-linked row per required step, retain all
-   owner gates and physical non-claims, restore scene/viewport state in `finally`, and
-   verify restoration before computing the aggregate verdict.
+## Evidence and scene integrity
 
-A release run stops before costly capture when provenance, plain-Python, inventory, or
-evaluated-mesh gates are RED. A requested diagnostic run may continue to collect evidence,
-but its aggregate remains RED.
+Use the model's declared evidence paths. Validate the exact output directory;
+reject symlinks/escapes and never delete a parent, glob or another model's data.
+Open a manifest before collection, recording candidate/run class, required IDs,
+inputs, artifacts and restore status. Changes to relevant source/tool/mode/scale/
+profile or acceptance input invalidate dependent evidence. Closure rechecks required
+coverage, artifact bytes/hashes, input freshness and restoration.
 
-## Protect evidence state
+Capture through an existing transaction where available: object/collection
+visibility, selection, active object, scene, camera, affected viewports, projection,
+lens/clipping, shading/overlays/xray/local view, and temporary measurement datablocks
+must return to their prior state. Failure to restore is RED. One operator owns a
+shared live scene; isolated background runs must restore their source scene too.
 
-- Write routine evidence only to the exact model-owned
-  `test/artifacts/verification/current/` directory.
-- Resolve the path, reject symlinks and escapes, and delete only the validated `current/`
-  directory. Never delete a parent, glob, unresolved variable, or another model's data.
-- Write an open manifest immediately after recreation. Record hashes, versions, run class,
-  actual build mode, required ids, candidate state, artifact paths, and restore result.
-- Mark evidence stale when any relevant source hash, tool version, mode, scale, profile,
-  or local contract input changes.
-- Before report closure or promotion, revalidate every required step id, artifact path,
-  artifact hash, coverage row, source hash, and restore result against the open manifest.
-- Promote only through a separate explicit command to a new non-existing baseline id.
-  Refuse diagnostic, stale, incomplete, restoration-failed, or non-GREEN runs.
+Promotion is a separate explicit command to a new baseline ID and refuses
+incomplete, diagnostic, stale, restoration-failed or non-GREEN evidence. Reuse
+prior measurements only through the local verified identity/freshness contract;
+a sibling or old variant passing is not evidence for changed geometry.
 
-## Preserve transactional boundaries
-
-Before capture, save object/collection visibility, selection, active object, scene,
-camera, every affected viewport, projection, lens/clipping, shading, overlays, xray, and
-local-view state. Isolate only declared context. Remove temporary measurement datablocks
-and restore saved state in `finally`. Treat incomplete restoration as aggregate RED.
-
-## Compute the verdict
-
-Use per-step `GREEN`, `RED`, `BLOCKED`, or `NOT_RUN`. Aggregate GREEN requires every
-required step GREEN, fresh evidence, exact coverage, verified restoration, and no owner
-gate misrepresented as verified. Keep physical fit, strength, material behaviour, optical
-performance, and print qualification unverified until direct evidence exists.
-
-## Related skills
-
-- `blender-modeling/build-loop` — incremental part work and the entry point for whole-model checks.
-- `blender-modeling/model-rules` — model-local construction and camera conventions.
-- `blender-modeling/parametric-config` — configuration, derivation, and plain-Python gates.
-- `blender/mcp-blender` — Blender execution, viewport, camera, and geometry inspection tools.
+Use per-step `GREEN`, `RED`, `BLOCKED` or `NOT_RUN`. Aggregate GREEN covers only the
+required, measured scope with fresh complete evidence and verified restoration.
+Unknown physical source dimensions are not manufacturer facts; a geometric design
+reservation stays labelled. Physical fit, strength, material behaviour, optics and
+print qualification require their own evidence and remain unverified until then.

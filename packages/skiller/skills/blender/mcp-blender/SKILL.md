@@ -2,11 +2,11 @@
 name: mcp-blender
 bucket: blender
 version: 0.1.0
-description: "MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_scene_info), viewport display modes (tech/material/realism/xray), camera-via-helper principle, code-send & module-cache reset (del sys.modules), hiding obstructing objects for screenshot, parallel multi-agent work. Activate when working with Blender via MCP — building, viewport setup, screenshots."
+description: "Use when working through Blender MCP: execution, object inspection, viewport setup and screenshots. Includes module reload, world-space units and exact visibility restoration."
 risk: write
 persona: oss-dev
 tags: [blender, mcp, python, 3d, bpy, viewport, camera, screenshot, orchestration]
-requires: [version-gotchas]
+requires: []
 produces_for: [build-loop]
 outputs: []
 snippets: ["role.md"]
@@ -14,118 +14,95 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# MCP Blender — tools, viewport, camera
+# Blender MCP tools
 
-Universal layer for Blender via MCP (any bpy project). Parametric-model build-loop discipline → skill `blender-modeling/build-loop`.
+Use this card when the task actually uses MCP. Headless builds use the project's
+entrypoint and launcher. The current task and model contract determine which
+objects and properties need inspection; this card does not add a full audit.
 
-## MCP tools
+## Execution and module provenance
 
-| Tool | Purpose | When |
-|---|---|---|
-| `execute_blender_code` | Run Python in Blender | main tool for building & setup |
-| `get_viewport_screenshot` | Viewport screenshot | only after camera set |
-| `get_object_info` | Bounding box, vertices, materials | check every changed part before screenshot |
-| `get_scene_info` | List all scene objects | see below |
-
-`get_scene_info` — call:
-- After scene recreation — confirm old `MESH_*` objects removed and collection recreated clean.
-- After boolean DIFFERENCE — confirm temp tool (names start with `_`) gone from scene (if present → `apply_bool` failed).
-- On unexpected behavior — see what exists in scene before debugging.
-
-Polyhaven / Sketchfab / Hyper3D — not for parametric models.
-
-## Code send & module-cache reset
-
-Blender caches Python modules between script runs. Reset cache before importing your modules, else file edits won't apply:
+Read the project's environment loader and entrypoint. Insert its resolved root
+before alternate checkouts and reset changed model/shared packages in a persistent
+Blender process before importing them:
 
 ```python
-import sys, os
-_root = '<absolute path to project root>'   # substitute before sending
-_pkg  = '<model package name>'
-for _k in list(sys.modules):
-    if _k == _pkg or _k.startswith(_pkg + '.') or _k in ('lib', 'config') or _k.startswith(('lib.', 'config.')):
-        del sys.modules[_k]
-if _root not in sys.path: sys.path.insert(0, _root)
+import sys
+_root = '<root resolved by the project loader>'
+_pkg = '<actual model package>'
+for name in tuple(sys.modules):
+    if name == _pkg or name.startswith(_pkg + '.') or name in ('lib', 'config') or name.startswith(('lib.', 'config.')):
+        del sys.modules[name]
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 ```
 
-- Paths substituted manually: Blender doesn't inherit shell env vars — `os.environ` is usually empty in Blender scripts. Agent substitutes absolute paths into code before sending.
-- On error in `execute_blender_code` — STOP. Read traceback, fix, resend (typical parametric-part build errors → diagnostics table in `blender-modeling/build-loop`).
+Use `importlib.import_module` for package names containing hyphens. Read changed
+dependencies when another agent owns related files; record loaded paths for a
+verification run. Do not infer paths from an assumption that `os.environ` is empty.
+A fresh background process already has a fresh module cache.
 
-## Camera: universal principle
+`execute_blender_code` runs the script. If execution fails, read the traceback,
+fix and retry before geometry checks; this does not end the authorized task.
+One operator owns a shared live Blender scene. Other agents may prepare source
+changes or isolated headless runs, but must not rebuild that scene concurrently.
 
-```python
-from {model}.common import set_viewport_camera
+## Object and scene inspection
 
-# z_mm  — center of changed zone in mm (from bounding box)
-# distance — zone_height_mm × 0.001 × 1.5, min 0.05
-set_viewport_camera(z_mm=<z_centre>, distance=<distance>)
-set_viewport_camera()  # whole model (default distance from model_config)
-```
+- `get_object_info`: inspect the changed object/context before a screenshot:
+  non-empty mesh, world bbox, transform and material. Use the returned field names;
+  tool versions may report mesh counts under `mesh` rather than `vertices_count`.
+- `get_scene_info`: check the owned universe after a rebuild, or investigate an
+  unexpected object/tool. Check leftover Boolean tools when the operation batch
+  closes or fails; a separate whole-scene call after every Difference is unnecessary.
+- `get_viewport_screenshot`: capture only after framing the relevant zone.
 
-- `z_mm=None` → model center (from `model_config`).
-- `distance` — smaller = closer view.
-- Angle: `ORTHO`, view on cut `X=0`, tilt ~15° (`Euler(75°, 0°, -90°)`).
-- FORBIDDEN: setting `view_rotation` manually via Quaternion/Euler — model flips. Only `set_viewport_camera()`.
-
-Ready `z_mm` / `distance` values per model → `models/{name}/ai/rules.md` (see `blender-modeling/model-rules`).
-
-## Size check
-
-`world_bounding_box` from `get_object_info` → dimensions in mm. Print height/diameter right after build (before screenshot):
-
-```python
-def _bb(obj):
-    xs = [v[0] for v in obj.bound_box]; zs = [v[2] for v in obj.bound_box]
-    print(f"[BB] {obj.name}: h={(max(zs)-min(zs))*1000:.1f}mm  "
-          f"z=[{min(zs)*1000:.1f},{max(zs)*1000:.1f}]mm  x_max={max(xs)*1000:.1f}mm")
-```
-
-If `vertices_count == 0` or bounding box degenerate (all coords equal) — part didn't build.
-
-## Viewport display modes
-
-Full table of viewport display modes (shading/overlay, wireframe/solid/material/rendered) and screenshot usage → [references/viewport-display-modes.md](references/viewport-display-modes.md).
-
-## Hiding obstructing objects for screenshot
-
-If target zone is occluded by neighbors — hide them for screenshot, then restore:
+Do not assume MCP bbox coordinates are millimetres. Confirm the tool/project unit
+contract. For a project storing mm and building Blender metres, multiply returned
+world coordinates by 1000 once. Prefer the project's evaluated world-bbox helper.
+Fallback for that same unit contract:
 
 ```python
 import bpy
-
-hidden = ["MESH_Model_Part", "MESH_Model_Part_SubPart"]   # substitute names for current model
-for name in hidden:
-    if name in bpy.data.objects:
-        bpy.data.objects[name].hide_viewport = True
-
-# ... get_viewport_screenshot() ...
-
-for name in hidden:        # ALWAYS restore after screenshot
-    if name in bpy.data.objects:
-        bpy.data.objects[name].hide_viewport = False
+from mathutils import Vector
+obj_eval = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+world_mm = [tuple(1000*c for c in obj_eval.matrix_world @ Vector(corner))
+            for corner in obj_eval.bound_box]
+lo = tuple(min(p[k] for p in world_mm) for k in range(3))
+hi = tuple(max(p[k] for p in world_mm) for k in range(3))
 ```
 
-When to hide — ask user, or hide yourself if obvious (top part covers ring, body covers inner tube).
+Raw `obj.bound_box` is local space. Object information is a framing/provenance
+check, not proof of manifold topology, wall thickness or a real mating clearance.
+Batch already-required metadata where supported; do not duplicate it with one
+round-trip for every unchanged or repeated bought reference.
 
-## Parallel multi-agent work
+## Camera, display and reversible isolation
 
-Multiple agents (e.g. Cursor + Claude Code) may run the full flow via MCP simultaneously. To avoid overwriting each other:
+Read the actual `common.set_viewport_camera` signature. A Z-centre helper alone
+cannot centre an off-axis target; use the model's documented XYZ wrapper if it has
+one. Choose distance from the world extent, inspect the result, and use the
+project's helper instead of scattered viewport quaternion assignments.
 
-Before editing code:
-- Re-read affected `parts/*.py` and `config.py` — another agent may have changed the file.
-- If file changed since last read — apply edits on top of current version.
+Viewport modes and settings: [viewport-display-modes](references/viewport-display-modes.md).
+Hide only the obstructing context needed for the view and restore its exact state,
+including objects that were hidden before capture:
 
-Before sending to Blender:
-- Re-read all files that will be imported in the Blender script.
-- `del sys.modules` mandatory — Blender caches modules between script runs.
+```python
+import bpy
+objects = [bpy.data.objects[name] for name in target_names if name in bpy.data.objects]
+saved = [(obj, obj.hide_get(), obj.hide_viewport, obj.hide_render) for obj in objects]
+try:
+    for obj in objects:
+        obj.hide_set(True)
+    # Set the documented camera, then capture/inspect the screenshot.
+finally:
+    for obj, hidden, viewport, render in saved:
+        obj.hide_viewport, obj.hide_render = viewport, render
+        obj.hide_set(hidden)
+```
 
-One-object rule:
-- Two agents must not edit the same `parts/{name}.py` simultaneously.
-- If tasks target one part — run sequentially, not in parallel.
-
-## Related skills
-
-- `blender/version-gotchas` — Blender 5.0 API traps: `temp_override`, normals after boolean, `surface_render_method`; `realism` mode already includes normal recompute.
-- `blender-modeling/build-loop` — parametric-model build-loop discipline over these tools.
-- `blender-modeling/parametric-config` — architecture of `config.py`/`profile.py`/`parts/*`/`check.py`.
-- `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: ready camera zones and model specifics.
+Prefer the project's capture transaction when it also restores selection, camera,
+shading and collection state. Purchased asset generators are not parametric CAD
+builders. See `build-loop` for scoped rebuilds, `model-verification` for acceptance
+or export, and `version-gotchas` only for an applicable Blender API issue.

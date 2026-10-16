@@ -55,19 +55,19 @@ Total: 209 skills in 47 buckets.
 
 | Skill | Description | Tags |
 |:--|:--|:--|
-| `mcp-blender` | MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_s… | `blender`, `mcp`, `python`, `3d`, `bpy`, `viewport`, `camera`, `screenshot`, `orchestration` |
+| `mcp-blender` | Use when working through Blender MCP: execution, object inspection, viewport setup and sc… | `blender`, `mcp`, `python`, `3d`, `bpy`, `viewport`, `camera`, `screenshot`, `orchestration` |
 | `version-gotchas` | Use when hitting Blender 5.0 API issues: known breaking changes and pitfalls. | `blender`, `api`, `bpy`, `3d`, `python`, `gotchas`, `advisory`, `version` |
 
 ### blender-modeling — Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop (7)
 
 | Skill | Description | Tags |
 |:--|:--|:--|
-| `build-loop` | Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recomput… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
-| `config-conventions` | Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z… | `blender`, `cad`, `parametric`, `dataclass`, `config`, `cross-config`, `conventions`, `bpy`, `fdm`, `sla` |
-| `model-rules` | Use this template before any task on a model: read models/{name}/ai/rules.md, the model-s… | `blender`, `template`, `rules`, `3d`, `cad`, `conventions` |
-| `model-verification` | Verify complete parametric Blender models with ordered provenance, config, inventory, eva… | `blender`, `cad`, `verification`, `evidence`, `release`, `fdm`, `sla` |
-| `parametric-config` | Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/t… | `blender`, `bpy`, `parametric`, `dataclass`, `cad`, `fdm`, `sla`, `geometry`, `units`, `python`, `3d` |
-| `scene-conventions` | Parametric-model scene conventions: object prefixes (MESH_/CRV_/LGT_/MTL_), parenting hie… | `blender`, `cad`, `parametric`, `naming`, `scene`, `materials`, `parenting`, `bpy` |
+| `build-loop` | Use for an incremental parametric part build or geometry fix: config preflight, scoped re… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
+| `config-conventions` | Use for physical config fields, units and dependencies between parametric parts. Keeps pu… | `blender`, `cad`, `parametric`, `dataclass`, `config`, `cross-config`, `conventions`, `bpy`, `fdm`, `sla` |
+| `model-rules` | Use for model work: read its existing models/{name}/ai/rules.md for construction, axes, i… | `blender`, `template`, `rules`, `3d`, `cad`, `conventions` |
+| `model-verification` | Use for final digital acceptance, export or a requested whole-model audit of a declared a… | `blender`, `cad`, `verification`, `evidence`, `release`, `fdm`, `sla` |
+| `parametric-config` | Use when editing parametric configs, derivations, profiles or builders. Covers pure versu… | `blender`, `bpy`, `parametric`, `dataclass`, `cad`, `fdm`, `sla`, `geometry`, `units`, `python`, `3d` |
+| `scene-conventions` | Use when naming or parenting model objects, assigning materials, or defining scene owners… | `blender`, `cad`, `parametric`, `naming`, `scene`, `materials`, `parenting`, `bpy` |
 | `threading` | Use when designing threads on FDM/SLA parts: material, print physics, radial clearance by… | `blender`, `3d`, `fdm`, `sla`, `threading`, `geometry`, `bpy` |
 
 ### botkit — botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo) (1)

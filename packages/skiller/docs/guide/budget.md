@@ -45,16 +45,16 @@ flowchart LR
     azguard["azguard<br/>⊕37 ↻1647"]:::mild
   end
   subgraph blender["blender"]
-    mcp_blender["mcp-blender<br/>⊕118 ↻1475"]:::hot
+    mcp_blender["mcp-blender<br/>⊕55 ↻1290"]:::warm
     version_gotchas["version-gotchas<br/>⊕28 ↻756"]:::cool
   end
   subgraph blender_modeling["blender-modeling"]
-    build_loop["build-loop<br/>⊕103 ↻2847"]:::hot
-    config_conventions["config-conventions<br/>⊕114 ↻2164"]:::hot
-    model_rules["model-rules<br/>⊕36 ↻733"]:::mild
-    model_verification["model-verification<br/>⊕90 ↻1503"]:::warm
-    parametric_config["parametric-config<br/>⊕111 ↻2275"]:::hot
-    scene_conventions["scene-conventions<br/>⊕95 ↻1135"]:::warm
+    build_loop["build-loop<br/>⊕53 ↻1015"]:::warm
+    config_conventions["config-conventions<br/>⊕52 ↻694"]:::warm
+    model_rules["model-rules<br/>⊕53 ↻414"]:::warm
+    model_verification["model-verification<br/>⊕59 ↻1459"]:::warm
+    parametric_config["parametric-config<br/>⊕55 ↻830"]:::warm
+    scene_conventions["scene-conventions<br/>⊕52 ↻742"]:::warm
     threading["threading<br/>⊕33 ↻885"]:::mild
   end
   subgraph botkit["botkit"]
@@ -213,7 +213,7 @@ flowchart LR
     legal_super_skill["legal-super-skill<br/>⊕93 ↻615"]:::warm
   end
   subgraph marketing["marketing"]
-    marketing_super_skill["marketing-super-skill<br/>⊕95 ↻663"]:::warm
+    marketing_super_skill["marketing-super-skill<br/>⊕95 ↻663"]:::hot
   end
   subgraph mobile["mobile"]
     figma_to_flutter["figma-to-flutter<br/>⊕107 ↻840"]:::hot
@@ -299,7 +299,7 @@ flowchart LR
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕35 ↻257"]:::mild
-    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕97 ↻569"]:::warm
+    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕97 ↻569"]:::hot
   end
   subgraph roles["roles"]
     open_source_maintainer["open-source-maintainer<br/>⊕25 ↻1208"]:::cool
@@ -323,11 +323,9 @@ flowchart LR
   botkit -->|requires| laravel
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
-  build_loop -->|requires| mcp_blender
   build_loop -->|requires| model_rules
   build_loop -->|requires| parametric_config
   build_loop -->|requires| scene_conventions
-  build_loop -->|requires| threading
   capacity_planning -->|requires| observability_design
   competitive_analysis -->|requires| idea_discovery
   customer_discovery -->|requires| idea_discovery
@@ -359,8 +357,6 @@ flowchart LR
   issue_triage -->|requires| github_flow
   laravel_security_audit -->|requires| static_analysis
   legal_compliance -->|requires| architecture
-  mcp_blender -->|requires| version_gotchas
-  model_verification -->|requires| mcp_blender
   model_verification -->|requires| model_rules
   model_verification -->|requires| parametric_config
   modular_architecture -->|requires| laravel
@@ -374,8 +370,6 @@ flowchart LR
   observability_design -->|requires| architecture
   oss_governance -->|requires| oss_development
   parametric_config -->|requires| model_rules
-  parametric_config -->|requires| threading
-  parametric_config -->|requires| version_gotchas
   pitch_deck -->|requires| competitive_analysis
   pitch_deck -->|requires| go_to_market
   pitch_deck -->|requires| unit_economics
@@ -405,7 +399,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Total:** 209 skills · ⊕ always **10920** current (is always resident if you include the entire registry) · ↻ bodies 256460 current · ⌥ on-demand 823694 current (snippets + references).
+**Total:** 209 skills · ⊕ always **10632** current (is always resident if you include the entire registry) · ↻ bodies 250772 current · ⌥ on-demand 823694 current (snippets + references).
 
 ## By buckets
 
@@ -414,11 +408,11 @@ flowchart LR
 | `general` | 20 | 1186 | 19589 | 7557 |
 | `architect` | 15 | 937 | 19786 | 33082 |
 | `laravel-architecture` | 6 | 596 | 9564 | 7832 |
-| `blender-modeling` | 7 | 582 | 11542 | 13519 |
 | `devops` | 11 | 553 | 9029 | 16736 |
 | `php` | 17 | 531 | 18231 | 54365 |
 | `pm` | 10 | 462 | 10775 | 23510 |
 | `founder` | 10 | 430 | 14976 | 577 |
+| `blender-modeling` | 7 | 357 | 6039 | 13519 |
 | `axioma` | 4 | 352 | 4502 | 0 |
 | `quality` | 11 | 346 | 15468 | 6562 |
 | `frontend-vue` | 11 | 340 | 14761 | 257982 |
@@ -430,7 +424,6 @@ flowchart LR
 | `frontend` | 3 | 263 | 3794 | 7847 |
 | `laravel-extras` | 3 | 202 | 4159 | 7570 |
 | `frontend-vite` | 4 | 188 | 3090 | 24643 |
-| `blender` | 2 | 146 | 2231 | 1821 |
 | `research` | 2 | 132 | 826 | 20472 |
 | `laravel-livewire` | 1 | 128 | 1256 | 1071 |
 | `laravel-testing` | 4 | 128 | 8329 | 16534 |
@@ -448,6 +441,7 @@ flowchart LR
 | `frontend-backend` | 3 | 93 | 5388 | 7602 |
 | `legal` | 1 | 93 | 615 | 29248 |
 | `frontend-nuxt` | 3 | 88 | 2564 | 24048 |
+| `blender` | 2 | 83 | 2046 | 1821 |
 | `frontend-tailwind` | 2 | 63 | 4403 | 5097 |
 | `python` | 2 | 63 | 1106 | 0 |
 | `laravel-data-layer` | 2 | 61 | 3240 | 3892 |
@@ -471,10 +465,10 @@ The most expensive descriptions are resident in each request.
 | `voice-ai` | voice-ai | 125 |
 | `pm-super-skill` | pm | 120 |
 | `eloquent-accessors` | laravel-architecture | 119 |
-| `mcp-blender` | blender | 118 |
 | `codebase-design` | architect | 117 |
-| `config-conventions` | blender-modeling | 114 |
 | `filepond-upload` | frontend | 114 |
+| `config-driven-abstraction` | laravel-architecture | 114 |
+| `eslint-flat-config` | frontend-linting | 112 |
 
 ## Top ↻ on-trigger (trigger price)
 
@@ -486,9 +480,9 @@ The heaviest bodies are loaded when using the skill.
 | `voice-ai` | voice-ai | 3165 |
 | `modular-architecture` | laravel-architecture | 3112 |
 | `laravel-testing` | laravel-testing | 3024 |
-| `build-loop` | blender-modeling | 2847 |
 | `spatie-settings` | laravel-extras | 2677 |
 | `vue-router-best-practices` | frontend-vue | 2569 |
 | `mcp-builder` | ai | 2560 |
 | `mutation-testing` | quality | 2552 |
 | `vue-best-practices` | frontend-vue | 2546 |
+| `playwright-e2e` | quality | 2517 |

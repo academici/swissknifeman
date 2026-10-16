@@ -2,11 +2,11 @@
 name: build-loop
 bucket: blender-modeling
 version: 0.1.0
-description: "Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recompute → incremental part build → verify geometry via get_object_info BEFORE screenshot → camera on changed zone → screenshot → propose rule fixes. Part docstring template, error-diagnosis table included. Activate on any part build/edit task in Blender."
+description: "Use for an incremental parametric part build or geometry fix: config preflight, scoped rebuild, evaluated geometry and affected interfaces, then framed visual evidence."
 risk: write
 persona: oss-dev
 tags: [blender, cad, parametric, workflow, bpy, mcp, 3d, fdm, sla]
-requires: [mcp-blender, parametric-config, config-conventions, scene-conventions, model-rules, threading]
+requires: [parametric-config, config-conventions, scene-conventions, model-rules]
 produces_for: []
 outputs: []
 snippets: []
@@ -14,138 +14,63 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Parametric model build loop
+# Scoped parametric build loop
 
-Procedure for any "build/edit part" task. Tool/viewport-preset/camera mechanics live in `blender/mcp-blender` — do not duplicate here.
+The current task and local model contract define the parts, properties and
+acceptance scope. A routine geometry/config edit does not activate a full release
+audit. Use `model-verification` for final acceptance/export of a declared assembly.
 
-## Step 1. Analyze task
+## Prepare and rebuild
 
-Before any code:
-- Which parts are affected? (`parts/*.py`, `config.py`)
-- Role of each affected part (purpose, material, fits).
-- Target geometry (shape, sizes, joints with neighbors).
-- Inter-part dependencies (mating radii, slots, threads).
-- Which **foreign configs** to read in this part (fit → mating part's config; cup → inserted part's config).
+1. Read the affected configs, builder, shared datums and model rules. Use their
+   sources for mating dimensions and design gaps (`config-conventions`).
+2. Edit the authorized construction. Keep its purpose, actual dependencies and
+   non-obvious geometric operations documented; a long repeated docstring template
+   is not a prerequisite for a small correction.
+3. Run the project's plain-Python preflight before Blender. Geometry and pure
+   derivation stay in their existing layers (`parametric-config`).
+4. Rebuild the changed output and required mating context through the supported
+   entrypoint. Incremental replacement is appropriate only when the builder
+   preserves neighbors and parenting; a `setup_scene()` that clears the entire
+   model is not an incremental part builder.
 
-**Flexibility check before code (mandatory):** for each number you'd write in `parts/*.py` ask "what if user changes an adjacent config param?":
-- Size depends on another part → **take from its config**, don't duplicate.
-- Structural offset/thickness/clearance → **add config field**, don't hardcode.
-- Computed value (e.g. joint z-position) → **formula from configs**, not a number.
+Use the project launcher/loader for headless builds. In a persistent MCP process,
+reload changed model/shared modules and use the actual paths (`mcp-blender`). One
+operator controls a shared live scene; parallel source work does not authorize
+concurrent scene rebuilds.
 
-Goal: changing any single `config.py` param must not break other parts' geometry. Full cross-config/recompute methodology — `blender-modeling/config-conventions`.
+## Fix execution errors before measurement
 
-**Mental recompute check (mandatory before code):** for each param the task depends on, run: "if this value changes → what shifts in neighbors → do they adjust correctly?" If chain breaks → there's a hardcode; find and replace with formula before sending to Blender.
+Read the traceback and relevant source, fix, retry. Do not continue geometry
+checks on a failed build, and do not end the authorized task just because its
+first execution failed.
 
-**For composite parts and new profiles — describe the algorithm in words before code.** For each subpart (`_build_*`, `_attach_*`, `_cut_*`) record:
-1. **Shape**: what it is geometrically (tube, disk, cylinder, slotted ring...).
-2. **Profile `pts`**: key points in traversal order and meaning of each.
-3. **Joints**: where/how the subpart meets neighbors (at which radius, at which height).
-4. **Operation**: `revolve_profile` → standalone object, or UNION/DIFFERENCE against what.
+| Symptom | Technical checks |
+|---|---|
+| Import/module error | Actual module name, loaded path, entrypoint and persistent cache |
+| Missing config field | Current config/derive API and every affected caller |
+| Invalid profile/invariant | Named constraint, knot order, closed boundary, dimensional source |
+| Operator context error | Appropriate context and `temp_override` for the installed API |
+| Empty/degenerate mesh | Builder output and intermediate profile/Boolean geometry |
+| Dark patch or invalid boundary | Real face winding/intersection; do not globally flip closed cavity normals |
 
-## Step 2. Edit code
+A symptom is not proof of one cause. Preserve legitimate small faces; do not
+remove nonzero geometry or remesh an exact interface merely to obtain PASS.
 
-- Numbers only in `config.py`, never hardcode in `parts/` (see `blender-modeling/config-conventions`).
-- New part → separate file in `parts/`, relative imports (`from .config import ...`).
-- On construction/param change → update docstring and adjacent comments.
+## Measure, then view
 
-**File docstring standard (mandatory):** each `parts/{name}.py` starts with a module docstring:
+- Apply relevant `test_mesh()`/evaluated mesh checks to changed physical outputs.
+  Check real affected interfaces with config-owned limits; bbox proximity does not
+  prove fit. A changed shared generator can affect several differently shaped
+  instances, which need their applicable checks.
+- Before images, inspect non-empty geometry, world bbox and transforms for the
+  changed zone. For MCP use `get_object_info`; for headless checks use the declared
+  evaluated geometry API. Reuse recorded metadata rather than duplicate calls.
+- Frame the actual zone with the documented camera helper, including off-axis
+  coordinates where its model wrapper supports them. Use technical/material/xray
+  views according to the property, inspect the images, and restore exact state.
 
-```python
-"""
-<Part name> (<comma-separated Blender object names>).
-
-Purpose:
-  What it physically is, why it exists, its role in the assembly.
-
-Construction (bottom-up / inside-out):
-  1. <subpart>: <shape, material, geometric principle>
-  2. <subpart>: ...
-
-Links to other parts:
-  - <part A>: <link type — joint, fit, thread, L-slot, contains inside...>
-    Config: <where params come from — XxxConfig.field>
-
-Contains / holds:
-  - <external element>: <what it is, how inserted, config — XxxConfig>
-
-Technical notes:
-  - <print specifics, material, clearances, boolean-op order, what must not change>
-
-Section (if model viewed in cross-section):
-  <what's visible in section, any artifacts, what to watch>
-
-Screenshot:
-  <which neighboring objects occlude the part and must be hidden for inspection>
-  <recommended display mode: tech / material / xray>
-"""
-```
-
-**Update rules:** on any part change update affected docstring sections; if a new link A↔B is found — add a "Links" entry in **both** parts.
-
-## Step 3. Check invariants without Blender
-
-Before sending to Blender, validate params in plain Python (no bpy): heights > 0, adjacent-segment radii match, nonzero wall thickness, clearance greater than thread profile depth. `check.py` architecture and two-level tests — `blender-modeling/parametric-config`.
-
-## Step 3.5. Whole-model or release verification
-
-Apply this reusable baseline when the scope includes all printable parts, export, STL/3MF, or a release. It does not replace model-local acceptance: the local rules own the inventory, interfaces, visual defects, printer profile, and thresholds. Never copy another model's object names or count.
-
-1. Derive expected assembled/print inventory from a documented model SSOT, such as `print_object_specs()`, `assembled_names()`, or a model-local inventory table. If no SSOT exists, create one before making a release claim; a hand-written list in a capture script is not evidence.
-2. Prove import and scene provenance. Reset model modules, put the active project root before alternate checkouts in `sys.path`, and record loaded module paths. After the normal entry point rebuilds the scene, compare final objects with the SSOT and detect foreign generated meshes and leftover temporary tools. A mixed scene is diagnostic-only, never release evidence. Do not delete foreign objects unless the active model explicitly owns that cleanup.
-3. Run mesh health for every final printable object on evaluated post-boolean geometry: non-empty/non-degenerate mesh, documented manifold or boundary exceptions only, sane volume, transforms, world-space dimensions, and relevant `test_mesh()` checks. A mirror or sibling passing never validates an unchecked object.
-4. Check real interfaces before images. Measure fit/intersection/clearance against the mating object and config-owned threshold; bbox proximity and an attractive assembled render are insufficient.
-5. Capture evidence transactionally. Record source/config/profile hashes; save visibility, selection and viewport state; isolate only target/context; restore in `finally`. Source/profile/scale/mode changes make dependent evidence stale. A dirty-tree candidate is not a committed release.
-6. Capture readable, non-edge-on views: a primary silhouette and an oblique/interface view for every part, plus xray/section context where a fit cannot otherwise be seen. Only after mesh and interface checks may screenshots support a GREEN conclusion.
-7. Keep claim boundaries explicit. Correct counts, manifold meshes, reproducible files and slicer import do not prove appearance, fit, load capacity or physical print performance. Preserve the model's `[UNVERIFIED_PHYSICAL]` boundary until an appropriate physical test exists.
-
-## Step 4. Send model to Blender (incremental)
-
-If task touches one part — rebuild **only it**, not the whole model (faster, leaves neighbors). Full build — when verifying joints of several parts. Send pattern, module-cache reset (`del sys.modules`), and `execute_blender_code` — `blender/mcp-blender`.
-
-**On `execute_blender_code` error — stop.** Do not proceed to geometry check. Read traceback, find error line, fix, retry.
-
-**Diagnosis by error type:**
-
-| Error | Cause | Action |
-|--------|---------|----------|
-| `ImportError: No module named '...'` | Modules not reset or wrong path | Check `del sys.modules` block; check `sys.path` |
-| `ModuleNotFoundError` after editing file | Stale `.pyc` in cache | Add `del sys.modules` for the package |
-| `AttributeError: '...Config' has no attribute '...'` | Field renamed or removed | Open `config.py`, find current name |
-| Geometric invariant violated | Formula error in config | Read validation message, fix formula |
-| `z[0] != 0` or `z[-1] != height` in profile | Last profile node not brought to segment height | Bring last `profile_knots` node to `height` |
-| Object created but `vertices_count = 0` | Profile `pts` degenerate (all r=0 or self-intersection) | `print(pts)` before `revolve_profile`, check r |
-| Dark spots / flipped normals | Wrong `pts` traversal | Reverse list: `pts[::-1]` and fix start point |
-| `RuntimeError: Calling operator ... context is incorrect` | `bpy.ops.*` without `temp_override` in Blender 5.0 | Wrap in `temp_override` (see `blender/version-gotchas`) |
-| Semi-transparent partition on section plane | `pts[-1] == pts[0]` — duplicate edge | Drop last profile point |
-
-## Step 5. Verify geometry via `get_object_info` (before screenshot)
-
-**Before screenshot** call `get_object_info` for each changed part:
-1. **Sizes**: `world_bounding_box` → height and diameter in mm.
-2. **Defect signs**: `vertices_count == 0` or degenerate bounding box → part didn't build, return to Step 2.
-3. **Compute part z-center** for camera: `z_mm = (z_min + z_max) / 2 * 1000`.
-
-Tool semantics and bounding-box formulas — `blender/mcp-blender`.
-
-## Step 6. Camera on changed zone (mandatory before screenshot)
-
-**Never screenshot without first setting the camera.** Aim camera at the changed part/zone using `z_mm` from Step 5. Camera-via-helper principle and `distance` formula — `blender/mcp-blender`. Ready zone values for a specific model — in `models/{name}/ai/rules.md` (see `blender-modeling/model-rules`).
-
-## Step 7. Screenshot in suitable mode
-
-Pick **one mode** by task (geometry → `tech`; part colors → `material`; presentation → `realism`; cavities/hidden → `xray`). Preset code and rule for hiding occluding objects — `blender/mcp-blender`.
-
-## Step 8. Propose rule fixes (if needed)
-
-If mismatches, gaps, or inaccuracies found in model rules/skills — formulate a proposal, apply the fix, **tell the user** (what changed, where, rationale). Don't stay silent about noticed mismatches.
-
-## Related skills
-
-- `blender/mcp-blender` — MCP tools, viewport modes, camera, send/reload pattern (all mechanics).
-- `blender/version-gotchas` — Blender 5.0 API traps from Step 4 diagnosis table.
-- `blender-modeling/parametric-config` — `config.py`/`profile.py`/`check.py` layer the loop rests on.
-- `blender-modeling/config-conventions` — cross-config and recompute (Step 1).
-- `blender-modeling/scene-conventions` — object names and materials of created parts.
-- `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: part stack, camera zones, thread params.
-- `blender-modeling/threading` — thread printing and radial clearances (Steps 2–7).
-- `blender-modeling/model-verification` — whole-model, export, and release evidence lifecycle.
+Record changed inputs, what was measured and any unresolved or physical property.
+Update local rules only when a real model constraint changed; general mechanics
+remain in shared skills. No full matrix or exhaustive reference-wire collision
+certificate is added unless the task/local acceptance actually requires it.

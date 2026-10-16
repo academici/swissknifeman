@@ -156,7 +156,7 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     kept = {"refs": refs, "file": self._relative(path), "counts": found, "effort": effort, "format": read["format"],
             "seconds": round(time.monotonic() - began, 1), "error": run.error}
     loud = found["Blocker"] + found["Major"]
-    followup = followup_input(self, number, refs, read) if loud else None
+    followup = followup_input(self, number, refs, read, self._route(item, "executor").get("effort")) if loud else None
     if followup:
         kept["followup"] = followup
     self.state.setdefault("group_reviews", {})[str(number)] = kept
@@ -174,9 +174,11 @@ def group_review(self, number: int, group: list, effort: str) -> None:
                                                    else ""))
 
 
-def followup_input(self, number: int, refs: list, read: dict) -> Optional[str]:
+def followup_input(self, number: int, refs: list, read: dict, effort: Optional[str] = None) -> Optional[str]:
     """The Blocker and Major findings of a group review as a ready execution-input (``provenance: review_followup``): one
-    command corrects them in a commit of their own, with the file source (``run --input FILE --commit``)."""
+    command corrects them in a commit of their own, with the file source (``run --input FILE --commit``). The route minimum
+    is the effort of the executor of the run (``high`` when it has none): a run configured for a lighter executor must be
+    able to start its own follow-up (``ROUTE_UNDERSHOOT`` otherwise)."""
     paths = review_batch.followup_paths(read["findings"])
     loud = [row for row in read["findings"] if row["severity"] in ("Blocker", "Major")]
     if not paths or not loud:
@@ -186,7 +188,7 @@ def followup_input(self, number: int, refs: list, read: dict) -> Optional[str]:
     try:
         doc = adhoc.build_adhoc_input(goal, paths, procedures=["V1=every listed finding is fixed and the tests that cover the "
                                                               "touched code pass"], why=f"group review {number} of this run",
-                                      route={"class": "implementation", "effort": "high"},
+                                      route={"class": "implementation", "effort": effort or "high"},
                                       provenance=adhoc.support_provenance("review_followup"))
     except adhoc.AdhocError as error:
         self.progress.emit("info", reason_code="GROUP_REVIEW_FOLLOWUP_FAILED", message=f"group {number}: {error}"[:200])

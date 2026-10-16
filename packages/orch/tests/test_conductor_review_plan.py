@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import unittest
 
 from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
@@ -67,6 +68,19 @@ class ReviewPlanTests(ConductorCase):
         self.assertIn("[Major] out/W3.txt:1 - a defect", doc["goal"])
         message = self.events(err, "GROUP_REVIEW")[0]["message"]
         self.assertIn("orch conduct run --input", message)
+
+    def test_the_followup_asks_no_more_effort_than_the_executor_of_the_run_has(self):
+        import tempfile
+        from types import SimpleNamespace
+        from orch.conductor.application import review_plan
+        read = {"findings": [{"severity": "Major", "location": "a.py:1", "text": "a.py:1 - a defect"}]}
+        for effort, expected in (("medium", "medium"), (None, "high")):
+            with tempfile.TemporaryDirectory() as folder:
+                owner = SimpleNamespace(directory=Path(folder), progress=SimpleNamespace(emit=lambda *a, **k: None),
+                                        _relative=lambda path: str(path))
+                target = review_plan.followup_input(owner, 1, ["W1"], read, effort)
+                doc = json.loads(Path(target).read_text(encoding="utf-8"))
+                self.assertEqual(doc["route"]["minimum"], {"class": "implementation", "effort": expected})
 
     def test_a_group_whose_commits_changed_no_production_code_is_not_sent_to_the_reviewer(self):
         from unittest import mock

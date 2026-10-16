@@ -1,0 +1,68 @@
+{
+  "plan": "2026.10.05-№1-DEMO",
+  "limit": 2,
+  "lanes": [
+    {
+      "lane": "L1",
+      "kind": "run-items",
+      "phase": "P2",
+      "batch": "B1",
+      "items": [
+        "P2.1"
+      ],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "command": "planner:plan-run 2026.10.05-№1-DEMO P2.1",
+      "launch": {
+        "claude": "/planner:plan-run 2026.10.05-№1-DEMO P2.1",
+        "codex": "$ planner:plan-run 2026.10.05-№1-DEMO P2.1"
+      }
+    },
+    {
+      "lane": "L2",
+      "kind": "run-items",
+      "phase": "P2",
+      "batch": "B1",
+      "items": [
+        "P2.2"
+      ],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "command": "planner:plan-run 2026.10.05-№1-DEMO P2.2",
+      "launch": {
+        "claude": "/planner:plan-run 2026.10.05-№1-DEMO P2.2",
+        "codex": "$ planner:plan-run 2026.10.05-№1-DEMO P2.2"
+      }
+    }
+  ],
+  "running": [],
+  "conflicts": [],
+  "waiting": [],
+  "deferred": [
+    "P3"
+  ],
+  "next": {
+    "kind": "run-items",
+    "exact": "run-items: planner:plan-run 2026.10.05-№1-DEMO P2.1 P2.2",
+    "phase": "P2",
+    "batch": "B1",
+    "items": [
+      "P2.1",
+      "P2.2"
+    ],
+    "route": {
+      "class": "implementation",
+      "effort": "medium"
+    },
+    "launch": {
+      "claude": "/planner:plan-run 2026.10.05-№1-DEMO P2.1 P2.2",
+      "codex": "$ planner:plan-run 2026.10.05-№1-DEMO P2.1 P2.2"
+    },
+    "command": "planner:plan-run 2026.10.05-№1-DEMO P2.1 P2.2",
+    "reason": ""
+  }
+}

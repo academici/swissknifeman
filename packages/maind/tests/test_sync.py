@@ -1,4 +1,6 @@
 """Tests sync.py (fan-out + providers mcp/graph/memory-hook) and common.managed_block."""
+import contextlib
+import io
 import json
 import os
 import shutil
@@ -9,15 +11,16 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from core import ProviderId
+from aicore.provider.values import ProviderId
 from maind.provider_deploy import ProviderDeployPlan, ProviderDeployResult
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
 from maind.provision import sync
-from maind.common import managed_block, upsert_block
+from aicore.util.block import managed_block, upsert_block
 from maind.config import load_config
 from maind.mcpconfig import has_server
 from tests.fixtures import make_repo, write_maind_config
+from tests.harness_partner import FakeHarnessCase, RealHarnessCase, real_harness
 
 
 def _ensure_umbrella_packages(project):
@@ -115,12 +118,12 @@ class TestProviderContexts(unittest.TestCase):
             }
             with mock.patch("maind.provision.deploy.deploy_project", return_value=result), \
                     mock.patch("maind.provision.deploy.mark_deployed") as mark_deployed, \
-                    mock.patch("maind.projects.write_config") as write_config:
+                    mock.patch("maind.projects.write_registry") as write_registry:
                 rows = sync._mcp_run(env, config, [context], "auto", False)
             self.assertEqual(rows[0]["status"], "failed")
             self.assertEqual(rows[0]["provider_aggregate"], "green")
             mark_deployed.assert_not_called()
-            write_config.assert_not_called()
+            write_registry.assert_not_called()
 
     def test_mcp_repair_mode_reaches_provider_deploy(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -193,29 +196,6 @@ class TestProviderContexts(unittest.TestCase):
             self.assertEqual(calls, ["flexcrm"])
             self.assertEqual([row["provisioner"] for row in results], ["mcp", "graph"])
 
-    def test_instruction_provisioner_uses_context_provider_ids_and_is_idempotent(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, project = _setup(tmp)
-            _ensure_umbrella_packages(project)
-            config["projects"][0]["providers"] = {
-                "contract_version": "1.0.0",
-                "selection": {"claude-code": {"enabled": True}, "codex": {"enabled": True}},
-            }
-            first = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
-            self.assertEqual(first[0]["provider_aggregate"], "green")
-            self.assertEqual({row["provider_id"] for row in first[0]["providers"]},
-                             {"claude-code", "codex"})
-            self.assertTrue((project / "CLAUDE.md").is_file())
-            self.assertTrue((project / "AGENTS.md").is_file())
-            for package in ("skiller", "harness", "maind"):
-                self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
-                self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
-            for package in ("analyst", "task"):
-                self.assertFalse((project / "packages" / package / "CLAUDE.md").exists())
-                self.assertFalse((project / "packages" / package / "AGENTS.md").exists())
-            second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
-            self.assertEqual(second[0]["provider_aggregate"], "green")
-            self.assertFalse(second[0]["changed"])
 
     def test_instruction_scope_ids_follow_real_package_topology(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -223,43 +203,64 @@ class TestProviderContexts(unittest.TestCase):
             context = sync.contexts(env, config, config["projects"])[0]
             self.assertEqual(sync._instruction_scope_ids(context), ("root",))
 
-            for package in ("skiller", "harness", "maind", "task"):
+            for package in ("skiller", "harness", "maind", "planner"):
                 (project / "packages" / package).mkdir(parents=True)
             linked = Path(tmp) / "linked-analyst"
             linked.mkdir()
             (project / "packages" / "analyst").symlink_to(linked, target_is_directory=True)
             self.assertEqual(sync._instruction_scope_ids(context),
-                             ("root", "skiller", "harness", "maind", "task"))
+                             ("root", "skiller", "harness", "maind", "planner"))
 
             (project / "packages" / "analyst").unlink()
             (project / "packages" / "analyst").mkdir()
             self.assertEqual(sync._instruction_scope_ids(context),
-                             ("root", "skiller", "harness", "maind", "analyst", "task"))
+                             ("root", "skiller", "harness", "maind", "analyst", "planner"))
 
-    def test_instruction_provisioner_dry_run_does_not_write(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, project = _setup(tmp)
-            _ensure_umbrella_packages(project)
-            row = sync.run_sync(env, config, config["projects"], only="instructions", dry=True)[0]
-            self.assertEqual(row["status"], "dry")
-            self.assertFalse((project / "CLAUDE.md").exists())
 
-    def test_instruction_repair_changes_only_managed_blocks(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, project = _setup(tmp)
-            _ensure_umbrella_packages(project)
-            sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
-            target = project / "CLAUDE.md"
-            original = target.read_text(encoding="utf-8")
-            target.write_text("local heading\n" + original.replace("#", "# drifted", 1)
-                              + "\nlocal footer\n", encoding="utf-8")
-            drift = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")[0]
-            self.assertEqual(drift["status"], "failed")
-            repaired = sync.run_sync(env, config, config["projects"], only="instructions", mode="repair")[0]
-            self.assertEqual(repaired["status"], "ok")
-            restored = target.read_text(encoding="utf-8")
-            self.assertTrue(restored.startswith("local heading\n"))
-            self.assertTrue(restored.endswith("\nlocal footer\n"))
+
+class TestSkillerProfiles(unittest.TestCase):
+    """Profile catalog comes from `skiller profiles --json`; no skiller means no profile packs."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = Path(self._tmp.name)
+        patcher = mock.patch.dict(os.environ, {"PATH": str(self.tmp / "none")})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        for var in ("SKM_SKILLER_BIN", "SKM_SKILLER_ROOT", "MAIND_SKM_BIN"):
+            os.environ.pop(var, None)
+        sync._PROFILES_CACHE.clear()
+        self.addCleanup(sync._PROFILES_CACHE.clear)
+
+    def _skiller(self, output, rc=0):
+        path = self.tmp / "skiller"
+        path.write_text(f"#!/bin/sh\necho '{output}'\nexit {rc}\n", encoding="utf-8")
+        path.chmod(0o755)
+        os.environ["SKM_SKILLER_BIN"] = str(path)
+
+    def test_profile_pack_and_answers_from_partner(self):
+        self._skiller(json.dumps({"profiles": {"node-package": {
+            "agent_pack": ["node", "_common"], "model_tiers": {"reviewer": "opus"}}}}))
+        project = {"id": "p", "type": "node-package"}
+        self.assertEqual(sync._resolve_agent_pack({}, project), ["node", "_common"])
+        self.assertEqual(sync._profile_answers({}, project), ["--answer", "MODEL_REVIEWER=opus"])
+
+    def test_missing_skiller_means_no_profile(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(sync._resolve_agent_pack({}, {"id": "p", "type": "node-package"}), [])
+        self.assertIn("PARTNER_UNAVAILABLE", err.getvalue())
+
+    def test_failing_skiller_means_no_profile(self):
+        self._skiller("", rc=3)
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(sync._profile_for({}, {"id": "p", "type": "node-package"}), {})
+        self.assertIn("PARTNER_FAILED", err.getvalue())
+
+    def test_unknown_type_has_no_profile(self):
+        self._skiller(json.dumps({"profiles": {"node-package": {"agent_pack": "x"}}}))
+        self.assertEqual(sync._profile_for({}, {"id": "p", "type": "other"}), {})
 
 
 class TestRoleAgentPacks(unittest.TestCase):
@@ -393,7 +394,7 @@ class TestSync(unittest.TestCase):
         # (when the binary is available); without a flag - no. We mock up the binary for those present.
         from maind.provision import deploy
         orig = deploy.shutil.which
-        deploy.shutil.which = lambda name: f"/usr/bin/{name}"
+        deploy.shutil.which = lambda name, *a, **k: f"/usr/bin/{name}"
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 env, config, proj = _setup(tmp)
@@ -515,8 +516,6 @@ class TestMemoryHookProvisioner(unittest.TestCase):
 class TestOutputStyleProvisioner(unittest.TestCase):
     """output-style: outputStyle=lean in everything.claude/settings.local.json (env:hooks), opt-out
     per-project via project.output_style="off". Goes to ORDER."""
-    _HARNESS = Path(__file__).resolve().parents[2] / "harness" / "bin" / "harness"
-
     def test_in_default_order(self):
         self.assertIn("output-style", sync.provisioner_names())
 
@@ -539,19 +538,10 @@ class TestOutputStyleProvisioner(unittest.TestCase):
             self.assertEqual(r[0]["status"], "skip")
 
     def test_applies_lean_by_default_dry(self):
-        import os
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory() as tmp, real_harness(self):
             env, config, proj = _setup(tmp)
             projs = sync.select_projects(env, config, {"all": True})
-            old = os.environ.get("MAIND_HARNESS_BIN")
-            os.environ["MAIND_HARNESS_BIN"] = str(self._HARNESS)
-            try:
-                r = sync.run_sync(env, config, projs, only="output-style", dry=True)
-            finally:
-                if old is None:
-                    os.environ.pop("MAIND_HARNESS_BIN", None)
-                else:
-                    os.environ["MAIND_HARNESS_BIN"] = old
+            r = sync.run_sync(env, config, projs, only="output-style", dry=True)
             self.assertEqual(r[0]["status"], "ok")
             self.assertIn("style=lean", r[0]["detail"])
             # honest dry-run harness — nothing recorded
@@ -600,8 +590,6 @@ class TestSkillsCatalogProvisioner(unittest.TestCase):
 class TestRouterConfigProvisioner(unittest.TestCase):
     """router-config: opt-in by .claude/agent-router.env.ini (POLICY!=off). No file/off →
     skip; enabled → generates a directory intent-router via harness (env:router). Goes to ORDER."""
-    _HARNESS = Path(__file__).resolve().parents[2] / "harness" / "bin" / "harness"
-
     def test_in_default_order(self):
         self.assertIn("router-config", sync.provisioner_names())
 
@@ -622,20 +610,11 @@ class TestRouterConfigProvisioner(unittest.TestCase):
             self.assertEqual(r[0]["status"], "skip")
 
     def test_generate_when_enabled_dry(self):
-        import os
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory() as tmp, real_harness(self):
             env, config, proj = _setup(tmp)
             (proj / ".claude" / "agent-router.env.ini").write_text("POLICY=propose\n")
             projs = sync.select_projects(env, config, {"all": True})
-            old = os.environ.get("MAIND_HARNESS_BIN")
-            os.environ["MAIND_HARNESS_BIN"] = str(self._HARNESS)
-            try:
-                r = sync.run_sync(env, config, projs, only="router-config", dry=True)
-            finally:
-                if old is None:
-                    os.environ.pop("MAIND_HARNESS_BIN", None)
-                else:
-                    os.environ["MAIND_HARNESS_BIN"] = old
+            r = sync.run_sync(env, config, projs, only="router-config", dry=True)
             self.assertEqual(r[0]["status"], "ok")
 
 
@@ -713,6 +692,82 @@ class TestSyncCliExitStatus(unittest.TestCase):
               self.assertRaises(SystemExit) as raised):
             sync.cmd_sync(object(), ["--all", "--json", "--dry-run"])
         self.assertEqual(raised.exception.code, 1)
+
+
+class TestInstructionsRealHarness(RealHarnessCase):
+    """Instruction operations are harness's: these tests need the real partner (integration runner)."""
+
+    def test_instruction_provisioner_uses_context_provider_ids_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            _ensure_umbrella_packages(project)
+            config["projects"][0]["providers"] = {
+                "contract_version": "1.0.0",
+                "selection": {"claude-code": {"enabled": True}, "codex": {"enabled": True}},
+            }
+            first = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            self.assertEqual(first[0]["provider_aggregate"], "green")
+            self.assertEqual({row["provider_id"] for row in first[0]["providers"]},
+                             {"claude-code", "codex"})
+            self.assertTrue((project / "CLAUDE.md").is_file())
+            self.assertTrue((project / "AGENTS.md").is_file())
+            for package in ("skiller", "harness", "maind"):
+                self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
+                self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
+            for package in ("analyst", "planner"):
+                self.assertFalse((project / "packages" / package / "CLAUDE.md").exists())
+                self.assertFalse((project / "packages" / package / "AGENTS.md").exists())
+            second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            self.assertEqual(second[0]["provider_aggregate"], "green")
+            self.assertFalse(second[0]["changed"])
+
+    def test_instruction_provisioner_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            _ensure_umbrella_packages(project)
+            row = sync.run_sync(env, config, config["projects"], only="instructions", dry=True)[0]
+            self.assertEqual(row["status"], "dry")
+            self.assertFalse((project / "CLAUDE.md").exists())
+
+    def test_instruction_repair_changes_only_managed_blocks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            _ensure_umbrella_packages(project)
+            sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            target = project / "CLAUDE.md"
+            original = target.read_text(encoding="utf-8")
+            target.write_text("local heading\n" + original.replace("#", "# drifted", 1)
+                              + "\nlocal footer\n", encoding="utf-8")
+            drift = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")[0]
+            self.assertEqual(drift["status"], "failed")
+            repaired = sync.run_sync(env, config, config["projects"], only="instructions", mode="repair")[0]
+            self.assertEqual(repaired["status"], "ok")
+            restored = target.read_text(encoding="utf-8")
+            self.assertTrue(restored.startswith("local heading\n"))
+            self.assertTrue(restored.endswith("\nlocal footer\n"))
+
+
+class TestInstructionsPartnerContract(FakeHarnessCase):
+    def test_provisioner_skips_with_partner_unavailable_without_harness(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            _ensure_umbrella_packages(project)
+            context = sync.contexts(env, config, config["projects"])[0]
+            os.environ.pop("SKM_HARNESS_BIN")
+            os.environ["PATH"] = tmp
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rows = sync._instruction_run(env, config, [context], "auto", False)
+            self.assertEqual((rows[0]["status"], rows[0]["detail"]), ("skip", "harness not available"))
+            self.assertIn("PARTNER_UNAVAILABLE: harness not found", err.getvalue())
+            self.assertFalse((project / "CLAUDE.md").exists())
+
+    def test_scope_ids_come_from_the_scopes_command(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            context = sync.contexts(env, config, config["projects"])[0]
+            self.assertEqual(sync._instruction_scope_ids(context), ("root",))
+            self.assertIn(["instructions", "scopes", "--json"], self.fake_calls())
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ Proof-class discipline (`source-evidence-verification-v1.md`, `reliability-accep
 a baseline whose `baseline_proof_class` is `pinned-not-recomputable`/`unknown` can never be
 silently promoted to a recomputed comparator or GREEN predicate — `pair_metric`
 enforces this rather than restating it in prose. The proof-class vocabulary is cited from
-those two contracts, not imported: analyst does not depend on `task` hard (mirrors
-`doctor.py`'s optional `task.plan` check), and each contract owns its own closed
+those two contracts, not imported: analyst does not depend on `planner` hard (mirrors
+`doctor.py`'s optional `planner.plan` check), and each contract owns its own closed
 enum rather than sharing a runtime module across an unrelated boundary.
 
 `project_id` slicing: the frozen `TraceRecord` (`unified-agent-trace-v1.md` § Field set) does

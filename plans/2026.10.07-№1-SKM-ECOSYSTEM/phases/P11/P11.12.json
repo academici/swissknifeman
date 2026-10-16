@@ -1,0 +1,360 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.12",
+  "title": "Удаление core и artifex; карта и линия пусты; check --strict зелёный и в CI; aicore.util.paths.state_dir удалён; корневые инструкции без core",
+  "status": "done_with_deviations",
+  "summary": "Остатки импорта core переведены (scripts/provider-docs.py и др.); git rm core/ и packages/artifex; scope artifex уходит из каталога инструкций генератором; ecosystem-units: aliases, transitional_roots, retired, foundation_paths пусты, ownership без строк P11, path_allow — только данные с причиной; baseline без нарушений, все standalone pass; CI запускает check --strict; aicore.util.paths.state_dir удалён; root-секции инструкций без core.",
+  "why": "D76, D2, D31; критерий фазы из архитектуры §12 («scripts/ecosystem-units.py --strict зелёный; core и artifex удалены»). Риски: (1) скрытые потребители core (скрипты хаба, CI, pyright/ruff) — grep по всему дереву; (2) записи artifex в lock инструкций — только генератором; (3) тексты корневых инструкций — через каталог harness, бюджет первого хода не растёт.",
+  "scope": {
+    "include": [
+      "scripts/provider-docs.py и прочие хаб-файлы с core; .github/workflows/test.yml; pyrightconfig.json, ruff.toml, scripts/lint.sh",
+      "git rm -r core/ и packages/artifex; каталог инструкций, фикстуры и тесты harness про artifex; golden harness-instructions-check",
+      "aicore.util.paths.state_dir и его тест",
+      "configs/ecosystem-units.json, ecosystem-baseline.json, config-inventory.json, ownership.md",
+      "тесты границ orch, planner, skiller (списки имён), scripts/test-ecosystem-units.py",
+      "корневые секции инструкций и генерация CLAUDE.md, AGENTS.md",
+      "docs/architecture/ecosystem.md, docs/rejected-optimizations.md, CHANGELOG"
+    ],
+    "exclude": [
+      "история: ADR, исследования orch, CHANGELOG прошлых выпусков, releases",
+      "сценарии сайта skiller (P12; path_allow)"
+    ]
+  },
+  "depends_on": [
+    "P11.11"
+  ],
+  "decisions": [
+    "D76",
+    "D73",
+    "D2",
+    "D31"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p11#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p11-closure#removal",
+      "why": "дизайн пункта по шагам",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-instructions#instructions",
+      "why": "как применять генератор инструкций хаба",
+      "required": true
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "why": "ключи карты и path_allow",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "why": "шаги core и check",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "core/**",
+      "change": "delete"
+    },
+    {
+      "path": "packages/artifex/**",
+      "change": "delete"
+    },
+    {
+      "path": "scripts/**",
+      "change": "any"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "change": "modify"
+    },
+    {
+      "path": "pyrightconfig.json",
+      "change": "modify"
+    },
+    {
+      "path": "ruff.toml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/paths.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/test_boundary.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/test_boundary.py",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/**",
+      "change": "any"
+    },
+    {
+      "path": "docs/rejected-optimizations.md",
+      "change": "modify"
+    },
+    {
+      "path": "CLAUDE.md",
+      "change": "modify"
+    },
+    {
+      "path": "AGENTS.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/*/CLAUDE.md",
+      "change": "any"
+    },
+    {
+      "path": "packages/*/AGENTS.md",
+      "change": "any"
+    },
+    {
+      "path": ".swissknifeman/provider-artifacts.lock.json",
+      "change": "any",
+      "note": "генератор инструкций"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "с причиной"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": ".cursor/rules/swissknifeman-instructions.mdc",
+      "change": "modify"
+    },
+    {
+      "path": ".grok/rules/swissknifeman-instructions.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/docs/reference/provider-instruction-contract.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/docs/reference/provider-instructions.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/release/attestation.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/docs/**",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/917c5bbbdc14f7cffac5c9d3352fc236c1535f6156b7ee21d5e9956818762833",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/93e0cc9b81c1e329044ee884c0dcf3cf6e883169fe2676cbf3623f7750121a56",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p11#rules (Python 3.9, stdlib; модуль импортирует только себя и aicore; другие модули — процессом через aicore.util.partners и их JSON-команды; наследное — с одним предупреждением, запись в активный источник, без тихой миграции; временные HOME и SKM_HOME в тестах; git mv отдельным шагом; генерируемое — генераторами; карта и линия — по rules п.12; красное чинится в пункте)",
+    "Дизайн — разделы knowledge из reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Удаление — только после того, как grep не находит потребителей; история не правится",
+    "path_allow — только записи из knowledge/hub-p11-closure#removal п.5 и P11.7, каждая с причиной"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок (knowledge/hub-p11-closure#removal п.1–8): grep потребителей core → перевод → `git rm -r core` → CI и конфиги линтеров → aicore `state_dir` → artifex (каталог инструкций, генератор, фикстуры, тесты, golden с причиной) → `configs/ecosystem-units.json` → `baseline --update`, `standalone --baseline` → `render` → корневые секции инструкций + генератор → `scripts/test-ecosystem-units.py` (strict на дереве) → docs → CHANGELOG → V1–V7.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "test ! -e core && test ! -e packages/artifex && python3 scripts/ecosystem-units.py check --strict",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c 'import json; c=json.load(open(\"configs/ecosystem-units.json\")); b=json.load(open(\"configs/ecosystem-baseline.json\")); assert c[\"foundation\"].get(\"aliases\", []) == [], c[\"foundation\"]; assert c.get(\"transitional_roots\", []) == []; assert c.get(\"retired\", []) == []; assert not c.get(\"standalone\", {}).get(\"foundation_paths\"); rows=[r[\"path\"] for r in c[\"ownership\"] if r.get(\"phase\") == \"P11\"]; assert not rows, rows; assert not b.get(\"violations\"), b.get(\"violations\"); bad={k: v for k, v in b[\"standalone\"].items() if v != \"pass\"}; assert not bad, bad'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py standalone --baseline",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "set -e; for m in aicore brain orch analyst maind harness; do bash packages/$m/scripts/test.sh; bash packages/$m/scripts/validate.sh; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p11-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; } && SB=$(scripts/dev-sandbox.sh new --name p11-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "! git grep -nE '^\\s*(from\\s+core(\\.|\\s)|import\\s+core\\b)' -- '*.py' && grep -q 'check --strict' .github/workflows/test.yml && bash scripts/test-bridges.sh && bash scripts/test-integration.sh && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V7",
+      "cmd": "git fetch -q origin && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "core и artifex удалены",
+    "check --strict зелёный и в CI"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-12T23:24:09Z",
+    "finished_at": "2026-10-13T00:11:39Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-3e8a7cefdd1cfe748a369891-P11.12",
+    "notes": "Added `skiller profiles [--json]` and `skiller topology` (deprecated alias of maind topology) sections to packages/skiller/docs/guide/cli.md. This credits the skiller docs class that docs-impact (V7) found missing. Ran public-hygiene.py (0 violations) and docs-impact.py.\nChanged: packages/skiller/docs/guide/cli.md",
+    "deviations": [
+      "packages/skiller/docs/** is in the write_set listed in the input, so there is no scope deviation for this edit. The previous report said otherwise."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T00:11:39Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T00:11:39Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T00:11:39Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T00:11:39Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-13T00:11:39Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-13T00:11:39Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V6.json"
+      },
+      {
+        "id": "V7",
+        "exit": 0,
+        "at": "2026-10-13T00:11:39Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V7.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V4.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V5.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V6.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P11.12/evidence/V7.json"
+    ]
+  },
+  "updated_at": "2026-10-13T00:11:39Z"
+}

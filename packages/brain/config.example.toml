@@ -1,0 +1,34 @@
+# brain configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[brain]
+# Root directory of the Obsidian vault; a leading ~ is expanded. Machine-wide: a project file cannot set it. String.
+# Allowed in layers: defaults, machine, invocation, flags.
+# vault_path = <string>
+
+[brain.catalog]
+# Folder with the control notes of projects, relative to the vault root. String.
+# projects_dir = "05-Projects"
+
+[brain.docs]
+# Whether document sync is on for the project. Boolean.
+# enabled = false
+
+# Default direction of the document sync. One of: "pull", "push", "bidirectional".
+# direction = "pull"
+
+# Glob patterns relative to the vault project folder and to the project root. Array of strings.
+# patterns = ["docs/**/*.md", "README.md"]
+
+[brain.notes]
+# Whether notes are written for events. Boolean.
+# enabled = true
+
+# Folder of the notes inside the project folder in the vault: a relative path without .. and outside the synchronized folders. String.
+# folder = "Ecosystem/Plans"
+
+# Folder of the notes from the vault root for events whose project is not found in the vault. String.
+# Allowed in layers: defaults, machine, invocation, flags.
+# fallback_folder = "Ecosystem/Plans"

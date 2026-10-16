@@ -8,12 +8,17 @@ import shutil
 import subprocess
 import uuid
 
-from core import atomic_write_json, find_repo_root
-from core.provider.lock import LOCK_RELATIVE_PATH, parse_lock, replace_owner_records, serialize_lock, _writer_guard, _contained_target
-from core import atomic_write_text
-from .common import die, parse_flags
+from aicore.artifacts.lock import (
+    LOCK_RELATIVE_PATH, parse_lock, replace_owner_records, serialize_lock, _writer_guard,
+    _contained_target)
+from aicore.util.cli import parse_flags
+from aicore.util.io import atomic_write_json, atomic_write_text
+from aicore.util.repo import find_repo_root
+from aicore.util.term import die
 from .host import load_host
-from .release_attestation import build, check, digest
+from .release_attestation import check
+from .settings import configured_skills_paths
+from aicore.release.attestation import digest
 from .state import load_db
 from .update import update_one
 
@@ -181,7 +186,7 @@ def verify_surface(root, surface, *, reject_extras=False):
                 digest(path.read_bytes()) != expected):
             errors.append(relative)
     if reject_extras:
-        from .common import SKILL_IGNORE
+        from aicore.content.skill import SKILL_IGNORE
         import fnmatch
         for path in root.rglob("*"):
             relative = path.relative_to(root).as_posix()
@@ -191,7 +196,7 @@ def verify_surface(root, surface, *, reject_extras=False):
                 allowed = False
                 source = Path(__file__).resolve().parents[4] / surface.get("source", "")
                 if relative.startswith(".codex-plugin/migrated-command-skills/"):
-                    from core.provider.runtime import codex_migrated_command_skill
+                    from aicore.provider.runtime import codex_migrated_command_skill
                     expected = codex_migrated_command_skill(source, relative)
                     allowed = expected is not None and not path.is_symlink() and path.read_bytes() == expected
                 if not allowed:
@@ -320,14 +325,11 @@ def project_readback(target, value):
                        digest((target / r.target_path).read_bytes()) != r.rendered_hash)]
         surfaces.append({"surface": "provider-lock", "status": "blocked" if errors else "current", "errors": errors})
     # Vendor manifests carry source paths, allowing byte readback independently of version strings.
-    from .common import MANIFEST, SKILL_IGNORE, strip_skill_managed_marker
+    from aicore.delivery.materialize import MANIFEST, strip_skill_managed_marker
+    from aicore.content.skill import SKILL_IGNORE
     import fnmatch
     folders = {".claude/skills", ".ai/skills", ".cursor/skills", ".agents/skills"}
-    for config_path in (target / ".swissknife.json", target / ".swissknifeman/config.json"):
-        if config_path.is_file():
-            config = json.loads(config_path.read_text())
-            if config.get("skills_path"):
-                folders.add(config["skills_path"])
+    folders.update(configured_skills_paths(target))
     for folder in sorted(folders):
         manifest_path = target / folder / MANIFEST
         if not manifest_path.is_file():
@@ -419,13 +421,11 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     shutil.copytree(managed, preimage / "agents-plugins", symlinks=True, dirs_exist_ok=True)
                 for manifest_path in project.glob(".*/skills/" + ".swissknifeman-manifest.json"):
                     shutil.copytree(manifest_path.parent, preimage / manifest_path.parent.relative_to(project), symlinks=True, dirs_exist_ok=True)
-                config_path = project / ".swissknife.json"
-                if config_path.is_file():
-                    custom = json.loads(config_path.read_text()).get("skills_path")
-                    if custom:
-                        folder = _contained_target(project, custom)
-                        if (folder / ".swissknifeman-manifest.json").is_file():
-                            shutil.copytree(folder, preimage / "custom-skills", symlinks=True, dirs_exist_ok=True)
+                for custom in configured_skills_paths(project):
+                    folder = _contained_target(project, custom)
+                    if (folder / ".swissknifeman-manifest.json").is_file():
+                        shutil.copytree(folder, preimage / "custom-skills", symlinks=True, dirs_exist_ok=True)
+                        break
             output = io.StringIO()
             with redirect_stdout(output), redirect_stderr(output):
                 ok = update_one(env, project, dry_run=dry_run)
@@ -440,7 +440,7 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
             row["reason"] = str(exc)
         save()
     if native and not dry_run:
-        from .publication import run_codex_native_install
+        from aicore.delivery.distribution import run_codex_native_install
         units = {u["id"]: u for u in value["units"]}
         if shutil.which("codex"):
             listed = subprocess.run(["codex", "plugin", "list", "--json"], capture_output=True, text=True, check=True)

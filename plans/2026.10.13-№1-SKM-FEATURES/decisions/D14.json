@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D14",
+  "title": "Телеметрия: журнал event/v1 — ядро, OTel GenAI — только в адаптере",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Как связать события orch с OpenTelemetry GenAI semantic conventions?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Ядро — append-only журнал CloudEvents event/v1 со своими идентификаторами (run_id, work_id, agent_run_id, attempt); экспорт в OTel — отдельный плагин, маппинг на gen_ai.* (статус Development) с зафиксированным коммитом semantic-conventions-genai; invoke_agent/chat/execute_tool только в адаптере; error.type (Stable) допустим в данных",
+      "pros": "ядро не зависит от нестабильных конвенций"
+    },
+    {
+      "id": "B",
+      "text": "gen_ai.* атрибуты прямо в событиях ядра",
+      "cons": "конвенции в статусе Development меняются"
+    }
+  ],
+  "decision": "A — Ядро — append-only журнал CloudEvents event/v1 со своими идентификаторами (run_id, work_id, agent_run_id, attempt); экспорт в OTel — отдельный плагин, маппинг на gen_ai.* (статус Development) с зафиксированным коммитом semantic-conventions-genai; invoke_agent/chat/execute_tool только в адаптере; error.type (Stable) допустим в данных",
+  "rationale": "Perplexity R07; open-telemetry/semantic-conventions-genai (Development).",
+  "applies_to": [
+    "P12"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

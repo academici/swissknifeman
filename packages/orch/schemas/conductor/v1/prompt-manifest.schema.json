@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:prompt-manifest:v1",
+  "title": "prompt-manifest",
+  "description": "What the prompt of one role step was made of (prompts/<step>.manifest.json beside <step>.md): its blocks in order with origin, digest and estimated tokens, the parts left out and why, and the digest and size of the whole prompt.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "description": "Document kind and version.",
+      "const": "prompt-manifest/v1"
+    },
+    "step": {
+      "description": "Step key of the prompt, such as scout, executor.1 or review.2.",
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "description": "Role id the prompt was made for.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "route": {
+      "description": "Route of the role: the parts that were set.",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "blocks": {
+      "description": "Blocks of the prompt in order; their texts joined are the prompt.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    },
+    "excluded": {
+      "description": "Parts that were left out of the prompt.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/excluded"
+      }
+    },
+    "estimated_tokens": {
+      "description": "Estimated tokens of the whole prompt.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "prompt_sha256": {
+      "description": "SHA-256 of the prompt text (UTF-8).",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "budgets": {
+      "description": "Estimated tokens of the blocks by class against their limits.",
+      "type": "object",
+      "properties": {
+        "core": {
+          "$ref": "#/$defs/budget"
+        },
+        "supporting": {
+          "$ref": "#/$defs/budget"
+        },
+        "retrieval": {
+          "$ref": "#/$defs/budget"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "step",
+    "role",
+    "route",
+    "blocks",
+    "excluded",
+    "estimated_tokens",
+    "prompt_sha256"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "block": {
+      "description": "One part of the prompt.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "description": "What the block is: role_text, input, repository_rules, skill, skill_names, context_map, verification, run_rules, correction, answers, progress, result_contract, expected_paths, candidate, review_scope, diff, findings, instruction or stub (the additional instructions of the machine and the project, after the role text).",
+          "type": "string",
+          "minLength": 1
+        },
+        "origin": {
+          "description": "Where the text came from: a role file, input.json, skill:<id>, scout-cache:<rel>, or conductor.",
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "description": "SHA-256 of the block text (UTF-8), the separator that follows it included.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "tokens": {
+          "description": "Estimated tokens of the block text.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Name of the thing the block stands for, such as a skill id.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "origin",
+        "sha256",
+        "tokens"
+      ],
+      "additionalProperties": false
+    },
+    "excluded": {
+      "description": "A part left out of the prompt.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Name of the part, such as a skill id.",
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "description": "Why it was left out.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "budget": {
+      "description": "Tokens of a class of blocks and its limit.",
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "tokens",
+        "limit"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

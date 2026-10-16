@@ -15,7 +15,7 @@ a Cursor inventory id) are Cursor models, not this provider.
 | Surface | Channel | Note |
 |:--|:--|:--|
 | Skills | `.agents/skills/` | Grok reads natively; skiller does not write `.grok/skills` |
-| Connect/vendor | — | `configs/provider-distribution.json` discovery only |
+| Connect/vendor | — | `packages/aicore/configs/provider-distribution.json` discovery only |
 | Instructions (extension) | `.grok/rules/*.md` | common contract stays in `AGENTS.md`; `root.grok.*` only |
 | MCP | `.grok/config.toml` `[mcp_servers]` | Codex TOML adapter, merge-only |
 | Permissions | `.grok/config.toml` `[permission]` | deny floor only; mode is a launch flag |
@@ -47,7 +47,7 @@ under `self-host-apply` / `repo:swissknifeman`.
 ```
 
 This installs the Grok marketplace, the host-configured command plugin, and `prefix-hold`
-(`--trust`), so a new session lists `/task:*`. Opt out with
+(`--trust`), so a new session lists `/planner:*`. Opt out with
 `--no-grok-plugins`. The script does not enable Grok on a project.
 
 ### 3. Project rollout
@@ -84,29 +84,29 @@ Launch mode, not a project key: `observe` → `--permission-mode default`,
 grok --cwd <repo-cwd> \
      --model <model-selector> \
      --always-approve \
-     '/task:<command> <arguments>'
+     '/planner:<command> <arguments>'
 ```
 
 Pins: `grok-4.5` (economy) / `grok-4.6` (implementation) / `grok-4.7` (frontier).
-See [Provider model roles](/task/reference/provider-model-roles).
+See [Provider model roles](/planner/reference/provider-model-roles).
 
 Do not pass Cursor `--workspace` / `--force` flags. Do not follow `root.codex.*`
 or `root.cursor.*` launch text from `AGENTS.md` in a Grok session.
 
 ## Diagnostics
 
-For the optional Task projection check, set `TASK_ROOT` to the installed Task
+For the optional planner projection check, set `PLANNER_ROOT` to the installed planner
 package directory and `SWISSKNIFEMAN_ROOT` to its host repository.
 
 ```bash
 skiller budget --first-turn --provider grok --target .
 maind health --cwd
 harness doctor --settings --provider grok --target .
-python3 "$TASK_ROOT/scripts/render-provider-commands.py" --check --root "$SWISSKNIFEMAN_ROOT"
+python3 "$PLANNER_ROOT/scripts/render-provider-commands.py" --check --root "$SWISSKNIFEMAN_ROOT"
 ```
 
 ## See also
 
 - [Harness setup: Grok](/harness/setup/grok)
-- [Provider model roles](/task/reference/provider-model-roles)
+- [Provider model roles](/planner/reference/provider-model-roles)
 - [Adapter Cursor](/skiller/adapters/cursor) — sibling skill discovery

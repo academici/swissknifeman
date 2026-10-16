@@ -15,12 +15,27 @@
 #   compact   consolidate old events events.ndjson in snapshot (--before ISO | --dry-run)
 #   token-report  token report on usage-trend.ndjson + rolling/pinned baseline
 #                 (--sessions N | --by model|role | --vs-baseline | --baseline set --note "...")
+#   runs      read-only JSON of a project's run reports: `runs show|codegraph --project DIR [--json]`
+#   events    ecosystem run outcomes: `events ingest --event -|FILE` (subscriber of planner.* and orch.run.*), `events list [--type T] [--since ISO] [--json]`
 #   sessions  weekly medians first_turn_overhead from the living jsonl-session transcripts
 #             (--project ID | --weeks N | --json)
 #   doctor    environment diagnostics
+#   orch      what orch runs cost, from its events and artifacts: `orch report [--plan P] [--run R] [--json]`
 #   workflow-scan  read-only inventory registered plan workflow artifacts
 #   version   version (git SHA) and package path
 set -euo pipefail
+# --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
+_skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+while [ "$_skm_guard_dir" != "/" ] && [ ! -e "$_skm_guard_dir/.swissknifeman-dev" ]; do _skm_guard_dir="$(dirname "$_skm_guard_dir")"; done
+if [ -e "$_skm_guard_dir/.swissknifeman-dev" ] && [ "${SKM_DEV_ALLOW_LIVE:-}" != "1" ]; then
+  _skm_real_home="$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)' 2>/dev/null || true)"
+  if [ -z "$_skm_real_home" ] || [ "$(readlink -f "${HOME:-/}")" = "$(readlink -f "$_skm_real_home")" ]; then
+    echo "SKM_DEV_GUARD: $_skm_guard_dir is a development clone; run inside scripts/dev-sandbox.sh or set SKM_DEV_ALLOW_LIVE=1" >&2
+    exit 3
+  fi
+fi
+unset _skm_guard_dir _skm_real_home
+# --- end dev-clone guard ---
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
@@ -46,15 +61,28 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "analyst $sha ($REPO_ROOT)"
     exit 0 ;;
-  digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|sessions|doctor|workflow-scan) ;;
+  digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|runs|events|sessions|doctor|workflow-scan) ;;
   *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 
-# Root monorepo (two levels above the package) gives the package `core` (general foundation).
-# Fallback on standalone-layout: if directory core is not nearby - the path is not added.
-# (Python-equivalent - core.repo.find_monorepo_root; fixed here. ../.., because core
-#  not yet PYTHONPATH — conscious take bash-sides.)
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+exec env PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m analyst "$REPO_ROOT" "$CMD" "$@"

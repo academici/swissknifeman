@@ -1,0 +1,254 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.1",
+  "title": "Начало фазы и локатор aicore в обёртках и раннерах модулей",
+  "status": "done_with_deviations",
+  "summary": "Влить origin/main и сверить golden; завести канонический фрагмент packages/aicore/scripts/aicore-locator.sh (AICORE_ROOT → _vendor/aicore → ../aicore, иначе AICORE_NOT_FOUND и exit 2), вставить его дословно в bin/<cli> и scripts/test.sh модулей analyst, harness, maind, skiller и в harness sync-usage.sh/validate.sh, добавить $AICORE_LIB в PYTHONPATH; тест идентичности копий и поведения scripts/test-aicore-locator.py.",
+  "why": "Правило §3 «поиск aicore обёрткой» — условие автономности модулей; без него перенос кода (P3.2) сломает копию standalone skiller, где aicore лежит в vendor/aicore, а core-shim не видит его от корня. Локатор ставится до переноса: он узнаёт aicore по unit.json, который уже есть. Риск — изменение вывода --help/ошибок CLI (golden) и дрейф копий фрагмента; держим порядком вставки после разбора подкоманд и тестом идентичности.",
+  "scope": {
+    "include": [
+      "scripts/dev-clone.sh sync-main и golden.py check в начале фазы (capture отдельным коммитом, если main изменил выходы)",
+      "packages/aicore/scripts/aicore-locator.sh",
+      "вставка фрагмента в 4 обёртки, 4 test.sh, harness sync-usage.sh и validate.sh",
+      "scripts/test-aicore-locator.py и шаг в .github/workflows/hygiene.yml"
+    ],
+    "exclude": [
+      "перенос кода core (P3.2)",
+      "установщики install.sh, generate-hub.sh, task validate.sh (core для них переходно ищется shim-ом; task — P9)",
+      "смена импортов core у потребителей"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D31",
+    "D32",
+    "D23",
+    "D30"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/aicore-p3#facts",
+      "why": "текущие пути к core в обёртках и раннерах",
+      "required": true
+    },
+    {
+      "ref": "knowledge/aicore-p3#locator",
+      "why": "контракт фрагмента, места вставки, тест",
+      "required": true
+    },
+    {
+      "ref": "knowledge/aicore-p3#checks",
+      "why": "прогоны и golden",
+      "required": true
+    },
+    {
+      "path": "scripts/test-dev-guard.py",
+      "why": "образец теста идентичности блока по списку файлов",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/bin/skiller",
+      "why": "образец обёртки: REPO_ROOT, разбор подкоманд, exec с PYTHONPATH",
+      "required": true
+    },
+    {
+      "path": "packages/harness/scripts/validate.sh",
+      "why": "блок vendoring _usage.py (стр. 1–30)",
+      "required": true
+    },
+    {
+      "path": "packages/harness/scripts/sync-usage.sh",
+      "why": "копирование usage.py",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/hygiene.yml",
+      "why": "куда добавить шаг теста",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/scripts/aicore-locator.sh",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-aicore-locator.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/bin/analyst",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/bin/harness",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/bin/maind",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/bin/skiller",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/scripts/sync-usage.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": ".github/workflows/hygiene.yml",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только если sync-main изменил выходы: capture --reason отдельным коммитом"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify",
+      "note": "только если тест инвентаря требует записи для нового .sh (обычно нет)"
+    }
+  ],
+  "rules": [
+    "Первое действие пункта: scripts/dev-clone.sh sync-main на чистом дереве, затем python3 scripts/golden.py check; DEV_CLONE_CONFLICT — разрешить по смыслу обеих сторон и записать plan.py log",
+    "Фрагмент во всех носителях байт-в-байт равен блоку между маркерами в packages/aicore/scripts/aicore-locator.sh; порядок кандидатов и код выхода 2 не менять",
+    "Локатор в обёртках — после обработки help/version/неизвестной подкоманды, чтобы golden-вывод не изменился; строки MONOREPO_ROOT для core остаются",
+    "В validate.sh harness до P3.2 источник _usage.py: $AICORE_LIB/aicore/usage.py, если файл есть, иначе прежний $MONOREPO_ROOT/core/usage.py",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9; тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: sync-main → golden check → канонический файл (текст — knowledge/aicore-p3 §locator; первой строкой shebang не нужен, файл — фрагмент; маркеры обязательны) → вставка в носители (руками, текст копировать из канонического файла) → PYTHONPATH: \"$REPO_ROOT/lib:$AICORE_LIB${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}\" (в test.sh аналитика/maind, где в PYTHONPATH ещё и $REPO_ROOT, — сохранить его) → тест → hygiene.yml шаг `python3 scripts/test-aicore-locator.py -v` рядом с test-dev-guard.\n\nТест: список носителей зашит (10 файлов: 4 bin, 4 test.sh, sync-usage.sh, validate.sh); для поведения — временный каталог `<tmp>/mods/{m,aicore}` и `<tmp>/mods/m/_vendor/aicore` с unit.json `{\"id\": \"aicore\"}`, синтетический bash-скрипт `REPO_ROOT=...; <фрагмент>; echo \"$AICORE_ROOT\"`, запуск через subprocess с env без AICORE_ROOT или с ним. Случаи — §locator (6 штук).\n\nПроверка вручную после вставки: `bash packages/skiller/bin/skiller --help` в песочнице не изменился (golden check это и проверит).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-aicore-locator.py -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/golden.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "set -e; for m in skiller harness maind analyst; do bash packages/$m/scripts/test.sh; done",
+      "expect": "exit 0 (наборы 4 модулей зелёные с локатором)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "bash packages/harness/scripts/validate.sh && bash packages/skiller/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/ecosystem-units.py standalone skiller && python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0 (skiller автономен, границы без новых нарушений)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "test \"$(grep -l -- '# --- aicore locator ---' packages/analyst/bin/analyst packages/harness/bin/harness packages/maind/bin/maind packages/skiller/bin/skiller packages/*/scripts/test.sh packages/harness/scripts/sync-usage.sh packages/harness/scripts/validate.sh | wc -l)\" -ge 10 && grep -q 'test-aicore-locator.py' .github/workflows/hygiene.yml && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "packages/aicore/scripts/aicore-locator.sh",
+    "локатор в обёртках и раннерах 4 модулей",
+    "scripts/test-aicore-locator.py в hygiene CI"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "self"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T06:27:08Z",
+    "finished_at": "2026-10-08T06:49:25Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "538060d7-8690-4a5b-ab05-6c44366cbadf"
+    },
+    "notes": "Локатор aicore в 4 bin, 4 test.sh, sync-usage.sh, validate.sh; тест scripts/test-aicore-locator.py в hygiene; sync-main без продуктовых изменений, golden зелёный.",
+    "deviations": [
+      "правило path в ecosystem-units.py пропускает foundation при requires; тесты обновлены"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T06:49:25Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T06:49:25Z"
+}

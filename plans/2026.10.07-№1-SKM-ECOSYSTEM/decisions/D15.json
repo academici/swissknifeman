@@ -17,7 +17,7 @@
   "rationale": "M5 (прямое требование владельца); механизм — aicore.config (D5, D14).",
   "applies_to": [
     "P4",
-    "P9"
+    "P9.4"
   ],
   "actor": {
     "provider": "anthropic",

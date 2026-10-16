@@ -1,0 +1,28 @@
+{
+  "data": {
+    "executor": {
+      "effort": "high",
+      "model": "claude-opus-5-5",
+      "provider": "claude-code"
+    },
+    "item_id": "P1.1",
+    "phase_id": "P1",
+    "plan_id": "2026.10.07-№1-LIFE",
+    "repository": "r",
+    "resumed": false,
+    "route": {
+      "class": "implementation",
+      "effort": "high"
+    },
+    "short_id": "PLAN1",
+    "title": "First"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:planner:event-data:planner-item-started:v1",
+  "id": "a9cd9dc529d64c9d989fbf32ed394744",
+  "source": "urn:swissknifeman:module:planner",
+  "specversion": "1.0",
+  "subject": "2026.10.07-№1-LIFE",
+  "time": "2026-10-10T04:29:22.947Z",
+  "type": "planner.item.started"
+}

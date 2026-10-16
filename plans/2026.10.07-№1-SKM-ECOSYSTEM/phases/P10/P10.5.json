@@ -1,0 +1,220 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.5",
+  "title": "exec/v1 minor II: launch-plan (digest-ы, config, decisions, policy_decision, proof, chain), run-policy (version, sandbox, on_error, fallback_routes, budgets, condense), capability-record (source, свежесть, remediation), execution-input (condensed, commit)",
+  "status": "done_with_deviations",
+  "summary": "Необязательные поля launch-plan, run-policy, capability-record и execution-input по knowledge/orch-p10-contracts#fields; расширение enum stages[].kind значением condense; ссылки на permissions/v1 и capability-support/v1 aicore; семантика CONDENSED_REQUIRED_DRIFT, CAPABILITY_FRESHNESS, FALLBACK_UNDECLARED, KEY_REUSED для launch-plan; фикстуры; changelog; aicore schema compat без ломающих.",
+  "why": "D64, D16, D20, D21; E21, E26, E54–E57, R09, R21, R27–R29, R07. Жёсткие риски: (1) сужение или обязательность — ломает v1 (schema compat, прежние фикстуры); (2) required_digest считается не тем набором полей — бриф будет отклоняться; набор полей фиксирован в §semantic и покрыт фикстурой condensed; (3) condense ломает prepare (MODEL_KINDS) — включение в prepare делает P10.8, здесь только контракт.",
+  "scope": {
+    "include": [
+      "packages/orch/schemas/exec/v1/{launch-plan,run-policy,capability-record,execution-input}.schema.json",
+      "packages/orch/lib/orch/contracts.py",
+      "packages/orch/fixtures/exec/v1/{valid,invalid}/{launch-plan,run-policy,capability-record,execution-input}/*",
+      "packages/orch/tests/test_contracts_*.py",
+      "packages/orch/docs/contracts.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "заполнение полей prepare (P10.8)",
+      "пакеты политик (P10.7)",
+      "свежесть seeds (данные seeds не меняются; source у seeds — P10.8 по необходимости)"
+    ]
+  },
+  "depends_on": [
+    "P10.4"
+  ],
+  "decisions": [
+    "D64",
+    "D16",
+    "D20"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/orch-p10#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#facts",
+      "why": "факты кода на начало фазы: файлы, функции, точки изменения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-contracts#rules",
+      "why": "правило minor и доказательство",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-contracts#fields",
+      "why": "поля launch-plan, run-policy, capability-record, execution-input",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-contracts#semantic",
+      "why": "семантические коды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-contracts#fixtures",
+      "why": "фикстуры",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#retry",
+      "why": "таблица DEFAULT_ACTIONS для фикстуры on-error-table",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#permissions",
+      "why": "permissions/v1 и ссылка #/$defs/permissions",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/launch-plan.schema.json",
+      "why": "текущая схема",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/run-policy.schema.json",
+      "why": "текущая схема",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/capability-record.schema.json",
+      "why": "текущая схема",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "why": "текущая схема",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/capability-support/v1/capability-support.schema.json",
+      "why": "$defs.source",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/exec/v1/launch-plan.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/run-policy.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/capability-record.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/execution-input.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/defs.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/contracts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/fixtures/exec/v1/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Только необязательные поля, новые $defs и расширение enum; прежние valid-фикстуры остаются valid",
+    "required_digest — sha256 hex канонического JSON ровно набора полей из §semantic (отсутствующие ключи не включаются); канонический JSON — aicore.util.digest.canonical_json_bytes"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: launch-plan → run-policy (on_error: propertyNames enum из 12 классов error/v1 + unknown_outcome; значения закрытые) → capability-record → execution-input (provenance plan.commit, condensed) → загрузка реестра → семантика → фикстуры (on-error-table с полной таблицей DEFAULT_ACTIONS, sandbox, budgets, condense; dry-run-proof; probed-fresh; condensed с вычисленным required_digest — посчитать скриптом в тесте или генерацией фикстуры и проверкой теста) → тесты → `aicore schema compat` → docs/contracts.md (таблицы и changelog) → V1–V3 → CHANGELOG («exec/v1: launch-plan proof and decisions, run-policy error actions and sandbox, capability freshness, condensed brief (optional fields)»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; для exec/v1 нет ломающих изменений",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "export HOME=$(mktemp -d) SKM_HOME=$(mktemp -d) && for f in launch-plan/dry-run-proof capability-record/probed-fresh run-policy/on-error-table execution-input/condensed; do python3 packages/orch/scripts/orch.py validate ${f%%/*} packages/orch/fixtures/exec/v1/valid/$f.json --quiet || exit 1; done; for f in launch-plan/key-reused run-policy/fallback-undeclared capability-record/fresh-before-observed execution-input/condensed-drift; do ! python3 packages/orch/scripts/orch.py validate ${f%%/*} packages/orch/fixtures/exec/v1/invalid/$f.json --quiet || exit 1; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "exec/v1 minor: launch-plan, run-policy, capability-record, execution-input"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-10T12:25:56Z",
+    "finished_at": "2026-10-10T13:19:33Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "b734ce06-9ed5-415a-bacb-c3ab5f99bbe1"
+    },
+    "notes": "exec/v1 minor II: launch-plan, run-policy, capability-record, execution-input optional fields; CONDENSED_REQUIRED_DRIFT, CAPABILITY_FRESHNESS, FALLBACK_UNDECLARED; fixtures, tests, docs, changelog. grok-4.7 review: 4 findings fixed.",
+    "deviations": [
+      "launch-plan stages[].kind widened with condense; aicore permissions and capability-support loaded by the orch registry; exec/v1 compat proof by schemacompat.compare (one conservative oneof-changed on execution-input provenance, accepted); existing execution-input digest check now also catches ValueError"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T13:19:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T13:19:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T13:19:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T13:19:33Z"
+}

@@ -1,0 +1,17 @@
+{
+  "data": {
+    "created": "2026-10-07",
+    "plan_id": "2026.10.07-№1-LIFE",
+    "repository": "r",
+    "short_id": "PLAN1",
+    "title": "Plan №1 — Life"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:planner:event-data:planner-plan-created:v1",
+  "id": "cbd4bbf6352c41f9803d852cb79c522e",
+  "source": "urn:swissknifeman:module:planner",
+  "specversion": "1.0",
+  "subject": "2026.10.07-№1-LIFE",
+  "time": "2026-10-10T04:29:22.280Z",
+  "type": "planner.plan.created"
+}

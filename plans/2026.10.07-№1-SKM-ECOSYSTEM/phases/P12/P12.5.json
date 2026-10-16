@@ -1,0 +1,250 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.5",
+  "title": "Conformance kit: сценарий crash плагина, native без declared, swissknifeman conformance plugin|engine",
+  "status": "done_with_deviations",
+  "summary": "aicore ext conformance получает сценарий crash и работает с манифестом вне репозитория; declared сценарии привязки native в orch получают тест или golden-трассу (иначе declared с причиной), cao и claude-only — declared с причиной; swissknifeman conformance plugin|engine маршрутизирует через unit.json.",
+  "why": "D82, E59, R13, R30; knowledge/hub-p12#conformance. Риски: (1) сценарий crash не должен двигать курсор доставки и терять событие; (2) тесты очистки процессов не воруют чужих потомков (supervise-процесс, как в conformance.py); (3) живые провайдеры в тестах запрещены — только фальшивые argv.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/ext/conformance.py, delivery при необходимости, фикстура плагина, тесты",
+      "packages/orch/conformance/scenarios.json (reason), тесты native в packages/orch/tests",
+      "scripts/umbrella.py: conformance plugin|engine; scripts/test-umbrella.py",
+      "CHANGELOG aicore и корня"
+    ],
+    "exclude": [
+      "golden-трассы cao и claude-only (триггер паритета orch)"
+    ]
+  },
+  "depends_on": [
+    "P12.4"
+  ],
+  "decisions": [
+    "D82",
+    "D19"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#conformance",
+      "why": "сценарий crash, native, маршруты umbrella",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/conformance.py",
+      "why": "SCENARIOS, supervise, результат",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/ext/test_conformance.py",
+      "why": "образец тестов сценариев",
+      "required": true
+    },
+    {
+      "path": "packages/orch/conformance/scenarios.json",
+      "why": "каталог сценариев и статус declared",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_conformance.py",
+      "why": "как сценарий становится pass",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e2-foundation#register",
+      "why": "строки R13, R30, E59",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/ext/conformance.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/delivery.py",
+      "change": "modify",
+      "note": "только если курсор двигается после краха"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/ext/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/conformance/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/lib/orch/**",
+      "change": "any",
+      "note": "только код сценариев conformance"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any",
+      "note": "страница conformance"
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "scripts/test-umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/d37dbabc32a58d69184281adeef10d8125617d068c64f97dd6ec4bfdb01c3476",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "Сценарий без теста остаётся declared только с полем reason; молча удалять сценарий нельзя"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: crash в aicore (фикстура падающего плагина, курсор, повторная доставка) → тест чужого плагина из mkdtemp → orch native: child-process-cleanup, stdout-stderr-framing, workspace-permissions, lock-expiry (тест или golden-трасса на фальшивом argv) → reason у оставшихся declared → umbrella conformance → тесты → CHANGELOG → V1–V4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "AICORE_ROOT=$PWD/packages/aicore python3 packages/orch/scripts/orch.py conformance --json | python3 -c 'import json, sys; rows = json.load(sys.stdin); bad = [r for r in rows if r.get(\"status\") == \"declared\" and not r.get(\"reason\")]; assert not bad, bad'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "H=$(mktemp -d) && HOME=$H SKM_HOME=$H/skm bin/swissknifeman conformance engine --binding native --json > $H/e.json && python3 -c 'import json, sys; json.load(open(sys.argv[1]))' $H/e.json && python3 scripts/test-umbrella.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "сценарий crash",
+    "conformance native без declared без причины",
+    "swissknifeman conformance"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T13:35:50Z",
+    "finished_at": "2026-10-13T13:59:17Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-7206b36915f20a0a4e1a358f-P12.5",
+    "notes": "aicore ext conformance gets a new last scenario `crash`: a plugin that exits non-zero or dies by a signal while handling an invoke or event fails with evidence `call=...` and `exit_code=N` or `signal=NAME`, plus the remediation from the design. Skipped when an earlier call timed out. The CLI accepts `--manifest PATH` besides the positional manifest; giving both is an error and giving none exits 2. New fixtures: plugins `crash` (subscriber, exit 3) and `crash-signal` (command, SIGKILL), and subscriber `killed.py`. Tests copy fixtures into a fresh temp dir and run them by path, and test_delivery pins that a subscriber killed by SIGKILL leaves the cursor in place, sets pending PROCESS_EXIT, and redelivers the same event once fixed (delivery.py needed no change). Orch: new tests/test_native_conformance.py, all on fake argv: child-process-cleanup (grandchild gone after idle timeout, linger and cancel; a bystander in another session survives), stdout-stderr-framing (separate raw and .stderr files, failure detail from stderr only), and workspace-permissions (writes outside write_set are found from the git tree via scope.dirty/outside). These three scenarios are now `covered` for native with a ref in scenarios.json. For cao and claude-only they stay declared with a reason that names the orch parity trigger (ADR 0062). lock-expiry stays n/a with its existing reason. orch test_conformance.py and docs/conformance.md updated. Umbrella: `conformance` alias in configs/umbrella.json with routes plugin (aicore ext conformance) and engine (orch conformance), both found via provides.cli. scripts/umbrella.py prints a usage error (exit 2) when a known alias has no matching route. test-umbrella.py gets TestConformanceRoutes. Golden help cases recaptured. Both CHANGELOGs updated. Narrow tests all pass (see the list above).\nChanged: CHANGELOG.md, configs/umbrella.json, packages/aicore/CHANGELOG.md, packages/aicore/lib/aicore/ext/cli.py, packages/aicore/lib/aicore/ext/conformance.py, packages/aicore/tests/ext/fixtures/plugins/crash-signal/extension.json, packages/aicore/tests/ext/fixtures/plugins/crash-signal/plugin.py, packages/aicore/tests/ext/fixtures/plugins/crash/extension.json, packages/aicore/tests/ext/fixtures/plugins/crash/plugin.py, packages/aicore/tests/ext/fixtures/subscribers/killed.py, packages/aicore/tests/ext/test_conformance.py, packages/aicore/tests/ext/test_delivery.py, packages/orch/conformance/scenarios.json, packages/orch/docs/conformance.md, packages/orch/tests/test_conformance.py, packages/orch/tests/test_native_conformance.py, scripts/test-umbrella.py, scripts/umbrella.py, tests/golden/cases.json, tests/golden/cli/swissknifeman-help.txt, tests/golden/cli/swissknifeman-unknown-subcommand.txt, tests/golden/generation.json",
+    "deviations": [
+      "configs/umbrella.json is outside write_set, but the `conformance` alias lives there (routes are data by hub rule 2, and umbrella.py may not hold module ids). Edited it by necessity.",
+      "D82 and the goal say `--manifest <path>`, but the CLI had a positional MANIFEST. Kept the positional and added `--manifest` as an equivalent option.",
+      "changed outside the write set: configs/umbrella.json"
+    ],
+    "pending": [
+      "packages/aicore/README.md (lines ~308-309) still lists nine conformance scenarios and the old usage. It is outside write_set and now stale."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T13:59:17Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T13:59:17Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T13:59:17Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T13:59:17Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V4.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.5/evidence/V4.json"
+    ]
+  },
+  "updated_at": "2026-10-13T13:59:17Z"
+}

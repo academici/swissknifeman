@@ -21,7 +21,7 @@ ephemeral ──promote──▶ candidate ──promote(person)──▶ curate
 Data Layout (per-project, **LOCAL**):
 
 ```
-<project>/.claude/analyst/
+<project>/.swissknifeman/analyst/
   lessons/{ephemeral,candidate,curated,deprecated}/<id>.json
   audit.ndjson     # append-only provenance of transitions
   events.ndjson    # append-only signal flow confidence (P3)
@@ -58,7 +58,7 @@ flag-and-ask**: auto-resolve is prohibited, a person decides `--supersedes ID` (
 
 ## Cross-project scan (P2)
 
-`scan` rises over one project: bypasses the registry `config.json:projects[]`, collects lessons from
+`scan` rises over one project: bypasses the maind project registry (`maind projects list --json`), collects lessons from
 all, clusters by Jaccard and detects patterns in **≥N projects** — **namespace-isolated**
 (inherits from [mAInd](/maind/guide/namespaces): pattern from `ns:axioma` does not flow into someone else's namespace;
 project without namespace isolated). Result - `index/by_pattern/<id>.json` (abstracted projection:

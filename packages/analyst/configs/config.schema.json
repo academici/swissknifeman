@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:analyst:config:v1",
+  "title": "analyst config",
+  "description": "Settings of the analyst module: thresholds of the lesson state machine and of the recurrence rule.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recompute": {
+      "type": "object",
+      "description": "Numeric gates of the lesson state machine (analyst recompute, analyst status).",
+      "additionalProperties": false,
+      "properties": {
+        "candidate_min_n": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 15,
+          "description": "Observations needed to promote a lesson from ephemeral to candidate (lowered for low-activity projects)."
+        },
+        "candidate_min_conf": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Confidence needed to promote a lesson from ephemeral to candidate."
+        },
+        "curated_min_n": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 50,
+          "description": "Observations after which a candidate is flagged as ready for curated (a person still decides)."
+        },
+        "curated_min_conf": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8,
+          "description": "Confidence after which a candidate is flagged as ready for curated."
+        },
+        "curated_min_passrate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.95,
+          "description": "Share of passing tests after which a candidate is flagged as ready for curated."
+        },
+        "deprecate_conf": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Confidence below which a candidate is deprecated and a curated lesson is flagged for review."
+        },
+        "candidate_min_n_floor": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "Lowest adaptive observation threshold for a candidate in a low-activity project."
+        }
+      }
+    },
+    "digest": {
+      "type": "object",
+      "description": "Recurrence rule of the digest (analyst digest).",
+      "additionalProperties": false,
+      "properties": {
+        "pathology_window": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 5,
+          "description": "How many of the latest project runs are inspected for a recurring run pathology."
+        },
+        "pathology_min_hits": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2,
+          "description": "In how many runs of the window a pathology code must occur to become a lesson."
+        }
+      }
+    }
+  }
+}

@@ -47,9 +47,8 @@ class BlockRouterCase(unittest.TestCase):
 
     def test_writes_envini_and_registers_both_hooks(self):
         run(block_router, self.proj, "propose", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "agent-router.env.ini").read_text().strip(),
-            "POLICY=propose")
+        self.assertEqual(fx.configured(self.proj, "agent_router", "policy"), "propose")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         self.assertIn("UserPromptSubmit", s["hooks"])
         self.assertIn("SessionStart", s["hooks"])
@@ -60,9 +59,8 @@ class BlockRouterCase(unittest.TestCase):
 
     def test_off_no_hooks(self):
         run(block_router, self.proj, "off", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "agent-router.env.ini").read_text().strip(),
-            "POLICY=off")
+        self.assertEqual(fx.configured(self.proj, "agent_router", "policy"), "off")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
     def test_idempotent_no_dupes(self):
@@ -91,6 +89,10 @@ class GenerateCatalogCase(unittest.TestCase):
         (claude / "skills" / "sales-report" / "SKILL.md").write_text(
             '---\nname: sales-report\ndescription: "Local sales reporting skill"\n'
             "---\nbodysuit\n")
+        (claude / "skills" / "planner-dev").mkdir()
+        (claude / "skills" / "planner-dev" / "SKILL.md").write_text(
+            "---\nname: planner-dev\ndescription: Implement features\n---\n")
+        # Compatibility alias: remove in the next minor release.
         (claude / "skills" / "task-dev").mkdir()
         (claude / "skills" / "task-dev" / "SKILL.md").write_text(
             "---\nname: task-dev\ndescription: Implement features\n---\n")
@@ -148,9 +150,9 @@ class HookBehaviorCase(unittest.TestCase):
             claude = root / ".claude"
             claude.mkdir()
             (claude / "agent-router.config.json").write_text(json.dumps({
-                "policy": "STOP-GATE: always use /task:dev",
-                "commands": [{"name": "/task:dev", "keywords": ["implement", "feature"]}],
-                "skills": [{"name": "skill:task-fix", "keywords": ["implement", "feature"]}],
+                "policy": "STOP-GATE: always use /planner:dev",
+                "commands": [{"name": "/planner:dev", "keywords": ["implement", "feature"]}],
+                "skills": [{"name": "skill:planner-fix", "keywords": ["implement", "feature"]}],
             }))
             for mode in ("propose", "auto_dispatch"):
                 (claude / "agent-router.env.ini").write_text(f"POLICY={mode}\n")
@@ -159,6 +161,22 @@ class HookBehaviorCase(unittest.TestCase):
                         out, rc = hook(script, {"cwd": str(root), "user_input": "implement feature"})
                         self.assertEqual(rc, 0)
                         self.assertEqual(out, "")
+
+    def test_legacy_task_spellings_cannot_activate_either(self):
+        # Compatibility alias: remove in the next minor release.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            claude = root / ".claude"
+            claude.mkdir()
+            (claude / "agent-router.config.json").write_text(json.dumps({
+                "commands": [{"name": "/task:dev", "keywords": ["implement", "feature"]},
+                             {"name": "task:fix", "keywords": ["implement", "feature"]}],
+                "skills": [{"name": "skill:task-fix", "keywords": ["implement", "feature"]},
+                           {"name": "skill:task:dev", "keywords": ["implement", "feature"]}],
+            }))
+            (claude / "agent-router.env.ini").write_text("POLICY=propose\n")
+            out, rc = hook(ROUTER_PY, {"cwd": str(root), "user_input": "implement feature"})
+            self.assertEqual((rc, out), (0, ""))
 
     def test_enabled_non_task_hint_still_works(self):
         with tempfile.TemporaryDirectory() as directory:

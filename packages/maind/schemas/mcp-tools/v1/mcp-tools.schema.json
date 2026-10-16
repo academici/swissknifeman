@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:maind:mcp-tools:v1",
+  "title": "mcp-tools",
+  "description": "Output of `maind mcp tools --json`: the tools the MCP server lists, in `tools/list` order, and the digest of that list.",
+  "type": "object",
+  "properties": {
+    "tools_digest": {"description": "Tagged sha256 digest of the canonical JSON of [{name, description, inputSchema}] in list order.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "tools": {
+      "description": "Tools as `tools/list` returns them.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"description": "Tool name.", "type": "string", "minLength": 1},
+          "description": {"description": "Tool description.", "type": "string"},
+          "inputSchema": {"description": "JSON Schema of the tool arguments.", "type": "object"}
+        },
+        "required": ["name", "description", "inputSchema"]
+      }
+    }
+  },
+  "required": ["tools_digest", "tools"]
+}

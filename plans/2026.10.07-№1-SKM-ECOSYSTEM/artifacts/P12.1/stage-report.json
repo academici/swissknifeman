@@ -1,0 +1,43 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bin/swissknifeman",
+    "configs/config-inventory.json",
+    "configs/schemas/umbrella-units.schema.json",
+    "configs/umbrella.json",
+    "configs/umbrella.schema.json",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/schemas/unit/v1/unit.schema.json",
+    "packages/aicore/tests/test_unit_install_plugins.py",
+    "scripts/test-umbrella.py",
+    "scripts/umbrella.py",
+    "tests/golden/cases.json",
+    "tests/golden/cli/swissknifeman-help.txt",
+    "tests/golden/cli/swissknifeman-unknown-subcommand.txt",
+    "tests/golden/generation.json"
+  ],
+  "checks_run": [
+    {
+      "cmd": "python3 scripts/test-umbrella.py && python3 scripts/test-dev-guard.py",
+      "exit": 0,
+      "id": "V1"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "None for P12.1; the legacy exec matches.",
+      "kind": "note",
+      "next": "P12.2 replaces the fan-out with the check-result aggregator.",
+      "text": "Bare `doctor` stays limited to four modules listed as data in configs/umbrella.json (doctor.fanout). Aggregating over all provides.doctor probes is left to P12.2."
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: Minor, with a design choice. The design rule says an id with provides.cli routes to its CLI, and the current code deliberately excludes bridges. Either drop the kind != bridge filter in group_units so route and help include bridges that have provides.cli (orch-harness has an empty provides and stays unknown), or record the exclusion as an open_issue and amend the design. Regression check: add a test in scripts/test-umbrella.py with a fixture bridge that has provides.cli and assert the route execs <root>/<cli[0]> with the remaining args.",
+      "text": "deferred minor finding scripts/umbrella.py:75: swissknifeman planner-orch and swissknifeman orch-skiller both return exit 1 and 'Unknown command', and exec nothing. Their unit.json provides.cli entries are brief.py and resolve_role.py. group_units drops kind bridge, so route never execs <root>/<provides.cli[0]> plus the remaining arguments. The umbrella routing rule says an id with provides.cli is that command. Help uses the same filter, so both ids are absent from the module list. orch-harness has an empty provides and stays unknown, which matches the rule."
+    }
+  ],
+  "status": "done",
+  "summary": "F1 fixed. Bare `doctor` now reads the fan-out list from the new `doctor.fanout` field in configs/umbrella.json (skiller, harness, maind, analyst, in that order) and runs `<cli> doctor` only for those modules, with an `== id ==` header each. It no longer walks every unit with provides.doctor, so aicore, brain and orch are not called. A missing launcher prints `ERROR: package launcher not found` and sets exit 1, as the old bash did. umbrella.schema.json gained the `doctor` object. In scripts/test-umbrella.py, a new TestLegacyGroups test asserts the exact argv sequence and order, with brain and orch added to the fixture hub. The old fan-out test now checks the missing-launcher path. Tests run: scripts/test-umbrella.py (25 OK), scripts/test-dev-guard.py OK, golden.py check OK, test-config-inventory.py OK. The help text is unchanged, so the golden file did not change."
+}

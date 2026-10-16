@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:effect-receipt:v1",
+  "contract_version": "exec/v1",
+  "effect_key": "synthetic-run:registrar:task_finish:ITEM-1",
+  "kind": "task_finish",
+  "intent": {
+    "input_digest": "77492587d30e5c55384a8d8fecb924ef144942ea5ddf605d3262722d7a67d1d6",
+    "target": "ITEM-1",
+    "expected_prior": {
+      "status": "in_progress"
+    }
+  },
+  "precondition_checked": true,
+  "outcome": "applied",
+  "result": {},
+  "reconcile": {
+    "method": "task_show"
+  },
+  "recorded_at": "2026-10-10T12:00:00Z",
+  "attempt_id": "att-synthetic-run-ITEM-1",
+  "owner_epoch": 1,
+  "precondition": {
+    "checked_at": "2026-10-10T12:00:00Z",
+    "matched": false,
+    "observed_prior": {
+      "status": "done"
+    },
+    "reason_code": "PRECONDITION_CHANGED"
+  }
+}

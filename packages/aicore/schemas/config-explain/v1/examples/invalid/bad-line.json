@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:aicore:config-explain:v1",
+  "module": "demo",
+  "project": null,
+  "config_file_version": 1,
+  "layers": [{"name": "defaults", "file": null, "present": true}],
+  "entries": [
+    {"key": "verbose", "value": true, "layer": "project", "file": "/p/config.toml", "line": 0, "source": null,
+     "secret": false, "overridden": []}
+  ]
+}

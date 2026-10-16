@@ -1,0 +1,7 @@
+{
+  "class": "quota",
+  "code": "PROVIDER_QUOTA",
+  "retryable": false,
+  "safe_message": "provider quota exhausted",
+  "evidence": "guess"
+}

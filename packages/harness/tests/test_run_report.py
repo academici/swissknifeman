@@ -10,7 +10,6 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parents[1]
 
-sys.path.insert(0, str(PKG.parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.hooks import block_run_report
@@ -370,8 +369,8 @@ class BlockRunReportCase(unittest.TestCase):
 
     def test_on_writes_envini_and_registers(self):
         run(block_run_report, self.proj, "on", "settings.json", False)
-        self.assertIn("ENABLED=on",
-                      (self.proj / ".claude" / "run-report.env.ini").read_text())
+        self.assertEqual(fx.configured(self.proj, "run_report", "enabled"), "on")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         self.assertIn("SessionEnd", s["hooks"])
         self.assertNotIn("matcher", s["hooks"]["SessionEnd"][0])
@@ -382,8 +381,8 @@ class BlockRunReportCase(unittest.TestCase):
 
     def test_off_no_hook(self):
         run(block_run_report, self.proj, "off", "settings.json", False)
-        self.assertIn("ENABLED=off",
-                      (self.proj / ".claude" / "run-report.env.ini").read_text())
+        self.assertEqual(fx.configured(self.proj, "run_report", "enabled"), "off")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
     def test_idempotent(self):

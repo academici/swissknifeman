@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:progress-line:v1",
+  "title": "progress-line",
+  "description": "One line of the progress journal of a conductor run (progress.jsonl, and stderr under --json-lines).",
+  "type": "object",
+  "properties": {
+    "ts": {
+      "description": "UTC time, YYYY-MM-DDTHH:MM:SSZ.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "run": {
+      "description": "Conductor run id.",
+      "type": "string",
+      "pattern": "^cnd-[A-Za-z0-9._-]+$"
+    },
+    "event": {
+      "description": "What the line records.",
+      "type": "string",
+      "enum": [
+        "run.start",
+        "run.resume",
+        "run.end",
+        "item.start",
+        "item.end",
+        "stage.start",
+        "stage.end",
+        "stage.skip",
+        "info"
+      ]
+    },
+    "item": {
+      "description": "Reference of the piece of work.",
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "description": "Step key: the stage kind and its round, such as executor.1 or review.2; executor.1-q1 is the round asked again after a question was answered by policy.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[0-9]+(-q[0-9]+)?)?$"
+    },
+    "role": {
+      "description": "Role id, or deterministic.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "route": {
+      "description": "PROVIDER/MODEL/EFFORT of a model stage.",
+      "type": "string",
+      "minLength": 1
+    },
+    "agent": {
+      "description": "Agent run of a model stage: the id of its folder under agents/ (agent-<run suffix>-<n>).",
+      "type": "string",
+      "pattern": "^agent-[A-Za-z0-9._-]+$"
+    },
+    "verdict": {
+      "description": "Verdict of the stage: done, blocked, green, red, GREEN, ATTENTION, RED, confirmed counts and so on.",
+      "type": "string",
+      "minLength": 1
+    },
+    "duration_s": {
+      "description": "Duration of the stage, item or run in seconds.",
+      "type": "number",
+      "minimum": 0
+    },
+    "outcome": {
+      "description": "Outcome of an item or of the run.",
+      "type": "string",
+      "enum": [
+        "done",
+        "done_with_deviations",
+        "blocked",
+        "stopped",
+        "none",
+        "finished"
+      ]
+    },
+    "reason_code": {
+      "description": "Stable code of a stop or a refusal.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+    },
+    "tokens": {
+      "description": "Tokens of a model stage.",
+      "type": "object",
+      "properties": {
+        "input": {
+          "description": "Fresh input tokens (cache writes included, cache reads not).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "cached": {
+          "description": "Cache-read input tokens; reported, not counted against limits.tokens_max.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "output": {
+          "description": "Output tokens.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "input",
+        "output"
+      ],
+      "additionalProperties": false
+    },
+    "message": {
+      "description": "Short human-readable detail.",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "ts",
+    "run",
+    "event"
+  ],
+  "additionalProperties": false
+}

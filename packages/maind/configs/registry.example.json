@@ -1,0 +1,121 @@
+{
+  "_comment": "Fleet registry of the maind node: the state that maind itself writes (projects, namespaces, agent definitions, MCP servers, provider selection, role packs). Copy to <state>/maind/registry.json (maind projects/onboard create it on first write). Settings of the node (node, memory, graph, code_graph, agents timings, integrations, mcp policy, observability) are not here: they live in the [maind] table of config.toml, see config.example.toml. Superset of .projects.json from brain: projects[].{id,name,repo,local_path,type} are compatible with brain, the rest are maind extensions.",
+  "_comment_agents": "agents.definitions: descriptors of the agents that live on this node. Timings of the registry are settings ([maind.agents]).",
+  "_comment_mcp": "mcp.servers: extra MCP servers rolled out into projects next to the hub ones. The policy (emit_example, perplexity_web) is a setting ([maind.mcp]).",
+  "_comment_namespaces": "Optional registry namespace-groups (id → {name, description}). Cross-project link isolation: edge A↔B in the graph is built only if A and B share at least one namespace (field projects[].namespaces). The registry is needed only for metadata and typo hints - membership is set in projects. No registry → namespace are free.",
+  "_comment_projects": "Ecosystem projects. Minimum for compatibility with brain: id, name, repo, local_path, type. The remaining fields are extensions maind. namespaces: list of project groups - connections are isolated by group; no/empty → implicit 'default' (everything is connected as before); ['*'] → common infrastructure, communicates with EVERYONE namespace. Add. federation options: graph_store=local (project graph in <local_path>/.maind/graph.db, and not on the hub); vault_path — for derive doc-connections from Brain frontmatter; inter-project relationships not inferred from code/docks, declare them in the project's .swissknifeman/config.toml: [maind.graph.links.getchat] type = \"relates_to\", plane = \"runtime\", note = \"REST\". docs_folders: doc-folders {id,vault,repo,visibility} — cache from frontmatter Brain (source of truth visibility — there, not here; names of the parties vault/repo may vary). repo = GitHub-slug owner/name; path to code - local_path (in brain-schema .projects.json repo = path, when importing → local_path).",
+  "schema_version": 1,
+  "agents": {
+    "definitions": [
+      {
+        "id": "vault-architect",
+        "description": "Senior architect for the brain vault",
+        "skills": [
+          "architect",
+          "oss-dev"
+        ],
+        "memory_scope": "project:brain",
+        "autostart": false
+      }
+    ]
+  },
+  "mcp": {
+    "servers": [
+      {
+        "name": "agentmemory",
+        "transport": "http",
+        "url": "http://127.0.0.1:4111/mcp",
+        "enabled": true
+      }
+    ]
+  },
+  "namespaces": {
+    "axioma": {
+      "name": "Axioma",
+      "description": "Line products and packages Axioma"
+    },
+    "flexcrm": {
+      "name": "FlexCRM",
+      "description": "Product group FlexCRM"
+    }
+  },
+  "projects": [
+    {
+      "id": "brain",
+      "name": "Brain",
+      "repo": "academici/brain",
+      "local_path": "~/Vaults/Brain",
+      "type": "obsidian-vault",
+      "memory_scope": "project:brain",
+      "agents": [
+        "vault-architect"
+      ],
+      "tags": [
+        "primary",
+        "docs"
+      ],
+      "namespaces": [
+        "*"
+      ],
+      "status": "active",
+      "dependencies": [
+        "maind"
+      ]
+    },
+    {
+      "id": "swissknifeman",
+      "name": "SwissKnifeMan",
+      "repo": "academici/swissknifeman",
+      "local_path": "~/projects/packages/swissknifeman",
+      "type": "node-package",
+      "code_language": "python",
+      "vault_path": "~/Vaults/Brain/05-Projects/03-Packages/Swissknifeman",
+      "docs_folders": [
+        {
+          "id": "docs",
+          "vault": "docs",
+          "repo": "docs",
+          "visibility": "private"
+        },
+        {
+          "id": "docs-public",
+          "vault": "docs-public",
+          "repo": "docs-public",
+          "visibility": "public"
+        }
+      ],
+      "memory_scope": "project:swissknifeman",
+      "agents": [],
+      "tags": [
+        "package",
+        "skills"
+      ],
+      "namespaces": [
+        "*"
+      ],
+      "status": "active",
+      "dependencies": [
+        "maind"
+      ]
+    },
+    {
+      "id": "maind",
+      "name": "mAInd",
+      "repo": "academici/maind",
+      "local_path": "~/projects/packages/maind",
+      "type": "python-package",
+      "memory_scope": "project:maind",
+      "agents": [],
+      "tags": [
+        "hub",
+        "memory",
+        "graph"
+      ],
+      "namespaces": [
+        "*"
+      ],
+      "status": "active",
+      "dependencies": []
+    }
+  ]
+}

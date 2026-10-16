@@ -2,19 +2,30 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P11",
   "title": "Модули хаба: maind, analyst, harness; удаление core и artifex",
-  "design": "skeleton",
-  "goal": "maind, analyst, harness работают на aicore и новых местах конфига/состояния (*.env.ini, .maind*.json, ~/.maind, *.bak уходят); рендереры провайдеров перенесены по правилу «рендер — aicore, каталоги — harness»; core/ и artifex удалены; проверка границ --strict зелёная.",
-  "context": "D2, D5, D8; knowledge/architecture §5.3, §7. Детализируется после P8 и P10. Внешнее ревью E1: тезисы E28, E30, E37 (knowledge/review-e1-*).",
+  "design": "detailed",
+  "goal": "maind, analyst, harness работают только на aicore и новых местах конфига и состояния: связи между модулями — публичные JSON-команды партнёров через aicore.util.partners; аналитика запусков из core — в analyst (команда analyst runs, подписчик run-events, имена телеметрии); узловой config.json maind делится на [maind] и реестр флота в состоянии, ~/.maind и ~/.swissknifeman/* — в aicore.state, topology — в maind; проекция MCP — в aicore.provider.mcp, maind зовёт harness командами; режимы хуков — [harness.hooks] и закоммиченный .swissknifeman/hooks.env, safe-dirs — в месте конфига; *.bak — бэкапы aicore; doctor модулей — check-result/v1 с probe/repair и порогом Python из aicore; MCP-сервер maind согласует версию и печатает tools_digest; core/ и artifex удалены; check --strict зелёный и в CI; фаза проверена независимым аудитом на Grok 4.7.",
+  "context": "D2, D5, D8, D25, D34, D35, D49, D53 конкретизированы решениями D67–D77 (детализация 2026-10-11). Факты кода, правила, проверки, сверка E1/E2, отложенное, документация, upgrade — knowledge/hub-p11; партнёры, аналитика запусков, analyst — knowledge/hub-p11-analyst; maind — knowledge/hub-p11-maind; harness — knowledge/hub-p11-harness; doctor, удаление core и artifex, аудит — knowledge/hub-p11-closure. Наследные файлы живых машин читаются с предупреждением до swissknifeman upgrade (P13); значения не переносятся. Внешнее ревью E1: E28, E30, E37; E2: R11, R15, R31 (+ R46, R57 без изменений). Независимый аудит фазы на Grok 4.7 — по запросу владельца (P11.15). План исполняет стабильный plan.py из live-папки.",
   "scope": {
     "include": [
-      "перевод модулей хаба",
-      "удаление core и artifex",
-      "strict-проверка границ",
-      "doctor модулей по контракту",
-      "редактирование секретов"
+      "aicore.util.partners и хаб-раннер scripts/test-integration.sh; связи модулей хаба — JSON-команды партнёров",
+      "core/{runs,pathology,codegraph_telemetry} → analyst; analyst runs show|codegraph; maind analyze через analyst",
+      "analyst на aicore и в границах; реестр проектов через maind; уроки проекта в .swissknifeman/analyst; подписчик run-events; телеметрия (R11, E37)",
+      "maind на aicore; партнёры вместо SIBLINGS; хранилище через brain vault --json; конфиг узла [maind] и реестр флота; места состояния; [maind.graph.links]; [aicore.providers]; бэкапы",
+      "topology из skiller в maind; реестр skiller в aicore.state; skiller list --json, skiller profiles --json",
+      "harness на aicore и в границах; каталог моделей aicore вместо копии command-routing; legacy-драйвер без соседа; каталог инструкций как данные; партнёры хуков",
+      "aicore.provider.mcp и JSON-команды harness для maind; maind deploy/sync/workspace без импорта harness",
+      "режимы хуков в [harness.hooks] и .swissknifeman/hooks.env; safe-dirs; policy_profile; блокировки — константы",
+      "MCP-сервер maind: согласование версии, tools_digest, conformance (R31)",
+      "doctor модулей по контракту check-result/v1, probe/repair, порог Python из одной константы (D35), редактирование секретов",
+      "удаление core и artifex; карта и линия пусты; check --strict в CI",
+      "документация модулей хаба, инструкции через каталог harness, ADR 0063–0071, CHANGELOG",
+      "независимый read-only аудит фазы на Grok 4.7"
     ],
     "exclude": [
-      "umbrella CLI (P12)"
+      "umbrella CLI, агрегатор swissknifeman doctor, CI-матрица (P12)",
+      "перенос значений живых машин и проектов, данные демона памяти (P13)",
+      "рендереры профиля harness в aicore (по триггеру, D71)",
+      "собственные каталоги инструкций модулей (при выносе в репозитории)"
     ]
   },
   "depends_on": [
@@ -22,9 +33,140 @@
     "P10"
   ],
   "deliverables": [
-    "модули хаба на aicore",
-    "core и artifex удалены"
+    "модули хаба (maind, analyst, harness) только на aicore, standalone pass",
+    "core и artifex удалены, check --strict зелёный и в CI",
+    "aicore.util.partners, aicore.provider.mcp, scripts/test-integration.sh",
+    "конфиг и состояние maind и harness в местах D5 с наследным чтением",
+    "doctor модулей на check-result/v1; MCP maind по R31",
+    "ADR 0063–0071; вердикт аудита P11 на Grok 4.7"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P11.1",
+    "P11.2",
+    "P11.3",
+    "P11.4",
+    "P11.5",
+    "P11.6",
+    "P11.7",
+    "P11.8",
+    "P11.9",
+    "P11.10",
+    "P11.11",
+    "P11.12",
+    "P11.13",
+    "P11.14",
+    "P11.15"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P11.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P11.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P11.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P11.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P11.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P11.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B7",
+      "items": [
+        "P11.7"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B8",
+      "items": [
+        "P11.8"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B9",
+      "items": [
+        "P11.9"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B10",
+      "items": [
+        "P11.10"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B11",
+      "items": [
+        "P11.11"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B12",
+      "items": [
+        "P11.12"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B13",
+      "items": [
+        "P11.13"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B14",
+      "items": [
+        "P11.14"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B15",
+      "items": [
+        "P11.15"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-13T04:37:22Z",
+    "result": "done_with_deviations",
+    "summary": "15 item(s): 5 done, 10 done_with_deviations"
+  }
 }

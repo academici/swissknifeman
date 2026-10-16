@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:aicore:plugin-describe:v1",
+  "protocol": "1",
+  "id": "x",
+  "kind": "command",
+  "version": "0.1.0",
+  "capabilities_digest": "abababababababababababababababababababababababababababababababab",
+  "transport": "stdio-json"
+}

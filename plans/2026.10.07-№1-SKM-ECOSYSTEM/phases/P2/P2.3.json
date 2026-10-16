@@ -1,0 +1,210 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.3",
+  "title": "Проверка автономности копии модуля (standalone) вместо skiller-standalone-check",
+  "status": "done_with_deviations",
+  "summary": "Добавить в scripts/ecosystem-units.py команду standalone (копия модуля + заместитель aicore, свой HOME, dev.test/dev.validate из unit.json), записать фактическую автономность всех модулей в базовую линию, заменить job skiller-standalone в CI на standalone --baseline и удалить scripts/skiller-standalone-check.sh.",
+  "why": "Автономность (тесты модуля проходят в копии его папки + aicore) — главное свойство «как в отдельном репозитории» (§3, E50); сейчас она проверяется только у skiller отдельным скриптом. Общая команда нужна P8–P12 как критерий. Риск — долгий прогон и протечка в реальный HOME: HOME и XDG внутри tmp, таймаут на команду, tmp удаляется всегда.",
+  "scope": {
+    "include": [
+      "ecosystem-units.py standalone <id>… | --all | --baseline [--update-baseline]",
+      "standalone в configs/ecosystem-units.json (foundation_paths, unset_env, timeout_s)",
+      "dev в unit.json модулей — если P2.1 не заполнил или факт иной",
+      "standalone в configs/ecosystem-baseline.json (фактические pass/fail/n/a)",
+      "job standalone в .github/workflows/test.yml вместо skiller-standalone",
+      "удаление scripts/skiller-standalone-check.sh и перевод ссылок на него",
+      "тесты"
+    ],
+    "exclude": [
+      "починка автономности модулей (их фазы)",
+      "CI-матрица по модулям (P12)",
+      "плагин из кэша маркетплейса в песочнице (P12)"
+    ]
+  },
+  "depends_on": [
+    "P2.2"
+  ],
+  "decisions": [
+    "D2",
+    "D23"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/modules-p2#standalone",
+      "why": "контракт команды",
+      "required": true
+    },
+    {
+      "path": "scripts/skiller-standalone-check.sh",
+      "why": "текущая реализация для skiller (раскладка vendor/<id>, unset env, шаги)",
+      "required": true
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "why": "расширяемый скрипт",
+      "required": true
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "why": "job skiller-standalone",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/ecosystem-units.py",
+      "change": "any",
+      "note": "создаётся в P2.1, здесь дополняется"
+    },
+    {
+      "path": "scripts/test-ecosystem-units.py",
+      "change": "any",
+      "note": "создаётся в P2.1, здесь дополняется"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "any",
+      "note": "создаётся в P2.1, здесь дополняется"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "any",
+      "note": "создаётся в P2.2, здесь дополняется"
+    },
+    {
+      "path": "packages/*/unit.json",
+      "change": "modify",
+      "note": "только поле dev, если нужно"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/skiller-standalone-check.sh",
+      "change": "delete"
+    },
+    {
+      "path": "docs/**",
+      "change": "modify",
+      "note": "только замена ссылок на skiller-standalone-check.sh"
+    }
+  ],
+  "rules": [
+    "Результаты автономности записываются как есть (fail — это базовая линия, не дефект P2); модуль, бывший автономным (skiller), обязан остаться pass",
+    "Никаких записей вне tmp; HOME/XDG внутри tmp; tmp удаляется и при ошибке",
+    "Таймаут на команду из конфига; при неуспехе — хвост вывода в stderr",
+    "Удаление skiller-standalone-check.sh — после того как git grep не находит ссылок, кроме CHANGELOG-истории"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПеренести логику копирования из skiller-standalone-check.sh в Python (git ls-files -z, пропуск node_modules, shutil.copy2 follow_symlinks=False). skiller: dev.standalone_setup = [[\"bash\",\"bin/skiller\",\"registry\"]], test `bash scripts/test.sh`, validate `bash scripts/validate.sh` — порядок как в старом скрипте; env без PYTHONPATH и SKILLER_HOST_CONFIG.\n\nПрогон `standalone --all --update-baseline` может идти десятки минут (harness ~3 мин тестов, task validate — тоже); запускать в фоне и дождаться. Для модулей с fail записать причину одной строкой в plan.py log (например «harness: tests import analyst»), это вход для их фаз.\n\nТесты: временный модуль с dev.test `python3 -c 'import sys; sys.exit(0)'` → pass; с exit 1 → fail; без dev → n/a; HOME внутри tmp (тест печатает HOME в файл внутри копии и проверяет префикс); --baseline гоняет только pass.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-ecosystem-units.py -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py standalone skiller",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py standalone --baseline",
+      "expect": "exit 0 (все модули с pass в линии автономны)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 -c 'import json,sys; s=json.load(open(\"configs/ecosystem-baseline.json\"))[\"standalone\"]; ids={\"aicore\",\"analyst\",\"harness\",\"maind\",\"orch\",\"skiller\",\"task\"}; sys.exit(0 if set(s)==ids and s[\"skiller\"]==\"pass\" and all(v in (\"pass\",\"fail\",\"n/a\") for v in s.values()) else 1)'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "test ! -e scripts/skiller-standalone-check.sh && ! git grep -n 'skiller-standalone-check' -- . ':!CHANGELOG.md' ':!plans' && grep -q 'ecosystem-units.py standalone --baseline' .github/workflows/test.yml",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "команда standalone",
+    "автономность всех модулей в базовой линии",
+    "job standalone в CI"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T03:34:39Z",
+    "finished_at": "2026-10-08T04:08:24Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "medium",
+      "session": "284ea4db-1a43-4fee-94be-369beea3972e"
+    },
+    "notes": "Команда standalone; в базовой линии pass: skiller, fail: analyst/harness/maind/orch/task, n/a: aicore; CI job standalone --baseline; skiller-standalone-check.sh удалён",
+    "deviations": [
+      "правка configs/config-inventory.json (ссылки на удалённый скрипт)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T04:08:24Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T04:08:24Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T04:08:24Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T04:08:24Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T04:08:24Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T04:08:24Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T04:08:24Z"
+}

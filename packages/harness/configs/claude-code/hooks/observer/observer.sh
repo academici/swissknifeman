@@ -8,7 +8,10 @@ command -v jq >/dev/null 2>&1 || exit 0
 
 cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null); [ -n "$cwd" ] || cwd="$PWD"
 
-EN=$(grep -E '^[[:space:]]*ENABLED' "$cwd/.claude/observer.env.ini" 2>/dev/null \
+# The committed carrier .swissknifeman/hooks.env wins over the legacy per-project file.
+EN=$(grep -E '^OBSERVER_ENABLED__CLAUDE_CODE=' "$cwd/.swissknifeman/hooks.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \r')
+[ -n "$EN" ] || EN=$(grep -E '^OBSERVER_ENABLED=' "$cwd/.swissknifeman/hooks.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \r')
+[ -n "$EN" ] || EN=$(grep -E '^[[:space:]]*ENABLED' "$cwd/.claude/observer.env.ini" 2>/dev/null \
       | head -1 | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]#].*//' | tr -d "\"'")
 [ "$EN" = "true" ] || exit 0
 

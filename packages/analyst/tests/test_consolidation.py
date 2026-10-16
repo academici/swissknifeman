@@ -3,6 +3,7 @@ flag-and-ask on the contradiction in promote, supersedes like soft-invalidate.""
 import os
 import tempfile
 import unittest
+from pathlib import Path
 from contextlib import contextmanager
 
 from analyst import lessons
@@ -78,6 +79,14 @@ class TestPromoteConsolidation(unittest.TestCase):
 
     def tearDown(self):
         self._tmp.cleanup()
+
+    def test_lessons_stay_in_a_legacy_project_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            legacy = Path(tmp) / ".claude" / "analyst" / "lessons"
+            legacy.mkdir(parents=True)
+            lessons.save_lesson(tmp, self.active, "curated")
+            self.assertTrue((legacy / "curated" / f"{self.active['id']}.json").is_file())
+            self.assertEqual(lessons.find_lesson(tmp, self.active["id"])[1], "curated")
 
     def test_conflict_blocks_promote_flag_and_ask(self):
         with chdir(self.proj):

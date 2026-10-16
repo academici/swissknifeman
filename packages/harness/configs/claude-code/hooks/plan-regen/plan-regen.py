@@ -10,7 +10,25 @@ _EDIT_TOOLS = ("Edit", "Write", "MultiEdit")
 _MAX_ISSUES = 5
 
 
+def _carrier(cwd, key):
+    """Value of `key` in the committed carrier .swissknifeman/hooks.env (provider key first)."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except Exception:
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            found[k.strip()] = v.strip()
+    return found.get(key + "__CLAUDE_CODE", found.get(key))
+
+
 def _enabled(cwd):
+    carried = _carrier(cwd, "PLAN_REGEN_MODE")
+    if carried is not None:
+        return carried.lower() == "on"
     try:
         text = (Path(cwd) / ".claude" / "plan-regen.env.ini").read_text(encoding="utf-8")
     except Exception:
@@ -30,9 +48,11 @@ def _plan_dir(path):
 
 
 def _plan_cli(cwd):
-    explicit = os.environ.get("TASK_PLAN_CLI")
-    candidates = ([Path(explicit)] if explicit else []) + [
-        Path(cwd) / "packages" / "task" / "scripts" / "plan.py"]
+    explicit = os.environ.get("TASK_PLAN_CLI") or os.environ.get("PLANNER_PLAN_PY")
+    root = os.environ.get("PLANNER_ROOT")
+    candidates = ([Path(explicit)] if explicit else []) + (
+        [Path(root) / "scripts" / "plan.py"] if root else []) + [
+        Path(cwd) / "packages" / "planner" / "scripts" / "plan.py"]
     return next((item for item in candidates if item.is_file()), None)
 
 

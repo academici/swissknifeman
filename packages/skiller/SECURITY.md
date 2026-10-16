@@ -50,7 +50,7 @@ dependencies) on each PR; tests run on the matrix Python (`test.yml`).
 CLI is placed as a symlink on `bin/skiller` (`./install.sh`) — external
 no dependencies, only stdlib Python 3. Installation scripts do not execute
 network requests and do not require root. The state of connected projects is stored
-locally in `~/.swissknifeman/projects.json`.
+locally in `<state>/skiller/projects.json` (legacy: `~/.swissknifeman/projects.json`).
 
 ## Supported versions
 

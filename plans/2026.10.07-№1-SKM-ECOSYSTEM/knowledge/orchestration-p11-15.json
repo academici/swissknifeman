@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "orchestration-p11-15",
+  "title": "Orchestration: P11.15 (аудит на Grok)",
+  "sections": [
+    {
+      "id": "orchestration",
+      "title": "Orchestration",
+      "text": "```json\n{\n \"scenario\": \"solo\",\n \"options\": {\n  \"stages\": [\n   {\n    \"role\": \"executor\",\n    \"provider\": \"claude-code\",\n    \"model_class\": \"implementation\",\n    \"effort\": \"high\"\n   }\n  ],\n  \"rules\": [\n   \"Grok запускай только как read-only процесс через verb launch моста planner-orch, не как исполнителя.\",\n   \"Поток ревьюера клади в .swissknifeman/state/review/P11.15, в артефакт идёт короткий review-verdict.json.\"\n  ],\n  \"limits\": {\n   \"check_timeout_s\": 600\n  }\n }\n}\n```"
+    }
+  ],
+  "applies_to": [
+    "P11.15"
+  ]
+}

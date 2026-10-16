@@ -1,0 +1,6 @@
+{
+  "specversion": "1.0",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:planner",
+  "type": "planner.plan.closed"
+}

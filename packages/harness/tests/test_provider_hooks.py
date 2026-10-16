@@ -12,18 +12,16 @@ from pathlib import Path
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "analyst" / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import ArtifactActionKind, ProviderId, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.provider.values import ProviderId
 from harness.hooks import (CodexLifecycleFragment, LifecycleRequest, adapt_codex_hook_payload,
                            block_codex_observer, codex_d104_observer_fragment,
                            plan_codex_capture_artifact, plan_codex_lifecycle_artifacts, plan_lifecycle,
                            render_codex_hook_handler, render_codex_hooks,
                            validate_d104_codex_lifecycle_composition)
 from harness.profiles import load_catalog
-from analyst.events import read_events
-from analyst.cli import main as analyst_main
+from aicore.util.partners import partner_command
 
 PACKAGE = Path(__file__).resolve().parents[1]
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
@@ -267,18 +265,44 @@ class ProviderHookTests(unittest.TestCase):
             payload = json.loads(payload_bytes)
             self.assertEqual(payload["metrics"], {"usage": 1})
             self.assertNotIn("source_sha256", payload)
+
+    def test_generated_capture_output_is_ingested_by_the_analyst_partner(self):
+        analyst = _analyst_root()
+        if analyst is None:
+            self.skipTest("analyst partner not found (set SKM_ANALYST_ROOT or SKM_ANALYST_BIN)")
+        artifact = plan_codex_capture_artifact(bindings_path=BINDINGS)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            apply_plan(root, plan_artifact_lock(root, (artifact,), lock_bytes=None))
+            handler = root / ".codex/hooks/analytics-capture.py"
+            payload_bytes = subprocess.run([sys.executable, str(handler)], input=json.dumps(
+                {"session_id": "s", "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1}}).encode(),
+                stdout=subprocess.PIPE, check=True).stdout
             source = root / "generated-capture.json"
             source.write_bytes(payload_bytes)
-            cwd = os.getcwd()
-            try:
-                os.chdir(root)
-                with redirect_stdout(io.StringIO()):
-                    analyst_main([str(root), "capture", "--provider", "codex", "--schema", "1",
-                                  "--input", str(source)])
-            finally:
-                os.chdir(cwd)
-            event = read_events(root)[0]
-            self.assertEqual(event.provenance["sha256"], hashlib.sha256(payload_bytes).hexdigest())
+            env = {**os.environ, "PYTHONPATH": os.pathsep.join(
+                [str(analyst / "lib")] + ([os.environ["PYTHONPATH"]] if os.environ.get("PYTHONPATH") else []))}
+            captured = subprocess.run(
+                [sys.executable, "-m", "analyst", str(root), "capture", "--provider", "codex", "--schema", "1",
+                 "--input", str(source)], cwd=root, env=env, capture_output=True, text=True)
+            self.assertEqual(captured.returncode, 0, captured.stderr)
+            events = (root / ".swissknife/analytics/events.ndjson").read_text(encoding="utf-8").splitlines()
+            event = json.loads(events[0])
+            self.assertEqual(event["provenance"]["sha256"], hashlib.sha256(payload_bytes).hexdigest())
+
+
+def _analyst_root():
+    """Root of the analyst partner named by SKM_ANALYST_ROOT or SKM_ANALYST_BIN, or None.
+
+    A launcher found only on PATH is not used: an older installation may lack the commands this test drives.
+    """
+    if not (os.environ.get("SKM_ANALYST_ROOT") or os.environ.get("SKM_ANALYST_BIN")):
+        return None
+    argv = partner_command("analyst")
+    if not argv:
+        return None
+    root = Path(argv[0]).resolve().parent.parent
+    return root if (root / "lib" / "analyst").is_dir() else None
 
 
 if __name__ == "__main__":

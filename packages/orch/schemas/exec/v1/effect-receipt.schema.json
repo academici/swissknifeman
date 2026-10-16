@@ -97,6 +97,41 @@
     "recorded_at": {
       "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
       "description": "Receipt timestamp."
+    },
+    "attempt_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/attemptId",
+      "description": "Key of the attempt that produced the effect."
+    },
+    "owner_epoch": {
+      "type": "integer",
+      "description": "Owner epoch of the run when the effect was produced, at least one."
+    },
+    "precondition": {
+      "type": "object",
+      "properties": {
+        "checked_at": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+          "description": "When the precondition was checked, immediately before the effect."
+        },
+        "matched": {
+          "type": "boolean",
+          "description": "Whether the observed prior state matched the expected one."
+        },
+        "observed_prior": {
+          "type": "object",
+          "description": "Open observed prior state, like expected_prior."
+        },
+        "reason_code": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/reasonCode",
+          "description": "Reason of a mismatch."
+        }
+      },
+      "required": [
+        "checked_at",
+        "matched"
+      ],
+      "additionalProperties": false,
+      "description": "Precondition re-check performed immediately before the effect."
     }
   },
   "required": [

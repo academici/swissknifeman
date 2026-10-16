@@ -1,0 +1,70 @@
+{
+  "item": "P12.2",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "provides.doctor declares aa.cfg as category config with probe [bin/aa, doctor]. The probe prints one valid check-result for aa.cfg with status ok, category state, observed 'actually fine'. swissknifeman doctor --unit aa --category config --json returns exit 1 and a single result aa.cfg status fail observed 'probe printed no result for this check'. The ok document was parsed and then discarded.",
+          "id": "F1",
+          "location": "scripts/umbrella.py:386",
+          "reproduction": "Temp unit aa with that manifest and probe; umbrella.collect_doctor(units, ['aa'], ['config'], 5) returned the synthetic fail and no ok row.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "временные модули aa/bb/cc с unit.json; PYTHONPATH=packages/aicore/lib SKM_UNITS_PATH=<tmp> python3: umbrella.collect_doctor(load_units(), ['aa'], ['config'], 5)",
+            "exit": 0,
+            "observed": "aa [('aa.cfg','fail','config','probe printed no result for this check')] — валидный ok-документ aa.cfg с категорией state был отброшен фильтром категории по документу (umbrella.py:386), потом добавлен синтетический fail"
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "One module declares bb.a on probe bin/p1 and bb.b on probe bin/p2. bin/p1 prints valid check-results for both bb.a and bb.b. bin/p2 prints []. The report contains bb.b twice: status ok observed 'from-p1', then status fail observed 'probe printed no result for this check'. Exit code is 1.",
+          "id": "F2",
+          "location": "scripts/umbrella.py:391",
+          "reproduction": "Temp unit bb with those two probes; umbrella.collect_doctor(units, ['bb'], [], 5) returned both the ok row and the synthetic fail for bb.b.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "тот же скрипт: collect_doctor(units, ['bb'], [], 5) для bb.a (probe bin/p1) и bb.b (probe bin/p2); p1 печатает оба check_id, p2 печатает []",
+            "exit": 0,
+            "observed": "bb [('bb.a','ok'), ('bb.b','ok','from-p1'), ('bb.b','fail','probe printed no result for this check')] — bb.b дважды, код выхода агрегатора будет 1"
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "A declared check has category integration and its probe prints non-JSON. swissknifeman doctor --category integration --json includes check_id <unit>.doctor with category environment. The row is outside the requested category. packages/aicore/unit.json puts aicore.ext in integration and points the probe at bin/aicore ext status with output text, which is this path.",
+          "id": "F3",
+          "location": "scripts/umbrella.py:378",
+          "reproduction": "Temp unit cc, doctor id cc.ext category integration, probe prints 'not json'; umbrella.collect_doctor(units, ['cc'], ['integration'], 5) returned cc.doctor category environment. aicore unit.json and aicore.ext.cli._run_status confirm the live probe is text unless --json is passed, and the manifest does not pass --json.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "тот же скрипт: collect_doctor(units, ['cc'], ['integration'], 5) для объявленной cc.ext категории integration с probe, печатающим 'not json'",
+            "exit": 0,
+            "observed": "cc [('cc.doctor','fail','environment','probe output is not JSON: not json')] — синтетическая строка с категорией environment вне запрошенной integration"
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a13500-e74d-77d2-a281-814227a597f2",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261013T111935Z-4f9589/P12.2/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "rejected": [],
+        "session": "c0a284ea-ed38-4d60-8c18-b8cb7f95a941"
+      },
+      "verdict": "ATTENTION"
+    }
+  ],
+  "run": "cnd-20261013T111935Z-4f9589",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

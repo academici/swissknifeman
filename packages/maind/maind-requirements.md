@@ -293,7 +293,8 @@ All other fields are extensions mAInd and ignored `brain` when reading fallback.
 
 ```
 academici/maind/
-├── config.example.json       ← example config (as .swissknife.example.json in SKM)
+├── config.example.toml       ← example of the [maind] settings (generated from configs/config.schema.json)
+├── configs/registry.example.json ← example of the fleet registry (registry.json)
 ├── config/
 │   └── memory/
 │       └── iii-config.yaml   ← moved from SKM/.agentmemory/
@@ -403,7 +404,7 @@ maind migrate from-skm .agentmemory/       # import module from SKM
 - [ ] Implement `config.py` with support `config.json` + fallback `.projects.json`
 - [ ] Implement `memory.py` (wrapper over iii-*)
 - [ ] CLI: `maind start`, `maind status`
-- [ ] `config.example.json` with full schematic
+- [ ] `config.example.toml` and `configs/registry.example.json` with full schematic
 - [ ] `install.sh` (analogue brain/swissknifeman)
 - [ ] Update swissknifeman: remove `.agentmemory/`, add dependency on maind
 

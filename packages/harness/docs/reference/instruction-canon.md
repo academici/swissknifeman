@@ -136,11 +136,10 @@ Three gate properties that are important not to lose when editing:
 
 - **The entire file is measured**, and not just managed blocks: the session pays for the entire
   `CLAUDE.md`, including bytes outside the markers, and the upstream recommendation is also about the file.
-- **Token valuation is the same formula as `skiller budget`** (`budget.py:48–64`).
-  No import across package border (harness does not depend on skiller), therefore the formula
-  is duplicated explicitly, and the equality of two implementations at the common input is pinned by the test
-  `tests/test_instruction_size_gate.py::test_token_estimate_matches_skiller_formula`.
-  Two independent accounts of one file are a guaranteed dispute of numbers, and it is closed by the test.
+- **Token valuation is the same formula as `skiller budget`**: both import
+  `aicore.content.budget.estimate_tokens` from the shared foundation, so there is one implementation and no copy
+  to drift. The test `tests/test_instruction_size_gate.py::test_token_estimate_is_the_aicore_function` pins that
+  the gate uses that very function. Two independent accounts of one file would be a guaranteed dispute of numbers.
 - **Finding size is not diagnostic.** Code table `InstructionDiagnostic`
   frozen by contract `provider-instruction-contract` v1.0.0; seventeenth code bumped
   would be a frozen contract, and reusing someone else's would lie in the machine field.

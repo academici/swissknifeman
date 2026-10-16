@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from aicore.state import list_backups
 from maind.mcpconfig import (EXAMPLE_SUFFIX, MCPConfigError, check_hygiene,
                              has_server, load_mcp, merge_server,
                              reconcile_gitignore, write_example, write_mcp)
@@ -67,8 +68,11 @@ class TestMcpConfig(unittest.TestCase):
             data, _ = merge_server(data, "new", {"command": "x"})
             write_mcp(p, data, dry=True)  # does not write anything
             self.assertNotIn("new", json.loads(p.read_text())["mcpServers"])
-            write_mcp(p, data)            # real entry + .bak
-            self.assertTrue((Path(tmp) / ".mcp.json.bak").exists())
+            write_mcp(p, data)            # real entry + a backup under .swissknifeman/backups
+            [(_stamp, files)] = list_backups(Path(tmp))
+            self.assertEqual([f.name for f in files], [".mcp.json"])
+            self.assertFalse((Path(tmp) / ".mcp.json.bak").exists())
+            self.assertEqual(json.loads(files[0].read_text())["mcpServers"], {"old": {}})
             self.assertIn("new", json.loads(p.read_text())["mcpServers"])
 
     def test_has_server(self):

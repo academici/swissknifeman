@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "left-right",
+  "title": "Bridge between two modules",
+  "kind": "bridge",
+  "version": "0.1.0",
+  "stability": "alpha",
+  "destination": "hub",
+  "requires": [{"unit": "aicore", "range": "^0.1.0"}],
+  "provides": {"ports": [{"id": "left.port", "bridge": "left-right"}]},
+  "protocol": {"min": "1", "max": "2"}
+}

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Tests of this bridge. Partners come from the environment (PLANNER_ROOT, SKM_ORCH_ROOT, SKM_SKILLER_ROOT,
+# SKM_HARNESS_ROOT, AICORE_ROOT); `bash scripts/test-bridges.sh` at the hub root wires them from the hub layout.
+set -euo pipefail
+BRIDGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$BRIDGE_ROOT"
+# The tests never touch the developer's HOME, state or event delivery.
+TEST_HOME="$(mktemp -d)"
+trap 'rm -rf "$TEST_HOME"' EXIT
+export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_AICORE_EVENTS__DELIVERY=off
+unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME
+python3 -m unittest discover -s tests -t tests -p "test_*.py" "$@"

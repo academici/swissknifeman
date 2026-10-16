@@ -1,0 +1,30 @@
+{
+  "checks": [
+    {
+      "id": "license",
+      "status": "ok",
+      "detail": "MIT"
+    },
+    {
+      "id": "provenance",
+      "status": "ok",
+      "detail": "upstream_sha equals the sha256 of a fetched file"
+    },
+    {
+      "id": "injection",
+      "status": "ok",
+      "detail": "no dangerous-instruction pattern"
+    },
+    {
+      "id": "budget",
+      "status": "ok",
+      "detail": "618 tokens of 8000"
+    },
+    {
+      "id": "tools",
+      "status": "ok",
+      "detail": "0 allowed-tools, all known"
+    }
+  ],
+  "verdict": "clean"
+}

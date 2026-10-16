@@ -1,0 +1,33 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-event:v1",
+  "contract_version": "exec/v1",
+  "run_id": "run-0123456789abcdef01234567",
+  "stage_id": "primary",
+  "attempt": 1,
+  "seq": 3,
+  "ts": "2026-10-10T12:00:00Z",
+  "kind": "provider_error",
+  "summary": "Synthetic provider failure.",
+  "event_id": "evt-run-0123456789abcdef01234567-3",
+  "causation_id": "evt-run-0123456789abcdef01234567-2",
+  "correlation_id": "sub-0123456789abcdef01234567",
+  "owner_epoch": 2,
+  "attempt_id": "att-run-0123456789abcdef01234567-primary-1",
+  "call_id": "call-claude-code-1",
+  "error": {
+    "class": "rate_limit",
+    "code": "RATE_LIMITED",
+    "retryable": true,
+    "safe_message": "provider rate limit reached",
+    "retry_after_s": 30,
+    "scope": "request",
+    "provider": "claude-code"
+  },
+  "raw": {
+    "$schema": "urn:swissknifeman:aicore:artifact-ref:v1",
+    "digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "size": 2048,
+    "media_type": "text/plain",
+    "sensitivity": "normal"
+  }
+}

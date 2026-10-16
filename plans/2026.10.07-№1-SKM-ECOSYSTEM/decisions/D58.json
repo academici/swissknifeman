@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D58",
+  "title": "Конфигурация planner: секция [planner], слой plan.settings, границы политик, константы формата в коде",
+  "date": "2026-10-09",
+  "status": "accepted",
+  "question": "Что из зашитого в planner становится конфигом, что — plan.settings, что остаётся в коде (D15: инвентаризация констант и политик), и как устроены слои?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Секция [planner]: packages/planner/configs/config.schema.json ($id urn:swissknifeman:planner:config:v1), config.example.toml с schema_version = 1, ключи и границы — таблица knowledge/planner-p9-config#keys (context.budget_kb, context.top_sources, check.heavy_text_kb, refs.max_chain, lock.timeout_seconds, new_plan.*, new_item.*, policy.review_rounds_max 1–3, policy.corrections_max 1–2, views.templates_dir, orchestration.default_scenario и by_class.*, events.enabled, checks.external, checks.external_failure). Порядок: умолчания схемы → машина → проект → plan.settings → env → --config → флаги; слой plan.settings = ExtraLayer(\"plan.settings\") и несёт только plan.settings.context_budget_kb → context.budget_kb (прочие поля settings — свойства плана, конфиг даёт им умолчания для новых планов через new_plan.*). Новых полей plan.settings нет. Константы формата и контракта (id, URN, статусы, порядок классов и усилий, имена файлов, коды ошибок, глаголы) остаются в коде. Политики циклов: минимум 1 в схеме (обнулить нельзя), значения — в пакете контекста (policy) и plan.py config; тексты команд ссылаются на них вместо чисел. Шаблоны представлений: views.templates_dir — каталог переопределений по имени файла (машина и проект); неизвестный файл — предупреждение.",
+      "pros": "Ровно D15; формат плана не меняется; границы держит схема"
+    },
+    {
+      "id": "B",
+      "text": "Сделать настраиваемыми и форматные константы (статусы, id, имена файлов)",
+      "cons": "Ломает формат плана и чтение старых планов"
+    },
+    {
+      "id": "C",
+      "text": "Добавить в plan.settings поле на каждый ключ конфига",
+      "cons": "Рост схемы plan/v1 без потребителя; по триггеру"
+    }
+  ],
+  "context": "Инвентаризация — knowledge/planner-p9-config#inventory (константы context.py, check.py, budget.py, refs.py, store.py, ops.py, политики циклов в текстах команд и references). Механизм — aicore.config (D22, D38: умолчания в схеме, x-skm-layers, schema_version, ExtraLayer для plan.settings).",
+  "decision": "A — Секция [planner]: packages/planner/configs/config.schema.json ($id urn:swissknifeman:planner:config:v1), config.example.toml с schema_version = 1, ключи и границы — таблица knowledge/planner-p9-config#keys (context.budget_kb, context.top_sources, check.heavy_text_kb, refs.max_chain, lock.timeout_seconds, new_plan.*, new_item.*, policy.review_rounds_max 1–3, policy.corrections_max 1–2, views.templates_dir, orchestration.default_scenario и by_class.*, events.enabled, checks.external, checks.external_failure). Порядок: умолчания схемы → машина → проект → plan.settings → env → --config → флаги; слой plan.settings = ExtraLayer(\"plan.settings\") и несёт только plan.settings.context_budget_kb → context.budget_kb (прочие поля settings — свойства плана, конфиг даёт им умолчания для новых планов через new_plan.*). Новых полей plan.settings нет. Константы формата и контракта (id, URN, статусы, порядок классов и усилий, имена файлов, коды ошибок, глаголы) остаются в коде. Политики циклов: минимум 1 в схеме (обнулить нельзя), значения — в пакете контекста (policy) и plan.py config; тексты команд ссылаются на них вместо чисел. Шаблоны представлений: views.templates_dir — каталог переопределений по имени файла (машина и проект); неизвестный файл — предупреждение.",
+  "rationale": "Решение детализации P9: инвентаризация D15 выполнена по коду (knowledge/planner-p9-config#inventory); формат плана не меняется, политики ограничены схемой снизу. Механизм — aicore.config (D22, D38).",
+  "applies_to": [
+    "P9.4",
+    "P9.5",
+    "P9.11"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

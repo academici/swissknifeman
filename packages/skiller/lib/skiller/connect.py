@@ -1,46 +1,33 @@
 """connect — channel plugin marketplace Claude Code."""
 import json
-import re
 import shutil
 import tempfile
 from dataclasses import replace
 from pathlib import Path
 
-from core import (apply_plan, atomic_write_text, find_repo_root, parse_lock,
-                  safe_load_json, serialize_lock)
-from core.provider.lock import ArtifactLock, LOCK_RELATIVE_PATH
-from core.provider.artifact import sha256_digest
+from aicore.artifacts.artifact import sha256_digest
+from aicore.artifacts.lock import (
+    apply_plan, parse_lock, serialize_lock, ArtifactLock, LOCK_RELATIVE_PATH)
+from aicore.state import backup
+from aicore.util.io import atomic_write_text, safe_load_json
+from aicore.util.repo import find_repo_root
 
-from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
-                     die, is_within, parse_flags, warn)
+from aicore.delivery.claude import enable_marketplace_plugins, redacted_settings_preview
+
+from .common import apply_permissions
+from aicore.delivery import MARKETPLACE
+from aicore.delivery.materialize import AGENT_DEFAULTS, MANIFEST
+from aicore.util.cli import parse_flags
+from aicore.util.paths import is_within
+from aicore.util.term import die, warn
 from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
                      all_buckets, default_command_plugins,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
+from .module_skills import (expand_bucket, host_provided_buckets, module_skill_sources,
+                            module_skills)
 from .state import upsert_project
 from .publication import build_connect_distribution_plan, selected_distribution_providers
-
-
-_PREVIEW_SECRET_KEY = re.compile(r"(?:api[_-]?key|authorization|credential|password|secret|token|private[_-]?key)", re.I)
-
-
-def _redacted_settings_preview(value, *, key="", redact=False):
-    """Return a dry-run-safe copy of consumer settings for terminal output.
-
-    A delivery dry-run may replay an existing ``settings.local.json``. Its
-    ``env`` table often contains provider credentials, so printing the merged
-    settings document would leak them into terminal logs and release receipts.
-    The writer still receives the original object; only this preview is redacted.
-    """
-    if isinstance(value, dict):
-        redact = redact or key == "env"
-        return {name: _redacted_settings_preview(item, key=name, redact=redact)
-                for name, item in value.items()}
-    if isinstance(value, list):
-        return [_redacted_settings_preview(item, key=key, redact=redact) for item in value]
-    if redact or _PREVIEW_SECRET_KEY.search(key):
-        return "[REDACTED]"
-    return value
 
 
 def _prune_codex_connect_artifacts(target, *, dry_run):
@@ -94,6 +81,36 @@ def _prune_codex_connect_artifacts(target, *, dry_run):
             pass
 
 
+def _expand_host_buckets(env, plugins, command_plugins):
+    """Replace each host-provided bucket in `plugins` with the host plugins behind it.
+
+    Only plugins the marketplace declares are kept (an undeclared one is skipped with a
+    warning, like a command plugin). Returns `(plugins, host_buckets, expansion)`:
+    `expansion` maps a bucket to `(all plugins, plugins that exist only because of it)`; the
+    second part lets connect drop them when the project explicitly disabled the old key."""
+    provided = host_provided_buckets(env)
+    host_buckets = tuple(dict.fromkeys(p for p in plugins if p in provided))
+    if not host_buckets:
+        return list(plugins), (), {}
+    direct = {p for p in plugins if p not in provided} | set(command_plugins) | {CORE_PLUGIN}
+    expanded, expansion = [], {}
+    for plugin in plugins:
+        if plugin not in provided:
+            expanded.append(plugin)
+            continue
+        names = []
+        for name in expand_bucket(env, plugin):
+            if _marketplace_declares(env, name):
+                names.append(name)
+            else:
+                warn(f"marketplace '{MARKETPLACE}' does not declare the plugin '{name}' "
+                     f"(bucket '{plugin}') — skipped. Run `skiller registry` in the registry, "
+                     f"then repeat connect.")
+        expanded.extend(names)
+        expansion[plugin] = (tuple(names), tuple(n for n in names if n not in direct))
+    return list(dict.fromkeys(expanded)), host_buckets, expansion
+
+
 def prepare_connect_selection(env, target, opts, config):
     """Resolve the one semantic plugin set used by every selected provider."""
     flag_plugins = [p for p in opts.get("plugins", "").split(",") if p]
@@ -105,7 +122,8 @@ def prepare_connect_selection(env, target, opts, config):
     buckets = all_buckets(env)
     command_plugins = default_command_plugins()
     known_plugins = (set(buckets) | {"generate-skill", CORE_PLUGIN}
-                     | set(command_plugins))
+                     | set(command_plugins) | set(module_skill_sources(env)))
+    plugins, host_buckets, host_expansion = _expand_host_buckets(env, plugins, command_plugins)
     core_added = []
     if not opts.get("no_core") and CORE_PLUGIN not in plugins:
         if _marketplace_declares(env, CORE_PLUGIN):
@@ -140,6 +158,8 @@ def prepare_connect_selection(env, target, opts, config):
         "include_meta": include_meta,
         "core_added": tuple(core_added),
         "cmd_added": tuple(cmd_added),
+        "host_buckets": host_buckets,
+        "host_expansion": host_expansion,
     }
 
 
@@ -151,15 +171,18 @@ _prepare_connect_selection = prepare_connect_selection
 def _resident_tokens(env, plugins):
     """Rough estimate of resident ⊕ tier-0 (name+description) of the selected set of plugins -
     for «smart connection»: you can see the price BEFORE recording. core → CORE_SKILLS; bucket → all his skills;
-    generate-skill → his skill. Source of token mathematics ONE - budget.skill_budget (do not duplicate).
+    generate-skill → his skill; a host module plugin → its skills. Source of token mathematics ONE - aicore.content.budget.skill_budget (do not duplicate).
     Return (tokens, n_skills)."""
-    from .budget import skill_budget
+    from aicore.content.budget import skill_budget
+    module_plugins = module_skill_sources(env)
     total = n = 0
     for p in plugins:
         if p == CORE_PLUGIN:
             dirs = [env.root / "skills" / cs for cs in CORE_SKILLS]
         elif p == "generate-skill":
             dirs = [env.root / "generate-skill" / "generate-skill"]
+        elif p in module_plugins:
+            dirs = [item.skill_dir for item in module_skills(env, [p])]
         else:
             base = env.root / "skills" / p
             dirs = [d for d in base.iterdir() if d.is_dir()] if base.is_dir() else []
@@ -242,52 +265,46 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
         except json.JSONDecodeError as e:
             die(f"{dest}: invalid JSON: {e}")
 
-    marketplaces = settings.setdefault("extraKnownMarketplaces", {})
+    # A host-provided bucket used to be one marketplace plugin of the same name; its key is
+    # replaced by the module plugins (merge-only: only that key, only when the marketplace
+    # no longer declares such a plugin; an explicit `false` is respected).
+    expansion = prepared.get("host_expansion", {})
+    existing = settings.get("enabledPlugins")
+    replaced = []
+    if isinstance(existing, dict):
+        for bucket in prepared.get("host_buckets", ()):
+            key = f"{bucket}@{MARKETPLACE}"
+            if key not in existing or _marketplace_declares(env, bucket):
+                continue
+            members, exclusive = expansion.get(bucket, ((), ()))
+            if existing[key] is False:
+                plugins = [p for p in plugins if p not in exclusive]
+                print(f"Skipped (explicit false): {key} — its host modules "
+                      f"({' '.join(members) or '-'}) are not enabled")
+                continue
+            del existing[key]
+            replaced.append(f"Replaced:  {key} -> "
+                            + ", ".join(f"{m}@{MARKETPLACE}" for m in members))
+
     # Marketplace source paths are relative to the host root where registry writes
     # its manifest, including sibling plugin entries declared by the host config.
     mp_root = find_repo_root(root) or root
-    our_source = {"source": "directory", "path": str(mp_root)}
-    if MARKETPLACE in marketplaces:
-        existing = marketplaces[MARKETPLACE].get("source", {})
-        if existing != our_source:
-            if fix_path_drift and existing.get("source") == "directory":
-                print(f"NOTE: path marketplace is deprecated ({existing.get('path')}) — "
-                      f"updating to {mp_root}")
-                marketplaces[MARKETPLACE] = {"source": our_source}
-            elif existing.get("source") == "directory":
-                # directory-source with a DIFFERENT path - probably the repository has moved: plugins
-                # will not be picked up. Making the hint effective (rather than silently leaving the old path).
-                print(f"⚠ marketplace '{MARKETPLACE}' points to ANOTHER directory: "
-                      f"{existing.get('path')}\n  registry is now here: {mp_root}. If "
-                      f"the repository has moved - the plugins will not load. Correct: "
-                      f"skiller connect --fix-path (or skiller update).")
-            else:
-                # Other source type (github/…) — conscious choice of the user, do not touch.
-                print(f"NOTE: marketplace '{MARKETPLACE}' declared with a different origin "
-                      f"({json.dumps(existing)}) — I leave it as is.")
-    else:
-        marketplaces[MARKETPLACE] = {"source": our_source}
-
-    enabled = settings.setdefault("enabledPlugins", {})
-    added, skipped_false = [], []
-    for p in plugins:
-        key = f"{p}@{MARKETPLACE}"
-        if key not in enabled:
-            enabled[key] = True
-            added.append(p)
-        elif enabled[key] is False:
-            skipped_false.append(p)
-    drift = [k for k, v in enabled.items()
-             if k.endswith(f"@{MARKETPLACE}") and v
-             and k.split("@")[0] not in plugins]
+    merged = enable_marketplace_plugins(settings, marketplace=MARKETPLACE, marketplace_root=mp_root,
+                                        plugins=plugins, fix_path_drift=fix_path_drift)
+    for note in merged.notes:
+        print(note)
+    for line in replaced:
+        print(("[dry-run] " if dry_run else "") + line)
+    enabled = settings["enabledPlugins"]
+    added, skipped_false, drift = merged.added, merged.skipped_false, merged.drift
 
     if dry_run:
         print(f"--- dry-run: {dest} ---")
-        print(json.dumps(_redacted_settings_preview(settings), ensure_ascii=False, indent=2))
+        print(json.dumps(redacted_settings_preview(settings), ensure_ascii=False, indent=2))
     else:
-        if dest.exists():
-            shutil.copy2(dest, f"{dest}.bak")
-            print(f"Backup:    {dest}.bak")
+        saved = backup(dest, project=target)
+        if saved is not None:
+            print(f"Backup:    {saved}")
         atomic_write_text(dest,
                           json.dumps(settings, ensure_ascii=False, indent=2) + "\n")
         print(f"Recorded: {dest}")
@@ -453,7 +470,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     prepared = prepare_connect_selection(env, target, opts, config)
     native_plan = None
     if opts.get("native_codex"):
-        from .native_codex import plan_selection
+        from aicore.delivery.codex import plan_selection
         marketplace = json.loads((repo_root / ".agents/plugins/marketplace.json").read_text())
         try:
             native_plan = plan_selection(env, target, prepared["plugins"],
@@ -461,7 +478,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         except (OSError, ValueError) as exc:
             die(f"CODEX_SELECTION_PREFLIGHT: {exc}")
     if opts.get("native_codex_only"):
-        from .native_codex import apply_selection
+        from aicore.delivery.codex import apply_selection
         apply_selection(target, native_plan, dry_run=opts.get("dry_run", False))
         return {"provider": "codex", "target": str(native_plan["path"]),
                 "plugins": native_plan["selected"]}
@@ -502,7 +519,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
                 env, target, plan, dry_run=opts.get("dry_run", False),
                 register=register))
     if native_plan is not None:
-        from .native_codex import apply_selection
+        from aicore.delivery.codex import apply_selection
         apply_selection(target, native_plan, dry_run=opts.get("dry_run", False))
         if opts.get("hub") and not opts.get("dry_run", False):
             generate_hub(env, target, root_files=("AGENTS.md",))

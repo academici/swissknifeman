@@ -7,6 +7,7 @@ from contextlib import contextmanager
 
 from analyst import lessons
 from analyst.common import Env
+from tests.maind_stub import without_maind
 from analyst.promote import cmd_deprecate, cmd_promote, surface_to_memory
 
 
@@ -38,6 +39,7 @@ def env_var(key, val):
 
 class TestPromote(unittest.TestCase):
     def setUp(self):
+        without_maind(self)   # a maind on the developer PATH must not answer
         self._tmp = tempfile.TemporaryDirectory()
         self.proj = self._tmp.name
         self.env = Env(self.proj, "promote")

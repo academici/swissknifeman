@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-followups:v1",
+  "title": "Read Followups",
+  "type": "object",
+  "description": "Follow-up and owner-decision leftovers recorded in result.pending of items, with whether another item follows them up.",
+  "properties": {
+    "plan": {
+      "type": "string",
+      "description": "Plan id.",
+      "minLength": 1
+    },
+    "followups": {
+      "type": "array",
+      "description": "Leftovers in item order.",
+      "items": {
+        "description": "One leftover.",
+        "$ref": "urn:swissknifeman:task:plan:read-followups:v1#/$defs/followup"
+      }
+    }
+  },
+  "required": [
+    "plan",
+    "followups"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "followup": {
+      "type": "object",
+      "description": "One follow_up or owner_decision entry of an item's result.pending.",
+      "properties": {
+        "item": {
+          "type": "string",
+          "description": "Item that recorded it.",
+          "minLength": 1
+        },
+        "phase": {
+          "type": "string",
+          "description": "Phase of the item.",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "description": "Outcome of the deviation.",
+          "enum": [
+            "follow_up",
+            "owner_decision"
+          ]
+        },
+        "class": {
+          "type": "string",
+          "description": "Deviation class named in the entry.",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "description": "The entry without its prefix.",
+          "minLength": 1
+        },
+        "entry": {
+          "type": "string",
+          "description": "The entry as stored in result.pending.",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "description": "open until another item follows up the origin item.",
+          "enum": [
+            "open",
+            "resolved"
+          ]
+        },
+        "resolved_by": {
+          "type": "array",
+          "description": "Items with a related follows_up link to the origin item.",
+          "items": {
+            "type": "string",
+            "description": "Item id.",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "item",
+        "phase",
+        "kind",
+        "class",
+        "text",
+        "entry",
+        "status",
+        "resolved_by"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

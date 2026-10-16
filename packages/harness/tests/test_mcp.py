@@ -39,6 +39,7 @@ class McpCase(unittest.TestCase):
         self.assertEqual(parse_mcp_flag(None), [])
 
     def test_block_mcp_adds_context7_mergeonly(self):
+        (self.proj / ".git").mkdir()
         (self.proj / ".mcp.json").write_text(json.dumps(
             {"mcpServers": {"maind": {"command": "maind"}}}) + "\n")
         run(block_mcp, self.env, self.proj, ["context7"], False)
@@ -46,7 +47,9 @@ class McpCase(unittest.TestCase):
         self.assertEqual(data["mcpServers"]["context7"],
                          {"type": "http", "url": "https://mcp.context7.com/mcp"})
         self.assertIn("maind", data["mcpServers"])
-        self.assertTrue((self.proj / ".mcp.json.bak").exists())
+        self.assertFalse((self.proj / ".mcp.json.bak").exists())
+        saved = sorted((self.proj / ".swissknifeman" / "backups").glob("*/.mcp.json"))
+        self.assertEqual([list(json.loads(path.read_text())["mcpServers"]) for path in saved], [["maind"]])
 
         run(block_mcp, self.env, self.proj, ["context7"], False)
         data2 = json.loads((self.proj / ".mcp.json").read_text())

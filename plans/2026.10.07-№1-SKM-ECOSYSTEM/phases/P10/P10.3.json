@@ -1,0 +1,311 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.3",
+  "title": "Мосты в хабе: bridges/planner-orch, orch-skiller, orch-harness — unit.json, проверки ecosystem-units, поиск партнёров без соседних путей, корни мостов planner из конфига",
+  "status": "done_with_deviations",
+  "summary": "git mv packages/planner/bridges/orch → bridges/planner-orch, packages/orch/bridges/skiller → bridges/orch-skiller, packages/orch/bridges/harness → bridges/orch-harness; git rm packages/orch/bridges/task; unit.json kind bridge; ecosystem-units ищет юниты в bridges/ (kind, requires capability для мостов, порты, границы, render); partners.py без шагов «сосед»; локатор aicore моста; planner bridges.roots в конфиге и диспетчере, .swissknifeman/config.toml хаба; scripts/test-bridges.sh; ссылки хаба (config-inventory, public-hygiene, develop.md, contracts.md, ecosystem.md, ownership); digest брифа через aicore.util.digest.",
+  "why": "D3, D62 (поиск соседа по путям заменяется конфигом), архитектура §2, §9; карта P2. Переносится рано, чтобы последующие пункты правили конечные пути. Жёсткие риски: (1) planner перестаёт находить мост (bridges.roots, имя planner-orch) — тест диспетчера и `plan.py bridge list` в песочнице; (2) проверка границ начинает видеть мосты — новые нарушения устраняются, а не вносятся в линию; (3) тесты мостов перестают запускаться (раньше их звали validate.sh planner и orch) — хаб-раннер и проверка, что он запускает каждый мост.",
+  "scope": {
+    "include": [
+      "bridges/** (create: unit.json, README, partners.py, scripts/test.sh; git mv содержимого)",
+      "packages/planner/bridges/**, packages/orch/bridges/** (delete)",
+      "scripts/ecosystem-units.py, scripts/test-ecosystem-units.py, configs/ecosystem-units.json, configs/ecosystem-baseline.json, docs/architecture/ownership.md",
+      "packages/planner/{configs/config.schema.json, config.example.toml, lib/planner/plan/bridges.py, scripts/validate.sh, skills/plan-protocol/**, tests/**}",
+      "packages/orch/scripts/validate.sh, packages/orch/tests/test_boundaries.py (SKIPPED_DIRS bridges/)",
+      ".swissknifeman/config.toml",
+      "scripts/test-bridges.sh",
+      "configs/config-inventory.json, scripts/public-hygiene.py, docs/develop.md, docs/architecture/{contracts,ecosystem}.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "порт work-source и флаги register (P10.10)",
+      "skill-digest в resolve-role (P10.8)",
+      "поведение глаголов brief/register/commit/launch (кроме digest и поиска партнёров)"
+    ]
+  },
+  "depends_on": [
+    "P10.2"
+  ],
+  "decisions": [
+    "D62",
+    "D3",
+    "D57"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/orch-p10#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#facts",
+      "why": "факты кода на начало фазы: файлы, функции, точки изменения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#checks",
+      "why": "команды проверок фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-bridges#layout",
+      "why": "карта переноса",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-bridges#units",
+      "why": "unit.json мостов и проверки ecosystem-units",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-bridges#lookup",
+      "why": "поиск партнёров и aicore, хаб-раннер",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-bridges#dispatch",
+      "why": "bridges.roots и диспетчер planner",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-config#resolve",
+      "why": "как planner читает конфиг (settings) и слои",
+      "required": true
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "why": "module_folders, load_units, _check_requires, _check_paths, scan_boundaries, current_module, run_standalone",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/bridges.py",
+      "why": "текущий диспетчер",
+      "required": true
+    },
+    {
+      "path": "packages/planner/bridges/orch/README.md",
+      "why": "глаголы и тесты моста",
+      "required": true
+    },
+    {
+      "path": "packages/planner/bridges/orch/partner.py",
+      "why": "текущий поиск orch",
+      "required": true
+    },
+    {
+      "path": "packages/orch/bridges/skiller/partner.py",
+      "why": "текущий поиск skiller",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/unit.schema.json",
+      "why": "kind, protocol, provides.ports",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "bridges/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/bridges/**",
+      "change": "delete"
+    },
+    {
+      "path": "packages/orch/bridges/**",
+      "change": "delete"
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-ecosystem-units.py",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/configs/config.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/config.example.toml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/bridges.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/skills/plan-protocol/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "change": "modify"
+    },
+    {
+      "path": ".swissknifeman/config.toml",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-bridges.sh",
+      "change": "create"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/public-hygiene.py",
+      "change": "modify"
+    },
+    {
+      "path": "docs/develop.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/contracts.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ecosystem.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Нарушения границ, найденные в мостах после включения сканирования, исправляются в коде моста; в линию не вносятся",
+    "Ни одного шага поиска «соседний каталог» в partners.py; единственное исключение path_allow — локатор aicore моста",
+    "Проекции planner перегенерируются генератором, если меняется текст plan-protocol: python3 packages/planner/scripts/render-provider-commands.py --write --root ."
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: (1) git mv по карте §layout отдельным шагом; git rm packages/orch/bridges/task; (2) unit.json трёх мостов (§units), bridge.json planner-orch `name: planner-orch`, удаление orch:bridge:v1 bridge.json у orch-skiller и orch-harness; README мостов и `bridges/README.md`; (3) partners.py (§lookup) и замена partner.py в коде и тестах; локатор aicore моста; digest брифа через aicore.util.digest (тест: прежний digest на фикстуре); (4) scripts/test.sh каждого моста (unittest discover своих tests) и `scripts/test-bridges.sh`; (5) ecosystem-units.py (§units) + кейсы в test-ecosystem-units.py; ownership: удалить строки перенесённых путей; `render`; `baseline --update` только если нарушения исчезли; (6) planner: ключ bridges.roots в config.schema.json, `aicore config example packages/planner --write`, bridges.py (§dispatch), тест диспетчера, validate.sh без тестов моста, plan-protocol api.md/SKILL.md; (7) `.swissknifeman/config.toml` хаба; (8) orch: validate.sh без bridges/*/tests; (9) ссылки хаба: config-inventory.json (пути мостов), public-hygiene.py (исключение тестов моста → bridges/planner-orch/tests/), develop.md, contracts.md (дескриптор моста planner), ecosystem.md; (10) `bash scripts/test-bridges.sh`, planner validate в песочнице, V1–V5; (11) CHANGELOG («bridges move into the hub: planner-orch (formerly the planner's orch bridge), orch-skiller, orch-harness; partners are found by environment and PATH; the planner finds bridges through bridges.roots»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash scripts/test-bridges.sh",
+      "expect": "exit 0; строка bridges: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test ! -e packages/planner/bridges && test ! -e packages/orch/bridges && for b in planner-orch orch-skiller orch-harness; do python3 -c 'import json, sys; u = json.load(open(sys.argv[1])); assert u[\"kind\"] == \"bridge\" and u[\"destination\"] == \"hub\", u' bridges/$b/unit.json || exit 1; done && ! grep -nE '(\\.\\./|parent).*(orch|planner|skiller|harness)' bridges/*/partners.py && python3 scripts/ecosystem-units.py list | grep -q planner-orch",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p10-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "bridges/planner-orch, bridges/orch-skiller, bridges/orch-harness",
+    "bridges.roots в конфиге planner",
+    "scripts/test-bridges.sh"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-10T11:21:25Z",
+    "finished_at": "2026-10-10T12:23:23Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "9a6a20cd-abe8-425a-b3aa-d4c81e1bed09"
+    },
+    "notes": "Bridges moved to bridges/{planner-orch,orch-skiller,orch-harness} as hub units; ecosystem-units checks bridges (kind, destination, requires, ports, boundaries); partners found by env/PATH only; planner bridges.roots + .swissknifeman/config.toml; scripts/test-bridges.sh; brief digest via aicore. grok-4.7 review: 2 findings, 1 fixed (shadowed manifest), 1 rejected (dynamic import is a recorded design limit).",
+    "deviations": [
+      "boundary-scan-invisible runtime import of the planner engine by brief and tests; V5 golden red only from owner-dirty files"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T12:23:23Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T12:23:23Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T12:23:23Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-10T12:23:23Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-10T12:23:23Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T12:23:23Z"
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D44",
+  "title": "События: конверт CloudEvents, журнал-сначала, курсоры, dead-letter, режимы доставки",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Какой конверт и какие гарантии у событий aicore.ext (D6, E22, E38, R06, R07, R32)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "event/v1 — подмножество CloudEvents 1.0 JSON: specversion \"1.0\", id (uuid4 hex), source urn:swissknifeman:module:<id>, type <module>.<subject>.<verb> (первый сегмент = модуль), time RFC 3339 UTC, необязательные subject, datacontenttype application/json, dataschema, data (объект, канонический JSON ≤ 64 KiB, больше — artifact-ref/v1 и aicore.state.blobs), расширения traceparent, causationid, correlationid; неизвестные расширения [a-z0-9]{1,20} читатель игнорирует; поля project нет — корень проекта подписчику даёт окружение. Журнал <project>/.swissknifeman/state/events.jsonl (вне проекта — машинный state), только дописывание под flock, fsync, без ротации; доставка только из журнала, курсор на подписку (смещение + last_id) в cursors.json под deliver.lock, один доставщик на журнал (LOCK_NB, без потерянного пробуждения), at-least-once с идемпотентностью подписчика по id, одна попытка за проход, после max_attempts (3) — dead-letter и replay. Режимы emit: background (по умолчанию: отдельный одноразовый процесс-доставщик в своей сессии), sync, off. Источник не ломается: emit бросает только на ошибке вызова (тип, data, лимит, Secret), ввод-вывод и конфиг — предупреждение и None.",
+      "pros": "Повтор вместо потери (R06), источник не ждёт подписчиков, нет демона (D35)",
+      "cons": "Фоновый процесс после emit; повторы только при следующем проходе доставщика"
+    },
+    {
+      "id": "B",
+      "text": "Синхронная доставка по умолчанию",
+      "pros": "Детерминизм",
+      "cons": "Источник ждёт сумму таймаутов подписчиков"
+    },
+    {
+      "id": "C",
+      "text": "Свой конверт {id, ts, source, type, project, subject, data} как в §6.1",
+      "pros": "Короче",
+      "cons": "Расходится с CloudEvents (E22) и кладёт машинный путь в событие"
+    }
+  ],
+  "context": "§6.1 архитектуры даёт конверт без CloudEvents-полей; E22 принят (D19); R06/R07 требуют журнал-сначала и лимит data. CloudEvents 1.0.2 проверен через perplexity-web 2026-10-09 (обязательные id/source/specversion/type; имена расширений a-z0-9 ≤ 20; data для JSON).",
+  "decision": "A — event/v1 — подмножество CloudEvents 1.0 JSON: specversion \"1.0\", id (uuid4 hex), source urn:swissknifeman:module:<id>, type <module>.<subject>.<verb> (первый сегмент = модуль), time RFC 3339 UTC, необязательные subject, datacontenttype application/json, dataschema, data (объект, канонический JSON ≤ 64 KiB, больше — artifact-ref/v1 и aicore.state.blobs), расширения traceparent, causationid, correlationid; неизвестные расширения [a-z0-9]{1,20} читатель игнорирует; поля project нет — корень проекта подписчику даёт окружение. Журнал <project>/.swissknifeman/state/events.jsonl (вне проекта — машинный state), только дописывание под flock, fsync, без ротации; доставка только из журнала, курсор на подписку (смещение + last_id) в cursors.json под deliver.lock, один доставщик на журнал (LOCK_NB, без потерянного пробуждения), at-least-once с идемпотентностью подписчика по id, одна попытка за проход, после max_attempts (3) — dead-letter и replay. Режимы emit: background (по умолчанию: отдельный одноразовый процесс-доставщик в своей сессии), sync, off. Источник не ломается: emit бросает только на ошибке вызова (тип, data, лимит, Secret), ввод-вывод и конфиг — предупреждение и None.",
+  "rationale": "Стандартная форма конверта переносима и не тянет зависимостей; журнал как источник правды с курсором даёт повтор вместо потери без БД и демона; dead-letter снимает блокировку очереди отравленным событием; лимит и artifact-ref держат журнал маленьким. Модель инвариантов и пары интерференции — knowledge/ext-p6-events §model.",
+  "applies_to": [
+    "P6.4",
+    "P6.6",
+    "P6.7",
+    "P6.10"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

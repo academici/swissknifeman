@@ -1,0 +1,232 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.2",
+  "title": "aicore.content.budget: математика токенов, листинг, измерения первого хода; skiller и harness на одной формуле",
+  "status": "done_with_deviations",
+  "summary": "Перенести из skiller/budget.py в aicore/content/budget.py оценку токенов, бюджет skill и набора, измерение листинга по провайдерам, записи измерений и измерители поверхностей первого хода (агенты, CLAUDE.md, инструкции, хуки, MCP с явным host_servers), вердикт и форматирование; в skiller оставить композицию (resolve_active_set, _measure_skills, first_turn_report, cmd_budget, карта бюджета) с реэкспортом; harness: удалить копию estimate_tokens и CHARS_PER_TOKEN_*, импортировать из aicore, тест на тождество функции, обновить instruction-canon.md; тесты aicore; карта и базовая линия.",
+  "why": "D40: первый реальный второй потребитель — harness держит копию формулы, сверяемую тестом через импорт соседнего пакета (нарушение границы в базовой линии). Жёсткие риски: (1) изменение чисел бюджета — docs/guide/budget.md в golden skiller-registry и тесты test_budget*; (2) измерение MCP перестанет видеть серверы host-конфига, если host_servers не передан из skiller; (3) patch-цели test_budget_first_turn.py.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/content/budget.py (таблица content-p5-budget#allocation aicore.content.budget)",
+      "packages/skiller/lib/skiller/budget.py: остаётся композиция; перенесённые имена — реэкспорт под старыми именами; _measure_mcp(target) — обёртка над measure_mcp(target, host_servers=_host_mcp_servers())",
+      "packages/harness/lib/harness/instructions.py, packages/harness/tests/test_instruction_size_gate.py, packages/harness/docs/reference/instruction-canon.md",
+      "packages/aicore/tests/content/test_budget.py; test_architecture: estimate_tokens в списке определений-один-раз",
+      "configs/ecosystem-units.json: удалить гипотезу budget.py; render; baseline --update; CHANGELOG aicore"
+    ],
+    "exclude": [
+      "текст правила skiller.module-boundaries в каталоге инструкций harness и проекциях (P5.9, с перезахватом golden)",
+      "render_budget_map/write_budget_map (документация библиотеки skiller) и выбор набора skills",
+      "изменения констант, формулы или формата отчётов"
+    ]
+  },
+  "depends_on": [
+    "P5.1"
+  ],
+  "decisions": [
+    "D40"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/content-p5-budget#allocation",
+      "why": "таблица aicore.content.budget",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5-budget#design",
+      "why": "harness, host_servers, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/content-p5#migration",
+      "why": "реэкспорт, patch-цели, байт-в-байт",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/budget.py",
+      "why": "исходник переноса",
+      "required": true
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "why": "копия формулы (строки 181–187, 486–491)",
+      "required": true
+    },
+    {
+      "path": "packages/harness/tests/test_instruction_size_gate.py",
+      "why": "тест сверки с skiller (строки 30–79)",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_budget_first_turn.py",
+      "why": "patch-цели измерителей",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/host.py",
+      "why": "McpServer (tools, instructions_tokens)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/content/budget.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/budget.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "modify",
+      "note": "только цели импортов/патчей"
+    },
+    {
+      "path": "packages/harness/lib/harness/instructions.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/tests/test_instruction_size_gate.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/docs/reference/instruction-canon.md",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify",
+      "note": "только baseline --update"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только render"
+    }
+  ],
+  "rules": [
+    "Перенос — по knowledge/content-p5 content-p5#migration: тела функций дословно, имена и сигнатуры строго по content-p5-budget#allocation, старые имена в skiller/task — реэкспорт; отклонение от таблицы — только через plan.py log с причиной (решение остаётся D40)",
+    "aicore импортирует только stdlib и aicore.*; слои подпакетов — content-p5#migration п.10 (test_subpackage_layering); новые импорты в skiller/task/harness — aicore.*, после первого import core модуля; shim core новых алиасов не получает",
+    "Константы, формула, пороги, тексты и порядок строк отчётов не меняются; числовой литерал в тесте aicore estimate_tokens берётся прогоном прежней функции до переноса",
+    "measure_mcp обращается к host_servers только через атрибуты tools и instructions_tokens; aicore не импортирует skiller и не читает skiller-host.json",
+    "harness.instructions сохраняет публичные имена estimate_tokens, CHARS_PER_TOKEN_CYR, CHARS_PER_TOKEN_LAT (реэкспорт из aicore) — их импортируют тесты и, возможно, другие модули harness",
+    "python3 scripts/golden.py check — без перезахвата: расхождение байтов генерации или вывода CLI — дефект переноса, чинится в пункте (D23)",
+    "Цели mock.patch в тестах skiller/task переносятся на модуль aicore, если патчится вызов внутри перенесённой функции (content-p5#migration п.5); каждый такой тест после правки проверяет, что mock действительно вызван",
+    "Пункт удаляет из configs/ecosystem-units.json гипотезы P5 по своим файлам, перегенерирует docs/architecture/ownership.md (ecosystem-units.py render) и при improvements обновляет базовую линию (baseline --update)",
+    "CLI skiller в dev-клоне блокирует guard (SKM_DEV_GUARD) — skiller validate.sh (внутри: test.sh, registry --check, Codex consumer acceptance) запускается только через scripts/dev-sandbox.sh, как в V-команде; прямой запуск вне песочницы даёт ложное «registry is out of date»",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: прогнать `bash packages/skiller/scripts/test.sh` (зелёный исходный) и записать `estimate_tokens` на 2–3 строках (латиница, кириллица, смешанная) для литералов теста → `content/budget.py`: перенос по таблице content-p5-budget#allocation группами (оценка и skill/набор → листинг → записи измерений → измерители первого хода → вердикт и форматирование); внутренние вызовы внутри модуля переименовать на публичные имена → в `skiller/budget.py` удалить перенесённые тела, добавить блок реэкспорта (старые приватные имена — `from aicore.content.budget import listing_entry_tokens as _listing_entry_tokens`), `_measure_mcp` — обёртка → прогон skiller-тестов; упавшие patch-цели (`skiller.budget._run_hook` и т. п. для функций, вызываемых из перенесённого кода) перевести на `aicore.content.budget.<имя>` → harness: импорт после `from core.cli import parse_args`, удаление копии и комментария, тест `test_token_estimate_is_the_aicore_function`, абзац в instruction-canon.md → тесты aicore `tests/content/test_budget.py` (content-p5-budget#design) → `test_content_primitives_are_defined_once` += `estimate_tokens`, `skill_budget`, `measure_listing_budget` → карта: удалить запись budget.py; render; `python3 scripts/ecosystem-units.py check` покажет improvement для harness-теста → `baseline --update` → CHANGELOG aicore.\n\nДиагностика (не приёмка): в `scripts/dev-sandbox.sh` выполнить `packages/skiller/bin/skiller budget --first-turn` в корне клона до и после — строки отчёта совпадают.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p5-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/harness/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "test -z \"$(git grep -n -E '^def (estimate_tokens|skill_budget|budget_for_set|measure_listing_budget|make_measurement)\\b' -- packages/skiller/lib packages/harness/lib)\" && test -z \"$(git grep -n 'packages/skiller/lib' -- packages/harness)\" && PYTHONPATH=packages/harness/lib:.:packages/aicore/lib python3 -c 'import harness.instructions as h, aicore.content.budget as b; assert h.estimate_tokens is b.estimate_tokens'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.content.budget",
+    "skiller budget — композиция над aicore",
+    "harness без копии формулы; нарушение границы снято из базовой линии"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T15:18:58Z",
+    "finished_at": "2026-10-08T15:38:34Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "9cabcd9b-ae21-4337-855f-a57a4f98dc9f"
+    },
+    "notes": "aicore.content.budget перенесён дословно по таблице (measure_mcp с host_servers), skiller/budget.py — композиция с реэкспортом и обёрткой _measure_mcp, harness без копии формулы (тест на тождество функции, instruction-canon.md), карта без budget.py, baseline обновлён (-2 нарушения), golden без перезахвата, skiller 803 и harness 736 тестов зелёные.",
+    "deviations": [
+      "TOP_N перенесена вместе с format_report (нет в таблице allocation)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T15:38:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T15:38:34Z"
+}

@@ -1,0 +1,6 @@
+{
+  "class": "quota",
+  "code": "provider-quota",
+  "retryable": false,
+  "safe_message": "x"
+}

@@ -12,13 +12,12 @@ from pathlib import Path
 from unittest import mock
 
 from skiller.registry import build_registry
-from skiller.skillset import (_registry_index, cmd_init, do_sync, load_lock,
-                                    load_skillset_config,
-                                    materialize_skillset_config, plan_sync,
-                                    resolve_skillset, skillset_config_path,
-                                    sync_skillset, write_lock)
+from skiller.skillset import (
+    _registry_index, cmd_init, do_sync, load_skillset_config, materialize_skillset_config,
+    plan_sync, resolve_skillset, skillset_config_path, sync_skillset)
+from aicore.delivery.materialize import load_lock, write_lock, MANIFEST
 
-from skiller.common import MANIFEST, Env
+from skiller.common import Env
 
 from tests.fixtures import make_laravel_project, make_registry, write_skill
 
@@ -47,10 +46,9 @@ def _materialize_registry(env):
 
 
 def _write_config(target, cfg):
-    d = skillset_config_path(target).parent
-    d.mkdir(parents=True, exist_ok=True)
-    skillset_config_path(target).write_text(
-        json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+    legacy = Path(target) / ".swissknifeman" / "config.json"  # the legacy vendor file
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
 
 
 def _write_preset(root, name, **body):
@@ -222,8 +220,9 @@ class TestSync(unittest.TestCase):
             _materialize_registry(env)
             target = make_laravel_project(tmp)
             cfg = {"mode": "vendor", "buckets": ["php"]}
-            with mock.patch("skiller.skillset.safe_copy_skill", return_value=False):
+            with mock.patch("aicore.delivery.materialize.safe_copy_skill", return_value=False) as copy:
                 plan = sync_skillset(env, target, cfg)
+            self.assertEqual(copy.call_count, len(plan["add"]))
             self.assertEqual(plan["installed"], [])
             self.assertCountEqual(plan["skip_copy"], plan["add"])
             self.assertEqual(load_lock(target).get("skills", {}), {})
@@ -759,7 +758,7 @@ class TestInit(unittest.TestCase):
             self.assertEqual(cfg["mode"], "vendor")
             self.assertEqual(cfg["version"], 1)
             self.assertEqual(set(cfg["buckets"]), {"php", "quality"})
-            # the file is actually written and valid as .swissknifeman/config.json
+            # the file is actually written and valid as config.toml
             self.assertTrue(skillset_config_path(target).is_file())
             self.assertEqual(load_skillset_config(target)["mode"], "vendor")
 

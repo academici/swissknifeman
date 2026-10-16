@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.1",
   "title": "Guard dev-клона в точках входа и scripts/dev-clone.sh",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Вставить одинаковый guard-блок в 11 точек входа сразу после set -euo pipefail; добавить /.swissknifeman-dev в .gitignore; написать scripts/dev-clone.sh (init, status, sync-main) и scripts/test-dev-guard.py; шаг CI; выполнить dev-clone.sh init в клоне и доказать, что наборы тестов зелёные при наличии маркера.",
   "why": "Live-папка — источник CLI в PATH, маркетплейса и путей в проектах; случайный запуск установщика или CLI из клона с реальным HOME перепишет их на недоделанную версию. Guard срабатывает до любых действий и только в клоне (маркер не коммитится). Риск: guard не первым оператором → побочные эффекты до проверки; тест места блока это исключает, поэтому реальные установщики с реальным HOME тесты не запускают.",
   "scope": {
@@ -207,6 +207,46 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-07T17:57:37Z"
+  "result": {
+    "started_at": "2026-10-08T20:13:29Z",
+    "finished_at": "2026-10-08T20:17:26Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "session": "01a11d1e-47ea-78a1-82de-32ecb9b8e2b5"
+    },
+    "notes": "Audit correction A1: restored dev-clone marker with init, verified 6 real-HOME guard refusals and all P1 acceptance checks. Public hygiene baseline is now green. Module tests use isolated HOME; skiller validated in clean tracked worktree because the pre-existing gitignored next-base-tooling projection violates root-bootstrap completeness only in the configured checkout.",
+    "deviations": [
+      "V4 Skiller runs in a clean tracked worktree with the same product inputs; local next-base-tooling is preserved. Original P1 migration deviations remain documented in the journal and reviewer baseline."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T20:17:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T20:17:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T20:17:26Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T20:17:26Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T20:17:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T20:17:26Z"
 }

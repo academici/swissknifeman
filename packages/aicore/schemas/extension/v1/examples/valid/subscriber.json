@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "notifier",
+  "kind": "subscriber",
+  "version": "1.2.3-rc.1",
+  "description": "Sends a note when a plan closes.",
+  "protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "entrypoint": [
+    "bin/notifier",
+    "--stdio"
+  ],
+  "requires": [
+    {
+      "contract": "urn:swissknifeman:aicore:event",
+      "versions": [
+        "v1"
+      ]
+    }
+  ],
+  "provides": {
+    "events": [
+      "planner.plan.*"
+    ],
+    "capabilities": [
+      {
+        "id": "notify.plan",
+        "version": "1",
+        "stability": "alpha"
+      }
+    ]
+  },
+  "permissions": {
+    "network": true,
+    "env": [
+      "HTTPS_PROXY"
+    ]
+  },
+  "timeout_seconds": 20
+}

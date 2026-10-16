@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:skiller:swissknife:v1",
   "title": "swissknifeman project config (.swissknife.json)",
-  "description": "Easy project config: selecting buckets/exceptions/profile for channels connect (bucket-granular) and legacy vendor. Vendor-mode `skiller sync` uses a separate, extended .swissknifeman/config.json (see swissknifeman-config.schema.json). Keys are kept in sync with CONFIG_KEYS (lib/skiller/common.py) — gate tests/test_schema.py and skiller doctor.",
+  "description": "Legacy (deprecated for skiller keys; use [skiller] in .swissknifeman/config.toml). Easy project config: selecting buckets/exceptions/profile for channels connect (bucket-granular) and legacy vendor. Vendor-mode `skiller sync` uses a separate, extended .swissknifeman/config.json (see swissknifeman-config.schema.json). Keys are kept in sync with CONFIG_KEYS (lib/skiller/common.py) — gate tests/test_schema.py and skiller doctor.",
   "type": "object",
   "additionalProperties": false,
   "patternProperties": {

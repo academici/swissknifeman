@@ -1,8 +1,11 @@
 """Tests orchestrate — delegation of commands to neighboring packages (whitelist, argv, rc)."""
+import contextlib
+import io
 import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import maind.provision.orchestrate as orch
 from maind.config import merge_defaults
@@ -149,6 +152,77 @@ class TestOrchestrate(unittest.TestCase):
             finally:
                 del os.environ["MAIND_SKM_BIN"]
                 orch.subprocess.run = orig
+
+
+_PARTNER_VARS = ("SKM_SKILLER_BIN", "SKM_SKILLER_ROOT", "SKM_HARNESS_BIN", "SKM_HARNESS_ROOT",
+                 "MAIND_SKM_BIN", "MAIND_HARNESS_BIN", "MAIND_BRAIN_BIN")
+
+
+class TestPartnerLookup(unittest.TestCase):
+    """Neighbors are found through aicore.util.partners; a missing one exits with PARTNER_UNAVAILABLE."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = Path(self._tmp.name)
+        _, self.env = make_repo(self.tmp)
+        self.cfg = merge_defaults({"projects": [{"id": "f", "name": "F", "local_path": "/x"}]})
+        patcher = mock.patch.dict(os.environ, {"PATH": str(self.tmp / "empty")})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        for var in _PARTNER_VARS:
+            os.environ.pop(var, None)
+        orch._warned.clear()
+
+    def run_cap(self, cap):
+        calls = {}
+        with mock.patch.object(orch.subprocess, "run", _fake_run(calls)):
+            orch.run_capability(self.env, self.cfg, "f", cap)
+        return calls["argv"]
+
+    def test_skiller_found_by_new_variable(self):
+        os.environ["SKM_SKILLER_BIN"] = str(_fake_bin(self.tmp, "skiller"))
+        self.assertTrue(self.run_cap("skm:lock")[0].endswith("/skiller"))
+
+    def test_legacy_variable_first_with_one_warning(self):
+        os.environ["SKM_SKILLER_BIN"] = str(_fake_bin(self.tmp, "new"))
+        os.environ["MAIND_SKM_BIN"] = str(_fake_bin(self.tmp, "old"))
+        self.assertTrue(self.run_cap("skm:lock")[0].endswith("/old"))
+
+    def test_harness_found_by_root(self):
+        root = self.tmp / "h"
+        (root / "bin").mkdir(parents=True)
+        _fake_bin(root / "bin", "harness")
+        os.environ["SKM_HARNESS_ROOT"] = str(root)
+        self.assertEqual(self.run_cap("env:hooks")[0], str(root / "bin" / "harness"))
+
+    def test_missing_partner_exits_with_code(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit):
+            orch.run_capability(self.env, self.cfg, "f", "env:apply")
+        self.assertIn("PARTNER_UNAVAILABLE: harness not found", err.getvalue())
+
+    def test_brain_cli_lives_in_the_vault(self):
+        vault = self.tmp / "vault"
+        (vault / "bin").mkdir(parents=True)
+        _fake_bin(vault / "bin", "brain")
+        with mock.patch("maind.provision.orchestrate.brain_path", return_value=str(vault)):
+            self.assertEqual(self.run_cap("brain:list")[0], str(vault / "bin" / "brain"))
+
+    def test_brain_without_vault_is_unavailable(self):
+        err = io.StringIO()
+        with mock.patch("maind.provision.orchestrate.brain_path", return_value=None), \
+                contextlib.redirect_stderr(err), self.assertRaises(SystemExit):
+            orch.run_capability(self.env, self.cfg, "f", "brain:list")
+        self.assertIn("PARTNER_UNAVAILABLE: brain", err.getvalue())
+
+    def test_legacy_brain_bin_warns_once(self):
+        os.environ["MAIND_BRAIN_BIN"] = str(_fake_bin(self.tmp, "brain"))
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.run_cap("brain:list")
+            self.run_cap("brain:list")
+        self.assertEqual(err.getvalue().count("MAIND_BRAIN_BIN_DEPRECATED"), 1)
 
 
 if __name__ == "__main__":

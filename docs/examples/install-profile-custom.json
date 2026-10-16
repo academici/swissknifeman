@@ -1,0 +1,14 @@
+{
+  "schema": "install-profiles/v1",
+  "default": "standard",
+  "own_links": ["*/bin/swissknifeman", "*/bin/skiller"],
+  "profiles": {
+    "notes": {
+      "description": "Skills, plans and the second brain: no environment, no orchestrator.",
+      "units": ["aicore", "skiller", "planner", "brain"],
+      "options": {
+        "skiller": ["--no-codex-plugins"]
+      }
+    }
+  }
+}

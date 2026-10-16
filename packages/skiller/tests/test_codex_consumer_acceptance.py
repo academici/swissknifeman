@@ -78,8 +78,6 @@ def _expected_codex_plugin_names(repo_root, package_root, host=HOST):
         (package_root / "configs" / "core-policy.json").read_text(encoding="utf-8"))
     if core_policy.get("skills"):
         names.add(core_policy["core_plugin"])
-    if (package_root / "skm" / ".claude-plugin" / "plugin.json").is_file():
-        names.add("skm")
     for pkg_dir in _sibling_plugin_dirs(repo_root, package_root, host):
         claude_manifest = pkg_dir / ".claude-plugin" / "plugin.json"
         codex_manifest = pkg_dir / ".codex-plugin" / "plugin.json"

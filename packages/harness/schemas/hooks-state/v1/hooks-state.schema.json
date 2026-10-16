@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:harness:hooks-state:v1",
+  "title": "hooks-state",
+  "description": "Output of `harness hooks show --json`: the hook modes a project sets in [harness.hooks] of .swissknifeman/config.toml, the committed carrier .swissknifeman/hooks.env as it is on disk, the legacy per-provider env.ini files that are still read, and whether the carrier differs from the one the configuration renders.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Contract identifier.",
+      "const": "urn:swissknifeman:harness:hooks-state:v1"
+    },
+    "project": {
+      "description": "Absolute path of the project.",
+      "type": "string",
+      "minLength": 1
+    },
+    "settings": {
+      "description": "The harness section of the project configuration, set keys only: hooks.<hook>.<key> and hooks.<hook>.providers.<provider>.<key> (the shape is the config schema of the module), and policy_profile.",
+      "type": "object",
+      "properties": {
+        "hooks": {
+          "description": "Hook modes by hook, as the config schema defines them.",
+          "type": "object"
+        },
+        "policy_profile": {
+          "description": "Expected permission policy profile.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "hooks_env": {
+      "description": "Variables of the carrier file as stored (empty when the file is missing).",
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z][A-Z0-9_]*$": {
+          "type": "string"
+        }
+      }
+    },
+    "legacy": {
+      "description": "Existing legacy <provider-dir>/*.env.ini files of the project; they are read when the carrier does not set a key, and never written.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "stale": {
+      "description": "True when the carrier differs from the one `harness hooks sync` would write.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "$schema",
+    "project",
+    "settings",
+    "hooks_env",
+    "legacy",
+    "stale"
+  ],
+  "additionalProperties": false
+}

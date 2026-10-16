@@ -1,0 +1,9 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "procedure",
+  "decision": "MERGE",
+  "also": [
+    "WORKFLOW"
+  ],
+  "exclusive_group": "founder-pipeline"
+}

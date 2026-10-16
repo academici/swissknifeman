@@ -1,0 +1,180 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.5",
+  "title": "Исполнение: сценарий оркестрации по умолчанию (D16) и один владелец попытки пункта (E04); минорное поле plan/v1",
+  "status": "done_with_deviations",
+  "summary": "Минорное поле plan/v1 defs.orchestration.scenario (+ skill plan-protocol); planner.plan.execution.scenario с порядком item → phase → plan → orchestration.by_class → default_scenario; пакет контекста orchestration.scenario и scenario_source; start пункта in_progress из другой сессии → ITEM_OWNED, передача --take-over (data.take_over.previous в событии журнала start); finish владение не проверяет; каталог ошибок и глаголов; тесты.",
+  "why": "D16: умолчание сценария оркестрации по классу пункта в конфиге planner с переопределением полем orchestration пункта; D21/E04: один владелец попытки пункта. D60 уточняет правило плана (только минорные изменения plan/v1). Жёсткие риски: (1) отказ ITEM_OWNED сломает обычное продолжение в той же сессии или поток моста orch — правило только при двух разных session и только в start (V2 тесты); (2) поле, которое старый движок отвергнет, — допустимо по правилу эволюции (minor), проверка совместимости — P9.10.",
+  "scope": {
+    "include": [
+      "packages/planner/schemas/plan/v1/defs.schema.json (orchestration.scenario)",
+      "packages/planner/skills/plan-protocol/** (описание поля, --take-over, ITEM_OWNED)",
+      "packages/planner/lib/planner/plan/{execution,context,units?,lifecycle,cli,catalog}.py",
+      "tests/engine/test_execution.py"
+    ],
+    "exclude": [
+      "проверка имени сценария по профилям orch (P10)",
+      "владение units (dispatch/return)",
+      "событие planner.item.started (P9.6)"
+    ]
+  },
+  "depends_on": [
+    "P9.4"
+  ],
+  "decisions": [
+    "D16",
+    "D21",
+    "D60"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#rules",
+      "why": "общие правила фазы (п.13 — каталог и skill, п.14 — только minor)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-ext#execution",
+      "why": "дизайн пункта: схема, разрешение, владелец, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-config#keys",
+      "why": "ключи orchestration.default_scenario и by_class.*",
+      "required": true
+    },
+    {
+      "path": "packages/planner/schemas/plan/v1/defs.schema.json",
+      "why": "$defs.orchestration",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/units.py",
+      "why": "policy() — слияние orchestration",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/lifecycle.py",
+      "why": "start (строки ~484–590): продолжение in_progress",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/cli.py",
+      "why": "аргументы start",
+      "required": true
+    },
+    {
+      "path": "packages/planner/bridges/orch/register.py",
+      "why": "регистрация finish --executed-by (почему finish не проверяет владельца)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/schemas/plan/v1/defs.schema.json",
+      "change": "any",
+      "note": "файл появляется в P9.1 (переименование)"
+    },
+    {
+      "path": "packages/planner/skills/plan-protocol/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/planner/docs/**",
+      "change": "modify",
+      "note": "только если docs-impact требует (иначе P9.11)"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "plan/v1 — только необязательное поле; $id и URN не меняются",
+    "Без session у одной из сторон — прежнее поведение start; finish не меняется"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: поле схемы + skill → `execution.py` и пакет контекста → тесты разрешения → владелец в `start` и флаг `--take-over` (`cli.py`), `ITEM_OWNED` в каталоге → тесты владения (две сессии, take-over, та же сессия, без session, finish с --executed-by другой сессии) → проверить фикстуры `tests/engine/fixtures/valid` (без scenario валидны) → V1–V3 → CHANGELOG («planner: default execution scenario per item class and one owner per item attempt (--take-over)»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=packages/planner/lib python3 -m unittest discover -s packages/planner/tests/engine -p 'test_execution.py' && python3 -c 'import json; d = json.load(open(\"packages/planner/schemas/plan/v1/defs.schema.json\")); s = d[\"$defs\"][\"orchestration\"][\"properties\"][\"scenario\"]; assert s[\"pattern\"] == \"^[a-z][a-z0-9-]*$\"; assert \"scenario\" not in d[\"$defs\"][\"orchestration\"].get(\"required\", [])' && grep -q 'take-over' packages/planner/skills/plan-protocol/references/api.md",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "orchestration.scenario и сценарий по умолчанию",
+    "ITEM_OWNED и --take-over"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-10T03:52:26Z",
+    "finished_at": "2026-10-10T04:17:37Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "e9bbe23e-51e2-4c34-bf54-4699121e1a83"
+    },
+    "notes": "orchestration.scenario (minor plan/v1) with execution.scenario resolution and scenario/scenario_source in the context pack; start refuses another session with ITEM_OWNED, --take-over records data.take_over.previous; finish unchanged; catalog, skill, api.md, tests (20), CHANGELOG.",
+    "deviations": [
+      "Schema/skill text avoids naming orch (core boundary test); ITEM_OWNED added to read-catalog error enum; owner check runs for all requested items before any write"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T04:17:37Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T04:17:37Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T04:17:37Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T04:17:37Z"
+}

@@ -1,11 +1,14 @@
-"""Tests scan (P2): registry config.json, namespace-isolation, clustering, ≥N-gate, artifacts."""
+"""Tests scan (P2): maind project registry, namespace-isolation, clustering, ≥N-gate, artifacts."""
+import io
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 
 from analyst import lessons, scan
 from analyst.common import Env
+from tests.maind_stub import install_maind_stub, without_maind
 
 
 class TestScan(unittest.TestCase):
@@ -26,18 +29,13 @@ class TestScan(unittest.TestCase):
         lessons.save_lesson(str(ppath), L, "ephemeral")
         return {"id": pid, "local_path": str(ppath), "namespaces": namespaces, "enabled": True}
 
-    def _write_config(self, projects):
-        cfg = self.base / "config.json"
-        cfg.write_text(json.dumps({"projects": projects}), encoding="utf-8")
-        return cfg
-
     def test_load_and_enabled_filter(self):
-        cfg = self._write_config([
+        install_maind_stub(self, [
             {"id": "a", "local_path": "/x", "namespaces": ["axioma"], "enabled": True},
             {"id": "b", "local_path": "/y", "namespaces": ["axioma"], "enabled": False},
             {"id": "c", "local_path": "", "namespaces": ["axioma"], "enabled": True},
         ])
-        projs = scan.load_projects(cfg)
+        projs = scan.load_projects()
         self.assertEqual(len(projs), 3)
         en = scan.enabled_projects(projs)
         self.assertEqual([p["id"] for p in en], ["a"])   # b disabled, c without local_path
@@ -148,7 +146,7 @@ class TestScan(unittest.TestCase):
 
     def test_orphan_pruned_on_rescan(self):
         # registry: 1 enabled-project ns axioma, no patterns (<min) → orphaned file ns axioma is removed
-        self._write_config([self._project("p1", ["axioma"], "solo lesson trig", "solo action")])
+        install_maind_stub(self, [self._project("p1", ["axioma"], "solo lesson trig", "solo action")])
         env = Env(self.base, "scan", home=self.home)
         idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
         payload = self._run_json(env, [])
@@ -157,7 +155,7 @@ class TestScan(unittest.TestCase):
 
     def test_scoped_scan_does_not_prune_foreign_namespace(self):
         # Adversarial S2 (end-to-end): scan --namespace axioma does not touch files ns other
-        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        install_maind_stub(self, [self._project("p1", ["axioma"], "trig words", "act words")])
         env = Env(self.base, "scan", home=self.home)
         a_idx, a_sug = self._seed_pattern(env, "axioma-orphan", "axioma")
         b_idx, b_sug = self._seed_pattern(env, "other-keep", "other")
@@ -167,7 +165,7 @@ class TestScan(unittest.TestCase):
         self.assertTrue(b_idx.exists() and b_sug.exists())   # alien ns not rescanned → untouched
 
     def test_dry_run_reports_but_does_not_delete(self):
-        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        install_maind_stub(self, [self._project("p1", ["axioma"], "trig words", "act words")])
         env = Env(self.base, "scan", home=self.home)
         idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
         payload = self._run_json(env, ["--dry-run"])
@@ -175,7 +173,7 @@ class TestScan(unittest.TestCase):
         self.assertTrue(idx.exists() and sug.exists())            # but nothing was deleted
 
     def test_no_prune_keeps_orphans(self):
-        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        install_maind_stub(self, [self._project("p1", ["axioma"], "trig words", "act words")])
         env = Env(self.base, "scan", home=self.home)
         idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
         payload = self._run_json(env, ["--no-prune"])
@@ -183,7 +181,7 @@ class TestScan(unittest.TestCase):
         self.assertTrue(idx.exists() and sug.exists())
 
     def test_broken_index_not_deleted_and_scan_survives(self):
-        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        install_maind_stub(self, [self._project("p1", ["axioma"], "trig words", "act words")])
         env = Env(self.base, "scan", home=self.home)
         bad = env.state_dir / "index" / "by_pattern" / "broken.json"
         bad.parent.mkdir(parents=True, exist_ok=True)
@@ -194,7 +192,7 @@ class TestScan(unittest.TestCase):
 
     def test_nondefault_params_skip_autoprune(self):
         # [POSSIBLE-DEFECT] non-standard parameters → auto-prun skipped (protection against churn)
-        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        install_maind_stub(self, [self._project("p1", ["axioma"], "trig words", "act words")])
         env = Env(self.base, "scan", home=self.home)
         idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
         payload = self._run_json(env, ["--min-projects", "5"])
@@ -205,10 +203,8 @@ class TestScan(unittest.TestCase):
         trig, act = "cross project shared lesson", "the shared resolution action"
         projs = [self._project(pid, ["axioma"], trig, act) for pid in ("p1", "p2", "p3")]
         projs.append(self._project("lonely", ["solo"], trig, act))
-        cfg = self._write_config(projs)
+        install_maind_stub(self, projs)
         env = Env(self.base, "scan", home=self.home)
-        # env.default_config should point to our config.json (monorepo_root fallback = root=base)
-        self.assertEqual(Path(env.default_config), cfg)
         import io
         from contextlib import redirect_stdout
         out = io.StringIO()
@@ -218,6 +214,25 @@ class TestScan(unittest.TestCase):
         self.assertEqual(payload["projects_scanned"], 4)
         self.assertEqual(len(payload["patterns"]), 1)   # only axioma (3), solo isolated (1)
         self.assertEqual(payload["patterns"][0]["namespace"], "axioma")
+
+    def test_scan_without_maind_reports_partner_unavailable(self):
+        without_maind(self)
+        env = Env(self.base, "scan", home=self.home)
+        err = io.StringIO()
+        with self.assertRaises(SystemExit) as cm, redirect_stderr(err):
+            scan.cmd_scan(env, ["--json"])
+        self.assertEqual(cm.exception.code, 1)
+        self.assertIn("PARTNER_UNAVAILABLE: maind not found (set SKM_MAIND_ROOT or put maind on PATH); "
+                      "the cross-project scan needs the project registry", err.getvalue())
+        self.assertNotIn("Traceback", err.getvalue())
+
+    def test_scan_rejects_non_list_registry(self):
+        install_maind_stub(self, {"projects": []})
+        env = Env(self.base, "scan", home=self.home)
+        err = io.StringIO()
+        with self.assertRaises(SystemExit), redirect_stderr(err):
+            scan.cmd_scan(env, ["--json"])
+        self.assertIn("PARTNER_BAD_OUTPUT", err.getvalue())
 
 
 if __name__ == "__main__":

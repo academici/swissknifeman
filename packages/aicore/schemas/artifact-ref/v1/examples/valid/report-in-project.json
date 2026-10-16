@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:aicore:artifact-ref:v1",
+  "digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "size": 1024,
+  "media_type": "text/markdown",
+  "sensitivity": "normal",
+  "name": "review report",
+  "location": "project"
+}

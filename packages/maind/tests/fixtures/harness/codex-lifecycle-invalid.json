@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:harness:codex-lifecycle:v1",
+  "ok": false,
+  "code": "HARNESS_D104_LIFECYCLE_INVALID"
+}

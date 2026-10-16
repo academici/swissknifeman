@@ -30,3 +30,22 @@ features:
   - title: 🐍 Python + bash
     details: Core on stdlib (like swissknifeman / brain). npm — for memory daemon and documentation only.
 ---
+
+## Development clone guard
+
+In a development clone of the repository (an untracked `.swissknifeman-dev` marker in the root) `bin/maind`
+refuses to run against the real `HOME`: exit code 3 and a `SKM_DEV_GUARD` line in stderr. Use a throwaway
+environment (`scripts/dev-sandbox.sh` in the repository root) or `SKM_DEV_ALLOW_LIVE=1` as a conscious
+exception. Installed copies and checkouts without the marker are unaffected. See `docs/develop.md`
+("Ecosystem split branch").
+
+`bin/maind` finds the `aicore` foundation through the canonical locator fragment: `$AICORE_ROOT`, then
+`_vendor/aicore`, then the sibling `../aicore`; a miss ends with `AICORE_NOT_FOUND` and exit code 2. See
+`packages/aicore/README.md`.
+
+## Skills
+
+The module plugin ships `cross-project-coordinator`, `local-topology`, `shared-memory` and `swissknifeman-locator`, plus the agent `code-coordinator` (`maind:code-coordinator`). The sources live in `packages/maind/skills/` and are released with the module.
+A project receives them through the host-provided `system` bucket of `skiller`: `skiller connect` enables the plugin
+`maind`, and `skiller sync` copies the skills into the project. The `skiller` guide
+"Configuration, host buckets and metadata" describes the bucket.

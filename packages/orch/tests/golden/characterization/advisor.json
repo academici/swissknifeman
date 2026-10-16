@@ -1,0 +1,588 @@
+{
+ "progress": [
+  {
+   "event": "run.start",
+   "message": "plan T; items W1"
+  },
+  {
+   "event": "item.start",
+   "item": "W1",
+   "message": "Work W1"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "brief"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "brief",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "prepare"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "prepare",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout"
+  },
+  {
+   "agent": "agent-<run>-1",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout",
+   "verdict": "mapped"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
+   "reason_code": "RESULT_HEALED",
+   "role": "context-scout",
+   "stage": "scout"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "agent": "agent-<run>-2",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "blocked"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "advisor",
+   "route": "claude-code/opus/high",
+   "stage": "advice.1"
+  },
+  {
+   "agent": "agent-<run>-3",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "advisor",
+   "route": "claude-code/opus/high",
+   "stage": "advice.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "keep (high)"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "question Q1 answered by the advisor with keep (plans/T/artifacts/W1/advice-1.json)",
+   "reason_code": "QUESTION_ADVISED",
+   "stage": "executor.1"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1-q1"
+  },
+  {
+   "agent": "agent-<run>-4",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1-q1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.1"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.1",
+   "verdict": "green"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1"
+  },
+  {
+   "agent": "agent-<run>-5",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "GREEN 0 finding(s)"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register",
+   "verdict": "recorded gate pass"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "commit"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "commit",
+   "verdict": "committed <digest>"
+  },
+  {
+   "event": "item.end",
+   "item": "W1",
+   "outcome": "done"
+  },
+  {
+   "event": "run.end",
+   "message": "observer report <project>/.swissknifeman/orch/reports/<run>/observer.md",
+   "outcome": "finished"
+  }
+ ],
+ "state": {
+  "agents": 5,
+  "claims": {
+   "item-W1": {
+    "orch_run": "run-<digest>",
+    "ref": "W1",
+    "submission": "sub-<run>-item-W1",
+    "title": "Work W1"
+   }
+  },
+  "executor_session": "executor-session-2",
+  "executor_session_route": "claude-code/sonnet/high",
+  "items": {
+   "W1": {
+    "adopted": [],
+    "advice_of": {
+     "question:Q1@1": 1
+    },
+    "autofix_at": [],
+    "check_fixes_at": [],
+    "check_fixes_used": 0,
+    "corrections_at": [],
+    "corrections_used": 0,
+    "executor_started": true,
+    "expected": null,
+    "orch_run": "run-<digest>",
+    "outcome": "done",
+    "plan_notes": [],
+    "retries_used": 0,
+    "source_paths": [],
+    "steps": {
+     "advice.1": {
+      "ended": "<time>",
+      "result": {
+       "advice": {
+        "confidence": "high",
+        "needs_owner": false,
+        "options": [
+         {
+          "cons": [
+           "two names"
+          ],
+          "id": "keep",
+          "pros": [
+           "no break"
+          ],
+          "text": "Keep the old flag name"
+         },
+         {
+          "cons": [
+           "breaks callers"
+          ],
+          "id": "rename",
+          "pros": [
+           "one name"
+          ],
+          "text": "Rename the flag"
+         }
+        ],
+        "problem_ref": "question:Q1@1",
+        "recommendation": "keep",
+        "sources": [
+         "README.md"
+        ]
+       },
+       "agent": "agent-<run>-3",
+       "attempts": 1,
+       "exit": 0,
+       "file": "plans/T/artifacts/W1/advice-1.json",
+       "model": "fake-model",
+       "session": "advisor-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/advice.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "advisor",
+      "route": "claude-code/opus/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "keep (high)"
+     },
+     "brief": {
+      "ended": "<time>",
+      "result": {
+       "artifacts_dir": "plans/T/artifacts/W1",
+       "base": "<digest>",
+       "input_id": "PLAN9.W1@<digest>",
+       "input_path": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/input.json"
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "checks.1": {
+      "ended": "<time>",
+      "result": [
+       {
+        "cmd": "test -f out/W1.txt",
+        "evidence": "plans/T/artifacts/W1/evidence/V1.json",
+        "exit": 0,
+        "green": true,
+        "id": "V1",
+        "kind": "acceptance",
+        "log": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/checks/1/V1.log",
+        "seconds": 0.0,
+        "tail": ""
+       }
+      ],
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "green"
+     },
+     "commit": {
+      "ended": "<time>",
+      "result": {
+       "outcome": "committed",
+       "sha": "<digest>"
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "committed <digest>"
+     },
+     "executor.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-2",
+       "attempts": 1,
+       "changed": [],
+       "exit": 0,
+       "model": "fake-model",
+       "report": {
+        "changed_paths": [],
+        "checks_run": [],
+        "evidence": [],
+        "open_issues": [
+         {
+          "kind": "escalation",
+          "text": "needs an answer from the owner"
+         }
+        ],
+        "questions": [
+         {
+          "blocking": true,
+          "id": "Q1",
+          "kind": "decision",
+          "options": [
+           {
+            "id": "keep",
+            "label": "keep"
+           },
+           {
+            "id": "rename",
+            "label": "rename"
+           }
+          ],
+          "revision": 1,
+          "text": "Keep the old flag name?"
+         }
+        ],
+        "status": "blocked",
+        "summary": "made W1"
+       },
+       "session": "executor-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/executor.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "executor",
+      "route": "claude-code/sonnet/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "blocked"
+     },
+     "executor.1-q1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-4",
+       "attempts": 1,
+       "changed": [
+        "out/W1.txt"
+       ],
+       "exit": 0,
+       "model": "fake-model",
+       "report": {
+        "changed_paths": [
+         "out/W1.txt"
+        ],
+        "checks_run": [
+         {
+          "cmd": "test -f out/W1.txt",
+          "exit": 0,
+          "id": "V1"
+         }
+        ],
+        "evidence": [],
+        "open_issues": [],
+        "status": "done",
+        "summary": "made W1"
+       },
+       "session": "executor-session-2",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/executor.1-q1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "executor",
+      "route": "claude-code/sonnet/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "done"
+     },
+     "prepare": {
+      "ended": "<time>",
+      "result": {
+       "refusals": [
+        {
+         "reason_code": "INDEPENDENT_PROVIDER",
+         "stage_id": "review"
+        }
+       ],
+       "stages": [
+        {
+         "effort": "high",
+         "model": "haiku",
+         "provider": "claude-code",
+         "role": "context-scout",
+         "stage_id": "condense"
+        },
+        {
+         "effort": "high",
+         "model": "sonnet",
+         "provider": "claude-code",
+         "role": "executor",
+         "stage_id": "primary"
+        }
+       ]
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "register": {
+      "ended": "<time>",
+      "result": {
+       "gate": "pass",
+       "outcome": "recorded"
+      },
+      "role": "registrar",
+      "route": "orch/conductor",
+      "status": "done",
+      "verdict": "recorded gate pass"
+     },
+     "review.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-5",
+       "attempts": 1,
+       "exit": 0,
+       "findings": {
+        "findings": [],
+        "verdict": "GREEN"
+       },
+       "model": "fake-model",
+       "session": "reviewer-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "reviewer",
+      "route": "grok/grok-4.7/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "GREEN 0 finding(s)"
+     },
+     "scout": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-1",
+       "attempts": 1,
+       "cache": ".swissknifeman/state/orch/conductor/cache/scout/W1/<digest>.txt",
+       "exit": 0,
+       "hit": false,
+       "model": null,
+       "session": null,
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/scout.txt",
+       "text": "a context map line — why it matters\nUnknowns:\n- none",
+       "usage": {
+        "cached": 0,
+        "input": 0,
+        "output": 0
+       }
+      },
+      "role": "context-scout",
+      "route": "claude-code/haiku/low",
+      "status": "done",
+      "verdict": "mapped"
+     }
+    },
+    "tokens": {
+     "cached": 0,
+     "input": 400,
+     "output": 40
+    }
+   }
+  },
+  "on_blocked": "stop",
+  "questions": {
+   "W1": {
+    "Q1": {
+     "advice": {
+      "confidence": "high",
+      "file": "plans/T/artifacts/W1/advice-1.json",
+      "needs_owner": false,
+      "recommendation": "keep"
+     },
+     "asked_at": "<time>",
+     "auto_answered": true,
+     "binding": {
+      "input_digest": "<digest>",
+      "item": "W1",
+      "step": "executor.1"
+     },
+     "blocking": true,
+     "id": "Q1",
+     "kind": "decision",
+     "options": [
+      {
+       "id": "keep",
+       "label": "keep"
+      },
+      {
+       "id": "rename",
+       "label": "rename"
+      }
+     ],
+     "resolution": {
+      "by": "advisor",
+      "value": "keep"
+     },
+     "revision": 1,
+     "status": "applied",
+     "text": "Keep the old flag name?"
+    }
+   }
+  },
+  "status": "finished",
+  "tokens": {
+   "cached": 0,
+   "input": 400,
+   "output": 40
+  }
+ }
+}

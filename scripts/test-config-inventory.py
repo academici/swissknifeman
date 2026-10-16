@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = ROOT / "configs/config-inventory.json"
 EXCLUDED_SEGMENTS = {"tests", "fixtures", "node_modules"}
-ROOT_OWNERS = {"root", "core"}
+ROOT_OWNERS = {"root"}
 
 
 def glob_to_regex(glob):

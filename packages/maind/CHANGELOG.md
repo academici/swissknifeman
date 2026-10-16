@@ -5,6 +5,62 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 
 ## [Unreleased]
 
+### Added
+- **Installer declared in unit.json:** `provides.install` is `["install.sh"]`, so `swissknifeman install` runs it with `--bin-dir` and `--force` (no prompt with `--force` or without a TTY).
+- **Hub modules on aicore:** maind imports only itself and `aicore` and reaches `harness`, `analyst`, `skiller` and `brain` through partner commands found by `aicore.util.partners` (`PARTNER_UNAVAILABLE` and degradation without a partner). Settings are the `[maind]` table, the fleet registry is `<state>/maind/registry.json`, the machine map is `maind topology`; documentation in `docs/ecosystem.md`, `docs/guide/{cli,config,health,mcp}.md` and the README.
+- **Doctor as check-result/v1:** `maind doctor --json` prints check-result documents (`maind.environment`, `.config`, `.registry`, `.memory`, `.mcp`, `.health`); the text form adds `<status> <check_id>: <observed>` lines. The doctor no longer creates the state directory, and the Python floor is `aicore.MIN_PYTHON`. `maind health --plan-repair` shows the repair steps (read-only), `--apply-repair` performs them; `--fix` is a deprecated alias (`MAIND_HEALTH_FIX_DEPRECATED`).
+- **maind:** the MCP server negotiates the protocol version: `initialize` returns the requested version when it is in `SUPPORTED_PROTOCOL_VERSIONS` (`2025-06-18`, `2024-11-05`), otherwise the newest supported one (it used to echo the client's version). `maind mcp tools [--json]` prints the tool list and its `tools_digest` (contract `mcp-tools/v1`). An optional conformance test runs the server against the official MCP Python SDK (`packages/maind/requirements-dev.txt`, skipped without it; the runtime never imports the SDK).
+- **Hook modes through harness:** the memory and agent-router modes of a project are read from `harness hooks show --json`
+  (`settings.hooks.<hook>`), then from the committed `.swissknifeman/hooks.env`, then from the legacy `.claude/*.env.ini` (the last two
+  are read directly when harness is missing). `maind onboard` sets the memory mode with `harness hooks --memory <mode>` and no longer
+  writes `memory.env.ini`; without harness the write is skipped with `PARTNER_UNAVAILABLE` (`memory_env_skipped` in the report). `health`
+  and `sync` (memory-hook, router-config) use the same readers.
+- **Harness link:** `maind.harness_link` reaches harness only through its JSON commands (`mcp catalog`, `profiles resolve`,
+  `hooks codex-lifecycle fragment|validate`, `instructions scopes|plan|check|apply|repair`) found by `aicore.util.partners`
+  (`SKM_HARNESS_BIN`, `SKM_HARNESS_ROOT`, PATH; `MAIND_HARNESS_BIN` still works with one `MAIND_HARNESS_BIN_DEPRECATED` warning). The MCP
+  projection comes from `aicore.provider.mcp`. `maind deploy`, `sync` (instructions), `workspace` trust and the provider conformance
+  report use them; without harness those steps are skipped with `PARTNER_UNAVAILABLE` (trust stays non-green) and the hub servers still
+  deploy. `plan_d108_operation`, `plan_d104_bootstrap_transfer` and `generate_conformance_report` no longer take the harness
+  configuration folder. The provider files and lock records are byte for byte what they were.
+- **Topology:** `maind topology show|init [--json]` and `<state>/maind/topology.json` (legacy `~/.swissknifeman/topology.json` read file by file with one warning; `*.bak` copies go through `aicore.state.backup`; defaults come from the fleet registry and the known vault). `skiller topology` is an alias. Skills `local-topology`, `cross-project-coordinator`, `shared-memory` and the agent `code-coordinator` read the map through `maind topology show --json` and `skiller list --json`.
+- **Contract:** `projects-list/v1` (`schemas/projects-list/v1`) describes `maind projects list --json`; the output itself is unchanged.
+- **Skills and agent:** the plugin `maind` 0.5.0 ships the skills `local-topology`, `swissknifeman-locator`, `cross-project-coordinator` and `shared-memory` and the agent `code-coordinator` (moved from the `system` bucket of skiller), and a Codex plugin manifest.
+
+### Changed
+- **Config split:** settings are the `[maind]` table of the layered config (`configs/config.schema.json`, `config.example.toml`), the
+  fleet registry is `<state>/maind/registry.json` (single writer `projects.write_registry`, previous file kept under the state
+  `backups/`); `Config.load` returns the same dictionary as before. The legacy node file (`config.json`, `.maind.json`) is read until
+  `swissknifeman upgrade` with one `MAIND_LEGACY_CONFIG` warning (settings: an extra layer while no `[maind]` table is set; registry:
+  while there is no `registry.json`, and then written back to that file). `Config.source` is `config`, `legacy:<file>`,
+  `linked-worktree-config`, `brain-fallback` or `empty`. `maind migrate from-brain` writes `registry.json` and the node settings into
+  the machine config.
+- **Places:** `Env.state_dir` is `<state>/maind` and `Env.data_dir` `<data>/maind` (`aicore.state`; `~/.maind` and `<module>/data` are used
+  with one warning while the new places do not exist); `Env.projects_db` is removed (it was unused); `default_config` is now
+  `legacy_node_config`; `install.sh` no longer creates `~/.maind`.
+- **Graph links:** `derive` reads `[maind.graph.links.<project>]` (`type`, `plane`, `note`) from the project's `.swissknifeman/config.toml`;
+  `<repo>/.maind.graph.json` is read with `MAIND_LEGACY_GRAPH_LINKS` while the project config has no `[maind.graph]` table.
+- **Provider selection of a project:** read from `[aicore.providers]` of `.swissknifeman/config.toml`, else the legacy
+  `.swissknife.json#/providers` (warning `MAIND_LEGACY_PROVIDERS`); the one-off D108 deployment writes to the active carrier (a legacy
+  file keeps its bytes, a new project gets the TOML table).
+- **Backups:** files maind replaces are copied to `<project>/.swissknifeman/backups/<stamp>/` (rotated) instead of `*.bak` next to them.
+- **Template:** `config.example.json` moved to `configs/registry.example.json` (registry keys only).
+- **aicore:** maind imports `aicore` directly; `maind.blocks` and `maind.http` are removed, `maind.common` re-exports nothing but its own
+  `Env` and `load_json_db`; `bin/maind` and `scripts/test.sh` no longer add the monorepo root.
+- **Neighbors:** skiller and harness are found through `aicore.util.partners` instead of `constants.SIBLINGS` (old `MAIND_SKM_BIN`,
+  `MAIND_HARNESS_BIN`, `MAIND_BRAIN_BIN` still work first and warn once); a missing neighbor gives `PARTNER_UNAVAILABLE` and the same skip
+  as before. Agent-pack profiles are read from `skiller profiles --json`.
+- **Vault:** `projects.brain_path` takes `integrations.brain.path`, the `brain` project's `vault_path`, then `brain vault --json`, and returns
+  `None` when none is known (`maind projects sync` and `brain:*` steps then stop or skip with a message). `MAIND_BRAIN_VAULT` and
+  `~/Vaults/Brain` are no longer read by maind; brain reads them.
+- **skilldoc:** a root-bootstrap projection of skiller is recognised by `bucket: repository-bootstrap` and its "generated by `skiller registry`" line.
+- **analyze:** `maind analyze` and the codegraph usage scan read run reports, codegraph summaries and analytics events through
+  `analyst runs show|codegraph --json`; without analyst the source is reported `unavailable` (`PARTNER_UNAVAILABLE`,
+  `PARTNER_FAILED` or `PARTNER_BAD_OUTPUT`) and the command still finishes. `maind.common` no longer re-exports `find_run_report*`.
+- **Follow the task → planner rename:** the default command plugin of the audit is `planner`, and the plan convention block names the planner plugin.
+
+### Removed
+- **`scripts/cache-brain-docs.sh`** moved to the brain module (`scripts/cache-brain-docs.sh`); it finds `maind` through `$MAIND_BIN` or `PATH`.
+
 ### Fixed
 - **`validate_config` — section `memory` didn't know about `digest`.** Key `memory.digest` (P1.1: `budget_chars`/`item_max_chars`/`shared_max`) existed in runtime since 0.3.0, but the validator scheme considered it unknown and warned on every `maind health`/CLI-call. Added to valid section keys.
 

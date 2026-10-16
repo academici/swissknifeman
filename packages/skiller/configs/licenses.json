@@ -1,0 +1,16 @@
+{
+  "schema": "licenses/v1",
+  "description": "SPDX identifiers an imported (vendored) skill may carry; `skiller compat` quarantines any other license. An `upstream.json` license starting with `not_applicable_prefix` marks a skill without vendored code and passes with a warning.",
+  "allowed": [
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC-BY-4.0",
+    "CC0-1.0",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+    "Unlicense"
+  ],
+  "not_applicable_prefix": "N/A"
+}

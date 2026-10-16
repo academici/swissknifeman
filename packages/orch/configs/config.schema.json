@@ -1,0 +1,572 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:config:v1",
+  "title": "orch config",
+  "description": "Settings of the orch module: execution engine choice, default run-policy, work source, run-policy folders, events and the conductor.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "engine": {
+      "type": "string",
+      "description": "Execution engine used when neither a flag nor engine_by_role names one.",
+      "default": "native",
+      "enum": [
+        "native",
+        "cao",
+        "claude-only"
+      ]
+    },
+    "engine_by_role": {
+      "type": "object",
+      "description": "Execution engine by role id; a role that is not listed uses the engine key.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "string",
+          "description": "Engine of the role.",
+          "enum": [
+            "native",
+            "cao",
+            "claude-only"
+          ]
+        }
+      }
+    },
+    "default_profile": {
+      "type": "string",
+      "description": "Run-policy used when the scenario of a task names none.",
+      "default": "solo",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Debug mode of conductor runs: a run reports DEBUG_MODE at its start with the observer protocol (packages/orch/dev-skills/orch-debug) and keeps a journal, a metrics table and findings in <run>/debug/. The roles and their prompts do not change. Set it per machine, per project, or with --debug/--no-debug for one run.",
+      "default": false
+    },
+    "work_source": {
+      "type": "string",
+      "description": "Id of the plugin of the extension point orch:work-source that supplies the work.",
+      "default": "planner-orch",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "capabilities": {
+      "type": "object",
+      "description": "Capability records of the engines.",
+      "additionalProperties": false,
+      "properties": {
+        "stale": {
+          "type": "string",
+          "description": "What preparation does with a capability record that is past its freshness date: warn and go on, or refuse.",
+          "default": "warn",
+          "enum": [
+            "warn",
+            "refuse"
+          ]
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "description": "Run-policy packs beyond the ones shipped with orch.",
+      "additionalProperties": false,
+      "properties": {
+        "dirs": {
+          "type": "array",
+          "description": "Extra folders with run-policy packs (one folder per policy id): absolute paths or paths starting with ~. Machine-wide: a project file cannot set it, because it makes orch read files from the listed paths.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One folder."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "Events of orch runs.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether orch emits the orch.run.* events.",
+          "default": true
+        }
+      }
+    },
+    "conductor": {
+      "type": "object",
+      "description": "The conductor (orch conduct): the global layer of the run options and how roles start.",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Provider of every role whose stage names none.",
+          "default": "claude-code",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "reviewer": {
+          "type": "string",
+          "description": "Reviewer selector PROVIDER/MODEL[/CONTEXT][/EFFORT].",
+          "default": "grok/grok-4.7/high",
+          "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/[0-9]+[kKmM]?)?(/(low|medium|high|xhigh|max|ultra))?$"
+        },
+        "registrar": {
+          "type": "string",
+          "description": "Actor PROVIDER/MODEL that registers outcomes in the work source.",
+          "default": "orch/conductor",
+          "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/(low|medium|high|xhigh|max|ultra))?$"
+        },
+        "rules": {
+          "type": "array",
+          "description": "Rules for the executor of every run; the options of the pack, the phase and the item append theirs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One rule."
+          }
+        },
+        "session_executor": {
+          "type": "string",
+          "description": "How the executor sessions are shared inside one run of several pieces (the first run-options layer, `session.executor`): `shared` resumes the session of the previous executor, `per-item` starts a fresh one.",
+          "default": "shared",
+          "enum": [
+            "shared",
+            "per-item"
+          ]
+        },
+        "on_blocked": {
+          "type": "string",
+          "description": "What a blocked piece of work does to the run: stop it, or report it and go on.",
+          "default": "stop",
+          "enum": [
+            "stop",
+            "report"
+          ]
+        },
+        "questions": {
+          "type": "string",
+          "description": "What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for orch conduct answer), deny (blocked QUESTION_DENIED, no answer expected), defaults (a question with a default is answered by it once, by policy; without one it is queued) or advisor (the advisor role gives advice; advice that needs no owner answers the question by advisor, any other is queued with the advice; needs orch.advisor.enabled).",
+          "default": "queue",
+          "enum": [
+            "queue",
+            "deny",
+            "defaults",
+            "advisor"
+          ]
+        },
+        "limits": {
+          "type": "object",
+          "description": "Default limits of a run.",
+          "additionalProperties": false,
+          "properties": {
+            "tokens_max": {
+              "type": "integer",
+              "description": "Fresh tokens of a piece of work past which a BUDGET_OVER beacon is printed (nothing is stopped); 0 means none.",
+              "default": 0,
+              "minimum": 0
+            },
+            "stage_timeout_s": {
+              "type": "integer",
+              "description": "Ceiling on the whole run of one role in seconds; 0 has none for a streaming role (STAGE_SLOW beacons report a long run) and keeps the launch catalog timeout for a text role.",
+              "default": 0,
+              "minimum": 0
+            },
+            "stage_idle_timeout_s": {
+              "type": "integer",
+              "description": "A streaming role is stopped when its output has not grown for this many seconds (a hang, not a long run); 0 never stops it; default 5400. STAGE_IDLE beacons report shorter silences and what runs meanwhile.",
+              "default": 5400,
+              "minimum": 0
+            },
+            "check_timeout_s": {
+              "type": "integer",
+              "description": "Ceiling on one acceptance check in seconds; 0 (default) has none: CHECK_SLOW beacons report a long check.",
+              "default": 0,
+              "minimum": 0
+            },
+            "check_idle_timeout_s": {
+              "type": "integer",
+              "description": "An acceptance check is stopped when its log has not grown for this many seconds (a hung test runner); 0 never stops it; default 3600.",
+              "default": 3600,
+              "minimum": 0
+            }
+          }
+        },
+        "argv": {
+          "type": "object",
+          "description": "Command line of a role instead of the launch catalog entry, by role id ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands the conductor runs.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "array",
+              "description": "Command and arguments.",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "description": "One argument."
+              },
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "invocation",
+                "flags"
+              ]
+            }
+          }
+        },
+        "risk": {
+          "type": "object",
+          "description": "The risk score of a piece after its executor round (P7.2): a piece whose run policy has no review gets one when the score reaches `review.dynamic_threshold` of the run options. Weights add up (capped at 100); a weight of 0 turns a feature off.",
+          "additionalProperties": false,
+          "properties": {
+            "weights": {
+              "type": "object",
+              "description": "Weight of each feature.",
+              "additionalProperties": false,
+              "properties": {
+                "public_cli": {
+                  "type": "integer",
+                  "description": "A path of `patterns.public_cli` changed (a public command line).",
+                  "default": 25,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "schema": {
+                  "type": "integer",
+                  "description": "A path of `patterns.schema` changed.",
+                  "default": 25,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "security": {
+                  "type": "integer",
+                  "description": "A path of `patterns.security` changed.",
+                  "default": 30,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "shared": {
+                  "type": "integer",
+                  "description": "A path of `patterns.shared` changed (a module others import).",
+                  "default": 15,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "diff_size": {
+                  "type": "integer",
+                  "description": "More lines changed than `diff_lines`.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "red_first": {
+                  "type": "integer",
+                  "description": "An acceptance check was red in the first executor round.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "deviation": {
+                  "type": "integer",
+                  "description": "The executor reported a deviation.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "outside_write_set": {
+                  "type": "integer",
+                  "description": "Paths outside the write set changed.",
+                  "default": 15,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "executor_recommended": {
+                  "type": "integer",
+                  "description": "The executor recommended a review (`review_recommendation.recommended`).",
+                  "default": 30,
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            },
+            "patterns": {
+              "type": "object",
+              "description": "Repository path patterns of the features (`*` inside a segment, `**` any segments, a trailing `/` owns everything below).",
+              "additionalProperties": false,
+              "properties": {
+                "public_cli": {
+                  "type": "array",
+                  "description": "Patterns of the public_cli feature.",
+                  "default": [
+                    "bin/**",
+                    "**/cli.py",
+                    "packages/*/scripts/*.py"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "schema": {
+                  "type": "array",
+                  "description": "Patterns of the schema feature.",
+                  "default": [
+                    "**/schemas/**",
+                    "**/migrations/**"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "security": {
+                  "type": "array",
+                  "description": "Patterns of the security feature.",
+                  "default": [
+                    "**/auth/**",
+                    "**/security/**",
+                    "**/permissions*",
+                    "**/*secret*",
+                    "**/sandbox*",
+                    "**/ro-run*",
+                    "**/launch-catalog.json",
+                    "**/roles/*.json",
+                    "**/run-policies/**",
+                    "**/hooks/**",
+                    ".github/workflows/**",
+                    "**/install.sh"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "shared": {
+                  "type": "array",
+                  "description": "Patterns of the shared feature.",
+                  "default": [
+                    "packages/aicore/**"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                }
+              }
+            },
+            "diff_lines": {
+              "type": "integer",
+              "description": "Changed lines past which the diff_size feature counts.",
+              "default": 400,
+              "minimum": 1
+            },
+            "critical": {
+              "type": "array",
+              "description": "Features that add the review on their own, whatever the score (REVIEW_ADDED names them); [] leaves only the threshold.",
+              "default": ["security"],
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "description": "A feature name.",
+                "enum": ["public_cli", "schema", "security", "shared", "diff_size", "red_first", "deviation", "outside_write_set", "executor_recommended"]
+              }
+            }
+          }
+        },
+        "skills_bridge": {
+          "type": "array",
+          "description": "Command of the skills bridge, run as a process with `--select ...` when the run options give a role `skills: [\"auto\"]`; empty means no bridge, and `auto` then stops the piece with SKILLS_BRIDGE_UNAVAILABLE. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One argument."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
+    },
+    "research": {
+      "type": "object",
+      "description": "Research sources (P10.1): where the researcher role and `orch.py research query` look things up.",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "type": "string",
+          "description": "When a piece of work gets a research stage: required (every piece), conditional (a piece whose research need is required) or off (never).",
+          "default": "conditional",
+          "enum": [
+            "required",
+            "conditional",
+            "off"
+          ]
+        },
+        "sources": {
+          "type": "object",
+          "description": "Research sources by id. An argv chooses the process orch starts, so only the machine, the invocation file and flags may set it; a project file may name roots and limits.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "One source.",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "description": "Adapter: command (argv, the query on stdin, JSON on stdout), filesystem (a search over roots) or mcp-stdio (an MCP server over stdio, the query goes to its tool).",
+                  "enum": [
+                    "command",
+                    "filesystem",
+                    "mcp-stdio"
+                  ]
+                },
+                "argv": {
+                  "type": "array",
+                  "description": "Command and arguments of a command or mcp-stdio source (required by both kinds on the merged layers: SOURCE_INVALID otherwise); a leading ~ is expanded. Machine-wide: a project file cannot set it, because it chooses the commands orch runs.",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "description": "One argument."
+                  },
+                  "x-skm-layers": [
+                    "defaults",
+                    "machine",
+                    "invocation",
+                    "flags"
+                  ]
+                },
+                "tool": {
+                  "type": "string",
+                  "description": "mcp-stdio: name of the tool that receives the query.",
+                  "default": "search",
+                  "minLength": 1
+                },
+                "roots": {
+                  "type": "array",
+                  "description": "filesystem: folders searched, absolute, starting with ~, or relative to the project (required by this kind on the merged layers: SOURCE_INVALID otherwise).",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "description": "One folder.",
+                    "minLength": 1
+                  }
+                },
+                "capabilities": {
+                  "type": "array",
+                  "description": "What the source can do.",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "description": "One capability.",
+                    "enum": [
+                      "search",
+                      "citations",
+                      "synthesis",
+                      "deep"
+                    ]
+                  }
+                },
+                "timeout_s": {
+                  "type": "integer",
+                  "description": "Ceiling on one query in seconds.",
+                  "default": 600,
+                  "minimum": 1
+                },
+                "concurrency": {
+                  "type": "integer",
+                  "description": "Queries of this source that run at once in one orch process.",
+                  "default": 1,
+                  "minimum": 1
+                },
+                "order": {
+                  "type": "integer",
+                  "description": "Place on the ladder of sources: lower first, ties by id.",
+                  "default": 100
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advisor": {
+      "type": "object",
+      "description": "The advisor role (P10.4): one opinion on a blocking question (questions = advisor), on acceptance checks that stay red after the check_fixes corrections, and on a Major finding the triager rejected.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the conductor asks the advisor at all. Off: every trigger behaves as before.",
+          "default": false
+        },
+        "max_rounds": {
+          "type": "integer",
+          "description": "Advice rounds per piece of work, all triggers together; past it the problem is handled as without the advisor.",
+          "default": 2,
+          "minimum": 0
+        },
+        "human_gate": {
+          "type": "array",
+          "description": "Advice categories that are never applied without the owner: the problem is queued with the advice instead.",
+          "default": [
+            "security",
+            "destructive",
+            "public-api",
+            "scope-expansion"
+          ],
+          "items": {
+            "type": "string",
+            "description": "One advice category.",
+            "enum": [
+              "security",
+              "destructive",
+              "public-api",
+              "scope-expansion",
+              "other"
+            ]
+          }
+        }
+      }
+    },
+    "stubs": {
+      "type": "object",
+      "description": "Stubs: additional instructions for the roles (`orch stubs publish|list|show`), from `~/.config/swissknifeman/stubs` (machine) and `<project>/.swissknifeman/stubs` (project). A run resolves them once and keeps the snapshot. Machine-wide: a project cannot turn its own stubs on or widen what it may add.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the role prompts get the stubs at all.",
+          "default": true,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "layers": {
+          "type": "array",
+          "description": "Layers read: a machine that runs repositories it does not trust leaves `project` out, so their stubs never reach a model.",
+          "default": ["machine", "project"],
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "description": "One layer.",
+            "enum": ["machine", "project"]
+          },
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        }
+      }
+    }
+  }
+}

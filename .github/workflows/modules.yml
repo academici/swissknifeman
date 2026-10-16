@@ -1,0 +1,108 @@
+name: Modules
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+# A test that fails in parallel and passes alone is a race (in the tests or the code): CI keeps it failed.
+env:
+  SKM_TEST_CLASH: fail
+
+jobs:
+  # The steps of every module and bridge live in scripts/ci-matrix.py only; this workflow takes the list of units and
+  # the steps from it and never repeats a command.
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+      test-matrix: ${{ steps.list.outputs.test-matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: '3.12'
+      - id: list
+        run: |
+          echo "matrix=$(python3 scripts/ci-matrix.py list --json)" >> "$GITHUB_OUTPUT"
+          echo "test-matrix=$(python3 scripts/ci-matrix.py list --json --step test --python 3.9,3.13,3.14)" >> "$GITHUB_OUTPUT"
+
+  # Every step except `test` on one runtime. maind and analyst are tools: they never block the core.
+  unit:
+    needs: matrix
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.tool }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Base of the schema compatibility check
+        run: echo "BASE_REF=${{ github.event.pull_request.base.sha || 'HEAD~1' }}" >> "$GITHUB_ENV"
+      - run: python3 scripts/ci-matrix.py run --unit ${{ matrix.unit }} --skip test --base-ref "$BASE_REF"
+
+  # The `test` step on the oldest and the newest supported Python.
+  test:
+    needs: matrix
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.tool }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.test-matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: ${{ matrix.python }}
+      # The MCP SDK needs a newer Python than the oldest supported one; with it present a missing SDK fails the test.
+      - name: Install the MCP SDK for the conformance test
+        if: matrix.unit == 'maind' && matrix.python == '3.13'
+        run: python3 -m pip install -r packages/maind/requirements-dev.txt
+      - run: python3 scripts/ci-matrix.py run --unit ${{ matrix.unit }} --step test
+        env:
+          SKM_REQUIRE_MCP_SDK: ${{ matrix.unit == 'maind' && matrix.python == '3.13' && '1' || '' }}
+
+  # Checks of the hub itself: module boundary, golden files, hub scripts, the installed form, conformance of the engines.
+  hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Workflow and matrix structure
+        run: python3 scripts/ci-matrix.py --check
+      - name: Module boundary (strict)
+        run: python3 scripts/ecosystem-units.py check --strict
+      - name: Golden files
+        run: python3 scripts/golden.py check
+      - name: Hub scripts
+        run: |
+          set -e
+          for test in scripts/test-*.py; do
+            echo "== $test"
+            python3 "$test"
+          done
+      - name: Installed form (sandbox)
+        run: |
+          set -e
+          SB=$(scripts/dev-sandbox.sh new --name ci | tail -1)
+          scripts/dev-sandbox.sh run "$SB" -- bash scripts/smoke-installed.sh
+      - name: Conformance of the engines
+        run: |
+          set -e
+          SB=$(scripts/dev-sandbox.sh new --name ci-engine | tail -1)
+          scripts/dev-sandbox.sh run "$SB" -- bin/swissknifeman conformance engine
+      # Tools with their partners: outside the core verification, they never block it.
+      - name: Integration of the tools with their partners
+        continue-on-error: true
+        run: bash scripts/test-integration.sh --with-tools

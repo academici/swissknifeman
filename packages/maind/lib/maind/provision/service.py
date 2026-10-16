@@ -7,7 +7,7 @@ import getpass
 import shutil
 import subprocess
 
-from ..common import die
+from aicore.util.term import die
 from ..config import load_config
 from ..memory import refuse_if_client_role
 

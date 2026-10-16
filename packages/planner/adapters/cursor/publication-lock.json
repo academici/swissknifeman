@@ -1,0 +1,127 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "planner.cursor.design.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-design/SKILL.md",
+      "rendered_hash": "sha256:c82a9eb0140925edf0a7f055fd78a7edb9e2abf9addd8c13bb7c77bdcb225b37",
+      "source_hash": "sha256:d6ef36246a8c9dc539245e911afcb73f23930bf49887e5b70995d5b56c0685f8"
+    },
+    {
+      "artifact_id": "planner.cursor.design.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-design/command.md",
+      "rendered_hash": "sha256:4460f8544f0b5b9d5e3030d83e5ae0f31166df2d24afc053a0393c4e6406a8b6",
+      "source_hash": "sha256:45462eacf88a7a980a05757e0019acd684ccfc1615f41999741e19ed59b7c0fd"
+    },
+    {
+      "artifact_id": "planner.cursor.dev.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-dev/SKILL.md",
+      "rendered_hash": "sha256:23dd873deb7831a7b66dfc356db96f4a0ca072273d5184904552a133836ad9c9",
+      "source_hash": "sha256:33e166ff8c4f56ccf5ade5ae7c512541e52953113e2f7a09a47066e0789f1390"
+    },
+    {
+      "artifact_id": "planner.cursor.dev.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-dev/command.md",
+      "rendered_hash": "sha256:bdd3dc357dd008b16f7304b33147399f37827859880ee077a37d77b771918132",
+      "source_hash": "sha256:22d421a5a5fd0327c3e81287216fedad6308b4fab45fa22363ec1fe767b57aa2"
+    },
+    {
+      "artifact_id": "planner.cursor.fix.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-fix/SKILL.md",
+      "rendered_hash": "sha256:eb515bf29aa59b602be973824d6565d3bb23adb565d8de1ce1b1ecb0b9ff498c",
+      "source_hash": "sha256:4a1ca417b8c0d0c54cdff09d363b731f16c004cb00998371303fe6d543c9d66c"
+    },
+    {
+      "artifact_id": "planner.cursor.fix.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-fix/command.md",
+      "rendered_hash": "sha256:2a18a441ac7e459d263c42ca4b0817907d67f2ea306d776cb2b7732e30d85c97",
+      "source_hash": "sha256:58597e16012fa3c77b5ad614d729fb649be54b0be4c6751ffd454598e436dbfd"
+    },
+    {
+      "artifact_id": "planner.cursor.make.workflow.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-make-workflow/SKILL.md",
+      "rendered_hash": "sha256:4fd3b1222f4cd1bde99b147fff2513d13c0dc1bae7f661dda57fde1484bd8d20",
+      "source_hash": "sha256:70a6a4158576eb8a165c7cd0d3b99c6f078f6ed660ee7ecb86279e34f5446720"
+    },
+    {
+      "artifact_id": "planner.cursor.make.workflow.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-make-workflow/command.md",
+      "rendered_hash": "sha256:2c114e7360d6750f65d6d02e5000498863614d86ed44fc557fde84f5026f6a98",
+      "source_hash": "sha256:2ed83e29bf4a2fdef1096a5a140998106a7176569682466d5bc82d3eba91f8d2"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.audit.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-audit/SKILL.md",
+      "rendered_hash": "sha256:9cf2c3d1cbe89df4c7f88ad46acbae24c47ecbb79fc1290c2b3b8bf8a5925215",
+      "source_hash": "sha256:bf1d1b776e3b0089b205a581fda9fcf4738a9750e8c60393b58784e0e5748fc5"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.audit.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-audit/command.md",
+      "rendered_hash": "sha256:9d4debf83351aa04ffaa53f5c953721b086974620fa81d02b11c97024b268a5f",
+      "source_hash": "sha256:acd8ad6573e9d490ca3b25beff4ce727043d2d44371080ecb4b798a9dd3f8213"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.close.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-close/SKILL.md",
+      "rendered_hash": "sha256:4ddae50642274c7e0f86ed46116a5e9a269b161fc9eea27f82a251c2eb040cd1",
+      "source_hash": "sha256:12baaf92e26534955e51fb1dde562ef45b234c26212b7e994d9b1b3afe4384a8"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.close.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-close/command.md",
+      "rendered_hash": "sha256:122866c1f157b252f52db5e724e26b363360098de0a8714c7378dcc2b94ef82d",
+      "source_hash": "sha256:11e8bd7fb88a16964cbb9b697a240382c873af2f4bffb2528d062d5da267e027"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.design.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-design/SKILL.md",
+      "rendered_hash": "sha256:d4ee3bcdbbda05c038fd62a8ed2f2dd256a061a810b71e02d52108a6db676db8",
+      "source_hash": "sha256:95bb0045a5c77fd11e24692bb26684fbb69a48707afdf1a8d684a8a5f31fe588"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.design.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-design/command.md",
+      "rendered_hash": "sha256:0fab3ed0e896d9cd8f6feee60ec6c8c602dd0bc92c8d662a3878affbbda0f01d",
+      "source_hash": "sha256:380180d1ee512402e1026cb7fdd3efd99149c3355eb45022368c24ea8fd7fbd5"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.run.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-run/SKILL.md",
+      "rendered_hash": "sha256:b94efe7a3dafda10e0c28c8e0ea620e607c09f82e16c5c2746d2c10bb41b661e",
+      "source_hash": "sha256:b114942db72949edef0b2ef0c90f4711e867f82d6d916846947b886c9e10a1be"
+    },
+    {
+      "artifact_id": "planner.cursor.plan.run.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-plan-run/command.md",
+      "rendered_hash": "sha256:89dc78a62761aed8aee7272ece9280209b82fec9f6bb53cf2fcb99b67182f751",
+      "source_hash": "sha256:c3f56d1a94118c00480e727e57b1e4ec93b9f89ea05343e83407b66d3fe5b355"
+    },
+    {
+      "artifact_id": "planner.cursor.research.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-research/SKILL.md",
+      "rendered_hash": "sha256:052bf78b17d7ea9c5b9b17f39dbf0ffaa063b0b5d961306b093fdb348dcb5eef",
+      "source_hash": "sha256:50fa96b8452cf2696c679ea58c23cacd96af388335ca46d51960bb153f241c5b"
+    },
+    {
+      "artifact_id": "planner.cursor.research.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-research/command.md",
+      "rendered_hash": "sha256:059d74cdb49db8cc19f4248d05d9c04d243dfb193996d6dcda2a0194e4adcca3",
+      "source_hash": "sha256:6c7da4d48e80cdf7a6787b209454a51c320ef01f3455535d883609d7c3b14828"
+    },
+    {
+      "artifact_id": "planner.cursor.review.skill",
+      "path": "packages/planner/adapters/cursor/skills/planner-review/SKILL.md",
+      "rendered_hash": "sha256:011a340f6eb7c6b095028e62d1a6b5111de1799cd0780296f8338897c578c801",
+      "source_hash": "sha256:f4e7ec0c42080dc66c4802349bb451a3efcec6b81c9a230bdae8795acee6140c"
+    },
+    {
+      "artifact_id": "planner.cursor.review.runtime",
+      "path": "packages/planner/adapters/cursor/skills/planner-review/command.md",
+      "rendered_hash": "sha256:acc7234da0be91011dfcecdc4a3efa445c657e345b95779ddd3557ad01f0f40c",
+      "source_hash": "sha256:74c815e6d18b7ac837801b302014027664dec48f933f2b78683de6570f3b628e"
+    }
+  ],
+  "contract_version": "1.0.0",
+  "publication_unit": "planner",
+  "version": "0.28.3"
+}

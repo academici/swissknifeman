@@ -1,7 +1,7 @@
 # Diagnostics and update
 
 The first step for any problem is `skiller doctor`: it checks the version
-Python, symlink, `PATH`, integrity `~/.swissknifeman/projects.json`, that registry
+Python, symlink, `PATH`, integrity `<state>/skiller/projects.json`, that registry
 — git-repository and without uncommitted skills that profiles are read.
 
 ## Composed effective-source doctor (`--effective-source`)

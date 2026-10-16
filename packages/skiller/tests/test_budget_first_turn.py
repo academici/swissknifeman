@@ -113,7 +113,7 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertIn("totally-unknown-server", mcp["detail"])
 
     def test_mcp_default_mode_is_deferred_lower_bound(self):
-        from skiller.budget import TOKENS_PER_MCP_TOOL_NAME
+        from aicore.content.budget import TOKENS_PER_MCP_TOOL_NAME
         (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
             HOST_SERVER: {"command": "hub-memory"}}}), encoding="utf-8")
         report = first_turn_report(self.env, self.proj)
@@ -125,7 +125,7 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertEqual(mcp["tokens"], HOST_TOOLS * TOKENS_PER_MCP_TOOL_NAME)
 
     def test_mcp_tool_search_off_uses_eager_schema_model(self):
-        from skiller.budget import FALLBACK_MCP_TOOLS, TOKENS_PER_MCP_TOOL
+        from aicore.content.budget import FALLBACK_MCP_TOOLS, TOKENS_PER_MCP_TOOL
         (self.proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
             HOST_SERVER: {"command": "hub-memory"},
             "totally-unknown-server": {"command": "x"}}}), encoding="utf-8")
@@ -172,14 +172,15 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertIsNone(mcp["estimate_class"])
 
     def test_boost_alias_known_next_to_laravel_boost(self):
-        from skiller.budget import KNOWN_MCP_TOOLS
+        from aicore.content.budget import KNOWN_MCP_TOOLS
         self.assertEqual(KNOWN_MCP_TOOLS["boost"], KNOWN_MCP_TOOLS["laravel-boost"])
 
     def test_listing_entry_capped_at_1536_chars(self):
         # first-party: "combined description and when_to_use text is truncated
         # at 1,536 characters" — a record longer than a cap should not give more
         # tokens than dripped text.
-        from skiller.budget import _listing_entry_tokens, estimate_tokens
+        from aicore.content.budget import (
+            listing_entry_tokens as _listing_entry_tokens, estimate_tokens)
         d = self.registry_root / "skills" / "quality" / "long-desc"
         long_desc = "x " * 2000  # 4000 char, obviously > 1536
         fx.write_skill(d, "long-desc", description=long_desc)
@@ -256,8 +257,8 @@ class FirstTurnReportCase(unittest.TestCase):
         # the staircase is pinned NAMELY at its boundaries: threshold re-edition
         # (P1.3 Implementation Rules §6) should drop this case and not quietly
         # change the meaning of the verdict for the fleet and the hub's context doctor.
-        from skiller.budget import (FIRST_TURN_TARGET_MAX, FIRST_TURN_WARN,
-                                    _first_turn_verdict)
+        from aicore.content.budget import (
+            FIRST_TURN_TARGET_MAX, FIRST_TURN_WARN, first_turn_verdict as _first_turn_verdict)
         self.assertEqual((FIRST_TURN_TARGET_MAX, FIRST_TURN_WARN), (16_000, 23_000))
         self.assertEqual(_first_turn_verdict(FIRST_TURN_TARGET_MAX), "OK")
         self.assertEqual(_first_turn_verdict(FIRST_TURN_TARGET_MAX + 1), "ELEVATED")
@@ -268,7 +269,7 @@ class FirstTurnReportCase(unittest.TestCase):
         # inflate CLAUDE.md obviously higher warn-threshold; volume is derived FROM
         # constants, otherwise the next time the threshold is re-issued, the test «just
         # will stop crashing» instead of requiring parsing.
-        from skiller.budget import FIRST_TURN_WARN, estimate_tokens
+        from aicore.content.budget import FIRST_TURN_WARN, estimate_tokens
         chunk = "padding word "
         (self.proj / "CLAUDE.md").write_text(
             chunk * (2 * FIRST_TURN_WARN // estimate_tokens(chunk) + 1),
@@ -476,7 +477,7 @@ class FirstTurnReportCase(unittest.TestCase):
 
     def test_report_prints_exclusion_line(self):
         self._write_skill_fm("silent-entry", "disable-model-invocation: true\n")
-        from skiller.budget import format_first_turn_report
+        from aicore.content.budget import format_first_turn_report
         text = format_first_turn_report(first_turn_report(self.env, self.proj))
         self.assertIn("excluded records: 1 (by field disable-model-invocation: 1)",
                       text)

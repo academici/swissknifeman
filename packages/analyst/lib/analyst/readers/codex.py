@@ -1,5 +1,5 @@
 """Named reader for the P6 generated Codex capture envelope, never Claude fallback."""
-from core.runs import ANALYTICS_METRICS
+from ..run_reports import ANALYTICS_METRICS
 
 from . import reject_sensitive, source_provenance
 

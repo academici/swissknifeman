@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "bad-protocol",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "Speaks protocols 2 and 3 only.",
+  "protocol": {"min": "2", "max": "3"},
+  "entrypoint": ["python3", "plugin.py"],
+  "provides": {"points": ["demo:check"]}
+}

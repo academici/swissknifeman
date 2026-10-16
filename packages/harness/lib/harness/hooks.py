@@ -8,19 +8,37 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, DiagnosticSeverity, ProviderId,
-                  apply_plan, artifact_dry_run, plan_artifact_lock,
-                  plan_artifact_render, render_artifact_projection, sha256_digest)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity,
+    ArtifactRenderRequest,
+    ArtifactSource,
+    ArtifactTarget,
+    canonical_json_bytes,
+    plan_artifact_render,
+    sha256_digest,
+)
+from aicore.artifacts.lock import (
+    LOCK_RELATIVE_PATH,
+    apply_plan,
+    artifact_dry_run,
+    plan_artifact_lock,
+    render_artifact_projection,
+)
+from aicore.config import ConfigError, edit_layer_file
+from aicore.state import project_config_file
+from aicore.provider.values import DiagnosticSeverity, ProviderId
 
-from .common import die, parse_flags, warn
+from aicore.util.cli import parse_flags
+from aicore.util.term import die, warn
+from . import hooks_env
 from .profiles import (HarnessDiagnostic, ProfileCatalog, default_catalog_path,
                        load_catalog)
 from .settings import (add_hook, load_settings, set_setting_key, set_swissknife,
                        write_json, write_text)
 
 AA_MODES = ("strict", "permissive", "bypass", "off")
-MEM_MODES = ("file", "federation", "agentmemory", "off")
+MEM_MODES = ("maind", "manual", "file", "federation", "agentmemory", "off")
+MAIND_MEMORY_MODES = ("maind", "manual")
 ROUTER_MODES = ("propose", "auto_dispatch", "off")
 RUNREPORT_MODES = ("on", "off")
 PACKGUARD_MODES = ("off", "warn", "strict")
@@ -424,9 +442,33 @@ def _payload_cwd(payload):
     return os.getcwd()
 
 
+def _carrier_value(cwd, name):
+    """Value of `name` in the committed carrier .swissknifeman/hooks.env: the Cursor key, then the general one."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        found[key.strip()] = value.strip()
+    return found.get(name + "__CURSOR", found.get(name))
+
+
+def _carrier_name(filename, key):
+    return filename.split(".")[0].replace("-", "_").upper() + "_" + key
+
+
 def _read_mode(cwd, filename):
     if not cwd:
         return "off"
+    carried = _carrier_value(cwd, _carrier_name(filename, "MODE"))
+    if carried is not None:
+        carried = carried.lower()
+        return carried if carried in _GATE_MODES else "off"
     env_file = Path(cwd) / ".cursor" / filename
     try:
         text = env_file.read_text(encoding="utf-8")
@@ -481,6 +523,15 @@ def _read_memory_config(cwd):
     mode, brain = "off", "core"
     if not cwd:
         return mode, brain
+    carried_mode = _carrier_value(cwd, "MEMORY_MODE")
+    carried_brain = _carrier_value(cwd, "MEMORY_BRAIN")
+    if carried_mode is not None:
+        lowered = carried_mode.lower()
+        mode = lowered if lowered in _MEMORY_MODES else "off"
+    if carried_brain:
+        brain = carried_brain
+    if carried_mode is not None and carried_brain:
+        return mode, brain
     env_file = Path(cwd) / ".cursor" / "memory.env.ini"
     try:
         text = env_file.read_text(encoding="utf-8")
@@ -491,10 +542,10 @@ def _read_memory_config(cwd):
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = (part.strip() for part in line.split("=", 1))
-        if key == "MODE":
+        if key == "MODE" and carried_mode is None:
             lowered = value.lower()
             mode = lowered if lowered in _MEMORY_MODES else "off"
-        elif key == "BRAIN" and value:
+        elif key == "BRAIN" and value and not carried_brain:
             brain = value
     return mode, brain
 
@@ -1211,15 +1262,16 @@ def plan_cursor_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path:
 
 
 _CODEX_ROUTER_CATALOG_PATH = ("packages/harness/configs/claude-code/hooks/"
-                              "agent-router/config.json")
+                              "agent-router/config.json")  # hub-relative identifier recorded in locks
+_CODEX_ROUTER_CATALOG_FILE = (Path(__file__).resolve().parents[2]
+                              / "configs/claude-code/hooks/agent-router/config.json")
 
 
 def _codex_router_catalog():
     """Read the same catalog `~/.claude/hooks/agent-router/config.json` uses and project
-    its command names into Codex's own bare invocation form (`task:x`, not `/task:x`)."""
-    root = Path(__file__).resolve().parents[4]
-    catalog = json.loads((root / _CODEX_ROUTER_CATALOG_PATH).read_text(encoding="utf-8"))
-    commands = [{"name": entry["name"].replace("/task:", "task:", 1),
+    its command names into Codex's own bare invocation form (`planner:x`, not `/planner:x`)."""
+    catalog = json.loads(_CODEX_ROUTER_CATALOG_FILE.read_text(encoding="utf-8"))
+    commands = [{"name": entry["name"].replace("/planner:", "planner:", 1),
                 "weight": entry.get("weight", 1), "keywords": entry["keywords"]}
                for entry in catalog.get("commands", [])]
     hint_template = catalog.get(
@@ -1324,12 +1376,32 @@ def _normalize_payload(raw, expected_event):
     return payload
 
 
+def _carrier_value(cwd, name):
+    """Value of `name` in the committed carrier .swissknifeman/hooks.env: the provider key, then the general one."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return None
+    found = {{}}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        found[key.strip()] = value.strip()
+    return found.get(name + "__" + _PROVIDER_ID.upper(), found.get(name))
+
+
 def _read_mode(cwd, filename):
-    """MODE from <cwd>/<_STATE_DIR>/<filename> (harness hooks writes it).
+    """MODE from the carrier .swissknifeman/hooks.env, then from <cwd>/<_STATE_DIR>/<filename>.
     Missing/unreadable/unknown value -> off (safe default, matches the Claude-side
     gates and the phase's explicit "inactive by default" requirement)."""
     if not cwd:
         return "off"
+    carried = _carrier_value(cwd, filename.split(".")[0].replace("-", "_").upper() + "_MODE")
+    if carried is not None:
+        carried = carried.lower()
+        return carried if carried in _GATE_MODES else "off"
     f = Path(cwd) / _STATE_DIR / filename
     try:
         text = f.read_text(encoding="utf-8")
@@ -1583,6 +1655,12 @@ def _memory(payload):
     cwd = payload.get("cwd")
     mode, brain = "maind", "core"
     if cwd:
+        carried_mode = _carrier_value(cwd, "MEMORY_MODE")
+        carried_brain = _carrier_value(cwd, "MEMORY_BRAIN")
+        if carried_mode is not None:
+            mode = carried_mode
+        if carried_brain:
+            brain = carried_brain
         ini = Path(cwd) / _STATE_DIR / "memory.env.ini"
         try:
             for line in ini.read_text(encoding="utf-8").splitlines():
@@ -1590,9 +1668,9 @@ def _memory(payload):
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 key, value = (part.strip() for part in line.split("=", 1))
-                if key == "MODE":
+                if key == "MODE" and carried_mode is None:
                     mode = value
-                elif key == "BRAIN":
+                elif key == "BRAIN" and not carried_brain:
                     brain = value
         except OSError:
             pass
@@ -2059,6 +2137,84 @@ def validate_d104_codex_lifecycle_composition(document: bytes, *, memory_command
         raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
 
 
+CODEX_LIFECYCLE_SCHEMA = "urn:swissknifeman:harness:codex-lifecycle:v1"
+_D104_FRAGMENT_SOURCE_ID = "harness.d104.observer-fragment"
+_D104_FRAGMENT_SOURCE_PATH = "packages/harness/lib/harness/hooks.py"
+
+
+def d104_observer_fragment(configs: Path) -> CodexLifecycleFragment:
+    """The native Codex observer registration and handler, planned from the package configs."""
+    configs = Path(configs)
+    lifecycle = plan_lifecycle(
+        load_catalog(configs / "common" / "profile-catalog.json"),
+        provider_id=ProviderId.CODEX,
+        requests=(LifecycleRequest("context.observer", True),), trusted=True,
+        codex_bindings_path=configs / "codex/hooks/lifecycle-context-bindings.json")
+    return codex_d104_observer_fragment(lifecycle)
+
+
+def codex_lifecycle_fragment_document(configs: Path) -> dict:
+    """The JSON form of the observer fragment (contract `codex-lifecycle/v1`)."""
+    fragment = d104_observer_fragment(configs)
+    return {
+        "$schema": CODEX_LIFECYCLE_SCHEMA,
+        "fragment": {
+            "target_path": fragment.target_path, "event": fragment.event,
+            "group": fragment.group, "handler": fragment.handler_bytes.decode("utf-8"),
+            "handler_sha256": sha256_digest(fragment.handler_bytes),
+            "source": {
+                "id": _D104_FRAGMENT_SOURCE_ID, "path": _D104_FRAGMENT_SOURCE_PATH,
+                "sha256": sha256_digest(canonical_json_bytes({
+                    "event": fragment.event, "group": fragment.group,
+                    "handler_sha256": sha256_digest(fragment.handler_bytes)})),
+            },
+        },
+    }
+
+
+def codex_lifecycle_validation_document(configs: Path, document: bytes, memory_command: str) -> dict:
+    """Validate a composed hooks document against the observer fragment; a refusal is data."""
+    fragment = d104_observer_fragment(configs)
+    try:
+        validate_d104_codex_lifecycle_composition(document, memory_command=memory_command,
+                                                  fragment=fragment)
+    except ValueError as error:
+        return {"$schema": CODEX_LIFECYCLE_SCHEMA, "ok": False, "code": str(error)}
+    return {"$schema": CODEX_LIFECYCLE_SCHEMA, "ok": True, "code": None}
+
+
+def cmd_codex_lifecycle(env, argv):
+    """`harness hooks codex-lifecycle fragment|validate --json` — D104 composition inputs."""
+    usage = ("harness hooks codex-lifecycle fragment --json\n"
+             "harness hooks codex-lifecycle validate --document FILE --memory-command CMD --json")
+    if not argv or argv[0] in ("-h", "--help"):
+        print(usage)
+        return
+    verb, rest = argv[0], argv[1:]
+    configs = Path(env.root) / "configs"
+    if verb == "fragment":
+        opts = parse_flags(rest, {"--json": "bool"})
+        if not opts["json"]:
+            die(usage)
+        try:
+            print(json.dumps(codex_lifecycle_fragment_document(configs), ensure_ascii=False))
+        except ValueError as error:
+            die(str(error))
+        return
+    if verb == "validate":
+        opts = parse_flags(rest, {"--document": "str", "--memory-command": "str", "--json": "bool"})
+        if not (opts["document"] and opts["memory_command"] and opts["json"]):
+            die(usage)
+        try:
+            document = Path(opts["document"]).expanduser().read_bytes()
+        except OSError as error:
+            die(f"{opts['document']}: {error}")
+        print(json.dumps(codex_lifecycle_validation_document(
+            configs, document, opts["memory_command"]), ensure_ascii=False))
+        return
+    die(f"unknown codex-lifecycle subcommand: {verb} (fragment|validate)")
+
+
 def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):
     """Use the P2 artifact seam for registration and its generated consumer handler."""
     return plan_claude_shaped_lifecycle_artifacts(plan, bindings_path=bindings_path)
@@ -2073,7 +2229,7 @@ def plan_claude_shaped_lifecycle_artifacts(plan: LifecycleRenderPlan, *, binding
     source = ArtifactSource(f"harness.{name}.lifecycle-bindings",
                             f"packages/harness/configs/{name}/hooks/lifecycle-context-bindings.json",
                             sha256_digest(Path(bindings_path).read_bytes()))
-    router_path = Path(__file__).resolve().parents[4] / _CODEX_ROUTER_CATALOG_PATH
+    router_path = _CODEX_ROUTER_CATALOG_FILE
     router_source = ArtifactSource("harness.codex.router-catalog",
                                    _CODEX_ROUTER_CATALOG_PATH,
                                    sha256_digest(router_path.read_bytes()))
@@ -2103,7 +2259,7 @@ def block_codex_lifecycle(env, target, *, surfaces, trusted, repair, dry,
         diagnostic = lifecycle.diagnostics[0]
         die(f"{diagnostic.code}: {diagnostic.next_action}")
     artifacts = plan_codex_lifecycle_artifacts(lifecycle, bindings_path=bindings_path)
-    lock_path = Path(target) / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = Path(target) / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     repair_ids = tuple(item.provenance.artifact_id for item in artifacts) if repair else ()
     plan = plan_artifact_lock(
@@ -2149,7 +2305,7 @@ def block_cursor_lifecycle(env, target, *, surfaces, trusted, repair, dry):
         die("HARNESS_CURSOR_HOOKS_INVALID: fix .cursor/hooks.json or remove it before deploy")
     artifacts = plan_cursor_lifecycle_artifacts(
         lifecycle, bindings_path=bindings_path, existing_document=existing_document)
-    lock_path = Path(target) / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = Path(target) / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     repair_ids = {item.provenance.artifact_id for item in artifacts} if repair else set()
     if existing_document is not None:
@@ -2208,7 +2364,7 @@ def block_autoapprove(target, mode, settings_file, dry):
         return
     if mode not in AA_MODES:
         die(f"unknown mode auto-approve: {mode} ({'|'.join(AA_MODES)})")
-    write_text(target / ".claude" / "auto-approve.env.ini", f"MODE={mode}\n", dry)
+    set_hook_setting(target, "auto_approve", "mode", mode, dry)
     if mode == "off":
         return
     settings, f = load_settings(target, settings_file)
@@ -2230,8 +2386,9 @@ def block_memory(target, brain, mode, dry):
     if mode not in MEM_MODES:
         die(f"unknown mode memory: {mode} ({'|'.join(MEM_MODES)})")
     brain = brain or "core"
-    set_swissknife(target, "memory_brain", brain, dry)
-    write_text(target / ".claude" / "memory.env.ini", f"MODE={mode}\n", dry)
+    if mode not in MAIND_MEMORY_MODES:  # maind scopes memory by project, the brain does not apply
+        set_swissknife(target, "memory_brain", brain, dry)
+    set_hook_setting(target, "memory", "mode", mode, dry)
     print(f"  project attached to brain '{brain}' (mode {mode}). "
           f"Participants - ~/.claude/hooks/memory/config.json")
 
@@ -2243,7 +2400,7 @@ def block_router(target, mode, settings_file, dry):
         return
     if mode not in ROUTER_MODES:
         die(f"unknown mode router: {mode} ({'|'.join(ROUTER_MODES)})")
-    write_text(target / ".claude" / "agent-router.env.ini", f"POLICY={mode}\n", dry)
+    set_hook_setting(target, "agent_router", "policy", mode, dry)
     if mode == "off":
         return
     settings, f = load_settings(target, settings_file)
@@ -2265,8 +2422,7 @@ def block_run_report(target, mode, settings_file, dry):
         return
     if mode not in RUNREPORT_MODES:
         die(f"unknown mode run-report: {mode} ({'|'.join(RUNREPORT_MODES)})")
-    write_text(target / ".claude" / "run-report.env.ini",
-               f"ENABLED={mode}\nRUNS_KEEP=30\n", dry)
+    set_hook_setting(target, "run_report", "enabled", mode, dry)
     if mode == "off":
         return
 
@@ -2294,7 +2450,7 @@ def block_pack_guard(target, mode, settings_file, dry):
         return
     if mode not in PACKGUARD_MODES:
         die(f"unknown mode pack-guard: {mode} ({'|'.join(PACKGUARD_MODES)})")
-    write_text(target / ".claude" / "pack-guard.env.ini", f"MODE={mode}\n", dry)
+    set_hook_setting(target, "pack_guard", "mode", mode, dry)
     if mode == "off":
         return
     settings, f = load_settings(target, settings_file)
@@ -2315,7 +2471,7 @@ def block_plan_guard(target, mode, settings_file, dry):
         return
     if mode not in PACKGUARD_MODES:
         die(f"unknown mode plan-guard: {mode} ({'|'.join(PACKGUARD_MODES)})")
-    write_text(target / ".claude" / "plan-guard.env.ini", f"MODE={mode}\n", dry)
+    set_hook_setting(target, "plan_guard", "mode", mode, dry)
     if mode == "off":
         return
     settings, f = load_settings(target, settings_file)
@@ -2336,7 +2492,7 @@ def block_changelog_gate(target, mode, settings_file, dry):
         return
     if mode not in CHANGELOGGATE_MODES:
         die(f"unknown mode changelog-gate: {mode} ({'|'.join(CHANGELOGGATE_MODES)})")
-    write_text(target / ".claude" / "changelog-gate.env.ini", f"MODE={mode}\n", dry)
+    set_hook_setting(target, "changelog_gate", "mode", mode, dry)
     if mode == "off":
         return
     settings, f = load_settings(target, settings_file)
@@ -2447,6 +2603,75 @@ def _parse_memory_flag(raw):
     return "core", raw.strip()
 
 
+def set_hook_setting(target, hook, key, value, dry, *, provider=None):
+    """Set one `[harness.hooks]` key of the project configuration (a provider key when `provider` is given).
+
+    The committed carrier `.swissknifeman/hooks.env` is regenerated by `sync_hooks_env`.
+    """
+    path = project_config_file(target)
+    dotted = f"hooks.{hook}." + (f"providers.{provider}." if provider else "") + key
+    if dry:
+        print(f"  [dry-run] would set harness {dotted} = {value!r} in {path}")
+        return
+    try:
+        edit_layer_file(path, "harness", dotted, value, schema=hooks_env.SCHEMA_FILE, layer="project")
+    except ConfigError as error:
+        die(f"{path}: {error}")
+    print(f"  set: harness {dotted} = {value!r} in {path}")
+
+
+def sync_hooks_env(target, dry):
+    """Regenerate `.swissknifeman/hooks.env` from the project configuration."""
+    path = hooks_env.carrier_path(target)
+    try:
+        settings = hooks_env.project_settings(target)
+    except ConfigError as error:
+        die(f"{project_config_file(target)}: {error}")
+    text = hooks_env.render_hooks_env(settings)
+    if not hooks_env.carrier_entries(settings) and not path.exists():
+        print(f"  {path}: no hook modes in {project_config_file(target)} - nothing to write")
+        return False
+    try:
+        current = path.read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        current = None
+    if current == text:
+        print(f"  {path}: up to date")
+        return False
+    write_text(path, text, dry)
+    return True
+
+
+def _sync_after_flags(target, dry):
+    if dry:
+        print(f"  [dry-run] would regenerate {hooks_env.carrier_path(target)} (harness hooks sync)")
+        return
+    sync_hooks_env(target, dry)
+
+
+def cmd_hooks_state(target_arg, verb, as_json, dry):
+    """`harness hooks show|sync [--target P] [--json] [--dry-run]`."""
+    target = Path(target_arg or ".").expanduser().resolve()
+    if verb == "sync":
+        if as_json:
+            die("hooks sync has no --json output; use hooks show --json")
+        sync_hooks_env(target, dry)
+        return
+    try:
+        document = hooks_env.hooks_state(target)
+    except ConfigError as error:
+        die(f"{project_config_file(target)}: {error}")
+    if as_json:
+        print(hooks_env.dumps(document))
+        return
+    print(f"project: {document['project']}")
+    print(f"carrier: {hooks_env.carrier_path(target)} ({'stale' if document['stale'] else 'current'})")
+    for name, value in hooks_env.carrier_entries(document["settings"]):
+        print(f"  {name}={value}")
+    for legacy in document["legacy"]:
+        print(f"  legacy (read only): {legacy}")
+
+
 _CODEX_OBSERVABILITY_SURFACES = (
     "lifecycle.command-log",
     "lifecycle.tool-telemetry",
@@ -2458,10 +2683,10 @@ _CODEX_GATE_SURFACE = {
     "changelog_gate": "lifecycle.changelog-gate",
     "review_gate": "lifecycle.review-gate", "git_guardrails": "lifecycle.git-guardrails",
 }
-_CODEX_GATE_ENV_FILE = {
-    "lifecycle.pack-guard": "pack-guard.env.ini", "lifecycle.plan-guard": "plan-guard.env.ini",
-    "lifecycle.changelog-gate": "changelog-gate.env.ini",
-    "lifecycle.review-gate": "review-gate.env.ini", "lifecycle.git-guardrails": "git-guardrails.env.ini",
+_CODEX_GATE_HOOK = {
+    "lifecycle.pack-guard": "pack_guard", "lifecycle.plan-guard": "plan_guard",
+    "lifecycle.changelog-gate": "changelog_gate",
+    "lifecycle.review-gate": "review_gate", "lifecycle.git-guardrails": "git_guardrails",
 }
 
 
@@ -2470,7 +2695,6 @@ def _block_codex_gates(env, target, opts, *, provider="codex"):
 
     Codex and Grok share the dispatcher; only the state dir (`.codex` / `.grok`) changes.
     """
-    state_dir = ".codex" if provider == "codex" else ".grok"
     provider_id = ProviderId.CODEX if provider == "codex" else ProviderId.GROK
     surfaces = []
     if opts["observer"]:
@@ -2486,10 +2710,11 @@ def _block_codex_gates(env, target, opts, *, provider="codex"):
         if mode not in PACKGUARD_MODES:
             die(f"unknown mode {flag.replace('_', '-')}: {mode} ({'|'.join(PACKGUARD_MODES)})")
         surface_id = _CODEX_GATE_SURFACE[flag]
-        write_text(target / state_dir / _CODEX_GATE_ENV_FILE[surface_id], f"MODE={mode}\n",
-                  opts["dry_run"])
+        set_hook_setting(target, _CODEX_GATE_HOOK[surface_id], "mode", mode, opts["dry_run"],
+                         provider=provider)
         if mode != "off":
             surfaces.append(surface_id)
+    _sync_after_flags(target, opts["dry_run"])
     if not surfaces:
         die(f"provider {provider} needs at least one of: --observer / --pack-guard off|warn|strict / "
             "--plan-guard off|warn|strict / --changelog-gate off|warn|strict / --review-gate off|warn|strict / "
@@ -2523,8 +2748,8 @@ def _block_cursor_gates(env, target, opts):
         brain, mode = _parse_memory_flag(memory)
         if mode not in MEM_MODES:
             die(f"unknown mode --memory: {mode} ({'|'.join(MEM_MODES)})")
-        write_text(target / ".cursor" / "memory.env.ini",
-                   f"MODE={mode}\nBRAIN={brain}\n", opts["dry_run"])
+        set_hook_setting(target, "memory", "mode", mode, opts["dry_run"], provider="cursor")
+        set_hook_setting(target, "memory", "brain", brain, opts["dry_run"], provider="cursor")
         if mode != "off":
             surfaces.append("lifecycle.memory")
     if opts["daemon_safety"]:
@@ -2534,8 +2759,7 @@ def _block_cursor_gates(env, target, opts):
         if git_mode not in PACKGUARD_MODES:
             die("unknown mode --git-guardrails: "
                 + f"{git_mode} ({'|'.join(PACKGUARD_MODES)})")
-        write_text(target / ".cursor" / "git-guardrails.env.ini", f"MODE={git_mode}\n",
-                   opts["dry_run"])
+        set_hook_setting(target, "git_guardrails", "mode", git_mode, opts["dry_run"], provider="cursor")
         if git_mode != "off":
             surfaces.append("lifecycle.git-guardrails")
     changelog_mode = opts["changelog_gate"]
@@ -2543,8 +2767,7 @@ def _block_cursor_gates(env, target, opts):
         if changelog_mode not in PACKGUARD_MODES:
             die("unknown mode --changelog-gate: "
                 + f"{changelog_mode} ({'|'.join(PACKGUARD_MODES)})")
-        write_text(target / ".cursor" / "changelog-gate.env.ini", f"MODE={changelog_mode}\n",
-                   opts["dry_run"])
+        set_hook_setting(target, "changelog_gate", "mode", changelog_mode, opts["dry_run"], provider="cursor")
         if changelog_mode != "off":
             surfaces.append("lifecycle.changelog-gate")
     pack_mode = opts["pack_guard"]
@@ -2552,8 +2775,7 @@ def _block_cursor_gates(env, target, opts):
         if pack_mode not in PACKGUARD_MODES:
             die("unknown mode --pack-guard: "
                 + f"{pack_mode} ({'|'.join(PACKGUARD_MODES)})")
-        write_text(target / ".cursor" / "pack-guard.env.ini", f"MODE={pack_mode}\n",
-                   opts["dry_run"])
+        set_hook_setting(target, "pack_guard", "mode", pack_mode, opts["dry_run"], provider="cursor")
         if pack_mode != "off":
             surfaces.append("lifecycle.pack-guard")
     plan_mode = opts["plan_guard"]
@@ -2561,8 +2783,7 @@ def _block_cursor_gates(env, target, opts):
         if plan_mode not in PACKGUARD_MODES:
             die("unknown mode --plan-guard: "
                 + f"{plan_mode} ({'|'.join(PACKGUARD_MODES)})")
-        write_text(target / ".cursor" / "plan-guard.env.ini", f"MODE={plan_mode}\n",
-                   opts["dry_run"])
+        set_hook_setting(target, "plan_guard", "mode", plan_mode, opts["dry_run"], provider="cursor")
         if plan_mode != "off":
             surfaces.append("lifecycle.plan-guard")
     review_mode = opts["review_gate"]
@@ -2570,10 +2791,10 @@ def _block_cursor_gates(env, target, opts):
         if review_mode not in PACKGUARD_MODES:
             die("unknown mode --review-gate: "
                 + f"{review_mode} ({'|'.join(PACKGUARD_MODES)})")
-        write_text(target / ".cursor" / "review-gate.env.ini", f"MODE={review_mode}\n",
-                   opts["dry_run"])
+        set_hook_setting(target, "review_gate", "mode", review_mode, opts["dry_run"], provider="cursor")
         if review_mode != "off":
             surfaces.append("lifecycle.review-gate")
+    _sync_after_flags(target, opts["dry_run"])
     block_cursor_lifecycle(env, target, surfaces=tuple(surfaces),
                            trusted=bool(opts["trusted"]), repair=bool(opts["repair"]),
                            dry=bool(opts["dry_run"]))
@@ -2586,7 +2807,7 @@ def block_plan_regen(target, mode, settings_file, dry):
         return
     if mode not in PLANREGEN_MODES:
         die(f"unknown mode plan-regen: {mode} ({'|'.join(PLANREGEN_MODES)})")
-    write_text(target / ".claude" / "plan-regen.env.ini", f"MODE={mode}\n", dry)
+    set_hook_setting(target, "plan_regen", "mode", mode, dry)
     if mode == "off":
         return
     settings, f = load_settings(target, settings_file)
@@ -2601,6 +2822,15 @@ def block_plan_regen(target, mode, settings_file, dry):
 
 
 def cmd_hooks(env, argv):
+    if argv and argv[0] == "codex-lifecycle":
+        return cmd_codex_lifecycle(env, argv[1:])
+    if argv and argv[0] in ("sync", "show"):
+        state = parse_flags(argv[1:], {"--target": "str", "--json": "bool", "--dry-run": "bool"})
+        if state["help"]:
+            print("harness hooks sync [--target P] [--dry-run]\n"
+                  "harness hooks show [--target P] [--json]")
+            return
+        return cmd_hooks_state(state["target"], argv[0], state["json"], state["dry_run"])
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
         "--router": "str", "--run-report": "str", "--pack-guard": "str",
@@ -2613,7 +2843,8 @@ def cmd_hooks(env, argv):
         "--repair": "bool", "--global": "bool", "--dry-run": "bool",
     })
     if opts["help"]:
-        print("harness hooks [--global] [--target P] [--auto-approve "
+        print("harness hooks sync|show [--target P] [--json] [--dry-run]   (hook modes: .swissknifeman/hooks.env)\n"
+              "harness hooks [--global] [--target P] [--auto-approve "
               f"{'|'.join(AA_MODES)}] [--memory BRAIN:{'|'.join(MEM_MODES)}] "
               f"[--router {'|'.join(ROUTER_MODES)}] "
               f"[--run-report {'|'.join(RUNREPORT_MODES)}] "
@@ -2684,3 +2915,6 @@ def cmd_hooks(env, argv):
         block_plan_guard(target, opts["plan_guard"], settings_file, opts["dry_run"])
     if opts["plan_regen"]:
         block_plan_regen(target, opts["plan_regen"], settings_file, opts["dry_run"])
+    if (opts["auto_approve"] or opts["memory"] or opts["router"] or opts["run_report"]
+            or opts["pack_guard"] or opts["changelog_gate"] or opts["plan_guard"] or opts["plan_regen"]):
+        _sync_after_flags(target, opts["dry_run"])

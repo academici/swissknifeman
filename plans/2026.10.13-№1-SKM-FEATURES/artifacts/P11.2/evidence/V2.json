@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261015T081828Z-83def3:P11.2:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN4.P11.2",
+  "candidate": {
+    "head": "a7a64e7dae8665432e73914e99f60d81499e97eb",
+    "dirty_digest": "e285472785aed72ee9777ef9bfeabfab0114adb64b30d128705f7d3216c9e6b3"
+  },
+  "started_at": "2026-10-15T10:02:29Z",
+  "procedure": {
+    "cmd": "python3 -c \"import pathlib,sys; big=[(p,sum(1 for _ in open(p))) for p in pathlib.Path('packages/orch/lib/orch/conductor').rglob('*.py')]; bad=[x for x in big if x[1]>600]; assert not bad, bad\"",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-15T10:02:29Z"
+}

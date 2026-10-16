@@ -146,7 +146,7 @@ class TestExtractors(unittest.TestCase):
 
 
 class TestExtractPathologies(unittest.TestCase):
-    """Signal C: core.pathology.detect + relapse rule (≥2 from the last 5 runs).
+    """Signal C: pathology.detect + relapse rule (≥2 from the last 5 runs).
     detector "protected-write" — most deterministic (fires when the list is not empty,
     without thresholds/shares), is useful as a control code for checking the recurrence rule itself."""
 

@@ -1,0 +1,412 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.3",
+  "title": "Перенос skills бакета system и агента code-coordinator в плагины maind, harness, analyst; Codex-манифесты модулей; активация бакета хоста; e2e доставки",
+  "status": "done_with_deviations",
+  "summary": "git mv четырёх skills и агента в maind, agent-packs в harness, session-observer в analyst; skills/agents в .claude-plugin модулей с подъёмом версий плагинов; .codex-plugin (skills-only) у maind, harness, analyst, brain; buckets.json system → provided_by: host, bucket_aliases в configs/skiller-host.json; core-policy, publication-versions, burndown-списки; тесты skills в модулях; ownership (минус 7 строк P8, плюс workflow-craft → planner P9); registry в песочнице и перезахват golden skiller-registry; сквозная проверка scripts/e2e-module-skills.sh в песочнице.",
+  "why": "Ownership P8 и D52/D8: skill о модуле живёт в модуле, в skiller — только общие. Жёсткие риски: (1) проекты с профилем, где есть system, теряют skills — страхуется e2e обоими каналами; (2) включение плагинов модулей добавляет их команды в первый ход проекта — замерить и записать (порог 23K — правило root.claude-code.context-budget); (3) Codex-проекты теряли бы skills без .codex-plugin модулей.",
+  "scope": {
+    "include": [
+      "git mv: packages/skiller/skills/system/{local-topology,swissknifeman-locator,cross-project-coordinator,shared-memory} → packages/maind/skills/; system/agents/code-coordinator.md → packages/maind/agents/; system/agent-packs → packages/harness/skills/; system/session-observer → packages/analyst/skills/; удалить манифесты бакета system",
+      "packages/{maind,harness,analyst}/.claude-plugin/plugin.json; packages/{maind,harness,analyst,brain}/.codex-plugin/plugin.json",
+      "configs/skiller-host.json: bucket_aliases; packages/skiller/buckets.json: system provided_by host; packages/skiller/configs/{core-policy,publication-versions}.json; config._load_core_policy умолчания; burndown-списки",
+      "packages/{maind,harness,analyst}/tests/test_skills.py",
+      "harness agent-packs docs: maind:code-coordinator; докстринги topology.py и quality/analyze.py",
+      "configs/ecosystem-units.json ownership; render; baseline при улучшении",
+      "configs/release-units.json — только если Codex-манифест требует codex в required_providers",
+      "генерация registry в песочнице; golden capture skiller-registry",
+      "scripts/e2e-module-skills.sh (хаб)",
+      "CHANGELOG: корень (skiller, harness, analyst — своего CHANGELOG у analyst нет), maind, brain"
+    ],
+    "exclude": [
+      "содержание перенесённых skills (кроме названного в knowledge/skiller-p8-modules#move)",
+      "перенос workflow-craft (P9) и других general/*",
+      "docs skiller и модулей (P8.6)",
+      "конфиг [skiller] (P8.4)"
+    ]
+  },
+  "depends_on": [
+    "P8.2"
+  ],
+  "decisions": [
+    "D52",
+    "D8"
+  ],
+  "reads": [
+    {
+      "why": "общие правила фазы",
+      "required": true,
+      "ref": "knowledge/skiller-p8#rules"
+    },
+    {
+      "why": "skills system, плагины модулей, карта, профили",
+      "required": true,
+      "ref": "knowledge/skiller-p8#facts"
+    },
+    {
+      "why": "дизайн пункта",
+      "required": true,
+      "ref": "knowledge/skiller-p8-modules#move"
+    },
+    {
+      "why": "как механизм P8.2 разворачивает бакет хоста (для e2e и активации)",
+      "required": true,
+      "ref": "knowledge/skiller-p8-modules#design"
+    },
+    {
+      "why": "прецедент переноса brain-locator: registry, golden, release-units",
+      "required": false,
+      "ref": "knowledge/brain-p7-move#skill"
+    },
+    {
+      "why": "образец теста skills модуля",
+      "required": true,
+      "path": "packages/brain/tests/test_skills.py"
+    },
+    {
+      "why": "формат Codex-манифеста",
+      "required": true,
+      "path": "packages/task/.codex-plugin/plugin.json"
+    },
+    {
+      "why": "манифест для правки",
+      "required": true,
+      "path": "packages/maind/.claude-plugin/plugin.json"
+    },
+    {
+      "why": "куда добавить bucket_aliases",
+      "required": true,
+      "path": "configs/skiller-host.json"
+    },
+    {
+      "why": "plugins модулей, required_providers",
+      "required": true,
+      "path": "configs/release-units.json"
+    },
+    {
+      "why": "new/run/remove для registry и e2e",
+      "required": false,
+      "path": "scripts/dev-sandbox.sh"
+    },
+    {
+      "why": "образец e2e-скрипта с проверкой не-реального HOME",
+      "required": false,
+      "path": "packages/brain/scripts/e2e-plan-note.sh"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/skills/system/**",
+      "change": "delete"
+    },
+    {
+      "path": "packages/maind/skills/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/maind/agents/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/skills/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/skills/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/maind/.claude-plugin/plugin.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/harness/.claude-plugin/plugin.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/analyst/.claude-plugin/plugin.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/.codex-plugin/plugin.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/.codex-plugin/plugin.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/.codex-plugin/plugin.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/brain/.codex-plugin/plugin.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/maind/tests/test_skills.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/harness/tests/test_skills.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/analyst/tests/test_skills.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/brain/tests/test_skills.py",
+      "change": "modify",
+      "note": "только проверка Codex-манифеста"
+    },
+    {
+      "path": "packages/harness/configs/claude-code/agent-packs/**/docs/subagents-and-workflows.md",
+      "change": "modify"
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/buckets.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/configs/core-policy.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/configs/publication-versions.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/config.py",
+      "change": "modify",
+      "note": "встроенные умолчания core-политики"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/topology.py",
+      "change": "modify",
+      "note": "только докстринг"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/quality/analyze.py",
+      "change": "modify",
+      "note": "только докстринг"
+    },
+    {
+      "path": "packages/skiller/scripts/desc-burndown.txt",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/scripts/desc-trigger-burndown.txt",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/scripts/skill-sections-burndown.txt",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/skills.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/skills/_index.md",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/skills/*/.claude-plugin/plugin.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/skills/*/.codex-plugin/plugin.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/docs/guide/budget.md",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/docs/guide/graph.md",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/adapters/codex/**",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "bootstrap/publication-lock.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "modify",
+      "note": "только golden.py capture"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify",
+      "note": "только baseline --update"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только через render"
+    },
+    {
+      "path": "configs/release-units.json",
+      "change": "modify",
+      "note": "только если требуют проверки выпуска"
+    },
+    {
+      "path": "scripts/e2e-module-skills.sh",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/maind/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/brain/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/skiller-p8 §rules (stdlib + aicore, Python 3.9, POSIX; граница модулей: skiller не называет модулей хаба; тесты только с временным HOME; CLI, validate и registry skiller — только в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды предупреждений, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "git mv — отдельным шагом без правок содержимого; затем правки; содержание SKILL.md и агента не меняется, версии skills не поднимаются",
+    "Профили skiller не меняются: бакет system остаётся в них и разворачивается хостом",
+    "Golden перезахватывается только для skiller-registry: python3 scripts/golden.py capture --only skiller-registry --reason \"system skills moved to the maind, harness, analyst and brain plugins\"",
+    "registry, validate и e2e skiller — только в песочнице (dev-sandbox.sh)",
+    "Замер первого хода: plan.py log с числами skiller budget --first-turn --with-plugins (в песочнице) до и после пункта и токенами описаний skills и команд плагинов maind, harness, analyst; превышение 23K — записать и сообщить в отчёте пункта (Owner verdict), не обходить"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: замер «до» (`skiller budget --first-turn --with-plugins` в песочнице; если с плагинами не измеряется без провайдерского CLI — `skiller budget --profile node-package` и сумма описаний, записать способ) → `git mv` по §move п.1 (один коммит-шаг без правок) → манифесты `.claude-plugin` и `.codex-plugin` (§move п.2) → хост, buckets.json, core-policy (+ умолчания в config.py), publication-versions, burndown (§move п.3) → ссылки (§move п.4) → `tests/test_skills.py` трёх модулей и проверка Codex-манифеста в brain (§move п.5) → ownership + render (§move п.6) → registry в песочнице, `git status` — только ожидаемые генерируемые файлы, golden capture (§move п.7) → проверки выпуска (`python3 scripts/test-verify-tag.py`, `test-version-guard.py`; при требовании — `required_providers`) → `scripts/e2e-module-skills.sh` (§move п.8) и V5 → замер «после», `plan.py log` → CHANGELOG (skiller: Removed system bucket skills, now provided by host modules; harness: Added skill agent-packs; maind: Added skills and agent code-coordinator; analyst: Added skill session-observer; brain: Added Codex plugin manifest) → V1–V5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p8-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "set -e; bash packages/maind/scripts/test.sh; bash packages/maind/scripts/validate.sh; bash packages/harness/scripts/test.sh; bash packages/harness/scripts/validate.sh; bash packages/analyst/scripts/test.sh; bash packages/analyst/scripts/validate.sh; bash packages/brain/scripts/test.sh; bash packages/brain/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "test ! -e packages/skiller/skills/system && for s in local-topology swissknifeman-locator cross-project-coordinator shared-memory; do test -f packages/maind/skills/$s/SKILL.md || exit 1; done && test -f packages/maind/agents/code-coordinator.md && test -f packages/harness/skills/agent-packs/SKILL.md && test -f packages/analyst/skills/session-observer/SKILL.md && for m in maind harness analyst brain; do test -f packages/$m/.codex-plugin/plugin.json || exit 1; done && python3 -c 'import json; h = json.load(open(\"configs/skiller-host.json\")); assert h[\"bucket_aliases\"] == {\"system\": [\"maind\", \"harness\", \"analyst\", \"brain\"]}, h; b = json.load(open(\"packages/skiller/buckets.json\")); assert b[\"system\"][\"provided_by\"] == \"host\"; m = json.load(open(\".claude-plugin/marketplace.json\")); names = {p[\"name\"] for p in m[\"plugins\"]}; assert \"system\" not in names and {\"maind\", \"harness\", \"analyst\", \"brain\"} <= names, names; c = json.load(open(\".agents/plugins/marketplace.json\")); cn = {p[\"name\"] for p in c[\"plugins\"]}; assert {\"maind\", \"harness\", \"analyst\", \"brain\"} <= cn, cn; u = json.load(open(\"configs/ecosystem-units.json\")); own = [o[\"path\"] for o in u[\"ownership\"]]; assert not [p for p in own if \"skills/system/\" in p], own; assert any(o[\"path\"].endswith(\"general/workflow-craft/\") and o[\"target\"] == \"planner\" and o[\"phase\"] == \"P9\" for o in u[\"ownership\"])'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/test-verify-tag.py && python3 scripts/test-version-guard.py && python3 scripts/test-ecosystem-units.py && python3 scripts/test-config-inventory.py && python3 scripts/test-dev-guard.py && python3 scripts/test-aicore-locator.py && python3 scripts/test-golden.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p8-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash scripts/e2e-module-skills.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "skills бакета system в плагинах maind, harness, analyst, brain",
+    "Codex-манифесты модулей со skills",
+    "scripts/e2e-module-skills.sh"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T14:44:23Z",
+    "finished_at": "2026-10-09T15:08:21Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "e0e8e97e-2ffe-45e9-91b6-87f1868ae3d2"
+    },
+    "notes": "Skills system перенесены в maind (4 skills + агент code-coordinator), harness (agent-packs), analyst (session-observer); Codex-манифесты у maind/harness/analyst/brain; бакет system — provided_by host, bucket_aliases в configs/skiller-host.json; golden skiller-registry перезахвачен; scripts/e2e-module-skills.sh зелёный (connect + sync); замер первого хода: добавка плагинов модулей ≈1.3K, порог 23K не затронут.",
+    "deviations": [
+      "e2e проверяет управляемость копий по skills-lock.json (managed: true), а не по маркеру в SKILL.md (sync маркер не пишет)",
+      "пересчитан tests/fixtures_data/claude-publication-golden.json skiller (49 артефактов после ухода манифестов бакета system)",
+      "исправлен scripts/golden.py capture (stale-дайджесты файлов, ушедших из индекса git) + тест в test-golden.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T15:08:21Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T15:08:21Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T15:08:21Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T15:08:21Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T15:08:21Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T15:08:21Z"
+}

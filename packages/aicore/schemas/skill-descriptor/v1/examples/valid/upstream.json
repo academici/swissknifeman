@@ -1,0 +1,30 @@
+{
+  "schema": "skill-descriptor/v1",
+  "id": "frontend-nuxt/nuxt-seo",
+  "name": "nuxt-seo",
+  "description": "SEO for Nuxt applications.",
+  "version": null,
+  "digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "license": "MIT",
+  "compatibility": "Requires Nuxt 3 or above",
+  "allowed_tools": ["Read", "Bash(git status:*)"],
+  "adapters": [],
+  "requires": [],
+  "risk": null,
+  "metadata": {},
+  "provenance": {
+    "source": "github",
+    "repo": "example/nuxt-skills",
+    "strategy": "notify",
+    "license": "MIT",
+    "files": [
+      {
+        "path": "SKILL.md",
+        "url": "https://raw.githubusercontent.com/example/nuxt-skills/main/skills/nuxt-seo/SKILL.md",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "fetched_at": "2026-06-17"
+      }
+    ],
+    "audit": {"verdict": "pass", "at": "2026-06-17", "upstream_sha": "0123abc"}
+  }
+}

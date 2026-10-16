@@ -9,8 +9,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from skiller.common import (SKILL_MANAGED_MARKER, _mark_skill_managed,
-                            strip_skill_managed_marker)
+from aicore.delivery.materialize import (
+    SKILL_MANAGED_MARKER, mark_skill_managed as _mark_skill_managed, strip_skill_managed_marker)
 
 
 class SkillManagedMarkerCase(unittest.TestCase):

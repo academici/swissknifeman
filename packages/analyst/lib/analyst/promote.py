@@ -10,10 +10,10 @@ Confidence-gates by numbers (N≥15/conf≥0.6 …) and mem0 auto-resolve - phas
 is done by a person consciously."""
 import os
 
-from core import sibling_bin
-
 from . import lessons
-from .common import confirm, die, parse_args, run_cmd, warn
+from aicore.util.cli import parse_args, run_cmd
+from aicore.util.partners import partner_command
+from aicore.util.term import confirm, die, warn
 
 # Promotion pipeline (deprecated — separate `deprecate`, not in that order).
 ORDER = ("ephemeral", "candidate", "curated")
@@ -26,10 +26,10 @@ def _next_state(cur):
 
 # ── surfacing to memory mAInd (graceful) ──────────────────────────────────────
 def _resolve_maind_bin(env):
-    """MAIND_BIN → PATH → <monorepo>/packages/maind/bin/maind. None if not found.
-    Single resolver - `core.sibling_bin`."""
-    p = sibling_bin("maind", env_var="MAIND_BIN", monorepo_root=env.monorepo_root)
-    return str(p) if p else None
+    """The maind executable (legacy MAIND_BIN, SKM_MAIND_BIN, SKM_MAIND_ROOT, PATH). None if not found.
+    Single resolver - `aicore.util.partners.partner_command`."""
+    argv = partner_command("maind", legacy_env=("MAIND_BIN",))
+    return argv[0] if argv else None
 
 
 def _fact_text(lesson):

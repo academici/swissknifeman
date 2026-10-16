@@ -1,0 +1,360 @@
+{
+  "catalog": [
+    [
+      "context7",
+      "http",
+      "mcp.catalog",
+      []
+    ],
+    [
+      "fetch",
+      "stdio",
+      "mcp.catalog",
+      []
+    ],
+    [
+      "filesystem",
+      "stdio",
+      "mcp.catalog",
+      []
+    ],
+    [
+      "github",
+      "http",
+      "mcp.catalog",
+      []
+    ],
+    [
+      "memory",
+      "stdio",
+      "mcp.catalog",
+      []
+    ],
+    [
+      "playwright",
+      "stdio",
+      "mcp.catalog",
+      []
+    ],
+    [
+      "sequential-thinking",
+      "stdio",
+      "mcp.catalog",
+      []
+    ]
+  ],
+  "claude-code/all": {
+    "rendered": "{\n  \"mcpServers\": {\n    \"context7\": {\n      \"type\": \"http\",\n      \"url\": \"https://mcp.context7.com/mcp\"\n    },\n    \"fetch\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-server-fetch\"\n      ]\n    },\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-filesystem\",\n        \".\"\n      ]\n    },\n    \"github\": {\n      \"type\": \"http\",\n      \"url\": \"https://api.githubcopilot.com/mcp/\"\n    },\n    \"memory\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-memory\"\n      ]\n    },\n    \"playwright\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"@playwright/mcp@0.0.78\",\n        \"--headless\",\n        \"--output-dir\",\n        \".playwright-mcp\"\n      ]\n    },\n    \"sequential-thinking\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-sequential-thinking\"\n      ]\n    }\n  }\n}\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch",
+      "filesystem",
+      "github",
+      "memory",
+      "playwright",
+      "sequential-thinking"
+    ],
+    "target_path": ".mcp.json",
+    "target_scope": "project"
+  },
+  "claude-code/base": {
+    "rendered": "{\n  \"mcpServers\": {}\n}\n",
+    "secret_refs": [],
+    "server_ids": [],
+    "target_path": ".mcp.json",
+    "target_scope": "project"
+  },
+  "claude-code/pair": {
+    "rendered": "{\n  \"mcpServers\": {\n    \"context7\": {\n      \"type\": \"http\",\n      \"url\": \"https://mcp.context7.com/mcp\"\n    },\n    \"fetch\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-server-fetch\"\n      ]\n    }\n  }\n}\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch"
+    ],
+    "target_path": ".mcp.json",
+    "target_scope": "project"
+  },
+  "codex/all": {
+    "artifact": {
+      "managed": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n\n[mcp_servers.filesystem]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-filesystem\", \".\"]\n\n[mcp_servers.github]\nurl = \"https://api.githubcopilot.com/mcp/\"\n\n[mcp_servers.memory]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-memory\"]\n\n[mcp_servers.playwright]\ncommand = \"npx\"\nargs = [\"@playwright/mcp@0.0.78\", \"--headless\", \"--output-dir\", \".playwright-mcp\"]\n\n[mcp_servers.sequential-thinking]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-sequential-thinking\"]\n",
+      "provenance": {
+        "adapter_id": "harness.codex.mcp",
+        "adapter_version": "1.0.0",
+        "artifact_id": "harness.codex.mcp.context7.fetch.filesystem.github.memory.playwright.sequential-thinking",
+        "capability_requirements": [],
+        "managed_boundary": [
+          "whole-file",
+          []
+        ],
+        "provider_id": "codex",
+        "rendered_hash": "sha256:ec82b09d4add2485fc1e9b235d5117947ea9054d43e199656448419773e78356",
+        "semantic_metadata": [],
+        "source_hash": "sha256:c73978a70692ddb3905be44040fb7b0a437e264b6f40e24ed4b1c089e8957d30",
+        "sources": [
+          [
+            "harness.codex.mcp-bindings",
+            "packages/harness/configs/codex/mcp/bindings.json",
+            "sha256:7cfaa92d8314f01a20d52f227a0bbda2495f11b4b508bd5376c22670a0de8772"
+          ],
+          [
+            "harness.mcp.catalog",
+            "packages/harness/configs/common/mcp/catalog.json",
+            "sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419"
+          ]
+        ],
+        "target_path": ".codex/config.toml"
+      },
+      "target": ".codex/config.toml"
+    },
+    "rendered": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n\n[mcp_servers.filesystem]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-filesystem\", \".\"]\n\n[mcp_servers.github]\nurl = \"https://api.githubcopilot.com/mcp/\"\n\n[mcp_servers.memory]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-memory\"]\n\n[mcp_servers.playwright]\ncommand = \"npx\"\nargs = [\"@playwright/mcp@0.0.78\", \"--headless\", \"--output-dir\", \".playwright-mcp\"]\n\n[mcp_servers.sequential-thinking]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-sequential-thinking\"]\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch",
+      "filesystem",
+      "github",
+      "memory",
+      "playwright",
+      "sequential-thinking"
+    ],
+    "target_path": ".codex/config.toml",
+    "target_scope": "project"
+  },
+  "codex/base": {
+    "rendered": "",
+    "secret_refs": [],
+    "server_ids": [],
+    "target_path": ".codex/config.toml",
+    "target_scope": "project"
+  },
+  "codex/pair": {
+    "artifact": {
+      "managed": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n",
+      "provenance": {
+        "adapter_id": "harness.codex.mcp",
+        "adapter_version": "1.0.0",
+        "artifact_id": "harness.codex.mcp.context7.fetch",
+        "capability_requirements": [],
+        "managed_boundary": [
+          "whole-file",
+          []
+        ],
+        "provider_id": "codex",
+        "rendered_hash": "sha256:01478ca9709ea6ad5df7bdb2e7f86822ae3f20c0a529c77d94e4aad6daf47db6",
+        "semantic_metadata": [],
+        "source_hash": "sha256:a3ddb2d969d45b447a0fe1f0b2bb72b131109797af7213b30feb52738eb686fb",
+        "sources": [
+          [
+            "harness.codex.mcp-bindings",
+            "packages/harness/configs/codex/mcp/bindings.json",
+            "sha256:7cfaa92d8314f01a20d52f227a0bbda2495f11b4b508bd5376c22670a0de8772"
+          ],
+          [
+            "harness.mcp.catalog",
+            "packages/harness/configs/common/mcp/catalog.json",
+            "sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419"
+          ]
+        ],
+        "target_path": ".codex/config.toml"
+      },
+      "target": ".codex/config.toml"
+    },
+    "rendered": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch"
+    ],
+    "target_path": ".codex/config.toml",
+    "target_scope": "project"
+  },
+  "cursor/all": {
+    "artifact": {
+      "managed": "{\n  \"mcpServers\": {\n    \"context7\": {\n      \"url\": \"https://mcp.context7.com/mcp\"\n    },\n    \"fetch\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-server-fetch\"\n      ]\n    },\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-filesystem\",\n        \".\"\n      ]\n    },\n    \"github\": {\n      \"url\": \"https://api.githubcopilot.com/mcp/\"\n    },\n    \"memory\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-memory\"\n      ]\n    },\n    \"playwright\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"@playwright/mcp@0.0.78\",\n        \"--headless\",\n        \"--output-dir\",\n        \".playwright-mcp\"\n      ]\n    },\n    \"sequential-thinking\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-sequential-thinking\"\n      ]\n    }\n  }\n}\n",
+      "provenance": {
+        "adapter_id": "harness.cursor.mcp",
+        "adapter_version": "1.0.0",
+        "artifact_id": "harness.cursor.mcp.context7.fetch.filesystem.github.memory.playwright.sequential-thinking",
+        "capability_requirements": [],
+        "managed_boundary": [
+          "whole-file",
+          []
+        ],
+        "provider_id": "cursor",
+        "rendered_hash": "sha256:1ffcc2fb885c413f4df14a2d4d69b890af86018c88ad08d31418f35ca3a11c13",
+        "semantic_metadata": [],
+        "source_hash": "sha256:96fe3aa119030e0e77215ce2aa8670f4eb27d391de16d777b484c9f8fa6f04cd",
+        "sources": [
+          [
+            "harness.cursor.mcp-bindings",
+            "packages/harness/configs/cursor/mcp/bindings.json",
+            "sha256:c4a5b15e4417cdf05da6cd6130b05890b3feca860c09cb19342754f776a218a6"
+          ],
+          [
+            "harness.mcp.catalog",
+            "packages/harness/configs/common/mcp/catalog.json",
+            "sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419"
+          ]
+        ],
+        "target_path": ".cursor/mcp.json"
+      },
+      "target": ".cursor/mcp.json"
+    },
+    "rendered": "{\n  \"mcpServers\": {\n    \"context7\": {\n      \"url\": \"https://mcp.context7.com/mcp\"\n    },\n    \"fetch\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-server-fetch\"\n      ]\n    },\n    \"filesystem\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-filesystem\",\n        \".\"\n      ]\n    },\n    \"github\": {\n      \"url\": \"https://api.githubcopilot.com/mcp/\"\n    },\n    \"memory\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-memory\"\n      ]\n    },\n    \"playwright\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"@playwright/mcp@0.0.78\",\n        \"--headless\",\n        \"--output-dir\",\n        \".playwright-mcp\"\n      ]\n    },\n    \"sequential-thinking\": {\n      \"command\": \"npx\",\n      \"args\": [\n        \"-y\",\n        \"@modelcontextprotocol/server-sequential-thinking\"\n      ]\n    }\n  }\n}\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch",
+      "filesystem",
+      "github",
+      "memory",
+      "playwright",
+      "sequential-thinking"
+    ],
+    "target_path": ".cursor/mcp.json",
+    "target_scope": "project"
+  },
+  "cursor/base": {
+    "rendered": "{\n  \"mcpServers\": {}\n}\n",
+    "secret_refs": [],
+    "server_ids": [],
+    "target_path": ".cursor/mcp.json",
+    "target_scope": "project"
+  },
+  "cursor/pair": {
+    "artifact": {
+      "managed": "{\n  \"mcpServers\": {\n    \"context7\": {\n      \"url\": \"https://mcp.context7.com/mcp\"\n    },\n    \"fetch\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-server-fetch\"\n      ]\n    }\n  }\n}\n",
+      "provenance": {
+        "adapter_id": "harness.cursor.mcp",
+        "adapter_version": "1.0.0",
+        "artifact_id": "harness.cursor.mcp.context7.fetch",
+        "capability_requirements": [],
+        "managed_boundary": [
+          "whole-file",
+          []
+        ],
+        "provider_id": "cursor",
+        "rendered_hash": "sha256:bb16760895e287253b844b5c62ad2cf7e824644be2b1a6bc91b224c6b398e4b5",
+        "semantic_metadata": [],
+        "source_hash": "sha256:01d362f3f43f855921aeaad3f5324cbec946a217a068895641886a8bc3dac58a",
+        "sources": [
+          [
+            "harness.cursor.mcp-bindings",
+            "packages/harness/configs/cursor/mcp/bindings.json",
+            "sha256:c4a5b15e4417cdf05da6cd6130b05890b3feca860c09cb19342754f776a218a6"
+          ],
+          [
+            "harness.mcp.catalog",
+            "packages/harness/configs/common/mcp/catalog.json",
+            "sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419"
+          ]
+        ],
+        "target_path": ".cursor/mcp.json"
+      },
+      "target": ".cursor/mcp.json"
+    },
+    "rendered": "{\n  \"mcpServers\": {\n    \"context7\": {\n      \"url\": \"https://mcp.context7.com/mcp\"\n    },\n    \"fetch\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"mcp-server-fetch\"\n      ]\n    }\n  }\n}\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch"
+    ],
+    "target_path": ".cursor/mcp.json",
+    "target_scope": "project"
+  },
+  "grok/all": {
+    "artifact": {
+      "managed": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n\n[mcp_servers.filesystem]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-filesystem\", \".\"]\n\n[mcp_servers.github]\nurl = \"https://api.githubcopilot.com/mcp/\"\n\n[mcp_servers.memory]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-memory\"]\n\n[mcp_servers.playwright]\ncommand = \"npx\"\nargs = [\"@playwright/mcp@0.0.78\", \"--headless\", \"--output-dir\", \".playwright-mcp\"]\n\n[mcp_servers.sequential-thinking]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-sequential-thinking\"]\n",
+      "provenance": {
+        "adapter_id": "harness.grok.mcp",
+        "adapter_version": "1.0.0",
+        "artifact_id": "harness.grok.mcp.context7.fetch.filesystem.github.memory.playwright.sequential-thinking",
+        "capability_requirements": [],
+        "managed_boundary": [
+          "whole-file",
+          []
+        ],
+        "provider_id": "grok",
+        "rendered_hash": "sha256:ec82b09d4add2485fc1e9b235d5117947ea9054d43e199656448419773e78356",
+        "semantic_metadata": [],
+        "source_hash": "sha256:603320e3d25905fdd9351e6e74d48cd790c9767fdb1e2caca83bacaeefab26e1",
+        "sources": [
+          [
+            "harness.grok.mcp-bindings",
+            "packages/harness/configs/grok/mcp/bindings.json",
+            "sha256:a6d49601aa1729a8aee745a53f8110dd6f59b55851248a607c49da1b32edc89d"
+          ],
+          [
+            "harness.mcp.catalog",
+            "packages/harness/configs/common/mcp/catalog.json",
+            "sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419"
+          ]
+        ],
+        "target_path": ".grok/config.toml"
+      },
+      "target": ".grok/config.toml"
+    },
+    "rendered": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n\n[mcp_servers.filesystem]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-filesystem\", \".\"]\n\n[mcp_servers.github]\nurl = \"https://api.githubcopilot.com/mcp/\"\n\n[mcp_servers.memory]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-memory\"]\n\n[mcp_servers.playwright]\ncommand = \"npx\"\nargs = [\"@playwright/mcp@0.0.78\", \"--headless\", \"--output-dir\", \".playwright-mcp\"]\n\n[mcp_servers.sequential-thinking]\ncommand = \"npx\"\nargs = [\"-y\", \"@modelcontextprotocol/server-sequential-thinking\"]\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch",
+      "filesystem",
+      "github",
+      "memory",
+      "playwright",
+      "sequential-thinking"
+    ],
+    "target_path": ".grok/config.toml",
+    "target_scope": "project"
+  },
+  "grok/base": {
+    "rendered": "",
+    "secret_refs": [],
+    "server_ids": [],
+    "target_path": ".grok/config.toml",
+    "target_scope": "project"
+  },
+  "grok/pair": {
+    "artifact": {
+      "managed": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n",
+      "provenance": {
+        "adapter_id": "harness.grok.mcp",
+        "adapter_version": "1.0.0",
+        "artifact_id": "harness.grok.mcp.context7.fetch",
+        "capability_requirements": [],
+        "managed_boundary": [
+          "whole-file",
+          []
+        ],
+        "provider_id": "grok",
+        "rendered_hash": "sha256:01478ca9709ea6ad5df7bdb2e7f86822ae3f20c0a529c77d94e4aad6daf47db6",
+        "semantic_metadata": [],
+        "source_hash": "sha256:5ae29a65f53787947bfdd7c0ee2a35628aab8916e1d8061476bef54e5a889557",
+        "sources": [
+          [
+            "harness.grok.mcp-bindings",
+            "packages/harness/configs/grok/mcp/bindings.json",
+            "sha256:a6d49601aa1729a8aee745a53f8110dd6f59b55851248a607c49da1b32edc89d"
+          ],
+          [
+            "harness.mcp.catalog",
+            "packages/harness/configs/common/mcp/catalog.json",
+            "sha256:95be667cbd19a671f88d946739b7161a6ca33407429ca7d7cb0cd93f6f714419"
+          ]
+        ],
+        "target_path": ".grok/config.toml"
+      },
+      "target": ".grok/config.toml"
+    },
+    "rendered": "[mcp_servers.context7]\nurl = \"https://mcp.context7.com/mcp\"\n\n[mcp_servers.fetch]\ncommand = \"uvx\"\nargs = [\"mcp-server-fetch\"]\n",
+    "secret_refs": [],
+    "server_ids": [
+      "context7",
+      "fetch"
+    ],
+    "target_path": ".grok/config.toml",
+    "target_scope": "project"
+  }
+}

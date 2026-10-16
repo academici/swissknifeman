@@ -1,0 +1,1 @@
+{"schema": "prompt-manifest/v1", "step": "scout", "role": "context-scout", "route": {}, "blocks": [{"kind": "input", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tokens": 1}], "excluded": [], "estimated_tokens": 1, "prompt_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}

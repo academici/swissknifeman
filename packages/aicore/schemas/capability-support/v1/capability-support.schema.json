@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:capability-support:v1",
+  "title": "capability-support",
+  "type": "object",
+  "description": "One observation of what a provider offers for a capability. The dimension says what kind of fact it is: a missing feature is 'unsupported' only for the feature dimension; an exhausted quota is a resource fact, a prohibition is a policy fact, and a failing dependency is a health fact. None of those three is expressed as 'unsupported'.",
+  "properties": {
+    "capability": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)*$",
+      "description": "Capability id, dot-separated segments."
+    },
+    "provider": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Provider id."
+    },
+    "dimension": {
+      "$ref": "#/$defs/dimension",
+      "description": "Kind of fact observed."
+    },
+    "level": {
+      "$ref": "#/$defs/level",
+      "description": "Support level."
+    },
+    "source": {
+      "$ref": "#/$defs/source",
+      "description": "How the fact was obtained."
+    },
+    "observed_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "When the fact was observed (ISO-8601, UTC)."
+    },
+    "fresh_until": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "description": "Until when a probed or inferred fact can be trusted (ISO-8601, UTC)."
+    },
+    "remediation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What to do to obtain the capability."
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Pointer to the proof of the fact, such as a document or a probe result."
+    }
+  },
+  "required": [
+    "capability",
+    "provider",
+    "dimension",
+    "level",
+    "source"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "level": {
+      "enum": [
+        "native",
+        "adapted",
+        "unsupported"
+      ],
+      "description": "native: provided directly; adapted: provided through an adapter; unsupported: not provided."
+    },
+    "source": {
+      "enum": [
+        "declared",
+        "probed",
+        "inferred"
+      ],
+      "description": "declared: stated in a manifest; probed: checked against the live provider; inferred: derived from other facts."
+    },
+    "dimension": {
+      "enum": [
+        "feature",
+        "resource",
+        "policy",
+        "health"
+      ],
+      "description": "feature: what the provider can do; resource: what is available now (quota); policy: what is allowed; health: whether a dependency works."
+    }
+  }
+}

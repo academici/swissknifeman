@@ -6,7 +6,7 @@
   "description": "Classify every `open_issues` entry (pending, deviation, blocker, difficulty, assumption, note,",
   "instructions": [
     {
-      "path": "packages/orch/roles/registrar.md",
+      "path": "roles/registrar.md",
       "purpose": "canonical role text",
       "sha256": "9dcd06f79642710ea0ae4e5816dd454484cca43ec5fb60938a72ba661d69e0b5"
     }

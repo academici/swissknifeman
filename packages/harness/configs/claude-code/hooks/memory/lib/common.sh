@@ -12,8 +12,21 @@ expandtilde() {
   esac
 }
 
+# Value of KEY from the committed carrier <project>/.swissknifeman/hooks.env (provider key first).
+read_hooks_env() {
+  local key="$1" dir="${2:-}" f v
+  f="$dir/.swissknifeman/hooks.env"
+  [ -n "$dir" ] && [ -f "$f" ] || return 1
+  v="$(grep -E "^${key}__CLAUDE_CODE=" "$f" | head -1 | cut -d= -f2- | tr -d ' \r')"
+  [ -n "$v" ] || v="$(grep -E "^${key}=" "$f" | head -1 | cut -d= -f2- | tr -d ' \r')"
+  [ -n "$v" ] || return 1
+  printf '%s' "$v"
+}
+
 read_mode() {
   local dir="$1" f m
+  m="$(read_hooks_env MEMORY_MODE "${CLAUDE_PROJECT_DIR:-}")" || m=""
+  [ -n "$m" ] && { printf '%s' "$m"; return; }
   for f in "${CLAUDE_PROJECT_DIR:+$CLAUDE_PROJECT_DIR/.claude/memory.env.ini}" "$dir/env.ini"; do
     [ -n "$f" ] && [ -f "$f" ] || continue
     m="$(grep -E '^[[:space:]]*MODE[[:space:]]*=' "$f" | head -1 \
@@ -38,7 +51,8 @@ cfg() {
 # --- brains -------------------------------------------------------------------
 brain_default() {
   local b=""
-  if [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ -f "$CLAUDE_PROJECT_DIR/.swissknife.json" ]; then
+  b="$(read_hooks_env MEMORY_BRAIN "${CLAUDE_PROJECT_DIR:-}")" || b=""
+  if [ -z "$b" ] && [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ -f "$CLAUDE_PROJECT_DIR/.swissknife.json" ]; then
     b="$(jq -r '.memory_brain // empty' "$CLAUDE_PROJECT_DIR/.swissknife.json" 2>/dev/null)"
   fi
   [ -n "$b" ] || b="$(cfg '.default_brain')"
@@ -51,8 +65,17 @@ brain_store()   { expandtilde "$(cfg ".brains[\"$1\"].store")"; }
 brain_am_url()  { cfg ".brains[\"$1\"].agentmemory.url"; }
 brain_am_ns()   { local v; v="$(cfg ".brains[\"$1\"].agentmemory.namespace")"; printf '%s' "${v:-$1}"; }
 
-MEM_TOPO="$HOME/.swissknifeman/topology.json"
-MEM_PROJDB="$HOME/.swissknifeman/projects.json"
+# An owner's registry file: its own state file (the XDG state directory of swissknifeman, or $SKM_HOME/state), else the
+# legacy ~/.swissknifeman/<name> while only that one exists (not under SKM_HOME). Same ladder as aicore.state.locations.
+mem_state_file() {
+  local owner="$1" name="$2" base new
+  if [ -n "${SKM_HOME:-}" ]; then printf '%s' "$SKM_HOME/state/$owner/$name"; return; fi
+  base="${XDG_STATE_HOME:-}"; case "$base" in /*) ;; *) base="$HOME/.local/state" ;; esac
+  new="$base/swissknifeman/$owner/$name"
+  if [ ! -f "$new" ] && [ -f "$HOME/.swissknifeman/$name" ]; then printf '%s' "$HOME/.swissknifeman/$name"; else printf '%s' "$new"; fi
+}
+MEM_TOPO="$(mem_state_file maind topology.json)"
+MEM_PROJDB="$(mem_state_file skiller projects.json)"
 
 topo_node_path() { [ -f "$MEM_TOPO" ] && jq -r ".nodes[\"$1\"].path // empty" "$MEM_TOPO" 2>/dev/null; }
 

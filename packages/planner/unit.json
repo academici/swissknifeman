@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "planner",
+  "title": "Planner: plans, phases, items and execution commands",
+  "kind": "capability",
+  "version": "0.28.3",
+  "stability": "beta",
+  "destination": "own-repo",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Shared helpers (today the root core package)."}
+  ],
+  "execution": {"project": "required", "cwd": "preserve", "writes": "project"},
+  "provides": {
+    "cli": ["scripts/plan.py"],
+    "config": "configs/config.schema.json",
+    "plugins": [
+      {"name": "planner", "manifest": ".claude-plugin/plugin.json"},
+      {"name": "task", "source": "aliases/task"}
+    ],
+    "contracts": [
+      {"id": "urn:swissknifeman:task:plan", "path": "schemas/plan/v1", "version": "v1", "stability": "beta"},
+      {"id": "urn:swissknifeman:planner:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "beta"},
+      {"id": "urn:swissknifeman:planner:check-plugin", "path": "schemas/check-plugin/v1", "version": "v1", "stability": "beta"}
+    ],
+    "extension_points": [
+      {"id": "check", "description": "External plan checks: input planner check-plugin input v1, output check-plugin output v1."}
+    ],
+    "events": [
+      "planner.plan.created", "planner.plan.closed", "planner.phase.closed",
+      "planner.item.started", "planner.item.finished", "planner.decision.accepted"
+    ],
+    "overlay_slots": [
+      "design", "dev", "fix", "make-workflow", "plan-audit", "plan-close", "plan-design", "plan-run", "research", "review"
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

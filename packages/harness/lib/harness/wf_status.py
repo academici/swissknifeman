@@ -5,9 +5,10 @@ import re
 import time
 from pathlib import Path
 
-from core import safe_load_json
+from aicore.util.io import safe_load_json
 
-from .common import die, parse_flags
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
 
 
 

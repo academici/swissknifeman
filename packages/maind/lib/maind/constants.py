@@ -1,5 +1,5 @@
 """Constants maind: memory ports, node types/graph edges, defaults, timings."""
-from core import LANGUAGE_BY_TYPE as _LANGUAGE_BY_TYPE
+from aicore.util.project import LANGUAGE_BY_TYPE as _LANGUAGE_BY_TYPE
 
 # ── memory (agent-memory daemon) ───────────────────────────────────────────
 MEMORY_HTTP_PORT = 4111
@@ -153,23 +153,3 @@ AGENT_STALE_FACTOR = 3   # missing heartbeat'ov to status "stale"
 
 # ── observability ───────────────────────────────────────────────────────────
 SERVICE_NAME = "maind"
-
-# ── neighboring ecosystem packages (siblings) ────────────────────────────────────
-# How to find your neighbor's launcher: env-override · project in config.json · path_key · bin.
-# Lives here (neutral data-module), and not in orchestrate — so that orchestrate
-# (run_capability), and sync (_skiller_profiles_dir) took one source without lazy-import
-# each other. Clean data, no dependencies.
-SIBLINGS = {
-    "brain": {"env": "MAIND_BRAIN_BIN", "project_id": "brain",
-              "path_key": "vault_path", "bin": "bin/brain"},
-    # monorepo academici: launcher skiller lives in a subpackage packages/skiller/, a
-    # local_path points to the root of the repo (where .git) — from here nested bin-path.
-    # Key sibling and project_id — "swissknifeman" (id project-repo in config.json).
-    "swissknifeman": {"env": "MAIND_SKM_BIN", "project_id": "swissknifeman",
-                      "path_key": "local_path",
-                      "bin": "packages/skiller/bin/skiller"},
-    # harness lives in the same monorepo (local_path project-repo swissknifeman).
-    "harness": {"env": "MAIND_HARNESS_BIN", "project_id": "swissknifeman",
-                "path_key": "local_path",
-                "bin": "packages/harness/bin/harness"},
-}

@@ -1,0 +1,17 @@
+{
+  "specversion": "1.0",
+  "id": "b1000000000000000000000000000004",
+  "source": "urn:swissknifeman:module:orch",
+  "type": "orch.run.finished",
+  "time": "2026-10-09T09:15:30.250Z",
+  "subject": "run-1",
+  "datacontenttype": "application/json",
+  "data": {
+    "run_id": "run-1",
+    "submission_id": "sub-1",
+    "ref": "P1.1",
+    "attempt_id": "att-1",
+    "outcome": "done",
+    "gate": "pass"
+  }
+}

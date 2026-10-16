@@ -20,7 +20,7 @@ methodology - `docs/guide/methodology.md`.
 
 **Section `## Conformance`.** For skill conventions (naming / writing-style / stack)
 is required: ≤10 strings of imperatives - a machine-squeezable checklist for
-conformance-finder'ov `task:review`. Authoring Standard -
+conformance-finder'ov `planner:review`. Authoring Standard -
 `docs/guide/creating-skills.md`, § «Section `## Conformance`».
 
 ## Adding an External (Upstream-Tracked) Skill

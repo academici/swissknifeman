@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "review-P5-6-P5-7-2026-10-08",
+  "title": "Review P5.6-P5.7 2026-10-08",
+  "sections": [
+    {
+      "id": "verdict",
+      "title": "Verdict",
+      "text": "RED (one Minor finding, fixed by the executor afterwards). Reviewer route grok/grok-4.7/500k/high, session 01a11c8c-ac78-7fe0-ad26-0f7e16aa93e2; model grok-4.7 and contextWindowTokens 500000 taken from the reviewer's own session record. Scope: c4d8dbd4^..d4caa0a3."
+    },
+    {
+      "id": "findings",
+      "title": "Findings",
+      "text": "```json\n[\n  {\n    \"severity\": \"Minor\",\n    \"confidence\": \"confirmed\",\n    \"location\": \"packages/aicore/lib/aicore/delivery/materialize.py:130\",\n    \"failure_scenario\": \"write_skill_manifest used to live in skiller.common and called now_iso from that module, so mock.patch(\\\"skiller.common.now_iso\\\") froze .swissknifeman-manifest.json. The body now looks up aicore.delivery.materialize.now_iso. test_provider_publication_parity.VendorPublicationParityTests.test_vendor_dry_run_idempotence_and_repair_matrix still patches skiller.common.now_iso to two different timestamps (2026-07-23T12:57:20Z, then 21Z) and compares project snapshots. The patch never runs, so a regression that rewrites installed_at on an unchanged sync stays green when both writes fall in the same second.\",\n    \"basis\": \"Command (PYTHONPATH=packages/aicore/lib:packages/skiller/lib:.): patch skiller.common.now_iso to return 1999-01-01T00:00:00Z, then skiller.common.write_skill_manifest(...). Output: common.now_iso calls 0; installed_at 2026-10-08T17:44:54Z; patched value written False; write fn module aicore.delivery.materialize. The parity test file still passes (unittest tests.test_provider_publication_parity, 77 tests in that run OK) because an unchanged manifest returns before now_iso.\"\n  }\n]\n```"
+    },
+    {
+      "id": "resolution",
+      "title": "Resolution",
+      "text": "Confirmed by the executor: after the move write_skill_manifest looks up now_iso in aicore.delivery.materialize, so the skiller.common.now_iso patch in test_provider_publication_parity never ran. The patch now targets aicore.delivery.materialize.now_iso; the first sync asserts the clock was called, the unchanged second sync asserts it was not (installed_at kept). No product code changed."
+    }
+  ],
+  "applies_to": [
+    "P5.6",
+    "P5.7"
+  ]
+}

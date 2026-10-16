@@ -1,0 +1,92 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    ".swissknifeman/provider-artifacts.lock.json",
+    "docs/architecture/contracts.md",
+    "docs/architecture/ecosystem.md",
+    "docs/architecture/decisions/README.md",
+    "docs/architecture/decisions/0063-partner-command-links.md",
+    "docs/architecture/decisions/0064-run-analytics-in-analyst-and-event-subscriber.md",
+    "docs/architecture/decisions/0065-maind-configuration-and-state.md",
+    "docs/architecture/decisions/0066-maind-harness-link-and-mcp-projection.md",
+    "docs/architecture/decisions/0067-harness-configuration-and-state.md",
+    "docs/architecture/decisions/0068-instruction-catalog-and-legacy-driver.md",
+    "docs/architecture/decisions/0069-module-doctor-contract.md",
+    "docs/architecture/decisions/0070-maind-mcp-protocol-negotiation.md",
+    "docs/architecture/decisions/0071-core-and-artifex-removal-and-strict-boundaries.md",
+    "docs/core/index.md",
+    "docs/develop.md",
+    "docs/planner/plan-structure.md",
+    "packages/aicore/README.md",
+    "packages/analyst/README.md",
+    "packages/analyst/CLAUDE.md",
+    "packages/analyst/docs/architecture.md",
+    "packages/analyst/docs/guide/cli.md",
+    "packages/analyst/docs/guide/pathologies.md",
+    "packages/harness/README.md",
+    "packages/harness/CLAUDE.md",
+    "packages/harness/docs/index.md",
+    "packages/harness/docs/configs/claude-permissions.md",
+    "packages/harness/docs/reference/exec-wave.md",
+    "packages/harness/configs/common/instructions/catalog.json",
+    "packages/harness/configs/common/instructions/packages/maind/common.md",
+    "packages/harness/configs/common/instructions/packages/analyst/common.md",
+    "packages/harness/configs/common/instructions/packages/harness/common.md",
+    "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
+    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json",
+    "packages/maind/README.md",
+    "packages/maind/CHANGELOG.md",
+    "packages/maind/CLAUDE.md",
+    "packages/maind/docs/architecture.md",
+    "packages/maind/docs/ecosystem.md",
+    "packages/maind/docs/guide/cli.md",
+    "packages/maind/docs/guide/health.md",
+    "packages/maind/docs/guide/onboarding-decision-tree.md",
+    "packages/maind/docs/guide/sync.md",
+    "tests/golden/cases.json",
+    "tests/golden/generation.json"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "Without the legacy files, the memory hook may not find the new registries. This is code, outside the docs-only scope.",
+      "kind": "difficulty",
+      "next": "Plan a hook fix, or record it for upgrade/P13.",
+      "text": "The harness memory hook (configs/claude-code/hooks/memory/lib/common.sh:68-69) and auto-approve/lib/safedirs.py:99 still read ~/.swissknifeman/topology.json and projects.json. Topology now lives in <state>/maind/topology.json and projects in <state>/skiller/projects.json. harness docs/index.md says the hooks read the registries from the legacy place."
+    },
+    {
+      "impact": "Docs follow the code. The old claim that maind analyze reports pathologies is gone.",
+      "kind": "deviation",
+      "next": "Confirm this was an intended loss, or restore the consumer in a later item.",
+      "text": "maind analyze no longer has a pathology slice. maind lib has no `pathology` references and compute_verdict has no pathology_attention. analyst/docs/guide/pathologies.md described maind analyze as a consumer; I rewrote it to follow the code. The CHANGELOG of maind (line ~93) still mentions the old pathology_slice (history, left as is)."
+    },
+    {
+      "impact": "The lock and 32-target hashes changed. Only CLAUDE.md of maind, analyst and harness changed in content.",
+      "kind": "deviation",
+      "next": "None.",
+      "text": "The harness section is `harness.cross-package-boundaries`: no `harness.module-boundaries` section exists. I prepended the 'Import only `harness` and `aicore`…' sentence there rather than add a section. The maind and analyst sections got the same sentence (maind.module-boundaries also says manual graph links live in `[maind.graph.links.<id>]`). catalog_version stays 1.8.0. Fixture_version went to 1.8.0 and the literal fixture's source_sha256 and literal_count were updated. `apply --authorize` needs target paths in alphabetical order. The regeneration rewrote lock records for all 32 targets (catalog hash changed)."
+    },
+    {
+      "impact": "An extra tracked file in the diff.",
+      "kind": "note",
+      "next": "Conductor decides whether to keep it in the commit.",
+      "text": "`docs-sync.sh` also added 10 lines to docs/planner/plan-structure.md from packages/planner/docs: a pre-existing drift, not from this item. docs/{maind,analyst,harness}/** show no git changes (apparently not tracked or ignored), so the synced copies are not part of the diff."
+    },
+    {
+      "impact": "Possible leftover stale mentions in docs not listed in the item.",
+      "kind": "note",
+      "next": "Run V1/V3; grep those three docs if needed.",
+      "text": "Not done: docs/.vitepress sidebar was not checked or edited (no new pages were added). docs/rejected-optimizations.md, docs/reference.md and docs/status.md were not reviewed for stale core/artifex text. V1 loop, V3 (harness/maind/analyst test and validate suites) were not run by me."
+    },
+    {
+      "impact": "Low.",
+      "kind": "assumption",
+      "next": "None.",
+      "text": "maind docs table lists skiller `profiles --json` and capability commands as partner calls. This was checked against code (sync.py:415). The doctor check names were taken from unit.json and doctor.py."
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Added ADR 0063–0071 and their index rows. Updated the README and docs of maind, analyst and harness, plus the aicore README (removed shim section; added partners, `[aicore.providers]` and `aicore.provider.mcp`). Rewrote the stale core text in CONTRIBUTING.md and docs/core/index.md. Updated docs/architecture/{ecosystem,contracts}.md, docs/develop.md (partner commands, test-integration.sh, --strict) and the CHANGELOGs (root and maind). Instructions: edited the maind, analyst and harness common.md fragments (partner-command boundary sentence), catalog.json and both fixtures. Regenerated via `harness instructions apply` (tmp HOME): packages/{maind,analyst,harness}/CLAUDE.md and the provider lock; recaptured golden `harness-provider-instructions`. Ran `bash scripts/docs-sync.sh`. Budget `skiller budget --first-turn` and `--with-plugins`: 2767 tokens (≤16000, OK). Targeted checks: `harness instructions check --target .` OK (32 targets); harness unit tests test_provider_instructions, test_instruction_size_gate, test_instruction_catalog_data, test_instruction_compatibility, test_instruction_literal_coverage and test_instruction_adoption OK (83 tests); scripts/test-ecosystem-units.py, test-public-hygiene.py and test-docs-impact.py OK; `golden.py check`, `public-hygiene.py` (0 violations) and `ecosystem-units.py render --check` exit 0."
+}

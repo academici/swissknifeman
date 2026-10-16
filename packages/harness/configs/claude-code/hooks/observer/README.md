@@ -9,7 +9,7 @@ skill parsing `system/session-observer`. Complements raw session-JSONL
 
 ## Enable (per-project, two steps)
 
-1. **Flag:** `.claude/observer.env.ini` → `ENABLED=true` (default `false` = no-op).
+1. **Flag:** `[harness.hooks.observer] enabled = true` in `.swissknifeman/config.toml` (carrier `OBSERVER_ENABLED=true` in `.swissknifeman/hooks.env`; the legacy `.claude/observer.env.ini` → `ENABLED=true` is still read; default `false` = no-op).
    Via Claude — `/observe on` (skill `system/session-observer`).
 2. **Wiring** (opt-in, is not global - otherwise there is a hook for EVERY tool-call for everyone):
    ```

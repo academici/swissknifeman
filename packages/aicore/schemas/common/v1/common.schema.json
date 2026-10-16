@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:common:v1",
+  "title": "common",
+  "description": "Shared definitions referenced by other contracts through $ref; the document itself is an empty object.",
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$",
+      "description": "SemVer version."
+    },
+    "module_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Module id: equals the folder name and the import package name."
+    },
+    "relpath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$",
+      "description": "Relative POSIX path without leading slash and without empty segments."
+    },
+    "argv": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Command as an argument vector.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "One argument."
+      }
+    },
+    "stability": {
+      "enum": [
+        "development",
+        "alpha",
+        "beta",
+        "rc",
+        "stable",
+        "deprecated"
+      ],
+      "description": "Stability stage."
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Extension values keyed by <owner>.<name>; the owner validates its own keys, others ignore them.",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9_.-]*$": {
+          "description": "Value owned by the namespace owner."
+        }
+      },
+      "additionalProperties": false
+    },
+    "media_type": {
+      "type": "string",
+      "pattern": "^[a-z0-9!#$&^_.+-]+/[a-z0-9!#$&^_.+-]+$",
+      "description": "Media type such as application/json."
+    },
+    "rfc3339_utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?Z$",
+      "description": "RFC 3339 UTC timestamp ending in Z."
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}

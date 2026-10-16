@@ -2,16 +2,16 @@
 import re
 from pathlib import Path
 
-from core import parse_frontmatter
+from aicore.util.text import parse_frontmatter
 
-from .common import parse_flags
+from aicore.util.cli import parse_flags
 from .settings import write_json
 
 
 _STOPWORDS = {
     "the", "a", "an", "and", "or", "for", "with", "use", "this", "that", "when",
-    "and", "in", "in", "on", "by", "for", "with", "with", "from", "to", "from", "like", "what",
-    "this", "or", "when", "over", "under", "without", "if",
+    "in", "on", "by", "from", "to", "like", "what",
+    "over", "under", "without", "if",
 }
 
 
@@ -58,7 +58,8 @@ def _scan_local_skills(claude_dir):
             continue
         fm = _frontmatter(f)
         name = fm.get("name") or d.name
-        if name.startswith(("task-", "task:")):
+        # Compatibility alias: remove in the next minor release (the `task-`/`task:` spellings).
+        if name.startswith(("planner-", "planner:", "task-", "task:")):
             continue
         out.append({"name": f"skill:{name}", "weight": 1,
                     "keywords": _keywords_from_description(fm.get("description", ""))})

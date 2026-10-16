@@ -1,0 +1,23 @@
+{
+  "schema": "install-profiles/v1",
+  "_doc": "Install profiles of `swissknifeman install`: ordered module ids, per-module extra installer arguments, the link patterns that count as the hub's own earlier symlinks.",
+  "default": "standard",
+  "own_links": ["*/bin/swissknifeman", "*/bin/skiller"],
+  "profiles": {
+    "minimal": {
+      "description": "Skills and plans: foundation, skill library, planner.",
+      "units": ["aicore", "skiller", "planner"],
+      "options": {}
+    },
+    "standard": {
+      "description": "Minimal plus the environment harness, the second brain and the orchestrator.",
+      "units": ["aicore", "skiller", "planner", "harness", "brain", "orch"],
+      "options": {}
+    },
+    "full": {
+      "description": "Every hub module, including the maind and analyst tools.",
+      "units": ["aicore", "skiller", "harness", "maind", "analyst", "planner", "brain", "orch"],
+      "options": {}
+    }
+  }
+}

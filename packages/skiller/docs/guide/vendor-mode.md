@@ -26,20 +26,21 @@ files. Memory, graph and MCP-hub tools mAInd are configured regardless of channe
 
 ## Config - a single source of truth
 
-At the root of the project - `.swissknifeman/config.json`. One custom config instead
-scattered: the rules unfold into a flat set of skills.
+The vendor mode is the `[skiller.sync]` table of `.swissknifeman/config.toml` at the root of the project.
+One config instead of scattered files: the rules unfold into a flat set of skills.
 
-```json
-{
-  "version": 1,
-  "mode": "vendor",
-  "skills_path": ".claude/skills",
-  "presets": ["laravel-admin"],
-  "include": ["architect/api-design"],
-  "buckets": ["quality"],
-  "exclude": ["laravel-extras/medialibrary"]
-}
+```toml
+[skiller.sync]
+agent = "claude"
+skills_path = ".claude/skills"
+presets = ["laravel-admin"]
+include = ["architect/api-design"]
+buckets = ["quality"]
+exclude = ["laravel-extras/medialibrary"]
 ```
+
+A project that still has the legacy `.swissknifeman/config.json` keeps working: it is read with a warning until
+the table is written. See [Configuration](./configuration).
 
 The rules are combined: **set = (presets ∪ buckets ∪ include) − exclude**.
 
@@ -57,7 +58,7 @@ The rules are combined: **set = (presets ∪ buckets ∪ include) − exclude**.
 ## Synchronization thread
 
 ```
-.swissknifeman/config.json   (source of truth - man rules)
+[skiller.sync] in .swissknifeman/config.toml   (source of truth - man rules)
         ↓ resolve            (buckets ∪ include) − exclude → flat set
    set of library skills   (resolves by skills.json registry)
         ↓ sync               install + update(by sha256) + prune(by managed)
@@ -114,7 +115,7 @@ One bucket should not be distributed **at the same time** plugin (`connect`) and
 (`vendor`) — otherwise the skills will arrive twice. `skiller status` this catches and prints
 `⚠ DOUBLE CHANNELS: …` with a list of intersecting buckets. Check lives in skiller
 (skill owner) and is accessible from the umbrella - `swissknifeman skills status`. Treatment:
-remove the bucket from `enabledPlugins` (connect) **or** from `.swissknifeman/config.json`
+remove the bucket from `enabledPlugins` (connect) **or** from `[skiller.sync]`
 (vendor) + `skiller sync`.
 
 ## Conflicts
@@ -126,7 +127,7 @@ symlink target remains in place).
 
 ## Channel selection during onboarding (`integrate` / `onboard` / `setup`)
 
-The channel is asked in advance - no need to write it manually `.swissknifeman/config.json`:
+The channel is asked in advance - no need to write `[skiller.sync]` manually:
 
 ```bash
 # the wizard will ask for the channel (connect/vendor) interactive
@@ -141,7 +142,7 @@ swissknifeman setup <project> --skills-channel vendor
 ```
 
 When `--skills-channel vendor` for Claude-project `integrate` **generates itself**
-`.swissknifeman/config.json` from the project profile (`buckets` by type) and immediately applies
+`[skiller.sync]` from the project profile (`buckets` by type) and immediately applies
 `sync` — skills are in `.claude/skills/`. Then refine the set by editing
 config (`include`/`exclude`) and repeat `skiller sync`. For Cursor/Gemini physical
 transfer to `.ai/.cursor` — separate legacy-command `skiller vendor --agent cursor`.

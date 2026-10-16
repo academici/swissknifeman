@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:defs:v1",
+  "title": "Shared plan definitions",
+  "description": "Reusable definitions referenced by every plan schema (closed JSON Schema profile).",
+  "$defs": {
+    "itemId": {
+      "type": "string",
+      "description": "Item id like P1.2.",
+      "minLength": 1,
+      "pattern": "^P[0-9]+\\.[0-9]+$"
+    },
+    "phaseId": {
+      "type": "string",
+      "description": "Phase id like P1.",
+      "minLength": 1,
+      "pattern": "^P[0-9]+$"
+    },
+    "decisionId": {
+      "type": "string",
+      "description": "Decision id like D3.",
+      "minLength": 1,
+      "pattern": "^D[0-9]+$"
+    },
+    "ref": {
+      "type": "string",
+      "description": "Local or qualified reference to a phase, item, unit, decision, knowledge document or section, or artifact (PLAN<N>.P2.3, P2.3/U1, repo:PLAN<N>.D4, knowledge/design#validation, artifact/catalog).",
+      "minLength": 1,
+      "pattern": "^((?:[a-z0-9-]+:)?PLAN[0-9]+\\.)?(P[0-9]+(\\.[0-9]+(/U[0-9]+)?)?|D[0-9]+|knowledge/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(#[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?|artifact/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)$"
+    },
+    "path": {
+      "type": "string",
+      "description": "Repository-relative POSIX path; @plan/ prefix means relative to the plan directory; no '..'.",
+      "minLength": 1,
+      "pattern": "^(@plan/)?[^/\\s][^\\s]*$"
+    },
+    "ts": {
+      "type": "string",
+      "description": "UTC timestamp YYYY-MM-DDTHH:MM:SSZ, optionally preserving fractional seconds.",
+      "minLength": 1,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+    },
+    "date": {
+      "type": "string",
+      "description": "Calendar date YYYY-MM-DD.",
+      "minLength": 1,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "modelClass": {
+      "type": "string",
+      "description": "Model class, ordered economy < implementation < frontier.",
+      "minLength": 1,
+      "enum": [
+        "economy",
+        "implementation",
+        "frontier"
+      ]
+    },
+    "effort": {
+      "type": "string",
+      "description": "Reasoning effort, ordered low < medium < high < xhigh < max < ultra.",
+      "minLength": 1,
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    "route": {
+      "type": "object",
+      "description": "Minimum semantic route: model class and effort.",
+      "properties": {
+        "class": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/modelClass",
+          "description": "Minimum model class."
+        },
+        "effort": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/effort",
+          "description": "Minimum effort."
+        },
+        "provider": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Provider."
+        },
+        "model": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Model."
+        },
+        "settings": {
+          "type": "object",
+          "description": "Provider-native JSON settings, carried without interpretation or execution."
+        }
+      },
+      "required": [
+        "class",
+        "effort"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "description": "Who did something: provider, model, optional effort and session.",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Provider id, for example claude-code or codex.",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "description": "Model id as reported by the provider.",
+          "minLength": 1
+        },
+        "effort": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/effort",
+          "description": "Effort the actor ran with."
+        },
+        "session": {
+          "type": "string",
+          "description": "Provider session id.",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider",
+        "model"
+      ],
+      "additionalProperties": false
+    },
+    "check": {
+      "type": "object",
+      "description": "One exact validation command or source-defined non-shell verification procedure.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Check id like V1.",
+          "minLength": 1,
+          "pattern": "^V[0-9]+$"
+        },
+        "cmd": {
+          "type": "string",
+          "description": "Exact shell command.",
+          "minLength": 1
+        },
+        "procedure": {
+          "type": "string",
+          "description": "Exact non-shell acceptance procedure or predicate when the source declares no command.",
+          "minLength": 1
+        },
+        "expect": {
+          "type": "string",
+          "description": "Expected outcome, for example 'exit 0' or 'OK'.",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "description": "acceptance must pass for done; impact is a wider guard; live runs at a live boundary.",
+          "minLength": 1,
+          "enum": [
+            "acceptance",
+            "impact",
+            "live"
+          ]
+        },
+        "cwd": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+          "description": "Working directory for the command."
+        }
+      },
+      "required": [
+        "id",
+        "expect",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "text": {
+      "type": "string",
+      "description": "Non-empty text, Markdown allowed.",
+      "minLength": 1
+    },
+    "orchestration": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "dag",
+            "sequential"
+          ],
+          "description": "Strategy."
+        },
+        "instructions": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Instructions."
+        },
+        "max_parallel": {
+          "type": "integer",
+          "description": "Optional concurrent dispatch ceiling; positive when present."
+        },
+        "scenario": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Execution scenario: the name of a run-policy profile of an execution engine, or solo for the current session."
+        },
+        "options": {
+          "$ref": "urn:swissknifeman:task:plan:extension:orchestration.options:v1",
+          "description": "Run options of the execution engine: an extension slot whose schema the bridge of that engine supplies (bridge.json extends); without such a bridge the field is refused with EXTENSION_UNAVAILABLE."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "orchestration contract."
+    },
+    "section": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Id."
+        },
+        "title": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Title."
+        },
+        "text": {
+          "type": "string",
+          "description": "Full section body, including code and examples; no truncation."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "text"
+      ],
+      "additionalProperties": false,
+      "description": "section contract."
+    },
+    "attemptId": {
+      "type": "string",
+      "description": "Caller-chosen id of one registration attempt; repeating it makes the registration idempotent.",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+          "description": "Path."
+        },
+        "note": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Note."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Sha256."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "provenance contract."
+    }
+  }
+}

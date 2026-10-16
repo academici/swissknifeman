@@ -191,20 +191,11 @@ flowchart LR
   subgraph research["research"]
     query_craft["query-craft"]
   end
-  subgraph system["system"]
-    brain_locator["brain-locator"]
-    cross_project_coordinator["cross-project-coordinator"]
-    local_topology["local-topology"]
-    session_observer["session-observer"]
-    shared_memory["shared-memory"]
-    swissknifeman_locator["swissknifeman-locator"]
-  end
   attribute_authorization -->|requires| laravel_permissions
   axioma_glossary -->|requires| domain_modeling
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
-  brain_locator -->|requires| local_topology
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
   build_loop -->|requires| mcp_blender
@@ -214,7 +205,6 @@ flowchart LR
   build_loop -->|requires| threading
   capacity_planning -->|requires| observability_design
   competitive_analysis -->|requires| idea_discovery
-  cross_project_coordinator -->|requires| local_topology
   customer_discovery -->|requires| idea_discovery
   dark_mode -->|requires| tailwind_conventions
   data_schema -->|requires| brd
@@ -274,9 +264,6 @@ flowchart LR
   release_engineering -->|requires| oss_development
   requirement_critic -->|requires| brd
   resolving_merge_conflicts -->|requires| git_commit_rules
-  session_observer -->|requires| shared_memory
-  shared_memory -->|requires| local_topology
-  swissknifeman_locator -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   tech_stack_selection -->|requires| ecosystem_reuse_gate
   test_isolation_guard -->|requires| laravel_testing
@@ -306,7 +293,6 @@ flowchart LR
   codebase_design -.->|feeds| refactoring_plan
   complex_task_orchestrator -.->|feeds| cross_layer_change_checklist
   config_conventions -.->|feeds| parametric_config
-  cross_project_coordinator -.->|feeds| refactoring_plan
   customer_discovery -.->|feeds| competitive_analysis
   customer_discovery -.->|feeds| monetization_design
   customer_discovery -.->|feeds| new_project
@@ -381,9 +367,9 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**In the column:** 129 skills, 88 ribs requires, 92 ribs produces_for.
+**In the column:** 123 skills, 83 ribs requires, 91 ribs produces_for.
 
-## Isolated skills (88)
+## Isolated skills (86)
 
 Skills without connections `requires`/`produces_for` — are self-sufficient.
 
@@ -404,7 +390,7 @@ Skills without connections `requires`/`produces_for` — are self-sufficient.
 | frontend-nuxt | `nuxt`, `nuxt-modules`, `nuxt-seo` |
 | frontend-vite | `vite`, `vitepress` |
 | frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
-| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `shell`, `skills-ssot`, `workflow-craft`, `writing-style` |
+| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `shell`, `skills-ssot`, `writing-style` |
 | laravel-architecture | `config-driven-abstraction`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
 | laravel-data-layer | `laravel-broadcasting` |
 | laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |
@@ -421,5 +407,4 @@ Skills without connections `requires`/`produces_for` — are self-sufficient.
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | sales | `sales-super-skill` |
 | security | `agent-security-super-skill` |
-| system | `agent-packs` |
 | voice-ai | `voice-ai` |

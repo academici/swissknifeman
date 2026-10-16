@@ -48,7 +48,7 @@ precedent `axioma-stack`). HOW plans/workflow are made — `plan-protocol`/`work
 
 ## Not here (see the canon)
 
-- Plan/phase/task schemas, 6 statuses, DoR gate, `/task:plan-*`, two-homes lifecycle →
+- Plan/phase/task schemas, 6 statuses, DoR gate, `/planner:plan-*`, two-homes lifecycle →
   **`plan-protocol`**.
 - Workflow-script authoring (stages, slots, names) → **`workflow-craft`**.
 
@@ -61,5 +61,5 @@ precedent `axioma-stack`). HOW plans/workflow are made — `plan-protocol`/`work
 ## Links
 
 - `general/plan-protocol` — plan-system canon (HOW).
-- `general/workflow-craft` — workflow authoring discipline.
+- `planner:workflow-craft` — workflow authoring discipline (planner plugin).
 - `axioma/axioma-stack` — sibling axioma pointer.

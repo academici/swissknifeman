@@ -1,22 +1,25 @@
 # Projects
 
-Ecosystem Project Registry - in `config.json` (at root monorepo, superset brain
-`.projects.json`).
+Ecosystem Project Registry - `registry.json` in the maind state directory (superset brain
+`.projects.json`); written only by maind.
 
 ## Load priority
 
 ```
-config.json      (primary — at the root of the monorepo, if any)
+registry.json    (primary — <state>/maind/registry.json, if any)
     ↓ fallback
-.maind.json      (legacy-name of the same config - backward compatibility)
+config.json      (legacy node file at the root of the monorepo, read and written until
+                  `swissknifeman upgrade`; `.maind.json` is its older name)
     ↓ fallback
 .projects.json   (legacy brain — read-only, with migration warning)
     ↓
 empty config
 ```
 
-`load_config` returns `(config, source)`, where `source ∈ {"config.json", ".maind.json",
-"brain-fallback", "empty"}` — so that the origin can be seen.
+`load_config` returns `(config, source)`, where `source ∈ {"config", "legacy:config.json",
+"legacy:.maind.json", "linked-worktree-config", "brain-fallback", "empty"}` — so that the origin can
+be seen. The settings (`[maind]`) are merged in from the layered config; the legacy file supplies them
+only while no `[maind]` table exists.
 
 ## CLI
 

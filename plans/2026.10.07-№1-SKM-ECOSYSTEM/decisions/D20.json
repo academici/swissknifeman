@@ -12,10 +12,12 @@
     }
   ],
   "decision": "A — aicore.provider: факты провайдеров (возможности, модели, маршруты авторизации), нормализованная таксономия ошибок (authentication, authorization, quota, rate_limit, invalid_request, model_unavailable, content_policy, transport, provider_internal, timeout, unknown; retryable, retry_after, scope, safe_message), разбор usage. Движки orch: процессный транспорт CLI, жизненный цикл run, повторы и backoff по классу ошибки из run-policy (никогда по тексту). Раздельно учитываются: feature capability (поддерживается ли), resource (квота сейчас), policy (разрешено ли), health (работает ли зависимость). capability-record дополняется: source (declared|probed|inferred), срок свежести probe, remediation",
-  "rationale": "E1 E10/E29/E21 переведены на наши модули; PLAN2 DECISIONS §5.3 уже различает quota/auth и сбой задачи.",
+  "rationale": "E1 E10/E29/E21 переведены на наши модули; PLAN2 DECISIONS §5.3 уже различает quota/auth и сбой задачи. Дополнено D36: к списку классов добавлен context_limit.",
   "applies_to": [
     "P3",
-    "P10"
+    "P10.5",
+    "P10.6",
+    "P10.8"
   ],
   "actor": {
     "provider": "anthropic",

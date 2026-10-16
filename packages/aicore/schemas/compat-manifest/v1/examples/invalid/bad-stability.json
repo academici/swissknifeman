@@ -1,0 +1,41 @@
+{
+  "schema": "urn:swissknifeman:aicore:compat-manifest:v1",
+  "umbrella": {
+    "version": "1.2.0",
+    "tag": "v1.2.0"
+  },
+  "units": [
+    {
+      "id": "aicore",
+      "kind": "foundation",
+      "version": "0.1.0",
+      "stability": "gold",
+      "destination": "own-repo",
+      "requires": [],
+      "contracts": [
+        {
+          "id": "urn:swissknifeman:aicore:unit",
+          "version": "v1",
+          "stability": "development",
+          "path": "packages/aicore/schemas/unit/v1"
+        }
+      ]
+    }
+  ],
+  "bridges": [
+    {
+      "id": "a-b",
+      "kind": "bridge",
+      "version": "0.1.0",
+      "stability": "alpha",
+      "destination": "hub",
+      "requires": [
+        {
+          "unit": "aicore",
+          "range": "^0.1"
+        }
+      ],
+      "contracts": []
+    }
+  ]
+}

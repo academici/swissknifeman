@@ -1,0 +1,10 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "KEEP",
+  "triggers": {
+    "deps": [
+      "composer:filament/filament"
+    ]
+  }
+}

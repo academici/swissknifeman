@@ -1,0 +1,95 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/aicore/lib/aicore/ext/process.py",
+    "packages/aicore/lib/aicore/util/redact.py",
+    "packages/aicore/tests/util/test_redact.py",
+    "packages/orch/docs/events.md",
+    "packages/orch/lib/orch/conductor/observer.py",
+    "packages/orch/lib/orch/conductor/process.py",
+    "packages/orch/lib/orch/conductor/progress.py",
+    "packages/orch/lib/orch/events.py",
+    "packages/orch/tests/test_redaction.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "exit": 0,
+      "id": "V1"
+    }
+  ],
+  "evidence": [
+    "/tmp/p123v1b.out"
+  ],
+  "open_issues": [
+    {
+      "class": "environment",
+      "evidence": [
+        "packages/orch/lib/orch/conductor/process.py:29"
+      ],
+      "impact": "orch requires the newer aicore (additive public module); a frozen or vendored aicore must be refreshed before orch runs against it",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "The earlier red V1 was an environment problem: AICORE_ROOT pointed to a frozen aicore snapshot that predates aicore.util.redact. orch now needs aicore with aicore.util.redact, so any environment that runs orch tests or code with an older aicore breaks at import."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/docs/events.md"
+      ],
+      "impact": "the commit takes docs/events.md",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Edited packages/orch/docs/events.md outside the declared write_set (docs row for the redaction rule required by plan.rules[3])."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/aicore/lib/aicore/util/redact.py"
+      ],
+      "impact": "short literal values after name= in free text are not masked by pattern",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "The named-pair token pattern (api_key/token/secret/password = or : value) requires a value of at least 8 characters instead of any \\S+, to avoid masking prose like 'password: none'. Shorter values are masked only when known from the environment."
+    },
+    {
+      "impact": "a secret_ref value not exported in the environment is masked only when it has a token format",
+      "kind": "assumption",
+      "next": "pass config secrets to redact in a later item if needed",
+      "text": "Known secrets are the values (>= 8 chars) of environment variables whose name matches api key/token/secret/password (role env, else process env), not the resolved secret_ref values of the effective config."
+    },
+    {
+      "impact": "compatibility with next pieces",
+      "kind": "note",
+      "next": "none",
+      "text": "For P12.4/P12.5: events.jsonl and the observer report now carry the mask in place of secrets; readers must not expect original values. orch doctor already had the state-ignore check, so cli.py is unchanged."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/docs/events.md"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/orch/docs/events.md"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "aicore/util/redact.py patterns and false positives",
+      "ext/process.py delegation keeps *** behaviour",
+      "conductor/process.py redaction of stderr tail and detail"
+    ],
+    "reason_codes": [
+      "security_touched",
+      "shared_module_changed",
+      "public_api_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "No code change in this round. The red V1 came from AICORE_ROOT pointing to a frozen aicore snapshot without aicore.util.redact. AICORE_ROOT now points to the clone's packages/aicore (which has redact.py), and python3 scripts/affected-tests.py --run --no-cache exits 0: bridges, aicore, brain, harness, orch, planner, skiller and the hub checks (ecosystem-units, public-hygiene, golden) are all green. The piece itself is as described in the previous report: aicore.util.redact (redact_text, redact_document, env_secrets), delegation from aicore.ext.process (mask *** kept, no patterns), redaction in orch progress lines, role failure detail and stderr tail, orch.* event data and the observer report; T7 leak tests in packages/orch/tests/test_redaction.py and packages/aicore/tests/util/test_redact.py; doctor already warns about a non-ignored .swissknifeman/state/ (orch.conductor-gitignore)."
+}

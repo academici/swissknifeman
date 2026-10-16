@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D40",
+  "title": "Граница обобщения P5: перенос по функциям, политика остаётся в skiller и task",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Как провести границу обобщения P5 (D4, архитектура §4: «распределение модулей skiller по корзинам уточняется в фазе по коду»): переносить файлы skiller и command_render целиком или по функциям?",
+  "options": [
+    {
+      "id": "A",
+      "text": "По функциям: в aicore.content (skill, budget, publication, commands, eval), aicore.delivery (codex, claude, distribution, materialize) и aicore.release (attestation, version, changelog) — механика без знания о бакетах и host, с явными параметрами; политика и CLI остаются в skiller (до P8) и task (до P9); старые имена — реэкспорт; генерация байт-в-байт. Не переносятся в P5: registry.py (skills.json — индекс библиотеки), маркетплейсы и root bootstrap (хаб, P12), delivery.py — пост-теговая доставка флоту (хаб, P12), host.py (P12), quality/audit.py и analyze.py (политика библиотеки; транскрипты — P11), resolve.py (мост orch-skiller, P10), lock.py, connect/vendor/update/status/skillset-оркестрация (P8). Генерация plugin.json модулей из unit.json — P12 (поменяла бы байты ручных манифестов). Таблица — knowledge/content-p5 §allocation"
+    },
+    {
+      "id": "B",
+      "text": "Файлы целиком по гипотезе карты P2 с параметризацией всего, что знает о skiller"
+    }
+  ],
+  "context": "По коду (knowledge/content-p5 §facts): большинство файлов skiller смешивают механику с политикой библиотеки (бакеты, CORE, профили, пресеты, .swissknife.json, host-конфиг, реестр проектов, hub); перенос файлов целиком затащил бы политику skiller в aicore и нарушил бы границу (aicore не может импортировать skiller). command_render на ~90% — политика task (маршрутизация, task:-пространство, plan-next). Реальные вторые потребители сейчас: harness (копия estimate_tokens), хаб (verify-tag, version-guard импортируют release_attestation), task (Codex plugin.json и publication-lock той же формы, что у skiller).",
+  "decision": "A — По функциям: в aicore.content (skill, budget, publication, commands, eval), aicore.delivery (codex, claude, distribution, materialize) и aicore.release (attestation, version, changelog) — механика без знания о бакетах и host, с явными параметрами; политика и CLI остаются в skiller (до P8) и task (до P9); старые имена — реэкспорт; генерация байт-в-байт. Не переносятся в P5: registry.py (skills.json — индекс библиотеки), маркетплейсы и root bootstrap (хаб, P12), delivery.py — пост-теговая доставка флоту (хаб, P12), host.py (P12), quality/audit.py и analyze.py (политика библиотеки; транскрипты — P11), resolve.py (мост orch-skiller, P10), lock.py, connect/vendor/update/status/skillset-оркестрация (P8). Генерация plugin.json модулей из unit.json — P12 (поменяла бы байты ручных манифестов). Таблица — knowledge/content-p5 §allocation",
+  "rationale": "Граница D4 по коду: в aicore только механика с реальными вторыми потребителями (harness, хаб, task) или нужная каждому модулю с контентом; политика библиотеки skiller и маршрутизация task остаются у владельцев; уточняет таблицу архитектуры §4 (решение плана, а не попутная правка). Байт-в-байт гарантирует golden без перезахвата.",
+  "applies_to": [
+    "P5",
+    "P8.1",
+    "P9.3",
+    "P10.2",
+    "P12",
+    "P11.1"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

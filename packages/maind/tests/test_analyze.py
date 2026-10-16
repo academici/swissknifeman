@@ -1,16 +1,20 @@
 """Tests analyze.py: search run-report, forensics bash-log, verdict GREEN/ATTENTION/RED,
 report assembly and --json. Without network/demon - health-disable slice (with_health=False),
 live memory metering is not needed for parsing logic."""
+import contextlib
+import io
 import json
 import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from aicore.util.partners import partner_command
 from maind.analysis.analyze import (analyze_report, analytics_slice, bash_log_forensics, compute_verdict,
-                           find_run_report, git_status, pending_lessons)
+                           git_status, pending_lessons, run_report_source)
 from maind.config import load_config
-from tests.fixtures import make_repo, write_maind_config
+from tests.fixtures import lookup_payload, make_fake_analyst, make_repo, write_maind_config
 
 GREEN_RR = {"schema": 1, "tools": {"total": 3, "by_name": {"Bash": 2, "Edit": 1}},
             "files_changed": ["a.py"],
@@ -39,6 +43,18 @@ MAIND_RR = {"schema": 1, "tools": {"total": 40, "by_name": {"Read": 25, "Grep": 
             "tool_failures": [], "workflows": [], "devloop": None,
             "maind": {"memory_recall": {"calls": 2, "results": 2, "found_total": 0, "found_max": 0}},
             "session_id": "m1"}
+
+
+@contextlib.contextmanager
+def partner_env(analyst_bin=None):
+    """Environment where analyst is the given script, or nowhere (no variable, no PATH entry with analyst)."""
+    path = os.pathsep.join(entry for entry in os.environ.get("PATH", "").split(os.pathsep)
+                           if not os.access(os.path.join(entry or ".", "analyst"), os.X_OK))
+    env = {"PATH": path, "SKM_ANALYST_BIN": analyst_bin or os.path.join(tempfile.gettempdir(), "no-such-analyst")}
+    with mock.patch.dict(os.environ, env):
+        for name in ("SKM_ANALYST_ROOT", "MAIND_ANALYST_BIN"):
+            os.environ.pop(name, None)
+        yield
 
 
 def _write_run(projdir, report):
@@ -78,20 +94,95 @@ class VerdictCase(unittest.TestCase):
         self.assertEqual((v, conf), ("GREEN", "low"))
 
 
-class FindRunReportCase(unittest.TestCase):
-    def test_latest_and_by_session(self):
+class RunReportSourceCase(unittest.TestCase):
+    def test_reads_report_codegraph_and_events_through_analyst(self):
         with tempfile.TemporaryDirectory() as tmp:
-            _write_run(tmp, GREEN_RR)
-            _write_run(tmp, ATTN_RR)
-            # fresh = the one recorded last (ATTN)
-            by_session = find_run_report(tmp, session="g1")
-            self.assertEqual(by_session["session_id"], "g1")
-            self.assertIsNotNone(find_run_report(tmp))          # there is some
-            self.assertIsNone(find_run_report(tmp, session="nope"))
+            codegraph = {"calls": 2, "ops": 1, "by_op": {"find_symbol": 2}}
+            fake, calls = make_fake_analyst(
+                Path(tmp) / "bin", show=lookup_payload(tmp, report=GREEN_RR, codegraph=codegraph))
+            with partner_env(fake):
+                source = run_report_source(tmp, "g1", "demo")
+            self.assertEqual((source["status"], source["report"]["session_id"]), ("found", "g1"))
+            self.assertEqual(source["codegraph"], codegraph)
+            self.assertEqual(source["diagnostics"], [])
+            self.assertEqual(calls(), [["runs", "show", "--project", tmp, "--session", "g1",
+                                        "--project-id", "demo", "--json"]])
 
-    def test_none_when_absent(self):
+    def test_missing_report(self):
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertIsNone(find_run_report(tmp))
+            fake, calls = make_fake_analyst(Path(tmp) / "bin", show=lookup_payload(tmp))
+            with partner_env(fake):
+                source = run_report_source(tmp)
+            self.assertEqual((source["status"], source["report"]), ("missing", None))
+            self.assertEqual(calls(), [["runs", "show", "--project", tmp, "--json"]])
+
+    def test_rejected_report_keeps_the_reason_as_diagnostic(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake, _ = make_fake_analyst(
+                Path(tmp) / "bin",
+                show=lookup_payload(tmp, status="rejected", reason="RUN_REPORT_PROJECT_MISMATCH"))
+            with partner_env(fake):
+                source = run_report_source(tmp)
+            self.assertEqual(source["diagnostics"][0]["code"], "RUN_REPORT_PROJECT_MISMATCH")
+
+    def test_no_analyst_is_unavailable_with_reason(self):
+        with tempfile.TemporaryDirectory() as tmp, partner_env():
+            source = run_report_source(tmp)
+        self.assertEqual((source["status"], source["reason"], source["report"]),
+                         ("unavailable", "PARTNER_UNAVAILABLE", None))
+        self.assertIn("SKM_ANALYST_ROOT", source["message"])
+        self.assertEqual(source["diagnostics"][0]["code"], "PARTNER_UNAVAILABLE")
+
+    def test_failing_analyst_is_unavailable_with_reason(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake, _ = make_fake_analyst(Path(tmp) / "bin", exit_code=3)
+            with partner_env(fake):
+                source = run_report_source(tmp)
+            self.assertEqual((source["status"], source["reason"]), ("unavailable", "PARTNER_FAILED"))
+
+    def test_output_without_the_needed_fields_is_bad_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for stdout in ("not json", json.dumps({"lookup": {}}), json.dumps([1])):
+                fake, _ = make_fake_analyst(Path(tmp) / "bin", stdout=stdout)
+                with partner_env(fake):
+                    source = run_report_source(tmp)
+                self.assertEqual((source["status"], source["reason"]), ("unavailable", "PARTNER_BAD_OUTPUT"), stdout)
+
+    def test_schema_valid_but_unusable_items_are_bad_output(self):
+        bad_lookups = [{"events": [{}]}, {"events": [{"provider_id": "codex", "session_id": "s", "event_id": "e",
+                                                       "occurred_at": "t", "provenance": {}, "metrics": []}]},
+                       {"events": [], "codegraph": {"calls": "lots"}}]
+        with tempfile.TemporaryDirectory() as tmp:
+            for extra in bad_lookups:
+                fake, _ = make_fake_analyst(Path(tmp) / "bin", show={**lookup_payload(tmp), **extra})
+                with partner_env(fake):
+                    source = run_report_source(tmp)
+                self.assertEqual((source["status"], source["reason"]), ("unavailable", "PARTNER_BAD_OUTPUT"), extra)
+
+    def test_legacy_variable_still_finds_analyst(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake, _ = make_fake_analyst(Path(tmp) / "bin", show=lookup_payload(tmp, report=GREEN_RR))
+            with partner_env():
+                with mock.patch.dict(os.environ, {"MAIND_ANALYST_BIN": fake}):
+                    source = run_report_source(tmp)
+            self.assertEqual(source["status"], "found")
+
+
+class RealAnalystCase(unittest.TestCase):
+    """Runs the real analyst; skipped unless SKM_ANALYST_ROOT or SKM_ANALYST_BIN names one (scripts/test-integration.sh
+    sets it; an analyst that only happens to be on PATH may be an older install)."""
+
+    def setUp(self):
+        if not (os.environ.get("SKM_ANALYST_ROOT") or os.environ.get("SKM_ANALYST_BIN")) \
+                or partner_command("analyst") is None:
+            self.skipTest("analyst not found (set SKM_ANALYST_ROOT)")
+
+    def test_report_found_and_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(run_report_source(tmp)["status"], "missing")
+            _write_run(tmp, {**GREEN_RR, "cwd": tmp})
+            source = run_report_source(tmp, "g1")
+            self.assertEqual((source["status"], source["report"]["session_id"]), ("found", "g1"))
 
 
 class BashLogCase(unittest.TestCase):
@@ -134,12 +225,13 @@ class ReportAssemblyCase(unittest.TestCase):
             root, env = make_repo(tmp)
             projdir = Path(tmp) / "proj_alpha"
             projdir.mkdir()
-            _write_run(projdir, ATTN_RR)
+            fake, _ = make_fake_analyst(Path(tmp) / "bin", show=lookup_payload(projdir, report=ATTN_RR))
             projects = [{"id": "alpha", "name": "Alpha", "type": "node-package",
                          "status": "active", "local_path": str(projdir)}]
             write_maind_config(root, projects=projects)
             config, _ = load_config(env)
-            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            with partner_env(fake):
+                rep = analyze_report(env, config, config["projects"][0], with_health=False)
             self.assertEqual(rep["project"], "alpha")
             self.assertEqual(rep["verdict"], "ATTENTION")
             self.assertEqual(rep["confidence"], "high")
@@ -153,14 +245,15 @@ class ReportAssemblyCase(unittest.TestCase):
             root, env = make_repo(tmp)
             projdir = Path(tmp) / "corex"
             projdir.mkdir()
-            foreign = {**RED_RR, "cwd": str(projdir),
-                       "files_changed": ["/home/example/projects/edufy/app.py"]}
-            _write_run(projdir, foreign)
+            fake, _ = make_fake_analyst(
+                Path(tmp) / "bin",
+                show=lookup_payload(projdir, status="rejected", reason="RUN_REPORT_PROJECT_MISMATCH"))
             projects = [{"id": "corex", "name": "CoreX", "type": "php-package",
                          "status": "active", "local_path": str(projdir)}]
             write_maind_config(root, projects=projects)
             config, _ = load_config(env)
-            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            with partner_env(fake):
+                rep = analyze_report(env, config, config["projects"][0], with_health=False)
             self.assertEqual(rep["verdict"], "ATTENTION")
             self.assertEqual(rep["red"], [])
             self.assertIsNone(rep["run_report"])
@@ -190,7 +283,7 @@ class PendingLessonsCase(unittest.TestCase):
             root, env = make_repo(tmp)
             projdir = Path(tmp) / "proj_beta"
             projdir.mkdir()
-            _write_run(projdir, GREEN_RR)
+            fake, _ = make_fake_analyst(Path(tmp) / "bin", show=lookup_payload(projdir, report=GREEN_RR))
             eph = projdir / ".claude" / "analyst" / "lessons" / "ephemeral"
             eph.mkdir(parents=True)
             (eph / "x.json").write_text("{}", encoding="utf-8")
@@ -198,25 +291,52 @@ class PendingLessonsCase(unittest.TestCase):
                          "status": "active", "local_path": str(projdir)}]
             write_maind_config(root, projects=projects)
             config, _ = load_config(env)
-            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            with partner_env(fake):
+                rep = analyze_report(env, config, config["projects"][0], with_health=False)
             self.assertEqual(rep["pending_lessons"], 1)
+
+    def test_without_analyst_the_report_degrades_and_does_not_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj_gamma"
+            projdir.mkdir()
+            projects = [{"id": "gamma", "name": "Gamma", "type": "node-package",
+                         "status": "active", "local_path": str(projdir)}]
+            write_maind_config(root, projects=projects)
+            config, _ = load_config(env)
+            err = io.StringIO()
+            with partner_env(), contextlib.redirect_stderr(err):
+                rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            self.assertEqual((rep["verdict"], rep["confidence"]), ("GREEN", "low"))
+            self.assertEqual(rep["run_report_source"], {"status": "unavailable", "reason": "PARTNER_UNAVAILABLE"})
+            self.assertEqual(rep["run_report_diagnostics"][0]["code"], "PARTNER_UNAVAILABLE")
+            self.assertTrue(err.getvalue().startswith("PARTNER_UNAVAILABLE: analyst not found"))
+            self.assertEqual(rep["analytics"]["events"], 0)
 
 
 class AnalyticsConsumerCase(unittest.TestCase):
-    def test_reads_only_normalized_store(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            store = Path(tmp) / ".swissknife" / "analytics"
-            store.mkdir(parents=True)
-            event = {"contract_version": "1.0.0", "provider_id": "codex", "session_id": "s",
-                     "project_id": "p", "event_id": "e", "occurred_at": "2026-07-22T00:00:00Z",
-                     "event_kind": "run_summary", "outcome": "ok", "metrics": {"usage": 1},
-                     "provenance": {"raw_ref": "local:c", "sha256": "a" * 64,
-                                    "reader_id": "codex-hook-context", "reader_version": "1.0.0"}}
-            (store / "events.ndjson").write_text(json.dumps(event) + "\n", encoding="utf-8")
-            slice_ = analytics_slice(tmp, "s")
-            self.assertEqual((slice_["events"], slice_["providers"]), (1, ["codex"]))
-            self.assertEqual(slice_["run_report"]["metrics"], {"usage": 1})
-            self.assertEqual(slice_["run_report"]["provenance"][0]["sha256"], "a" * 64)
+    def test_sums_the_events_analyst_returned(self):
+        event = {"contract_version": "1.0.0", "provider_id": "codex", "session_id": "s",
+                 "project_id": "p", "event_id": "e", "occurred_at": "2026-07-22T00:00:00Z",
+                 "event_kind": "run_summary", "outcome": "ok", "metrics": {"usage": 1},
+                 "provenance": {"raw_ref": "local:c", "sha256": "a" * 64,
+                                "reader_id": "codex-hook-context", "reader_version": "1.0.0"}}
+        slice_ = analytics_slice([event], "s")
+        self.assertEqual((slice_["events"], slice_["providers"]), (1, ["codex"]))
+        self.assertEqual(slice_["run_report"]["metrics"], {"usage": 1})
+        self.assertEqual(slice_["run_report"]["provenance"][0]["sha256"], "a" * 64)
+
+    def test_only_the_selected_session_counts(self):
+        def event(session, usage):
+            return {"provider_id": "codex", "session_id": session, "event_id": "e-" + session,
+                    "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": usage},
+                    "provenance": {"sha256": "a" * 64}}
+        slice_ = analytics_slice([event("s1", 1), event("s2", 10)], "s1")
+        self.assertEqual((slice_["events"], slice_["run_report"]["metrics"]), (1, {"usage": 1}))
+        self.assertEqual(analytics_slice([event("s1", 1), event("s2", 10)])["events"], 2)
+
+    def test_no_events(self):
+        self.assertEqual(analytics_slice([])["events"], 0)
 
 
 class MaindObservabilityCase(unittest.TestCase):

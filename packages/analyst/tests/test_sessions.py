@@ -12,6 +12,7 @@ from unittest import mock
 
 from analyst import sessions as ss
 from analyst.cli import main
+from tests.maind_stub import install_maind_stub
 
 
 def _assistant(in_=0, out=0, cache_read=0, cache_creation=0, ts=None, model="claude-sonnet-5"):
@@ -209,9 +210,7 @@ class CliCase(unittest.TestCase):
         self.assertEqual(data["weeks"][0]["median_first_turn_overhead"], 120)
 
     def test_unknown_project_dies(self):
-        (self.root / "config.json").write_text(json.dumps(
-            {"projects": [{"id": "known", "local_path": str(self.root), "enabled": True}]}),
-            encoding="utf-8")
+        install_maind_stub(self, [{"id": "known", "local_path": str(self.root), "enabled": True}])
         code, _, err = self._run(["--project", "ghost"])
         self.assertEqual(code, 1)
         self.assertIn("not found", err)

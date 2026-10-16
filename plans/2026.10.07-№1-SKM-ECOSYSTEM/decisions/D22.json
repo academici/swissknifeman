@@ -15,8 +15,9 @@
   "rationale": "E1 E30–E33; OpenAPI Overlay — только ориентир модели target+update/remove, не принимается как формат.",
   "applies_to": [
     "P4",
-    "P9",
-    "P11"
+    "P9.4",
+    "P11.5",
+    "P11.9"
   ],
   "actor": {
     "provider": "anthropic",

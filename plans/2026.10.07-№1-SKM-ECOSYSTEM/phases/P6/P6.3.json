@@ -1,0 +1,208 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.3",
+  "title": "aicore.config: таблицы-словари (patternProperties); схема конфига aicore — секция [aicore] для событий, подписок, плагинов и оверлеев",
+  "status": "done_with_deviations",
+  "summary": "Модель конфига получает словари (D43): загрузка схемы, шаблонные листья записей, слияние записей по ключу между слоями, _unset/_append, x-skm-layers на листьях записей, explain, предупреждение для env, пример config.example.toml; aicore получает configs/config.schema.json (events.*, subscriptions, plugins, overlays), provides.config, сгенерированный config.example.toml и запись в configs/config-inventory.json.",
+  "why": "Подписки, плагины и оверлеи настраиваются через единый конфиг (D5, D22) с адресуемыми записями; без словарей их не выразить. Жёсткие риски: (1) регресс модели конфига у analyst и `swissknifeman config` — прогон потребителей; (2) запрет исполняемых определений в проектном слое (x-skm-layers) — безопасность (E40): тест, что run из проектного файла даёт CONFIG_LAYER_FORBIDDEN; (3) A4-урок: новая схема конфига без записи в config-inventory — красный test-config-inventory.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/config/{model,example}.py (и cli.py, если нужен вывод)",
+      "packages/aicore/configs/config.schema.json, packages/aicore/config.example.toml, unit.json provides.config",
+      "configs/config-inventory.json — запись схемы aicore",
+      "tests/config/test_maps.py и тест схемы aicore"
+    ],
+    "exclude": [
+      "чтение секции в aicore.ext.settings (P6.6)",
+      "поведение подписок, плагинов, оверлеев (P6.6–P6.9)",
+      "изменения toml_edit.py (квотирование уже есть)"
+    ]
+  },
+  "depends_on": [
+    "P6.1"
+  ],
+  "decisions": [
+    "D43",
+    "D22",
+    "D38"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/ext-p6#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-config#maps",
+      "why": "правила словарей и тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-config#section",
+      "why": "ключи схемы aicore, слои, inventory",
+      "required": true
+    },
+    {
+      "ref": "knowledge/config-p4#model",
+      "why": "действующая модель слоёв, слияния, env, explain",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/model.py",
+      "why": "load_module_schema, _walk_table, Leaf, ModuleSchema.leaf, слияние и env",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/example.py",
+      "why": "рендер примера",
+      "required": true
+    },
+    {
+      "path": "packages/analyst/configs/config.schema.json",
+      "why": "образец схемы конфига модуля",
+      "required": true
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "why": "форма записи схемы конфига (запись analyst)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/config/model.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/example.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/cli.py",
+      "change": "modify",
+      "note": "только если вывод show/explain требует правки для записей"
+    },
+    {
+      "path": "packages/aicore/configs/config.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/config.example.toml",
+      "change": "create",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/ext-p6 §rules (stdlib, Python 3.9, POSIX, контракты, тесты без реального HOME, секреты, английский в продукте, CHANGELOG aicore, красное чинится в пункте)",
+    "Дизайн — разделы knowledge ext-p6-*, указанные в reads; имена функций, коды ошибок, пути файлов и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "Слои aicore: ext → util, state, config; util/state/config/provider/artifacts/content/delivery/release/usage не импортируют ext; верхний aicore/cli.py импортирует группы лениво (test_subpackage_layering)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии, тексты ошибок) — на английском; без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Поведение конфигов без словарей не меняется: все тесты tests/config, analyst и ecosystem-units зелёные без правки ожиданий",
+    "Словарь — ровно один якорный ключ patternProperties без properties; имя записи не может содержать точку (паттерн проверяется на \"a.b\"); вложенных словарей в записи нет",
+    "Листья `on`, `run`, `plugin`, `projects`, таймауты подписок и `manifest`, `trusted`, `timeout_seconds` плагинов — x-skm-layers [defaults, machine, invocation, flags]; `enabled` и overlays — все слои (D43)",
+    "config.example.toml aicore — только генератором `aicore config example packages/aicore --write`; запись inventory — owner aicore, consumers по ext-p6-config §section"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: тесты-фикстуры (схема со словарём-таблицей и словарём-листом во временном модуле с unit.json, SKM_UNITS_PATH) → `model.py`: MapSpec, распознавание словаря в `_walk_table`, проверки схемы, шаблонные листья с `*`, `ModuleSchema.leaf` для ключей записей, умолчания листьев в get/as_dict, слияние записей (существующая рекурсия по объектам), `_unset` записи, x-skm-layers для листьев записей, проверка записей валидатором, env-предупреждение для словарей, explain → `example.py`: закомментированная запись → `configs/config.schema.json` aicore по таблице §section (описания на английском, умолчания) → `unit.json` provides.config → `aicore config example packages/aicore --write` → inventory → тесты test_maps.py по §maps п.9 + тест схемы aicore: проектный файл с `[aicore.subscriptions.x] run = [\"true\"]` → CONFIG_LAYER_FORBIDDEN; `enabled = false` из проекта принимается → CHANGELOG.\n\nПроверка вручную: `PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore config explain aicore` — умолчания events.*.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/analyst/scripts/test.sh && bash packages/harness/scripts/test.sh && python3 scripts/test-ecosystem-units.py && python3 scripts/test-config-inventory.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore config example packages/aicore --check && T=$(mktemp -d) && mkdir -p $T/config && printf 'schema_version = 1\\n[aicore.subscriptions.notes]\\non = [\"planner.plan.closed\"]\\nrun = [\"true\"]\\n[aicore.overlays]\\n\"planner:plan-design\" = [\"/x.md\"]\\n' > $T/config/config.toml && SKM_HOME=$T HOME=$T PYTHONPATH=packages/aicore/lib python3 -c 'from pathlib import Path; from aicore.config import resolve; c = resolve(\"aicore\", unit_root=Path(\"packages/aicore\")); assert c.get(\"events.delivery\") == \"background\" and c.get(\"events.max_attempts\") == 3; assert c.get(\"subscriptions.notes.enabled\") is True and list(c.get(\"subscriptions.notes.run\")) == [\"true\"]; assert list(c.get(\"overlays.planner:plan-design\")) == [\"/x.md\"]'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "словари в aicore.config",
+    "схема конфига aicore и config.example.toml",
+    "запись inventory"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T02:38:51Z",
+    "finished_at": "2026-10-09T02:56:13Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "486e743e-e07a-493e-aedc-226b5b3c6c90"
+    },
+    "notes": "map tables in aicore.config (MapSpec, entries merge/_unset/_append/flags/explain/example, env warning); aicore configs/config.schema.json, provides.config, generated config.example.toml, inventory entry; 40 new tests; aicore 1035 tests, analyst/harness/units/inventory green",
+    "deviations": [
+      "inventory entry omits the not-yet-existing aicore/ext/settings.py consumer (added by P6.6)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T02:56:13Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T02:56:13Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T02:56:13Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T02:56:13Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T02:56:13Z"
+}

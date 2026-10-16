@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "orch",
+  "title": "Engine-neutral orchestration of agent runs",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "alpha",
+  "destination": "own-repo",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: schema validator, digest, model catalog, error classes, configuration, events, plugins, state."}
+  ],
+  "execution": {"project": "optional", "cwd": "preserve", "writes": "project-and-machine"},
+  "provides": {
+    "cli": ["scripts/orch.py"],
+    "config": "configs/config.schema.json",
+    "contracts": [
+      {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:work-source", "path": "schemas/work-source/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:conductor", "path": "schemas/conductor/v1", "version": "v1", "stability": "alpha"}
+    ],
+    "events": ["orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused",
+               "orch.agent.started", "orch.agent.finished", "orch.agent.failed", "orch.agent.questioned",
+               "orch.run.warning", "orch.run.waiting", "orch.work.blocked", "orch.review.added",
+               "orch.deviation.recorded", "orch.deviation.resolved", "orch.provider.rate-limited",
+               "orch.provider.quota-exhausted", "orch.provider.fallback", "orch.input.rebuilt"],
+    "doctor": [
+      {"id": "orch.conductor-gitignore", "category": "config", "probe": ["scripts/orch.py", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "orch.sandbox", "category": "config", "probe": ["scripts/orch.py", "doctor", "--json"], "output": "check-result/v1"}
+    ],
+    "extension_points": [
+      {"id": "work-source", "description": "Work source of orchestration runs: input orch work-source input v1, output orch work-source output v1."}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

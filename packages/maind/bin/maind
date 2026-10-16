@@ -14,7 +14,7 @@
 #   namespaces namespace-ecosystem groups and their member projects
 #   deploy    roll out MCP-hub servers for projects (--project X | --all)
 #   sync      roll out controlled artifacts: --only ... (--project|--namespace|--all)
-#   health    healthcheck project connection with the hub: --cwd | --project X [--fix]
+#   health    healthcheck project connection with the hub: --cwd | --project X [--plan-repair|--apply-repair]
 #   workspace single trust Claude to ecosystem projects: sync | status
 #   run       execute the command of the neighboring package: run <proj> <cap> (--list)
 #   fleet     cross-project layer: manifest | duplicates | similar
@@ -24,8 +24,21 @@
 #   doctor    environment diagnostics
 #   verify    proof of work: is it written to memory/graph/code-graph or idle (--json)
 #   analyze   post-run analysis of the run: run-report+bash-log+git+health → GREEN/ATTENTION/RED
+#   topology  machine topology map (init|show --json) — <state>/maind/topology.json
 #   version   version (git SHA) and path to node
 set -euo pipefail
+# --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
+_skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+while [ "$_skm_guard_dir" != "/" ] && [ ! -e "$_skm_guard_dir/.swissknifeman-dev" ]; do _skm_guard_dir="$(dirname "$_skm_guard_dir")"; done
+if [ -e "$_skm_guard_dir/.swissknifeman-dev" ] && [ "${SKM_DEV_ALLOW_LIVE:-}" != "1" ]; then
+  _skm_real_home="$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)' 2>/dev/null || true)"
+  if [ -z "$_skm_real_home" ] || [ "$(readlink -f "${HOME:-/}")" = "$(readlink -f "$_skm_real_home")" ]; then
+    echo "SKM_DEV_GUARD: $_skm_guard_dir is a development clone; run inside scripts/dev-sandbox.sh or set SKM_DEV_ALLOW_LIVE=1" >&2
+    exit 3
+  fi
+fi
+unset _skm_guard_dir _skm_real_home
+# --- end dev-clone guard ---
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
@@ -40,7 +53,7 @@ if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,27p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,28p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -51,15 +64,28 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "maind $sha ($REPO_ROOT)"
     exit 0 ;;
-  start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|fleet|onboard|migrate|mcp|doctor|verify|analyze) ;;
+  start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|fleet|onboard|migrate|mcp|doctor|verify|analyze|topology) ;;
   *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 
-# Root monorepo (two levels above the package) gives the package `core` (general foundation).
-# Fallback on standalone-layout: if directory core is not nearby - the path is not added.
-# (Python-equivalent - core.repo.find_monorepo_root; fixed here. ../.., because core
-#  not yet PYTHONPATH — conscious take bash-sides.)
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+exec env PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m maind "$REPO_ROOT" "$CMD" "$@"

@@ -8,9 +8,8 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import EffectiveProvider, ProviderId
+from aicore.provider.values import EffectiveProvider, ProviderId
 from harness.grok_render import render_grok_config_toml
 from harness.hooks import (LifecycleRequest, plan_codex_lifecycle_artifacts, plan_lifecycle,
                            render_codex_hook_handler, render_codex_hooks)

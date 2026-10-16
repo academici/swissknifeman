@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:telemetry-conventions:v1",
+  "title": "telemetry-conventions",
+  "type": "object",
+  "description": "Naming convention for traces and metrics of the modules: the span names and their nesting, the attributes with their cardinality, and the rule for metric labels. Data lives in configs/telemetry-conventions.json; the API is aicore.util.telemetry.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:telemetry-conventions:v1",
+      "description": "Schema identifier of the document."
+    },
+    "namespace": {
+      "const": "skm",
+      "description": "Prefix of every span and attribute name defined here; attributes of the OpenTelemetry GenAI conventions keep their gen_ai. prefix."
+    },
+    "spans": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The spans, parents before children.",
+      "items": {
+        "type": "object",
+        "description": "One span name.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^skm\\.[a-z][a-z0-9_.]*$",
+            "description": "Span name, lower case with dots, starting with the namespace."
+          },
+          "parent": {
+            "type": ["string", "null"],
+            "pattern": "^skm\\.[a-z][a-z0-9_.]*$",
+            "description": "Name of the span this one runs inside, or null for a root span."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What the span covers."
+          },
+          "genai": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "description": "Name template of the OpenTelemetry GenAI span this one also is, with one {placeholder} for the agent or tool name, or null."
+          }
+        },
+        "required": ["name", "parent", "description", "genai"],
+        "additionalProperties": false
+      }
+    },
+    "attributes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The attributes a span or a metric may carry.",
+      "items": {
+        "type": "object",
+        "description": "One attribute.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^skm\\.[a-z][a-z0-9_.]*$",
+            "description": "Attribute name, lower case with dots, starting with the namespace."
+          },
+          "type": {
+            "enum": ["string", "integer", "boolean", "number"],
+            "description": "Type of the value."
+          },
+          "cardinality": {
+            "enum": ["low", "high"],
+            "description": "low: a small fixed set of values, fit for a metric label; high: unbounded values such as ids, for spans and logs only."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What the attribute says."
+          }
+        },
+        "required": ["name", "type", "cardinality", "description"],
+        "additionalProperties": false
+      }
+    },
+    "metric_label_rule": {
+      "const": "low-cardinality-only",
+      "description": "Only attributes declared with low cardinality may be metric labels."
+    }
+  },
+  "required": ["$schema", "namespace", "spans", "attributes", "metric_label_rule"],
+  "additionalProperties": false
+}

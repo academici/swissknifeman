@@ -1,7 +1,8 @@
 """maind health — client healthcheck project connection with the hub (memory + maind MCP).
 
 Run FROM the project (--cwd) or by id (--project). DOES NOT block: always prints status
-connected|partial|standalone and tips. --fix picks up memory and adds MCP-servers.
+connected|partial|standalone and tips. --plan-repair shows (read-only) what --apply-repair would do:
+pick up memory and add MCP-servers. --fix is a deprecated alias of --apply-repair.
 
 Here are the delivery providers «priority №1» to projects (are called from sync):
 - health-doc  — managed block priority-block.md in <project>/CLAUDE.md (idempotent, by hash);
@@ -11,12 +12,19 @@ import copy
 import json
 import os
 import stat
+import subprocess
+import sys
 from pathlib import Path
 
-from core.http import HTTPUnauthorizedError
+from aicore.util.http import HTTPUnauthorizedError
 
-from .common import (atomic_write_json, atomic_write_text, backup_file,
-                     content_hash, die, parse_args, upsert_block, warn)
+from aicore.util.io import atomic_write_json, atomic_write_text
+from aicore.util.block import content_hash, upsert_block
+from aicore.util.term import die, warn
+from aicore.util.cli import parse_args
+from aicore.util.partners import PartnerError, PartnerUnavailable, require_partner, run_partner_json
+from . import harness_link
+from .common import save_backup
 from .config import load_config
 from .mcpconfig import check_hygiene
 from .memory import auth_headers, resolve_secret
@@ -57,19 +65,104 @@ def _render(env, relpath, subst):
 
 
 # ── memory and hook mode test ───────────────────────────────────────────────
-def hook_memory_mode(project):
-    """MODE from <project>/.claude/memory.env.ini (memory hook mode) or None.
-    Source of Truth «intentions» project memory - read and health, and sync (memory-hook)."""
+def project_root(project):
+    """Local path of a registered project, or None."""
     lp = project.get("local_path")
-    if not lp:
+    return Path(os.path.expanduser(lp)) if lp else None
+
+
+def hooks_state(root):
+    """``harness hooks show --json`` of a project, or None without harness (or when it refuses)."""
+    try:
+        document = run_partner_json(harness_link.PARTNER,
+                                    ["hooks", "show", "--target", str(root), "--json"],
+                                    legacy_env=harness_link.LEGACY_ENV, timeout=harness_link.TIMEOUT)
+    except (PartnerError, PartnerUnavailable):
         return None
-    f = Path(os.path.expanduser(lp)) / ".claude" / "memory.env.ini"
-    if not f.is_file():
+    return document if isinstance(document, dict) else None
+
+
+def _carrier(root, name):
+    """Value of ``name`` in the committed carrier .swissknifeman/hooks.env (Claude key first)."""
+    try:
+        text = (Path(root) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except (OSError, ValueError):
         return None
-    for line in f.read_text(encoding="utf-8").splitlines():
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            found[key.strip()] = value.strip()
+    return found.get(name + "__CLAUDE_CODE", found.get(name)) or None
+
+
+def _legacy_value(path, key):
+    """``key`` of a legacy per-project ini file (read only), or None."""
+    try:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except (OSError, ValueError):
+        return None
+    for line in lines:
         s = line.strip()
-        if s.startswith("MODE="):
+        if s.startswith(key + "="):
             return s.split("=", 1)[1].split("#")[0].strip().strip("\"'")
+    return None
+
+
+def hook_setting(project, hook, key, carrier_name, legacy_file, legacy_key):
+    """One hook setting of a project: harness (the project configuration), the committed carrier,
+    then the legacy ini file. Without harness the last two are read directly."""
+    root = project_root(project)
+    if root is None:
+        return None
+    state = hooks_state(root)
+    if state is not None:
+        value = (((state.get("settings") or {}).get("hooks") or {}).get(hook) or {}).get(key)
+        if value:
+            return str(value)
+    return _carrier(root, carrier_name) or _legacy_value(root / ".claude" / legacy_file, legacy_key)
+
+
+def hook_memory_mode(project):
+    """Memory hook mode of a project (``settings.hooks.memory.mode`` through harness, else the
+    carrier, else the legacy memory ini) or None. Source of truth for the memory intent of a
+    project: read by health and by sync (memory-hook)."""
+    return hook_setting(project, "memory", "mode", "MEMORY_MODE", "memory.env.ini", "MODE")
+
+
+def set_hook_memory_mode(project, mode):
+    """Set the memory mode through ``harness hooks --memory <mode>``.
+
+    Returns ``(status, detail)``: ``ok`` or ``failed``; ``skip`` with the ``PARTNER_UNAVAILABLE``
+    message when harness is not found.
+    """
+    root = project_root(project)
+    if root is None:
+        return "skip", "no path"
+    try:
+        argv = require_partner(harness_link.PARTNER, legacy_env=harness_link.LEGACY_ENV)
+    except PartnerUnavailable as error:
+        print(str(error), file=sys.stderr)
+        return "skip", str(error)
+    done = subprocess.run(argv + ["hooks", "--target", str(root), "--memory", mode],
+                          capture_output=True, text=True, timeout=harness_link.TIMEOUT, check=False)
+    if done.returncode != 0:
+        tail = (done.stderr.strip().splitlines() or [""])[-1]
+        return "failed", f"harness hooks exited {done.returncode}: {tail}"
+    return "ok", mode
+
+
+def hook_router_policy(project):
+    """Agent-router policy of a project, or None. A legacy ini file without a POLICY line counts as
+    an enabled router (the empty string), as before."""
+    policy = hook_setting(project, "agent_router", "policy", "AGENT_ROUTER_POLICY",
+                          "agent-router.env.ini", "POLICY")
+    if policy:
+        return policy
+    root = project_root(project)
+    if root is not None and (root / ".claude" / "agent-router.env.ini").is_file():
+        return ""
     return None
 
 
@@ -224,7 +317,7 @@ def apply_health_doc(env, config, project, mode, dry):
         return _result(pid, "health-doc", state, False, dry, "CLAUDE.md")
     if not dry:
         if claude.is_file():
-            backup_file(claude)
+            save_backup(claude)
         atomic_write_text(claude, new_text)
     return _result(pid, "health-doc", state, True, dry, "CLAUDE.md")
 
@@ -281,7 +374,7 @@ def _remove_script_hook(project, dry, *, name, script_rel, event, marker, detail
         changed = True
     if changed and not dry:
         if existed:
-            backup_file(settings_path)
+            save_backup(settings_path)
             atomic_write_json(settings_path, settings)
         script_path.unlink(missing_ok=True)
     return _result(pid, name, "stale" if changed else "fresh", changed, dry, detail)
@@ -323,7 +416,7 @@ def _apply_script_hook(env, project, mode, dry, *, name, template, script_rel, d
     if not dry:
         script_path.parent.mkdir(parents=True, exist_ok=True)
         if script_path.is_file():
-            backup_file(script_path)
+            save_backup(script_path)
         atomic_write_text(script_path, script)
         script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         merged, changed = _merge_session_hook(settings, command, event=event, marker=marker)
@@ -331,7 +424,7 @@ def _apply_script_hook(env, project, mode, dry, *, name, template, script_rel, d
             changed = True
         if changed:
             if settings_path.is_file():
-                backup_file(settings_path)
+                save_backup(settings_path)
             atomic_write_json(settings_path, merged)
     return _result(pid, name, state, True, dry, detail)
 
@@ -394,7 +487,7 @@ def revert_memory_hook(env, config, project, dry):
     if settings.pop("autoMemoryEnabled", None) is not None:
         changed = True
     if changed and not dry and existed:
-        backup_file(settings_path)
+        save_backup(settings_path)
         atomic_write_json(settings_path, settings)
     return _result(pid, "memory-hook", "stale" if changed else "fresh", changed, dry,
                    "native restored")
@@ -415,7 +508,7 @@ def configure_manual_memory(env, config, project, dry):
     if native_changed and not dry:
         settings["autoMemoryEnabled"] = False
         if existed:
-            backup_file(settings_path)
+            save_backup(settings_path)
         atomic_write_json(settings_path, settings)
     if native_changed:
         result["changed"] = not dry
@@ -425,28 +518,74 @@ def configure_manual_memory(env, config, project, dry):
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
+FIX_DEPRECATED = "MAIND_HEALTH_FIX_DEPRECATED: use --apply-repair"
+
+
+def plan_repair(env, config, rep):
+    """The repair steps for a health report (read-only): the same steps ``--apply-repair`` performs."""
+    hygiene_fixable = any("missing-example" in i["problems"] for i in rep["mcp_hygiene"])
+    if rep["status"] == "connected" and not hygiene_fixable:
+        return []
+    actions = []
+    if not rep["memory_daemon"]:
+        _, _, url = resolve_ports(env, config)
+        actions.append({"kind": "start-memory", "target": url,
+                        "detail": "start the memory daemon (maind start --only memory)"})
+    actions.append({"kind": "sync-mcp", "target": rep["id"],
+                    "detail": f"add the maind MCP servers (maind sync --only mcp --project {rep['id']})"})
+    return actions
+
+
+def apply_repair(env, config, project, rep):
+    """Perform the steps of ``plan_repair``."""
+    actions = plan_repair(env, config, rep)
+    for action in actions:
+        if action["kind"] == "start-memory":
+            try:
+                from .memory import start as mem_start
+                mem_start(env, config)
+            except SystemExit as e:
+                warn(f"failed to raise memory: {e}")
+        elif action["kind"] == "sync-mcp":
+            from .provision.sync import run_sync
+            run_sync(env, config, [project], only="mcp")
+    return bool(actions)
+
+
 def cmd_health(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--cwd": "bool", "--fix": "bool",
+                                "--plan-repair": "bool", "--apply-repair": "bool",
                                 "--strict": "bool", "--json": "bool", "--deep": "bool"})
     if opts["help"]:
-        print("maind health [--project ID | --cwd] [--fix] [--strict] [--deep] [--json]")
+        print("maind health [--project ID | --cwd] [--plan-repair | --apply-repair] [--strict] [--deep] [--json]\n"
+              "  --plan-repair   show what --apply-repair would do (read-only)\n"
+              "  --apply-repair  start memory and add the MCP servers when the project is not connected\n"
+              "  --fix           deprecated alias of --apply-repair")
         return
+    if opts["fix"]:
+        warn(FIX_DEPRECATED)
+    do_apply = opts["apply_repair"] or opts["fix"]
+    if opts["plan_repair"] and do_apply:
+        die("--plan-repair cannot be combined with --apply-repair")
     config, _src = load_config(env)
     project = _target(env, config, opts)
     from .provision.sync import contexts
     context = contexts(env, config, [project])[0]
     rep = health_report(env, config, project, provider_context=context, deep=opts["deep"])
 
-    hygiene_fixable = any("missing-example" in i["problems"] for i in rep["mcp_hygiene"])
-    if opts["fix"] and (rep["status"] != "connected" or hygiene_fixable):
-        if not rep["memory_daemon"]:
-            try:
-                from .memory import start as mem_start
-                mem_start(env, config)
-            except SystemExit as e:
-                warn(f"failed to raise memory: {e}")
-        from .provision.sync import run_sync
-        run_sync(env, config, [project], only="mcp")
+    if opts["plan_repair"]:
+        actions = plan_repair(env, config, rep)
+        if opts["json"]:
+            print(json.dumps({"project": rep["id"], "actions": actions}, ensure_ascii=False, indent=2))
+        else:
+            print(f"maind health repair plan — project:{rep['id']}")
+            for action in actions:
+                print(f"  {action['kind']} {action['target']}: {action['detail']}")
+            if not actions:
+                print("  nothing to repair")
+        return
+
+    if do_apply and apply_repair(env, config, project, rep):
         rep = health_report(env, config, project, provider_context=context, deep=opts["deep"])
 
     if opts["json"]:

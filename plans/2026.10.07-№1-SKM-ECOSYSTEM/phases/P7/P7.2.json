@@ -1,0 +1,275 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.2",
+  "title": "Перенос brain_sync: brain docs (integrate, pull, push, script); skiller integrate через команду хоста brain_docs",
+  "status": "done_with_deviations",
+  "summary": "Перенести BrainSync из skiller в lib/brain/docs.py с паритетом поведения на настройках [brain.docs] и наследном memory_brain; команды brain docs integrate|pull|push|script; тесты test_brain_sync переносятся и дополняются; в skiller удалить brain_sync.py и его тест, блок [9] мастера integrate вызывает команду хоста brain_docs (configs/skiller-host.json, SKM_BRAIN_BIN); удалить строку ownership brain_sync.py.",
+  "why": "Ownership P7 и D50: код doc-sync принадлежит brain, а skiller не может его импортировать. Жёсткие риски: (1) регресс мастера skiller integrate (блок [9] у живых проектов): паритет выводов и действий, мастер не падает без brain; (2) docs pull/push пишут в проект и в хранилище человека — push не перезаписывает изменённый файл без --force, pull только добавляет/обновляет по шаблонам; (3) тесты skiller идут только в песочнице.",
+  "scope": {
+    "include": [
+      "packages/brain/lib/brain/docs.py; cli.py: группа docs; errors.py: DOCS_CONFLICT",
+      "packages/brain/tests/test_docs.py (перенос и адаптация packages/skiller/tests/test_brain_sync.py + integrate, push, dry-run)",
+      "packages/skiller/lib/skiller/brain_sync.py и packages/skiller/tests/test_brain_sync.py — удалить",
+      "packages/skiller/lib/skiller/integrate.py: _block_brain через host_command(env, \"brain_docs\")",
+      "configs/skiller-host.json: commands.brain_docs",
+      "packages/skiller/tests: тест _block_brain с фиктивной командой (SKM_BRAIN_BIN)",
+      "configs/ecosystem-units.json: удалить строку ownership brain_sync.py; render",
+      "CHANGELOG brain и корневой CHANGELOG.md (строка skiller)"
+    ],
+    "exclude": [
+      "skiller.config memory_brain и .swissknife.json (P8)",
+      "блок [5] memory мастера (имя мозга памяти, не хранилище)",
+      "двусторонний git-merge sync внешнего CLI хранилища"
+    ]
+  },
+  "depends_on": [
+    "P7.1"
+  ],
+  "decisions": [
+    "D50",
+    "D49"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/brain-p7#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7#facts",
+      "why": "brain_sync, _block_brain, команды хоста skiller",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-move#docs",
+      "why": "дизайн brain docs и правка skiller",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-surface#config",
+      "why": "docs.* и наследный объект memory_brain",
+      "required": true
+    },
+    {
+      "ref": "knowledge/brain-p7-surface#cli",
+      "why": "синтаксис и выходы brain docs",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/brain_sync.py",
+      "why": "переносимый код (160 строк) и шаблон скрипта",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_brain_sync.py",
+      "why": "тесты для переноса",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/integrate.py",
+      "why": "_run_environment (строки 88–109) и _block_brain (строки 293–325)",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/host.py",
+      "why": "host_command, host_install_suffix, чтение commands (_read_host)",
+      "required": true
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "why": "формат commands",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/tests/test_integrate.py",
+      "why": "как тестируется мастер (пресеты, choices)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/brain/lib/brain/docs.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/brain/lib/brain/cli.py",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/lib/brain/errors.py",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/brain/README.md",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/brain/CHANGELOG.md",
+      "change": "any",
+      "note": "создаётся в P7.1, здесь меняется"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/brain_sync.py",
+      "change": "delete"
+    },
+    {
+      "path": "packages/skiller/tests/test_brain_sync.py",
+      "change": "delete"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/integrate.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify",
+      "note": "строка skiller: своего CHANGELOG у skiller нет"
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify",
+      "note": "удалить строку ownership brain_sync.py"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только через render"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/brain-p7 §rules (stdlib + aicore, Python 3.9, POSIX; тесты только с временным HOME и копией фикстуры хранилища; граница модулей; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge/brain-p7, указанные в reads; имена функций, коды ошибок, ключи конфига, пути и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "lib/brain импортирует только stdlib, brain.* и aicore.*; skiller и maind обращаются к brain только через CLI (python3 scripts/ecosystem-units.py check без новых нарушений базовой линии)",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Паритет: при объекте memory_brain с direction pull|bidirectional brain docs integrate копирует те же файлы и пишет .claude/sync-brain.sh (0o755, bash -n проходит), что и прежний BrainSync; строковый memory_brain — doc-sync выключен; dry-run ничего не пишет",
+    "brain docs push без --force не перезаписывает файл хранилища с другим содержимым (DOCS_CONFLICT в отчёте, exit 1); ничего не удаляет",
+    "skiller не импортирует brain и не называет packages/brain в lib/; путь живёт только в configs/skiller-host.json (хаб); без команды хоста блок [9] печатает предупреждение и мастер продолжает",
+    "Тесты и validate skiller — только в песочнице (V4)"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: прочитать brain_sync.py и тест → `lib/brain/docs.py` по §docs (`DocsSync.from_settings(project_root, settings, vault_info)`; `_shell_quote` дословно; шаблон скрипта — та же логика find/cp, новые английские комментарии, сообщение об отсутствии хранилища `BRAIN is not set: run brain vault to check the vault path`) → `cli.py`: `docs integrate|pull|push|script` (`--project DIR` обязателен, `--dry-run`, `--force` только у push) → тесты `test_docs.py`: перенесённые случаи (нормализация наследного объекта/строки, pull с mkdir и copy2, скрипт bash -n, кавычки с апострофом), integrate (объект pull → файлы + скрипт; строка → «doc-sync is off»; нет хранилища → off; dry-run без записи), push (новый файл; тот же контент — без изменений; другой контент → DOCS_CONFLICT; --force перезаписывает), настройки из конфига сильнее наследного объекта → skiller: `host_command(env, \"brain_docs\")` в `_block_brain` по §docs (подсказка про frontmatter остаётся первой), удалить `from .brain_sync import BrainSync`, удалить brain_sync.py и test_brain_sync.py → configs/skiller-host.json `commands.brain_docs` (свериться с `_read_host`: какие ключи обязательны; `install_hint` указывает путь, который печатается человеку) → тест skiller: временный каталог с исполняемым скриптом-фикстурой, `SKM_BRAIN_BIN` на него, вызов `_block_brain(env, target, {\"brain\": True}, dry=True)` → скрипт получил `--project <target> --dry-run`; без команды (`SKM_BRAIN_BIN` на несуществующий путь или host без команды) → предупреждение и возврат без исключения → удалить строку ownership brain_sync.py, `python3 scripts/ecosystem-units.py render` → CHANGELOG brain (Added: brain docs) и корневой CHANGELOG.md (skiller — Changed: integrate calls the brain command; Removed: brain_sync) → README brain (раздел Document sync) → V1–V6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/brain/scripts/test.sh && bash packages/brain/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone brain && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/test-ecosystem-units.py && python3 scripts/test-config-inventory.py && python3 scripts/test-dev-guard.py && python3 scripts/test-aicore-locator.py && python3 scripts/test-golden.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p7-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "test ! -e packages/skiller/lib/skiller/brain_sync.py && test ! -e packages/skiller/tests/test_brain_sync.py && ! grep -rq 'brain_sync\\|BrainSync' packages/skiller/lib && grep -q 'brain_docs' packages/skiller/lib/skiller/integrate.py && python3 -c 'import json; d = json.load(open(\"configs/skiller-host.json\")); assert d[\"commands\"][\"brain_docs\"][\"argv\"] == [\"packages/brain/bin/brain\", \"docs\", \"integrate\"], d[\"commands\"]; u = json.load(open(\"configs/ecosystem-units.json\")); assert not [o for o in u[\"ownership\"] if o[\"path\"].endswith(\"brain_sync.py\")]'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "unset SKM_HOME XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UNITS_PATH MAIND_BRAIN_VAULT AICORE_ROOT SKM_BRAIN_BIN; export HOME=\"$(mktemp -d)\"; mkdir -p \"$HOME/v/docs/g\" \"$HOME/p\" && echo a > \"$HOME/v/docs/g/a.md\" && echo r > \"$HOME/v/README.md\" && printf '{\"memory_brain\": {\"path\": \"%s\", \"sync\": {\"direction\": \"pull\"}}}' \"$HOME/v\" > \"$HOME/p/.swissknife.json\" && packages/brain/bin/brain docs integrate --project \"$HOME/p\" --dry-run && test ! -e \"$HOME/p/docs\" && packages/brain/bin/brain docs integrate --project \"$HOME/p\" && test -f \"$HOME/p/docs/g/a.md\" && test -f \"$HOME/p/README.md\" && test -x \"$HOME/p/.claude/sync-brain.sh\" && bash -n \"$HOME/p/.claude/sync-brain.sh\" && echo changed > \"$HOME/p/docs/g/a.md\" && { packages/brain/bin/brain docs push --project \"$HOME/p\" >/dev/null 2>&1; test $? = 1; } && grep -qx a \"$HOME/v/docs/g/a.md\" && packages/brain/bin/brain docs push --project \"$HOME/p\" --force >/dev/null && grep -qx changed \"$HOME/v/docs/g/a.md\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "brain docs integrate|pull|push|script",
+    "skiller integrate через команду хоста brain_docs",
+    "brain_sync удалён из skiller"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T09:30:35Z",
+    "finished_at": "2026-10-09T09:38:14Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "b0338ecc-5969-4808-b550-d7068af4923b"
+    },
+    "notes": "brain docs integrate|pull|push|script moved from skiller brain_sync (DocsSync, DOCS_CONFLICT, 34 new tests); skiller block [9] calls host command brain_docs (SKM_BRAIN_BIN), brain_sync and its test deleted, ownership row removed, 6 skiller tests added",
+    "deviations": [
+      "Sync script matches files directly below the folder for /**/ patterns; pull/push CLI require a vault; push is partial on conflict (details in the log)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T09:38:14Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T09:38:14Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T09:38:14Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T09:38:14Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-09T09:38:14Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-09T09:38:14Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T09:38:14Z"
+}

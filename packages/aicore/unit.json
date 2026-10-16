@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "aicore",
+  "title": "Shared foundation: contracts and, later, utilities, providers and content delivery",
+  "kind": "foundation",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "own-repo",
+  "requires": [],
+  "provides": {
+    "cli": ["bin/aicore"],
+    "config": "configs/config.schema.json",
+    "contracts": [
+      {"id": "urn:swissknifeman:aicore:unit", "path": "schemas/unit/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:check-result", "path": "schemas/check-result/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:digest", "path": "schemas/digest/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:error", "path": "schemas/error/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:capability-support", "path": "schemas/capability-support/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:model-catalog", "path": "schemas/model-catalog/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:config-explain", "path": "schemas/config-explain/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:project-launcher-lock", "path": "schemas/project-launcher-lock/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:invocation-context", "path": "schemas/invocation-context/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:skill-descriptor", "path": "schemas/skill-descriptor/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:skill-selection", "path": "schemas/skill-selection/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:eval-context", "path": "schemas/eval-context/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:common", "path": "schemas/common/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:event", "path": "schemas/event/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:artifact-ref", "path": "schemas/artifact-ref/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:permissions", "path": "schemas/permissions/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:extension", "path": "schemas/extension/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:plugin-request", "path": "schemas/plugin-request/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:plugin-response", "path": "schemas/plugin-response/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:plugin-describe", "path": "schemas/plugin-describe/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:telemetry-conventions", "path": "schemas/telemetry-conventions/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:plugin-catalog", "path": "schemas/plugin-catalog/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:compat-manifest", "path": "schemas/compat-manifest/v1", "version": "v1", "stability": "development"}
+    ],
+    "doctor": [
+      {"id": "aicore.ext", "category": "integration", "probe": ["bin/aicore", "ext", "status"], "output": "text"}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

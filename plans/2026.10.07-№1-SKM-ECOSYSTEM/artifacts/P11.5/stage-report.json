@@ -1,0 +1,133 @@
+{
+  "changed_paths": [
+    ".gitignore",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "configs/config-inventory.json",
+    "docs/architecture/ecosystem.md",
+    "packages/aicore/config.example.toml",
+    "packages/aicore/configs/config.schema.json",
+    "packages/aicore/lib/aicore/provider/values.py",
+    "packages/aicore/tests/config/test_maps.py",
+    "packages/aicore/tests/config/test_providers.py",
+    "packages/aicore/tests/provider/test_values.py",
+    "packages/harness/docs/reference/hook-intent-files.md",
+    "packages/maind/CHANGELOG.md",
+    "packages/maind/CONTRIBUTING.md",
+    "packages/maind/README.md",
+    "config.example.json",
+    "packages/maind/configs/registry.example.json",
+    "packages/maind/configs/config.schema.json",
+    "packages/maind/config.example.toml",
+    "packages/maind/docs/architecture.md",
+    "packages/maind/docs/ecosystem.md",
+    "packages/maind/docs/guide/agents.md",
+    "packages/maind/docs/guide/code-graph.md",
+    "packages/maind/docs/guide/config.md",
+    "packages/maind/docs/guide/fleet.md",
+    "packages/maind/docs/guide/graph.md",
+    "packages/maind/docs/guide/installation.md",
+    "packages/maind/docs/guide/memory.md",
+    "packages/maind/docs/guide/migration.md",
+    "packages/maind/docs/guide/projects.md",
+    "packages/maind/docs/guide/workspace.md",
+    "packages/maind/install.sh",
+    "packages/maind/lib/maind/agents.py",
+    "packages/maind/lib/maind/common.py",
+    "packages/maind/lib/maind/config.py",
+    "packages/maind/lib/maind/derive.py",
+    "packages/maind/lib/maind/doctor.py",
+    "packages/maind/lib/maind/health.py",
+    "packages/maind/lib/maind/mcpconfig.py",
+    "packages/maind/lib/maind/projects.py",
+    "packages/maind/lib/maind/provider_deploy.py",
+    "packages/maind/lib/maind/provision/deploy.py",
+    "packages/maind/lib/maind/provision/migrate.py",
+    "packages/maind/lib/maind/provision/onboard.py",
+    "packages/maind/lib/maind/provision/skilldoc.py",
+    "packages/maind/lib/maind/provision/sync.py",
+    "packages/maind/lib/maind/provision/workspace.py",
+    "packages/maind/maind-requirements.md",
+    "packages/maind/scripts/validate.sh",
+    "packages/maind/tests/__init__.py",
+    "packages/maind/tests/fixtures.py",
+    "packages/maind/tests/test_config.py",
+    "packages/maind/tests/test_constants.py",
+    "packages/maind/tests/test_deploy.py",
+    "packages/maind/tests/test_health.py",
+    "packages/maind/tests/test_mcpconfig.py",
+    "packages/maind/tests/test_migrate.py",
+    "packages/maind/tests/test_node_config.py",
+    "packages/maind/tests/test_projects.py",
+    "packages/maind/tests/test_provider_deploy.py",
+    "packages/maind/tests/test_start.py",
+    "packages/maind/tests/test_sync.py",
+    "packages/maind/tests/test_unit.py",
+    "packages/maind/tests/test_workspace.py",
+    "packages/maind/tests/data/legacy-node-config.json",
+    "packages/maind/unit.json"
+  ],
+  "checks_run": [
+    {
+      "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+      "exit": 0,
+      "id": "V1"
+    },
+    {
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "exit": 0,
+      "id": "V2"
+    },
+    {
+      "cmd": "test -f packages/maind/configs/config.schema.json && test -f packages/maind/config.example.toml && test -f packages/maind/configs/registry.example.json && test ! -e config.example.json && python3 -c 'import json; u=json.load(open(\"packages/maind/unit.json\")); assert u[\"provides\"].get(\"config\") == \"configs/config.schema.json\"' && ! grep -rn 'backup_file' packages/maind/lib",
+      "exit": 0,
+      "id": "V3"
+    },
+    {
+      "cmd": "python3 scripts/test-config-inventory.py && bash scripts/test-integration.sh && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+      "exit": 0,
+      "id": "V4"
+    },
+    {
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "exit": 0,
+      "id": "V5"
+    }
+  ],
+  "evidence": [
+    "/tmp/p115/maind-test.txt",
+    "/tmp/p115/maind-val-now.txt",
+    "/tmp/p115/aicore-test.txt",
+    "/tmp/p115/aicore-val-now.txt",
+    "/tmp/p115/v4a.txt",
+    "/tmp/p115/integ-now.txt",
+    "/tmp/p115/v5.txt"
+  ],
+  "open_issues": [
+    {
+      "impact": "changed_paths comes from git status, not from edits made in this run",
+      "kind": "note",
+      "next": "none",
+      "text": "The work was already in the working tree from the earlier attempts (one of which timed out). This run only inspected it and re-ran the checks; I ran V4 in pieces with the same commands, not as one command line."
+    },
+    {
+      "impact": "the coordinator must commit with an explicit path list, including the deleted config.example.json",
+      "kind": "note",
+      "next": "git add the untracked product files, then commit with explicit paths",
+      "text": "The rename of config.example.json is staged in the index (status RM). The new files under packages/maind/ are untracked (config.schema.json, config.example.toml, test_node_config.py, tests/data/)."
+    },
+    {
+      "impact": "keep them out of the item commit",
+      "kind": "note",
+      "next": "none",
+      "text": ".swissknifeman/orch/ and the plan log and phase files show as modified or untracked. They are conductor state, not product files, and I did not touch them."
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "REVIEW_LIMIT: confirmed review findings F1, F2 remain after 1 review round(s) and 2 correction(s)"
+    }
+  ],
+  "status": "blocked",
+  "summary": "maind node config is split: settings are the [maind] table (new configs/config.schema.json, generated config.example.toml, unit.json provides.config, config-inventory entry) and the fleet registry is <state>/maind/registry.json with the single writer projects.write_registry. The legacy node file is still read with one MAIND_LEGACY_CONFIG warning (settings as an ExtraLayer while no [maind] is set; registry read and written there while there is no registry.json). Env.state_dir and data_dir use aicore.state with the legacy ~/.maind and <module>/data fallbacks. [maind.graph.links] is read in derive, with the legacy .maind.graph.json warning MAIND_LEGACY_GRAPH_LINKS. [aicore.providers] has an aicore schema and example, a .swissknifeman/config.toml carrier in _SOURCE_CARRIERS, and provider_config_layers and D108 plan_project_carrier write to the active carrier (legacy .swissknife.json bytes unchanged, warning MAIND_LEGACY_PROVIDERS). *.bak became aicore.state.backup, config.example.json moved to packages/maind/configs/registry.example.json, and docs, CHANGELOGs and tests were updated."
+}

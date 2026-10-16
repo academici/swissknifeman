@@ -16,11 +16,11 @@ from pathlib import Path
 from unittest import mock
 
 from skiller.host import load_host
-from core import find_repo_root
+from aicore.util.repo import find_repo_root
 from skiller.common import Env
 from skiller.config import load_config
 from skiller.connect import do_connect, prepare_connect_selection
-from skiller.publication import run_codex_native_install
+from aicore.delivery.distribution import run_codex_native_install
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, plan_sync
 from skiller.update import update_one
@@ -99,7 +99,7 @@ class ProviderDistributionCase(unittest.TestCase):
         materialize_codex_marketplace(self.root)
         config = self.project / ".codex/config.toml"
         with mock.patch.dict(os.environ, {"CODEX_HOME": str(self.tmp / "codex-home")}), \
-                mock.patch("skiller.publication.run_codex_native_install", side_effect=AssertionError("native install")), \
+                mock.patch("aicore.delivery.distribution.run_codex_native_install", side_effect=AssertionError("native install")), \
                 contextlib.redirect_stdout(io.StringIO()):
             do_connect(self.env, self.project, {"plugins": "php", "no_core": True, "dry_run": True,
                                                "native_codex": True}, register=False)
@@ -231,7 +231,7 @@ class ProviderDistributionCase(unittest.TestCase):
     def test_dual_connect_external_target_gets_contained_bundle_with_claude_parity(self):
         self.write_provider_config(providers())
         materialize_codex_marketplace(self.root)
-        with mock.patch("skiller.publication.subprocess.run",
+        with mock.patch("aicore.delivery.distribution.subprocess.run",
                         side_effect=AssertionError("implicit native install")), \
                 contextlib.redirect_stdout(io.StringIO()):
             do_connect(self.env, self.project, {
@@ -480,11 +480,12 @@ class ProviderDistributionCase(unittest.TestCase):
 
     def test_native_install_reports_missing_codex_without_runner(self):
         calls = []
-        with mock.patch("skiller.publication.shutil.which", return_value=None):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value=None) as which:
             ok, message = run_codex_native_install(
                 repo_root=self.root, plugin="core", dry_run=False,
                 runner=lambda *args, **kwargs: calls.append((args, kwargs)))
         self.assertFalse(ok)
+        which.assert_called_with("codex")
         self.assertIn("SPUB_INSTALL_UNAVAILABLE", message)
         self.assertEqual(calls, [])
 
@@ -500,10 +501,11 @@ class ProviderDistributionCase(unittest.TestCase):
             commands.append((command, kwargs))
             return Result()
 
-        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value="/bin/codex") as which:
             ok, _ = run_codex_native_install(repo_root=self.root, plugin="core",
                                               dry_run=False, runner=runner)
         self.assertTrue(ok)
+        which.assert_called_with("codex")
         self.assertEqual(commands[0][0][:4], ["codex", "plugin", "marketplace", "add"])
         self.assertEqual(commands[1][0], ["codex", "plugin", "add", "core@swissknifeman"])
         self.assertTrue(all(item[1].get("shell") is None for item in commands))
@@ -523,9 +525,10 @@ class ProviderDistributionCase(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, "abcdef\n", "")
             return subprocess.CompletedProcess(command, 0, "", "")
 
-        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value="/bin/codex") as which:
             ok, _ = run_codex_native_install(repo_root=self.root, plugin="core", dry_run=False, runner=runner)
         self.assertTrue(ok)
+        which.assert_called_with("codex")
         self.assertIn(["codex", "plugin", "add", "core@swissknifeman"], commands)
         self.assertNotIn(["codex", "plugin", "marketplace", "upgrade", "swissknifeman"], commands)
         self.assertFalse(any("remove" in command for command in commands))
@@ -543,25 +546,27 @@ class ProviderDistributionCase(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, "https://example.test/repo.git\n", "")
             return subprocess.CompletedProcess(command, 0, "", "")
 
-        with mock.patch("skiller.publication.shutil.which", return_value="/bin/codex"):
+        with mock.patch("aicore.delivery.distribution.shutil.which", return_value="/bin/codex") as which:
             ok, _ = run_codex_native_install(repo_root=self.root, plugin="core", dry_run=False, runner=runner)
         self.assertTrue(ok)
+        which.assert_called_with("codex")
         self.assertIn(["codex", "plugin", "marketplace", "upgrade", "swissknifeman"], commands)
         self.assertFalse(any("remove" in command for command in commands))
 
     def test_provider_b_failure_is_honest_and_repairable(self):
         self.write_provider_config(providers())
-        from skiller import skillset
-        original_copy = skillset.safe_copy_skill
+        from aicore.delivery import materialize
+        original_copy = materialize.safe_copy_skill
         calls = []
 
         def first_then_fail(*args, **kwargs):
             calls.append(1)
             return original_copy(*args, **kwargs) if len(calls) == 1 else False
 
-        with mock.patch("skiller.skillset.safe_copy_skill", side_effect=first_then_fail):
+        with mock.patch("aicore.delivery.materialize.safe_copy_skill", side_effect=first_then_fail):
             with self.assertRaises(SystemExit):
                 do_sync(self.env, self.project, {"no_core": True})
+        self.assertEqual(len(calls), 2)
         self.assertTrue((self.project / ".claude/skills/code-style/SKILL.md").is_file())
         self.assertFalse((self.project / ".agents/skills/code-style").exists())
         with contextlib.redirect_stdout(io.StringIO()):
@@ -829,10 +834,10 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
     """P1.4 (D51/D62/D63): cold per-provider install/discover of the declared fixture
     (repo marketplace minus the three donor buckets) proves catalog-wide identity
     uniqueness — never a named-ID list — plus the negative fixture (D42 curated CORE pairs +
-    class-B `workflow-craft` precondition) and the D62 reconciliation against a frozen
+    class-B preconditions) and the D62 reconciliation against a frozen
     collision snapshot. Runs against the REAL repo catalog (like
     CoreDonorMutualExclusionCase above) — a synthetic fixture has neither the
-    root-bootstrap config nor the `task` sibling this gate must cover."""
+    root-bootstrap config nor the `planner` sibling this gate must cover."""
 
     def setUp(self):
         self.package_root = Path(__file__).resolve().parents[1]
@@ -881,27 +886,26 @@ class EffectiveRuntimeGateCase(unittest.TestCase):
                 ("architecture", "unit:architect"), ("codebase-design", "unit:architect"),
                 ("domain-modeling", "unit:architect"),
                 ("package-contribution-protocol", "unit:architect"),
-                ("task-design", "unit:task"), ("task-plan-audit", "unit:task"),
-                ("task-plan-close", "unit:task"), ("task-plan-design", "unit:task"),
-                ("task-plan-run", "unit:task")):
+                ("planner-design", "unit:planner"), ("planner-plan-audit", "unit:planner"),
+                ("planner-plan-close", "unit:planner"), ("planner-plan-design", "unit:planner"),
+                ("planner-plan-run", "unit:planner")):
             self.assertEqual(result["positive_maps"]["codex"].get(identity), [expected_unit],
                              f"{identity}: expected exactly-once {expected_unit}, no root carrier")
         # class-A resolves via root only (private bucket, never a unit member) on both
-        # providers; class-B `workflow-craft` is Codex-only by declared asymmetry (D43)
+        # providers; `workflow-craft` resolves once from the planner plugin on both
         self.assertEqual(result["positive_maps"]["codex"].get("cross-project-optimizer"),
                          ["root:codex"])
         self.assertEqual(result["positive_maps"]["claude-code"].get("cross-project-optimizer"),
                          ["root:claude-code"])
-        self.assertEqual(result["positive_maps"]["codex"].get("workflow-craft"), ["root:codex"])
-        self.assertNotIn("workflow-craft", result["positive_maps"]["claude-code"])
+        self.assertEqual(result["positive_maps"]["codex"].get("workflow-craft"), ["unit:planner"])
+        self.assertEqual(result["positive_maps"]["claude-code"].get("workflow-craft"), ["unit:planner"])
 
     def test_negative_fixture_proves_the_four_pairs_and_class_b_precondition(self):
         from skiller.doctor import run_effective_runtime_gate
         result = run_effective_runtime_gate(self.env)
         self.assertEqual(len(result["negative_pairs"]), 4)
         self.assertIn("verify-claims", {item["identity"] for item in result["negative_pairs"]})
-        self.assertIsNotNone(result["workflow_craft_precondition_error"])
-        self.assertIn("precondition violated", result["workflow_craft_precondition_error"])
+        self.assertIsNone(result["class_b_precondition_error"])  # no class-B record is declared
 
     def test_cli_effective_runtime_reports_ok_and_writes_artifacts(self):
         import contextlib

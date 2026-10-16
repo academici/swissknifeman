@@ -41,11 +41,11 @@
     },
     {
       "kind": "perplexity",
-      "ref": "orch/research/perplexity/Q11.md"
+      "ref": "docs/research/perplexity/Q11.md"
     },
     {
       "kind": "perplexity",
-      "ref": "orch/research/perplexity/Q14.md"
+      "ref": "docs/research/perplexity/Q14.md"
     }
   ],
   "extensions": {

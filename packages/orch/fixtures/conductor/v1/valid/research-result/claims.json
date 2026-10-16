@@ -1,0 +1,12 @@
+{
+  "query": "How does the command source normalise a reply?",
+  "claims": [
+    {
+      "text": "A command source answers a JSON object with text and sources.",
+      "sources": ["https://example.org/c", "packages/orch/docs/research.md"]
+    }
+  ],
+  "contradictions": [],
+  "unknowns": ["Whether a second process shares the concurrency limit."],
+  "sources_used": ["fake", "notes-fs"]
+}

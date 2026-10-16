@@ -1,0 +1,69 @@
+{
+  "stages": [
+    {
+      "role": "context-scout",
+      "model_class": "economy",
+      "effort": "low"
+    },
+    {
+      "role": "executor",
+      "provider": "claude-code",
+      "model": "claude-opus-5-5",
+      "effort": "high"
+    },
+    {
+      "role": "triager",
+      "model_class": "implementation"
+    },
+    {
+      "role": "registrar",
+      "model_class": "economy"
+    }
+  ],
+  "reviewer": "grok/grok-4.7/500k/high",
+  "rules": [
+    "Run the module test suite before reporting.",
+    "Never edit plan files."
+  ],
+  "skills": [
+    {
+      "role": "reviewer",
+      "names": [
+        "code-review"
+      ]
+    }
+  ],
+  "limits": {
+    "review_rounds": 2,
+    "corrections": 1,
+    "check_fixes": 1,
+    "retries": 1,
+    "tokens_max": 2000000,
+    "stage_timeout_s": 3600,
+    "check_timeout_s": 900,
+    "provider_wait_max_s": 600
+  },
+  "on_blocked": "stop",
+  "on_error": {
+    "quota": {
+      "action": "fallback_route",
+      "max": 1
+    },
+    "unknown": {
+      "action": "retry"
+    }
+  },
+  "fallback_routes": [
+    {
+      "role": "reviewer",
+      "provider": "claude-code",
+      "model_class": "frontier",
+      "effort": "high"
+    },
+    {
+      "role": "executor",
+      "provider": "codex",
+      "model_class": "implementation"
+    }
+  ]
+}

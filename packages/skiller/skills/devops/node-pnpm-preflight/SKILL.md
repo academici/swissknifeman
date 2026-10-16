@@ -18,6 +18,8 @@ sha256: ""
 
 # Node/pnpm Preflight
 
+Executable: `python3 scripts/preflight.py` prints a `check-result/v1` JSON (exit 1 on fail); the steps below are what it checks.
+
 Run before any host command needing `pnpm` or `node`:
 - git hooks (`commit-msg`, `pre-commit`, `commitlint`)
 - frontend (`pnpm lint`, `pnpm test`, `pnpm build`)

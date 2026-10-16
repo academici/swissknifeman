@@ -8,73 +8,43 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import hashlib
 import json
-import math
 from pathlib import Path
 import re
 import sys
 from typing import Mapping
 
-from core.cli import parse_args
-from core.io import atomic_write_text
-from core.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
-from core.provider.projection import load_projection_catalog, project_common_instructions
-from core.provider.artifact import (
+from aicore.util.cli import parse_args
+from aicore.content.budget import CHARS_PER_TOKEN_CYR, CHARS_PER_TOKEN_LAT, estimate_tokens  # noqa: F401 (re-export)
+from aicore.util.io import atomic_write_text
+from aicore.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from aicore.provider.projection import load_projection_catalog, project_common_instructions
+from aicore.artifacts.artifact import (
     ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
     canonical_json_bytes, plan_artifact_render, sha256_digest,
 )
-from core.provider.lock import (
-    ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
+from aicore.artifacts.lock import (
+    LOCK_RELATIVE_PATH, ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
     parse_lock, plan_artifact_lock, serialize_lock,
 )
 
 
 CONTRACT_VERSION = "1.0.0"
-CATALOG_VERSION = "1.3.0"
 PROVIDERS = tuple(item.value for item in ProviderId)
-SCOPES = ("root", "skiller", "harness", "maind", "analyst", "task", "artifex")
-_SCOPE_TARGET_KEYS = {
-    "claude-code": "claude_target",
-    "codex": "codex_target",
-    "cursor": "cursor_target",
-    "grok": "grok_target",
-}
-TARGETS = {
-    "root": {
-        "claude-code": "CLAUDE.md", "codex": "AGENTS.md",
-        "cursor": ".cursor/rules/swissknifeman-instructions.mdc",
-        "grok": ".grok/rules/swissknifeman-instructions.md",
-    },
-    "skiller": {
-        "claude-code": "packages/skiller/CLAUDE.md", "codex": "packages/skiller/AGENTS.md",
-        "cursor": "packages/skiller/.cursor-instructions.mdc",
-        "grok": "packages/skiller/.grok-instructions.md",
-    },
-    "harness": {
-        "claude-code": "packages/harness/CLAUDE.md", "codex": "packages/harness/AGENTS.md",
-        "cursor": "packages/harness/.cursor-instructions.mdc",
-        "grok": "packages/harness/.grok-instructions.md",
-    },
-    "maind": {
-        "claude-code": "packages/maind/CLAUDE.md", "codex": "packages/maind/AGENTS.md",
-        "cursor": "packages/maind/.cursor-instructions.mdc",
-        "grok": "packages/maind/.grok-instructions.md",
-    },
-    "analyst": {
-        "claude-code": "packages/analyst/CLAUDE.md", "codex": "packages/analyst/AGENTS.md",
-        "cursor": "packages/analyst/.cursor-instructions.mdc",
-        "grok": "packages/analyst/.grok-instructions.md",
-    },
-    "task": {
-        "claude-code": "packages/task/CLAUDE.md", "codex": "packages/task/AGENTS.md",
-        "cursor": "packages/task/.cursor-instructions.mdc",
-        "grok": "packages/task/.grok-instructions.md",
-    },
-    "artifex": {
-        "claude-code": "packages/artifex/CLAUDE.md", "codex": "packages/artifex/AGENTS.md",
-        "cursor": "packages/artifex/.cursor-instructions.mdc",
-        "grok": "packages/artifex/.grok-instructions.md",
-    },
-}
+
+
+def _frozen_catalog_head():
+    """(catalog_version, scope ids, target paths by scope) of the packaged catalog, the owner of this data."""
+    path = Path(__file__).resolve().parents[2] / "configs/common/instructions/catalog.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        scopes = value["scopes"]
+        return (value["catalog_version"], tuple(scope["id"] for scope in scopes),
+                {scope["id"]: dict(scope["targets"]) for scope in scopes})
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise RuntimeError(f"INSTRUCTION_CATALOG_UNREADABLE: {path.name}: {error}") from error
+
+
+CATALOG_VERSION, SCOPES, TARGETS = _frozen_catalog_head()
 COMMON_IDS = {
     "root": ("root.ecosystem-identity", "root.repository-layout", "root.package-boundaries",
              "root.cli-routing", "root.shared-core", "root.marketplace",
@@ -82,7 +52,7 @@ COMMON_IDS = {
              "root.development-validation", "root.reference-provenance",
              "root.decision-verification", "root.provider-parity", "root.worktree-safety",
              "root.untrusted-content", "root.evidence-integrity", "root.generated-artifacts",
-             "root.speculative-work", "root.docs-build"),
+             "root.speculative-work", "root.docs-build", "root.module-folders"),
     "skiller": ("skiller.identity", "skiller.distribution-channels",
                 "skiller.configuration-ownership", "skiller.core-policy",
                 "skiller.layout-and-generation", "skiller.module-boundaries",
@@ -97,13 +67,19 @@ COMMON_IDS = {
     "analyst": ("analyst.identity-human-gate", "analyst.layer-boundary", "analyst.layout",
                 "analyst.module-boundaries", "analyst.data-lifecycle", "analyst.privacy",
                 "analyst.engineering-invariants", "analyst.validation-release"),
-    "task": ("task.identity", "task.command-catalog", "task.plan-protocol", "task.plan-files",
-             "task.layout", "task.schema-ownership", "task.engineering-invariants",
-             "task.validation-release"),
-    "artifex": ("artifex.identity", "artifex.layout", "artifex.runtime-boundaries",
-                 "artifex.provenance", "artifex.engineering-invariants",
-                 "artifex.validation-release"),
+    "planner": ("planner.identity", "planner.command-catalog", "planner.plan-protocol", "planner.plan-files",
+                "planner.layout", "planner.schema-ownership", "planner.engineering-invariants",
+                "planner.configuration", "planner.events-and-extensions",
+                "planner.validation-release"),
+    "brain": ("brain.identity", "brain.layout", "brain.module-boundaries",
+              "brain.vault-safety", "brain.engineering-invariants",
+              "brain.validation-release"),
+    "orch": ("orch.identity", "orch.module-boundaries", "orch.engineering-invariants",
+             "orch.validation-release"),
 }
+# Root common is on demand for every provider except these ids: they are projected to every root
+# target, so the rule reaches any agent that opens the repository (the first-turn budget gates additions).
+ROOT_PINNED_COMMON_IDS = ("root.module-folders",)
 EXTENSION_IDS = {
     ("root", "claude-code"): ("root.claude-code.native-surfaces",
                               "root.claude-code.context-budget",
@@ -128,10 +104,8 @@ EXTENSION_IDS = {
                                "maind.claude-code.workspace-trust"),
     ("analyst", "claude-code"): ("analyst.claude-code.capture-surfaces",
                                  "analyst.claude-code.plugin"),
-    ("task", "claude-code"): ("task.claude-code.slash-projection",
-                              "task.claude-code.model-pins"),
-    ("artifex", "claude-code"): ("artifex.claude-code.package-scope",),
-    ("artifex", "codex"): ("artifex.codex.package-scope",),
+    ("planner", "claude-code"): ("planner.claude-code.slash-projection",
+                                 "planner.claude-code.model-pins"),
 }
 for _scope in SCOPES:
     for _provider in PROVIDERS:
@@ -175,13 +149,6 @@ PACKAGE_CANON_LINE_LIMIT = 100
 PACKAGE_CANON_TOKEN_LIMIT = 3_000
 
 
-# `packages/skiller/lib/skiller/budget.py:48–64` (`estimate_tokens`,
-
-
-
-# `tests/test_instruction_size_gate.py::test_token_estimate_matches_skiller_formula`.
-CHARS_PER_TOKEN_CYR = 2.9
-CHARS_PER_TOKEN_LAT = 3.4
 _IDENTIFIER = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _DIGEST = re.compile(r"^(?:sha256:)?[0-9a-f]{64}$")
 _TAG = re.compile(r"^<!-- instruction:([a-z][a-z0-9.-]*) -->$", re.M)
@@ -270,9 +237,11 @@ class InstructionTargetResult:
     block_ids: tuple[str, ...]
     diagnostics: tuple[InstructionDiagnostic, ...]
     changed: bool
+    # Digest of the drifted target; a repair names it. Present only on managed-drift targets.
+    observed_hash: str | None = None
 
     def as_dict(self) -> dict[str, object]:
-        return {
+        value = {
             "artifact_id": self.artifact_id, "scope_id": self.scope_id,
             "provider_id": self.provider_id, "target_path": self.target_path,
             "ordered_semantic_ids": list(self.ordered_semantic_ids),
@@ -282,6 +251,9 @@ class InstructionTargetResult:
             "diagnostics": [item.as_dict() for item in self.diagnostics],
             "changed": self.changed,
         }
+        if self.observed_hash is not None:
+            value["observed_hash"] = self.observed_hash
+        return value
 
 
 @dataclass(frozen=True)
@@ -340,7 +312,26 @@ def package_root() -> Path:
 
 
 def repository_root() -> Path:
+    """Hub checkout around this module (the default target of the CLI); meaningless in a standalone copy."""
     return Path(__file__).resolve().parents[4]
+
+
+_PACKAGE_PREFIX = "packages/harness/"
+
+
+def package_file(hub_relative: str) -> Path:
+    """Package-owned file named by its hub-relative identifier (`packages/harness/<rest>`), in any layout."""
+    if not hub_relative.startswith(_PACKAGE_PREFIX):
+        raise ValueError(f"not a harness file: {hub_relative}")
+    return package_root() / hub_relative[len(_PACKAGE_PREFIX):]
+
+
+def _identifier(path: Path) -> str:
+    """Hub-relative identifier of a file: package files are `packages/harness/<rest>` wherever the package lives."""
+    try:
+        return _PACKAGE_PREFIX + path.relative_to(package_root()).as_posix()
+    except ValueError:
+        return path.relative_to(repository_root()).as_posix()
 
 
 def catalog_path() -> Path:
@@ -419,12 +410,13 @@ def validate_catalog(value: object) -> tuple[InstructionDiagnostic, ...]:
         scope = scopes[scope_index]
         if scope.get("id") != scope_id:
             continue
-        expected_fields = {"id", "sections", *(_SCOPE_TARGET_KEYS[p] for p in PROVIDERS)}
-        if set(scope) != expected_fields:
+        targets = scope.get("targets")
+        if (set(scope) != {"id", "sections", "targets"} or not isinstance(targets, dict)
+                or set(targets) != set(PROVIDERS)):
             diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
                                      expected="scope record fields", observed=_shape(scope)))
             continue
-        observed_targets = tuple(scope[_SCOPE_TARGET_KEYS[p]] for p in PROVIDERS)
+        observed_targets = tuple(targets[p] for p in PROVIDERS)
         expected_targets = tuple(TARGETS[scope_id][p] for p in PROVIDERS)
         if observed_targets != expected_targets:
             diagnostics.append(_diag("INSTRUCTION_TARGET_SET_MISMATCH", scope_id=scope_id,
@@ -478,14 +470,6 @@ def plan_instructions(request: InstructionRequest, *,
     if semantic_diagnostics:
         return InstructionOperationResult(request, (), semantic_diagnostics, False)
     return _observe(request, value)
-
-
-def estimate_tokens(text: str) -> int:
-    """Internal documentation."""
-    if not text:
-        return 0
-    cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ" or "Ԁ" <= c <= "ԯ")
-    return math.ceil(cyr / CHARS_PER_TOKEN_CYR + (len(text) - cyr) / CHARS_PER_TOKEN_LAT)
 
 
 def canon_size_limits(scope_id: str) -> tuple[int, int]:
@@ -554,12 +538,29 @@ def apply_instructions(request: InstructionRequest, *,
             message="target order expected (alphabetical order target_path): "
                     + ",".join(action.target_path for action in writable))
     if not writable:
+        try:
+            _prune_retired_scope_records(Path(request.target_root))
+        except (OSError, ValueError) as error:
+            return _write_refusal(request, fresh, type(error).__name__)
         return replace(fresh, request=request, green=True)
     try:
         apply_plan(Path(request.target_root), fresh.artifact_plan)
+        _prune_retired_scope_records(Path(request.target_root))
     except (OSError, TypeError, ValueError) as error:
         return _write_refusal(request, fresh, type(error).__name__)
     return _completed_write(request, fresh, writable)
+
+
+def _prune_retired_scope_records(root: Path) -> None:
+    """Drop lock records of instruction scopes that left the catalog; other records stay."""
+    lock_path = root / LOCK_RELATIVE_PATH
+    if not lock_path.is_file():
+        return
+    existing = parse_lock(lock_path.read_bytes())
+    kept = tuple(record for record in existing.records
+                 if not _retired_scope_record(record.artifact_id))
+    if len(kept) != len(existing.records):
+        atomic_write_text(lock_path, serialize_lock(ArtifactLock(1, kept)).decode("utf-8"))
 
 
 def repair_instructions(request: InstructionRequest, *,
@@ -671,7 +672,7 @@ def adopt_instructions(request: InstructionRequest, *,
     } for target_path, _target, _raw, _spans, pre_image_hash, pre_image_relative in written}
     projections = {item.target_path: item for item in _projections(
         value, request.scope_ids, request.provider_ids, adoption_hints=hints)}
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     try:
         existing_lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
                          else ArtifactLock(1, ()))
@@ -719,7 +720,7 @@ def rollback_adoption(root: Path, target_path: str) -> bytes:
     record exists or the pre-image no longer matches its recorded hash.
     """
     root = _absolute_root(Path(root))
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     try:
         lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
                 else ArtifactLock(1, ()))
@@ -764,7 +765,7 @@ def plan(root: Path, *, repairs: tuple[str, ...] = (),
     result = _observe(request, value, repairs=repairs)
     if result.artifact_plan is None:
         raise InstructionValidationError(result.diagnostics)
-    lock_path = Path(request.target_root) / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = Path(request.target_root) / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     projections = _projections(value, request.scope_ids, request.provider_ids,
                                adoption_hints=_adoption_hints(lock_bytes))
@@ -860,7 +861,7 @@ def operator_reference(catalog: dict[str, object] | None = None) -> str:
 def _observe(request: InstructionRequest, value: dict[str, object], *,
              repairs: tuple[str, ...] = ()) -> InstructionOperationResult:
     root = Path(request.target_root)
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     projections = _projections(value, request.scope_ids, request.provider_ids,
                                adoption_hints=_adoption_hints(lock_bytes))
@@ -899,8 +900,9 @@ def _validate_projection_semantics(value: dict[str, object],
             continue
         for projection in scoped:
             rendered = projection.result.managed_bytes.decode("utf-8")
-            expected_common = (COMMON_IDS[scope_id] if scope_id != "root" and
-                project_common_instructions(projection_policy, ProviderId(projection.provider_id)) else ())
+            expected_common = (ROOT_PINNED_COMMON_IDS if scope_id == "root" else
+                               COMMON_IDS[scope_id] if project_common_instructions(
+                                   projection_policy, ProviderId(projection.provider_id)) else ())
             if projection.common_ids != expected_common:
                 diagnostics.append(_diag(
                     "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
@@ -997,11 +999,17 @@ def _projection(value: dict[str, object], scope: dict, provider: str, *,
     if hint is not None:
         semantic["adoption"] = dict(hint)
     catalog = load_projection_catalog()
-    # Repository-wide common guidance is on demand for every provider. Package
-    # guides retain their provider policy, so entering a package still supplies it.
-    projected_common_ids = (common_ids if scope_id != "root" and
-                            project_common_instructions(catalog, ProviderId(provider)) else ())
-    common_text = (common.read_text(encoding="utf-8") if projected_common_ids else "")
+    # Repository-wide common guidance is on demand for every provider, except the pinned ids,
+    # which every root target carries. Package guides retain their provider policy, so entering
+    # a package still supplies it.
+    if scope_id == "root":
+        projected_common_ids = ROOT_PINNED_COMMON_IDS
+    else:
+        projected_common_ids = (common_ids if project_common_instructions(catalog, ProviderId(provider))
+                                else ())
+    common_source = common.read_text(encoding="utf-8") if projected_common_ids else ""
+    common_text = ("".join(_fragment_body(common_source, semantic_id) for semantic_id in projected_common_ids)
+                   if scope_id == "root" else common_source)
     result = plan_artifact_render(ArtifactRenderRequest(
         artifact_id, sources,
         ArtifactTarget(target, ("managed-blocks", blocks)), identity, (), semantic,
@@ -1078,7 +1086,7 @@ def _validate_record(record: dict, scope_id: str, diagnostics: list[InstructionD
                                  observation="provenance-invalid",
                                  expected=expected_fragment, observed=_display(sources)))
     else:
-        source_path = repository_root() / expected_fragment
+        source_path = package_file(expected_fragment)
         expected_hash = sha256_digest(source_path.read_bytes()).removeprefix("sha256:")
         if sources[0]["sha256"] != expected_hash:
             diagnostics.append(_diag("INSTRUCTION_PROVENANCE_INVALID", scope_id=scope_id,
@@ -1154,7 +1162,7 @@ def _validate_fragments(scope_id: str, sections: list, diagnostics: list) -> Non
     by_id = {item.get("id"): item for item in sections if isinstance(item, dict)}
     for provider in (None,) + PROVIDERS:
         expected_ids = COMMON_IDS[scope_id] if provider is None else EXTENSION_IDS[(scope_id, provider)]
-        path = repository_root() / _fragment_relative(scope_id, provider)
+        path = package_file(_fragment_relative(scope_id, provider))
         try:
             text = path.read_text(encoding="utf-8")
         except OSError as error:
@@ -1286,7 +1294,7 @@ def _literal_coverage_source_text(source: object) -> str:
     """Read the provenance source (repository-relative path). Patchable by name from tests."""
     if not isinstance(source, str):
         raise ValueError("provenance.source must be a string")
-    return (repository_root() / source).read_text(encoding="utf-8")
+    return package_file(source).read_text(encoding="utf-8")
 
 
 def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, ...]:
@@ -1441,7 +1449,8 @@ def _target_result(projection: InstructionProjection, action,
         projection.common_ids + projection.extension_ids, observation,
         action.action.value, projection.result.provenance.source_hash,
         projection.result.provenance.rendered_hash, marker_ids, block_ids,
-        diagnostics, changed)
+        diagnostics, changed,
+        action.observed_hash if observation == "managed-drift" else None)
 
 
 def _completed_write(request: InstructionRequest, fresh: InstructionOperationResult,
@@ -1524,6 +1533,14 @@ def _uncovered_bytes(raw: bytes, spans: tuple[tuple[int, int], ...]) -> bytes:
     return b"".join(pieces)
 
 
+def _retired_scope_record(artifact_id: str) -> bool:
+    """Whether the lock record belongs to an instruction scope that the catalog no longer has."""
+    prefix = "harness.instruction-projection."
+    if not artifact_id.startswith(prefix):
+        return False
+    return artifact_id[len(prefix):].split(".", 1)[0] not in SCOPES
+
+
 def _preserve_unselected_lock(plan_value: ArtifactPlan,
                               lock_bytes: bytes | None) -> ArtifactPlan:
     if plan_value.next_lock is None or lock_bytes is None:
@@ -1534,7 +1551,8 @@ def _preserve_unselected_lock(plan_value: ArtifactPlan,
         return plan_value
     selected = {action.artifact_id for action in plan_value.actions}
     records = tuple(record for record in existing.records
-                    if record.artifact_id not in selected) + plan_value.next_lock.records
+                    if record.artifact_id not in selected
+                    and not _retired_scope_record(record.artifact_id)) + plan_value.next_lock.records
     return replace(plan_value, next_lock=ArtifactLock(1, records))
 
 
@@ -1562,17 +1580,14 @@ def _instruction_observation_corrections(root: Path, plan_value: ArtifactPlan,
 
 
 def _source(source_id: str, path: Path) -> ArtifactSource:
-    return ArtifactSource(source_id, path.relative_to(repository_root()).as_posix(),
-                          sha256_digest(path.read_bytes()))
+    return ArtifactSource(source_id, _identifier(path), sha256_digest(path.read_bytes()))
 
 
 def _catalog_source(value: dict[str, object]) -> ArtifactSource:
     path = catalog_path()
     raw = path.read_bytes()
     content = raw if json.loads(raw) == value else canonical_json_bytes(value)
-    return ArtifactSource("instruction.catalog",
-                          path.relative_to(repository_root()).as_posix(),
-                          sha256_digest(content))
+    return ArtifactSource("instruction.catalog", _identifier(path), sha256_digest(content))
 
 
 def _fragment_relative(scope_id: str, provider_id: str | None) -> str:
@@ -1593,8 +1608,8 @@ def _fragment_body(text: str, semantic_id: str) -> str:
 def fragment_section(scope_id: str, provider_id: str | None, semantic_id: str, *,
                      root: Path | None = None) -> str:
     """Body of one catalog section, so a projection never restates the text itself."""
-    base = repository_root() if root is None else Path(root)
-    path = base / _fragment_relative(scope_id, provider_id)
+    relative = _fragment_relative(scope_id, provider_id)
+    path = package_file(relative) if root is None else Path(root) / relative
     body = _fragment_body(path.read_text(encoding="utf-8"), semantic_id)
     if not body:
         raise ValueError(f"HARNESS_INSTRUCTION_FRAGMENT_MISSING:{semantic_id}")
@@ -1755,6 +1770,15 @@ def _print_report(result: InstructionOperationResult) -> None:
               f"material in skill or path-scoped rule", file=sys.stderr)
 
 
+INSTRUCTION_SCOPES_SCHEMA = "urn:swissknifeman:harness:instruction-scopes:v1"
+
+
+def scopes_document() -> dict:
+    """The instruction scopes in catalog order (contract `instruction-scopes/v1`)."""
+    return {"$schema": INSTRUCTION_SCOPES_SCHEMA, "scopes": list(SCOPES),
+            "catalog_version": CATALOG_VERSION, "contract_version": CONTRACT_VERSION}
+
+
 def cmd_instructions(env, argv):
     """`harness instructions <plan|check|adopt|apply|repair>` — operator surface over
     the D86 instruction-projection mechanism (see module docstring/contract)."""
@@ -1764,12 +1788,19 @@ def cmd_instructions(env, argv):
         "--preimage-dir": "str", "--observed-hash": "str", "--json": "bool",
     }, max_pos=1)
     if opts["help"] or not positional:
-        print("harness instructions <plan|check|adopt|apply|repair> [--target P] "
+        print("harness instructions scopes --json\n"
+              "harness instructions <plan|check|adopt|apply|repair> [--target P] "
               "[--scope a,b] [--provider a,b] [--authorize a,b] "
               "[--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] "
               "[--observed-hash path=hash,...] [--json]")
         return
     operation = positional[0]
+    if operation == "scopes":
+        if not opts["json"]:
+            print("harness instructions scopes --json", file=sys.stderr)
+            sys.exit(2)
+        print(json.dumps(scopes_document(), ensure_ascii=False))
+        return
     handler = _OPERATIONS.get(operation)
     if handler is None:
         print(f"harness instructions: unknown operation {operation}", file=sys.stderr)

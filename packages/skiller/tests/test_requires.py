@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.common import resolve_requires_bfs
+from aicore.content.skill import resolve_requires_bfs
 
 
 class RequiresDiagnosticsCase(unittest.TestCase):

@@ -12,8 +12,9 @@ from pathlib import Path
 from unittest import mock
 
 from skiller.common import Env
-from skiller.release import (bump_version, classify_bump, cmd_release,
-                             read_unreleased_section, unreleased_is_empty)
+from skiller.release import cmd_release
+from aicore.release.changelog import read_unreleased_section, unreleased_is_empty
+from aicore.release.version import bump_version, classify_bump
 
 from skiller.host import clear_host_cache
 

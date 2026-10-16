@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from aicore.state import list_backups
 from maind.provision import workspace
 from maind.provision import sync
 from maind.config import merge_defaults
@@ -120,23 +121,27 @@ class TestSync(unittest.TestCase):
             a = Path(tmp) / "a"; a.mkdir()
             b = Path(tmp) / "b"; b.mkdir()
             path = workspace.hub_settings_path(env)
-            bak = path.with_name(path.name + ".bak")
+            def saved():
+                return list_backups(env.root)
 
             r1 = workspace.sync(env, _cfg([("a", str(a))]))
             self.assertTrue(r1["changed"])
             data = json.loads(path.read_text(encoding="utf-8"))
             self.assertIn(str(a), data["permissions"]["additionalDirectories"])
             self.assertEqual(data["permissions"]["defaultMode"], "acceptEdits")
-            self.assertFalse(bak.exists())  # first entry - there was no file, .bak no
+            self.assertEqual(saved(), [])  # first entry - there was no file, nothing to back up
 
             r2 = workspace.sync(env, _cfg([("a", str(a))]))
             self.assertFalse(r2["changed"])  # idempotent - we don’t write anything
-            self.assertFalse(bak.exists())
+            self.assertEqual(saved(), [])
 
             r3 = workspace.sync(env, _cfg([("a", str(a)), ("b", str(b))]))
             self.assertTrue(r3["changed"])
             self.assertEqual(r3["dirs_added"], [str(b)])
-            self.assertTrue(bak.exists())  # real change → .bak before recording
+            # real change → a backup under .swissknifeman/backups before recording
+            [(_stamp, files)] = saved()
+            self.assertEqual([f.relative_to(f.parents[1]) for f in files],
+                             [Path(".claude/settings.local.json")])
 
     def test_broken_settings_dies(self):
         with tempfile.TemporaryDirectory() as tmp:

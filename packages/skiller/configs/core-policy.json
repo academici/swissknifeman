@@ -10,5 +10,5 @@
   "resident_budget_target": 750,
   "core_plugin": "core",
   "core_buckets": ["general", "oss-dev"],
-  "default_exclude": ["system/shared-memory", "system/cross-project-coordinator"]
+  "default_exclude": ["shared-memory", "cross-project-coordinator"]
 }

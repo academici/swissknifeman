@@ -1,0 +1,16 @@
+{
+  "correlationid": "cnd-1",
+  "data": {
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "run_id": "cnd-1",
+    "work_id": "P1.1@def"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-input-rebuilt:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "cnd-1/P1.1",
+  "time": "2026-10-15T10:00:00.000Z",
+  "type": "orch.input.rebuilt"
+}

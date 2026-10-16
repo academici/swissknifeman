@@ -19,7 +19,8 @@ import json
 import os
 from pathlib import Path
 
-from .common import die, parse_args
+from aicore.util.cli import parse_args
+from aicore.util.term import die
 from .lessons import (ACTIVE_STATES, KINDS, add_candidate, audit_append,
                       classify_consolidation, new_lesson, similar_lessons)
 

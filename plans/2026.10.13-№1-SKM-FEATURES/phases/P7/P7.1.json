@@ -1,0 +1,101 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.1",
+  "title": "review_recommendation в stage-report (recommended, reason_codes, focus, suggested_model_class); правило в executor.md; фикстуры",
+  "status": "done",
+  "summary": "Поле review_recommendation по knowledge/p7-review#recommendation в stage-report.schema.json (аддитивно), правило в roles/executor.md, valid/invalid фикстуры; conductor сохраняет его в отчёте без интерпретации (интерпретация — P7.2).",
+  "why": "Аудит П6.1, мысль 17.",
+  "scope": {
+    "include": [
+      "packages/orch/schemas/conductor/v1/stage-report.schema.json",
+      "packages/orch/roles/executor.md",
+      "фикстуры"
+    ],
+    "exclude": [
+      "risk score (P7.2)"
+    ]
+  },
+  "depends_on": [
+    "P6.6"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p7-review#recommendation",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p7-review#facts",
+      "why": "код",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/schemas/conductor/v1/stage-report.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/roles/executor.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты stage-report, config, run-options — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: economy/high. Сначала сверка facts. Порядок: фикстуры → схема → executor.md → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "review_recommendation"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T14:33:44Z",
+    "finished_at": "2026-10-14T14:41:59Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "d28dd78b-d672-4a05-a090-92281ed71ce8"
+    },
+    "notes": "review_recommendation в stage-report (additive), executor.md + manifest sha, prompt, фикстуры, e2e: поле сохраняется в stage-report.json и не идёт в register body. V1: affected-tests --run зелёный (exit 0); manifest roles/executor.json обновлён на новый sha256 (instructions drift) — вне task_files, через --path.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T14:41:59Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T14:41:59Z"
+}

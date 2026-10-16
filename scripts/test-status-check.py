@@ -23,7 +23,7 @@ VALID = """# Status
 | Package | Opportunity | Maturity | Evidence / boundary |
 |:--|:--|:--|:--|
 | skiller | budget | available | `skiller status` prints budget |
-| core | io | available | `unittest discover -s core/tests` |
+| aicore | io | available | `bash packages/aicore/scripts/test.sh` |
 
 ## Known limitations
 """

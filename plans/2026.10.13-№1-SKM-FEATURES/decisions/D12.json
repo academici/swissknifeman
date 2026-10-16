@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D12",
+  "title": "Поля deviation — аддитивно, next остаётся свободным текстом",
+  "date": "2026-10-13",
+  "status": "accepted",
+  "question": "Аудит (2.9.4) делает issue.next перечислением none|follow_up|owner_decision; сейчас next — свободный текст в закрытой схеме stage-report. Как добавить классы без поломки?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Новые необязательные поля issue: class, severity, outcome (accepted|follow_up|owner_decision), auto_fixable, evidence[]; для kind deviation через if/then обязательны class, impact, outcome; next остаётся свободным текстом; heal заполняет class/outcome по правилу, если роль их не дала",
+      "pros": "аддитивно; старые отчёты валидны"
+    },
+    {
+      "id": "B",
+      "text": "Сменить тип next на enum",
+      "cons": "ломает существующие отчёты и журналы"
+    }
+  ],
+  "decision": "A — Новые необязательные поля issue: class, severity, outcome (accepted|follow_up|owner_decision), auto_fixable, evidence[]; для kind deviation через if/then обязательны class, impact, outcome; next остаётся свободным текстом; heal заполняет class/outcome по правилу, если роль их не дала",
+  "rationale": "D1: только аддитивные изменения; aicore schema compat.",
+  "applies_to": [
+    "P5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "agent"
+}

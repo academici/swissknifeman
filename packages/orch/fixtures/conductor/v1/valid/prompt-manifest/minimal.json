@@ -1,0 +1,10 @@
+{
+  "schema": "prompt-manifest/v1",
+  "step": "close",
+  "role": "registrar",
+  "route": {},
+  "blocks": [],
+  "excluded": [],
+  "estimated_tokens": 0,
+  "prompt_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

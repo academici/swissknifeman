@@ -1,0 +1,113 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.5",
+  "title": "Пользовательские skills: skiller.custom_dirs (machine), .swissknifeman/skills проекта, replaces и EXTENSION_AMBIGUOUS, origin и digest в select/describe",
+  "status": "done_with_deviations",
+  "summary": "По knowledge/p8-skills#custom: config skiller.custom_dirs (x-skm-layers machine/invocation/flags), обнаружение проектных skills, политика коллизий, origin library|machine|project в explain и describe; тесты.",
+  "why": "Аудит П7.5, мысль 2. Риск: проект подменяет skill без явного replaces — ошибка EXTENSION_AMBIGUOUS.",
+  "scope": {
+    "include": [
+      "packages/skiller/configs/config.schema.json",
+      "packages/skiller/lib/skiller/ (discovery, select, describe)",
+      "tests, docs"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P8.2"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p8-skills#custom",
+      "why": "дизайн",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/configs/config.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Skills не удаляются и не переименовываются (D1); frontmatter SKILL.md остаётся по стандарту agentskills.io (D10)"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты коллизий → config → discovery → explain → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) SKM_VALIDATE_SKIP_TESTS=1 bash packages/skiller/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "custom skills"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T16:33:14Z",
+    "finished_at": "2026-10-14T16:42:45Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "301cfed7-08af-4ae7-960e-8ac5e83ad291"
+    },
+    "notes": "custom_dirs (machine/invocation/flags), project .swissknifeman/skills, EXTENSION_AMBIGUOUS, override via replaces, notes, origin+digest in select/describe; 16 new tests.",
+    "deviations": [
+      "aicore skill-selection/v1 gets optional replaces (additive)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T16:42:45Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T16:42:45Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T16:42:45Z"
+}

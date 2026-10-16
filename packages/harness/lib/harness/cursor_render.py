@@ -9,7 +9,8 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import ProviderId
+from aicore.provider.models import load_model_catalog, select_model
+from aicore.provider.values import ProviderId
 
 from .instructions import fragment_section, semantic_block
 from .profiles import ProfileResolution
@@ -76,8 +77,8 @@ _IDE_PERMISSIONS = {
             "python3",
             "bash scripts/validate.sh",
             "bash scripts/test.sh",
-            "packages/harness/bin/harness",
-            "packages/skiller/bin/skiller",
+            "harness",
+            "skiller",
         ],
         "autoRun": {
             "block_instructions": [
@@ -113,7 +114,7 @@ class _CursorRule:
 # Rule bodies are projected from existing canons:
 # - catalog-backed instruction sections (`root.cursor.*`);
 # - observe profile policy (`_IDE_PERMISSIONS["observe"]`);
-# - command routing mapping (`packages/task/configs/command-routing.json`).
+# - the aicore model catalog (Cursor class selectors).
 # Only frontmatter lives directly in this table.
 _RULES = (
     _CursorRule(".cursor/rules/swissknifeman-core.mdc",
@@ -220,48 +221,22 @@ def _observer_rule_section(semantic_id: str) -> bytes:
 
 
 def _router_rule_section(semantic_id: str, root: Path | None) -> bytes:
-    routing = _cursor_routing_catalog(root)
-    commands = routing["commands"]
-    cursor_mapping = routing["mappings"]["cursor"]
-    class_selectors = cursor_mapping["class_selectors"]
-    fixed = {name: [] for name in ("economy", "implementation", "frontier")}
-    for command in commands:
-        route = command.get("routing", {})
-        if route.get("mode") != "fixed":
-            continue
-        model_class = route.get("model_class")
-        if model_class in fixed:
-            fixed[model_class].append(command["command_id"])
-    classes = ", ".join(
-        f"{name}={class_selectors[name][0]}" for name in ("economy", "implementation", "frontier")
-    )
-    fixed_rows = "\n".join(
-        f"- Fixed {name} commands: {', '.join(f'`{command}`' for command in sorted(ids)) or 'none'}."
-        for name, ids in fixed.items()
-    )
+    catalog = load_model_catalog()
+    selectors = {name: select_model(catalog, ProviderId.CURSOR.value, name)
+                 for name in ("economy", "implementation", "frontier")}
+    if not all(selectors.values()):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    classes = ", ".join(f"{name}={selector}" for name, selector in selectors.items())
     text = (
         f"<!-- semantic:{semantic_id} -->\n"
-        "## Cursor Task routing (explicit invocation only)\n\n"
-        "This managed rule is generated from `packages/task/configs/command-routing.json`.\n"
-        "Apply only when the owner explicitly invokes Task or attaches this manual rule.\n"
-        "Ordinary requests and existing plan files do not activate Task.\n\n"
-        f"{fixed_rows}\n"
+        "## Cursor planner routing (explicit invocation only)\n\n"
+        "This managed rule is generated from the aicore model catalog.\n"
+        "Apply only when the owner explicitly invokes planner or attaches this manual rule.\n"
+        "Ordinary requests and existing plan files do not activate planner.\n\n"
         f"- Model selectors: {classes}.\n"
         "- Never replace fixed frontier or fixed implementation routes with `auto`.\n"
     )
     return text.encode("utf-8")
-
-
-def _cursor_routing_catalog(root: Path | None) -> dict:
-    repo_root = Path(root) if root is not None else Path(__file__).resolve().parents[4]
-    candidate = repo_root / "packages/task/configs/command-routing.json"
-    if not candidate.is_file():
-        candidate = Path(__file__).resolve().parents[4] / "packages/task/configs/command-routing.json"
-    value = json.loads(candidate.read_text(encoding="utf-8"))
-    if ("commands" not in value or "mappings" not in value
-            or "cursor" not in value["mappings"]):
-        raise ValueError("HARNESS_MAPPING_MISSING")
-    return value
 
 
 def plan_cursor_rules(root: Path | None = None) -> dict[str, bytes]:

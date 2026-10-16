@@ -11,7 +11,7 @@ harness safe-dirs remove <path> [--exclude] [--dry-run]   # remove root (or with
 harness safe-dirs prune-ask [--global] [--target P] [--all-projects]
 ```
 
-- Default `include_registered_projects=true` — paths of onboarded projects from `~/.swissknifeman/projects.json` are turned on automatically.
+- Default `include_registered_projects=true` — paths of onboarded projects from the skiller registry (`<state>/skiller/projects.json`) are turned on automatically.
 - `add` will refuse `/`, `$HOME` and ancestors `$HOME` (the same guard in the hook itself).
 - `prune-ask` removes static ask-rules `Bash(rm -r *)`/`Bash(rm -rf *)` from settings — hook-allow does not penetrate them, without cleaning rm in safe-dirs will continue to prompt.
 - Protection inside safe-dirs: the root itself is not deleted, `.git` protected (`protect_git`), globs are validated by static prefix (`allow_globs`).

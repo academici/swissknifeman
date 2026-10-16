@@ -12,9 +12,9 @@ except ModuleNotFoundError:  # Python 3.9/3.10 compatibility
     tomllib = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.artifacts.lock import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
+from aicore.provider.models import load_model_catalog, select_model
 from harness.agentpacks import (agent_model_trace, compare_agent_inventory, cursor_consumer_target,
                                 expected_agent_inventory,
                                 cursor_consumer_targets, load_claude_role_bindings,
@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "configs/common/agent-packs/roles.json"
 BINDINGS = ROOT / "configs/claude-code/agent-packs/role-bindings.json"
 CURSOR_MAPPING = ROOT / "configs/cursor/agent-packs/consumer-mapping.json"
-FORBIDDEN = re.compile(r"\.claude(?:/|\b)|(?<![\w-])/(?:task:[a-z-]+|effort|clear)\b|"
+FORBIDDEN = re.compile(r"\.claude(?:/|\b)|(?<![\w-])/(?:planner|task):[a-z-]+|(?<![\w-])/(?:effort|clear)\b|"
                        r"\bWorkflow\b|\bSubagentStop\b|"
                        r"(?<![\w-])(?:Read|Grep|Glob|Bash|Edit|Write)(?![\w-])")
 
@@ -132,9 +132,7 @@ class ProviderAgentpackCase(unittest.TestCase):
                 assert_codex_role_contract(
                     self,
                     actual.decode("utf-8"),
-                    model={"economy": "gpt-5.6-luna",
-                           "implementation": "gpt-5.6-terra",
-                           "frontier": "gpt-5.6-sol"}[role.model_class],
+                    model=select_model(load_model_catalog(), "codex", role.model_class),
                     skills=list(role.skills),
                     command_requirements=list(role.command_ids),
                 )

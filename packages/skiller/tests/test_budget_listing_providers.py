@@ -16,11 +16,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.budget import (CODEX_LISTING_FALLBACK_CHARS, cmd_budget,
-                            format_listing_report,
-                            format_profiles_listing_report,
-                            measure_listing_budget, profiles_listing_report,
-                            resolve_active_set)
+from skiller.budget import (
+    cmd_budget, format_profiles_listing_report, profiles_listing_report, resolve_active_set)
+from aicore.content.budget import (
+    CODEX_LISTING_FALLBACK_CHARS, format_listing_report, measure_listing_budget)
 import tests.fixtures as fx
 
 
@@ -43,7 +42,7 @@ class MeasureListingBudgetCase(unittest.TestCase):
         report = measure_listing_budget(skills, "codex")
         self.assertEqual(report["unit"], "char")
         # compare with direct sum len(name)+len(description) by frontmatter
-        from skiller.common import parse_frontmatter
+        from aicore.content.skill import read_frontmatter as parse_frontmatter
         raw = 0
         for _b, _rel, d, _fm in skills:
             fm = parse_frontmatter(d / "SKILL.md")

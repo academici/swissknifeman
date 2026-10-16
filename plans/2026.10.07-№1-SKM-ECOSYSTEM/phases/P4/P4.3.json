@@ -1,0 +1,202 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.3",
+  "title": "aicore.config: схемы модулей, слои, слияние, env, --config, schema_version, secret_ref и explain (контракт config-explain/v1)",
+  "status": "done_with_deviations",
+  "summary": "Расширение профиля util.schema (minimum, maximum, аннотации x-skm-secret, x-skm-layers); load_module_schema; resolve() со слоями defaults → machine → project → extra → env → invocation → flags, _unset/_append, x-skm-layers, разбор env SKM_<MODULE>_<PATH>, проверка schema_version; ResolvedConfig; ConfigError с файлом и строкой; secret_ref (env://, реестр резолверов, Secret без утечки); explain с перекрытыми значениями и JSON по новому контракту config-explain/v1; запись слоя (edit_layer_file: редактор + бэкап + атомарная запись); тесты на каждое правило и тест редактирования секретов.",
+  "why": "D22, D38, E30–E33, E39, R04, R05: семантика конфига фиксируется до первого потребителя и покрывается тестом на каждое правило. Жёсткие риски: (1) утечка значения секрета в вывод, текст исключения или трейсбек — инвариант и тест §secrets; (2) тихое принятие неизвестного ключа или неверного слоя — ошибки CONFIG_UNKNOWN_KEY/CONFIG_LAYER_FORBIDDEN; (3) изменение поведения валидатора для существующих контрактов при расширении профиля — тесты контрактов и ecosystem-units.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/util/schema.py: minimum, maximum, x-skm-secret, x-skm-layers",
+      "packages/aicore/lib/aicore/config/{__init__,model,secrets}.py; функция edit_layer_file",
+      "packages/aicore/schemas/config-explain/v1/{config-explain.schema.json,examples/}; unit.json provides.contracts",
+      "packages/aicore/tests/config/{test_schema_profile,test_model,test_env,test_explain,test_secret_redaction,test_edit_layer}.py и фикстурная схема модуля tests/config/fixtures/",
+      "tests/test_architecture.py: config → util, state"
+    ],
+    "exclude": [
+      "CLI, обнаружение модулей, пример и init (P4.4)",
+      "перевод модулей (analyst — P4.5; остальные — P8–P11)",
+      "плагины-резолверы секретов (P6), слой профиля установки (отложен D22)",
+      "блокировки файлов конфига (не-цель, §model п.12)"
+    ]
+  },
+  "depends_on": [
+    "P4.1",
+    "P4.2"
+  ],
+  "decisions": [
+    "D38",
+    "D22",
+    "D5",
+    "D14"
+  ],
+  "reads": [
+    {
+      "why": "полная модель: схема, файл, слои, слияние, env, ошибки, раскладка — реализуется дословно",
+      "required": true,
+      "ref": "knowledge/config-p4#model"
+    },
+    {
+      "why": "secret_ref, Secret, инвариант редактирования и шесть случаев теста",
+      "required": true,
+      "ref": "knowledge/config-p4#secrets"
+    },
+    {
+      "why": "ExplainEntry, текстовый вид, контракт config-explain/v1",
+      "required": true,
+      "ref": "knowledge/config-p4#explain"
+    },
+    {
+      "why": "backup и места для edit_layer_file",
+      "required": false,
+      "ref": "knowledge/config-p4#state"
+    },
+    {
+      "why": "профиль и коды issues для расширения",
+      "required": true,
+      "path": "packages/aicore/lib/aicore/util/schema.py"
+    },
+    {
+      "why": "образец стиля схемы контракта",
+      "required": true,
+      "path": "packages/aicore/schemas/check-result/v1/check-result.schema.json"
+    },
+    {
+      "why": "как обходятся примеры схем",
+      "required": true,
+      "path": "packages/aicore/tests/test_contracts.py"
+    },
+    {
+      "why": "provides.contracts",
+      "required": true,
+      "path": "packages/aicore/unit.json"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/util/schema.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/__init__.py",
+      "change": "any",
+      "note": "created in P4.2"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/model.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/secrets.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/config-explain/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/schemas/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Семантика — дословно по knowledge/config-p4#model; расхождение с ним допустимо только через plan.py log с причиной и правкой решения D38",
+    "Расширение профиля обратно совместимо: все существующие схемы aicore загружаются и валидируются как раньше (test_contracts, ecosystem-units check); x-* вне списка → SchemaProfileError",
+    "Значение секрета не хранится в ResolvedConfig и не кешируется; сбой резолва — raise … from None; ни одно сообщение об ошибке на секретном листе не включает значение",
+    "Каждое правило D22/D38 — отдельный тест с понятным именем (test_missing_key_falls_through, test_unset_restores_default, test_append_extends_array, test_maps_merge_arrays_replace, test_layer_forbidden, test_unknown_key_rejected, test_env_double_underscore_path, test_env_unknown_path_warns_once, test_invocation_between_env_and_flags, test_version_missing/newer/invalid, test_layer_order_full)",
+    "ConfigError несёт слой, файл и строку (LineIndex) для ошибок файловых слоёв — тест проверяет текст `<file>:<line>:`",
+    "edit_layer_file: разбор → правка редактором → проверка секции слоя схемой → state.backup → atomic_write_text; при любой ошибке файл не меняется",
+    "Самопроверка стиля: если в PATH есть ruff — `ruff check <изменённые .py>` без новых F/B-замечаний (не приёмка: scripts/lint.sh требует ruff 0.15.19 или pipx, на машине их нет)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: util/schema.py (minimum/maximum с кодами issues, аннотации; тесты профиля) → secrets.py (ссылки, реестр, Secret) → model.py: load_module_schema (проверки §model п.1), обход схемы в карту лист → (тип, default, secret, layers), загрузка файлового слоя (toml.load_file + проверка schema_version + секция модуля), применение слоя (_unset → _append → значения), env-слой, invocation, flags, extra; итоговая валидация; ResolvedConfig и explain (история значений по ключу хранится при применении слоёв) → __init__.py экспорт: resolve, ResolvedConfig, ConfigError, ExtraLayer, Secret, register_secret_resolver, edit_layer_file, CONFIG_FILE_VERSION, LAYER_NAMES → контракт config-explain/v1 + примеры → unit.json → тесты (фикстурная схема модуля `demo` с листами: integer с minimum, number 0..1, boolean, string enum, array, вложенный объект, секрет, лист с x-skm-layers [defaults, machine]) → test_secret_redaction (§secrets) → test_architecture (config импортирует только util и state) → schemas/README.md и CHANGELOG.\n\nresolve получает env и home явно (по умолчанию os.environ и HOME) и передаёт их в aicore.state — тесты не трогают окружение процесса (кроме случаев, где проверяется именно os.environ, через unittest.mock.patch.dict).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test -f packages/aicore/tests/config/test_secret_redaction.py && test -f packages/aicore/schemas/config-explain/v1/config-explain.schema.json && ls packages/aicore/schemas/config-explain/v1/examples/invalid/*.json >/dev/null && ls packages/aicore/schemas/config-explain/v1/examples/valid/*.json >/dev/null && python3 -c 'import json, sys; c = [x[\"id\"] for x in json.load(open(\"packages/aicore/unit.json\"))[\"provides\"][\"contracts\"]]; sys.exit(0 if \"urn:swissknifeman:aicore:config-explain\" in c else 1)'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/test-ecosystem-units.py && python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.config.resolve со слоями и правилами D22/D38",
+    "secret_ref с открытым реестром резолверов и тестом редактирования",
+    "explain с файлом, строкой и перекрытыми значениями; контракт config-explain/v1",
+    "edit_layer_file с бэкапом и атомарной записью"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T12:37:46Z",
+    "finished_at": "2026-10-08T12:56:10Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "e8c4b6e7-d2aa-4735-92a6-3263153addf7"
+    },
+    "notes": "aicore.config: resolve со слоями defaults→machine→project→extra→env→invocation→flags, _unset/_append, x-skm-layers, env с __, schema_version, secret_ref/Secret/реестр резолверов, explain (текст и config-explain/v1), edit_layer_file; util.schema: minimum/maximum и x-skm-*; 621 тест aicore, ruff без замечаний",
+    "deviations": [
+      "scripts/test-ecosystem-units.py поправлен вне Scope: тест использовал minimum как неподдерживаемое ключевое слово профиля"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T12:56:10Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T12:56:10Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T12:56:10Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T12:56:10Z"
+}

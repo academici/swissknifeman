@@ -1,0 +1,11 @@
+{
+  "problem_ref": "question:Q1@1",
+  "options": [
+    {"id": "keep", "text": "Keep the old flag name", "pros": ["no break for callers"], "cons": ["two names for a while"]},
+    {"id": "rename", "text": "Rename the flag", "pros": ["one name"], "cons": ["breaks callers"]}
+  ],
+  "recommendation": "keep",
+  "confidence": "high",
+  "sources": ["packages/orch/docs/contracts.md"],
+  "needs_owner": false
+}

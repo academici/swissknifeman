@@ -2,7 +2,8 @@
 import json
 
 from ..agents import listing as agents_listing
-from ..common import die, parse_args
+from aicore.util.term import die
+from aicore.util.cli import parse_args
 from ..config import load_config
 from ..memory import start as memory_start
 from ..memory import status as memory_status

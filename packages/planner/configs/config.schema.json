@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:planner:config:v1",
+  "title": "planner config",
+  "description": "Settings of the planner module: thresholds, defaults of new plans and items, review loop policies, view templates, orchestration scenarios, events and external checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "context": {
+      "type": "object",
+      "description": "Context pack of an item.",
+      "additionalProperties": false,
+      "properties": {
+        "budget_kb": {
+          "type": "integer",
+          "description": "Size of a context pack above which a warning is reported, in KB; the pack is never trimmed. The plan setting context_budget_kb overrides it for that plan.",
+          "default": 256,
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "top_sources": {
+          "type": "integer",
+          "description": "Number of the largest sources the budget report lists.",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 50
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "description": "Plan check.",
+      "additionalProperties": false,
+      "properties": {
+        "heavy_text_kb": {
+          "type": "integer",
+          "description": "Size of a text field above which check warns that it is heavy, in KB.",
+          "default": 16,
+          "minimum": 1,
+          "maximum": 1024
+        }
+      }
+    },
+    "refs": {
+      "type": "object",
+      "description": "References between plans.",
+      "additionalProperties": false,
+      "properties": {
+        "max_chain": {
+          "type": "integer",
+          "description": "Longest chain of superseding decisions followed while resolving a reference to another plan.",
+          "default": 8,
+          "minimum": 1,
+          "maximum": 64
+        }
+      }
+    },
+    "lock": {
+      "type": "object",
+      "description": "Plan lock.",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "description": "Seconds a mutation waits for the lock of a plan before it fails with PLAN_LOCKED.",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 600
+        }
+      }
+    },
+    "new_plan": {
+      "type": "object",
+      "description": "Settings written into a new plan.",
+      "additionalProperties": false,
+      "properties": {
+        "design_audit": {
+          "type": "string",
+          "description": "settings.design_audit of a new plan.",
+          "default": "none",
+          "enum": [
+            "none",
+            "required"
+          ]
+        },
+        "scout": {
+          "type": "string",
+          "description": "settings.scout of a new plan.",
+          "default": "off",
+          "enum": [
+            "off",
+            "auto"
+          ]
+        },
+        "context_pack": {
+          "type": "string",
+          "description": "settings.context_pack of a new plan.",
+          "default": "scoped",
+          "enum": [
+            "legacy",
+            "scoped"
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "description": "settings.evidence of a new plan; written only when required.",
+          "default": "optional",
+          "enum": [
+            "optional",
+            "required"
+          ]
+        },
+        "language": {
+          "type": "string",
+          "description": "settings.language of a new plan; an empty string writes nothing.",
+          "default": ""
+        },
+        "commit_scope": {
+          "type": "string",
+          "description": "settings.commit.scope of a new plan: a lower-case scope for commit subjects; an empty string writes nothing.",
+          "default": "",
+          "pattern": "^$|^[a-z0-9][a-z0-9-]*$"
+        }
+      }
+    },
+    "new_item": {
+      "type": "object",
+      "description": "Fields written into a new item.",
+      "additionalProperties": false,
+      "properties": {
+        "route_class": {
+          "type": "string",
+          "description": "route.class of a new item.",
+          "default": "implementation",
+          "enum": [
+            "economy",
+            "implementation",
+            "frontier"
+          ]
+        },
+        "route_effort": {
+          "type": "string",
+          "description": "route.effort of a new item.",
+          "default": "high",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ]
+        },
+        "review_mode": {
+          "type": "string",
+          "description": "review.mode of a new item.",
+          "default": "none",
+          "enum": [
+            "none",
+            "self",
+            "requested"
+          ]
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "description": "Loop policies of the planner commands; the context pack of an item carries them.",
+      "additionalProperties": false,
+      "properties": {
+        "review_rounds_max": {
+          "type": "integer",
+          "description": "Completed review rounds allowed on one item.",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 3
+        },
+        "corrections_max": {
+          "type": "integer",
+          "description": "Owning corrections allowed for the findings of a review.",
+          "default": 1,
+          "minimum": 1,
+          "maximum": 2
+        }
+      }
+    },
+    "views": {
+      "type": "object",
+      "description": "Human views of a plan.",
+      "additionalProperties": false,
+      "properties": {
+        "templates_dir": {
+          "type": "string",
+          "description": "Folder with view templates (project file or --config only: the rendered views are committed with the plan) that replace the built-in ones of the same file name; a relative path is taken from the folder of the configuration file, a leading ~ is expanded. An empty string keeps the built-in templates.",
+          "default": "",
+          "x-skm-layers": [
+            "defaults",
+            "project",
+            "invocation"
+          ]
+        }
+      }
+    },
+    "bridges": {
+      "type": "object",
+      "description": "Named bridges to partner tools.",
+      "additionalProperties": false,
+      "properties": {
+        "roots": {
+          "type": "array",
+          "description": "Directories that hold named bridges (<root>/<name>/bridge.json); a relative path is resolved against the project root, a leading ~ is expanded.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        }
+      }
+    },
+    "orchestration": {
+      "type": "object",
+      "description": "Orchestration scenarios of plan-run.",
+      "additionalProperties": false,
+      "properties": {
+        "default_scenario": {
+          "type": "string",
+          "description": "Scenario used when the item class has no entry of its own. Reserved: no effect yet.",
+          "default": "solo",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "by_class": {
+          "type": "object",
+          "description": "Scenario per route class.",
+          "additionalProperties": false,
+          "properties": {
+            "economy": {
+              "type": "string",
+              "description": "Scenario for items of class economy; an empty string uses default_scenario. Reserved: no effect yet.",
+              "default": "",
+              "pattern": "^$|^[a-z][a-z0-9-]*$"
+            },
+            "implementation": {
+              "type": "string",
+              "description": "Scenario for items of class implementation; an empty string uses default_scenario. Reserved: no effect yet.",
+              "default": "",
+              "pattern": "^$|^[a-z][a-z0-9-]*$"
+            },
+            "frontier": {
+              "type": "string",
+              "description": "Scenario for items of class frontier; an empty string uses default_scenario. Reserved: no effect yet.",
+              "default": "",
+              "pattern": "^$|^[a-z][a-z0-9-]*$"
+            }
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "Events of the planner.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the planner emits its planner.* events.",
+          "default": true
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "description": "External checks of a plan.",
+      "additionalProperties": false,
+      "properties": {
+        "external": {
+          "type": "boolean",
+          "description": "Whether plan.py check calls the plugins registered at the planner:check extension point.",
+          "default": true
+        },
+        "external_failure": {
+          "type": "string",
+          "description": "What a plugin that fails, times out or answers with an invalid output counts as in plan.py check: a warning (warn) or an error.",
+          "default": "warn",
+          "enum": [
+            "warn",
+            "error"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -279,7 +279,7 @@ The old flat `["docs","docs-public"]` form is migrated on the fly. Details — B
 ## Machine-specific config hygiene (gitignore + synced `.example`)
 
 > **Fleet map.** Which generated service files belong in `.gitignore` and which are committed is
-> one table: `configs/gitignore-policy.json` (policies `ignore` / `commit` / `portable-or-ignore` /
+> one table: `packages/aicore/configs/gitignore-policy.json` (policies `ignore` / `commit` / `portable-or-ignore` /
 > `project`, owner and reason per file). Check a project with
 > `maind doctor --gitignore-drift --project <id>` (read-only; `--block` prints the lines to add).
 > `maind sync` provisioner `gitignore` appends those ignore lines for files that already exist.

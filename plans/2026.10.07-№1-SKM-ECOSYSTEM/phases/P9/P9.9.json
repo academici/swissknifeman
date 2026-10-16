@@ -1,0 +1,213 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P9.9",
+  "title": "Skills planner: перенос workflow-craft из skiller в плагин planner, доставка и бюджет первого хода",
+  "status": "done_with_deviations",
+  "summary": "git mv packages/skiller/skills/general/workflow-craft → packages/planner/skills/workflow-craft (содержимое без правок); skiller без workflow-craft (doctor, тесты, burndown-списки, бакет general через registry); bootstrap canonical → planner; строка ownership снята; тест skills planner; registry и golden с причиной; бюджет первого хода до/после в plan.py log.",
+  "why": "D8, D52: workflow-craft привязан к planner (его SSOT — шаблоны wf-*.js и команда make-workflow planner); перенос отложен из P8 «по месту по бюджету». Жёсткий риск: проекты теряют skill — он приходит с плагином planner (Claude и Codex), бюджет первого хода сверяется до и после.",
+  "scope": {
+    "include": [
+      "packages/planner/skills/workflow-craft/** (перенос)",
+      "packages/skiller/** (doctor, тесты, burndown-списки; skills.json, индексы, манифесты бакетов — registry)",
+      "configs/repository-bootstrap-skills.json, configs/ecosystem-units.json (ownership), маркетплейсы и bootstrap генератором",
+      "packages/planner/tests/test_skills.py"
+    ],
+    "exclude": [
+      "содержимое SKILL.md (не-цель)",
+      "прочие general/* (общие, D52)"
+    ]
+  },
+  "depends_on": [
+    "P9.8"
+  ],
+  "decisions": [
+    "D8",
+    "D52"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/planner-p9#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-compat#workflow-craft",
+      "why": "дизайн пункта",
+      "required": true
+    },
+    {
+      "ref": "knowledge/skiller-p8-modules#move",
+      "why": "образец переноса skills в плагин модуля (шаги 1, 2, 5–7)",
+      "required": true
+    },
+    {
+      "path": "packages/skiller/lib/skiller/doctor.py",
+      "why": "упоминание workflow-craft",
+      "required": true
+    },
+    {
+      "path": "configs/repository-bootstrap-skills.json",
+      "why": "запись workflow-craft",
+      "required": true
+    },
+    {
+      "path": "packages/brain/tests/test_skills.py",
+      "why": "образец теста skills модуля",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/skills/general/workflow-craft/**",
+      "change": "delete",
+      "note": "переносится git mv"
+    },
+    {
+      "path": "packages/planner/skills/workflow-craft/**",
+      "change": "create",
+      "note": "git mv"
+    },
+    {
+      "path": "packages/planner/tests/test_skills.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/**",
+      "change": "modify",
+      "note": "doctor, тесты, burndown; генерируемое — registry"
+    },
+    {
+      "path": "configs/repository-bootstrap-skills.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify",
+      "note": "только baseline --update"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "change": "modify",
+      "note": "только skiller registry"
+    },
+    {
+      "path": ".agents/**",
+      "change": "any",
+      "note": "только генераторы"
+    },
+    {
+      "path": "bootstrap/publication-lock.json",
+      "change": "modify",
+      "note": "только skiller registry"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только render"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "modify",
+      "note": "только capture «workflow-craft moved to the planner plugin»"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/planner-p9 §rules (stdlib; aicore только через planner.integration и рендер; Python 3.9, POSIX; граница модулей; временные HOME и SKM_HOME в тестах; новый движок не запускается мутирующими глаголами на plans/ репозитория; validate.sh и CLI с состоянием — в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Содержимое skill не меняется; бюджет первого хода — числа до и после в plan.py log (цель 16K, предупреждение 23K)"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: бюджет первого хода до (V4-команда, число — `plan.py log`) → `git mv` → skiller (doctor, тесты, burndown) → bootstrap canonical → ownership → `render` → `skiller registry` в песочнице → проекции planner, если рендер перечисляет skills → тест skills planner → `golden.py check` → capture с причиной → бюджет после → V1–V4 → CHANGELOG («planner: workflow-craft skill moves from the skiller library to the planner plugin»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-plv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/planner/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "test -f packages/planner/skills/workflow-craft/SKILL.md && test ! -e packages/skiller/skills/general/workflow-craft && ! grep -n 'general/workflow-craft' configs/repository-bootstrap-skills.json configs/ecosystem-units.json && SB=$(scripts/dev-sandbox.sh new --name p9-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/test-ecosystem-units.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p9-bud-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- packages/skiller/bin/skiller budget --first-turn; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; итог первого хода ≤ 23K (числа до и после — в plan.py log)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "workflow-craft в плагине planner"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-10T06:12:37Z",
+    "finished_at": "2026-10-10T07:04:33Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "medium",
+      "session": "b71c33d4-63b6-4b3f-996b-86580369e769"
+    },
+    "notes": "workflow-craft moved to planner plugin; budget 2464→2512",
+    "deviations": [
+      "class-B root projection removed (planner plugin is the single carrier); boundary test skips moved skill content; skiller test/golden fixtures updated"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-10T07:04:33Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-10T07:04:33Z"
+}

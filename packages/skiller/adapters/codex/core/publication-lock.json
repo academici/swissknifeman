@@ -5,7 +5,7 @@
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:31a502ae28b186625049ed1afb6bde0021e0bc959de0acf1c6b794612b037da2",
+      "source_hash": "sha256:46ef9a103bd4f865e3516b033df17882c0e53836880e8568e99d271dbb96bf9f",
       "rendered_hash": "sha256:40aa013bca21f181e007ad52aac83643e43169ef231691f3b0bfeba2c2ef149d"
     },
     {
@@ -70,17 +70,17 @@
     },
     {
       "path": "skills/general/session-handoff/SKILL.md",
-      "source_hash": "sha256:816263ed27705f3203cb77b6b040ffe8ce06e96a04a6fb028d5501446d66019b",
-      "rendered_hash": "sha256:0ea2cbf5eb20fe32dfb39323b0185793df618264934388db11c4cf1d4307a270"
+      "source_hash": "sha256:fdd808b51ffc862e6dcd463213cdb341cece2d2edd14e447bd03991b74e1ab4a",
+      "rendered_hash": "sha256:b60c9d8efc2e1fad350eabcf8ee57bdce0acafcc9e294f396b92611bd6a149a9"
     },
     {
       "path": "skills/general/session-handoff/snippets/handoff-template.md",
-      "source_hash": "sha256:816263ed27705f3203cb77b6b040ffe8ce06e96a04a6fb028d5501446d66019b",
+      "source_hash": "sha256:fdd808b51ffc862e6dcd463213cdb341cece2d2edd14e447bd03991b74e1ab4a",
       "rendered_hash": "sha256:fc7d4781e12a19e2cd7ea0f670111c025268f39c31ec3e73c455d8e4b9433a89"
     },
     {
       "path": "skills/general/session-handoff/snippets/index.json",
-      "source_hash": "sha256:816263ed27705f3203cb77b6b040ffe8ce06e96a04a6fb028d5501446d66019b",
+      "source_hash": "sha256:fdd808b51ffc862e6dcd463213cdb341cece2d2edd14e447bd03991b74e1ab4a",
       "rendered_hash": "sha256:df48da222872688e10579aa4126504271e9cb282568018257d2c1f6c4f4896f8"
     },
     {

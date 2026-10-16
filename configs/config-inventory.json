@@ -3,11 +3,10 @@
   "_doc": "Every config has one owner and at least one consumer. Checked by scripts/test-config-inventory.py (CI hygiene). Decisions: plan PLAN2 knowledge configs-p11.",
   "scope": [
     "configs/*.json",
-    "config.example.json",
     ".codex/config.toml.example",
     ".grok/config.toml.example",
     "packages/*/configs/*.json",
-    "packages/*/bridges/*/*.json",
+    "bridges/*/*.json",
     "packages/harness/configs/**/*.json",
     "packages/skiller/budget-configs/*.json",
     "packages/skiller/schema/*.json",
@@ -15,11 +14,109 @@
   ],
   "entries": [
     {
+      "path": "packages/analyst/configs/config.schema.json",
+      "owner": "analyst",
+      "consumers": [
+        "packages/analyst/lib/analyst/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "analyst thresholds, schema defaults and generated config.example.toml"
+    },
+    {
+      "path": "packages/harness/configs/config.schema.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks_env.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/settings_audit.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "harness hook modes in [harness.hooks] (rendered to the committed .swissknifeman/hooks.env) and policy_profile"
+    },
+    {
+      "path": "packages/harness/configs/safe-dirs.example.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/safedirs.py"
+      ],
+      "released": false,
+      "note": "template of the safe-dirs list that `harness safe-dirs init` copies to <config>/harness/safe-dirs.json"
+    },
+    {
+      "path": "packages/brain/configs/config.schema.json",
+      "owner": "brain",
+      "consumers": [
+        "packages/brain/lib/brain/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "brain vault path, catalog folder, document sync and notes"
+    },
+    {
+      "path": "packages/skiller/configs/config.schema.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/skillset.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "skiller skill selection (buckets, plugins, profile) and vendor sync in [skiller] and [skiller.sync]"
+    },
+    {
+      "path": "packages/planner/configs/config.schema.json",
+      "owner": "planner",
+      "consumers": [
+        "packages/planner/lib/planner/integration/config.py",
+        "packages/planner/lib/planner/plan/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "planner thresholds, defaults of new plans and items, review loop policies, view templates, orchestration scenarios, events and external checks in [planner]"
+    },
+    {
+      "path": "packages/maind/configs/config.schema.json",
+      "owner": "maind",
+      "consumers": [
+        "packages/maind/lib/maind/config.py",
+        "packages/maind/lib/maind/derive.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "maind node settings in [maind] (node, memory, graph and its links, code graph policy, agent timings, integrations, mcp policy, observability); generated config.example.toml"
+    },
+    {
+      "path": "packages/aicore/configs/config.schema.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/ext/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "aicore settings: events, subscriptions, plugins, overlays and the provider selection of a project"
+    },
+    {
       "path": ".codex/config.toml.example",
       "owner": "root",
       "consumers": [
         "user:copies to .codex/config.toml",
-        "configs/gitignore-policy.json"
+        "packages/aicore/configs/gitignore-policy.json"
       ],
       "released": true,
       "note": "sample"
@@ -29,14 +126,14 @@
       "owner": "root",
       "consumers": [
         "user:copies to .grok/config.toml",
-        "configs/gitignore-policy.json"
+        "packages/aicore/configs/gitignore-policy.json"
       ],
       "released": true,
       "note": "sample"
     },
     {
-      "path": "config.example.json",
-      "owner": "root",
+      "path": "packages/maind/configs/registry.example.json",
+      "owner": "maind",
       "consumers": [
         "packages/maind/install.sh",
         "packages/maind/lib/maind/common.py",
@@ -44,7 +141,7 @@
         "packages/maind/lib/maind/projects.py"
       ],
       "released": true,
-      "note": "template of the root config.json"
+      "note": "template of the fleet registry (registry.json) that maind writes"
     },
     {
       "path": "configs/config-inventory.json",
@@ -55,13 +152,22 @@
       "released": false
     },
     {
-      "path": "configs/gitignore-policy.json",
-      "owner": "core",
+      "path": "configs/ecosystem-units.json",
+      "owner": "root",
       "consumers": [
-        "core/gitignore_policy.py",
-        "packages/maind/lib/maind/doctor.py"
+        "scripts/ecosystem-units.py"
       ],
-      "released": false
+      "released": false,
+      "note": "module split map: targets, aliases, version sources, ownership, path patterns"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "generated by ecosystem-units.py baseline --update: accepted module boundary violations"
     },
     {
       "path": "configs/managed-blocks.json",
@@ -74,49 +180,145 @@
       "note": "registry is empty; gate kept for P5.5"
     },
     {
-      "path": "configs/provider-capabilities.json",
-      "owner": "core",
+      "path": "packages/aicore/configs/gitignore-policy.json",
+      "owner": "aicore",
       "consumers": [
-        "core/provider/config.py",
+        "packages/aicore/lib/aicore/state/gitignore.py",
+        "packages/maind/lib/maind/doctor.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/aicore/configs/provider-capabilities.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/manifest.py",
         "packages/harness/lib/harness/profiles.py",
         "packages/harness/lib/harness/provider_audit.py",
         "packages/maind/lib/maind/config.py",
         "packages/maind/lib/maind/provider_deploy.py",
-        "packages/task/lib/task/command_render.py"
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/publication.py",
+        "packages/planner/lib/planner/command_render.py"
       ],
       "released": false,
       "note": "SSOT of support levels"
     },
     {
-      "path": "configs/provider-distribution.json",
-      "owner": "core",
+      "path": "packages/aicore/configs/provider-distribution.json",
+      "owner": "aicore",
       "consumers": [
-        "core/provider/distribution.py",
+        "packages/aicore/lib/aicore/provider/distribution.py",
         "packages/skiller/lib/skiller/doctor.py",
         "packages/skiller/lib/skiller/publication.py",
         "scripts/release-fleet.sh",
-        "scripts/skiller-standalone-check.sh"
+        "configs/ecosystem-units.json"
       ],
       "released": false
     },
     {
-      "path": "configs/provider-projection.json",
-      "owner": "core",
+      "path": "packages/aicore/configs/provider-projection.json",
+      "owner": "aicore",
       "consumers": [
-        "core/provider/projection.py",
-        "scripts/skiller-standalone-check.sh"
+        "packages/aicore/lib/aicore/provider/projection.py",
+        "configs/ecosystem-units.json"
       ],
       "released": false
+    },
+    {
+      "path": "packages/aicore/configs/provider-errors.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/errors.py",
+        "packages/harness/lib/harness/run/worker.py"
+      ],
+      "released": false,
+      "note": "classification rules of provider failures (data, not code)"
+    },
+    {
+      "path": "packages/aicore/configs/model-catalog.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/models.py",
+        "packages/planner/lib/planner/integration/models.py"
+      ],
+      "released": false,
+      "note": "canonical model catalog; the planner renderer writes a snapshot of it into command-routing.json"
+    },
+    {
+      "path": "packages/aicore/configs/telemetry-conventions.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/util/telemetry.py"
+      ],
+      "released": false,
+      "note": "names of spans, attributes and metric labels (telemetry-conventions/v1); data, not code"
     },
     {
       "path": "configs/release-units.json",
       "owner": "root",
       "consumers": [
         "packages/skiller/lib/skiller/release_attestation.py",
-        "packages/task/scripts/check-publication-version.py",
+        "packages/planner/scripts/check-publication-version.py",
         "scripts/version-guard.py"
       ],
       "released": false
+    },
+    {
+      "path": "configs/umbrella.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/umbrella.py",
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "aliases of the umbrella CLI (umbrella-config/v1); the hub reads module groups from unit.json"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/umbrella.py",
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "install profiles (install-profiles/v1) of swissknifeman install: module ids, per-module installer options, own-link patterns"
+    },
+    {
+      "path": "configs/install-profiles.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "schema of configs/install-profiles.json"
+    },
+    {
+      "path": "configs/umbrella.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "schema of configs/umbrella.json; the umbrella-units/v1 schema lives in configs/schemas/"
+    },
+    {
+      "path": "configs/schemas/umbrella-units.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "umbrella-units/v1: output of swissknifeman units --json"
+    },
+    {
+      "path": "configs/schemas/umbrella-doctor.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "umbrella-doctor/v1: output of swissknifeman doctor --json"
     },
     {
       "path": "configs/repository-bootstrap-skills.json",
@@ -260,39 +462,43 @@
       "released": true
     },
     {
-      "path": "packages/orch/bridges/harness/bridge.json",
-      "owner": "orch",
-      "consumers": [
-        "packages/orch/bridges/harness/tests/test_agent_pack_roles.py"
-      ],
-      "released": false,
-      "note": "declarative, no entrypoints; bridges are discovered by scanning bridges/*/bridge.json",
-      "dynamic": true
-    },
-    {
-      "path": "packages/orch/bridges/skiller/bridge.json",
-      "owner": "orch",
-      "consumers": [
-        "packages/orch/bridges/skiller/resolve_role.py"
-      ],
-      "released": false,
-      "note": "declarative; names the resolve-role entrypoint"
-    },
-    {
-      "path": "packages/orch/bridges/skiller/role-skills.json",
-      "owner": "orch",
-      "consumers": [
-        "packages/orch/bridges/skiller/resolve_role.py"
-      ],
-      "released": false
-    },
-    {
       "path": "packages/orch/configs/launch-catalog.json",
       "owner": "orch",
       "consumers": [
         "packages/orch/lib/orch/launch.py"
       ],
       "released": false
+    },
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "[orch]: engine choice, default run-policy, work source plugin, capability freshness, pack folders, events"
+    },
+    {
+      "glob": "packages/orch/configs/run-policies/**/*.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/policies.py"
+      ],
+      "released": false,
+      "note": "shipped run-policy packs (policy.json) and their test cases (cases/*.json)"
+    },
+    {
+      "path": "bridges/planner-orch/extension.json",
+      "owner": "root",
+      "consumers": [
+        "packages/aicore/lib/aicore/ext/plugins.py",
+        "bridges/planner-orch/worksource.py"
+      ],
+      "released": false,
+      "note": "plugin manifest of the orch:work-source port, registered by the machine in [aicore.plugins.planner-orch]"
     },
     {
       "path": "packages/skiller/.swissknifeman.example/config.json",
@@ -325,6 +531,34 @@
       "released": true
     },
     {
+      "path": "packages/skiller/configs/exclusive-groups.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/selection.py",
+        "packages/skiller/scripts/validate.sh"
+      ],
+      "released": true,
+      "note": "skills of which a selection keeps at most one"
+    },
+    {
+      "path": "packages/skiller/configs/licenses.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/quality/compat.py"
+      ],
+      "released": true,
+      "note": "SPDX licenses an imported skill may carry; skiller compat quarantines any other"
+    },
+    {
+      "path": "packages/skiller/configs/selection-summary.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/selection.py"
+      ],
+      "released": true,
+      "note": "summary of the skill-selection decisions (skiller selection report)"
+    },
+    {
       "path": "packages/skiller/configs/publication-versions.json",
       "owner": "skiller",
       "consumers": [
@@ -349,30 +583,57 @@
       "note": "editor/doc schemas, loaded by name"
     },
     {
-      "path": "packages/task/bridges/orch/bridge.json",
-      "owner": "task",
+      "path": "packages/planner/configs/command-routing.json",
+      "owner": "planner",
       "consumers": [
-        "packages/task/lib/task/plan/bridges.py"
-      ],
-      "released": false
-    },
-    {
-      "path": "packages/task/configs/command-routing.json",
-      "owner": "task",
-      "consumers": [
-        "packages/task/lib/task/plan/lifecycle.py",
-        "packages/task/lib/task/command_render.py",
-        "packages/task/lib/task/command_catalog.py",
-        "packages/task/scripts/render-provider-commands.py",
-        "packages/task/scripts/check-publication-version.py",
-        "packages/task/bridges/orch/launch.py",
+        "packages/planner/lib/planner/plan/lifecycle.py",
+        "packages/planner/lib/planner/command_render.py",
+        "packages/planner/lib/planner/command_catalog.py",
+        "packages/planner/scripts/render-provider-commands.py",
+        "packages/planner/scripts/check-publication-version.py",
+        "bridges/planner-orch/launch.py",
         "packages/harness/lib/harness/cursor_render.py",
         "packages/harness/lib/harness/run/worker.py",
-        "packages/artifex/lib/artifex/providers/codex.py",
         "scripts/provider-docs.py",
         "configs/skiller-host.json"
       ],
       "released": true
+    },
+    {
+      "path": "bridges/planner-orch/bridge.json",
+      "owner": "planner",
+      "consumers": [
+        "packages/planner/lib/planner/plan/bridges.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "owner": "planner",
+      "consumers": [
+        "bridges/planner-orch/bridge.json",
+        "packages/planner/lib/planner/plan/extensions.py"
+      ],
+      "released": false,
+      "note": "schema of the planner's orchestration.options slot, supplied by the bridge; a literal copy of orch's conductor/v1 run-options"
+    },
+    {
+      "path": "bridges/orch-skiller/role-skills.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/orch-skiller/resolve_role.py"
+      ],
+      "released": false
+    },
+    {
+      "glob": "bridges/*/unit.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/ecosystem-units.py",
+        "scripts/test-bridges.sh"
+      ],
+      "released": false,
+      "note": "unit manifest of a bridge; dev.test is run by the hub bridge runner"
     }
   ]
 }

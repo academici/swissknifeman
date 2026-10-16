@@ -23,7 +23,8 @@
     "P2",
     "P3",
     "P6",
-    "P10"
+    "P10.4",
+    "P10.5"
   ],
   "actor": {
     "provider": "anthropic",

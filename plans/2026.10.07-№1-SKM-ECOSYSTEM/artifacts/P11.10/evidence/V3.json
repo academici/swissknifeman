@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261012T195210Z-655aeb:P11.10:checks.1:V3",
+  "check_id": "V3",
+  "subject": "PLAN3.P11.10",
+  "candidate": {
+    "head": "b4f514962e2402a8484ee6261faf3895a103dfd6",
+    "dirty_digest": "91c5902dee4aa805ad8f2f19d39c42c3e6df456653b13820afb7bd7ca5f46458"
+  },
+  "started_at": "2026-10-12T19:56:43Z",
+  "procedure": {
+    "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && set -e; for t in scripts/test-*.py; do python3 \"$t\"; done",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-12T19:58:25Z"
+}

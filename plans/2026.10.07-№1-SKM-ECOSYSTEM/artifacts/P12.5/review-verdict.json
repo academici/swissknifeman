@@ -1,0 +1,19 @@
+{
+  "item": "P12.5",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a13583-1fe8-7c42-ab50-746974e98a3e",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261013T133549Z-0eb98d/P12.5/streams/review.1.jsonl",
+      "triage": null,
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261013T133549Z-0eb98d",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

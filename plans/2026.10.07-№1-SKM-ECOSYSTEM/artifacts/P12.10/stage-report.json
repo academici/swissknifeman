@@ -1,0 +1,43 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/planner/lib/planner/plan/check.py",
+    "packages/planner/tests/engine/test_actors_attempts.py"
+  ],
+  "checks_run": [
+    {
+      "id": "V1",
+      "procedure": "Построчная сверка 13 строк knowledge/hub-p12#e1e2 с кодом и тестами (чтение файлов, grep; orch.py conformance --binding native; skiller budget --first-turn в песочнице); таблица в summary",
+      "verdict": "pass"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "Ломающие изменения схем этих модулей не будут пойманы до появления базы",
+      "kind": "difficulty",
+      "next": "Повторить после push ветки или объявить схемы базой",
+      "text": "Известный риск: aicore schema compat не читает базовые ref у harness, planner, skiller (ecosystem-split ещё без нужных unit/schema на базе). Шаг R10 формально зелёный, но этих трёх модулей не проверяет."
+    },
+    {
+      "impact": "E50 пройден с известным дефектом в установленной форме",
+      "kind": "pending",
+      "next": "Владелец maind: убрать подъём, затем WARN → FAIL",
+      "text": "packages/maind/install.sh:109 (подъём ../..) и SKILL.md:35 ломки в установленной форме; smoke-installed печатает WARN, а не FAIL. Не исправлено, потому что это правка у владельца maind."
+    },
+    {
+      "impact": "В таблице статус «отложено», а не OK",
+      "kind": "note",
+      "next": "Нет",
+      "text": "E42 (reusable workflows) не реализован: отложено по триггеру «вынос в репозитории» (knowledge/hub-p12#deferred). Строка считается закрытой отложением, а не файлом."
+    },
+    {
+      "impact": "Эти результаты нужно подтвердить прогоном дирижёра",
+      "kind": "note",
+      "next": "Дирижёр гонит V11–V15",
+      "text": "ci-matrix run --all, V12–V14 в этой сессии мной не запускались (по правилам их гонит дирижёр); статус «OK» по ним опирается на evidence предыдущего прогона (exit 0 для V11–V15 на HEAD 82fe9b619) и чтении кода."
+    }
+  ],
+  "status": "done",
+  "summary": "Сверка knowledge/hub-p12#e1e2 с кодом (V1), таблица «тезис → файл/тест → статус» для notes finish.\n\n| Тезис | Файл / тест | Статус |\n| --- | --- | --- |\n| E16 содержимое хаба | scripts/umbrella.py, bin/swissknifeman, scripts/ci-matrix.py, .github/workflows/modules.yml, docs/install-profiles.md, docs/examples/, scripts/smoke-installed.sh; тесты scripts/test-umbrella.py, test-ci-matrix.py, test-smoke-installed.py | OK. Прогон ci-matrix run --all — V11 у дирижёра; в прошлом прогоне exit 0 |\n| E28/D25 doctor по unit.json | scripts/umbrella.py (doctor), configs/schemas/umbrella-doctor.schema.json; scripts/test-umbrella.py (doctor --json по схеме, probe через provides.doctor) | OK |\n| E36 umbrella — композиция | scripts/test-umbrella.py::test_new_module_appears_without_code_change (стр. 238), ::test_no_module_ids_in_the_umbrella_source (стр. 675) | OK |\n| E41/D26 checksums, compat-манифест, пакет схем | packages/aicore/lib/aicore/release/bundle.py; packages/aicore/tests/release/test_bundle.py::test_sha256sum_accepts_the_bundle (sha256sum -c) | OK |\n| E42 reusable workflows | не реализовано, отложено по триггеру «вынос в репозитории» (knowledge/hub-p12#deferred) | отложено |\n| E43 матрица компонента | .github/workflows/modules.yml, scripts/ci-matrix.py (list/steps/run/--check), scripts/test-ci-matrix.py; test.yml и validate.yml удалены (D85) | OK |\n| E45/D24 ADR | docs/architecture/decisions/0072..0078 (7 файлов) + README индекс | OK |\n| E50 опубликованная форма | scripts/smoke-installed.sh, scripts/test-smoke-installed.py; V13 (smoke-installed OK) | OK; WARN по packages/maind/install.sh:109, см. open_issues |\n| E58 профили установки | configs/install-profiles.json; install.sh → swissknifeman install --profile full; scripts/test-umbrella.py (default profile, profile errors, installer options), scripts/test-root-install.py | OK |\n| E59, R13 conformance плагина | packages/aicore/lib/aicore/ext/conformance.py (SCENARIOS включает crash, стр. 39/245/360); packages/aicore/tests/ext/test_conformance.py, test_delivery.py; alias conformance в configs/umbrella.json | OK |\n| R30 conformance движка | packages/orch/scripts/orch.py conformance --binding native: 15 PASS, 1 N/A, declared 0; packages/orch/tests/test_native_conformance.py | OK. Declared остаются только у cao и claude-only (отложено по ADR 0062) |\n| R10 schema compat в CI | scripts/ci-matrix.py шаг schema-compat (стр. 136, 415) → modules.yml | OK, с оговоркой про базовый ref в open_issues |\n| R31 MCP conformance в CI | packages/maind/tests/test_mcp_conformance.py (SKM_REQUIRE_MCP_SDK=1); modules.yml стр. 63-69: SDK ставится, переменная = 1 для maind на Python 3.13 | OK |\n\nБюджет первого хода (V15, песочница): skiller budget --first-turn — Total 2790 (цель ≤16000, предупреждение >23000), OK; --with-plugins — 2790, OK (плагинов не включено, в песочнице их 0). Прошлые evidence V11–V15 в plans/.../artifacts/P12.10/evidence/ все с exit 0 (V15 записал только exit, чисел там нет; числа сняты повторным запуском в песочнице). Файлов продукта не менял; V1 закрывается этой таблицей."
+}

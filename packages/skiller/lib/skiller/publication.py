@@ -12,25 +12,27 @@ from dataclasses import dataclass
 import hashlib
 import json
 import re
-import shutil
-import subprocess
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
-                  ArtifactActionKind, ArtifactPlan, ArtifactRenderRequest,
-                  ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
-                  CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
-                  connect_channel, find_repo_root, load_distribution_catalog,
-                  load_provider_manifest, plan_artifact_lock, plan_artifact_render,
-                  provider_config_catalog, vendor_channel)
-from core.provider.lock import LOCK_RELATIVE_PATH
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactRenderResult, ArtifactSource,
+    ArtifactTarget, plan_artifact_render)
+from aicore.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+
+# Publication primitives live in aicore.content.publication; the distribution plans in aicore.delivery.
+from aicore.content.publication import (
+    codex_plugin_manifest as _codex_plugin_manifest, manifest_bytes as _manifest_text,
+    package_rel, publication_lock, render_whole_file,
+    skill_runtime_files as _codex_skill_runtime_files, validate_publication_capabilities)
+from aicore.delivery.distribution import (
+    DistributionIdentity, ProviderDistributionPlan, connect_distribution_plan,
+    distribution_artifact, vendor_distribution_plan)
 
 
-def package_rel(repo_root: Path, package_root: Path) -> str:
-    """Package prefix relative to its host root, empty for standalone layouts."""
-    relative = package_root.relative_to(repo_root).as_posix()
-    return "" if relative == "." else relative
+# skiller's own plugin-catalog/v1 file, declared in its unit.json and read by aicore.content.marketplace.
+PLUGIN_CATALOG_PATH = ".claude-plugin/catalog.json"
+PLUGIN_CATALOG_SCHEMA = "urn:swissknifeman:aicore:plugin-catalog:v1"
 
 
 def _generator(package_prefix: str) -> str:
@@ -49,44 +51,6 @@ _CODEX_ADAPTER = ArtifactAdapterIdentity(
     (CapabilityRequirement(CapabilityId("skills.repository"),
                            (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
 )
-
-_CURSOR_ADAPTER = ArtifactAdapterIdentity(
-    "skiller.cursor-publication", "1.0.0", ProviderId.CURSOR, "1.0.0",
-    (CapabilityRequirement(CapabilityId("skills.repository"),
-                           (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
-)
-
-_PUBLICATION_ADAPTERS = {
-    ProviderId.CLAUDE_CODE: _CLAUDE_ADAPTER,
-    ProviderId.CODEX: _CODEX_ADAPTER,
-    ProviderId.CURSOR: _CURSOR_ADAPTER,
-}
-
-_DISTRIBUTION_CATALOG = None
-
-
-def _distribution_catalog():
-    global _DISTRIBUTION_CATALOG
-    if _DISTRIBUTION_CATALOG is None:
-        root = find_repo_root(Path(__file__).resolve()) or Path(__file__).resolve().parents[4]
-        _DISTRIBUTION_CATALOG = load_distribution_catalog(root / "configs/provider-distribution.json")
-    return _DISTRIBUTION_CATALOG
-
-
-def validate_publication_capabilities(provider_id: ProviderId, *, manifest_path=None):
-    """Fail closed against the root manifest before publication bytes are rendered."""
-    manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
-    manifest = load_provider_manifest(manifest_path)
-    identity = _PUBLICATION_ADAPTERS[provider_id]
-    gate = AdapterCatalog((AdapterDescriptor(
-        "skills.publication", identity, lambda _request: b""),)).select(
-            provider_id=provider_id, artifact_kind="skills.publication",
-            capability_catalog=provider_config_catalog(manifest),
-            effective_provider=EffectiveProvider(provider_id, True))
-    if gate.selection is None:
-        raise ValueError(",".join(item.code for item in gate.diagnostics))
-    return manifest
 
 
 @dataclass(frozen=True)
@@ -142,7 +106,6 @@ class PublicationCatalog:
     bucket_metadata: tuple[tuple[str, tuple[tuple[str, object], ...]], ...]
     sibling_plugins: tuple[SiblingPlugin, ...]
     generate_skill_description: str
-    skm_present: bool
 
 
 @dataclass(frozen=True)
@@ -173,7 +136,7 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
                               bucket_dirs: Sequence[str], core_skills: Sequence[str],
                               core_plugin: str, package_version: str,
                               siblings: Sequence[SiblingPlugin],
-                              generate_skill_description: str, skm_present: bool,
+                              generate_skill_description: str,
                               unit_versions: Mapping[str, str] | None = None,
                               default_unit_version: str | None = None) -> PublicationCatalog:
     """Build a deterministic semantic catalog from explicit canonical scan results.
@@ -188,6 +151,7 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
     raw_skills = registry.get("skills")
     if not isinstance(raw_skills, list):
         raise ValueError("registry skills must be a list")
+    raw_skills = [item for item in raw_skills if not (isinstance(item, dict) and item.get("quarantined"))]
     skills = tuple(sorted((_skill_from_registry(item) for item in raw_skills),
                           key=lambda item: item.semantic_id))
     by_id = {skill.semantic_id: skill for skill in skills}
@@ -236,9 +200,6 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
                                      content_version=unit_version(core_plugin)))
     units.append(PublicationUnit("generate-skill", "generate-skill", "meta", (),
                                  content_version=unit_version("generate-skill")))
-    if skm_present:
-        units.append(PublicationUnit("skm", "skm", "management", (),
-                                     content_version=unit_version("skm")))
 
     return PublicationCatalog(
         marketplace_name=_require_string(registry.get("name"), "registry name"),
@@ -249,7 +210,6 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
         bucket_metadata=metadata,
         sibling_plugins=tuple(sorted(siblings, key=lambda item: item.name)),
         generate_skill_description=generate_skill_description,
-        skm_present=skm_present,
     )
 
 
@@ -261,15 +221,14 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
         raise TypeError("catalog must be PublicationCatalog")
     repo_root = repo_root.resolve()
     package_root = package_root.resolve()
-    rel_package = package_rel(repo_root, package_root)
-
-    def source_path(relative: str) -> str:
-        return f"./{rel_package}/{relative}" if rel_package else f"./{relative}"
-
     by_id = {skill.semantic_id: skill for skill in catalog.skills}
     metadata = {name: dict(data) for name, data in catalog.bucket_metadata}
     artifacts = []
-    marketplace_plugins = []
+    plugins = []
+    # The root Claude marketplace and the Codex index are assembled from the unit.json of the
+    # modules (aicore.content.marketplace); skiller states its own plugins in a plugin-catalog/v1
+    # file: every path is relative to the package.
+    codex_policy = {"install_policy": "explicit", "auth": "none"}
     for unit in catalog.units:
         if unit.kind == "bucket":
             meta = metadata[unit.plugin_id]
@@ -285,41 +244,42 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 package_root / "skills" / unit.plugin_id / ".claude-plugin" / "plugin.json",
                 unit, plugin_data, tuple(by_id[item] for item in unit.member_ids), repo_root,
                 catalog.package_version, package_root=package_root))
-            marketplace_plugins.append({
+            plugins.append({
                 "name": unit.plugin_id,
-                "source": source_path(f"skills/{unit.plugin_id}"),
+                "source": f"skills/{unit.plugin_id}",
                 "description": meta["description"],
                 "category": meta.get("category", ""),
-                "tags": meta.get("tags", []),
-                "package": "skiller",
+                "tags": list(meta.get("tags", [])),
+                "codex": dict(codex_policy),
             })
         elif unit.kind == "bucket-alias":
             meta = metadata[unit.plugin_id]
-            paths = [source_path(by_id[item].source_path.removesuffix("/SKILL.md"))
+            paths = [by_id[item].source_path.removesuffix("/SKILL.md")
                      for item in unit.member_ids]
-            marketplace_plugins.append({
+            plugins.append({
                 "name": unit.plugin_id,
                 "source": "./",
                 "skills": paths,
                 "description": meta.get("description")
                     or f"Alias: bucket moved to '{meta['alias_of']}'",
                 "category": meta.get("category", ""),
-                "tags": meta.get("tags", []),
-                "package": "skiller",
+                "tags": list(meta.get("tags", [])),
                 "alias_of": meta["alias_of"],
             })
         elif unit.kind == "curated":
-            marketplace_plugins.append({
+            plugins.append({
                 "name": unit.plugin_id,
                 "source": "./",
-                "skills": [source_path(by_id[item].source_path.removesuffix("/SKILL.md"))
+                "skills": [by_id[item].source_path.removesuffix("/SKILL.md")
                            for item in unit.member_ids],
                 "description": "Curated always-on core: token-economy skills (context-economy, "
                                "anti-drift, verify-claims, …) — lean replacement for the "
                                "general+oss-dev buckets in every project",
                 "category": "meta",
                 "tags": ["core", "token-economy", "always-on"],
-                "package": "skiller",
+                "codex": {"source": "adapters/codex/core",
+                          "description": "Curated always-on core skills",
+                          "category": "meta", "tags": ["core", "token-economy"], **codex_policy},
             })
         elif unit.kind == "meta":
             plugin_data = {"name": "generate-skill", "description": catalog.generate_skill_description,
@@ -327,35 +287,22 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
             artifacts.append(_render_artifact(
                 package_root / "generate-skill" / ".claude-plugin" / "plugin.json", unit,
                 plugin_data, (), repo_root, catalog.package_version, package_root=package_root))
-            marketplace_plugins.append({
-                "name": "generate-skill", "source": source_path("generate-skill"),
+            plugins.append({
+                "name": "generate-skill", "source": "generate-skill",
                 "description": catalog.generate_skill_description, "category": "meta",
-                "tags": ["meta", "authoring"], "package": "skiller",
-            })
-        elif unit.kind == "management":
-            marketplace_plugins.append({
-                "name": "skm", "source": source_path("skm"),
-                "description": "skiller CLI — managing project skills: buckets "
-                               "(connect/vendor), integrate, status",
-                "category": "meta", "tags": ["cli", "skills", "management"],
-                "package": "skiller",
+                "tags": ["meta", "authoring"], "codex": dict(codex_policy),
             })
 
-    marketplace_plugins.extend({
-        "name": sibling.name, "source": f"./{sibling.source_path}",
-        "description": sibling.description, "category": sibling.category,
-        "tags": list(sibling.tags), "package": sibling.package,
-    } for sibling in catalog.sibling_plugins)
-    marketplace_data = {
-        "name": catalog.marketplace_name,
-        "owner": dict(catalog.owner),
-        "plugins": sorted(marketplace_plugins, key=lambda plugin: plugin["name"]),
+    catalog_data = {
+        "schema": PLUGIN_CATALOG_SCHEMA,
+        "marketplace": {"name": catalog.marketplace_name, "owner": dict(catalog.owner)},
+        "plugins": sorted(plugins, key=lambda plugin: plugin["name"]),
     }
-    all_sources = tuple(catalog.skills) + tuple(catalog.sibling_plugins)
-    artifacts.append(_render_artifact(repo_root / ".claude-plugin" / "marketplace.json",
-                                      PublicationUnit("claude-marketplace", "claude-marketplace",
-                                                      "marketplace", ()), marketplace_data,
-                                      all_sources, repo_root, catalog.package_version, package_root=package_root))
+    artifacts.append(_render_artifact(package_root / PLUGIN_CATALOG_PATH,
+                                      PublicationUnit("plugin-catalog", "plugin-catalog",
+                                                      "catalog", ()), catalog_data,
+                                      tuple(catalog.skills), repo_root, catalog.package_version,
+                                      package_root=package_root))
     return tuple(artifacts)
 
 
@@ -363,9 +310,9 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                              package_root: Path, manifest_path=None) -> tuple[CodexPublicationArtifact, ...]:
     """Render native Codex plugins independently from the semantic catalog.
 
-    Bucket plugins remain direct canonical roots.  The discontiguous core and
-    management unit are explicit cache-contained bundles; only declared SKILL.md
-    members are copied into those bundles.
+    Bucket plugins remain direct canonical roots.  The discontiguous core
+    unit is an explicit cache-contained bundle; only declared SKILL.md
+    members are copied into that bundle.
     """
     validate_publication_capabilities(ProviderId.CODEX, manifest_path=manifest_path)
     if not isinstance(catalog, PublicationCatalog):
@@ -375,10 +322,6 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
     by_id = {skill.semantic_id: skill for skill in catalog.skills}
     metadata = {name: dict(data) for name, data in catalog.bucket_metadata}
     artifacts: list[CodexPublicationArtifact] = []
-    plugins: list[dict[str, object]] = []
-
-    def source_path(path: Path) -> str:
-        return "./" + path.relative_to(repo_root).as_posix()
 
     for unit in catalog.units:
         if unit.kind == "bucket":
@@ -391,8 +334,6 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 tuple(by_id[item] for item in unit.member_ids), repo_root,
                 catalog.package_version, content_version=unit.content_version,
                 package_root=package_root))
-            plugins.append(_codex_marketplace_entry(unit.plugin_id, source_path(root),
-                                                    meta["description"], meta))
         elif unit.kind == "meta":
             root = package_root / "generate-skill"
             data = _codex_plugin_manifest("generate-skill", unit.content_version,
@@ -402,40 +343,11 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                 root / ".codex-plugin" / "plugin.json", unit, data, (), repo_root,
                 catalog.package_version, content_version=unit.content_version,
                 package_root=package_root))
-            plugins.append(_codex_marketplace_entry("generate-skill", source_path(root),
-                                                    catalog.generate_skill_description,
-                                                    {"category": "meta", "tags": ["meta", "authoring"]}))
         elif unit.kind == "curated":
             root = package_root / "adapters" / "codex" / "core"
             artifacts.extend(_render_codex_bundle(
                 root, unit, catalog, tuple(by_id[item] for item in unit.member_ids), repo_root, package_root,
                 description="Curated always-on core skills", skill_root="./skills"))
-            plugins.append(_codex_marketplace_entry("core", source_path(root),
-                                                    "Curated always-on core skills",
-                                                    {"category": "meta", "tags": ["core", "token-economy"]}))
-        elif unit.kind == "management":
-            root = package_root / "adapters" / "codex" / "skm"
-            artifacts.extend(_render_codex_skm_bundle(root, unit, catalog, repo_root, package_root=package_root))
-            plugins.append(_codex_marketplace_entry("skm", source_path(root),
-                                                    "skiller management skill adapter",
-                                                    {"category": "meta", "tags": ["cli", "skills", "management"]}))
-
-    codex_siblings = tuple(
-        sibling for sibling in catalog.sibling_plugins if sibling.codex_supported)
-    plugins.extend(_codex_marketplace_entry(
-        sibling.name, f"./{sibling.source_path}", sibling.description,
-        {"category": sibling.category, "tags": sibling.tags})
-        for sibling in codex_siblings)
-
-    marketplace = {
-        "name": catalog.marketplace_name,
-        "plugins": sorted(plugins, key=lambda plugin: str(plugin["name"])),
-    }
-    artifacts.append(_render_codex_artifact(
-        repo_root / ".agents" / "plugins" / "marketplace.json",
-        PublicationUnit("codex-marketplace", "codex-marketplace", "marketplace", ()),
-        marketplace, tuple(catalog.skills) + codex_siblings,
-        repo_root, catalog.package_version, package_root=package_root))
     return tuple(artifacts)
 
 
@@ -455,26 +367,6 @@ def render_cursor_publication(catalog: PublicationCatalog, *, repo_root: Path,
     if cursor_skills.is_dir() and any(cursor_skills.iterdir()):
         raise ValueError("SPUB_OWNERSHIP_CONFLICT: .cursor/skills must not be a second writer")
     return ()
-
-
-def _codex_plugin_manifest(name: str, version: str, description: str,
-                           skills: list[str]) -> dict[str, object]:
-    return {"name": name, "version": version, "description": description, "skills": skills}
-
-
-def _codex_marketplace_entry(name: str, path: str, description: str,
-                             metadata: Mapping[str, object]) -> dict[str, object]:
-    if not path.startswith("./") or ".." in Path(path).parts:
-        raise ValueError("Codex marketplace source path must be contained and ./-prefixed")
-    return {
-        "name": name,
-        "source": path,
-        "description": description,
-        "category": metadata.get("category", ""),
-        "tags": list(metadata.get("tags", [])),
-        "install_policy": "explicit",
-        "auth": "none",
-    }
 
 
 def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,
@@ -499,25 +391,6 @@ def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: Publication
     return tuple(artifacts)
 
 
-def _render_codex_skm_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,
-                             repo_root: Path, package_root: Path) -> tuple[CodexPublicationArtifact, ...]:
-    skill = ("---\nname: skm\ndescription: skiller CLI management adapter.\n---\n\n"
-             "Use the repository-local skiller CLI for status, doctor, skills, and integration.\n")
-    artifacts = [
-        _render_codex_artifact(root / ".codex-plugin" / "plugin.json", unit,
-                               _codex_plugin_manifest("skm", unit.content_version,
-                                                      "skiller management skill adapter", ["./skills"]),
-                               (), repo_root, catalog.package_version, content_version=unit.content_version,
-                package_root=package_root),
-        _render_codex_artifact(root / "skills" / "skm" / "SKILL.md", unit,
-                               skill.encode("utf-8"), (), repo_root, catalog.package_version,
-                               content_version=unit.content_version, package_root=package_root),
-    ]
-    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts),
-                                        repo_root, package_root=package_root))
-    return tuple(artifacts)
-
-
 def _codex_bundle_lock(root: Path, unit: PublicationUnit, package_version: str,
                        artifacts: tuple[CodexPublicationArtifact, ...],
                        repo_root: Path, package_root: Path) -> CodexPublicationArtifact:
@@ -525,8 +398,7 @@ def _codex_bundle_lock(root: Path, unit: PublicationUnit, package_version: str,
                 "source_hash": artifact.source_hash, "rendered_hash": artifact.rendered_hash}
                for artifact in artifacts]
     return _render_codex_artifact(root / "publication-lock.json", unit,
-                                  {"contract_version": "1.0.0", "publication_unit": unit.unit_id,
-                                   "version": unit.content_version, "artifacts": records}, (),
+                                  publication_lock(unit.unit_id, unit.content_version, records), (),
                                   repo_root, package_version, content_version=unit.content_version,
                                   package_root=package_root)
 
@@ -546,13 +418,12 @@ def _render_codex_artifact(target: Path, unit: PublicationUnit, data: Mapping[st
             "sha256:" + "0" * 64),)
     rendered = data if isinstance(data, bytes) else _manifest_text(data)
     plugin_version = content_version if content_version is not None else package_version
-    result = plan_artifact_render(ArtifactRenderRequest(
-        f"skiller.codex.{unit.plugin_id}.{target.relative_to(repo_root).as_posix().lstrip('.').replace('/', '-').replace('.', '-').lower()}", source_records,
-        ArtifactTarget(target.relative_to(repo_root).as_posix(), ("whole-file", ())),
-        _CODEX_ADAPTER, (), {"publication_unit": unit.unit_id,
-                              "plugin_version": plugin_version},
-        lambda _request: rendered,
-    ))
+    result = render_whole_file(
+        artifact_id=f"skiller.codex.{unit.plugin_id}.{target.relative_to(repo_root).as_posix().lstrip('.').replace('/', '-').replace('.', '-').lower()}",
+        target=target.relative_to(repo_root).as_posix(), sources=source_records,
+        adapter=_CODEX_ADAPTER, parameters={"publication_unit": unit.unit_id,
+                                            "plugin_version": plugin_version},
+        rendered=rendered)
     return CodexPublicationArtifact(target, unit.unit_id, package_version, result.managed_bytes,
                                     result.provenance.source_hash, result.provenance.rendered_hash)
 
@@ -570,18 +441,13 @@ def _render_artifact(target: Path, unit: PublicationUnit, data: Mapping[str, obj
             "skiller.publication.meta",
             (Path(package_rel(repo_root, package_root)) / "package.json").as_posix(),
             "sha256:" + "0" * 64),)
-    result = plan_artifact_render(ArtifactRenderRequest(
-        f"skiller.claude.{unit.plugin_id}", source_records,
-        ArtifactTarget(relative_target, ("whole-file", ())), _CLAUDE_ADAPTER, (),
-        {"publication_unit": unit.unit_id, "plugin_version": package_version},
-        lambda _request: _manifest_text(data),
-    ))
+    result = render_whole_file(
+        artifact_id=f"skiller.claude.{unit.plugin_id}", target=relative_target,
+        sources=source_records, adapter=_CLAUDE_ADAPTER,
+        parameters={"publication_unit": unit.unit_id, "plugin_version": package_version},
+        rendered=_manifest_text(data))
     return ClaudePublicationArtifact(target, unit.unit_id, package_version, result.managed_bytes,
                                      result.provenance.source_hash, result.provenance.rendered_hash)
-
-
-def _manifest_text(data: Mapping[str, object]) -> bytes:
-    return (json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
 
 def _claude_skill_dirs(unit: PublicationUnit, by_id: Mapping[str, SemanticSkill]) -> list[str]:
@@ -648,23 +514,16 @@ def _freeze_value(value: object) -> object:
     return value
 
 
-# distribution plans live beside the P3-owned semantic publication seam.
-# They intentionally consume package config only through the P1 adapter and do
-# not scan a provider manifest or execute a native installer during planning.
-@dataclass(frozen=True)
-class ProviderDistributionPlan:
-    provider_id: str
-    channel: str
-    target: Path
-    target_identity: str
-    source_hash: str
-    rendered_hash: str
-    artifacts: tuple[ArtifactRenderResult, ...] = ()
-    artifact_plan: ArtifactPlan | None = None
+# Distribution plans live in aicore.delivery.distribution; skiller keeps provider selection (config)
+# and the identity that its distribution artifacts carry in generated provenance and the artifact
+# lock. They consume package config only through the P1 adapter and do not scan a provider manifest
+# or execute a native installer during planning.
+_DISTRIBUTION_IDENTITY = DistributionIdentity(
+    _CODEX_ADAPTER, "skiller.codex.connect", "skiller.connect.source")
 
 
 def selected_distribution_providers(config, *, project_id: str) -> tuple[str, ...]:
-    from .common import die
+    from aicore.util.term import die
     from .config import resolve_distribution_providers
     resolved = resolve_distribution_providers(config, project_id=project_id)
     if resolved.effective is None:
@@ -675,375 +534,24 @@ def selected_distribution_providers(config, *, project_id: str) -> tuple[str, ..
 
 def build_vendor_distribution_plan(config, target: Path, *, project_id: str,
                                    claude_path: str, codex_path: str) -> tuple[ProviderDistributionPlan, ...]:
-    from .common import die
-    catalog = _distribution_catalog()
-    path_params = {"claude_path": claude_path, "codex_path": codex_path}
-    plans = []
-    for provider in selected_distribution_providers(config, project_id=project_id):
-        vendor = vendor_channel(catalog, ProviderId(provider))
-        if vendor is None:
-            continue
-        rel = path_params.get(vendor.path_param)
-        if rel is None:
-            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}, channel vendor: "
-                f"unknown path_param {vendor.path_param!r}")
-        plans.append(ProviderDistributionPlan(provider, "vendor", target / rel,
-                                              (target / rel).as_posix(), "", ""))
-    seen = set()
-    for plan in plans:
-        resolved = plan.target.resolve(strict=False)
-        if resolved in seen:
-            die("SPUB_OWNERSHIP_CONFLICT: selected providers share one managed vendor path")
-        seen.add(resolved)
-    return tuple(plans)
+    return vendor_distribution_plan(
+        selected_distribution_providers(config, project_id=project_id), target,
+        claude_path=claude_path, codex_path=codex_path)
 
 
 def build_connect_distribution_plan(config, target: Path, *, project_id: str,
                                     repo_root: Path,
                                     plugins: Sequence[str] = ()) -> tuple[ProviderDistributionPlan, ...]:
-    from .common import die
-    catalog = _distribution_catalog()
-    plans = []
-    for provider in selected_distribution_providers(config, project_id=project_id):
-        connect = connect_channel(catalog, ProviderId(provider))
-        if connect is None:
-            continue
-        provider_id = ProviderId(provider)
-        try:
-            validate_publication_capabilities(provider_id)
-        except (OSError, TypeError, ValueError) as exc:
-            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}, "
-                f"channel marketplace: {exc}")
-        if connect.mode == "claude-marketplace":
-            plans.append(ProviderDistributionPlan(provider, "marketplace", target / connect.target,
-                                                   connect.target, "", ""))
-        elif connect.mode == "codex-marketplace":
-            repo_root = repo_root.resolve()
-            target = target.resolve()
-            marketplace = repo_root / connect.marketplace
-            if not marketplace.is_file():
-                die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace, "
-                    f"target {marketplace}: generated marketplace is missing; run skiller registry")
-            if target == repo_root:
-                plans.append(ProviderDistributionPlan(
-                    provider, "marketplace", marketplace, marketplace.as_posix(), "", ""))
-            else:
-                if not plugins:
-                    die("SPUB_BUNDLE_INCOMPLETE: provider codex, channel marketplace-bundle, "
-                        f"target {target}: selected plugin set is required")
-                artifacts, artifact_plan = _build_codex_connect_artifacts(
-                    repo_root=repo_root, target=target, plugins=plugins,
-                    marketplace_path=marketplace)
-                marketplace_artifact = next(
-                    item for item in artifacts
-                    if item.target.path == ".agents/plugins/marketplace.json")
-                plans.append(ProviderDistributionPlan(
-                    provider, "marketplace-bundle",
-                    target / marketplace_artifact.target.path,
-                    marketplace_artifact.target.path,
-                    marketplace_artifact.provenance.source_hash,
-                    marketplace_artifact.provenance.rendered_hash,
-                    artifacts, artifact_plan))
-        else:
-            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}, connect mode {connect.mode}")
-    return tuple(plans)
-
-
-def _build_codex_connect_artifacts(*, repo_root: Path, target: Path,
-                                   plugins: Sequence[str],
-                                   marketplace_path: Path) -> tuple[
-                                       tuple[ArtifactRenderResult, ...], ArtifactPlan]:
-    """Build and ownership-preflight a self-contained repo Codex marketplace.
-
-    The source repository marketplace is only an index.  Every selected plugin
-    is materialized as a deterministic bundle under the consumer repository;
-    no consumer entry points back at the skiller checkout.
-    """
-    from .common import die
-
-    try:
-        source_marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace, "
-            f"target {marketplace_path}: invalid generated marketplace: {exc}")
-    entries = source_marketplace.get("plugins")
-    if not isinstance(entries, list):
-        die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace, "
-            f"target {marketplace_path}: plugins must be a list")
-    by_name = {}
-    for entry in entries:
-        if not isinstance(entry, dict) or not isinstance(entry.get("name"), str):
-            die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace: invalid plugin entry")
-        name = entry["name"]
-        if name in by_name:
-            die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, unit {name}: duplicate marketplace entry")
-        by_name[name] = entry
-
-    selected = tuple(sorted(set(plugins)))
-    if len(selected) != len(tuple(plugins)):
-        die("SPUB_OWNERSHIP_CONFLICT: provider codex, channel marketplace-bundle: "
-            "duplicate selected plugin")
-
-    artifacts: list[ArtifactRenderResult] = []
-    consumer_entries = []
-    bundles_root = target / ".agents" / "plugins" / "bundles"
-    for name in selected:
-        if not name or Path(name).name != name or name in {".", ".."}:
-            die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {name!r}: invalid plugin ID")
-        entry = by_name.get(name)
-        if entry is None:
-            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {name}, "
-                f"target {marketplace_path}: selected plugin is not declared")
-        source_rel = _codex_local_source(entry, plugin=name)
-        source_root = _contained(repo_root, repo_root / source_rel, plugin=name,
-                                 label="source")
-        if not source_root.is_dir():
-            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {name}, "
-                f"target {source_root}: plugin source is missing")
-        bundle_root = bundles_root / name
-        bundle_artifacts = _codex_bundle_artifacts(
-            source_root=source_root, bundle_root=bundle_root, plugin=name,
-            repo_root=repo_root, target=target)
-        if bundle_root.exists():
-            expected_paths = {
-                target / artifact.target.path for artifact in bundle_artifacts
-            }
-            unexpected = next((
-                path for path in bundle_root.rglob("*")
-                if path.is_file() and path not in expected_paths
-            ), None)
-            if unexpected is not None:
-                die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, unit {name}, "
-                    f"target {unexpected}: unowned file in managed bundle")
-        artifacts.extend(bundle_artifacts)
-        consumer_entries.append({
-            "name": name,
-            "source": {
-                "source": "local",
-                "path": "./" + bundle_root.relative_to(target).as_posix(),
-            },
-            "policy": {
-                "installation": "AVAILABLE",
-                "authentication": "ON_INSTALL",
-            },
-            "category": entry.get("category", ""),
-        })
-
-    marketplace_data = {
-        "name": source_marketplace.get("name", "swissknifeman"),
-        "interface": {"displayName": source_marketplace.get("name", "swissknifeman")},
-        "plugins": consumer_entries,
-    }
-    marketplace_bytes = _manifest_text(marketplace_data)
-    marketplace_target = target / ".agents" / "plugins" / "marketplace.json"
-    artifacts.append(_distribution_artifact(
-        target, marketplace_target, marketplace_bytes,
-        marketplace_path.relative_to(repo_root).as_posix(),
-        marketplace_path.read_bytes()))
-
-    result = tuple(sorted(artifacts, key=lambda item: item.target.path))
-    lock_path = target / LOCK_RELATIVE_PATH
-    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
-    artifact_plan = plan_artifact_lock(
-        target, result, lock_bytes=lock_bytes, owner_namespace="skiller.codex.connect")
-    refused = tuple(action for action in artifact_plan.actions
-                    if action.action is ArtifactActionKind.REFUSE)
-    if refused:
-        details = "; ".join(
-            f"{action.target_path}: {action.diagnostic}" for action in refused)
-        die("SPUB_OWNERSHIP_CONFLICT: provider codex, channel marketplace-bundle, "
-            f"target {target}: {details}")
-    return result, artifact_plan
-
-
-def _codex_bundle_artifacts(*, source_root: Path, bundle_root: Path, plugin: str,
-                            repo_root: Path, target: Path) -> tuple[ArtifactRenderResult, ...]:
-    from .common import die
-
-    manifest = source_root / ".codex-plugin" / "plugin.json"
-    try:
-        data = json.loads(manifest.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
-            f"target {manifest}: invalid plugin manifest: {exc}")
-    if not isinstance(data, dict) or data.get("name") != plugin:
-        die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
-            f"target {manifest}: manifest identity mismatch")
-    raw_roots = data.get("skills")
-    roots = [raw_roots] if isinstance(raw_roots, str) else raw_roots
-    if not isinstance(roots, list) or not roots or not all(isinstance(item, str) for item in roots):
-        die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
-            f"target {manifest}: declared skills are missing")
-
-    files = [manifest]
-    for raw_root in roots:
-        root = _contained(source_root, source_root / raw_root, plugin=plugin,
-                          label="declared skill root")
-        if root.is_file():
-            members = [root] if root.name == "SKILL.md" else []
-        elif root.is_dir():
-            members = sorted(root.rglob("SKILL.md"))
-        else:
-            members = []
-        if not members:
-            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
-                f"target {root}: declared skill root has no SKILL.md")
-        for member in members:
-            _contained(source_root, member, plugin=plugin,
-                       label="declared skill member")
-            files.extend(_codex_skill_runtime_files(
-                member.parent, source_root=source_root, plugin=plugin))
-
-    unique = tuple(sorted(set(files), key=lambda item: item.relative_to(source_root).as_posix()))
-    artifacts = []
-    for source in unique:
-        source_bytes = source.read_bytes()
-        relative = source.relative_to(source_root)
-        artifacts.append(_distribution_artifact(
-            target, bundle_root / relative, source_bytes,
-            source.relative_to(repo_root).as_posix(), source_bytes))
-    return tuple(artifacts)
-
-
-def _codex_skill_runtime_files(skill_root: Path, *, source_root: Path,
-                               plugin: str) -> tuple[Path, ...]:
-    """Enumerate one consumer skill tree with the canonical vendor exclusions."""
-    from .common import SKILL_IGNORE, die
-
-    ignore = shutil.ignore_patterns(*SKILL_IGNORE)
-    pending = [skill_root]
-    seen_dirs = set()
-    files = []
-    while pending:
-        directory = pending.pop()
-        resolved_dir = _contained(
-            source_root, directory, plugin=plugin, label="runtime support directory")
-        if resolved_dir in seen_dirs:
-            continue
-        seen_dirs.add(resolved_dir)
-        try:
-            entries = sorted(directory.iterdir(), key=lambda item: item.name)
-        except OSError as exc:
-            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
-                f"target {directory}: cannot read runtime support files: {exc}")
-        excluded = ignore(str(directory), [entry.name for entry in entries])
-        for entry in entries:
-            if entry.name in excluded:
-                continue
-            resolved = _contained(
-                source_root, entry, plugin=plugin, label="runtime support file")
-            if resolved.is_dir():
-                pending.append(entry)
-            elif resolved.is_file():
-                files.append(entry)
-    return tuple(files)
-
-
-def _codex_local_source(entry: Mapping[str, object], *, plugin: str) -> str:
-    from .common import die
-
-    source = entry.get("source")
-    if isinstance(source, str):
-        path = source
-    elif isinstance(source, Mapping) and source.get("source") == "local":
-        path = source.get("path")
-    else:
-        path = None
-    if not isinstance(path, str) or not path.startswith("./"):
-        die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {plugin}: "
-            "marketplace source must be a contained local ./ path")
-    return path
-
-
-def _contained(root: Path, candidate: Path, *, plugin: str, label: str) -> Path:
-    from .common import die
-
-    root = root.resolve()
-    resolved = candidate.resolve(strict=False)
-    try:
-        resolved.relative_to(root)
-    except ValueError:
-        die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {plugin}, "
-            f"{label} {candidate} escapes {root}")
-    return resolved
+    return connect_distribution_plan(
+        selected_distribution_providers(config, project_id=project_id), target,
+        repo_root=repo_root, plugins=plugins, identity=_DISTRIBUTION_IDENTITY)
 
 
 def _distribution_artifact(root: Path, target: Path, managed_bytes: bytes,
                            source_identity: str,
                            source_bytes: bytes) -> ArtifactRenderResult:
-    relative_target = target.relative_to(root).as_posix()
-    digest = hashlib.sha256(relative_target.encode("utf-8")).hexdigest()[:16]
-    return plan_artifact_render(ArtifactRenderRequest(
-        f"skiller.codex.connect.a{digest}",
-        (ArtifactSource(
-            "skiller.connect.source", source_identity,
-            "sha256:" + hashlib.sha256(source_bytes).hexdigest()),),
-        ArtifactTarget(relative_target, ("whole-file", ())),
-        _CODEX_ADAPTER, (),
-        {"channel": "marketplace-bundle"},
-        lambda _request: managed_bytes,
-    ))
-
-
-def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,
-                             runner=subprocess.run, executable: str = "codex") -> tuple[bool, str]:
-    """The explicit native global transaction; dry-run never probes or runs it."""
-    from .common import MARKETPLACE
-    if dry_run:
-        return True, "SPUB_INSTALL_EXPLICIT_REQUIRED: dry-run; native installer was not invoked"
-    if shutil.which(executable) is None:
-        return False, "SPUB_INSTALL_UNAVAILABLE: codex executable not found"
-    commands = (
-        [executable, "plugin", "marketplace", "add", str(repo_root)],
-        [executable, "plugin", "add", f"{plugin}@{MARKETPLACE}"],
-    )
-    for command in commands:
-        try:
-            result = runner(command, check=False, capture_output=True, text=True)
-        except OSError as exc:
-            return False, f"SPUB_INSTALL_UNAVAILABLE: {exc}"
-        if getattr(result, "returncode", 1) != 0:
-            detail = (getattr(result, "stderr", "") or getattr(result, "stdout", "")).strip()
-            if command[2:4] == ["marketplace", "add"] and "already added from a different source" in detail:
-                try:
-                    listed = runner([executable, "plugin", "marketplace", "list", "--json"],
-                                    check=False, capture_output=True, text=True)
-                    origin = runner(["git", "-C", str(repo_root), "remote", "get-url", "origin"],
-                                    check=False, capture_output=True, text=True)
-                    sources = [m.get("marketplaceSource", {}) for m in json.loads(listed.stdout).get("marketplaces", [])
-                               if m.get("name") == MARKETPLACE]
-                    expected_origin = origin.stdout.strip()
-                    source = sources[0] if len(sources) == 1 else {}
-                    matches_git_origin = (source.get("sourceType") == "git"
-                                          and source.get("source") == expected_origin)
-                    matches_local_checkout = False
-                    if source.get("sourceType") == "local" and isinstance(source.get("source"), str):
-                        local_root = source["source"]
-                        local_origin = runner(["git", "-C", local_root, "remote", "get-url", "origin"],
-                                              check=False, capture_output=True, text=True)
-                        local_head = runner(["git", "-C", local_root, "rev-parse", "HEAD"],
-                                            check=False, capture_output=True, text=True)
-                        release_head = runner(["git", "-C", str(repo_root), "rev-parse", "HEAD"],
-                                              check=False, capture_output=True, text=True)
-                        matches_local_checkout = (local_origin.returncode == 0 and local_head.returncode == 0
-                                                  and release_head.returncode == 0
-                                                  and local_origin.stdout.strip() == expected_origin
-                                                  and local_head.stdout.strip() == release_head.stdout.strip())
-                    if listed.returncode or origin.returncode or not (matches_git_origin or matches_local_checkout):
-                        return False, "SPUB_INSTALL_UNAVAILABLE: existing marketplace source does not match repository origin and release commit"
-                    if matches_local_checkout:
-                        # Local marketplaces have no Codex upgrade transaction. The exact
-                        # checked-out release is already their source; proceed to plugin add.
-                        continue
-                    upgraded = runner([executable, "plugin", "marketplace", "upgrade", MARKETPLACE],
-                                      check=False, capture_output=True, text=True)
-                    if upgraded.returncode == 0:
-                        continue
-                    detail = (upgraded.stderr or upgraded.stdout).strip()
-                except (OSError, ValueError, AttributeError) as exc:
-                    detail = str(exc)
-            return False, f"SPUB_INSTALL_UNAVAILABLE: {' '.join(command[:3])} failed: {detail}"
-    return True, f"codex/native-install: marketplace={repo_root}, plugin={plugin}@{MARKETPLACE}"
+    return distribution_artifact(root, target, managed_bytes, source_identity, source_bytes,
+                                 identity=_DISTRIBUTION_IDENTITY)
 
 
 # the sole root-bootstrap producer. Class-A private/source-only identities
@@ -1178,10 +686,14 @@ def _validate_class_b_record(record: object, class_a_identities: Sequence[str]) 
 
 
 def _class_b_donor_bucket(canonical: str) -> str:
-    """The publication bucket that owns the class-B canonical file (`skills/<bucket>/<id>/…`)."""
+    """The publication unit that owns the class-B canonical file: the bucket for
+    `skills/<bucket>/<id>/SKILL.md`, the owning module plugin for `<module>/skills/<id>/SKILL.md`."""
     parts = Path(canonical).parts
     try:
-        return parts[parts.index("skills") + 1]
+        index = parts.index("skills")
+        if len(parts) > index + 2 and parts[index + 2] == "SKILL.md" and index > 0:
+            return parts[index - 1]
+        return parts[index + 1]
     except (ValueError, IndexError):
         raise ValueError(f"class_b canonical path {canonical!r} is not under a skills/<bucket>/ tree") from None
 
@@ -1255,7 +767,7 @@ def render_repository_bootstrap_projections(*, repo_root: Path, package_root: Pa
     # the existing class-A projection bytes byte-identical across the P1.5 owner bump.
     class_a_version = config["class_a_content_version"]
 
-    from .common import parse_frontmatter
+    from aicore.content.skill import read_frontmatter as parse_frontmatter
 
     artifacts: list[RootBootstrapArtifact] = []
     lock_records: list[dict[str, object]] = []

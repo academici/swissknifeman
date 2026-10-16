@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "x",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "x",
+  "protocol": {
+    "min": "a",
+    "max": "1"
+  },
+  "entrypoint": [
+    "bin/x"
+  ],
+  "provides": {}
+}

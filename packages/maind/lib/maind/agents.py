@@ -1,4 +1,4 @@
-"""Hub agent registry: register/heartbeat/list/kill/reap (~/.maind/agents.json).
+"""Hub agent registry: register/heartbeat/list/kill/reap (<state>/maind/agents.json).
 
 State is derived at read time from heartbeat age, configured interval, and PID
 liveness. The persisted file therefore contains facts only."""
@@ -6,8 +6,11 @@ import json
 import os
 import signal
 
-from .common import (atomic_write_json, die, load_json_db, now_iso, parse_args,
-                     parse_iso, pid_alive)
+from aicore.util.io import atomic_write_json
+from aicore.util.term import die, now_iso, parse_iso
+from .common import load_json_db
+from aicore.util.cli import parse_args
+from aicore.util.proc import pid_alive
 from .config import load_config
 from .constants import AGENT_STALE_FACTOR, HEARTBEAT_DEFAULT_MS
 

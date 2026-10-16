@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:permissions:v1",
+  "title": "permissions",
+  "description": "Declared effects of a module or plugin. Declarative: the host reports what it enforces.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:permissions:v1",
+      "description": "Schema identifier of the document."
+    },
+    "filesystem": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Filesystem areas the module or plugin may write.",
+      "items": {
+        "enum": [
+          "project",
+          "state",
+          "provider-surfaces",
+          "home"
+        ],
+        "description": "Filesystem area."
+      }
+    },
+    "network": {
+      "type": "boolean",
+      "description": "Whether the network is used."
+    },
+    "secrets": {
+      "type": "array",
+      "description": "References to secrets that are read.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9+.-]*://\\S+$",
+        "description": "Secret reference of the form <scheme>://<name>."
+      }
+    },
+    "shell": {
+      "type": "boolean",
+      "description": "Whether child processes and shell commands are run."
+    },
+    "env": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Environment variables to pass through the cleaned environment of a plugin.",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z_][A-Z0-9_]*$",
+        "description": "Environment variable name."
+      }
+    },
+    "profile": {
+      "enum": [
+        "trusted-local",
+        "read-only"
+      ],
+      "description": "Named sandbox profile; trusted-local when absent. The host states which profiles it enforces."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "permissions": {
+      "type": "object",
+      "description": "The permissions object without $schema, for embedding by $ref.",
+      "properties": {
+        "filesystem": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Filesystem areas the module or plugin may write.",
+          "items": {
+            "enum": [
+              "project",
+              "state",
+              "provider-surfaces",
+              "home"
+            ],
+            "description": "Filesystem area."
+          }
+        },
+        "network": {
+          "type": "boolean",
+          "description": "Whether the network is used."
+        },
+        "secrets": {
+          "type": "array",
+          "description": "References to secrets that are read.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9+.-]*://\\S+$",
+            "description": "Secret reference of the form <scheme>://<name>."
+          }
+        },
+        "shell": {
+          "type": "boolean",
+          "description": "Whether child processes and shell commands are run."
+        },
+        "env": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Environment variables to pass through the cleaned environment of a plugin.",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_][A-Z0-9_]*$",
+            "description": "Environment variable name."
+          }
+        },
+        "profile": {
+          "enum": [
+            "trusted-local",
+            "read-only"
+          ],
+          "description": "Named sandbox profile; trusted-local when absent. The host states which profiles it enforces."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

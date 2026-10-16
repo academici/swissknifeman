@@ -1,0 +1,19 @@
+{
+  "status": "done",
+  "summary": "needs a decision",
+  "changed_paths": [],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [],
+  "questions": [
+    {
+      "id": "Q2",
+      "revision": 1,
+      "kind": "clarification",
+      "text": "Which timeout?",
+      "blocking": false,
+      "assumed": "30",
+      "risk": "low"
+    }
+  ]
+}

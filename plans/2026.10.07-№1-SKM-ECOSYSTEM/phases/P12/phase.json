@@ -2,9 +2,9 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P12",
   "title": "Хаб: umbrella CLI, маркетплейс, CI-матрица, документация",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "swissknifeman install/doctor/config/units; маркетплейс и плагин-набор генерируются aicore из unit.json; CI-матрица проверяет каждый модуль автономно и мосты; документация модулей и экосистемы актуальна.",
-  "context": "D1, D3; knowledge/architecture §7 корень хаба. Детализируется после P11. Внешнее ревью E1: тезисы E16, E36, E41–E43, E45, E50, E58, E59 (knowledge/review-e1-*).",
+  "context": "D1, D3; knowledge/architecture §7 корень хаба. Детализируется после P11. Внешнее ревью E1: тезисы E16, E36, E41–E43, E45, E50, E58, E59 (knowledge/review-e1-*). Внешнее ревью E2: R10 — проверка совместимости схем в CI-матрице; R13, R30 — команда conformance для плагина и движка.",
   "scope": {
     "include": [
       "umbrella CLI",
@@ -15,7 +15,9 @@
       "CI-матрица модулей",
       "smoke установленной формы плагинов в песочнице",
       "эталонные профили установки и примеры",
-      "состав выпуска: checksums, compat-манифест, пакет схем"
+      "состав выпуска: checksums, compat-манифест, пакет схем",
+      "проверка совместимости схем в CI-матрице (R10)",
+      "команда conformance для плагина и движка (R13, R30)"
     ],
     "exclude": [
       "команда upgrade (P13)"
@@ -24,10 +26,134 @@
   "depends_on": [
     "P11"
   ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all --include-tools",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && for t in scripts/test-*.py; do python3 \"$t\" || exit 1; done && bash scripts/test-integration.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bash scripts/e2e-plan-events.sh && bash scripts/e2e-work-source.sh && bash scripts/e2e-module-skills.sh && bash scripts/smoke-installed.sh'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строки e2e … OK и smoke-installed OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V14",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split && python3 scripts/docs-impact.py --base origin/ecosystem-split --head HEAD",
+      "expect": "exit 0; нет ломающих изменений",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V15",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p12-bud-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bash packages/skiller/bin/skiller budget --first-turn && bash packages/skiller/bin/skiller budget --first-turn --with-plugins'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; first-turn ≤ 23K",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
   "deliverables": [
     "umbrella CLI",
     "CI-матрица"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P12.1",
+    "P12.2",
+    "P12.3",
+    "P12.4",
+    "P12.5",
+    "P12.6",
+    "P12.7",
+    "P12.8",
+    "P12.9",
+    "P12.10"
+  ],
+  "batches": [
+    {
+      "id": "BP12-1",
+      "items": [
+        "P12.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-2",
+      "items": [
+        "P12.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-3",
+      "items": [
+        "P12.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-4",
+      "items": [
+        "P12.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-5",
+      "items": [
+        "P12.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-6",
+      "items": [
+        "P12.6"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-7",
+      "items": [
+        "P12.7"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-8",
+      "items": [
+        "P12.8"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-9",
+      "items": [
+        "P12.9"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "BP12-10",
+      "items": [
+        "P12.10"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-13T17:59:37Z",
+    "result": "done_with_deviations",
+    "summary": "10 item(s): 3 done, 7 done_with_deviations"
+  }
 }

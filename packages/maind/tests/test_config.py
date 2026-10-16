@@ -5,15 +5,26 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skiller" / "lib"))
 
 from maind.config import (load_config, map_brain_project, merge_defaults,
-                          provider_config_layers, resolve_provider_config,
-                          validate_config)
-from core.tests.provider.test_config import catalog, config
-from core import effective_projection
-from skiller.config import resolve_provider_config as resolve_skiller_provider_config
+                          resolve_provider_config, validate_config)
+from aicore.provider.values import CapabilityId, NativeExtensionId, ProviderId, SupportLevel
+from aicore.provider.config import (
+    CapabilitySupport, NativeExtension, ProviderConfigCatalog)
 from tests.fixtures import make_repo, write_brain_projects, write_maind_config
+
+
+def catalog():
+    return ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX),
+        (CapabilitySupport(CapabilityId("instructions.project"), ProviderId.CLAUDE_CODE, SupportLevel.NATIVE),
+         CapabilitySupport(CapabilityId("skills.repository"), ProviderId.CODEX, SupportLevel.NATIVE),
+         CapabilitySupport(CapabilityId("hooks.lifecycle"), ProviderId.CODEX, SupportLevel.UNSUPPORTED)),
+        (NativeExtension(NativeExtensionId("claude-code.fixture-native"), ProviderId.CLAUDE_CODE),
+         NativeExtension(NativeExtensionId("codex.fixture-native"), ProviderId.CODEX)))
+
+
+def config(selection):
+    return {"contract_version": "1.0.0", "selection": selection}
 
 
 class TestValidate(unittest.TestCase):
@@ -126,17 +137,6 @@ class TestProviderConfig(unittest.TestCase):
         result = resolve_provider_config(cfg, catalog(), "demo")
         self.assertTrue(dict((x.provider_id.value, x.enabled) for x in result.effective)["codex"])
 
-    def test_skiller_and_maind_adapters_match_on_identical_layers(self):
-        providers = config({"codex": {"enabled": True}})
-        fleet = {"providers": {"defaults": config({"codex": {"enabled": False}})},
-                 "projects": [{"id": "demo"}]}
-        maind_result = resolve_provider_config(fleet, catalog(), "demo", project_config=providers)
-        skiller_result = resolve_skiller_provider_config(
-            {"providers": providers}, catalog(), project_id="demo",
-            fleet_defaults=provider_config_layers(fleet, "demo")[0])
-        self.assertEqual(effective_projection(maind_result), effective_projection(skiller_result))
-        self.assertEqual(maind_result.diagnostics, skiller_result.diagnostics)
-
     def test_legacy_carriers_load_and_resolve_without_writes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)
@@ -144,7 +144,7 @@ class TestProviderConfig(unittest.TestCase):
             before = path.read_bytes()
             loaded, source = load_config(env)
             result = resolve_provider_config(loaded, catalog(), "alpha")
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "legacy:config.json")
             self.assertEqual(path.read_bytes(), before)
             self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
 
@@ -165,7 +165,7 @@ class TestProviderConfig(unittest.TestCase):
             loaded, source = load_config(env)
             result = resolve_provider_config(loaded, catalog(), "alpha")
 
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "legacy:config.json")
             self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
             self.assertEqual({path: path.read_bytes() for path in sentinels}, before)
 
@@ -186,7 +186,7 @@ class TestPrecedence(unittest.TestCase):
             write_maind_config(root)
             write_brain_projects(root)  # is present, but .maind.json takes priority
             cfg, source = load_config(env)
-            self.assertEqual(source, "config.json")
+            self.assertEqual(source, "legacy:config.json")
             self.assertEqual(cfg["projects"][0]["id"], "alpha")
 
     def test_brain_fallback(self):

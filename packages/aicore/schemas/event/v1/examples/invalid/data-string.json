@@ -1,0 +1,8 @@
+{
+  "specversion": "1.0",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:planner",
+  "type": "planner.plan.closed",
+  "time": "2026-10-09T12:00:00.123Z",
+  "data": "text"
+}

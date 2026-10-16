@@ -7,11 +7,11 @@
   "harness_presets": ["base", "python"],
   "mcp": ["context7"],
   "model_tiers": {
-    "reviewer": "opus",
-    "spec-writer": "opus",
-    "orchestrator": "opus",
-    "slice-builder": "sonnet",
-    "test-writer": "sonnet",
-    "type-checker": "sonnet"
+    "reviewer": "frontier",
+    "spec-writer": "frontier",
+    "orchestrator": "frontier",
+    "slice-builder": "implementation",
+    "test-writer": "implementation",
+    "type-checker": "implementation"
   }
 }

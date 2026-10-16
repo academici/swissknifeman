@@ -1,0 +1,120 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.5",
+  "title": "orch conductor: acp-маршрут недоступен заранее — dry-run available false с причиной, preflight TRANSPORT_UNSUPPORTED до работы, Grok только reviewer/report-fixer в docs",
+  "status": "done_with_deviations",
+  "summary": "conductor/cli.py _preview: available учитывает transport acp, новое поле unavailable {role: причина}; engine._preflight останавливает run кодом TRANSPORT_UNSUPPORTED до любой работы для обязательной роли с transport acp; README и docs/conductor.md: Grok в conductor — reviewer и report-fixer; тесты dry-run и run в tests/test_conductor.py.",
+  "why": "Аудит П0.5 (N3), D4, C8: сейчас dry-run показывает available true для grok executor, сбой — только при запуске роли.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/cli.py",
+      "packages/orch/lib/orch/conductor/engine.py (_preflight)",
+      "packages/orch/tests/test_conductor.py",
+      "docs"
+    ],
+    "exclude": [
+      "acp-транспорт (D4)"
+    ]
+  },
+  "decisions": [
+    "D4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p1-fixes#acp",
+      "why": "что и где менять",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "section": "_preview",
+      "why": "dry-run",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "section": "_preflight",
+      "why": "строки ~777–784",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Опциональные роли context-scout и report-fixer по-прежнему пропускаются, а не останавливают run"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты dry-run и run с executor на grok (падают) → _preview → _preflight → docs → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "честная недоступность acp"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T20:41:45Z",
+    "finished_at": "2026-10-13T20:54:02Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "86068c8c-34bb-426c-be25-afe31c80b9e1"
+    },
+    "notes": "available/unavailable в dry-run, TRANSPORT_UNSUPPORTED до prepare и в preflight, docs, changelog, 3 теста",
+    "deviations": [
+      "acp check also runs before prepare"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T20:54:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T20:54:02Z"
+}

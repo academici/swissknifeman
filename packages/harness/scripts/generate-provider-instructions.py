@@ -9,16 +9,17 @@ import sys
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "packages" / "harness" / "lib"))
+PACKAGE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PACKAGE / "lib"))
 
 from harness.instructions import operator_reference  # noqa: E402
 
 
-OUTPUT = ROOT / "packages" / "harness" / "docs" / "reference" / "provider-instructions.md"
-COVERAGE = ROOT / "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json"
-COMPATIBILITY = ROOT / "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json"
+OUTPUT = PACKAGE / "docs" / "reference" / "provider-instructions.md"
+COVERAGE = PACKAGE / "tests/fixtures_data/instruction-literal-coverage-v1.json"
+COMPATIBILITY = PACKAGE / "tests/fixtures_data/instruction-compatibility-v1.json"
+# hub-relative identifier recorded in the generated fixture, whatever the layout of this checkout
+COMPATIBILITY_ID = "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json"
 
 
 def main() -> int:
@@ -30,8 +31,8 @@ def main() -> int:
     literals = [{"semantic_id": row["id"], "literal": assertion}
                 for row in source["records"] for assertion in row["assertions"]]
     coverage = json.dumps({
-        "contract_version": source["contract_version"], "fixture_version": "1.3.0",
-        "provenance": {"source": str(COMPATIBILITY.relative_to(ROOT)),
+        "contract_version": source["contract_version"], "fixture_version": "1.7.0",
+        "provenance": {"source": COMPATIBILITY_ID,
                        "source_hash_scope": "file",
                        "source_sha256": hashlib.sha256(COMPATIBILITY.read_bytes()).hexdigest(),
                        "generator": "packages/harness/scripts/generate-provider-instructions.py",
@@ -47,7 +48,7 @@ def main() -> int:
         return 0
     OUTPUT.write_text(expected, encoding="utf-8")
     COVERAGE.write_text(coverage, encoding="utf-8")
-    print(f"provider instructions reference: written {OUTPUT.relative_to(ROOT)}")
+    print(f"provider instructions reference: written packages/harness/{OUTPUT.relative_to(PACKAGE).as_posix()}")
     return 0
 
 

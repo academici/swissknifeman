@@ -1,65 +1,40 @@
-# core — common package foundation
+# core — removed
 
-**What is this.** stdlib-only monorepo foundation package: a single source of truth for primitives that
-packages (`skiller`/`harness`/`maind`/`analyst`) have historically been copied independently. Connects via
-PYTHONPATH (without pip); `Env` of each package inherits `core.BaseEnv`, import - `from core import …`.
+**What is this.** The root `core/` package used to hold the shared stdlib-only primitives of the monorepo. They moved
+into the foundation module `packages/aicore` (see its `README.md`), and the folder `core/` is gone: there is
+no import shim and no `AICORE_ROOT` fallback for the name `core`
+([ADR 0071](../architecture/decisions/0071-core-and-artifex-removal-and-strict-boundaries.md)).
 
-**When to touch.** When a primitive is duplicated between ≥2 packets with a stable boundary - his place
-here, not parallel copies. Domain add-ons (path-property `Env` of each package) remain in
-`common.py` packages - they are at odds with the contract.
+**When to touch.** Never. New and old code import `aicore`; code outside the repository that imports `core` must switch to
+the names below.
 
-## What's inside
+## Where the code went
 
-| Module | Gives |
+| Old name | New home |
 |:--|:--|
-| `term` | `die` · `warn` · `confirm` · `now_iso` · `parse_iso` |
-| `text` | `parse_frontmatter` · `parse_inline_list` · `sanitize` (slug) |
-| `env` | `BaseEnv` (frozen-dataclass core root/cmd/home) · `HOME` |
-| `io` | `atomic_write_text/json` (tmp+`os.replace`) · `safe_load_json` · `load_json_db` · `read_ndjson` · **`backup_file`** |
-| `repo` | `find_repo_root` · `find_monorepo_root` · **`sibling_bin`** (neighbor's launcher resolver) |
-| `block` | managed markdown-block: `managed_block` · `upsert_block` · `content_hash` |
-| `http` | urllib-client: `http_get_json` · `http_post_json` · `ping` |
-| `cli` | `parse_flags` · `parse_args` · `run_cmd` (guarded subprocess) |
-| `paths` | `is_within` · `is_within_lexical` · `state_dir` |
-| `project` | `PROJECT_TYPES` · `detect_project_type` · docs-visibility |
-| `pathology` | `detect` — detector «pathologies» run (common for `maind analyze` and `analyst digest`) |
-| `usage` | token accumulator/usage run (`new_acc`/`feed_event`/`finish`) |
-| `proc` · `runs` | `pid_alive` · `find_run_report` |
-| **`provider/`** | domain subpackage of the provider model: `values` · `config` · `manifest` · `artifact` · `lock` · `registry` (see below) |
-
-### Subpackage `provider/`
-
-Single domain cluster `core/` — six modules connected by mutual imports and common
-dictionary (other modules are flat: the domain subpackage is started when ≥3 modules linked
-MUTUAL imports and share the domain dictionary, «similar in topic» — not a criterion).
-
-| Module | Gives |
-|:--|:--|
-| `provider.values` | domain values and enum's: `ProviderId` · `CapabilityId` · `SupportLevel` · `ProviderDecision` · `EffectiveProvider` |
-| `provider.config` | layers and provider configuration resolution: `ProviderConfigCatalog` · `resolve_provider_config` · `effective_projection` |
-| `provider.manifest` | parsing and canonicalization of the capabilities manifest: `load_provider_manifest` · `provider_manifest_sha256` · `provider_support_projection` |
-| `provider.artifact` | planning the rendering of the artifact and its provenance: `plan_artifact_render` · `canonical_json_bytes` · `sha256_digest` |
-| `provider.lock` | lock-managed artifact file and plan application: `plan_artifact_lock` · `apply_plan` · `artifact_dry_run` · `parse_lock` |
-| `provider.registry` | adapter registry and selection from the catalog: `AdapterCatalog` · `AdapterDescriptor` · `AdapterSelection` |
-
-Re-exports to `core/provider/__init__.py` NO: The only package facade is `core/__init__.py`
-(`from core import …`), deep-import goes directly to the submodule (`core.provider.lock`).
+| `core.{block,cli,env,http,io,paths,proc,project,repo,term,text}` | `aicore.util.*` |
+| `core.provider` and `core.provider.*` | `aicore.provider.*` |
+| `core.provider.{artifact,lock,reconcile}` | `aicore.artifacts.*` |
+| `core.usage` | `aicore.usage` |
+| `core.gitignore_policy` | `aicore.state.gitignore` |
+| `core.runs`, `core.pathology`, `core.codegraph_telemetry` | `analyst.run_reports`, `analyst.pathology`, `analyst.codegraph`; read by other modules through `analyst runs show\|codegraph --json` |
+| `aicore.util.paths.state_dir` | `aicore.state.state_dir` |
 
 ## Reference: run telemetry (SCHEMA=2)
 
-`core/usage.py` — a single accumulator of tokens on which all telemetry is based. Capture run
-does SessionEnd-hook harness (`hooks/run-report/`): parses the transcript line by line → writes
-`<project>/.claude/runs/<sid>.json` (**SCHEMA=2**: tests/lint/files/tool-failures/dev-loop-signal +
-usage-partition in/out by model). This run-report read:
+`packages/aicore/lib/aicore/usage.py` is the single accumulator of tokens on which all telemetry is based. The run is
+captured by the SessionEnd hook of harness (`hooks/run-report/`), which parses the transcript line by line and writes
+`<project>/.claude/runs/<sid>.json` (**SCHEMA=2**: tests, lint, files, tool failures, dev-loop signal and the
+usage partition in/out by model). This run report is read by:
 
-- **`maind analyze`** — post-run verdict GREEN/ATTENTION/RED (did the agent tug on his memory/graph);
-- **`analyst token-report`** — usage-trend + rolling-baseline (`.claude/analyze/baseline.json`);
-- **`core.pathology.detect`** — detector of recurrent pathologies (rule ≥2/5 on history run-report).
+- **`maind analyze`** — the post-run verdict GREEN/ATTENTION/RED (did the agent use its memory and graph);
+- **`analyst token-report`** — usage trend and rolling baseline (`.claude/analyze/baseline.json`);
+- **`analyst.pathology.detect`** — the detector of recurrent pathologies (rule ≥2/5 on the run-report history).
 
 The operational layer of this is [Development §9](/develop#_9-performance-measurement★).
 
 ## Development
 
 ```bash
-PYTHONPATH=. python3 -m unittest discover -s core/tests   # smoke-tests core
+bash packages/aicore/scripts/test.sh                       # aicore tests
 ```

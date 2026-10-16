@@ -1,0 +1,102 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.3",
+  "title": "RESULT_SILENT_DENIAL: permission_denials и permission_denied потока Claude → маяк и note в отчёте executor",
+  "status": "done",
+  "summary": "process.parse_stream собирает denials (tool_name без tool_input); _role — маяк RESULT_SILENT_DENIAL и note-issue для пишущих ролей; фикстура потока; docs Beacons.",
+  "why": "Аудит П5.3, E2: тихий отказ в headless — реальный риск. Риск: tool_input может содержать секреты — не сохранять.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/process.py, engine.py",
+      "tests, docs"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P6.2"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p6-work#denial",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-13#claude",
+      "why": "поля потока",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/process.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты exec/v1, work-source/v1, stage-report, progress-line, config — только аддитивно (D1)"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: фикстура и тесты → parse_stream → _role → docs → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "RESULT_SILENT_DENIAL"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T11:30:43Z",
+    "finished_at": "2026-10-14T11:51:44Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "10bfd74b-2666-49dd-adce-d1e7a0bf145f"
+    },
+    "notes": "parse_stream collects permission_denied + result.permission_denials by tool_use_id (tool names only); RoleRun.denials; RESULT_SILENT_DENIAL beacon for any role; note issue for executor/bounded-implementer; tests (process, e2e), docs, CHANGELOG. V1 green.",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T11:51:44Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T11:51:44Z"
+}

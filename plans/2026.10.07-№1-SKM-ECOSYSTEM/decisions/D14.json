@@ -24,7 +24,7 @@
   ],
   "context": "M5: «свой формат конфига, подобрать наиболее подходящий»; создаётся из example. Ограничение: только stdlib Python; на машине Python 3.12.",
   "decision": "A — TOML для слоёв, которые правит человек: ~/.config/swissknifeman/config.toml и <project>/.swissknifeman/config.toml; JSON — для генерируемого состояния, lock-файлов и defaults модулей. Модуль поставляет config.example.toml, генерируемый из схемы и defaults (CI проверяет расхождение); swissknifeman config init копирует example в слой машины или проекта. Чтение — tomllib (stdlib, Python ≥ 3.11 — минимальная версия экосистемы); запись командой config set — свой минимальный писатель подмножества TOML под наши схемы (детали в P4)",
-  "rationale": "M5 делегирует выбор; stdlib-ограничение исключает YAML/JSON5; TOML даёт комментарии в example. Уточняет D5: места слоёв прежние, меняется формат файлов слоёв 2–3.",
+  "rationale": "M5 делегирует выбор; stdlib-ограничение исключает YAML/JSON5; TOML даёт комментарии в example. Уточняет D5: места слоёв прежние, меняется формат файлов слоёв 2–3. Уточнено D35: минимум Python — 3.9; чтение TOML — tomllib при ≥ 3.11, иначе vendored tomli (форму решает P4).",
   "applies_to": [
     "P4",
     "P13"

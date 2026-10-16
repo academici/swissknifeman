@@ -15,8 +15,10 @@
   "rationale": "M1 «через мосты»; research/Q4, Q5; M4.",
   "applies_to": [
     "P6",
-    "P10",
-    "P11"
+    "P10.3",
+    "P10.10",
+    "P11.1",
+    "P11.13"
   ],
   "actor": {
     "provider": "anthropic",

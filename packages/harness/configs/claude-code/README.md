@@ -213,8 +213,8 @@ hooks/memory/
 The modes are interchangeable - you switch `MODE` and compare on the same group.
 
 **Membership.** `members` groups - names of topology nodes (`brain`/`swissknifeman`)
-or keys/project paths (resolve via `~/.swissknifeman/topology.json` +
-`projects.json`). The participant sees the brain only if it is in `members`.
+or keys/project paths (resolve via `<state>/maind/topology.json` +
+`<state>/skiller/projects.json`; legacy `~/.swissknifeman/` copies while they are the only ones). The participant sees the brain only if it is in `members`.
 
 ```bash
 # at the beginning of the task - ask the general brain

@@ -1,0 +1,35 @@
+exit: 1
+--- stdout ---
+
+--- stderr ---
+Unknown command: no-such-subcommand
+
+Commands (are run from the consuming project, the root is looked up from CWD):
+  connect   connect the project via plugin marketplace Claude Code
+  vendor    vendor skills to the project (Cursor and other agents)
+  integrate integration wizard: checklist for all functionality (skills/hooks/memory/hub)
+  update    update connection/vendoring of the current project (--all: all)
+  init      create .swissknifeman/config.json (mode=vendor) — without copying skills
+  sync      vendor-mode: apply .swissknifeman/config.json (physical. transfer + lock)
+  lock      update skills-lock.json project (external skill map: skm + boost)
+  resolve   resolve skill IDs and transitive requirements (read-only; --json)
+  describe  skill descriptor: license, version, digest, provenance (read-only; --json)
+  compat    quarantine checks of vendored skills: [--write] [--json] (licence, provenance, injection, budget, tools)
+  select    skills of an orchestration role: --role R [--paths --deps --budget --include --exclude --policy] --json [--explain]
+  selection selection.json sidecars: `report [--json]` against the audit summary, `check` (read-only)
+  status    report on the current project (read-only)
+  budget    token budget for skill set (⊕ always/↻ on-trigger/⌥ on-demand)
+  eval      behavioral skill run (evals/: with-skill vs baseline, pressure, triggers)
+  analyze-run   analysis of session transcripts: usage/cache by agent, skill-markers
+  bucket-audit  audit buckets: size/overlap/usage → verdicts keep/thin/merge/dead
+  list      registered projects (<state>/skiller/projects.json; --prune, --json)
+  profiles  project-type profiles delivered with skiller (read-only; --json)
+  topology  alias of `maind topology` (the map moved to maind)
+  release   monorepo release proposal: [Unreleased]+conventional commits → vX.Y.Z
+            (opt --dry-run; does NOT tag/does not push - prints the command)
+
+Maintainer Commands (work with the registry itself):
+  registry  regenerate skills.json + plugin manifests + graph
+  validate  scripts/validate.sh
+  doctor    environment diagnostics
+  version   version (git SHA) and registry path

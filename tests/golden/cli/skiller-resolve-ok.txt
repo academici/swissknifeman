@@ -1,0 +1,22 @@
+exit: 0
+--- stdout ---
+{
+  "schema": "skiller.resolve/v1",
+  "requested": [
+    "general/verify-claims"
+  ],
+  "provider": null,
+  "skills": [
+    {
+      "name": "verify-claims",
+      "id": "general/verify-claims",
+      "bucket": "general",
+      "path": "skills/general/verify-claims/SKILL.md",
+      "requested": true,
+      "required_by": []
+    }
+  ],
+  "diagnostics": []
+}
+--- stderr ---
+

@@ -1,0 +1,150 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.3",
+  "title": "Исходы deviation: follow_up и owner_decision в result.pending; plan.py followups с закрытием через link resolves-followup; без автосоздания пунктов; закрытие фазы P5",
+  "status": "done_with_deviations",
+  "summary": "Мост register: outcome follow_up/owner_decision → finish --pending с префиксом и log --data outcome; planner: read-глагол plan.py followups [--open] [--json] и схема read-followups; закрытие follow-up связью related/resolves-followup; тесты. Пункт закрывает фазу: phase.validation P5.",
+  "why": "Аудит П4.3 с поправкой D16: автоматическое add-item создаёт петли и расширяет scope без полномочия; работа не теряется через pending.",
+  "scope": {
+    "include": [
+      "bridges/planner-orch/register.py",
+      "packages/planner/lib/planner/plan/ (followups)",
+      "packages/planner/schemas/plan/v1/read-followups.schema.json",
+      "tests",
+      "docs planner",
+      "phase.validation P5"
+    ],
+    "exclude": [
+      "автоматическое создание пунктов",
+      "события orch.deviation.* (P12)"
+    ]
+  },
+  "depends_on": [
+    "P5.2"
+  ],
+  "decisions": [
+    "D16"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p5-deviations#lifecycle",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p5-deviations#checks",
+      "why": "проверки фазы",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/lifecycle.py",
+      "why": "finish и result.pending",
+      "required": true,
+      "section": "finish"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "bridges/planner-orch/register.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/tests/test_register.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/schemas/plan/v1/read-followups.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/planner/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help plan.py, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы stage-report, log-event, read-* — только аддитивно (D1)",
+    "phase.validation P5 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: тесты → мост → followups → docs → V1 → phase.validation P5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "plan.py followups"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T09:29:23Z",
+    "finished_at": "2026-10-14T10:36:42Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "49b99fb7-8127-4a51-9732-3c393da4551b"
+    },
+    "notes": "bridge register: follow_up/owner_decision deviations go to finish --pending as outcome(class): text (no items created); plan.py followups [--open] with read-followups schema, catalog/golden; follows_up link closes; tests, docs, CHANGELOG. Phase P5: V11 ci-matrix --all exit 0 (first run had one flaky harness test, aicore backups race, noted; rerun clean), V12 0, V13 0 (compat 0 errors).",
+    "deviations": [
+      "closing relation is follows_up (existing enum value) instead of resolves-followup"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-14T10:36:42Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T10:36:42Z"
+}

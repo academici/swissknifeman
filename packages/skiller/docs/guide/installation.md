@@ -20,8 +20,8 @@ and the state directory `~/.swissknifeman/`. When provider CLIs are present, it
 registers the local marketplace and installs the configured machine plugins.
 Codex selection combines CORE policy with the host's `default_command_plugins`;
 Grok source paths and optional hold plugins come from `machine_plugins.grok`.
-For the ecosystem host, these include Task and `prefix-hold`, exposing `$ task:*`
-in Codex and `/task:*` in Grok. Standalone installs have no host command plugins.
+For the ecosystem host, these include planner and `prefix-hold`, exposing `$ planner:*`
+in Codex and `/planner:*` in Grok. Standalone installs have no host command plugins.
 Grok does not install the root `core` plugin or profile plugins.
 
 After moving the checkout, rerun `./install.sh` to refresh the symlink and native
@@ -36,8 +36,9 @@ Check the installation with `skiller doctor`.
 ## Host configuration and standalone installs
 
 Skiller reads optional host-repository integration data from `configs/skiller-host.json`.
-This is separate from a consumer project's `.swissknife.json` and
-`.swissknifeman/config.json`: those select skills and providers for that project.
+This is separate from a consumer project's `[skiller]` and `[skiller.sync]` settings in
+`.swissknifeman/config.toml` (see [Configuration](./configuration)): those select skills
+and providers for that project.
 The host config describes the repository containing the **Skiller installation**.
 
 Discovery starts at the installed package root and finds its enclosing repository.
@@ -57,14 +58,14 @@ The following example uses the host's integration fields with an illustrative
 {
   "schema_version": 1,
   "plugin_dirs": ["plugins/*"],
-  "default_command_plugins": ["task"],
-  "version_files": [{"path": "plugins/task/configs/command-routing.json", "key": "plugin_version"}],
+  "default_command_plugins": ["planner"],
+  "version_files": [{"path": "plugins/planner/configs/command-routing.json", "key": "plugin_version"}],
   "machine_plugins": {
-    "grok": [{"name": "task", "path": "plugins/task", "holds": ["plugins/task/adapters/grok/prefix-hold"]}]
+    "grok": [{"name": "planner", "path": "plugins/planner", "holds": ["plugins/planner/adapters/grok/prefix-hold"]}]
   },
-  "runtime_projection_plugins": ["task"],
-  "codex_link_roots": ["plugins/task/adapters/codex/skills"],
-  "legacy_runtime_links": [{"link": "plugins/task", "plugin": "task", "source": "plugins/task"}],
+  "runtime_projection_plugins": ["planner"],
+  "codex_link_roots": ["plugins/planner/adapters/codex/skills"],
+  "legacy_runtime_links": [{"link": "plugins/planner", "plugin": "planner", "source": "plugins/planner"}],
   "commands": {
     "permissions": {"argv": ["tools/harness/bin/harness", "permissions"], "env_override": "SKM_HARNESS_BIN", "install_hint": "tools/harness/install.sh"},
     "settings_doctor": {"argv": ["tools/harness/bin/harness", "doctor", "--settings"], "env_override": "SKM_HARNESS_BIN"},
@@ -80,6 +81,7 @@ The following example uses the host's integration fields with an illustrative
 | Field | Meaning |
 |---|---|
 | `plugin_dirs` | Repository-relative globs for sibling plugins containing `.claude-plugin/plugin.json`; Skiller itself is excluded. |
+| `bucket_aliases` | Skill buckets the library leaves to the host (`"provided_by": "host"` in `buckets.json`): bucket name mapped to the host plugins whose skills it expands to on connect, vendor and sync. |
 | `default_command_plugins` | Command plugins added to the default install and delivery selection. |
 | `version_files` | JSON files and top-level keys updated to the umbrella release version. |
 | `machine_plugins` | Provider-keyed arrays of plugin `name`, source `path`, and optional `holds` paths for machine installation. |
@@ -131,7 +133,7 @@ maind onboard <path|id> && maind sync --project <id>
 | **Cursor** | `skiller sync` + `maind onboard/sync` | skills in `.agents/skills` (native discovery); MCP in `.cursor/mcp.json`; permissions — [adapter Cursor](../adapters/cursor) |
 | **Cursor (legacy)** | `skiller vendor --agent cursor` | copies to `.cursor/skills` — avoid dual-write with `.agents` |
 | **Codex (vendor)** | `skiller sync` with `providers.codex.enabled=true` | managed copies in `.agents/skills` + provider-qualified lock |
-| **Grok** | `./install.sh` once, then per project `providers.selection.grok.enabled` + `maind sync --project <id>` + `harness hooks --provider grok … --target .` | machine plugins `task` and `prefix-hold` (`/task:*`); project MCP in `.grok/config.toml`; hooks in `.grok/hooks/`; skills through the connect catalog |
+| **Grok** | `./install.sh` once, then per project `providers.selection.grok.enabled` + `maind sync --project <id>` + `harness hooks --provider grok … --target .` | machine plugins `planner` and `prefix-hold` (`/planner:*`); project MCP in `.grok/config.toml`; hooks in `.grok/hooks/`; skills through the connect catalog |
 
 Grok plugins from step 1 are available in every project. They do not register
 the project or turn Grok on. A project opts in with
@@ -156,7 +158,7 @@ and `laravel-test-writer` (see skill `laravel-subagents`).
 :::
 
 Each connection automatically registers the project in
-`~/.swissknifeman/projects.json` — this includes `skiller list` and
+`<state>/skiller/projects.json` — this includes `skiller list` and
 `skiller update --all`.
 
 ## Project with Laravel Boost (multi-agent, single source of truth)

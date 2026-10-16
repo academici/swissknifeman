@@ -1,0 +1,13 @@
+{
+  "verdict": "RED",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "Critical",
+      "confidence": "high",
+      "location": "a:1",
+      "failure_scenario": "f",
+      "basis": "b"
+    }
+  ]
+}

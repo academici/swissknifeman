@@ -46,9 +46,8 @@ class HooksCase(unittest.TestCase):
     # --- auto-approve -------------------------------------------------------
     def test_autoapprove_writes_envini_and_hooks_idempotent(self):
         run(block_autoapprove, self.proj, "strict", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "auto-approve.env.ini").read_text().strip(),
-            "MODE=strict")
+        self.assertEqual(fx.configured(self.proj, "auto_approve", "mode"), "strict")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         matchers = [e.get("matcher") for e in s["hooks"]["PreToolUse"]]
         self.assertEqual(sorted(matchers), ["Bash", "ExitPlanMode"])
@@ -59,9 +58,8 @@ class HooksCase(unittest.TestCase):
 
     def test_autoapprove_off_no_hook(self):
         run(block_autoapprove, self.proj, "off", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "auto-approve.env.ini").read_text().strip(),
-            "MODE=off")
+        self.assertEqual(fx.configured(self.proj, "auto_approve", "mode"), "off")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
     def test_autoapprove_preserves_existing_settings(self):
@@ -82,9 +80,8 @@ class HooksCase(unittest.TestCase):
         run(block_memory, self.proj, "core", "federation", False)
         cfg = json.loads((self.proj / ".swissknife.json").read_text())
         self.assertEqual(cfg["memory_brain"], "core")
-        self.assertEqual(
-            (self.proj / ".claude" / "memory.env.ini").read_text().strip(),
-            "MODE=federation")
+        self.assertEqual(fx.configured(self.proj, "memory", "mode"), "federation")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
 
     def test_parse_memory_flag(self):
         self.assertEqual(_parse_memory_flag("core:federation"), ("core", "federation"))

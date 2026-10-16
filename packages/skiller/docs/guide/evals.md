@@ -141,10 +141,20 @@ with-skill vs baseline.
   `claude` was actually called (this thread cmd_eval otherwise unreachable); `clock` —
   `"injected"`, if `clock_ns` is passed explicitly, otherwise `"wall"`; `baseline` — flag
   `--baseline`.
-- **`schema_version: "skill-benchmark/v2"`** — spaced (is not a bare number):
-  the same module carries a separate `build_system_benchmark` (P3.3-contract,
-  `"schema_version": "system-bank-benchmark/v1"`) — different version dictionaries under
+- **`schema_version: "skill-benchmark/v3"`** — spaced (is not a bare number):
+  the same module carries a separate `build_system_benchmark` (contract
+  `"schema_version": "system-bank-benchmark/v2"`) — different version dictionaries under
   a common short name would be a defect.
+- **`context` (`eval-context/v1`) — what makes two results comparable.** Both benchmark kinds
+  carry `{skill: {id, digest}, fixtures: {id, version, digest}, grader: {id, version},
+  runner: {provider, cli_version, models}}`. Only observed values are written: `models` are
+  the `modelUsage` keys of the runs, `cli_version` is the output of `claude --version`
+  (10 s timeout), `skill.digest` is the skill content digest; anything not observed is `null`
+  or `[]`. The system bank recomputes recorded transcripts, so its `skill` is `null` and its
+  runner is unobserved. `aicore.content.eval.compare_eval_context(a, b)` lists the differing
+  paths (`skill.digest`, `runner.models`, …); no paths means the results are comparable.
+  The report prints one `Context:` line. Older `benchmark.json` files have no `context` and
+  are not rewritten.
 - **No-op offline, exactly the necessary files online.** No `claude` → nothing is written
   (format validation only, see above). Yes `claude` → is written EXACTLY
   `evals/benchmark.json` (+`evals/benchmark.html` when `--static`) — verified

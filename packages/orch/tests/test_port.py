@@ -21,7 +21,7 @@ class DummyPort:
     def run(self, launch_plan):
         raise PortError("NOT_IMPLEMENTED", "run")
 
-    def watch(self, run_id):
+    def watch(self, run_id, after_seq=None):
         raise PortError("NOT_IMPLEMENTED", "watch")
 
     def cancel(self, run_id):
@@ -69,6 +69,21 @@ class EnginePortTests(unittest.TestCase):
         with self.assertRaises(PortError) as caught:
             DummyPort().run({})
         self.assertIn(caught.exception.code, PORT_ERROR_CODES)
+
+    def test_watch_takes_a_resume_cursor(self):
+        import inspect
+        from orch.bindings import BINDINGS as CLASSES
+        parameter = inspect.signature(EnginePort.watch).parameters["after_seq"]
+        self.assertIsNone(parameter.default)
+        for name, cls in CLASSES.items():
+            with self.subTest(binding=name):
+                self.assertEqual(inspect.signature(cls.watch).parameters["after_seq"].default, None)
+                with self.assertRaises(PortError) as caught:
+                    cls.watch(object.__new__(cls), "run-1", after_seq=3)
+                self.assertEqual(caught.exception.code, "NOT_IMPLEMENTED")
+
+    def test_new_codes_close_the_table(self):
+        self.assertEqual(PORT_ERROR_CODES[-2:], ("EVENT_CONFLICT", "STALE_EPOCH"))
 
     def test_codes_match_documented_table(self):
         self.assertEqual(len(set(PORT_ERROR_CODES)), len(PORT_ERROR_CODES))

@@ -3,9 +3,10 @@ import json
 import subprocess
 from pathlib import Path
 
-from core import atomic_write_text, load_json_db
+from aicore.util.io import atomic_write_text, load_json_db
 
-from .common import DB_VERSION, now_iso
+from .common import DB_VERSION
+from aicore.util.term import now_iso
 
 
 def load_db(env):

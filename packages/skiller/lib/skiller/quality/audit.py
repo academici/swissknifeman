@@ -3,13 +3,13 @@
 
 Why: solutions for ~205 skills without metrics - fortune telling. Collects into one report:
 
-  size - review `budget.skill_budget` (⊕tier0/↻tier1/⌥tier2); budget.py remains
+  size - review `budget.skill_budget` (⊕tier0/↻tier1/⌥tier2); aicore.content.budget remains
              THE ONLY source of token mathematics, this module only consumes it,
              does not expand.
   overlap  — Jaccard≥0.4 by description-triggers (normalized description words) AND/OR
              5-gram word-shingle≥0.3 by body (is more resistant to reformulations than
              character-by-character diff). Their compact sets on stdlib, without lib.
-  usage    — fan-out by ~/.swissknifeman/projects.json → skill_usage from JSONL-transcripts,
+  usage    — fan-out by the skiller project registry → skill_usage from JSONL-transcripts,
              as in `analyze.py` (Skill-tool calls), window `--since N` days. Transcripts
              fail-safe (log format is not guaranteed; see analyze.parse_transcript) —
              unavailable/broken logs give usage=0, and not an audit crash.
@@ -37,8 +37,12 @@ import time
 from pathlib import Path
 
 from .analyze import agent_stats, logs_root, parse_transcript, skill_key
-from ..budget import _split_frontmatter, budget_for_set, resolve_active_set, skill_budget
-from ..common import die, parse_flags, parse_frontmatter
+from ..budget import resolve_active_set
+from aicore.content.budget import budget_for_set, skill_budget
+from aicore.content.skill import (
+    split_frontmatter as _split_frontmatter, read_frontmatter as parse_frontmatter)
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
 from ..config import CORE_SKILLS, load_config
 from ..state import load_db
 
@@ -250,7 +254,7 @@ def _sessions_since(root, since_days):
 
 
 def collect_usage(env, since_days=DEFAULT_SINCE_DAYS):
-    """Fan out by ~/.swissknifeman/projects.json: how many times each normalized
+    """Fan out by the skiller project registry (<state>/skiller/projects.json): how many times each normalized
     skill actually loaded (Skill-tool, as in analyze.agent_stats) for the last
     since_days days across ALL registered projects (main-sessions + them
     subagents). Transcripts fail-safe — parse_transcript/agent_stats are tolerant to
@@ -298,7 +302,7 @@ def resident_skill_names(env):
       1) CORE_SKILLS (config.py) — are resident by tier-0 in each project.
       2) active set (profile/buckets `.swissknife.json`, same
          `budget.resolve_active_set`, which uses `analyze._active_skill_names`)
-         at least ONE registered project (~/.swissknifeman/projects.json).
+         at least ONE registered project (the skiller project registry).
 
     A resident skill may not leave any obvious Skill-tool-call in
     transcript (auto-trigger description/native preload out of detection transcript-
@@ -471,7 +475,7 @@ def cmd_bucket_audit(env, argv):
         print("  Metrics for the entire skill registry: size (⊕tier0/↻tier1/⌥tier2, review\n"
               "  budget.skill_budget) · overlap (description-triggers Jaccard≥0.4 / body\n"
               "  5-gram shingle≥0.3) · usage — TWO independent visibility sources:\n"
-              "  explicit skill-call (fan-out by ~/.swissknifeman/projects.json, window\n"
+              "  explicit skill-call (fan-out by the project registry, window\n"
               "  --since N days, default 30) And residency (CORE_SKILLS/active\n"
               "  project set, field channel: skill-call|resident|none) · verdicts\n"
               "  keep/thin/retrieval-only/merge/dead (resident skill without\n"

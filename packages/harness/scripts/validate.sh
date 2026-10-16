@@ -2,6 +2,26 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
+
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
 
@@ -9,13 +29,13 @@ echo "[1/12] python compile"
 python3 -m compileall -q lib tests || err "py_compile"
 
 echo "[2/12] vendoring _usage.py (SCHEMA=2 run-report)"
-MONOREPO_ROOT_USAGE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 USAGE_DST="configs/claude-code/hooks/run-report/_usage.py"
-if [[ -n "$MONOREPO_ROOT_USAGE" && -f "$MONOREPO_ROOT_USAGE/core/usage.py" ]]; then
-  cmp -s "$MONOREPO_ROOT_USAGE/core/usage.py" "$USAGE_DST" \
-    || err "vendor _usage.py separated from core/usage.py — run scripts/sync-usage.sh"
+USAGE_SRC="$AICORE_LIB/aicore/usage.py"
+if [[ -f "$USAGE_SRC" ]]; then
+  cmp -s "$USAGE_SRC" "$USAGE_DST" \
+    || err "vendor _usage.py separated from the aicore usage module — run scripts/sync-usage.sh"
 else
-  [[ -f "$USAGE_DST" ]] || err "no $USAGE_DST (standalone-layout without core/ — expected vendor copy)"
+  [[ -f "$USAGE_DST" ]] || err "no $USAGE_DST (expected vendor copy)"
 fi
 
 echo "[3/12] bash syntax"
@@ -75,44 +95,55 @@ sys.exit(1 if bad else 0)
 PY
 
 echo "[7/12] package import + tests"
-MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
-[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import harness.cli" \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c "import harness.cli" \
   || err "lib/harness not imported"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -c "
 import sys
 from harness.agentpacks import do_doctor
 from harness.common import Env
 sys.exit(do_doctor(Env('$REPO_ROOT', 'validate')))" || err "agent-packs integrity"
-scripts/test.sh || err "tests"
+if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
+  echo "  tests skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
+else
+  scripts/test.sh || err "tests"
+fi
 
 echo "[8/12] generated provider instructions reference"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" \
   python3 scripts/generate-provider-instructions.py --check \
   || err "generated provider instructions reference"
 
 echo "[9/12] role registry review"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.reviewroles --check \
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -m harness.reviewroles --check \
   || err "role registry review (role-bindings.json)"
 
+# The hub gates read the checkout around the module (generated files of the hub, its committed rules); in a
+# standalone copy there is none and they are skipped.
+HUB_AROUND=0
+[[ "$REPO_ROOT/../../packages/harness" -ef "$REPO_ROOT" && -d "$REPO_ROOT/../../.cursor/rules" ]] && HUB_AROUND=1
+
 echo "[10/12] instruction drift (28 projections)"
-PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -m harness.instructions --check \
-  || err "instruction drift (harness instructions check)"
+if [[ "$HUB_AROUND" -eq 1 ]]; then
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -m harness.instructions --check \
+    || err "instruction drift (harness instructions check)"
+else
+  echo "  instruction drift: no hub checkout around the module (standalone layout) — gate skipped"
+fi
 
 echo "[11/12] rules Cursor (.cursor/rules/*.mdc as directory projection)"
-if [[ -n "$MONOREPO_ROOT" ]]; then
-  PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT" python3 scripts/render-cursor-rules.py --check \
+if [[ "$HUB_AROUND" -eq 1 ]]; then
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 scripts/render-cursor-rules.py --check \
     || err "rules Cursor disagreed with the instructions catalog"
 else
-  echo "  rules Cursor: core/ not found (standalone-layout) — gate skipped"
+  echo "  rules Cursor: no hub checkout around the module (standalone layout) — gate skipped"
 fi
 
 echo "[12/12] execution policy (execution-policy)"
-if [[ -n "$MONOREPO_ROOT" ]]; then
-  PYTHONPATH="$REPO_ROOT/lib:$MONOREPO_ROOT" python3 -m harness.execpolicy --check \
+if [[ "$HUB_AROUND" -eq 1 ]]; then
+  PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB" python3 -m harness.execpolicy --check \
     || err "execution policy (execution-policy)"
 else
-  echo "  execution policy: core/ not found (standalone-layout) — gate skipped"
+  echo "  execution policy: no hub checkout around the module (standalone layout) — gate skipped"
 fi
 
 echo ""

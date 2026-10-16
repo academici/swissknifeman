@@ -1,0 +1,85 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P6",
+  "title": "Работа вне пунктов, папки и lineage агентов, тихий отказ, протокол вопросов, агентный режим, автоисправление deviation",
+  "design": "detailed",
+  "goal": "conduct.py run --input FILE через встроенный FileWorkSource и новые provenance exec/v1; каталог и lineage каждого вызова агента; RESULT_SILENT_DENIAL; вопросы агента как сохранённое решение с привязкой (D11) и conduct.py answer/questions; документированный агентный режим; автоисправление deviation внутри пункта в бюджете коррекций.",
+  "context": "audits/perplexity-audit.md — Фаза 5 (П5.1–П5.4, П5.6), П4.4, 2.7, 2.9.3, 2.10, E2, E3, E5; дизайн — knowledge/p6-work; D11. Advisor — P10.4.",
+  "scope": {
+    "include": [
+      "orch conductor cli.py, engine.py, worksource.py",
+      "exec/v1 provenance.kind",
+      "stage-report questions[]",
+      "conduct.py answer"
+    ],
+    "exclude": [
+      "advisor (P10)",
+      "режим interactive вопросов (только после queue/deny/defaults)"
+    ]
+  },
+  "depends_on": [
+    "P2",
+    "P5"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "adhoc run",
+    "agent_run_id и папки агентов",
+    "протокол вопросов"
+  ],
+  "items": [
+    "P6.1",
+    "P6.2",
+    "P6.3",
+    "P6.4",
+    "P6.5",
+    "P6.6"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P6.1",
+        "P6.2",
+        "P6.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P6.4",
+        "P6.5",
+        "P6.6"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-14T14:18:11Z",
+    "result": "done_with_deviations",
+    "summary": "6 item(s): 2 done, 4 done_with_deviations"
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.5",
+  "title": "config_digest, config_layers, options_digest в run.json, options.json и событиях orch; закрытие фазы P3",
+  "status": "done_with_deviations",
+  "summary": "run.json: config_digest (эффективные [orch] и [aicore.providers]), config_layers; <item>/options.json: digest; данные orch.run.started и orch.run.stage.finished: config_digest, options_digest, project_resolution (схемы event-data/v1 аддитивно); тест различия digest. Пункт закрывает фазу: phase.validation P3.",
+  "why": "Аудит П2.6; воспроизводимость run (критерий 2).",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/engine.py",
+      "packages/orch/schemas/event-data/v1/*.json",
+      "packages/orch/tests/test_conductor.py, test_events.py",
+      "phase.validation P3"
+    ],
+    "exclude": [
+      "prompt digest (P9)"
+    ]
+  },
+  "depends_on": [
+    "P3.2",
+    "P3.3",
+    "P3.4"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p3-config#digest",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p3-config#checks",
+      "why": "проверки фазы",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/event-data/v1/orch.run.started.schema.json",
+      "why": "схема события",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/event-data/v1/**",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_events.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — аддитивно",
+    "phase.validation P3 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: тесты → run.json/options.json → события → V1 → phase.validation P3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "digest конфига и options"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T06:44:55Z",
+    "finished_at": "2026-10-14T07:29:00Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0068d0be-1d1f-4fdc-8ee8-a533f18299ad"
+    },
+    "notes": "run.json: config_digest, config_layers; options.json: digest; orch.run.started: config_digest, project_resolution; stage.finished (conductor): options_digest; схемы event-data/v1 аддитивно + фикстуры; тесты DigestTests; docs, CHANGELOG. Фаза P3: V11-V13 зелёные.",
+    "deviations": [
+      "settings.py, options.py, cli.py, фикстуры событий вне task_files"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T07:29:00Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-14T07:29:00Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-14T07:29:00Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-14T07:29:00Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T07:29:00Z"
+}

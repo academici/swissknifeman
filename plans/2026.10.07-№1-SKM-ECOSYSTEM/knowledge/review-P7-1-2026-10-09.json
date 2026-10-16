@@ -1,0 +1,25 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "review-P7-1-2026-10-09",
+  "title": "Review P7.1 2026-10-09",
+  "sections": [
+    {
+      "id": "verdict",
+      "title": "Verdict",
+      "text": "FINDINGS (2 low), both confirmed by the executor's own run and fixed in P7.1. Reviewer route grok/grok-4.7/500k/high, session 01a11fc8-2608-7b01-b486-e925b5a1d346 (headless, launched through the orch bridge launch verb; model grok-4.7 from the session record, contextWindowTokens 500000 from signals.json, 37 model calls, 91565 reasoning tokens; effort high comes from the launch argv, the session record has no effort field). Duration 2566 s. The reviewer ran the item checks (brain tests and validate, hub checks) and probed the vault ladder, legacy doc-sync, notes.folder and catalog in a throwaway HOME: contract met apart from the two findings."
+    },
+    {
+      "id": "findings",
+      "title": "Findings",
+      "text": "1. Low, packages/brain/lib/brain/doctor.py:32 — brain doctor printed the same BRAIN_LEGACY_CONFIG / BRAIN_LEGACY_ENV deprecation twice (brain.vault evidence and brain.config evidence). Reproduction by the reviewer and the executor: legacy memory_brain object with path, `brain doctor --project P | grep -c 'memory_brain is deprecated'` printed 2. Fix: brain.vault evidence carries only path and source; all warnings are in brain.config once. Tests: test_legacy_warning_is_reported_once, test_legacy_variable_warning_is_reported_once.\n2. Low, packages/brain/lib/brain/doctor.py:63 — brain doctor dropped CONFIG_ENV_UNKNOWN: `SKM_BRAIN_NOT_A_KEY=1 brain doctor` reported brain.config ok with no warning while `brain vault` warned. Fix: brain.config reports every settings warning (including those of aicore.config) as warn. Test: test_ignored_environment_variable_warns."
+    },
+    {
+      "id": "resolution",
+      "title": "Resolution",
+      "text": "One owning correction (fix in the item commit), checks V1-V6 and the brain suite (80 tests) rerun green. Round 1 of at most 2; no second review launched: both fixes are local to doctor.py, each with its own reproduction turned into a test. The full stream (1.4 MB) was not copied into the repository; the session record is in the grok session store under the id above."
+    }
+  ],
+  "applies_to": [
+    "P7.1"
+  ]
+}

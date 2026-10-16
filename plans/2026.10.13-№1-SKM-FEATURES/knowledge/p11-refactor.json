@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "p11-refactor",
+  "title": "P11: рефакторинг engine.py — characterization, вынос, мутации плана",
+  "sections": [
+    {
+      "id": "facts",
+      "title": "Факты кода",
+      "text": "Код на HEAD aed8924b9 (до P2–P10; к началу P11 engine.py вырастет — сверить):\n\n- `packages/orch/lib/orch/conductor/engine.py` — 1524 строки, 92 KB: `Stop`, `Item`, `Conductor` (жизненный цикл run: `run`, `resume`, `settle`, `release`, `_loop`, `_pieces`, `_claim`, `_piece`, `_conduct`; стадии `_scout`, `_execute`, `_run_checks`, `_review`, `_triage`, `_close`, `_finish`; политики `_allowance`, `_route*`, `_preflight`; инфраструктура `_orch` (подпроцесс orch.py source), `_role`, `_role_argv`, `_role_env`, запись файлов `write_json`). Рядом: `checks.py, process.py, prompts.py, scope.py, observer.py, options.py, heal.py, progress.py, contract.py, cli.py` (+ после PLAN4: `gates.py, risk.py, sandbox.py`, research/).\n- Запись в каталог артефактов плана (`item.artifacts` = `artifacts_dir` из brief, т.е. `plans/<plan>/artifacts/<item>/`): `review-verdict.json` (~1402), `stage-report.json` (~1445); остальное — runtime `.swissknifeman/state/orch/conductor/<run>/`.\n- Тесты orch: ~557 (+ PLAN4); `tests/test_conductor.py` — фейковые роли и work source."
+    },
+    {
+      "id": "characterization",
+      "title": "Characterization",
+      "text": "**P11.1.** Characterization (approval): для сценариев на фейковых ролях — зелёный; красный check → correction; review finding → triage → correction; quota → PROVIDER_WAIT; fallback (ROUTE_FALLBACK); resume после stop; INPUT_REBUILT; блокирующий вопрос → answer → resume; adhoc `--input`; dynamic review (REVIEW_ADDED); advisor (если P10 исполнен) — снимок **нормализованных** `progress.jsonl` (без ts, duration_s, run id, путей tmp; токены — как есть из фикстур) и `state.json` (без времени) в `packages/orch/tests/golden/characterization/<scenario>.json`; тест сравнивает; обновление снимка — только явным `--reason` (как golden.py). Покрытие — каждый `Stop`-код и маяк из docs/conductor.md встречается хотя бы в одном сценарии или unit-тесте (тест-перечень)."
+    },
+    {
+      "id": "extract",
+      "title": "Целевая структура и порядок выноса",
+      "text": "**P11.2.** Целевая структура (аудит 2.19), вынос по одному модулю, после каждого — characterization и `tests/test_conductor*.py` зелёные, публичные имена сохраняются реэкспортом из `engine.py` (CLI, мосты, тесты импортируют `engine.Conductor`, `engine.Stop`, `engine.runs_root`, …):\n\n```text\nconductor/\n  application/  run_service.py (run, resume, settle, release), loop.py (_loop, _pieces)\n  domain/       item.py (Item), stop.py (Stop), report.py (report_problems, findings_problems)\n  stages/       scout.py, execute.py, checks_stage.py, review.py, triage.py, close.py, finish.py\n  policies/     routing.py (_route, _route_minimum, _preflight), allowance.py, risk.py, retry_policy.py (обёртка retry.decide), sandbox (из sandbox.py), gates (из gates.py)\n  infrastructure/ roles.py (_role, _role_argv, _role_env, _repair), work_source.py (_orch, claim/brief/register/commit + запись в каталог артефактов плана), files.py (write_json, read_json), progress.py\n```\n\nКлассы — только stateful: `Conductor` (фасад, хранит run/state), `RunStore` (run.json/state.json/agents); правила (allowance, risk, routing-решения, heal) — функции с явными аргументами. Порядок выноса: domain → infrastructure/files → policies → infrastructure/roles → stages → application. Модули ≤ 600 строк."
+    },
+    {
+      "id": "fs",
+      "title": "Мутации плана через work source",
+      "text": "**P11.3.** Инвариант: запись в каталог артефактов плана и любые переходы плана — только в `conductor/infrastructure/work_source.py`. Архитектурный тест (`tests/test_boundaries.py` или новый): в `packages/orch/lib/orch/conductor/**` вне `infrastructure/work_source.py` нет обращений к `item.artifacts`/`artifacts_dir` на запись и нет подпроцессов `plan.py`. Работы без `artifacts_dir` — `.swissknifeman/orch-artifacts/<run>/<work>/` (как сейчас) через тот же модуль."
+    },
+    {
+      "id": "checks",
+      "title": "Проверки фазы",
+      "text": "Фаза P11: каждый шаг — characterization + `python3 scripts/affected-tests.py --run`; широкий прогон — phase.validation (P11.3) + повторный conformance (`python3 packages/orch/scripts/orch.py conformance …` на фейковых движках). Платный conformance на реальных провайдерах — вне (D8). Первый пункт сверяет knowledge/p11-refactor#facts с кодом после P2–P10."
+    }
+  ],
+  "applies_to": [
+    "P11"
+  ]
+}

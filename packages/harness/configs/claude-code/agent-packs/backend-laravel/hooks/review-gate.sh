@@ -28,6 +28,12 @@ if [[ -f "$CFG" ]]; then
   done < <(grep -vE '^[[:space:]]*[#;]' "$CFG" 2>/dev/null || true)
 fi
 
+# The committed carrier .swissknifeman/hooks.env wins over the legacy file.
+CARRIER="$PROJECT_DIR/.swissknifeman/hooks.env"
+CARRIED="$(grep -E '^REVIEW_GATE_MODE__CLAUDE_CODE=' "$CARRIER" 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \r')"
+[[ -n "$CARRIED" ]] || CARRIED="$(grep -E '^REVIEW_GATE_MODE=' "$CARRIER" 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \r')"
+[[ -n "$CARRIED" ]] && MODE="$CARRIED"
+
 [[ "$MODE" == "off" ]] && exit 0
 
 FIRST_BIN="$(printf '%s' "$CMD" | awk '{print $1}')"

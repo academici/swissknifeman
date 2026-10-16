@@ -8,23 +8,18 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest import mock
+
+from aicore.provider import models
 
 from orch import catalog, contracts, launch
+from orch.catalog import CLASS_RANK
 from orch.bindings import BINDINGS, Cao, ClaudeOnly, Native, load_capabilities, prepare_common
 from orch.cli import main
 from orch.port import PortError
 
 ROOT = Path(__file__).resolve().parents[1]
 VALID = ROOT / "fixtures" / "exec" / "v1" / "valid"
-ROUTING = {"mappings": {
-    "claude-code": {"class_selectors": {"economy": ["m-small"], "implementation": ["m-mid"], "frontier": ["m-big"]},
-                    "effort_selectors": {e: [e] for e in ("low", "medium", "high", "xhigh")}},
-    "codex": {"class_selectors": {"economy": ["x-small"], "implementation": ["x-mid", "x-alt"], "frontier": ["x-big"]},
-              "effort_selectors": {e: [e] for e in ("low", "medium", "high", "xhigh")}},
-    "grok": {"class_selectors": {"economy": ["g-small"], "implementation": ["g-mid"], "frontier": ["g-big"]},
-             "effort_selectors": {e: [e] for e in ("low", "medium", "high", "xhigh")}},
-}}
+MODEL_CATALOG = ROOT / "fixtures" / "model-catalog" / "test.json"
 
 
 def fixture(kind: str, name: str) -> dict:
@@ -51,7 +46,7 @@ class PrepareCase(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.out = Path(self.tmp.name) / "out"
-        self.catalog = catalog.Catalog(ROUTING)
+        self.catalog = catalog.Catalog.load(MODEL_CATALOG)
 
     def prepare(self, binding: str, provider: str, policy: str | dict = "solo", input_name: str = "plan-bound"):
         doc = fixture("run-policy", policy) if isinstance(policy, str) else policy
@@ -105,7 +100,7 @@ class NativeTests(PrepareCase):
         self.assertFalse(self.out.exists(), "a refused preparation writes nothing")
 
     def test_missing_mapping_is_a_refusal_not_a_guess(self):
-        self.catalog = catalog.Catalog({"mappings": {}})
+        self.catalog = catalog.Catalog.load(MODEL_CATALOG.with_name("grok-only.json"))
         error = self.refusal("native", "claude-code")
         self.assertEqual(error.code, "CAPABILITY_UNSUPPORTED")
         self.assertIn("class_selectors", error.data["launch_plan"]["refusals"][0]["reason"])
@@ -164,6 +159,18 @@ class RefusalTests(PrepareCase):
         policy = fixture("run-policy", "solo")
         next(s for s in policy["stages"] if s["kind"] == "primary")["model_class"] = "economy"
         self.assertEqual(self.refusal("native", "claude-code", policy).code, "ROUTE_UNDERSHOOT")
+
+    def test_an_unpinned_primary_follows_the_route_minimum_of_the_piece(self):
+        engine = Native(self.out, catalog=self.catalog)
+        policy, doc = fixture("run-policy", "solo"), fixture("execution-input", "plan-bound")
+        self.assertIsNone(next(s for s in policy["stages"] if s["kind"] == "primary").get("model_class"))
+        doc["route"]["minimum"]["class"] = "frontier"
+        from orch import contracts
+        doc["digest"] = contracts.canonical_digest(doc)
+        doc["input_id"] = doc["input_id"].split("@")[0] + "@" + doc["digest"][:12]
+        plan = engine.prepare(doc, policy, roles(), provider="claude-code")
+        primary = next(stage for stage in plan["stages"] if stage["stage_id"] == "primary")
+        self.assertEqual(primary["model"], "m-big")  # the frontier model of the test catalog
 
     def test_role_without_manifest(self):
         self.assertEqual(self.refusal("native", "claude-code", "frontend-bounded").code, "ROLE_UNKNOWN")
@@ -267,7 +274,7 @@ class CatalogTests(unittest.TestCase):
             catalog.substitute(["{effort}"], {})
 
     def test_resolve_model_and_effort(self):
-        found = catalog.Catalog(ROUTING)
+        found = catalog.Catalog.load(MODEL_CATALOG)
         self.assertEqual(found.resolve_model("codex", "implementation"), "x-mid")
         self.assertEqual(found.resolve_effort("grok", "xhigh"), "xhigh")
         for call in (lambda: found.resolve_model("cursor", "economy"), lambda: found.resolve_effort("grok", "ultra")):
@@ -276,30 +283,36 @@ class CatalogTests(unittest.TestCase):
             self.assertEqual(raised.exception.code, "CATALOG_UNKNOWN")
 
     def test_launch_entry(self):
-        self.assertEqual(catalog.Catalog(ROUTING).launch_entry("executor", "grok")["model_set"], "unknown")
+        self.assertEqual(catalog.Catalog.load(MODEL_CATALOG).launch_entry("executor", "grok")["model_set"], "unknown")
 
-    def test_find_routing_order(self):
+    def test_default_catalog_is_the_aicore_one(self):
+        found = catalog.Catalog.load()
+        for provider in ("claude-code", "codex", "grok"):
+            for model_class in CLASS_RANK:
+                self.assertTrue(found.resolve_model(provider, model_class))
+            for effort in ("low", "medium", "high", "xhigh"):
+                self.assertTrue(found.resolve_effort(provider, effort))
+
+    def test_default_catalog_matches_the_packaged_file(self):
+        packaged = models.load_model_catalog()
+        found = catalog.Catalog.load()
+        for provider in packaged.providers:
+            for model_class in CLASS_RANK:
+                self.assertEqual(found.resolve_model(provider.provider_id, model_class),
+                                 provider.class_selectors[model_class][0])
+
+    def test_unreadable_or_invalid_catalog_is_unavailable(self):
         with tempfile.TemporaryDirectory() as directory:
-            explicit, from_env = Path(directory, "a.json"), Path(directory, "b.json")
-            with mock.patch.dict(os.environ, {catalog.ROUTING_ENV: str(from_env)}):
-                self.assertEqual(catalog.find_routing(explicit), explicit)
-                self.assertEqual(catalog.find_routing(), from_env)
+            invalid = Path(directory, "r.json")
+            invalid.write_text("{}", encoding="utf-8")
+            for path in (invalid, Path(directory, "missing.json")):
+                with self.subTest(path=path.name), self.assertRaises(catalog.CatalogError) as raised:
+                    catalog.Catalog.load(path)
+                self.assertEqual(raised.exception.code, "MODEL_CATALOG_UNAVAILABLE")
 
-    def test_find_routing_unavailable(self):
-        with mock.patch.dict(os.environ, {}, clear=False), mock.patch.object(catalog, "_from_bridges", return_value=None):
-            os.environ.pop(catalog.ROUTING_ENV, None)
-            with self.assertRaises(catalog.CatalogError) as raised:
-                catalog.find_routing()
-        self.assertEqual(raised.exception.code, "ROUTING_UNAVAILABLE")
-
-    def test_load_routing_rejects_a_file_without_mappings(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory, "r.json")
-            path.write_text("{}", encoding="utf-8")
-            with self.assertRaises(catalog.CatalogError):
-                catalog.load_routing(path)
-            with self.assertRaises(catalog.CatalogError):
-                catalog.load_routing(Path(directory, "missing.json"))
+    def test_removed_routing_discovery(self):
+        for name in ("ROUTING_ENV", "find_routing", "load_routing", "_from_bridges", "BRIDGES_DIR", "UNAVAILABLE"):
+            self.assertFalse(hasattr(catalog, name), name)
 
 
 class CliTests(unittest.TestCase):
@@ -310,9 +323,7 @@ class CliTests(unittest.TestCase):
         return code, out.getvalue(), err.getvalue()
 
     def arguments(self, directory: str, binding: str = "native", policy: str = "solo") -> list[str]:
-        routing = Path(directory, "routing.json")
-        routing.write_text(json.dumps(ROUTING), encoding="utf-8")
-        return ["prepare", "--binding", binding, "--provider", "claude-code", "--routing", str(routing),
+        return ["prepare", "--binding", binding, "--provider", "claude-code", "--model-catalog", str(MODEL_CATALOG),
                 "--input", str(VALID / "execution-input" / "plan-bound.json"),
                 "--policy", str(VALID / "run-policy" / f"{policy}.json"), "--out", str(Path(directory, "out"))]
 
@@ -344,13 +355,13 @@ class CliTests(unittest.TestCase):
             self.assertTrue(err.startswith("CAPABILITY_UNSUPPORTED:"))
             self.assertEqual(json.loads(out)["refusals"][0]["capability"], "model.set")
 
-    def test_missing_routing_is_reported(self):
+    def test_missing_model_catalog_is_reported(self):
         with tempfile.TemporaryDirectory() as directory:
             arguments = self.arguments(directory, "claude-only")
-            arguments[arguments.index("--routing") + 1] = str(Path(directory, "missing.json"))
+            arguments[arguments.index("--model-catalog") + 1] = str(Path(directory, "missing.json"))
             code, _, err = self.run_cli(*arguments, "--dry-run")
             self.assertEqual(code, 1)
-            self.assertTrue(err.startswith("ROUTING_UNAVAILABLE:"))
+            self.assertTrue(err.startswith("MODEL_CATALOG_UNAVAILABLE:"))
 
 
 if __name__ == "__main__":

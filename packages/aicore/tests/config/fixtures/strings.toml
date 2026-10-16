@@ -1,0 +1,14 @@
+basic = "tab\there \"quoted\" back\\slash \u00e9 \U0001F600"
+literal = 'C:\path\no\escapes'
+multi = """
+first line
+second # not a comment
+trailing \
+   continued"""
+multi_literal = '''
+raw \n kept
+"quotes" and 'single'
+'''
+quote_end = """ends with quote\""""
+unicode = "Привет"
+empty = ""

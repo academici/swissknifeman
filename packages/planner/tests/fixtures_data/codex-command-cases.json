@@ -1,0 +1,25 @@
+{
+  "contract_version": "1.0.0",
+  "command_ids": [
+    "planner:design",
+    "planner:dev",
+    "planner:fix",
+    "planner:make-workflow",
+    "planner:research",
+    "planner:review",
+    "planner:plan-design",
+    "planner:plan-run",
+    "planner:plan-close",
+    "planner:plan-audit"
+  ],
+  "invocations": {
+    "planner:fix": "$ planner:fix repair parser",
+    "planner:plan-run": "$ planner:plan-run 2026.07.19-DEMO-PLAN P4.2"
+  },
+  "negative_diagnostics": [
+    "CMD_CAPABILITY_UNSUPPORTED",
+    "CMD_MAPPING_MISSING",
+    "CMD_MAPPING_AMBIGUOUS",
+    "CMD_ROUTE_UNDERSHOOT"
+  ]
+}

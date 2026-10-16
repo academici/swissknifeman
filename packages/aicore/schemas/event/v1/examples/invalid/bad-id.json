@@ -1,0 +1,7 @@
+{
+  "specversion": "1.0",
+  "id": "not-hex",
+  "source": "urn:swissknifeman:module:planner",
+  "type": "planner.plan.closed",
+  "time": "2026-10-09T12:00:00.123Z"
+}

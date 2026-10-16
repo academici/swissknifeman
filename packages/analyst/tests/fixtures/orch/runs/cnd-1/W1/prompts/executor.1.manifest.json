@@ -1,0 +1,36 @@
+{
+  "blocks": [
+    {
+      "id": "python-tests",
+      "kind": "skill",
+      "origin": "skill:python-tests",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "tokens": 1200
+    },
+    {
+      "kind": "input",
+      "origin": "input.json",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "tokens": 300
+    }
+  ],
+  "budgets": {
+    "input": {
+      "limit": 0,
+      "tokens": 300
+    },
+    "skills": {
+      "limit": 1000,
+      "tokens": 1200
+    }
+  },
+  "estimated_tokens": 1500,
+  "excluded": [],
+  "prompt_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "role": "executor",
+  "route": {
+    "provider": "codex"
+  },
+  "schema": "prompt-manifest/v1",
+  "step": "executor.1"
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-policy:v1",
+  "contract_version": "exec/v1",
+  "policy_id": "solo-condensed",
+  "description": "Fixture solo pipeline with the default error actions and a condense stage.",
+  "stages": [
+    {
+      "id": "context",
+      "kind": "context",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "condense",
+      "kind": "condense",
+      "role": "context-scout",
+      "required": false,
+      "model_class": "economy",
+      "on_unavailable": "skip",
+      "limits": {
+        "input_tokens_max": 60000,
+        "output_tokens_max": 8000
+      }
+    },
+    {
+      "id": "primary",
+      "kind": "primary",
+      "role": "executor",
+      "required": true,
+      "on_unavailable": "refuse",
+      "depends_on": [
+        "condense"
+      ],
+      "limits": {
+        "input_tokens_max": 200000,
+        "output_tokens_max": 64000
+      }
+    },
+    {
+      "id": "checks",
+      "kind": "checks",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "registrar",
+      "kind": "registrar",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    },
+    {
+      "id": "git",
+      "kind": "git",
+      "role": "deterministic",
+      "required": true,
+      "on_unavailable": "refuse"
+    }
+  ],
+  "review": {
+    "enabled": false,
+    "independent_provider": false,
+    "max_rounds": 2,
+    "max_corrections": 1
+  },
+  "retries_budget": {
+    "total_max": 1
+  },
+  "git_action": "commit",
+  "finalize": {
+    "kind": "deterministic",
+    "register": true
+  },
+  "version": "1.0.0",
+  "sandbox": {
+    "filesystem": [
+      "project"
+    ],
+    "network": false,
+    "shell": true,
+    "profile": "trusted-local"
+  },
+  "on_error": {
+    "authentication": {
+      "action": "stop"
+    },
+    "authorization": {
+      "action": "stop"
+    },
+    "quota": {
+      "action": "retry_after"
+    },
+    "rate_limit": {
+      "action": "retry_after"
+    },
+    "invalid_request": {
+      "action": "stop"
+    },
+    "model_unavailable": {
+      "action": "retry",
+      "max": 2
+    },
+    "content_policy": {
+      "action": "stop"
+    },
+    "transport": {
+      "action": "retry",
+      "max": 2
+    },
+    "provider_internal": {
+      "action": "retry",
+      "max": 2
+    },
+    "timeout": {
+      "action": "retry",
+      "max": 2
+    },
+    "context_limit": {
+      "action": "replan"
+    },
+    "unknown": {
+      "action": "stop"
+    },
+    "unknown_outcome": {
+      "action": "reconcile"
+    }
+  },
+  "fallback_routes": [
+    {
+      "provider": "codex",
+      "model_class": "implementation"
+    },
+    {
+      "provider": "grok",
+      "model_class": "implementation"
+    }
+  ],
+  "budgets": {
+    "brief_max_bytes": 200000,
+    "packer_input_max_bytes": 1000000,
+    "stage_tokens_max": 400000
+  }
+}

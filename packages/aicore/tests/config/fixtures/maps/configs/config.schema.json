@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:maps:config:v1",
+  "title": "maps config",
+  "description": "Fixture module with dictionary tables.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "verbose": {"type": "boolean", "default": false, "description": "Print details."},
+    "hooks": {
+      "type": "object",
+      "description": "Hooks by id.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*(:[a-z][a-z0-9-]*)?$": {
+          "type": "object",
+          "description": "One hook.",
+          "additionalProperties": false,
+          "properties": {
+            "run": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "description": "Command to run.",
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            },
+            "tags": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "default": [],
+              "description": "Labels."
+            },
+            "level": {"type": "integer", "minimum": 1, "maximum": 9, "description": "Severity."},
+            "enabled": {"type": "boolean", "default": true, "description": "Switch the hook off."}
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "object",
+      "description": "Note files by slot <module>:<slot>.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "description": "Files of the slot."
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "description": "A table that holds a map.",
+      "additionalProperties": false,
+      "properties": {
+        "title": {"type": "string", "default": "none", "description": "Title."},
+        "items": {
+          "type": "object",
+          "description": "Items by name.",
+          "additionalProperties": false,
+          "patternProperties": {"^[a-z]+$": {"type": "integer", "minimum": 0, "default": 1, "description": "Count."}}
+        }
+      }
+    }
+  }
+}

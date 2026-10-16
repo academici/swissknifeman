@@ -55,8 +55,8 @@ tool error → response is marked `isError: true`, **the server does not crash**
 
 ## Methods JSON-RPC
 
-`initialize` (→ `serverInfo.name = maind`; **echo-it `protocolVersion` client**) ·
-`notifications/initialized` (no response) · `tools/list` · `tools/call` · `ping`. Unknown
+`initialize` (→ `serverInfo.name = maind`; **the requested `protocolVersion` if supported (`2025-06-18`, `2024-11-05`), otherwise the newest supported one**) ·
+`notifications/initialized` (no response) · `tools/list` · `tools/call` · `ping`. `maind mcp tools [--json]` prints the `tools_digest` and the tool list. Unknown
 method/tool → error `-32601`; internal error → `-32603` (cycle continues).
 
 ## Why your own server and not FastMCP

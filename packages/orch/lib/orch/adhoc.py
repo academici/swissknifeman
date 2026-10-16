@@ -12,6 +12,15 @@ SCHEMA = "urn:swissknifeman:orch:exec:execution-input:v1"
 DEFAULT_ROUTE = {"class": "implementation", "effort": "high"}
 REVIEW_PROCEDURE = "Every finding has severity, file:line, failure scenario"
 _CHECK_ID = re.compile(r"^V[0-9]+$")
+# provenance kinds beyond ``adhoc`` and ``review``: kind -> (fields, required fields); the owner of the work names them
+SUPPORT_PROVENANCE = {
+    "plan_support": (("plan", "phase"), ("plan",)),
+    "phase_support": (("plan", "phase"), ("plan", "phase")),
+    "review_followup": (("plan", "item", "finding"), ()),
+    "deviation_fix": (("plan", "item", "event"), ("plan", "item")),
+    "research": (("plan", "question"), ()),
+    "advisor": (("plan", "item", "question"), ()),
+}
 
 
 class AdhocError(Exception):
@@ -40,21 +49,39 @@ def _split_review(review: str) -> tuple[str, str]:
     return base, head
 
 
+def support_provenance(kind: str, **fields: str | None) -> dict:
+    """``provenance`` of work outside the items of a plan: ``kind`` is one of :data:`SUPPORT_PROVENANCE`; a field the kind
+    does not carry, or a required one that is missing, is a usage mistake."""
+    if kind not in SUPPORT_PROVENANCE:
+        raise _usage(f"--provenance must be one of {', '.join(SUPPORT_PROVENANCE)}, got {kind!r}")
+    allowed, required = SUPPORT_PROVENANCE[kind]
+    given = {key: value for key, value in fields.items() if value}
+    extra = sorted(set(given) - set(allowed))
+    if extra:
+        raise _usage(f"provenance {kind} does not take {', '.join('--' + key for key in extra)}")
+    missing = [key for key in required if key not in given]
+    if missing:
+        raise _usage(f"provenance {kind} needs {', '.join('--' + key for key in missing)}")
+    return {"kind": kind, **given}
+
+
 def build_adhoc_input(goal: str | None, include: Iterable[str], exclude: Iterable[str] = (),
                       checks: Iterable[str] = (), procedures: Iterable[str] = (),
                       reads: Iterable[str] = (), route: dict | None = None,
                       review: str | None = None, why: str | None = None,
-                      expect: str | None = None, created_by: str = "owner") -> dict:
+                      expect: str | None = None, created_by: str = "owner", provenance: dict | None = None) -> dict:
     """Execution-input for ad-hoc work or, with ``review='BASE..HEAD'``, a read-only review.
 
     ``checks`` are ``'V1=CMD'`` (expected ``expect``, default ``exit 0``), ``procedures`` are
     ``'V2=TEXT'`` (expected ``observed``). Without any of them the input is refused: acceptance is mandatory,
-    except that a review falls back to the findings-shape procedure.
+    except that a review falls back to the findings-shape procedure. ``provenance`` (see :func:`support_provenance`)
+    names the owner of work outside the items of a plan; it replaces the ``adhoc`` provenance and excludes ``review``.
     """
     include, exclude, reads = list(include), list(exclude), list(reads)
     parsed = [(*_pair(item, "--check"), "cmd") for item in checks]
     parsed += [(*_pair(item, "--procedure"), "procedure") for item in procedures]
-    provenance: dict
+    if provenance is not None and review is not None:
+        raise _usage("--provenance and --review exclude each other")
     if review is not None:
         base, head = _split_review(review)
         target = f"diff {base}..{head}"
@@ -65,7 +92,7 @@ def build_adhoc_input(goal: str | None, include: Iterable[str], exclude: Iterabl
     else:
         if not goal or not goal.strip():
             raise _usage("a goal is required")
-        provenance = {"kind": "adhoc", "request": goal, "created_by": created_by}
+        provenance = provenance or {"kind": "adhoc", "request": goal, "created_by": created_by}
     if not include:
         raise _usage("at least one include entry is required")
     if not parsed:

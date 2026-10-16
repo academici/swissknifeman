@@ -1,0 +1,101 @@
+{
+  "changed_paths": [
+    ".claude-plugin/marketplace.json",
+    "CHANGELOG.md",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/lib/aicore/cli.py",
+    "packages/aicore/lib/aicore/content/marketplace.py",
+    "packages/aicore/schemas/README.md",
+    "packages/aicore/schemas/plugin-catalog/v1/examples/invalid/bad-source.json",
+    "packages/aicore/schemas/plugin-catalog/v1/examples/invalid/codex-without-policy.json",
+    "packages/aicore/schemas/plugin-catalog/v1/examples/invalid/extra-field.json",
+    "packages/aicore/schemas/plugin-catalog/v1/examples/invalid/missing-required.json",
+    "packages/aicore/schemas/plugin-catalog/v1/examples/valid/bucket.json",
+    "packages/aicore/schemas/plugin-catalog/v1/examples/valid/hub-root-entries.json",
+    "packages/aicore/schemas/plugin-catalog/v1/plugin-catalog.schema.json",
+    "packages/aicore/tests/content/test_marketplace.py",
+    "packages/aicore/unit.json",
+    "packages/planner/unit.json",
+    "packages/skiller/.claude-plugin/catalog.json",
+    "packages/skiller/lib/skiller/publication.py",
+    "packages/skiller/lib/skiller/registry.py",
+    "packages/skiller/tests/fixtures.py",
+    "packages/skiller/tests/fixtures_data/claude-publication-golden.json",
+    "packages/skiller/tests/test_codex_publication.py",
+    "packages/skiller/tests/test_host_publication.py",
+    "packages/skiller/tests/test_marketplace_catalog.py",
+    "packages/skiller/tests/test_provider_publication_parity.py",
+    "packages/skiller/tests/test_publication.py",
+    "packages/skiller/unit.json",
+    "scripts/ecosystem-units.py",
+    "tests/golden/cases.json",
+    "tests/golden/generation.json"
+  ],
+  "checks_run": [
+    {
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore marketplace build --hub . --check",
+      "exit": 0,
+      "id": "V3"
+    },
+    {
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "exit": 0,
+      "id": "V4"
+    }
+  ],
+  "evidence": [
+    "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.4/stage-report.json"
+  ],
+  "open_issues": [
+    {
+      "impact": "Record in plan.py log as the allowed D81 difference; golden skiller-registry was recaptured for it.",
+      "kind": "note",
+      "next": "None.",
+      "text": "Byte difference versus HEAD: in .claude-plugin/marketplace.json the `package` field of the `task` entry changed from `task` to `planner` (the module that ships the alias). .agents/plugins/marketplace.json is byte-identical. The consumers named in the input (attestation.py, connect.py, hub.py, distribution.py, release-units.json) read `name` or other fields, not `package`; the only `package` assertion is skiller test_bucket_alias (green)."
+    },
+    {
+      "impact": "New code path in the checker is covered only indirectly through V4 (the real repo units).",
+      "kind": "deviation",
+      "next": "Add a test case for source/catalog entries to scripts/test-ecosystem-units.py in a later item.",
+      "text": "scripts/ecosystem-units.py (_check_paths) read plugin['manifest'] unconditionally, so any provides.plugins entry with `source` or `catalog` (allowed by unit/v1 since P12.1) crashed `ecosystem-units.py check`. Fixed in this session: for `source` it probes <source>/.claude-plugin/plugin.json, for `catalog` the catalog file; the manifest-name check is skipped for both. scripts/test-ecosystem-units.py (148 tests) passes, but I added no test for the new branch because the test file is outside write_set."
+    },
+    {
+      "impact": "Hub identity lives in skiller's generated catalog until umbrella.json declares it; a key added later takes precedence automatically.",
+      "kind": "deviation",
+      "next": "Decide whether to add marketplace to configs/umbrella.json and umbrella.schema.json in a later item.",
+      "text": "configs/umbrella.json has no `marketplace` key (the design takes owner/name from it). assemble() resolves name/owner as: explicit arguments, then configs/umbrella.json#marketplace if present, then a top-level `marketplace` {name, owner} block of a plugin-catalog. skiller's catalog.json carries that block, so the CLI --check reproduces the bytes without configs."
+    },
+    {
+      "impact": "Additive to the sketch; the schema is new, compat check has 0 errors.",
+      "kind": "deviation",
+      "next": "Confirm key name `schema` vs `$schema` at audit; changing it later is a v1 edit while there is no other consumer.",
+      "text": "plugin-catalog/v1 differs from the knowledge sketch: (1) the `codex` object accepts optional source, description, category, tags besides required install_policy/auth, because the Codex entries of core and skm differ from their Claude entries; (2) an optional top-level `marketplace` block; (3) skills[] paths are module-relative (assemble prefixes the module path) because skiller's boundary test K1 rejects 'packages/skiller' inside the module; source './' still means the hub root; (4) the document key is `schema`, as in the knowledge text, while other aicore contracts use `$schema`."
+    },
+    {
+      "impact": "Two near-identical unit loaders in aicore.",
+      "kind": "deviation",
+      "next": "Optionally unify later.",
+      "text": "aicore.content may not import aicore.ext (layering test), so the CLI loads units with its own marketplace.discover() on top of aicore.config.units.unit_dirs instead of aicore.ext.units.discover_units. Semantics are the same (SKM_UNITS_PATH, first id wins). The CLI sets SKM_UNITS_PATH to <hub>/packages when unset, and its main() lives in marketplace.py because no other aicore file for it was in the write set."
+    },
+    {
+      "impact": "Hosts that kept plugin dirs without unit.json lose their marketplace entries; in this hub all five module plugins and the task alias declare provides.plugins.",
+      "kind": "assumption",
+      "next": "None.",
+      "text": "skiller's registry always adds its own unit (synthesized with the catalog entry when root/unit.json is absent, e.g. fixture or standalone roots). Modules of a host without unit.json no longer appear in the root marketplace; plugin_dirs now feeds only module_skills and the doctor sibling scan. Fixture tests that relied on sibling plugin.json were rewritten to declare units."
+    },
+    {
+      "impact": "V1 and V2 results are unknown until the conductor runs them.",
+      "kind": "note",
+      "next": "Conductor runs V1 and V2.",
+      "text": "Not run by me, as per the rules: V1 (affected-tests --run) and V2 (skiller validate.sh in the sandbox). I also did not run the full aicore and skiller suites, only single test files of the changed code. The context map's claim that attestation.py:230 and connect.py:474 read `package` was not supported by the code (they read `name`)."
+    },
+    {
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "text": "changed outside the write set: packages/aicore/schemas/README.md"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Маркетплейс и Codex-индекс собираются из unit.json. Новый aicore.content.marketplace (assemble, build --check, дубликаты → MARKETPLACE_DUPLICATE) и схема plugin-catalog/v1; контракт объявлен в aicore/unit.json; CLI `aicore marketplace build --hub ROOT [--check]`. skiller пишет packages/skiller/.claude-plugin/catalog.json и вызывает assemble; unit.json skiller объявляет catalog. planner объявляет planner и алиас task (source aliases/task); analyst, brain, harness и maind уже объявляли свои плагины. plugin_dirs не тронут (нужен module_skills.py). В этой сессии: в scripts/ecosystem-units.py (_check_paths) добавлена обработка provides.plugins с source/catalog вместо обязательного manifest, иначе V4 падал с KeyError (раньше это был блокер за пределами write_set). Байты против HEAD: .agents/plugins/marketplace.json идентичен; .claude-plugin/marketplace.json отличается одной строкой: package записи task теперь planner (было task). Golden skiller-registry перезахвачен с этой причиной. Тесты: test_marketplace (aicore, 13), skiller test_marketplace_catalog, test_bucket_alias, test_publication, test_host_publication, test_codex_publication, test_provider_publication_parity, scripts/test-ecosystem-units.py (148) — все OK; aicore schema compat: 0 errors, 1 warning (oneOf у provides.plugins.items), 4 notes."
+}

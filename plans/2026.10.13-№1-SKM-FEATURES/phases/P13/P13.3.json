@@ -1,0 +1,105 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P13.3",
+  "title": "Prompt profiles: orch/configs/prompt-profiles.json (prompt-profile/v1), transforms только с A/B-доказательством, применение к блокам manifest, profile в manifest",
+  "status": "todo",
+  "summary": "По knowledge/p13-eval#profiles: схема, загрузка, применение к блокам P9.1 (порядок и оформление), A/B на наборе P13.1, удаление transform без выигрыша.",
+  "why": "Аудит П8.3, 2.4.3; D6, D8. Риск: компилятор меняет смысл — только порядок и оформление блоков, golden.",
+  "scope": {
+    "include": [
+      "packages/orch/configs/prompt-profiles.json",
+      "packages/orch/schemas/conductor/v1/prompt-profile.schema.json",
+      "packages/orch/lib/orch/conductor/prompts.py",
+      "tests, отчёты A/B"
+    ],
+    "exclude": [
+      "transforms без доказательства"
+    ]
+  },
+  "depends_on": [
+    "P13.1"
+  ],
+  "decisions": [
+    "D8",
+    "D6"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p13-eval#profiles",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p9-prompt#manifest",
+      "why": "блоки",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "why": "схема профиля",
+      "required": true,
+      "section": "2.4 Model control plane"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/configs/prompt-profiles.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/prompt-profile.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/prompts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P13.3/**",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Платные прогоны — только в пределах бюджета владельца (D8); id skills не удаляются (D1)"
+  ],
+  "guidance": "Исполнитель: frontier/high. Порядок: схема → применение (golden) → A/B → оставить только выигрышные → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "prompt profiles"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "owner_gate",
+    "gate": "EVAL-BUDGET",
+    "scope": "платные прогоны моделей в объёме бюджета, подтверждённого владельцем (D8)"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-13T19:59:48Z"
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D69",
+  "title": "maind: конфиг узла делится на настройки [maind] и реестр флота в состоянии; наследный config.json читается до upgrade",
+  "date": "2026-10-11",
+  "status": "accepted",
+  "question": "Как перевести узловой config.json maind (в корне монорепозитория) на слоёный конфиг D5, если в нём массивы объектов (projects, agents.definitions, mcp.servers), а maind сам пишет проекты (onboard, deploy, sync)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Настройки, которые maind только читает (node, memory, graph, code_graph, agents — скаляры, integrations, mcp.emit_example и perplexity_web, observability), — секция [maind] схемы packages/maind/configs/config.schema.json; реестр, который пишет maind (projects, namespaces, agents.definitions, mcp.servers, providers, role_packs), — <state>/maind/registry.json в прежней форме с единственным писателем write_registry. Config.load собирает прежний словарь. Наследный узловой файл: настройки — ExtraLayer, пока нет [maind] ни в одном слое; реестр — читается и пишется в наследный файл, пока нет registry.json (предупреждение MAIND_LEGACY_CONFIG). ~/.maind → <state>/maind, <module>/data → <data>/maind через resolve_with_legacy; .maind.graph.json → [maind.graph.links.<id>] проекта; *.bak → aicore.state.backup; данные демона памяти не переносятся (P13).",
+      "pros": "Схема aicore выражает настройки без массивов объектов; писатель реестра один и машинный; живые установки работают до upgrade"
+    },
+    {
+      "id": "B",
+      "text": "Весь config.json — в TOML [maind] с массивами таблиц.",
+      "cons": "aicore.config не поддерживает массивы объектов, toml_edit отказывается от массивов таблиц; maind не сможет писать проекты"
+    },
+    {
+      "id": "C",
+      "text": "Перенести config.json как есть в ~/.config/swissknifeman/maind.json.",
+      "cons": "Нет слоёв, explain и схемы; против D5 и D14"
+    }
+  ],
+  "context": "knowledge/hub-p11#facts (maind), knowledge/hub-p11-maind#config; aicore.config: массивы только скаляров, словари через patternProperties; архитектура §5.2: реестры — ~/.local/state/swissknifeman.",
+  "decision": "A — Настройки, которые maind только читает (node, memory, graph, code_graph, agents — скаляры, integrations, mcp.emit_example и perplexity_web, observability), — секция [maind] схемы packages/maind/configs/config.schema.json; реестр, который пишет maind (projects, namespaces, agents.definitions, mcp.servers, providers, role_packs), — <state>/maind/registry.json в прежней форме с единственным писателем write_registry. Config.load собирает прежний словарь. Наследный узловой файл: настройки — ExtraLayer, пока нет [maind] ни в одном слое; реестр — читается и пишется в наследный файл, пока нет registry.json (предупреждение MAIND_LEGACY_CONFIG). ~/.maind → <state>/maind, <module>/data → <data>/maind через resolve_with_legacy; .maind.graph.json → [maind.graph.links.<id>] проекта; *.bak → aicore.state.backup; данные демона памяти не переносятся (P13).",
+  "rationale": "Уточняет архитектуру §5.3 строкой config.json/.maind.json: человеческие настройки — в слоёный конфиг, машинно записываемый реестр — в состояние (§5.2 «реестры … проекты»). Перенос значений — swissknifeman upgrade (P13).",
+  "applies_to": [
+    "P11.5",
+    "P11.11",
+    "P11.13"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

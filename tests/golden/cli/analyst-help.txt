@@ -1,0 +1,28 @@
+exit: 0
+--- stdout ---
+analyst — CLI layer of continuous learning ecosystem academici.
+Thin launcher: checks the environment and transfers control to the package lib/analyst
+(python3 -m analyst). All logic is in lib/ (importable and testable: see tests/).
+
+Commands (package root = installation directory analyst):
+  digest    learn candidate lessons from run-report run (--project ID | --cwd | --session UUID)
+  scan      cross-project lesson patterns (config.json) → suggestions (namespace-isolated)
+  suggest   cross-project pattern → DRAFT skill (drafts/); promoter - person (<id>|--all|--bucket|--force)
+  review    show lessons by state + diff against active (--state S | --project ID)
+  recompute recalculate confidence from events.ndjson + numeric state-machine (--now | --dry-run)
+  promote   advance the lesson through the pipeline: ephemeral→candidate→curated (man in the gate)
+  deprecate demo lesson (soft, not deleted - audit)
+  status    read-only lesson story summary (counters, curated-ready, promote_failed)
+  compact   consolidate old events events.ndjson in snapshot (--before ISO | --dry-run)
+  token-report  token report on usage-trend.ndjson + rolling/pinned baseline
+                (--sessions N | --by model|role | --vs-baseline | --baseline set --note "...")
+  runs      read-only JSON of a project's run reports: `runs show|codegraph --project DIR [--json]`
+  events    ecosystem run outcomes: `events ingest --event -|FILE` (subscriber of planner.* and orch.run.*), `events list [--type T] [--since ISO] [--json]`
+  sessions  weekly medians first_turn_overhead from the living jsonl-session transcripts
+            (--project ID | --weeks N | --json)
+  doctor    environment diagnostics
+  orch      what orch runs cost, from its events and artifacts: `orch report [--plan P] [--run R] [--json]`
+  workflow-scan  read-only inventory registered plan workflow artifacts
+  version   version (git SHA) and package path
+--- stderr ---
+

@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261012T164112Z-9dfd53:P11.8:checks.2:V3",
+  "check_id": "V3",
+  "subject": "PLAN3.P11.8",
+  "candidate": {
+    "head": "b9c499f4460322e90f90cba4f6bc3679dd7bd348",
+    "dirty_digest": "3c34ff17a131d5e2b8acd86173851f20249df80056f1449454f599e39d93986b"
+  },
+  "started_at": "2026-10-12T18:25:51Z",
+  "procedure": {
+    "cmd": "bash packages/maind/scripts/test.sh && bash packages/maind/scripts/validate.sh",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-12T18:26:59Z"
+}

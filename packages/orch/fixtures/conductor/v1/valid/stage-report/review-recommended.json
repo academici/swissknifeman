@@ -1,0 +1,21 @@
+{
+  "status": "done",
+  "summary": "changed the schema",
+  "changed_paths": [
+    "packages/orch/schemas/x.json"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [],
+  "review_recommendation": {
+    "recommended": true,
+    "reason_codes": [
+      "schema_changed",
+      "public_api_changed"
+    ],
+    "focus": [
+      "compatibility of stage-report readers"
+    ],
+    "suggested_model_class": "frontier"
+  }
+}

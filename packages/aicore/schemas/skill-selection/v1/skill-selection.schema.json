@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:skill-selection:v1",
+  "title": "skill-selection",
+  "type": "object",
+  "description": "Selection policy of one skill, kept in `selection.json` beside its `SKILL.md` so that the frontmatter stays within the Agent Skills standard (whose `metadata` is a string-to-string map). Read by `skiller registry` into `skills.json` (`selection`) and by `skiller select`; a skill without the file is `kind: domain` with no triggers.",
+  "properties": {
+    "schema": {
+      "const": "skill-selection/v1",
+      "description": "Schema identifier."
+    },
+    "kind": {
+      "enum": [
+        "contract",
+        "procedure",
+        "domain",
+        "tool",
+        "router",
+        "reference",
+        "persona"
+      ],
+      "description": "What the skill is for: `contract` a rule or deliverable format, `procedure` steps to follow, `domain` knowledge of a stack or area, `tool` use of a tool or capability, `router` a choice between other skills, `reference` material read on request, `persona` a role voice."
+    },
+    "decision": {
+      "enum": [
+        "KEEP",
+        "SLIM",
+        "SPLIT",
+        "MERGE",
+        "ROUTER_ONLY",
+        "REFERENCE",
+        "SCRIPT",
+        "OVERLAY",
+        "WORKFLOW",
+        "PACKAGE_LOCAL",
+        "PERSONA",
+        "DEPRECATE",
+        "DELETE",
+        "ARTIFACT",
+        "COMMAND",
+        "SCHEMA",
+        "CONTRACT",
+        "CONFIG",
+        "POLICY",
+        "TOOL_PROFILE",
+        "EXTERNAL_PACK"
+      ],
+      "description": "Decision of the skill audit (first code of the audit decision): keep, slim, split, merge, hand over to the router only, make a reference, replace with a script, a project overlay, an orchestration workflow, a package-local skill, a persona, deprecate or delete; `ARTIFACT`, `COMMAND`, `SCHEMA`, `CONTRACT`, `CONFIG`, `POLICY`, `TOOL_PROFILE` and `EXTERNAL_PACK` name where the content moves."
+    },
+    "also": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Further codes of a compound audit decision, such as `SLIM` of `KEEP/SLIM`.",
+      "items": {
+        "enum": [
+          "KEEP",
+          "SLIM",
+          "SPLIT",
+          "MERGE",
+          "ROUTER_ONLY",
+          "REFERENCE",
+          "SCRIPT",
+          "OVERLAY",
+          "WORKFLOW",
+          "PACKAGE_LOCAL",
+          "PERSONA",
+          "DEPRECATE",
+          "DELETE",
+          "ARTIFACT",
+          "COMMAND",
+          "SCHEMA",
+          "CONTRACT",
+          "CONFIG",
+          "POLICY",
+          "TOOL_PROFILE",
+          "EXTERNAL_PACK"
+        ],
+        "description": "One decision code."
+      }
+    },
+    "roles": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Orchestration roles the skill is allowed for, such as `reviewer`; absent or empty means every role. Which skills a role must always get is the list of its bridge (`role-skills.json`), not this field.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "description": "Role id."
+      }
+    },
+    "triggers": {
+      "type": "object",
+      "description": "What in a project makes the skill relevant.",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Glob patterns of project paths.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One glob pattern."
+          }
+        },
+        "deps": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Project dependencies as `<ecosystem>:<package>`.",
+          "items": {
+            "type": "string",
+            "pattern": "^(composer|npm|pip|pub):[^\\s]+$",
+            "description": "One dependency, such as `composer:laravel/framework`."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "requires_tools": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Tools or capabilities a role must have for the skill to be useful; a role without them does not get the skill.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Tool name."
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Skills that must not be selected together with this one.",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$",
+        "description": "Skill id `<bucket>/<folder>`."
+      }
+    },
+    "exclusive_group": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Group of the table `skiller/configs/exclusive-groups.json` whose members are not selected together beyond the group limit."
+    },
+    "max_tokens": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Token budget of the skill body that selection counts; selection does not cut the text."
+    },
+    "replaces": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$",
+      "description": "Id (`bucket/folder`) of the skill this custom skill overrides; a custom skill with an existing id and no matching `replaces` is an `EXTENSION_AMBIGUOUS` error."
+    },
+    "replaced_by": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Where the content lives now: a role contract, a schema, a hook or a script; the skill is not preloaded for orchestration roles."
+    },
+    "evidence": {
+      "type": "object",
+      "description": "What confirms the decision.",
+      "properties": {
+        "eval_report": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Path of the eval report that backs the decision, or null when there is none."
+        },
+        "verified_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Date (`YYYY-MM-DD`) the decision was last checked, or null."
+        }
+      },
+      "required": [
+        "eval_report",
+        "verified_at"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "kind",
+    "decision"
+  ],
+  "additionalProperties": false
+}

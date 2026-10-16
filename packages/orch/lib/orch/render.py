@@ -21,6 +21,12 @@ class RenderError(Exception):
         self.code = code
 
 
+def load_roles(directory: str | Path | None = None) -> dict[str, dict]:
+    """Role manifests by id (file stem) from ``directory`` (default: the packaged ``roles``)."""
+    base = Path(directory) if directory else ROLES_DIR
+    return {path.stem: json.loads(path.read_text(encoding="utf-8")) for path in sorted(base.glob("*.json"))}
+
+
 def _fence(text: str, lang: str = "") -> str:
     """Fenced code block that cannot be closed by the content itself."""
     longest = max((len(run) for run in _BACKTICKS.findall(text)), default=0)
@@ -230,12 +236,20 @@ def render_prompt(input_doc: dict, manifest: dict, instructions_text: str) -> st
     return f"{head}\n---\n\n{render_task_block(input_doc)}"
 
 
+def _role_file(path: str) -> Path:
+    """Part of a module-relative instruction path below the roles folder; other shapes are refused."""
+    parts = Path(path).parts
+    if len(parts) < 2 or parts[0] != "roles" or ".." in parts or Path(path).is_absolute():
+        raise ValueError(f"instruction path must be module-relative under roles/: {path!r}")
+    return Path(*parts[1:])
+
+
 def load_role(role: str, roles_dir: str | Path | None = None) -> tuple[dict, str]:
-    """Manifest and instruction text of ``role``; instruction files resolve by name inside ``roles_dir``."""
+    """Manifest and instruction text of ``role``; instruction paths are module-relative (``roles/<id>.md``) and resolve inside ``roles_dir``."""
     directory = Path(roles_dir) if roles_dir is not None else ROLES_DIR
     try:
         manifest = json.loads((directory / f"{role}.json").read_text(encoding="utf-8"))
-        texts = [(directory / Path(item["path"]).name).read_text(encoding="utf-8")
+        texts = [(directory / _role_file(item["path"])).read_text(encoding="utf-8")
                  for item in manifest["instructions"]]
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise RenderError("ROLE_UNREADABLE", f"cannot load role {role!r} from {directory}: {error}") from error

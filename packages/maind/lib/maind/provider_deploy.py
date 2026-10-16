@@ -1,7 +1,8 @@
 """Provider-aware, caller-owned MCP deployment planning.
 
-mAInd owns semantic server selection; harness owns provider target, trust validation and
-serialization through its immutable MCP projection API.
+mAInd owns semantic server selection; ``aicore.provider.mcp`` owns the pure projection and its
+serialization; harness supplies the catalog, bindings and the Codex observer fragment through its
+JSON commands (``harness_link``).
 """
 from __future__ import annotations
 
@@ -11,20 +12,31 @@ from types import MappingProxyType
 from pathlib import Path
 import json
 import re
-import sys
+import tempfile
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ArtifactAction, ArtifactActionKind, ArtifactLock,
-                  ArtifactPlan, CapabilityId, CapabilityRequirement, DriftObservation,
-                  ProviderId, SupportLevel, canonical_json_bytes, apply_plan,
-                  load_provider_manifest, plan_artifact_lock, plan_artifact_render,
-                  replace_owner_records,
-                  parse_lock, provider_config_catalog,
-                  plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
-                  ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
-                  support_for, shared_config_path)
-from core.provider.lock import artifact_doctor, rollback_chained_bootstrap_transfer
-from .common import atomic_write_text
+from . import harness_link
+from .config import (PROJECT_LEGACY_CARRIER, PROJECT_TOML_CARRIER, aicore_schema,
+                     toml_project_providers)
+from aicore.provider.manifest import default_manifest_path
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
+    canonical_json_bytes, plan_artifact_render, sha256_digest)
+from aicore.provider.mcp import McpProjection, render_mcp_projection
+from aicore.artifacts.lock import (
+    LOCK_RELATIVE_PATH, ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan,
+    DriftObservation, apply_plan, plan_artifact_lock, replace_owner_records, parse_lock,
+    plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run,
+    ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer)
+from aicore.provider.values import (
+    CapabilityId, CapabilityRequirement, ProviderId, SupportLevel)
+from aicore.provider.manifest import (
+    load_provider_manifest, provider_config_catalog, support_for)
+from aicore.artifacts.lock import artifact_doctor, rollback_chained_bootstrap_transfer
+from aicore.util.io import atomic_write_text
+from aicore.util.term import warn
+from aicore.config import ConfigError, edit_layer_file
+from aicore.config.toml_edit import TomlEditError
+from .common import save_backup
 
 
 _BOOTSTRAP_CANONICAL_PREIMAGE = "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
@@ -85,11 +97,12 @@ def _provider_managed_block_codecs(artifacts):
 
 
 def resolve_effective_providers(config, catalog, project_id, *, operation=None,
-                                project_config=None):
+                                project_config=None, project_carrier=None):
     """Resolve P1 provider selection once for a project operation, without I/O."""
-    from .config import resolve_provider_config
+    from .config import PROJECT_LEGACY_CARRIER, resolve_provider_config
     result = resolve_provider_config(config, catalog, project_id,
-                                     project_config=project_config, operation=operation)
+                                     project_config=project_config, operation=operation,
+                                     project_carrier=project_carrier or PROJECT_LEGACY_CARRIER)
     if result.selection is None:
         codes = ",".join(item.code for item in result.diagnostics)
         raise ProviderDeployError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")
@@ -147,11 +160,15 @@ class BootstrapTransferPlan:
 
 @dataclass(frozen=True)
 class ProjectCarrierPlan:
-    """The closed D108 project-local provider selection mutation."""
+    """The closed D108 project-local provider selection mutation.
+
+    ``carrier`` names the active source: the project layer ``.swissknifeman/config.toml``
+    (``[aicore.providers]``) or the legacy ``.swissknife.json`` (``/providers``)."""
     path: Path
     before: bytes | None
     after: bytes
     providers: dict
+    carrier: str = PROJECT_LEGACY_CARRIER
 
     @property
     def changed(self):
@@ -168,17 +185,63 @@ class D108OperationPlan:
 
 
 def plan_project_carrier(root, config, project_id, *, expected_root=None):
-    """Plan the only allowed `.swissknife.json#/providers` selection merge.
+    """Plan the only allowed project provider selection merge, in the ACTIVE source.
 
-    ``expected_root`` is supplied by the live facade; disposable-root conformance leaves it
-    unset but still uses the canonical project id.  No caller may broaden this to another
-    project or carrier.
+    The source is the ``[aicore.providers]`` table of ``.swissknifeman/config.toml`` when the project
+    layer sets a selection there; else the legacy ``.swissknife.json#/providers`` while that file
+    exists (its bytes keep the form they always had); else the project layer (new file, written
+    only by the apply step). ``expected_root`` is supplied by the live facade; disposable-root
+    conformance leaves it unset but still uses the canonical project id.  No caller may broaden
+    this to another project or carrier.
     """
     root = Path(root)
     if project_id != "swissknifeman" or (expected_root is not None and
                                           root.resolve() != Path(expected_root).resolve()):
         raise ProviderDeployError("MAIND_D108_FOREIGN_PROJECT")
-    path = root / ".swissknife.json"
+    toml_path = root / PROJECT_TOML_CARRIER
+    if toml_path.is_symlink() or (toml_path.exists() and not toml_path.is_file()):
+        raise ProviderDeployError("MAIND_D108_CARRIER_UNSAFE")
+    try:
+        toml_existing = toml_project_providers(root)
+    except ConfigError:
+        raise ProviderDeployError("MAIND_D108_CARRIER_INVALID") from None
+    legacy_path = root / PROJECT_LEGACY_CARRIER
+    if toml_existing is not None or (not legacy_path.exists() and not legacy_path.is_symlink()):
+        return _plan_toml_carrier(root, config, project_id, toml_path, toml_existing)
+    return _plan_legacy_carrier(root, config, project_id, legacy_path)
+
+
+def _plan_toml_carrier(root, config, project_id, path, existing):
+    before = path.read_bytes() if path.exists() else None
+    if existing is not None:
+        from .config import resolve_provider_config
+        resolved = resolve_provider_config(config, None, project_id, project_config=existing,
+                                           project_carrier=PROJECT_TOML_CARRIER)
+        if resolved.selection is None:
+            raise ProviderDeployError("MAIND_D108_CARRIER_INVALID")
+    with tempfile.TemporaryDirectory() as scratch:
+        scratch_root = Path(scratch)
+        scratch_path = scratch_root / PROJECT_TOML_CARRIER
+        scratch_path.parent.mkdir(parents=True)
+        if before is not None:
+            scratch_path.write_bytes(before)
+        try:
+            for provider_id in ("claude-code", "codex"):
+                edit_layer_file(scratch_path, "aicore", f"providers.selection.{provider_id}.enabled",
+                                True, schema=aicore_schema(), layer="project", project=scratch_root)
+            providers = toml_project_providers(scratch_root)
+        except (ConfigError, TomlEditError):
+            raise ProviderDeployError("MAIND_D108_CARRIER_INVALID") from None
+        after = scratch_path.read_bytes()
+    # Validate the fully merged layer before it becomes writable.
+    selected = resolve_effective_providers(config, None, project_id, project_config=providers,
+                                           project_carrier=PROJECT_TOML_CARRIER)
+    if selected != (ProviderId.CLAUDE_CODE, ProviderId.CODEX):
+        raise ProviderDeployError("MAIND_D108_SELECTION_INVALID")
+    return ProjectCarrierPlan(path, before, after, providers, PROJECT_TOML_CARRIER)
+
+
+def _plan_legacy_carrier(root, config, project_id, path):
     if path.is_symlink() or (path.exists() and not path.is_file()):
         raise ProviderDeployError("MAIND_D108_CARRIER_UNSAFE")
     before = path.read_bytes() if path.exists() else None
@@ -196,6 +259,7 @@ def plan_project_carrier(root, config, project_id, *, expected_root=None):
                                            project_config=existing)
         if resolved.selection is None:
             raise ProviderDeployError("MAIND_D108_CARRIER_INVALID")
+        warn_legacy_providers(path)
     providers = dict(existing or {})
     providers["contract_version"] = "1.0.0"
     selection = dict(providers.get("selection") or {})
@@ -210,7 +274,20 @@ def plan_project_carrier(root, config, project_id, *, expected_root=None):
     if selected != (ProviderId.CLAUDE_CODE, ProviderId.CODEX):
         raise ProviderDeployError("MAIND_D108_SELECTION_INVALID")
     document["providers"] = providers
-    return ProjectCarrierPlan(path, before, canonical_json_bytes(document), providers)
+    return ProjectCarrierPlan(path, before, canonical_json_bytes(document), providers,
+                              PROJECT_LEGACY_CARRIER)
+
+
+_warned_legacy_providers = set()
+
+
+def warn_legacy_providers(path):
+    """One MAIND_LEGACY_PROVIDERS warning per process and legacy carrier."""
+    if str(path) in _warned_legacy_providers:
+        return
+    _warned_legacy_providers.add(str(path))
+    warn(f"MAIND_LEGACY_PROVIDERS: reading the provider selection from {path}; move it to "
+         f"[aicore.providers.selection.<id>] in .swissknifeman/config.toml (swissknifeman upgrade)")
 
 
 def apply_project_carrier(plan):
@@ -218,7 +295,9 @@ def apply_project_carrier(plan):
     if not isinstance(plan, ProjectCarrierPlan):
         raise TypeError("project carrier plan required")
     plan.path.parent.mkdir(parents=True, exist_ok=True)
-    from core import atomic_write_text
+    from aicore.util.io import atomic_write_text
+    if plan.carrier == PROJECT_TOML_CARRIER and plan.before is not None:
+        save_backup(plan.path, project=plan.path.parents[1])
     atomic_write_text(plan.path, plan.after.decode("utf-8"))
 
 
@@ -228,28 +307,25 @@ def _rollback_project_carrier(plan):
         raise ProviderDeployError("MAIND_D108_ROLLBACK_CARRIER_CHANGED")
     if plan.before is None:
         plan.path.unlink()
+        if plan.carrier == PROJECT_TOML_CARRIER:
+            try:
+                plan.path.parent.rmdir()   # only if the apply step created it and it is empty
+            except OSError:
+                pass
     elif plan.changed:
-        from core import atomic_write_text
+        from aicore.util.io import atomic_write_text
         atomic_write_text(plan.path, plan.before.decode("utf-8"))
 
 
-def _d108_planned_projections(config, project_id, carrier, harness_configs):
+def _d108_planned_projections(config, project_id, carrier):
     """Render the one closed D108 Claude+Codex P5 base tuple from its carrier."""
     selected = resolve_effective_providers(config, None, project_id,
-                                           project_config=carrier.providers)
+                                           project_config=carrier.providers,
+                                           project_carrier=carrier.carrier)
     expected = (ProviderId.CLAUDE_CODE, ProviderId.CODEX)
     if selected != expected:
         raise ProviderDeployError("MAIND_D108_SELECTION_INVALID")
-    harness_configs = Path(harness_configs)
-    harness_lib = str(harness_configs.parent / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
-    from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    catalog = load_mcp_catalog(harness_configs / "common/mcp/catalog.json")
-    return tuple(plan_mcp_projection(
-        catalog, provider_id=provider,
-        bindings_path=harness_configs / provider.value / "mcp/bindings.json",
-        selected=(), trusted=True) for provider in expected)
+    return harness_link.base_projections(expected)
 
 
 def _d108_unchanged_mcp_artifact(root, deploy):
@@ -275,20 +351,20 @@ def _d108_unchanged_mcp_artifact(root, deploy):
     return ProviderDeployPlan(tuple(rows)), mcp
 
 
-def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
-                        expected_root=None):
+def plan_d108_operation(root, config, project_id, servers, *, expected_root=None):
     """Construct every D108 component before returning any writer-capable plan."""
     carrier = plan_project_carrier(root, config, project_id, expected_root=expected_root)
     selected = resolve_effective_providers(config, None, project_id,
-                                           project_config=carrier.providers)
+                                           project_config=carrier.providers,
+                                           project_carrier=carrier.carrier)
     deploy = plan_provider_deploy(
-        _d108_planned_projections(config, project_id, carrier, harness_configs),
+        _d108_planned_projections(config, project_id, carrier),
         servers, selected=selected)
     if not deploy.green:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
     deploy, mcp = _d108_unchanged_mcp_artifact(root, deploy)
-    transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness_configs)
-    lock = Path(root) / ".swissknifeman/provider-artifacts.lock.json"
+    transfer = plan_d104_bootstrap_transfer(root)
+    lock = Path(root) / LOCK_RELATIVE_PATH
     lock_bytes = lock.read_bytes() if lock.exists() else None
     artifacts = transfer.artifacts + (mcp,)
     if transfer.managed_post_apply:
@@ -347,7 +423,7 @@ def _d108_rollback_operation_error(root, operation):
         return "MAIND_D108_ROLLBACK_ROOT_INVALID"
     carrier = operation.carrier
     if (not isinstance(carrier, ProjectCarrierPlan) or
-            carrier.path != root / ".swissknife.json" or
+            carrier.path != root / carrier.carrier or
             carrier.path.is_symlink() or not carrier.path.is_file() or
             carrier.path.read_bytes() != carrier.after):
         return "MAIND_D108_ROLLBACK_CARRIER_CHANGED"
@@ -423,29 +499,15 @@ def _d104_memory_registration(preimage, *, observer_group=None):
     return group, hook["command"], len(groups) == 2
 
 
-def _d104_observer_fragment(harness_configs):
-    """Obtain P5's public native fragment without importing its implementation details."""
-    harness_configs = Path(harness_configs)
-    harness_lib = str(harness_configs.parent / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
-    from harness.hooks import (LifecycleRequest, codex_d104_observer_fragment,
-                               plan_lifecycle)
-    from harness.profiles import load_catalog
-
-    lifecycle = plan_lifecycle(
-        load_catalog(shared_config_path("profile-catalog",
-                                        repo_root=harness_configs.parents[2])),
-        provider_id=ProviderId.CODEX,
-        requests=(LifecycleRequest("context.observer", True),), trusted=True,
-        codex_bindings_path=harness_configs / "codex/hooks/lifecycle-context-bindings.json")
+def _d104_observer_fragment():
+    """Obtain P5's public native fragment through its JSON command."""
     try:
-        return codex_d104_observer_fragment(lifecycle)
-    except ValueError as error:
+        return harness_link.observer_fragment()
+    except (ValueError, harness_link.PartnerError) as error:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from error
 
 
-def plan_d104_bootstrap_transfer(root, *, harness_configs):
+def plan_d104_bootstrap_transfer(root):
     """Compose the exact D104 native Codex pair and ask P2 for its closed admission.
 
     This is intentionally separate from ordinary provider deployment: callers use it only
@@ -455,30 +517,24 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
     root = Path(root)
     existing_path = root / ".codex/hooks.json"
     preimage = existing_path.read_bytes()
-    fragment = _d104_observer_fragment(harness_configs)
+    fragment = _d104_observer_fragment()
     memory_group, memory_command, managed_post_apply = _d104_memory_registration(
         preimage, observer_group=fragment.group)
-    from harness.hooks import validate_d104_codex_lifecycle_composition
     preimage_value = json.loads(preimage.decode("utf-8"))
     merged_hooks = dict(preimage_value["hooks"])
     merged_hooks["SessionStart"] = [memory_group, fragment.group]
     document = (json.dumps({"hooks": merged_hooks},
                            ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     try:
-        validate_d104_codex_lifecycle_composition(
-            document, memory_command=memory_command, fragment=fragment)
-    except ValueError as error:
+        harness_link.validate_codex_lifecycle(document, memory_command)
+    except (ValueError, harness_link.PartnerError) as error:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from error
 
     preimage_hash = sha256_digest(preimage)
     sources = (
         ArtifactSource("maind.d104.memory-preimage", ".codex/hooks.json",
                        _BOOTSTRAP_CANONICAL_PREIMAGE if managed_post_apply else preimage_hash),
-        ArtifactSource("harness.d104.observer-fragment",
-                       "packages/harness/lib/harness/hooks.py",
-                       sha256_digest(canonical_json_bytes({
-                           "event": fragment.event, "group": fragment.group,
-                           "handler_sha256": sha256_digest(fragment.handler_bytes)}))),
+        fragment.source,
     )
     identity = ArtifactAdapterIdentity("maind.d104.bootstrap-transfer", "1.0.0",
                                        ProviderId.CODEX, "1.0.0", ())
@@ -497,7 +553,7 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
         preimage_hash,
         ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
         "harness.codex.lifecycle.handler")
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     plan = plan_bootstrap_transfer(root, (hooks, handler),
                                    lock_bytes=lock_path.read_bytes() if lock_path.exists() else None,
                                    admission=admission)
@@ -519,9 +575,8 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
                          disabled=(), secret_values=(), manifest_path=None,
                          excluded_server_ids_by_provider=None):
     """Project caller-owned descriptors through P5-owned target/serialization records."""
-    from harness.mcp import McpProjection, render_mcp_projection
     manifest_path = Path(manifest_path) if manifest_path is not None else (
-        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        default_manifest_path())
     try:
         manifest = load_provider_manifest(manifest_path)
         capability_catalog = provider_config_catalog(manifest)
@@ -619,18 +674,10 @@ def write_conformance_report(path, plan):
     atomic_write_text(Path(path), conformance_report(plan))
 
 
-def generate_conformance_report(harness_configs, output_path):
+def generate_conformance_report(output_path):
     """Generate the fixed P6 semantic inventory through P5 projections only."""
-    harness_lib = str(Path(harness_configs).parent / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
-    from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    root = Path(harness_configs)
-    catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
-    bases = tuple(plan_mcp_projection(
-        catalog, provider_id=provider,
-        bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
-        for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
+    bases = harness_link.base_projections(
+        (ProviderId.CLAUDE_CODE, ProviderId.CODEX, ProviderId.CURSOR))
     plan = plan_provider_deploy(bases, semantic_servers(
         maind={"command": "maind"},
         codegraph={"command": "uvx", "args": ["serena"]},
@@ -645,7 +692,7 @@ def plan_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=
         return {"mode": "check", "severity": "error", "plan": None,
                 "diagnostics": deploy_plan.diagnostics}
     root = Path(root)
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
     artifacts = tuple(row.artifact for row in deploy_plan.results if row.artifact is not None)
     extra_artifacts = tuple(extra_artifacts)
@@ -675,7 +722,7 @@ def plan_exact_artifact_adoption(root, artifacts, *, preimage_hashes,
     root = Path(root)
     if not root.is_absolute() or root != root.resolve() or not root.is_dir():
         raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_ROOT_INVALID")
-    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_path = root / LOCK_RELATIVE_PATH
     if lock_path.is_symlink() or lock_path.exists() and not lock_path.is_file():
         raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_LOCK_UNSAFE")
     lock_bytes = lock_path.read_bytes() if lock_path.exists() else None

@@ -1,0 +1,227 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.6",
+  "title": "События: emit, журнал events.jsonl (только дописывание под flock), чтение; настройки [aicore] и unit.json модулей; CLI aicore events emit|list",
+  "status": "done_with_deviations",
+  "summary": "aicore.ext.journal (journal_dir, append с flock/fsync/починкой порванного хвоста, iter_lines только полных строк), aicore.ext.events (Event, build_event, emit, read_events, лимит data 64 KiB, отказ Secret), aicore.ext.settings (секция [aicore] через aicore.config), aicore.ext.units (unit.json всех модулей: events, subscribes, overlay_slots, extension_points); группа CLI events: emit (эмуляция) и list; фикстура модуля demo; тест архитектуры «только journal пишет журнал». Шаг доставки добавляет P6.7 (до него emit ведёт себя как delivery=off).",
+  "why": "R06 (журнал — источник правды), R07/R32 (лимит data), E22, E30. Жёсткие риски: (1) конкурентные emit и порванный хвост — инварианты I1–I4, I11 модели ext-p6-events §model, тест на 2 процесса × 200 событий; (2) источник не должен ломаться на ошибках ввода-вывода — I11; (3) секрет в data — отказ без вывода значения.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/ext/{journal,events,settings,units,cli}.py; errors.py (EVENT_*, JOURNAL_*, CONFIG_INVALID)",
+      "aicore/cli.py: группа events (emit, list)",
+      "фикстура tests/ext/fixtures/units/demo/ (unit.json + bin/demo-sub)",
+      "tests/ext/test_journal.py, test_events.py, test_units.py, test_cli_events.py",
+      "test_architecture: test_only_journal_writes_the_journal"
+    ],
+    "exclude": [
+      "подписки и доставка, курсоры, deliver/replay/status (P6.7)",
+      "плагины (P6.8)"
+    ]
+  },
+  "depends_on": [
+    "P6.3",
+    "P6.4"
+  ],
+  "decisions": [
+    "D44",
+    "D43",
+    "D6"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/ext-p6#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6#layout",
+      "why": "файлы и публичный API ext",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6#cli",
+      "why": "правила вывода CLI",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#model",
+      "why": "инварианты I1–I4, I11 и точки принуждения — читать целиком",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#emit",
+      "why": "API journal/events/units, CLI emit/list, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-config#section",
+      "why": "ExtSettings и чтение секции [aicore]",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#event",
+      "why": "поля конверта",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/state/locations.py",
+      "why": "project_state_dir, state_dir, find_project_root, ensure_dir",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/util/digest.py",
+      "why": "canonical_json_bytes",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/units.py",
+      "why": "корни поиска unit.json (SKM_UNITS_PATH)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/ext/journal.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/events.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/settings.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/cli.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/errors.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/__init__.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/cli.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "p6-6-review-grok",
+      "path": "@plan/research/P6.6-review-grok.md",
+      "role": "output"
+    },
+    {
+      "id": "p6-1-4-review-grok",
+      "path": "@plan/research/P6.1-P6.4-review-grok.md",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/ext-p6 §rules (stdlib, Python 3.9, POSIX, контракты, тесты без реального HOME, секреты, английский в продукте, CHANGELOG aicore, красное чинится в пункте)",
+    "Дизайн — разделы knowledge ext-p6-*, указанные в reads; имена функций, коды ошибок, пути файлов и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "Слои aicore: ext → util, state, config; util/state/config/provider/artifacts/content/delivery/release/usage не импортируют ext; верхний aicore/cli.py импортирует группы лениво (test_subpackage_layering)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии, тексты ошибок) — на английском; без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Инварианты I1–I4 и I11 ext-p6-events §model — обязательны; запись в events.jsonl — только journal.append (O_APPEND, один os.write, flock journal.lock, fsync)",
+    "Чтение журнала отдаёт только полные строки снимка размера; битые строки — проблема с смещением, не исключение",
+    "emit бросает ExtError только на ошибке вызова (тип, источник, data, лимит, Secret); ошибки ввода-вывода и конфига — предупреждение в stderr (одно на процесс на код) и None; strict=True бросает всё",
+    "MAX_DATA_BYTES = 65536 — размер canonical_json_bytes(data); значение Secret никогда не печатается",
+    "Фикстура tests/ext/fixtures/units/demo/unit.json проходит unit/v1: id demo, kind capability, events [\"demo.thing.happened\"], overlay_slots [\"plan\"], extension_points [{id: check}], subscribes [{id: log, on: [\"demo.*\"], run: [\"bin/demo-sub\"]}]; bin/demo-sub — исполняемый python-скрипт, дописывающий stdin в файл из env DEMO_SUB_OUT (если задан) и печатающий пустой stdout"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: `journal.py` (I1–I4: открытие `os.open(path, O_WRONLY|O_APPEND|O_CREAT, 0o600)`, flock на `ext/journal.lock` с опросом LOCK_NB 50 мс до 10 с, проверка последнего байта (`os.pread` или seek), запись, fsync; `iter_lines` через чтение блоками до снимка размера; `read_at`; `size`) → tests/ext/test_journal.py (порванный хвост, неполная строка, 2 процесса × 200 событий через multiprocessing) → `events.py` (Event, build_event с валидацией event/v1 через aicore.util.schema.load_contract, обход data на Secret до сериализации, лимит, emit без доставки, read_events) → `settings.py` (ExtSettings по ext-p6-config §section; пути оверлеев от каталога файла слоя — explain ResolvedConfig) → `units.py` (discover_units, declared_events, module_subscriptions, overlay_slots, extension_points) → фикстура demo → `ext/cli.py`: `main(argv, *, env, cwd, out, err)` для группы events с подкомандами emit/list (`list --json` → `{\"events\": [...], \"problems\": [...]}`; `emit --json` печатает событие); регистрация группы events в aicore/cli.py и строка USAGE (в P6.6 описание группы — `emit, list`; P6.7 дописывает остальное) → тесты CLI (временный HOME, SKM_UNITS_PATH на фикстуры) → test_architecture test_only_journal_writes_the_journal (строка \"events.jsonl\" в lib/ только в ext/journal.py) → CHANGELOG.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "T=$(mktemp -d) && mkdir -p $T/p/.swissknifeman && export HOME=$T PYTHONPATH=packages/aicore/lib && python3 -m aicore events emit --source planner --type planner.plan.closed --subject X --data '{\"n\": 1}' --project $T/p --delivery off >/dev/null && python3 -m aicore events list --project $T/p --json | python3 -c 'import json, sys; d = json.load(sys.stdin); e = d[\"events\"][0]; assert e[\"type\"] == \"planner.plan.closed\" and e[\"specversion\"] == \"1.0\" and e[\"data\"] == {\"n\": 1} and e[\"source\"] == \"urn:swissknifeman:module:planner\"' && test -f $T/p/.swissknifeman/state/events.jsonl && python3 -c 'from aicore.ext.events import MAX_DATA_BYTES; assert MAX_DATA_BYTES == 65536'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.ext.journal и aicore.ext.events (emit, read_events)",
+    "aicore.ext.settings и aicore.ext.units",
+    "`aicore events emit|list`"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T03:09:38Z",
+    "finished_at": "2026-10-09T05:41:26Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "f86187b8-6915-48fb-a486-0a3905f620c6"
+    },
+    "notes": "journal (flock, O_APPEND, one write, fsync, torn-tail repair, snapshot readers), events (Event, build_event, emit best-effort, read_events), settings, units, aicore events emit|list, demo fixture; grok-4.7 reviews: 15 findings fixed over three sessions; aicore 1220 tests, units/inventory/hygiene/golden/analyst green",
+    "deviations": [
+      "defects of closed P6.1-P6.4 found by the grok review fixed in this run (schemacompat, config map dot guard, propertyNames type)",
+      "test_only_journal_writes_the_journal allows provider/request_lifecycle.py (own per-request file); emit validates delivery but does not deliver or read config until P6.7",
+      "review budget spent; last corrections verified by regression tests only; role=reviewer commit not used"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T05:41:26Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T05:41:26Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T05:41:26Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T05:41:26Z"
+}

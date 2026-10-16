@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T154430Z-e8da3f:P12.9:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P12.9",
+  "candidate": {
+    "head": "dba3e176120383d2cbc53e990de0633f9ebd2305",
+    "dirty_digest": "40b97d5def562a7cbed996dcae1a33c5392f17e9fbabdf2e580eaed8541a0cc1"
+  },
+  "started_at": "2026-10-13T15:54:20Z",
+  "procedure": {
+    "cmd": "test $(ls docs/architecture/decisions/007[2-8]-*.md | wc -l) -eq 7 && grep -q 0078 docs/architecture/decisions/README.md && ! grep -q '\"docs:sync\"' packages/skiller/package.json",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T15:54:20Z"
+}

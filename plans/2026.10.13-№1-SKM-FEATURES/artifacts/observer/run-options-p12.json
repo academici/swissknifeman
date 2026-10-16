@@ -1,0 +1,12 @@
+{
+ "rules": [
+  "Run only the tests of the code you changed (affected-tests --run). Do NOT run ci-matrix, validate.sh, golden full, --tier all, schema compat: the conductor runs the acceptance checks; heavy runs are not allowed for you in this item.",
+  "No broad repo exploration: read only the files in reads and the write set."
+ ],
+ "review": {
+  "dynamic": false
+ },
+ "limits": {
+  "check_fixes": 2
+ }
+}

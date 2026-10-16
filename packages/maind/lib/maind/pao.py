@@ -7,7 +7,7 @@ dependency changes require interactive approval.
 import re
 import subprocess
 
-from .common import warn
+from aicore.util.term import warn
 
 PHP_TYPES = {"laravel-project", "php-package"}
 MIN_PHP = (8, 3)

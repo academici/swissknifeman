@@ -34,10 +34,11 @@ Selecting projects (`select_projects`) — exactly one of `--project` / `--names
 | `output-style` | `outputStyle: lean` (terce-agent-voice, token-saving) to all `.claude/settings.local.json`; opt-out — `project.output_style: "off"` | `orchestrate.py` → `env:hooks` |
 | `router-config` | directory intent-router (`.claude/agent-router.config.json`), only for projects with the hook enabled | `orchestrate.py` → `env:router` |
 | `instructions` | managed instruction blocks for the selected providers | `sync.py` → harness instructions |
-| `gitignore` | appends `.gitignore` lines from `configs/gitignore-policy.json` for service files that already exist (`ignore`, and `portable-or-ignore` when the file holds a machine path). Does not delete lines and does not run `git rm --cached`. Last, so files written earlier in the same sync are visible | `core/gitignore_policy.py` |
+| `gitignore` | appends `.gitignore` lines from `packages/aicore/configs/gitignore-policy.json` for service files that already exist (`ignore`, and `portable-or-ignore` when the file holds a machine path). Does not delete lines and does not run `git rm --cached`. Last, so files written earlier in the same sync are visible | `aicore/state/gitignore.py` |
 
-> `memory-hook` reads «intent» memory from `<project>/.claude/memory.env.ini` (`MODE`),
-> who writes `maind onboard --memory`. So auto-download can be extended to already connected
+> `memory-hook` reads «intent» memory from the committed `<project>/.swissknifeman/hooks.env` (`MEMORY_MODE`; legacy
+> `<project>/.claude/memory.env.ini` while there is no carrier), which `maind onboard --memory` sets through
+> `harness hooks --memory` (skipped with `PARTNER_UNAVAILABLE` without harness). So auto-download can be extended to already connected
 > projects without full onboard: `maind sync --all --only memory-hook`.
 >
 > `skills-catalog`/`output-style` — the same principle for skills and terse voice: `skiller

@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D1",
+  "title": "Collect all errors",
+  "date": "2026-10-05",
+  "status": "accepted",
+  "question": "Diagnostics in English or Russian?",
+  "options": [
+    {
+      "id": "A",
+      "text": "English"
+    },
+    {
+      "id": "B",
+      "text": "Russian"
+    }
+  ],
+  "decision": "A — English",
+  "rationale": "repo convention",
+  "consequences": [
+    "All diagnostics are English"
+  ],
+  "applies_to": [
+    "P1"
+  ],
+  "supersedes": [],
+  "superseded_by": null,
+  "evidence": [
+    {
+      "kind": "owner",
+      "ref": "M1",
+      "note": "stated in the brief"
+    }
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "answered_by": "owner"
+}

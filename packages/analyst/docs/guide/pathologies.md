@@ -5,7 +5,7 @@ haiku-agent thinking instead of text, quietly fanning scope, edit the generated 
 next sync will be erased. This is a catalog of such patterns - **workflow pathologies** — with detector (if
 it is), formula/threshold, severity and specific remediation.
 
-Source of Truth Codes/formulas/thresholds/severity — **[`core/pathology.py`](https://github.com/academici/swissknifeman/blob/main/core/pathology.py)**
+Source of Truth Codes/formulas/thresholds/severity — **[`analyst/pathology.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/pathology.py)**
 (clean `detect(run_report) -> [finding]`, without I/O and watch, never quits). This document is
 his Russian-language showcase + mapping to a minimal list of classes «Workflow Pathology Catalog»
 (§12 draft master plan - local design-document not tracked in the repo, hence no path/links).
@@ -16,32 +16,23 @@ source module.
 ## Layers
 
 ```
-harness-hook (SessionEnd)        core/pathology.py              consumers route
-run-report SCHEMA=2       ──▶   detect(run_report)       ──▶   maind analyze  — attention → reasons
-(usage/reads/error_loops/                                                       (verdict ATTENTION);
- retrieval/protected_writes)                                                    info → section «Efficiency»
-                                                                 analyst digest — relapse ≥2 out of 5
-                                                                   last sessions → candidate-lesson
+harness-hook (SessionEnd)        analyst/pathology.py              consumer
+run-report SCHEMA=2       ──▶   detect(run_report)       ──▶   analyst digest — relapse ≥2 out of 5
+(usage/reads/error_loops/                                        last sessions → candidate-lesson
+ retrieval/protected_writes)
 ```
 
 Hook **collects** raw run slices (tool calls, readings, error-series, retrieval, protected-writes,
 usage-tokens) in `<project>/.claude/runs/<sid>.json`. `pathology.detect()` **evaluates** this slice
 detectors below and gives a flat list of findings - he himself does not write anything or solve anything. Next
-finds **route** consumers: `maind analyze` — to the verdict of the current run (read-only
-parsing «did everything work?»), `analyst digest` — in the candidate lesson, if the pathology is not one-time (see
-«Relapse rule» below). The same clean list of finds is at the entrance to both.
+finds **route** to `analyst digest` — the candidate lesson, if the pathology is not one-time (see
+«Relapse rule» below). `maind analyze` no longer evaluates pathologies; it reads the run report only.
 
-Both connections are implemented and covered by tests (plan SKM-MASTER-002, phase P3, items P3.1–P3.3):
+The connection is implemented and covered by tests:
 
-- **`maind analyze`** (`packages/maind/lib/maind/analyze.py`, `pathology_slice()`) unfolds
-  finds by severity: `attention` leaves **lines evidence** (without code) in `reasons` verdict
-  via `compute_verdict(..., pathology_attention=...)` — goes where pack-drift/dirty
-  tree/token-anomalies; `info` goes to `rep["efficiency"]` and is printed in human-readable output
-  as a separate block `code: evidence` under the title **«Efficiency»**. Import `core.pathology`
-  unconditional - like the others `from core import ...` in `maind`/`analyst`/`harness` (none
-  wrapped in `try/except ImportError`; degradation «core/ not on PYTHONPATH» — launcher care/
-  `validate.sh`, not every import in place). Formally diverges from literal wording Code
-  Guidance item P3.2 («import from ImportError-fallback»), but follows the actual repo convention.
+- **`maind analyze`** reads the run report through `analyst runs show --json` (found by `aicore.util.partners`) and builds its
+  verdict from the report, git, the Bash log and health; it does not run the pathology detector itself. Without analyst the
+  run-report source is unavailable and the confidence is low.
 - **`analyst digest`** (`packages/analyst/lib/analyst/digest.py`, `extract_pathologies()`) drives away
   `detect()` according to the latest `PATHOLOGY_WINDOW=5` run-report'project am (reads them directly from disk
   `<project>/.claude/runs/*.json`, not via trend file) and creates a candidate lesson only if the code
@@ -181,7 +172,7 @@ execution. Expansion diff'and beyond what is stated is a reason for an obvious e
 
 **Status: NOT deterministic detectable.** Data acquisition: declared-scope from plans/-protocol -
 need a list of declared paths/files task item as a reference to compare with the actual
-`files_changed` run-report'a. `core/pathology.py` sees only WHAT was actually changed during the run, without
+`files_changed` run-report'a. `analyst/pathology.py` sees only WHAT was actually changed during the run, without
 standard «what was stated» — has nothing to compare with.
 
 ### 6. mismatch between stack-pack and project type
@@ -194,7 +185,7 @@ at stage provisioning/sync. For Laravel-packages (not app) — target solution f
 
 **Status: NOT detectable here.** This is a static diagnostic of the project configuration at the stage
 installations/stack-pack signal, not a single-run signal - lives in `harness agent-packs doctor`, not in
-`core/pathology.py`: thresholds/detectors of this file operate only run-report'om session.
+`analyst/pathology.py`: thresholds/detectors of this file operate only run-report'om session.
 
 ### 7. invalid handoff after context reset
 
@@ -206,7 +197,7 @@ is readable and consistent with the current state of the plan».
 
 **Status: NOT deterministic detectable.** Data acquisition: cross-run correlation - necessary
 match handoff-artifact of the PREVIOUS run with the actual starting state of the NEXT run.
-`core/pathology.py detect()` sees one run-report at a time (without memory of the neighboring session) — this is in
+`analyst/pathology.py detect()` sees one run-report at a time (without memory of the neighboring session) — this is in
 basically a different login form, not just one pathology inside the report.
 
 ### 8. protected asset mutation attempts
@@ -262,7 +253,7 @@ plans/-protocol, and not just the fact that there was no run. **→ digest:** on
 
 ## Detectors outside the minimum list §12
 
-`core/pathology.py` implements more detectors than the minimum list §12 (industrial
+`analyst/pathology.py` implements more detectors than the minimum list §12 (industrial
 heuristics LLM-agent observability — see [docs/reference.md](/reference)). For completeness SSOT — they
 here, without reference to a specific draft class:
 
@@ -280,10 +271,9 @@ within ONE run, and not about the plan between runs), upon relapse, it also beco
 
 ## See also
 
-- [`core/pathology.py`](https://github.com/academici/swissknifeman/blob/main/core/pathology.py) —
+- [`analyst/pathology.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/pathology.py) —
   detector code (SSOT formulas/thresholds/severity).
-- [`packages/maind/lib/maind/analyze.py`](https://github.com/academici/swissknifeman/blob/main/packages/maind/lib/maind/analyze.py)
-  (`pathology_slice`) · [`packages/analyst/lib/analyst/digest.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/digest.py)
+- [`packages/analyst/lib/analyst/digest.py`](https://github.com/academici/swissknifeman/blob/main/packages/analyst/lib/analyst/digest.py)
   (`extract_pathologies`, `_PATHOLOGY_REMEDIATIONS`) — routing finds to verdict/lessons.
 - [Tuning parameters](./tuning) — same principle «change the threshold only in the source module», for
   confidence-arithmetic `analyst`.

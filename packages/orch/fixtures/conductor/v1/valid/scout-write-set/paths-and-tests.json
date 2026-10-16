@@ -1,0 +1,9 @@
+{
+  "paths": [
+    "lib/orch/**",
+    "docs/conductor.md"
+  ],
+  "tests": [
+    "tests/test_conductor.py"
+  ]
+}

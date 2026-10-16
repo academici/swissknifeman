@@ -1,0 +1,35 @@
+# Bridges
+
+A bridge is the only place where two modules know each other. It is a unit of the hub: `bridges/<id>/unit.json`
+(kind `bridge`, destination `hub`, `requires` for both sides and the foundation, a `protocol` range and `dev.test`),
+its own `README.md`, `scripts/test.sh` and `tests/`. `python3 scripts/ecosystem-units.py check` validates the units
+and scans the bridge code for imports of partner packages and for the paths of other modules.
+
+| Bridge | Between | Verbs / content |
+| --- | --- | --- |
+| [`planner-orch`](planner-orch/README.md) | planner ↔ orch | `brief`, `register`, `register-review`, `commit`, `launch` (`plan.py bridge planner-orch <verb>`) |
+| [`orch-skiller`](orch-skiller/README.md) | orch ↔ skiller | `resolve_role.py`: the skill closure of a role and the skill delivery mode |
+| [`orch-harness`](orch-harness/README.md) | orch ↔ harness | conformance of the role manifests with the agent-pack role catalog |
+
+## Finding the partners
+
+A bridge never looks at a neighbouring folder. Each partner is found by an explicit environment variable, then by a
+command on `PATH`:
+
+| Partner | Variable | Command |
+| --- | --- | --- |
+| planner | `PLANNER_PLAN_PY` (the file) or `PLANNER_ROOT` | `planner` |
+| orch | `SKM_ORCH_ROOT` | `orch` |
+| skiller | `SKM_SKILLER_ROOT` | `skiller` |
+| harness | `SKM_HARNESS_ROOT` (tests only) | |
+
+A partner that is not found gives `BRIDGE_PARTNER_UNAVAILABLE: <partner> not found (set <VAR>)` on stderr with exit 3
+(the conformance tests are skipped). The foundation is found by `AICORE_ROOT`, then `_vendor/aicore` inside the bridge,
+then `packages/aicore` of the hub that holds the bridge; otherwise `AICORE_NOT_FOUND` with exit 2. The planner
+dispatcher passes `PLANNER_ROOT`, `PLANNER_PLAN_PY`, `PYTHONPATH` and `AICORE_ROOT` to the bridges it runs.
+
+## Tests
+
+`bash scripts/test-bridges.sh` runs `dev.test` of every bridge with the partners wired from the hub layout, a temporary
+`HOME` and event delivery off, and prints `bridges: OK`. The planner finds `bridges/` of this repository through
+`bridges.roots` in `.swissknifeman/config.toml`.

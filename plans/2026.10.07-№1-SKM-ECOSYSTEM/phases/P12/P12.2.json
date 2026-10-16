@@ -1,0 +1,204 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.2",
+  "title": "swissknifeman doctor: агрегатор provides.doctor модулей, umbrella-doctor/v1, только чтение",
+  "status": "done_with_deviations",
+  "summary": "swissknifeman doctor [--unit] [--category] [--json] [--timeout] запускает уникальные probe каждого модуля по разу, проверяет check-result/v1, синтезирует fail для объявленного id без результата и для сбоя probe, перечисляет модули без doctor; --json — umbrella-doctor/v1; код 1 при fail; ничего не пишет.",
+  "why": "D79, D25, E28; knowledge/hub-p12#doctor. Риски: (1) probe модулей с dev-guard и реальным HOME — тесты только с временным HOME; (2) один probe на несколько id запускается один раз; (3) медленный probe не вешает агрегатор — таймаут с синтетическим fail.",
+  "scope": {
+    "include": [
+      "scripts/umbrella.py: команда doctor",
+      "configs/schemas/umbrella-doctor.schema.json",
+      "scripts/test-umbrella.py: фикстуры doctor и снимок без записи",
+      "golden swissknifeman-help при изменении справки; CHANGELOG"
+    ],
+    "exclude": [
+      "doctor модулей (P11.11)",
+      "repair-агрегация"
+    ]
+  },
+  "depends_on": [
+    "P12.1"
+  ],
+  "decisions": [
+    "D79",
+    "D25"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#doctor",
+      "why": "алгоритм агрегатора, формат, коды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#umbrella",
+      "why": "раскладка umbrella и тест на фикстуре",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/check-result/v1/check-result.schema.json",
+      "why": "контракт результата",
+      "required": true
+    },
+    {
+      "path": "packages/brain/lib/brain/doctor.py",
+      "why": "образец doctor --json модуля",
+      "required": true
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "why": "команды umbrella после P12.1",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-ops#register",
+      "why": "строка E28 — проверка при аудите",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "scripts/test-umbrella.py",
+      "change": "any",
+      "note": "создан в P12.1"
+    },
+    {
+      "path": "configs/schemas/umbrella-doctor.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/c72ee4059eceaf4da2477d943c227daaa785f5b361862336f494080b5e706abe",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "doctor ничего не пишет в HOME, SKM_HOME, хаб и проект (тест снимка)"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: схема umbrella-doctor/v1 → сбор probe по unit.json (дедупликация argv) → запуск с таймаутом → разбор и проверка схемы → синтетические fail → текст и --json → коды → тест на фикстурах (ok/warn, невалидный JSON, без doctor, объявленный без результата, таймаут, снимок) → V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-umbrella.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "H=$(mktemp -d) && HOME=$H SKM_HOME=$H/skm bin/swissknifeman doctor --json > $H/d.json; rc=$?; [ $rc -le 1 ] && python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); units = {x[\"unit\"] for x in d[\"results\"]}; assert d[\"schema\"] == \"umbrella-doctor/v1\" and {\"aicore\", \"skiller\", \"maind\", \"harness\", \"brain\", \"orch\", \"analyst\"} <= units, units; assert all(x[\"status\"] in (\"ok\", \"warn\", \"fail\", \"skip\") for x in d[\"results\"])' $H/d.json",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/test-config-inventory.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "swissknifeman doctor по unit.json",
+    "umbrella-doctor/v1"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T11:19:37Z",
+    "finished_at": "2026-10-13T11:51:17Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-8eb6991c796fd7c448eef0b8-P12.2",
+    "notes": "swissknifeman doctor is now the read-only D79 aggregator (umbrella-doctor/v1). The P12.1 fan-out and the doctor.fanout config key are removed. New schema configs/schemas/umbrella-doctor.schema.json; tests, golden, inventory and CHANGELOG updated.\nChanged: CHANGELOG.md, configs/config-inventory.json, configs/schemas/umbrella-doctor.schema.json, configs/umbrella.json, configs/umbrella.schema.json, scripts/test-umbrella.py, scripts/umbrella.py, tests/golden/cases.json, tests/golden/cli/swissknifeman-help.txt, tests/golden/cli/swissknifeman-unknown-subcommand.txt, tests/golden/generation.json",
+    "deviations": [
+      "The doctor.fanout key was removed from configs/umbrella.json and configs/umbrella.schema.json (added in P12.1). The input did not decide this, but D79 replaces the fan-out.",
+      "changed outside the write set: configs/umbrella.json, configs/umbrella.schema.json"
+    ],
+    "pending": [
+      "The aicore (aicore.ext) and skiller (skiller.environment) probes still print text, not check-result/v1. The aggregator reports them as synthetic fails (aicore.doctor, skiller.doctor), so real `swissknifeman doctor` exits 1 on this machine."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T11:51:17Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T11:51:17Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.2/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T11:51:17Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.2/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.2/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.2/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.2/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-13T11:51:17Z"
+}

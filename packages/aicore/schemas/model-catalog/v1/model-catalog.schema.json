@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:model-catalog:v1",
+  "title": "model-catalog",
+  "type": "object",
+  "description": "Catalog of the models of each provider: which model serves each class (economy, implementation, frontier), which value carries each effort level, and the inventory of known models. Providers are a list of records.",
+  "properties": {
+    "schema_version": {
+      "const": "model-catalog/v1",
+      "description": "Document format identifier."
+    },
+    "catalog_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "SemVer of the catalog content."
+    },
+    "providers": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One record per provider.",
+      "items": {
+        "$ref": "#/$defs/provider-models",
+        "description": "Models of one provider."
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "catalog_version",
+    "providers"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "provider-models": {
+      "type": "object",
+      "description": "Models of one provider.",
+      "properties": {
+        "provider_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Provider id."
+        },
+        "class_selectors": {
+          "type": "object",
+          "description": "Model selectors by class, in preference order.",
+          "properties": {
+            "economy": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Selectors for economy, in preference order.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One selector."
+              }
+            },
+            "implementation": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Selectors for implementation, in preference order.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One selector."
+              }
+            },
+            "frontier": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Selectors for frontier, in preference order.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One selector."
+              }
+            }
+          },
+          "required": [
+            "economy",
+            "implementation",
+            "frontier"
+          ],
+          "additionalProperties": false
+        },
+        "effort_selectors": {
+          "type": "object",
+          "description": "Effort values by level, in preference order.",
+          "properties": {
+            "low": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Selectors for low, in preference order.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One selector."
+              }
+            },
+            "medium": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Selectors for medium, in preference order.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One selector."
+              }
+            },
+            "high": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Selectors for high, in preference order.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One selector."
+              }
+            },
+            "xhigh": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Selectors for xhigh, in preference order.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One selector."
+              }
+            }
+          },
+          "required": [
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ],
+          "additionalProperties": false
+        },
+        "model_inventory": {
+          "$ref": "#/$defs/inventory",
+          "description": "Known models of the provider."
+        }
+      },
+      "required": [
+        "provider_id",
+        "class_selectors",
+        "effort_selectors",
+        "model_inventory"
+      ],
+      "additionalProperties": false
+    },
+    "inventory": {
+      "type": "object",
+      "description": "Known models of one provider and how the list was verified.",
+      "properties": {
+        "verified_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Date of the last verification (YYYY-MM-DD)."
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where the list comes from."
+        },
+        "verification": {
+          "type": "string",
+          "minLength": 1,
+          "description": "How the list was verified."
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Known models.",
+          "items": {
+            "$ref": "#/$defs/entry",
+            "description": "One known model."
+          }
+        },
+        "auto_mode": {
+          "type": "object",
+          "description": "Limits of the provider's automatic model routing, when it has one.",
+          "properties": {
+            "allowed_for": {
+              "type": "array",
+              "description": "Uses for which automatic routing is allowed.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One use."
+              }
+            },
+            "forbidden_for": {
+              "type": "array",
+              "description": "Uses for which automatic routing is forbidden.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "One use."
+              }
+            }
+          },
+          "required": [
+            "allowed_for",
+            "forbidden_for"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "verified_at",
+        "source",
+        "verification",
+        "entries"
+      ],
+      "additionalProperties": false
+    },
+    "entry": {
+      "type": "object",
+      "description": "One known model.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Model id or alias as the provider takes it."
+        },
+        "roles": {
+          "type": "array",
+          "description": "Roles the model is suited for.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One role."
+          }
+        },
+        "patterns": {
+          "type": "array",
+          "description": "Regular expressions that match model ids of the same family.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One pattern."
+          }
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Verification status of the entry."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Remark about the entry."
+        },
+        "policy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Usage policy of the entry."
+        }
+      },
+      "required": [
+        "id",
+        "roles"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

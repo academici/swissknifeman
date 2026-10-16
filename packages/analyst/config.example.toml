@@ -1,0 +1,35 @@
+# analyst configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[analyst]
+
+[analyst.recompute]
+# Observations needed to promote a lesson from ephemeral to candidate (lowered for low-activity projects). Integer >= 1.
+# candidate_min_n = 15
+
+# Confidence needed to promote a lesson from ephemeral to candidate. Number >= 0 and <= 1.
+# candidate_min_conf = 0.6
+
+# Observations after which a candidate is flagged as ready for curated (a person still decides). Integer >= 1.
+# curated_min_n = 50
+
+# Confidence after which a candidate is flagged as ready for curated. Number >= 0 and <= 1.
+# curated_min_conf = 0.8
+
+# Share of passing tests after which a candidate is flagged as ready for curated. Number >= 0 and <= 1.
+# curated_min_passrate = 0.95
+
+# Confidence below which a candidate is deprecated and a curated lesson is flagged for review. Number >= 0 and <= 1.
+# deprecate_conf = 0.6
+
+# Lowest adaptive observation threshold for a candidate in a low-activity project. Integer >= 1.
+# candidate_min_n_floor = 3
+
+[analyst.digest]
+# How many of the latest project runs are inspected for a recurring run pathology. Integer >= 1.
+# pathology_window = 5
+
+# In how many runs of the window a pathology code must occur to become a lesson. Integer >= 1.
+# pathology_min_hits = 2

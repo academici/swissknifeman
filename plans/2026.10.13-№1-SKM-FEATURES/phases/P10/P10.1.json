@@ -1,0 +1,161 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.1",
+  "title": "[orch.research] policy и sources: адаптеры command, filesystem, mcp-stdio (Perplexity через perplexity-web-mcp), повтор при BROWSER_BUSY; orch.py research query/sources",
+  "status": "done",
+  "summary": "Config и адаптеры по knowledge/p10-research#sources; обобщённый stdlib MCP stdio-клиент; CLI research; пример machine-конфига Perplexity в docs; тесты (CONFIG_LAYER_FORBIDDEN, фейковый mcp-stdio сервер).",
+  "why": "Аудит П9.1, мысль 16; ответ на вопрос 7 части 7 (Perplexity — MCP stdio, а не отдельный бинарник). Риски: (1) проект задаёт исполняемый argv — запрещено слоями; (2) перегрузка daemon — concurrency и повтор.",
+  "scope": {
+    "include": [
+      "packages/orch/configs/config.schema.json",
+      "packages/orch/lib/orch/research/",
+      "packages/orch/lib/orch/cli.py (research)",
+      "tests и фикстура mcp-stdio",
+      "docs"
+    ],
+    "exclude": [
+      "http, vector адаптеры",
+      "реальные запросы к Perplexity в тестах"
+    ]
+  },
+  "depends_on": [
+    "P9.4"
+  ],
+  "decisions": [
+    "D6"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p10-research#sources",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p10-research#facts",
+      "why": "код",
+      "required": true
+    },
+    {
+      "path": "packages/orch/docs/research/tools/pplx_stdio.py",
+      "why": "образец MCP stdio-клиента",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/settings.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/research/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/research/sources.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/tests/test_research.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/fixtures/research/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "help, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/config.example.toml",
+      "change": "modify",
+      "note": "generated: aicore config example packages/orch --write"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/d81478186c60904c843f6a716b58ad23ddd79b5af09ef15a1705ec4dab07297b",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/15093b25c811a5e285ef6783b2ffa02cdb09f7765e420b58c421b6a89e5a7bea",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Контракты и config — только аддитивно (D1)",
+    "argv источников — только machine/invocation/flags"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала проверить вход фазы (D6) и сверить facts. Порядок: тесты → config → адаптеры → CLI → docs → V1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "источники research"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-15T05:39:52Z",
+    "finished_at": "2026-10-15T05:39:54Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-cc9f6e4398e32221556a156a-P10.1",
+    "notes": "P10.1 research sources (command, filesystem, mcp-stdio adapters with BROWSER_BUSY retry, generic stdlib MCP stdio client, research query/sources CLI, schema, docs, tests with fake mcp server) are in the tree from the earlier round. This round the only fix was regenerating packages/orch/config.example.toml, which had drifted from the schema (ECOSYSTEM_CONFIG_EXAMPLE_DRIFT). affected-tests --run is now green, including the orch unit tests with a temporary HOME/SKM_HOME.\nChanged: CHANGELOG.md, packages/orch/config.example.toml, packages/orch/configs/config.schema.json, packages/orch/docs/configuration.md, packages/orch/docs/index.md, packages/orch/docs/research.md, packages/orch/lib/orch/cli.py, packages/orch/lib/orch/research/__init__.py, packages/orch/lib/orch/research/sources.py, packages/orch/lib/orch/settings.py, packages/orch/tests/fixtures/research/fake_command.py, packages/orch/tests/fixtures/research/fake_mcp.py, packages/orch/tests/fixtures/research/tree/b.txt, packages/orch/tests/fixtures/research/tree/docs/a.md, packages/orch/tests/test_research.py\nEvidence: /tmp/p10.1-affected.txt",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T05:39:54Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.1/evidence/V1.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P10.1/evidence/V1.json"
+    ]
+  },
+  "updated_at": "2026-10-15T05:39:54Z"
+}

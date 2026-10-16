@@ -23,7 +23,7 @@ Three layers of the ecosystem - different tasks:
 
 ## Enable (config-driven)
 
-Project field `code: true` in `.maind.json` — and `maind sync`/`onboard` roll out the code-MCP:
+Project field `code: true` in the registry — and `maind sync`/`onboard` roll out the code-MCP:
 
 ```json
 { "id": "flexcrm", "code": true }

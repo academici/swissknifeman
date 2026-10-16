@@ -1,0 +1,516 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:run-options:v1",
+  "title": "run-options",
+  "description": "Options of a conductor run for one piece of work. Layers merge from the general to the specific: the [orch.conductor] configuration, the run-policy pack, the options of the phase, then the options of the item.",
+  "type": "object",
+  "properties": {
+    "stages": {
+      "description": "Route of each role in pipeline order; a more specific layer overrides the fields of the same role.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stage"
+      }
+    },
+    "reviewer": {
+      "description": "Reviewer selector PROVIDER/MODEL[/CONTEXT][/EFFORT], such as grok/grok-4.7/high.",
+      "$ref": "#/$defs/selector"
+    },
+    "rules": {
+      "description": "Short rules for the executor; layers append, a repeated rule is kept once.",
+      "type": "array",
+      "items": {
+        "description": "One rule, a single short sentence.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "skills": {
+      "description": "Skills to attach to roles; a more specific layer replaces the list of the role it names.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/skills",
+        "description": "Skills of one role."
+      }
+    },
+    "limits": {
+      "description": "Limits of the run of the piece of work.",
+      "$ref": "#/$defs/limits"
+    },
+    "instructions": {
+      "description": "Which instructions a role process sees; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "isolate_roles": {
+          "description": "Roles that start without the project instructions of their provider (for Claude Code: started with `--safe-mode`, so no repository CLAUDE.md, project memory, plugins, MCP servers, user skills or hooks), so that each role gets only the instructions of its own prompt. Default: every role.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor"]
+          }
+        },
+        "module_rules": {
+          "description": "Instruction sections an isolated role still needs, by the last part of their heading id (`## <scope>.<name>` in the CLAUDE.md or AGENTS.md of the repository root and of every folder on the way to a write-set path): their text goes into the prompt as a short Repository rules block. Default `[\"module-folders\", \"module-boundaries\", \"engineering-invariants\"]`; `[]` sends none.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"}
+        },
+        "sandbox": {
+          "description": "The provider sandbox for the shell commands of a role (bubblewrap; it confines the commands, not the agent process). `prefer` (default): Claude Code roles with Bash get `--settings` with a `sandbox` block when the sandbox can start here, else the run goes on under the filesystem guard and says so once (`ISOLATION_PARTIAL`); `require`: the run stops with `SANDBOX_UNAVAILABLE` before any work when it cannot start; `off`: no `--settings`. A Codex route that carries `--sandbox` is unavailable when the sandbox cannot start, whatever this value.",
+          "type": "string",
+          "enum": ["off", "prefer", "require"]
+        },
+        "file_tools_rule": {
+          "description": "Add a short rule to the executor prompt: read, search and change files with the file tools (Read, Grep, Glob, Edit, Write), not with Bash (`cat`, `sed`, heredoc scripts); it is added only when the route offers Read and Edit (Claude Code `--tools`). Default true; false leaves the one line of the role text.",
+          "type": "boolean"
+        },
+        "sandbox_domains": {
+          "description": "Domains a sandboxed Claude Code role may reach (`network.allowedDomains` with `strictAllowlist`); a role whose manifest declares `network: allowed` is not restricted. Default `[]`: no network for the commands of a role that declares `none`.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(\\*\\.)?[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$"}
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "session": {
+      "description": "How the sessions of the executor are shared inside one run of several pieces (Claude Code roles).",
+      "type": "object",
+      "properties": {
+        "executor": {
+          "description": "`shared` (default): the executor of a piece, and of every correction round of it, resumes the session of the previous executor of the run (`--resume`), so the later pieces start with the context of the earlier ones and the first prompt names the pieces of the run; `per-item`: each executor step starts a fresh session. A provider that cannot resume starts fresh either way.",
+          "type": "string",
+          "enum": ["shared", "per-item"]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "scope": {
+      "description": "What the conductor does with paths a role changed outside `scope.write_set` of the input; the changed paths are read from git after every executor round, never from the report.",
+      "type": "object",
+      "properties": {
+        "outside": {
+          "description": "`deviation` (default): the paths are kept, listed as a deviation issue, shown to the reviewer and committed with the piece; `block`: the piece is blocked at once with an escalation that names them.",
+          "type": "string",
+          "enum": ["deviation", "block"]
+        },
+        "fence": {
+          "description": "What the executor may change. `project` (default): any file of the project; `scope.write_set` is the expected change, and a path outside it is reported by the executor as a `deviation` instead of blocking the piece. `plan`: the write set is a fence, a path outside it makes the executor stop with `blocked`.",
+          "type": "string",
+          "enum": ["project", "plan"]
+        },
+        "extra_paths": {
+          "description": "Directories outside the project that the executor may also change (absolute, or `~/...`): they are named in its prompt and added to its filesystem guard (`ro-run.py --rw`). Default none.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(/|~/)"}
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "checks": {
+      "description": "How the acceptance checks of a piece of work are run; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "parallel": {
+          "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "kinds": {
+          "description": "Kinds of checks the conductor runs in a piece of work: `[\"acceptance\"]` is the quick pass (the gate needs evidence of the acceptance checks only), the default `[\"acceptance\", \"impact\"]` the full one. Heavy repository-wide checks belong to `impact` and run in the full pass (the closing piece of a phase, or on request).",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "enum": ["acceptance", "impact"]},
+          "minItems": 1
+        },
+        "cadence": {
+          "description": "Cadences of checks the conductor runs in a piece of work: `[\"item\"]` runs only the checks of the piece (a check without `cadence` is `item`); the default `[\"item\", \"phase\"]` runs all. `phase` checks (repository-wide, branch against origin) belong to the closing piece of a phase.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "enum": ["item", "phase"]},
+          "minItems": 1
+        },
+        "red_first": {
+          "description": "In a correction round the checks that were red run first; when one is still red the others are not run (a half-hour full run is not repeated for a correction that did not mend it). Default true; false runs every check in every round.",
+          "type": "boolean"
+        },
+        "executor_runs_checks": {
+          "description": "When false (default) the executor is told to run only the tests that cover the code it changed, because the conductor runs every acceptance check right after its report; true lets it run the checks itself.",
+          "type": "boolean"
+        },
+        "overlap_review": {
+          "description": "The checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated after the correction. Default false.",
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "review": {
+      "description": "How review findings are handled; a more specific layer overrides the keys it names.",
+      "type": "object",
+      "properties": {
+        "correct_min_severity": {
+          "description": "Confirmed findings of this severity or higher are corrected; lower ones are deferred to the plan as notes for the cleanup of the phase (Blocker > Major > Minor > Nit). Default Major.",
+          "type": "string",
+          "enum": ["Blocker", "Major", "Minor", "Nit"]
+        },
+        "audit_scope": {
+          "description": "What a review round after a correction reads: `corrected` (default) only the confirmed findings of the previous round and the lines their correction touched; `full` the whole change again.",
+          "type": "string",
+          "enum": ["corrected", "full"]
+        },
+        "final_correction": {
+          "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan says so) instead of blocking with REVIEW_LIMIT. Default false.",
+          "type": "boolean"
+        },
+        "pre_final": {
+          "description": "A review round after a correction is a pre-final audit that looks only for findings of correct_min_severity or higher. Default true.",
+          "type": "boolean"
+        },
+        "dynamic": {
+          "description": "A piece whose run policy has no review gets one when its risk score ([orch.conductor.risk]) reaches dynamic_threshold after the executor round (beacon REVIEW_ADDED, risk.json). Default true; set false, with the reason in rules, to never add a review.",
+          "type": "boolean"
+        },
+        "dynamic_threshold": {
+          "description": "Risk score 0..100 at which a review is added. Default 60.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "strategy": {
+          "description": "How a batch of several pieces is reviewed, chosen before the first piece runs. `auto` (default): the strategist picks; `each`: every piece on its own as the policy and the risk score say; `groups`: one review per group of neighbouring pieces after the last piece of the group; `single`: one review of the whole batch after its last piece; `none`: no review. In `groups`, `single` and `none` a piece has no review of its own.",
+          "type": "string",
+          "enum": ["auto", "each", "groups", "single", "none"]
+        },
+        "strategist": {
+          "description": "Who chooses the strategy when it is `auto`: `model` (default; a small model call that sees every piece; the rules decide when it fails or answers unsoundly) or `rules` (the deterministic choice only).",
+          "type": "string",
+          "enum": ["model", "rules"]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "on_error": {
+      "description": "What to do after a role fails at the provider, by failure class of error/v1 (the shape of run-policy `on_error`); a class that is not listed has the default action of the conductor. Layers merge by class.",
+      "type": "object",
+      "properties": {
+        "authentication": {"$ref": "#/$defs/on_error_rule"},
+        "authorization": {"$ref": "#/$defs/on_error_rule"},
+        "quota": {"$ref": "#/$defs/on_error_rule"},
+        "rate_limit": {"$ref": "#/$defs/on_error_rule"},
+        "invalid_request": {"$ref": "#/$defs/on_error_rule"},
+        "model_unavailable": {"$ref": "#/$defs/on_error_rule"},
+        "content_policy": {"$ref": "#/$defs/on_error_rule"},
+        "transport": {"$ref": "#/$defs/on_error_rule"},
+        "provider_internal": {"$ref": "#/$defs/on_error_rule"},
+        "timeout": {"$ref": "#/$defs/on_error_rule"},
+        "context_limit": {"$ref": "#/$defs/on_error_rule"},
+        "unknown": {"$ref": "#/$defs/on_error_rule"},
+        "unknown_outcome": {"$ref": "#/$defs/on_error_rule"}
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "fallback_routes": {
+      "description": "Routes a role may move to when its provider cannot serve it (a quota whose reset is too far, an exhausted account gate, a provider that cannot start). A route is checked before it is taken: not below the class of the work, startable here, not gated. A layer replaces the list; `[]` switches the routes of the layers below off.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fallback_route"
+      }
+    },
+    "on_blocked": {
+      "description": "What a blocked piece of work does to the run: stop the run, or report it and go on with the next piece.",
+      "type": "string",
+      "enum": [
+        "stop",
+        "report"
+      ]
+    }
+  },
+  "required": [],
+  "additionalProperties": false,
+  "$defs": {
+    "selector": {
+      "description": "PROVIDER/MODEL[/CONTEXT][/EFFORT].",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/[0-9]+[kKmM]?)?(/(low|medium|high|xhigh|max|ultra))?$"
+    },
+    "stage": {
+      "description": "Route of one role.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "description": "Role id.",
+          "type": "string",
+          "enum": [
+            "context-scout",
+            "executor",
+            "bounded-implementer",
+            "reviewer",
+            "triager",
+            "registrar",
+            "report-fixer",
+            "researcher",
+            "advisor"
+          ]
+        },
+        "provider": {
+          "description": "Provider of the role, such as claude-code, codex or grok.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "model_class": {
+          "description": "Semantic model class, resolved through the model catalog.",
+          "type": "string",
+          "enum": [
+            "economy",
+            "implementation",
+            "frontier"
+          ]
+        },
+        "model": {
+          "description": "Exact model; wins over model_class.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+        },
+        "effort": {
+          "description": "Reasoning effort.",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "additionalProperties": false
+    },
+    "on_error_rule": {
+      "description": "Action for a failure class.",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "What to do after a failure of the class.",
+          "type": "string",
+          "enum": ["stop", "retry", "retry_after", "fallback_route", "replan", "reconcile"]
+        },
+        "max": {
+          "description": "Maximum number of times the action may be taken; 0 or more.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["action"],
+      "additionalProperties": false
+    },
+    "fallback_route": {
+      "description": "Another route of one role.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "description": "Role id.",
+          "type": "string",
+          "enum": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor"]
+        },
+        "provider": {
+          "description": "Provider of the route, such as claude-code, codex or grok.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "model_class": {
+          "description": "Semantic model class, resolved through the model catalog.",
+          "type": "string",
+          "enum": ["economy", "implementation", "frontier"]
+        },
+        "effort": {
+          "description": "Reasoning effort.",
+          "type": "string",
+          "enum": ["low", "medium", "high", "xhigh"]
+        }
+      },
+      "required": ["role", "provider", "model_class"],
+      "additionalProperties": false
+    },
+    "limits": {
+      "description": "Limits of the run of the piece of work.",
+      "type": "object",
+      "properties": {
+        "review_rounds": {
+          "description": "Review rounds planned (the policy pack's max_rounds by default); 0 to 5. A target, not a wall: past it a round still runs while the last correction made progress, up to ceiling_factor times the target, with a LIMIT_OVER beacon and a plan note.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "corrections": {
+          "description": "Corrections planned after a confirmed review finding (the policy pack's max_corrections by default); 0 to 3; a target like review_rounds.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "check_fixes": {
+          "description": "Corrections planned after red acceptance checks; 0 to 3; a target: past it a correction still runs while the red checks change, up to ceiling_factor times the target.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "retries": {
+          "description": "Repeats of one step whose role run failed or whose result stays outside its contract after healing and repair (the policy pack's retries_budget by default); counted per step; 0 to 5.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "tokens_max": {
+          "description": "Fresh input and output tokens of the piece of work: past it a BUDGET_OVER beacon is printed once (nothing is stopped); 0 means none; 0 or more.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stage_timeout_s": {
+          "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role (stage_warn_s beacons report a long run instead) and keeps the launch catalog timeout for a text role; 0 or more.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stage_idle_timeout_s": {
+          "description": "A streaming role is stopped (TIMEOUT, then the retry rule of the step) when its output has not grown for this many seconds: silence that long is a hang, not a long test run (stage_idle_warn_s beacons report shorter silences and what runs meanwhile); 0 never stops it; default 5400.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "check_timeout_s": {
+          "description": "Ceiling on one acceptance check in seconds; 0 (default) has none: a long check is reported by check_warn_s beacons, not stopped; 0 or more.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "check_idle_timeout_s": {
+          "description": "An acceptance check is stopped (exit 124, red) when its log has not grown for this many seconds: a hung test runner, not a long one (the check runs with PYTHONUNBUFFERED=1, and the time a check spends stopped is not counted); 0 never stops it; default 3600.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "ceiling_factor": {
+          "description": "How far past their target review_rounds, corrections and check_fixes may go while every extra round makes progress: the ceiling is this factor times the target (at least target + 1); 1 to 5, default 2.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "repairs": {
+          "description": "Repairs of a role result outside its contract by the report-fixer role (an economy model that rewrites only the closed block from the role's own answer) before the whole role is repeated; 0 switches repair off; 0 to 3, default 1.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "stage_warn_s": {
+          "description": "A STAGE_SLOW beacon (what the role runs now: its last command and the child processes) is printed every this many seconds of one role run; nothing is stopped; 0 switches it off; default 2700.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stage_idle_warn_s": {
+          "description": "A STAGE_IDLE beacon is printed every this many seconds while the output of a role has not grown (a long test run or a silent model call); nothing is stopped; 0 switches it off; default 600.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "provider_wait_max_s": {
+          "description": "The longest a role waits for a provider limit to reset (a PROVIDER_WAIT beacon, checked for cancel every second); a longer wait, or a quota whose reset is unknown, goes to `fallback_routes` or stops with PROVIDER_QUOTA; 0 or more, default 900.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "check_warn_s": {
+          "description": "A CHECK_SLOW beacon is printed every this many seconds of one running acceptance check; 0 switches it off; default 900.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_warn_s": {
+          "description": "A RUN_SLOW beacon (and one plan note) is printed every this many seconds of the ACTIVE time of a run (the segments of its processes: a resume a day later does not count the day); nothing is stopped; 0 switches it off; default 7200.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "question_warn_s": {
+          "description": "A question of the executor that waits this many seconds for an answer is marked overdue by `conduct.py questions` and the observer; nothing is answered or stopped; 0 switches it off; default 1800.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "skill_tokens_max": {
+          "description": "Largest text of one skill, in estimated tokens, that an isolated role gets in its prompt: a longer skill is left out whole (`excluded: over_budget` in the prompt manifest, beacon SKILL_EXCLUDED), never cut; the `max_tokens` of its `selection.json` is checked as well; 0 switches the limit off; default 5000.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_core_tokens": {
+          "description": "Largest total of the core blocks of one role prompt (role text, input, verification, result contract, answers, correction and the frame of the review roles), in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut (`budgets` of the prompt manifest); 0 switches the beacon off; default 12000.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_supporting_tokens": {
+          "description": "Largest total of the supporting blocks of one role prompt (repository rules, skills, context map, expected paths, run rules), in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut; 0 switches the beacon off; default 30000.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_retrieval_tokens": {
+          "description": "Largest total of the retrieval blocks (references) of one role prompt, in estimated tokens: past it a BUDGET_OVER beacon names the heaviest block; the prompt is never cut; no block has this class yet; 0 switches the beacon off; default 50000.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "disk_min_gb": {
+          "description": "Least free space in GB under the project and the temporary directory: below it the run does not start (and `resume` does not go on) and the checks of a round do not start, it stops with DISK_LOW (free the space, then resume); a running check only gets a DISK_LOW beacon every `check_warn_s`; 0 switches it off; default 5.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_timeout_s": {
+          "description": "Ceiling on the active time of a run in seconds: the current role is cancelled and the run stops with RUN_TIMEOUT (resume continues; raise the limit first); 0 (default) has none.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "review_rounds_batch": {
+          "description": "Target for review rounds of the whole run (all pieces of a `--batch` or `--items` run together); the rule of `review_rounds`: a round past the target goes on only while the last correction made progress, up to `ceiling_factor` times it, with a LIMIT_OVER beacon (`batch: …`); 0 (default) has no limit.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "corrections_batch": {
+          "description": "Target for corrections of the whole run, with the target and ceiling rule of `corrections`; 0 (default) has no limit.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "findings_batch": {
+          "description": "Target for confirmed review findings of the whole run (those accepted by triage), with the target and ceiling rule; when the run is refused more rounds, an open Blocker stops it with REVIEW_LIMIT and other findings become plan notes; 0 (default) has no limit.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "skills": {
+      "description": "Skills of one role.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "description": "Role id.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "names": {
+          "description": "Skill names, or the single name `auto`: the skills bridge chooses the skills of the role from the write set of the piece (`skills_bridge` of `[orch.conductor]`); `auto` is not listed with other names.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "description": "Skill name.",
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:/-]*$"
+          }
+        }
+      },
+      "required": [
+        "role",
+        "names"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

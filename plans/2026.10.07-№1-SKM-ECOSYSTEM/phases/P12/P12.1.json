@@ -1,0 +1,250 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.1",
+  "title": "Начало фазы; umbrella CLI по unit.json: scripts/umbrella.py, configs/umbrella.json, swissknifeman units, unit/v1 minor (provides.install, plugins source/catalog)",
+  "status": "done",
+  "summary": "bin/swissknifeman — тонкий bash с dev-guard → scripts/umbrella.py; модули из unit.json (discover_units, SKM_UNITS_PATH=packages:bridges); группа = id модуля с provides.cli; прежние группы и наследные глаголы skiller — алиасы configs/umbrella.json (umbrella-config/v1); swissknifeman units [list|show] [--json] (umbrella-units/v1); версия из git describe; unit/v1 получает необязательные provides.install и plugins[].source|catalog (схема и тесты aicore, без деклараций в модулях).",
+  "why": "D78, E36; knowledge/hub-p12#umbrella. Риски: (1) прежние команды umbrella (setup --machine, status с выбором maind/skiller, release vs release bundle) ломаются при переносе в данные — тест на каждую группу текущей справки; (2) dev-guard должен остаться первым в bash до exec python (scripts/test-dev-guard.py); (3) изменение unit/v1 должно быть аддитивным — oneOf manifest|catalog без удаления required у старой формы.",
+  "scope": {
+    "include": [
+      "scripts/umbrella.py (маршрутизация, units, version, help)",
+      "bin/swissknifeman — тонкий bash",
+      "configs/umbrella.json и configs/umbrella.schema.json; configs/schemas/umbrella-units.schema.json",
+      "unit/v1: provides.install ($defs/argv), plugins[].source и catalog (oneOf с manifest); тесты схемы aicore",
+      "scripts/test-umbrella.py; golden swissknifeman-help; config-inventory; CHANGELOG"
+    ],
+    "exclude": [
+      "doctor, install, conformance, release bundle — P12.2, P12.3, P12.5, P12.6 (в P12.1 — заглушки не делать: команды появляются в своих пунктах)",
+      "декларации provides.install и plugins в unit.json модулей — P12.3, P12.4"
+    ]
+  },
+  "depends_on": [
+    "P11.14"
+  ],
+  "decisions": [
+    "D78",
+    "D1",
+    "D19"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/hub-p12#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#facts",
+      "why": "факты кода на начало фазы: файлы, строки, функции",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#checks",
+      "why": "быстрые и широкие проверки фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/hub-p12#umbrella",
+      "why": "дизайн umbrella: раскладка, маршрутизация, units, версия, тест",
+      "required": true
+    },
+    {
+      "path": "bin/swissknifeman",
+      "why": "текущие группы, алиасы и dev-guard",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "why": "discover_units, UnitDoc",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/units.py",
+      "why": "SKM_UNITS_PATH и unit_dirs",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/unit.schema.json",
+      "why": "схема unit/v1, $defs argv и relpath",
+      "required": true
+    },
+    {
+      "path": "scripts/test-dev-guard.py",
+      "why": "что проверяется в dev-guard точек входа",
+      "required": true
+    },
+    {
+      "ref": "knowledge/review-e1-extensions#register",
+      "why": "строка E36 — что принято и проверка при аудите",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "bin/swissknifeman",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-umbrella.py",
+      "change": "create"
+    },
+    {
+      "path": "configs/umbrella.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/umbrella.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/schemas/umbrella-units.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/schemas/unit/v1/unit.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-dev-guard.py",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "только затронутый случай, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/d73c41325af5d91b114c79c7c661ad124163f039565ed3d426e5482fb72d7f56",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/413a2e8edb72d1fd46cd7fc05fb727028016b625f9e15a7006b4fc0dd244da26",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/hub-p12#rules (stdlib, хаб импортирует только aicore, umbrella без логики модулей и без литералов id, unit/v1 только аддитивно, временные HOME/SKM_HOME, генерируемое — генераторами, английский в продуктовых файлах, быстрые проверки в пункте, широкие — в phase.validation)",
+    "Дизайн — раздел knowledge из reads; имена команд, полей, кодов ошибок, путей и форматов — строго оттуда; отклонение или расхождение с кодом — open_issues отчёта (дирижёр пишет plan.py log)",
+    "В scripts/umbrella.py нет литералов id модулей (aicore, skiller, planner, orch, maind, analyst, harness, brain); id приходят из unit.json или configs/umbrella.json",
+    "Каждая группа текущей справки bin/swissknifeman даёт тот же exec, что до пункта (тест на каждую)"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: unit/v1 (install, plugins source/catalog) + тест схемы aicore → configs/umbrella.json и схема → scripts/umbrella.py (load_units, route, units, version, help) → bin/swissknifeman (dev-guard, exec python) → scripts/test-umbrella.py на фикстуре хаба во временной папке → config-inventory (владелец hub, потребитель scripts/umbrella.py) → golden swissknifeman-help (--reason \"umbrella reads unit.json\") → CHANGELOG → V1–V4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-umbrella.py && python3 scripts/test-dev-guard.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "H=$(mktemp -d) && HOME=$H SKM_HOME=$H/skm bin/swissknifeman units --json | python3 -c 'import json, sys; d = json.load(sys.stdin); ids = {u[\"id\"] for u in d[\"units\"]}; need = {\"aicore\", \"skiller\", \"planner\", \"orch\", \"maind\", \"analyst\", \"harness\", \"brain\", \"planner-orch\"}; assert d[\"schema\"] == \"umbrella-units/v1\" and need <= ids, ids'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/test-config-inventory.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "scripts/umbrella.py, configs/umbrella.json",
+    "swissknifeman units",
+    "unit/v1 minor: provides.install, plugins source/catalog"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T10:36:56Z",
+    "finished_at": "2026-10-13T11:06:48Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-48366dda18cc5fb2fada2645-P12.1",
+    "notes": "F1 fixed. Bare `doctor` now reads the fan-out list from the new `doctor.fanout` field in configs/umbrella.json (skiller, harness, maind, analyst, in that order) and runs `<cli> doctor` only for those modules, with an `== id ==` header each. It no longer walks every unit with provides.doctor, so aicore, brain and orch are not called. A missing launcher prints `ERROR: package launcher not found` and sets exit 1, as the old bash did. umbrella.schema.json gained the `doctor` object. In scripts/test-umbrella.py, a new TestLegacyGroups test asserts the exact argv sequence and order, with brain and orch added to the fixture hub. The old fan-out test now checks the missing-launcher path. Tests run: scripts/test-umbrella.py (25 OK), scripts/test-dev-guard.py OK, golden.py check OK, test-config-inventory.py OK. The help text is unchanged, so the golden file did not change.\nChanged: CHANGELOG.md, bin/swissknifeman, configs/config-inventory.json, configs/schemas/umbrella-units.schema.json, configs/umbrella.json, configs/umbrella.schema.json, packages/aicore/CHANGELOG.md, packages/aicore/schemas/unit/v1/unit.schema.json, packages/aicore/tests/test_unit_install_plugins.py, scripts/test-umbrella.py, scripts/umbrella.py, tests/golden/cases.json, tests/golden/cli/swissknifeman-help.txt, tests/golden/cli/swissknifeman-unknown-subcommand.txt, tests/golden/generation.json",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T11:06:48Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T11:06:48Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-13T11:06:48Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-13T11:06:48Z",
+        "evidence": "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V4.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V1.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V2.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V3.json",
+      "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P12.1/evidence/V4.json"
+    ]
+  },
+  "updated_at": "2026-10-13T11:06:48Z"
+}

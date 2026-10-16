@@ -8,52 +8,55 @@ import os
 import sys
 import tempfile
 import unittest
+from fractions import Fraction
 from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
+from aicore.content import eval as aev
 from skiller.quality import eval as ev
 import tests.fixtures as fx
+from aicore.content.skill import skill_digest
 
 FIXTURES_DATA = Path(__file__).resolve().parent / "fixtures_data"
 
 
 class GradeAssertionCase(unittest.TestCase):
     def test_contains_case_insensitive(self):
-        ok, _ = ev.grade_assertion({"type": "contains", "value": "ABC"}, "x abc y", None)
+        ok, _ = aev.grade_assertion({"type": "contains", "value": "ABC"}, "x abc y", None)
         self.assertTrue(ok)
 
     def test_contains_case_sensitive_flag(self):
-        ok, _ = ev.grade_assertion(
+        ok, _ = aev.grade_assertion(
             {"type": "contains", "value": "ABC", "flags": {"case_sensitive": True}},
             "x abc y", None)
         self.assertFalse(ok)
 
     def test_not_contains(self):
-        ok, _ = ev.grade_assertion({"type": "not_contains", "value": "zzz"}, "abc", None)
+        ok, _ = aev.grade_assertion({"type": "not_contains", "value": "zzz"}, "abc", None)
         self.assertTrue(ok)
 
     def test_regex_and_not_regex(self):
-        self.assertTrue(ev.grade_assertion(
+        self.assertTrue(aev.grade_assertion(
             {"type": "regex", "value": r"\d+\.\d+"}, "v1.2", None)[0])
-        self.assertTrue(ev.grade_assertion(
+        self.assertTrue(aev.grade_assertion(
             {"type": "not_regex", "value": r"\d+\.\d+"}, "no versions", None)[0])
 
     def test_min_words(self):
-        self.assertTrue(ev.grade_assertion({"type": "min_words", "value": 2}, "a b c", None)[0])
-        self.assertFalse(ev.grade_assertion({"type": "min_words", "value": 5}, "a b", None)[0])
+        self.assertTrue(aev.grade_assertion({"type": "min_words", "value": 2}, "a b c", None)[0])
+        self.assertFalse(aev.grade_assertion({"type": "min_words", "value": 5}, "a b", None)[0])
 
     def test_file_exists_absent(self):
         with tempfile.TemporaryDirectory() as ws:
             (Path(ws) / "out.txt").write_text("x")
-            self.assertTrue(ev.grade_assertion(
+            self.assertTrue(aev.grade_assertion(
                 {"type": "file_exists", "value": "out.txt"}, "", ws)[0])
-            self.assertTrue(ev.grade_assertion(
+            self.assertTrue(aev.grade_assertion(
                 {"type": "file_absent", "value": "nope.txt"}, "", ws)[0])
 
     def test_unknown_type(self):
-        ok, detail = ev.grade_assertion({"type": "bogus", "value": "x"}, "x", None)
+        ok, detail = aev.grade_assertion({"type": "bogus", "value": "x"}, "x", None)
         self.assertFalse(ok)
         self.assertIn("unknown", detail)
 
@@ -61,15 +64,15 @@ class GradeAssertionCase(unittest.TestCase):
 class GradeCaseCase(unittest.TestCase):
     def test_all_pass(self):
         c = {"id": 1, "assertions": [{"type": "contains", "value": "ok"}]}
-        self.assertTrue(ev.grade_case(c, "ok!", None)["passed"])
+        self.assertTrue(aev.grade_case(c, "ok!", None)["passed"])
 
     def test_one_fail(self):
         c = {"id": 1, "assertions": [{"type": "contains", "value": "ok"},
                                      {"type": "contains", "value": "missing"}]}
-        self.assertFalse(ev.grade_case(c, "ok", None)["passed"])
+        self.assertFalse(aev.grade_case(c, "ok", None)["passed"])
 
     def test_no_assertions_is_none(self):
-        self.assertIsNone(ev.grade_case({"id": 1}, "whatever", None)["passed"])
+        self.assertIsNone(aev.grade_case({"id": 1}, "whatever", None)["passed"])
 
 
 class ValidateSchemaCase(unittest.TestCase):
@@ -118,7 +121,7 @@ class AggregateCase(unittest.TestCase):
         runs = [{"passed": True, "duration_s": 1.0, "tokens": 100},
                 {"passed": False, "duration_s": 3.0, "tokens": 200},
                 {"passed": None, "duration_s": 2.0, "tokens": None}]
-        a = ev.aggregate_runs(runs)
+        a = aev.aggregate_runs(runs)
         self.assertEqual(a["total"], 3)
         self.assertEqual(a["graded"], 2)
         self.assertEqual(a["passed"], 1)
@@ -127,7 +130,7 @@ class AggregateCase(unittest.TestCase):
         self.assertGreater(a["duration_std"], 0)
 
     def test_no_graded_pass_rate_none(self):
-        self.assertIsNone(ev.aggregate_runs([{"passed": None}])["pass_rate"])
+        self.assertIsNone(aev.aggregate_runs([{"passed": None}])["pass_rate"])
 
     def test_build_benchmark_delta(self):
         b = ev.build_benchmark("s", [{"passed": True, "tokens": 100}],
@@ -149,23 +152,23 @@ class DescriptionTuningCase(unittest.TestCase):
                    "should_not": ["unrelated ask", "another miss"]}
 
     def test_score_perfect(self):
-        s = ev.score_description("desc", self.ts, self.judge)
+        s = aev.score_description("desc", self.ts, self.judge)
         self.assertEqual(s["accuracy"], 1.0)
         self.assertEqual(s["f1"], 1.0)
         self.assertFalse(s["over_limit"])
 
     def test_over_limit_flag(self):
-        s = ev.score_description("x" * (ev.DESC_MAX + 1), self.ts, self.judge)
+        s = aev.score_description("x" * (aev.DESC_MAX + 1), self.ts, self.judge)
         self.assertTrue(s["over_limit"])
 
     def test_select_rejects_too_long_and_empty(self):
-        res = ev.select_best_description(
+        res = aev.select_best_description(
             ["good description", "x" * 200, ""], self.ts, self.judge)
         self.assertEqual(res["best"], "good description")
         self.assertEqual(len(res["rejected"]), 2)
 
     def test_select_all_rejected(self):
-        res = ev.select_best_description(["x" * 200], self.ts, self.judge)
+        res = aev.select_best_description(["x" * 200], self.ts, self.judge)
         self.assertIsNone(res["best"])
 
 
@@ -205,18 +208,18 @@ class ScaffoldResolveCase(unittest.TestCase):
             ev.resolve_skill(self.env, "code-style")
 
     def test_evals_coverage(self):
-        before, total = ev.evals_coverage(self.root)
+        before, total = aev.evals_coverage(self.root)
         self.assertEqual(before, 0)
         self.assertGreater(total, 0)
         ev.scaffold_evals(self.root / "skills" / "quality" / "test-writer", "test-writer")
-        after, _ = ev.evals_coverage(self.root)
+        after, _ = aev.evals_coverage(self.root)
         self.assertEqual(after, 1)
 
     def test_coverage_excludes_upstream(self):
         d = self.root / "skills" / "devops" / "ext-skill"
         fx.write_skill(d, "ext-skill", description="x")
         fx.write_upstream(d)                       # marks as upstream
-        _, total_with_upstream = ev.evals_coverage(self.root)
+        _, total_with_upstream = aev.evals_coverage(self.root)
         # upstream-skill does not fall into the denominator of local coverage
         names = {p.parent.name for p in (self.root / "skills").glob("*/*/SKILL.md")
                  if not (p.parent / "upstream.json").exists()}
@@ -237,13 +240,13 @@ class ViewerCmdBuildCase(unittest.TestCase):
         self.assertIn("<!doctype html>", html)
 
     def test_build_run_cmd_flags(self):
-        cmd = ev.build_run_cmd("claude", "do it", "SKILL BODY")
+        cmd = aev.build_run_cmd("claude", "do it", "SKILL BODY")
         self.assertEqual(cmd[:2], ["claude", "-p"])
         self.assertIn("--output-format", cmd)
         self.assertIn("--append-system-prompt", cmd)
         self.assertIn("SKILL BODY", cmd)
         # baseline (without skill) — without system injection
-        self.assertNotIn("--append-system-prompt", ev.build_run_cmd("claude", "do it"))
+        self.assertNotIn("--append-system-prompt", aev.build_run_cmd("claude", "do it"))
 
 
 class SystemBankAdapterCase(unittest.TestCase):
@@ -263,47 +266,47 @@ class SystemBankAdapterCase(unittest.TestCase):
     # --- operators -----------------------------------------------------------
     def test_event_present_absent(self):
         t = [{"seq": 1, "type": "block", "reason_code": "X"}]
-        self.assertTrue(ev.apply_system_operator("event_present", {"type": "block"}, t, {})[0])
-        self.assertFalse(ev.apply_system_operator("event_absent", {"type": "block"}, t, {})[0])
-        self.assertTrue(ev.apply_system_operator(
+        self.assertTrue(aev.apply_system_operator("event_present", {"type": "block"}, t, {})[0])
+        self.assertFalse(aev.apply_system_operator("event_absent", {"type": "block"}, t, {})[0])
+        self.assertTrue(aev.apply_system_operator(
             "event_present", {"type": "block", "where": {"reason_code": "X"}}, t, {})[0])
-        self.assertFalse(ev.apply_system_operator(
+        self.assertFalse(aev.apply_system_operator(
             "event_present", {"type": "block", "where": {"reason_code": "Y"}}, t, {})[0])
 
     def test_event_order_violated_and_vacuous(self):
         t = [{"seq": 1, "type": "mutation"}, {"seq": 2, "type": "contract_compiled"}]
-        ok, _ = ev.apply_system_operator(
+        ok, _ = aev.apply_system_operator(
             "event_order", {"before": {"type": "contract_compiled"}, "after": {"type": "mutation"}}, t, {})
         self.assertFalse(ok)  # mutation (seq 1) happened before the contract (seq 2)
-        ok, _ = ev.apply_system_operator(
+        ok, _ = aev.apply_system_operator(
             "event_order", {"before": {"type": "x"}, "after": {"type": "never-happens"}}, [], {})
         self.assertTrue(ok)  # no `after` events -> vacuously true
 
     def test_event_count_max_min(self):
         t = [{"seq": i, "type": "finding", "finding_id": "F-1"} for i in range(1, 4)]
-        self.assertFalse(ev.apply_system_operator(
+        self.assertFalse(aev.apply_system_operator(
             "event_count_max", {"type": "finding", "max": 2}, t, {})[0])
-        self.assertTrue(ev.apply_system_operator(
+        self.assertTrue(aev.apply_system_operator(
             "event_count_min", {"type": "finding", "min": 3}, t, {})[0])
 
     def test_outcome_operators(self):
         outcome = {"declared_status": "success", "requirements_satisfied": ["R-1"]}
-        self.assertTrue(ev.apply_system_operator(
+        self.assertTrue(aev.apply_system_operator(
             "outcome_field_equals", {"path": "declared_status", "value": "success"}, [], outcome)[0])
-        self.assertTrue(ev.apply_system_operator(
+        self.assertTrue(aev.apply_system_operator(
             "outcome_list_contains", {"path": "requirements_satisfied", "value": "R-1"}, [], outcome)[0])
-        self.assertTrue(ev.apply_system_operator(
+        self.assertTrue(aev.apply_system_operator(
             "outcome_list_excludes", {"path": "requirements_satisfied", "value": "R-2"}, [], outcome)[0])
 
     def test_unknown_operator(self):
-        ok, detail = ev.apply_system_operator("bogus", {}, [], {})
+        ok, detail = aev.apply_system_operator("bogus", {}, [], {})
         self.assertFalse(ok)
         self.assertIn("unknown", detail)
 
     # --- case grading ----------------------------------------------------------
     def test_grade_system_case_all_pass(self):
         c = self._case("fx-critical-retention")
-        graded = ev.grade_system_case(c, self.graders_by_id,
+        graded = aev.grade_system_case(c, self.graders_by_id,
                                       c["baseline"]["transcript"], c["baseline"]["outcome"])
         self.assertTrue(graded["passed"])
         self.assertEqual(len(graded["checks"]), 3)
@@ -311,40 +314,40 @@ class SystemBankAdapterCase(unittest.TestCase):
 
     def test_grade_system_case_fail(self):
         c = self._case("fx-critical-premature-stop")
-        graded = ev.grade_system_case(c, self.graders_by_id,
+        graded = aev.grade_system_case(c, self.graders_by_id,
                                       c["baseline"]["transcript"], c["baseline"]["outcome"])
         self.assertFalse(graded["passed"])
 
     def test_grade_system_case_unknown_grader(self):
         c = {"case_id": "x", "assertions": [{"id": "A1", "grader": "NOPE", "expect": True}]}
-        graded = ev.grade_system_case(c, self.graders_by_id, [], {})
+        graded = aev.grade_system_case(c, self.graders_by_id, [], {})
         self.assertFalse(graded["passed"])
         self.assertIn("unknown grader", graded["checks"][0]["detail"])
 
     # --- schema validation -------------------------------------------------------
     def test_validate_system_graders_valid(self):
-        self.assertEqual(ev.validate_system_graders(self.graders_doc), [])
+        self.assertEqual(aev.validate_system_graders(self.graders_doc), [])
 
     def test_validate_system_graders_llm_judge_forbidden(self):
         bad = {"policy": {"llm_judge_allowed": True}, "graders": [
             {"id": "G1", "operator": "event_present"}]}
-        errs = ev.validate_system_graders(bad)
+        errs = aev.validate_system_graders(bad)
         self.assertTrue(any("llm_judge_allowed" in e for e in errs))
 
     def test_validate_system_graders_bad_operator(self):
         bad = {"policy": {"llm_judge_allowed": False}, "graders": [
             {"id": "G1", "operator": "bogus_op"}]}
-        errs = ev.validate_system_graders(bad)
+        errs = aev.validate_system_graders(bad)
         self.assertTrue(any("operator" in e for e in errs))
 
     def test_validate_system_cases_valid(self):
         grader_ids = set(self.graders_by_id)
-        self.assertEqual(ev.validate_system_cases(self.cases_doc, grader_ids), [])
+        self.assertEqual(aev.validate_system_cases(self.cases_doc, grader_ids), [])
 
     def test_validate_system_cases_bad(self):
         bad = {"cases": [{"case_id": "a", "kind": "bogus", "assertions": [
             {"grader": "NOPE"}], "baseline": {"transcript": [], "outcome": {}}}]}
-        errs = ev.validate_system_cases(bad, {"G-EVENT-PRESENT"})
+        errs = aev.validate_system_cases(bad, {"G-EVENT-PRESENT"})
         self.assertTrue(any("kind" in e for e in errs))
         self.assertTrue(any("unknown grader" in e for e in errs))
         self.assertTrue(any("transcript is empty" in e for e in errs))
@@ -357,17 +360,17 @@ class SystemBankAdapterCase(unittest.TestCase):
             {"case_id": "a", "kind": "critical", "assertions": [{"grader": "G-EVENT-PRESENT"}],
              "baseline": {"transcript": [{"seq": 1, "type": "x"}], "outcome": {"declared_status": "success"}}},
         ]}
-        errs = ev.validate_system_cases(bad, {"G-EVENT-PRESENT"})
+        errs = aev.validate_system_cases(bad, {"G-EVENT-PRESENT"})
         self.assertTrue(any("duplicate case_id" in e for e in errs))
 
     # --- metrics --------------------------------------------------------------
     def test_compute_system_metrics_all_paths(self):
         cases = self.cases_doc["cases"]
         records = {c["case_id"]: c["baseline"] for c in cases}
-        graded = [ev.grade_system_case(c, self.graders_by_id,
+        graded = [aev.grade_system_case(c, self.graders_by_id,
                                        c["baseline"]["transcript"], c["baseline"]["outcome"])
                  for c in cases]
-        m = ev.compute_system_metrics(cases, graded, records)
+        m = aev.compute_system_metrics(cases, graded, records)
         self.assertEqual(m["premature_stop_count"], 1)
         self.assertIn("fx-critical-premature-stop", m["premature_stop_cases"])
         self.assertEqual(m["redundant_approval_count"], 1)
@@ -387,30 +390,30 @@ class SystemBankAdapterCase(unittest.TestCase):
     # --- seeded sample -----------------------------------------------------------
     def test_seeded_system_sample_deterministic_and_bounded(self):
         ids = [c["case_id"] for c in self.cases_doc["cases"]]
-        s1 = ev.seeded_system_sample("seed-x", ids, 3)
-        s2 = ev.seeded_system_sample("seed-x", ids, 3)
+        s1 = aev.seeded_system_sample("seed-x", ids, 3)
+        s2 = aev.seeded_system_sample("seed-x", ids, 3)
         self.assertEqual(s1, s2)
         self.assertEqual(len(s1), 3)
         self.assertTrue(set(s1).issubset(set(ids)))
-        s3 = ev.seeded_system_sample("seed-y", ids, 3)
+        s3 = aev.seeded_system_sample("seed-y", ids, 3)
         self.assertNotEqual(s1, s3)
 
     # --- provider capability matrix --------------------------------------------
     def test_provider_capability_matrix_present_and_absent(self):
-        m = ev.provider_capability_matrix(claude_lookup=lambda: "/usr/bin/claude",
+        m = aev.provider_capability_matrix(claude_lookup=lambda: "/usr/bin/claude",
                                           codex_lookup=lambda: None)
         self.assertEqual(m["claude"]["capability"], "native")
         self.assertEqual(m["codex"]["capability"], "unsupported")
 
     # --- portability tier ------------------------------------------------------
     def test_classify_portability_tier_committed_bundle(self):
-        tier, reason = ev.classify_portability_tier(
+        tier, reason = aev.classify_portability_tier(
             self._case("fx-portability-tiered")["work"])
         self.assertIsNone(reason)
         self.assertEqual(tier, "committed-bundle")
 
     def test_classify_portability_tier_brief_acceptance(self):
-        tier, reason = ev.classify_portability_tier(
+        tier, reason = aev.classify_portability_tier(
             self._case("fx-portability-brief")["work"])
         self.assertIsNone(reason)
         self.assertEqual(tier, "brief-acceptance")
@@ -419,7 +422,7 @@ class SystemBankAdapterCase(unittest.TestCase):
     def test_pair_system_metric_deferred_without_candidate(self):
         baseline = {"metric": "first_pass_success", "value": 0.5,
                     "baseline_proof_class": "recomputed"}
-        pair = ev.pair_system_metric(baseline, None)
+        pair = aev.pair_system_metric(baseline, None)
         self.assertEqual(pair["status"], "deferred")
         self.assertIsNone(pair["candidate"])
 
@@ -427,20 +430,21 @@ class SystemBankAdapterCase(unittest.TestCase):
         baseline = {"metric": "first_pass_success", "value": 0.5,
                     "baseline_proof_class": "recomputed"}
         candidate = {"metric": "first_pass_success", "value": 0.8}
-        pair = ev.pair_system_metric(baseline, candidate)
+        pair = aev.pair_system_metric(baseline, candidate)
         self.assertEqual(pair["status"], "paired")
         self.assertAlmostEqual(pair["delta"], 0.3)
 
     def test_pair_system_metric_pinned_baseline_forbidden(self):
         baseline = {"metric": "m", "value": 1, "baseline_proof_class": "pinned-not-recomputable"}
         with self.assertRaises(ValueError):
-            ev.pair_system_metric(baseline, {"metric": "m", "value": 1})
+            aev.pair_system_metric(baseline, {"metric": "m", "value": 1})
 
     # --- benchmark builder -------------------------------------------------------
     def test_build_system_benchmark_shape_and_deferred_pair(self):
-        bench = ev.build_system_benchmark(
+        bench = aev.build_system_benchmark(
             self.cases_doc, self.graders_doc, generated_at="2026-07-26T00:00:00Z")
-        self.assertEqual(bench["schema_version"], "system-bank-benchmark/v1")
+        self.assertEqual(bench["schema_version"], "system-bank-benchmark/v2")
+        self.assertEqual(bench["context"]["fixtures"]["id"], "system-bank")
         self.assertEqual(bench["counts"]["cases"], len(self.cases_doc["cases"]))
         self.assertEqual(bench["pair"]["status"], "deferred")
         self.assertIsNone(bench["candidate"])
@@ -450,7 +454,7 @@ class SystemBankAdapterCase(unittest.TestCase):
 
     def test_build_system_benchmark_with_candidate_pairs(self):
         candidate_runs = {c["case_id"]: c["baseline"] for c in self.cases_doc["cases"]}
-        bench = ev.build_system_benchmark(
+        bench = aev.build_system_benchmark(
             self.cases_doc, self.graders_doc, generated_at="2026-07-26T00:00:00Z",
             candidate_runs=candidate_runs)
         self.assertEqual(bench["pair"]["status"], "paired")
@@ -462,21 +466,21 @@ class FractionRenderCase(unittest.TestCase):
     """_fmt_frac/_stringify_fractions — render without float (P8.9)."""
 
     def test_fmt_frac_round_half_up_and_sign(self):
-        self.assertEqual(ev._fmt_frac(None), None)
-        self.assertEqual(ev._fmt_frac(ev.Fraction(1, 2)), "0.500")
-        self.assertEqual(ev._fmt_frac(ev.Fraction(1, 3)), "0.333")
-        self.assertEqual(ev._fmt_frac(ev.Fraction(-1, 4)), "-0.250")
-        self.assertEqual(ev._fmt_frac(3), "3.000")
+        self.assertEqual(aev._fmt_frac(None), None)
+        self.assertEqual(aev._fmt_frac(Fraction(1, 2)), "0.500")
+        self.assertEqual(aev._fmt_frac(Fraction(1, 3)), "0.333")
+        self.assertEqual(aev._fmt_frac(Fraction(-1, 4)), "-0.250")
+        self.assertEqual(aev._fmt_frac(3), "3.000")
 
     def test_stringify_fractions_recursive_no_leftover(self):
-        obj = {"a": ev.Fraction(1, 2), "b": [ev.Fraction(3), None, "x"], "c": {"d": ev.Fraction(0)}}
+        obj = {"a": Fraction(1, 2), "b": [Fraction(3), None, "x"], "c": {"d": Fraction(0)}}
         out = ev._stringify_fractions(obj)
         self.assertEqual(out, {"a": "0.500", "b": ["3.000", None, "x"], "c": {"d": "0.000"}})
 
     def test_sqrt_fraction_integer_no_float(self):
         # √4 == 2 exactly; we check that the implementation does not touch float in general
-        self.assertEqual(ev._sqrt_fraction(ev.Fraction(4)), ev.Fraction(2))
-        self.assertGreater(ev._sqrt_fraction(ev.Fraction(2)), ev.Fraction(0))
+        self.assertEqual(aev._sqrt_fraction(Fraction(4)), Fraction(2))
+        self.assertGreater(aev._sqrt_fraction(Fraction(2)), Fraction(0))
 
 
 def _write_fake_claude(tmp_dir, *, output_tokens=5, input_tokens=10, result="ok output"):
@@ -557,7 +561,26 @@ class OnlineDeterminismCase(unittest.TestCase):
                 for v in node:
                     _walk(v)
         _walk(data)
-        self.assertEqual(data["schema_version"], "skill-benchmark/v2")
+        self.assertEqual(data["schema_version"], "skill-benchmark/v3")
+
+    def test_context_records_only_observed_values(self):
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        ctx = json.loads(self._bench_path().read_text(encoding="utf-8"))["context"]
+        self.assertEqual(ctx["schema"], "eval-context/v1")
+        self.assertEqual(ctx["skill"]["id"], "quality/test-writer")
+        self.assertEqual(ctx["skill"]["digest"], skill_digest(self.skill_dir))
+        self.assertEqual(ctx["grader"], {"id": "skill-eval", "version": aev.GRADER_VERSION})
+        # the stub neither reports modelUsage nor answers `--version` with a version
+        self.assertEqual(ctx["runner"], {"provider": "claude-code", "cli_version": None, "models": []})
+
+    def test_report_prints_the_context_line(self):
+        ev.cmd_eval(self.env, ["quality/test-writer"],
+                   clock_ns=_no_op_clock(), now_iso="2026-07-27T00:00:00")
+        bench = json.loads(self._bench_path().read_text(encoding="utf-8"))
+        digest = bench["context"]["skill"]["digest"]
+        self.assertIn(f"Context: skill {digest[:19]}…, models unobserved, claude unknown",
+                      ev.render_markdown(bench))
 
     def test_provenance_llm_true_and_clock_injected(self):
         ev.cmd_eval(self.env, ["quality/test-writer"],
@@ -568,10 +591,11 @@ class OnlineDeterminismCase(unittest.TestCase):
         self.assertEqual(data["provenance"]["clock"], "injected")
 
     def test_offline_branch_writes_nothing(self):
-        with mock.patch.object(ev, "claude_bin", return_value=None):
+        with mock.patch.object(ev, "claude_bin", return_value=None) as lookup:
             before = sorted((self.skill_dir / "evals").iterdir())
             ev.cmd_eval(self.env, ["quality/test-writer"])
             after = sorted((self.skill_dir / "evals").iterdir())
+        lookup.assert_called()
         self.assertEqual(before, after)
         self.assertFalse(self._bench_path().exists())
 

@@ -1,0 +1,243 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.5",
+  "title": "Метаданные skills (E27): license, compatibility, allowed_tools в skills.json; skiller describe (skill-descriptor/v1); проверки validate",
+  "status": "done_with_deviations",
+  "summary": "registry пишет license (frontmatter → upstream.json → лицензия пакета) и compatibility/allowed_tools при наличии через aicore describe_skill; команда skiller describe <skill> [--json] для skills библиотеки и модулей; шаг metadata в validate (дескриптор строится, лицензия upstream-skills, ограничения стандарта); схема skills.json (если есть) — новые необязательные свойства; golden skiller-registry и skiller-help перезахвачены с причиной.",
+  "why": "D54 и E27: закрыть пробелы license, совместимость, инструменты, provenance без правки SKILL.md. Риск: смена байтов skills.json для потребителей индекса (orch-мост, maind skilldoc) — изменение аддитивное, потребители игнорируют неизвестные поля; проверяется их тестами в широком прогоне P8.7.",
+  "scope": {
+    "include": [
+      "packages/skiller/lib/skiller/registry.py: поля записи",
+      "packages/skiller/lib/skiller/describe.py (новый), cli.py: команда describe и справка",
+      "packages/skiller/scripts/validate.sh или tests/test_metadata.py: шаг metadata",
+      "packages/skiller/schema/** — только если описывает записи skills.json",
+      "генерация registry в песочнице; golden capture skiller-registry и skiller-help",
+      "CHANGELOG.md корня"
+    ],
+    "exclude": [
+      "правка frontmatter и содержания skills",
+      "строгая проекция под skills-ref validate и копирование текста лицензий (отложено, skiller-p8#deferred)",
+      "receipt skill-digest в run (P10)"
+    ]
+  },
+  "depends_on": [
+    "P8.4"
+  ],
+  "decisions": [
+    "D54",
+    "D41"
+  ],
+  "reads": [
+    {
+      "why": "общие правила фазы",
+      "required": true,
+      "ref": "knowledge/skiller-p8#rules"
+    },
+    {
+      "why": "покрытие метаданных, skills.json, внешние предпосылки стандарта",
+      "required": true,
+      "ref": "knowledge/skiller-p8#facts"
+    },
+    {
+      "why": "дизайн пункта",
+      "required": true,
+      "ref": "knowledge/skiller-p8#metadata"
+    },
+    {
+      "why": "тезис E27 и таблица пробелов",
+      "required": true,
+      "ref": "knowledge/review-e1-skills#register"
+    },
+    {
+      "why": "describe_skill, SkillDescriptor и его сериализация",
+      "required": true,
+      "path": "packages/aicore/lib/aicore/content/skill.py"
+    },
+    {
+      "why": "build_registry (строки 25–100)",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/registry.py"
+    },
+    {
+      "why": "COMMANDS и справка",
+      "required": true,
+      "path": "packages/skiller/lib/skiller/cli.py"
+    },
+    {
+      "why": "как устроены шаги validate",
+      "required": true,
+      "path": "packages/skiller/scripts/validate.sh"
+    },
+    {
+      "why": "ограничения полей стандарта Agent Skills (первоисточники в ответе)",
+      "required": false,
+      "path": "research/P8-perplexity.md"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/lib/skiller/registry.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/describe.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/schema/**",
+      "change": "modify",
+      "note": "только если описывает записи skills.json"
+    },
+    {
+      "path": "packages/skiller/skills.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/skills/_index.md",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/docs/guide/budget.md",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "packages/skiller/docs/guide/graph.md",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "bootstrap/publication-lock.json",
+      "change": "modify",
+      "note": "только генератором"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "modify",
+      "note": "только golden.py capture"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/skiller-p8 §rules (stdlib + aicore, Python 3.9, POSIX; граница модулей: skiller не называет модулей хаба; тесты только с временным HOME; CLI, validate и registry skiller — только в песочнице; git mv отдельным шагом; английский в продукте; CHANGELOG; генерируемое — генераторами; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды предупреждений, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "SKILL.md и upstream.json не меняются; skills.json меняется только генератором",
+    "Один читатель метаданных — aicore.content.skill.describe_skill; лицензия пакета — значение по умолчанию из package.json",
+    "Golden: capture --only skiller-registry --reason \"skills.json carries license, compatibility and allowed_tools\" и capture --only skiller-help --reason \"skiller describe\"; другие генераторы — без перезахвата"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: `aicore.content.skill` — поля дескриптора и сериализация → `registry.build_registry`: license/compatibility/allowed_tools по §metadata п.1 (порядок вставки ключей!) → схема skills.json, если есть → `describe.py` + `cli.py` (поиск через `skillset._registry_index`, включая модульные skills; exit 1 на неизвестный) → шаг metadata в validate (§metadata п.3) с тестом на нарушающую фикстуру → registry в песочнице → golden capture двух генераторов → V1–V4 → CHANGELOG (skiller — Added: license, compatibility and allowed_tools in skills.json; skiller describe).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p8-skv-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash packages/skiller/scripts/validate.sh; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c 'import json; d = json.load(open(\"packages/skiller/skills.json\")); s = d[\"skills\"]; assert all(isinstance(e.get(\"license\"), str) and e[\"license\"] for e in s), [e[\"name\"] for e in s if not e.get(\"license\")]; assert any(\"compatibility\" in e for e in s)' && test -f packages/skiller/lib/skiller/describe.py && grep -q '\"describe\"' packages/skiller/lib/skiller/cli.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p8-desc-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'packages/skiller/bin/skiller describe context-economy --json | python3 -c \"import json, sys; d = json.load(sys.stdin); assert d[\\\"name\\\"] == \\\"context-economy\\\" and d[\\\"license\\\"], d\" && packages/skiller/bin/skiller describe shared-memory --json | python3 -c \"import json, sys; d = json.load(sys.stdin); assert d[\\\"name\\\"] == \\\"shared-memory\\\", d\" && { packages/skiller/bin/skiller describe no-such-skill-xyz >/dev/null 2>&1; test $? = 1; }'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0 (describe отдаёт дескриптор для skill библиотеки и модульного skill, неизвестный — exit 1)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone skiller && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && python3 scripts/test-ecosystem-units.py && python3 scripts/test-config-inventory.py && python3 scripts/test-dev-guard.py && python3 scripts/test-aicore-locator.py && python3 scripts/test-golden.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "skills.json с license, compatibility, allowed_tools",
+    "skiller describe",
+    "шаг metadata в validate"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T15:34:04Z",
+    "finished_at": "2026-10-09T15:43:34Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "b408b805-1583-41e2-aec3-148b773ecec3"
+    },
+    "notes": "skills.json carries license/compatibility/allowed_tools; skiller describe; metadata gate in tests/test_metadata.py",
+    "deviations": [
+      "extra golden recapture skiller-unknown-subcommand (command list gained describe)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-09T15:43:34Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T15:43:34Z"
+}

@@ -1,0 +1,427 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:stage-report:v1",
+  "title": "stage-report",
+  "description": "Closed result of an executor run under the conductor: a status and the report fields of result_contract.report. A gap that needs a decision of the owner is blocked with what is missing, never a guess.",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description": "done, done with recorded deviations, or blocked.",
+      "type": "string",
+      "enum": [
+        "done",
+        "done_with_deviations",
+        "blocked"
+      ]
+    },
+    "summary": {
+      "description": "What changed and why, in a few lines.",
+      "type": "string",
+      "minLength": 1
+    },
+    "changed_paths": {
+      "description": "Every repository path created, modified or deleted.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "description": "Repository-relative path.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "checks_run": {
+      "description": "Checks that actually ran.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/check"
+      }
+    },
+    "evidence": {
+      "description": "Paths of output files and evidence documents.",
+      "type": "array",
+      "items": {
+        "description": "Repository-relative path.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "open_issues": {
+      "description": "Every surprise that matters to the plan, classified.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/issue"
+      }
+    },
+    "questions": {
+      "description": "Questions of the executor to the owner (D11): a blocking question blocks the piece until it is answered; a non-blocking one states what the executor assumed and goes on.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/question"
+      }
+    },
+    "review_recommendation": {
+      "$ref": "#/$defs/review_recommendation"
+    }
+  },
+  "required": [
+    "status",
+    "summary",
+    "changed_paths",
+    "checks_run",
+    "evidence",
+    "open_issues"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "check": {
+      "description": "A command check with its exit, or a manual procedure with its verdict.",
+      "oneOf": [
+        {
+          "description": "Command check.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Check id.",
+              "type": "string",
+              "pattern": "^V[0-9]+$"
+            },
+            "cmd": {
+              "description": "Command as written in the input.",
+              "type": "string",
+              "minLength": 1
+            },
+            "exit": {
+              "description": "Observed exit.",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "cmd",
+            "exit"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "Manual procedure.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Check id.",
+              "type": "string",
+              "pattern": "^V[0-9]+$"
+            },
+            "procedure": {
+              "description": "Procedure as written in the input.",
+              "type": "string",
+              "minLength": 1
+            },
+            "verdict": {
+              "description": "Observed verdict.",
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "procedure",
+            "verdict"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "issue": {
+      "description": "One open issue.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "description": "What happened.",
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "description": "Class of the issue; escalation names what the owner must decide or provide.",
+          "type": "string",
+          "enum": [
+            "pending",
+            "deviation",
+            "blocker",
+            "difficulty",
+            "assumption",
+            "note",
+            "escalation"
+          ]
+        },
+        "impact": {
+          "description": "What it affects.",
+          "type": "string",
+          "minLength": 1
+        },
+        "next": {
+          "description": "What should happen next.",
+          "type": "string",
+          "minLength": 1
+        },
+        "class": {
+          "description": "Class of a deviation: what it deviates from. Required for kind deviation.",
+          "type": "string",
+          "enum": [
+            "write_set",
+            "spec_mismatch",
+            "test_env",
+            "docs",
+            "dependency",
+            "environment",
+            "other"
+          ]
+        },
+        "severity": {
+          "description": "How serious it is.",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "outcome": {
+          "description": "How the deviation ends: accepted as is, a follow-up for later work, or a decision of the owner. Required for kind deviation.",
+          "type": "string",
+          "enum": [
+            "accepted",
+            "follow_up",
+            "owner_decision"
+          ]
+        },
+        "auto_fixable": {
+          "description": "True when the deviation can be repaired without a decision.",
+          "type": "boolean"
+        },
+        "evidence": {
+          "description": "Where it shows: path:line or a check id V<n>.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "text",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "description": "A deviation names its class, impact and outcome.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "deviation"
+              ]
+            }
+          },
+          "required": [
+            "class",
+            "impact",
+            "outcome"
+          ]
+        },
+        {
+          "description": "Any other issue.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "pending",
+                "blocker",
+                "difficulty",
+                "assumption",
+                "note",
+                "escalation"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "question": {
+      "description": "One question. blocking false needs assumed.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Id of the question, stable across rounds.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "revision": {
+          "description": "Revision of the question: 1 when first asked; it goes up when the input it was asked on changed.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "kind": {
+          "description": "What the question asks for.",
+          "type": "string",
+          "enum": [
+            "clarification",
+            "decision",
+            "approval",
+            "credential"
+          ]
+        },
+        "text": {
+          "description": "The question.",
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "description": "Answers to choose from.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Id of the option.",
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "description": "What the option means.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "answer_schema": {
+          "description": "JSON Schema of a free answer.",
+          "type": "object"
+        },
+        "default": {
+          "description": "Proposed answer (a proposal, not an assumption).",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "array"
+          ]
+        },
+        "blocking": {
+          "description": "True when the work cannot go on without the answer.",
+          "type": "boolean"
+        },
+        "assumed": {
+          "description": "What the executor assumed and went on with; required when the question is not blocking.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "array"
+          ]
+        },
+        "risk": {
+          "description": "Risk of a wrong answer.",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "kind",
+        "text",
+        "blocking"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "description": "A blocking question.",
+          "properties": {
+            "blocking": {
+              "enum": [
+                true
+              ]
+            }
+          }
+        },
+        {
+          "description": "A question the executor went on without an answer to names what it assumed.",
+          "properties": {
+            "blocking": {
+              "enum": [
+                false
+              ]
+            }
+          },
+          "required": [
+            "assumed"
+          ]
+        }
+      ]
+    },
+    "review_recommendation": {
+      "description": "The executor's own advice whether the piece needs a review, with why (P7.1). The conductor keeps it in the report and reads it as the executor_recommended feature of the risk score; it never turns it into a review by itself.",
+      "type": "object",
+      "properties": {
+        "recommended": {
+          "description": "True when a review of the piece is advised.",
+          "type": "boolean"
+        },
+        "reason_codes": {
+          "description": "Why a review is advised (or the signals met when it is not).",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "scope_expanded",
+              "public_api_changed",
+              "schema_changed",
+              "shared_module_changed",
+              "security_touched",
+              "low_confidence",
+              "other"
+            ]
+          }
+        },
+        "focus": {
+          "description": "What the reviewer should look at first.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "suggested_model_class": {
+          "description": "Route class the executor suggests for the review.",
+          "type": "string",
+          "enum": [
+            "economy",
+            "implementation",
+            "frontier"
+          ]
+        }
+      },
+      "required": [
+        "recommended",
+        "reason_codes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

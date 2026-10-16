@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D38",
+  "title": "Модель конфига: умолчания в схеме, _unset/_append, x-skm-layers, x-skm-secret, schema_version, env с __, дополнительные слои",
+  "date": "2026-10-08",
+  "status": "accepted",
+  "question": "Как конкретно выражаются правила D22 в TOML и схемах модулей: где значения по умолчанию, как записываются удаление и добавление в массив, запрет слоя, имена переменных окружения, версия файла, место дополнительных слоёв (наследные файлы, plan.settings)?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Значения по умолчанию — только default в config.schema.json (configs/defaults.json не заводится; уточняет архитектуру §3 и §5.1); схема секции: корень object, additionalProperties false на каждом объекте, без required, description у каждого листа; профиль util.schema расширяется minimum/maximum и аннотациями x-skm-secret, x-skm-layers (прочие x-* — ошибка профиля). Файл слоя: schema_version = 1 обязателен (нет — CONFIG_VERSION_MISSING, больше — CONFIG_VERSION_NEWER), секции [<module>]. Удаление — _unset = [ключи] (возврат к default или отсутствие), добавление — _append = {ключ = [...]} только для массивов; оба только в файловых и дополнительных слоях. x-skm-layers — список слоёв, где ключ разрешён (иначе CONFIG_LAYER_FORBIDDEN). Окружение SKM_<MODULE>_<PATH> с __ между сегментами, разбор по типу схемы; неизвестный путь под префиксом модуля — предупреждение и пропуск. Дополнительные слои модуля (наследный файл, plan.settings планера) — после project и до env. Полная модель — knowledge/config-p4#model.",
+      "pros": "Один источник значений по умолчанию; правила D22 выразимы в чистом TOML; совместимо с существующими SKM_*; P8/P9/P11 получают готовую точку для наследных файлов и plan.settings"
+    },
+    {
+      "id": "B",
+      "text": "defaults.json рядом со схемой, как в архитектуре §3",
+      "cons": "Два источника умолчаний и отдельная проверка их согласия"
+    },
+    {
+      "id": "C",
+      "text": "Неизвестная SKM_<MODULE>_* переменная — ошибка",
+      "cons": "Ломает существующие переменные вроде SKM_TASK_ROOT после перевода модуля"
+    }
+  ],
+  "context": "D5/D14/D22 задают принципы; архитектура §3 перечисляет и configs/defaults.json, и configs/config.schema.json. Закрытый профиль aicore.util.schema не знает minimum/maximum и x-аннотаций. Префикс SKM_ уже занят не-конфигурационными переменными (SKM_HOME, SKM_TASK_ROOT, SKM_CLAUDE_BIN, SKM_DEV_ALLOW_LIVE).",
+  "decision": "A — Значения по умолчанию — только default в config.schema.json (configs/defaults.json не заводится; уточняет архитектуру §3 и §5.1); схема секции: корень object, additionalProperties false на каждом объекте, без required, description у каждого листа; профиль util.schema расширяется minimum/maximum и аннотациями x-skm-secret, x-skm-layers (прочие x-* — ошибка профиля). Файл слоя: schema_version = 1 обязателен (нет — CONFIG_VERSION_MISSING, больше — CONFIG_VERSION_NEWER), секции [<module>]. Удаление — _unset = [ключи] (возврат к default или отсутствие), добавление — _append = {ключ = [...]} только для массивов; оба только в файловых и дополнительных слоях. x-skm-layers — список слоёв, где ключ разрешён (иначе CONFIG_LAYER_FORBIDDEN). Окружение SKM_<MODULE>_<PATH> с __ между сегментами, разбор по типу схемы; неизвестный путь под префиксом модуля — предупреждение и пропуск. Дополнительные слои модуля (наследный файл, plan.settings планера) — после project и до env. Полная модель — knowledge/config-p4#model.",
+  "rationale": "Конкретизация D22 и R04 для реализации в P4; уточняет архитектуру §3/§5.1 (defaults.json не нужен) — изменение верхнего слоя оформлено этим решением.",
+  "applies_to": [
+    "P4",
+    "P8.4",
+    "P9.4",
+    "P13",
+    "P11.5",
+    "P11.9"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:demo:config:v1",
+  "title": "demo config",
+  "type": "object",
+  "description": "Settings of the demo module used by the configuration tests.",
+  "additionalProperties": false,
+  "properties": {
+    "recompute": {
+      "type": "object",
+      "description": "Recompute thresholds.",
+      "additionalProperties": false,
+      "properties": {
+        "candidate_min_n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 15,
+          "description": "Smallest sample that makes a candidate."
+        },
+        "ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5,
+          "description": "Share of agreeing samples."
+        },
+        "window": {
+          "type": "object",
+          "description": "Time window.",
+          "additionalProperties": false,
+          "properties": {
+            "days": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 7,
+              "description": "Length of the window in days."
+            }
+          }
+        }
+      }
+    },
+    "verbose": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print details."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["fast", "safe"],
+      "default": "safe",
+      "description": "Run mode."
+    },
+    "sources": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true,
+      "default": ["local"],
+      "description": "Where to read from."
+    },
+    "limits": {
+      "type": "object",
+      "description": "Limits without defaults.",
+      "additionalProperties": false,
+      "properties": {
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Retry count; unset by default."
+        }
+      }
+    },
+    "token": {
+      "type": "string",
+      "x-skm-secret": true,
+      "description": "Reference to the API token."
+    },
+    "cache_dir": {
+      "type": "string",
+      "default": "",
+      "x-skm-layers": ["defaults", "machine"],
+      "description": "Machine-local cache directory; never set per project."
+    }
+  }
+}

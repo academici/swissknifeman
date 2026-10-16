@@ -1,0 +1,184 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P10.9",
+  "title": "События orch.run.*: unit.json provides.events, схемы event-data/v1, emit после записи журнала, фикстуры производителя",
+  "status": "done",
+  "summary": "unit.json orch: events orch.run.started|stage.finished|finished|refused и контракт urn:swissknifeman:orch:event-data; схемы data (закрытые) по knowledge/orch-p10-runtime#events; lib/orch/events.py (emit best-effort, ORCH_EVENT_NOT_EMITTED, events.enabled); фикстуры производителя tests/fixtures/events/<type>/; раннеры с SKM_AICORE_EVENTS__DELIVERY=off; scripts/test-event-contracts.py видит orch.",
+  "why": "D65, D6, D44; E44; архитектура §9 (orch → analyst событиями). Подписчик analyst — P11, здесь производитель и контракт. Жёсткие риски: (1) сбой журнала событий ломает команду — best-effort, тест с бросающим emit; (2) испускание из чистых операций (dry-run prepare, policy test) — запрещено, тест; (3) данные с секретами — aicore EVENT_SECRET.",
+  "scope": {
+    "include": [
+      "packages/orch/unit.json",
+      "packages/orch/schemas/event-data/v1/*.schema.json",
+      "packages/orch/lib/orch/events.py",
+      "packages/orch/tests/{test_events.py, fixtures/events/**}",
+      "packages/orch/scripts/{test.sh,validate.sh} (env доставки)",
+      "packages/orch/docs/events.md (новая) или раздел architecture.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "вызовы emit из цикла источника работы (P10.10)",
+      "подписчик analyst (P11)"
+    ]
+  },
+  "depends_on": [
+    "P10.8"
+  ],
+  "decisions": [
+    "D65",
+    "D44",
+    "D59"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/orch-p10#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10#facts",
+      "why": "факты кода на начало фазы: файлы, функции, точки изменения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/orch-p10-runtime#events",
+      "why": "типы, данные, emit, фикстуры, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/planner-p9-ext#events",
+      "why": "образец производителя событий и фикстур",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-events#emit",
+      "why": "API emit и лимиты",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/integration/events.py",
+      "why": "образец best-effort emit",
+      "required": true
+    },
+    {
+      "path": "packages/planner/schemas/event-data/v1/planner.plan.closed.schema.json",
+      "why": "образец схемы data",
+      "required": true
+    },
+    {
+      "path": "scripts/test-event-contracts.py",
+      "why": "как находятся производители и фикстуры",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/unit.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/event-data/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/events.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/scripts/test.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/scripts/validate.sh",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/**",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/orch-p10 §rules (Python 3.9; orch импортирует только stdlib, orch и aicore; мосты — stdlib и aicore, партнёры — процессом по CLI; временные HOME и SKM_HOME в тестах; новый движок planner не запускается мутирующими глаголами на plans/ репозитория; git mv отдельным шагом; CHANGELOG; генерируемое — генераторами; exec/v1 и plan/v1 — только minor; красное чинится в пункте)",
+    "Дизайн — разделы knowledge, указанные в reads; имена функций, ключи, коды ошибок, пути и форматы — строго оттуда; отклонение или расхождение с кодом — plan.py log с причиной",
+    "Продуктовые файлы — на английском, без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "Сбой испускания не меняет код выхода и вывод команды",
+    "Испускание — только после записи журнала run и вне блокировок; чистые операции не испускают"
+  ],
+  "guidance": "Исполнитель: implementation/medium.\n\nПорядок: схемы data (4) и записи unit.json → `python3 scripts/ecosystem-units.py check` (правило префикса событий) → events.py → фикстуры производителя (valid и invalid на тип) → test_events (валидность фикстур, выключенные события, сбой emit, отсутствие испускания из prepare --dry-run и policy test) → раннеры экспортируют SKM_AICORE_EVENTS__DELIVERY=off → `python3 scripts/test-event-contracts.py` → docs → V1–V3 → CHANGELOG («orch: orch.run.* events with data contracts»).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/test.sh && bash packages/orch/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/test-event-contracts.py && python3 -c 'import json; u = json.load(open(\"packages/orch/unit.json\")); e = set(u[\"provides\"][\"events\"]); assert e == {\"orch.run.started\", \"orch.run.stage.finished\", \"orch.run.finished\", \"orch.run.refused\"}, e' && test \"$(ls packages/orch/schemas/event-data/v1/*.schema.json | wc -l)\" = 4",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "события orch.run.* и контракт event-data/v1 orch"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-11T04:23:37Z",
+    "finished_at": "2026-10-11T04:46:07Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "session": "a7bc1943-b3b9-4414-8fac-d8a6f1fcf1bc"
+    },
+    "notes": "orch.run.* events: unit.json provides.events and contract urn:swissknifeman:orch:event-data, four closed data schemas, orch.events.emit (best-effort, strict journal write, ORCH_EVENT_NOT_EMITTED, events.enabled), producer fixtures, test_events (fixtures, disabled, failing emit, unwritable journal, closed stderr, no emission from prepare --dry-run and policy test), docs/events.md, CHANGELOG. Review grok/grok-4.7/high: 2 findings fixed. Artifact: artifacts/P10.9/review-verdict.md",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-11T04:46:07Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-11T04:46:07Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-11T04:46:07Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-11T04:46:07Z"
+}

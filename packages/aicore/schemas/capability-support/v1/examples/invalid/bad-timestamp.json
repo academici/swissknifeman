@@ -1,0 +1,8 @@
+{
+  "capability": "agent.subagents",
+  "provider": "claude-code",
+  "dimension": "health",
+  "level": "adapted",
+  "source": "probed",
+  "observed_at": "yesterday"
+}

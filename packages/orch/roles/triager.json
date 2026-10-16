@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "triager",
+  "title": "Triager",
+  "description": "Reproduce every finding with a command or a short test run against the candidate, and record the command, its exit and what you observed.",
+  "instructions": [
+    {
+      "path": "roles/triager.md",
+      "purpose": "canonical role text",
+      "sha256": "6a82029e5352568227220d4873c1cacc73dedc38e5371b10b70288f141f3648b"
+    }
+  ],
+  "tools": {
+    "filesystem": "read",
+    "shell": "full",
+    "network": "none",
+    "plan_api": "none"
+  },
+  "write_authority": "none",
+  "result_shape": "triage-result",
+  "model_class_min": "implementation",
+  "forbidden_inputs": [
+    "lifecycle_instructions",
+    "report_api",
+    "plan_write"
+  ]
+}

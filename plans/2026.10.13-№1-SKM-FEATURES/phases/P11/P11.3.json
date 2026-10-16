@@ -1,0 +1,142 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P11.3",
+  "title": "Запись артефактов и переходы плана только в infrastructure/work_source.py; архитектурный тест; закрытие фазы P11",
+  "status": "done_with_deviations",
+  "summary": "По knowledge/p11-refactor#fs: вынос записи stage-report/review-verdict/orch-artifacts в work_source.py; архитектурный тест запрета записи вне него. Пункт закрывает фазу: phase.validation P11 и conformance на фейковых движках.",
+  "why": "Аудит П10.3, критерий 14.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/infrastructure/work_source.py",
+      "packages/orch/tests/test_boundaries.py",
+      "phase.validation P11"
+    ],
+    "exclude": []
+  },
+  "depends_on": [
+    "P11.2"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p11-refactor#fs",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p11-refactor#checks",
+      "why": "проверки фазы",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/infrastructure/work_source.py",
+      "change": "any",
+      "note": "создан в P11.2"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/75ea9710d5bc9bbc6bc15a1217364c24fbb66dfa6c7a85f0fcf761950152a053",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Поведение conductor не меняется: characterization и существующие тесты зелёные после каждого шага",
+    "phase.validation P11 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Порядок: архитектурный тест (падает) → вынос → V1 → phase.validation P11.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "инвариант work source"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-15T09:16:34Z",
+    "finished_at": "2026-10-15T10:28:19Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "opus",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-cd200e39ce47d9ddfd08a26f-P11.3",
+    "notes": "Only infrastructure/work_source.py now writes into the artifact folder of a piece and builds or runs orch.py source command lines (knowledge/p11-refactor#fs). Test first: tests/test_boundaries.py got test_plan_artifacts_and_transitions_only_in_the_work_source_module. It is an AST rule over packages/orch/lib/orch/conductor/** except work_source.py: no `/` path that names item.artifacts, artifacts, artifacts_dir or orch-artifacts; no literal [\"source\", <verb>, ...] command line; no call of _orch/run_orch. A companion test proves each form is seen. It was red on 7 places (loop.py:228, files.py:20, advice.py:63, checks_stage.py:94, finish.py:40 and :52, review.py:180). Moved into work_source.py: FALLBACK_ARTIFACTS (still re-exported by engine.py), open_artifacts (item.artifacts from the brief), write_artifact (stage-report.json, review-verdict.json, advice-N.json), evidence_dir (the evidence folder passed to the checks), register_args (the source register arguments) and closer_command (the command line of the model registrar, out of stages/close.py). All are bound on Conductor like the other layer functions. Behaviour unchanged: bash scripts/test.sh -p test_boundaries.py green; bash scripts/test.sh -p 'test_c[oh]*.py' (characterization, test_conductor*, test_contracts*, test_conformance: 545 tests) green. Repeat conformance on fake engines: orch.py conformance with a temporary HOME exited 0 (33 PASS, 10 DECLARED, 5 N/A, no FAIL; output in /tmp, not in the repo). CHANGELOG.md got a 'Changed' entry for P11.\nChanged: CHANGELOG.md, packages/orch/lib/orch/conductor/application/loop.py, packages/orch/lib/orch/conductor/engine.py, packages/orch/lib/orch/conductor/infrastructure/files.py, packages/orch/lib/orch/conductor/infrastructure/work_source.py, packages/orch/lib/orch/conductor/stages/advice.py, packages/orch/lib/orch/conductor/stages/checks_stage.py, packages/orch/lib/orch/conductor/stages/close.py, packages/orch/lib/orch/conductor/stages/finish.py, packages/orch/lib/orch/conductor/stages/review.py, packages/orch/tests/test_boundaries.py",
+    "deviations": [
+      "conductor/checks.py still writes the evidence files itself, into the folder work_source.evidence_dir gives it. The architecture test checks where artifact paths are built and orch.py source command lines are built or run, not every file write by a module that receives such a path."
+    ],
+    "pending": [
+      "follow_up(other): conductor/checks.py still writes the evidence files itself, into the folder work_source.evidence_dir gives it. The architecture test checks where artifact paths are built and orch.py source command lines are built or run, not every file write by a module that receives such a path."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-15T10:28:19Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V1.json"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-15T10:28:19Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V11.json"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-15T10:28:19Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V12.json"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-15T10:28:19Z",
+        "evidence": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V13.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V1.json",
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V11.json",
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V12.json",
+      "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P11.3/evidence/V13.json"
+    ]
+  },
+  "updated_at": "2026-10-15T10:28:19Z"
+}

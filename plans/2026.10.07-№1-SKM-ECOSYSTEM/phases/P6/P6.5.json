@@ -1,0 +1,191 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.5",
+  "title": "aicore.ext.process и environment: дисциплина процесса плагина (R08), очищенное окружение, секреты по ссылкам, профиль",
+  "status": "done_with_deviations",
+  "summary": "run_json — запуск одноразового процесса с JSON в stdin и ровно одним JSON-объектом в stdout: новая сессия, общий дедлайн чтения (selectors), SIGTERM→2 с→SIGKILL группе, SIGKILL группе после выхода, лимит stdout 1 MiB, хвост stderr 2 KiB с редактированием секретов; clean_environment — allowlist, permissions.env и секреты env:// только для trusted, служебные SKM_EXT_*; effective_profile; тест архитектуры «Popen только в process.py».",
+  "why": "R08 и D19/D45: плагины и подписчики не должны ломать хост, зависать, мусорить в протоколе, оставлять потомков и утекать секретами (E30, E40). Жёсткие риски: (1) зависание на pipe, удерживаемом ушедшим потомком, — дедлайн на чтение, не communicate(); (2) убийство чужой группы — pgid = pid ребёнка (start_new_session), ошибки ProcessLookupError/PermissionError игнорируются; (3) утечка секрета в stderr-хвосте и текстах ошибок — тесты SENTINEL.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/ext/{process,environment}.py; errors.py (коды PROCESS_*, PROTOCOL_*, PLUGIN_SECRET_UNSUPPORTED, PLUGIN_PROFILE_UNAVAILABLE)",
+      "tests/ext/test_process.py, test_environment.py, фикстуры tests/ext/fixtures/procs/*.py",
+      "test_architecture: test_process_spawn_is_in_one_place"
+    ],
+    "exclude": [
+      "доставка событий (P6.7)",
+      "handshake и манифест (P6.8)",
+      "cgroup/Landlock (D45 — по триггеру)"
+    ]
+  },
+  "depends_on": [
+    "P6.1",
+    "P6.4"
+  ],
+  "decisions": [
+    "D45",
+    "D19"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/ext-p6#rules",
+      "why": "общие правила фазы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-plugins#process",
+      "why": "алгоритм run_json и тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-plugins#environment",
+      "why": "allowlist, секреты, профиль, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6-contracts#permissions",
+      "why": "поля permissions/v1",
+      "required": true
+    },
+    {
+      "ref": "knowledge/ext-p6#sources",
+      "why": "семантика killpg/setsid/subreaper по man-страницам",
+      "required": false
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/secrets.py",
+      "why": "resolve_ref, is_secret_ref",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/tests/config/test_secret_redaction.py",
+      "why": "образец теста SENTINEL",
+      "required": true
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "why": "прецедент start_new_session/killpg (строки 930–945)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/ext/process.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/environment.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/errors.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/__init__.py",
+      "change": "any",
+      "note": "файл создан предыдущим пунктом P6"
+    },
+    {
+      "path": "packages/aicore/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "p6-5-review-grok",
+      "path": "@plan/research/P6.5-review-grok.md",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Общие правила фазы — knowledge/ext-p6 §rules (stdlib, Python 3.9, POSIX, контракты, тесты без реального HOME, секреты, английский в продукте, CHANGELOG aicore, красное чинится в пункте)",
+    "Дизайн — разделы knowledge ext-p6-*, указанные в reads; имена функций, коды ошибок, пути файлов и форматы — строго оттуда; отклонение — plan.py log с причиной",
+    "Слои aicore: ext → util, state, config; util/state/config/provider/artifacts/content/delivery/release/usage не импортируют ext; верхний aicore/cli.py импортирует группы лениво (test_subpackage_layering)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии, тексты ошибок) — на английском; без ID плана, PLAN<N>, путей plans/ и домашних путей (scripts/public-hygiene.py); коммит — русский Conventional Commit через plan.py commit",
+    "run_json никогда не бросает на поведении ребёнка: любой исход — ProcessResult с code; бросает только на неверных аргументах вызывающего",
+    "env=None в run_json означает копию os.environ (вызывающие передают clean_environment); cwd=None — текущий каталог",
+    "Чтение stdout/stderr и запись stdin — selectors в одном цикле с общим дедлайном; communicate() не используется",
+    "Значения секретов не появляются в ProcessResult, repr, исключениях и предупреждениях; хвост stderr редактируется до сохранения",
+    "Тесты процессов ждут завершения сами (без sleep дольше 3 с на тест); проверка «потомков нет» — os.kill(pid, 0) → ProcessLookupError по pid, записанному фикстурой"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: фикстуры `tests/ext/fixtures/procs/` (echo.py, garbage.py, two_docs.py, big_stdout.py, sleeper_with_grandchild.py — пишет pid внука в файл из argv, leaves_grandchild.py — запускает фонового внука `sleep 60` и выходит, stderr_flood.py, print_secret_stderr.py, ignores_stdin.py) → `process.py` по ext-p6-plugins §process (ProcessResult — NamedTuple/frozen dataclass; константы MAX_STDOUT=1048576, STDERR_TAIL=2048, GRACE_S=2.0) → tests/ext/test_process.py → `environment.py` по §environment → tests/ext/test_environment.py → errors.py коды → `ext/__init__.py` реэкспорт `run_json`, `ProcessResult`, `clean_environment` → test_architecture `test_process_spawn_is_in_one_place` (AST: вызовы `subprocess.Popen|run|call|check_output` и `os.fork|posix_spawn` в lib/aicore/ext/ только в process.py; исключение для delivery.py допишет P6.7) → CHANGELOG.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py render --check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "PYTHONPATH=packages/aicore/lib python3 -c 'import sys; from aicore.ext.process import run_json; r = run_json([sys.executable, \"-c\", \"import sys, json; json.dump(json.load(sys.stdin), sys.stdout)\"], {\"a\": 1}, deadline_s=10, env=None, cwd=None); assert r.ok and r.document == {\"a\": 1}, r; r = run_json([sys.executable, \"-c\", \"print(1); print(2)\"], {}, deadline_s=10, env=None, cwd=None); assert r.code == \"PROTOCOL_STDOUT\", r; r = run_json([sys.executable, \"-c\", \"import time; time.sleep(30)\"], {}, deadline_s=1, env=None, cwd=None); assert r.code == \"PROCESS_TIMEOUT\" and r.timed_out, r; from aicore.ext.environment import clean_environment; env, secrets = clean_environment({\"PATH\": \"/bin\", \"AWS_SECRET_ACCESS_KEY\": \"x\"}); assert \"AWS_SECRET_ACCESS_KEY\" not in env and env[\"PATH\"] == \"/bin\" and env[\"SKM_EXT_TRUSTED\"] == \"0\" and secrets == []'",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "aicore.ext.process.run_json",
+    "aicore.ext.environment.clean_environment"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-09T03:09:38Z",
+    "finished_at": "2026-10-09T04:28:46Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "f86187b8-6915-48fb-a486-0a3905f620c6"
+    },
+    "notes": "run_json (new session, shared selectors deadline, SIGTERM->grace->SIGKILL to the group, group SIGKILL after exit, 1 MiB stdout, 2 KiB redacted stderr tail), clean_environment/ignored_requests/effective_profile, errors.CODES, architecture test for single spawn place; grok-4.7 review: 8 findings fixed (secret escapes, numeric secrets, deep documents, NaN limits, surrogates, regex backtracking); aicore 1140+ tests green",
+    "deviations": [
+      "role=reviewer commit not used (would sweep owner knowledge edits); review verdict artifact committed with the fix commit",
+      "review budget (2 rounds) spent; the last correction (linear redaction scans) is verified by regression tests only"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-09T04:28:46Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-09T04:28:46Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-09T04:28:46Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-09T04:28:46Z"
+}

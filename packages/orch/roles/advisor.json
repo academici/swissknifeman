@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "advisor",
+  "title": "Advisor",
+  "description": "Read the evidence and the files that bear on the problem; ask a source only for what the repository cannot answer.",
+  "instructions": [
+    {
+      "path": "roles/advisor.md",
+      "purpose": "canonical role text",
+      "sha256": "5ceaafaac19f4e00c5280a7561a985a9cea63ad49da9bf4bbfa7b5ed28fdd9ad"
+    }
+  ],
+  "tools": {
+    "filesystem": "read",
+    "shell": "read_only",
+    "network": "allowed",
+    "plan_api": "none"
+  },
+  "write_authority": "none",
+  "result_shape": "advice",
+  "model_class_min": "frontier",
+  "forbidden_inputs": [
+    "lifecycle_instructions",
+    "report_api",
+    "plan_write"
+  ]
+}

@@ -3,7 +3,7 @@
 Real tokens/timings/cache-hit by agent + effective/dead skills -
 from logs Claude Code (`~/.claude/projects/<slug>/…`). stdlib-only, does not burn tokens.
 
-Complements quality skill `system/session-observer` (that one - about «why/drift»
+Complements the session-observer skill (that one - about «why/drift»
 via agent; this one is about NUMBERS deterministically). Uses the field `usage`
 (input/output/cache_read), which the rest of the tooling does not touch.
 
@@ -31,9 +31,10 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from core.usage import feed_event, finish, new_acc
+from aicore.usage import feed_event, finish, new_acc
 
-from ..common import die, parse_flags
+from aicore.util.cli import parse_flags
+from aicore.util.term import die
 
 
 # --- path-resolve logs (as in system/session-observer) ------------------------
@@ -244,7 +245,8 @@ def _first_user_text(events):
 def _active_skill_names(env, project_path):
     """Normalized names of active project skills (best-effort; [] on error)."""
     try:
-        from ..budget import budget_for_set, resolve_active_set
+        from ..budget import resolve_active_set
+        from aicore.content.budget import budget_for_set
         from ..config import load_config
         config = load_config(env, Path(project_path))
         skills, meta = resolve_active_set(env, Path(project_path), config)

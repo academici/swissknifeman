@@ -7,15 +7,15 @@ import tempfile
 import unittest
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
-from core.provider.artifact import sha256_digest
-from core.provider.lock import serialize_lock
+from aicore.artifacts.artifact import sha256_digest
+from aicore.artifacts.lock import ArtifactLock, parse_lock, serialize_lock
+from harness.instructions import _prune_retired_scope_records
 from harness.instructions import (
     CATALOG_VERSION, COMMON_IDS, CONTRACT_VERSION, DIAGNOSTIC_CODES, EXTENSION_IDS,
-    PROVIDERS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,
-    adopt_instructions, apply_instructions, check_instructions, load_catalog,
+    PROVIDERS, ROOT_PINNED_COMMON_IDS, SCOPES, TARGETS, InstructionDiagnostic, InstructionRequest,
+    adopt_instructions, apply_instructions, check_instructions, load_catalog, package_file,
     plan_instructions, repair_instructions,
 )
 
@@ -65,13 +65,13 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
-    def test_exact_63_common_28_extension_91_total_and_twenty_eight_targets(self):
+    def test_exact_70_common_26_extension_96_total_and_thirty_two_targets(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (63, 28, 91))
+        self.assertEqual((common, extensions, common + extensions), (70, 26, 96))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(
@@ -87,18 +87,21 @@ class SemanticCatalogTests(unittest.TestCase):
             by_provider = {item.provider_id: item
                            for item in result.targets if item.scope_id == scope}
             claude, codex, cursor, grok = (by_provider[provider] for provider in PROVIDERS)
-            common = COMMON_IDS[scope] if scope != "root" else ()
+            # Root common is on demand except the pinned ids, which every root target carries;
+            # package common is projected to Claude Code only.
+            pinned = ROOT_PINNED_COMMON_IDS if scope == "root" else ()
+            common = pinned or COMMON_IDS[scope]
             self.assertEqual(claude.ordered_semantic_ids[:len(common)], common)
             self.assertEqual(
                 claude.ordered_semantic_ids[len(common):],
                 EXTENSION_IDS[(scope, "claude-code")])
             self.assertEqual(
                 codex.ordered_semantic_ids,
-                EXTENSION_IDS[(scope, "codex")])
+                pinned + EXTENSION_IDS[(scope, "codex")])
             self.assertEqual(cursor.ordered_semantic_ids,
-                             EXTENSION_IDS[(scope, "cursor")])
+                             pinned + EXTENSION_IDS[(scope, "cursor")])
             self.assertEqual(grok.ordered_semantic_ids,
-                             EXTENSION_IDS[(scope, "grok")])
+                             pinned + EXTENSION_IDS[(scope, "grok")])
 
     def test_missing_id_refuses_before_p2(self):
         result = altered_result(lambda value: root_records(value).pop(0))
@@ -133,7 +136,7 @@ class SemanticCatalogTests(unittest.TestCase):
 
     def test_provider_mismatch_and_namespace_refuse_before_p2(self):
         def mismatch(value):
-            record = root_records(value)[21]
+            record = next(item for item in root_records(value) if item["id"] == "root.codex.bootstrap")
             record["provider_id"] = "claude-code"
         result = altered_result(mismatch)
         self.assertIn("INSTRUCTION_EXTENSION_ID_INVALID", diagnostic_codes(result))
@@ -243,10 +246,11 @@ class PublicOperationTests(unittest.TestCase):
     def test_missing_package_agents_is_structured_non_green(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
+            package_scope = next(scope for scope in SCOPES if scope != "root")
             result = check_instructions(request(
-                "check", root, scope_ids=("analyst",), provider_ids=("codex",)))
+                "check", root, scope_ids=(package_scope,), provider_ids=("codex",)))
         self.assertEqual(len(result.targets), 1)
-        self.assertEqual(result.targets[0].target_path, "packages/analyst/AGENTS.md")
+        self.assertEqual(result.targets[0].target_path, TARGETS[package_scope]["codex"])
         self.assertEqual(result.targets[0].observation, "missing")
         self.assertEqual(diagnostic_codes(result), ("INSTRUCTION_TARGET_MISSING",))
 
@@ -449,7 +453,7 @@ class PublicOperationTests(unittest.TestCase):
                 tuple(item["source_id"] for item in record["canonical_sources"]),
                 tuple(sorted(item["source_id"] for item in record["canonical_sources"])))
             for source in record["canonical_sources"]:
-                source_path = Path(__file__).resolve().parents[3] / source["path"]
+                source_path = package_file(source["path"])
                 self.assertEqual(source["hash"], sha256_digest(source_path.read_bytes()))
             self.assertEqual(
                 record["capability_requirements"],
@@ -476,6 +480,24 @@ class PublicOperationTests(unittest.TestCase):
             })
             self.assertRegex(record["source_hash"], r"^sha256:[0-9a-f]{64}$")
             self.assertRegex(record["rendered_hash"], r"^sha256:[0-9a-f]{64}$")
+
+
+class RetiredScopeLockTests(unittest.TestCase):
+    def test_prune_drops_only_records_of_scopes_outside_the_catalog(self):
+        hub_lock = Path(__file__).resolve().parents[3] / ".swissknifeman/provider-artifacts.lock.json"
+        if not hub_lock.is_file():
+            self.skipTest("no hub lock around")
+        records = parse_lock(hub_lock.read_bytes()).records
+        own = next(r for r in records if r.artifact_id.startswith("harness.instruction-projection.root."))
+        retired = replace(own, artifact_id="harness.instruction-projection.gone.claude-code",
+                          target_path="packages/gone/CLAUDE.md")
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / ".swissknifeman/provider-artifacts.lock.json"
+            path.parent.mkdir()
+            path.write_bytes(serialize_lock(ArtifactLock(1, (own, retired))))
+            _prune_retired_scope_records(Path(temp))
+            kept = parse_lock(path.read_bytes()).records
+        self.assertEqual([r.artifact_id for r in kept], [own.artifact_id])
 
 
 if __name__ == "__main__":

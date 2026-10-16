@@ -10,6 +10,9 @@ hero:
       text: Start
       link: /getting-started
     - theme: alt
+      text: How it works
+      link: /overview
+    - theme: alt
       text: Installation
       link: /skiller/guide/installation
     - theme: alt
@@ -19,9 +22,9 @@ hero:
 features:
   - icon: 🧰
     title: Everything in one place
-    # counters «195/45» — landmark, manually maintained; check with `skiller registry`
+    # counters «209/47» — landmark, manually maintained; check with `skiller registry`
     # (source of truth - skills.json / .claude-plugin/marketplace.json), should not be considered canon
-    details: 195 45 skills bucket-ah, presets permissions, project profiles, adapters for IDE. One source of truth instead of copy-paste between projects.
+    details: 209 skills in 47 buckets, permission presets, project profiles, adapters for IDE. One source of truth instead of copy-paste between projects.
   - icon: 🎯
     title: Contextual installation
     details: CLI swissknifeman itself determines the project type - Laravel, PHP-package, Obsidian vault — and connects a suitable set of skills. One team - and the project is ready to work with AI.
@@ -31,6 +34,9 @@ features:
   - icon: 🔄
     title: Upstream-sync
     details: External skills are tracked through upstream.json — weekly CI checks for source updates and opens PR with diff.
+  - icon: 🗺️
+    title: Plans and a conductor
+    details: Plans are JSON (phases, items, checks, write sets); the orch conductor runs their items through narrow roles — scout, executor, reviewer, triager — with checks, review and resumable stops. See How it works.
   - icon: 🧩
     title: Provider-neutral
     details: Skill is a folder with SKILL.md and snippets/. One format works in Claude Code, Cursor and Perplexity via adapters.

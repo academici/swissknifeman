@@ -234,6 +234,30 @@
     "extensions": {
       "type": "object",
       "description": "Open binding-specific extension data."
+    },
+    "source": {
+      "$ref": "urn:swissknifeman:aicore:capability-support:v1#/$defs/source",
+      "description": "How the record was obtained: declared, probed or inferred."
+    },
+    "observed_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "When the facts of the record were observed."
+    },
+    "fresh_until": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Until when the record can be trusted."
+    },
+    "remediation": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "What to do to obtain a capability the record reports as unsupported."
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+        "description": "Capability that this record depends on."
+      },
+      "description": "Capabilities whose availability this record depends on."
     }
   },
   "required": [

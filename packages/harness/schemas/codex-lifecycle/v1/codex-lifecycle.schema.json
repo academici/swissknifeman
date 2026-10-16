@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:harness:codex-lifecycle:v1",
+  "title": "codex-lifecycle",
+  "description": "Output of `harness hooks codex-lifecycle fragment|validate --json`: the native Codex observer fragment, or the verdict on a composed hooks document. Exactly one of the two shapes.",
+  "oneOf": [
+    {
+      "description": "Output of `fragment`.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "description": "Contract identifier.",
+          "const": "urn:swissknifeman:harness:codex-lifecycle:v1"
+        },
+        "fragment": {
+          "type": "object",
+          "properties": {
+            "target_path": {
+              "description": "Project-relative hooks document the group belongs to.",
+              "type": "string",
+              "minLength": 1
+            },
+            "event": {
+              "description": "Lifecycle event the group registers on.",
+              "type": "string",
+              "minLength": 1
+            },
+            "group": {
+              "description": "One hook group of the native Codex hooks document.",
+              "type": "object",
+              "properties": {
+                "matcher": {
+                  "type": "string"
+                },
+                "hooks": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "const": "command"
+                      },
+                      "command": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "command"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "hooks"
+              ],
+              "additionalProperties": false
+            },
+            "handler": {
+              "description": "Companion handler script, UTF-8 text.",
+              "type": "string"
+            },
+            "handler_sha256": {
+              "description": "Tagged digest of the handler bytes.",
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "source": {
+              "description": "A lock source record: stable id, hub-relative path and tagged SHA-256 digest of the file.",
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "Source label recorded in the lock.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "path": {
+                  "description": "Path recorded in the lock.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "description": "Tagged digest, sha256:<64 hex>.",
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "id",
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "target_path",
+            "event",
+            "group",
+            "handler",
+            "handler_sha256",
+            "source"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "$schema",
+        "fragment"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "description": "Output of `validate`.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "description": "Contract identifier.",
+          "const": "urn:swissknifeman:harness:codex-lifecycle:v1"
+        },
+        "ok": {
+          "description": "True when the composition is valid.",
+          "type": "boolean"
+        },
+        "code": {
+          "description": "Refusal code when not ok; null when ok.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "$schema",
+        "ok",
+        "code"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

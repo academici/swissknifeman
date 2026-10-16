@@ -213,9 +213,8 @@ class BlockChangelogGateCase(unittest.TestCase):
 
     def test_strict_writes_envini_and_registers(self):
         run(block_changelog_gate, self.proj, "strict", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "changelog-gate.env.ini").read_text().strip(),
-            "MODE=strict")
+        self.assertEqual(fx.configured(self.proj, "changelog_gate", "mode"), "strict")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         s = json.loads((self.proj / ".claude" / "settings.json").read_text())
         entries = s["hooks"]["PreToolUse"]
         self.assertEqual(len(entries), 1)
@@ -224,8 +223,8 @@ class BlockChangelogGateCase(unittest.TestCase):
 
     def test_off_no_hook(self):
         run(block_changelog_gate, self.proj, "off", "settings.json", False)
-        self.assertEqual(
-            (self.proj / ".claude" / "changelog-gate.env.ini").read_text().strip(), "MODE=off")
+        self.assertEqual(fx.configured(self.proj, "changelog_gate", "mode"), "off")
+        self.assertEqual(fx.env_ini_files(self.proj), [])
         self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
     def test_idempotent(self):

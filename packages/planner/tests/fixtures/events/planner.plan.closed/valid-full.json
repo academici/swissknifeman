@@ -1,0 +1,39 @@
+{
+  "causationid": "7e5f660e0e6942318e83ae674cc4a435",
+  "data": {
+    "closed_at": "2026-10-07T00:00:29Z",
+    "counts": {
+      "blocked": 0,
+      "done": 3,
+      "done_with_deviations": 0,
+      "items": 3,
+      "skipped": 0
+    },
+    "goal": "Plan №1 — Life",
+    "phases": [
+      {
+        "id": "P1",
+        "status": "done",
+        "title": "One"
+      },
+      {
+        "id": "P2",
+        "status": "done",
+        "title": "Two"
+      }
+    ],
+    "plan_id": "2026.10.07-№1-LIFE",
+    "repository": "r",
+    "short_id": "PLAN1",
+    "status": "done",
+    "title": "Plan №1 — Life"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:planner:event-data:planner-plan-closed:v1",
+  "id": "bb64cd1057fb439583bfb1c8a36d9dd7",
+  "source": "urn:swissknifeman:module:planner",
+  "specversion": "1.0",
+  "subject": "2026.10.07-№1-LIFE",
+  "time": "2026-10-10T04:29:23.340Z",
+  "type": "planner.plan.closed"
+}

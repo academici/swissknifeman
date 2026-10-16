@@ -1,0 +1,102 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P12.5",
+  "title": "Плагин telemetry-exporter: подписчик orch.* → OTLP-JSON, маппинг на gen_ai.* по зафиксированному коммиту semconv; вход по D6; закрытие фазы P12",
+  "status": "skipped",
+  "summary": "По knowledge/p12-observability#otel: модуль-плагин с unit.json, подписка, OTLP-JSON без SDK, тест на фикстуре журнала. Пункт закрывает фазу: phase.validation P12.",
+  "why": "Аудит П11.5, D14, D6: только при появлении потребителя.",
+  "scope": {
+    "include": [
+      "plugins/telemetry-exporter/ (или packages/<id> по правилам ecosystem-units)",
+      "tests",
+      "phase.validation P12"
+    ],
+    "exclude": [
+      "зависимость opentelemetry"
+    ]
+  },
+  "depends_on": [
+    "P12.4"
+  ],
+  "decisions": [
+    "D6",
+    "D14"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p12-observability#otel",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p12-observability#checks",
+      "why": "проверки фазы",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/telemetry-exporter/**",
+      "change": "create",
+      "note": "размещение — по правилам module-folders и ecosystem-units"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "any"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/6e46d5f499e6c0398384ff624dc759a5ada504698ec3e7bee7b521503e1e05c4",
+      "role": "input"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Схемы событий — только аддитивно; без gen_ai.* в ядре (D14)",
+    "Новый модуль — по правилу module-folders (unit.json, requires aicore)",
+    "phase.validation P12 — после V1, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/medium. Сначала проверить вход (D6). Порядок: фикстура → маппинг → плагин → V1 → phase.validation P12.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "telemetry-exporter"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "finished_at": "2026-10-15T18:08:19Z",
+    "registered_by": {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    },
+    "notes": "Deferred by the owner under D6: the entry condition (a consumer of the telemetry or an owner decision to build it) is not met, and the semconv commit that D7/D14 require is not pinned. Nothing was changed. The item returns when a consumer appears; then reopen it.",
+    "decision": "D6"
+  },
+  "updated_at": "2026-10-15T18:08:19Z"
+}

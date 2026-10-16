@@ -2,18 +2,27 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P8",
   "title": "skiller: только общие skills",
-  "design": "skeleton",
-  "goal": "В skiller остаются общие skills, skm, профили/пресеты, шаблон skill и синхронизация с upstream; system/* разъезжаются по модулям; код — тонкий CLI над aicore; служебные файлы skiller — в новых местах; skiller автономен (зависит только от aicore).",
-  "context": "D2, D5, D8; knowledge/architecture §7 skiller, §8. Детализируется после P5 и P7. Внешнее ревью E1: тезисы E27 (knowledge/review-e1-*).",
+  "design": "detailed",
+  "goal": "skiller — библиотека общих skills, зависящая только от aicore: код без core и без слоя реэкспорта P5, автономная копия проходит без core; skills бакета system живут в плагинах модулей (maind — local-topology, swissknifeman-locator, cross-project-coordinator, shared-memory и агент code-coordinator; harness — agent-packs; analyst — session-observer; brain — brain-locator) и доставляются проектам обоими каналами через бакет, предоставляемый хостом (профили и конфиги проектов не меняются); настройки skiller — секции [skiller] и [skiller.sync] в .swissknifeman/config.toml с чтением наследных файлов; skills.json и skiller describe несут license, compatibility, allowed_tools (E27).",
+  "context": "D2, D5, D8 конкретизированы решениями D52–D54 (детализация 2026-10-09). Факты кода, правила фазы, перевод на aicore, метаданные, проверки, сверка E1/E2, отложенное и заметки для upgrade — knowledge/skiller-p8; механизм доставки модульных skills и перенос — knowledge/skiller-p8-modules; конфиг и служебные файлы — knowledge/skiller-p8-config. Внешние предпосылки (стандарт Agent Skills, плагины Claude Code и Codex, skills-lock.json) проверены через perplexity-web — research/P8-perplexity.md. Граница P5 — D40 (политика библиотеки остаётся в skiller). Ревью E1: E27; E2: R44, R59 (отложены).",
   "scope": {
     "include": [
-      "перенос skills по модулям",
-      "перевод кода на aicore",
-      "служебные файлы skiller",
-      "метаданные skills: license, совместимость, инструменты, provenance"
+      "skiller на aicore: импорты core → aicore, снятие слоя реэкспорта P5, обёртки без корня монорепозитория, standalone без core",
+      "механизм бакета, предоставляемого хостом: модульные источники skills, псевдонимы бакетов в конфиге хоста, connect, vendor, sync, budget, status",
+      "перенос skills бакета system и агента code-coordinator в плагины maind, harness, analyst; Codex-манифесты модулей со skills (включая brain)",
+      "решение D8 по general/*: workflow-craft → planner (P9), остальные общие",
+      "служебные файлы skiller: [skiller] и [skiller.sync] в config.toml, наследные .swissknife.json и .swissknifeman/config.json, резервные копии через aicore.state",
+      "метаданные skills: license, compatibility, allowed_tools, provenance; skiller describe; проверки validate (E27)",
+      "документация, инструкции skiller через каталог harness, ADR 0049–0051"
     ],
     "exclude": [
-      "содержимое общих skills"
+      "содержимое общих skills",
+      "topology.py, listing.py, state.py и реестры ~/.swissknifeman (P11, maind)",
+      "provider-artifacts.lock.json → state/ (P11, общий lock)",
+      "delivery.py, hub.py, host.py и квитанции delivery (P12, хаб)",
+      "чужие ключи .swissknife.json: providers, memory_brain, policy_profile (P11) и перенос значений (P13)",
+      "перенос workflow-craft (P9)",
+      "генерация plugin.json модулей из unit.json (P12)"
     ]
   },
   "depends_on": [
@@ -21,9 +30,69 @@
     "P7"
   ],
   "deliverables": [
-    "skiller → aicore",
-    "skills по модулям"
+    "skiller → только aicore (standalone без core)",
+    "skills по модулям: плагины maind, harness, analyst, brain со skills; бакет system предоставляется хостом",
+    "[skiller] и [skiller.sync] в .swissknifeman/config.toml",
+    "skills.json с license, compatibility, allowed_tools; skiller describe",
+    "ADR 0049–0051"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P8.1",
+    "P8.2",
+    "P8.3",
+    "P8.4",
+    "P8.5",
+    "P8.6",
+    "P8.7"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P8.1"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P8.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P8.3"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B4",
+      "items": [
+        "P8.4"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B5",
+      "items": [
+        "P8.5"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B6",
+      "items": [
+        "P8.6",
+        "P8.7"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-09T17:49:59Z",
+    "result": "done_with_deviations",
+    "summary": "7 item(s): 2 done, 5 done_with_deviations"
+  }
 }

@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261013T133549Z-0eb98d:P12.5:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN3.P12.5",
+  "candidate": {
+    "head": "04faff494737bee92c0c4c3a80b2c891048cc822",
+    "dirty_digest": "2b30156a8623802a7df53299bed92eec539a8c6e6586465216d5cf2d3376cf27"
+  },
+  "started_at": "2026-10-13T13:47:28Z",
+  "procedure": {
+    "cmd": "AICORE_ROOT=$PWD/packages/aicore python3 packages/orch/scripts/orch.py conformance --json | python3 -c 'import json, sys; rows = json.load(sys.stdin); bad = [r for r in rows if r.get(\"status\") == \"declared\" and not r.get(\"reason\")]; assert not bad, bad'",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-13T13:47:31Z"
+}

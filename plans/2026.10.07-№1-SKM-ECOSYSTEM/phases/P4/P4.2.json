@@ -1,0 +1,189 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.2",
+  "title": "TOML: vendored tomli 2.3.1, бэкенд чтения с LineIndex и минимальный редактор со сверкой",
+  "status": "done",
+  "summary": "aicore/_vendor/tomli (2.3.1 из чистого wheel с проверкой sha256, LICENSE, VENDORED.json, тест целостности); aicore.config.toml (tomllib при ≥ 3.11, иначе vendored; ConfigError с файлом и строкой; LineIndex ключ → строка); aicore.config.toml_edit (set/unset одного листа с сохранением комментариев и обязательной сверкой разбором); тесты на обоих бэкендах; ruff extend-exclude для _vendor.",
+  "why": "D37, R15: TOML на Python 3.9–3.10 без pip и без собственного парсера; config set не должен терять комментарии примера. Риски: (1) расхождение TOML 1.0/1.1 между бэкендами — пин ветки 2.3.x и тест паритета; (2) редактор, портящий файл, — сверка разбором до записи; (3) подмена vendored-кода — хеши в VENDORED.json.",
+  "scope": {
+    "include": [
+      "packages/aicore/lib/aicore/_vendor/{__init__.py,VENDORED.json,tomli/{__init__,_parser,_re,_types}.py,tomli/LICENSE}",
+      "packages/aicore/lib/aicore/config/{__init__,toml,toml_edit}.py (в __init__ пока только ConfigError и экспорт подмодулей)",
+      "packages/aicore/tests/config/{__init__,test_toml,test_toml_edit}.py, packages/aicore/tests/test_vendor.py, фикстуры tests/config/fixtures/*.toml",
+      "ruff.toml extend-exclude; tests/test_architecture.py: один вход TOML"
+    ],
+    "exclude": [
+      "слои, слияние, схемы, секреты, explain (P4.3)",
+      "запись файлов и CLI (P4.3, P4.4)",
+      "tomli ≥ 2.4 (TOML 1.1), tomlkit, tomli-w (D37)"
+    ]
+  },
+  "depends_on": [
+    "P4.1"
+  ],
+  "decisions": [
+    "D37",
+    "D35",
+    "D14"
+  ],
+  "reads": [
+    {
+      "why": "процедура vendoring, бэкенд, LineIndex, алгоритм редактора и его тесты",
+      "required": true,
+      "ref": "knowledge/config-p4#toml"
+    },
+    {
+      "why": "коды ошибок (CONFIG_FILE_INVALID) и раскладка aicore.config",
+      "required": true,
+      "ref": "knowledge/config-p4#model"
+    },
+    {
+      "why": "куда добавить тест «один вход TOML»",
+      "required": true,
+      "path": "packages/aicore/tests/test_architecture.py"
+    },
+    {
+      "why": "место для extend-exclude",
+      "required": true,
+      "path": "ruff.toml"
+    },
+    {
+      "why": "atomic_write_text — понадобится в P4.3; здесь не писать файлы",
+      "required": false,
+      "path": "packages/aicore/lib/aicore/util/io.py"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/aicore/lib/aicore/_vendor/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/toml.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/config/toml_edit.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/config/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/test_vendor.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/aicore/tests/test_architecture.py",
+      "change": "modify"
+    },
+    {
+      "path": "ruff.toml",
+      "change": "modify"
+    },
+    {
+      "path": "packages/aicore/CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Vendored-файлы tomli — байт-в-байт из wheel tomli-2.3.1-py3-none-any.whl с sha256 94004df25851c4e811a5135545a470a823f9e31418ea3eb07c9440aec09c4369; хеш не совпал или сеть недоступна → остановиться, plan.py log, вопрос владельцу; код по памяти не писать",
+    "Скачанное — во временный каталог scratchpad, распаковка zipfile без исполнения; ничего из wheel не запускать",
+    "Импорт tomllib/tomli — только в aicore/config/toml.py; остальной код зовёт loads/load_file",
+    "Редактор не пишет файлы и не теряет байты вне изменённой строки: тест сравнивает остальные строки до и после",
+    "Сверка разбором обязательна для каждой операции; рассогласование → TomlEditError, текст не возвращается",
+    "Самопроверка стиля: если в PATH есть ruff — `ruff check <изменённые .py>` без новых F/B-замечаний (не приёмка: scripts/lint.sh требует ruff 0.15.19 или pipx, на машине их нет)",
+    "Продуктовые файлы (код, docs, README, CHANGELOG, комментарии) — на английском; без ID плана, PLAN<N>.*, путей в plans/ и домашних путей (scripts/public-hygiene.py); коммиты — русский Conventional Commit через plan.py commit",
+    "Stdlib-only, совместимость с Python 3.9 (никаких match, X | Y вне аннотаций, zip(strict=)); тесты и CLI — только штатными раннерами (они изолируют HOME) или в scripts/dev-sandbox.sh; реальный HOME и live-папку не трогать",
+    "Красная проверка чинится у владельца в этом же пункте (dev-режим), отклонение — plan.py log; известных красных проверок не оставлять"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\nПорядок: vendoring по §toml (скрипт-помощник держать в scratchpad, не в репозитории) → VENDORED.json (sha256 каждого файла `sha256:<hex>`) → test_vendor.py → toml.py (`_parse(text, backend)`, `loads`, `load_file`, `LineIndex`) → тесты на фикстурах: для каждой фикстуры `_parse(..., 'stdlib') == _parse(..., 'vendored')`; ошибка синтаксиса даёт номер строки на обоих бэкендах; LineIndex для заголовков, ключей, dotted, кавычечных, inline, многострочной строки и массива, массива таблиц → toml_edit.py → тесты (§toml, последний абзац) → test_architecture: ast-обход `lib/aicore/**/*.py` кроме `_vendor/`: импорт `tomllib`/`tomli` только в `config/toml.py` → ruff.toml → CHANGELOG aicore.\n\nПодсказки: номер строки в tomllib 3.12 есть в тексте сообщения `(at line N, column M)`; атрибуты `lineno` появились позже — поддержать оба. В тестах на 3.12 доступны оба бэкенда; ветка `< 3.11` проверяется принудительным `backend='vendored'` и CI-матрицей 3.9.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/aicore/scripts/test.sh && bash packages/aicore/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "PYTHONPATH=packages/aicore/lib python3 -c 'import json; from aicore._vendor import tomli; v = json.load(open(\"packages/aicore/lib/aicore/_vendor/VENDORED.json\"))[\"packages\"][0]; assert v[\"name\"] == \"tomli\" and v[\"version\"] == \"2.3.1\" and v[\"artifact_sha256\"] == \"94004df25851c4e811a5135545a470a823f9e31418ea3eb07c9440aec09c4369\"; assert tomli.loads(\"a = 1\") == {\"a\": 1}' && grep -q 'aicore/_vendor' ruff.toml && grep -q 'MIT License' packages/aicore/lib/aicore/_vendor/tomli/LICENSE",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "test -z \"$(git grep -lE '^(import tomllib|from tomllib|import tomli|from tomli)' -- 'packages/*.py' ':!packages/aicore/lib/aicore/_vendor' ':!packages/aicore/lib/aicore/config/toml.py' ':!packages/aicore/tests')\"",
+      "expect": "exit 0 (один вход TOML)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check && python3 scripts/ecosystem-units.py standalone aicore && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "vendored tomli 2.3.1 с VENDORED.json и тестом целостности",
+    "aicore.config.toml: чтение на 3.9–3.13, ошибки с файлом и строкой, LineIndex",
+    "aicore.config.toml_edit: set/unset с сохранением комментариев и сверкой"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T12:07:07Z",
+    "finished_at": "2026-10-08T12:27:00Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5.5",
+      "effort": "high",
+      "session": "2ffd486f-1d91-404e-8cf1-14c3ab7326d6"
+    },
+    "notes": "vendored tomli 2.3.1 (wheel sha256 сверен), aicore.config.toml (бэкенды, ConfigError с файлом и строкой, LineIndex), toml_edit со сверкой; 452 теста aicore, ruff 0.16 без замечаний на новых файлах",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T12:27:00Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T12:27:00Z"
+}

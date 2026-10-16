@@ -93,7 +93,7 @@ skiller doctor
 
 Then everything is done **from the project directory** — the root is searched automatically,
 the registry doesn't need to know about your projects (connection map is accumulated in
-`~/.swissknifeman/projects.json`). Command reference: [docs/guide/cli.md](docs/guide/cli.md).
+`<state>/skiller/projects.json`). Command reference: [docs/guide/cli.md](docs/guide/cli.md).
 
 ### Claude Code: plugin marketplace (recommended)
 
@@ -278,11 +278,10 @@ Extracting snippets from local projects (paths in `.skills-scanner.json`):
 
 | Workflow | Purpose |
 |----------|------------|
-| `validate.yml` | `scripts/validate.sh`: frontmatter, upstream.json, profiles, manifests |
+| `modules.yml` (hub) | `scripts/validate.sh` and `scripts/test.sh` of the skiller unit (Python 3.9, 3.13, 3.14), including `skiller registry --check` |
 | `upstream-sync.yml` | Weekly check of upstreams → PR with diff |
-| `test.yml` | `scripts/test.sh` on the matrix Python 3.9–3.12 |
-| `sha256-update.yml` | Recalculation of registry hashes when pushing |
-| `scanner-pr.yml` | Weekly PR from scanner |
+| `sha256-update.yml` | `skiller registry --check` on push and PR (read-only) |
+| `scanner-pr.yml` | Weekly scan → PR; on a hosted runner the local scan paths are absent (`SCAN_PATHS_ABSENT`), run `scan-and-pr.sh` locally |
 
 ## Security
 

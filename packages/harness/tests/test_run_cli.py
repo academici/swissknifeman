@@ -8,15 +8,15 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "packages" / "harness" / "lib"))
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PACKAGE_ROOT / "lib"))
 
 from harness.cli import COMMANDS  # noqa: E402
 from harness.common import Env  # noqa: E402
 from harness.run import cmd_run, gate, journal, plan_reader, worker  # noqa: E402
-from packages.harness.tests.plan_fixture import write_plan  # noqa: E402
+from tests.plan_fixture import write_plan  # noqa: E402
 
-BIN_HARNESS = REPO_ROOT / "packages" / "harness" / "bin" / "harness"
+BIN_HARNESS = PACKAGE_ROOT / "bin" / "harness"
 
 PHASE_ID = "P1"
 DRIVABLE_ID = "P1.1"
@@ -58,7 +58,9 @@ class RegistrationTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 1)
 
     def test_run_reaches_root_router(self):
-        swissknifeman = REPO_ROOT / "bin" / "swissknifeman"
+        swissknifeman = PACKAGE_ROOT.parents[1] / "bin" / "swissknifeman"
+        if not swissknifeman.is_file():
+            self.skipTest("the hub launcher is not around this module")
         proc = subprocess.run([str(swissknifeman), "env", "run", "--help"],
                               capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)
@@ -72,7 +74,7 @@ class DryRunTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         self.plan_dir = _init_repo(self.root)
-        self.env = Env(REPO_ROOT / "packages" / "harness", "run")
+        self.env = Env(PACKAGE_ROOT, "run")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -93,7 +95,7 @@ class DryRunTest(unittest.TestCase):
     def test_text_output_shows_argv_and_refusal(self):
         out = self._run([])
         self.assertIn(f"[DRIVING] {DRIVABLE_ID}", out)
-        self.assertIn(f"/task:plan-run {self.plan_dir.name} {DRIVABLE_ID}", out)
+        self.assertIn(f"/planner:plan-run {self.plan_dir.name} {DRIVABLE_ID}", out)
         self.assertIn(f"[FAILURE] {BLOCKED_ID}", out)
         self.assertIn("ITEM-BLOCKED", out)
 
@@ -139,7 +141,7 @@ class WaveOrchestrationTest(unittest.TestCase):
     """Internal documentation."""
 
     def setUp(self):
-        self.env = Env(REPO_ROOT / "packages" / "harness", "run")
+        self.env = Env(PACKAGE_ROOT, "run")
 
     def _run(self, argv):
         return _capture(cmd_run, self.env, argv)
@@ -193,7 +195,7 @@ class WaveOrchestrationTest(unittest.TestCase):
 
 class FlagParsingTest(unittest.TestCase):
     def setUp(self):
-        self.env = Env(REPO_ROOT / "packages" / "harness", "run")
+        self.env = Env(PACKAGE_ROOT, "run")
 
     def test_no_args_prints_usage(self):
         out = _capture(cmd_run, self.env, [])

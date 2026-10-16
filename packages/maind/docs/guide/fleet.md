@@ -56,7 +56,7 @@ maind fleet similar --group azguard-core --threshold 0.85 [--json]
 
 On top of literal duplicates jscpd: extracts functions/classes by grouped paths, embeds them
 **external** backend and looks for cross-project pairs «similar in meaning, not verbatim». Backend -
-pluggable via `code_graph.embed.command` in `.maind.json` (external tool `text→vector`,
+pluggable via `code_graph.embed.command` in the `[maind]` config (external tool `text→vector`,
 placeholders `{input}`/`{output}`):
 
 ```jsonc
@@ -73,7 +73,7 @@ cosine comparison - on stdlib; embedding - external (like jscpd). MVP, is develo
 
 | Brick | From |
 |:--|:--|
-| list projects + paths | registry `.maind.json` |
+| list projects + paths | registry `registry.json` |
 | access to all repositories | workspace-hub trust ([workspace](./workspace)) |
 | groups by common packages | maind-topology graph ([federation](./federation)) |
 | feature correlation | shared memory + namespaces |

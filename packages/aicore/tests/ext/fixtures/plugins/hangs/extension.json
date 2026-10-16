@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "hangs",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "Never answers within its deadline.",
+  "protocol": {"min": "1", "max": "1"},
+  "entrypoint": ["python3", "plugin.py"],
+  "provides": {"points": ["demo:check"]},
+  "timeout_seconds": 1
+}

@@ -1,0 +1,14 @@
+{
+  "route": "perplexity-web-mcp stdio, default pool; search",
+  "started": "2026-10-13T19:32:43Z",
+  "completed": "2026-10-13T19:35:07Z",
+  "query": "OpenAI Codex CLI \"codex exec --json\" (2026): what JSONL event types report errors (for example \"error\", \"turn.failed\", \"stream_error\"), what fields they carry, and how a usage limit / rate limit (429), authentication failure, and context window exceeded are reported, including any retry-after or reset time. Also: what does \"codex exec --sandbox workspace-write\" do with network access by default and how is network enabled (sandbox_workspace_write.network_access)? Cite official docs or the codex GitHub repository.",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "No answer found. Perplexity may have changed its structure."
+      }
+    ]
+  }
+}

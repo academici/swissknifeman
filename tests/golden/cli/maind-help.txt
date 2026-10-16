@@ -1,0 +1,31 @@
+exit: 0
+--- stdout ---
+maind — CLI central node of the ecosystem academici (memory + graph + agents).
+Thin launcher: checks the environment and transfers control to the package lib/maind
+(python3 -m maind). All logic is in lib/ (importable and testable: see tests/).
+
+Commands (node root = installation directory maind):
+  start     start node workers (--only memory|graph)
+  status    summary status: memory, graph, agents, projects
+  memory    memory daemon: start | run (foreground) | stop | status
+  service   systemd --user for the memory daemon: install | start | stop | logs | ...
+  graph     graph (federation): query | stats | neighbors | view | derive | rebuild
+  agents    agent registry: list | kill | heartbeat | register
+  projects  project registry: list | status | sync (--namespace NS filters)
+  namespaces namespace-ecosystem groups and their member projects
+  deploy    roll out MCP-hub servers for projects (--project X | --all)
+  sync      roll out controlled artifacts: --only ... (--project|--namespace|--all)
+  health    healthcheck project connection with the hub: --cwd | --project X [--plan-repair|--apply-repair]
+  workspace single trust Claude to ecosystem projects: sync | status
+  run       execute the command of the neighboring package: run <proj> <cap> (--list)
+  fleet     cross-project layer: manifest | duplicates | similar
+  onboard   unified project onboarding: skills (swissknifeman) + connection to the brain
+  migrate   import: from-brain <.projects.json> | from-agentmemory <dir>
+  mcp       run maind like MCP-server (stdio JSON-RPC)
+  doctor    environment diagnostics
+  verify    proof of work: is it written to memory/graph/code-graph or idle (--json)
+  analyze   post-run analysis of the run: run-report+bash-log+git+health → GREEN/ATTENTION/RED
+  topology  machine topology map (init|show --json) — <state>/maind/topology.json
+  version   version (git SHA) and path to node
+--- stderr ---
+

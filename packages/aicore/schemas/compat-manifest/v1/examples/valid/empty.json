@@ -1,0 +1,9 @@
+{
+  "schema": "urn:swissknifeman:aicore:compat-manifest:v1",
+  "umbrella": {
+    "version": "1.2.0",
+    "tag": "v1.2.0"
+  },
+  "units": [],
+  "bridges": []
+}

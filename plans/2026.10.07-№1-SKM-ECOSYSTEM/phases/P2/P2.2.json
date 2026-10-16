@@ -1,0 +1,218 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.2",
+  "title": "Карта принадлежности и проверка границ с базовой линией",
+  "status": "done_with_deviations",
+  "summary": "Дополнить scripts/ecosystem-units.py проверками map (карта принадлежности), schemas ($schema и $id с версией у всех схем репозитория) и boundaries (импорты и пути между модулями) с базовой линией configs/ecosystem-baseline.json, режимом --strict, командами baseline --update и render (docs/architecture/ownership.md); заполнить ownership и path_patterns в configs/ecosystem-units.json; тесты и CI.",
+  "why": "Правило «папка = модуль» без исполняемой проверки — пожелание (D23, E47). Базовая линия фиксирует текущие нарушения (maind→harness, analyst→task, строковые packages/<другой>/), чтобы CI ловил только новые, а каждая фаза видела, сколько осталось; P11 требует --strict зелёным. Риск — ложные срабатывания и шум: ключ нарушения без номеров строк, шаблоны путей — данные с причиной, docs и *.md не сканируются.",
+  "scope": {
+    "include": [
+      "ownership, path_patterns, path_suffixes в configs/ecosystem-units.json по §ownership и §ecosystem-config",
+      "ecosystem-units.py: map, schemas (весь репозиторий), boundaries, --strict, --json, baseline --update, render [--check]",
+      "configs/ecosystem-baseline.json (генерируется; violations)",
+      "docs/architecture/ownership.md (генерируется render)",
+      "тесты на каждый новый код ошибки",
+      "регистрация baseline в config-inventory; шаг CI render --check"
+    ],
+    "exclude": [
+      "исправление самих нарушений границ (фазы P3–P11)",
+      "standalone (P2.3)",
+      "остальные файлы docs/architecture (P2.6)"
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "decisions": [
+    "D2",
+    "D3",
+    "D8",
+    "D23",
+    "D28"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/modules-p2#checks",
+      "why": "контракт map/schemas/boundaries/baseline/render",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#ecosystem-config",
+      "why": "семантика ownership и path_patterns",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#ownership",
+      "why": "начальная карта",
+      "required": true
+    },
+    {
+      "ref": "knowledge/modules-p2#facts",
+      "why": "ожидаемые нарушения для сверки базовой линии",
+      "required": true
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "why": "каркас из P2.1, расширяется",
+      "required": true
+    },
+    {
+      "path": "packages/orch/tests/test_boundaries.py",
+      "why": "существующая проверка границ orch (образец разбора импортов)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "any",
+      "note": "создаётся в P2.1, здесь дополняется"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "create"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/ecosystem-units.py",
+      "change": "any",
+      "note": "создаётся в P2.1, здесь дополняется"
+    },
+    {
+      "path": "scripts/test-ecosystem-units.py",
+      "change": "any",
+      "note": "создаётся в P2.1, здесь дополняется"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "create"
+    },
+    {
+      "path": ".github/workflows/hygiene.yml",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Базовая линия только генерируется (baseline --update); руками не правится",
+    "Карта: каждый файл transitional_roots покрыт; каждая запись указывает на существующий отслеживаемый путь; цели только из targets",
+    "Новый path_pattern — только с reason и тестом; *.md и docs/ не сканируются",
+    "Нарушение границы не исправляется в P2: оно попадает в базовую линию; исключение — очевидная ошибка самой проверки (ложное срабатывание) — чинится в проверке",
+    "render детерминирован (без дат и абсолютных путей); вывод на английском",
+    "Stdlib, Python 3.9; диагностика ECOSYSTEM_<CODE>"
+  ],
+  "guidance": "Исполнитель: implementation/high.\n\n1. Заполнить ownership: раскрыть фигурные скобки §ownership в отдельные записи (файл или каталог с `/`). Для `core/tests/` найти тесты runs/pathology/codegraph_telemetry по импортам (`git grep -l 'runs\\|pathology\\|codegraph_telemetry' core/tests`) и дать им запись analyst; если файл тестирует несколько целей — запись по главному субъекту + note.\n2. map: longest-prefix match; `ECOSYSTEM_MAP_UNCOVERED`, `ECOSYSTEM_MAP_STALE`, валидация полей.\n3. schemas: `git ls-files '*.schema.json'` минус tests/fixtures/examples; regex §checks; сейчас все 37 продуктовых схем должны пройти (если нет — это находка: починить схему, если дефект очевиден, иначе записать в plan.py log и включить в baseline нельзя — schemas не имеют линии).\n4. boundaries: множество модулей = имена `packages/*/lib/*` (включая artifex); foundation aliases из конфига. Ожидаемый состав линии (§facts): import maind→harness, analyst→task, harness(tests)→analyst, maind(tests)→skiller; path-нарушения в analyst, artifex? (artifex retired — его файлы НЕ сканируются, он не модуль), harness, maind, orch, task. Сверить фактическую линию с ожиданием и описать расхождения в plan.py log.\n5. `check` = manifests + map + schemas + boundaries против линии; `--strict` игнорирует линию. После `baseline --update` реальный репозиторий: `check` → 0, `check --strict` → 1.\n6. render: две таблицы (модули, карта), заголовок-предупреждение; `render --check` в CI.\n\nТесты: временное дерево с двумя модулями: импорт соседа → новое нарушение (1); то же в линии → 0; удалить импорт → 0 + improvement; core-импорт без requires → undeclared; путь `packages/other/x` в .py и .sh → path; в .md → не нарушение; непокрытый файл transitional_roots; устаревшая запись карты; схема без $id и с несовпадающей v<N>; render стабилен между двумя запусками.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/test-ecosystem-units.py -v",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0 (нарушения равны базовой линии)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict >/dev/null 2>&1; test $? -eq 1 && python3 -c 'import json,sys; v=json.load(open(\"configs/ecosystem-baseline.json\"))[\"violations\"]; sys.exit(0 if any(k.startswith(\"import|packages/maind/\") and k.endswith(\"|harness\") for k in v) else 1)'",
+      "expect": "exit 0 (линия непуста и содержит maind→harness; strict падает)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py render --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "cp configs/ecosystem-baseline.json /tmp/skm-p22-baseline.json && python3 scripts/ecosystem-units.py baseline --update >/dev/null && cmp -s configs/ecosystem-baseline.json /tmp/skm-p22-baseline.json; rc=$?; cp /tmp/skm-p22-baseline.json configs/ecosystem-baseline.json; rm -f /tmp/skm-p22-baseline.json; test $rc -eq 0",
+      "expect": "exit 0 (линия воспроизводима байт-в-байт)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 scripts/test-config-inventory.py -v && python3 scripts/public-hygiene.py && grep -q 'ecosystem-units.py render --check' .github/workflows/hygiene.yml",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "карта принадлежности",
+    "проверки map/schemas/boundaries с базовой линией и --strict",
+    "docs/architecture/ownership.md",
+    "шаги CI"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-08T03:08:30Z",
+    "finished_at": "2026-10-08T03:16:02Z",
+    "executor": {
+      "provider": "claude",
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "session": "90aa0b4d-2043-49ab-b95e-f3c076cdfb15"
+    },
+    "notes": "ecosystem-units.py: map, schemas, boundaries, --strict, baseline --update, render [--check]; 72 ownership entries; baseline 53 keys (maind imports of harness 6 keys, analyst->task, harness tests->analyst, maind tests->skiller, 44 path keys); docs/architecture/ownership.md; baseline registered in config-inventory; render --check in hygiene.yml; 94 tests.",
+    "deviations": [
+      "repo-escape pattern got a climb flag to remove false positives (fix in the check)"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-08T03:16:02Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-08T03:16:02Z"
+}

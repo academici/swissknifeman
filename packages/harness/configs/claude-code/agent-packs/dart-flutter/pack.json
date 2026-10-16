@@ -112,9 +112,12 @@
     {
       "id": "MODEL_REVIEWER",
       "q": "Model reviewer?",
-      "default": "opus",
+      "default": "frontier",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -123,9 +126,12 @@
     {
       "id": "MODEL_FFI_REVIEWER",
       "q": "Model ffi-reviewer?",
-      "default": "opus",
+      "default": "frontier",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -134,9 +140,12 @@
     {
       "id": "MODEL_SLICE_BUILDER",
       "q": "Model slice-builder?",
-      "default": "sonnet",
+      "default": "implementation",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -145,9 +154,12 @@
     {
       "id": "MODEL_TEST_WRITER",
       "q": "Model test-writer?",
-      "default": "sonnet",
+      "default": "implementation",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"
@@ -156,9 +168,12 @@
     {
       "id": "MODEL_SPEC_WRITER",
       "q": "Model spec-writer?",
-      "default": "sonnet",
+      "default": "implementation",
       "enum": [
         "inherit",
+        "economy",
+        "implementation",
+        "frontier",
         "opus",
         "sonnet",
         "haiku"

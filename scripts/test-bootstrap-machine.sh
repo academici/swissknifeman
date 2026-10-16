@@ -8,6 +8,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT="$REPO_ROOT/scripts/bootstrap-machine.sh"
 SWISSKNIFEMAN="$REPO_ROOT/bin/swissknifeman"
 
+# Dev clone (PLAN3 D13): every call below that has no explicit HOME= runs in a throwaway HOME.
+GUARD_HOME="$(mktemp -d)"
+trap 'rm -rf "$GUARD_HOME"' EXIT
+export HOME="$GUARD_HOME"
+
 fail=0
 ok() { echo "ok - $1"; }
 bad() { echo "NOT OK - $1"; fail=1; }
@@ -35,7 +40,7 @@ fi
 #    so here we consider ANY record (-mindepth 1, without -type f).
 TMP_HOME="$(mktemp -d)"
 LOCAL_HOME=""
-trap 'rm -rf "$TMP_HOME" "${LOCAL_HOME:-}"' EXIT
+trap 'rm -rf "$GUARD_HOME" "$TMP_HOME" "${LOCAL_HOME:-}"' EXIT
 before_all="$(find "$TMP_HOME" -mindepth 1 2>/dev/null | sort)"
 HOME="$TMP_HOME" "$SCRIPT" --dry-run --bin-dir "$TMP_HOME/.local/bin" >/tmp/dry.out 2>&1 || true
 after_all="$(find "$TMP_HOME" -mindepth 1 2>/dev/null | sort)"

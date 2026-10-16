@@ -22,7 +22,7 @@ skills based on the template yourself. It is installed only with a profile `stan
 
 Machine-squeezable checklist of skill rules: bulleted list of imperatives,
 **≤10 lines**, grappable (`grep -A12 '^## Conformance' SKILL.md`). Consumer -
-conformance-finder'review orchestrator's (`task:review`, Stage B): finder gets
+conformance-finder'review orchestrator's (`planner:review`, Stage B): finder gets
 section as a checklist and checks the diff against each line. New skill in the registry
 ⇒ new dimension review automatically.
 

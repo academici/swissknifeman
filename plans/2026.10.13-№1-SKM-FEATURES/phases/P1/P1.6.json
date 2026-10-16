@@ -1,0 +1,208 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.6",
+  "title": "orch: песочницы провайдеров — проба bubblewrap, instructions.sandbox off|prefer|require, --settings sandbox для Claude-ролей с Bash, SANDBOX_UNAVAILABLE для Codex, network declared/enforced в dry-run; закрытие фазы P1",
+  "status": "done",
+  "summary": "Новый packages/orch/lib/orch/sandbox.py (probe bwrap userns+netns, socat); orch.py doctor — check orch.sandbox; run-options instructions.sandbox (off|prefer|require, умолч. prefer) и instructions.sandbox_domains; engine._role_argv добавляет --settings с блоком sandbox для Claude-ролей с Bash; prefer+недоступно → ISOLATION_PARTIAL, require → SANDBOX_UNAVAILABLE до работы; codex-маршрут при недоступной песочнице недоступен; dry-run показывает sandbox и network declared/enforced; docs. Пункт закрывает фазу: phase.validation P1.",
+  "why": "N5, D5, C7, C14: сеть процесса агента ограничить нельзя; штатные песочницы ограничивают инструменты. На машине песочницы не стартуют (AppArmor userns) — отчётность это показывает, живая проверка — после действия владельца. Риски: (1) --settings сливается с настройками пользователя — передаётся только блок sandbox; (2) strictAllowlist без доменов ломает сетевые тесты проекта — домены задаются instructions.sandbox_domains; (3) зеркало run-options моста.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/sandbox.py",
+      "packages/orch/lib/orch/cli.py (doctor)",
+      "packages/orch/lib/orch/conductor/engine.py (_role_argv, _preflight)",
+      "packages/orch/lib/orch/conductor/cli.py (_preview)",
+      "packages/orch/lib/orch/conductor/options.py",
+      "run-options схема и зеркало моста",
+      "docs contracts.md, conductor.md",
+      "тесты",
+      "phase.validation P1"
+    ],
+    "exclude": [
+      "Landlock TCP (D5)",
+      "переписывание argv codex",
+      "изменение системной конфигурации AppArmor (действие владельца)"
+    ]
+  },
+  "depends_on": [
+    "P1.1",
+    "P1.2",
+    "P1.3",
+    "P1.4",
+    "P1.5"
+  ],
+  "decisions": [
+    "D5"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p1-fixes#network",
+      "why": "дизайн пробы, опции, argv и отчётности",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-13#claude",
+      "why": "ключи песочницы Claude и поведение --settings",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-fixes#checks",
+      "why": "проверки фазы",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "section": "_role_argv",
+      "why": "ISOLATION_ARGS и _knows",
+      "required": true
+    },
+    {
+      "path": "packages/orch/schemas/exec/v1/role-manifest.schema.json",
+      "why": "permissions.network",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/sandbox.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/lib/orch/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/engine.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/options.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "change": "modify",
+      "note": "только через sync-schema.py"
+    },
+    {
+      "path": "packages/orch/tests/test_sandbox.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/tests/test_conductor.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/contracts.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "orch doctor/help, захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "plans/2026.10.13-№1-SKM-FEATURES/artifacts/P1.6/review-verdict.json",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Проба только читает и запускает bwrap с true; системные файлы не меняет",
+    "Тесты подменяют probe; реальный bwrap в тестах не нужен",
+    "run-options меняется аддитивно; зеркало моста — sync-schema.py",
+    "phase.validation P1 — после V1–V2 пункта, один раз"
+  ],
+  "guidance": "Исполнитель: implementation/high. Порядок: тесты (падают) → sandbox.py и doctor → схема и options (+ sync-schema) → _role_argv и _preflight → _preview → docs → V1–V2 → phase.validation P1.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "SKM_ORCH_ROOT=$PWD/packages/orch python3 bridges/planner-orch/scripts/sync-schema.py --check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "проба песочницы",
+    "instructions.sandbox",
+    "network declared/enforced"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-13T20:41:45Z",
+    "finished_at": "2026-10-13T21:07:54Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "86068c8c-34bb-426c-be25-afe31c80b9e1"
+    },
+    "notes": "sandbox.py + doctor orch.sandbox; instructions.sandbox/sandbox_domains (+зеркало моста); --settings sandbox для Claude-ролей с Bash; ISOLATION_PARTIAL/SANDBOX_UNAVAILABLE; dry-run sandbox/network/warnings; docs; phase.validation V11-V13 зелёные",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V11",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V12",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      },
+      {
+        "id": "V13",
+        "exit": 0,
+        "at": "2026-10-13T21:07:54Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-13T21:31:13Z"
+}

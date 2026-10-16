@@ -1,0 +1,8 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "contract",
+  "decision": "PACKAGE_LOCAL",
+  "also": [
+    "OVERLAY"
+  ]
+}

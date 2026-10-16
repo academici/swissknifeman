@@ -50,7 +50,8 @@
               "checks",
               "review",
               "registrar",
-              "git"
+              "git",
+              "condense"
             ],
             "description": "Stage kind."
           },
@@ -119,6 +120,24 @@
               "skip"
             ],
             "description": "Action when capability is unavailable."
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "input_tokens_max": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Maximum input tokens of the stage."
+              },
+              "output_tokens_max": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Maximum output tokens of the stage."
+              }
+            },
+            "required": [],
+            "additionalProperties": false,
+            "description": "Token limits of the stage."
           }
         },
         "required": [
@@ -151,6 +170,24 @@
         "max_corrections": {
           "type": "integer",
           "description": "Maximum owning corrections; at most one."
+        },
+        "triage": {
+          "type": "object",
+          "description": "Triage of review findings before a correction: a role reproduces every finding and passes on only the confirmed ones.",
+          "properties": {
+            "role": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+              "description": "Role of the triage."
+            },
+            "model_class": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+              "description": "Requested semantic model class of the triage."
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -275,6 +312,112 @@
         "recheck"
       ],
       "additionalProperties": false
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Version of this policy."
+    },
+    "sandbox": {
+      "$ref": "urn:swissknifeman:aicore:permissions:v1#/$defs/permissions",
+      "description": "Permissions of the stages: what a stage may write, reach and run."
+    },
+    "on_error": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "authentication",
+          "authorization",
+          "quota",
+          "rate_limit",
+          "invalid_request",
+          "model_unavailable",
+          "content_policy",
+          "transport",
+          "provider_internal",
+          "timeout",
+          "context_limit",
+          "unknown",
+          "unknown_outcome"
+        ],
+        "description": "Failure class of error/v1, or unknown_outcome."
+      },
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "stop",
+                "retry",
+                "retry_after",
+                "fallback_route",
+                "replan",
+                "reconcile"
+              ],
+              "description": "What to do after a failure of the class."
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum number of times the action may be taken."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "description": "Action for a failure class."
+        }
+      },
+      "description": "Action by failure class; a class that is not listed has the default action of the engine."
+    },
+    "fallback_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+            "description": "Fallback provider."
+          },
+          "model_class": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+            "description": "Minimum model class on the fallback provider."
+          }
+        },
+        "required": [
+          "provider",
+          "model_class"
+        ],
+        "additionalProperties": false,
+        "description": "Fallback route."
+      },
+      "description": "Routes that the action fallback_route may switch to, in order of preference."
+    },
+    "budgets": {
+      "type": "object",
+      "properties": {
+        "brief_max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum size of the brief in bytes."
+        },
+        "packer_input_max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum size of the input of the brief packer in bytes."
+        },
+        "stage_tokens_max": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum tokens of one stage."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Size and token budgets."
     }
   },
   "required": [

@@ -10,10 +10,29 @@ _MODES = ("off", "warn", "strict")
 _EDIT_TOOLS = ("Edit", "Write", "MultiEdit")
 
 
+def _carrier(cwd, key):
+    """Value of `key` in the committed carrier .swissknifeman/hooks.env (provider key first)."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except Exception:
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            found[k.strip()] = v.strip()
+    return found.get(key + "__CLAUDE_CODE", found.get(key))
+
+
 def _read_mode(cwd):
     """Internal documentation."""
     if not cwd:
         return _DEFAULT_MODE
+    carried = _carrier(cwd, "PACK_GUARD_MODE")
+    if carried is not None:
+        carried = carried.lower()
+        return carried if carried in _MODES else _DEFAULT_MODE
     f = Path(cwd) / ".claude" / "pack-guard.env.ini"
     try:
         text = f.read_text(encoding="utf-8")

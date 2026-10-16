@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:aicore:config-explain:v1",
+  "module": "analyst",
+  "project": "/work/p",
+  "config_file_version": 1,
+  "layers": [
+    {"name": "defaults", "file": null, "present": true},
+    {"name": "machine", "file": "/home/u/.config/swissknifeman/config.toml", "present": true},
+    {"name": "project", "file": "/work/p/.swissknifeman/config.toml", "present": true},
+    {"name": "env", "file": null, "present": false},
+    {"name": "invocation", "file": null, "present": false},
+    {"name": "flags", "file": null, "present": false}
+  ],
+  "entries": [
+    {
+      "key": "recompute.candidate_min_n",
+      "value": 20,
+      "layer": "project",
+      "file": "/work/p/.swissknifeman/config.toml",
+      "line": 7,
+      "source": null,
+      "secret": false,
+      "default": 15,
+      "overridden": [
+        {"layer": "machine", "file": "/home/u/.config/swissknifeman/config.toml", "line": 3, "source": null, "value": 18},
+        {"layer": "defaults", "file": null, "line": null, "source": null, "value": 15}
+      ]
+    },
+    {
+      "key": "token",
+      "value": "env://ANALYST_TOKEN",
+      "layer": "machine",
+      "file": "/home/u/.config/swissknifeman/config.toml",
+      "line": 4,
+      "source": null,
+      "secret": true,
+      "overridden": []
+    },
+    {
+      "key": "sources",
+      "value": ["local", "extra"],
+      "layer": "project",
+      "file": "/work/p/.swissknifeman/config.toml",
+      "line": 9,
+      "source": "_append",
+      "secret": false,
+      "default": ["local"],
+      "overridden": [
+        {"layer": "defaults", "file": null, "line": null, "source": null, "value": ["local"]}
+      ]
+    }
+  ]
+}

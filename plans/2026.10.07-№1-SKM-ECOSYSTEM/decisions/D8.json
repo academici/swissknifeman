@@ -15,8 +15,9 @@
   "rationale": "M3: «я и так сказал… утверждать не нужно».",
   "applies_to": [
     "P7",
-    "P8",
-    "P11"
+    "P8.3",
+    "P8.6",
+    "P11.6"
   ],
   "actor": {
     "provider": "anthropic",

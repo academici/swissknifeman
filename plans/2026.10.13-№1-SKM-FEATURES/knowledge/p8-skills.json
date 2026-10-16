@@ -1,0 +1,50 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "p8-skills",
+  "title": "P8: skills — sidecar выбора, select, волна A, переносы, расширения, карантин",
+  "sections": [
+    {
+      "id": "facts",
+      "title": "Факты кода",
+      "text": "Код на HEAD aed8924b9:\n\n- Реестр: `packages/skiller/skills/<bucket>/<folder>/SKILL.md` (209 skills, 48 папок bucket'ов), `skills.json` собирается `skiller registry` (`skiller/lib/skiller/registry.py:build_registry`, frontmatter через `parse_frontmatter`); ключ резолвера — `bucket/<folder>` и имя (`skillset.py` `by_key`, `by_name`). Vendored skills — `upstream.json` (`source, repo, strategy, license, files, notes, audit {verdict, at, by, upstream_sha}`), проверка `validate.sh`.\n- `aicore/schemas/skill-descriptor/v1/skill-descriptor.schema.json`: `id, name, description, version, digest, license, compatibility, allowed_tools, adapters, requires, risk, metadata (строка→строка, открытый), provenance`; `skiller describe <id> --json`, `skiller resolve <skill…> --json` (closure `requires`), `skiller eval` (aicore.content.eval), `skiller budget`.\n- Мост `bridges/orch-skiller`: `resolve_role.py (--role ID | --manifest PATH) --provider P [--json]` — skills роли из манифеста или `role-skills.json` (сейчас только reviewer: `quality:code-review` required, `quality:artifact-review`), closure через `skiller resolve`, digest через `skiller describe`; `--all-roles` → вход `orch.py prepare --skills`.\n- conductor: `options.skills` — карта роль → имена; `engine._skill_texts(item, role)` для изолированной роли читает `<project>/.claude/skills/<name>/SKILL.md` или `.agents/skills/…` без frontmatter и **обрезает до 12000 символов** (молча) → `prompts._head`.\n- harness hooks `packages/harness/configs/claude-code/hooks/`: `git-guardrails`, `plan-guard`, `review-gate`, … (каталог hooks harness); skill `general/git-safety` дублирует правила словами.\n- Аудит часть 3: решения по 209 skills (3.4), волна A (3.2), группы (3.3), сводка (3.5). Стандарт Agent Skills: `metadata` — строка→строка (research-2026-10-13#skills, D10)."
+    },
+    {
+      "id": "meta",
+      "title": "Sidecar selection.json (D10)",
+      "text": "**P8.1 (D10).** Sidecar `selection.json` рядом с `SKILL.md` (только где нужен; отсутствие = `kind: domain`, без триггеров):\n\n```json\n{\"schema\": \"skill-selection/v1\", \"kind\": \"contract|procedure|domain|tool|router|reference|persona\",\n \"decision\": \"KEEP|SLIM|SPLIT|MERGE|ROUTER_ONLY|REFERENCE|SCRIPT|OVERLAY|WORKFLOW|PACKAGE_LOCAL|PERSONA|DEPRECATE|DELETE\",\n \"roles\": [\"executor\", \"reviewer\", ...], \"triggers\": {\"paths\": [\"glob\"], \"deps\": [\"composer:laravel/framework\", \"npm:vue\"]},\n \"requires_tools\": [\"Bash\"], \"conflicts\": [\"bucket/folder\"], \"exclusive_group\": \"php-architecture\",\n \"max_tokens\": 1500, \"replaced_by\": \"orch/roles/executor.md\", \"evidence\": {\"eval_report\": null, \"verified_at\": null}}\n```\n\nСхема `skill-selection/v1` — в aicore (`aicore/schemas/skill-selection/v1/`), контракт рядом с skill-descriptor; skiller `registry` переносит sidecar в `skills.json` (поле `selection`), `validate.sh` проверяет схему, ссылки `conflicts`, существование `exclusive_group` в таблице групп (`skiller/configs/exclusive-groups.json` из аудита 3.3). Заполнение: `kind` и `decision` для всех 209 по аудиту часть 3 (3.4; `—` → `kind` по смыслу, решение — из 3.2). Команда `skiller selection report [--json]` строит сводку по `decision` и сверяет с таблицей 3.5 аудита (расхождения — список, не падение). Frontmatter SKILL.md не меняется."
+    },
+    {
+      "id": "select",
+      "title": "skiller select и conductor auto",
+      "text": "**P8.2.** `skiller select --role R [--paths P…] [--deps D…] [--model-class C] [--provider P] [--budget TOKENS] [--include ID…] [--exclude ID…] --json [--explain]` — чистая функция над реестром (алгоритм аудита 2.6.6): явные include → обязательные по роли (`role-skills.json` моста и `selection.roles`) → триггеры путей/зависимостей → без `requires_tools` у роли — исключить (`tool_missing`) → `exclusive_group` (не больше 1, для `php-architecture` — 2) → exclude (всегда после include) → `kind ∈ router|reference|persona` не preload для изолированных ролей (`kind_not_preloaded`) → `replaced_by` контракт роли (`duplicated_by_role_contract`) → бюджет (`over_budget`, без обрезки). Выход: `{included: [{id, reason, tokens}], excluded: [{id, reason}], discoverable: [id], tokens}`. Политика `skiller.selection.policy = explicit | auto` (`skiller` config, project+, умолч. explicit). Зависимости проекта (`deps`) — из `composer.json`/`package.json`/`pyproject.toml` (чтение имён пакетов).\n\norch: `options.skills` роли может быть `[\"auto\"]` (аддитивно, схема run-options) → conductor вызывает мост `python3 bridges/orch-skiller/resolve_role.py --select --role R --paths <write set> --provider P --json` (процесс, модули не импортируются) → имена и пути SKILL.md; `_skill_texts` читает по пути из ответа моста (не только `.claude/skills`). Golden на 5 задачах: Laravel-миграция, Vue-компонент, Python CLI, docs-only, изменение схемы (фикстуры проектов в тестах skiller)."
+    },
+    {
+      "id": "wavea",
+      "title": "Волна A без удаления",
+      "text": "**P8.3.** Волна A (аудит 3.2) **без удаления** (D1): skills из таблицы получают `selection.json` с `kind` (workflow/contract/router/persona) и `replaced_by`; `select` их не preload'ит для orch-ролей; пресеты `agent-context`, `agent-tasks` пересобираются без них; skill получает строку deprecated в `description`? — нет (описание — триггер; менять осторожно): вместо этого `selection.decision = DEPRECATE` и вывод `skiller list --deprecated`. `roles/*` → `kind: persona`. Super-skills/routers (`ai/ai-agents`, `architect/dev-engineering-super-skill`, `devops/docker`, `php-packages/laravel-packages`, `frontend-vite/vite`, …) → `kind: router`. Ссылки `laravel-subagents` в harness — обновить на новые имена пресетов. Проверка: golden P8.2 не содержит этих skills в `included` изолированных ролей."
+    },
+    {
+      "id": "transfer",
+      "title": "Переносы в hooks, схемы, скрипты",
+      "text": "**P8.4.** Переносы с тестом на новом месте и ссылкой из skill:\n\n- `general/git-safety` → правила как hook harness рядом с `hooks/git-guardrails` (расширить существующий, не новый) — тест hook; skill становится короткой ссылкой (`kind: reference`).\n- `general/task-brief-template` → уже `exec/v1` execution-input: skill → `replaced_by: orch/schemas/exec/v1/execution-input.schema.json`.\n- `general/session-handoff` → `stage-report` / журнал: `replaced_by`.\n- `laravel-testing/test-isolation-guard`, `db-test-preflight`, `node-pnpm-preflight` (найти точные пути в `skills/`) → исполняемые preflight-скрипты рядом со skill (`scripts/preflight.sh|py`) с JSON-результатом `check-result/v1` (aicore); skill описывает запуск. Тест: скрипт на фикстуре проекта → JSON по схеме."
+    },
+    {
+      "id": "custom",
+      "title": "Пользовательские skills и коллизии",
+      "text": "**P8.5.** Пользовательские skills: `skiller.custom_dirs` (только machine/invocation/flags, x-skm-layers) — каталоги с той же структурой `<bucket>/<folder>/SKILL.md`; проектные `<project>/.swissknifeman/skills/`. Коллизии (аудит 2.6.9): тот же id + `selection.replaces: <id>` → override; тот же id без replaces → ошибка `EXTENSION_AMBIGUOUS`; другой id с теми же триггерами → предупреждение; deprecated → предупреждение. `skiller select --explain` и `skiller describe` показывают `origin` (`library|machine|project`) и digest. Тесты: id без replaces → ошибка; с replaces → override виден."
+    },
+    {
+      "id": "quarantine",
+      "title": "Карантин импорта",
+      "text": "**P8.6.** Импорт vendored skill (`upstream.json`) проходит проверки до `audit.verdict: clean`: лицензия (есть в списке разрешённых `skiller/configs/licenses.json`), provenance (`upstream_sha` совпадает), скан prompt injection и опасных инструкций (детерминированные шаблоны: чтение `~/.ssh`, `~/.aws`, `.env`, отключение проверок, `curl … | sh`, просьбы скрыть действия), бюджет токенов (`max_tokens` или порог), предположения о tools (`allowed_tools` против известных). Результат — `compat-report.json` рядом с `upstream.json` (`{checks: [{id, status, detail}], verdict: clean|quarantine}`); `quarantine` → skill не попадает в реестр runtime (`skills.json` с `quarantined: true`, `select` исключает с `quarantined`). Тест: фикстура skill с «прочитай ~/.ssh/id_rsa» → quarantine с причиной."
+    },
+    {
+      "id": "checks",
+      "title": "Проверки фазы",
+      "text": "Фаза P8: пункты — `python3 scripts/affected-tests.py --run` + `HOME=$(mktemp -d) SKM_VALIDATE_SKIP_TESTS=1 bash packages/skiller/scripts/validate.sh`. Широкий прогон — phase.validation (P8.6) + `skiller budget --first-turn` в песочнице как в PLAN3 P12 (не выше 23K). Первый пункт сверяет knowledge/p8-skills#facts."
+    }
+  ],
+  "applies_to": [
+    "P8"
+  ]
+}

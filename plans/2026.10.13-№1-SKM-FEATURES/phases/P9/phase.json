@@ -1,0 +1,73 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P9",
+  "title": "Сборка промпта: prompt manifest, дедупликация и конфликты, бюджеты, фокус review",
+  "design": "detailed",
+  "goal": "Prompt manifest (блоки с origin, sha256, tokens) без изменения промпта; conduct.py prompt explain; детерминированные исключения skills и PROMPT_CONFLICT по объявленным конфликтам, без молчаливой обрезки; измерение бюджетов core/supporting/retrieval с BUDGET_OVER; фокус и класс reviewer из рекомендации executor.",
+  "context": "audits/perplexity-audit.md — Фаза 8 (П8.1, П8.2, П8.4), П6.3, 2.5, E7; дизайн — knowledge/p9-prompt. Prompt profiles (П8.3) — P13.3.",
+  "scope": {
+    "include": [
+      "orch conductor prompts.py",
+      "схема prompt-manifest",
+      "conduct.py prompt explain"
+    ],
+    "exclude": [
+      "изменение смысла задачи компилятором",
+      "лимиты бюджетов до 2–3 фаз данных"
+    ]
+  },
+  "depends_on": [
+    "P7",
+    "P8"
+  ],
+  "validation": [
+    {
+      "id": "V11",
+      "cmd": "python3 scripts/ci-matrix.py run --all",
+      "expect": "exit 0; все строки ok|skip",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V12",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V13",
+      "cmd": "git fetch -q origin && PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base origin/ecosystem-split",
+      "expect": "exit 0; нет ломающих изменений схем",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "prompt manifest",
+    "prompt explain"
+  ],
+  "items": [
+    "P9.1",
+    "P9.2",
+    "P9.3",
+    "P9.4"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P9.1",
+        "P9.2",
+        "P9.3",
+        "P9.4"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": {
+    "at": "2026-10-15T04:53:10Z",
+    "result": "done_with_deviations",
+    "summary": "4 item(s): 2 done, 2 done_with_deviations"
+  }
+}

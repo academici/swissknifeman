@@ -13,7 +13,7 @@ is regenerated from The per-project story is not in itself a source of truth."""
 import os
 from pathlib import Path
 
-from .common import die
+from aicore.util.term import die
 from .graph import Graph, empty_graph
 from .namespaces import in_namespace, shares
 

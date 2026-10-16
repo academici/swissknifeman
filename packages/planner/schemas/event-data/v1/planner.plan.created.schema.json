@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:planner:event-data:planner-plan-created:v1",
+  "title": "planner.plan.created",
+  "description": "Data of the planner.plan.created event. A plan was created.",
+  "type": "object",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "description": "Id of the plan the event belongs to.",
+      "minLength": 1
+    },
+    "short_id": {
+      "type": "string",
+      "description": "Short id of the plan such as PLAN7.",
+      "pattern": "^PLAN[1-9][0-9]*$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the plan.",
+      "minLength": 1
+    },
+    "repository": {
+      "type": "string",
+      "description": "Repository the plan belongs to.",
+      "minLength": 1
+    },
+    "created": {
+      "type": "string",
+      "description": "Creation date of the plan.",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    }
+  },
+  "required": [
+    "plan_id",
+    "title"
+  ],
+  "additionalProperties": false
+}

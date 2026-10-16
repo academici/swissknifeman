@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:harness:profile-resolution:v1",
+  "title": "profile-resolution",
+  "description": "Output of `harness profiles resolve --json`: the fail-closed resolution of one profile for one provider. A refusal is data (green false, diagnostics), not a failed command.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Contract identifier.",
+      "const": "urn:swissknifeman:harness:profile-resolution:v1"
+    },
+    "provider_id": {
+      "description": "Provider the profile was resolved for.",
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "description": "The resolved profile; null when the resolution was refused.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "intent"
+      ],
+      "additionalProperties": false
+    },
+    "target_scope": {
+      "description": "Requested target scope.",
+      "type": "string"
+    },
+    "operation_id": {
+      "description": "Explicit operation id, when given.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "target_identity": {
+      "description": "Explicit target identity, when given.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "green": {
+      "description": "True when a profile resolved without diagnostics.",
+      "type": "boolean"
+    },
+    "diagnostics": {
+      "description": "Refusal diagnostics in canonical order.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "description": "Diagnostic severity.",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "code": {
+            "description": "Stable HARNESS_* diagnostic code.",
+            "type": "string",
+            "minLength": 1
+          },
+          "provider_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile_id": {
+            "type": "string"
+          },
+          "surface_id": {
+            "type": "string"
+          },
+          "target_scope": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "observed": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "next_action": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "provider_id",
+          "profile_id",
+          "surface_id",
+          "target_scope",
+          "path",
+          "required",
+          "observed",
+          "message",
+          "next_action"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "provider_id",
+    "profile",
+    "target_scope",
+    "operation_id",
+    "target_identity",
+    "green",
+    "diagnostics"
+  ],
+  "additionalProperties": false
+}

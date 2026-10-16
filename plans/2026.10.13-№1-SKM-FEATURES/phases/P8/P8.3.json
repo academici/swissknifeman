@@ -1,0 +1,143 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P8.3",
+  "title": "Волна A без удаления: selection.json kind/replaced_by/DEPRECATE для мета-skills (аудит 3.2), routers и roles/*; пресеты agent-context и agent-tasks без них; skiller list --deprecated; harness laravel-subagents",
+  "status": "done_with_deviations",
+  "summary": "По knowledge/p8-skills#wavea: kind и replaced_by для таблицы 3.2, router для super-skills, persona для roles/*; пресеты пересобраны; skiller list --deprecated; ссылки harness обновлены; golden P8.2 подтверждает отсутствие в included изолированных ролей.",
+  "why": "Аудит П7.3, 2.6.7: пять слоёв мета-инструкций конкурируют за внимание сильной модели. Риск: удаление сломает проекты, включающие skill по имени — только deprecated (D1).",
+  "scope": {
+    "include": [
+      "packages/skiller/skills/**/selection.json",
+      "packages/skiller/presets/*.json",
+      "packages/skiller/lib/skiller/ (list --deprecated)",
+      "packages/harness/configs/** (ссылки пресетов)"
+    ],
+    "exclude": [
+      "удаление skills",
+      "SLIM/MERGE (P13.2)"
+    ]
+  },
+  "depends_on": [
+    "P8.2"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p8-skills#wavea",
+      "why": "дизайн",
+      "required": true
+    },
+    {
+      "path": "audits/perplexity-audit.md",
+      "why": "таблица волны A",
+      "required": true,
+      "section": "3.2 Волна A: мета-skills, которые уходят из runtime первыми"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/skiller/skills/**/selection.json",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/presets/*.json",
+      "change": "modify"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/listing.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/lib/skiller/cli.py",
+      "change": "any"
+    },
+    {
+      "path": "packages/skiller/tests/**",
+      "change": "any"
+    },
+    {
+      "path": "packages/harness/configs/**",
+      "change": "any",
+      "note": "ссылки laravel-subagents"
+    },
+    {
+      "path": "packages/skiller/skills.json",
+      "change": "modify",
+      "note": "только через skiller registry"
+    },
+    {
+      "path": "tests/golden/**",
+      "change": "any",
+      "note": "захват с --reason"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Дизайн — разделы knowledge из reads; имена команд, полей, кодов, путей — строго оттуда; расхождение с кодом — open_issues отчёта kind deviation",
+    "Skills не удаляются и не переименовываются (D1); frontmatter SKILL.md остаётся по стандарту agentskills.io (D10)"
+  ],
+  "guidance": "Исполнитель: economy/high. Порядок: golden ожиданий → selection.json → пресеты → list --deprecated → harness → registry → V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) SKM_VALIDATE_SKIP_TESTS=1 bash packages/skiller/scripts/validate.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "волна A"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-14T15:53:54Z",
+    "finished_at": "2026-10-14T16:26:47Z",
+    "executor": {
+      "provider": "claude",
+      "model": "sonnet-5-5",
+      "effort": "high",
+      "session": "0da2629f-5c4d-41fc-9bfc-ca2039bc857c"
+    },
+    "notes": "replaced_by у 10 meta-skills (волна A), пресеты agent-context/agent-tasks без них, skiller list --deprecated, тесты WaveACase. V1, V2 зелёные после коррекции.",
+    "deviations": [
+      "Общий review батча (grok-4.7) после P8.3; fix-коммит правит P8.1/P8.2",
+      "harness: исправлены имена skill laravel-subagents в docs пака backend-laravel (php: → laravel-architecture:), пресеты не переименовывались; agent-context стал пустым"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-14T16:26:47Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-14T16:26:47Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-14T16:26:47Z"
+}

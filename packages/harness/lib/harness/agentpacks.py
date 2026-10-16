@@ -1,6 +1,7 @@
 """Internal documentation."""
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import os
@@ -10,10 +11,21 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ProviderId, plan_artifact_render, sha256_digest)
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity,
+    ArtifactRenderRequest,
+    ArtifactSource,
+    ArtifactTarget,
+    plan_artifact_render,
+    sha256_digest,
+)
+from aicore.provider.models import load_model_catalog, select_model
+from aicore.provider.values import ProviderId
 
-from .common import die, parse_flags, safe_load_json, sanitize, warn
+from aicore.util.cli import parse_flags
+from aicore.util.io import safe_load_json
+from aicore.util.term import die, warn
+from aicore.util.text import sanitize
 from .settings import add_hook, load_settings, write_json, write_text
 
 LOCK_REL = ".claude/agent-pack.lock.json"
@@ -258,6 +270,7 @@ def _apply_conditionals(text, answers):
 
 
 def _render_template_text(src_text, answers):
+    answers = _model_answers(answers)
     return _subst_double(_apply_conditionals(src_text, answers), answers)
 
 
@@ -387,7 +400,7 @@ def write_lock(target, lock, dry):
         print(f"  [dry-run] would update {lp}")
         return
     lp.parent.mkdir(parents=True, exist_ok=True)
-    from core import atomic_write_json
+    from aicore.util.io import atomic_write_json
     atomic_write_json(lp, lock)
     print(f"  lock: {lp}")
 
@@ -885,12 +898,34 @@ _CURSOR_CONSUMER_FIELDS = {
     "disconnect_policy",
 }
 _COMMON_FORBIDDEN = re.compile(
-    r"\.claude(?:/|\b)|(?<![\w-])/(?:task:[a-z-]+|effort|clear)\b|"
+    r"\.claude(?:/|\b)|(?<![\w-])/(?:planner|task):[a-z-]+|(?<![\w-])/(?:effort|clear)\b|"
     r"\bWorkflow\b|\bSubagentStop\b|(?<![\w-])(?:Read|Grep|Glob|Bash|Edit|Write|"
     r"Haiku|Sonnet|Opus)(?![\w-])")
 _TOKEN = re.compile(r"\{\{token:([a-z-]+)\}\}")
-_MODEL_SELECTORS = {"economy": "gpt-5.6-luna", "implementation": "gpt-5.6-terra",
-                    "frontier": "gpt-5.6-sol"}
+MODEL_CLASSES = ("economy", "implementation", "frontier")
+
+
+@functools.lru_cache(maxsize=1)
+def _model_catalog():
+    return load_model_catalog()
+
+
+def model_for_class(provider_id, model_class):
+    """The model of ``model_class`` for ``provider_id`` from the aicore model catalog (the one source of models);
+    ``HARNESS_MODEL_CLASS_UNKNOWN`` when the catalog has no such class for the provider."""
+    model = select_model(_model_catalog(), provider_id, model_class)
+    if model is None:
+        raise ValueError(f"HARNESS_MODEL_CLASS_UNKNOWN:{provider_id}:{model_class}")
+    return model
+
+
+def _model_answers(answers):
+    """``answers`` with every ``MODEL_*`` value that names a model class replaced by the Claude Code model of the class
+    (a model name, ``inherit`` or any other value stays as it is): the agents of a pack are rendered for Claude Code."""
+    if not any(key.startswith("MODEL_") and value in MODEL_CLASSES for key, value in answers.items()):
+        return answers
+    return {key: model_for_class("claude-code", value) if key.startswith("MODEL_") and value in MODEL_CLASSES else value
+            for key, value in answers.items()}
 _CLAUDE_TOKENS = {
     "agent-roster": "`.claude/agents/{{PACK_PREFIX}}-*.md` (Glob/Read)",
     "managed-role-override-pattern": "`.claude/rules/*-overrides.md`",
@@ -931,7 +966,7 @@ def load_agentpack_catalog(path):
             raise ValueError("HARNESS_CATALOG_MISMATCH")
         key = (row["pack_id"], row["role_id"])
         list_fields = ("skills", "tool_requirements", "command_ids", "activation_requirements")
-        if (key in seen or row["model_class"] not in _MODEL_SELECTORS
+        if (key in seen or row["model_class"] not in MODEL_CLASSES
                 or not all(isinstance(row.get(field), str) and row[field] for field in
                            ("pack_id", "role_id", "content"))
                 or not isinstance(row["description_lines"], list)
@@ -1031,7 +1066,7 @@ def agent_model_trace(roles, bindings_path, env):
               "model_class_mismatch": ()}
     unknown, mismatch = [], []
     classes = {"haiku": "economy", "sonnet": "implementation", "inherit": "implementation",
-               "opus": "frontier"}
+               "opus": "frontier", **{name: name for name in MODEL_CLASSES}}
     for key in sorted(set(expected) & set(bound)):
         selector = bound[key]
         match = re.fullmatch(r"\{\{([A-Z0-9_]+)\}\}", selector)
@@ -1086,7 +1121,7 @@ def project_agent_role(role, provider_id, *, claude_bindings=None, pack_prefix=N
         rendered = rendered_text.encode("utf-8")
     elif provider_id == "codex":
         target = f".codex/agents/{{{{PACK_PREFIX}}}}-{role.role_id}.toml"
-        model = _MODEL_SELECTORS[role.model_class]
+        model = model_for_class("codex", role.model_class)
         skills = ", ".join(json.dumps(item, ensure_ascii=False) for item in role.skills)
         commands = ", ".join(json.dumps(item, ensure_ascii=False) for item in role.command_ids)
         rendered = (f'name = {json.dumps(role.pack_id + "-" + role.role_id)}\n'
@@ -1256,7 +1291,7 @@ def write_codex_roles_lock(target, lock, dry):
         print(f"  [dry-run] would update {lp}")
         return
     lp.parent.mkdir(parents=True, exist_ok=True)
-    from core import atomic_write_json
+    from aicore.util.io import atomic_write_json
     atomic_write_json(lp, lock)
     print(f"  lock: {lp}")
 

@@ -28,9 +28,21 @@ read_ini() { # file key
     | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]#].*$//' | tr -d "\"'"
 }
 
-# MODE: per-project override → hookdir
-MODE=""
+# Value of KEY from the committed carrier <project>/.swissknifeman/hooks.env (provider key first).
+read_hooks_env() {
+  local key="$1" dir="${2:-}" f v
+  f="$dir/.swissknifeman/hooks.env"
+  [ -n "$dir" ] && [ -f "$f" ] || return 1
+  v="$(grep -E "^${key}__CLAUDE_CODE=" "$f" | head -1 | cut -d= -f2- | tr -d ' \r')"
+  [ -n "$v" ] || v="$(grep -E "^${key}=" "$f" | head -1 | cut -d= -f2- | tr -d ' \r')"
+  [ -n "$v" ] || return 1
+  printf '%s' "$v"
+}
+
+# MODE: carrier → per-project override → hookdir
+MODE="$(read_hooks_env REVIEW_GATE_MODE "$cwd" 2>/dev/null || true)"
 for f in "$cwd/.claude/review-gate.env.ini" "$HOOK_DIR/env.ini"; do
+  [ -n "$MODE" ] && break
   m="$(read_ini "$f" MODE 2>/dev/null || true)"
   [ -n "$m" ] && { MODE="$m"; break; }
 done

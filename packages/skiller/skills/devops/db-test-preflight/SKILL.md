@@ -18,6 +18,8 @@ sha256: ""
 
 # DB Test Preflight
 
+Executable: `python3 scripts/preflight.py [--root DIR] [--mode docker|host] [--live]` prints a `check-result/v1` JSON (exit 1 on fail): the `*_test` name gate always, container and `pg_isready` with `--live`. Full flow with DB creation and migrations: `snippets/preflight.sh`.
+
 Use before any Postgres test suite (`php artisan test`, Pest, PHPUnit, `make test`) and when wiring hooks/CI that hit a real DB in Docker. Analog of `devops/node-pnpm-preflight` for the test DB.
 
 Triggers:

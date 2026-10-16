@@ -10,9 +10,10 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core import ProviderId, load_provider_manifest, support_for
+from aicore.provider.manifest import default_manifest_path
+from aicore.provider.manifest import load_provider_manifest, support_for
+from aicore.provider.values import ProviderId
 from harness.hooks import LifecycleRequest, plan_lifecycle, render_cursor_hook_handler, render_cursor_hooks
 from harness.profiles import load_catalog
 
@@ -20,7 +21,7 @@ PACKAGE = Path(__file__).resolve().parents[1]
 ROOT = PACKAGE.parents[1]
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
 CURSOR_BINDINGS = PACKAGE / "configs/cursor/hooks/lifecycle-context-bindings.json"
-MANIFEST = ROOT / "configs/provider-capabilities.json"
+MANIFEST = default_manifest_path()
 
 
 def _run_handler(handler_path, surface, payload, *, env=None):

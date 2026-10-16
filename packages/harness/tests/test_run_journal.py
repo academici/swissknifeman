@@ -6,13 +6,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "packages" / "harness" / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from harness.run import journal, worker  # noqa: E402
 
 
-from packages.harness.tests.plan_fixture import write_plan  # noqa: E402
+from tests.plan_fixture import planner_argv, write_plan  # noqa: E402
 
 
 def _outcome(kind, **extra):
@@ -92,7 +91,6 @@ class MaybeWriteTest(unittest.TestCase):
 
     def _write(self, **kwargs):
         kwargs.setdefault("run_id", "wave-1")
-        kwargs.setdefault("monorepo_root", REPO_ROOT)
         return journal.maybe_write(self.plan.plan_dir, "P1.1", **kwargs)
 
     def _driver_events(self):
@@ -160,8 +158,7 @@ class MaybeWriteTest(unittest.TestCase):
         with self.assertRaises(journal.JournalCallFailed):
             journal.maybe_write(
                 self.plan.plan_dir, "P9.9", run_id="wave-1",
-                outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="in_progress",
-                monorepo_root=REPO_ROOT)
+                outcome=_outcome(worker.OUTCOME_TIMEOUT), item_status="in_progress")
 
     def test_missing_run_id_is_rejected(self):
         with self.assertRaises(ValueError):
@@ -171,8 +168,7 @@ class MaybeWriteTest(unittest.TestCase):
     def test_every_written_event_passes_check(self):
         self._write(outcome=_outcome(worker.OUTCOME_QUOTA), item_status="in_progress")
         proc = subprocess.run(
-            [sys.executable, str(REPO_ROOT / "packages/task/scripts/plan.py"), "check",
-             str(self.plan.plan_dir)], capture_output=True, text=True)
+            [*planner_argv(), "check", str(self.plan.plan_dir)], capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 
 

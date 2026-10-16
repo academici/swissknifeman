@@ -120,16 +120,16 @@
       "provider": "claude",
       "target": ".claude/skills/harness-operations/SKILL.md",
       "canonical": "packages/harness/dev-skills/harness-operations/SKILL.md",
-      "canonical_sha256": "da5ae9537152d4ed42d1ed34c11b19715ca45038f5541d0cac366cfb21aac362",
-      "rendered_sha256": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f"
+      "canonical_sha256": "0912abd96f92047ab8f16d5f45745759dfc653918c7cea77688b11adf9b4fd05",
+      "rendered_sha256": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b"
     },
     {
       "identity": "harness-operations",
       "provider": "codex",
       "target": ".agents/skills/harness-operations/SKILL.md",
       "canonical": "packages/harness/dev-skills/harness-operations/SKILL.md",
-      "canonical_sha256": "da5ae9537152d4ed42d1ed34c11b19715ca45038f5541d0cac366cfb21aac362",
-      "rendered_sha256": "91c14ac684949696ad40a32a40957e1af6c597670b206bb613fbf3061deb811f"
+      "canonical_sha256": "0912abd96f92047ab8f16d5f45745759dfc653918c7cea77688b11adf9b4fd05",
+      "rendered_sha256": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b"
     },
     {
       "identity": "maind-overview",
@@ -148,93 +148,100 @@
       "rendered_sha256": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f"
     },
     {
+      "identity": "orch-debug",
+      "provider": "claude",
+      "target": ".claude/skills/orch-debug/SKILL.md",
+      "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
+      "canonical_sha256": "868593f4f6b3aa48d2da0d6d9a2a679d6c4ca7488894e4a98b93cb4ebbe7ac65",
+      "rendered_sha256": "0d24547c39f66038a52edea5189568193a4715a140d7378deb2754f2d00746bc"
+    },
+    {
+      "identity": "orch-debug",
+      "provider": "codex",
+      "target": ".agents/skills/orch-debug/SKILL.md",
+      "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
+      "canonical_sha256": "868593f4f6b3aa48d2da0d6d9a2a679d6c4ca7488894e4a98b93cb4ebbe7ac65",
+      "rendered_sha256": "0d24547c39f66038a52edea5189568193a4715a140d7378deb2754f2d00746bc"
+    },
+    {
       "identity": "package-architecture",
       "provider": "claude",
       "target": ".claude/skills/package-architecture/SKILL.md",
       "canonical": "bootstrap/skills/package-architecture/SKILL.md",
-      "canonical_sha256": "a1e463d25dff22415f59b546e67b62844a3df241fb4d1c6def5215c5cb46769d",
-      "rendered_sha256": "067d62d2563dd2d4f9d6a4a484e0f7ae807ea7a477ad776db02d6480a2c6d213"
+      "canonical_sha256": "60d2a7dc05638a23618449dbb2b5be762699dc573744667d58b26b26c7da9c3a",
+      "rendered_sha256": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86"
     },
     {
       "identity": "package-architecture",
       "provider": "codex",
       "target": ".agents/skills/package-architecture/SKILL.md",
       "canonical": "bootstrap/skills/package-architecture/SKILL.md",
-      "canonical_sha256": "a1e463d25dff22415f59b546e67b62844a3df241fb4d1c6def5215c5cb46769d",
-      "rendered_sha256": "067d62d2563dd2d4f9d6a4a484e0f7ae807ea7a477ad776db02d6480a2c6d213"
+      "canonical_sha256": "60d2a7dc05638a23618449dbb2b5be762699dc573744667d58b26b26c7da9c3a",
+      "rendered_sha256": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86"
+    },
+    {
+      "identity": "planner-development-philosophy",
+      "provider": "claude",
+      "target": ".claude/skills/planner-development-philosophy/SKILL.md",
+      "canonical": "packages/planner/dev-skills/planner-development-philosophy/SKILL.md",
+      "canonical_sha256": "bd2b2cd1b9248bafea9380f53b7256db9350ee5dbeae1f9506a9a4fa092db204",
+      "rendered_sha256": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3"
+    },
+    {
+      "identity": "planner-development-philosophy",
+      "provider": "codex",
+      "target": ".agents/skills/planner-development-philosophy/SKILL.md",
+      "canonical": "packages/planner/dev-skills/planner-development-philosophy/SKILL.md",
+      "canonical_sha256": "bd2b2cd1b9248bafea9380f53b7256db9350ee5dbeae1f9506a9a4fa092db204",
+      "rendered_sha256": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3"
     },
     {
       "identity": "project-tooling-runbook",
       "provider": "claude",
       "target": ".claude/skills/project-tooling-runbook/SKILL.md",
       "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md",
-      "canonical_sha256": "be47994cdbd612448992ea4412e88d9481b69374148a1f028f7b5d4cc3b2a089",
-      "rendered_sha256": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02"
+      "canonical_sha256": "6147b695ebabd3fbfa20c68fd8a36267efc145ffba175f805789d13b16ddfcaf",
+      "rendered_sha256": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023"
     },
     {
       "identity": "project-tooling-runbook",
       "provider": "codex",
       "target": ".agents/skills/project-tooling-runbook/SKILL.md",
       "canonical": "bootstrap/skills/project-tooling-runbook/SKILL.md",
-      "canonical_sha256": "be47994cdbd612448992ea4412e88d9481b69374148a1f028f7b5d4cc3b2a089",
-      "rendered_sha256": "7749a70847a0e361eda3b7907ca24c0f8668ea3ae1b9186ae04b023a55f67b02"
+      "canonical_sha256": "6147b695ebabd3fbfa20c68fd8a36267efc145ffba175f805789d13b16ddfcaf",
+      "rendered_sha256": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023"
     },
     {
       "identity": "release-discipline",
       "provider": "claude",
       "target": ".claude/skills/release-discipline/SKILL.md",
       "canonical": "bootstrap/skills/release-discipline/SKILL.md",
-      "canonical_sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
-      "rendered_sha256": "09b2161b86fc527a97e694e8b9900c31ceff81c882d4c4af1be2b96093929efa"
+      "canonical_sha256": "83ec2b229e577122aa05aaa560b40f22254bcbd4bdfba6f3e3495e34ce04872f",
+      "rendered_sha256": "043d77c47f20a870e715971455d023b6208394fa4c0debf1fd0f32489b755cd9"
     },
     {
       "identity": "release-discipline",
       "provider": "codex",
       "target": ".agents/skills/release-discipline/SKILL.md",
       "canonical": "bootstrap/skills/release-discipline/SKILL.md",
-      "canonical_sha256": "feb198d183be888c07f47998173db89d72c10ec2c24d704d4849fedd30760a1c",
-      "rendered_sha256": "09b2161b86fc527a97e694e8b9900c31ceff81c882d4c4af1be2b96093929efa"
+      "canonical_sha256": "83ec2b229e577122aa05aaa560b40f22254bcbd4bdfba6f3e3495e34ce04872f",
+      "rendered_sha256": "043d77c47f20a870e715971455d023b6208394fa4c0debf1fd0f32489b755cd9"
     },
     {
       "identity": "skill-authoring",
       "provider": "claude",
       "target": ".claude/skills/skill-authoring/SKILL.md",
       "canonical": "bootstrap/skills/skill-authoring/SKILL.md",
-      "canonical_sha256": "1ddc9d5424f00329cedfc3c36f4a965001610b8f7ff0f0d8d84f8132fc7de5c8",
-      "rendered_sha256": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874"
+      "canonical_sha256": "5a41346180e7d8108672a311e949fad07ccc58f535bd87c5a27902c78003e330",
+      "rendered_sha256": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8"
     },
     {
       "identity": "skill-authoring",
       "provider": "codex",
       "target": ".agents/skills/skill-authoring/SKILL.md",
       "canonical": "bootstrap/skills/skill-authoring/SKILL.md",
-      "canonical_sha256": "1ddc9d5424f00329cedfc3c36f4a965001610b8f7ff0f0d8d84f8132fc7de5c8",
-      "rendered_sha256": "15a1dd818277fb249cf8f0784b7980780d30af4beed4411fadeb360061578874"
-    },
-    {
-      "identity": "task-development-philosophy",
-      "provider": "claude",
-      "target": ".claude/skills/task-development-philosophy/SKILL.md",
-      "canonical": "packages/task/dev-skills/task-development-philosophy/SKILL.md",
-      "canonical_sha256": "d5644dddff49ae21447ebd7d0989c6f337a74aa4786708415bb482cf150e6a50",
-      "rendered_sha256": "cc30252821edb8f0eb004cab7a6594f8f0848641c7b41a47166ee46c6c431b3e"
-    },
-    {
-      "identity": "task-development-philosophy",
-      "provider": "codex",
-      "target": ".agents/skills/task-development-philosophy/SKILL.md",
-      "canonical": "packages/task/dev-skills/task-development-philosophy/SKILL.md",
-      "canonical_sha256": "d5644dddff49ae21447ebd7d0989c6f337a74aa4786708415bb482cf150e6a50",
-      "rendered_sha256": "cc30252821edb8f0eb004cab7a6594f8f0848641c7b41a47166ee46c6c431b3e"
-    },
-    {
-      "identity": "workflow-craft",
-      "provider": "codex",
-      "target": ".agents/skills/workflow-craft/SKILL.md",
-      "source_class": "public-bucket",
-      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
-      "canonical_sha256": "7f784751d1e91794f380d227851f5906b04aa4c3be3604067d8e8ba53a3b093d",
-      "rendered_sha256": "29ed4c1c15a096faefa42d3bcd25b26da002abbd81b32ab2ebd01c0ea38a6ea4"
+      "canonical_sha256": "5a41346180e7d8108672a311e949fad07ccc58f535bd87c5a27902c78003e330",
+      "rendered_sha256": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8"
     }
   ]
 }

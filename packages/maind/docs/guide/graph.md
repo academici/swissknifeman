@@ -31,12 +31,14 @@ type is inferred from id.
 |:--|:--|:--|
 | `code` | `composer.json`/`package.json` (+ path-repos) | `project ─requires→ package`, `package ─provided_by→ project`, cross `project ─depends_on→ project` |
 | `doc` | Brain frontmatter `uses:/used_by:` (**read only**) | `project ─uses→ project` |
-| `override` | `<repo>/.maind.graph.json` | declared `relates_to`/… (runtime/API) |
+| `override` | `[maind.graph.links]` of the project config (legacy `<repo>/.maind.graph.json`) | declared `relates_to`/… (runtime/API) |
 | `skills` | `skills-lock.json` | `project ─uses→ skill ─provided_by→ tool` |
 
 The truth remains in composer/Brain/lock — `_index.db` is just a regenerated cache. Project config fields
 (`dependencies`/`agents`) graph **do not materialize**: to declare a relationship that is not in the code,
-use `.maind.graph.json` (plan `override`).
+use `[maind.graph.links.<project>]` (keys `type`, `plane`, `note`) in the project's
+`.swissknifeman/config.toml` (plan `override`). A legacy `<repo>/.maind.graph.json` is still read, with
+a `MAIND_LEGACY_GRAPH_LINKS` warning, while the project config has no `[maind.graph]` table.
 
 ## API (`graph.py` — primitive)
 

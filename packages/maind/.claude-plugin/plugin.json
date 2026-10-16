@@ -1,11 +1,11 @@
 {
   "name": "maind",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "mAInd hub — thin face above CLI: onboarding projects into the ecosystem academici (skills + memory + graph + MCP), sync, status, communication health; skills: local-topology, swissknifeman-locator, cross-project-coordinator, shared-memory.",
   "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
   "homepage": "https://github.com/academici/maind",
   "keywords": ["maind", "hub", "mcp", "memory", "graph", "academici", "ecosystem"],
   "commands": ["./commands"],
   "skills": ["./skills"],
-  "agents": ["./agents"]
+  "agents": ["./agents/code-coordinator.md"]
 }

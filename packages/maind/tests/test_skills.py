@@ -36,7 +36,8 @@ class TestManifests(unittest.TestCase):
     def test_claude_manifest_declares_skills_and_agents(self):
         self.assertEqual(self.claude["name"], "maind")
         self.assertIn("./skills", self.claude["skills"])
-        self.assertIn("./agents", self.claude["agents"])
+        # Claude Code accepts agent files only: a directory path fails the manifest load.
+        self.assertEqual(self.claude["agents"], ["./agents/code-coordinator.md"])
 
     def test_codex_manifest_matches_claude(self):
         for key in ("name", "version", "description"):

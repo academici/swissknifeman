@@ -69,7 +69,7 @@ async def project(request: Request) -> Response:
 async def add_project(request: Request) -> Response:
     """``{path}``: a bearer client (the CLI) adds at once; a browser session confirms first (it grants trust)."""
     state = _state(request)
-    body = await read_json(request, allowed={"path", "confirm_token"})
+    body = await read_json(request, allowed={"path", "confirm"})
     path = body.get("path")
     if not isinstance(path, str) or not path or "\x00" in path or not os.path.isabs(path):
         raise GuiError("INPUT_INVALID", "path must be an absolute folder path",
@@ -77,7 +77,7 @@ async def add_project(request: Request) -> Response:
     auth = request.scope["state"]["auth"]
     if auth == "cookie":
         target = os.path.realpath(path)
-        confirm.require(state, "project.add", {"path": target}, body.get("confirm_token"), risk="medium",
+        confirm.require(state, "project.add", {"path": target}, body.get("confirm"), risk="medium",
                         summary=f"Trust the project at {target}: commands of the catalog may run inside it.")
     with state.db_lock:
         added = state.registry.add(path, source="open" if auth == "bearer" else "user")

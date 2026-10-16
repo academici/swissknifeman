@@ -46,6 +46,43 @@ CREATE TABLE audit (
     correlation_id TEXT
 );
 """),
+    (2, """
+CREATE TABLE runs (
+    run_id TEXT PRIMARY KEY,
+    command TEXT NOT NULL,
+    owner TEXT NOT NULL,
+    state TEXT NOT NULL,
+    dry_run INTEGER NOT NULL,
+    project_id TEXT,
+    context_json TEXT NOT NULL,
+    input_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    started_at TEXT,
+    finished_at TEXT,
+    exit_code INTEGER,
+    exit_signal TEXT,
+    pid INTEGER,
+    pid_start TEXT,
+    executable_json TEXT,
+    argv_json TEXT,
+    cwd TEXT,
+    actor_json TEXT NOT NULL,
+    permission_json TEXT NOT NULL,
+    log_json TEXT NOT NULL,
+    error_json TEXT,
+    correlation_id TEXT NOT NULL
+);
+CREATE INDEX runs_by_state ON runs (state);
+CREATE INDEX runs_by_project ON runs (project_id, created_at);
+CREATE TABLE run_transitions (
+    run_id TEXT NOT NULL REFERENCES runs (run_id) ON DELETE CASCADE,
+    seq INTEGER NOT NULL,
+    from_state TEXT,
+    to_state TEXT NOT NULL,
+    at TEXT NOT NULL,
+    PRIMARY KEY (run_id, seq)
+);
+"""),
 ]
 
 

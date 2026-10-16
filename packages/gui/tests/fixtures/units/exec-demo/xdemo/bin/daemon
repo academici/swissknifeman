@@ -1,0 +1,5 @@
+#!/bin/sh
+# The leader exits at once and leaves a grandchild in its process group.
+( trap '' HUP; sleep 1000 ) &
+echo "grandchild:$!"
+exit 0

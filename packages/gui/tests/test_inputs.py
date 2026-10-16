@@ -52,7 +52,7 @@ class TestValidate(unittest.TestCase):
     def test_reference_types(self):
         fields = [field("plan", "plan-ref"), field("item", "item-ref"), field("model", "model-ref"),
                   field("secret", "secret-ref")]
-        good = {"plan": "2026.10.16-№1-SKM-GUI", "item": "P2.2", "model": "anthropic/claude-opus-5-5",
+        good = {"plan": "2020.01.01-№1-DEMO", "item": "P2.2", "model": "anthropic/claude-opus-5-5",
                 "secret": "env://GUI_TOKEN"}
         self.assertEqual(good, inputs.validate(fields, good))
         self.assertEqual({"plan": "PLAN5"}, inputs.validate(fields, {"plan": "PLAN5"}))

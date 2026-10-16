@@ -1,7 +1,7 @@
 """Confirmation of a risky request by an HMAC token bound to the request, the backend epoch and the session secret.
 
-The first request answers ``428 CONFIRMATION_REQUIRED`` with ``details {confirm_token, risk, summary}``; the UI
-shows the summary and repeats the same request with ``confirm_token``. A token from another epoch, purpose or
+The first request answers ``428 CONFIRMATION_REQUIRED`` with ``details {confirm, risk, summary}``; the UI
+shows the summary and repeats the same request with ``confirm``. A token from another epoch, purpose or
 payload does not match.
 """
 from __future__ import annotations
@@ -26,4 +26,4 @@ def require(state, purpose: str, payload: Any, given: Optional[str], *, risk: st
     if isinstance(given, str) and hmac.compare_digest(given.encode("utf-8"), expected.encode("utf-8")):
         return
     raise GuiError("CONFIRMATION_REQUIRED", "this request needs a confirmation",
-                   details={"confirm_token": expected, "risk": risk, "summary": summary})
+                   details={"confirm": expected, "risk": risk, "summary": summary})

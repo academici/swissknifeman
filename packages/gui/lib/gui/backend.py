@@ -30,7 +30,10 @@ from aicore.util.redact import env_secrets
 
 from . import __version__, contracts
 from .catalog import resolve, sources
+from .core.broker import Broker
+from .core.events import EventHub
 from .core.projects import ProjectRegistry
+from .core.runs import RunStore, frame_run, prune_logs
 from .settings import Settings
 from .storage import db
 
@@ -41,7 +44,7 @@ TOKEN_TTL_S = 300
 COOKIE = "skm_gui_session"
 GUI_PROTOCOL = {"min": resolve.HOST_PROTOCOL[0], "max": resolve.HOST_PROTOCOL[1]}
 FRONTEND_DIR = contracts.SCHEMAS.parent / "frontend" / "dist"
-FEATURES = ("queries", "projects")
+FEATURES = ("queries", "projects", "runs", "events")
 
 
 class BackendError(Exception):
@@ -195,6 +198,29 @@ def build_catalog(collected: sources.Collected) -> Catalog:
     return Catalog(document, owners, queries, commands)
 
 
+def _journal_read(root: str, offset: Optional[int]) -> Tuple[List[Dict[str, Any]], int]:
+    """New events of a project journal after ``offset`` (``None``: start at the current end) and the next offset."""
+    from aicore.ext import journal
+    from aicore.ext.events import parse_line
+
+    jdir = journal.journal_dir(root)
+    if offset is None:
+        return [], journal.size(jdir)
+    found: List[Dict[str, Any]] = []
+    following = offset
+    for start, line, problem in journal.iter_lines(jdir, offset):
+        if line is not None:
+            following = start + len(line) + 1
+            event, _problem = parse_line(start, line, problem)
+            if event is not None:
+                found.append(event.to_json())
+        elif problem == "empty":
+            following = start + 1
+        else:  # a line too long to read: continue after the data seen now
+            following = max(following, journal.size(jdir))
+    return found, following
+
+
 def platform_info() -> Dict[str, str]:
     machine = platform.machine().lower()
     arch = {"amd64": "x86_64", "arm64": "aarch64"}.get(machine, machine)
@@ -227,8 +253,81 @@ class BackendState:
 
     def __post_init__(self) -> None:
         self.registry = ProjectRegistry(self.conn)
+        self.hub = EventHub(self.epoch, ring_frames=self.settings.events.ring_frames,
+                            queue_frames=self.settings.events.queue_frames)
+        self.store = RunStore(self.conn, lock=self.db_lock,
+                              publish=lambda doc: self.hub.publish_run(doc, frame_run(doc)))
+        self.broker = Broker(store=self.store, hub=self.hub, settings=lambda: self.settings, conn=self.conn,
+                             db_lock=self.db_lock, env=self.env, runs_dir=self.runs_dir, secrets=self.secrets,
+                             emit=self.emit)
+        self.tasks: List[Any] = []
         if self.catalog is None:
             self.refresh_catalog()
+
+    @property
+    def runs_dir(self) -> Path:
+        base = self.state_folder if self.state_folder is not None else state_dir("gui", env=self.env)
+        return Path(base) / "runs"
+
+    def emit(self, type_: str, data: Mapping[str, Any], *, subject: str, project: str) -> None:
+        """Journal a ``gui.*`` event in the project (blocking; the broker calls it in a worker thread)."""
+        from aicore.ext.events import emit
+
+        emit(type_, data, source="gui", subject=subject, project=project, env=dict(self.env))
+
+    async def start(self) -> None:
+        """Before the first request: runs of an earlier backend become ``lost``; heartbeats and journals start."""
+        import asyncio
+
+        lost = self.store.mark_lost(grace_s=self.settings.runs.cancel_grace_s)
+        for run_id in lost:
+            run = self.store.get(run_id)
+            project_id = run["context"].get("project_id")
+            if project_id:
+                try:
+                    root = str(self.registry.resolve(project_id))
+                    await asyncio.to_thread(self.emit, "gui.run.lost", {"run_id": run_id, "command": run["command"],
+                                                                        "owner": run["owner"], "state": "lost"},
+                                            subject=run_id, project=root)
+                except Exception:  # noqa: BLE001 - journaling never blocks the start
+                    pass
+        prune_logs(self.runs_dir, max_age_days=self.settings.retention.log_days,
+                   max_total_mb=self.settings.retention.log_total_mb)
+        self.tasks = [asyncio.create_task(self._heartbeats()), asyncio.create_task(self._journals())]
+
+    async def stop(self) -> None:
+        import asyncio
+
+        await self.broker.shutdown()
+        for task in self.tasks:
+            task.cancel()
+        await asyncio.gather(*self.tasks, return_exceptions=True)
+        self.tasks = []
+
+    async def _heartbeats(self) -> None:
+        import asyncio
+
+        while True:
+            await asyncio.sleep(self.settings.events.heartbeat_s)
+            self.hub.heartbeat()
+
+    async def _journals(self) -> None:
+        """Each registered project's event journal, read from its end at start, as ``event`` frames."""
+        import asyncio
+
+        offsets: Dict[str, int] = {}
+        while True:
+            with self.db_lock:
+                projects = self.registry.list()
+            for project in projects:
+                try:
+                    events, offsets[project.id] = await asyncio.to_thread(_journal_read, project.root,
+                                                                          offsets.get(project.id))
+                except Exception:  # noqa: BLE001 - a broken journal never stops the stream
+                    continue
+                for event in events:
+                    self.hub.publish_event(event, project.id)
+            await asyncio.sleep(self.settings.events.journal_poll_s)
 
     def refresh_catalog(self) -> Catalog:
         collected = self.collect() if self.collect is not None else sources.collect(None, dict(self.env))

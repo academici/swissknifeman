@@ -1,0 +1,13 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "xdemo-handler",
+  "kind": "command",
+  "version": "0.3.0",
+  "description": "Test handler of the xdemo invoke commands.",
+  "protocol": {"min": "1", "max": "1"},
+  "entrypoint": ["python3", "handler.py"],
+  "provides": {"points": ["gui:command"]},
+  "permissions": {"env": ["SKM_TEST_SECRET"]},
+  "timeout_seconds": 30,
+  "example_input": {"id": "xdemo.hello", "context": {}, "input": {"name": "x"}}
+}

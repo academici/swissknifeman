@@ -1,0 +1,4 @@
+#!/bin/sh
+# Writes far more than a small log limit.
+i=0
+while [ $i -lt 2000 ]; do echo "line $i of the flood with some padding text to make it longer"; i=$((i + 1)); done

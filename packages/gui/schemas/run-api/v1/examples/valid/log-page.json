@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:gui:run-api:v1",
+  "kind": "log_page",
+  "run_id": "run-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "stream": "stdout",
+  "chunks": [
+    {
+      "chunk": 0,
+      "at": "2026-10-16T12:00:00Z",
+      "text": "hello World\n",
+      "truncated": false
+    }
+  ],
+  "next_cursor": null
+}

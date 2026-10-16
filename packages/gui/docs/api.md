@@ -31,8 +31,15 @@ All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` e
 | `GET /v1/ui/contributions[?refresh=1]` | `catalog/v1`, resolved at start; `refresh=1` collects and resolves again |
 | `GET /v1/schemas/{contract}/{version}` | the JSON Schema of a contract listed in `unit.json`; anything else `NOT_FOUND` |
 | `GET /v1/projects`, `GET /v1/projects/{id}` | `project/v1` (`project_list`, `project`) |
-| `POST /v1/projects` `{path, confirm_token?}` | `201` `project/v1`; a bearer client adds at once (`source: open`), a browser session confirms first (`source: user`) |
+| `POST /v1/projects` `{path, confirm?}` | `201` `project/v1`; a bearer client adds at once (`source: open`), a browser session confirms first (`source: user`) |
 | `POST /v1/queries/{id}` `{context, params}` | the `view-data/v1` answer of a query of an accepted contribution |
+| `GET /v1/commands[?scope=&project_id=]` | `run-api/v1` `command_list`: the commands of the accepted catalog, without argv or paths |
+| `POST /v1/commands/{id}/runs` `run_request` | `202` `run/v1` (`running`, or a terminal state such as `denied`); `428`, `429`, `422` before a run exists |
+| `GET /v1/runs[?project_id=&state=&limit=&cursor=]` | `run-api/v1` `run_list`, newest first, `next_cursor` while pages remain |
+| `GET /v1/runs/{run_id}` | `run/v1` |
+| `POST /v1/runs/{run_id}:cancel` `{}` | `run/v1` in `cancelling` (or `cancelled` from `queued`); `RUN_NOT_CANCELLABLE` otherwise |
+| `GET /v1/runs/{run_id}/log?stream=&cursor=&limit=` | `run-api/v1` `log_page`: stored chunks from chunk `cursor`; `next_cursor` null when the run ended and all were returned |
+| WebSocket `/v1/events` | `stream/v1` frames: subscriptions, replay by cursor, run, log, journal events, heartbeats |
 | `POST /v1/session/tokens` `{}` | `201` `{url}`: a new one-time browser URL; bearer only (`PERMISSION_DENIED` otherwise) |
 | `GET /?t=<token>` | the token exchange: `303` to `/` with the session cookie |
 | `GET` any other path | the built frontend (`frontend/dist`): a file inside it, else `index.html`; `FRONTEND_NOT_BUILT` without a build |
@@ -52,11 +59,73 @@ secret values (secret-named environment variables, the session secret) are redac
 `HANDLER_FAILED` (`details.plugin_code`), a missed deadline `HANDLER_TIMEOUT`. With `cache_s` the answer is reused
 for that many seconds for the same owner, query, context and params.
 
+## Commands and runs (`run-api/v1`)
+
+A run request carries only typed values (I2): `{$schema, kind: "run_request", context, input, dry_run, confirm?}`.
+The command must be in the accepted catalog (`NOT_FOUND`); its scope says which context is required (as for queries);
+`input` is checked by `gui.core.inputs` (pointer `/input/<name>`); `dry_run` needs a declared dry run. Then:
+
+- **Confirmation.** `confirmation: always`, or `risk-based` with risk `medium`/`high` and not a dry run, answers `428
+  CONFIRMATION_REQUIRED` before any run exists; the same request with `confirm` gets the run with decision
+  `confirmed`.
+- **Limits.** Active runs are counted globally (`runs.max_global`), per project, per owner and per
+  `concurrency_key` (with `{project_id}`, `{plan_id}`, `{item_id}` filled in); over a limit is `429
+  CONCURRENCY_LIMIT` and no run is created (there is no queue).
+- **Permission (until plugin trust exists).** A hub unit's command is `allowed`; an extension's only when
+  `[aicore.plugins]` trusts it, else the run is `denied` (`PERMISSION_DENIED`). Every effect is reported with
+  enforcement `advisory`: nothing is enforced by the OS yet (I12).
+- **argv** (`gui.core.argv`, I4). `argv[0]` is the descriptor's literal path, resolved inside the owner root and
+  executable (`PATH_ESCAPE`, `HANDLER_FAILED`); each `{input}` part is exactly one element with one value, which may
+  not start with `-` (`INPUT_INVALID`, issue `leading_dash`); fields with a flag follow in input order (a true
+  boolean adds the flag alone, another value the flag and the value); the dry run's `argv_append` comes last. No
+  shell is involved.
+- **Working folder and environment** (I5). `cwd: project` is the registered project root after `realpath`, `owner`
+  the real owner root; the environment is `aicore.ext.environment.clean_environment` plus the variables the
+  descriptor lists in `exec.env`.
+- **Process.** A new session (`start_new_session`), stdin closed. Cancel, a timeout (`timeout_s` of the command, or
+  `runs.idle_timeout_s` without output) and shutdown signal the group with SIGTERM, wait `runs.cancel_grace_s`, then
+  send SIGKILL to the group; when the leader exits, a group that is still alive is killed. Exit 0 is `succeeded`,
+  any other end `failed` (`exit {code, signal}`), a timeout `timed_out` (`HANDLER_TIMEOUT`, `details.reason`
+  `total` or `idle`). An `invoke` command calls the owner's handler once at `gui:command` with
+  `{id, context, input}`; its JSON output becomes the stdout log.
+- **Logs** (I6). Each stream is read in blocks of `runs.chunk_bytes`, decoded as UTF-8 (invalid bytes replaced),
+  cleaned of OSC/CSI/other escape sequences and control characters except tab, newline and carriage return, and
+  redacted (secret-named environment values, the variables the plugin may read as secrets, the session secret; an
+  end that could begin a secret waits for the next block). Each chunk is written to
+  `state_dir("gui")/runs/<run_id>/<stream>.jsonl` (`{chunk, at, text, truncated}`) and only then published. Past
+  `runs.log_max_bytes` per stream the last chunk is marked `truncated` and the rest is read and dropped. Old logs are
+  pruned at start by age (`retention.log_days`) and total size (`retention.log_total_mb`).
+- **State** (I11). Every transition is written in its own transaction before its `run` frame is published. When the
+  backend starts, every unfinished run of an earlier backend becomes `lost`; a process of such a run that is still
+  alive with the same PID and start time is stopped with its group (`error.details.orphan_killed`). A PID is never
+  watched again.
+- **Audit.** `audit` rows `run.requested` (command, owner, redacted input, dry run), `run.decided` (decision,
+  effects), `run.started` (program path and digest, redacted argv, cwd), `run.finished` (state, exit, duration).
+  A run with a project is also journaled there as `gui.run.<verb>` (started, succeeded, failed, cancelled,
+  timed_out, lost, denied) with `{run_id, command, owner, state}`; a journal failure never changes the run.
+
+## Events (`/v1/events`)
+
+The WebSocket passes the same Host, Origin (required) and session checks as every request before it is accepted
+(else closed `4403` or `4401`). The client sends `subscribe {id, filter, cursor, epoch}` and `unsubscribe {id}`
+frames (at most 64 KiB, else closed `1009`; anything else is an `error` frame `INPUT_INVALID`; at most 16
+subscriptions, `CONCURRENCY_LIMIT`). A filter narrows by `projects`, `runs`, `owners` (exact) and `types` (shell
+patterns: journal event types, `gui.run`, `gui.log`); every key given must match.
+
+Every frame the backend publishes (`event`, `log`, `run`, `heartbeat`) has the next `seq` of the backend process;
+the last `events.ring_frames` are kept. A subscription with `cursor` and the current `epoch` (from `/v1/bootstrap`)
+first gets the kept frames after the cursor, then live frames, without gaps or duplicates; an older cursor or
+another epoch gets `snapshot_required` (`cursor_expired`) and the client reloads. Each subscription has a queue of
+`events.queue_frames`; a client that falls behind gets `snapshot_required` (`overflow`) instead of the dropped
+frames and stays subscribed. `.progress` events with the same type and subject within 250 ms replace each other in
+a queue. Heartbeats come every `events.heartbeat_s`. The journals of the registered projects are read from their
+end every `events.journal_poll_s` and their events come as `event` frames unchanged.
+
 ### Confirmation
 
 A request that grants trust or runs a risky command answers `428 CONFIRMATION_REQUIRED` with
-`details {confirm_token, risk, summary}`; the UI shows the summary and repeats the same request with
-`confirm_token`. The token is an HMAC (session secret) of the purpose, the backend epoch and the request payload, so
+`details {confirm, risk, summary}`; the UI shows the summary and repeats the same request with
+`confirm`. The token is an HMAC (session secret) of the purpose, the backend epoch and the request payload, so
 it fits only that request in this backend process.
 
 ## Authentication and transport security

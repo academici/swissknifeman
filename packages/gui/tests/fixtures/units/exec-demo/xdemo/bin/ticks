@@ -1,0 +1,6 @@
+#!/bin/sh
+# Ticks forever; a child sleep in the same process group must die with the run.
+sleep 1000 &
+echo "child:$!"
+i=0
+while true; do i=$((i + 1)); echo "tick $i"; sleep 0.1; done

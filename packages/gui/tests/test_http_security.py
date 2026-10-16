@@ -39,11 +39,19 @@ class TestHost(unittest.TestCase):
                 self.assertEqual(200, BACKEND.client(host=host).get("/v1/bootstrap").status_code)
 
     def test_websocket_with_foreign_host_closes_before_accept(self):
-        client = BACKEND.client(host="evil.example:%d" % PORT)
-        with self.assertRaises(WebSocketDisconnect) as caught:
-            with client.websocket_connect("/v1/events", headers={"Origin": f"http://127.0.0.1:{PORT}"}):
-                pass
-        self.assertEqual(4403, caught.exception.code)
+        # The TestClient WebSocket ignores the base URL host: the Host header is set explicitly.
+        for host in ("evil.example:%d" % PORT, "testserver"):
+            with self.subTest(host=host), self.assertRaises(WebSocketDisconnect) as caught:
+                with BACKEND.client().websocket_connect("/v1/events", headers={
+                        "Host": host, "Origin": f"http://127.0.0.1:{PORT}"}):
+                    pass
+            self.assertEqual(4403, caught.exception.code)
+
+    def test_websocket_with_loopback_host_and_origin_is_accepted(self):
+        with BACKEND.client().websocket_connect("/v1/events", headers={
+                "Host": f"127.0.0.1:{PORT}", "Origin": f"http://127.0.0.1:{PORT}"}) as ws:
+            ws.send_text("{}")
+            self.assertEqual("error", __import__("json").loads(ws.receive_text())["kind"])
 
 
 class TestOrigin(unittest.TestCase):
@@ -56,9 +64,16 @@ class TestOrigin(unittest.TestCase):
 
     def test_websocket_without_origin_is_refused(self):
         with self.assertRaises(WebSocketDisconnect) as caught:
-            with BACKEND.client().websocket_connect("/v1/events"):
+            with BACKEND.client().websocket_connect("/v1/events", headers={"Host": f"127.0.0.1:{PORT}"}):
                 pass
         self.assertEqual(4403, caught.exception.code)
+
+    def test_websocket_without_credentials_is_refused(self):
+        with self.assertRaises(WebSocketDisconnect) as caught:
+            with BACKEND.client(bearer=False).websocket_connect("/v1/events", headers={
+                    "Host": f"127.0.0.1:{PORT}", "Origin": f"http://127.0.0.1:{PORT}"}):
+                pass
+        self.assertEqual(4401, caught.exception.code)
 
     def test_cookie_post_without_origin_is_rejected(self):
         browser = BACKEND.browser()

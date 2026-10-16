@@ -22,7 +22,7 @@ class TestOpen(unittest.TestCase):
         self.assertEqual("wal", conn.execute("PRAGMA journal_mode").fetchone()[0])
         self.assertEqual(1, conn.execute("PRAGMA foreign_keys").fetchone()[0])
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
-        self.assertLessEqual({"projects", "prefs", "audit"}, tables)
+        self.assertLessEqual({"projects", "prefs", "audit", "runs", "run_transitions"}, tables)
         self.assertEqual(0o600, stat.S_IMODE(os.stat(self.path).st_mode))
         self.assertEqual(0o700, stat.S_IMODE(os.stat(self.path.parent).st_mode))
 
@@ -55,16 +55,17 @@ class TestOpen(unittest.TestCase):
 
     def test_later_migration_applies_on_top_and_failure_rolls_back(self):
         db.open_db(self.path).close()
-        extra = db.MIGRATIONS + [(2, "CREATE TABLE extra (id INTEGER PRIMARY KEY);")]
+        known = db.schema_version()
+        extra = db.MIGRATIONS + [(known + 1, "CREATE TABLE extra (id INTEGER PRIMARY KEY);")]
         conn = db.open_db(self.path, migrations=extra)
-        self.assertEqual(2, conn.execute("PRAGMA user_version").fetchone()[0])
+        self.assertEqual(known + 1, conn.execute("PRAGMA user_version").fetchone()[0])
         conn.close()
-        broken = extra + [(3, "CREATE TABLE three (id INTEGER);\nCREATE TABLE three (id INTEGER);")]
+        broken = extra + [(known + 2, "CREATE TABLE three (id INTEGER);\nCREATE TABLE three (id INTEGER);")]
         with self.assertRaises(sqlite3.OperationalError):
             db.open_db(self.path, migrations=broken)
         conn = db.open_db(self.path, migrations=extra)
         self.addCleanup(conn.close)
-        self.assertEqual(2, conn.execute("PRAGMA user_version").fetchone()[0])
+        self.assertEqual(known + 1, conn.execute("PRAGMA user_version").fetchone()[0])
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
         self.assertNotIn("three", tables)
 

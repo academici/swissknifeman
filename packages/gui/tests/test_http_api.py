@@ -30,7 +30,7 @@ class TestCore(ApiCase):
         self.assertEqual(("browser", self.backend.state.epoch), (body["mode"], body["epoch"]))
         self.assertEqual([{"id": "qdemo", "version": "0.2.0"}], body["units"])
         self.assertIn({"id": "urn:swissknifeman:gui:project", "version": "v1"}, body["contracts"])
-        self.assertEqual(["queries", "projects"], body["features"])
+        self.assertEqual(["queries", "projects", "runs", "events"], body["features"])
 
     def test_contributions_and_refresh(self):
         catalog = self.client.get("/v1/ui/contributions").json()
@@ -84,13 +84,13 @@ class TestProjects(ApiCase):
         details = first.json()["error"]["details"]
         self.assertIn(str(root), details["summary"])
         self.assertEqual([], self.backend.state.registry.list())
-        wrong = browser.post("/v1/projects", json={"path": str(other), "confirm_token": details["confirm_token"]})
+        wrong = browser.post("/v1/projects", json={"path": str(other), "confirm": details["confirm"]})
         self.assertEqual("CONFIRMATION_REQUIRED", code(wrong))
-        done = browser.post("/v1/projects", json={"path": str(root), "confirm_token": details["confirm_token"]})
+        done = browser.post("/v1/projects", json={"path": str(root), "confirm": details["confirm"]})
         self.assertEqual(201, done.status_code)
         self.assertEqual("user", done.json()["source"])
 
-    def test_confirm_token_is_bound_to_the_epoch(self):
+    def test_confirm_is_bound_to_the_epoch(self):
         state = self.backend.state
         token = confirm.token(state.sessions.secret, state.epoch, "project.add", {"path": "/x"})
         self.assertNotEqual(token, confirm.token(state.sessions.secret, "other-epoch", "project.add", {"path": "/x"}))

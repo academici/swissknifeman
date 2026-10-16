@@ -31,7 +31,8 @@ class Backend:
     def __init__(self, units: str = "query-demo", env_extra=None):
         self.tmp = Path(os.path.realpath(tempfile.mkdtemp()))
         self.env = {"HOME": str(self.tmp / "home"), "SKM_HOME": str(self.tmp / "skm"), "PATH": os.environ["PATH"],
-                    "SKM_UNITS_PATH": str(FIXTURES / units), "SKM_TEST_SECRET": SECRET_VALUE,
+                    "SKM_UNITS_PATH": os.pathsep.join(str(FIXTURES / name) for name in units.split(",")),
+                    "SKM_TEST_SECRET": SECRET_VALUE,
                     "AICORE_ROOT": os.environ.get("AICORE_ROOT", "")}
         self.env.update(env_extra or {})
         (self.tmp / "home").mkdir()

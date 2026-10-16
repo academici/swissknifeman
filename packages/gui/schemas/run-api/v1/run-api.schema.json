@@ -1,0 +1,350 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:run-api:v1",
+  "title": "run-api",
+  "description": "Documents of the command and run endpoints: the request body of POST /v1/commands/{id}/runs, the command catalog of a context, a page of runs and a page of a run log. One kind per document, chosen by the const field kind.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/run_request",
+      "description": "Body of POST /v1/commands/{id}/runs."
+    },
+    {
+      "$ref": "#/$defs/command_list",
+      "description": "Answer of GET /v1/commands."
+    },
+    {
+      "$ref": "#/$defs/run_list",
+      "description": "Answer of GET /v1/runs."
+    },
+    {
+      "$ref": "#/$defs/log_page",
+      "description": "Answer of GET /v1/runs/{id}/log."
+    }
+  ],
+  "$defs": {
+    "contract": {
+      "const": "urn:swissknifeman:gui:run-api:v1",
+      "description": "Contract id of this document."
+    },
+    "run_request": {
+      "type": "object",
+      "description": "Start a run of a catalog command with typed input; the backend builds the argv.",
+      "required": [
+        "$schema",
+        "kind",
+        "context",
+        "input",
+        "dry_run"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "run_request",
+          "description": "Document kind."
+        },
+        "context": {
+          "$ref": "#/$defs/context",
+          "description": "Context of the run; a project scope needs project_id."
+        },
+        "input": {
+          "type": "object",
+          "description": "Input values by field name; checked against the command's fields.",
+          "patternProperties": {
+            "^[a-z][a-z0-9_]*$": {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ],
+              "description": "One input value."
+            }
+          },
+          "additionalProperties": false
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Run the dry-run form of the command (only when the command declares one)."
+        },
+        "confirm": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Confirmation from the CONFIRMATION_REQUIRED answer (details.confirm) to the same request."
+        }
+      },
+      "additionalProperties": false
+    },
+    "command": {
+      "type": "object",
+      "description": "One command of the catalog without its argv and paths.",
+      "required": [
+        "owner",
+        "id",
+        "title",
+        "scope",
+        "effects",
+        "risk",
+        "confirmation",
+        "timeout_s",
+        "exec_kind"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+          "description": "Owner of the command."
+        },
+        "id": {
+          "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/local_id",
+          "description": "Command id."
+        },
+        "title": {
+          "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/title",
+          "description": "Command title."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What the command does."
+        },
+        "scope": {
+          "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/scope",
+          "description": "Context the command needs."
+        },
+        "input": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Input fields.",
+          "items": {
+            "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/field",
+            "description": "One field."
+          }
+        },
+        "effects": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Declared effects.",
+          "items": {
+            "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/effect",
+            "description": "One effect."
+          }
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "Risk level; drives the confirmation."
+        },
+        "confirmation": {
+          "enum": [
+            "none",
+            "risk-based",
+            "always"
+          ],
+          "description": "When the backend asks for a confirmation."
+        },
+        "supports": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Optional abilities.",
+          "items": {
+            "enum": [
+              "dry-run",
+              "cancel",
+              "stream"
+            ],
+            "description": "One ability."
+          }
+        },
+        "timeout_s": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "description": "Deadline of a run in seconds."
+        },
+        "exec_kind": {
+          "enum": [
+            "invoke",
+            "argv"
+          ],
+          "description": "How the command runs: one handler call or a streamed process."
+        }
+      },
+      "additionalProperties": false
+    },
+    "command_list": {
+      "type": "object",
+      "description": "Commands of the accepted catalog for a context.",
+      "required": [
+        "$schema",
+        "kind",
+        "commands"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "command_list",
+          "description": "Document kind."
+        },
+        "commands": {
+          "type": "array",
+          "description": "The commands, sorted by owner and id.",
+          "items": {
+            "$ref": "#/$defs/command",
+            "description": "One command."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "run_list": {
+      "type": "object",
+      "description": "A page of runs, newest first.",
+      "required": [
+        "$schema",
+        "kind",
+        "runs"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "run_list",
+          "description": "Document kind."
+        },
+        "runs": {
+          "type": "array",
+          "description": "The runs.",
+          "items": {
+            "$ref": "urn:swissknifeman:gui:run:v1",
+            "description": "One run."
+          }
+        },
+        "next_cursor": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Cursor of the next page; absent on the last page."
+        }
+      },
+      "additionalProperties": false
+    },
+    "chunk": {
+      "type": "object",
+      "description": "One stored chunk of a run log (redacted).",
+      "required": [
+        "chunk",
+        "at",
+        "text",
+        "truncated"
+      ],
+      "properties": {
+        "chunk": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Chunk number in the stream, from 0."
+        },
+        "at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the chunk was read."
+        },
+        "text": {
+          "type": "string",
+          "description": "Text of the chunk, cleaned of terminal control sequences."
+        },
+        "truncated": {
+          "type": "boolean",
+          "description": "Output after this chunk was dropped (log limit)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "log_page": {
+      "type": "object",
+      "description": "A page of the stored log of one stream of a run.",
+      "required": [
+        "$schema",
+        "kind",
+        "run_id",
+        "stream",
+        "chunks",
+        "next_cursor"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "log_page",
+          "description": "Document kind."
+        },
+        "run_id": {
+          "$ref": "urn:swissknifeman:gui:run:v1#/$defs/run_id",
+          "description": "Run id."
+        },
+        "stream": {
+          "enum": [
+            "stdout",
+            "stderr"
+          ],
+          "description": "Output stream."
+        },
+        "chunks": {
+          "type": "array",
+          "description": "Chunks from the cursor on, in order.",
+          "items": {
+            "$ref": "#/$defs/chunk",
+            "description": "One chunk."
+          }
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Chunk number to ask for next."
+            },
+            {
+              "type": "null",
+              "description": "The run ended and every chunk was returned."
+            }
+          ],
+          "description": "Where the next page starts."
+        }
+      },
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "description": "Context of a run (the same fields as run/v1 context).",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Project id."
+        },
+        "plan_id": {
+          "type": "string",
+          "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]{2}-№[0-9]+-[A-Z][A-Z0-9-]*$|^PLAN[0-9]+$",
+          "description": "Plan id (planner plan id or PLAN<N>)."
+        },
+        "item_id": {
+          "type": "string",
+          "pattern": "^P[0-9]+\\.[0-9]+$",
+          "description": "Plan item id."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

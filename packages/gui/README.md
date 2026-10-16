@@ -7,8 +7,8 @@ domain mutations, runs allowlisted commands (dry-run, confirmation, log stream, 
 catalog with isolation and quarantine.
 
 Status: `development`, version 0.1.0: the frozen v1 contracts, the contribution resolver, the loopback backend
-(`gui serve` / `gui open`: projects, queries, browser session) and the commands `contributions` and `check`; command
-runs, the event stream, the frontend and the desktop shell come next.
+(`gui serve` / `gui open`: projects, queries, command runs, the event stream, browser session) and the commands
+`contributions` and `check`; the frontend and the desktop shell come next.
 
 ## Principles
 

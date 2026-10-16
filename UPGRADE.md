@@ -51,42 +51,52 @@ Needs the owner: they change live machine state (symlinks, `~/.claude`, `~/.conf
    `safe-dirs.json` aside until step 5), drop `.swissknifeman-dev` and the dev guard (`install.sh` / entry points) — **[todo]**
    the guard is removed in a separate commit at cutover.
 3. `./install.sh` (re-points every symlink; adds `aicore`, `brain`, `plan.py`, `orch.py`; `task` disappears). **[verified]** in a sandbox home.
-4. Machine config: write `~/.config/swissknifeman/config.toml` — keep existing sections, point `[aicore.plugins.*].manifest` at the
+4. Move `~/.swissknifeman/{projects,topology}.json` (legacy place, skiller warns) to `~/.local/state/swissknifeman/skiller/`. **[todo]**
+5. Machine config: write `~/.config/swissknifeman/config.toml` — keep existing sections, point `[aicore.plugins.*].manifest` at the
    main checkout (not `-next`). Move hub settings from the old `config.json` into `[maind]` and the project list into `registry.json`. **[todo]**
-5. Claude Code: `/plugin marketplace update swissknifeman`, enable `planner`, `brain`, `skm`; disable `task`. **[todo]**
-6. `swissknifeman doctor` → all units green.
+6. Claude Code: `/plugin marketplace update swissknifeman`, enable `planner`, `brain`, `skm`; disable `task`. **[todo]**
+7. `swissknifeman doctor` → all units green.
 
 ## Project steps (each project)
 
-Prefer one project at a time, committed on a branch. All paths absolute (`maind onboard .` crashes — see Known gaps).
+Work on a branch `chore/skm-upgrade`; skip the project if the hub tools are not on PATH. Absolute paths only.
+Helper: `scripts/upgrade-project.py PROJECT [--apply]` does steps 4-7 mechanically (dry-run without `--apply`).
 
-1. Clean tree check: `git status` clean (or commit first). Note existing plans: `ls plans`.
+1. `git status` — note files already dirty (they are not yours; commit only your own paths).
 2. `swissknifeman project init` → `.swissknifeman/launcher.py` + lock. **[verified]**
-3. `maind onboard "$PWD"` — registers the project, wires memory, `skiller integrate`, MCP files (`.codex`, `.cursor`, `.grok`), refreshes
-   `ecosystem-*` skills, re-renders agent-packs (generated files such as `.claude/hooks/review-gate.sh` gain the
-   `.swissknifeman/hooks.env` carrier), creates `.swissknifeman/{config.toml,hooks.env,backups/}`. **[verified]** Outside a sandbox
-   it may print `✗ instructions only umbrella-monorepo swissknifeman` and exit 1 — expected for non-hub projects; rerun with `--allow-partial`.
-4. `.swissknife.json` → `.swissknifeman/config.toml`: copy `plugins` into the skiller settings and `providers.selection` into
-   `[aicore.providers.selection.<id>]` (`enabled = true`), then delete `.swissknife.json`. The `MAIND_LEGACY_PROVIDERS` /
-   `SKILLER_LEGACY_CONFIG` warnings must disappear. Plugin choice lives in `.claude/settings.local.json` (`enabledPlugins`), not in
-   `.swissknife.json`. **[verified]** (warnings gone after the move)
-5. Plugins: in `.claude/settings.local.json` rename `task@swissknifeman` → `planner@swissknifeman`; add `brain` only if wanted.
-   Run `skiller connect --dry-run` first, then without it. **[todo]**
-6. Hook settings: for each `.claude/*.env.ini`, put its values under `[harness.hooks.<name>]` in `.swissknifeman/config.toml`, run
-   `harness hooks sync` (writes `.swissknifeman/hooks.env`). Keys that exist: `mode` of `auto_approve`, `memory`, `review_gate`.
-   **Keep `.claude/review-gate.env.ini`**: the hook still reads `REVIEW_GATE_CMD` from it (no config key yet); delete the other two. **[verified]**
-7. Delete leftovers: `*.bak`, `.claude/settings*.json.bak`, `CLAUDE.md.bak`, `.mcp.json.provider-artifact.bak` (git-ignored ones
-   are safe to remove; onboard already put copies under `.swissknifeman/backups/`).
-8. Plans: for each `plans/<plan>`, `plan.py check` → 0 errors. Replace `/task:` with `/planner:` in project docs and `CLAUDE.md`.
-9. Verify: `swissknifeman project verify` and `doctor`, `maind health --cwd`, `git diff --stat` reviewed by hand,
-   `grep -rIn "packages/task\|/task:\|swissknife.json\|env.ini" . --exclude-dir={vendor,node_modules,.git}` → nothing.
+3. `maind onboard "$PWD" --allow-partial` — registers, wires memory, `skiller integrate`, MCP files, `ecosystem-*` skills, agent-packs,
+   creates `.swissknifeman/{config.toml,hooks.env,backups/}`. `✗ instructions only umbrella-monorepo swissknifeman` is expected for
+   non-hub projects. **[verified]** on commerz, azguard, corex, vaulter, chatom.
+4. `python3 scripts/upgrade-project.py "$PWD" --apply`: moves `.swissknife.json` providers and the `*.env.ini` modes
+   (auto-approve, memory, review-gate, agent-router, run-report) into `.swissknifeman/config.toml`; renames `task@swissknifeman` →
+   `planner@swissknifeman` in `.claude/settings*.json`; deletes `.swissknife.json`, `*.bak`, the migrated `.env.ini`; lists docs that
+   still mention `/task:`. Keeps `.claude/review-gate.env.ini` (the hook still reads `REVIEW_GATE_CMD` from it). **[verified]**
+5. `harness hooks sync` → `.swissknifeman/hooks.env`. **[verified]**
+6. `skiller connect --file settings.local.json --cleanup-codex-vendored --native-codex` — `system@` is replaced by
+   `maind`, `harness`, `analyst`, `brain` (the `system` plugin no longer exists); Codex gets `.codex/config.toml`. **[verified]**
+   `task` is kept as a compatibility alias of `planner` (`packages/planner/aliases/task`), so old `/task:*` still resolve; docs
+   should move to `/planner:*`.
+7. Vendored Codex bundles `.agents/plugins/`:
+   - git-ignored → `rm -rf .agents/plugins` (stale `task`/`system` copies). **[verified]** commerz
+   - tracked → `skiller connect` regenerates them in place (system → analyst/brain/harness/maind, task → planner); commit the result. **[verified]** corex
+   - `SPUB_OWNERSHIP_CONFLICT: ... modified prior artifact` (a vendored file differs from the lock) → `git rm -rf .agents/plugins`,
+     re-run step 3 and 6; the project then uses native Codex only. **[verified]** vaulter
+8. Verify: `swissknifeman project verify`, `git status`, plans: `plan.py check plans/<plan>` → 0 errors, then commit on the branch.
+   `skiller connect` warns `marketplace 'swissknifeman' points to ANOTHER directory` until the machine cutover — do not `--fix-path`.
+
+Do **not** run these steps in a hub clone (`skm-orch-dev`, any checkout that has `packages/*/unit.json`): it rewrites hub files
+(`.mcp.json.example`, `packages/harness/CLAUDE.md`) and `skiller integrate` fails on its own marketplace. A hub clone is replaced by the
+cutover (or deleted), never upgraded.
 
 ## Pilot log
 
-- 2026-10-16, `commerz` copy in `scripts/dev-sandbox.sh`: steps 2–3 ran; diff = 7 files (agent-pack regeneration, skill refresh,
-  registry sha in `CLAUDE.md`). Steps 4 and 6 applied: `.swissknife.json` removed, providers and three hook modes moved to `config.toml`,
-  `harness hooks sync` wrote `hooks.env`, re-onboard printed only `MAIND_LEGACY_CONFIG` (machine-level, step 4 of the machine steps) and the `laravel/pao` hint.
-  Steps 5 and 7 not yet applied.
+- Rehearsal: `commerz` copy in `scripts/dev-sandbox.sh`, steps 2-6.
+- 2026-10-16 real run, hub tools from the `-next` checkout via a PATH prefix and `SKM_DEV_ALLOW_LIVE=1` (machine not cut over yet):
+  - `commerz` (commit on `chore/skm-upgrade`): `.swissknife.json` removed, 4 skill files refreshed. 
+  - `corex` (commit): codex bundles regenerated (85 files), `.bak` and `.env.ini` removed.
+  - `vaulter` (commit, branch based on `improve/test-run-modes`): `SPUB_OWNERSHIP_CONFLICT` fixed by step 7; `.agents/plugins` dropped.
+  - `azguard`, `chatom`: only git-ignored files changed — no commit, tracked tree untouched (chatom had 23 unrelated dirty files, left alone).
+  - `skm-orch-dev`: hub clone, reverted, not upgraded.
 
 ## Known gaps in the tooling (fix or note before the second computer)
 

@@ -52,6 +52,7 @@ CODES: Dict[str, Tuple[str, int]] = {
     # Backend host: third-party packages and the state database.
     "GUI_DEPS_UNAVAILABLE": ("unavailable", 503),
     "STATE_INCOMPATIBLE": ("internal", 500),
+    "FRONTEND_NOT_BUILT": ("unavailable", 503),
     # Anything unexpected; the message never carries a trace.
     "INTERNAL": ("internal", 500),
 }

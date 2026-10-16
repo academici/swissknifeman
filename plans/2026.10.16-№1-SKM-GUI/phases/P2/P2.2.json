@@ -1,0 +1,282 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.2",
+  "title": "HTTP backend browser mode: безопасность локального API, сессия и токен → cookie, bootstrap/contributions/schemas/projects, queries через invoke, gui serve / gui open",
+  "status": "done_with_deviations",
+  "summary": "HTTP backend browser mode: Starlette-приложение в lib/gui/http (единственное место сторонних импортов) с middleware Host/Origin/размер тела/аутентификация (Bearer секрета сессии или cookie после обмена одноразового токена), envelope api-error/v1, CSP и security-заголовки; endpoints /v1/bootstrap, /v1/ui/contributions, /v1/schemas/{contract}/{version}, /v1/projects, POST /v1/queries/{id} через aicore invoke_one точки gui:query с валидацией view-data/v1 и redaction; общий валидатор typed input gui.core.inputs и подтверждение по HMAC-токену; статика frontend/dist; single instance (flock + backend.json 0600) и CLI `gui serve` / `gui open`; тесты безопасности API.",
+  "why": "Локальный API — граница доверия между браузером и процессами владельца. Жёсткие риски: DNS rebinding (Host не проверен), cross-site WebSocket/CSRF (Origin не обязателен для cookie-POST), повторное использование одноразового токена, утечка секрета сессии или секретов окружения в ответ/лог, CORS wildcard, bind не на loopback (I9, I6), второй backend на той же gui.db (I11).",
+  "scope": {
+    "include": [
+      "packages/gui/lib/gui/http/** (app, security, errors, confirm, routes, server, static)",
+      "packages/gui/lib/gui/backend.py (BackendState, lock, backend.json)",
+      "packages/gui/lib/gui/core/inputs.py",
+      "packages/gui/lib/gui/catalog/resolve.py: внутренняя index(collected) → owner → Source",
+      "packages/gui/lib/gui/cli.py: serve, open",
+      "packages/gui/lib/gui/errors.py + docs/api.md: CLI/API коды BACKEND_RUNNING, BACKEND_START_FAILED, FRONTEND_NOT_BUILT (если в API)",
+      "packages/gui/tests/test_http_security.py, test_http_api.py, test_inputs.py, test_backend_cli.py, tests/fixtures/units/query-demo/**",
+      "packages/gui/docs/api.md (endpoints, аутентификация), README, CHANGELOG.md"
+    ],
+    "exclude": [
+      "/v1/commands, /v1/runs, /v1/events (P2.3)",
+      "desktop-режим и секрет через stdin (P6)",
+      "frontend исходники (P2.5): в тестах — временный каталог dist"
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "decisions": [
+    "D4",
+    "D5",
+    "D7",
+    "D12",
+    "D13"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p2-design#http",
+      "why": "BackendState, single instance, serve/open, аутентификация и обмен токена",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p2-design#security",
+      "why": "порядок middleware, allowlist Host/Origin, CSP, обязательные негативные тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p2-design#queries",
+      "why": "endpoints, исполнение queries, inputs, confirm, статика",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p2-design#code-facts",
+      "why": "сигнатуры invoke_one, Registration, load_manifest, catalog без корня владельца",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#transport",
+      "why": "API и правила browser mode",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I2, I4, I6, I9",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p1-contracts#ids",
+      "why": "паттерны ref-типов полей для inputs",
+      "required": true
+    },
+    {
+      "path": "packages/gui/docs/api.md",
+      "why": "реестр кодов, bootstrap, правило совместимости",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/catalog/resolve.py",
+      "section": "evaluate, resolve",
+      "why": "построение index без изменения catalog/v1",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/plugins.py",
+      "section": "Registration, invoke_one, registered_plugins",
+      "why": "вызов handler",
+      "required": true
+    },
+    {
+      "path": "packages/gui/schemas/bootstrap/v1/bootstrap.schema.json",
+      "why": "поля ответа bootstrap (epoch, platform)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/lib/gui/http/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/app.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/security.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/errors.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/confirm.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/routes_core.py",
+      "change": "create",
+      "note": "bootstrap, contributions, schemas, projects, session/tokens"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/routes_queries.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/static.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/server.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/backend.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/core/inputs.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/catalog/resolve.py",
+      "change": "modify",
+      "note": "только добавить index(); catalog/v1 и digest без изменений"
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "change": "modify",
+      "note": "serve, open"
+    },
+    {
+      "path": "packages/gui/lib/gui/errors.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/tests/test_http_security.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_http_api.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_inputs.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_backend_cli.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/units/query-demo/**",
+      "change": "create",
+      "note": "юнит с gui.json + extension.json + handler (python3), queries resource-list/metric-group, query с неверным view и с секретом из env в выводе"
+    },
+    {
+      "path": "packages/gui/docs/api.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "import starlette/uvicorn/anyio/httpx — только в lib/gui/http/** и тестах API; lib/gui/backend.py, core, catalog, storage — stdlib + aicore.",
+    "Bind только 127.0.0.1; в CLI и конфиге нет host/remote bind (I9). uvicorn: proxy_headers=False, server_header=False, access_log=False.",
+    "Host проверяется до аутентификации на каждом http и websocket запросе точным сравнением с тремя значениями; Origin вне allowlist → ORIGIN_REJECTED; cookie-аутентифицированный небезопасный метод без Origin → ORIGIN_REJECTED; CORS-заголовков нет.",
+    "Сравнение секретов и токенов — hmac.compare_digest; одноразовый токен удаляется при первом использовании; секрет сессии, cookie и токены не пишутся в лог, не попадают в api-error и в bootstrap.",
+    "Ответ handler проходит: лимит размера → contracts.validate view-data → view == returns → redact_document; любая ошибка — envelope api-error/v1 c correlation_id, без trace.",
+    "UI не передаёт argv и пути исполняемых файлов: тела запросов содержат только context/params/input по контрактам (I2).",
+    "Тесты API не пропускаются молча: gui.deps.activate() в setUpModule; отсутствие зависимостей — ошибка теста."
+  ],
+  "guidance": "Исполнитель: frontier/high. Порядок: (1) BackendState + lock + backend.json (stdlib) и тест второго serve → BACKEND_RUNNING; (2) http/errors.py (GuiError → JSONResponse по errors.CODES) и security.py как чистый ASGI middleware (scope type http/websocket) — Host → Origin → размер/Content-Type → auth; (3) обмен токена `GET /?t=` (303 + Set-Cookie), POST /v1/session/tokens; (4) routes_core: bootstrap (валидировать в тесте contracts.validate(..., \"bootstrap\")), contributions (+refresh), schemas allowlist, projects (+confirm для cookie); (5) inputs.py + routes_queries (invoke_one в anyio.to_thread с лимитером, кэш cache_s); (6) static.py (dist, SPA fallback, FRONTEND_NOT_BUILT); (7) server.py (сокет create_server, uvicorn.Server с ws=\"wsproto\", сигналы) и CLI serve/open (open: пробник bootstrap c Bearer, иначе отсоединённый serve, ожидание backend.json ≤ 10 s, webbrowser.open); (8) тесты: test_http_security — весь список knowledge/p2-design#security; test_http_api — bootstrap, contributions, schemas 404 вне allowlist, projects + confirm, query ok/INPUT_INVALID/NOT_FOUND/OUTPUT_INVALID/HANDLER_FAILED/HANDLER_TIMEOUT (handler со sleep и timeout_s 1), redaction секрета env; test_inputs — все типы, path escape через symlink; test_backend_cli — serve в подпроцессе на порту 0 с временным SKM_HOME: строка GUI_URL, обмен токена через urllib с Host 127.0.0.1, повтор токена 401, SIGTERM удаляет backend.json; open повторно использует живой backend. (9) docs/api.md: endpoints, аутентификация, коды. Новые CLI-коды не обязаны быть в errors.CODES, если не возвращаются API.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "grep -rlE --include='*.py' '^(from|import) (starlette|uvicorn|anyio|httpx)' packages/gui/lib/gui | grep -v '^packages/gui/lib/gui/http/' ; test $? -eq 1",
+      "expect": "exit 0 (сторонние импорты только в lib/gui/http)",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "lib/gui/http",
+    "lib/gui/backend.py",
+    "gui.core.inputs",
+    "gui serve / gui open",
+    "тесты безопасности API"
+  ],
+  "route": {
+    "class": "frontier",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "grok-4.7",
+      "note": "жёсткий риск: аутентификация локального API, Host/Origin, токен → cookie, утечка секретов (knowledge/roadmap#sizing)",
+      "provider": "grok",
+      "effort": "high"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": {
+    "started_at": "2026-10-16T16:18:31Z",
+    "finished_at": "2026-10-16T16:32:09Z",
+    "executor": {
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "session": "9320b893-b442-4c92-8323-d222526f5492"
+    },
+    "notes": "lib/gui/http (security middleware, errors, confirm, routes core/queries, static, server), backend.py (flock, backend.json, Sessions), core/inputs.py, gui serve/open; 197 тестов gui OK, включая негативные тесты безопасности и реальные процессы serve/open",
+    "deviations": [
+      "httpx→httpx2 в тестовой секции lock (Starlette 1.8 deprecation)",
+      "PROCESS_TIMEOUT→HANDLER_TIMEOUT; Registration.id из манифеста; index → Owner"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-16T16:32:09Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-16T16:32:09Z"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-16T16:32:09Z"
+      }
+    ]
+  },
+  "updated_at": "2026-10-16T16:32:09Z"
+}

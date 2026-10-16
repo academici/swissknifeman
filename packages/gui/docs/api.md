@@ -1,6 +1,6 @@
-# Local API contracts
+# Local API
 
-The contracts of the gui local API, frozen before the API itself exists (the HTTP server arrives later). Each is a
+The local API of the gui backend (`gui serve`, `lib/gui/http`) and its contracts. Each contract is a
 JSON Schema under `schemas/<contract>/v1/`, validated by `gui.contracts.validate`. The code sources are
 `gui.errors` (error codes) and `gui.core.run_states` (run states); `tests/test_runtime_contracts.py` keeps them, the
 schemas and this page in step.
@@ -13,10 +13,86 @@ schemas and this page in step.
 | `stream/v1` | the frames of the WebSocket `/v1/events` |
 | `trust/v1` | the trust state of a plugin (`/v1/plugins`) |
 | `config-mutation/v1` | the configuration write: preview and commit |
+| `project/v1` | `/v1/projects`: the trusted projects |
 
 The API listens on loopback only and authenticates every request with the session secret; no contract has a field
 for a secret value. Values that may be secret (run input, argv, log text) are redacted before they are stored or sent;
 a secret configuration key takes only a reference (`env://NAME`, `keyring://NAME`).
+
+## Endpoints
+
+All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` envelope with a fresh
+`correlation_id` and never a trace (an unexpected failure is `INTERNAL`, its redacted trace goes to
+`state_dir("gui")/backend.log`).
+
+| Method and path | Answer |
+| --- | --- |
+| `GET /v1/bootstrap` | `bootstrap/v1` kind `browser`: epoch, versions, `gui_protocol`, contracts of `unit.json`, units of the accepted contributions, features (`queries`, `projects`), platform |
+| `GET /v1/ui/contributions[?refresh=1]` | `catalog/v1`, resolved at start; `refresh=1` collects and resolves again |
+| `GET /v1/schemas/{contract}/{version}` | the JSON Schema of a contract listed in `unit.json`; anything else `NOT_FOUND` |
+| `GET /v1/projects`, `GET /v1/projects/{id}` | `project/v1` (`project_list`, `project`) |
+| `POST /v1/projects` `{path, confirm_token?}` | `201` `project/v1`; a bearer client adds at once (`source: open`), a browser session confirms first (`source: user`) |
+| `POST /v1/queries/{id}` `{context, params}` | the `view-data/v1` answer of a query of an accepted contribution |
+| `POST /v1/session/tokens` `{}` | `201` `{url}`: a new one-time browser URL; bearer only (`PERMISSION_DENIED` otherwise) |
+| `GET /?t=<token>` | the token exchange: `303` to `/` with the session cookie |
+| `GET` any other path | the built frontend (`frontend/dist`): a file inside it, else `index.html`; `FRONTEND_NOT_BUILT` without a build |
+
+### Queries
+
+The query id must be in the accepted catalog (`NOT_FOUND`). `context` has only `project_id`, `plan_id`, `item_id`,
+`run_id`; the scope of the query says which are required (`project`: `project_id`; `plan`: and `plan_id`; `item`:
+and `item_id`; `run`: `run_id`); `project_id` must name a registered project whose root is still in place. `params`
+are checked by `gui.core.inputs` against the query's fields (unknown, required, type, enum, pattern, bounds,
+reference patterns, `project-path` inside the project after `realpath`); every problem is an issue of
+`INPUT_INVALID`. The handler (the aicore command plugin the contribution names) is called at `gui:query` with
+`{id, context, params}` and the deadline `timeout_s`; a hub unit's handler is trusted, an extension's comes from
+`[aicore.plugins]` as configured (`PLUGIN_UNAVAILABLE` when it is not usable). The answer must fit
+`query.max_output_bytes`, be `view-data/v1` and be the view the query `returns` (`OUTPUT_INVALID`, `502`); then
+secret values (secret-named environment variables, the session secret) are redacted. A handler error is
+`HANDLER_FAILED` (`details.plugin_code`), a missed deadline `HANDLER_TIMEOUT`. With `cache_s` the answer is reused
+for that many seconds for the same owner, query, context and params.
+
+### Confirmation
+
+A request that grants trust or runs a risky command answers `428 CONFIRMATION_REQUIRED` with
+`details {confirm_token, risk, summary}`; the UI shows the summary and repeats the same request with
+`confirm_token`. The token is an HMAC (session secret) of the purpose, the backend epoch and the request payload, so
+it fits only that request in this backend process.
+
+## Authentication and transport security
+
+The backend binds `127.0.0.1` only (there is no host option) and runs uvicorn without proxy headers, server header
+or access log. A pure ASGI middleware checks every HTTP request and WebSocket handshake, in this order:
+
+1. `Host` is exactly `127.0.0.1:<port>`, `localhost:<port>` or `[::1]:<port>`, else `HOST_REJECTED` (DNS
+   rebinding); a WebSocket is closed with `4403` before accept.
+2. A present `Origin` is one of `http://127.0.0.1:<port>`, `http://localhost:<port>`, `http://[::1]:<port>`, else
+   `ORIGIN_REJECTED`; a WebSocket must send one.
+3. A body over 1 MiB (declared or streamed) is `PAYLOAD_TOO_LARGE`; `POST`, `PUT`, `PATCH` and `DELETE` need
+   `Content-Type: application/json` (`INPUT_INVALID`).
+4. Authentication: `Authorization: Bearer <session secret>` (the CLI, later the desktop shell) or the cookie
+   `skm_gui_session`; nothing else is accepted (`AUTH_REQUIRED` without one, `AUTH_INVALID` for a wrong one; a page
+   request gets a short HTML page instead). A cookie-authenticated request that changes state must send `Origin`
+   (`ORIGIN_REJECTED`), which with `SameSite=Strict` closes CSRF.
+5. Every response gets `Content-Security-Policy` (`default-src 'self'`, no inline script or style, no
+   `unsafe-eval`, `connect-src` to the three loopback WebSocket origins, `frame-ancestors 'none'`),
+   `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, and `/v1/*`
+   `Cache-Control: no-store`. No CORS header is ever sent.
+
+The session secret has 256 bits (`secrets.token_urlsafe(32)`) and lives in the backend process and in
+`state_dir("gui")/backend.json` (`0600`, folder `0700`) for `gui open`. The browser never sees it: `gui open` asks
+`POST /v1/session/tokens` for a one-time URL `http://127.0.0.1:<port>/?t=<token>`; the first `GET` with it answers
+`303` with `Set-Cookie: skm_gui_session=<value>; HttpOnly; SameSite=Strict; Path=/` (no `Secure`: plain loopback
+HTTP). A token lives 300 s and works once; the backend keeps only sha256 values of tokens and cookies and compares
+with `hmac.compare_digest`. Secrets, tokens and cookies are never logged and never part of a response.
+
+### Single instance
+
+`gui serve` holds `flock` on `state_dir("gui")/backend.lock` for its whole life; a second one exits with
+`BACKEND_RUNNING` (CLI code, exit 1). `gui open` reuses a backend whose `backend.json` names a live process that
+answers `GET /v1/bootstrap` with its secret; otherwise it starts `gui serve` detached (output to `backend.log`, no URL
+in it) and waits up to 10 s (`BACKEND_START_FAILED` with the log tail). SIGTERM or SIGINT end the backend
+gracefully and remove `backend.json`.
 
 ## Errors (`api-error/v1`)
 
@@ -64,6 +140,7 @@ audit and backend logs; `issues` lists validation issues as `{pointer, code, mes
 | `CATALOG_SOURCE_UNAVAILABLE` | unavailable | 503 | yes |
 | `GUI_DEPS_UNAVAILABLE` | unavailable | 503 | yes |
 | `STATE_INCOMPATIBLE` | internal | 500 | no |
+| `FRONTEND_NOT_BUILT` | unavailable | 503 | no |
 | `INTERNAL` | internal | 500 | no |
 
 `AUTH_*`, `HOST_REJECTED` and `ORIGIN_REJECTED` come from the security checks of every request (session secret,

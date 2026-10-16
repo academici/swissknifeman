@@ -435,9 +435,39 @@ def _rejected(owner: Optional[str], file: str, code: str, message: str,
     return entry
 
 
+@dataclass(frozen=True)
+class Owner:
+    """What the backend needs of an accepted contribution and the catalog leaves out: the source with its root,
+    the realpath of the handler manifest (``None`` without one), the document and the manifest version."""
+
+    source: Source
+    handler: Optional[Path]
+    document: Dict[str, Any]
+    version: Optional[str]
+
+
+def _manifest_version(manifest: Path) -> Optional[str]:
+    try:
+        version = json.loads(Path(manifest).read_text(encoding="utf-8")).get("version")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return version if isinstance(version, str) else None
+
+
 def resolve(collected: Collected, *, host_protocol: Tuple[str, str] = HOST_PROTOCOL,
             supported: Optional[Set[Tuple[str, str]]] = None) -> Dict[str, Any]:
     """The ``catalog/v1`` document of the collected sources."""
+    return resolve_indexed(collected, host_protocol=host_protocol, supported=supported)[0]
+
+
+def index(collected: Collected, **options: Any) -> Dict[str, Owner]:
+    """``owner -> Owner`` of the accepted contributions (the same pass as :func:`resolve`; catalog/v1 unchanged)."""
+    return resolve_indexed(collected, **options)[1]
+
+
+def resolve_indexed(collected: Collected, *, host_protocol: Tuple[str, str] = HOST_PROTOCOL,
+                    supported: Optional[Set[Tuple[str, str]]] = None) -> Tuple[Dict[str, Any], Dict[str, Owner]]:
+    """The ``catalog/v1`` document and the :class:`Owner` of every accepted contribution, in one pass."""
     supported = host_contracts() if supported is None else supported
     accepted: List[Tuple[Source, Evaluation]] = []
     rejected: List[Dict[str, Any]] = [dict(problem) for problem in collected.problems]
@@ -450,29 +480,32 @@ def resolve(collected: Collected, *, host_protocol: Tuple[str, str] = HOST_PROTO
             code, message, findings = rejection
             rejected.append(_rejected(source.owner, evaluation.file, code, message, findings))
     claims: Dict[Tuple[str, str], List[int]] = {}
-    for index, (_source, evaluation) in enumerate(accepted):  # one participant per source, even for one file
+    for position, (_source, evaluation) in enumerate(accepted):  # one participant per source, even for one file
         for key in set(_local_keys(evaluation.document)):
-            claims.setdefault(key, []).append(index)
+            claims.setdefault(key, []).append(position)
     conflicting: Dict[int, List[str]] = {}
     for (kind, value), participants in sorted(claims.items()):
         if len(participants) > 1:
-            for index in participants:
-                conflicting.setdefault(index, []).append(f"{kind} {value!r}")
+            for position in participants:
+                conflicting.setdefault(position, []).append(f"{kind} {value!r}")
     entries = []
-    for index, (source, evaluation) in enumerate(accepted):
-        if index in conflicting:
-            claimed = conflicting[index]
+    owners: Dict[str, Owner] = {}
+    for position, (source, evaluation) in enumerate(accepted):
+        if position in conflicting:
+            claimed = conflicting[position]
             rejected.append(_rejected(source.owner, evaluation.file, CONFLICT,
                                       "another contribution also claims " + ", ".join(claimed[:5])))
         else:
             entries.append({"owner": source.owner, "source": source.kind, "file": evaluation.file,
                             "digest": evaluation.digest, "document": evaluation.document})
+            owners[source.owner] = Owner(source, evaluation.handler, evaluation.document,
+                                         _manifest_version(source.manifest))
     entries.sort(key=lambda entry: (entry["owner"], entry["source"], entry["file"]))
     rejected.sort(key=lambda entry: (entry["owner"] or "", entry["file"], entry["code"], entry["message"]))
     host = {"gui_protocol": {"min": host_protocol[0], "max": host_protocol[1]}}
     digest = digest_json({"host": host, "contributions": [
         {"owner": entry["owner"], "source": entry["source"], "digest": entry["digest"]} for entry in entries]})
-    return {"$schema": CATALOG, "host": host, "contributions": entries, "rejected": rejected, "digest": digest}
+    return {"$schema": CATALOG, "host": host, "contributions": entries, "rejected": rejected, "digest": digest}, owners
 
 
 # --- gui check ----------------------------------------------------------------------------------------------

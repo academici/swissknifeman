@@ -1,0 +1,112 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "owner": "qdemo",
+  "version": "0.2.0",
+  "gui_protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "handler": {
+    "extension": "handler/extension.json"
+  },
+  "routes": [
+    {
+      "id": "qdemo.items",
+      "title": "Items",
+      "path": "items",
+      "view": "resource-list",
+      "scope": "project",
+      "query": "qdemo.items",
+      "nav": {
+        "section": "project",
+        "order": 10
+      }
+    }
+  ],
+  "widgets": [
+    {
+      "id": "qdemo.count",
+      "title": "Count",
+      "view": "metric-group",
+      "query": "qdemo.metrics",
+      "scope": "fleet"
+    }
+  ],
+  "queries": [
+    {
+      "id": "qdemo.items",
+      "title": "Items",
+      "scope": "project",
+      "returns": "resource-list",
+      "params": [
+        {
+          "name": "filter",
+          "title": "Filter",
+          "type": "string",
+          "required": false,
+          "pattern": "^[a-z]+$"
+        },
+        {
+          "name": "limit",
+          "title": "Limit",
+          "type": "integer",
+          "required": false,
+          "default": 10,
+          "minimum": 1,
+          "maximum": 100
+        },
+        {
+          "name": "folder",
+          "title": "Folder",
+          "type": "project-path",
+          "required": false
+        }
+      ],
+      "cache_s": 0
+    },
+    {
+      "id": "qdemo.metrics",
+      "title": "Metrics",
+      "scope": "fleet",
+      "returns": "metric-group",
+      "cache_s": 60
+    },
+    {
+      "id": "qdemo.wrong-view",
+      "title": "Wrong-View",
+      "scope": "fleet",
+      "returns": "resource-list"
+    },
+    {
+      "id": "qdemo.broken",
+      "title": "Broken",
+      "scope": "fleet",
+      "returns": "resource-list"
+    },
+    {
+      "id": "qdemo.fails",
+      "title": "Fails",
+      "scope": "fleet",
+      "returns": "metric-group"
+    },
+    {
+      "id": "qdemo.slow",
+      "title": "Slow",
+      "scope": "fleet",
+      "returns": "metric-group",
+      "timeout_s": 1
+    },
+    {
+      "id": "qdemo.secret",
+      "title": "Secret",
+      "scope": "fleet",
+      "returns": "metric-group"
+    }
+  ]
+}

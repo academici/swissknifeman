@@ -41,6 +41,14 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--json", action="store_true", help="print {path, lock_digest, installed}")
     q.add_argument("--offline", action="store_true", help="never download: fail unless already installed")
     deps_sub.add_parser("path", help="print the install folder of the lock")
+    p = sub.add_parser("serve", help="run the loopback backend in the foreground and print a one-time browser URL")
+    p.add_argument("--port", type=int, default=None, metavar="N", help="TCP port on 127.0.0.1 (default: [gui] port)")
+    p.add_argument("--project", metavar="DIR", default=None, help="register this project (default: the current one)")
+    p.add_argument("--no-browser", action="store_true", help="do not start the browser")
+    p.add_argument("--detached", action="store_true", help=argparse.SUPPRESS)  # started by gui open: no URL
+    p = sub.add_parser("open", help="open the GUI in the browser, starting the backend when none runs")
+    p.add_argument("--project", metavar="DIR", default=None, help="register this project (default: the current one)")
+    p.add_argument("--no-browser", action="store_true", help="only print the URL")
     return parser
 
 
@@ -98,6 +106,101 @@ def _deps(args: argparse.Namespace) -> int:
     return 0
 
 
+def _fail(code: str, message: str) -> int:
+    print(f"{code}: {message}", file=sys.stderr)
+    return EXIT_FAILURE
+
+
+def _project_dir(args: argparse.Namespace) -> Optional[Path]:
+    from .backend import project_marker_root
+
+    if args.project:
+        return Path(args.project).expanduser().resolve()
+    return project_marker_root(Path.cwd())
+
+
+def _browse(url: str, settings, no_browser: bool) -> None:
+    print(f"GUI_URL {url}", flush=True)
+    if settings.open_browser and not no_browser:
+        import webbrowser
+
+        webbrowser.open(url)
+
+
+def _serve(args: argparse.Namespace) -> int:
+    import os
+
+    from . import deps
+    from .backend import BackendError, BackendState, InstanceLock, gui_state_dir, remove_runtime, write_runtime
+    from .core.projects import ProjectRegistry
+    from .errors import GuiError
+    from .settings import load
+    from .storage import db
+
+    try:
+        deps.activate()
+    except deps.GuiDepsError as error:
+        return _fail(error.code, error.message)
+    folder = gui_state_dir()
+    try:
+        lock = InstanceLock(folder).acquire()
+    except BackendError as error:
+        return _fail(error.code, error.message)
+    state = None
+    try:
+        settings = load()
+        conn = db.open_db(folder / db.DB_NAME)
+        project = _project_dir(args)
+        if project is not None:
+            ProjectRegistry(conn).add(project, source="open")
+        from .http import server
+
+        sock = server.bind(settings.port if args.port is None else args.port)
+        state = BackendState(settings=settings, conn=conn, env=os.environ, port=sock.getsockname()[1],
+                             state_folder=folder)
+        write_runtime(folder, state.runtime_info())
+        if args.detached:
+            print(f"GUI_READY 127.0.0.1:{state.port}", flush=True)
+        else:
+            _browse(state.url(state.sessions.new_token()), settings, args.no_browser)
+        server.serve(state, sock)
+    except GuiError as error:
+        return _fail(error.code, error.message)
+    finally:
+        if state is not None:
+            remove_runtime(folder, state.epoch)
+            state.conn.close()
+        lock.release()
+    return 0
+
+
+def _open(args: argparse.Namespace) -> int:
+    from .backend import BackendError, alive, gui_state_dir, read_runtime, request, start_detached
+    from .settings import load
+
+    folder = gui_state_dir()
+    settings = load()
+    try:
+        info = read_runtime(folder)
+        if not alive(info):
+            info = start_detached(folder)
+        project = _project_dir(args)
+        if project is not None:
+            status, answer = request(info, "POST", "/v1/projects", {"path": str(project)})
+            if status != 201:
+                error = (answer or {}).get("error", {}) if isinstance(answer, dict) else {}
+                return _fail(error.get("code", "BACKEND_START_FAILED"), error.get("message", f"HTTP {status}"))
+        status, answer = request(info, "POST", "/v1/session/tokens", {})
+    except BackendError as error:
+        return _fail(error.code, error.message)
+    except OSError as error:
+        return _fail("BACKEND_START_FAILED", f"the backend does not answer: {error}")
+    if status != 201 or not isinstance(answer, dict) or not isinstance(answer.get("url"), str):
+        return _fail("BACKEND_START_FAILED", f"the backend refused a session token (HTTP {status})")
+    _browse(answer["url"], settings, args.no_browser)
+    return 0
+
+
 def check_python(version_info: Optional[Sequence[int]] = None) -> Optional[str]:
     """The ``PYTHON_TOO_OLD`` message when the interpreter is older than ``MIN_PYTHON``, else ``None``."""
     current: Tuple[int, ...] = tuple(version_info if version_info is not None else sys.version_info)[:2]
@@ -122,6 +225,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _contributions(args)
     if args.command == "deps":
         return _deps(args)
+    if args.command in ("serve", "open"):
+        from aicore.config import ConfigError
+
+        try:
+            return _serve(args) if args.command == "serve" else _open(args)
+        except ConfigError as error:
+            return _fail(error.code, str(error))
     return _check(args)
 
 

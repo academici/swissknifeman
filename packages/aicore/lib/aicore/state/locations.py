@@ -168,7 +168,7 @@ class ProjectContextRequired(LookupError):
     code = "PROJECT_CONTEXT_REQUIRED"
 
     def __init__(self, start: PathLike, reason: Optional[str] = None):
-        super().__init__(f"PROJECT_CONTEXT_REQUIRED: " + (reason or f"no project found above {start} (no .git or "
+        super().__init__("PROJECT_CONTEXT_REQUIRED: " + (reason or f"no project found above {start} (no .git or "
                          f".swissknifeman); go into the project or pass --project DIR"))
 
 

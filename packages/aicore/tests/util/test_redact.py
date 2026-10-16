@@ -2,7 +2,6 @@
 import unittest
 
 from aicore.config.secrets import Secret
-from aicore.util import redact
 from aicore.util.redact import MASK, env_secrets, redact_document, redact_text
 
 # Formats from the provider documentation of each issuer (prefix and length class only; the values are made up).

@@ -1,0 +1,179 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.5",
+  "title": "Frontend: редактор item (schema-form), E2E правки reviewer model; закрытие фазы P4",
+  "status": "todo",
+  "summary": "Frontend: SchemaFormView для view schema-form (форма из forms[] каталога, виджеты text/textarea/number/toggle/select/list/json/model-picker/readonly, группы), plan-enums.ts, сохранение через gui-planner.item-set с expected_revision, конфликт Reload/Reapply, сообщения по plugin_code; фикстура плана и E2E `planner.spec.ts` (изменить reviewer model → файл плана изменён, `plan.py check` зелёный; внешний конфликт); закрытие фазы P4.",
+  "why": "Замыкает вертикальный срез: человек правит item в браузере, и файл плана меняется только через planner. Жёсткие риски: вместо patch по изменённым корневым ключам уходит весь документ (затирает чужие правки — patch строго по изменённым корням); lifecycle-поля редактируются формой (readonly + allowlist моста); конфликт revision молча перезаписывается (Reapply только явным кликом и на новом revision); enum frontend расходится со схемой (тест паритета с фикстурой plan-enums.json из P4.3); E2E зависит от реального planner/umbrella (фикстурный план и env-пути заданы в backend.ts, а не из окружения разработчика); автозамена недоступной модели (запрещена, drift показывается).",
+  "scope": {
+    "include": [
+      "packages/gui/frontend/{src,e2e}",
+      "packages/gui/tests/fixtures/plans/e2e/**",
+      "packages/gui/tests/fixtures/units/** (подключение моста в E2E)",
+      "packages/gui/docs/frontend.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "backend packages/gui/lib",
+      "bridges/gui-planner (кроме правки найденного дефекта с тестом)",
+      "packages/planner"
+    ]
+  },
+  "depends_on": [
+    "P4.4"
+  ],
+  "decisions": [
+    "D18",
+    "D20"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design#frontend",
+      "why": "P4.5: SchemaFormView, сообщения, E2E",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p4-design#integrity",
+      "why": "revision, конфликт, lifecycle-поля",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p4-design#bridge-mutations",
+      "why": "команды и формы, на которые опирается UI",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#testing",
+      "why": "E2E в browser mode",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/forms/ConflictView.tsx",
+      "why": "образец конфликта и Reapply",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/forms/PreviewDialog.tsx",
+      "why": "образец запуска записи и разбора кодов",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/components/CommandRunner.tsx",
+      "why": "запуск команды и ожидание run",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/app/catalog.ts",
+      "why": "useCatalog, Catalog",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/backend.ts",
+      "why": "окружение E2E",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/config.spec.ts",
+      "why": "образец спеки с конфликтом",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/gui.json",
+      "why": "forms[] и commands моста (результат P4.3)",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/tests/fixtures/plan-enums.json",
+      "why": "enum схемы item (результат P4.3)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/frontend/src/views/SchemaFormView.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/plan-enums.ts",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/SchemaFormView.test.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/ViewDataView.tsx",
+      "change": "modify",
+      "note": "case schema-form"
+    },
+    {
+      "path": "packages/gui/frontend/e2e/backend.ts",
+      "change": "modify",
+      "note": "фикстурный план, мост gui-planner, SKM_UMBRELLA"
+    },
+    {
+      "path": "packages/gui/frontend/e2e/planner.spec.ts",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/plans/e2e/**",
+      "change": "create",
+      "note": "минимальный план: phase P1, item P1.1 (скопирован из вывода plan.py new/add-*)"
+    },
+    {
+      "path": "packages/gui/docs/frontend.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками (I3, I7).",
+    "Патч содержит только корневые ключи изменённых полей (массивы и объекты — целиком, как в merge-patch RFC 7386); пустой патч не отправляется.",
+    "`status`, `result`, `updated_at`, `id`, `$schema`, `units`, `artifacts`, `sections` в форме readonly/hidden и не попадают в патч.",
+    "Сообщения по `plugin_code`: PLAN_REVISION_CONFLICT → диалог «The plan changed» (Reload / Reapply), ITEM_IN_PROGRESS, FIELD_NOT_EDITABLE, SCHEMA_INVALID, PLAN_LOCKED — отдельные понятные тексты; неизвестный код — общий текст с кодом.",
+    "enum-таблица `plan-enums.ts` сверяется vitest-тестом с `bridges/gui-planner/tests/fixtures/plan-enums.json`.",
+    "E2E использует только временные каталоги и фикстурный план; реальные планы проекта не читаются и не меняются."
+  ],
+  "guidance": "Порядок: (1) прочитать #frontend (P4.5), #integrity и результат P4.3 (forms[], item-form, models); образец конфликта — `src/forms/ConflictView.tsx` и `PreviewDialog.tsx`, образец запуска команды — `components/CommandRunner.tsx`; (2) plan-enums.ts + тест паритета; (3) SchemaFormView: форма из `useCatalog()` по `data.form` (поиск в `contributions[].document.forms`), группы по order, виджеты по `widget`; черновик Map pointer → значение; model-picker берёт варианты запросом `gui-planner.models` и записывает `review.reviewer.provider` и `.model`; значение вне каталога — подпись drift; (4) Save → запуск `gui-planner.item-set` через `/v1/commands/{id}/runs` (`transport`, как CommandRunner) с `patch` (JSON-строка) и `expected_revision`; ожидание терминального состояния run; успех → перечитать запрос формы; `HANDLER_FAILED` → разбор `error.plugin_code`; (5) vitest: патч по изменённым корням, readonly поля не попадают, конфликт → Reapply отправляет тот же патч с новым revision, drift-подпись; (6) фикстурный план: создать во временном каталоге через `plan.py new`/`add-phase`/`add-item` один раз, проверить `plan.py check` = 0 errors, скопировать в `tests/fixtures/plans/e2e/`; (7) E2E: `backend.ts` копирует фикстуру в `<tmp>/project/plans/`, добавляет `bridges/gui-planner` в каталог вкладов (способ — как `lib/gui/catalog` принимает SKM_UNITS_PATH; допустим каталог-обёртка в tests/fixtures/units), пробрасывает SKM_UMBRELLA; сценарии по #frontend; (8) docs/frontend.md, CHANGELOG; V1–V2 (E2E и сборку запускает conductor в phase.validation).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm --prefix packages/gui/frontend run check",
+      "expect": "exit 0; eslint, tsc и vitest зелёные",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "редактор item (schema-form)",
+    "E2E правки reviewer model",
+    "закрытие фазы P4"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T20:02:13Z"
+}

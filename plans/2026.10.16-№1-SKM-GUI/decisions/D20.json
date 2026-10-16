@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D20",
+  "title": "Редактор item — форма по аннотациям `forms[]` вклада (host не грузит JSON Schema planner); валидация только в planner",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как хост рисует форму item и кто её валидирует?",
+  "options": [
+    {
+      "id": "A",
+      "text": "host берёт `forms[]` из каталога вкладов (pointer, group, widget, readonly) и значения из `schema-form.document`; enum-значения — таблица в `plan-enums.ts`; допустимость значения решает planner (SCHEMA_INVALID/FIELD_OWNED)",
+      "pros": "не расширяет `/v1/schemas` схемой planner (граница модулей); единый путь с кастомными вкладами",
+      "cons": "список enum дублируется в frontend (проверяется тестом против схемы item)"
+    },
+    {
+      "id": "B",
+      "text": "gui отдаёт схему item planner через /v1/schemas",
+      "pros": "form из схемы",
+      "cons": "gui знал бы контракт planner; unit.json gui перечисляет только свои контракты"
+    }
+  ],
+  "decision": "A — host берёт `forms[]` из каталога вкладов (pointer, group, widget, readonly) и значения из `schema-form.document`; enum-значения — таблица в `plan-enums.ts`; допустимость значения решает planner (SCHEMA_INVALID/FIELD_OWNED)",
+  "rationale": "D6 (свой renderer, валидация только backend) и architecture#boundaries: модуль-владелец не меняется ради GUI, gui не знает чужих схем.",
+  "consequences": [
+    "views/SchemaFormView.tsx + plan-enums.ts",
+    "тест паритета plan-enums.ts со схемой `plan.py schema item` (Python-тест моста)",
+    "ошибки записи показываются по plugin_code"
+  ],
+  "applies_to": [
+    "P4.3",
+    "P4.5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

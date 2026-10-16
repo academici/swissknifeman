@@ -1,0 +1,188 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.4",
+  "title": "Frontend: host views board, dependency-graph, resource-detail, plan-контекст маршрутов",
+  "status": "todo",
+  "summary": "Frontend: параметры пути plan_id/item_id/run_id попадают в context запроса; host views BoardView, DependencyGraphView (SVG без внешних библиотек), ResourceDetailView; колонка progress в ResourceListView; подключение в ViewDataView; vitest.",
+  "why": "Без этого маршруты плана не работают: QueryView кладёт в context только project_id, а scope plan/item требует plan_id/item_id; board, graph и detail сейчас Placeholder. Жёсткие риски: plan_id в params вместо context (запрос отклонён хостом); данные плана как HTML (всё — текст React, markdown только через существующий MarkdownView); статус только цветом (подпись текстом, aria); граф на сотни узлов (рендер линейный, без O(n²) по рёбрам); ссылки карточек на чужой origin (только `/x/<owner>/…?project=<id>` внутри приложения).",
+  "scope": {
+    "include": [
+      "packages/gui/frontend/src/{app,components,pages,views}",
+      "packages/gui/frontend/src/styles.css",
+      "packages/gui/frontend/src/**/*.test.tsx",
+      "packages/gui/docs/frontend.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "backend packages/gui/lib, contracts gui",
+      "редактор item и E2E (P4.5)",
+      "внешние библиотеки графов"
+    ]
+  },
+  "depends_on": [
+    "P4.3"
+  ],
+  "decisions": [
+    "D20"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p4-design#frontend",
+      "why": "P4.4: контекст, компоненты, тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p4-design#code-facts",
+      "why": "ограничения QueryView/ViewDataView",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#testing",
+      "why": "уровни тестов frontend",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/components/QueryView.tsx",
+      "why": "где собирается context",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/ContributionRoute.tsx",
+      "why": "маршрут вклада",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/app/catalog.ts",
+      "why": "matchRoute, routesOf, Catalog",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/views/ViewDataView.tsx",
+      "why": "диспетчер views",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/views/ResourceListView.tsx",
+      "why": "образец view",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/views/views.test.tsx",
+      "why": "образец тестов views",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/test/fakes.tsx",
+      "why": "FakeTransport, Wrapper",
+      "required": false
+    },
+    {
+      "path": "packages/gui/schemas/view-data/v1/examples/valid",
+      "why": "фикстуры board, dependency-graph, resource-detail",
+      "required": true
+    },
+    {
+      "path": "packages/gui/docs/frontend.md",
+      "why": "куда дописать раздел",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/frontend/src/components/QueryView.tsx",
+      "change": "modify",
+      "note": "plan_id/item_id/run_id → context"
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/ContributionRoute.tsx",
+      "change": "modify",
+      "note": "scope plan/item требует параметры пути"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/BoardView.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/DependencyGraphView.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/ResourceDetailView.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/ResourceListView.tsx",
+      "change": "modify",
+      "note": "тип колонки progress"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/ViewDataView.tsx",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/frontend/src/views/views.test.tsx",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/ContributionRoute.test.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/styles.css",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/docs/frontend.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками (I3, I7).",
+    "Типы view-data — только из `src/contracts/generated`; руками типы контрактов не дублировать.",
+    "Все строки данных рендерятся как текст React; `dangerouslySetInnerHTML` запрещён; markdown — только через `MarkdownView`.",
+    "Статус виден текстом и `aria-label`, не только цветом; граф имеет текстовую альтернативу (таблица «зависит от»).",
+    "Ссылка `link {route, params}` строится в путь `/x/<owner>/<path с подставленными :params>?project=<id>` через каталог (`app/catalog.ts`); route не из каталога — не ссылка, а текст."
+  ],
+  "guidance": "Порядок: (1) прочитать #frontend (P4.4) и текущие QueryView, ContributionRoute, catalog.ts, ViewDataView, ResourceListView; (2) контекст: в QueryView выделить из `params` ключи plan_id, item_id, run_id в `context`, остальные оставить params; тест (vitest, FakeTransport): запрос уходит с `context {project_id, plan_id}`; (3) BoardView: колонки, карточки со ссылкой, пустая колонка, счётчик; (4) DependencyGraphView: раскладка по `group` (колонки слева направо) и порядку узлов, рёбра SVG-линиями со стрелкой (blocks — сплошные, related — пунктир), таблица «зависит от»; ребро на отсутствующий узел пропускается; (5) ResourceDetailView: fields по `type` (status — значок+текст, date, ref как ссылка, progress), sections через MarkdownView, actions через `onAction`; (6) progress в ResourceListView: `<progress value max aria-label>`, значение — число 0..1; (7) тесты по валидным примерам схемы (`schemas/view-data/v1/examples/valid`) для каждого view + ссылки + пустые случаи; (8) docs/frontend.md; V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm --prefix packages/gui/frontend run check",
+      "expect": "exit 0; eslint, tsc и vitest зелёные",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "views board, dependency-graph, resource-detail",
+    "plan-контекст маршрутов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-16T20:02:12Z"
+}

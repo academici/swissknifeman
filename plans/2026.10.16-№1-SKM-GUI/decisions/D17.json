@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D17",
+  "title": "Мост gui-planner: чтения — CLI planner через umbrella; мутации — exec invoke со скалярным input и argv, собираемым адаптером",
+  "date": "2026-10-16",
+  "status": "accepted",
+  "question": "Как мост выполняет чтения и мутации planner, не нарушая I2–I4?",
+  "options": [
+    {
+      "id": "A",
+      "text": "адаптер (aicore-плагин) вызывает `$SKM_UMBRELLA planner --output json …` с cwd = корень проекта; мутации — команды `exec: invoke`, input скаляры (JSON-патч — строка), адаптер сам строит argv из проверенных значений",
+      "pros": "один канал для чтений и записей; patch-объект не проходит через argv-шаблон хоста; лучше типизированные ошибки (plugin_code)",
+      "cons": "логика allowlist полей в адаптере (дублирует planner, но planner остаётся авторитетом)"
+    },
+    {
+      "id": "B",
+      "text": "мутации — `exec: argv` через run.py с типизированным input и `--json` в argv хоста",
+      "pros": "стрим/cancel брокера, единая модель argv",
+      "cons": "JSON-патч как значение input не может начинаться с `-` и не имеет типа object; ошибки CLI приходят только текстом stderr"
+    },
+    {
+      "id": "C",
+      "text": "импорт библиотеки planner в адаптер",
+      "pros": "быстрее",
+      "cons": "нарушает root.module-folders (мост только через CLI/протокол), I3"
+    }
+  ],
+  "decision": "A — адаптер (aicore-плагин) вызывает `$SKM_UMBRELLA planner --output json …` с cwd = корень проекта; мутации — команды `exec: invoke`, input скаляры (JSON-патч — строка), адаптер сам строит argv из проверенных значений",
+  "rationale": "I3 требует мутаций через CLI владельца; invoke даёт типизированный plugin_code для конфликтов и не заставляет передавать объект через argv-значение (I4). Планировщик остаётся авторитетом валидации (FIELD_OWNED, SCHEMA_INVALID), allowlist адаптера — защита в глубину.",
+  "consequences": [
+    "bridges/gui-planner: адаптер с planner_json(); коды PLANNER_UNAVAILABLE, PLANNER_CLI_FAILED, PLANNER_CONTEXT_MISSING и коды planner как есть",
+    "команды item-set, phase-set, decision-decide, item-reopen, grant, log-note — exec invoke",
+    "dry-run для мутаций не заявляется (preview — форма с diff в UI)"
+  ],
+  "applies_to": [
+    "P4.2",
+    "P4.3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

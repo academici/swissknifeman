@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "gui-hub",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "GUI queries of the hub: the fleet, the four control-surface layers of a project, doctor and units, read from the hub command line as view-data.",
+  "protocol": {"min": "1", "max": "1"},
+  "entrypoint": ["adapter.py"],
+  "provides": {"points": ["gui:query", "gui:command"]},
+  "permissions": {
+    "filesystem": ["project", "state"],
+    "network": false,
+    "shell": true,
+    "env": ["SKM_UMBRELLA"]
+  },
+  "timeout_seconds": 60,
+  "example_input": {"id": "gui-hub.units", "context": {}, "params": {}}
+}

@@ -45,6 +45,7 @@ swissknifeman/                      # the hub repository
     gui/       destination: own-repo   # desktop and browser control plane (tool module, Python 3.11+)
   bridges/
     planner-orch/                    # glue between two modules (hub)
+    gui-hub/                         # GUI adapter of the hub: fleet, control surface, doctor, units
     orch-skiller/
     orch-harness/
     gui-hub/  gui-planner/  gui-orch/  # planned: GUI adapters of the domains
@@ -69,7 +70,7 @@ swissknifeman/                      # the hub repository
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |
 | `brain` | Obsidian vault: search, document sync, notes, event subscriptions, own skills | `aicore` | new; `brain_sync` from `skiller`, skill `brain-locator`, vault parts of `maind` |
 | `gui` | local control plane for desktop (Tauri 2) and browser mode: contracts, contribution resolver, API, frontend; a tool module (`standalone.tools`, Python 3.11+) | `aicore` | new ([ADR 0080](decisions/0080-gui-tauri-shell-react-python-control-plane.md)–[ADR 0084](decisions/0084-gui-state-canonical-files.md)) |
-| `bridges/*` | glue between modules | both sides through their CLI | `bridges/planner-orch`, `bridges/orch-skiller`, `bridges/orch-harness` (moved out of `planner` and `orch`); planned `bridges/gui-hub`, `bridges/gui-planner`, `bridges/gui-orch` (GUI adapters, [ADR 0081](decisions/0081-gui-domains-through-bridges.md)) |
+| `bridges/*` | glue between modules | both sides through their CLI | `bridges/planner-orch`, `bridges/orch-skiller`, `bridges/orch-harness` (moved out of `planner` and `orch`), `bridges/gui-hub`; planned `bridges/gui-planner`, `bridges/gui-orch` (GUI adapters, [ADR 0081](decisions/0081-gui-domains-through-bridges.md)) |
 | hub root | assembly, install, update, docs, CI, the `skm` front door | all modules | `bin/`, `scripts/`, `configs/`, `bootstrap/`, `plugins/`, `docs/` |
 
 The file-level map, with the stage that moves each entry and a confidence mark, is generated into
@@ -113,7 +114,7 @@ flowchart LR
 | planner and orch | bridge `bridges/planner-orch` | work-source port plus `exec/v1` |
 | orch and skiller | bridge `bridges/orch-skiller` | role to set of skills (`skiller resolve`) |
 | orch and harness | bridge `bridges/orch-harness` | conformance of the role manifests with the agent-pack role catalog |
-| gui and hub, planner, orch | bridges `bridges/gui-<module>` (planned) | `gui.json` (`contribution/v1`) plus the aicore plugin protocol on `gui:query` and `gui:command`; the bridge calls the owner's CLI ([ADR 0081](decisions/0081-gui-domains-through-bridges.md)) |
+| gui and hub, planner, orch | bridges `bridges/gui-<module>` (`gui-hub`; `gui-planner`, `gui-orch` planned) | `gui.json` (`contribution/v1`) plus the aicore plugin protocol on `gui:query` and `gui:command`; the bridge calls the owner's CLI ([ADR 0081](decisions/0081-gui-domains-through-bridges.md)) |
 | analyst to planner | read-only planner CLI | plan read API |
 | planner to brain, analyst | events | `planner.*` |
 | orch to analyst | events | `orch.run.*` |

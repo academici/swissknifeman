@@ -1,0 +1,32 @@
+{
+  "schema": "umbrella-units/v1",
+  "hub_root": "/tmp/hub",
+  "units": [
+    {
+      "id": "aicore",
+      "kind": "foundation",
+      "version": "0.1.0",
+      "stability": "development",
+      "destination": "own-repo",
+      "root": "packages/aicore",
+      "cli": [
+        "bin/aicore"
+      ],
+      "plugins": [],
+      "doctor": 1,
+      "install": false
+    },
+    {
+      "id": "gui-hub",
+      "kind": "bridge",
+      "version": "0.1.0",
+      "stability": "alpha",
+      "destination": "hub",
+      "root": "bridges/gui-hub",
+      "cli": [],
+      "plugins": [],
+      "doctor": 0,
+      "install": false
+    }
+  ]
+}

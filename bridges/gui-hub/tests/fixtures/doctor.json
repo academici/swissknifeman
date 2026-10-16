@@ -1,0 +1,42 @@
+{
+  "schema": "umbrella-doctor/v1",
+  "results": [
+    {
+      "$schema": "urn:swissknifeman:aicore:check-result:v1",
+      "check_id": "aicore.ext",
+      "status": "ok",
+      "category": "integration",
+      "observed": "plugins: 1",
+      "evidence": [],
+      "unit": "aicore"
+    },
+    {
+      "$schema": "urn:swissknifeman:aicore:check-result:v1",
+      "check_id": "maind.memory",
+      "status": "warn",
+      "category": "environment",
+      "observed": "daemon not running",
+      "evidence": [],
+      "unit": "maind"
+    },
+    {
+      "$schema": "urn:swissknifeman:aicore:check-result:v1",
+      "check_id": "orch.sandbox",
+      "status": "skip",
+      "category": "environment",
+      "observed": "bwrap absent",
+      "evidence": [],
+      "unit": "orch"
+    },
+    {
+      "$schema": "urn:swissknifeman:aicore:check-result:v1",
+      "check_id": "odd.check",
+      "status": "strange",
+      "category": "environment",
+      "observed": "\u001b[31mred\u001b[0m text",
+      "evidence": [],
+      "unit": "odd"
+    }
+  ],
+  "units_without_doctor": []
+}

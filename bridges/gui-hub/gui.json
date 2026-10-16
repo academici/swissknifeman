@@ -1,0 +1,227 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "owner": "gui-hub",
+  "version": "0.1.0",
+  "gui_protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "handler": {
+    "extension": "extension.json"
+  },
+  "routes": [
+    {
+      "id": "gui-hub.fleet",
+      "title": "Fleet",
+      "path": "fleet",
+      "view": "resource-list",
+      "scope": "fleet",
+      "query": "gui-hub.fleet",
+      "nav": {
+        "section": "fleet",
+        "order": 10
+      }
+    },
+    {
+      "id": "gui-hub.doctor",
+      "title": "Doctor",
+      "path": "doctor",
+      "view": "status-table",
+      "scope": "fleet",
+      "query": "gui-hub.doctor",
+      "nav": {
+        "section": "fleet",
+        "order": 20
+      },
+      "actions": [
+        "gui-hub.doctor-run"
+      ]
+    },
+    {
+      "id": "gui-hub.units",
+      "title": "Units",
+      "path": "units",
+      "view": "resource-list",
+      "scope": "fleet",
+      "query": "gui-hub.units",
+      "nav": {
+        "section": "fleet",
+        "order": 30
+      }
+    },
+    {
+      "id": "gui-hub.layers",
+      "title": "Control surface",
+      "path": "layers",
+      "view": "status-table",
+      "scope": "project",
+      "query": "gui-hub.layers",
+      "nav": {
+        "section": "project",
+        "order": 10
+      },
+      "actions": [
+        "gui-hub.sync"
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "id": "gui-hub.fleet-summary",
+      "title": "Fleet",
+      "view": "metric-group",
+      "query": "gui-hub.fleet-summary",
+      "scope": "fleet",
+      "size": "medium"
+    },
+    {
+      "id": "gui-hub.layers",
+      "title": "Control surface",
+      "view": "status-table",
+      "query": "gui-hub.layers",
+      "scope": "project",
+      "size": "large"
+    }
+  ],
+  "queries": [
+    {
+      "id": "gui-hub.fleet",
+      "title": "Fleet",
+      "description": "Projects of the maind fleet with their status, skills, agent packs and fixes.",
+      "scope": "fleet",
+      "returns": "resource-list",
+      "timeout_s": 60,
+      "cache_s": 10
+    },
+    {
+      "id": "gui-hub.fleet-summary",
+      "title": "Fleet summary",
+      "description": "Counts of the fleet and the state of the memory daemon.",
+      "scope": "fleet",
+      "returns": "metric-group",
+      "timeout_s": 60,
+      "cache_s": 10
+    },
+    {
+      "id": "gui-hub.layers",
+      "title": "Control surface",
+      "description": "The four layers of the project (skills, roles/agents, MCP, memory/graph) with the fixes of the hub.",
+      "scope": "project",
+      "returns": "status-table",
+      "timeout_s": 60,
+      "cache_s": 10
+    },
+    {
+      "id": "gui-hub.doctor",
+      "title": "Doctor",
+      "description": "Read-only checks of the hub modules.",
+      "scope": "fleet",
+      "returns": "status-table",
+      "timeout_s": 120,
+      "cache_s": 30
+    },
+    {
+      "id": "gui-hub.units",
+      "title": "Units",
+      "description": "Modules and bridges the hub found.",
+      "scope": "fleet",
+      "returns": "resource-list",
+      "timeout_s": 30,
+      "cache_s": 60
+    }
+  ],
+  "commands": [
+    {
+      "id": "gui-hub.doctor-run",
+      "title": "Run doctor",
+      "description": "Run the read-only checks of every hub module and stream their report.",
+      "scope": "fleet",
+      "effects": [
+        "read",
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "run.py",
+          "doctor"
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_UMBRELLA"
+        ]
+      }
+    },
+    {
+      "id": "gui-hub.sync",
+      "title": "Re-sync a capability",
+      "description": "Roll out one managed capability of the hub into this project (maind sync --only <cap>).",
+      "scope": "project",
+      "input": [
+        {
+          "name": "cap",
+          "title": "Capability",
+          "type": "enum",
+          "required": true,
+          "enum": [
+            "mcp",
+            "code-graph",
+            "graph",
+            "memory",
+            "memory-hook",
+            "health-hook",
+            "health-doc",
+            "feature-log-hook",
+            "ecosystem-skill",
+            "agent-pack"
+          ]
+        }
+      ],
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "risk": "medium",
+      "confirmation": "risk-based",
+      "supports": [
+        "dry-run",
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 900,
+      "concurrency_key": "gui-hub:sync:{project_id}",
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "run.py",
+          "sync",
+          {
+            "input": "cap"
+          }
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ]
+      },
+      "dry_run": {
+        "argv_append": [
+          "--dry-run"
+        ]
+      }
+    }
+  ]
+}

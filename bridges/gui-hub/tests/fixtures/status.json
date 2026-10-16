@@ -1,0 +1,188 @@
+{
+  "hub": {
+    "memory": {
+      "running": false,
+      "url": "http://127.0.0.1:4111",
+      "pid": null
+    },
+    "graph": {
+      "adapter": "federation",
+      "nodes": 10,
+      "edges": 12
+    },
+    "docs_watcher": {
+      "running": false,
+      "via": null,
+      "pid": null
+    }
+  },
+  "projects": [
+    {
+      "id": "alpha",
+      "name": "Alpha",
+      "path": "/tmp/fleet/alpha",
+      "memory_scope": "project:alpha",
+      "configured": {
+        "agentmemory_mcp": false,
+        "maind_mcp": true,
+        "code_mcp": false,
+        "mcp_files": [
+          ".mcp.json"
+        ],
+        "skills_lock": true,
+        "skills_count": 3,
+        "boost": false,
+        "deployed_flag": true
+      },
+      "skills": {
+        "total": 3,
+        "swissknifeman": 0,
+        "laravel_boost": 0,
+        "local": 3
+      },
+      "agent_packs": {
+        "installed": [],
+        "count": 0,
+        "lock": false,
+        "modified": false
+      },
+      "daemons": {
+        "memory_reachable": false
+      },
+      "trusted": true,
+      "status": "partial",
+      "fixes": [
+        {
+          "layer": "memory",
+          "issue": "MCP memory configured but daemon not responding",
+          "fix": "maind start --only memory"
+        }
+      ]
+    },
+    {
+      "id": "beta",
+      "name": "Beta",
+      "path": "/tmp/fleet/beta",
+      "memory_scope": "project:beta",
+      "configured": {
+        "agentmemory_mcp": false,
+        "maind_mcp": true,
+        "code_mcp": false,
+        "mcp_files": [
+          ".mcp.json"
+        ],
+        "skills_lock": true,
+        "skills_count": 3,
+        "boost": false,
+        "deployed_flag": true
+      },
+      "skills": {
+        "total": 3,
+        "swissknifeman": 0,
+        "laravel_boost": 0,
+        "local": 3
+      },
+      "agent_packs": {
+        "installed": [],
+        "count": 2,
+        "lock": false,
+        "modified": false
+      },
+      "daemons": {
+        "memory_reachable": false
+      },
+      "trusted": true,
+      "status": "partial",
+      "fixes": [
+        {
+          "layer": "mcp",
+          "issue": "maind server not in .mcp.json",
+          "fix": "maind sync --only mcp --project beta"
+        }
+      ]
+    },
+    {
+      "id": "gamma",
+      "name": "Gamma",
+      "path": "/tmp/fleet/gamma",
+      "memory_scope": "project:gamma",
+      "configured": {
+        "agentmemory_mcp": false,
+        "maind_mcp": true,
+        "code_mcp": false,
+        "mcp_files": [
+          ".mcp.json"
+        ],
+        "skills_lock": true,
+        "skills_count": 3,
+        "boost": false,
+        "deployed_flag": true
+      },
+      "skills": {
+        "total": 3,
+        "swissknifeman": 0,
+        "laravel_boost": 0,
+        "local": 3
+      },
+      "agent_packs": {
+        "installed": [],
+        "count": 0,
+        "lock": false,
+        "modified": false
+      },
+      "daemons": {
+        "memory_reachable": false
+      },
+      "trusted": true,
+      "status": "partial",
+      "fixes": [
+        {
+          "layer": "agent-pack",
+          "issue": "profile is waiting for packs role-x",
+          "fix": "maind sync --only agent-pack --project gamma"
+        },
+        {
+          "layer": "weird",
+          "issue": "something odd",
+          "fix": "rm -rf /tmp/x; maind sync --only mcp"
+        }
+      ]
+    },
+    {
+      "id": "delta",
+      "name": "Delta",
+      "path": "/tmp/fleet/delta",
+      "memory_scope": "project:delta",
+      "configured": {
+        "agentmemory_mcp": false,
+        "maind_mcp": true,
+        "code_mcp": false,
+        "mcp_files": [
+          ".mcp.json"
+        ],
+        "skills_lock": true,
+        "skills_count": 3,
+        "boost": false,
+        "deployed_flag": true
+      },
+      "skills": {
+        "total": 3,
+        "swissknifeman": 0,
+        "laravel_boost": 0,
+        "local": 3
+      },
+      "agent_packs": {
+        "installed": [],
+        "count": 0,
+        "lock": false,
+        "modified": false
+      },
+      "daemons": {
+        "memory_reachable": false
+      },
+      "trusted": false,
+      "status": "connected",
+      "fixes": []
+    }
+  ]
+}

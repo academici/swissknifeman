@@ -10,6 +10,7 @@ and scans the bridge code for imports of partner packages and for the paths of o
 | [`planner-orch`](planner-orch/README.md) | planner ↔ orch | `brief`, `register`, `register-review`, `commit`, `launch` (`plan.py bridge planner-orch <verb>`) |
 | [`orch-skiller`](orch-skiller/README.md) | orch ↔ skiller | `resolve_role.py`: the skill closure of a role and the skill delivery mode |
 | [`orch-harness`](orch-harness/README.md) | orch ↔ harness | conformance of the role manifests with the agent-pack role catalog |
+| [`gui-hub`](gui-hub/README.md) | gui ↔ hub | GUI queries (fleet, control-surface layers, doctor, units) and commands (`doctor`, `sync <cap>`) over the hub command line |
 
 ## Finding the partners
 
@@ -22,6 +23,8 @@ command on `PATH`:
 | orch | `SKM_ORCH_ROOT` | `orch` |
 | skiller | `SKM_SKILLER_ROOT` | `skiller` |
 | harness | `SKM_HARNESS_ROOT` (tests only) | |
+| gui | `SKM_GUI_ROOT` (tests only) | the hub registry (`swissknifeman units list --json`) |
+| hub | `SKM_UMBRELLA` | `swissknifeman` |
 
 A partner that is not found gives `BRIDGE_PARTNER_UNAVAILABLE: <partner> not found (set <VAR>)` on stderr with exit 3
 (the conformance tests are skipped). The foundation is found by `AICORE_ROOT`, then `_vendor/aicore` inside the bridge,

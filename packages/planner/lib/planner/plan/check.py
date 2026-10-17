@@ -331,10 +331,13 @@ class _Context:
                     membership.setdefault(item_id, []).append(str(batch_id))
             for item_id in declared:
                 found = membership.get(item_id, [])
-                if len(found) != 1:
+                if len(found) > 1:  # ambiguous: a piece cannot start in two groups
                     self.error("batch_coverage", f"{rel}/batches",
-                               f"item {item_id} is in {len(found)} batches" + (f" ({', '.join(found)})" if found else "")
-                               + ", expected exactly 1")
+                               f"item {item_id} is in {len(found)} batches ({', '.join(found)}), expected at most 1")
+                elif not found:  # batches are a recommendation: running a piece outside them is a deliberate choice
+                    self.warn("batch_coverage", f"{rel}/batches",
+                              f"item {item_id} is in 0 batches (batches are a recommendation; it can be started alone or "
+                              "with other pieces on purpose)")
 
     def completeness(self) -> None:
         p = self.p

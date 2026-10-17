@@ -35,6 +35,15 @@ class RulesTests(unittest.TestCase):
                   piece("C", "packages/orch/c.py"), piece("D", "packages/orch/d.py", route={"class": "frontier", "effort": "high"})]
         self.assertEqual(strategy.rules(pieces)["groups"], [["A"], ["B"], ["C"], ["D"]])
 
+    def test_pieces_the_plan_leaves_without_review_are_not_reviewed(self):
+        pieces = [dict(piece("A", "packages/orch/a.py"), review_mode="none"),
+                  dict(piece("B", "packages/orch/b.py"), review_mode="none")]
+        self.assertEqual(strategy.rules(pieces)["mode"], "none")
+        pieces[1] = dict(pieces[1], review_mode="requested")
+        self.assertNotEqual(strategy.rules(pieces)["mode"], "none")
+        self.assertEqual(strategy.facts("A", "t", {"review_mode": "none"})["review_mode"], "none")
+        self.assertNotIn("review_mode", strategy.facts("A", "t", {}))
+
     def test_security_wording_raises_the_effort(self):
         chosen = strategy.rules([piece("A", "packages/orch/redact.py", title="redact secrets"), piece("B", "packages/orch/b.py")])
         self.assertEqual(chosen["reviewer"]["effort"], "high")

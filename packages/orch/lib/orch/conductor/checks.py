@@ -294,7 +294,9 @@ def changed_files(before: dict, after: dict) -> list:
 def _run_ordered(wanted: list, first, run_all, on_result) -> list:
     """The rows of ``wanted``; the checks named in ``first`` run ahead, and when one of them is still red the others are
     skipped."""
-    ahead = [check for check in wanted if check["id"] in set(first)]
+    # a procedure check (a verdict the executor reports) cannot be mended by running it again: it neither goes ahead nor
+    # holds the command checks back, or a missing verdict would keep every other check from ever running
+    ahead = [check for check in wanted if check["id"] in set(first) and check.get("cmd")]
     if not ahead or len(ahead) == len(wanted):
         return run_all(wanted)
     done = {row["id"]: row for row in run_all(ahead)}

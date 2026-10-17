@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-run.md
-Canonical SHA-256: sha256:bafbe2606abe9f2007dd80c71bbd19c6955a0dee88384dc5a33dce77cf09ad86
+Canonical SHA-256: sha256:ece4c6c669ccbf6ed20defa38737aa515fe3e37ac2e26915bf0631e4f489b3c5
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -34,6 +34,10 @@ one commit per item, inside the item's scope.
    Review flags are options, never item ids. Read `references/reviewer-selection.md` when requested.
    `--reviewer` requests a fresh read-only review of each selected item before `finish`;
    an omitted reviewer flag never starts a review.
+   **A review runs only when the plan JSON records it** (`review.mode: requested` with its reviewer, or a review
+   item of the phase); one that no document declares is not run, like a subagent when the registration command is
+   given. A phase item that is itself the review of the phase needs no further review. Batches are a
+   recommendation: starting several items together without a recorded batch is a conscious choice, not an error.
 2. `plan.py start <plan> <items…> --actor <provider>/<model>/<effort> --session auto`.
    A route refusal (`ROUTE_UNDERSHOOT`) stops before any product write; a stronger route is fine.
 3. Read `plan.py context <plan> <item> --stdout` as JSON and the supporting files it names; get more state with

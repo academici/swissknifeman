@@ -94,6 +94,13 @@ class MappingTests(BriefCase):
         ops.patch(self.root, "P1.1", {"rag": {"need": "optional", "status": "pending"}})
         self.assertEqual(self.brief()["research"], {"need": "optional", "notes": "check the flags"})
 
+    def test_the_review_mode_of_the_item_reaches_the_input(self):
+        plan = self.load()
+        plan.items["P1.1"]["review"] = {"mode": "none"}
+        doc = brief.build(plan, "P1.1")
+        self.assertEqual(doc["review_mode"], "none")
+        self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+
     def test_an_item_without_rag_gets_no_research_field(self):
         plan = self.load()
         plan.items["P1.1"].pop("rag")

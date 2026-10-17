@@ -79,6 +79,22 @@ class RedFirstTests(unittest.TestCase):
             self.assertTrue(marker.exists())
 
 
+class RedFirstProcedureTests(unittest.TestCase):
+    def test_a_procedure_check_without_a_verdict_does_not_hold_the_command_checks_back(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for args in (["init", "-q"], ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x"]):
+                subprocess.run(["git", *args], cwd=tmp, check=True, capture_output=True)
+            marker = root / "ran-v3"
+            document = doc("true", "true", f"touch {marker}")
+            document["acceptance"]["checks"][0] = {"id": "V1", "kind": "acceptance", "procedure": "observe the fix"}
+            rows = checks.run_checks(document, project=root, evidence_dir=root / "ev", log_dir=root / "log", timeout_s=30,
+                                     evidence_prefix="r:W1:checks.3", first=["V1"])
+            self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in rows],
+                             [("V1", False, False), ("V2", True, False), ("V3", True, False)])
+            self.assertTrue(marker.exists())  # V1 stays red (no verdict), yet the command checks ran
+
+
 def _repo(tmp: str) -> Path:
     for args in (["init", "-q"], ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x"]):
         subprocess.run(["git", *args], cwd=tmp, check=True, capture_output=True)

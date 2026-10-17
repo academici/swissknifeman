@@ -85,8 +85,8 @@ def decide(self, answers: list) -> None:
     mode = review.get("strategy", "auto")
     if mode != "auto":
         plan = forced(mode, pieces, proposal)
-    elif review.get("strategist", "model") == "rules":
-        plan = proposal
+    elif review.get("strategist", "model") == "rules" or strategy.unreviewed(pieces):
+        plan = proposal  # the plan gave no piece a review: nothing for a strategist to weigh
     else:
         plan = ask_strategist(self, first, pieces, proposal) or proposal
     plan = dict(plan, decided_at=utc_now())

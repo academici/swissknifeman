@@ -17,6 +17,10 @@ one commit per item, inside the item's scope.
    Review flags are options, never item ids. Read `references/reviewer-selection.md` when requested.
    `--reviewer` requests a fresh read-only review of each selected item before `finish`;
    an omitted reviewer flag never starts a review.
+   **A review runs only when the plan JSON records it** (`review.mode: requested` with its reviewer, or a review
+   item of the phase); one that no document declares is not run, like a subagent when the registration command is
+   given. A phase item that is itself the review of the phase needs no further review. Batches are a
+   recommendation: starting several items together without a recorded batch is a conscious choice, not an error.
 2. `plan.py start <plan> <items…> --actor <provider>/<model>/<effort> --session auto`.
    A route refusal (`ROUTE_UNDERSHOOT`) stops before any product write; a stronger route is fine.
 3. Read `plan.py context <plan> <item> --stdout` as JSON and the supporting files it names; get more state with

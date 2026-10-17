@@ -2,6 +2,8 @@
 
 Applies to `planner:plan-audit` and to a review item added by `--review`.
 
+0. Only what the plan records: `review.mode: requested` with its reviewer and limits, or a review item of the
+   phase (itself the reviewer: it needs no second review). A review no document declares is never run.
 1. Runs only on explicit owner request: one reviewer, one pass over the whole target, no subagents
    unless the owner asked.
 2. Read-only over product code and execution state. Inputs: `plan.py show`, `plan.py check`, the item

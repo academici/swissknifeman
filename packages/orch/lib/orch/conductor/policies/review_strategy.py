@@ -21,10 +21,13 @@ def facts(ref: str, title: str, brief: dict) -> dict:
     """What the strategist is told about one piece, from its execution-input."""
     scope = brief.get("scope") or {}
     route = (brief.get("route") or {}).get("minimum") or {}
-    return {"ref": ref, "title": title, "goal": str(brief.get("goal") or "")[:300],
-            "include": list(scope.get("include") or [])[:12], "write_set": list(scope.get("write_set") or [])[:20],
-            "route": {key: route[key] for key in ("class", "effort") if key in route},
-            "checks": len((brief.get("acceptance") or {}).get("checks") or [])}
+    found = {"ref": ref, "title": title, "goal": str(brief.get("goal") or "")[:300],
+             "include": list(scope.get("include") or [])[:12], "write_set": list(scope.get("write_set") or [])[:20],
+             "route": {key: route[key] for key in ("class", "effort") if key in route},
+             "checks": len((brief.get("acceptance") or {}).get("checks") or [])}
+    if brief.get("review_mode"):  # what the plan says of this piece (none, self, requested); the strategist may not raise it
+        found["review_mode"] = brief["review_mode"]
+    return found
 
 
 def _top(path: str) -> str:
@@ -53,11 +56,19 @@ def _alone(piece: dict) -> bool:
         or (piece["route"].get("class") == "frontier")
 
 
+def unreviewed(pieces: list) -> bool:
+    """The plan gives no piece of the batch a review (``review.mode none`` on every one)."""
+    return bool(pieces) and all(piece.get("review_mode") == "none" for piece in pieces)
+
+
 def rules(pieces: list) -> dict:
     """The deterministic choice: a batch of coupled neighbours is read together (cut at ``MAX_GROUP``), a piece on the
     foundation or on a frontier route is read alone, and uncoupled pieces are reviewed each."""
     if not pieces:
         return {"mode": "none", "groups": [], "reviewer": {"effort": "medium"}, "reason": "no pieces", "source": "rules"}
+    if unreviewed(pieces):
+        return {"mode": "none", "groups": [], "reviewer": {"effort": "medium"}, "source": "rules",
+                "reason": "the plan gives no review to any piece of the batch (review.mode none)"}
     if len(pieces) == 1:
         return {"mode": "each", "groups": [[pieces[0]["ref"]]], "reviewer": {"effort": "medium"},
                 "reason": "one piece: reviewed on its own as configured", "source": "rules"}

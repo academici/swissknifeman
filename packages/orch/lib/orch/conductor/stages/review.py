@@ -13,6 +13,8 @@ from orch.conductor.policies.routing import CLASS_RANK
 def review_enabled(self, item: Item) -> bool:
     if self._per_piece_review_off():  # the batch is reviewed by group (or not at all): review.strategy
         return False
+    if item.input_doc.get("review_mode") in ("none", "self"):  # the plan declares no independent review for this piece
+        return False
     review = item.policy.get("review") or {}
     return bool(review.get("enabled")) and item.options["limits"]["review_rounds"] > 0
 
@@ -27,6 +29,8 @@ def dynamic_review(self, item: Item, report: dict) -> None:
     The score is computed once from the facts after the executor and check rounds and kept in ``state.risk`` and
     ``<item>/risk.json``; a resume reads it again instead of asking the tree."""
     review, limits = item.options["review"], item.options["limits"]
+    if item.input_doc.get("review_mode") in ("none", "self"):  # the plan decided: no risk score adds a review to it
+        return
     if self._per_piece_review_off() or self._review_enabled(item) or not review["dynamic"] or limits["review_rounds"] <= 0:
         return
     found = item.state.get("risk")

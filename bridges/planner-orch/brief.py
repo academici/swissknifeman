@@ -351,6 +351,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
         "lessons": [{key: e[key] for key in _LESSON_KEYS if key in e} for e in pack["lessons"]],
         "hints": [{"text": text, "source": "scout"} for text in pack.get("scout", {}).get("entries", [])],
         "research": _research(item),
+        "review_mode": (item.get("review") or {}).get("mode"),
     }
     doc.update({key: value for key, value in optional.items() if value})
     missing = verify(plan, item_id, doc, unit_id=unit_id)

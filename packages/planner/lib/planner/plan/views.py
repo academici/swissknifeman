@@ -145,6 +145,19 @@ def _route_text(route: Any) -> str:
     return f"{route.get('class')}/{route.get('effort')}" if isinstance(route, dict) else ""
 
 
+def _review_text(plan: store.Plan, members: list) -> str:
+    """What the plan says of the review of these pieces: per mode, and who reads them when it is requested."""
+    modes: dict = {}
+    for item_id in members:
+        review = plan.items[item_id].get("review")
+        review = review if isinstance(review, dict) else {}
+        reviewer = review.get("reviewer") if isinstance(review.get("reviewer"), dict) else {}
+        who = "/".join(str(reviewer[k]) for k in ("provider", "model", "effort") if reviewer.get(k)) or str(reviewer.get("class") or "")
+        label = str(review.get("mode") or "unset") + (f" {who}" if who and review.get("mode") == "requested" else "")
+        modes.setdefault(label, []).append(item_id)
+    return "; ".join(f"{label} ({', '.join(ids)})" if len(modes) > 1 else label for label, ids in modes.items())
+
+
 def _phase_label(plan: store.Plan, phase_id: str) -> str:
     phase = plan.phases[phase_id]
     closed = phase.get("closed")
@@ -199,7 +212,7 @@ def build_model(plan: store.Plan) -> dict:
             batches.append({
                 "n": number, "phase": phase_id, "batch": cell(batch.get("id")),
                 "command": f"{COMMAND_NAMESPACE}:plan-run {doc.get('id', plan.root.name)} {' '.join(members)}",
-                "route": _route_text(route), "state": cell(lifecycle.batch_state(plan, phase_id, batch, frontier, granted)),
+                "route": _route_text(route), "review": cell(_review_text(plan, members)), "state": cell(lifecycle.batch_state(plan, phase_id, batch, frontier, granted)),
             })
     decisions = [(k, d) for k, d in plan.decisions.items()]
     open_questions = [(k, d) for k, d in decisions if d.get("status") == "open"]

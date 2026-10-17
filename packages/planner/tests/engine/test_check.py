@@ -315,9 +315,10 @@ class BatchTests(CheckCase):
     def test_item_in_no_batch_or_in_two_batches(self):
         self.edit(P1 + "phase.json", lambda d: d.update(batches=[{"id": "B1", "items": ["P1.1"], "mode": "recommended"},
                                                                  {"id": "B2", "items": ["P1.1"], "mode": "recommended"}]))
-        messages = sorted(h.message for h in self.assertFound("batch_coverage", count=2))
-        self.assertTrue(any("P1.1 is in 2 batches (B1, B2)" in m for m in messages))
-        self.assertTrue(any("P1.2 is in 0 batches" in m for m in messages))
+        errors = self.assertFound("batch_coverage", count=1)
+        warnings = self.assertFound("batch_coverage", level="warning", count=1)  # a recommendation, not a refusal
+        self.assertIn("P1.1 is in 2 batches (B1, B2)", errors[0].message)
+        self.assertIn("P1.2 is in 0 batches", warnings[0].message)
 
     def test_batch_item_from_another_phase_or_not_in_the_phase(self):
         self.edit(P1 + "phase.json", lambda d: d["batches"][0].update(items=["P1.1", "P1.2", "P2.1", "P1.8"]))

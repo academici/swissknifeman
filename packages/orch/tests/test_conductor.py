@@ -327,6 +327,12 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(len(cancelled), 1, err)
         self.assertEqual(self.calls("reviewer"), 2)
 
+    def test_a_plan_item_without_review_gets_no_policy_review_either(self):
+        self.set_items({"W1": {"review_mode": "self"}})  # the scenario `full` reviews; the plan says no independent review
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("reviewer")), (0, 0), err)
+
     def test_a_finished_review_is_kept_when_slow_checks_turn_red(self):
         slow = {"id": "V1", "cmd": "sleep 2; test -f out/W1.txt", "expect": "exit 0", "kind": "acceptance"}
         self.set_items({"W1": {"checks": [slow], "options": [{"source": "item:W1", "options": {
@@ -1266,6 +1272,15 @@ class DynamicReviewTests(ConductorCase):
         self.script({"executor": [self.SCHEMA], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("reviewer")), (0, 1), err)
+
+    def test_a_plan_item_without_review_is_not_given_one_by_the_risk_score(self):
+        self.write_config(extra="[orch.conductor.risk.weights]\nschema = 100")
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "out/schemas/*.json"], "review_mode": "none"}})
+        self.script({"executor": [self.SCHEMA]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("reviewer")), (0, 0), err)
+        self.assertEqual([line for line in self.lines(err) if line.get("reason_code") == "REVIEW_ADDED"], [])
+        self.assertNotIn("dynamic_review", self.state(err)["items"]["W1"])
 
     def test_dynamic_false_never_adds_a_review(self):
         self.piece({"review": {"dynamic": False}}, extra="[orch.conductor.risk.weights]\nschema = 100")

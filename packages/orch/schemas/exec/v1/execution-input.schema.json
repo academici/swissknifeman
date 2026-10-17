@@ -297,6 +297,11 @@
       "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
       "description": "Purpose of the work."
     },
+    "review_mode": {
+      "type": "string",
+      "enum": ["none", "self", "requested"],
+      "description": "Review the plan asks for this work: none (no review, no risk-score review either), self or requested."
+    },
     "scope": {
       "type": "object",
       "description": "Execution scope.",

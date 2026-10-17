@@ -13,6 +13,7 @@
 | brain | capability | 0.1.0 | hub | alpha | aicore |
 | gui | capability | 0.1.0 | own-repo | development | aicore |
 | gui-hub | bridge | 0.1.0 | hub | alpha | aicore, gui |
+| gui-planner | bridge | 0.1.0 | hub | alpha | aicore, gui, planner |
 | harness | capability | 0.7.2 | hub | beta | aicore |
 | maind | capability | 0.6.2 | hub | beta | aicore |
 | orch | capability | 0.1.0 | own-repo | alpha | aicore |

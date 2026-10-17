@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.2",
   "title": "bridges/gui-planner: запросы — планы, overview, phases, board, graph, decisions, evidence, timeline, raw; регистрация моста",
-  "status": "todo",
+  "status": "done",
   "summary": "Мост bridges/gui-planner: unit.json, extension.json, gui.json (маршруты, виджет, запросы), adapter.py (чтения planner → view-data/v1), README, scripts/test.sh, тесты на фейковом umbrella; запросы plans, overview, phases, board, graph, item, decisions, evidence, timeline, raw; регистрация моста в хабе.",
   "why": "Первый вертикальный срез планировщика: планы читаются в человеческом виде. Жёсткие риски: расхождение прогресса и статусов с CLI (адаптер не считает статусы и прогресс сам: прогресс — из `plans`, колонки board — по значениям status планировщика); импорт кода planner (запрещён root.module-folders, только CLI через umbrella); неэкранированный текст планов в view-data (все строки как текст, markdown через санитайзер хоста); план_id из контекста без проверки (хост проверяет шаблон, адаптер проверяет существование через CLI); падение на частично битом плане (ответ с пометкой, не trace).",
   "scope": {
@@ -157,6 +157,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/63a26006009dd5a924fb9ba9ea40e37e68d89fcde860db3dcf94b642c76b28ed",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/037eab3682b723b73403a64b808b554424df4bdb55f0eb1d2ac6def356864dbb",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками (I3, I7).",
@@ -221,6 +231,62 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T20:02:11Z"
+  "result": {
+    "started_at": "2026-10-16T20:03:17Z",
+    "finished_at": "2026-10-17T00:35:59Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-47edb4a8c679b6b7d714485d-P4.2",
+    "notes": "Added bridges/gui-planner (unit.json, extension.json, gui.json with 10 queries, 10 routes and the plans widget, adapter.py, README, scripts/test.sh, tests with a fake umbrella) and registered it in the hub (ecosystem-units.json, install profile full, bridges/README.md, ecosystem.md, rendered ownership.md, CHANGELOG). The adapter calls only `swissknifeman planner --output json ...` (plus `show --json`) in the project folder, moves fields into view-data/v1, and computes no progress; the plans list uses the progress of the `plans` verb. Bridge tests (21), gui check and ecosystem-units check --strict pass; the gui-planner owner appears in `gui contributions`.\nChanged: CHANGELOG.md, bridges/README.md, bridges/gui-planner/README.md, bridges/gui-planner/adapter.py, bridges/gui-planner/extension.json, bridges/gui-planner/gui.json, bridges/gui-planner/scripts/test.sh, bridges/gui-planner/tests/__init__.py, bridges/gui-planner/tests/fixtures/fake.py, bridges/gui-planner/tests/fixtures/umbrella-broken, bridges/gui-planner/tests/fixtures/umbrella-empty, bridges/gui-planner/tests/fixtures/umbrella-fail, bridges/gui-planner/tests/fixtures/umbrella-garbage, bridges/gui-planner/tests/fixtures/umbrella-missing, bridges/gui-planner/tests/fixtures/umbrella-ok, bridges/gui-planner/tests/test_queries.py, bridges/gui-planner/unit.json, configs/ecosystem-units.json, configs/install-profiles.json, docs/architecture/ecosystem.md, docs/architecture/ownership.md",
+    "pending": [
+      "Spec says item `actions: gui-planner.item-reopen`; the command does not exist before P4.3, and a route/resource-detail action pointing at an undeclared command would fail the resolver. The item query returns no actions yet."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T00:35:59Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T00:35:59Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T00:35:59Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T00:35:59Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T00:35:59Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V5.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V3.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V4.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.2/evidence/V5.json"
+    ]
+  },
+  "updated_at": "2026-10-17T00:35:59Z"
 }

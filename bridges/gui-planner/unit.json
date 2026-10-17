@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "destination": "hub",
+  "dev": {
+    "test": [
+      "bash",
+      "scripts/test.sh"
+    ]
+  },
+  "id": "gui-planner",
+  "kind": "bridge",
+  "protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "provides": {
+    "gui": "gui.json"
+  },
+  "requires": [
+    {
+      "description": "Foundation: the plugin protocol that carries the GUI queries.",
+      "range": "^0.1",
+      "unit": "aicore"
+    },
+    {
+      "description": "GUI host: the contribution and view-data contracts this bridge answers in.",
+      "range": "^0.1",
+      "unit": "gui"
+    },
+    {
+      "description": "Domain: the plan command line (plans, show, list, get, events) the queries read.",
+      "range": "^0.30",
+      "unit": "planner"
+    }
+  ],
+  "stability": "alpha",
+  "title": "Bridge between the GUI and the planner: plans, overview, phases, board, graph, items, decisions, evidence, timeline, raw",
+  "version": "0.1.0"
+}

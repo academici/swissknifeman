@@ -1,0 +1,341 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "gui_protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "handler": {
+    "extension": "extension.json"
+  },
+  "owner": "gui-planner",
+  "queries": [
+    {
+      "cache_s": 5,
+      "description": "The plans of the project with their progress.",
+      "id": "gui-planner.plans",
+      "returns": "resource-list",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Plans"
+    },
+    {
+      "cache_s": 5,
+      "description": "Status, goal, progress and next step of one plan.",
+      "id": "gui-planner.overview",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        }
+      ],
+      "returns": "resource-detail",
+      "scope": "plan",
+      "timeout_s": 30,
+      "title": "Plan overview"
+    },
+    {
+      "cache_s": 5,
+      "description": "The phases of a plan with design, result and progress.",
+      "id": "gui-planner.phases",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        }
+      ],
+      "returns": "resource-list",
+      "scope": "plan",
+      "timeout_s": 30,
+      "title": "Phases"
+    },
+    {
+      "cache_s": 5,
+      "description": "The items of a plan (or one phase) in columns by status.",
+      "id": "gui-planner.board",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "phase",
+          "pattern": "^P[0-9]+$",
+          "required": false,
+          "title": "Phase",
+          "type": "string"
+        }
+      ],
+      "returns": "board",
+      "scope": "plan",
+      "timeout_s": 60,
+      "title": "Board"
+    },
+    {
+      "cache_s": 5,
+      "description": "Items with their blocking dependencies and non-blocking links.",
+      "id": "gui-planner.graph",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "phase",
+          "pattern": "^P[0-9]+$",
+          "required": false,
+          "title": "Phase",
+          "type": "string"
+        }
+      ],
+      "returns": "dependency-graph",
+      "scope": "plan",
+      "timeout_s": 60,
+      "title": "Dependency graph"
+    },
+    {
+      "cache_s": 5,
+      "description": "One item: route, review, authority, dependencies, summary and result.",
+      "id": "gui-planner.item",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "item_id",
+          "required": true,
+          "title": "Item",
+          "type": "item-ref"
+        }
+      ],
+      "returns": "resource-detail",
+      "scope": "item",
+      "timeout_s": 30,
+      "title": "Item"
+    },
+    {
+      "cache_s": 5,
+      "description": "The decisions and open questions of a plan.",
+      "id": "gui-planner.decisions",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        }
+      ],
+      "returns": "resource-list",
+      "scope": "plan",
+      "timeout_s": 60,
+      "title": "Decisions"
+    },
+    {
+      "cache_s": 5,
+      "description": "Artifacts and recorded check outcomes of one item.",
+      "id": "gui-planner.evidence",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "item_id",
+          "required": true,
+          "title": "Item",
+          "type": "item-ref"
+        }
+      ],
+      "returns": "resource-list",
+      "scope": "item",
+      "timeout_s": 30,
+      "title": "Item evidence"
+    },
+    {
+      "cache_s": 2,
+      "description": "The journal of a plan (or one item), newest first.",
+      "id": "gui-planner.timeline",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "item",
+          "required": false,
+          "title": "Item",
+          "type": "item-ref"
+        }
+      ],
+      "returns": "timeline",
+      "scope": "plan",
+      "timeout_s": 30,
+      "title": "Timeline"
+    },
+    {
+      "cache_s": 5,
+      "description": "One plan document as read-only JSON.",
+      "id": "gui-planner.raw",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "ref",
+          "pattern": "^(plan|brief|P[0-9]+|P[0-9]+\\.[0-9]+|D[0-9]+)$",
+          "required": true,
+          "title": "Reference",
+          "type": "string"
+        }
+      ],
+      "returns": "markdown",
+      "scope": "plan",
+      "timeout_s": 30,
+      "title": "Raw document"
+    }
+  ],
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "routes": [
+    {
+      "id": "gui-planner.plans",
+      "nav": {
+        "order": 20,
+        "section": "project"
+      },
+      "path": "plans",
+      "query": "gui-planner.plans",
+      "scope": "project",
+      "title": "Plans",
+      "view": "resource-list"
+    },
+    {
+      "id": "gui-planner.overview",
+      "nav": {
+        "order": 10,
+        "section": "plan"
+      },
+      "path": "plans/:plan_id",
+      "query": "gui-planner.overview",
+      "scope": "plan",
+      "title": "Overview",
+      "view": "resource-detail"
+    },
+    {
+      "id": "gui-planner.phases",
+      "nav": {
+        "order": 20,
+        "section": "plan"
+      },
+      "path": "plans/:plan_id/phases",
+      "query": "gui-planner.phases",
+      "scope": "plan",
+      "title": "Phases",
+      "view": "resource-list"
+    },
+    {
+      "id": "gui-planner.board",
+      "nav": {
+        "order": 30,
+        "section": "plan"
+      },
+      "path": "plans/:plan_id/board",
+      "query": "gui-planner.board",
+      "scope": "plan",
+      "title": "Board",
+      "view": "board"
+    },
+    {
+      "id": "gui-planner.graph",
+      "nav": {
+        "order": 40,
+        "section": "plan"
+      },
+      "path": "plans/:plan_id/graph",
+      "query": "gui-planner.graph",
+      "scope": "plan",
+      "title": "Dependencies",
+      "view": "dependency-graph"
+    },
+    {
+      "id": "gui-planner.decisions",
+      "nav": {
+        "order": 50,
+        "section": "plan"
+      },
+      "path": "plans/:plan_id/decisions",
+      "query": "gui-planner.decisions",
+      "scope": "plan",
+      "title": "Decisions",
+      "view": "resource-list"
+    },
+    {
+      "id": "gui-planner.timeline",
+      "nav": {
+        "order": 60,
+        "section": "plan"
+      },
+      "path": "plans/:plan_id/timeline",
+      "query": "gui-planner.timeline",
+      "scope": "plan",
+      "title": "Timeline",
+      "view": "timeline"
+    },
+    {
+      "id": "gui-planner.raw",
+      "path": "plans/:plan_id/raw/:ref",
+      "query": "gui-planner.raw",
+      "scope": "plan",
+      "title": "Raw document",
+      "view": "markdown"
+    },
+    {
+      "id": "gui-planner.item",
+      "path": "plans/:plan_id/items/:item_id",
+      "query": "gui-planner.item",
+      "scope": "item",
+      "title": "Item",
+      "view": "resource-detail"
+    },
+    {
+      "id": "gui-planner.evidence",
+      "path": "plans/:plan_id/items/:item_id/evidence",
+      "query": "gui-planner.evidence",
+      "scope": "item",
+      "title": "Item evidence",
+      "view": "resource-list"
+    }
+  ],
+  "version": "0.1.0",
+  "widgets": [
+    {
+      "id": "gui-planner.plans",
+      "query": "gui-planner.plans",
+      "scope": "project",
+      "size": "medium",
+      "title": "Plans",
+      "view": "resource-list"
+    }
+  ]
+}

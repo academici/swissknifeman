@@ -15,8 +15,8 @@
       "options": {}
     },
     "full": {
-      "description": "Every hub module, including the maind, analyst and gui tools and the gui-hub bridge.",
-      "units": ["aicore", "skiller", "harness", "maind", "analyst", "planner", "brain", "orch", "gui", "gui-hub"],
+      "description": "Every hub module, including the maind, analyst and gui tools and the gui-hub and gui-planner bridges.",
+      "units": ["aicore", "skiller", "harness", "maind", "analyst", "planner", "brain", "orch", "gui", "gui-hub", "gui-planner"],
       "options": {}
     }
   }

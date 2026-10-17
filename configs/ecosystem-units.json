@@ -15,6 +15,7 @@
     "bridges/orch-skiller",
     "bridges/orch-harness",
     "bridges/gui-hub",
+    "bridges/gui-planner",
     "hub"
   ],
   "module_aliases": {},

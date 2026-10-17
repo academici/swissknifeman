@@ -1,0 +1,101 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/README.md",
+    "bridges/gui-planner/README.md",
+    "bridges/gui-planner/adapter.py",
+    "bridges/gui-planner/extension.json",
+    "bridges/gui-planner/gui.json",
+    "bridges/gui-planner/scripts/test.sh",
+    "bridges/gui-planner/tests/__init__.py",
+    "bridges/gui-planner/tests/fixtures/fake.py",
+    "bridges/gui-planner/tests/fixtures/umbrella-broken",
+    "bridges/gui-planner/tests/fixtures/umbrella-empty",
+    "bridges/gui-planner/tests/fixtures/umbrella-fail",
+    "bridges/gui-planner/tests/fixtures/umbrella-garbage",
+    "bridges/gui-planner/tests/fixtures/umbrella-missing",
+    "bridges/gui-planner/tests/fixtures/umbrella-ok",
+    "bridges/gui-planner/tests/test_queries.py",
+    "bridges/gui-planner/unit.json",
+    "configs/ecosystem-units.json",
+    "configs/install-profiles.json",
+    "docs/architecture/ecosystem.md",
+    "docs/architecture/ownership.md"
+  ],
+  "checks_run": [
+    {
+      "cmd": "bash bridges/gui-planner/scripts/test.sh",
+      "exit": 0,
+      "id": "V1"
+    },
+    {
+      "cmd": "packages/gui/bin/gui check bridges/gui-planner --json > /dev/null",
+      "exit": 0,
+      "id": "V2"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "V3 and V5 must be run by the conductor outside the sandbox",
+      "kind": "note",
+      "next": "run V3 and V5 in the normal environment",
+      "text": "golden.py check fails in this sandbox only on skiller cases (skiller-resolve-ok, skiller-resolve-missing, skiller-registry) because the sandbox masks packages/skiller/skills.json (Permission denied). Nothing of planner or gui-planner differs. Also only the first part of V3 (ecosystem-units.py check --strict, exit 0) passed here; V4 was verified by its condition; V5 was not run."
+    },
+    {
+      "impact": "P4.3 must add the command gui-planner.item-reopen and add `actions` (command, scope item) to the item query output and the item route",
+      "kind": "pending",
+      "next": "P4.3",
+      "text": "Spec says item `actions: gui-planner.item-reopen`; the command does not exist before P4.3, and a route/resource-detail action pointing at an undeclared command would fail the resolver. The item query returns no actions yet."
+    },
+    {
+      "impact": "P4.4 frontend plan context; until then plan-scope queries are rejected by the host with INPUT_INVALID",
+      "kind": "note",
+      "next": "P4.4",
+      "text": "Queries of scope plan/item declare the path parameters as query params (plan_id plan-ref required, item_id item-ref, ref string with pattern), because the resolver requires every path param to be a query param. The adapter takes plan_id/item_id from context and falls back to params. The host check_context needs context.plan_id/item_id for these scopes; today QueryView sends only project_id in context and path params in params, so P4.4 must put plan_id/item_id into context."
+    },
+    {
+      "impact": "possible drift if the planner changes its definition of done",
+      "kind": "assumption",
+      "next": "consider a per-phase progress in planner later",
+      "text": "The `phases` query counts items done per phase from `show --json` statuses (done, done_with_deviations, skipped), because no planner verb gives per-phase progress; the plans-level progress comes from the `plans` verb. Same definition as the planner."
+    },
+    {
+      "impact": "behavior of board and plans without project",
+      "kind": "assumption",
+      "next": "none",
+      "text": "Board shows the column `other` only when a card has a status outside the six planner statuses; the six columns always exist. The `plans` query, when called without a project (aicore conformance probe), lists the plans of the plugin's working folder instead of failing, because ext.conformance.invoke runs example_input without a project; other queries still require the project and answer PLANNER_CONTEXT_MISSING."
+    },
+    {
+      "impact": "P4.4 may add a phase selector to the board page",
+      "kind": "note",
+      "next": "P4.4",
+      "text": "Link params of phases rows hold only plan_id (path params); the phase filter of board is a query param and cannot be passed through a link, so every phase row opens the whole board."
+    },
+    {
+      "impact": "none",
+      "kind": "note",
+      "next": "none",
+      "text": "unit.json requires planner ^0.30 (the current planner is 0.30.x; ^0.1 failed ecosystem-units check --strict)."
+    },
+    {
+      "impact": "none",
+      "kind": "note",
+      "next": "none",
+      "text": "the conductor mended the form of this report: status done_with_deviations named no deviation issue; it is done"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "adapter.py planner_json/planner_show error mapping and text sanitising (safe_text, md_text, raw fence)",
+      "gui.json params vs path parameters and scopes"
+    ],
+    "reason_codes": [
+      "other"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done",
+  "summary": "Added bridges/gui-planner (unit.json, extension.json, gui.json with 10 queries, 10 routes and the plans widget, adapter.py, README, scripts/test.sh, tests with a fake umbrella) and registered it in the hub (ecosystem-units.json, install profile full, bridges/README.md, ecosystem.md, rendered ownership.md, CHANGELOG). The adapter calls only `swissknifeman planner --output json ...` (plus `show --json`) in the project folder, moves fields into view-data/v1, and computes no progress; the plans list uses the progress of the `plans` verb. Bridge tests (21), gui check and ecosystem-units check --strict pass; the gui-planner owner appears in `gui contributions`."
+}

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.1",
   "title": "Терминал (backend): PTY-сессии, privilege-гейт, WebSocket с credits, аудит, контракт terminal/v1",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`lib/gui/core/terminal.py` (stdlib: PTY, запуск shell, resize, закрытие группы процессов, credits-счётчик, лимиты и таймауты), `lib/gui/http/routes_terminal.py` (сессии и WebSocket `/v1/terminal/{id}/io`), контракт `terminal/v1`, группа настроек `[gui.terminal]`, код `TERMINAL_LIMIT`, feature `terminal`, аудит terminal.start/end, документация.",
   "why": "Жёсткие риски (произвольный shell, auth, ресурсы): терминал доступен при `enabled=false` или без подтверждения; сессия вне доверенного проекта; утечка секретов окружения в shell; содержимое терминала попало в аудит/лог (I6); WebSocket без Origin/Host-проверки или угадываемый session_id; backpressure не работает (вывод копится в памяти, потеря байтов); осиротевшие процессы после закрытия/остановки backend; гонка закрытия (close vs чтение vs idle-таймер); второй WebSocket к чужой сессии. Решения D29, D30; описание — knowledge/p7-design#terminal.",
   "scope": {
@@ -216,6 +216,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/6e60e33ccf3df123955c3a6179f5d84768f0c46385b7d23b6162f2822b95f09c",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/7cd1d4109590677dc05ab46a81d0ff90742fc3df823f1e00a767a186442c764b",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками.",
@@ -272,6 +282,48 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T05:36:17Z"
+  "result": {
+    "started_at": "2026-10-17T05:36:54Z",
+    "finished_at": "2026-10-17T05:51:57Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-68312a0e31e48a0a248fcdbc-P7.1",
+    "notes": "Corrected two test defects in tests/test_http_terminal.py: frame examples are now validated against the specific frame def (input_frame, resize_frame, ...) so issue codes match the file names; the cookie WebSocket test sends the Cookie header explicitly because the test client's ws URL host differs from the cookie jar domain. No product code changed. tests.test_http_terminal passes (23 tests) when run with the cached pydeps and deps.activate bypassed.\nChanged: CHANGELOG.md, packages/gui/config.example.toml, packages/gui/configs/config.schema.json, packages/gui/docs/api.md, packages/gui/docs/desktop.md, packages/gui/frontend/src/contracts/generated/terminal.ts, packages/gui/lib/gui/backend.py, packages/gui/lib/gui/core/terminal.py, packages/gui/lib/gui/errors.py, packages/gui/lib/gui/http/app.py, packages/gui/lib/gui/http/routes_terminal.py, packages/gui/lib/gui/settings.py, packages/gui/schemas/README.md, packages/gui/schemas/terminal/v1/examples/frames/invalid/credit-zero.minimum.json, packages/gui/schemas/terminal/v1/examples/frames/invalid/exit-reason.enum.json, packages/gui/schemas/terminal/v1/examples/frames/invalid/input-not-base64.pattern.json, packages/gui/schemas/terminal/v1/examples/frames/invalid/output-extra.additional.json, packages/gui/schemas/terminal/v1/examples/frames/invalid/resize-without-rows.required.json, packages/gui/schemas/terminal/v1/examples/frames/valid/credit.json, packages/gui/schemas/terminal/v1/examples/frames/valid/error.json, packages/gui/schemas/terminal/v1/examples/frames/valid/exit-signal.json, packages/gui/schemas/terminal/v1/examples/frames/valid/exit.json, packages/gui/schemas/terminal/v1/examples/frames/valid/input.json, packages/gui/schemas/terminal/v1/examples/frames/valid/output.json, packages/gui/schemas/terminal/v1/examples/frames/valid/resize.json, packages/gui/schemas/terminal/v1/examples/invalid/bad-session-id.pattern.json, packages/gui/schemas/terminal/v1/examples/invalid/cols-too-small.minimum.json, packages/gui/schemas/terminal/v1/examples/invalid/extra-field.additional.json, packages/gui/schemas/terminal/v1/examples/invalid/missing-rows.required.json, packages/gui/schemas/terminal/v1/examples/invalid/rows-too-large.maximum.json, packages/gui/schemas/terminal/v1/examples/invalid/unknown-kind.one_of.json, packages/gui/schemas/terminal/v1/examples/valid/session-ended.json, packages/gui/schemas/terminal/v1/examples/valid/session-list.json, packages/gui/schemas/terminal/v1/examples/valid/session-request-confirmed.json, packages/gui/schemas/terminal/v1/examples/valid/session-request.json, packages/gui/schemas/terminal/v1/examples/valid/session.json, packages/gui/schemas/terminal/v1/terminal.schema.json, packages/gui/tests/test_http_terminal.py, packages/gui/tests/test_runtime_contracts.py, packages/gui/tests/test_terminal.py, packages/gui/unit.json",
+    "deviations": [
+      "changed outside the write set: packages/gui/config.example.toml, packages/gui/schemas/README.md"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:51:57Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.1/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:51:57Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.1/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T05:51:57Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.1/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.1/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.1/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.1/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-17T05:51:57Z"
 }

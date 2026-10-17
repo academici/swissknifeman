@@ -26,6 +26,7 @@ CODES: Dict[str, Tuple[str, int]] = {
     "PERMISSION_DENIED": ("forbidden", 403),
     "CONFIRMATION_REQUIRED": ("forbidden", 428),
     "CONCURRENCY_LIMIT": ("limit", 429),
+    "TERMINAL_LIMIT": ("limit", 429),
     "RUN_NOT_CANCELLABLE": ("conflict", 409),
     "HANDLER_FAILED": ("unavailable", 502),
     "HANDLER_TIMEOUT": ("timeout", 504),
@@ -60,7 +61,7 @@ CODES: Dict[str, Tuple[str, int]] = {
 }
 
 # Transient failures: the same request may succeed later. A quarantined plugin or a too large body does not heal.
-RETRYABLE = frozenset({"CONCURRENCY_LIMIT", "HANDLER_FAILED", "HANDLER_TIMEOUT", "PLUGIN_UNAVAILABLE",
+RETRYABLE = frozenset({"CONCURRENCY_LIMIT", "TERMINAL_LIMIT", "HANDLER_FAILED", "HANDLER_TIMEOUT", "PLUGIN_UNAVAILABLE",
                        "CONFIG_LOCKED", "CATALOG_SOURCE_UNAVAILABLE",
                        "GUI_DEPS_UNAVAILABLE"})
 

@@ -61,6 +61,16 @@ class Plugins:
 
 
 @dataclass(frozen=True)
+class Terminal:
+    enabled: bool
+    max_sessions: int
+    idle_timeout_s: int
+    max_session_s: int
+    credit_bytes: int
+    output_chunk_bytes: int
+
+
+@dataclass(frozen=True)
 class Settings:
     """The effective ``[gui]`` configuration; ``resolved`` explains where each value comes from."""
 
@@ -72,11 +82,17 @@ class Settings:
     query: Query
     config: Config
     plugins: Plugins
+    terminal: Terminal
     resolved: Optional[ResolvedConfig] = None
 
 
 def _group(resolved: ResolvedConfig, cls: type, prefix: str):
     return cls(**{name: resolved.get(f"{prefix}.{name}") for name in cls.__dataclass_fields__})
+
+
+def _terminal(resolved: ResolvedConfig) -> Terminal:
+    group = _group(resolved, Terminal, "terminal")
+    return Terminal(**{**group.__dict__, "enabled": bool(group.enabled)})
 
 
 def load(env: Optional[Mapping[str, str]] = None, project: Optional[PathLike] = None, *,
@@ -89,4 +105,5 @@ def load(env: Optional[Mapping[str, str]] = None, project: Optional[PathLike] = 
                     runs=_group(resolved, Runs, "runs"), events=_group(resolved, Events, "events"),
                     retention=_group(resolved, Retention, "retention"), query=_group(resolved, Query, "query"),
                     config=_group(resolved, Config, "config"), plugins=_group(resolved, Plugins, "plugins"),
+                    terminal=_terminal(resolved),
                     resolved=resolved)

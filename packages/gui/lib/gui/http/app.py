@@ -11,14 +11,15 @@ from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.routing import Route
 
-from . import routes_config, routes_core, routes_events, routes_plugins, routes_queries, routes_runs, static
+from . import (routes_config, routes_core, routes_events, routes_plugins, routes_queries, routes_runs, routes_terminal,
+               static)
 from .security import SecurityMiddleware
 
 
 def routes() -> list:
     """Every route; the frontend catch-all comes last and answers unknown ``/v1`` paths with ``NOT_FOUND``."""
     return [*routes_core.ROUTES, *routes_queries.ROUTES, *routes_runs.ROUTES, *routes_config.ROUTES,
-            *routes_plugins.ROUTES, *routes_events.ROUTES,
+            *routes_plugins.ROUTES, *routes_events.ROUTES, *routes_terminal.ROUTES,
             Route("/{path:path}", static.frontend, methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"])]
 
 

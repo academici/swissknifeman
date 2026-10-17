@@ -76,3 +76,22 @@ schema_version = 1
 [gui.query]
 # Largest canonical JSON output of one query handler in bytes; a larger one is OUTPUT_INVALID. Integer >= 1024.
 # max_output_bytes = 1048576
+
+[gui.terminal]
+# Whether sessions may start. Off: POST /v1/terminal/sessions is PERMISSION_DENIED and the feature terminal is absent. Boolean.
+# enabled = false
+
+# Sessions that run at the same time; a new one beyond it is TERMINAL_LIMIT. Integer >= 1 and <= 8.
+# max_sessions = 2
+
+# A session without input and output for this many seconds is closed. Integer >= 30 and <= 86400.
+# idle_timeout_s = 900
+
+# Longest life of one session in seconds. Integer >= 60 and <= 86400.
+# max_session_s = 14400
+
+# Output bytes a client pays in one credit; the unpaid credit of a client stays at most four times this. Integer >= 4096 and <= 1048576.
+# credit_bytes = 65536
+
+# Largest output frame in bytes; also the most the server holds unsent per session. Integer >= 1024 and <= 65536.
+# output_chunk_bytes = 16384

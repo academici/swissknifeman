@@ -36,6 +36,7 @@ from .core.config import ConfigService
 from .core.events import EventHub
 from .core.plugins import PluginHost, failing
 from .core.projects import ProjectRegistry
+from .core import terminal as terminal_core
 from .core.runs import RunStore, frame_run, prune_logs
 from .settings import Settings
 from .storage import db
@@ -279,6 +280,9 @@ class BackendState:
             self.conn, self.db_lock, lambda: self.settings, self._config_publish, self._config_audit,
             lambda owner: [run_id for run_id, active in list(self.broker.active.items()) if active.owner == owner],
             lambda run_id: self.broker.cancel(run_id, system=True), self._conformance)
+        limits = terminal_core.Limits(**{name: getattr(self.settings.terminal, name)
+                                         for name in terminal_core.Limits.__dataclass_fields__})
+        self.terminals = terminal_core.TerminalManager(limits, env=self.env, audit=self._config_audit)
         self.tasks: List[Any] = []
         if self.catalog is None:
             self.refresh_catalog()
@@ -335,12 +339,14 @@ class BackendState:
                     pass
         prune_logs(self.runs_dir, max_age_days=self.settings.retention.log_days,
                    max_total_mb=self.settings.retention.log_total_mb)
-        self.tasks = [asyncio.create_task(self._heartbeats()), asyncio.create_task(self._journals())]
+        self.tasks = [asyncio.create_task(self._heartbeats()), asyncio.create_task(self._journals()),
+                      asyncio.create_task(self._terminal_timers())]
 
     async def stop(self) -> None:
         import asyncio
 
         await self.broker.shutdown()
+        await asyncio.to_thread(self.terminals.close_all, "backend_stop")
         for task in self.tasks:
             task.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)
@@ -352,6 +358,18 @@ class BackendState:
         while True:
             await asyncio.sleep(self.settings.events.heartbeat_s)
             self.hub.heartbeat()
+
+    async def _terminal_timers(self) -> None:
+        """The idle and maximum timers of the terminal sessions (one second resolution)."""
+        import asyncio
+
+        while True:
+            await asyncio.sleep(1)
+            if self.terminals.count():
+                try:
+                    await asyncio.to_thread(self.terminals.reap)
+                except Exception:  # noqa: BLE001 - a failing timer never stops the backend
+                    pass
 
     async def _journals(self) -> None:
         """Each registered project's event journal, read from its end at start, as ``event`` frames."""
@@ -405,10 +423,21 @@ class BackendState:
         document = {"$schema": "urn:swissknifeman:gui:bootstrap:v1", "mode": self.mode, "epoch": self.epoch,
                     "backend": {"version": __version__, "python": platform.python_version()},
                     "gui_protocol": dict(GUI_PROTOCOL), "contracts": unit_contracts(), "units": units,
-                    "features": list(self.features), "platform": platform_info()}
+                    "features": self.feature_list(), "platform": platform_info()}
         if self.mode == "desktop":
             document["shell"] = {"version": self.shell_version or "0.0.0"}
         return document
+
+    def feature_list(self) -> List[str]:
+        """The features the UI may use; ``terminal`` only when the host enabled it, the platform has a PTY and the
+        mode is not desktop (decision D30)."""
+        features = list(self.features)
+        if self.terminal_available() and "terminal" not in features:
+            features.append("terminal")
+        return features
+
+    def terminal_available(self) -> bool:
+        return self.settings.terminal.enabled and terminal_core.supported() and not self.desktop
 
     @property
     def desktop(self) -> bool:

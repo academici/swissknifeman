@@ -11,7 +11,7 @@ MODULE_ROOT = Path(__file__).resolve().parents[1]
 API_DOC = (MODULE_ROOT / "docs" / "api.md").read_text(encoding="utf-8")
 UNIT = json.loads((MODULE_ROOT / "unit.json").read_text(encoding="utf-8"))
 LISTED = [entry["id"].rpartition(":")[2] for entry in UNIT["provides"]["contracts"]]
-RUNTIME = ("api-error", "bootstrap", "run", "stream", "trust", "config-mutation", "plugin-api")
+RUNTIME = ("api-error", "bootstrap", "run", "stream", "trust", "config-mutation", "plugin-api", "terminal")
 
 
 def root_schema(contract):
@@ -98,7 +98,7 @@ class TestErrorCodes(unittest.TestCase):
         self.assertLessEqual({
             "AUTH_REQUIRED", "AUTH_INVALID", "HOST_REJECTED", "ORIGIN_REJECTED", "PROTOCOL_INCOMPATIBLE", "NOT_FOUND",
             "INPUT_INVALID", "OUTPUT_INVALID", "PATH_ESCAPE", "PERMISSION_DENIED", "CONFIRMATION_REQUIRED",
-            "CONCURRENCY_LIMIT", "RUN_NOT_CANCELLABLE", "HANDLER_FAILED", "HANDLER_TIMEOUT", "PLUGIN_UNAVAILABLE",
+            "CONCURRENCY_LIMIT", "TERMINAL_LIMIT", "RUN_NOT_CANCELLABLE", "HANDLER_FAILED", "HANDLER_TIMEOUT", "PLUGIN_UNAVAILABLE",
             "PLUGIN_QUARANTINED", "PLUGIN_DISABLED", "PLUGIN_CONFORMANCE_FAILED", "CONFIG_REVISION_CONFLICT", "CONFIG_LOCKED", "CONFIG_LAYER_FORBIDDEN", "PREVIEW_STALE",
             "PAYLOAD_TOO_LARGE", "INTERNAL"}, set(errors.CODES))
         self.assertLessEqual(errors.RETRYABLE, set(errors.CODES))
@@ -137,11 +137,14 @@ class TestKinds(unittest.TestCase):
         self.assertEqual(("kind", {"plugin_list", "plugin_history", "grant_request", "action_request", "action_result",
                                    "grant_result"}), self.kinds("plugin-api"))
 
+    def test_terminal_kinds(self):
+        self.assertEqual(("kind", {"session_request", "session", "session_list"}), self.kinds("terminal"))
+
     def test_bootstrap_modes(self):
         self.assertEqual(("mode", {"desktop", "browser"}), self.kinds("bootstrap"))
 
     def test_every_kind_has_a_valid_example(self):
-        for contract in ("stream", "config-mutation", "bootstrap", "plugin-api"):
+        for contract in ("stream", "config-mutation", "bootstrap", "plugin-api", "terminal"):
             name, kinds = self.kinds(contract)
             seen = {json.loads(path.read_text(encoding="utf-8"))[name]
                     for path in (contracts.contract_dir(contract) / "examples" / "valid").glob("*.json")}

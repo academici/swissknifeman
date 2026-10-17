@@ -199,6 +199,53 @@
           "minimum": 1024
         }
       }
+    },
+    "terminal": {
+      "type": "object",
+      "description": "The terminal of the host: a shell in a PTY in a trusted project. A privilege of the machine, off by default; every session needs a confirmation.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether sessions may start. Off: POST /v1/terminal/sessions is PERMISSION_DENIED and the feature terminal is absent.",
+          "default": false
+        },
+        "max_sessions": {
+          "type": "integer",
+          "description": "Sessions that run at the same time; a new one beyond it is TERMINAL_LIMIT.",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 8
+        },
+        "idle_timeout_s": {
+          "type": "integer",
+          "description": "A session without input and output for this many seconds is closed.",
+          "default": 900,
+          "minimum": 30,
+          "maximum": 86400
+        },
+        "max_session_s": {
+          "type": "integer",
+          "description": "Longest life of one session in seconds.",
+          "default": 14400,
+          "minimum": 60,
+          "maximum": 86400
+        },
+        "credit_bytes": {
+          "type": "integer",
+          "description": "Output bytes a client pays in one credit; the unpaid credit of a client stays at most four times this.",
+          "default": 65536,
+          "minimum": 4096,
+          "maximum": 1048576
+        },
+        "output_chunk_bytes": {
+          "type": "integer",
+          "description": "Largest output frame in bytes; also the most the server holds unsent per session.",
+          "default": 16384,
+          "minimum": 1024,
+          "maximum": 65536
+        }
+      }
     }
   }
 }

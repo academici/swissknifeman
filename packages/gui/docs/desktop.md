@@ -55,6 +55,13 @@ it). An exit restarts with the delays 0.5, 1, 2, 4, 8, 16, then 30 s; 60 s of st
 (15 s), then kill. The shell plugin cannot close the child stdin, so the "close stdin first" step of the protocol is
 replaced by SIGTERM; the sidecar treats both the same way.
 
+## Terminal
+
+The terminal is not supported in desktop mode in version 1 (decision D30). The adapter forwards only `GET /v1/events`
+subscriptions and never opens a WebSocket for `/v1/terminal/{id}/io`; the sidecar does not announce the bootstrap
+feature `terminal` and answers `POST /v1/terminal/sessions` with `PERMISSION_DENIED` (`details.reason:
+terminal_unsupported`). The terminal works in browser mode (`gui open`) when the owner enables `[gui.terminal]`.
+
 ## Configuration
 
 `tauri.conf.json`: `withGlobalTauri: true`, CSP `default-src 'self'; script-src 'self'; style-src 'self'; connect-src

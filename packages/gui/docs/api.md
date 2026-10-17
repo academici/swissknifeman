@@ -27,7 +27,7 @@ All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` e
 
 | Method and path | Answer |
 | --- | --- |
-| `GET /v1/bootstrap` | `bootstrap/v1` kind `browser`: epoch, versions, `gui_protocol`, contracts of `unit.json`, units of the accepted contributions, features (`queries`, `projects`, `runs`, `events`, `config`, `plugins`), platform |
+| `GET /v1/bootstrap` | `bootstrap/v1` kind `browser`: epoch, versions, `gui_protocol`, contracts of `unit.json`, units of the accepted contributions, features (`queries`, `projects`, `runs`, `events`, `config`, `plugins`, and `terminal` when the host enabled it; never in desktop mode), platform |
 | `GET /v1/ui/contributions[?refresh=1]` | `catalog/v1`, resolved at start, without the contributions of plugins that are not `ui_enabled` (the `digest` is computed again over the rest); `refresh=1` collects, resolves and syncs the plugins again |
 | `GET /v1/schemas/{contract}/{version}` | the JSON Schema of a contract listed in `unit.json`; anything else `NOT_FOUND` |
 | `GET /v1/projects`, `GET /v1/projects/{id}` | `project/v1` (`project_list`, `project`) |
@@ -48,6 +48,10 @@ All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` e
 | `POST /v1/plugins/{id}:enable`, `:disable`, `:release` `action_request` | `plugin-api/v1` `action_result` |
 | `POST /v1/plugins/{id}/grants` `grant_request` | `201` `grant_result`; always confirmed |
 | `POST /v1/plugins/{id}/grants/{grant_id}:revoke` `action_request` | `action_result` |
+| `GET /v1/terminal/sessions` | `terminal/v1` `session_list`: the running sessions, oldest first |
+| `POST /v1/terminal/sessions` `session_request` | `201` `terminal/v1` `session`; `PERMISSION_DENIED` while `[gui.terminal] enabled` is off, `428` without the confirmation, `404` for an unknown project, `429` `TERMINAL_LIMIT` |
+| `POST /v1/terminal/sessions/{id}:close` `{}` | `terminal/v1` `session` with `ended_at`; `NOT_FOUND` for an unknown id |
+| WebSocket `/v1/terminal/{id}/io` | `terminal/v1` frames: input, resize and credit from the client, output, exit and error from the server |
 | WebSocket `/v1/events` | `stream/v1` frames: subscriptions, replay by cursor, run, log, journal events, heartbeats |
 | `POST /v1/session/tokens` `{}` | `201` `{url}`: a new one-time browser URL; bearer only (`PERMISSION_DENIED` otherwise) |
 | `GET /?t=<token>` | the token exchange: `303` to `/` with the session cookie |
@@ -218,6 +222,7 @@ audit and backend logs; `issues` lists validation issues as `{pointer, code, mes
 | `PERMISSION_DENIED` | forbidden | 403 | no |
 | `CONFIRMATION_REQUIRED` | forbidden | 428 | no |
 | `CONCURRENCY_LIMIT` | limit | 429 | yes |
+| `TERMINAL_LIMIT` | limit | 429 | yes |
 | `RUN_NOT_CANCELLABLE` | conflict | 409 | no |
 | `HANDLER_FAILED` | unavailable | 502 | yes |
 | `HANDLER_TIMEOUT` | timeout | 504 | yes |
@@ -323,6 +328,44 @@ backend restarted) or a subscription's queue overflowed, the server sends `snaps
 state through the HTTP API and subscribes again with `cursor: null, epoch: null`. A `subscribe` with a cursor and no
 epoch is `INPUT_INVALID`. Progress events may be coalesced; log chunks come from a bounded ring buffer and the full
 log stays on disk.
+
+## Terminal (`terminal/v1`)
+
+The terminal is a privilege of the host, not a contribution of a plugin (a contribution with the effect `terminal` is
+still `CONTRIB_CAPABILITY_RESERVED`). It is **off by default**: `[gui.terminal] enabled = false` in the machine layer.
+While off, `POST /v1/terminal/sessions` is `PERMISSION_DENIED` (`details.reason: terminal_disabled`) and the bootstrap
+feature `terminal` is absent. Desktop mode does not support it (`terminal_unsupported`, no feature; decision D30).
+
+**Start.** `session_request {project_id, cols, rows, confirm?}`: the project must be registered (trusted), `cols` is
+10..500, `rows` 2..200. Every session needs the HMAC confirmation (purpose `terminal.start`, payload project and size,
+risk `high`; the summary names the shell and the project root), and at most `terminal.max_sessions` run at the same
+time (`TERMINAL_LIMIT`). The answer is a `session`: `session_id` (`term-` and 128 random bits), `project_id`,
+`shell`, `cols`, `rows`, `started_at`, and `ended_at` once it ended.
+
+**Process.** The shell is `$SHELL` when it is an absolute, executable path listed in `/etc/shells`, else `/bin/sh`,
+started as a session leader on a PTY (job control works) in the project root. Its environment is the
+`clean_environment` allowlist plus `TERM=xterm-256color`, `COLORTERM=truecolor` and `LANG`: no secrets, no `GUI_*`,
+no session token. Closing sends `SIGHUP` to the group, waits 2 s, then `SIGKILL` to the group and to every process of
+the shell's session (jobs have groups of their own), and reaps the shell. A session ends on the exit of the shell,
+`:close`, the closing of the WebSocket (at once; version 1 has no reconnect), `terminal.idle_timeout_s` without input
+and output, `terminal.max_session_s`, or the stop of the backend.
+
+**WebSocket** `/v1/terminal/{id}/io` (Host and Origin checked, Origin required, Bearer or cookie as everywhere).
+Frames are JSON text: client to server `{t: input, data: base64}` (at most 64 KiB of bytes), `{t: resize, cols, rows}`
+and `{t: credit, bytes}`; server to client `{t: output, seq, data: base64}`, `{t: exit, code, signal?, reason}` and
+`{t: error, code, message}`. The client sends its first credit at once. The server reads the PTY only while the client
+has credit, subtracts what it sends, and holds at most `terminal.output_chunk_bytes` unsent: at zero credit the kernel
+slows the shell down and nothing is lost; `seq` rises by one per `output` frame. The unpaid credit stays at most
+`4 * terminal.credit_bytes`. A frame that is not JSON, of an unknown type, with extra fields, an input over 64 KiB or
+not base64, a credit over the cap or a size out of range gets `{t: error, code: INPUT_INVALID}` and the socket closes
+(and with it the session). A second client on a session gets `{t: error, code: TERMINAL_BUSY}` and is closed; the
+holder is not affected. `TERMINAL_BUSY` is a code of this socket only (it is not an HTTP answer, so not in the
+registry above). An unknown id gets `NOT_FOUND`. `exit.reason` is `exit`, `closed`, `idle`, `max`, `backend_stop`
+or `error`; `exit.code` is `-1` when a signal ended the shell.
+
+**Audit and privacy.** `terminal.start` (project, shell, size) and `terminal.end` (reason, exit code and signal,
+`bytes_in`, `bytes_out`, `duration_s`) are audited. The content of the terminal, input and output, is never stored:
+not in the audit, the logs, the events or any file of the state folder.
 
 ## Plugin endpoints (`plugin-api/v1`)
 

@@ -26,7 +26,8 @@
       {"id": "urn:swissknifeman:gui:project", "path": "schemas/project/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:gui:run-api", "path": "schemas/run-api/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:gui:config-view", "path": "schemas/config-view/v1", "version": "v1", "stability": "development"},
-      {"id": "urn:swissknifeman:gui:plugin-api", "path": "schemas/plugin-api/v1", "version": "v1", "stability": "development"}
+      {"id": "urn:swissknifeman:gui:plugin-api", "path": "schemas/plugin-api/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:terminal", "path": "schemas/terminal/v1", "version": "v1", "stability": "development"}
     ],
     "extension_points": [
       {"id": "query", "description": "Read-only GUI queries of a contribution: input {id, context, params}, output view-data/v1."},

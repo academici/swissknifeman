@@ -48,6 +48,7 @@ extensions. Each contract is a JSON Schema validated by `aicore.util.schema` (th
 | `run-api` | `urn:swissknifeman:gui:run-api:v1` | command and run endpoints: `run_request`, `command_list`, `run_list`, `log_page`, chosen by `kind` | P2.3 |
 | `config-view` | `urn:swissknifeman:gui:config-view:v1` | configuration editor: `config_modules` and `config_view` (module schema, layers with revision and redacted raw, keys with provenance, overridden values and per-layer values), chosen by `kind` | P3.2 |
 | `plugin-api` | `urn:swissknifeman:gui:plugin-api:v1` | plugin endpoints (`/v1/plugins*`): `plugin_list`, `plugin_history`, `grant_request`, `action_request`, `action_result`, `grant_result`, chosen by `kind` | P5.2 |
+| `terminal` | `urn:swissknifeman:gui:terminal:v1` | terminal of the host (`/v1/terminal*`): `session_request`, `session`, `session_list` chosen by `kind`; the frames of the WebSocket `/v1/terminal/{id}/io` in `$defs` (`client_frame`, `server_frame`, chosen by `t`; examples in `examples/frames`) | P7.1 |
 
 The column "Added by" names the step of the module plan that freezes the contract; until then the row is a reservation.
 Frozen: `contribution`, `view-data` (field reference: [docs/contribution.md](../docs/contribution.md)); `api-error`,

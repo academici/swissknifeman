@@ -85,6 +85,26 @@ class ReviewPlanTests(ConductorCase):
         fixed = SimpleNamespace(conductor={"argv": {"reviewer": ["fake"]}})
         self.assertEqual(review_plan.group_effort(fixed, "codex/gpt-6.1-sol/xhigh", "medium"), "medium")
 
+    def test_the_followup_runs_the_command_checks_of_the_reviewed_pieces(self):
+        import tempfile
+        from types import SimpleNamespace
+        from orch.conductor.application import review_plan
+        read = {"findings": [{"severity": "Major", "location": "a.py:1", "text": "a.py:1 - a defect"}]}
+        checks = {"W1": [{"id": "V1", "cmd": "bash t.sh", "kind": "acceptance"},
+                         {"id": "V2", "cmd": "python3 -m unittest x", "cwd": "pkg dir", "kind": "acceptance"},
+                         {"id": "V50", "cmd": "broad --tier all", "cadence": "phase", "kind": "acceptance"},
+                         {"id": "V3", "procedure": "looks right", "kind": "acceptance"}],
+                  "W2": [{"id": "V1", "cmd": "bash t.sh", "kind": "acceptance"}]}
+        with tempfile.TemporaryDirectory() as folder:
+            for ref, rows in checks.items():
+                (Path(folder) / ref).mkdir()
+                (Path(folder) / ref / "input.json").write_text(json.dumps({"acceptance": {"checks": rows}}), encoding="utf-8")
+            owner = SimpleNamespace(directory=Path(folder), progress=SimpleNamespace(emit=lambda *a, **k: None),
+                                    _relative=lambda path: str(path))
+            doc = json.loads(Path(review_plan.followup_input(owner, 1, ["W1", "W2"], read, "high")).read_text(encoding="utf-8"))
+        commands = [row.get("cmd") for row in doc["acceptance"]["checks"] if row.get("cmd")]
+        self.assertEqual(commands, ["bash t.sh", "cd 'pkg dir' && python3 -m unittest x"])  # once each, no phase check
+
     def test_the_followup_asks_no_more_effort_than_the_executor_of_the_run_has(self):
         import tempfile
         from types import SimpleNamespace

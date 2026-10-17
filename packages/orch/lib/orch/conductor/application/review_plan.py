@@ -7,6 +7,8 @@ commits of the group once (``review_batch``) and keeps the reply in ``group-revi
 findings are announced (``GROUP_REVIEW``) and left to the owner or the observer to correct in a commit of their own."""
 from __future__ import annotations
 
+import json
+import shlex
 import time
 from typing import Optional
 
@@ -188,6 +190,27 @@ def group_review(self, number: int, group: list, effort: str) -> None:
                                                    else ""))
 
 
+def piece_checks(self, refs: list) -> list:
+    """The command acceptance checks of the reviewed pieces, once each and in order (a check of ``cadence: phase`` is the
+    broad pass of a phase, not a check of a correction): the follow-up must pass the tests the pieces passed. A check run
+    in another folder keeps it as ``cd DIR && CMD``."""
+    seen, found = set(), []
+    for ref in refs:
+        try:
+            doc = json.loads((self.directory / safe(ref) / "input.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for check in (doc.get("acceptance") or {}).get("checks") or []:
+            if check.get("kind", "acceptance") != "acceptance" or not check.get("cmd") or check.get("cadence") == "phase":
+                continue
+            folder = check.get("cwd") or "."
+            command = check["cmd"] if folder in (".", "./") else f"cd {shlex.quote(folder)} && {check['cmd']}"
+            if command not in seen:
+                seen.add(command)
+                found.append(command)
+    return found
+
+
 def followup_input(self, number: int, refs: list, read: dict, effort: Optional[str] = None) -> Optional[str]:
     """The Blocker and Major findings of a group review as a ready execution-input (``provenance: review_followup``): one
     command corrects them in a commit of their own, with the file source (``run --input FILE --commit``). The route minimum
@@ -199,9 +222,11 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
         return None
     goal = ("Correct these confirmed review findings of the pieces " + ", ".join(refs) + ", each in the file it names; change "
             "nothing else:\n" + "\n".join(f"- [{row['severity']}] {row['text']}" for row in loud))
+    checks = [f"V{number}={command}" for number, command in enumerate(piece_checks(self, refs), 2)]
     try:
-        doc = adhoc.build_adhoc_input(goal, paths, procedures=["V1=every listed finding is fixed and the tests that cover the "
-                                                              "touched code pass"], why=f"group review {number} of this run",
+        doc = adhoc.build_adhoc_input(goal, paths, checks=checks,
+                                      procedures=["V1=every listed finding is fixed and the tests that cover the "
+                                                  "touched code pass"], why=f"group review {number} of this run",
                                       route={"class": "implementation", "effort": effort or "high"},
                                       provenance=adhoc.support_provenance("review_followup"))
     except adhoc.AdhocError as error:

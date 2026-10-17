@@ -17,7 +17,7 @@ class RetryOfAPieceTheConductorBlocked(unittest.TestCase):
     def fake(self, steps: dict):
         saved = []
         self_ = types.SimpleNamespace(state={"items": {"W1": {"outcome": "blocked", "steps": steps, "stop": {}}}, "questions": {}},
-                                      _save=lambda: saved.append(1), progress=mock.Mock())
+                                      _save=lambda: saved.append(1), progress=mock.Mock(), directory=Path(tempfile.mkdtemp()))
         return self_
 
     def test_checks_red_past_the_limit_has_no_blocked_round_and_retry_goes_on_from_the_last_executor_round(self):

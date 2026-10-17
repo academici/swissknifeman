@@ -24,6 +24,7 @@ import unittest
 from unittest import mock
 
 from orch.conductor import cli, engine, gates, options as opts, progress
+from orch.conductor.application import run_service
 from orch.conductor.infrastructure import clock
 from orch.conductor.policies import sandbox as sandbox_policy
 
@@ -603,6 +604,66 @@ class StopTests(ConductorCase):
         self.assertIn("brief", started)  # the input is built again from the amended plan
         self.assertIn("executor.1", started)
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+    def retry_blocked(self, run_id: str) -> tuple:
+        doc = self.source()
+        doc["items"]["W1"]["status"] = "todo"  # the source reopened it
+        self.state_file.write_text(json.dumps(doc), encoding="utf-8")
+        return self.conduct("resume", "--run", run_id, "--retry", "W1", "--json-lines")
+
+    def test_a_retry_keeps_every_earlier_attempt_with_its_stream_and_report(self):
+        blocked = [report("W1", "blocked", open_issues=[{"text": f"needs a path outside the write set {n}", "kind": "escalation"}])
+                   for n in (1, 2)]
+        self.script({"executor": [{"result": blocked[0]}, {"result": blocked[1]}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        run_dir = self.run_dir(err)
+        piece = run_dir / "W1"
+        first_stream = (piece / "streams" / "executor.1.jsonl").read_text(encoding="utf-8")
+        first_report = (piece / "reports" / "executor.1.json").read_text(encoding="utf-8")
+        code, _, err = self.retry_blocked(run_dir.name)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        second_report = (piece / "reports" / "executor.1.json").read_text(encoding="utf-8")
+        self.assertNotEqual(first_report, second_report)
+        code, _, err = self.retry_blocked(run_dir.name)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        attempts = json.loads((run_dir / engine.STATE_FILE).read_text())["items"]["W1"]["attempts"]
+        self.assertEqual([attempt["n"] for attempt in attempts], [1, 2])
+        self.assertEqual(attempts[0]["steps"]["executor.1"]["report_status"], "blocked")
+        self.assertIn("streams/executor.1.jsonl", attempts[0]["steps"]["executor.1"]["files"])
+        self.assertEqual((piece / "attempts" / "1" / "streams" / "executor.1.jsonl").read_text(encoding="utf-8"), first_stream)
+        self.assertEqual((piece / "attempts" / "1" / "reports" / "executor.1.json").read_text(encoding="utf-8"), first_report)
+        self.assertEqual((piece / "attempts" / "2" / "reports" / "executor.1.json").read_text(encoding="utf-8"), second_report)
+        self.assertNotEqual((piece / "reports" / "executor.1.json").read_text(encoding="utf-8"), second_report)
+        observed = json.loads(self.conduct("observe", "--run", run_dir.name)[1])
+        report_doc = json.loads(Path(observed["json"]).read_text(encoding="utf-8")) if "json" in observed else None
+        self.assertIsNotNone(report_doc, observed)
+        row = report_doc["items"][0]
+        self.assertEqual([attempt["n"] for attempt in row["attempts"]], [1, 2])
+        self.assertIn("## Retried pieces", Path(observed["markdown"]).read_text(encoding="utf-8"))
+
+    def test_the_reviews_of_all_attempts_are_counted_not_the_keys_of_the_state(self):
+        directory = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(directory, ignore_errors=True))
+        for folder, name in (("streams", "review.1.jsonl"), ("streams", "review.1.jsonl.times"), ("reports", "review.1.json"),
+                             ("streams", "review.10.jsonl"), ("streams", "executor.1-q1.jsonl")):
+            (directory / "W1" / folder).mkdir(parents=True, exist_ok=True)
+            (directory / "W1" / folder / name).write_text(name, encoding="utf-8")
+        steps = {"executor.1": {"verdict": "blocked", "ended": "2026-01-01T00:00:01Z"},
+                 "review.1": {"verdict": "RED 1 finding(s)", "role": "reviewer", "ended": "2026-01-01T00:00:02Z"},
+                 "review.10": {"verdict": "GREEN", "ended": "2026-01-01T00:00:03Z"},
+                 "executor.1-q1": {"verdict": "done", "ended": "2026-01-01T00:00:04Z"}}
+        item = {"steps": steps}
+        service = type("Service", (), {"directory": directory})()
+        run_service.archive_attempt(service, "W1", item, ["executor.1", "review.1"])
+        run_service.archive_attempt(service, "W1", item, ["review.10"])
+        self.assertEqual([attempt["n"] for attempt in item["attempts"]], [1, 2])
+        self.assertEqual(sorted(item["attempts"][0]["steps"]["review.1"]["files"]),
+                         ["reports/review.1.json", "streams/review.1.jsonl", "streams/review.1.jsonl.times"])
+        self.assertEqual(item["attempts"][1]["steps"]["review.10"]["files"], ["streams/review.10.jsonl"])
+        self.assertTrue((directory / "W1" / "streams" / "executor.1-q1.jsonl").is_file())  # a kept longer key stays
+        self.assertFalse((directory / "W1" / "streams" / "review.1.jsonl").exists())
+        self.assertEqual(sum(1 for attempt in item["attempts"] for key in attempt["steps"] if key.startswith("review.")), 2)
 
     def test_a_resume_does_not_count_the_closed_correction_rounds_again(self):
         repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}

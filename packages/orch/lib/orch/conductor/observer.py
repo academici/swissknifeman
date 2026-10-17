@@ -144,7 +144,12 @@ def build(directory: Path, project: Path) -> dict:
                 scout_hits += 1 if result.get("hit") else 0
         items.append({"item": ref, "outcome": item.get("outcome"), "stop": item.get("stop"),
                       "check_fixes": item.get("check_fixes_used", 0), "corrections": item.get("corrections_used", 0),
-                      "retries": item.get("retries_used", 0), "tokens": item.get("tokens", {"input": 0, "output": 0})})
+                      "retries": item.get("retries_used", 0), "tokens": item.get("tokens", {"input": 0, "output": 0}),
+                      "attempts": [{"n": attempt["n"], "retried_at": attempt.get("retried_at"),
+                                    "steps": {key: step.get("verdict") for key, step in attempt.get("steps", {}).items()}}
+                                   for attempt in item.get("attempts", [])],
+                      "reviews": sum(1 for key in steps if key.startswith("review.")) + sum(
+                          1 for attempt in item.get("attempts", []) for key in attempt.get("steps", {}) if key.startswith("review."))})
     by_agent = []
     for folder in sorted(Path(directory).glob("*/")):
         for row in agents_mod.read(folder):
@@ -260,6 +265,13 @@ def markdown(report: dict) -> str:
             outcome += f" ({item['stop']['code']})"
         lines.append(f"| {item['item']} | {outcome} | {item['check_fixes']} | {item['corrections']} | "
                      f"{item['retries']} | {item['tokens'].get('input', 0)}/{item['tokens'].get('output', 0)} |")
+    retried = [item for item in report["items"] if item.get("attempts")]
+    if retried:
+        lines += ["", "## Retried pieces", "", "| Item | Earlier attempts | Reviews in all attempts |", "| --- | --- | --- |"]
+        for item in retried:
+            lines.append(f"| {item['item']} | " + "; ".join(
+                f"{attempt['n']}: " + ", ".join(f"{key} {verdict or '-'}" for key, verdict in attempt["steps"].items())
+                for attempt in item["attempts"]) + f" | {item['reviews']} |")
     lines += ["", "## Roles", "", "| Role | Seconds | Tokens in/out |", "| --- | --- | --- |"]
     for role in sorted(set(report["seconds_by_role"]) | set(report["tokens_by_role"])):
         value = report["tokens_by_role"].get(role, {"input": 0, "output": 0})

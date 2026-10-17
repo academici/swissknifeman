@@ -12,7 +12,7 @@ from orch.conductor import debug_mode, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import RunStore, write_json
+from orch.conductor.infrastructure.files import RunStore, safe, write_json
 from orch.worksource import WorkSourceError
 from orch.worksource_file import read_input
 
@@ -128,8 +128,10 @@ def retry(self, ref: str) -> None:
     # rejected finding, the question ``orch-advice-<n>`` waits for the owner) reported no blocked round: its closed rounds,
     # checks, reviews and advice stay and only the opening and closing steps are repeated.
     since = steps[blocked].get("ended", "") if blocked else None
-    for key in [key for key in steps if key == blocked or key in ("brief", "prepare", "scout", "close", "register", "commit")
-                or (since is not None and steps[key].get("ended", "") > since)]:
+    dropped = [key for key in steps if key == blocked or key in ("brief", "prepare", "scout", "close", "register", "commit")
+               or (since is not None and steps[key].get("ended", "") > since)]
+    archive_attempt(self, ref, item, dropped)  # the repeated steps write the same files again: the first attempt is kept aside
+    for key in dropped:
         steps.pop(key)
     for key in ("outcome", "stop", "partial", "skills_auto", "skills_checked"):  # the skills are chosen again from the amended write set
         item.pop(key, None)
@@ -137,6 +139,44 @@ def retry(self, ref: str) -> None:
     self._save()
     self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated" if blocked
                        else "retry: the answer to the advice is applied; the closed rounds are kept")
+
+
+ATTEMPT_DIRS = ("streams", "reports", "prompts", "checks")
+
+
+def archive_attempt(self, ref: str, item: dict, dropped: list) -> None:
+    """Keep what a ``retry`` is about to repeat: the record of the dropped steps in ``item["attempts"]`` and their
+    files (stream, report, prompt, checks) under ``<piece>/attempts/<n>/``. The count of reviews a piece went through is
+    the reviews of its attempts and of its current steps; a step key alone is not a history."""
+    steps = item.get("steps", {})
+    attempts = item.setdefault("attempts", [])
+    number = len(attempts) + 1
+    kept = [key for key in steps if key not in dropped]
+    directory = self.directory / safe(ref)
+    record = {}
+    for key in dropped:
+        step = steps[key]
+        result = step.get("result") if isinstance(step.get("result"), dict) else {}
+        report = result.get("report") if isinstance(result.get("report"), dict) else {}
+        row = {name: step[name] for name in ("verdict", "role", "route", "ended") if step.get(name)}
+        if report.get("status"):
+            row["report_status"] = report["status"]
+        moved = []
+        for folder in ATTEMPT_DIRS:
+            for path in sorted((directory / folder).glob("*")) if (directory / folder).is_dir() else []:
+                name = path.name
+                if not (name == key or name.startswith((key + ".", key + "-"))):
+                    continue
+                if any(name == other or name.startswith((other + ".", other + "-")) for other in kept if len(other) > len(key)):
+                    continue  # a file of a longer step key that stays (``executor.1-q1`` beside a dropped ``executor.1``)
+                target = directory / "attempts" / str(number) / folder / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                path.replace(target)
+                moved.append(f"{folder}/{name}")
+        if moved:
+            row["files"] = moved
+        record[key] = row
+    attempts.append({"n": number, "retried_at": clock.utc_now(), "steps": record})
 
 
 def work_began(state: dict) -> bool:

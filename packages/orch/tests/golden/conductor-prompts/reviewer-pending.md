@@ -136,7 +136,7 @@ Diff against the base:
 
 ## Progress lines
 
-Before each major step print one line to your output: `[orch] <UTC time> P1.1 review.1 <what you start or finish>`.
+Before each major step print one line to your output: `[orch] P1.1 review.1 <what you start or finish>`.
 
 ## Result
 

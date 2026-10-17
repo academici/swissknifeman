@@ -82,7 +82,7 @@ d
 
 ## Progress lines
 
-Before each major step print one line to your output: `[orch] <UTC time> W1 review.1 <what you start or finish>`.
+Before each major step print one line to your output: `[orch] W1 review.1 <what you start or finish>`.
 
 ## Result
 

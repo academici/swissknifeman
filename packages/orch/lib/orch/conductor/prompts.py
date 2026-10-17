@@ -3,7 +3,7 @@
 A prompt is the role text and the task block of ``render.render_prompt`` (the execution-input only: the role never
 sees the plan or the plan command line), followed by the conductor frame: the scout context, the run rules, a
 correction package, the candidate under review, and the result block the role must end with. Every role prints the
-same progress lines as the conductor (``[orch] <UTC time> <item> <step> <what>``) before each major step.
+same progress lines as the conductor (``[orch] <item> <step> <what>``) before each major step.
 
 Every builder returns the prompt as a list of ``Block(kind, origin, text)``; ``render`` joins them into the prompt byte for
 byte (a separator belongs to the block it follows), and ``manifest`` says what each block is and where it came from.
@@ -124,7 +124,7 @@ is optional:
 _PROGRESS = """\
 ## Progress lines
 
-Before each major step print one line to your output: `[orch] <UTC time> {item} {step} <what you start or finish>`.
+Before each major step print one line to your output: `[orch] {item} {step} <what you start or finish>`.
 """
 
 

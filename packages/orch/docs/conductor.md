@@ -516,7 +516,7 @@ Every event is one progress line (`conductor/v1` `progress-line`): `run.start|re
 `stage.start|end|skip`, `info`. stderr gets a readable line by default (time, item, step, role and route, what
 happened, verdict, duration, tokens, stop code), the JSON line with `--json-lines`, nothing with `--quiet`. The journal
 `progress.jsonl` always gets the JSON line. Every role is told to print the same kind of line
-(`[orch] <UTC time> <item> <step> <what>`) into its own stream. `orch conduct status` summarises the journal: run status,
+(`[orch] <item> <step> <what>`, no time: a role cannot know it; the time of a line is the receive stamp in the `<step>.jsonl.times` file next to the stream) into its own stream. `orch conduct status` summarises the journal: run status,
 the step running now, the last step and outcome of each piece, the tokens and the agent runs of the current piece
 (`status --json` has them as `agents: [{agent_run_id, role, step, status, tokens}]`).
 

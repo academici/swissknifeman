@@ -205,7 +205,7 @@ class HappyPathTests(ConductorCase):
         self.assertIn("- phase rule\n- item rule", prompt)
         self.assertIn("## Context map", prompt)
         self.assertIn("```stage-report", prompt)
-        self.assertIn("[orch] <UTC time> W1 executor.1", prompt)
+        self.assertIn("[orch] W1 executor.1", prompt)
         self.assertNotIn("plan" + ".py", prompt)
         options = json.loads((self.run_dir(err) / "W1" / "options.json").read_text())
         self.assertEqual(options["sources"]["rules"], "item:W1")

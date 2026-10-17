@@ -621,6 +621,96 @@ class RollbackTests(MigrateCase):
         self.assertEqual(read_marker(root)["plans_store"], "workspace")
 
 
+class RecoveryTests(MigrateCase):
+    """A call that stops after the bridge switched the marker is finished by the next one; rollback never loses a copy."""
+
+    def failing_report(self):
+        original = migrate.atomic_write_text
+
+        def write(path, text, *args, **kwargs):
+            if path.parent.name == "migrations":
+                raise OSError("disk full")
+            return original(path, text, *args, **kwargs)
+        return mock.patch.object(migrate, "atomic_write_text", write)
+
+    def intents(self) -> list:
+        return sorted(self.state.glob("migrate-*.intent.json"))
+
+    def test_a_refused_second_apply_does_not_remove_the_intent_of_the_first(self):
+        root = self.build()
+        with self.failing_report(), self.assertRaises(OSError):
+            migrate.apply(root, yes=True)
+        project_id = read_marker(root)["project_id"]
+        self.assertEqual(len(self.intents()), 1)
+        self.assertEqual(self.reports(project_id), [])
+        write_marker(root, project_id, "legacy")  # the second apply was planned before the switch
+        refused = {"result": "refused", "code": "MIGRATION_LOCKED", "message": "busy", "phase": "lock"}
+        real = migrator_port.call
+
+        def call(op, *args, **kwargs):
+            return refused if op == "apply" else real(op, *args, **kwargs)
+        with mock.patch.object(migrator_port, "call", call), self.assertRaises(migrate.WorkspaceError):
+            migrate.apply(root, yes=True)
+        self.assertEqual(len(self.intents()), 1)
+        write_marker(root, project_id, "workspace")
+        again = migrate.apply(root, yes=True)
+        self.assertFalse(again["noop"])
+        self.assertEqual(len(self.reports(project_id)), 1)
+        self.assertEqual(self.intents(), [])
+
+    def test_the_report_of_a_retry_keeps_the_decision_of_the_bridge(self):
+        root = self.build()
+        real = migrator_port.call
+        project = {}
+
+        def call(op, payload, *args, **kwargs):
+            if op == "apply":  # the folders appear in the workspace after the dry run
+                target = self.project_dir(payload["project_id"]) / "plans"
+                project["id"] = payload["project_id"]
+                shutil.copytree(root / "plans" / PLAN, target / PLAN)
+            return real(op, payload, *args, **kwargs)
+        with self.failing_report(), mock.patch.object(migrator_port, "call", call), self.assertRaises(OSError):
+            migrate.apply(root, yes=True)
+        done = migrate.apply(root, yes=True)
+        self.assertFalse(done["noop"])
+        report = json.loads(self.reports(project["id"])[0].read_text(encoding="utf-8"))
+        actions = {row["name"]: row["action"] for row in report["plans"]}
+        self.assertEqual(actions[PLAN], "skipped-equal")
+        self.assertEqual(self.json_cli("migrate", "rollback", "--project", str(root))["rolled_back"], True)
+        self.assertTrue((self.project_dir(project["id"]) / "plans" / PLAN / "plan.json").is_file())
+
+    def rollback_stopped(self, extra: bool):
+        root = self.build()
+        project_id = self.apply(root)["project_id"]
+        plan = self.project_dir(project_id) / "plans" / PLAN
+
+        def drop(*args, **kwargs):
+            put(plan / ".lock", "")  # what a planner's PlanLock makes at the old path
+            if extra:
+                put(plan / "plan.json", "new\n")
+            raise OSError("boom")
+        with mock.patch.object(migrate, "_drop_local_only", drop):
+            try:
+                migrate.rollback(root)
+            except (OSError, migrate.WorkspaceError) as exc:
+                return root, plan, exc
+        self.fail("the rollback did not stop")
+
+    def test_a_stopped_rollback_puts_the_plan_back_over_a_lock_file(self):
+        root, plan, exc = self.rollback_stopped(False)
+        self.assertIsInstance(exc, OSError)
+        self.assertIn('"$schema"', (plan / "plan.json").read_text(encoding="utf-8"))
+        self.assertEqual(read_marker(root)["plans_store"], "workspace")
+
+    def test_a_stopped_rollback_keeps_the_staged_copy_when_the_old_path_is_taken(self):
+        root, plan, exc = self.rollback_stopped(True)
+        self.assertEqual(getattr(exc, "code", None), "MIGRATION_FAILED")
+        self.assertIn(".staging", str(exc))
+        staged = list((self.ws / ".staging").glob(f"rollback-*/plans/{PLAN}/plan.json"))
+        self.assertEqual(len(staged), 1)
+        self.assertIn('"$schema"', staged[0].read_text(encoding="utf-8"))
+
+
 class CleanupTests(MigrateCase):
     def test_the_confirmation_must_be_the_project_id_of_the_marker(self):
         root = self.build()

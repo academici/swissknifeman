@@ -158,10 +158,14 @@ def _unit_dirs(plans: Path):
     """``(name, directory)`` of the plan folders of ``plans/`` and ``plans/archive/`` and the loose files."""
     folders, loose = [], []
     for parent, prefix in ((plans, ""), (plans / ARCHIVE, ARCHIVE + "/")):
+        if parent.is_symlink():  # never entered; ``plans/archive`` as a symlink is reported from the loose entries
+            continue
         try:
             entries = sorted(os.scandir(parent), key=lambda entry: entry.name)
-        except OSError:
-            continue
+        except (FileNotFoundError, NotADirectoryError):
+            continue  # no ``archive`` folder (or a file of that name, listed as a loose file)
+        except OSError as exc:
+            raise OSError(f"cannot list plans/{prefix}: {exc.strerror or exc.__class__.__name__}") from None
         for entry in entries:
             if entry.name in IGNORED or (prefix == "" and entry.name == ARCHIVE and entry.is_dir(follow_symlinks=False)):
                 continue

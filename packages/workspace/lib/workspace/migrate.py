@@ -21,6 +21,7 @@ import os
 import re
 import shlex
 import shutil
+import time
 import urllib.parse
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
@@ -47,6 +48,7 @@ LAUNCHER = ".swissknifeman/launcher.py"
 VIRTUAL = "projects/prj/"  # prefix of the paths given to the publish-safety rules (they judge paths below projects/)
 COPY = ("copied", "imported-copy")
 MAX_LISTED = 5
+PLAN_LOCK_TIMEOUT_S = 30.0
 ON_CONFLICT = ("keep-workspace", "import-copy")
 _HEAD = re.compile(r"^[0-9a-f]{40,64}$")
 _CHUNK = 1 << 20
@@ -115,6 +117,8 @@ def source_entries(plans: Path) -> Tuple[List[Tuple[str, Path]], List[Tuple[str,
     folders: List[Tuple[str, Path]] = []
     loose: List[Tuple[str, Path]] = []
     for parent, prefix in ((plans, ""), (plans / ARCHIVE, ARCHIVE + "/")):
+        if parent.is_symlink():  # a symlinked container is never entered; ``plans/archive`` then stays a loose symlink
+            continue
         try:
             entries = sorted(os.scandir(parent), key=lambda item: item.name)
         except OSError:
@@ -142,6 +146,23 @@ def encode_name(name: str) -> str:
 
 def decode_name(text: str) -> str:
     return urllib.parse.unquote(text)
+
+
+def _valid_rel(name: str) -> bool:
+    """A folder name of a report: ``<id>`` or ``archive/<id>``, no empty, ``.`` or ``..`` part, no NUL."""
+    parts = name.split("/")
+    if not 1 <= len(parts) <= 2 or (len(parts) == 2 and parts[0] != ARCHIVE):
+        return False
+    return all(part not in ("", ".", "..") and "\0" not in part for part in parts)
+
+
+def _report_name(row: Mapping[str, Any]) -> str:
+    """The folder name of a report row, decoded; a name that could leave its plan folder is ``MIGRATION_REPORT_INVALID``."""
+    name = decode_name(row["name"])
+    if not _valid_rel(name):
+        raise WorkspaceError("MIGRATION_REPORT_INVALID", f"the migration report names a folder that is not a plan "
+                             f"folder name: {row['name']}")
+    return name
 
 
 def device_short(device_id: str) -> str:
@@ -490,11 +511,26 @@ def report_issues(document: Any) -> List[str]:
     if not isinstance(document, dict):
         return ["not an object"]
     body = {key: value for key, value in document.items() if key != "rolled_back_at"}
+    stored_as: List[Any] = []
+    if isinstance(body.get("plans"), list):  # ``stored_as`` (where a suffixed copy lives) is checked here by hand as well
+        rows = [dict(row) if isinstance(row, dict) else row for row in body["plans"]]
+        stored_as = [row.pop("stored_as") for row in rows if isinstance(row, dict) and "stored_as" in row]
+        body = dict(body, plans=rows)
     issues = validate_document("workspace-migration", body)
+    issues.extend("plans.stored_as: not a folder name" for value in stored_as
+                  if not isinstance(value, str) or not _valid_rel(decode_name(value)))
     if "rolled_back_at" in document and not (isinstance(document["rolled_back_at"], str)
                                              and _TIME.match(document["rolled_back_at"])):
         issues.append("rolled_back_at: not a UTC time")
     return issues
+
+
+def _report_row(row: Mapping[str, Any]) -> Dict[str, Any]:
+    document = {"name": encode_name(row["name"]), "class": row["class"], "action": row["action"],
+                "files": row["files"], "bytes": row["bytes"], "digest": row["digest"]}
+    if row.get("stored_as") and row["stored_as"] != row["name"]:
+        document["stored_as"] = encode_name(row["stored_as"])
+    return document
 
 
 def _report_document(op_id: str, project_id: str, device_id: str, started: str, plan: Plan, answer: Mapping[str, Any],
@@ -502,9 +538,7 @@ def _report_document(op_id: str, project_id: str, device_id: str, started: str, 
     return {"$schema": REPORT_SCHEMA, "op_id": op_id, "project_id": project_id, "device_id": device_id,
             "started_at": started, "finished_at": utc_now(), "mode": answer.get("mode", plan.document["mode"]),
             "source": plan.document["source"],
-            "plans": [{"name": encode_name(row["name"]), "class": row["class"], "action": row["action"],
-                       "files": row["files"], "bytes": row["bytes"], "digest": row["digest"]}
-                      for row in answer["plans"]],
+            "plans": [_report_row(row) for row in answer["plans"]],
             "local_only": local_only, "warnings": sorted(set(codes))}
 
 
@@ -528,6 +562,56 @@ def _record_local_only(ws: Path, project_id: str, device_id: str, plan: Plan, an
     localonly.update(ws, project_id, entries, device_id)
     localonly.rebuild_exclude(ws, device_id)
     return len(added)
+
+
+def _intent_path(project_id: str, op_id: str, env: Env, home: Optional[PathLike]) -> Path:
+    """One intent file per operation: a second apply never overwrites or removes the intent of the first."""
+    return workspace_state_dir(env, home) / f"migrate-{project_id}.{op_id}.intent.json"
+
+
+def _write_intent(path: Path, op_id: str, started: str, device_id: str, plan: Plan) -> None:
+    """What the report and the local-only index need, kept on this device until they are written. It is ``confirmed`` only
+    when the answer of the bridge (its real decisions) has been added by ``_confirm_intent``."""
+    document = {"op_id": op_id, "started_at": started, "device_id": device_id, "mode": plan.document["mode"],
+                "source": plan.document["source"], "codes": [item["code"] for item in plan.document["warnings"]],
+                "plans": [dict(row) for row in plan.document["plans"]], "confirmed": False,
+                "units": [{key: unit[key] for key in ("name", "class", "stored_as", "local_only")} for unit in plan.units]}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(path, json.dumps(document, indent=2, ensure_ascii=False) + "\n")
+
+
+def _confirm_intent(path: Path, answer: Mapping[str, Any]) -> None:
+    """Replace the plan-time rows by the rows the bridge answered (its actions and ``stored_as``), right after it returns."""
+    with contextlib.suppress(OSError, UnicodeError, ValueError, KeyError, TypeError):
+        document = json.loads(path.read_text(encoding="utf-8"))
+        document.update(plans=[dict(row) for row in answer["plans"]], mode=answer.get("mode", document["mode"]),
+                        confirmed=True)
+        atomic_write_text(path, json.dumps(document, indent=2, ensure_ascii=False) + "\n")
+
+
+def _read_intent(project_id: str, device_id: str, ws: Path, answer: Mapping[str, Any], env: Env, home: Optional[PathLike]):
+    """``(path, op_id, started, plan, answer, codes)`` of the newest confirmed intent of this device whose report is
+    missing and whose folders are the ones the bridge found, or ``None``. An unconfirmed intent holds only the plan-time
+    decisions, which the bridge may have changed, so it is never used."""
+    found = []
+    for path in workspace_state_dir(env, home).glob(f"migrate-{project_id}.*.intent.json"):
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+            if (document["confirmed"] is True and document["device_id"] == device_id and isinstance(document["plans"], list)
+                    and {(row["name"], row["digest"]) for row in document["plans"]}
+                    == {(row["name"], row["digest"]) for row in answer["plans"]}
+                    and not (project_dir(ws, project_id) / "migrations" / f"{document['op_id']}.json").exists()):
+                found.append((document["started_at"], document["op_id"], path, document))
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError):
+            continue
+    if not found:
+        return None
+    _started, _op, path, document = max(found, key=lambda item: item[:2])
+    plan = Plan()
+    plan.units = document["units"]
+    plan.document = {"mode": document["mode"], "source": document["source"]}
+    return (path, document["op_id"], document["started_at"], plan,
+            {"mode": document["mode"], "plans": document["plans"]}, list(document["codes"]))
 
 
 def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: int = 30,
@@ -563,17 +647,34 @@ def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: in
     if project_id is None:  # nothing to migrate and no project yet
         result.update(noop=True, mode=plan.document["mode"], plans=[], op_id=None, next=[])
         return result
+    intent_path = _intent_path(project_id, op_id, env, home)  # this call's own file; it is the only one it removes
+    written = not plan.document["already_migrated"]
+    if written:
+        _write_intent(intent_path, op_id, started, device["device_id"], plan)
+    finished = [intent_path]
     answer = migrator_port.call("apply", {
         "project_root": str(root), "workspace_root": str(ws), "project_id": project_id, "op_id": op_id,
         "manifest": plan.manifest, "mode": plan.document["mode"], "on_conflict": on_conflict,
         "device_short": device_short(device["device_id"]), "lock_timeout_s": lock_timeout}, env, home)
     if answer.get("result") == "refused":
+        with contextlib.suppress(OSError):
+            intent_path.unlink()
         raise _refusal(answer)
+    if written and answer.get("result") != "noop":
+        _confirm_intent(intent_path, answer)
     bind(project_id, root, env, home)
-    if answer.get("result") == "noop":
-        result.update(noop=True, mode=answer.get("mode"), plans=answer["plans"], op_id=None, next=[])
-        return result
     codes = [item["code"] for item in plan.document["warnings"]]
+    if answer.get("result") == "noop":
+        pending = _read_intent(project_id, device["device_id"], ws, answer, env, home)
+        if pending is None:
+            with contextlib.suppress(OSError):
+                intent_path.unlink()
+            result.update(noop=True, mode=answer.get("mode"), plans=answer["plans"], op_id=None, next=[])
+            return result
+        # an earlier call switched the marker and stopped before the report: write the metadata it still owes
+        recovered, op_id, started, plan, answer, codes = pending
+        finished.append(recovered)
+        result["op_id"] = op_id
     notes: List[str] = []
     with gitutil.git_lock(env, home):
         try:
@@ -589,6 +690,9 @@ def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: in
         report_path = project_dir(ws, project_id) / "migrations" / f"{op_id}.json"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         atomic_write_text(report_path, json.dumps(document, indent=2, ensure_ascii=False) + "\n")
+    for path in finished:
+        with contextlib.suppress(OSError):
+            path.unlink()
     quoted = shlex.quote(str(root))
     result.update(mode=document["mode"], plans=answer["plans"], local_only=recorded, warnings=document["warnings"],
                   notes=notes, report=f"projects/{project_id}/migrations/{op_id}.json",
@@ -633,7 +737,19 @@ def _this_device(env: Env, home: Optional[PathLike]) -> Optional[str]:
 
 
 def _copy_name(row: Mapping[str, Any], name: str, device_id: str) -> str:
-    return f"{name}~{device_short(device_id)}" if row["action"] == "imported-copy" else name
+    """The name of the row's folder in the workspace: ``stored_as`` of the report when it has one."""
+    stored = row.get("stored_as")
+    if stored is not None:
+        decoded = decode_name(stored)
+        if not _valid_rel(decoded) or not (decoded == name or decoded.startswith(f"{name}~")):
+            raise WorkspaceError("MIGRATION_REPORT_INVALID", f"the migration report places {row['name']} at {stored}")
+        return decoded
+    if row["action"] != "imported-copy":
+        return name
+    short = device_short(device_id)
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", short):
+        raise WorkspaceError("MIGRATION_REPORT_INVALID", "the migration report names an invalid device")
+    return f"{name}~{short}"
 
 
 def _workspace_state(pdir: Path, row: Mapping[str, Any], name: str, device_id: str) -> Optional[str]:
@@ -660,7 +776,7 @@ def verify(project: PathLike, env: Env = None, home: Optional[PathLike] = None) 
     undone = "rolled_back_at" in report  # the copies were removed on purpose: only the old folders can still be compared
     rows = []
     for row in report["plans"]:
-        name = decode_name(row["name"])
+        name = _report_name(row)
         compared = row["action"] != "kept-workspace" and not undone
         in_workspace = _workspace_state(pdir, row, name, report["device_id"]) if compared else None
         old = _source_state(root, row, name)
@@ -692,72 +808,126 @@ def _workspace_extras(pdir: Path, known: Sequence[str]) -> List[str]:
     return [name for name in found if name not in known]
 
 
+def _lock_folders(stack: contextlib.ExitStack, folders: Sequence[Path], timeout: float = PLAN_LOCK_TIMEOUT_S) -> None:
+    """The ``PlanLock`` of the planner (``flock`` on ``<plan>/.lock``) of every folder, in the order of the sorted paths, so
+    that a running planner command finishes before the folder is removed; ``MIGRATION_LOCKED`` after ``timeout`` seconds."""
+    for folder in sorted(folders, key=str):
+        handle = open(folder / ".lock", "a+")
+        stack.callback(handle.close)
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise WorkspaceError("MIGRATION_LOCKED", f"plan {folder.name} is held by another process") from None
+                time.sleep(0.05)
+
+
 def rollback(project: PathLike, env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]:
     """Undo the last migration: marker back to ``legacy``, the folders it put into the workspace removed.
 
     Refused (``MIGRATION_DIVERGED`` with the list) when a plan of the report changed in the workspace or the old folder
     is gone or changed; nothing is touched then. A folder that was already in the workspace (``skipped-equal``,
-    ``kept-workspace``) stays.
+    ``kept-workspace``) stays. Everything runs under the migration lock and the lock of every plan that is removed; a
+    failure before the marker is switched puts the folders back, a failure after it is finished by a repeated call (the
+    marker is ``legacy``, the copies are gone, the report is not yet marked).
     """
     root = _real(project)
     ws = layout.root_of(None, env, home)
     layout.require_initialized(ws)
-    marker, project_id = _project_of(root)
-    report = last_report(ws, project_id, _this_device(env, home))
-    if marker["plans_store"] != "workspace" or report is None or "rolled_back_at" in report:
-        raise WorkspaceError("MIGRATION_NOT_APPLIED", f"project {project_id} has no applied migration to roll back")
+    _marker, project_id = _project_of(root)
     pdir = project_dir(ws, project_id)
-    device_id = report["device_id"]
-    diverged: List[str] = []
-    stored: List[str] = []
-    for row in report["plans"]:
-        name = decode_name(row["name"])
-        if row["action"] != "kept-workspace":
-            if _workspace_state(pdir, row, name, device_id) != row["digest"]:
-                diverged.append(f"{name} (changed-in-workspace)")
-            elif row["class"] == "v4":
-                stored.append(_copy_name(row, name, device_id))
-        old = _source_state(root, row, name)
-        if old is None:
-            diverged.append(f"{name} (legacy-removed)")
-        elif old != row["digest"]:
-            diverged.append(f"{name} (changed-in-legacy)")
-    if report["mode"] == "initial":
-        diverged.extend(f"{name} (added-in-workspace)" for name in _workspace_extras(pdir, stored))
-    if diverged:
-        raise WorkspaceError("MIGRATION_DIVERGED", f"{len(diverged)} plan(s) differ from the report {report['op_id']}: "
-                             f"{', '.join(diverged[:10])}{' ...' if len(diverged) > 10 else ''}")
-    removed: List[str] = []
-    with _migration_lock(project_id, env, home), gitutil.git_lock(env, home):
-        write_marker(root, project_id, "legacy")
+    with _migration_lock(project_id, env, home), gitutil.git_lock(env, home), contextlib.ExitStack() as plan_locks:
+        marker, current = _project_of(root)
+        report = last_report(ws, project_id, _this_device(env, home))
+        if current != project_id or report is None or "rolled_back_at" in report:
+            raise WorkspaceError("MIGRATION_NOT_APPLIED", f"project {project_id} has no applied migration to roll back")
+        device_id = report["device_id"]
+        names = [(row, _report_name(row)) for row in report["plans"]]
+        targets = [(row, f"{_kind_dir(row['class'])}/{_copy_name(row, name, device_id)}")
+                   for row, name in names if row["action"] in COPY]
+        # a legacy marker with every copy gone is the rest of a rollback that stopped after the marker was switched
+        finishing = marker["plans_store"] == "legacy" and not any(
+            os.path.lexists(pdir / relative) for _row, relative in targets)
+        if marker["plans_store"] != "workspace" and not finishing:
+            raise WorkspaceError("MIGRATION_NOT_APPLIED", f"project {project_id} has no applied migration to roll back")
+        def check() -> None:
+            if finishing:
+                return
+            diverged: List[str] = []
+            stored: List[str] = []
+            for row, name in names:
+                if row["action"] != "kept-workspace":
+                    if _workspace_state(pdir, row, name, device_id) != row["digest"]:
+                        diverged.append(f"{name} (changed-in-workspace)")
+                    elif row["class"] == "v4":
+                        stored.append(_copy_name(row, name, device_id))
+                old = _source_state(root, row, name)
+                if old is None:
+                    diverged.append(f"{name} (legacy-removed)")
+                elif old != row["digest"]:
+                    diverged.append(f"{name} (changed-in-legacy)")
+            if report["mode"] == "initial":
+                diverged.extend(f"{name} (added-in-workspace)" for name in _workspace_extras(pdir, stored))
+            if diverged:
+                raise WorkspaceError("MIGRATION_DIVERGED", f"{len(diverged)} plan(s) differ from the report "
+                                     f"{report['op_id']}: {', '.join(diverged[:10])}{' ...' if len(diverged) > 10 else ''}")
+
+        check()  # nothing is touched when it fails; the locks come after it and the check is repeated under them
+        _lock_folders(plan_locks, [pdir / relative for row, relative in targets
+                                   if row["class"] == "v4" and (pdir / relative / "plan.json").is_file()
+                                   and not (pdir / relative).is_symlink()])
+        check()
+        done = dict(report, rolled_back_at=utc_now())
+        issues = report_issues(done)
+        if issues:
+            raise WorkspaceError("WORKSPACE_LAYOUT_INVALID", f"the migration report is invalid: {issues[0]}")
         staging = ws / ".staging" / f"rollback-{report['op_id']}"
         if staging.exists():
             shutil.rmtree(staging)
-        staging.mkdir(parents=True)
-        moved: List[str] = []
-        for row in report["plans"]:
-            if row["action"] not in COPY:
-                continue
-            relative = f"{_kind_dir(row['class'])}/{_copy_name(row, decode_name(row['name']), device_id)}"
-            target = pdir / relative
-            if target.is_dir():
-                destination = staging / relative
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                os.rename(target, destination)
-                moved.append(relative)
-        shutil.rmtree(staging)
-        removed = moved
+        moved: List[Tuple[Path, Path]] = []
+        removed: List[str] = []
+        before = [{"path": item["path"], "reason": item["reason"]} for item in localonly.read(ws, project_id)["files"]
+                  if item["device_id"] == device_id]
+        try:
+            staging.mkdir(parents=True)
+            for _row, relative in targets:
+                target = pdir / relative
+                if target.is_dir() and not target.is_symlink():
+                    destination = staging / relative
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    os.rename(target, destination)
+                    moved.append((target, destination))
+                    removed.append(relative)
+            if removed:
+                _drop_local_only(ws, project_id, device_id, removed)
+            if marker["plans_store"] != "legacy":
+                write_marker(root, project_id, "legacy")
+        except BaseException:
+            stuck: List[str] = []
+            for target, destination in reversed(moved):
+                try:
+                    if target.is_dir() and not target.is_symlink() and set(os.listdir(target)) <= {".lock"}:
+                        shutil.rmtree(target)  # what a planner's PlanLock made at the old path while the folder was away
+                    os.rename(destination, target)
+                except OSError:
+                    stuck.append(str(target.relative_to(pdir)))
+            with contextlib.suppress(Exception):
+                localonly.update(ws, project_id, before, device_id)
+                localonly.rebuild_exclude(ws, device_id)
+            if stuck:  # the staging folder holds the only copy of these: keep it
+                raise WorkspaceError("MIGRATION_FAILED", f"the rollback stopped and could not put back {', '.join(stuck)}; "
+                                     f"the copies are kept in {staging}") from None
+            shutil.rmtree(staging, ignore_errors=True)
+            raise
         for kind in ("plans", "legacy-plans"):
             with contextlib.suppress(OSError):
                 (pdir / kind / ARCHIVE).rmdir()
-        if moved:
-            _drop_local_only(ws, project_id, device_id, moved)
-        report = dict(report, rolled_back_at=utc_now())
-        issues = report_issues(report)
-        if issues:
-            raise WorkspaceError("WORKSPACE_LAYOUT_INVALID", f"the migration report is invalid: {issues[0]}")
         atomic_write_text(pdir / "migrations" / f"{report['op_id']}.json",
-                          json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+                          json.dumps(done, indent=2, ensure_ascii=False) + "\n")
+        shutil.rmtree(staging, ignore_errors=True)
     quoted = shlex.quote(str(root))
     return {"project_id": project_id, "op_id": report["op_id"], "rolled_back": True, "removed": sorted(removed),
             "next": [f"git -C {quoted} add .swissknifeman/project.json && git -C {quoted} commit -m "
@@ -815,6 +985,14 @@ def cleanup(project: PathLike, confirm: str, env: Env = None, home: Optional[Pat
     if marker["plans_store"] != "workspace":
         raise WorkspaceError("MIGRATION_NOT_APPLIED", f"project {project_id} still keeps its plans in the checkout; "
                              "run migrate apply first")
+    with _migration_lock(project_id, env, home):  # a rollback in between would leave no copy of what is removed here
+        if _project_of(root)[0]["plans_store"] != "workspace":
+            raise WorkspaceError("MIGRATION_NOT_APPLIED", f"project {project_id} still keeps its plans in the checkout; "
+                                 "run migrate apply first")
+        return _cleanup_locked(root, ws, project_id, env, home)
+
+
+def _cleanup_locked(root: Path, ws: Path, project_id: str, env: Env, home: Optional[PathLike]) -> Dict[str, Any]:
     pdir = project_dir(ws, project_id)
     device = read_device(env, home)
     shorts = {device_short(device["device_id"])} if device else set()
@@ -871,6 +1049,8 @@ def cleanup(project: PathLike, confirm: str, env: Env = None, home: Optional[Pat
 def _remove_if_empty(plans: Path) -> bool:
     """Remove ``plans/archive`` and then ``plans`` when nothing but ignorable files is left in them; whether ``plans`` is gone."""
     for folder in (plans / ARCHIVE, plans):
+        if folder.is_symlink():
+            continue
         try:
             names = os.listdir(folder)
         except OSError:

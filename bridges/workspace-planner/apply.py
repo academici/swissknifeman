@@ -121,6 +121,12 @@ def parse(request: dict) -> Dict[str, object]:
     if (not isinstance(manifest, dict) or not isinstance(manifest.get("plans"), list)
             or not isinstance(manifest.get("top_level"), list) or not isinstance(manifest.get("digest"), str)):
         raise Refusal("INPUT_INVALID", "manifest must be the answer of inspect", "request")
+    try:
+        authentic = inspector.digest_manifest(manifest["plans"], manifest["top_level"]) == manifest["digest"]
+    except (KeyError, TypeError):
+        authentic = False
+    if not authentic:
+        raise Refusal("INPUT_INVALID", "the entries of the manifest do not match its digest", "request")
     mode = request.get("mode", "initial")
     if mode not in ("initial", "import"):
         raise Refusal("INPUT_INVALID", "mode must be initial or import", "request")
@@ -303,8 +309,29 @@ def _verify_staged(units: List[Unit], plans: Path, staging: Path) -> None:
         raise Refusal("MIGRATION_VERIFY_FAILED", f"{len(failed)} staged plan(s) do not verify", "verify", plans=failed)
 
 
-def _rename(source: Path, destination: Path) -> None:
+def _check_destination(workspace_root: Path, destination: Path, phase: str) -> None:
+    """Refuse a destination below ``workspace_root`` when a folder on the way to it is a symlink (the move would leave the
+    workspace). Folders that do not exist yet are fine."""
+    try:
+        relative = destination.relative_to(workspace_root)
+    except ValueError:
+        raise Refusal("MIGRATION_TRANSFER_FAILED", "the destination is outside the workspace", phase) from None
+    current = workspace_root
+    for index, part in enumerate(relative.parts):
+        current = current / part
+        if current.is_symlink():
+            raise Refusal("MIGRATION_BLOCKED_SYMLINK", "a folder on the way into the workspace is a symlink", phase,
+                          symlinks=["/".join(relative.parts[:index + 1])])
+        if not current.exists():
+            break
+        if not current.is_dir():
+            raise Refusal("MIGRATION_TRANSFER_FAILED", "a file stands where the workspace needs a folder", phase)
+
+
+def _rename(source: Path, destination: Path, workspace_root: Path) -> None:
+    _check_destination(workspace_root, destination, "rename")
     destination.parent.mkdir(parents=True, exist_ok=True)
+    _check_destination(workspace_root, destination, "rename")
     try:
         os.rename(source, destination)
     except OSError as exc:
@@ -312,23 +339,25 @@ def _rename(source: Path, destination: Path) -> None:
                       f"{exc.strerror or exc.__class__.__name__}", "rename") from None
 
 
-def _transfer(units: List[Unit], staging: Path, project_dir: Path, progress) -> None:
+def _transfer(units: List[Unit], staging: Path, project_dir: Path, workspace_root: Path, progress) -> None:
     plans_target = project_dir / "plans"
+    _check_destination(workspace_root, project_dir / "legacy-plans", "rename")
+    _check_destination(workspace_root, plans_target, "rename")
     whole = not _exists(plans_target) or _is_empty_dir(plans_target)
     moving = [unit for unit in units if unit.action in ("copy", "import")]
     if whole:
         if _is_empty_dir(plans_target):
             plans_target.rmdir()
         (staging / "plans").mkdir(parents=True, exist_ok=True)
-        _rename(staging / "plans", plans_target)
+        _rename(staging / "plans", plans_target, workspace_root)
         moving = [unit for unit in moving if unit.cls != "v4"]
     else:
         for unit in moving:
             if unit.cls == "v4":
-                _rename(staging / unit.stage_rel, project_dir / unit.target_rel)
+                _rename(staging / unit.stage_rel, project_dir / unit.target_rel, workspace_root)
         moving = [unit for unit in moving if unit.cls != "v4"]
     for unit in moving:
-        _rename(staging / unit.stage_rel, project_dir / unit.target_rel)
+        _rename(staging / unit.stage_rel, project_dir / unit.target_rel, workspace_root)
     for unit in units:  # W4: the bytes after the rename are the bytes of the manifest
         if unit.action in ("copy", "import"):
             if inspector.scan_digest(project_dir / unit.target_rel, unit.cls, progress) != unit.digest:
@@ -359,9 +388,20 @@ def _already_switched(request: dict, project_dir: Path, progress) -> Dict[str, o
     units = _manifest_units(request["manifest"])
     different = []
     for unit in units:
-        if _target_digest(project_dir, unit, unit.target_rel, progress) != unit.digest:
-            different.append(unit.name)
+        found = _target_digest(project_dir, unit, unit.target_rel, progress)
         unit.action = "equal"
+        if found == unit.digest:
+            continue
+        suffix = request["device_short"]
+        if suffix:
+            unit.stored_as = f"{unit.name}~{suffix}"  # the copy imported next to a different folder
+            if _target_digest(project_dir, unit, unit.target_rel, progress) == unit.digest:
+                continue
+            unit.stored_as = unit.name
+        if request["on_conflict"] == "keep-workspace" and found is not None:
+            unit.action = "keep"  # the workspace folder was kept on purpose
+            continue
+        different.append(unit.name)
     if different:
         raise Refusal("MIGRATION_ALREADY_APPLIED", "the project marker points at the workspace and its copy differs "
                       "from the manifest", "done", paths=sorted(different))
@@ -382,8 +422,12 @@ def _apply(request: dict, progress, state: Dict[str, str]) -> Dict[str, object]:
     if structure["symlinks"]:
         raise Refusal("MIGRATION_BLOCKED_SYMLINK", "the source holds symlinks", "digest",
                       symlinks=structure["symlinks"])
-    names = [plan["name"] for plan in request["manifest"]["plans"] if isinstance(plan, dict) and plan.get("class") == "v4"]
+    names = [plan["name"] for plan in structure["plans"] if plan["class"] == "v4"]  # from the source, not from the caller
     _phase(state, "lock", progress)
+    announced = sorted(plan["name"] for plan in request["manifest"]["plans"] if plan["class"] == "v4")
+    if announced != sorted(names):
+        raise Refusal("MIGRATION_SOURCE_CHANGED", "the plans of the source changed since the plan; run plan again",
+                      "lock", changed=sorted(set(announced) ^ set(names)))
     with migration_lock(request["project_id"]), contextlib.ExitStack() as locks:
         lock_plans(locks, plans, names, request["timeout"])
         _phase(state, "digest", progress)
@@ -391,9 +435,14 @@ def _apply(request: dict, progress, state: Dict[str, str]) -> Dict[str, object]:
         if fresh["symlinks"]:
             raise Refusal("MIGRATION_BLOCKED_SYMLINK", "the source holds symlinks", "digest", symlinks=fresh["symlinks"])
         _compare_source(request["manifest"], fresh)
+        if sorted(plan["name"] for plan in fresh["plans"] if plan["class"] == "v4") != sorted(names):
+            raise Refusal("MIGRATION_SOURCE_CHANGED", "the plans of the source changed while locking; run plan again",
+                          "digest")
         units = [Unit(entry) for entry in inspector.units_of(fresh)]
         _check_unique(units)
         _phase(state, "plan", progress)
+        for kind in ("plans", "legacy-plans"):
+            _check_destination(workspace_root, project_dir / kind, "plan")
         conflicts = decide(units, project_dir, request, progress)
         if conflicts:
             raise Refusal("MIGRATION_CONFLICT", f"{len(conflicts)} plan(s) differ from the workspace; choose "
@@ -413,7 +462,7 @@ def _apply(request: dict, progress, state: Dict[str, str]) -> Dict[str, object]:
         _verify_staged(units, plans, staging)
         _phase(state, "rename", progress)
         _fail_point("pre-rename")
-        _transfer(units, staging, project_dir, progress)
+        _transfer(units, staging, project_dir, workspace_root, progress)
         _fail_point("post-rename")
         _phase(state, "marker", progress)
         aicore_workspace.write_marker(project_root, request["project_id"], "workspace")

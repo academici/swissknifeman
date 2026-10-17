@@ -113,6 +113,11 @@
             "type": "string",
             "pattern": "^sha256:[0-9a-f]{64}$",
             "description": "SHA-256 over the sorted (path, sha256) pairs of the files."
+          },
+          "stored_as": {
+            "type": "string",
+            "pattern": "^(?![/~]|[A-Za-z]:[\\\\/])[^/\\\\]+$",
+            "description": "Folder name of the copy in the workspace when it differs from `name` (a suffixed copy imported next to a different folder, also when it was found equal)."
           }
         },
         "required": [

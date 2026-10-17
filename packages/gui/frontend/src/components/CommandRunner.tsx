@@ -101,10 +101,12 @@ interface Pending {
 export function CommandRunner({
   commandId,
   projectId,
+  context,
   defaults = {},
 }: {
   commandId: string;
   projectId?: string;
+  context?: Record<string, string>;
   defaults?: Record<string, unknown>;
 }) {
   const commands = useCommands();
@@ -112,10 +114,20 @@ export function CommandRunner({
   if (commands.isPending) return <div className="muted">Loading the command…</div>;
   if (commands.isError) return <ErrorPanel error={commands.error} />;
   if (!command) return <div className="muted">The command {commandId} is not in the catalog.</div>;
-  return <CommandForm key={command.id} command={command} projectId={projectId} defaults={defaults} />;
+  return <CommandForm key={command.id} command={command} projectId={projectId} context={context} defaults={defaults} />;
 }
 
-export function CommandForm({ command, projectId, defaults = {} }: { command: Command; projectId?: string; defaults?: Record<string, unknown> }) {
+export function CommandForm({
+  command,
+  projectId,
+  context,
+  defaults = {},
+}: {
+  command: Command;
+  projectId?: string;
+  context?: Record<string, string>;
+  defaults?: Record<string, unknown>;
+}) {
   const transport = useTransport();
   const navigate = useNavigate();
   const fields = command.input ?? [];
@@ -129,7 +141,7 @@ export function CommandForm({ command, projectId, defaults = {} }: { command: Co
     const body: RunRequest = {
       $schema: RUN_API,
       kind: "run_request",
-      context: needsProject && projectId ? { project_id: projectId } : {},
+      context: needsProject && projectId ? { ...context, project_id: projectId } : {},
       input: inputOf(fields, values),
       dry_run: dryRun,
       ...(confirm ? { confirm } : {}),

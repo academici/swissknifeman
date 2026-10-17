@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.4",
   "title": "Frontend: host views board, dependency-graph, resource-detail, plan-контекст маршрутов",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Frontend: параметры пути plan_id/item_id/run_id попадают в context запроса; host views BoardView, DependencyGraphView (SVG без внешних библиотек), ResourceDetailView; колонка progress в ResourceListView; подключение в ViewDataView; vitest.",
   "why": "Без этого маршруты плана не работают: QueryView кладёт в context только project_id, а scope plan/item требует plan_id/item_id; board, graph и detail сейчас Placeholder. Жёсткие риски: plan_id в params вместо context (запрос отклонён хостом); данные плана как HTML (всё — текст React, markdown только через существующий MarkdownView); статус только цветом (подпись текстом, aria); граф на сотни узлов (рендер линейный, без O(n²) по рёбрам); ссылки карточек на чужой origin (только `/x/<owner>/…?project=<id>` внутри приложения).",
   "scope": {
@@ -140,6 +140,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/5e837856c81ef5949c48f1a5bd361cd8572e145d0529ee810474ebd178f07eaa",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/ea31f9ed4e22d50a2c5058965e97016da4761a92c4a8d6ec1d371e2cf14f45ee",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками (I3, I7).",
@@ -183,6 +193,43 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T20:02:12Z"
+  "result": {
+    "started_at": "2026-10-16T20:03:20Z",
+    "finished_at": "2026-10-17T00:49:50Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-e97ba310cd3ae3c553c43189-P4.4",
+    "notes": "Added host views BoardView, DependencyGraphView (plain SVG plus a dependencies table) and ResourceDetailView, wired them in ViewDataView, added an accessible label to progress cells, and made the plan/item/run ids of a route path go into the query context (QueryView.routeContext, path params also stay in params because the query declares them). ContributionRoute reports a plan or item page without its ids and passes the context to page actions; CommandRunner/CommandForm gained an optional context. Tests, docs/frontend.md and CHANGELOG updated. tsc --noEmit passes; vitest and eslint could not run in this sandbox.\nChanged: CHANGELOG.md, packages/gui/docs/frontend.md, packages/gui/frontend/src/components/CommandRunner.tsx, packages/gui/frontend/src/components/QueryView.tsx, packages/gui/frontend/src/pages/ContributionRoute.test.tsx, packages/gui/frontend/src/pages/ContributionRoute.tsx, packages/gui/frontend/src/styles.css, packages/gui/frontend/src/views/BoardView.tsx, packages/gui/frontend/src/views/DependencyGraphView.tsx, packages/gui/frontend/src/views/ResourceDetailView.tsx, packages/gui/frontend/src/views/ResourceListView.tsx, packages/gui/frontend/src/views/ViewDataView.tsx, packages/gui/frontend/src/views/views.test.tsx",
+    "deviations": [
+      "Edited packages/gui/frontend/src/components/CommandRunner.tsx (not in the write set): an optional `context` prop so commands of plan/item scope get plan_id/item_id; without it the actions of the plan pages (grant, item-reopen, log-note, decision-decide) would be refused by the host.",
+      "Path params plan_id/item_id/run_id go to `context` AND stay in `params` (guidance said to move them): the gui-planner queries declare plan_id/item_id as required params, so the host rejects a query without them.",
+      "changed outside the write set: packages/gui/frontend/src/components/CommandRunner.tsx"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T00:49:50Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.4/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T00:49:50Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.4/evidence/V2.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.4/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.4/evidence/V2.json"
+    ]
+  },
+  "updated_at": "2026-10-17T00:49:50Z"
 }

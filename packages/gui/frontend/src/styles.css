@@ -117,3 +117,25 @@ button:disabled { opacity: 0.5; cursor: default; }
 .status-conflict td:last-child { color: var(--fail); }
 .status-theirs td:last-child { color: var(--warn); }
 .config-actions { margin-top: 12px; }
+
+.board { display: flex; gap: 12px; align-items: flex-start; overflow-x: auto; }
+.board-column { min-width: 200px; flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.board-column h2 { font-size: 14px; margin: 0 0 8px; }
+.board-column ul { list-style: none; padding: 0; margin: 0; }
+.board-card { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; background: var(--bg); }
+.board-card .card-title { margin-top: 2px; }
+.resource-detail dl { margin: 0 0 12px; }
+.resource-detail .field { display: flex; gap: 12px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.resource-detail dt { width: 160px; color: var(--muted); }
+.resource-detail dd { margin: 0; }
+.dependency-graph svg { max-width: 100%; height: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+.graph-node rect { fill: var(--panel); stroke: currentColor; stroke-width: 1.5; }
+.graph-node text { fill: var(--text); font-size: 12px; }
+.graph-node .graph-status { fill: currentColor; font-size: 11px; }
+.graph-node.status-ok { color: var(--ok); }
+.graph-node.status-warn { color: var(--warn); }
+.graph-node.status-fail { color: var(--fail); }
+.graph-node.status-unknown, .graph-node.status-skip { color: var(--unknown); }
+.graph-edge { stroke: var(--muted); stroke-width: 1.5; }
+.graph-arrowhead { fill: var(--muted); }
+.graph-table { margin-top: 12px; }

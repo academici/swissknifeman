@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261016T200314Z-c9dfc5:P4.4:checks.1:V1",
+  "check_id": "V1",
+  "subject": "PLAN5.P4.4",
+  "candidate": {
+    "head": "ea8325adf4f90c21d0e2eeb54f523f38fb6e49e8",
+    "dirty_digest": "428865addb911835c2457741d3d68f1d748ecc0986a566ea976726ffa3a3116a"
+  },
+  "started_at": "2026-10-17T00:49:05Z",
+  "procedure": {
+    "cmd": "npm --prefix packages/gui/frontend run check",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T00:49:21Z"
+}

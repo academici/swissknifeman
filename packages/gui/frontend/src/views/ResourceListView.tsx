@@ -7,7 +7,7 @@ function Cell({ type, value }: { type: string; value: string | number | boolean 
     const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
     return (
       <span className="progress">
-        <progress max={100} value={percent} /> {percent}%
+        <progress max={100} value={percent} aria-label={`${percent}%`} /> {percent}%
       </span>
     );
   }

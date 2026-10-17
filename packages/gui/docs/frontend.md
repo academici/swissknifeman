@@ -58,7 +58,17 @@ the sections `fleet`, `plan`, `settings`, `plugins` (by `nav.order`); project ro
 the command form of the action), `metric-group`, `timeline`, `markdown` (react-markdown with `skipHtml`; links only
 relative or http(s)), `log-stream` (stored pages, then live `log` frames, merged by chunk number), `command-form`
 (typed fields from `/v1/commands`, Run and Dry run, the confirmation dialog of `428`, then the run page).
-`resource-detail`, `dependency-graph`, `board` and `schema-form` show a placeholder until a later version.
+`resource-detail` (fields by type, markdown sections through `MarkdownView`, actions through `onAction`), `board`
+(columns with counts, cards whose `link` is built from the catalog as `/x/<owner>/<path>?project=<id>`; a route that
+is not in the catalog is plain text) and `dependency-graph` (plain SVG, no library: one column per `group`, solid
+arrow for `blocks`, dashed for `related`, an edge to a missing node is skipped, and a "Dependencies as text" table
+repeats it). Every status is written as text as well as coloured. `schema-form` shows a placeholder until a later
+version. A `progress` cell or field is a number from 0 to 1 drawn as `<progress aria-label>`.
+
+Route context: `QueryView` sends `context = {project_id, plan_id, item_id, run_id}` for the ids found in the path of
+the route (the host reads them from `context` only) and keeps every path parameter in `params` too, because the query
+declares them. `ContributionRoute` shows what is missing for a plan or item page without the ids and passes the same
+context to the commands of the page (`CommandRunner` takes an optional `context`).
 
 To add a host view: implement `src/views/<Name>View.tsx` for the view-data kind, add its `case` to `ViewDataView`,
 and the test of `views.test.tsx` renders every valid example of `schemas/view-data/v1/examples/valid` through it.

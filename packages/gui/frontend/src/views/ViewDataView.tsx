@@ -1,9 +1,12 @@
 import type { ViewAction, ViewData } from "../contracts";
 import { CommandRunner } from "../components/CommandRunner";
 import { RunLog } from "../components/RunLog";
+import { BoardView } from "./BoardView";
+import { DependencyGraphView } from "./DependencyGraphView";
 import { MarkdownView } from "./MarkdownView";
 import { MetricGroupView } from "./MetricGroupView";
 import { Placeholder } from "./Placeholder";
+import { ResourceDetailView } from "./ResourceDetailView";
 import { ResourceListView } from "./ResourceListView";
 import { StatusTableView } from "./StatusTableView";
 import { TimelineView } from "./TimelineView";
@@ -13,6 +16,12 @@ export function ViewDataView({ data, projectId, onAction }: { data: ViewData; pr
   switch (data.view) {
     case "resource-list":
       return <ResourceListView data={data} projectId={projectId} />;
+    case "resource-detail":
+      return <ResourceDetailView data={data} onAction={onAction} />;
+    case "board":
+      return <BoardView data={data} projectId={projectId} />;
+    case "dependency-graph":
+      return <DependencyGraphView data={data} />;
     case "status-table":
       return <StatusTableView data={data} onAction={onAction} />;
     case "metric-group":

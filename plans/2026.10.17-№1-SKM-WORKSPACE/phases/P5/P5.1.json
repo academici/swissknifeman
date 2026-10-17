@@ -1,0 +1,190 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.1",
+  "title": "Мост bridges/gui-workspace: запросы overview, projects, migration, sync, conflicts и команды init, attach, scan, rebind, migrate *, sync *, resolve, connect",
+  "status": "todo",
+  "summary": "Мост `gui-workspace` (kind bridge; requires aicore, gui, workspace) регистрирует декларативные маршруты, виджет и запросы (`metric-group`, `resource-list`, `status-table`) и команды с argv-дескрипторами (`run.py <cmd>`) поверх `swissknifeman workspace … --json`; рискованные команды (migrate apply/cleanup, sync push/resolve, connect) требуют подтверждения (`confirmation: always`), cleanup — ввода project_id.",
+  "why": "Требование владельца B5: управление проектами через GUI; принцип GUI — домены только через мосты (ADR 0081, D14). Жёсткие риски: произвольный argv из frontend, push без показа remote/branch, токен в URL remote в ответе запроса.",
+  "scope": {
+    "include": [
+      "bridges/gui-workspace/: unit.json, gui.json, extension.json, adapter.py, run.py, README.md, scripts/test.sh, tests/ (fixtures ответов workspace CLI)",
+      "bridges/README.md, configs/ecosystem-units.json, configs/install-profiles.json (профиль full), scripts/test-bridges.sh"
+    ],
+    "exclude": [
+      "frontend и core gui (P5.2)",
+      "изменение CLI workspace (только потребление)"
+    ]
+  },
+  "depends_on": [
+    "P4.2"
+  ],
+  "decisions": [
+    "D9",
+    "D14"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#gui",
+      "why": "маршруты, запросы, команды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#cli",
+      "why": "JSON команд workspace",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#gui",
+      "why": "контрибуции, брокер, подтверждения",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-hub/gui.json",
+      "why": "образец queries/commands/widgets/routes с input и confirmation",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-hub/adapter.py",
+      "why": "образец адаптера запросов поверх CLI",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-hub/run.py",
+      "why": "образец run.py для команд",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-hub/extension.json",
+      "why": "образец extension.json",
+      "required": true
+    },
+    {
+      "path": "packages/gui/schemas/contribution/v1",
+      "why": "схема контрибуций (view, field.type, confirmation)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "bridges/gui-workspace/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/gui.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/extension.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/adapter.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/run.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/README.md",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/scripts/test.sh",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/tests/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/tests/test_queries.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/tests/test_commands.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-workspace/tests/fixtures/**",
+      "change": "create"
+    },
+    {
+      "path": "bridges/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-bridges.sh",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Команды объявляются только в gui.json с `exec.kind = argv` и фиксированным argv `run.py <command>`; параметры — поля `input` типов из схемы (`string`, `enum`, `project-path`); run.py собирает argv `swissknifeman workspace …` из проверенных полей, без shell.",
+    "`confirmation`: `always` для migrate-apply, migrate-cleanup, sync-push, sync-resolve, connect; `risk-based` для остальных записей; `none` для чтения.",
+    "Ответы запросов не содержат userinfo URL (redact на стороне workspace CLI; мост дополнительно отклоняет `@` до хоста в URL).",
+    "Мост не читает файлы workspace напрямую — только JSON CLI workspace.",
+    "Тесты на фикстурах JSON-ответов CLI и на реальном CLI во временном SKM_HOME/SKM_WORKSPACE_ROOT (один сценарий init → attach → overview)."
+  ],
+  "guidance": "nav: section `workspace`, порядок overview 10, projects 20, migration 30, sync 40, conflicts 50; widget `gui-workspace.summary` (metric-group, scope fleet) для дашборда. cleanup: поле `confirm` (string) должно совпасть с project_id — проверка в run.py до вызова CLI и повторно в CLI. Push: summary подтверждения включает redacted remote и branch из `workspace status --json`.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash bridges/gui-workspace/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash scripts/test-bridges.sh",
+      "expect": "exit 0; bridges: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "мост gui-workspace"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:22:20Z"
+}

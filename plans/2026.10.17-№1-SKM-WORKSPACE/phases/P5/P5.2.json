@@ -1,0 +1,134 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.2",
+  "title": "GUI: страница Projects с project_id и binding из workspace, доверие привязанного проекта, E2E workspace-сценариев; README gui; закрытие фазы P5",
+  "status": "todo",
+  "summary": "Страница Projects показывает у доверенных проектов workspace `project_id`, binding и plans_store (запрос `gui-workspace.projects`, если мост доступен), список привязанных, но не доверенных проектов с кнопкой «Доверять» (существующий `POST /v1/projects` с подтверждением); Playwright-сценарии: overview workspace, attach, migrate plan, конфликт sync в таблице, подтверждение push с remote/branch; устаревший статус в packages/gui/README.md исправлен.",
+  "why": "Проекты в GUI сегодня идентифицируются хэшем пути (code-facts#consumers) и не связаны между машинами; workspace даёт стабильный список (B5). Жёсткие риски: неявное доверие проекту из workspace (нарушение D12 плана GUI), регресс существующей страницы Projects и E2E.",
+  "scope": {
+    "include": [
+      "packages/gui/frontend/src/pages/Projects.tsx (+ тест)",
+      "packages/gui/frontend/e2e/workspace.spec.ts",
+      "packages/gui/README.md (статус desktop/sidecar, раздел workspace)",
+      "закрытие фазы P5"
+    ],
+    "exclude": [
+      "изменения реестра доверия и контракта project/v1",
+      "новые view-типы"
+    ]
+  },
+  "depends_on": [
+    "P5.1"
+  ],
+  "decisions": [
+    "D14"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#gui",
+      "why": "страница Projects и доверие",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#gui",
+      "why": "проверки и E2E",
+      "required": true
+    },
+    {
+      "ref": "knowledge/audit-verification#deferred",
+      "why": "строка про устаревший статус README gui",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/Projects.tsx",
+      "why": "изменяемая страница",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/planner.spec.ts",
+      "why": "образец E2E с мостом",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/backend.ts",
+      "why": "запуск backend в E2E",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/core/projects.py",
+      "why": "реестр доверия и POST /v1/projects",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/frontend/src/pages/Projects.tsx",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/Projects.test.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/e2e/workspace.spec.ts",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Без моста gui-workspace страница Projects работает как сейчас (тест: запрос недоступен → колонки workspace скрыты, ошибок нет).",
+    "Доверие только через существующий `POST /v1/projects` с подтверждением; автоматического добавления нет.",
+    "Новые строки UI на английском, как остальной frontend; без новых npm-зависимостей."
+  ],
+  "guidance": "Запрос контрибуции из страницы — через существующий транспорт запросов (`POST /v1/queries/{query_id}`), как ContributionRoute. E2E: backend с временным SKM_HOME и SKM_WORKSPACE_ROOT, workspace init и attach временного git-проекта в фикстуре. Закрытие фазы: phase.validation P5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm --prefix packages/gui/frontend run check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "npm --prefix packages/gui/frontend run e2e -- workspace.spec.ts",
+      "expect": "exit 0; все сценарии workspace проходят",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "Projects с workspace",
+    "E2E workspace"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:23:02Z"
+}

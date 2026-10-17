@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D15",
+  "title": "Стратегия ревью и исполнения: один run = один батч, групповое ревью батча; codex xhigh для P1–P4, grok для P5 и перепроверки коррекций; P6 без code review",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "options": [
+    {
+      "id": "A",
+      "text": "Групповое ревью по батчам: codex xhigh для P1–P4, grok для P5 и перепроверки коррекций"
+    },
+    {
+      "id": "B",
+      "text": "Ревью каждого пункта codex"
+    },
+    {
+      "id": "C",
+      "text": "Одно ревью всего плана в конце"
+    }
+  ],
+  "context": "Владелец: ревьюеры codex/gpt-6.1-sol/xhigh и grok/grok-4.7 (слабое контекстное окно); ревью не обязательно после каждого пункта, стратегию выбирает агент. Механика orch: review.strategy single — одно групповое ревью production-диффа батча после его последнего пункта (group-review-<n>.md), Blocker/Major → follow-up execution-input (orch conduct run --input <file> --commit); пользовательские группы внутри батча не задаются, поэтому группа = батч плана.",
+  "decision": "Один run conductor = один батч плана; ревью — групповое по батчу (review.strategy single, review.dynamic false, у пунктов review.mode none). Батчи и ревьюер: P1 [P1.1,P1.2,P1.3], P2 B1 [P2.1,P2.2] и B2 [P2.3,P2.4], P3 [P3.1,P3.2,P3.3], P4 [P4.1,P4.2] — codex/gpt-6.1-sol/xhigh; P5 [P5.1,P5.2] — grok/grok-4.7/high; P6 — без code review (strategy none), проверка — гейты владельца. Исправление: Blocker и Major одной follow-up коррекцией; затем узкая перепроверка только диффа коррекции через packages/orch/scripts/batch-review.py <run коррекции> --provider grok --model grok-4.7 --effort medium; Blocker в перепроверке → ещё одна коррекция и запись в отчёт, Major/Minor перепроверки и все Minor группового ревью → plan notes (follow_up). Не более двух проходов ревью на батч. Fallback ревьюера — claude-code/frontier/high.",
+  "rationale": "Фазы P1–P4 несут риски целостности данных (резолвер хранилища, PLANS_MIGRATED, разделение коммита, критическая секция миграции, merge-слияние) — их читает модель с большим контекстом на максимальном усилии, один раз на связный батч, а не после каждого пункта (дешевле, видит связи пунктов). Диффы P5 (мост GUI, страница Projects) и диффы коррекций малы — их выдерживает контекст grok. P6 — живые операции под четырьмя гейтами владельца, кода почти нет. Два прохода на батч ограничивают цикл ревью/исправление (planner-development-philosophy: bounded exit).",
+  "applies_to": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  }
+}

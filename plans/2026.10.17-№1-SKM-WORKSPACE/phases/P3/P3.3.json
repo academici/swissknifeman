@@ -1,0 +1,118 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.3",
+  "title": "E2E миграции на копиях реальных структур, docs/workspace.md (миграция); закрытие фазы P3",
+  "status": "todo",
+  "summary": "`scripts/e2e-workspace-migrate.sh` проверяет на временных проектах полный путь: plan → apply → planner видит планы из workspace → повторный apply noop → verify equal → конкурентный planner-писатель получает PLANS_MIGRATED → rollback → повторный apply → cleanup; import-режим второй «машины» (второй SKM_HOME на той же копии workspace). `docs/workspace.md` описывает модель, команды и миграцию.",
+  "why": "Фаза меняет хранилище всех планов; модульные тесты не доказывают совместную работу CLI, порта, planner и маркера. Жёсткий риск: неидемпотентный повтор после частичного сбоя.",
+  "scope": {
+    "include": [
+      "scripts/e2e-workspace-migrate.sh + test-integration.sh",
+      "docs/workspace.md (создать: модель, layout, attach, migrate, publish-safety)",
+      "docs/index.md или навигация docs (ссылка)",
+      "закрытие фазы P3"
+    ],
+    "exclude": [
+      "sync (P4)",
+      "GUI (P5)"
+    ]
+  },
+  "depends_on": [
+    "P3.2"
+  ],
+  "decisions": [
+    "D4",
+    "D12",
+    "D13"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#migration",
+      "why": "сценарии e2e",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#integrity",
+      "why": "W3, W5 — проверяемые инварианты",
+      "required": true
+    },
+    {
+      "path": "scripts/e2e-workspace-plans.sh",
+      "why": "образец изоляции (P2.4)",
+      "required": true
+    },
+    {
+      "path": "docs/project-launcher.md",
+      "why": "стиль пользовательской документации",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "scripts/e2e-workspace-migrate.sh",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-integration.sh",
+      "change": "modify"
+    },
+    {
+      "path": "docs/workspace.md",
+      "change": "create"
+    },
+    {
+      "path": "docs/index.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/.vitepress/config.mts",
+      "change": "modify",
+      "note": "навигация, если docs собираются vitepress и файл существует"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "E2E только во временных каталогах; никаких обращений к ~/projects и реальному workspace.",
+    "Сценарий конкурентной записи — реальный второй процесс planner, ждущий PlanLock, а не mock."
+  ],
+  "guidance": "Закрытие фазы: phase.validation P3. В docs/workspace.md — разделы: зачем, пять областей данных, layout, attach и маркер, migrate (dry-run, apply, verify, rollback, cleanup), publish-safety, коды ошибок перечислить текстом (docs — продукт и не ссылается на knowledge плана).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash scripts/e2e-workspace-migrate.sh",
+      "expect": "exit 0; e2e-workspace-migrate: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "e2e миграции",
+    "docs/workspace.md"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:22:18Z"
+}

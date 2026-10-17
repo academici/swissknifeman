@@ -1,0 +1,187 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P4.2",
+  "title": "workspace sync: commit (publish-safety, local-only), pull (merge-tree, typed конфликты), resolve, push без force; sync.json, audit.jsonl, события; e2e двух машин; закрытие фазы P4",
+  "status": "todo",
+  "summary": "`workspace sync [--commit] [--pull] [--push] [--resolve PATH=local|remote …]` по knowledge/workspace-contract#sync: коммит после publish-safety (block останавливает), сухое слияние `git merge-tree --write-tree`, merge или отчёт конфликтов с project/plan/ref без изменения рабочего дерева, явное разрешение всех конфликтных путей, push без force с `WORKSPACE_BEHIND`; e2e `scripts/e2e-workspace-sync.sh` моделирует машины A и B (два SKM_HOME и два workspace на одном bare remote).",
+  "why": "Синхронизация — единственный способ перенести планы на машину B и обратно; ошибка слияния теряет состояние плана. Жёсткие риски: автоматический выбор стороны, коммит секрета, push незавершённого слияния, повреждение log.jsonl при слиянии, гонка с planner commit (git.lock).",
+  "scope": {
+    "include": [
+      "packages/workspace/lib/workspace/sync.py",
+      "cli sync",
+      "sync.json, audit.jsonl",
+      "события sync.* + схемы",
+      "scripts/e2e-workspace-sync.sh + test-integration.sh",
+      "docs/workspace.md (синхронизация)",
+      "закрытие фазы P4"
+    ],
+    "exclude": [
+      "фоновые режимы sync (ideas)",
+      "разрешение конфликтов по полям JSON"
+    ]
+  },
+  "depends_on": [
+    "P4.1"
+  ],
+  "decisions": [
+    "D5",
+    "D8",
+    "D9"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#sync",
+      "why": "алгоритм шагов 1–5",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#publish-safety",
+      "why": "gate коммита",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#integrity",
+      "why": "W7 и пары с planner commit",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#commit-split",
+      "why": "что коммитит planner сам",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#events",
+      "why": "события sync",
+      "required": true
+    },
+    {
+      "path": "packages/workspace/lib/workspace/safety.py",
+      "why": "scan/changed_paths (P1.3)",
+      "required": true
+    },
+    {
+      "path": "packages/workspace/lib/workspace/localonly.py",
+      "why": "exclude-блок (P1.3)",
+      "required": true
+    },
+    {
+      "path": "packages/planner/tests/engine/test_log_union.py",
+      "why": "как проверяется union-слияние log.jsonl",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/workspace/lib/workspace/sync.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/cli.py",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/events.py",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/schemas/event-data/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/unit.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/tests/test_sync.py",
+      "change": "create"
+    },
+    {
+      "path": "scripts/e2e-workspace-sync.sh",
+      "change": "create"
+    },
+    {
+      "path": "scripts/test-integration.sh",
+      "change": "modify"
+    },
+    {
+      "path": "docs/workspace.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/README.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/CHANGELOG.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запрещены `push --force`, `--force-with-lease`, `reset --hard`, `clean`, `checkout .`, `rebase`; тест проверяет argv всех git-вызовов модуля на отсутствие этих форм (перехват gitutil.run).",
+    "При конфликте рабочее дерево и HEAD не меняются (merge-tree); при ошибке во время `--resolve` — `git merge --abort`.",
+    "`--resolve` копит решения в `sync.json.pending_resolutions` только для путей `last_conflicts` (иначе `RESOLUTION_INCOMPLETE`); merge выполняется, когда решены все пути и `origin/<b>` не сдвинулся (иначе `WORKSPACE_CONFLICT_STALE` и сброс решений); `--resolve-reset` очищает решения.",
+    "Push печатает redacted remote и branch до выполнения; `--json` содержит их в ответе.",
+    "Файл, ставший local-only и уже отслеживаемый, удаляется из индекса (`git rm --cached`) в коммите sync с warn в отчёте; сам файл остаётся на диске."
+  ],
+  "guidance": "Конфликтный отчёт: `git merge-tree --write-tree --name-only -z --messages HEAD origin/<b>` (exit 1) → пути конфликтов из секции conflicted file info; ref из пути по knowledge/workspace-contract#sync. E2E (машины A/B): A: init, attach временного проекта с планом (через e2e P3 фикстуру), migrate apply, connect bare, sync --push; B: clone, project scan, planner plans видит план; A и B меняют разные планы → sync на обоих сходится без конфликтов; A и B меняют один файл пункта → B получает WORKSPACE_CONFLICT с ref, `--resolve <path>=remote` → push; A и B дописывают log.jsonl одного плана → union без конфликта; вывод `e2e-workspace-sync: OK`.\nЗакрытие фазы: phase.validation P4.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/workspace/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) PYTHONPATH=lib:../aicore/lib python3 -m unittest tests.test_sync",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/workspace"
+    },
+    {
+      "id": "V3",
+      "cmd": "bash scripts/e2e-workspace-sync.sh",
+      "expect": "exit 0; e2e-workspace-sync: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "workspace sync",
+    "e2e двух машин"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:23:02Z"
+}

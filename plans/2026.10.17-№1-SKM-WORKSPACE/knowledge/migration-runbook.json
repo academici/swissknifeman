@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "migration-runbook",
+  "title": "Runbook живой миграции: машина A, публикация, машина B, cleanup",
+  "sections": [
+    {
+      "id": "principles",
+      "title": "Правила живой миграции",
+      "text": "- Машина A — `/home/vostrikov` (где спроектирован план), машина B — второй компьютер владельца. Имя/адрес машины B и URL приватного remote workspace известны только владельцу: их вводит владелец при прохождении gate (`plan.py grant`), агент их не угадывает.\n- Порядок фиксирован: dry-run → owner gate → apply → verify → publish → машина B → cleanup. Каждый шаг идемпотентен и повторяем.\n- Ни одной команды `git push` source-репозиториев и workspace без гейта владельца; force push запрещён всегда.\n- swissknifeman мигрирует последним на машине A: в нём живёт этот план (PLAN6); после apply planner читает PLAN6 из workspace (маркер), оставшиеся пункты продолжают работу там же.\n- Активные планы других проектов (vaulter PLAN3, corex PLAN3, chatom PLAN4, billium PLAN1, swissknifeman PLAN3/PLAN4) мигрируют как есть; пункт `in_progress` без активного run — `--allow-in-progress` после проверки `swissknifeman orch conduct runs --json` в том проекте (нет живого run); при живом run — отложить проект.\n- Отчёты dry-run и apply сохраняются артефактами пункта (`@plan/artifacts/<item>/`)."
+    },
+    {
+      "id": "host-a",
+      "title": "Машина A",
+      "text": "```bash\nswissknifeman workspace init\nswissknifeman workspace migrate discover ~/projects/packages --json > migrate-discover.json\nfor p in billium commerz azguard chatom corex vaulter swissknifeman; do\n  swissknifeman workspace project attach --project ~/projects/packages/$p --yes --json\n  swissknifeman workspace migrate plan --project ~/projects/packages/$p --json > migrate-plan-$p.json\ndone\n# owner gate MIGRATE-HOST-A: владелец читает сводку (блокеры, local-only объём, warn) и даёт grant\nfor p in billium commerz azguard chatom corex vaulter swissknifeman; do\n  swissknifeman workspace migrate apply --project ~/projects/packages/$p --json > migrate-apply-$p.json\n  swissknifeman workspace migrate verify --project ~/projects/packages/$p --json\n  (cd ~/projects/packages/$p && python3 -I .swissknifeman/launcher.py planner plans)   # планы видны из workspace\ndone\nswissknifeman workspace doctor --publish-safety --all --json > publish-report.json\nswissknifeman workspace sync --commit\n# маркеры в репозиториях проектов: один коммит на репозиторий, без push\nfor p in …; do git -C ~/projects/packages/$p add .swissknifeman/project.json && git -C ~/projects/packages/$p commit -m \"chore(skm): маркер проекта portable workspace\"; done\n```\nОжидание: `plans` каждого проекта показывает те же планы и прогресс, что до миграции (сравнение с `migrate-discover.json`/выводом `planner plans` до apply); `doctor` без fail; publish-report без block."
+    },
+    {
+      "id": "publish",
+      "title": "Публикация (owner gate PUBLISH-WORKSPACE)",
+      "text": "Владелец создаёт пустой приватный репозиторий (например GitHub private) и сообщает URL в grant.\n```bash\nswissknifeman workspace connect --remote <URL>\nswissknifeman workspace sync --push\nfor p in …; do git -C ~/projects/packages/$p push; done   # коммиты маркеров\n```\nОжидание: `workspace status --fetch` → ahead 0, behind 0; размер push ≈ объём минус local-only."
+    },
+    {
+      "id": "host-b",
+      "title": "Машина B (owner gate MIGRATE-HOST-B)",
+      "text": "Выполняется на машине B владельцем или агентной сессией на ней; результаты (JSON-отчёты) владелец приносит в план (`plan.py finish … --notes`, артефакты).\n```bash\n# обновить установку swissknifeman до версии с модулем workspace (docs/getting-started.md), проверить: swissknifeman workspace --help\nswissknifeman workspace clone <URL>\nfor p in <checkouts>; do git -C $p pull --ff-only; done      # приезжают маркеры (plans_store=workspace)\nswissknifeman workspace project scan ~/projects\nfor p in <checkouts>; do\n  swissknifeman workspace migrate plan --project $p --json > b-migrate-plan-$(basename $p).json   # import-режим: equal → skip\ndone\n# conflict (план изменён и на B, и в workspace) → владелец выбирает --on-conflict keep-workspace|import-copy\nfor p in <checkouts с copied/conflict>; do swissknifeman workspace migrate apply --project $p [--on-conflict …]; done\nswissknifeman workspace sync --commit --pull --push\n```\nОсобый случай: на B у проекта нет маркера (репозиторий не обновлён) → `git pull` сначала; проект есть только на B → `attach` создаст новый project_id, затем обычная миграция.\nПроверка на B: `planner plans` в каждом checkout показывает планы; `workspace doctor` без fail."
+    },
+    {
+      "id": "cleanup",
+      "title": "Cleanup (owner gate CLEANUP-LEGACY)",
+      "text": "После того как обе машины verify = equal и workspace синхронизирован:\n```bash\nfor p in …; do\n  swissknifeman workspace migrate cleanup --project $p --confirm <project_id>\n  git -C $p rm -r --cached plans && git -C $p commit -m \"chore(skm): планы перенесены в portable workspace\"\ndone\n```\nНа машине B после `git pull` source-репозиториев удалённые git'ом каталоги исчезают; неотслеживаемые остатки — `migrate cleanup` на B.\nОткат до cleanup — `workspace migrate rollback --project DIR`; после cleanup источник восстанавливается из истории git репозитория проекта (`git checkout <sha до cleanup> -- plans`) и `rollback` маркера."
+    }
+  ],
+  "provenance": {
+    "note": "по knowledge/code-facts#inventory и knowledge/workspace-contract#migration, #sync"
+  }
+}

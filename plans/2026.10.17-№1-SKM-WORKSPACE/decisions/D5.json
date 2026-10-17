@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D5",
+  "title": "Layout v4 и log.jsonl без изменений",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "decision": "Каталог плана в workspace — тот же layout v4; log.jsonl остаётся с merge=union; per-device журнал отложен.",
+  "rationale": "Layout v4 уже хранит документы по файлам; union-драйвер снимает конфликт параллельных дописываний; переписывание формата не нужно для переноса (knowledge/audit-verification#corrected C1, #verified A6).",
+  "applies_to": [
+    "P2",
+    "P4"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  }
+}

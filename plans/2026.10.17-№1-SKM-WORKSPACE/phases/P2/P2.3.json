@@ -1,0 +1,148 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.3",
+  "title": "planner commit: продукт в source repo, файлы плана — локальный коммит в workspace (Plan-Project, Plan-Source-Commit); commits читает source repo; planner-orch op_commit",
+  "status": "todo",
+  "summary": "Для плана в workspace `plan.py commit` коммитит продуктовые пути в checkout (как сейчас, с трейлерами Plan*) и затем файлы плана в git workspace под `git.lock` с трейлерами `Plan-Project` и `Plan-Source-Commit`; ответ получает `repo`, `workspace_sha`, `workspace_commit.status`; `plan.py commits` читает историю checkout; `op_commit` моста planner-orch передаёт новые поля и не меняет поведение для legacy.",
+  "why": "Коммит пункта сегодня — одна транзакция «продукт + bookkeeping» в одном репозитории (knowledge/audit-verification#corrected C4); после переноса без разделения либо пропадёт продуктовый коммит, либо файлы плана останутся грязными навсегда. Жёсткие риски: продуктовый коммит, захвативший чужие пути, коммит workspace, захвативший файлы других планов, потеря связи коммитов, гонка с `workspace sync`.",
+  "scope": {
+    "include": [
+      "packages/planner/lib/planner/plan/gitops.py: commit, _allowed, list_commits",
+      "bridges/planner-orch/worksource.py op_commit (проброс полей)",
+      "тесты с двумя временными git-репозиториями"
+    ],
+    "exclude": [
+      "`workspace sync` (P4.2)",
+      "изменение формата трейлеров для legacy-планов"
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "decisions": [
+    "D7"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#commit-split",
+      "why": "алгоритм и формат ответа",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#integrity",
+      "why": "W7, пары planner commit / workspace sync",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#planner-store",
+      "why": "gitops факты",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/gitops.py",
+      "why": "весь модуль",
+      "required": true
+    },
+    {
+      "path": "packages/planner/tests/engine/test_commit.py",
+      "why": "существующие ожидания commit",
+      "required": true
+    },
+    {
+      "path": "bridges/planner-orch/worksource.py",
+      "why": "op_commit, _only_plan_dirt",
+      "required": true,
+      "section": "op_commit, _only_plan_dirt"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/lib/planner/plan/gitops.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/cli.py",
+      "change": "modify",
+      "note": "печать новых полей commit"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_commit.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_commits_read.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/worksource.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/tests/test_commit_bridge.py",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Legacy-план (внутри checkout): поведение и вывод `commit`/`commits` без изменений; новые ключи ответа добавляются со значениями `repo: source`, `workspace_sha: null`, `workspace_commit.status: skipped-legacy`.",
+    "Workspace-часть никогда не возвращает `OUTSIDE_SCOPE`: чужие грязные пути workspace остаются вне коммита.",
+    "git.lock — тот же файл `workspace_state_dir()/git.lock`, что у модуля workspace (stdlib flock в planner, путь по правилу planner.plan.workspace.state_dir); тайм-аут 10 с → `workspace_commit.status = locked`.",
+    "Сбой workspace-части после продуктового коммита: exit 0, `workspace_commit.status = failed`, `workspace_commit.error` = код и сообщение git; продуктовый коммит не откатывается.",
+    "`--dry-run` показывает обе части без записи."
+  ],
+  "guidance": "Разделить `commit` на `_commit_part(repo, patterns, excluded, message, …)` (существующий алгоритм приватного индекса) и оркестрацию: source-часть (repo = source root, шаблоны продукта), затем workspace-часть (repo = workspace_root, шаблоны плана относительно workspace). `_message` дополняется трейлерами для workspace-части. Тест-сценарии: (a) legacy без изменений; (b) workspace: продукт + bookkeeping → два коммита, трейлер Plan-Source-Commit = sha первого; (c) только bookkeeping (reviewer) → только workspace-коммит, `sha` = workspace sha, `repo = workspace`; (d) workspace без .git → `skipped-no-git`; (e) git.lock занят → `locked`; (f) грязный файл другого плана в workspace не попадает в коммит; (g) `commits` для плана в workspace читает checkout.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/planner/scripts/test.sh",
+      "expect": "exit 0; обе сюиты OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) SKM_HOME=$(mktemp -d) AICORE_ROOT=$(cd ../aicore && pwd) PYTHONPATH=lib:../aicore/lib python3 -m unittest tests.engine.test_commit tests.engine.test_commits_read",
+      "expect": "exit 0; сценарии a–g",
+      "kind": "acceptance",
+      "cwd": "packages/planner"
+    },
+    {
+      "id": "V3",
+      "cmd": "bash bridges/planner-orch/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "двухчастный commit",
+    "commits из checkout",
+    "op_commit с новыми полями"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:22:16Z"
+}

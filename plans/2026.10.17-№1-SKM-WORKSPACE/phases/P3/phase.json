@@ -1,0 +1,69 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P3",
+  "title": "Миграция: мост workspace-planner и migrate discover|plan|apply|verify|rollback|cleanup",
+  "design": "detailed",
+  "goal": "Планы проекта переносятся из `<root>/plans` в workspace одной идемпотентной командой с dry-run, digest-проверкой, атомарным переключением хранилища под PlanLock, откатом и явным cleanup; повторная миграция на другой машине сливает планы по digest без тихой перезаписи.",
+  "context": "Алгоритм и инварианты — knowledge/workspace-contract#migration, #integrity (W2–W5); документы — #documents; реальные структуры — knowledge/code-facts#inventory (v4, 19 не-v4 каталогов, крупные артефакты, home-пути). Критическая секция в мосте workspace-planner (D6), команды — в модуле workspace.",
+  "scope": {
+    "include": [
+      "bridges/workspace-planner",
+      "packages/workspace (migrate, port, doctor, events)",
+      "scripts/e2e-workspace-migrate.sh",
+      "docs/workspace.md"
+    ],
+    "exclude": [
+      "реальные проекты и машинное состояние (P6)",
+      "git remote и sync (P4)"
+    ]
+  },
+  "pitfalls": [
+    "os.rename между томами невозможен: staging обязан быть внутри workspace_root.",
+    "Долгая миграция крупных проектов: тайм-аут плагина 3600 с, прогресс в stderr моста."
+  ],
+  "validation": [
+    {
+      "id": "V50",
+      "cmd": "python3 scripts/affected-tests.py --run --tier all",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V51",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V52",
+      "cmd": "bash scripts/test-integration.sh && bash scripts/test-bridges.sh",
+      "expect": "exit 0; bridges: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "мост workspace-planner",
+    "migrate *",
+    "e2e миграции",
+    "docs/workspace.md"
+  ],
+  "items": [
+    "P3.1",
+    "P3.2",
+    "P3.3"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P3.1",
+        "P3.2",
+        "P3.3"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

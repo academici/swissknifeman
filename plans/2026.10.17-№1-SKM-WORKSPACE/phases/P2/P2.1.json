@@ -1,0 +1,184 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.1",
+  "title": "planner: stdlib-резолвер planner.plan.workspace, find_plans_root по маркеру, Plan.source_root, launcher-проверка, PLANS_MIGRATED в PlanLock, LEGACY_PLANS_PRESENT",
+  "status": "todo",
+  "summary": "planner разрешает хранилище планов проекта по маркеру (`legacy` → `<root>/plans`, `workspace` → `<ws>/projects/<id>/plans`, нет каталога → `WORKSPACE_PROJECT_MISSING`) своей stdlib-копией правила, проходящей векторы aicore; `Plan.source_root` даёт checkout (launcher, binding или родитель `plans/`), `Plan.repo_root` возвращает его или `PLAN_SOURCE_UNBOUND`; `PlanLock` legacy-плана после переключения отдаёт `PLANS_MIGRATED`; settings и `new` берут проект и имя репозитория из source root.",
+  "why": "Это точка переключения: все глаголы plan.py, мосты и GUI получают каталог плана через store. Жёсткие риски: расхождение копии правила с aicore (W1), потерянная запись в legacy после миграции (W3), регресс launcher-режима (`PROJECT_PATH_OVERRIDE_FORBIDDEN` должен остаться для чужих путей), stdlib-инвариант plan engine.",
+  "scope": {
+    "include": [
+      "packages/planner/lib/planner/plan/workspace.py (новый, stdlib): workspace_root, read_marker, read_bindings, resolve_plans_store, source_root_of, legacy_plans_present",
+      "store.py: find_plans_root, require_project_plans, Plan.source_root, Plan.repo_root, PlanLock (W3), resolve_plan_dir без изменения семантики id/PLAN<N>",
+      "settings.py: project_root_of и for_plan/for_root через source root",
+      "ops.py/cli.py: repository по умолчанию = имя source root; ошибки новых кодов в envelope",
+      "тесты engine: test_workspace.py (векторы через AICORE_ROOT), test_store.py, test_settings.py; tests/test_launcher_mode.py"
+    ],
+    "exclude": [
+      "потребители repo_root в context/check/scout/refs и мостах (P2.2)",
+      "gitops (P2.3)",
+      "модули вне planner (P2.4)"
+    ]
+  },
+  "depends_on": [
+    "P1.3"
+  ],
+  "decisions": [
+    "D3",
+    "D4",
+    "D6"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#resolution",
+      "why": "правило в обе стороны и предупреждение",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#integrity",
+      "why": "W1, W3; пара planner-мутация / migrate apply",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#errors",
+      "why": "коды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#planner-store",
+      "why": "текущие функции и строки",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/store.py",
+      "why": "изменяемый модуль",
+      "required": true,
+      "section": "launcher_project_root, require_project_plans, find_plans_root, Plan, PlanLock"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/settings.py",
+      "why": "project_root_of, for_plan, for_root",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/cli.py",
+      "why": "общий --plans-root, new, обработка PlanError",
+      "required": true,
+      "section": "cmd_new, build parser common, main"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/workspace/resolve.py",
+      "why": "эталон правила (P1.1)",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/schemas/workspace/v1/resolution-vectors.json",
+      "why": "общие векторы",
+      "required": true
+    },
+    {
+      "path": "packages/planner/tests/test_launcher_mode.py",
+      "why": "ожидания launcher-режима",
+      "required": true
+    },
+    {
+      "path": "packages/planner/scripts/test.sh",
+      "why": "как тесты получают AICORE_ROOT",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/lib/planner/plan/workspace.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/store.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/settings.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/ops.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/cli.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_workspace.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_store.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_settings.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/test_launcher_mode.py",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "`lib/planner/plan/` остаётся stdlib-only: aicore не импортируется; правило дублируется с docstring «Same rule as aicore.workspace.resolve; read here so the store stays stdlib-only» (прецедент `launcher_project_root`).",
+    "Тест паритета читает `$AICORE_ROOT/schemas/workspace/v1/resolution-vectors.json` (AICORE_ROOT ставит scripts/test.sh); без AICORE_ROOT тест `skipTest`, не fail.",
+    "Проект без маркера ведёт себя байт-в-байт как сейчас (все существующие тесты planner без правок ожиданий, кроме добавленных).",
+    "`PlanLock.__enter__` после успешного flock: если каталог плана лежит в `<x>/plans[/archive]/<plan>` и у `<x>` маркер с `plans_store == workspace` → unlock, close, `PlanError('PLANS_MIGRATED', …)`; для каталогов внутри workspace проверка не выполняется.",
+    "`LEGACY_PLANS_PRESENT` — одна строка stderr за процесс, только в командах, где хранилище разрешено как workspace; JSON stdout не меняется.",
+    "`WORKSPACE_PROJECT_MISSING`, `PROJECT_MARKER_INVALID`, `PLAN_SOURCE_UNBOUND`, `PLANS_MIGRATED` — PlanError с этими кодами в JSON envelope (как прочие коды)."
+  ],
+  "guidance": "`workspace.py`: `workspace_root(env)` — SKM_WORKSPACE_ROOT | SKM_HOME/data/workspace | XDG_DATA_HOME|~/.local/share + /swissknifeman/workspace; `state_dir(env)` — SKM_HOME/state/workspace | XDG_STATE_HOME|~/.local/state + /swissknifeman/workspace; `read_marker(root)`; `read_bindings(env)`; `resolve_plans_store(project_root, env=None)`; `source_root_of(plan_dir, env=None, launcher=None)`; `legacy_plans_present(project_root)`.\n`store.find_plans_root(start=None)`: launcher → `resolve_plans_store(bound).plans_root`; без launcher — поиск вверх от cwd: в каждом кандидате сначала маркер (`.swissknifeman/project.json`) → хранилище по правилу; иначе `plans/` как сейчас; cwd внутри `<ws>/projects/<id>/plans` → этот каталог.\n`require_project_plans(path)`: допустимый корень = `resolve_plans_store(bound).plans_root`.\n`Plan.source_root` — `cached_property`-эквивалент (Python 3.9: `functools.cached_property` есть) через `workspace.source_root_of(self.root)`; `Plan.repo_root` → `source_root` или `PlanError('PLAN_SOURCE_UNBOUND', ...)`.\n`settings.project_root_of(plans_root)`: для каталога внутри workspace — source root через bindings, иначе прежнее правило.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/planner/scripts/test.sh",
+      "expect": "exit 0; обе сюиты OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) SKM_HOME=$(mktemp -d) AICORE_ROOT=$(cd ../aicore && pwd) PYTHONPATH=lib:../aicore/lib python3 -m unittest tests.engine.test_workspace tests.engine.test_store tests.engine.test_settings tests.test_launcher_mode",
+      "expect": "exit 0; векторы aicore пройдены (не skipped)",
+      "kind": "acceptance",
+      "cwd": "packages/planner"
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "planner.plan.workspace",
+    "store/settings на source root",
+    "PLANS_MIGRATED, WORKSPACE_PROJECT_MISSING, PLAN_SOURCE_UNBOUND"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:23:02Z"
+}

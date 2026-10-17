@@ -1,0 +1,19 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D8",
+  "title": "Publish-safety по уровням",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "decision": "Секреты, абсолютные пути в portable-манифестах, symlink, неизвестные корни — block; home-пути в данных плана и executable-бит — warn; файлы > 5 MiB или бинарные > 1 MiB — local-only (не в git, индекс local-only.json, .git/info/exclude).",
+  "rationale": "На машине A в plans/ 3755 файлов с home-путями и 307 файлов > 1 МиБ (до 76 МБ): блок по home-пути сделал бы миграцию невозможной, а гигабайты артефактов в git непригодны для sync; секреты и пути в манифестах — реальный риск (knowledge/audit-verification#verified A7).",
+  "applies_to": [
+    "P1",
+    "P3",
+    "P4"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  }
+}

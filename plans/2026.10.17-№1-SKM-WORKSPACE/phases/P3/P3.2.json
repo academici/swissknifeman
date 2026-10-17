@@ -1,0 +1,188 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.2",
+  "title": "swissknifeman workspace migrate discover|plan|apply|verify|rollback|cleanup, отчёты миграций, local-only при миграции, события",
+  "status": "todo",
+  "summary": "Команды `migrate` модуля workspace: `discover` находит кандидатов (launcher-проекты под каталогами и `local_path` реестра maind), `plan` строит dry-run (классы, digest, publish-safety, import-сравнение, блокеры) без записи, `apply` вызывает порт `workspace:plans-migrator` и затем пишет `local-only.json`, отчёт `migrations/<op_id>.json`, binding и событие; `verify`, `rollback`, `cleanup --confirm` — по knowledge/workspace-contract#migration.",
+  "why": "Миграция — необратимое для пользователя действие над 1.8 ГБ планов семи репозиториев; владельцу нужен точный dry-run и безопасные откат/очистка. Жёсткие риски: удаление источника без digest-проверки, тихая перезапись планов машины B (D13), секрет в workspace, перенос активного плана посреди run.",
+  "scope": {
+    "include": [
+      "packages/workspace/lib/workspace/migrate.py, migrator_port.py (поиск и вызов плагина: find_registration по `workspace.plans_migrator`, иначе unit hub-реестра с портом)",
+      "cli.py: группа migrate",
+      "doctor: проверка `workspace.plans-migrator` (плагин найден)",
+      "события migration.applied / rolled_back + схемы",
+      "тесты"
+    ],
+    "exclude": [
+      "критическая секция (мост, P3.1)",
+      "git-коммиты в checkout и workspace (cleanup и apply только печатают next)"
+    ]
+  },
+  "depends_on": [
+    "P3.1"
+  ],
+  "decisions": [
+    "D4",
+    "D8",
+    "D12",
+    "D13"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#migration",
+      "why": "команды и алгоритм",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#cli",
+      "why": "флаги и JSON",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#publish-safety",
+      "why": "классификация при dry-run",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#documents",
+      "why": "workspace-migration/v1, workspace-local-only/v1",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#errors",
+      "why": "коды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#inventory",
+      "why": "реальные классы каталогов для тестовых фикстур",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/worksource.py",
+      "why": "образец поиска плагина и проверки точки",
+      "required": true,
+      "section": "PluginWorkSource"
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/units.py",
+      "why": "discover_units для поиска порта в реестре хаба",
+      "required": true,
+      "section": "discover_units"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/safety.py",
+      "why": "API publish-safety (P1.3)",
+      "required": true
+    },
+    {
+      "path": "bridges/workspace-planner/README.md",
+      "why": "протокол порта (P3.1)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/workspace/lib/workspace/migrate.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/migrator_port.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/cli.py",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/doctor.py",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/events.py",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/schemas/event-data/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/unit.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/tests/test_migrate.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/README.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "packages/workspace/CHANGELOG.md",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "`plan` ничего не пишет на диск (тест сравнивает дерево до/после).",
+    "`apply` без предварительного `plan` строит манифест сам и выполняет те же проверки блокеров; блокер → отказ до вызова порта.",
+    "Активный пункт (`in_progress`) → `MIGRATION_IN_PROGRESS` без `--allow-in-progress`.",
+    "`cleanup` требует `--confirm <project_id>` равный маркеру (иначе `CLEANUP_CONFIRM_MISMATCH`), удаляет только каталоги с digest, равным копии; не выполняет git-команд.",
+    "`rollback` отказывает `MIGRATION_DIVERGED`, если любой план в workspace изменился после отчёта.",
+    "discover не читает содержимое файлов, только структуру и размеры; реестр maind читается как данные (`state_dir()/maind/registry.json`, ключ projects[].local_path), без импорта maind."
+  ],
+  "guidance": "`migrator_port.call(op, payload)`: `aicore.ext.plugins.find_registration(settings.plans_migrator)`; не найден → unit из `aicore.ext.units.discover_units()` с `provides.ports[].id == \"workspace:plans-migrator\"` и его `extension.json` через `load_manifest`; ничего → `MIGRATOR_UNAVAILABLE` с подсказкой `swissknifeman config set aicore plugins.workspace-planner.manifest <hub>/bridges/workspace-planner/extension.json`. После apply: `localonly.update` для файлов с классом local-only, отчёт по схеме workspace-migration/v1, `bindings.bind`, событие. Фикстуры — по code-facts#inventory: v4 active и archived, legacy с только `artifacts/`, вложенный `plans/archive/<legacy>`, файл 6 МиБ, home-путь, `.env` в legacy (блокер MIGRATION_BLOCKED_SECRET), import-режим с равным/новым/различающимся планом.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/workspace/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "HOME=$(mktemp -d) PYTHONPATH=lib:../aicore/lib python3 -m unittest tests.test_migrate",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "packages/workspace"
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "migrate discover|plan|apply|verify|rollback|cleanup",
+    "отчёты миграций и local-only"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:23:02Z"
+}

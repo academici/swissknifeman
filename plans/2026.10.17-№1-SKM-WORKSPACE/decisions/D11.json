@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D11",
+  "title": "Разделы аудита вне плана",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "decision": "Prompt profiles — PLAN4 P13.3; conductor (typed scout, ContextPack, diff chunking, fast-check gate, telemetry), skills (v2, lint, conflicts, eval), фоновый sync, per-device журнал, semantic merge, materials load_policy, tasks inbox, остаток метаданных конфига — ideas/workspace-audit-deferred.md с триггерами (P1.1).",
+  "rationale": "Это независимые от переноса планов изменения других модулей; часть уже запланирована PLAN4; правило «не строить спекулятивную машинерию» (planner-development-philosophy).",
+  "applies_to": [
+    "P1"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  }
+}

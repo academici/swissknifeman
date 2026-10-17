@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D9",
+  "title": "Синхронизация — только ручной sync через merge",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "decision": "workspace sync: commit → fetch → git merge-tree --write-tree (сухое слияние) → merge или typed-отчёт конфликтов без изменения worktree → явное разрешение --resolve PATH=local|remote для всех путей → push только с --push без force. Фоновые режимы и hooks отложены.",
+  "rationale": "Rebase переписывает локальные коммиты плана и оставляет промежуточное состояние; merge-tree даёт отчёт о конфликтах без касания рабочего дерева; автопуш даёт гонки и публикацию незаконченного (knowledge/audit-verification#verified A8).",
+  "applies_to": [
+    "P4",
+    "P5"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  }
+}

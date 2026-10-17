@@ -1,0 +1,93 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.4",
+  "title": "Машина B: обновление swissknifeman, workspace clone, pull репозиториев, project scan, import-миграция локальных планов, sync",
+  "status": "todo",
+  "summary": "Под гейтом MIGRATE-HOST-B на второй машине владельца: обновлённый swissknifeman (git pull хаба), `workspace clone`, `git pull` checkout'ов (приезжают маркеры), `workspace project scan`, `migrate plan`/`apply` в import-режиме (равные — skip, новые — copy, различающиеся — выбор владельца `--on-conflict`), `workspace sync --commit --pull --push`; на машине B `planner plans` в каждом checkout показывает планы из workspace.",
+  "why": "Требование владельца B4 (миграция на другом компьютере). Жёсткие риски: тихая перезапись локальных планов B (D13), использование legacy plans/ на B после pull маркера (W3: PLANS_MIGRATED/WORKSPACE_PROJECT_MISSING вместо тихой записи), различие версий swissknifeman на машинах.",
+  "scope": {
+    "include": [
+      "шаги knowledge/migration-runbook#host-b на машине B",
+      "отчёты B в артефактах P6.4 (владелец или агентная сессия на B приносит JSON)"
+    ],
+    "exclude": [
+      "cleanup (P6.5)",
+      "проекты, которых нет среди 7 и которые владелец не назвал"
+    ]
+  },
+  "depends_on": [
+    "P6.3"
+  ],
+  "decisions": [
+    "D3",
+    "D13"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/migration-runbook#host-b",
+      "why": "команды и особые случаи",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#migration",
+      "why": "import-режим",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#resolution",
+      "why": "что видит planner на B",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/artifacts/P6.4/**",
+      "change": "create",
+      "note": "b-migrate-plan-*.json, b-apply-*.json, b-plans-*.json, b-doctor.json"
+    }
+  ],
+  "rules": [
+    "Выполняется на машине B; если план исполняется агентом на машине A, пункт ждёт результатов от владельца (finish с notes и артефактами).",
+    "Конфликт import — только решение владельца; по умолчанию apply отказывает `MIGRATION_CONFLICT`.",
+    "Версия swissknifeman на B — та же коммит-база main, что запушена в P6.3 (`swissknifeman --version` на обеих машинах совпадает)."
+  ],
+  "guidance": "Команды — knowledge/migration-runbook#host-b. После sync на B: на машине A `swissknifeman workspace sync --pull`, чтобы A получила планы, импортированные с B.",
+  "validation": [
+    {
+      "id": "V1",
+      "procedure": "На машине B для каждого checkout с маркером: `python3 -I .swissknifeman/launcher.py planner plans` возвращает ok и непустой список (или пустой для проекта без планов); `swissknifeman workspace doctor --json` без fail; `swissknifeman workspace status --fetch --json` ahead 0, behind 0. JSON-выводы сохранены в @plan/artifacts/P6.4/.",
+      "expect": "все условия выполнены",
+      "kind": "acceptance"
+    },
+    {
+      "id": "V2",
+      "cmd": "swissknifeman workspace sync --pull --json | python3 -c \"import json,sys; d=json.load(sys.stdin); sys.exit(0 if not d.get('conflicts') else 1)\"",
+      "expect": "exit 0 на машине A; изменения B приняты без конфликтов",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "workspace на машине B",
+    "локальные планы B в workspace",
+    "A и B синхронны"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "owner_gate",
+    "gate": "MIGRATE-HOST-B",
+    "scope": "На второй машине владельца: обновить swissknifeman, клонировать workspace из приватного remote, обновить checkout'ы проектов, привязать их, перенести локальные планы в import-режиме с решениями владельца по конфликтам и синхронизировать workspace (push без force)."
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:22:22Z"
+}

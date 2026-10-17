@@ -1,0 +1,88 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P2",
+  "title": "Planner и остальные модули работают с планами из workspace: хранилище по маркеру, source root, разделение коммита, чтения исполнителя",
+  "design": "detailed",
+  "goal": "Проект с маркером plans_store=workspace полностью работает: plan.py (все глаголы, launcher-режим), мосты planner-orch и gui-planner, orch через brief, harness, analyst и диагностика aicore находят планы в workspace; коммит пункта разделяется на checkout и workspace; проекты без маркера ведут себя как раньше.",
+  "context": "Правило разрешения — knowledge/workspace-contract#resolution (векторы aicore P1.1); целостность — #integrity (W1, W3, W7); разделение коммита — #commit-split; чтения исполнителя — #brief-inline. Потребители и строки — knowledge/code-facts#planner-store, #consumers. P2.2 и P2.3 независимы (непересекающиеся файлы) после P2.1; P2.4 закрывает фазу e2e-сценарием.",
+  "scope": {
+    "include": [
+      "packages/planner (plan engine, tests, CLAUDE.md, README)",
+      "bridges/planner-orch, bridges/gui-planner",
+      "packages/aicore (invocation, project doctor, util.repo)",
+      "packages/harness run, packages/analyst readers",
+      "scripts/e2e-workspace-plans.sh"
+    ],
+    "exclude": [
+      "packages/workspace кроме чтения API",
+      "orch core",
+      "gui core и frontend",
+      "реальные проекты"
+    ]
+  },
+  "pitfalls": [
+    "Не ломать legacy-путь: большинство проектов до P6 остаются без маркера.",
+    "Брифы orch из workspace без встраивания дают исполнителю несуществующие пути — проверять тестом, а не глазами."
+  ],
+  "validation": [
+    {
+      "id": "V50",
+      "cmd": "python3 scripts/affected-tests.py --run --tier all",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V51",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V52",
+      "cmd": "bash scripts/test-integration.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V53",
+      "cmd": "bash packages/planner/scripts/validate.sh && python3 scripts/ecosystem-units.py standalone planner",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "planner на маркере и source root",
+    "двухчастный commit",
+    "встраивание @plan/-чтений",
+    "потребители вне planner",
+    "e2e"
+  ],
+  "items": [
+    "P2.1",
+    "P2.2",
+    "P2.3",
+    "P2.4"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P2.1",
+        "P2.2"
+      ],
+      "mode": "recommended"
+    },
+    {
+      "id": "B2",
+      "items": [
+        "P2.3",
+        "P2.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

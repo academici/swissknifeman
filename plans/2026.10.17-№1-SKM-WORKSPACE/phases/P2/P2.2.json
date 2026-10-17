@@ -1,0 +1,175 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.2",
+  "title": "planner и мосты: context, check, scout, refs на source root; brief встраивает @plan/-чтения для плана вне checkout; метка gui-planner raw",
+  "status": "todo",
+  "summary": "`context`, `check`, `scout` берут базу путей репозитория из `Plan.source_root` (без source root `check` пропускает проверку существования путей репозитория с warning `source_unbound`, остальное работает); `refs` находит планы другого репозитория через `resolve_plans_store`; `bridges/planner-orch/brief.py` для плана в workspace встраивает содержимое всех `@plan/` reads и context pack и не выдаёт абсолютных путей workspace; `bridges/gui-planner` `raw` показывает `<plan-id>/<file>`.",
+  "why": "Исполнитель orch ограничен проектом и не видит workspace (knowledge/audit-verification#corrected C5); без встраивания пункты с knowledge-чтениями ломаются молча. Жёсткие риски: утечка абсолютного пути workspace в промпт, рост токенов при встраивании целых документов вместо секций, ложные ошибки check при несвязанном checkout.",
+  "scope": {
+    "include": [
+      "packages/planner/lib/planner/plan/{context,check,scout,refs}.py",
+      "bridges/planner-orch/brief.py",
+      "bridges/gui-planner/adapter.py (raw)",
+      "тесты затронутого"
+    ],
+    "exclude": [
+      "gitops и op_commit (P2.3)",
+      "orch render/conductor (меняются данные brief, не код orch)"
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "decisions": [
+    "D10"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#brief-inline",
+      "why": "правило встраивания",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#resolution",
+      "why": "source root и PLAN_SOURCE_UNBOUND",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#planner-store",
+      "why": "строки context/check/scout/refs",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#consumers",
+      "why": "brief, render, gui-planner",
+      "required": true
+    },
+    {
+      "path": "bridges/planner-orch/brief.py",
+      "why": "_plan_dir, _read, _context_refs, build",
+      "required": true
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/context.py",
+      "why": "read_entry и база путей",
+      "required": true,
+      "section": "read_entry, missing_reads"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/refs.py",
+      "why": "_plans_root",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/render.py",
+      "why": "как content попадает в промпт",
+      "required": false,
+      "section": "_reads, _context"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/planner/lib/planner/plan/context.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/check.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/scout.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/refs.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/brief.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/gui-planner/adapter.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_context.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_check.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_refs.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/planner/tests/engine/test_scout.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/planner-orch/tests/test_brief.py",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/gui-planner/tests/test_queries.py",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Для плана внутри checkout (legacy) вывод brief, context и check байт-в-байт прежний (golden/существующие тесты без правок ожиданий).",
+    "Встраивание для knowledge-чтения с `#section` — только текст секции; без секции — документ целиком; бинарные/не-UTF-8 файлы не встраиваются, read получает `error: not-text`.",
+    "В brief плана из workspace нет подстроки пути `workspace_root()` (тест проверяет поиском по сериализованному brief).",
+    "`refs` с `--repo NAME=PATH`/`SKM_PLAN_REPOS`: путь — checkout; хранилище по маркеру этого checkout."
+  ],
+  "guidance": "brief: `outside = plan.source_root is None or not plan.root.resolve().is_relative_to(plan.source_root.resolve())` (Python 3.9: `is_relative_to` есть с 3.9); при `outside` вызывать `_read(plan, entry, inline=True)` для `@plan/` и knowledge-ref reads; `_plan_dir` возвращает `@plan` вместо относительного пути; context_refs — `@plan/context/<item>.json` + content.\ncheck/context: заменить `plan.repo_root` на локальную переменную `base = plan.source_root`; при None — пропуск проверки существования путей репозитория с одним warning `source_unbound` на план.\nscout: при None — scout выключается с причиной `source_unbound` (как при `scout: off`).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/planner/scripts/test.sh",
+      "expect": "exit 0; обе сюиты OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash bridges/planner-orch/scripts/test.sh && bash bridges/gui-planner/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "source root во всех потребителях planner",
+    "встраивание @plan/-чтений в brief",
+    "метка raw"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:22:16Z"
+}

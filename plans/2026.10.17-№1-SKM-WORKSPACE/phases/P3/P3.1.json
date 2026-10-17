@@ -1,0 +1,219 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P3.1",
+  "title": "Мост bridges/workspace-planner: порт workspace:plans-migrator — inspect, apply (критическая секция под PlanLock), verify",
+  "status": "todo",
+  "summary": "Мост `workspace-planner` (kind bridge; requires aicore, planner, workspace) реализует точку расширения `workspace:plans-migrator` по протоколу плагинов aicore: `inspect` классифицирует содержимое `<root>/plans` (v4/legacy/derived/top-level), даёт манифест файлов с sha256 и пункты `in_progress`; `apply` выполняет критическую секцию миграции W2–W5 (lock миграции, PlanLock всех v4-планов, сверка digest, копия в `.staging`, verify, rename, маркер `plans_store=workspace`); `verify` загружает планы каталога через planner store и сравнивает множества кодов `plan.py check`.",
+  "why": "Критическая секция требует одновременно PlanLock planner и знания layout workspace; по правилу модулей это место моста (D6). Жёсткие риски: потеря записи процесса planner во время миграции (W3), частично перенесённый проект (W5), расхождение копии (W4), deadlock при взятии многих PlanLock, долгий вызов плагина на 822 МБ.",
+  "scope": {
+    "include": [
+      "bridges/workspace-planner/: unit.json, extension.json (point workspace:plans-migrator, timeout_seconds 3600), README.md, migrator.py (вход плагина), inspect.py, apply.py, verify.py, scripts/test.sh, tests/",
+      "packages/workspace: точка расширения plans-migrator в unit.json (если не объявлена в P1.2), схема запроса/ответа порта в packages/workspace/schemas/plans-migrator/v1",
+      "bridges/README.md (строка таблицы и партнёр workspace), configs/ecosystem-units.json targets"
+    ],
+    "exclude": [
+      "команды CLI migrate (P3.2)",
+      "изменения planner кроме чтения его store API"
+    ]
+  },
+  "depends_on": [
+    "P2.4"
+  ],
+  "decisions": [
+    "D4",
+    "D6",
+    "D12",
+    "D13"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#migration",
+      "why": "классы, критическая секция по шагам, import-режим",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#integrity",
+      "why": "W2–W5, пары операция/lock",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#documents",
+      "why": "workspace-migration/v1 (поля plans[])",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#hub-registration",
+      "why": "структура моста",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#planner-store",
+      "why": "PlanLock, load_plan",
+      "required": true
+    },
+    {
+      "path": "bridges/planner-orch/extension.json",
+      "why": "образец extension.json с точкой",
+      "required": true
+    },
+    {
+      "path": "bridges/planner-orch/worksource.py",
+      "why": "образец входа плагина: describe/invoke/reply",
+      "required": true,
+      "section": "reply, describe, invoke, main"
+    },
+    {
+      "path": "bridges/planner-orch/partners.py",
+      "why": "поиск партнёров по env/PATH",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/ext/plugins.py",
+      "why": "протокол плагина",
+      "required": true,
+      "section": "load_manifest, invoke_one, find_registration"
+    },
+    {
+      "path": "packages/planner/lib/planner/plan/store.py",
+      "why": "PlanLock, load_plan, plan_dirs",
+      "required": true,
+      "section": "PlanLock, load_plan"
+    }
+  ],
+  "task_files": [
+    {
+      "path": "bridges/workspace-planner/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/extension.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/README.md",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/migrator.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/inspect.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/apply.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/verify.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/partners.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/scripts/test.sh",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/tests/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/tests/test_inspect.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/tests/test_apply.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/workspace-planner/tests/test_verify.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/schemas/plans-migrator/v1/request.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/schemas/plans-migrator/v1/response.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/unit.json",
+      "change": "any",
+      "note": "создаётся предыдущим пунктом плана"
+    },
+    {
+      "path": "bridges/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-bridges.sh",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "PlanLock берутся в порядке отсортированных путей каталогов; при тайм-ауте любого — освободить взятые в обратном порядке и ответить `MIGRATION_LOCKED` со списком.",
+    "Копирование: `shutil.copy2`, symlink не разыменовывается (встреченный symlink → ответ `MIGRATION_BLOCKED_SYMLINK`, проверка до копирования); `.staging/<op_id>` внутри workspace (тот же том для `os.rename`).",
+    "Любая ошибка до `os.rename` → `shutil.rmtree(staging)`, маркер не меняется; ответ содержит `phase` шага, на котором остановились.",
+    "Повтор apply с тем же манифестом после успешного rename, но до маркера: target с равным digest → только запись маркера.",
+    "verify сравнивает множества `(code, where)` ошибок `check` источника и копии; новые ошибки копии → `MIGRATION_VERIFY_FAILED`; предупреждения не сравниваются.",
+    "Мост не печатает содержимое файлов и секреты; в ответе только пути относительно `plans/`, размеры, digest.",
+    "Мост находит planner через `PLANNER_ROOT`/`PLANNER_PLAN_PY`, затем `planner` на PATH (таблица bridges/README.md); workspace — через `SKM_WORKSPACE_MODULE_ROOT`, затем `swissknifeman`."
+  ],
+  "guidance": "Протокол: `migrator.py` — вход плагина (`describe` → points [workspace:plans-migrator], ops [inspect, apply, verify]); запрос `{\"op\": \"inspect\", \"project_root\", \"workspace_root\"}` → `{\"plans\": [{name, class, files: [{path, bytes, sha256}], in_progress: [refs]}], \"top_level\": [...], \"digest\"}`; `{\"op\": \"apply\", \"project_root\", \"workspace_root\", \"project_id\", \"op_id\", \"manifest\", \"mode\": \"initial\"|\"import\", \"on_conflict\": null|\"keep-workspace\"|\"import-copy\", \"device_short\", \"lock_timeout_s\"}` → `{\"result\": \"applied\"|\"noop\", \"plans\": [{name, class, action, digest}], \"phase\"}` или refusal `{code, message, phase}`; `{\"op\": \"verify\", \"plans_root\"}` → `{\"plans\": [{name, loaded: bool, problems, check_codes}]}`.\nИмпорт planner: мост — единственное место, где `planner.plan.store` и workspace-контракт встречаются; PYTHONPATH на `$PLANNER_ROOT/lib` по образцу bridges/planner-orch.\nТесты: временный checkout с v4-планом (active, archived), legacy-каталогом, `views/`/`context/`/`.lock` (не копируются), `plans/README.md` (top-level → legacy-plans/_root); конкурентный писатель (subprocess держит PlanLock 2 с → apply ждёт; держит дольше тайм-аута → MIGRATION_LOCKED); писатель после переключения получает PLANS_MIGRATED; инъекция ошибки между копией и rename (env `SKM_MIGRATOR_FAIL_AT=pre-rename` только в тестах) → нет `projects/<id>/plans`, staging удалён.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash bridges/workspace-planner/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "мост workspace-planner с inspect/apply/verify",
+    "схема порта plans-migrator/v1"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:23:02Z"
+}

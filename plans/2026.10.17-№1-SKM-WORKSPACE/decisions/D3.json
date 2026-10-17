@@ -1,0 +1,20 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D3",
+  "title": "Идентичность проекта — маркер в репозитории",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "decision": "Маркер <root>/.swissknifeman/project.json {project_id, plans_store} коммитится в репозиторий проекта; runtime-разрешение только по маркеру; remotes используются только attach для поиска существующего проекта; путь и basename не идентичность.",
+  "rationale": "Маркер приезжает на машину B вместе с git pull и делает разрешение детерминированным и дешёвым (одно чтение файла, stdlib); remote-сопоставление в рантайме ломается от переименований и форков (knowledge/audit-verification#corrected C3).",
+  "applies_to": [
+    "P1",
+    "P2",
+    "P3",
+    "P6"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5",
+    "effort": "high"
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.2",
+  "title": "Модуль packages/workspace: регистрация в хабе, swissknifeman workspace init|status|doctor|project attach|list|show|scan|rebind|detach",
+  "status": "todo",
+  "summary": "Новый модуль `workspace` (kind capability, requires aicore) с группой `swissknifeman workspace`: `init` создаёт layout v1, git-репозиторий и device; `status` и `doctor` (структурные проверки в формате check-result/v1) читают состояние; `project attach|list|show|scan|rebind|detach` управляют project.json, маркером в checkout и bindings машины; события `workspace.initialized`, `workspace.project.attached`.",
+  "why": "CLI — единственный путь создания workspace и привязки проектов; на нём строятся миграция, sync и GUI. Жёсткие риски: init поверх непустого каталога (потеря данных владельца), attach по совпадению basename (склейка разных проектов), запись маркера в чужой checkout без явного действия.",
+  "scope": {
+    "include": [
+      "packages/workspace/: unit.json, bin/workspace, lib/workspace/{__init__,cli,layout,projects,doctor,gitutil}.py, configs/config.schema.json, config.example.toml, schemas/event-data/v1, scripts/test.sh, tests/, README.md, CHANGELOG.md",
+      "регистрация модуля в хабе по образцу коммита 3f12763820 (knowledge/code-facts#hub-registration), install-profiles: workspace во всех профилях, где есть planner",
+      "golden-фикстуры help umbrella"
+    ],
+    "exclude": [
+      "publish-safety (P1.3)",
+      "migrate (P3)",
+      "connect/clone/sync (P4)",
+      "изменения planner"
+    ]
+  },
+  "depends_on": [
+    "P1.1"
+  ],
+  "decisions": [
+    "D2",
+    "D3",
+    "D6"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/workspace-contract#layout",
+      "why": "что создаёт init",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#gitignore",
+      "why": "baseline .gitignore и .gitattributes",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#identity",
+      "why": "алгоритм attach",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#cli",
+      "why": "команды, флаги, ключи JSON",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#integrity",
+      "why": "W6, W7 (git.lock)",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#events",
+      "why": "события",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#errors",
+      "why": "коды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/code-facts#hub-registration",
+      "why": "файлы регистрации модуля",
+      "required": true
+    },
+    {
+      "path": "packages/gui/unit.json",
+      "why": "образец unit.json модуля",
+      "required": true
+    },
+    {
+      "path": "packages/gui/bin/gui",
+      "why": "образец bin-обёртки с локатором aicore",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "why": "образец CLI модуля",
+      "required": true
+    },
+    {
+      "path": "packages/gui/scripts/test.sh",
+      "why": "образец test.sh с временным HOME",
+      "required": true
+    },
+    {
+      "path": "packages/aicore/lib/aicore/workspace/__init__.py",
+      "why": "API из P1.1",
+      "required": true
+    },
+    {
+      "path": "scripts/umbrella.py",
+      "why": "как модуль становится группой",
+      "required": true,
+      "section": "group_units, apply_execution"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "why": "профили установки",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/workspace/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/bin/workspace",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/cli.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/layout.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/projects.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/doctor.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/gitutil.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/lib/workspace/events.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/configs/config.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/config.example.toml",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/schemas/event-data/v1/**",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/scripts/test.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/tests/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/tests/test_cli.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/tests/test_init.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/tests/test_projects.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/tests/test_doctor.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/README.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/workspace/CHANGELOG.md",
+      "change": "create"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-ecosystem-units.py",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-aicore-locator.py",
+      "change": "modify"
+    },
+    {
+      "path": "scripts/test-dev-guard.py",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/cli/swissknifeman-help.txt",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/cli/swissknifeman-unknown-subcommand.txt",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/cases.json",
+      "change": "modify"
+    },
+    {
+      "path": "tests/golden/generation.json",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ecosystem.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "lib/workspace импортирует только stdlib, aicore и себя; имена packages/<другой модуль> и bridges/ в коде модуля запрещены (ecosystem-units check).",
+    "`init` на каталоге с `workspace.json` — no-op с `already_initialized: true`; на непустом каталоге без него — `WORKSPACE_ROOT_NOT_EMPTY`, ничего не пишется.",
+    "`git init -b main` и все git-вызовы — через `gitutil.run(argv, cwd)` (список аргументов, без shell, `LC_ALL=C`), git.lock для меняющих операций (W7).",
+    "`attach` без маркера и с одним remote-совпадением без `--yes` и без TTY → `ATTACH_CONFIRM_REQUIRED`; совпадение только по basename никогда не используется.",
+    "`attach` не делает git-коммитов в checkout; `next` в выводе — команда коммита маркера.",
+    "`project scan` не создаёт новые проекты: маркер с неизвестным id → `unknown`.",
+    "`execution.project = optional` в unit.json; `--json` — один объект на stdout; ошибки `CODE: message` на stderr, exit 1, неверные аргументы exit 2.",
+    "Тесты: временные HOME, SKM_HOME, SKM_WORKSPACE_ROOT; git-репозитории проектов создаются во временных каталогах."
+  ],
+  "guidance": "Порядок: (1) скелет модуля и регистрация по `git show --stat 3f12763820` (unit.json: id workspace, kind capability, destination hub, requires aicore ^0.1, execution {project: optional, cwd: preserve, writes: machine}, provides {cli: [bin/workspace], config: configs/config.schema.json, events: [...], extension_points: [{id: plans-migrator, description: ...}]}); (2) `layout.init(root)`: каталоги, `workspace.json` (aicore.workspace.documents), `.gitignore`/`.gitattributes`/`README.md` из констант, `git init -b main`, начальный коммит `skm(workspace): init` с трейлером `Workspace-Device`; device в `workspace_state_dir()/device.json` (создать при отсутствии); (3) `status` без сети (ahead/behind из `git rev-list --left-right --count HEAD...@{u}`, если upstream есть); (4) `projects.py` по knowledge/workspace-contract#identity; (5) `doctor` проверки: `workspace.layout`, `workspace.documents` (схемы), `workspace.bindings` (BINDING_PATH_MISSING, BINDING_MARKER_MISMATCH), `workspace.legacy-plans` (LEGACY_PLANS_PRESENT для привязанных проектов с plans_store=workspace), `workspace.git` (версия ≥ 2.38, иначе WORKSPACE_GIT_TOO_OLD warn); (6) события через `aicore.ext.events.emit(..., source=\"workspace\")` best-effort; (7) golden: `python3 scripts/golden.py capture` только для затронутых кейсов, проверить `python3 scripts/golden.py check`.\nКонфиг модуля `[workspace]`: `publish.max_tracked_bytes` (5242880), `publish.max_binary_tracked_bytes` (1048576), `git.lock_timeout_s` (60), `plans_migrator` (\"workspace-planner\") — слои defaults, machine (`x-skm-layers`).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/workspace/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/golden.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/ecosystem-units.py check",
+      "expect": "exit 0; модуль workspace без нарушений границ",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "T=$(mktemp -d) && SKM_HOME=$T/h SKM_WORKSPACE_ROOT=$T/ws ./bin/swissknifeman workspace init --json | python3 -c \"import json,sys; d=json.load(sys.stdin); sys.exit(0 if d['workspace_id'].startswith('ws_') else 1)\"",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V9",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "модуль packages/workspace с CLI init/status/doctor/project",
+    "регистрация в хабе, профилях и golden"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:22:14Z"
+}

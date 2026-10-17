@@ -1,0 +1,86 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.3",
+  "title": "Публикация: приватный remote workspace, connect, sync --push; push коммитов маркеров и main swissknifeman",
+  "status": "todo",
+  "summary": "Под гейтом PUBLISH-WORKSPACE: владелец создаёт пустой приватный репозиторий и сообщает URL; `workspace connect --remote URL` (классификация empty), `workspace sync --push`; push коммитов маркеров 7 репозиториев и ветки main swissknifeman (с модулем workspace) — чтобы машина B получила код и маркеры.",
+  "why": "Машина B получает планы только из remote; push в репозитории проектов — внешнее действие владельца. Жёсткие риски: push в неверный remote, секрет в истории workspace (gate publish-safety уже в sync), утечка токена URL в логи.",
+  "scope": {
+    "include": [
+      "connect, sync --push",
+      "git push 7 репозиториев (текущие ветки)",
+      "артефакты: status-after.json"
+    ],
+    "exclude": [
+      "создание репозитория на хостинге (делает владелец)",
+      "force push"
+    ]
+  },
+  "depends_on": [
+    "P6.2"
+  ],
+  "decisions": [
+    "D9"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/migration-runbook#publish",
+      "why": "команды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/workspace-contract#sync",
+      "why": "connect и push",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "@plan/artifacts/P6.3/**",
+      "change": "create"
+    }
+  ],
+  "rules": [
+    "URL берётся только из grant владельца; в артефакты пишется redacted URL.",
+    "Отказ `REMOTE_FOREIGN`/`REMOTE_OTHER_WORKSPACE` → остановка и вопрос владельцу."
+  ],
+  "guidance": "```bash\nswissknifeman workspace connect --remote \"$URL\" --json\nswissknifeman workspace sync --push --json\nfor p in billium commerz azguard chatom corex vaulter swissknifeman; do git -C ~/projects/packages/$p push; done\nswissknifeman workspace status --fetch --json > status-after.json\n```",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "swissknifeman workspace status --fetch --json | python3 -c \"import json,sys; g=json.load(sys.stdin)['git']; sys.exit(0 if g['ahead']==0 and g['behind']==0 and g['remote'] else 1)\"",
+      "expect": "exit 0; workspace синхронизирован с remote",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "for p in billium commerz azguard chatom corex vaulter swissknifeman; do test -z \"$(git -C ~/projects/packages/$p log @{u}..HEAD --oneline -- .swissknifeman/project.json)\" || exit 1; done",
+      "expect": "exit 0; коммиты маркеров запушены",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "workspace в приватном remote",
+    "маркеры и main swissknifeman в remote"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "owner_gate",
+    "gate": "PUBLISH-WORKSPACE",
+    "scope": "Подключить приватный remote workspace по URL владельца, запушить workspace и текущие ветки 7 репозиториев проектов с коммитами маркеров (без force)."
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T10:22:22Z"
+}

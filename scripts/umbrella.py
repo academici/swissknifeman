@@ -176,6 +176,35 @@ def check_launcher(env: Optional[Dict[str, str]] = None) -> Optional[int]:
     return None
 
 
+def partner_roots(units: Mapping[str, Any], config: Mapping[str, Any]) -> Dict[str, str]:
+    """The install roots of the discovered modules under the names their partners look them up by
+    (the partner lookup of the foundation, the ``partners.py`` of the bridges): the variables ``partner_env`` of the config names
+    for a module (a path relative to its root; a path that does not exist is left out), else ``SKM_<ID>_ROOT``.
+    Bridges are helpers, not partners."""
+    named = config.get("partner_env") if isinstance(config.get("partner_env"), dict) else {}
+    roots: Dict[str, str] = {}
+    for key, unit in units.items():
+        if unit.doc.get("kind") == "bridge":
+            continue
+        variables = named.get(key) if isinstance(named.get(key), dict) else \
+            {f"SKM_{key.upper().replace('-', '_')}_ROOT": "."}
+        for name, relative in variables.items():
+            path = unit.root if relative == "." else unit.root / str(relative)
+            if path.exists():
+                roots[name] = str(path)
+    return roots
+
+
+def export_partner_roots(units: Mapping[str, Any], config: Mapping[str, Any],
+                         env: Optional[Dict[str, str]] = None) -> None:
+    """Give a routed module the roots of its partners in this hub, so that a bridge it starts (the work source of a
+    conductor run) finds them without a neighbour search; a variable already set wins."""
+    target = os.environ if env is None else env
+    for name, value in partner_roots(units, config).items():
+        if not target.get(name):
+            target[name] = value
+
+
 def route(argv: Sequence[str], units: Optional[Mapping[str, Any]] = None,
           config: Optional[Mapping[str, Any]] = None) -> int:
     """Resolve the first word: built-in command, alias, module id; anything else is unknown."""
@@ -196,6 +225,7 @@ def route(argv: Sequence[str], units: Optional[Mapping[str, Any]] = None,
     config = load_config() if config is None else config
     target = resolve_alias(config, cmd, rest)
     units = load_units() if units is None else units
+    export_partner_roots(units, config)
     if target is not None:
         if target["script"]:
             path = ROOT / target["script"]

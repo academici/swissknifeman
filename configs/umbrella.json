@@ -8,6 +8,10 @@
   "plugins": [
     {"name": "skm", "manifest": "plugins/skm/.claude-plugin/plugin.json"}
   ],
+  "partner_env": {
+    "aicore": {"AICORE_ROOT": "."},
+    "planner": {"PLANNER_ROOT": ".", "PLANNER_PLAN_PY": "scripts/plan.py"}
+  },
   "aliases": {
     "skills": {
       "description": "skill registry: connect, vendor, registry, ...",

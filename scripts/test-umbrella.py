@@ -273,6 +273,39 @@ class TestModuleGroups(unittest.TestCase):
         self.assertIn("launcher not found", result.stderr)
 
 
+class TestPartnerRoots(unittest.TestCase):
+    """A routed module gets the roots of its hub partners: the bridge of ``orch conduct`` finds the planner (no PATH
+    command, no neighbour search) without a manual export."""
+
+    def setUp(self):
+        self.hub = Hub(ids=("aicore", "planner", "orch", "gui-hub"))
+        self.addCleanup(self.hub.close)
+        (self.hub.packages / "planner" / "scripts").mkdir()
+        (self.hub.packages / "planner" / "scripts" / "plan.py").write_text("", encoding="utf-8")
+        make_unit(self.hub.packages, "planner-orch", ["worksource.py"], kind="bridge")
+        self.units = umbrella.load_units(self.hub.env)
+
+    def routed_env(self, preset=None):
+        env = {"PATH": os.environ.get("PATH", ""), **(preset or {})}
+        with mock.patch.dict(umbrella.os.environ, env, clear=True), \
+                mock.patch.object(umbrella.os, "execv", side_effect=lambda path, args: None):
+            umbrella.route(["orch", "conduct"], self.units, umbrella.load_config())
+            return dict(umbrella.os.environ)
+
+    def test_a_routed_module_gets_the_roots_of_its_partners(self):
+        env = self.routed_env()
+        packages = self.hub.packages
+        self.assertEqual(env["PLANNER_ROOT"], str(packages / "planner"))
+        self.assertEqual(env["PLANNER_PLAN_PY"], str(packages / "planner" / "scripts" / "plan.py"))
+        self.assertEqual(env["AICORE_ROOT"], str(packages / "aicore"))
+        self.assertEqual(env["SKM_ORCH_ROOT"], str(packages / "orch"))
+        self.assertEqual(env["SKM_GUI_HUB_ROOT"], str(packages / "gui-hub"))
+        self.assertNotIn("SKM_PLANNER_ORCH_ROOT", env)  # a bridge is not a partner
+
+    def test_a_root_set_by_the_caller_wins(self):
+        self.assertEqual(self.routed_env({"PLANNER_ROOT": "/elsewhere"})["PLANNER_ROOT"], "/elsewhere")
+
+
 def check(check_id, status="ok", category="environment", observed="fine", **extra):
     return {"$schema": "urn:swissknifeman:aicore:check-result:v1", "check_id": check_id, "status": status,
             "category": category, "observed": observed, **extra}

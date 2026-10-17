@@ -336,7 +336,9 @@ Never edit a managed block directly — edit the source and run `--write`.
 
 **Partner commands.** A module imports only itself and `aicore`. When it needs data or a service of another module it calls
 the partner's public command with JSON output, found by `aicore.util.partners` (`SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`,
-then `PATH`; for planner `PLANNER_PLAN_PY` or `PLANNER_ROOT`). A missing partner is `PARTNER_UNAVAILABLE` on stderr and the command
+then `PATH`; for planner `PLANNER_PLAN_PY` or `PLANNER_ROOT`). A module routed by the umbrella (`swissknifeman <id>`, the project
+launcher) gets these roots of every discovered module (names from `partner_env` of `configs/umbrella.json`, else
+`SKM_<ID>_ROOT`; a variable already set wins), so a bridge it starts finds its partners. A missing partner is `PARTNER_UNAVAILABLE` on stderr and the command
 degrades; a test that needs a partner is skipped when none is found. `bash scripts/test-integration.sh` runs the tests of
 `harness` (and, with `--with-tools`, of the tools `analyst` and `maind`) with every partner wired from the hub layout, in a
 temporary `HOME`, so those tests run instead of being skipped. `maind` and `analyst` are auxiliary tools outside the core

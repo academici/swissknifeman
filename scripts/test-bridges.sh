@@ -10,6 +10,7 @@ export SKM_ORCH_ROOT="$HUB/packages/orch"
 export SKM_SKILLER_ROOT="$HUB/packages/skiller"
 export SKM_HARNESS_ROOT="$HUB/packages/harness"
 export AICORE_ROOT="$HUB/packages/aicore"
+export SKM_WORKSPACE_MODULE_ROOT="$HUB/packages/workspace"
 export SKM_AICORE_EVENTS__DELIVERY=off
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT

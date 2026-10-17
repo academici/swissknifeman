@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "description": "Moves the plans of a checkout into the portable workspace: inspect classifies <root>/plans with a manifest of digests, apply runs the critical section under the PlanLock of every plan, verify loads and checks the plans of a folder.",
+  "entrypoint": [
+    "migrator.py"
+  ],
+  "id": "workspace-planner",
+  "kind": "command",
+  "permissions": {
+    "env": [
+      "PLANNER_ROOT",
+      "PLANNER_PLAN_PY",
+      "AICORE_ROOT",
+      "SKM_HOME",
+      "SKM_WORKSPACE_ROOT",
+      "SKM_WORKSPACE_MODULE_ROOT"
+    ],
+    "filesystem": [
+      "project",
+      "state",
+      "home"
+    ],
+    "network": false,
+    "shell": false
+  },
+  "protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "provides": {
+    "points": [
+      "workspace:plans-migrator"
+    ]
+  },
+  "timeout_seconds": 3600,
+  "version": "0.1.0"
+}

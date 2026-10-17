@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:plans-migrator:response:v1",
+  "title": "plans-migrator response",
+  "description": "Output of the extension point workspace:plans-migrator. A refusal of apply is an answer (result refused with code, message and the phase it stopped at), not a protocol error. Answers hold paths relative to plans/, sizes and digests, never file content or an absolute path.",
+  "oneOf": [
+    {"$ref": "#/$defs/inspect"},
+    {"$ref": "#/$defs/applied"},
+    {"$ref": "#/$defs/refused"},
+    {"$ref": "#/$defs/verify"}
+  ],
+  "$defs": {
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![/~]|[A-Za-z]:[\\\\/]).+$",
+      "description": "POSIX path relative to plans/."
+    },
+    "file": {
+      "type": "object",
+      "description": "One file of the source.",
+      "properties": {
+        "path": {"$ref": "#/$defs/relativePath", "description": "Path relative to plans/."},
+        "bytes": {"type": "integer", "minimum": 0, "description": "Size in bytes."},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Hex sha256 of the content."}
+      },
+      "required": ["path", "bytes", "sha256"]
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 over the sorted (path, sha256) pairs."
+    },
+    "code": {
+      "type": "object",
+      "description": "One error of the plan check.",
+      "properties": {
+        "code": {"type": "string", "minLength": 1, "description": "Check code."},
+        "where": {"type": "string", "description": "Place in the plan the code refers to."}
+      },
+      "required": ["code", "where"]
+    },
+    "inspect": {
+      "type": "object",
+      "description": "Manifest of plans/ of a checkout.",
+      "properties": {
+        "present": {"type": "boolean", "description": "Whether the checkout has a plans folder."},
+        "plans": {
+          "type": "array",
+          "description": "Plan folders and legacy folders, in the order of their names.",
+          "items": {
+            "type": "object",
+            "description": "One folder of plans/ or plans/archive/.",
+            "properties": {
+              "name": {"$ref": "#/$defs/relativePath", "description": "Folder name relative to plans/ (archive/<id> for an archived plan)."},
+              "class": {"enum": ["v4", "legacy"], "description": "v4 for a plan.json of the plan schema, else legacy."},
+              "files": {"type": "array", "description": "Files that move (derived files are left out).", "items": {"$ref": "#/$defs/file", "description": "One file."}},
+              "bytes": {"type": "integer", "minimum": 0, "description": "Total size of the files."},
+              "digest": {"$ref": "#/$defs/digest", "description": "Digest of the folder, paths relative to it."},
+              "in_progress": {"type": "array", "description": "<plan>/<item> of every item in progress (v4 only).", "items": {"type": "string", "minLength": 1, "description": "Plan folder and item id."}}
+            },
+            "required": ["name", "class", "files", "bytes", "digest", "in_progress"]
+          }
+        },
+        "top_level": {"type": "array", "description": "Loose files of plans/ and plans/archive/ (they go to legacy-plans/_root).", "items": {"$ref": "#/$defs/file", "description": "One file."}},
+        "symlinks": {"type": "array", "description": "Symlinks and special files that block a migration.", "items": {"$ref": "#/$defs/relativePath", "description": "Path relative to plans/."}},
+        "derived_skipped": {"type": "integer", "minimum": 0, "description": "Number of derived entries left out (views, context, .lock, caches)."},
+        "digest": {"$ref": "#/$defs/digest", "description": "Digest of the whole manifest."}
+      },
+      "required": ["present", "plans", "top_level", "symlinks", "derived_skipped", "digest"]
+    },
+    "applied": {
+      "type": "object",
+      "description": "The migration ran (applied) or there was nothing left to do (noop: the marker already points at the workspace and every copy is equal).",
+      "properties": {
+        "result": {"enum": ["applied", "noop"], "description": "Outcome."},
+        "phase": {"const": "done", "description": "Step reached."},
+        "mode": {"enum": ["initial", "import"], "description": "Mode of the request."},
+        "op_id": {"type": "string", "minLength": 1, "description": "Id of the operation."},
+        "plans": {
+          "type": "array",
+          "description": "What happened to every folder.",
+          "items": {
+            "type": "object",
+            "description": "One folder of the manifest.",
+            "properties": {
+              "name": {"$ref": "#/$defs/relativePath", "description": "Folder name in the source (_root for loose files)."},
+              "class": {"enum": ["v4", "legacy"], "description": "Class of the folder."},
+              "action": {"enum": ["copied", "skipped-equal", "imported-copy", "kept-workspace"], "description": "What was done."},
+              "files": {"type": "integer", "minimum": 0, "description": "Number of files."},
+              "bytes": {"type": "integer", "minimum": 0, "description": "Total size."},
+              "digest": {"$ref": "#/$defs/digest", "description": "Digest of the folder in the source."},
+              "stored_as": {"$ref": "#/$defs/relativePath", "description": "Name in the workspace when it differs (device suffix of an imported copy)."}
+            },
+            "required": ["name", "class", "action", "files", "bytes", "digest"]
+          }
+        }
+      },
+      "required": ["result", "phase", "mode", "op_id", "plans"]
+    },
+    "refused": {
+      "type": "object",
+      "description": "The migration stopped; nothing moved before the rename and the marker is unchanged.",
+      "properties": {
+        "result": {"const": "refused", "description": "Outcome."},
+        "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$", "description": "MIGRATION_LOCKED, MIGRATION_SOURCE_CHANGED, MIGRATION_BLOCKED_SYMLINK, MIGRATION_CONFLICT, MIGRATION_COPY_MISMATCH, MIGRATION_VERIFY_FAILED, MIGRATION_TRANSFER_FAILED, MIGRATION_ALREADY_APPLIED, MIGRATION_FAILED, PROJECT_MARKER_INVALID, PROJECT_MARKER_MISMATCH or INPUT_INVALID."},
+        "message": {"type": "string", "minLength": 1, "description": "What stopped the migration."},
+        "phase": {"enum": ["request", "lock", "digest", "plan", "copy", "verify", "rename", "marker", "done"], "description": "Step it stopped at."},
+        "locked": {"type": "array", "description": "MIGRATION_LOCKED: the plan (or the migration lock) that was held.", "items": {"type": "string", "minLength": 1, "description": "Plan name or migrate-<project_id>."}},
+        "changed": {"type": "array", "description": "MIGRATION_SOURCE_CHANGED: folders that differ from the manifest.", "items": {"type": "string", "minLength": 1, "description": "Folder name."}},
+        "symlinks": {"type": "array", "description": "MIGRATION_BLOCKED_SYMLINK: blocking paths.", "items": {"$ref": "#/$defs/relativePath", "description": "Path relative to plans/."}},
+        "conflicts": {"type": "array", "description": "MIGRATION_CONFLICT: plans that differ from the workspace.", "items": {"type": "string", "minLength": 1, "description": "Plan name."}},
+        "paths": {"type": "array", "description": "MIGRATION_COPY_MISMATCH, MIGRATION_ALREADY_APPLIED: folders whose bytes differ.", "items": {"type": "string", "minLength": 1, "description": "Folder name."}},
+        "plans": {
+          "type": "array",
+          "description": "MIGRATION_VERIFY_FAILED: the staged plans that do not verify.",
+          "items": {
+            "type": "object",
+            "description": "One staged plan.",
+            "properties": {
+              "name": {"$ref": "#/$defs/relativePath", "description": "Plan folder."},
+              "loaded": {"type": "boolean", "description": "Whether the store loaded it without problems."},
+              "problems": {"type": "array", "description": "Store problems.", "items": {"type": "object", "description": "One problem.", "properties": {"file": {"type": "string", "description": "File inside the plan."}, "message": {"type": "string", "description": "What is wrong."}}, "required": ["file", "message"]}},
+              "new_errors": {"type": "array", "description": "Errors of check the source does not have.", "items": {"$ref": "#/$defs/code", "description": "One error."}}
+            },
+            "required": ["name", "loaded", "problems", "new_errors"]
+          }
+        }
+      },
+      "required": ["result", "code", "message", "phase"]
+    },
+    "verify": {
+      "type": "object",
+      "description": "Load and check result of the plans of a folder.",
+      "properties": {
+        "ok": {"type": "boolean", "description": "Every plan loaded without problems and has no error the baseline lacks."},
+        "plans": {
+          "type": "array",
+          "description": "One row per plan folder.",
+          "items": {
+            "type": "object",
+            "description": "One plan.",
+            "properties": {
+              "name": {"$ref": "#/$defs/relativePath", "description": "Plan folder relative to the verified folder."},
+              "loaded": {"type": "boolean", "description": "Whether the store loaded it without problems."},
+              "problems": {"type": "array", "description": "Store problems.", "items": {"type": "object", "description": "One problem.", "properties": {"file": {"type": "string", "description": "File inside the plan."}, "message": {"type": "string", "description": "What is wrong."}}, "required": ["file", "message"]}},
+              "check_codes": {"type": "array", "description": "Errors of check as (code, where).", "items": {"$ref": "#/$defs/code", "description": "One error."}},
+              "new_errors": {"type": "array", "description": "Errors the baseline lacks (only with a baseline).", "items": {"$ref": "#/$defs/code", "description": "One error."}}
+            },
+            "required": ["name", "loaded", "problems", "check_codes"]
+          }
+        }
+      },
+      "required": ["ok", "plans"]
+    }
+  }
+}

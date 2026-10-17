@@ -31,6 +31,12 @@
         "stability": "development"
       },
       {
+        "id": "urn:swissknifeman:workspace:plans-migrator",
+        "path": "schemas/plans-migrator/v1",
+        "version": "v1",
+        "stability": "development"
+      },
+      {
         "id": "urn:swissknifeman:workspace:publish-report",
         "path": "schemas/publish-report/v1",
         "version": "v1",

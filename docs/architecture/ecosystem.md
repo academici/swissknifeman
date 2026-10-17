@@ -46,6 +46,7 @@ swissknifeman/                      # the hub repository
     gui/       destination: own-repo   # desktop and browser control plane (tool module, Python 3.11+)
   bridges/
     planner-orch/                    # glue between two modules (hub)
+    workspace-planner/               # plans migration into the portable workspace: inspect, apply under PlanLock, verify
     gui-hub/                         # GUI adapter of the hub: fleet, control surface, doctor, units
     gui-planner/                     # GUI adapter of the planner: plans, board, graph, items, timeline, forms and writes
     gui-orch/                        # GUI adapter of the orchestrator: conductor runs, items, report, questions, sandbox, run/resume/release
@@ -118,6 +119,7 @@ flowchart LR
 | --- | --- | --- |
 | planner and orch | bridge `bridges/planner-orch` | work-source port plus `exec/v1` |
 | orch and skiller | bridge `bridges/orch-skiller` | role to set of skills (`skiller resolve`) |
+| workspace and planner | bridge `bridges/workspace-planner` | port `workspace:plans-migrator` (`inspect`, `apply`, `verify`; contract `schemas/plans-migrator/v1` of `workspace`) |
 | orch and harness | bridge `bridges/orch-harness` | conformance of the role manifests with the agent-pack role catalog |
 | gui and hub, planner, orch | bridges `bridges/gui-<module>` (`gui-hub`, `gui-planner`, `gui-orch`) | `gui.json` (`contribution/v1`) plus the aicore plugin protocol on `gui:query` and `gui:command`; the bridge calls the owner's CLI ([ADR 0081](decisions/0081-gui-domains-through-bridges.md)) |
 | analyst to planner | read-only planner CLI | plan read API |

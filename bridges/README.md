@@ -12,6 +12,7 @@ and scans the bridge code for imports of partner packages and for the paths of o
 | [`orch-harness`](orch-harness/README.md) | orch ↔ harness | conformance of the role manifests with the agent-pack role catalog |
 | [`gui-hub`](gui-hub/README.md) | gui ↔ hub | GUI queries (fleet, control-surface layers, doctor, units) and commands (`doctor`, `sync <cap>`) over the hub command line |
 | [`gui-orch`](gui-orch/README.md) | gui ↔ orch | GUI queries (conductor runs, run status, items, observer report, questions, provider sandbox) and commands (run the ready pieces of a plan, resume, release) over the orch command line |
+| [`workspace-planner`](workspace-planner/README.md) | workspace ↔ planner | port `workspace:plans-migrator`: `inspect`, `apply` (critical section of the plans migration under `PlanLock`), `verify` (plugin `migrator.py`) |
 | [`gui-planner`](gui-planner/README.md) | gui ↔ planner | GUI queries (plans, overview, phases, board, dependency graph, items, decisions, evidence, timeline, raw documents, edit forms, model picker) and commands (item and phase edits, decide, reopen, grant, log) over the planner command line |
 
 ## Finding the partners
@@ -23,6 +24,7 @@ command on `PATH`:
 | --- | --- | --- |
 | planner | `PLANNER_PLAN_PY` (the file) or `PLANNER_ROOT` | `planner` |
 | orch | `SKM_ORCH_ROOT` | `orch` |
+| workspace | `SKM_WORKSPACE_MODULE_ROOT` (the folder of the module) | the hub behind `swissknifeman` |
 | skiller | `SKM_SKILLER_ROOT` | `skiller` |
 | harness | `SKM_HARNESS_ROOT` (tests only) | |
 | gui | `SKM_GUI_ROOT` (tests only) | the hub registry (`swissknifeman units list --json`) |

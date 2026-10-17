@@ -18,6 +18,7 @@
     "bridges/gui-hub",
     "bridges/gui-planner",
     "bridges/gui-orch",
+    "bridges/workspace-planner",
     "hub"
   ],
   "module_aliases": {},

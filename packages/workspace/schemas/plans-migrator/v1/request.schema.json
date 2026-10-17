@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:plans-migrator:request:v1",
+  "title": "plans-migrator request",
+  "description": "Input of the extension point workspace:plans-migrator: inspect the plans of a checkout, apply the migration into the workspace, or verify the plans of a folder. The request is a call between processes of one machine, not a portable document, so it names absolute folders.",
+  "oneOf": [
+    {"$ref": "#/$defs/inspect"},
+    {"$ref": "#/$defs/apply"},
+    {"$ref": "#/$defs/verify"}
+  ],
+  "$defs": {
+    "folder": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute path of an existing folder on this machine."
+    },
+    "manifestFile": {
+      "type": "object",
+      "description": "One file of the source, by its path relative to plans/.",
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "description": "POSIX path relative to plans/."},
+        "bytes": {"type": "integer", "minimum": 0, "description": "Size in bytes."},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Hex sha256 of the content."}
+      },
+      "required": ["path", "bytes", "sha256"]
+    },
+    "manifest": {
+      "type": "object",
+      "description": "The answer of inspect, as it was read; apply recomputes it under the locks and compares the digest.",
+      "properties": {
+        "plans": {
+          "type": "array",
+          "description": "Plan folders and legacy folders of the source.",
+          "items": {
+            "type": "object",
+            "description": "One folder of plans/ or plans/archive/.",
+            "properties": {
+              "name": {"type": "string", "minLength": 1, "description": "Folder name relative to plans/."},
+              "class": {"enum": ["v4", "legacy"], "description": "Class of the folder."},
+              "files": {"type": "array", "description": "Files of the folder.", "items": {"$ref": "#/$defs/manifestFile", "description": "One file."}},
+              "bytes": {"type": "integer", "minimum": 0, "description": "Total size of the files."},
+              "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "Digest of the sorted (path, sha256) pairs."}
+            },
+            "required": ["name", "class", "files", "bytes", "digest"]
+          }
+        },
+        "top_level": {"type": "array", "description": "Loose files of plans/ (they go to legacy-plans/_root).", "items": {"$ref": "#/$defs/manifestFile", "description": "One file."}},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "Digest of the whole manifest."}
+      },
+      "required": ["plans", "top_level", "digest"]
+    },
+    "inspect": {
+      "type": "object",
+      "description": "Classify plans/ of a checkout and list its files with sizes and digests.",
+      "properties": {
+        "op": {"const": "inspect", "description": "Operation."},
+        "project_root": {"$ref": "#/$defs/folder", "description": "Root of the checkout."},
+        "workspace_root": {"$ref": "#/$defs/folder", "description": "Root of the workspace (not read by inspect)."}
+      },
+      "required": ["op", "project_root"]
+    },
+    "apply": {
+      "type": "object",
+      "description": "Run the critical section of the migration for the manifest of a dry run.",
+      "properties": {
+        "op": {"const": "apply", "description": "Operation."},
+        "project_root": {"$ref": "#/$defs/folder", "description": "Root of the checkout."},
+        "workspace_root": {"$ref": "#/$defs/folder", "description": "Root of the workspace; staging lives inside it."},
+        "project_id": {"type": "string", "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$", "description": "Id of the project."},
+        "op_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$", "description": "Id of the operation; names the staging folder."},
+        "manifest": {"$ref": "#/$defs/manifest", "description": "Manifest of the dry run."},
+        "mode": {"enum": ["initial", "import"], "default": "initial", "description": "initial: the workspace holds no plans of the project; import: it may."},
+        "on_conflict": {"enum": ["keep-workspace", "import-copy", null], "default": null, "description": "What to do with a plan whose copy in the workspace differs."},
+        "device_short": {"type": "string", "pattern": "^[A-Za-z0-9]{1,16}$", "description": "Short device name for the suffix of an imported copy."},
+        "lock_timeout_s": {"type": "number", "minimum": 0, "default": 30, "description": "Seconds to wait for each PlanLock."}
+      },
+      "required": ["op", "project_root", "workspace_root", "project_id", "op_id", "manifest"]
+    },
+    "verify": {
+      "type": "object",
+      "description": "Load the plans of a folder through the planner store and compare the errors of check with a baseline.",
+      "properties": {
+        "op": {"const": "verify", "description": "Operation."},
+        "plans_root": {"$ref": "#/$defs/folder", "description": "Folder with the plan folders to verify."},
+        "compare_to": {"$ref": "#/$defs/folder", "description": "Folder with the baseline plans of the same names."},
+        "unbound": {"type": "boolean", "default": false, "description": "Check plans_root as plans without a checkout."},
+        "compare_to_unbound": {"type": "boolean", "default": false, "description": "Check the baseline as plans without a checkout."}
+      },
+      "required": ["op", "plans_root"]
+    }
+  }
+}

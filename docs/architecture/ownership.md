@@ -24,6 +24,7 @@
 | planner-orch | bridge | 0.1.0 | hub | alpha | aicore, planner, orch |
 | skiller | capability | 0.19.6 | own-repo | beta | aicore |
 | workspace | capability | 0.1.0 | hub | development | aicore |
+| workspace-planner | bridge | 0.1.0 | hub | alpha | aicore, planner, workspace |
 
 ## Ownership map
 

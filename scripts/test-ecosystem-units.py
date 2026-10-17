@@ -1169,7 +1169,8 @@ class RealRepositoryTests(unittest.TestCase):
         self.assertEqual(sorted(m["id"] for m in data["modules"] if m["kind"] != "bridge"),
                          ["aicore", "analyst", "brain", "gui", "harness", "maind", "orch", "planner", "skiller", "workspace"])
         self.assertEqual(sorted(m["id"] for m in data["modules"] if m["kind"] == "bridge"),
-                         ["gui-hub", "gui-orch", "gui-planner", "orch-harness", "orch-skiller", "planner-orch"])
+                         ["gui-hub", "gui-orch", "gui-planner", "orch-harness", "orch-skiller", "planner-orch",
+                          "workspace-planner"])
         self.assertFalse((ROOT / "packages/artifex").exists())
         self.assertFalse((ROOT / "core").exists())
 

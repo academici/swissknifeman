@@ -1,0 +1,4 @@
+{
+  "$schema": "urn:swissknifeman:gui:plugin-api:v1",
+  "kind": "action_request"
+}

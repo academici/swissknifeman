@@ -27,8 +27,8 @@ All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` e
 
 | Method and path | Answer |
 | --- | --- |
-| `GET /v1/bootstrap` | `bootstrap/v1` kind `browser`: epoch, versions, `gui_protocol`, contracts of `unit.json`, units of the accepted contributions, features (`queries`, `projects`, `runs`, `events`, `config`), platform |
-| `GET /v1/ui/contributions[?refresh=1]` | `catalog/v1`, resolved at start; `refresh=1` collects and resolves again |
+| `GET /v1/bootstrap` | `bootstrap/v1` kind `browser`: epoch, versions, `gui_protocol`, contracts of `unit.json`, units of the accepted contributions, features (`queries`, `projects`, `runs`, `events`, `config`, `plugins`), platform |
+| `GET /v1/ui/contributions[?refresh=1]` | `catalog/v1`, resolved at start, without the contributions of plugins that are not `ui_enabled` (the `digest` is computed again over the rest); `refresh=1` collects, resolves and syncs the plugins again |
 | `GET /v1/schemas/{contract}/{version}` | the JSON Schema of a contract listed in `unit.json`; anything else `NOT_FOUND` |
 | `GET /v1/projects`, `GET /v1/projects/{id}` | `project/v1` (`project_list`, `project`) |
 | `POST /v1/projects` `{path, confirm?}` | `201` `project/v1`; a bearer client adds at once (`source: open`), a browser session confirms first (`source: user`) |
@@ -43,6 +43,11 @@ All bodies are JSON (`ensure_ascii=False`); every failure is an `api-error/v1` e
 | `GET /v1/config/{module}/effective[?project_id=]` | `config-view/v1` `config_view`: schema, layers with revision, keys with provenance |
 | `POST /v1/config/{module}/preview[?project_id=]` `preview_request` | `config-mutation/v1` `preview`; no side effects |
 | `PATCH /v1/config/{module}/layers/{layer}[?project_id=]` `commit_request` | `config-mutation/v1` `commit_result`; `layer` is `machine` or `project`, anything else `CONFIG_LAYER_FORBIDDEN` |
+| `GET /v1/plugins[?project_id=]`, `GET /v1/plugins/{id}[?project_id=]` | `plugin-api/v1` `plugin_list`; `trust/v1` |
+| `GET /v1/plugins/{id}/history[?limit=]` | `plugin-api/v1` `plugin_history`, newest first, `limit` 1..200 |
+| `POST /v1/plugins/{id}:enable`, `:disable`, `:release` `action_request` | `plugin-api/v1` `action_result` |
+| `POST /v1/plugins/{id}/grants` `grant_request` | `201` `grant_result`; always confirmed |
+| `POST /v1/plugins/{id}/grants/{grant_id}:revoke` `action_request` | `action_result` |
 | WebSocket `/v1/events` | `stream/v1` frames: subscriptions, replay by cursor, run, log, journal events, heartbeats |
 | `POST /v1/session/tokens` `{}` | `201` `{url}`: a new one-time browser URL; bearer only (`PERMISSION_DENIED` otherwise) |
 | `GET /?t=<token>` | the token exchange: `303` to `/` with the session cookie |
@@ -195,6 +200,8 @@ audit and backend logs; `issues` lists validation issues as `{pointer, code, mes
 | `HANDLER_TIMEOUT` | timeout | 504 | yes |
 | `PLUGIN_UNAVAILABLE` | unavailable | 503 | yes |
 | `PLUGIN_QUARANTINED` | unavailable | 503 | no |
+| `PLUGIN_DISABLED` | unavailable | 503 | no |
+| `PLUGIN_CONFORMANCE_FAILED` | invalid | 422 | no |
 | `CONFIG_REVISION_CONFLICT` | conflict | 409 | no |
 | `CONFIG_LOCKED` | locked | 423 | yes |
 | `CONFIG_LAYER_FORBIDDEN` | forbidden | 403 | no |
@@ -293,6 +300,37 @@ backend restarted) or a subscription's queue overflowed, the server sends `snaps
 state through the HTTP API and subscribes again with `cursor: null, epoch: null`. A `subscribe` with a cursor and no
 epoch is `INPUT_INVALID`. Progress events may be coalesced; log chunks come from a bounded ring buffer and the full
 log stays on disk.
+
+## Plugin endpoints (`plugin-api/v1`)
+
+The plugin host (`gui.core.plugins`, [plugins.md](plugins.md)) stands in front of every query, command and process of
+a plugin: a hub bridge or an extension. Kinds (by `kind`): `plugin_list {plugins: [trust/v1]}`, `plugin_history {plugin,
+entries: [{id, at, kind: state|failure|grant|digest|admin, code?, detail?}]}`, `grant_request {capability, project_id
+(null: every project), expires_at (null: none), confirm?}`, `action_request {confirm?}` (an empty body is the same),
+`action_result {plugin: trust/v1, drained, cancelled}` and `grant_result {plugin, grant}`.
+
+- `:enable` of an extension runs the conformance check of `gui check`; a failing check is `PLUGIN_CONFORMANCE_FAILED`
+  (`details.count`, `details.findings`: up to ten lines `id: observed`); a quarantined plugin is `PLUGIN_QUARANTINED`
+  until `:release`.
+- `:disable` closes the plugin at once and drains it: the calls and runs of the plugin are waited for up to
+  `plugins.drain_timeout_s`, the runs left are cancelled (`runs.cancel_grace_s`); `drained` and `cancelled` count runs.
+  With active runs the first request answers `428` (purpose `plugin.disable`, risk `medium`, the summary names the
+  number of runs and the timeout).
+- A grant is always confirmed (purpose `plugin.grant`; risk `high` for every project, `medium` for one project). The
+  token is bound to the plugin, capability, project, expiry and the manifest digest shown, so a manifest that changed
+  meanwhile asks again. `capability` must be a declared effect other than `read` and `terminal`; `project_id` must be a
+  registered project; `expires_at` is in the future and at most 365 days away (`INPUT_INVALID` otherwise).
+- A query or command of a plugin that is not enabled is `PLUGIN_DISABLED`, a quarantined one `PLUGIN_QUARANTINED`, an
+  unavailable one `PLUGIN_UNAVAILABLE`; a command of an extension without a grant for each effect beyond `read` is
+  `PERMISSION_DENIED` (`details {plugin, effect, project_id}`) and no run exists. The grants a run used are in
+  `run.permission.grants`; its effects show `advisory` for effects that need a grant and `declared` otherwise: the
+  platform has no sandbox, so no response ever says `enforced`.
+- Only protocol failures of the handler count toward quarantine (`OUTPUT_INVALID` of a query, `PROCESS_SPAWN` of an
+  argv command, the protocol codes of the extension layer). An error with the plugin's own code, a non-zero exit, a
+  timeout of an argv run and a cancel are not failures.
+- Events (machine frames of `/v1/events`, `event/v1`): `gui.plugin.state {plugin, from, to, reason}` on every change
+  of the derived state, `gui.plugin.grant {plugin, capability, project_id, action: granted|revoked|voided}`; both
+  after the commit.
 
 ## Plugin trust (`trust/v1`)
 

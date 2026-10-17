@@ -28,6 +28,7 @@ from aicore.ext.environment import clean_environment
 from aicore.util.redact import redact_document, redact_text
 
 from . import argv as argv_mod, procinfo
+from .plugins import enforcement
 from .runs import RunStore, group_alive
 from ..errors import GuiError
 from ..storage.db import audit, now
@@ -196,6 +197,9 @@ class Active:
     task: Optional[asyncio.Task] = None
     cancel: bool = False
     timed_out: Optional[str] = None
+    ticket: Any = None  # the PluginHost ticket of the work (admit); finished with the run
+    judged: bool = False  # the outcome says something about the plugin (a cancel or an own stop does not)
+    plugin_code: Optional[str] = None  # code of a judged outcome; ``None`` is a success
     started: float = field(default_factory=time.monotonic)
     last_output: float = field(default_factory=time.monotonic)
     done: asyncio.Event = field(default_factory=asyncio.Event)
@@ -268,8 +272,12 @@ class Broker:
     async def submit(self, *, owner: str, owner_root: Path, trusted: bool, command: Mapping[str, Any],
                      context: Mapping[str, Any], project_root: Optional[str], values: Mapping[str, Any],
                      dry_run: bool, confirmed: bool, correlation_id: str, actor: Mapping[str, str],
-                     invoke: Optional[Callable[[], Any]] = None) -> Dict[str, Any]:
-        """Admit, record and start one run; returns its ``run/v1`` document (``running`` or a terminal state)."""
+                     invoke: Optional[Callable[[], Any]] = None, ticket: Any = None) -> Dict[str, Any]:
+        """Admit, record and start one run; returns its ``run/v1`` document (``running`` or a terminal state).
+
+        ``ticket`` is the :class:`~gui.core.plugins.Ticket` the PluginHost gave for this work: its grants go into
+        ``permission.grants``, the enforcement of each effect is told by ``plugins.enforcement`` and the broker
+        finishes it when the run ends. Without one (no plugin gate) every effect is ``advisory``."""
         project_id = context.get("project_id")
         key = self._key(command, context)
         self._admit(project_id, owner, key)
@@ -292,14 +300,19 @@ class Broker:
                 "env", ()))}, trusted=trusted)
         secrets = [*secret_values, *self.secrets()]
         decision = "denied" if not trusted else "confirmed" if confirmed else "allowed"
-        permission = {"decision": decision, "grants": [],
-                      "effects": [{"effect": effect, "enforcement": "advisory"} for effect in command["effects"]]}
+        if ticket is None:
+            permission = {"decision": decision, "grants": [],
+                          "effects": [{"effect": effect, "enforcement": "advisory"} for effect in command["effects"]]}
+        else:
+            permission = {"decision": decision, "grants": list(ticket.grants),
+                          "effects": [{"effect": effect, "enforcement": enforcement(effect, ticket.source)}
+                                      for effect in command["effects"]]}
         redacted_input = redact_document(dict(values), secrets=secrets)
         run = self.store.create(command=command["id"], owner=owner, dry_run=dry_run, context=context,
                                 input=redacted_input, actor=actor, permission=permission,
                                 correlation_id=correlation_id)
         run_id = run["run_id"]
-        active = Active(run_id, project_id, owner, key, command, project_root, correlation_id)
+        active = Active(run_id, project_id, owner, key, command, project_root, correlation_id, ticket=ticket)
         self.active[run_id] = active
         try:
             self._audit("run.requested", run_id, "pending", {"command": command["id"], "owner": owner,
@@ -329,6 +342,7 @@ class Broker:
                     *built.argv, cwd=cwd, env=child_env, stdin=asyncio.subprocess.DEVNULL,
                     stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, start_new_session=True)
             except OSError as exc:
+                active.judged, active.plugin_code = True, "PROCESS_SPAWN"
                 run = self.store.transition(run_id, "failed_to_start", error=error_doc(
                     "HANDLER_FAILED", f"the program could not start: {exc.strerror or exc.__class__.__name__}",
                     correlation_id))
@@ -347,11 +361,27 @@ class Broker:
             return run
         except BaseException:
             if not active.task:
+                self._finish_ticket(active)
                 self.active.pop(run_id, None)
                 active.done.set()
             raise
 
+    def _finish_ticket(self, active: Active) -> None:
+        """Report the outcome of the run to the PluginHost: a failure to start or a protocol fault of the handler is
+        judged, a non-zero exit, a timeout, a cancel or a lost run is not."""
+        ticket = active.ticket
+        if ticket is None:
+            return
+        try:
+            if active.judged:
+                ticket.finish(active.plugin_code)
+            else:
+                ticket.finish(cancelled=True)
+        except Exception:  # noqa: BLE001 - the books of the plugin never block the end of a run
+            log.exception("ticket of %s was not finished", active.run_id)
+
     def _finish(self, active: Active, run: Mapping[str, Any]) -> None:
+        self._finish_ticket(active)
         self._audit("run.finished", active.run_id, run["state"],
                     {"state": run["state"], "exit": run.get("exit"),
                      "duration_ms": int((time.monotonic() - active.started) * 1000)}, active.correlation_id)
@@ -417,8 +447,10 @@ class Broker:
                 error = error_doc("HANDLER_TIMEOUT", f"the run was stopped: {active.timed_out} timeout",
                                   active.correlation_id, reason=active.timed_out)
             elif code == 0:
+                active.judged = True
                 state, error = "succeeded", None
             else:
+                active.judged = True  # a non-zero exit of the program is the program's answer, not a plugin fault
                 state = "failed"
                 error = error_doc("HANDLER_FAILED", f"the program ended with {exit_doc['signal'] or exit_doc['code']}",
                                   active.correlation_id)
@@ -444,6 +476,7 @@ class Broker:
                 "INTERNAL", "the backend lost track of the run", active.correlation_id))
             self._finish(active, final)
         else:
+            self._finish_ticket(active)
             self.active.pop(active.run_id, None)
             active.done.set()
 
@@ -452,6 +485,8 @@ class Broker:
         sinks = self._sinks(run, secrets)
         try:
             result = await asyncio.to_thread(invoke)
+            active.judged = True
+            active.plugin_code = None if result.status == "ok" else (result.code or result.status)
             if result.output is not None:
                 sinks["stdout"].feed(json.dumps(redact_document(result.output, secrets=list(secrets)),
                                                 ensure_ascii=False, indent=2).encode("utf-8"))

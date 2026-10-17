@@ -479,8 +479,8 @@ class TestEnableDisable(HostCase):
             run(self.host.enable("ext"))
         error = caught.exception
         self.assertEqual("PLUGIN_CONFORMANCE_FAILED", error.code)
-        self.assertEqual(10, len(error.details["findings"]))
-        self.assertEqual({"id": "c0", "observed": "bad 0"}, error.details["findings"][0])
+        lines = error.details["findings"].split("\n")
+        self.assertEqual((12, 10, "c0: bad 0"), (error.details["count"], len(lines), lines[0]))
         self.assertEqual("compatible", self.state())
         self.findings = []
         self.assertEqual("enabled", run(self.host.enable("ext"))["state"])

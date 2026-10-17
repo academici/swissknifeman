@@ -14,7 +14,7 @@ from typing import Any, Dict, Optional, Tuple
 import anyio
 from aicore.ext import settings as ext_settings
 from aicore.ext.errors import ExtError
-from aicore.ext.plugins import Registration, invoke_one, load_manifest, registered_plugins
+from aicore.ext.plugins import Registration, load_manifest, registered_plugins
 from aicore.config import ConfigError
 from aicore.util.digest import canonical_json_bytes
 from aicore.util.redact import redact_document
@@ -124,18 +124,28 @@ async def run_query(request: Request) -> Response:
     key = (owner, query_id, canonical_json_bytes(context).decode(), canonical_json_bytes(params).decode())
     if cache_s > 0:
         cached = state.query_cache.get(key)
-        if cached is not None and cached[0] > time.monotonic():
+        if cached is not None and cached[0] > time.monotonic() and state.plugins.visible(owner):
             return json_response(cached[1])
-    plugin = registration(state, owner, int(query.get("timeout_s", 30)), root)
-    payload = {"id": query_id, "context": context, "params": params}
-    result = await anyio.to_thread.run_sync(
-        lambda: invoke_one(plugin, POINT, payload, env=dict(state.env), project=root), limiter=limiter())
-    if result.status != "ok":
-        code = result.code or result.status
-        if code in TIMEOUT_CODES:
-            raise GuiError("HANDLER_TIMEOUT", f"the handler of {owner} did not answer in {plugin.timeout_seconds} s")
-        raise GuiError("HANDLER_FAILED", f"the handler of {owner} failed", details={"plugin_code": str(code)[:64]})
-    output = check_output(state, result.output, query["returns"])
+    ticket = state.plugins.admit(owner, "query", ["read"], context.get("project_id"))
+    code, judged = None, False  # judged: the outcome says something about the plugin (a failure or a success)
+    try:
+        plugin = registration(state, owner, int(query.get("timeout_s", 30)), root)
+        payload = {"id": query_id, "context": context, "params": params}
+        result = await anyio.to_thread.run_sync(
+            lambda: ticket.invoke(plugin, POINT, payload, env=state.env, project=root), limiter=limiter())
+        if result.status != "ok":
+            code, judged = result.code or result.status, True
+            if code in TIMEOUT_CODES:
+                raise GuiError("HANDLER_TIMEOUT", f"the handler of {owner} did not answer in {plugin.timeout_seconds} s")
+            raise GuiError("HANDLER_FAILED", f"the handler of {owner} failed", details={"plugin_code": str(code)[:64]})
+        try:
+            output = check_output(state, result.output, query["returns"])
+        except GuiError:
+            code, judged = "OUTPUT_INVALID", True
+            raise
+        judged = True
+    finally:
+        ticket.finish(code, cancelled=not judged)
     if cache_s > 0:
         state.query_cache[key] = (time.monotonic() + cache_s, output)
     return json_response(output)

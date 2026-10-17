@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.2",
   "title": "Интеграция PluginHost: гейты queries/commands/broker, /v1/plugins*, контракт plugin-api/v1, события, видимость каталога",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "PluginHost подключён в backend: все три точки исполнения идут через admit; broker получает grants и enforcement(); disable отменяет runs владельца; `GET /v1/ui/contributions` скрывает вклады с ui_enabled=false; новые маршруты /v1/plugins*; контракт plugin-api/v1 и TS-типы; коды PLUGIN_DISABLED и PLUGIN_CONFORMANCE_FAILED; события gui.plugin.*; feature `plugins`.",
   "why": "Жёсткие риски (auth, обход, целостность): обход гейта прямым invoke_one/Broker.submit (PI1; структурный тест), ответ query учитывается как сбой только для протокольных кодов, успех сбрасывает degraded, гонка disable/admit в реальном стеке (PI3), подтверждение Grant/Disable подделано или переиспользовано (HMAC confirm, purpose plugin.grant / plugin.disable), каталог отдаёт маршруты отключённого плагина (UI после disable не должен их видеть), утечка секретов в detail истории, float в ответах (журнал п. 12). Контракты — knowledge/p5-design#api.",
   "scope": {
@@ -232,6 +232,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/a86f828c692e881c3eecf98188f94c21e326e51eea12377f22b864020c48526f",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/c6c06f1c92cb0a5c71818ced4ba85368bd48f3fb3acaa3d16c92087aadba4021",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками.",
@@ -295,6 +305,60 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T02:09:36Z"
+  "result": {
+    "started_at": "2026-10-17T02:10:40Z",
+    "finished_at": "2026-10-17T02:37:05Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-432f6997de56a026158a6cbd-P5.2",
+    "notes": "PluginHost wired into the backend: BackendState.plugins (sync at build, start and refresh_catalog; visible_catalog), admit/Ticket gates in routes_queries and routes_runs, Ticket.invoke as the only invoke_one caller, Broker.submit(ticket=) with grants and enforcement in permission and ticket finish at run end, new routes_plugins.py (/v1/plugins*, confirmed disable-with-runs and grant, audit and events through the host), contract plugin-api/v1 with examples and generated TS, codes PLUGIN_DISABLED and PLUGIN_CONFORMANCE_FAILED, catalog filter with recomputed digest, feature plugins, docs and CHANGELOG. Verified by unit tests (314 run, OK) incl. a real throwaway extension and an ad-hoc stub-Starlette route smoke; ASGI tests are written but not run here (no Starlette).\nChanged: CHANGELOG.md, packages/gui/docs/api.md, packages/gui/docs/plugins.md, packages/gui/frontend/src/contracts/generated/plugin-api.ts, packages/gui/lib/gui/backend.py, packages/gui/lib/gui/core/broker.py, packages/gui/lib/gui/core/plugins.py, packages/gui/lib/gui/errors.py, packages/gui/lib/gui/http/app.py, packages/gui/lib/gui/http/routes_core.py, packages/gui/lib/gui/http/routes_plugins.py, packages/gui/lib/gui/http/routes_queries.py, packages/gui/lib/gui/http/routes_runs.py, packages/gui/schemas/README.md, packages/gui/schemas/plugin-api/v1/examples/invalid/bad-capability.enum.json, packages/gui/schemas/plugin-api/v1/examples/invalid/bad-confirm.pattern.json, packages/gui/schemas/plugin-api/v1/examples/invalid/extra-field.additional.json, packages/gui/schemas/plugin-api/v1/examples/invalid/missing-capability.required.json, packages/gui/schemas/plugin-api/v1/examples/invalid/unknown-kind.one_of.json, packages/gui/schemas/plugin-api/v1/examples/valid/action-request.json, packages/gui/schemas/plugin-api/v1/examples/valid/action-result.json, packages/gui/schemas/plugin-api/v1/examples/valid/grant-request-confirmed.json, packages/gui/schemas/plugin-api/v1/examples/valid/grant-request.json, packages/gui/schemas/plugin-api/v1/examples/valid/grant-result.json, packages/gui/schemas/plugin-api/v1/examples/valid/plugin-history.json, packages/gui/schemas/plugin-api/v1/examples/valid/plugin-list.json, packages/gui/schemas/plugin-api/v1/plugin-api.schema.json, packages/gui/tests/plugin_support.py, packages/gui/tests/test_http_api.py, packages/gui/tests/test_http_plugins.py, packages/gui/tests/test_plugin_gates.py, packages/gui/tests/test_plugins.py, packages/gui/tests/test_runtime_contracts.py, packages/gui/unit.json",
+    "deviations": [
+      "Starlette/anyio/httpx2 are not importable in this sandbox (requirements.lock is masked, pip and network unavailable), so tests/test_http_plugins.py and the edited tests/test_http_api.py were NOT executed. Instead I ran an ad-hoc smoke (not committed) that called routes_plugins, routes_queries, routes_runs and routes_core through stub Starlette classes against a real BackendState and the real extension fixture; it showed the expected status codes and documents. The conductor must run V1.",
+      "V2 (npm run check) not run to completion: gen-types --check and tsc passed, ESLint failed on a masked node_modules/esquery .min.js (EACCES). V3 and V4 not run (gui bin needs the locked deps; affected-tests fails on masked lock files). All four acceptance checks are left to the conductor.",
+      "Changed core/plugins.py (excluded except small interface fixes): added Ticket.invoke (the only invoke_one caller, structural rule PI1) and Ticket.source (for enforcement); changed PLUGIN_CONFORMANCE_FAILED details to scalars details.count and details.findings (newline-joined 'id: observed', up to 10) because api-error/v1 details accept scalars only and the design's list of objects would make an invalid envelope. P5.1 test and docs/plugins.md updated.",
+      "Changed existing test test_http_api.test_handler_results: three protocol failures now quarantine qdemo (policy), so the qdemo.fails (domain error) query moved first and a final PLUGIN_QUARANTINED assertion was added.",
+      "Files outside write_set: packages/gui/schemas/README.md (test_contracts requires a row per contract), packages/gui/docs/plugins.md, packages/gui/tests/plugin_support.py, tests/test_plugin_gates.py (non-HTTP gate, wiring and structural tests that do run in the sandbox), tests/test_http_api.py, tests/test_plugins.py.",
+      "changed outside the write set: packages/gui/docs/plugins.md, packages/gui/lib/gui/core/plugins.py, packages/gui/schemas/README.md, packages/gui/tests/plugin_support.py, packages/gui/tests/test_http_api.py, packages/gui/tests/test_plugin_gates.py, packages/gui/tests/test_plugins.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T02:37:05Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T02:37:05Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T02:37:05Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T02:37:05Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V4.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V3.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P5.2/evidence/V4.json"
+    ]
+  },
+  "updated_at": "2026-10-17T02:37:05Z"
 }

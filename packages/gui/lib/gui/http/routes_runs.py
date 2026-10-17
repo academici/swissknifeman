@@ -13,7 +13,7 @@ from typing import Any, Dict, Optional
 from aicore.config import ConfigError
 from aicore.ext import settings as ext_settings
 from aicore.ext.errors import ExtError
-from aicore.ext.plugins import invoke_one, registered_plugins
+from aicore.ext.plugins import registered_plugins
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
@@ -99,26 +99,31 @@ async def start_run(request: Request) -> Response:
                        issues=[{"pointer": "/dry_run", "code": "unsupported", "message": "no dry run"}])
     values = inputs.validate(command.get("input", ()), body["input"], root, pointer="/input")
     confirmed = needs_confirmation(command, dry_run)
-    if confirmed:
-        confirm.require(state, "command.run", {"command": command_id, "context": context, "input": values,
-                                               "dry_run": dry_run}, body.get("confirm"), risk=command["risk"],
-                        summary=f"Run {command['title']} ({command_id}) of {owner} with risk {command['risk']}"
-                                + (f" in project {context['project_id']}" if "project_id" in context else ""))
-    entry = state.catalog.owners[owner]
-    invoke = None
-    if command["exec"]["kind"] == "invoke":
-        plugin = registration(state, owner, int(command["timeout_s"]), root)
-        payload = {"id": command_id, "context": context, "input": values}
-        env = dict(state.env)
+    ticket = state.plugins.admit(owner, "command", command["effects"], context.get("project_id"))
+    try:
+        if confirmed:
+            confirm.require(state, "command.run", {"command": command_id, "context": context, "input": values,
+                                                   "dry_run": dry_run}, body.get("confirm"), risk=command["risk"],
+                            summary=f"Run {command['title']} ({command_id}) of {owner} with risk {command['risk']}"
+                                    + (f" in project {context['project_id']}" if "project_id" in context else ""))
+        entry = state.catalog.owners[owner]
+        invoke = None
+        if command["exec"]["kind"] == "invoke":
+            plugin = registration(state, owner, int(command["timeout_s"]), root)
+            payload = {"id": command_id, "context": context, "input": values}
+            env = dict(state.env)
 
-        def invoke():
-            return invoke_one(plugin, "gui:command", payload, env=env, project=root)
+            def invoke():
+                return ticket.invoke(plugin, "gui:command", payload, env=env, project=root)
 
-    actor = {"kind": "user", "id": "browser" if request.scope["state"]["auth"] == "cookie" else "cli"}
-    run = await state.broker.submit(owner=owner, owner_root=entry.source.root, trusted=_trusted(state, owner, root),
-                                    command=command, context=context, project_root=root, values=values,
-                                    dry_run=dry_run, confirmed=confirmed, correlation_id=uuid.uuid4().hex,
-                                    actor=actor, invoke=invoke)
+        actor = {"kind": "user", "id": "browser" if request.scope["state"]["auth"] == "cookie" else "cli"}
+        run = await state.broker.submit(owner=owner, owner_root=entry.source.root,
+                                        trusted=_trusted(state, owner, root), command=command, context=context,
+                                        project_root=root, values=values, dry_run=dry_run, confirmed=confirmed,
+                                        correlation_id=uuid.uuid4().hex, actor=actor, invoke=invoke, ticket=ticket)
+    except BaseException:
+        ticket.finish(cancelled=True)  # no run took the ticket over (finishing twice is harmless)
+        raise
     return json_response(run, 202)
 
 

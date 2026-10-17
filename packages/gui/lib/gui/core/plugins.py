@@ -25,7 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Set, Tuple
 
-from aicore.ext.plugins import safe_text
+from aicore.ext.plugins import invoke_one, safe_text
 from aicore.util.digest import digest_json, sha256_tagged
 from aicore.util.redact import redact_text
 
@@ -209,10 +209,18 @@ class Ticket:
     ``with`` block without ``finish`` releases the ticket as cancelled.
     """
 
-    def __init__(self, host: "PluginHost", plugin: str, kind: str, grants: Sequence[str]) -> None:
-        self.host, self.plugin, self.kind, self.grants = host, plugin, kind, list(grants)
+    def __init__(self, host: "PluginHost", plugin: str, kind: str, grants: Sequence[str], source: str = "unit") -> None:
+        self.host, self.plugin, self.kind, self.grants, self.source = host, plugin, kind, list(grants), source
         self.finished = False
         self._guard = threading.Lock()
+
+    def invoke(self, registration: Any, point: str, payload: Mapping[str, Any], *, env: Mapping[str, str],
+               project: Optional[str]) -> Any:
+        """Call the handler of the plugin (blocking; run it in a worker thread). The only place of the backend that
+        calls ``invoke_one``: a finished ticket cannot call it, so no work of a plugin bypasses :meth:`admit`."""
+        if self.finished:
+            raise RuntimeError("the ticket is finished")
+        return invoke_one(registration, point, dict(payload), env=dict(env), project=project)
 
     def finish(self, code: Optional[str] = None, detail: Optional[str] = None, *, cancelled: bool = False) -> None:
         with self._guard:
@@ -462,7 +470,7 @@ class PluginHost:
             before = self._state(owner, row)
             self._inflight[owner] = self._inflight.get(owner, 0) + 1
             self._announce(owner, before, "call")
-            return Ticket(self, owner, kind, grants)
+            return Ticket(self, owner, kind, grants, row["source"])
 
     def _gate(self, row: sqlite3.Row, effects: Sequence[str], project_id: Optional[str]) -> List[str]:
         """Ids of the grants that cover every effect beyond ``read`` of an extension, else ``PERMISSION_DENIED``."""
@@ -531,7 +539,8 @@ class PluginHost:
                      for item in list(findings)[:FINDINGS_SHOWN]]
             if findings:
                 raise PluginError("PLUGIN_CONFORMANCE_FAILED", f"plugin {plugin!r} fails the conformance check",
-                                  details={"findings": shown})
+                                  details={"count": len(findings), "findings": "\n".join(
+                                      f"{item['id']}: {item['observed']}" for item in shown)})
         with self._mutation() as after:
             row = self._require(plugin)
             observed = self._enable_precheck(plugin, row)

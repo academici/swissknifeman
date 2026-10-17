@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from aicore.state.locations import ensure_dir, state_dir
+from aicore.util.digest import digest_json
 from aicore.util.redact import env_secrets
 
 from . import __version__, contracts
@@ -33,6 +34,7 @@ from .catalog import resolve, sources
 from .core.broker import Broker
 from .core.config import ConfigService
 from .core.events import EventHub
+from .core.plugins import PluginHost, failing
 from .core.projects import ProjectRegistry
 from .core.runs import RunStore, frame_run, prune_logs
 from .settings import Settings
@@ -45,7 +47,7 @@ TOKEN_TTL_S = 300
 COOKIE = "skm_gui_session"
 GUI_PROTOCOL = {"min": resolve.HOST_PROTOCOL[0], "max": resolve.HOST_PROTOCOL[1]}
 FRONTEND_DIR = contracts.SCHEMAS.parent / "frontend" / "dist"
-FEATURES = ("queries", "projects", "runs", "events", "config")
+FEATURES = ("queries", "projects", "runs", "events", "config", "plugins")
 
 
 class BackendError(Exception):
@@ -271,9 +273,15 @@ class BackendState:
                                     emit_project=lambda type_, data, subject, root: self.emit(
                                         type_, data, subject=subject, project=root),
                                     emit_machine=self._config_publish)
+        self.plugins = PluginHost(
+            self.conn, self.db_lock, lambda: self.settings, self._config_publish, self._config_audit,
+            lambda owner: [run_id for run_id, active in list(self.broker.active.items()) if active.owner == owner],
+            lambda run_id: self.broker.cancel(run_id, system=True), self._conformance)
         self.tasks: List[Any] = []
         if self.catalog is None:
             self.refresh_catalog()
+        else:
+            self.plugins.sync(self.plugins.observe(self.catalog))
 
     @property
     def runs_dir(self) -> Path:
@@ -301,11 +309,16 @@ class BackendState:
         else:
             self.hub.publish_event(event, None)
 
+    def _conformance(self, observed: Any) -> List[Dict[str, str]]:
+        """The failing checks of ``gui check`` for a plugin (the conformance gate of Enable); blocking."""
+        return failing(resolve.check(Path(observed.root), env=dict(self.env), conformance=True))
+
     async def start(self) -> None:
         """Before the first request: runs of an earlier backend become ``lost``; heartbeats and journals start."""
         import asyncio
 
         self.loop = asyncio.get_running_loop()
+        self.plugins.sync(self.plugins.observe(self.catalog))
         lost = self.store.mark_lost(grace_s=self.settings.runs.cancel_grace_s)
         for run_id in lost:
             run = self.store.get(run_id)
@@ -360,7 +373,19 @@ class BackendState:
         collected = self.collect() if self.collect is not None else sources.collect(None, dict(self.env))
         self.catalog = build_catalog(collected)
         self.query_cache.clear()
+        self.plugins.sync(self.plugins.observe(self.catalog))
         return self.catalog
+
+    def visible_catalog(self) -> Dict[str, Any]:
+        """The ``catalog/v1`` document for the UI: contributions of plugins that are not ``ui_enabled`` are left out
+        and the digest is computed again over the rest by the algorithm of the resolver."""
+        document = self.catalog.document
+        entries = [entry for entry in document["contributions"] if self.plugins.visible(entry["owner"])]
+        if len(entries) == len(document["contributions"]):
+            return document
+        digest = digest_json({"host": document["host"], "contributions": [
+            {"owner": entry["owner"], "source": entry["source"], "digest": entry["digest"]} for entry in entries]})
+        return {**document, "contributions": entries, "digest": digest}
 
     @property
     def log_path(self) -> Optional[Path]:

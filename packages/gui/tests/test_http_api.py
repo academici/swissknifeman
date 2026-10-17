@@ -30,7 +30,7 @@ class TestCore(ApiCase):
         self.assertEqual(("browser", self.backend.state.epoch), (body["mode"], body["epoch"]))
         self.assertEqual([{"id": "qdemo", "version": "0.2.0"}], body["units"])
         self.assertIn({"id": "urn:swissknifeman:gui:project", "version": "v1"}, body["contracts"])
-        self.assertEqual(["queries", "projects", "runs", "events", "config"], body["features"])
+        self.assertEqual(["queries", "projects", "runs", "events", "config", "plugins"], body["features"])
 
     def test_contributions_and_refresh(self):
         catalog = self.client.get("/v1/ui/contributions").json()
@@ -146,16 +146,21 @@ class TestQueries(ApiCase):
         self.assertEqual("NOT_FOUND", code(self.query("qdemo.items", context={"project_id": "gone-00000000"})))
 
     def test_handler_results(self):
+        # A domain error is not a plugin failure; the three protocol failures below quarantine qdemo (P5), so the
+        # domain error comes first.
+        response = self.query("qdemo.fails")
+        self.assertEqual((502, "HANDLER_FAILED"), (response.status_code, code(response)))
+        failed = response.json()["error"]
+        self.assertEqual({"plugin_code": "QDEMO_BROKEN"}, failed["details"])
+        self.assertTrue(failed["retryable"])
         for query_id, status, expected in (("qdemo.wrong-view", 502, "OUTPUT_INVALID"),
                                            ("qdemo.broken", 502, "OUTPUT_INVALID"),
-                                           ("qdemo.fails", 502, "HANDLER_FAILED"),
                                            ("qdemo.slow", 504, "HANDLER_TIMEOUT")):
             with self.subTest(query=query_id):
                 response = self.query(query_id)
                 self.assertEqual((status, expected), (response.status_code, code(response)))
-        failed = self.query("qdemo.fails").json()["error"]
-        self.assertEqual({"plugin_code": "QDEMO_BROKEN"}, failed["details"])
-        self.assertTrue(failed["retryable"])
+        self.assertEqual((503, "PLUGIN_QUARANTINED"), (self.query("qdemo.metrics").status_code,
+                                                       code(self.query("qdemo.metrics"))))
 
     def test_output_size_limit(self):
         import dataclasses

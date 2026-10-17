@@ -32,7 +32,7 @@ async def contributions(request: Request) -> Response:
     state = _state(request)
     if request.query_params.get("refresh") == "1":
         await run_in_threadpool(state.refresh_catalog)
-    return json_response(state.catalog.document)
+    return json_response(state.visible_catalog())
 
 
 @endpoint

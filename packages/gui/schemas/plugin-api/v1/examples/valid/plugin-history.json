@@ -1,0 +1,20 @@
+{
+  "$schema": "urn:swissknifeman:gui:plugin-api:v1",
+  "kind": "plugin_history",
+  "plugin": "gui-planner",
+  "entries": [
+    {
+      "id": 7,
+      "at": "2026-10-16T14:00:00Z",
+      "kind": "grant",
+      "code": "granted",
+      "detail": "plan.write for project swissknifeman"
+    },
+    {
+      "id": 6,
+      "at": "2026-10-16T13:59:00Z",
+      "kind": "state",
+      "code": "enabled"
+    }
+  ]
+}

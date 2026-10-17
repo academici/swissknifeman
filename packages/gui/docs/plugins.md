@@ -2,7 +2,8 @@
 
 A *plugin* is a hub bridge (`source = unit`) or an external extension (`source = extension`) that provides a GUI
 contribution. `gui.core.plugins.PluginHost` decides what a plugin may do and in which state it is. It has no HTTP
-layer; the routes `/v1/plugins*` and the gates in front of queries, commands and the broker come with the API item.
+layer; the routes `/v1/plugins*` (`gui.http.routes_plugins`, [api.md](api.md#plugin-endpoints-plugin-apiv1)) and the gates
+in front of queries and commands (`routes_queries`, `routes_runs`) and of the broker are thin callers of it.
 
 ## What is stored and what is derived
 
@@ -91,7 +92,7 @@ plugin does not use, `advisory` for a used effect that needs a grant. The platfo
 ## Enable, Disable, drain
 
 `enable` refuses a quarantined plugin (`PLUGIN_QUARANTINED`) and runs the conformance gate for an extension in a worker
-thread: any failing check gives `PLUGIN_CONFORMANCE_FAILED` with up to ten `{id, observed}` findings. A pass is
+thread: any failing check gives `PLUGIN_CONFORMANCE_FAILED` with `details.count` and `details.findings` (up to ten lines `id: observed`; `api-error/v1` details are scalars). A pass is
 remembered per digest until `sync` sees another digest.
 
 `disable` closes the plugin and writes `desired = disabled` in one step, then waits for the calls in flight and the
@@ -126,3 +127,16 @@ monotonic=None, sleep=None)`: `observe(catalog)`, `sync(observed)`, `view(plugin
 owner; `cancel_run(run_id)` may be a coroutine; `conformance(observed)` returns the failing checks as `{id, observed}`
 (`plugins.failing` converts `check-result/v1` documents). `clock()` is epoch seconds; the host never sleeps for real
 in a test.
+
+## Where the host stands in the backend
+
+`BackendState.plugins` is built with the injected pieces: `active_runs` and `cancel_run` come from the broker
+(`Broker.active`, `Broker.cancel(run_id, system=True)`), `conformance` runs `resolve.check` of the owner root in a worker
+thread, `publish` and `audit` are the machine-frame and audit writers of the config service. `sync` runs when the state
+is built, at `start()` and after every `refresh_catalog()`; `visible_catalog()` is the catalog the UI gets.
+
+`Ticket.invoke` is the only place that calls `invoke_one`; a structural test fails when any other file of `lib/gui`
+does. A query `admit`s with `["read"]`, a command with its declared effects; for an argv command the ticket goes to
+`Broker.submit(ticket=...)`: its grants become `permission.grants`, `enforcement()` tells the enforcement of each
+effect, and the broker finishes the ticket when the run ends (a failure to start is `PROCESS_SPAWN`, a non-zero exit,
+a timeout and a cancel judge nothing).

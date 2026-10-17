@@ -31,6 +31,8 @@ CODES: Dict[str, Tuple[str, int]] = {
     "HANDLER_TIMEOUT": ("timeout", 504),
     "PLUGIN_UNAVAILABLE": ("unavailable", 503),
     "PLUGIN_QUARANTINED": ("unavailable", 503),
+    "PLUGIN_DISABLED": ("unavailable", 503),
+    "PLUGIN_CONFORMANCE_FAILED": ("invalid", 422),
     # Configuration writes.
     "CONFIG_REVISION_CONFLICT": ("conflict", 409),
     "CONFIG_LOCKED": ("locked", 423),

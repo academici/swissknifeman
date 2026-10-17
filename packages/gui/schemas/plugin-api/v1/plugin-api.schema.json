@@ -1,0 +1,286 @@
+{
+  "$defs": {
+    "action_request": {
+      "additionalProperties": false,
+      "description": "Body of POST /v1/plugins/{id}:enable, :disable, :release and of a grant :revoke.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "confirm": {
+          "description": "Confirmation from the CONFIRMATION_REQUIRED answer (details.confirm) to the same request.",
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "action_request",
+          "description": "Document kind."
+        }
+      },
+      "required": [
+        "$schema",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "action_result": {
+      "additionalProperties": false,
+      "description": "Answer of enable, disable, release and revoke.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "cancelled": {
+          "description": "Runs the backend cancelled when the drain time ended.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "drained": {
+          "description": "Runs that finished on their own while the plugin was drained.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "const": "action_result",
+          "description": "Document kind."
+        },
+        "plugin": {
+          "$ref": "urn:swissknifeman:gui:trust:v1",
+          "description": "Trust document of the plugin after the call."
+        }
+      },
+      "required": [
+        "$schema",
+        "kind",
+        "plugin",
+        "drained",
+        "cancelled"
+      ],
+      "type": "object"
+    },
+    "contract": {
+      "const": "urn:swissknifeman:gui:plugin-api:v1",
+      "description": "Contract id of this document."
+    },
+    "grant_request": {
+      "additionalProperties": false,
+      "description": "Body of POST /v1/plugins/{id}/grants.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "capability": {
+          "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/effect",
+          "description": "The effect to grant; read and terminal are refused."
+        },
+        "confirm": {
+          "description": "Confirmation from the CONFIRMATION_REQUIRED answer (details.confirm) to the same request.",
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "expires_at": {
+          "description": "When the grant ends (at most 365 days ahead); null for no expiry.",
+          "oneOf": [
+            {
+              "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+              "description": "Expiry time."
+            },
+            {
+              "description": "No expiry.",
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "const": "grant_request",
+          "description": "Document kind."
+        },
+        "project_id": {
+          "description": "Project the grant applies to; null for every project.",
+          "oneOf": [
+            {
+              "description": "Project id.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "description": "Every project.",
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "$schema",
+        "kind",
+        "capability",
+        "project_id",
+        "expires_at"
+      ],
+      "type": "object"
+    },
+    "grant_result": {
+      "additionalProperties": false,
+      "description": "Answer of POST /v1/plugins/{id}/grants.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "grant": {
+          "$ref": "urn:swissknifeman:gui:trust:v1#/$defs/grant",
+          "description": "The grant that was made."
+        },
+        "kind": {
+          "const": "grant_result",
+          "description": "Document kind."
+        },
+        "plugin": {
+          "$ref": "urn:swissknifeman:gui:trust:v1",
+          "description": "Trust document of the plugin after the call."
+        }
+      },
+      "required": [
+        "$schema",
+        "kind",
+        "plugin",
+        "grant"
+      ],
+      "type": "object"
+    },
+    "history_entry": {
+      "additionalProperties": false,
+      "description": "One entry of the history of a plugin.",
+      "properties": {
+        "at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the entry was written."
+        },
+        "code": {
+          "description": "State, error code or action of the entry.",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,63}$",
+          "type": "string"
+        },
+        "detail": {
+          "description": "Redacted text of the entry, at most 500 characters.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Entry number; grows with time.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "kind": {
+          "description": "What the entry records.",
+          "enum": [
+            "state",
+            "failure",
+            "grant",
+            "digest",
+            "admin"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "at",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "plugin_history": {
+      "additionalProperties": false,
+      "description": "Answer of GET /v1/plugins/{id}/history: entries newest first.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "entries": {
+          "description": "The entries, newest first.",
+          "items": {
+            "$ref": "#/$defs/history_entry",
+            "description": "One entry."
+          },
+          "type": "array"
+        },
+        "kind": {
+          "const": "plugin_history",
+          "description": "Document kind."
+        },
+        "plugin": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+          "description": "Plugin id."
+        }
+      },
+      "required": [
+        "$schema",
+        "kind",
+        "plugin",
+        "entries"
+      ],
+      "type": "object"
+    },
+    "plugin_list": {
+      "additionalProperties": false,
+      "description": "Answer of GET /v1/plugins: the trust document of every plugin.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "plugin_list",
+          "description": "Document kind."
+        },
+        "plugins": {
+          "description": "The plugins, sorted by id.",
+          "items": {
+            "$ref": "urn:swissknifeman:gui:trust:v1",
+            "description": "One plugin."
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "$schema",
+        "kind",
+        "plugins"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:swissknifeman:gui:plugin-api:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Documents of the plugin endpoints: the plugin list, the history of a plugin, the request bodies to grant, enable, disable, release and revoke, and their results. One kind per document, chosen by the const field kind.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/plugin_list",
+      "description": "Answer of GET /v1/plugins."
+    },
+    {
+      "$ref": "#/$defs/plugin_history",
+      "description": "Answer of GET /v1/plugins/{id}/history."
+    },
+    {
+      "$ref": "#/$defs/grant_request",
+      "description": "Body of POST /v1/plugins/{id}/grants."
+    },
+    {
+      "$ref": "#/$defs/action_request",
+      "description": "Body of an enable, disable, release or revoke call."
+    },
+    {
+      "$ref": "#/$defs/action_result",
+      "description": "Answer of an enable, disable, release or revoke call."
+    },
+    {
+      "$ref": "#/$defs/grant_result",
+      "description": "Answer of a grant."
+    }
+  ],
+  "title": "plugin-api"
+}

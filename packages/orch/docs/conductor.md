@@ -163,7 +163,7 @@ The conductor stops only on:
 | `PROVIDER_CONTEXT` | the request does not fit the context window (class `context_limit`); the prompt is not rebuilt yet |
 | `MODEL_UNAVAILABLE` | the model is not available to the account (class `model_unavailable`), repeated within `limits.retries` first |
 | `TIMEOUT` | a role was silent for `stage_idle_timeout_s` (default 5400: a hang, not a long run), or a wall-clock `stage_timeout_s` was asked for (none by default) |
-| `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece) |
+| `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece; `[orch.conductor] foreign_untracked = "keep"` lets untracked files of someone else stay: they are fingerprinted in `state.foreign`, announced as `FOREIGN_KEPT`, and never counted as a piece's work while their content stays the same) |
 | `CLAIM_BLOCKED`, `BRIEF_REFUSED`, `PREPARE_REFUSED`, `REGISTER_REFUSED`, `COMMIT_REFUSED`, `WORK_SOURCE_*` | the work source refused or is unavailable |
 | `OPTIONS_INVALID`, `POLICY_UNKNOWN`, `MODEL_CATALOG_UNAVAILABLE` | the run options, the pack or the model catalog are unusable |
 | `OPTIONS_UNTRUSTED` | a layer of the work source (plan, phase, item, overlay, input file) loosens the isolation set below it: `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence`, `scope.outside` or `scope.extra_paths` (see "Isolation floor") |
@@ -425,7 +425,8 @@ The conductor reviews piece by piece (`review.*`); a batch is better read once, 
 commits of the run from its `state.json`, keeps their production diff (`--include`, default `.`, the whole project,
 without tests, docs, fixtures, goldens and plans; `--exclude` adds more), asks one reviewer (the launch catalog route:
 `--provider grok --model grok-4.7 --effort medium`; `high` costs three times the time and found one more Major in the one batch measured) for correctness and safety defects with a concrete failing scenario, and
-writes the reply to `<run folder>/batch-review.md`. The time of a review is the reasoning of the reviewer (its output
+writes the reply to `<run folder>/batch-review.md`, the raw reply to `streams/batch-review.jsonl` and the measures (route,
+pieces, commits, prompt bytes, seconds, exit code) to `batch-review.json`, and prints `BATCH_REVIEW: … in N s` on stderr. The time of a review is the reasoning of the reviewer (its output
 tokens, about 30-60 per second), not its reading: `--effort` and `--max-tools N` (default 12, in the prompt) shorten it; `--dry-run` shows the pieces, the prompt size and the command. A finding of Major and above is fixed in a separate
 commit after the batch.
 

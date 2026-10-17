@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 ORCH = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ORCH / "lib"))
@@ -57,7 +58,19 @@ def main(argv=None) -> int:
     if args.dry_run:
         print(json.dumps({"pieces": refs, "commits": shas, "prompt_bytes": len(prompt.encode()), "command": command}))
         return 0
+    began = time.monotonic()
     done = subprocess.run(command, input=prompt, capture_output=True, text=True, cwd=args.project, check=False)
+    seconds = round(time.monotonic() - began, 1)
+    streams = run_dir / "streams"  # the raw reply and the measures, for step-profile.py and the observer
+    streams.mkdir(parents=True, exist_ok=True)
+    (streams / "batch-review.jsonl").write_text(done.stdout, encoding="utf-8")
+    (streams / "batch-review.stderr").write_text(done.stderr, encoding="utf-8")
+    (run_dir / "batch-review.json").write_text(json.dumps(
+        {"provider": args.provider, "model": args.model, "effort": args.effort, "pieces": refs, "commits": shas,
+         "prompt_bytes": len(prompt.encode()), "seconds": seconds, "returncode": done.returncode}, indent=2) + "\n",
+        encoding="utf-8")
+    print(f"BATCH_REVIEW: {args.provider}/{args.model}/{args.effort} in {seconds} s, prompt {len(prompt) // 1000} KB; "
+          f"raw reply {streams / 'batch-review.jsonl'}", file=sys.stderr)
     text = done.stdout
     for line in reversed(text.splitlines()):  # a streaming reply: the last `result` event holds the answer
         try:

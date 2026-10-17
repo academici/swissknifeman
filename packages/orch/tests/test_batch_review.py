@@ -51,6 +51,11 @@ class BatchReviewTests(unittest.TestCase):
         text = (self.run_dir / "batch-review.md").read_text(encoding="utf-8")
         self.assertIn("## Findings", text)
         self.assertIn("SAW 2", text)  # lib/W1.py and lib/W2.py; the tests are left out
+        measured = json.loads((self.run_dir / "batch-review.json").read_text(encoding="utf-8"))
+        self.assertEqual((measured["returncode"], measured["pieces"]), (0, ["W1", "W2"]))
+        self.assertGreaterEqual(measured["seconds"], 0)
+        self.assertIn('"type": "result"', (self.run_dir / "streams" / "batch-review.jsonl").read_text(encoding="utf-8"))
+        self.assertIn("BATCH_REVIEW:", done.stderr)
 
     def test_a_run_without_commits_is_refused(self):
         (self.run_dir / "state.json").write_text(json.dumps({"items": {}}), encoding="utf-8")

@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.parse
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
@@ -238,7 +239,7 @@ def plans(root: Optional[str], timeout_s: float, **_: Any) -> Dict[str, Any]:
         items, done = int(progress.get("items") or 0), int(progress.get("items_done") or 0)
         rows.append({"id": plan["id"], "cells": {
             "name": _text(plan.get("title"), plan["id"]), "status": _text(plan.get("status"), "unknown", 64),
-            "progress": (done / items) if items else 0,
+            "progress": (done * 100 // items) if items else 0,
             "phases": f"{int(progress.get('phases_closed') or 0)}/{int(progress.get('phases') or 0)}"},
             "link": {"route": f"{OWNER}.overview", "params": {"plan_id": plan["id"]}}})
     columns = [{"id": "name", "title": "Plan", "type": "text"}, {"id": "status", "title": "Status", "type": "status"},
@@ -295,7 +296,7 @@ def phases(root: Optional[str], timeout_s: float, context: Dict[str, Any], param
             "phase": phase["id"], "title": _text(phase.get("title"), phase["id"]),
             "design": _text(phase.get("design"), "-", 64),
             "result": _text(closed.get("result"), "closed", 64) if closed else "open",
-            "progress": (done / len(items)) if items else 0, "items": f"{done}/{len(items)}"},
+            "progress": (done * 100 // len(items)) if items else 0, "items": f"{done}/{len(items)}"},
             "link": {"route": f"{OWNER}.board", "params": {"plan_id": plan_id}}})
     columns = [{"id": "phase", "title": "Phase", "type": "text"}, {"id": "title", "title": "Title", "type": "text"},
                {"id": "design", "title": "Design", "type": "text"}, {"id": "result", "title": "Result", "type": "status"},
@@ -389,6 +390,10 @@ def item(root: Optional[str], timeout_s: float, context: Dict[str, Any], params:
                               "fields": fields}
     if sections:
         detail["sections"] = sections
+    project = context.get("project_id")
+    if isinstance(project, str) and re.fullmatch(r"[A-Za-z0-9_.-]+", project):  # a link inside the app, to the form
+        path = "/x/{}/plans/{}/items/{}/edit?project={}".format(OWNER, urllib.parse.quote(plan_id, safe=""), item_id, project)
+        detail.setdefault("sections", []).append({"title": "Edit", "markdown": f"[Edit this item]({path})"})
     if doc.get("status") in ("done", "done_with_deviations", "blocked", "skipped"):
         detail["actions"] = [{"command": f"{OWNER}.item-reopen"}]
     return detail

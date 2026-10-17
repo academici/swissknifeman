@@ -15,9 +15,9 @@ items into board columns by `status` and the map of a planner status to a view s
 
 | Query | Scope | Planner command | View |
 | --- | --- | --- | --- |
-| `gui-planner.plans` | project | `plans` | `resource-list`: name, status, progress (items done / items), phases closed |
+| `gui-planner.plans` | project | `plans` | `resource-list`: name, status, progress (integer percent of items done), phases closed |
 | `gui-planner.overview` | plan | `show --json`, `get plan`, `plans` | `resource-detail`: plan, status, goal, progress, next; sections goal, context, rules |
-| `gui-planner.phases` | plan | `show --json` | `resource-list`: design, result, progress, items done per phase |
+| `gui-planner.phases` | plan | `show --json` | `resource-list`: design, result, progress (integer percent), items done per phase |
 | `gui-planner.board` | plan | `list item [--phase]` | `board`: a column per status (`todo`, `in_progress`, `blocked`, `done`, `done_with_deviations`, `skipped`), `other` only for a status the planner does not define |
 | `gui-planner.graph` | plan | `list item [--phase]`, `get` per item | `dependency-graph`: `depends_on` → `blocks` (dependency → dependent), `related` → `related`; an edge to an item outside the selection is dropped |
 | `gui-planner.item` | item | `get Pn.m` | `resource-detail`: title, status, phase, route, review, authority, depends on; sections summary, why, result |
@@ -33,6 +33,9 @@ Form queries and the model picker:
 | `gui-planner.item-form` | item | `get Pn.m` | `schema-form`: form `gui-planner.item`, the document and its revision |
 | `gui-planner.phase-form` | plan | `get Pn` | `schema-form`: form `gui-planner.phase` |
 | `gui-planner.models` | project | aicore `load_model_catalog()` | `resource-list` of `provider/model` rows (provider, model, default of class, roles); `MODEL_CATALOG_UNAVAILABLE` when aicore or its catalog cannot be read |
+
+The route `plans/:plan_id/items/:item_id/edit` shows `gui-planner.item-form` in the `schema-form` view; the item page links to it
+(an "Edit" section, built from the project id of the context) and saving runs `gui-planner.item-set`.
 
 A model already written in an item but absent from the list is shown as it is (the UI marks it `drift`); nothing
 replaces it. `gui.json` `forms[]` (`gui-planner.item`, `.phase`, `.decision`) annotate the planner schemas by JSON

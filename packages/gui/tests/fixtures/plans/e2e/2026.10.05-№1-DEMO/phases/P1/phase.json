@@ -1,0 +1,19 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P1",
+  "title": "Demo phase",
+  "design": "skeleton",
+  "goal": "One item to edit.",
+  "items": [
+    "P1.1"
+  ],
+  "batches": [
+    {
+      "id": "BP1-1",
+      "items": [
+        "P1.1"
+      ],
+      "mode": "recommended"
+    }
+  ]
+}

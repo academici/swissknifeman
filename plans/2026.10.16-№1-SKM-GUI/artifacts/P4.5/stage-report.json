@@ -1,0 +1,69 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/gui-planner/README.md",
+    "bridges/gui-planner/adapter.py",
+    "bridges/gui-planner/gui.json",
+    "bridges/gui-planner/tests/test_forms.py",
+    "bridges/gui-planner/tests/test_queries.py",
+    "packages/gui/docs/frontend.md",
+    "packages/gui/frontend/e2e/backend.ts",
+    "packages/gui/frontend/e2e/planner.spec.ts",
+    "packages/gui/frontend/src/components/QueryView.tsx",
+    "packages/gui/frontend/src/views/ResourceDetailView.tsx",
+    "packages/gui/frontend/src/views/ResourceListView.tsx",
+    "packages/gui/frontend/src/views/SchemaFormView.test.tsx",
+    "packages/gui/frontend/src/views/SchemaFormView.tsx",
+    "packages/gui/frontend/src/views/ViewDataView.tsx",
+    "packages/gui/frontend/src/views/plan-enums.ts",
+    "packages/gui/frontend/src/views/views.test.tsx",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/.cursorignore",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/.gitattributes",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/.gitignore",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/.ignore",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/brief.json",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/log.jsonl",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/phases/P1/P1.1.json",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/phases/P1/phase.json",
+    "packages/gui/tests/fixtures/plans/e2e/2026.10.05-№1-DEMO/plan.json"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "other bridges copying the example would hit the same failure; the progress cell is now documented as an integer percent 0-100",
+      "kind": "note",
+      "next": "consider fixing the example and stating the range in view-data/v1 docs",
+      "text": "The root cause of the red V26 was floats in view-data (progress 0.0 etc.): the backend canonicalizes JSON and refuses floats, so the query failed and the plan link never appeared. It was fixed in the tree outside this piece (adapter.py percent, ResourceListView/ResourceDetailView, tests, docs). The valid contract example schemas/view-data/v1/examples/valid/resource-list.json still shows a float progress (0.25), which the backend would refuse in a real answer."
+    },
+    {
+      "class": "test_env",
+      "impact": "V26 must be run by the conductor",
+      "kind": "difficulty",
+      "outcome": "follow_up",
+      "severity": "medium",
+      "text": "The E2E (V26) was not re-run here; the rest of planner.spec.ts (model picker, Save, confirmation, conflict, Reapply) is verified only by reading the code paths."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "bridges/gui-planner/README.md",
+        "bridges/gui-planner/adapter.py",
+        "bridges/gui-planner/gui.json",
+        "bridges/gui-planner/tests/test_forms.py",
+        "bridges/gui-planner/tests/test_queries.py",
+        "packages/gui/frontend/src/components/QueryView.tsx",
+        "packages/gui/frontend/src/views/ResourceDetailView.tsx",
+        "packages/gui/frontend/src/views/ResourceListView.tsx",
+        "packages/gui/frontend/src/views/views.test.tsx"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: bridges/gui-planner/README.md, bridges/gui-planner/adapter.py, bridges/gui-planner/gui.json, bridges/gui-planner/tests/test_forms.py, bridges/gui-planner/tests/test_queries.py, packages/gui/frontend/src/components/QueryView.tsx, packages/gui/frontend/src/views/ResourceDetailView.tsx, packages/gui/frontend/src/views/ResourceListView.tsx, packages/gui/frontend/src/views/views.test.tsx"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Checked the working tree against the real cause of the red V26: the bridge returned float progress values and the backend's canonical JSON refuses floats, so the plans query failed and the list had no link. The fix (integer percent 0-100 in the bridge adapter, matching rendering in ResourceListView/ResourceDetailView, tests and docs) is already in the tree and consistent; the backend.ts fix of the previous round (planner and AICORE_ROOT in the E2E environment) is also needed and stays. Only change in this round: the bridge README says progress is an integer percent. Bridge tests (51, incl. a no-floats assertion on every answer), tsc and public-hygiene pass; vitest, eslint and the E2E could not run in this sandbox."
+}

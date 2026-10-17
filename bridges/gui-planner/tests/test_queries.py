@@ -22,6 +22,17 @@ RETURNS = {query["id"]: query["returns"] for query in GUI_DOC["queries"]}
 PLAN = "PLAN1"
 
 
+def floats(value, path="$"):
+    """Paths of the float numbers in a JSON value: the backend refuses to canonicalize them."""
+    if isinstance(value, float):
+        return [path]
+    if isinstance(value, dict):
+        return [p for k, v in value.items() for p in floats(v, f"{path}.{k}")]
+    if isinstance(value, list):
+        return [p for i, v in enumerate(value) for p in floats(v, f"{path}[{i}]")]
+    return []
+
+
 class AdapterCase(unittest.TestCase):
     def setUp(self):
         self.home = Path(os.path.realpath(tempfile.mkdtemp()))
@@ -44,6 +55,7 @@ class AdapterCase(unittest.TestCase):
         self.assertEqual("ok", result.status, (result.code, result.error))
         self.assertEqual([], contracts.validate(result.output, "view-data"))
         self.assertEqual(RETURNS[query_id], result.output["view"])
+        self.assertEqual([], floats(result.output), "the backend's canonical JSON has no floats")
         return result.output
 
     def calls(self):
@@ -60,7 +72,7 @@ class TestQueries(AdapterCase):
         out = self.ok("gui-planner.plans")
         row = out["rows"][0]
         self.assertEqual("2026.10.16-№1-DEMO", row["id"])
-        self.assertEqual({"name": "Demo plan", "status": "active", "progress": 3 / 7, "phases": "1/2"}, row["cells"])
+        self.assertEqual({"name": "Demo plan", "status": "active", "progress": 42, "phases": "1/2"}, row["cells"])
         self.assertEqual({"route": "gui-planner.overview", "params": {"plan_id": row["id"]}}, row["link"])
         self.assertEqual([["--output", "json", "plans"]], [c["argv"][1:] for c in self.calls()])
         self.assertEqual(str(self.project), self.calls()[0]["cwd"])
@@ -84,7 +96,7 @@ class TestQueries(AdapterCase):
 
     def test_phases(self):
         rows = {r["id"]: r for r in self.ok("gui-planner.phases")["rows"]}
-        self.assertEqual({"phase": "P1", "title": "Phase P1", "design": "detailed", "result": "done", "progress": 1.0,
+        self.assertEqual({"phase": "P1", "title": "Phase P1", "design": "detailed", "result": "done", "progress": 100,
                           "items": "2/2"}, rows["P1"]["cells"])
         self.assertEqual(("open", "1/5"), (rows["P2"]["cells"]["result"], rows["P2"]["cells"]["items"]))
         self.assertEqual("gui-planner.board", rows["P2"]["link"]["route"])

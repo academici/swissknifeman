@@ -1,0 +1,26 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:plan:v1",
+  "id": "2026.10.05-№1-DEMO",
+  "short_id": "PLAN1",
+  "title": "Plan №1 — E2E demo plan",
+  "status": "active",
+  "created": "2026-10-05",
+  "updated_at": "2026-10-17T00:51:34Z",
+  "repository": "project",
+  "owner": "repository owner",
+  "authoring": {
+    "provider": "claude-code",
+    "model": "opus",
+    "effort": "high"
+  },
+  "goal": "Try the GUI editor on a throwaway plan.",
+  "context": "Fixture of the browser E2E; edited only by tests.",
+  "phases": [
+    "P1"
+  ],
+  "settings": {
+    "design_audit": "none",
+    "scout": "off",
+    "context_pack": "scoped"
+  }
+}

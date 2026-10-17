@@ -1,13 +1,24 @@
 import { execFileSync, spawn } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const gui = resolve(here, "..", "..");
 const fixtures = join(gui, "tests", "fixtures", "units", "e2e");
+// The planner bridge and the hub command line it calls are the hub's own; the plan is a copy of a fixture, in the
+// throwaway project, so no real plan is ever read or written.
+const hub = resolve(gui, "..", "..");
+const bridge = join(hub, "bridges", "gui-planner");
+const umbrella = join(hub, "bin", "swissknifeman");
+// SKM_UNITS_PATH replaces the hub registry for the backend and for every plugin it starts (the environment of a
+// plugin passes it on), so the umbrella the bridge calls can find the planner only if the planner is on the path too;
+// the bridge finds the model catalog of the foundation through AICORE_ROOT, which also reaches the plugin.
+const planner = join(hub, "packages", "planner");
+const foundation = join(hub, "packages", "aicore");
+const planFixture = join(gui, "tests", "fixtures", "plans", "e2e");
 
 /** Global setup: one `gui serve` for every spec, on a free port, in a throwaway home; returns the teardown. */
 export default async function setup(): Promise<() => Promise<void>> {
@@ -16,11 +27,14 @@ export default async function setup(): Promise<() => Promise<void>> {
   const project = join(base, "project");
   mkdirSync(join(project, ".git"), { recursive: true });
   mkdirSync(join(base, "home"));
+  cpSync(planFixture, join(project, "plans"), { recursive: true });
   const env = {
     PATH: process.env.PATH ?? "/usr/bin:/bin",
     HOME: join(base, "home"),
     SKM_HOME: join(base, "skm"),
-    SKM_UNITS_PATH: fixtures,
+    SKM_UNITS_PATH: [fixtures, bridge, planner].join(delimiter),
+    AICORE_ROOT: foundation,
+    SKM_UMBRELLA: umbrella,
     GUI_PYDEPS_DIR: pydeps,
     LANG: "C.UTF-8",
   };
@@ -44,6 +58,8 @@ export default async function setup(): Promise<() => Promise<void>> {
   process.env.GUI_E2E_ORIGIN = new URL(url).origin;
   process.env.GUI_E2E_SECRET = runtime.session_secret;
   process.env.GUI_E2E_PROJECT = project;
+  process.env.GUI_E2E_UMBRELLA = umbrella;
+  process.env.GUI_E2E_HOME = join(base, "home");
   return async () => {
     child.kill("SIGTERM");
     await new Promise((done) => {

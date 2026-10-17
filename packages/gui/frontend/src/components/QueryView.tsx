@@ -32,7 +32,7 @@ export function QueryView({ queryId, projectId, params = {} }: { queryId: string
   if (query.isError) return <ErrorPanel error={query.error} />;
   return (
     <>
-      <ViewDataView data={query.data} projectId={projectId} onAction={setAction} />
+      <ViewDataView data={query.data} projectId={projectId} context={context} onAction={setAction} />
       {action && (
         <div className="action-panel">
           <CommandRunner commandId={action.command} projectId={projectId} context={context} defaults={action.input ?? {}} />

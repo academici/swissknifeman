@@ -6,7 +6,7 @@ import { ViewDataView } from "./ViewDataView";
 
 const examples = import.meta.glob("../../../schemas/view-data/v1/examples/valid/*.json", { eager: true, import: "default" });
 const IMPLEMENTED = ["resource-list", "status-table", "metric-group", "timeline", "markdown", "log-stream", "command-form",
-  "resource-detail", "board", "dependency-graph"];
+  "resource-detail", "board", "dependency-graph", "schema-form"];
 
 const ROUTE = { id: "gui-planner.item", title: "Item", path: "plans/:plan_id/items/:item_id", view: "resource-detail", scope: "item" };
 
@@ -134,7 +134,7 @@ describe("host views render every valid view-data example", () => {
   it("shows a resource detail by field type, markdown sections and actions", () => {
     const seen: string[] = [];
     const data: ViewData = { ...base, view: "resource-detail", title: "Item <i>x</i>", fields: [
-      { label: "Status", value: "ok", type: "status" }, { label: "Done", value: 0.5, type: "progress" },
+      { label: "Status", value: "ok", type: "status" }, { label: "Done", value: 50, type: "progress" },
       { label: "At", value: "2026-10-16T10:00:00Z", type: "date" }, { label: "Owner", value: null, type: "text" }],
       sections: [{ title: "Goal", markdown: "Make **it** <script>bad()</script>" }],
       actions: [{ command: "gui-planner.item-reopen", input: { reason: "r" } }] };
@@ -155,7 +155,7 @@ describe("host views render every valid view-data example", () => {
 
   it("draws a progress cell of a list with an accessible label", () => {
     const data: ViewData = { ...base, view: "resource-list", columns: [{ id: "p", title: "P", type: "progress" }],
-      rows: [{ id: "r", cells: { p: 0.25 } }] };
+      rows: [{ id: "r", cells: { p: 25 } }] };
     render(
       <Wrapper transport={transport()}>
         <ViewDataView data={data} />

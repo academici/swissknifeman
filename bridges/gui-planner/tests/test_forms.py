@@ -30,6 +30,16 @@ class TestFormQueries(AdapterCase):
         first = self.ok("gui-planner.item-form", context={"item_id": "P2.1"})["revision"]
         self.assertEqual(first, self.ok("gui-planner.item-form", context={"item_id": "P2.1"})["revision"])
 
+    def test_the_item_page_links_to_its_edit_route_inside_the_app(self):
+        out = self.ok("gui-planner.item", context={"item_id": "P2.2", "project_id": "proj-1"})
+        section = [s for s in out["sections"] if s["title"] == "Edit"][0]["markdown"]
+        self.assertEqual("[Edit this item](/x/gui-planner/plans/PLAN1/items/P2.2/edit?project=proj-1)", section)
+        routes = {route["id"]: route for route in GUI_DOC["routes"]}
+        self.assertEqual(("schema-form", "gui-planner.item-form", "item"), tuple(
+            routes["gui-planner.item-edit"][key] for key in ("view", "query", "scope")))
+        without = self.ok("gui-planner.item", context={"item_id": "P2.2"})
+        self.assertNotIn("Edit", [s["title"] for s in without["sections"]])
+
     def test_phase_form(self):
         out = self.ok("gui-planner.phase-form", params={"phase": "P2"})
         self.assertEqual(("gui-planner.phase", "Phase P2"), (out["form"], out["document"]["title"]))

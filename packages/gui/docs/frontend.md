@@ -62,8 +62,7 @@ relative or http(s)), `log-stream` (stored pages, then live `log` frames, merged
 (columns with counts, cards whose `link` is built from the catalog as `/x/<owner>/<path>?project=<id>`; a route that
 is not in the catalog is plain text) and `dependency-graph` (plain SVG, no library: one column per `group`, solid
 arrow for `blocks`, dashed for `related`, an edge to a missing node is skipped, and a "Dependencies as text" table
-repeats it). Every status is written as text as well as coloured. `schema-form` shows a placeholder until a later
-version. A `progress` cell or field is a number from 0 to 1 drawn as `<progress aria-label>`.
+repeats it). Every status is written as text as well as coloured. `schema-form` is the plan editor below. A `progress` cell or field is an integer percent from 0 to 100 (the backend's canonical JSON has no floats) drawn as `<progress aria-label>`.
 
 Route context: `QueryView` sends `context = {project_id, plan_id, item_id, run_id}` for the ids found in the path of
 the route (the host reads them from `context` only) and keeps every path parameter in `params` too, because the query
@@ -72,6 +71,27 @@ context to the commands of the page (`CommandRunner` takes an optional `context`
 
 To add a host view: implement `src/views/<Name>View.tsx` for the view-data kind, add its `case` to `ViewDataView`,
 and the test of `views.test.tsx` renders every valid example of `schemas/view-data/v1/examples/valid` through it.
+
+## Plan item editor
+
+`views/SchemaFormView.tsx` draws a `schema-form` answer: the form comes from `forms[]` of the catalog (`useCatalog()`,
+the entry whose `id` is `data.form`), the values from `data.document`, and the host never loads the planner schema
+(D20). Fields are grouped by `groups` and sorted by `order`; the widget decides the control: `text`, `textarea`,
+`number`, `toggle`, `select` (choices from `views/plan-enums.ts`, which `SchemaFormView.test.tsx` compares with the
+enum table that the planner bridge exports from the planner schema; the reviewer provider comes from the model
+catalog), `list` (one entry per line for arrays of text), `json` (a textarea that must parse, else Save is disabled)
+and `model-picker` (a select over the `gui-planner.models` query; it writes `review.reviewer.provider` and `.model`;
+a model that is not in the catalog stays as it is with a "drift" note, it is never replaced). `readonly` fields and
+the identity and lifecycle roots (`status`, `result`, `updated_at`, `id`, `$schema`, `units`, `artifacts`, `sections`)
+are shown as text and never written.
+
+Save builds a merge patch of the changed root keys only (a root is sent whole), runs `gui-planner.item-set` with
+`patch` and `expected_revision` (the revision of the form) through `/v1/commands/{id}/runs`, handles the confirmation
+of the host, and waits for the run. A refusal is shown by its `plugin_code`: `PLAN_REVISION_CONFLICT` opens "The plan
+changed" with Reload (drop the draft) and Reapply (the same patch on the revision read now, only on a click);
+`ITEM_IN_PROGRESS`, `FIELD_NOT_EDITABLE`, `SCHEMA_INVALID` and `PLAN_LOCKED` have their own texts. The end-to-end test
+`e2e/planner.spec.ts` runs against a copy of `tests/fixtures/plans/e2e` in the throwaway project and the planner
+bridge, and checks the plan file and `planner check` afterwards.
 
 ## Configuration editor
 

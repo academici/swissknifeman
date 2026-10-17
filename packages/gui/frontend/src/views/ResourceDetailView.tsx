@@ -9,7 +9,7 @@ function Value({ field }: { field: Field }) {
   const { type, value } = field;
   if (type === "status" && typeof value === "string") return <StatusBadge status={value} />;
   if (type === "progress" && typeof value === "number") {
-    const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
+    const percent = Math.round(Math.max(0, Math.min(100, value)));
     return (
       <span className="progress">
         <progress max={100} value={percent} aria-label={`${field.label}: ${percent}%`} /> {percent}%

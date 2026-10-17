@@ -999,6 +999,14 @@
       "scope": "item",
       "title": "Item evidence",
       "view": "resource-list"
+    },
+    {
+      "id": "gui-planner.item-edit",
+      "path": "plans/:plan_id/items/:item_id/edit",
+      "query": "gui-planner.item-form",
+      "scope": "item",
+      "title": "Edit item",
+      "view": "schema-form"
     }
   ],
   "version": "0.1.0",

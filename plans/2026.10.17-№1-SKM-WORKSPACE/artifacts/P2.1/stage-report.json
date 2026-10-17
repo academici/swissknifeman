@@ -1,0 +1,89 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/planner/lib/planner/plan/catalog.py",
+    "packages/planner/lib/planner/plan/cli.py",
+    "packages/planner/lib/planner/plan/ops.py",
+    "packages/planner/lib/planner/plan/settings.py",
+    "packages/planner/lib/planner/plan/store.py",
+    "packages/planner/lib/planner/plan/workspace.py",
+    "packages/planner/schemas/plan/v1/read-catalog.schema.json",
+    "packages/planner/tests/engine/test_settings.py",
+    "packages/planner/tests/engine/test_store.py",
+    "packages/planner/tests/engine/test_workspace.py",
+    "packages/planner/tests/test_launcher_mode.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/planner/lib/planner/plan/catalog.py:49",
+        "packages/planner/schemas/plan/v1/read-catalog.schema.json:199"
+      ],
+      "impact": "коммит пункта должен взять catalog.py и read-catalog.schema.json",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Изменены packages/planner/lib/planner/plan/catalog.py и packages/planner/schemas/plan/v1/read-catalog.schema.json (вне write_set): тест ErrorRegistryTests сверяет литералы PlanError с ERROR_CODES, SHARED_ERRORS и enum схемы read-catalog, поэтому новые коды (PROJECT_MARKER_INVALID, WORKSPACE_PROJECT_MISSING, WORKSPACE_LAYOUT_INVALID, PLAN_SOURCE_UNBOUND, PLANS_MIGRATED, PROJECT_CONTEXT_CONFLICT) пришлось зарегистрировать."
+    },
+    {
+      "impact": "в P2.2 context, check, scout, refs должны обращаться к source_root, а не к repo_root, и бросать PLAN_SOURCE_UNBOUND только в операциях, которым нужен checkout (context, check существования reads/task_files, scout, commit, commits, brief); существование @plan/-путей проверять от plan.root без source root",
+      "kind": "pending",
+      "next": "P2.2: использовать Plan.source_root (None = не привязан) и пропускать проверки существования путей репозитория при None",
+      "text": "Потребители repo_root (context._resolve, check.paths, scout, refs, lifecycle) пока читают plan.repo_root напрямую. Для плана workspace без привязанного checkout любая мутация через ops.patch и подобные, вызывающие check.check, сейчас падает с PLAN_SOURCE_UNBOUND (check -> context.human_view -> repo_root), хотя контракт требует, чтобы чтение и мутации документов без source root работали. Это зона P2.2 (Exclude). До P2.2 план workspace без привязки можно читать, а писать в него лишь на уровне store.save, append_log и PlanLock."
+    },
+    {
+      "impact": "поведение отличается только для планов вне структуры plans/ и для путей через симлинки; существующие тесты не затронуты",
+      "kind": "note",
+      "next": "P2.2 учитывает это при проверках существования путей",
+      "text": "Plan.repo_root для каталога плана вне workspace и не под папкой plans/ теперь None -> PLAN_SOURCE_UNBOUND (раньше брался parent.parent). Так требуют контракт и вектор «a folder that is not under plans has no source root». source_root для legacy-плана вычисляется от realpath (как в aicore), раньше путь не разыменовывался."
+    },
+    {
+      "impact": "поведение на краях, контрактом не зафиксировано",
+      "kind": "assumption",
+      "next": "при желании зафиксировать в контракте workspace",
+      "text": "Выбор поведения вне контракта: (1) битый bindings.json даёт PlanError WORKSPACE_LAYOUT_INVALID, как в aicore, а не None; (2) невалидный маркер внутри PlanLock проходит как PROJECT_MARKER_INVALID после снятия lock; (3) некорректные SKM_HOME и SKM_WORKSPACE_ROOT (не абсолютные) дают ValueError, как в aicore; (4) ops.default_repository для плана workspace без привязки даёт имя папки проекта (id), а не ошибку, чтобы new работал до attach; (5) в PlanLock маркер читается только если файл .swissknifeman/project.json существует."
+    },
+    {
+      "impact": "контракты, на которые опираются P2.2, P2.3 и мост workspace-planner",
+      "kind": "note",
+      "next": "использовать store.plans_store_of и workspace.resolve_plans_store, а не повторять правило",
+      "text": "Для P2.2 и дальше: workspace.source_root_of(plan_dir, env=None, launcher=None) и Plan.source_root могут бросить PROJECT_CONTEXT_CONFLICT (launcher другого проекта) и WORKSPACE_LAYOUT_INVALID. Кеш source_root живёт в __dict__ Plan, adopt() его копирует. Предупреждение LEGACY_PLANS_PRESENT выдаёт store.plans_store_of (общая точка для find_plans_root и require_project_plans); флаг store._LEGACY_WARNED сбрасывается в тестах через mock.patch.object."
+    },
+    {
+      "impact": "возможна красная широкая проверка в конце фазы",
+      "kind": "note",
+      "next": "владелец или координатор запускает skiller registry",
+      "text": "scripts/golden.py check сообщает дрейф packages/skiller/skills.json: файл был изменён до начала работы (в git status на старте), к пункту не относится."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/planner/lib/planner/plan/catalog.py",
+        "packages/planner/schemas/plan/v1/read-catalog.schema.json"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/planner/lib/planner/plan/catalog.py, packages/planner/schemas/plan/v1/read-catalog.schema.json"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/planner/lib/planner/plan/store.py: PlanLock._guard_migrated (W3) и find_plans_root/plans_store_of",
+      "packages/planner/lib/planner/plan/workspace.py: паритет с aicore.workspace.resolve",
+      "packages/planner/lib/planner/plan/catalog.py: регистрация новых кодов"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "shared_module_changed",
+      "scope_expanded"
+    ],
+    "recommended": true,
+    "suggested_model_class": "frontier"
+  },
+  "status": "done_with_deviations",
+  "summary": "Добавлен stdlib-резолвер planner.plan.workspace (копия правила aicore, проходит общие векторы). store.find_plans_root идёт по маркеру .swissknifeman/project.json (legacy -> <root>/plans, workspace -> <ws>/projects/<id>/plans, нет каталога -> WORKSPACE_PROJECT_MISSING), require_project_plans в launcher-режиме допускает плановый каталог по маркеру. Plan.source_root (cached_property) и Plan.repo_root (source_root или PLAN_SOURCE_UNBOUND). PlanLock после flock отдаёт PLANS_MIGRATED для legacy-плана с маркером workspace. LEGACY_PLANS_PRESENT - одна строка stderr за процесс. settings.project_root_of идёт через source root для каталогов workspace; ops.default_repository даёт имя репозитория для new. Новые коды зарегистрированы в каталоге ошибок и схеме read-catalog. Тесты: новый test_workspace.py (векторы через AICORE_ROOT) и дополнения test_store, test_settings, test_launcher_mode. Проект без маркера ведёт себя как раньше."
+}

@@ -13,10 +13,13 @@ import json
 import os
 from pathlib import Path
 import re
+import sys
 import time
+from functools import cached_property
 from typing import Any, Iterable
 
 from . import schema as _schema
+from . import workspace
 from .model import SHORT_ID, PlanError, id_sort_key
 
 LOG = "log.jsonl"
@@ -31,20 +34,39 @@ def launcher_project_root() -> Path | None:
     """The project root the project-local launcher bound to this process (``.swissknifeman/launcher.py`` → the installed
     ``swissknifeman``; the umbrella checked it), else ``None``. Inherited launcher variables of a parent process (another
     ``SKM_LAUNCHER_PID``) bind nothing. Same rule as ``aicore.state.launcher_root``; read here so the store stays stdlib-only."""
-    env = os.environ
-    if env.get("SKM_LAUNCHER_ACTIVE") != "1" or env.get("SKM_LAUNCHER_PID") != str(os.getpid()):
-        return None
-    root = env.get("SKM_LAUNCHER_PROJECT_ROOT", "")
-    return Path(root) if root else None
+    return workspace.launcher_root()
+
+
+_LEGACY_WARNED = False
+
+
+def _warn_legacy_present(project_root: Path) -> None:
+    """One ``LEGACY_PLANS_PRESENT`` line on stderr per process: the plans of the project live in the workspace, but the
+    old ``<root>/plans`` still holds plan folders. Stdout is not touched."""
+    global _LEGACY_WARNED
+    if not _LEGACY_WARNED and workspace.legacy_plans_present(project_root):
+        _LEGACY_WARNED = True
+        print(f"warning: LEGACY_PLANS_PRESENT: {project_root}/plans still holds plans; the workspace copy is used "
+              f"(swissknifeman workspace migrate verify|cleanup)", file=sys.stderr)
+
+
+def plans_store_of(project_root: str | Path) -> Path:
+    """The plans folder of the checkout at ``project_root`` by its marker (``workspace.resolve_plans_store``); warns once
+    about legacy plans left behind when the plans live in the workspace."""
+    found = workspace.resolve_plans_store(project_root)
+    if found.kind == "workspace":
+        _warn_legacy_present(Path(project_root))
+    return found.plans_root
 
 
 def require_project_plans(path: str | Path, what: str = "--plans-root") -> None:
-    """In launcher mode a plans location must be ``<project>/plans`` or inside it: anything else would retarget the
-    command to another project (``PROJECT_PATH_OVERRIDE_FORBIDDEN``). Outside launcher mode nothing is checked."""
+    """In launcher mode a plans location must be the plans folder of the launcher project (``<project>/plans``, or the
+    workspace folder its marker names) or inside it: anything else would retarget the command to another project
+    (``PROJECT_PATH_OVERRIDE_FORBIDDEN``). Outside launcher mode nothing is checked."""
     bound = launcher_project_root()
     if bound is None:
         return
-    plans = Path(os.path.realpath(bound / "plans"))
+    plans = Path(os.path.realpath(plans_store_of(bound)))
     target = Path(os.path.realpath(path))
     if target != plans and plans not in target.parents:
         raise PlanError("PROJECT_PATH_OVERRIDE_FORBIDDEN",
@@ -52,13 +74,16 @@ def require_project_plans(path: str | Path, what: str = "--plans-root") -> None:
 
 
 def find_plans_root(start: str | Path | None = None) -> Path:
-    """``<project>/plans`` of the launcher-bound project (no search); else the nearest ``plans/`` at or above ``start``,
-    or ``<start>/plans`` (maybe absent) when none exists."""
+    """The plans folder of the launcher-bound project (no search); else, walking up from ``start``, the plans folder a
+    project marker names (``.swissknifeman/project.json``), or the nearest ``plans/`` (a ``plans`` folder at or above
+    ``start`` is itself the answer); or ``<start>/plans`` (maybe absent) when none exists."""
     bound = launcher_project_root()
     if bound is not None and start is None:
-        return bound / "plans"
+        return plans_store_of(bound)
     base = Path(start or Path.cwd()).resolve()
     for candidate in (base, *base.parents):
+        if workspace.read_marker(candidate) is not None:
+            return plans_store_of(candidate)
         if (candidate / "plans").is_dir():
             return candidate / "plans"
         if candidate.name == "plans" and candidate.is_dir():
@@ -112,11 +137,20 @@ class Plan:
     documents: dict[str, dict] = field(default_factory=dict)
     problems: list[tuple[str, str]] = field(default_factory=list)  # (relative file, message)
 
+    @cached_property
+    def source_root(self) -> Path | None:
+        """The checkout the plan belongs to: the launcher project, a checkout bound to the plan's workspace project, or the
+        parent of ``plans/`` (``plans/archive/``) for a plan outside the workspace; ``None`` when no checkout is bound."""
+        return workspace.source_root_of(self.root)
+
     @property
     def repo_root(self) -> Path:
-        """Repository root: the parent of ``plans/`` (or of ``plans/archive/``)."""
-        parent = self.root.parent
-        return parent.parent.parent if parent.name == ARCHIVE else parent.parent
+        """Repository root: ``source_root``; ``PLAN_SOURCE_UNBOUND`` when the plan has no checkout on this machine."""
+        root = self.source_root
+        if root is None:
+            raise PlanError("PLAN_SOURCE_UNBOUND", f"no checkout is bound to the plans of {self.root}; "
+                            f"bind a checkout: swissknifeman workspace project attach --project DIR")
+        return root
 
     def path(self, kind: str, key: str | None = None) -> Path:
         if kind == "plan":
@@ -237,8 +271,24 @@ def short_id_of(plan_dir: Path) -> str | None:
 
 # ---------------------------------------------------------------- lock
 
+def _guard_migrated(plan_dir: Path) -> None:
+    """``PLANS_MIGRATED`` when ``plan_dir`` is ``<x>/plans[/archive]/<plan>`` outside the workspace and the marker of ``<x>``
+    says the plans moved to the workspace (a write to the old copy would be lost). Folders inside the workspace and
+    folders without a marker beside them are not checked."""
+    real = Path(os.path.realpath(plan_dir))
+    plans = real.parent.parent if real.parent.name == ARCHIVE else real.parent
+    if plans.name != "plans" or not (plans.parent / workspace.MARKER_RELPATH).exists():
+        return
+    if workspace.workspace_project_of(real) is not None:
+        return
+    marker = workspace.read_marker(plans.parent)
+    if marker is not None and marker["plans_store"] == "workspace":
+        raise PlanError("PLANS_MIGRATED", "plans of this project moved to the portable workspace; rerun the command")
+
+
 class PlanLock:
-    """Exclusive ``flock`` on ``<plan>/.lock``; waits up to ``timeout`` seconds, then ``PLAN_LOCKED``."""
+    """Exclusive ``flock`` on ``<plan>/.lock``; waits up to ``timeout`` seconds, then ``PLAN_LOCKED``. A plan folder of a
+    project whose marker moved the plans to the workspace is refused with ``PLANS_MIGRATED`` once the lock is held."""
 
     def __init__(self, plan_dir: str | Path, timeout: float = 30.0, poll: float = 0.05):
         self.path = Path(plan_dir) / LOCK
@@ -259,6 +309,12 @@ class PlanLock:
                     handle.close()
                     raise PlanError("PLAN_LOCKED", f"{self.path} is held by another process") from None
                 time.sleep(self.poll)
+        try:
+            _guard_migrated(self.path.parent)
+        except BaseException:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+            handle.close()
+            raise
         self._handle = handle
         return self
 

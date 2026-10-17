@@ -342,6 +342,54 @@ class ConsumerTests(ConfigCase):
 
 
 @needs_aicore
+class WorkspaceProjectTests(ConfigCase):
+    """Plans in the portable workspace take the project configuration of the checkout bound to them."""
+
+    PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+
+    def setUp(self):
+        super().setUp()
+        self.project = Path(os.path.realpath(self.project))
+        self.ws = self.home / "ws"
+        patcher = mock.patch.dict(os.environ, {"SKM_WORKSPACE_ROOT": str(self.ws)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.ws_plans = self.ws / "projects" / self.PID / "plans"
+        self.ws_plans.mkdir(parents=True)
+
+    def bind(self):
+        marker = self.project / ".swissknifeman" / "project.json"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1",
+                                      "project_id": self.PID, "plans_store": "workspace"}), encoding="utf-8")
+        bindings = self.home / "state" / "workspace" / "bindings.json"
+        bindings.parent.mkdir(parents=True, exist_ok=True)
+        bindings.write_text(json.dumps({
+            "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",
+            "projects": {self.PID: {"paths": [str(self.project)], "primary": str(self.project),
+                                    "bound_at": "2026-10-17T09:30:00Z"}}}), encoding="utf-8")
+
+    def new(self):
+        return ops.new_plan("WSP", "Wsp", plans_root=self.ws_plans, repository=ops.default_repository(self.ws_plans),
+                            owner="o", authoring=test_lifecycle.OPUS, message="m", date="2026.10.08")
+
+    def test_the_project_root_of_the_workspace_plans_is_the_bound_checkout(self):
+        self.assertIsNone(settings.project_root_of(self.ws_plans))
+        self.bind()
+        self.assertEqual(settings.project_root_of(self.ws_plans), self.project)
+        self.assertEqual(settings.project_root_of(self.plans), self.project)  # a legacy folder: as before
+
+    def test_new_plan_takes_the_configuration_and_the_name_of_the_bound_checkout(self):
+        self.project_file('[planner.new_plan]\nscout = "auto"\n')
+        before = self.new()
+        self.assertEqual((before.plan["settings"]["scout"], before.plan["repository"]), ("off", self.PID))
+        self.bind()
+        after = self.new()
+        self.assertEqual((after.plan["settings"]["scout"], after.plan["repository"]), ("auto", self.project.name))
+        self.assertEqual(settings.for_plan(store.load_plan(after.root)).get("new_plan.scout"), "auto")
+
+
+@needs_aicore
 class TemplateTests(ConfigCase):
     def folder(self, name="own"):
         path = self.project / ".swissknifeman" / name

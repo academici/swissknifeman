@@ -196,6 +196,10 @@
                 "PLAN_NOT_DONE",
                 "PLAN_NOT_FOUND",
                 "PLAN_REVISION_CONFLICT",
+                "PLAN_SOURCE_UNBOUND",
+                "PLANS_MIGRATED",
+                "PROJECT_CONTEXT_CONFLICT",
+                "PROJECT_MARKER_INVALID",
                 "PROJECT_PATH_OVERRIDE_FORBIDDEN",
                 "RATIONALE_REQUIRED",
                 "READ_MISSING",
@@ -217,7 +221,9 @@
                 "UNIT_SELF",
                 "UNIT_STATE",
                 "USAGE",
-                "VERB_FAILED"
+                "VERB_FAILED",
+                "WORKSPACE_LAYOUT_INVALID",
+                "WORKSPACE_PROJECT_MISSING"
               ]
             },
             "uniqueItems": true

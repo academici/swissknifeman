@@ -1,6 +1,7 @@
 """Project-bound invocation: the launcher fixes the plans root and no user-facing surface names a package path."""
 import contextlib
 import io
+import json
 import os
 import re
 import tempfile
@@ -63,6 +64,59 @@ class LauncherPlansRootTests(unittest.TestCase):
     def test_without_launcher_nothing_is_checked(self):
         with mock.patch.dict(os.environ, {"SKM_LAUNCHER_ACTIVE": ""}):
             store.require_project_plans(self.other / "plans")
+
+
+class LauncherWorkspaceTests(unittest.TestCase):
+    """A launcher project whose marker moved the plans to the workspace: that folder is the plans root, the old
+    ``<project>/plans`` and the folders of other projects stay refused."""
+
+    PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(tmp.name).resolve()
+        self.root = base / "proj"
+        (self.root / "plans").mkdir(parents=True)
+        (self.root / ".swissknifeman").mkdir()
+        (self.root / ".swissknifeman" / "project.json").write_text(json.dumps({
+            "$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": self.PID,
+            "plans_store": "workspace"}), encoding="utf-8")
+        self.ws = base / "ws"
+        self.plans = self.ws / "projects" / self.PID / "plans"
+        self.other = self.ws / "projects" / "prj_01JC0Z8Q3M5T7V9XABCDEFGHJN" / "plans"
+        for folder in (self.plans, self.other):
+            folder.mkdir(parents=True)
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
+        env.update(HOME=str(base / "home"), SKM_HOME=str(base / "home"), SKM_WORKSPACE_ROOT=str(self.ws), **launcher(self.root))
+        patcher = mock.patch.dict(os.environ, env, clear=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_the_workspace_folder_is_the_plans_root(self):
+        self.assertEqual(store.find_plans_root(), self.plans)
+        store.require_project_plans(self.plans)
+        store.require_project_plans(self.plans / "archive")
+
+    def test_foreign_and_old_folders_are_still_refused(self):
+        for bad in (self.root / "plans", self.other, self.ws / "projects", self.plans.parent):
+            with self.subTest(bad=bad), self.assertRaises(PlanError) as caught:
+                store.require_project_plans(bad)
+            self.assertEqual(caught.exception.code, "PROJECT_PATH_OVERRIDE_FORBIDDEN")
+
+    def test_cli_refuses_the_old_plans_folder_and_foreign_project(self):
+        for bad in (self.root / "plans", self.other):
+            err = io.StringIO()
+            with self.subTest(bad=bad), contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
+                code = cli.main(["next", "PLAN1", "--plans-root", str(bad)])
+            self.assertEqual(code, 1)
+            self.assertIn("PROJECT_PATH_OVERRIDE_FORBIDDEN", err.getvalue())
+
+    def test_a_missing_workspace_folder_is_reported_not_guessed(self):
+        self.plans.rmdir()
+        with self.assertRaises(PlanError) as caught:
+            store.find_plans_root()
+        self.assertEqual(caught.exception.code, "WORKSPACE_PROJECT_MISSING")
 
 
 class NoExternalPathsTests(unittest.TestCase):

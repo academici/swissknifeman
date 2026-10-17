@@ -180,6 +180,24 @@ class LoadAndOpenTests(DemoCase):
     def test_repo_root_of_a_live_plan(self):
         self.assertEqual(store.load_plan(self.root).repo_root, self.plans.parent)
 
+    def test_source_root_is_remembered_and_follows_adopt(self):
+        plan = store.load_plan(self.root)
+        self.assertEqual(plan.source_root, self.plans.parent)
+        self.assertIn("source_root", plan.__dict__)
+        other = store.load_plan(self.root)
+        other.adopt(plan)
+        self.assertEqual(other.repo_root, self.plans.parent)
+
+    def test_a_plan_folder_outside_plans_has_no_checkout(self):
+        elsewhere = self.plans.parent / "elsewhere" / "p1"
+        elsewhere.parent.mkdir()
+        self.root.rename(elsewhere)
+        plan = store.load_plan(elsewhere)
+        self.assertIsNone(plan.source_root)
+        with self.assertRaises(PlanError) as ctx:
+            plan.repo_root
+        self.assertEqual(ctx.exception.code, "PLAN_SOURCE_UNBOUND")
+
     def test_unknown_and_ambiguous_references(self):
         with self.assertRaises(PlanError) as ctx:
             store.open_plan("PLAN99", self.plans)

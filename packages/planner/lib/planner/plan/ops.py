@@ -15,7 +15,7 @@ from typing import Any, Iterator
 
 from planner.integration import events as emission
 
-from . import lifecycle, query, settings, store, views
+from . import lifecycle, query, settings, store, views, workspace
 from .model import SHORT_ID, PlanError, parse_ref
 
 _DIR_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2})-№([1-9][0-9]*)-[A-Z][A-Z0-9-]*$", re.ASCII)
@@ -129,6 +129,17 @@ def _new_plan_settings(config) -> dict:
     if config.get("new_plan.commit_scope"):
         result["commit"] = {"scope": config.get("new_plan.commit_scope")}
     return result
+
+
+def default_repository(plans_root: str | Path) -> str:
+    """The repository name a new plan records: the folder name of the checkout the plans belong to (the bound checkout for
+    the plans of a workspace project), else the name of the folder that holds ``plans_root``."""
+    real = Path(plans_root).resolve()
+    if workspace.workspace_project_of(real) is not None:
+        source = workspace.source_root_of(real)
+        if source is not None:
+            return source.name
+    return real.parent.name
 
 
 def new_plan(codename: str, title: str, *, plans_root: str | Path, repository: str, owner: str,

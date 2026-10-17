@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T125557Z-de5687:P2.1:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN6.P2.1",
+  "candidate": {
+    "head": "80996e89d071f08229f05ee281c1b7e11d6feb83",
+    "dirty_digest": "d3883311d2a05998bbc38ad3ddb2f1aa004fea0bcb4d2cb395aad1ad1ab4a7fc"
+  },
+  "started_at": "2026-10-17T13:10:01Z",
+  "procedure": {
+    "cmd": "HOME=$(mktemp -d) SKM_HOME=$(mktemp -d) AICORE_ROOT=$(cd ../aicore && pwd) PYTHONPATH=lib:../aicore/lib python3 -m unittest tests.engine.test_workspace tests.engine.test_store tests.engine.test_settings tests.test_launcher_mode",
+    "cwd": "packages/planner"
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T13:10:38Z"
+}

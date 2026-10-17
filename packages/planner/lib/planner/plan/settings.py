@@ -10,7 +10,7 @@ import json
 import os
 from pathlib import Path
 
-from . import store
+from . import store, workspace
 
 _INVOCATION: dict = {"file": None}
 _CACHE: dict = {}
@@ -27,8 +27,12 @@ def invocation_file() -> Path | None:
 
 
 def project_root_of(plans_root: Path) -> Path | None:
-    """The project a ``plans/`` folder (or ``plans/archive/``) belongs to; ``None`` for any other folder name."""
+    """The project a ``plans/`` folder (or ``plans/archive/``) belongs to; ``None`` for any other folder name. For a
+    folder inside the portable workspace it is the checkout bound to the project (``workspace.source_root_of``), ``None``
+    while none is bound."""
     root = Path(plans_root)
+    if workspace.workspace_project_of(root) is not None:
+        return workspace.source_root_of(root)
     if root.name == store.ARCHIVE:
         root = root.parent
     return root.parent if root.name == "plans" else None

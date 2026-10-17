@@ -134,7 +134,7 @@ def cmd_new(args) -> int:
     else:
         message = args.message
     plan = ops.new_plan(
-        args.codename, args.title, plans_root=plans_root, repository=args.repository or Path(plans_root).resolve().parent.name,
+        args.codename, args.title, plans_root=plans_root, repository=args.repository or ops.default_repository(plans_root),
         owner=args.owner, authoring=args.actor, message=message, date=args.date)
     print(f"created {plan.plan['id']} ({plan.plan['short_id']}) at {plan.root}")
     return 0

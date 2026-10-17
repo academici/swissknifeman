@@ -48,7 +48,7 @@ and when a window is destroyed.
 
 ## Supervisor
 
-Spawn through the shell plugin (`sidecar("gui-backend")`), one handshake line on stdin, READY within 20 s
+Spawn through the shell plugin from the resource tree (`<resource_dir>/gui-backend/gui-backend`), one handshake line on stdin, READY within 20 s
 (`READY_INVALID` or a timeout kills it), health check `GET /v1/bootstrap` with Bearer every 10 s (three failures kill
 it). An exit restarts with the delays 0.5, 1, 2, 4, 8, 16, then 30 s; 60 s of stable work resets the counter; more than
 5 exits within 300 s make the state `failed` until `sidecar_restart`. On exit of the shell the sidecar gets SIGTERM
@@ -59,10 +59,10 @@ replaced by SIGTERM; the sidecar treats both the same way.
 
 `tauri.conf.json`: `withGlobalTauri: true`, CSP `default-src 'self'; script-src 'self'; style-src 'self'; connect-src
 ipc: http://ipc.localhost; img-src 'self' data:`, `frontendDist: ../../frontend/dist`, one local window `main`,
-`bundle.externalBin: ["binaries/gui-backend"]`, deep link scheme `skm-gui` (the handler only brings the window forward).
+no `bundle.externalBin`, deep link scheme `skm-gui` (the handler only brings the window forward).
 `capabilities/default.json` lists the window `main` and exactly the permissions of the allowlist in
 `tests/test_desktop_config.py`: `core:app|event|window:default`, the six `allow-*` permissions of the commands (generated
-from `app/build.rs`), `shell:allow-spawn` scoped to the sidecar `binaries/gui-backend`, `updater:default`,
+from `app/build.rs`), `updater:default`,
 `dialog:allow-open`, `deep-link:default`. No `fs:`, `http:`, `process:` and no `shell:allow-execute`. The single-instance
 plugin has no permissions. Bundle: `targets: ["appimage","deb","app"]`, `createUpdaterArtifacts: true`, `resources` copies the sidecar onedir tree
 `binaries/gui-backend-onedir/` to `gui-backend/`, and `plugins.updater` holds the placeholders `OWNER_PUBKEY_REQUIRED` and
@@ -75,7 +75,7 @@ Checked by Python tests (`test_desktop_vectors.py`, `test_desktop_config.py`): t
 over the vectors, the structure of the configuration, and a static reading of the commands. **Not checked** (no Rust
 toolchain on the development machine, decision D26): that any Rust file compiles, that `core/tests/vectors.rs` passes,
 the behaviour of the supervisor and the adapter at run time, the crate versions (chosen by major; `Cargo.lock` is not
-committed), the build-script options `capabilities_path_pattern` and `app_manifest` with the config in `src-tauri`
-while the crate lives in `src-tauri/app`, and the shell plugin sidecar resolution of a PyInstaller onedir tree. The
+committed), the build script (`set_current_dir("..")`, `capabilities_path_pattern`, `app_manifest`) with the config in `src-tauri`
+while the crate lives in `src-tauri/app`, and the start of the PyInstaller onedir executable from the resource directory. The
 owner runs `cargo test -p skm-gui-core` and the first `cargo tauri build` (see `docs/desktop-release.md`). `test_desktop_release.py` covers the release scripts (`check-release-config.py`,
 `make-update-json.py`, `smoke.sh`) on fake files.

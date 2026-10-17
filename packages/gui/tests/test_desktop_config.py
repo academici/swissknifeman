@@ -20,7 +20,6 @@ PERMISSION_ALLOWLIST = {
     "allow-sidecar-status",
     "allow-sidecar-restart",
     "allow-sidecar-log",
-    "shell:allow-spawn",
     "updater:default",
     "dialog:allow-open",
     "deep-link:default",
@@ -71,7 +70,8 @@ class TauriConf(unittest.TestCase):
         self.assertNotIn("devUrl", self.conf["build"])
 
     def test_sidecar_and_deep_link(self):
-        self.assertEqual(self.conf["bundle"]["externalBin"], ["binaries/gui-backend"])
+        self.assertNotIn("externalBin", self.conf["bundle"])
+        self.assertEqual(self.conf["bundle"]["resources"], {"binaries/gui-backend-onedir/": "gui-backend/"})
         self.assertEqual(self.conf["plugins"]["deep-link"]["desktop"]["schemes"], ["skm-gui"])
         self.assertEqual(self.conf["app"]["security"]["capabilities"], ["default"])
 
@@ -93,18 +93,20 @@ class Capabilities(unittest.TestCase):
             self.assertNotIn("shell:allow-open", ident)
         self.assertNotIn("shell:default", map(identifier, self.perms))
 
-    def test_shell_scope_is_one_sidecar(self):
-        shell = [p for p in self.perms if not isinstance(p, str)]
-        self.assertEqual(len(shell), 1)
-        self.assertEqual(shell[0]["identifier"], "shell:allow-spawn")
-        self.assertEqual(shell[0]["allow"], [{"name": "binaries/gui-backend", "sidecar": True}])
-        for key in shell[0]:
-            self.assertIn(key, ("identifier", "allow"))
+    def test_no_scoped_permissions_and_no_shell_from_the_window(self):
+        self.assertEqual([p for p in self.perms if not isinstance(p, str)], [])
+        self.assertFalse([p for p in map(identifier, self.perms) if p.startswith("shell:")])
 
     def test_main_window_only_and_local(self):
         self.assertEqual(self.cap["windows"], ["main"])
         self.assertNotIn("remote", self.cap)
         self.assertNotIn("webviews", self.cap)
+
+    def test_build_script_reads_config_from_the_parent(self):
+        build = (TAURI / "app" / "build.rs").read_text(encoding="utf-8")
+        self.assertIn('set_current_dir("..")', build)
+        self.assertIn('capabilities_path_pattern("capabilities/**/*")', build)
+        self.assertTrue((TAURI / "tauri.conf.json").is_file())
 
     def test_commands_match_build_and_main(self):
         build = (TAURI / "app" / "build.rs").read_text(encoding="utf-8")
@@ -142,6 +144,17 @@ class AdapterSurface(unittest.TestCase):
         self.assertNotIn("secret", status)
         self.assertIn("[redacted]", self.sidecar)
         self.assertNotRegex(self.commands, r"secret\(\)[^;]*\)\s*;?\s*Ok\(")
+
+    def test_http_client_ignores_system_proxies(self):
+        self.assertIn(".no_proxy()", self.sidecar)
+
+    def test_health_request_does_not_block_the_supervisor(self):
+        self.assertNotIn("health_ok(shared, port).await", self.sidecar)
+        self.assertIn("health_rx.recv()", self.sidecar)
+
+    def test_sidecar_runs_from_the_onedir_resource_tree(self):
+        self.assertNotIn(".sidecar(", self.sidecar)
+        self.assertIn("resource_dir()", self.sidecar)
 
     def test_adapter_validates_before_sending(self):
         self.assertLess(self.commands.index("adapter::validate"), self.commands.index(".send().await"))

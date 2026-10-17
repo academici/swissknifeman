@@ -46,7 +46,7 @@ start="$(date +%s.%N)"
 "$sidecar" <"$work/in" >"$work/out" 2>"$work/err" &
 pid=$!
 exec 3>"$work/in"
-printf '{"v":1,"secret":"%s","port":%s,"shell_version":"smoke"}\n' "$secret" "$port" >&3
+printf '{"v":1,"secret":"%s","port":%s,"shell_version":"0.0.0"}\n' "$secret" "$port" >&3
 elapsed=""
 while [ "$(python3 -c "import time;print(int(time.time()-$start))")" -lt "$limit" ]; do
   if grep -q '^GUI_READY ' "$work/out" 2>/dev/null; then

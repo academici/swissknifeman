@@ -122,6 +122,23 @@ describe("TauriTransport stream", () => {
     expect(seen).toEqual([5, 1]);
   });
 
+  it("asks for the snapshot only after the replacement subscription is established", async () => {
+    const { transport, invoke, timers } = setup();
+    const order: string[] = [];
+    transport.subscribe({}, { onFrame: () => undefined, onSnapshotRequired: () => order.push("snapshot") });
+    await flush();
+    FakeChannel.all[0]!.deliver([log(5)]);
+    FakeChannel.all[0]!.deliver([{ closed: true }]);
+    invoke.mockImplementation(async (command: string) => {
+      order.push(command);
+      return command === "api_subscribe" ? 8 : null;
+    });
+    timers[0]!();
+    expect(order).toEqual(["api_subscribe"]);
+    await flush();
+    expect(order).toEqual(["api_subscribe", "snapshot"]);
+  });
+
   it("retries a failed subscribe without asking for a snapshot", async () => {
     const { transport, invoke, timers } = setup();
     invoke.mockRejectedValueOnce({ code: "SIDECAR_UNAVAILABLE" });

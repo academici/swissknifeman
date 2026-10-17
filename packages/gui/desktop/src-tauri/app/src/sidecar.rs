@@ -8,7 +8,7 @@ use skm_gui_core::ready;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
@@ -152,7 +152,9 @@ impl Shared {
 
 pub fn start(app: AppHandle) -> Arc<Shared> {
     let (tx, rx) = unbounded_channel();
+    // No system proxy: the Bearer secret must never leave loopback.
     let client = reqwest::Client::builder()
+        .no_proxy()
         .redirect(reqwest::redirect::Policy::none())
         .timeout(Duration::from_secs(30))
         .build()
@@ -260,11 +262,19 @@ async fn health_ok(shared: &Shared, port: u16) -> bool {
     }
 }
 
+/// The PyInstaller onedir tree is bundled as a resource (`gui-backend/`); the executable must stay next to its runtime directory.
+fn sidecar_path(app: &AppHandle) -> tauri::Result<std::path::PathBuf> {
+    let name = if cfg!(windows) { "gui-backend.exe" } else { "gui-backend" };
+    Ok(app.path().resource_dir()?.join("gui-backend").join(name))
+}
+
 async fn run_once(app: &AppHandle, shared: &Arc<Shared>, rx: &mut UnboundedReceiver<Control>) -> End {
     if shared.lock().state != State::Restarting {
         shared.set_state(State::Starting);
     }
-    let spawned = app.shell().sidecar("gui-backend").and_then(|command| command.spawn());
+    let spawned = sidecar_path(app)
+        .map_err(|e| e.to_string())
+        .and_then(|path| app.shell().command(path).spawn().map_err(|e| e.to_string()));
     let (mut events, mut child) = match spawned {
         Ok(pair) => pair,
         Err(e) => return End::Exited(format!("spawn failed: {}", e)),
@@ -285,6 +295,9 @@ async fn run_once(app: &AppHandle, shared: &Arc<Shared>, rx: &mut UnboundedRecei
     let mut ticker = tokio::time::interval(Duration::from_secs(1));
     let mut ticks = 0u32;
     let mut fails = 0u32;
+    // The health request runs in its own task, so the supervisor keeps handling Stop and Restart while it waits.
+    let (health_tx, mut health_rx) = unbounded_channel::<bool>();
+    let mut health_pending = false;
     loop {
         tokio::select! {
             event = events.recv() => match event {
@@ -328,6 +341,18 @@ async fn run_once(app: &AppHandle, shared: &Arc<Shared>, rx: &mut UnboundedRecei
                     Some(Control::Stop) | None => End::Stop,
                 };
             },
+            Some(ok) = health_rx.recv() => {
+                health_pending = false;
+                if ok {
+                    fails = 0;
+                } else {
+                    fails += 1;
+                    if fails >= HEALTH_FAILS {
+                        let _ = child.kill();
+                        return End::Exited("health check failed".into());
+                    }
+                }
+            },
             _ = ticker.tick() => {
                 ticks += 1;
                 if !ready_seen {
@@ -337,16 +362,13 @@ async fn run_once(app: &AppHandle, shared: &Arc<Shared>, rx: &mut UnboundedRecei
                     }
                 } else if ticks % HEALTH_EVERY_TICKS == 0 {
                     let port = shared.lock().port;
-                    if let Some(port) = port {
-                        if health_ok(shared, port).await {
-                            fails = 0;
-                        } else {
-                            fails += 1;
-                            if fails >= HEALTH_FAILS {
-                                let _ = child.kill();
-                                return End::Exited("health check failed".into());
-                            }
-                        }
+                    if let (Some(port), false) = (port, health_pending) {
+                        health_pending = true;
+                        let shared = shared.clone();
+                        let tx = health_tx.clone();
+                        tauri::async_runtime::spawn(async move {
+                            let _ = tx.send(health_ok(&shared, port).await);
+                        });
                     }
                 }
             },

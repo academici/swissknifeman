@@ -1,6 +1,7 @@
 """Release scripts of the desktop shell: check-release-config.py, make-update-json.py, smoke.sh (no toolchain needed)."""
 import copy
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -69,7 +70,7 @@ class CheckReleaseConfig(unittest.TestCase):
         for mutate in (
             lambda c: c["bundle"].update(createUpdaterArtifacts=False),
             lambda c: c["bundle"].update(targets=["deb"]),
-            lambda c: c["bundle"].pop("externalBin"),
+            lambda c: c["bundle"].update(externalBin=["binaries/gui-backend"]),
             lambda c: c["bundle"].pop("resources"),
             lambda c: c["plugins"].pop("updater"),
             lambda c: c["plugins"]["updater"].update(pubkey=""),
@@ -165,6 +166,12 @@ class Smoke(unittest.TestCase):
 
     def test_unknown_argument_is_refused(self):
         self.assertEqual(run("bash", str(SCRIPTS / "smoke.sh"), "--bogus").returncode, 2)
+
+    def test_handshake_carries_a_semver_shell_version(self):
+        text = (SCRIPTS / "smoke.sh").read_text(encoding="utf-8")
+        match = re.search(r'"shell_version":"([^"]+)"', text)
+        self.assertIsNotNone(match)
+        self.assertRegex(match.group(1), r"^\d+\.\d+\.\d+$")
 
 
 class NoSecretsInRepository(unittest.TestCase):

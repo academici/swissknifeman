@@ -14,8 +14,8 @@ it only from the owner's environment (`TAURI_SIGNING_PRIVATE_KEY` holds the key 
    registries; `Cargo.lock` is not committed, commit it after the first build.
 2. **Rust core tests.** `cd packages/gui/desktop/src-tauri && cargo test -p skm-gui-core` (reads `desktop/tests/vectors/*.json`).
 3. **Sidecar.** `bash packages/gui/sidecar/build.sh` builds `sidecar/dist/gui-backend-<target-triple>/`. Copy the tree to
-   `packages/gui/desktop/src-tauri/binaries/gui-backend-onedir/` (it goes to `resources`) and the executable to
-   `binaries/gui-backend-<target-triple>` (`externalBin`; the suffix is the target triple, e.g. `x86_64-unknown-linux-gnu`).
+   `packages/gui/desktop/src-tauri/binaries/gui-backend-onedir/` (it goes to `resources`; the shell starts
+   `gui-backend/gui-backend` from the resource directory, so the executable stays next to its runtime directory; there is no `externalBin`).
 4. **Sidecar check.** `bash packages/gui/desktop/scripts/smoke.sh` starts the built `gui-backend`, sends the handshake and waits
    for `GUI_READY` (limit 20 s). Also request `GET /v1/bootstrap` with the Bearer secret against the printed port.
 5. **Frontend.** `npm --prefix packages/gui/frontend ci && npm --prefix packages/gui/frontend run build`.
@@ -49,7 +49,7 @@ each supported distribution.
 - The PyInstaller build of the sidecar: the `gui-backend.spec` data layout (`src/gui/lib`, `src/aicore/lib` with schemas and
   `unit.json`) and the in-place filter of `a.pure` are confirmed only by the first build; run the built `gui-backend`, give
   the handshake, get `GUI_READY` and `GET /v1/bootstrap`.
-- The `tauri build` bundle, the use of `generate_context!("../tauri.conf.json")` and `capabilities_path_pattern` with the config
+- The `tauri build` bundle, the use of `generate_context!("../tauri.conf.json")` and `set_current_dir("..")` in `build.rs` with the config
   outside the crate directory, and the shell plugin starting a sidecar from the onedir resource tree.
 - Signing, the update JSON against a real updater, the update flow of deb and AppImage.
 - Installation of deb and AppImage and the behaviour of the web view (WebKitGTK) with the CSP and the global `__TAURI__`.

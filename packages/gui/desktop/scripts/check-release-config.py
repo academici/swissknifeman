@@ -24,8 +24,8 @@ def structure(conf: dict) -> list:
         problems.append(f"bundle.targets must be exactly {sorted(TARGETS)}")
     if bundle.get("createUpdaterArtifacts") is not True:
         problems.append("bundle.createUpdaterArtifacts must be true")
-    if bundle.get("externalBin") != ["binaries/gui-backend"]:
-        problems.append("bundle.externalBin must be [binaries/gui-backend]")
+    if bundle.get("externalBin"):
+        problems.append("bundle.externalBin must be absent: the sidecar runs from the onedir resource tree")
     if not bundle.get("resources"):
         problems.append("bundle.resources must carry the sidecar onedir tree")
     updater = (conf.get("plugins") or {}).get("updater")

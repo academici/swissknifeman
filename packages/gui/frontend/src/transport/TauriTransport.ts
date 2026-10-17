@@ -110,12 +110,18 @@ export class TauriTransport implements Transport {
         return;
       }
       live.remoteId = id;
+      // The replacement subscription is live first, so no event falls between the snapshot and the stream.
+      if (live.started) {
+        live.started = false;
+        live.entry.lastSeq = null;
+        live.entry.handlers.onSnapshotRequired?.("cursor_expired");
+      }
     } catch {
       if (live.channel === channel) this.lost(live, channel, false);
     }
   }
 
-  /** The stream ended or could not start: resubscribe with backoff. The shell cannot resume, so the data is reloaded. */
+  /** The stream ended or could not start: resubscribe with backoff. The shell cannot resume, so the data is reloaded once the new subscription is established. */
   private lost(live: Live, channel: TauriChannel, wasStreaming: boolean): void {
     if (live.closed || live.channel !== channel) return;
     channel.onmessage = null;
@@ -126,10 +132,6 @@ export class TauriTransport implements Transport {
     live.attempt += 1;
     live.timer = this.schedule(() => {
       live.timer = null;
-      if (live.started) {
-        live.entry.lastSeq = null;
-        live.entry.handlers.onSnapshotRequired?.("cursor_expired");
-      }
       void this.open(live);
     }, delay);
   }

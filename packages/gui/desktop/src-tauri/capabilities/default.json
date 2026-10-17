@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: its own adapter commands, the gui-backend sidecar and the few plugin calls the UI needs",
+  "description": "Main window: its own adapter commands, the few plugin calls the UI needs",
   "windows": ["main"],
   "permissions": [
     "core:app:default",
@@ -13,10 +13,6 @@
     "allow-sidecar-status",
     "allow-sidecar-restart",
     "allow-sidecar-log",
-    {
-      "identifier": "shell:allow-spawn",
-      "allow": [{ "name": "binaries/gui-backend", "sidecar": true }]
-    },
     "updater:default",
     "dialog:allow-open",
     "deep-link:default"

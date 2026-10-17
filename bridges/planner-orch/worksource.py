@@ -414,14 +414,19 @@ _LANE: list = []  # the lane of the last ``_candidate`` (a batch the planner nam
 _FOREIGN = re.compile(r"OUTSIDE_SCOPE: foreign dirty paths: (.*?); use --leave-outside")
 
 
+_PLAN_FILE = re.compile(r"(^|/)plans/.+/(phases/[^/]+/[^/]+(\.json|/.*)|log\.jsonl|plan\.json)$")
+
+
+def _foreign_paths(text: str) -> list:
+    """The foreign dirty paths an ``OUTSIDE_SCOPE`` refusal names (empty for any other answer)."""
+    found = _FOREIGN.search(text or "")
+    return re.findall(r"'([^']+)'", found.group(1)) if found else []
+
+
 def _only_plan_dirt(text: str) -> bool:
     """``OUTSIDE_SCOPE`` whose foreign dirty paths are all plan files (``.../phases/P/Pn.m.json``, ``log.jsonl``)."""
-    found = _FOREIGN.search(text or "")
-    if not found:
-        return False
-    paths = re.findall(r"'([^']+)'", found.group(1))
-    return bool(paths) and all(re.search(r"(^|/)plans/.+/(phases/[^/]+/[^/]+(\.json|/.*)|log\.jsonl|plan\.json)$", path)
-                               for path in paths)
+    paths = _foreign_paths(text)
+    return bool(paths) and all(_PLAN_FILE.search(path) for path in paths)
 
 
 def op_commit(fields: dict) -> dict:
@@ -432,9 +437,14 @@ def op_commit(fields: dict) -> dict:
     if fields.get("actor"):
         argv += ["--actor", actor_text(fields["actor"])]
     done = plan_py([*argv, "--json"], fields.get("plans_root"))
-    if done.returncode and _only_plan_dirt(done.stderr or done.stdout):
+    left = []
+    foreign = _foreign_paths(done.stderr or done.stdout) if done.returncode else []
+    if foreign and (fields.get("paths") or _only_plan_dirt(done.stderr or done.stdout)):
         # Pieces of one batch are in progress together: the bookkeeping of the others (their item files, started in the
-        # same call) is dirty and belongs to their own commits, so it stays out of this one instead of refusing it.
+        # same call) is dirty and belongs to their own commits, so it stays out of this one instead of refusing it. With
+        # the paths of the piece named by the caller (the conductor reads them from git per executor round), any other
+        # dirty path is not this piece's work either (another session, the owner): it is left untouched and named.
+        left = [path for path in foreign if not _PLAN_FILE.search(path)]
         done = plan_py([*argv, "--leave-outside", "--json"], fields.get("plans_root"))
     if done.returncode:
         blocked = refusal_of(done.stderr or done.stdout, "COMMIT_REFUSED")
@@ -449,7 +459,10 @@ def op_commit(fields: dict) -> dict:
     if not result.get("sha"):
         return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_RESULT_INVALID",
                 "message": "plan.py commit created no commit"}
-    return {"op": "commit", "outcome": "committed", "sha": result["sha"]}
+    answer = {"op": "commit", "outcome": "committed", "sha": result["sha"]}
+    if left:
+        answer["message"] = ("left outside, not the work of this piece: " + ", ".join(left))[:1000]
+    return answer
 
 
 def op_release(fields: dict) -> dict:

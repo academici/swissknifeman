@@ -642,3 +642,27 @@ class OnlyPlanDirtTests(unittest.TestCase):
         mixed = "OUTSIDE_SCOPE: foreign dirty paths: 'plans/2026-X/phases/P11/P11.3.json', 'src/app.py'; use --leave-outside"
         self.assertFalse(worksource._only_plan_dirt(mixed))
         self.assertFalse(worksource._only_plan_dirt("NOTHING_TO_COMMIT: no changed paths"))
+
+    def commit_with(self, fields, refusal):
+        """``op_commit`` against a planner that refuses with ``refusal`` unless ``--leave-outside`` is passed."""
+        from types import SimpleNamespace
+        calls = []
+
+        def plan_py(argv, plans_root=None):
+            calls.append(argv)
+            if "--leave-outside" in argv:
+                return SimpleNamespace(returncode=0, stdout=json.dumps({"sha": "abc1234"}), stderr="")
+            return SimpleNamespace(returncode=1, stdout="", stderr=refusal)
+
+        with mock.patch.object(worksource, "plan_py", side_effect=plan_py):
+            return worksource.op_commit({"plan": "PLAN1", "ref": "P1.1", **fields}), calls
+
+    def test_dirt_of_another_session_stays_outside_a_commit_whose_paths_the_conductor_named(self):
+        refusal = ("OUTSIDE_SCOPE: foreign dirty paths: 'ideas/other-session.md', 'plans/2026-X/phases/P1/P1.2.json'; "
+                   "use --leave-outside or --path and plan.py log --type deviation")
+        answer, calls = self.commit_with({"paths": ["src/a.py"]}, refusal)
+        self.assertEqual((answer["outcome"], answer["sha"]), ("committed", "abc1234"))
+        self.assertEqual(answer["message"], "left outside, not the work of this piece: ideas/other-session.md")
+        self.assertEqual(len(calls), 2)
+        answer, _ = self.commit_with({}, refusal)  # no path set from the caller: foreign work is not guessed away
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "OUTSIDE_SCOPE"))

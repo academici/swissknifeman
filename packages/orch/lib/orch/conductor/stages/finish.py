@@ -78,5 +78,6 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         paths = sorted(set(report.get("changed_paths", [])) | {self._relative(item.artifacts) + "/"}
                        | self._research_paths(item))
         self._step(item, "commit", lambda: self._commit(item, paths),
-                   verdict=lambda result: f"{result['outcome']} {result.get('sha') or ''}".strip())
+                   verdict=lambda result: " ".join(part for part in (result["outcome"], result.get("sha"),
+                                                                     result.get("message")) if part))
     return status

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.2",
   "title": "Desktop shell: Rust-ядро (адаптер, READY, backoff, батчинг), приложение Tauri, conf и capabilities, векторы с Python-оракулом",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`desktop/src-tauri` как workspace: библиотека `core` (validate запроса адаптера, разбор READY, backoff и Policy перезапуска, Batcher) и `app` (Tauri 2: запуск sidecar, handshake, health-check, команды api_request/api_subscribe/sidecar_status/sidecar_restart/sidecar_log, single-instance); tauri.conf.json, capabilities/default.json; векторы `desktop/tests/vectors/*.json`; Python-оракул и структурные тесты конфигов.",
   "why": "Жёсткие риски (IPC-адаптер, секрет, изоляция webview): адаптер как произвольный прокси (хост/путь/заголовки от webview, `..`, percent-кодирование, тело без лимита); секрет достижим из frontend (команда возвращает заголовки/секрет, логирование); capabilities шире нужных или remote URL в CSP/окнах; подписка живёт после закрытия окна; бесконечный перезапуск sidecar без backoff. Rust не компилируется на этой машине (D26): ожидания вынесены в векторы, которые читают и Rust-тесты, и Python-оракул; конфиги проверяются структурно. Описание — knowledge/p6-design#desktop-shell.",
   "scope": {
@@ -179,6 +179,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/c75078d54ba39880b0dfdf42b19c8f4cb20511a6188eededcee61bedcf8a713c",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/42a4e6b2e25b12a9dd9e44cf824081159cf7055b668f5a97b7e11d9afe4a3214",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками.",
@@ -232,6 +242,53 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T03:23:01Z"
+  "result": {
+    "started_at": "2026-10-17T03:23:31Z",
+    "finished_at": "2026-10-17T05:11:11Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-6db73804ae1b5b94410a7c02-P6.2",
+    "notes": "Добавлены desktop/src-tauri: workspace с core (adapter, ready, backoff с Policy, batch, tests/vectors.rs) и app (main.rs, sidecar.rs, commands.rs, build.rs), tauri.conf.json, capabilities/default.json. Векторы adapter (35 случаев), ready (30), backoff (11 попыток и 10 сценариев Policy), batch (10). Python-оракул desktop_oracle.py, тесты test_desktop_vectors.py и test_desktop_config.py, docs/desktop.md, CHANGELOG. Python-тесты (оба файла, 23 теста) зелёные, все JSON в desktop/ читаются. Rust не компилировался и не запускался, поведение supervisor и адаптера на практике не проверено.\nChanged: CHANGELOG.md, packages/gui/desktop/src-tauri/Cargo.toml, packages/gui/desktop/src-tauri/app/Cargo.toml, packages/gui/desktop/src-tauri/app/build.rs, packages/gui/desktop/src-tauri/app/src/commands.rs, packages/gui/desktop/src-tauri/app/src/main.rs, packages/gui/desktop/src-tauri/app/src/sidecar.rs, packages/gui/desktop/src-tauri/capabilities/default.json, packages/gui/desktop/src-tauri/core/Cargo.toml, packages/gui/desktop/src-tauri/core/src/adapter.rs, packages/gui/desktop/src-tauri/core/src/backoff.rs, packages/gui/desktop/src-tauri/core/src/batch.rs, packages/gui/desktop/src-tauri/core/src/lib.rs, packages/gui/desktop/src-tauri/core/src/ready.rs, packages/gui/desktop/src-tauri/core/tests/vectors.rs, packages/gui/desktop/src-tauri/tauri.conf.json, packages/gui/desktop/tests/vectors/adapter.json, packages/gui/desktop/tests/vectors/backoff.json, packages/gui/desktop/tests/vectors/batch.json, packages/gui/desktop/tests/vectors/ready.json, packages/gui/docs/desktop.md, packages/gui/tests/desktop_oracle.py, packages/gui/tests/test_desktop_config.py, packages/gui/tests/test_desktop_vectors.py",
+    "deviations": [
+      "Корректное закрытие stdin sidecar невозможно через tauri-plugin-shell (CommandChild не закрывает stdin). Вместо шага «закрыть stdin, 10 с» supervisor шлёт SIGTERM командой `kill -TERM` (на unix), ждёт 15 с, затем kill. Это отличается от sidecar-protocol.",
+      "В capabilities нет разрешения single-instance: у плагина нет permissions, а несуществующий идентификатор ломал бы сборку. Single-instance подключён в main.rs. Allowlist теста — это набор из docs/desktop.md без него.",
+      "Расширены зависимости app сверх списка правила: serde, serde_json, tokio, futures-util и path-зависимость skm-gui-core. Нужны для аргументов и результатов команд, select! и разделения WebSocket. Политика Policy и Batcher лежат в core (backoff.rs, batch.rs), модуля supervisor нет, потому что его нет в write_set."
+    ],
+    "pending": [
+      "Для P6.4: в tauri.conf.json нет bundle.resources, plugins.updater и createUpdaterArtifacts. Плагин updater подключён в main.rs, но без plugins.updater в конфиге приложение может упасть при запуске. docs/desktop.md ссылается на docs/desktop-release.md, который создаёт P6.4. Резолв sidecar onedir через shell-плагин не проверен."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:11:11Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:11:11Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.2/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T05:11:11Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.2/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.2/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.2/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.2/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-17T05:11:11Z"
 }

@@ -1,0 +1,118 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/gui/desktop/src-tauri/Cargo.toml",
+    "packages/gui/desktop/src-tauri/app/Cargo.toml",
+    "packages/gui/desktop/src-tauri/app/build.rs",
+    "packages/gui/desktop/src-tauri/app/src/commands.rs",
+    "packages/gui/desktop/src-tauri/app/src/main.rs",
+    "packages/gui/desktop/src-tauri/app/src/sidecar.rs",
+    "packages/gui/desktop/src-tauri/capabilities/default.json",
+    "packages/gui/desktop/src-tauri/core/Cargo.toml",
+    "packages/gui/desktop/src-tauri/core/src/adapter.rs",
+    "packages/gui/desktop/src-tauri/core/src/backoff.rs",
+    "packages/gui/desktop/src-tauri/core/src/batch.rs",
+    "packages/gui/desktop/src-tauri/core/src/lib.rs",
+    "packages/gui/desktop/src-tauri/core/src/ready.rs",
+    "packages/gui/desktop/src-tauri/core/tests/vectors.rs",
+    "packages/gui/desktop/src-tauri/tauri.conf.json",
+    "packages/gui/desktop/tests/vectors/adapter.json",
+    "packages/gui/desktop/tests/vectors/backoff.json",
+    "packages/gui/desktop/tests/vectors/batch.json",
+    "packages/gui/desktop/tests/vectors/ready.json",
+    "packages/gui/docs/desktop.md",
+    "packages/gui/tests/desktop_oracle.py",
+    "packages/gui/tests/test_desktop_config.py",
+    "packages/gui/tests/test_desktop_vectors.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "владелец при первой сборке может получить ошибки компиляции или несовместимость версий",
+      "kind": "note",
+      "next": "cargo test -p skm-gui-core, затем cargo tauri build (runbook P6.4)",
+      "severity": "medium",
+      "text": "Не проверено, потому что нет Rust: компиляция core и app, cargo test (core/tests/vectors.rs), поведение supervisor (spawn, handshake, READY, health, перезапуск, SIGTERM), pump подписки и api_request. Не проверены версии крейтов: реестр crates.io недоступен из sandbox. Версии указаны по мажорам по памяти: tauri и плагины 2, reqwest 0.12, tokio-tungstenite 0.26, getrandom 0.3 (API getrandom::fill), base64 0.22. Cargo.lock не создавался."
+    },
+    {
+      "impact": "сборка может упасть на поиске конфига или capabilities",
+      "kind": "assumption",
+      "next": "владелец проверяет первую сборку; запасной вариант — перенести манифест app в src-tauri или добавить ссылку на конфиг",
+      "severity": "medium",
+      "text": "Структура репозитория: Rust-крейт app лежит в src-tauri/app, а tauri.conf.json и capabilities — в src-tauri. Я использовал generate_context!(\"../tauri.conf.json\") и Attributes::capabilities_path_pattern(\"../capabilities/**/*\"). Не уверен, что оба вызова существуют в tauri 2, и что tauri-build и CLI находят конфиг вне CARGO_MANIFEST_DIR."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/gui/desktop/src-tauri/app/src/sidecar.rs"
+      ],
+      "impact": "порядок завершения sidecar; sidecar обрабатывает SIGTERM так же, как EOF; на Windows SIGTERM не отправляется",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Корректное закрытие stdin sidecar невозможно через tauri-plugin-shell (CommandChild не закрывает stdin). Вместо шага «закрыть stdin, 10 с» supervisor шлёт SIGTERM командой `kill -TERM` (на unix), ждёт 15 с, затем kill. Это отличается от sidecar-protocol."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/gui/desktop/src-tauri/capabilities/default.json"
+      ],
+      "impact": "множество разрешений в capabilities на один пункт короче перечня в дизайне",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "В capabilities нет разрешения single-instance: у плагина нет permissions, а несуществующий идентификатор ломал бы сборку. Single-instance подключён в main.rs. Allowlist теста — это набор из docs/desktop.md без него."
+    },
+    {
+      "impact": "поверхность webview шире необходимого",
+      "kind": "note",
+      "next": "ревью: решить, убирать ли shell:allow-spawn вместе с правкой allowlist теста",
+      "severity": "low",
+      "text": "Дизайн требует shell с sidecar gui-backend, поэтому в capabilities есть shell:allow-spawn со scope на binaries/gui-backend. Это позволяет webview запустить ещё один экземпляр sidecar (без секрета ничего не получит; второй упрётся в InstanceLock). Rust запускает sidecar сам и этого разрешения не требует."
+    },
+    {
+      "class": "dependency",
+      "evidence": [
+        "packages/gui/desktop/src-tauri/app/Cargo.toml"
+      ],
+      "impact": "Cargo.toml app",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Расширены зависимости app сверх списка правила: serde, serde_json, tokio, futures-util и path-зависимость skm-gui-core. Нужны для аргументов и результатов команд, select! и разделения WebSocket. Политика Policy и Batcher лежат в core (backoff.rs, batch.rs), модуля supervisor нет, потому что его нет в write_set."
+    },
+    {
+      "impact": "контракт между Rust и frontend P6.3",
+      "kind": "note",
+      "next": "P6.3 учитывает формат; при необходимости расширить api_subscribe курсором",
+      "text": "Для P6.3 (TauriTransport): формат сообщений Channel — JSON-массив кадров; первый элемент может быть {\"dropped\":N}, в конце приходит [{\"closed\":true}]. api_subscribe шлёт subscribe с cursor и epoch равными null (replay — через повторную подписку и snapshot_required). id подписки в кадре — s<N>. Описано в docs/desktop.md."
+    },
+    {
+      "impact": "сборка и запуск приложения до P6.4",
+      "kind": "pending",
+      "next": "P6.4: добавить updater-конфиг (pubkey-плейсхолдер), resources onedir и runbook",
+      "text": "Для P6.4: в tauri.conf.json нет bundle.resources, plugins.updater и createUpdaterArtifacts. Плагин updater подключён в main.rs, но без plugins.updater в конфиге приложение может упасть при запуске. docs/desktop.md ссылается на docs/desktop-release.md, который создаёт P6.4. Резолв sidecar onedir через shell-плагин не проверен."
+    },
+    {
+      "impact": "возможна лишняя правка в коммите координатора",
+      "kind": "note",
+      "next": "координатор проверяет git status перед коммитом",
+      "text": "В рабочем дереве есть изменения, не связанные с этим пунктом: lock-файлы (docs, frontend, maind, skiller, requirements.lock) и skills.json. Появились между началом сессии и концом работы. Я их не трогал и в changed_paths не включал."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "desktop/src-tauri/core/src/adapter.rs и vectors/adapter.json (границы IPC-адаптера)",
+      "app/src/commands.rs и sidecar.rs: секрет не уходит в frontend и в лог",
+      "capabilities/default.json против allowlist",
+      "компилируемость Rust, которая не проверялась"
+    ],
+    "reason_codes": [
+      "security_touched",
+      "low_confidence",
+      "public_api_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "frontier"
+  },
+  "status": "done_with_deviations",
+  "summary": "Добавлены desktop/src-tauri: workspace с core (adapter, ready, backoff с Policy, batch, tests/vectors.rs) и app (main.rs, sidecar.rs, commands.rs, build.rs), tauri.conf.json, capabilities/default.json. Векторы adapter (35 случаев), ready (30), backoff (11 попыток и 10 сценариев Policy), batch (10). Python-оракул desktop_oracle.py, тесты test_desktop_vectors.py и test_desktop_config.py, docs/desktop.md, CHANGELOG. Python-тесты (оба файла, 23 теста) зелёные, все JSON в desktop/ читаются. Rust не компилировался и не запускался, поведение supervisor и адаптера на практике не проверено."
+}

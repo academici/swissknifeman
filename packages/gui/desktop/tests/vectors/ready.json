@@ -1,0 +1,276 @@
+{
+ "about": "ready::parse(line) -> Ready{port,epoch,pid,backend,gui_protocol{min,max}} or READY_INVALID",
+ "cases": [
+  {
+   "name": "valid",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "ok": {
+     "port": 43111,
+     "epoch": "e-1",
+     "pid": 4242,
+     "backend": "0.1.0",
+     "gui_protocol": {
+      "min": "1",
+      "max": "1"
+     }
+    }
+   }
+  },
+  {
+   "name": "valid_trailing_newline",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}\n",
+   "expect": {
+    "ok": {
+     "port": 43111,
+     "epoch": "e-1",
+     "pid": 4242,
+     "backend": "0.1.0",
+     "gui_protocol": {
+      "min": "1",
+      "max": "1"
+     }
+    }
+   }
+  },
+  {
+   "name": "valid_crlf",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}\r\n",
+   "expect": {
+    "ok": {
+     "port": 43111,
+     "epoch": "e-1",
+     "pid": 4242,
+     "backend": "0.1.0",
+     "gui_protocol": {
+      "min": "1",
+      "max": "1"
+     }
+    }
+   }
+  },
+  {
+   "name": "valid_extra_field",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"},\"extra\":\"x\"}",
+   "expect": {
+    "ok": {
+     "port": 43111,
+     "epoch": "e-1",
+     "pid": 4242,
+     "backend": "0.1.0",
+     "gui_protocol": {
+      "min": "1",
+      "max": "1"
+     }
+    }
+   }
+  },
+  {
+   "name": "valid_port_max",
+   "line": "GUI_READY {\"v\":1,\"port\":65535,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "ok": {
+     "port": 65535,
+     "epoch": "e-1",
+     "pid": 4242,
+     "backend": "0.1.0",
+     "gui_protocol": {
+      "min": "1",
+      "max": "1"
+     }
+    }
+   }
+  },
+  {
+   "name": "valid_port_min",
+   "line": "GUI_READY {\"v\":1,\"port\":1,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "ok": {
+     "port": 1,
+     "epoch": "e-1",
+     "pid": 4242,
+     "backend": "0.1.0",
+     "gui_protocol": {
+      "min": "1",
+      "max": "1"
+     }
+    }
+   }
+  },
+  {
+   "name": "no_prefix",
+   "line": "{\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "prefix_without_space",
+   "line": "GUI_READY{\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "lowercase_prefix",
+   "line": "gui_ready {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "leading_space",
+   "line": " GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "empty",
+   "line": "",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "prefix_only",
+   "line": "GUI_READY ",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "not_json",
+   "line": "GUI_READY {oops",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "json_array",
+   "line": "GUI_READY [1]",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "v_two",
+   "line": "GUI_READY {\"v\":2,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "v_missing",
+   "line": "GUI_READY {\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "v_string",
+   "line": "GUI_READY {\"v\":\"1\",\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "v_bool",
+   "line": "GUI_READY {\"v\":true,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "port_zero",
+   "line": "GUI_READY {\"v\":1,\"port\":0,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "port_too_large",
+   "line": "GUI_READY {\"v\":1,\"port\":65536,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "port_negative",
+   "line": "GUI_READY {\"v\":1,\"port\":-1,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "port_string",
+   "line": "GUI_READY {\"v\":1,\"port\":\"43111\",\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "port_float",
+   "line": "GUI_READY {\"v\":1,\"port\":43111.5,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "port_missing",
+   "line": "GUI_READY {\"v\":1,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "epoch_empty",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "epoch_missing",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "pid_zero",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":0,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "backend_missing",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"gui_protocol\":{\"min\":\"1\",\"max\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "protocol_missing",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\"}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "protocol_no_max",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":\"1\"}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  },
+  {
+   "name": "protocol_not_strings",
+   "line": "GUI_READY {\"v\":1,\"port\":43111,\"epoch\":\"e-1\",\"pid\":4242,\"backend\":\"0.1.0\",\"gui_protocol\":{\"min\":1,\"max\":1}}",
+   "expect": {
+    "error": "READY_INVALID"
+   }
+  }
+ ]
+}

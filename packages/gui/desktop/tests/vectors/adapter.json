@@ -1,0 +1,320 @@
+{
+ "about": "adapter::validate(method, path, body_len); checks in order method, path, body",
+ "cases": [
+  {
+   "name": "get_bootstrap",
+   "method": "GET",
+   "path": "/v1/bootstrap",
+   "body_len": 0,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "get_with_query",
+   "method": "GET",
+   "path": "/v1/runs/r1/log?cursor=10",
+   "body_len": 0,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "post_query",
+   "method": "POST",
+   "path": "/v1/queries/gui-hub.fleet",
+   "body_len": 120,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "patch_config",
+   "method": "PATCH",
+   "path": "/v1/config/gui/layers/machine",
+   "body_len": 64,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "get_colon_verb",
+   "method": "GET",
+   "path": "/v1/runs/r1:cancel",
+   "body_len": 0,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "percent_space_allowed",
+   "method": "GET",
+   "path": "/v1/projects?q=a%20b",
+   "body_len": 0,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "path_just_prefix",
+   "method": "GET",
+   "path": "/v1/",
+   "body_len": 0,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "path_len_2048",
+   "method": "GET",
+   "path": "/v1/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "body_len": 0,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "body_limit_exact",
+   "method": "POST",
+   "path": "/v1/queries/x",
+   "body_len": 1048576,
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "method_delete",
+   "method": "DELETE",
+   "path": "/v1/projects/p1",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_METHOD"
+   }
+  },
+  {
+   "name": "method_put",
+   "method": "PUT",
+   "path": "/v1/projects/p1",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_METHOD"
+   }
+  },
+  {
+   "name": "method_head",
+   "method": "HEAD",
+   "path": "/v1/bootstrap",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_METHOD"
+   }
+  },
+  {
+   "name": "method_lowercase",
+   "method": "get",
+   "path": "/v1/bootstrap",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_METHOD"
+   }
+  },
+  {
+   "name": "path_without_v1",
+   "method": "GET",
+   "path": "/bootstrap",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_v1_no_slash",
+   "method": "GET",
+   "path": "/v1",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_dotdot",
+   "method": "GET",
+   "path": "/v1/../x",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_encoded_dotdot",
+   "method": "GET",
+   "path": "/v1/%2e%2e/x",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_encoded_dotdot_upper",
+   "method": "GET",
+   "path": "/v1/%2E%2E/x",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_half_encoded_dotdot",
+   "method": "GET",
+   "path": "/v1/.%2e/x",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_backslash",
+   "method": "GET",
+   "path": "/v1/a\\b",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_encoded_backslash",
+   "method": "GET",
+   "path": "/v1/a%5Cb",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_nul",
+   "method": "GET",
+   "path": "/v1/a\u0000b",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_encoded_nul",
+   "method": "GET",
+   "path": "/v1/a%00b",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_space",
+   "method": "GET",
+   "path": "/v1/a b",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_newline",
+   "method": "GET",
+   "path": "/v1/a\nb",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_hash",
+   "method": "GET",
+   "path": "/v1/a#frag",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_url_with_host",
+   "method": "GET",
+   "path": "http://x/v1/",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_scheme_relative",
+   "method": "GET",
+   "path": "//evil/v1/x",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_non_ascii",
+   "method": "GET",
+   "path": "/v1/é",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_bad_percent",
+   "method": "GET",
+   "path": "/v1/a%zz",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_truncated_percent",
+   "method": "GET",
+   "path": "/v1/a%2",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "path_len_2049",
+   "method": "GET",
+   "path": "/v1/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "body_len": 0,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  },
+  {
+   "name": "body_too_large",
+   "method": "POST",
+   "path": "/v1/queries/x",
+   "body_len": 1048577,
+   "expect": {
+    "error": "ADAPTER_BODY_TOO_LARGE"
+   }
+  },
+  {
+   "name": "method_checked_before_path",
+   "method": "DELETE",
+   "path": "/x",
+   "body_len": 2000000,
+   "expect": {
+    "error": "ADAPTER_METHOD"
+   }
+  },
+  {
+   "name": "path_checked_before_body",
+   "method": "POST",
+   "path": "/x",
+   "body_len": 2000000,
+   "expect": {
+    "error": "ADAPTER_PATH"
+   }
+  }
+ ]
+}

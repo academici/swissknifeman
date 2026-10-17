@@ -1,0 +1,11 @@
+[package]
+name = "skm-gui-core"
+description = "Pure logic of the SKM GUI desktop shell (no Tauri): adapter validation, READY parsing, restart policy, batching"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

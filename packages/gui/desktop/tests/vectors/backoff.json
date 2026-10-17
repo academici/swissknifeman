@@ -1,0 +1,398 @@
+{
+ "about": "delays: backoff::delay_ms(attempt); policy: Policy.on_exit(started,exited) per event, 'reset' calls Policy.reset (expect null); values are restart delay in ms or 'failed'",
+ "delays": [
+  {
+   "attempt": 0,
+   "ms": 500
+  },
+  {
+   "attempt": 1,
+   "ms": 1000
+  },
+  {
+   "attempt": 2,
+   "ms": 2000
+  },
+  {
+   "attempt": 3,
+   "ms": 4000
+  },
+  {
+   "attempt": 4,
+   "ms": 8000
+  },
+  {
+   "attempt": 5,
+   "ms": 16000
+  },
+  {
+   "attempt": 6,
+   "ms": 30000
+  },
+  {
+   "attempt": 7,
+   "ms": 30000
+  },
+  {
+   "attempt": 8,
+   "ms": 30000
+  },
+  {
+   "attempt": 9,
+   "ms": 30000
+  },
+  {
+   "attempt": 10,
+   "ms": 30000
+  }
+ ],
+ "policy": [
+  {
+   "name": "crash_loop_fails_on_sixth",
+   "events": [
+    {
+     "started_ms": 0,
+     "exited_ms": 1000
+    },
+    {
+     "started_ms": 1500,
+     "exited_ms": 2000
+    },
+    {
+     "started_ms": 3000,
+     "exited_ms": 3500
+    },
+    {
+     "started_ms": 5500,
+     "exited_ms": 6000
+    },
+    {
+     "started_ms": 10000,
+     "exited_ms": 10500
+    },
+    {
+     "started_ms": 18500,
+     "exited_ms": 19000
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    "failed"
+   ]
+  },
+  {
+   "name": "stable_run_resets_attempt",
+   "events": [
+    {
+     "started_ms": 0,
+     "exited_ms": 1000
+    },
+    {
+     "started_ms": 1500,
+     "exited_ms": 2000
+    },
+    {
+     "started_ms": 3000,
+     "exited_ms": 70000
+    },
+    {
+     "started_ms": 70500,
+     "exited_ms": 71000
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    500,
+    1000
+   ]
+  },
+  {
+   "name": "stable_boundary_59999_keeps",
+   "events": [
+    {
+     "started_ms": 0,
+     "exited_ms": 10
+    },
+    {
+     "started_ms": 20,
+     "exited_ms": 60019
+    }
+   ],
+   "expect": [
+    500,
+    1000
+   ]
+  },
+  {
+   "name": "stable_boundary_60000_resets",
+   "events": [
+    {
+     "started_ms": 0,
+     "exited_ms": 10
+    },
+    {
+     "started_ms": 20,
+     "exited_ms": 60020
+    }
+   ],
+   "expect": [
+    500,
+    500
+   ]
+  },
+  {
+   "name": "window_expired_drops_old_exits",
+   "events": [
+    {
+     "started_ms": 10,
+     "exited_ms": 100
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 200
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 300
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 400
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 500
+    },
+    {
+     "started_ms": 400000,
+     "exited_ms": 400100
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    16000
+   ]
+  },
+  {
+   "name": "window_boundary_300000_counts",
+   "events": [
+    {
+     "started_ms": 10,
+     "exited_ms": 100
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 200
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 300
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 400
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 500
+    },
+    {
+     "started_ms": 300000,
+     "exited_ms": 300100
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    "failed"
+   ]
+  },
+  {
+   "name": "window_boundary_300001_expires",
+   "events": [
+    {
+     "started_ms": 10,
+     "exited_ms": 100
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 200
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 300
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 400
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 500
+    },
+    {
+     "started_ms": 300000,
+     "exited_ms": 300101
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    16000
+   ]
+  },
+  {
+   "name": "failed_is_sticky",
+   "events": [
+    {
+     "started_ms": 0,
+     "exited_ms": 1
+    },
+    {
+     "started_ms": 2,
+     "exited_ms": 3
+    },
+    {
+     "started_ms": 4,
+     "exited_ms": 5
+    },
+    {
+     "started_ms": 6,
+     "exited_ms": 7
+    },
+    {
+     "started_ms": 8,
+     "exited_ms": 9
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 11
+    },
+    {
+     "started_ms": 12,
+     "exited_ms": 13
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    "failed",
+    "failed"
+   ]
+  },
+  {
+   "name": "reset_clears_failed",
+   "events": [
+    {
+     "started_ms": 0,
+     "exited_ms": 1
+    },
+    {
+     "started_ms": 2,
+     "exited_ms": 3
+    },
+    {
+     "started_ms": 4,
+     "exited_ms": 5
+    },
+    {
+     "started_ms": 6,
+     "exited_ms": 7
+    },
+    {
+     "started_ms": 8,
+     "exited_ms": 9
+    },
+    {
+     "started_ms": 10,
+     "exited_ms": 11
+    },
+    "reset",
+    {
+     "started_ms": 100,
+     "exited_ms": 101
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    "failed",
+    null,
+    500
+   ]
+  },
+  {
+   "name": "cap_at_30000_with_spread_exits",
+   "events": [
+    {
+     "started_ms": 0,
+     "exited_ms": 10
+    },
+    {
+     "started_ms": 100000,
+     "exited_ms": 100010
+    },
+    {
+     "started_ms": 200000,
+     "exited_ms": 200010
+    },
+    {
+     "started_ms": 300000,
+     "exited_ms": 300010
+    },
+    {
+     "started_ms": 400000,
+     "exited_ms": 400010
+    },
+    {
+     "started_ms": 500000,
+     "exited_ms": 500010
+    },
+    {
+     "started_ms": 600000,
+     "exited_ms": 600010
+    },
+    {
+     "started_ms": 700000,
+     "exited_ms": 700010
+    },
+    {
+     "started_ms": 800000,
+     "exited_ms": 800010
+    }
+   ],
+   "expect": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    16000,
+    30000,
+    30000,
+    30000
+   ]
+  }
+ ]
+}

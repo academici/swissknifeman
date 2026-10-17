@@ -87,10 +87,12 @@ async def add_project(request: Request) -> Response:
 @endpoint
 async def session_token(request: Request) -> Response:
     """A new one-time browser URL; only for the bearer of the session secret (the CLI, the desktop shell)."""
+    state = _state(request)
+    if state.desktop:
+        raise GuiError("PERMISSION_DENIED", "the desktop backend has no browser clients")
     if request.scope["state"]["auth"] != "bearer":
         raise GuiError("PERMISSION_DENIED", "only the session secret may issue browser tokens")
     await read_json(request, allowed=set())
-    state = _state(request)
     return json_response({"url": state.url(state.sessions.new_token())}, 201)
 
 

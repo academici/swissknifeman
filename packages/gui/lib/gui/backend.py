@@ -259,6 +259,8 @@ class BackendState:
     db_lock: threading.RLock = field(default_factory=threading.RLock)
     query_cache: Dict[Tuple[str, ...], Tuple[float, Any]] = field(default_factory=dict)
     loop: Any = None  # the event loop of the running backend (set by start)
+    mode: str = "browser"  # "desktop": the sidecar of the Tauri shell (bearer only, no cookie, no frontend)
+    shell_version: Optional[str] = None  # version of the desktop shell (mode desktop)
 
     def __post_init__(self) -> None:
         self.registry = ProjectRegistry(self.conn)
@@ -400,10 +402,17 @@ class BackendState:
         for owner in sorted(self.catalog.owners.values(), key=lambda entry: entry.source.owner) if self.catalog else ():
             if owner.version:
                 units.append({"id": owner.source.owner, "version": owner.version})
-        return {"$schema": "urn:swissknifeman:gui:bootstrap:v1", "mode": "browser", "epoch": self.epoch,
-                "backend": {"version": __version__, "python": platform.python_version()},
-                "gui_protocol": dict(GUI_PROTOCOL), "contracts": unit_contracts(), "units": units,
-                "features": list(self.features), "platform": platform_info()}
+        document = {"$schema": "urn:swissknifeman:gui:bootstrap:v1", "mode": self.mode, "epoch": self.epoch,
+                    "backend": {"version": __version__, "python": platform.python_version()},
+                    "gui_protocol": dict(GUI_PROTOCOL), "contracts": unit_contracts(), "units": units,
+                    "features": list(self.features), "platform": platform_info()}
+        if self.mode == "desktop":
+            document["shell"] = {"version": self.shell_version or "0.0.0"}
+        return document
+
+    @property
+    def desktop(self) -> bool:
+        return self.mode == "desktop"
 
     def url(self, token: str) -> str:
         return f"http://127.0.0.1:{self.port}/?t={token}"

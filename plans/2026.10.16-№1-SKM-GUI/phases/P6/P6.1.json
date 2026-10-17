@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.1",
   "title": "Sidecar backend: gui serve --sidecar, stdin-handshake, GUI_READY, режим desktop (только Bearer), PyInstaller spec и build.sh",
-  "status": "todo",
+  "status": "done",
   "summary": "Режим `gui serve --sidecar` по knowledge/p6-design#sidecar-protocol: разбор stdin-handshake, `BackendState(mode='desktop')` с секретом из Rust, отключение токен-обмена/cookie/раздачи frontend, отсутствие backend.json, строка GUI_READY, watchdog EOF stdin, graceful shutdown; `sidecar/entry.py`, `sidecar/gui-backend.spec`, `sidecar/build.sh` (gated).",
   "why": "Жёсткие риски (auth, секреты, осиротевшие процессы): секрет попал в argv/env/диск/лог (I6, I9); в desktop остался путь для браузера (cookie, `GET /?t=`, `POST /v1/session/tokens`); второй sidecar при живом backend; sidecar переживает родителя; READY напечатан до того, как порт принимает соединения; stdout засорён после READY; bootstrap отдаёт browser вместо desktop. Протокол — knowledge/p6-design#sidecar-protocol, решение D28.",
   "scope": {
@@ -165,6 +165,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/577a3dc4466bb039734f2ed9d5a9cc9f7dc562a592a9129952b17c017907515a",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками.",
@@ -219,6 +225,48 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T03:23:00Z"
+  "result": {
+    "started_at": "2026-10-17T03:23:29Z",
+    "finished_at": "2026-10-17T04:59:46Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-f10deabe906accaf5ac7288c-P6.1",
+    "notes": "Добавлен gui serve --sidecar (lib/gui/sidecar.py, cli._serve_sidecar): одна строка handshake со stdin (v, secret >=32 base64url, port, shell_version; SIDECAR_HANDSHAKE_INVALID без значений, exit 2, таймаут 10 с), BackendState(mode='desktop', shell_version) с Sessions(secret), без backend.json, одна строка GUI_READY после bind, watchdog EOF stdin -> SIGTERM -> graceful. Режим desktop: bootstrap с shell.version, GET /?t= -> 404, cookie игнорируется, POST /v1/session/tokens -> PERMISSION_DENIED, frontend не раздаётся. sidecar/entry.py, gui-backend.spec, build.sh (gated). Тесты test_sidecar.py (парсер, чтение, ready, ASGI desktop) и test_sidecar_process.py (подпроцесс). Запущены только 8 тестов парсера, чтения handshake и ready_line (OK) и ручные проверки отказов handshake и build.sh; ASGI- и подпроцессные тесты не запускались (sandbox не даёт читать requirements.lock).\nChanged: CHANGELOG.md, packages/gui/docs/api.md, packages/gui/lib/gui/backend.py, packages/gui/lib/gui/cli.py, packages/gui/lib/gui/http/routes_core.py, packages/gui/lib/gui/http/security.py, packages/gui/lib/gui/http/static.py, packages/gui/lib/gui/sidecar.py, packages/gui/sidecar/build.sh, packages/gui/sidecar/entry.py, packages/gui/sidecar/gui-backend.spec, packages/gui/tests/test_sidecar.py, packages/gui/tests/test_sidecar_process.py",
+    "pending": [
+      "build.sh складывает результат в sidecar/dist/gui-backend-<target-triple>/gui-backend (каталог onedir, не один файл). Для Tauri externalBin с onedir P6.4 должен решить, как кладётся каталог (resources) и как запускается внутренний исполняемый файл. Каталог sidecar/dist не добавлен в .gitignore (вне write set)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T04:59:46Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.1/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T04:59:46Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.1/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T04:59:46Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.1/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.1/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.1/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.1/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-17T04:59:46Z"
 }

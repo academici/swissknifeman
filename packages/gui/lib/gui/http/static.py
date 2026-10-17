@@ -21,9 +21,11 @@ NOT_BUILT_PAGE = ("<!doctype html><meta charset=\"utf-8\"><title>SKM GUI</title>
 
 
 async def frontend(request: Request) -> Response:
+    state = request.app.state.backend
+    if state.desktop:  # the webview loads its bundled frontend; this backend serves the API only
+        return error_response(GuiError("NOT_FOUND", f"no endpoint {request.method} {request.url.path}"))
     if request.scope["state"].get("auth") == "exchange":
         return await exchange(request)
-    state = request.app.state.backend
     if request.url.path == "/v1" or request.url.path.startswith("/v1/") or request.method not in ("GET", "HEAD"):
         return error_response(GuiError("NOT_FOUND", f"no endpoint {request.method} {request.url.path}"))
     root = os.path.realpath(state.frontend_dir)

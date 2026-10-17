@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T032328Z-36051a:P6.1:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN5.P6.1",
+  "candidate": {
+    "head": "734f1c9c8510154be3154907e83c5b0c35efb745",
+    "dirty_digest": "89fb96f9dcfaaa00104d60230414b10f8ff036a3bfcb6c1088eb6054d47b6502"
+  },
+  "started_at": "2026-10-17T04:59:16Z",
+  "procedure": {
+    "cmd": "bash packages/gui/sidecar/build.sh --allow-missing",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T04:59:16Z"
+}

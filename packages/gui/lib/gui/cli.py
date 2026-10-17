@@ -50,6 +50,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--project", metavar="DIR", default=None, help="register this project (default: the current one)")
     p.add_argument("--no-browser", action="store_true", help="do not start the browser")
     p.add_argument("--detached", action="store_true", help=argparse.SUPPRESS)  # started by gui open: no URL
+    p.add_argument("--sidecar", action="store_true",
+                   help="run as the sidecar of the desktop shell: handshake line on stdin, GUI_READY on stdout")
     p = sub.add_parser("open", help="open the GUI in the browser, starting the backend when none runs")
     p.add_argument("--project", metavar="DIR", default=None, help="register this project (default: the current one)")
     p.add_argument("--no-browser", action="store_true", help="only print the URL")
@@ -148,8 +150,76 @@ def _browse(url: str, settings, no_browser: bool) -> None:
         webbrowser.open(url)
 
 
+def _serve_sidecar(args: argparse.Namespace) -> int:
+    """``gui serve --sidecar`` (decision D28): the secret comes on stdin, never in argv, env, disk or log."""
+    import os
+    import signal
+
+    from . import deps, sidecar
+    from .backend import GUI_PROTOCOL, BackendError, BackendState, InstanceLock, Sessions, gui_state_dir
+    from .core.projects import ProjectRegistry
+    from .errors import GuiError
+    from .settings import load
+    from .storage import db
+
+    if args.detached or args.port is not None:
+        print("gui: usage: --sidecar cannot be combined with --detached or --port (the port is in the handshake)",
+              file=sys.stderr)
+        return EXIT_USAGE
+    stdin = sidecar.stdin_stream()
+    try:
+        handshake = sidecar.read_handshake(stdin)
+    except sidecar.HandshakeError as error:
+        print(str(error), file=sys.stderr, flush=True)
+        return EXIT_USAGE
+    if not getattr(sys, "frozen", False):  # the frozen backend carries its packages
+        try:
+            deps.activate()
+        except deps.GuiDepsError as error:
+            return _fail(error.code, error.message)
+    folder = gui_state_dir()
+    try:
+        lock = InstanceLock(folder).acquire()
+    except BackendError as error:
+        return _fail(error.code, error.message)
+    state = None
+    try:
+        settings = load()
+        conn = db.open_db(folder / db.DB_NAME)
+        if args.project:
+            ProjectRegistry(conn).add(Path(args.project).expanduser().resolve(), source="open")
+        from .http import server
+
+        sock = server.bind(handshake.port)
+        state = BackendState(settings=settings, conn=conn, env=os.environ, port=sock.getsockname()[1],
+                             sessions=Sessions(handshake.secret), state_folder=folder, mode="desktop",
+                             shell_version=handshake.shell_version)
+        from . import __version__
+
+        # The handler is in place before the watchdog can fire; uvicorn then stops gracefully like on SIGTERM.
+        signal.signal(signal.SIGTERM, server._stop)
+        try:
+            sys.stdout.write(sidecar.ready_line(state.port, state.epoch, os.getpid(), __version__, GUI_PROTOCOL)
+                             + "\n")
+            sys.stdout.flush()
+            sidecar.watch_stdin(stdin, lambda: os.kill(os.getpid(), signal.SIGTERM))
+            server.serve(state, sock)
+        except server._Stopped:  # EOF or SIGTERM before uvicorn took over the signals
+            pass
+    except GuiError as error:
+        return _fail(error.code, error.message)
+    finally:
+        if state is not None:
+            state.conn.close()
+        lock.release()
+    return 0
+
+
 def _serve(args: argparse.Namespace) -> int:
     import os
+
+    if args.sidecar:
+        return _serve_sidecar(args)
 
     from . import deps
     from .backend import BackendError, BackendState, InstanceLock, gui_state_dir, remove_runtime, write_runtime

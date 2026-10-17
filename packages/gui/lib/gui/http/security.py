@@ -4,7 +4,7 @@ Order: (1) ``Host`` must be exactly ``127.0.0.1:<port>``, ``localhost:<port>`` o
 rebinding), before anything else; (2) a present ``Origin`` must be one of the same three ``http://`` origins, and a
 WebSocket must send one; (3) a body over 1 MiB is ``PAYLOAD_TOO_LARGE`` and an unsafe method needs
 ``Content-Type: application/json``; (4) authentication: ``Authorization: Bearer <session secret>`` or the session
-cookie (the token exchange ``GET /?t=`` is the only open door), and an unsafe method authenticated by cookie must
+cookie (the token exchange ``GET /?t=`` is the only open door; in desktop mode there is no cookie and no exchange), and an unsafe method authenticated by cookie must
 carry an ``Origin`` (CSRF); (5) security headers on every response; no CORS header is ever sent.
 """
 from __future__ import annotations
@@ -110,6 +110,8 @@ class SecurityMiddleware:
                     raise GuiError("INPUT_INVALID", "a request that changes state must send application/json",
                                    issues=[{"pointer": "", "code": "content_type",
                                             "message": "expected Content-Type: application/json"}])
+        if self.state.desktop and is_exchange(scope):  # no browser client in the desktop sidecar
+            raise GuiError("NOT_FOUND", "no endpoint GET /")
         if is_exchange(scope):
             return receive, "exchange"
         authorization = _single(headers, "authorization")
@@ -118,9 +120,10 @@ class SecurityMiddleware:
             if scheme.lower() != "bearer" or not value or not self.state.sessions.bearer_ok(value.strip()):
                 raise GuiError("AUTH_INVALID", "the bearer credential is not valid")
             return receive, "bearer"
-        cookie = _cookie(headers)
+        cookie = None if self.state.desktop else _cookie(headers)  # desktop: the bearer is the only credential
         if cookie is None:
-            raise GuiError("AUTH_REQUIRED", "sign in with the URL printed by `gui open`")
+            raise GuiError("AUTH_REQUIRED", "send Authorization: Bearer" if self.state.desktop
+                           else "sign in with the URL printed by `gui open`")
         if not self.state.sessions.cookie_ok(cookie):
             raise GuiError("AUTH_INVALID", "the session is not valid; open a new URL with `gui open`")
         if (method in UNSAFE or websocket) and origin is None:

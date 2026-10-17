@@ -50,6 +50,7 @@
 
 ### Fixed
 
+- orch group review follow-up: when the reviewed pieces have command checks the follow-up input carries only those (no `observed` procedure check `V1`), so a correction no longer needs an extra executor round and a full checks pass to report a verdict; a follow-up without commands keeps the procedure check.
 - orch conductor: a procedure check without a verdict (`observed`) no longer runs ahead of the command checks and no longer skips them while it is red; before, a correction round whose `V1` stayed red ended `ITEM_BLOCKED` with the other checks unrun.
 - gui review of phase P2: a coalesced `.progress` frame no longer jumps over a log frame queued after it (the client dropped the lower `seq`); `gui serve --detached` started by `gui open` no longer registers its own working folder (the state folder) as a trusted project; `Broker.stop` before the waiter task exists now waits on the process and still sends SIGKILL.
 - harness review-gate `plan-check` skipped every plan when the planner was installed only as the `plan.py` link of `install.sh`: it now finds `plan.py` on PATH after `planner`, in the order of `aicore.util.partners` (its test `test_broken_plan_json_is_a_violation` failed on `main`).

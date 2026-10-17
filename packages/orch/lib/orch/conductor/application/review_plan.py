@@ -222,11 +222,14 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
         return None
     goal = ("Correct these confirmed review findings of the pieces " + ", ".join(refs) + ", each in the file it names; change "
             "nothing else:\n" + "\n".join(f"- [{row['severity']}] {row['text']}" for row in loud))
-    checks = [f"V{number}={command}" for number, command in enumerate(piece_checks(self, refs), 2)]
+    commands = piece_checks(self, refs)
+    # the reviewed pieces' own command checks decide when they exist: a procedure check (a verdict the executor must report)
+    # cost a round and a full checks pass whenever the executor forgot it; only a follow-up without commands keeps one
+    checks = [f"V{index}={command}" for index, command in enumerate(commands, 1)]
+    procedures = [] if commands else ["V1=every listed finding is fixed and the tests that cover the touched code pass"]
     try:
-        doc = adhoc.build_adhoc_input(goal, paths, checks=checks,
-                                      procedures=["V1=every listed finding is fixed and the tests that cover the "
-                                                  "touched code pass"], why=f"group review {number} of this run",
+        doc = adhoc.build_adhoc_input(goal, paths, checks=checks, procedures=procedures,
+                                      why=f"group review {number} of this run",
                                       route={"class": "implementation", "effort": effort or "high"},
                                       provenance=adhoc.support_provenance("review_followup"))
     except adhoc.AdhocError as error:

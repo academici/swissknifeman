@@ -104,6 +104,7 @@ class ReviewPlanTests(ConductorCase):
             doc = json.loads(Path(review_plan.followup_input(owner, 1, ["W1", "W2"], read, "high")).read_text(encoding="utf-8"))
         commands = [row.get("cmd") for row in doc["acceptance"]["checks"] if row.get("cmd")]
         self.assertEqual(commands, ["bash t.sh", "cd 'pkg dir' && python3 -m unittest x"])  # once each, no phase check
+        self.assertEqual([row for row in doc["acceptance"]["checks"] if row.get("procedure")], [])  # no observed check
 
     def test_the_followup_asks_no_more_effort_than_the_executor_of_the_run_has(self):
         import tempfile

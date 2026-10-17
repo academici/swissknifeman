@@ -263,7 +263,7 @@ the `fallback_routes` of the role:
 
 An exhausted account quota with a known reset is also written as a capacity gate when it is seen, so the next piece and the
 next run do not start the provider again; a wait that is longer than `limits.provider_wait_max_s`, or a quota whose reset
-is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`). The role's step result records
+is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`). A quota that is still refused after the reset the provider named (`retry_after_s` 0) counts as unknown: no repeat at once, no gate, and the stop message gives the provider's own reset time as already past, not "resume after now". The role's step result records
 `error` (error/v1), `api_retries` and `decisions`.
 
 The reviewer has a fallback by default (`fallback_routes`): a review is too dear to lose when grok cannot start (no CLI), is

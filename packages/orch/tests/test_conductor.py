@@ -8,12 +8,14 @@ below the minimum, budget, output outside the contract).
 """
 from __future__ import annotations
 
+import calendar
 import contextlib
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -1510,6 +1512,44 @@ class ProviderErrorTests(ConductorCase):
         self.assertEqual(self.calls("executor"), 1)
         self.assertIn("resume after", err)
         self.assertIn("claude-code", self.gate_file())
+
+    def end_message(self, err: str) -> str:
+        return [line for line in self.lines(err) if line["event"] == "run.end"][0]["message"]
+
+    def test_a_reset_already_past_is_no_wait_no_gate_and_is_not_shown_as_now(self):
+        self.options(limits={"retries": 2})
+        self.script({"executor": [quota_failure(-2700), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("executor"), 1)  # a rejected request is not repeated at once
+        message = self.end_message(err)
+        self.assertIn("already past", message)
+        self.assertNotIn("resume after", message)
+        self.assertNotIn("the limit resets", message)
+        stamp = re.search(r"reset at (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)", message)
+        self.assertIsNotNone(stamp, message)  # the provider's own time, 45 minutes before the stop
+        stop = [line for line in self.lines(err) if line["event"] == "stage.end"][-1]
+        self.assertLess(calendar.timegm(time.strptime(stamp.group(1), "%Y-%m-%dT%H:%M:%SZ")),
+                        calendar.timegm(time.strptime(stop["ts"], "%Y-%m-%dT%H:%M:%SZ")) - 2000)
+        self.assertEqual(self.slept, [])
+        self.assertFalse(gates.path().exists() and "claude-code" in self.gate_file())
+
+    def test_a_reset_already_past_does_not_repeat_a_read_only_role_at_once(self):
+        self.options(limits={"retries": 2}, reviewer="claude-code/claude-opus-5-5/high", fallback_routes=[])
+        self.script({"executor": [executor_ok("W1")], "reviewer": [quota_failure(-2700), GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        self.assertEqual(self.slept, [])
+
+    def test_a_reset_already_past_goes_to_the_declared_fallback_route(self):
+        self.options(fallback_routes=[self.FALLBACK])
+        self.script({"executor": [quota_failure(-2700), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        fallback = self.beacons(err, "ROUTE_FALLBACK")
+        self.assertEqual(len(fallback), 1, err)
+        self.assertIn("RETRY_AFTER_UNKNOWN", fallback[0]["message"])
 
     def test_a_gated_provider_goes_to_the_fallback_at_once_and_stops_without_one(self):
         gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())

@@ -263,7 +263,7 @@ the `fallback_routes` of the role:
 
 An exhausted account quota with a known reset is also written as a capacity gate when it is seen, so the next piece and the
 next run do not start the provider again; a wait that is longer than `limits.provider_wait_max_s`, or a quota whose reset
-is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`). The role's step result records
+is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`). A quota that is still refused after the reset the provider named (`retry_after_s` 0) counts as unknown: no repeat at once, no gate, and the stop message gives the provider's own reset time as already past, not "resume after now". The role's step result records
 `error` (error/v1), `api_retries` and `decisions`.
 
 The reviewer has a fallback by default (`fallback_routes`): a review is too dear to lose when grok cannot start (no CLI), is
@@ -516,7 +516,7 @@ Every event is one progress line (`conductor/v1` `progress-line`): `run.start|re
 `stage.start|end|skip`, `info`. stderr gets a readable line by default (time, item, step, role and route, what
 happened, verdict, duration, tokens, stop code), the JSON line with `--json-lines`, nothing with `--quiet`. The journal
 `progress.jsonl` always gets the JSON line. Every role is told to print the same kind of line
-(`[orch] <UTC time> <item> <step> <what>`) into its own stream. `orch conduct status` summarises the journal: run status,
+(`[orch] <item> <step> <what>`, no time: a role cannot know it; the time of a line is the receive stamp in the `<step>.jsonl.times` file next to the stream) into its own stream. `orch conduct status` summarises the journal: run status,
 the step running now, the last step and outcome of each piece, the tokens and the agent runs of the current piece
 (`status --json` has them as `agents: [{agent_run_id, role, step, status, tokens}]`).
 
@@ -622,7 +622,7 @@ means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer
 
 | Path | Git | Content |
 | --- | --- | --- |
-| `.swissknifeman/state/orch/conductor/<run>/` | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/` (`<step>.md` and `<step>.manifest.json`), `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json` |
+| `.swissknifeman/state/orch/conductor/<run>/` | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/` (`<step>.md` and `<step>.manifest.json`), `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json`; after a `resume --retry` `attempts/<n>/` holds the streams, reports, prompts and checks of the steps that retry repeated, and `state.json` the record `items.<ref>.attempts[]` (`n`, `retried_at`, per step `verdict`, `role`, `route`, `ended`, `report_status`, `files`); the observer report lists them under "Retried pieces" |
 | `.swissknifeman/state/orch/conductor/cache/scout/` | ignored | context maps keyed by the digest of the brief, the plan version, the route and the role text |
 | `.swissknifeman/state/orch/runs/<run>/` | ignored | the orch run journal of `source …` |
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |

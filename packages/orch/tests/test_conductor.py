@@ -8,12 +8,14 @@ below the minimum, budget, output outside the contract).
 """
 from __future__ import annotations
 
+import calendar
 import contextlib
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -22,6 +24,7 @@ import unittest
 from unittest import mock
 
 from orch.conductor import cli, engine, gates, options as opts, progress
+from orch.conductor.application import run_service
 from orch.conductor.infrastructure import clock, roles
 from orch.conductor.policies import sandbox as sandbox_policy
 
@@ -205,7 +208,7 @@ class HappyPathTests(ConductorCase):
         self.assertIn("- phase rule\n- item rule", prompt)
         self.assertIn("## Context map", prompt)
         self.assertIn("```stage-report", prompt)
-        self.assertIn("[orch] <UTC time> W1 executor.1", prompt)
+        self.assertIn("[orch] W1 executor.1", prompt)
         self.assertNotIn("plan" + ".py", prompt)
         options = json.loads((self.run_dir(err) / "W1" / "options.json").read_text())
         self.assertEqual(options["sources"]["rules"], "item:W1")
@@ -550,6 +553,25 @@ class StopTests(ConductorCase):
         self.assertEqual(skipped, ["brief", "prepare", "scout", "executor.1", "checks.1", "review.1"])
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
+    def test_a_finished_run_keeps_the_earlier_stop_only_as_last_stop(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        self.set_items({"W1": {}}, refuse=["register"])
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "REGISTER_REFUSED")), err)
+        run_id = self.run_dir(err).name
+        stopped = json.loads(self.conduct("status", "--run", run_id, "--json")[1])
+        self.assertEqual(stopped["stop"]["code"], "REGISTER_REFUSED")
+        self.assertIsNone(stopped["last_stop"])
+        code, _, err = self.conduct("resume", "--run", run_id, "--json-lines")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        finished = json.loads(self.conduct("status", "--run", run_id, "--json")[1])
+        self.assertEqual(finished["status"], "finished")
+        self.assertIsNone(finished["stop"])
+        self.assertEqual((finished["last_stop"]["code"], finished["last_stop"]["resume"]), ("REGISTER_REFUSED", 1))
+        report_doc = json.loads((self.run_dir(err) / engine.STATE_FILE).read_text())
+        self.assertNotIn("stop", report_doc)
+        self.assertEqual(report_doc["last_stop"]["code"], "REGISTER_REFUSED")
+
     def test_a_repeated_registration_is_a_no_op(self):
         self.set_items({"W1": {}}, refuse=["commit"])
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
@@ -582,6 +604,66 @@ class StopTests(ConductorCase):
         self.assertIn("brief", started)  # the input is built again from the amended plan
         self.assertIn("executor.1", started)
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+    def retry_blocked(self, run_id: str) -> tuple:
+        doc = self.source()
+        doc["items"]["W1"]["status"] = "todo"  # the source reopened it
+        self.state_file.write_text(json.dumps(doc), encoding="utf-8")
+        return self.conduct("resume", "--run", run_id, "--retry", "W1", "--json-lines")
+
+    def test_a_retry_keeps_every_earlier_attempt_with_its_stream_and_report(self):
+        blocked = [report("W1", "blocked", open_issues=[{"text": f"needs a path outside the write set {n}", "kind": "escalation"}])
+                   for n in (1, 2)]
+        self.script({"executor": [{"result": blocked[0]}, {"result": blocked[1]}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        run_dir = self.run_dir(err)
+        piece = run_dir / "W1"
+        first_stream = (piece / "streams" / "executor.1.jsonl").read_text(encoding="utf-8")
+        first_report = (piece / "reports" / "executor.1.json").read_text(encoding="utf-8")
+        code, _, err = self.retry_blocked(run_dir.name)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        second_report = (piece / "reports" / "executor.1.json").read_text(encoding="utf-8")
+        self.assertNotEqual(first_report, second_report)
+        code, _, err = self.retry_blocked(run_dir.name)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        attempts = json.loads((run_dir / engine.STATE_FILE).read_text())["items"]["W1"]["attempts"]
+        self.assertEqual([attempt["n"] for attempt in attempts], [1, 2])
+        self.assertEqual(attempts[0]["steps"]["executor.1"]["report_status"], "blocked")
+        self.assertIn("streams/executor.1.jsonl", attempts[0]["steps"]["executor.1"]["files"])
+        self.assertEqual((piece / "attempts" / "1" / "streams" / "executor.1.jsonl").read_text(encoding="utf-8"), first_stream)
+        self.assertEqual((piece / "attempts" / "1" / "reports" / "executor.1.json").read_text(encoding="utf-8"), first_report)
+        self.assertEqual((piece / "attempts" / "2" / "reports" / "executor.1.json").read_text(encoding="utf-8"), second_report)
+        self.assertNotEqual((piece / "reports" / "executor.1.json").read_text(encoding="utf-8"), second_report)
+        observed = json.loads(self.conduct("observe", "--run", run_dir.name)[1])
+        report_doc = json.loads(Path(observed["json"]).read_text(encoding="utf-8")) if "json" in observed else None
+        self.assertIsNotNone(report_doc, observed)
+        row = report_doc["items"][0]
+        self.assertEqual([attempt["n"] for attempt in row["attempts"]], [1, 2])
+        self.assertIn("## Retried pieces", Path(observed["markdown"]).read_text(encoding="utf-8"))
+
+    def test_the_reviews_of_all_attempts_are_counted_not_the_keys_of_the_state(self):
+        directory = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(directory, ignore_errors=True))
+        for folder, name in (("streams", "review.1.jsonl"), ("streams", "review.1.jsonl.times"), ("reports", "review.1.json"),
+                             ("streams", "review.10.jsonl"), ("streams", "executor.1-q1.jsonl")):
+            (directory / "W1" / folder).mkdir(parents=True, exist_ok=True)
+            (directory / "W1" / folder / name).write_text(name, encoding="utf-8")
+        steps = {"executor.1": {"verdict": "blocked", "ended": "2026-01-01T00:00:01Z"},
+                 "review.1": {"verdict": "RED 1 finding(s)", "role": "reviewer", "ended": "2026-01-01T00:00:02Z"},
+                 "review.10": {"verdict": "GREEN", "ended": "2026-01-01T00:00:03Z"},
+                 "executor.1-q1": {"verdict": "done", "ended": "2026-01-01T00:00:04Z"}}
+        item = {"steps": steps}
+        service = type("Service", (), {"directory": directory})()
+        run_service.archive_attempt(service, "W1", item, ["executor.1", "review.1"])
+        run_service.archive_attempt(service, "W1", item, ["review.10"])
+        self.assertEqual([attempt["n"] for attempt in item["attempts"]], [1, 2])
+        self.assertEqual(sorted(item["attempts"][0]["steps"]["review.1"]["files"]),
+                         ["reports/review.1.json", "streams/review.1.jsonl", "streams/review.1.jsonl.times"])
+        self.assertEqual(item["attempts"][1]["steps"]["review.10"]["files"], ["streams/review.10.jsonl"])
+        self.assertTrue((directory / "W1" / "streams" / "executor.1-q1.jsonl").is_file())  # a kept longer key stays
+        self.assertFalse((directory / "W1" / "streams" / "review.1.jsonl").exists())
+        self.assertEqual(sum(1 for attempt in item["attempts"] for key in attempt["steps"] if key.startswith("review.")), 2)
 
     def test_a_resume_does_not_count_the_closed_correction_rounds_again(self):
         repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
@@ -1509,6 +1591,44 @@ class ProviderErrorTests(ConductorCase):
         self.assertEqual(self.calls("executor"), 1)
         self.assertIn("resume after", err)
         self.assertIn("claude-code", self.gate_file())
+
+    def end_message(self, err: str) -> str:
+        return [line for line in self.lines(err) if line["event"] == "run.end"][0]["message"]
+
+    def test_a_reset_already_past_is_no_wait_no_gate_and_is_not_shown_as_now(self):
+        self.options(limits={"retries": 2})
+        self.script({"executor": [quota_failure(-2700), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("executor"), 1)  # a rejected request is not repeated at once
+        message = self.end_message(err)
+        self.assertIn("already past", message)
+        self.assertNotIn("resume after", message)
+        self.assertNotIn("the limit resets", message)
+        stamp = re.search(r"reset at (\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)", message)
+        self.assertIsNotNone(stamp, message)  # the provider's own time, 45 minutes before the stop
+        stop = [line for line in self.lines(err) if line["event"] == "stage.end"][-1]
+        self.assertLess(calendar.timegm(time.strptime(stamp.group(1), "%Y-%m-%dT%H:%M:%SZ")),
+                        calendar.timegm(time.strptime(stop["ts"], "%Y-%m-%dT%H:%M:%SZ")) - 2000)
+        self.assertEqual(self.slept, [])
+        self.assertFalse(gates.path().exists() and "claude-code" in self.gate_file())
+
+    def test_a_reset_already_past_does_not_repeat_a_read_only_role_at_once(self):
+        self.options(limits={"retries": 2}, reviewer="claude-code/claude-opus-5-5/high", fallback_routes=[])
+        self.script({"executor": [executor_ok("W1")], "reviewer": [quota_failure(-2700), GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "PROVIDER_QUOTA")), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        self.assertEqual(self.slept, [])
+
+    def test_a_reset_already_past_goes_to_the_declared_fallback_route(self):
+        self.options(fallback_routes=[self.FALLBACK])
+        self.script({"executor": [quota_failure(-2700), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        fallback = self.beacons(err, "ROUTE_FALLBACK")
+        self.assertEqual(len(fallback), 1, err)
+        self.assertIn("RETRY_AFTER_UNKNOWN", fallback[0]["message"])
 
     def test_a_gated_provider_goes_to_the_fallback_at_once_and_stops_without_one(self):
         gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())

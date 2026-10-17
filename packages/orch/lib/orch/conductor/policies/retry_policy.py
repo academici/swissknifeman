@@ -68,7 +68,7 @@ def provider_failure(self, item: Item, key: str, role: str, route: dict, run, at
     inputs = retry.RetryInputs(
         error_class=error["class"], stage_writes=writes, worktree_dirty=dirty, receipt_unresolved=False,
         attempts_used=attempts, stage_retries_max=limits["retries"], budget_left=limits["retries"] + 1 - attempts,
-        retry_after_s=error.get("retry_after_s"),
+        retry_after_s=None if past_reset(error) else error.get("retry_after_s"),
         current_route={"provider": route["provider"], "model_class": route["model_class"]},
         max_wait_s=limits.get("provider_wait_max_s", 900))
     policy = {"on_error": {**CONDUCTOR_ON_ERROR, **item.options.get("on_error", {})},
@@ -112,11 +112,20 @@ def provider_failure(self, item: Item, key: str, role: str, route: dict, run, at
     raise Stop(*self._provider_stop(role, route, run, error, decision, refused))
 
 
+def past_reset(error: dict) -> bool:
+    """A refused quota whose reset (``retry_after_s``, never negative) is 0: the provider's own reset time has passed and it
+    still refuses. That is an unknown reset, not a reset now: no wait of 0 s, no gate, no "resume after <now>"."""
+    return error.get("class") == "quota" and error.get("retry_after_s") == 0
+
+
 def provider_stop(self, role: str, route: dict, run, error: dict, decision, refused: list) -> tuple:
     code = PROVIDER_STOP_CODES.get(error["class"]) or run.error
     text = f"{role} on {self.label(route)}: {error['class']} ({error.get('safe_message') or run.detail}); " \
            f"{', '.join(decision.reason_codes)}"
-    if error["class"] in ("quota", "rate_limit") and error.get("retry_after_s") is not None:
+    if past_reset(error):
+        text += "; the provider still refuses and its reset time is unknown" + (
+            f" (it said the reset at {clock.utc_stamp(run.reset_at)}, already past)" if run.reset_at else " (its reset is already past)")
+    elif error["class"] in ("quota", "rate_limit") and error.get("retry_after_s") is not None:
         reset = clock.utc_stamp(clock.wall() + error["retry_after_s"])
         text += f"; the limit resets {reset}, resume after {reset}"
     elif error["class"] in ("quota", "rate_limit"):
@@ -129,7 +138,7 @@ def provider_stop(self, role: str, route: dict, run, error: dict, decision, refu
 def gate(self, item: Item, route: dict, error: dict) -> None:
     """Remember an exhausted account quota with a known reset on the machine: nobody starts the provider again
     before it (``gates.py``). A gate that cannot be written does not stop the run."""
-    if error["class"] != "quota" or error.get("retry_after_s") is None or error.get("scope") != "account":
+    if error["class"] != "quota" or error.get("retry_after_s") is None or past_reset(error) or error.get("scope") != "account":
         return
     now = clock.wall()
     try:

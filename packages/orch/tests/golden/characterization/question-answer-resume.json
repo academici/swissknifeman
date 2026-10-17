@@ -291,6 +291,56 @@
   "items": {
    "W1": {
     "adopted": [],
+    "attempts": [
+     {
+      "n": 1,
+      "retried_at": "<time>",
+      "steps": {
+       "brief": {
+        "ended": "<time>",
+        "role": "deterministic",
+        "verdict": "done"
+       },
+       "executor.1": {
+        "ended": "<time>",
+        "files": [
+         "streams/executor.1.jsonl",
+         "streams/executor.1.stderr",
+         "reports/executor.1.json",
+         "prompts/executor.1.manifest.json",
+         "prompts/executor.1.md"
+        ],
+        "report_status": "blocked",
+        "role": "executor",
+        "route": "claude-code/sonnet/high",
+        "verdict": "blocked"
+       },
+       "prepare": {
+        "ended": "<time>",
+        "role": "deterministic",
+        "verdict": "done"
+       },
+       "register": {
+        "ended": "<time>",
+        "role": "registrar",
+        "route": "orch/conductor",
+        "verdict": "recorded gate none"
+       },
+       "scout": {
+        "ended": "<time>",
+        "files": [
+         "streams/scout.stderr",
+         "streams/scout.txt",
+         "prompts/scout.manifest.json",
+         "prompts/scout.md"
+        ],
+        "role": "context-scout",
+        "route": "claude-code/haiku/low",
+        "verdict": "mapped"
+       }
+      }
+     }
+    ],
     "autofix_at": [],
     "check_fixes_at": [],
     "check_fixes_used": 0,
@@ -484,6 +534,11 @@
     }
    }
   },
+  "last_stop": {
+   "code": "ITEM_BLOCKED",
+   "message": "W1 is blocked; see its escalation",
+   "resume": 1
+  },
   "on_blocked": "stop",
   "questions": {
    "W1": {
@@ -520,10 +575,6 @@
   },
   "resumes": 1,
   "status": "finished",
-  "stop": {
-   "code": "ITEM_BLOCKED",
-   "message": "W1 is blocked; see its escalation"
-  },
   "tokens": {
    "cached": 0,
    "input": 300,

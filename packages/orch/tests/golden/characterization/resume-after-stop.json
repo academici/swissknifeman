@@ -425,16 +425,17 @@
     }
    }
   },
+  "last_stop": {
+   "code": "PROVIDER_UNAVAILABLE",
+   "message": "cannot start reviewer (<project>/no-such-grok): install or log in the CLI, then resume",
+   "resume": 1
+  },
   "on_blocked": "stop",
   "questions": {
    "W1": {}
   },
   "resumes": 1,
   "status": "finished",
-  "stop": {
-   "code": "PROVIDER_UNAVAILABLE",
-   "message": "cannot start reviewer (<project>/no-such-grok): install or log in the CLI, then resume"
-  },
   "tokens": {
    "cached": 0,
    "input": 200,

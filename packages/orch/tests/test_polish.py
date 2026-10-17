@@ -44,7 +44,8 @@ class OwnedPieceHint(unittest.TestCase):
 
 class RepeatedRetry(unittest.TestCase):
     def fake(self, item: dict):
-        return types.SimpleNamespace(state={"items": {"W1": item}, "questions": {}}, _save=lambda: None, progress=mock.Mock())
+        return types.SimpleNamespace(state={"items": {"W1": item}, "questions": {}}, _save=lambda: None, progress=mock.Mock(),
+                                     directory=Path(tempfile.mkdtemp()))
 
     def blocked(self) -> dict:
         return {"outcome": "blocked", "stop": {}, "steps": {"brief": {"ended": "1"},

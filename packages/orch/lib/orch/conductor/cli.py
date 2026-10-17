@@ -344,7 +344,7 @@ def main(argv: list | None = None) -> int:
         if args.json:
             print(json.dumps({key: value for key, value in found.items() if key != "state"} |
                              {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop"),
-                              "agents": listed}, ensure_ascii=False, indent=2))
+                              "last_stop": found["state"].get("last_stop"), "agents": listed}, ensure_ascii=False, indent=2))
             return 0
         print(f"run {run_id}: {found['status']}" + (f" ({found['reason_code']})" if found["reason_code"] else "")
               + f", last line {found['last_ts']}")

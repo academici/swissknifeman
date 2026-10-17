@@ -48,6 +48,7 @@ class RoleRun:
     error_doc: Optional[dict] = None  # error/v1 of a failed role the rules of aicore recognize (``provider`` known)
     api_retries: int = 0  # how many times the provider CLI itself repeated the request (claude ``api_retry`` events)
     denials: list = field(default_factory=list)  # ``[{tool_name}]``: tool calls refused without a prompt (never their input)
+    reset_at: Optional[int] = None  # unix time the provider itself gave for the end of a limit (claude ``resetsAt``), as seen
 
 
 def available(argv: list) -> bool:
@@ -426,7 +427,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
     parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
                   usage=parsed["usage"], duration_s=duration, raw=str(raw_path), lingered=lingered,
-                  api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"])
+                  api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"],
+                  reset_at=parsed["signals"].get("limit_resets_at"))
     if lingered:
         run.exit = 0
     if (process.returncode != 0 and not lingered) or parsed["is_error"]:

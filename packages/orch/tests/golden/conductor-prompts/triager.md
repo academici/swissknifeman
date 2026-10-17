@@ -157,7 +157,7 @@ Base revision `abc123`; the candidate is the working tree. Scratch files go to a
 
 ## Progress lines
 
-Before each major step print one line to your output: `[orch] <UTC time> P1.1 triage.1 <what you start or finish>`.
+Before each major step print one line to your output: `[orch] P1.1 triage.1 <what you start or finish>`.
 
 ## Result
 

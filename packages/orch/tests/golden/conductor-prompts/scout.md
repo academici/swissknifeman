@@ -145,4 +145,4 @@ Beta body.
 
 ## Progress lines
 
-Before each major step print one line to your output: `[orch] <UTC time> P1.1 scout <what you start or finish>`.
+Before each major step print one line to your output: `[orch] P1.1 scout <what you start or finish>`.

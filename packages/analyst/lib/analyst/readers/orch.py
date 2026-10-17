@@ -4,7 +4,8 @@ Three sources, none of them an internal file of orch beyond its published format
 
 * the event journal (``event/v1``, types ``orch.*``; data per ``orch/schemas/event-data/v1``), read through
   ``aicore.ext.events``;
-* the artifacts of a piece in ``<project>/plans/<plan>/artifacts/<item>/``: ``stage-report.json`` (``stage-report``)
+* the artifacts of a piece in ``<plans store>/<plan>/artifacts/<item>/`` (``<project>/plans`` or the portable
+  workspace, found by ``aicore.workspace.resolve_plans_store``): ``stage-report.json`` (``stage-report``)
   and ``review-verdict.json`` (``orch-conductor-review-verdict/v1``);
 * the run folder of the conductor (``<project state>/orch/conductor/<run>/<item>/``): ``risk.json`` and the
   ``prompts/*.manifest.json`` (``prompt-manifest/v1``).
@@ -17,6 +18,7 @@ from pathlib import Path
 
 from aicore.ext import events as aicore_events
 from aicore.state.locations import project_state_dir
+from aicore.workspace import WorkspaceError, resolve_plans_store
 
 EVENT_TYPES = ("orch.*",)
 
@@ -49,7 +51,12 @@ def read_events(project, run=None, problems=None):
 def read_artifacts(project, plan, problems):
     """``{item: {stage_report, review_verdict}}`` of the artifact folders of plan ``plan``."""
     items = {}
-    root = Path(project) / "plans" / plan / "artifacts"
+    try:
+        plans_root = resolve_plans_store(project).plans_root
+    except (WorkspaceError, ValueError) as exc:
+        problems.append(f"plans store: {exc}")
+        return items
+    root = plans_root / plan / "artifacts"
     if not root.is_dir():
         problems.append(f"no artifact folder {root}")
         return items

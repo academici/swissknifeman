@@ -23,10 +23,16 @@ def find_monorepo_root(start, *, markers=("packages",)):
 
 
 def resolve_plan_dir(repo_root, plan_id):
-    """Return a live or archived plan directory, otherwise raise ``FileNotFoundError``."""
+    """Return a live or archived plan directory, otherwise raise ``FileNotFoundError``.
+
+    The plans folder comes from the project marker (``aicore.workspace.resolve_plans_store``): ``<repo>/plans`` without
+    a marker or with a legacy store, the portable workspace folder otherwise. A store that cannot be resolved raises
+    ``aicore.workspace.WorkspaceError``."""
+    from aicore.workspace import resolve_plans_store
     repo_root = Path(repo_root)
-    live = repo_root / "plans" / plan_id
-    archived = repo_root / "plans" / "archive" / plan_id
+    plans_root = resolve_plans_store(repo_root).plans_root
+    live = plans_root / plan_id
+    archived = plans_root / "archive" / plan_id
     if live.is_dir():
         return live
     if archived.is_dir():

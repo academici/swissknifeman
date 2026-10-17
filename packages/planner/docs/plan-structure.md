@@ -58,6 +58,35 @@ An item's optional `skills` is a unique list of skill or capability names, such 
 `skill-creator` or `blender:mcp-blender`. These names declare what the executor must load;
 the plan API does not install or launch them.
 
+## Where the plans live
+
+The plans store of a checkout is decided by its marker `<root>/.swissknifeman/project.json`
+(`{project_id, plans_store}`), one rule for aicore (`aicore.workspace.resolve_plans_store`) and
+the planner copy (`planner.plan.workspace`):
+
+| Marker | Plans folder |
+| --- | --- |
+| none, or `plans_store: legacy` | `<root>/plans` |
+| `plans_store: workspace` | `<workspace>/projects/<project_id>/plans/` (`SKM_WORKSPACE_ROOT`, else the data directory `workspace`) |
+
+The folder is the same layout v4 in both stores. A marker that points at a workspace whose project
+folder is missing is `WORKSPACE_PROJECT_MISSING`; a legacy folder of a migrated project refuses
+mutations with `PLANS_MIGRATED`. `swissknifeman project context --json` prints `plans_root` and
+`plans_store {kind, project_id, reason}`; `project doctor` checks it as `project.plans-store`.
+
+A workspace plan is separate from its source checkout (`Plan.source_root`, bound with
+`swissknifeman workspace project attach`). Operations that need the checkout (`context`, `check` of
+repository paths, `scout`, `commit`, `commits`, the executor brief of a bridge) refuse with `PLAN_SOURCE_UNBOUND`
+without one; reading and changing plan documents works without it. `commit` of a workspace plan makes
+two commits: product paths in the checkout (trailers `Plan*`), then plan files in the workspace
+repository under `git.lock` with `Plan-Project` and `Plan-Source-Commit`. The result adds `repo`,
+`workspace_sha` and `workspace_commit.status` (`committed`, `nothing`, `skipped-no-git`, `locked`,
+`failed`; `dry-run` for a preview; `skipped-legacy` for a plan in its checkout). A failure of the
+workspace part after the source commit is `failed` with exit 0 and does not undo the source commit;
+`NOTHING_TO_COMMIT` only when both parts are empty. The workspace is pushed only by
+`swissknifeman workspace sync --push`. The executor brief of a workspace plan embeds the content of every
+`@plan/` read, because the executor cannot read outside its project.
+
 ## API
 
 ```bash

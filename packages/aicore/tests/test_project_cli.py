@@ -148,6 +148,47 @@ class ProjectCliTests(unittest.TestCase):
         self.assertEqual(checks["project.config"], "fail")
         self.assertEqual(checks["project.write-boundary"], "fail")
 
+    def test_doctor_checks_the_plans_store(self):
+        from aicore.workspace import new_id, write_marker
+        run(self.root, "init")
+        ws = Path(self._tmp.name).resolve() / "ws"
+        env = {"HOME": "/nonexistent-home", "PATH": "", "SKM_WORKSPACE_ROOT": str(ws)}
+
+        def statuses():
+            _code, out, _ = run(self.root, "doctor", "--json", env=env)
+            return {item["check_id"]: item["status"] for item in json.loads(out)}
+
+        self.assertEqual(statuses()["project.plans-store"], "ok")
+        project_id = new_id("prj")
+        write_marker(self.root, project_id, "workspace")
+        self.assertEqual(statuses()["project.plans-store"], "fail")
+        (ws / "projects" / project_id / "plans").mkdir(parents=True)
+        found = statuses()
+        self.assertEqual(found["project.plans-store"], "ok")
+        self.assertEqual(found["project.write-boundary"], "ok")
+
+    def test_context_reports_the_plans_store(self):
+        from aicore.workspace import new_id, write_marker
+        ws = Path(self._tmp.name).resolve() / "ws"
+        env = {"HOME": "/nonexistent-home", "PATH": "", "SKM_WORKSPACE_ROOT": str(ws)}
+
+        def context():
+            return json.loads(run(self.root, "context", "--json", env=env)[1])
+
+        doc = context()
+        self.assertEqual(doc["plans_root"], str(self.root / "plans"))
+        self.assertEqual(doc["plans_store"], {"kind": "legacy", "project_id": None, "reason": "no-marker"})
+        project_id = new_id("prj")
+        write_marker(self.root, project_id, "workspace")
+        doc = context()
+        self.assertEqual((doc["plans_root"], doc["plans_store"]["kind"], doc["plans_store"]["error"]),
+                         (str(self.root / "plans"), "unresolved", "WORKSPACE_PROJECT_MISSING"))
+        (ws / "projects" / project_id / "plans").mkdir(parents=True)
+        doc = context()
+        self.assertEqual(doc["plans_root"], str(ws / "projects" / project_id / "plans"))
+        self.assertEqual(doc["plans_store"], {"kind": "workspace", "project_id": project_id,
+                                              "reason": "marker-workspace"})
+
     def test_context_without_launcher(self):
         code, out, _ = run(self.root / "src", "context", "--json")
         self.assertEqual(code, 0)

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.4",
   "title": "Потребители вне planner (aicore invocation/doctor/util.repo, harness run, analyst), документация правил planner, e2e scripts/e2e-workspace-plans.sh; закрытие фазы P2",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`invocation-context` получает `plans_root` разрешённого хранилища и аддитивное поле `plans_store`; `project doctor` проверяет хранилище (`project.plans-store`) вместо жёсткого `plans`; `aicore.util.repo.resolve_plan_dir`, harness `run`, analyst `readers/orch.py` и `workflow_scan.py` находят планы через `aicore.workspace.resolve_plans_store`; правила planner в CLAUDE.md/README и docs/project-launcher.md описывают хранилище; e2e-скрипт проверяет полный цикл планирования проекта с маркером workspace в изолированном SKM_HOME.",
   "why": "Иначе analyst, harness и диагностика проекта будут читать пустой `<root>/plans` после миграции (knowledge/audit-verification#corrected C7). Жёсткий риск: несовместимое изменение контракта invocation-context/v1 (только аддитивное поле).",
   "scope": {
@@ -177,6 +177,20 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/078362fb9432a08878aea552f41871210b1868ca7d84336684a15b2efaabed35",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/c667234381b68225bbebd5ffa4a3f2c3f2feb3c438008a6ce1ed085be8ff4617",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/1aa775d51a1ec4f74508cbd884e6689b54faf75081ee1f4aff8d227b45c281e4",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Контракт invocation-context/v1 меняется только добавлением необязательного поля; `swissknifeman aicore schema compat --base origin/main` не сообщает breaking.",
     "harness и analyst импортируют только aicore (`aicore.workspace`), не planner.",
@@ -233,6 +247,84 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T10:23:15Z"
+  "result": {
+    "started_at": "2026-10-17T15:27:34Z",
+    "finished_at": "2026-10-17T16:34:40Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-8fa1c1daee8f85013f88dece-P2.4",
+    "notes": "Corrected the red checks: moved plan-store resolution out of aicore.state.invocation into project/cli.py (plans_store_of), InvocationContext.to_json takes optional plans_root/plans_store; doctor and context use the resolver; removed the word orch from plan-structure.md; rewrote the analyst test fixture so public-hygiene passes. Tests: aicore full suite, planner test_boundary, analyst test_scan, public-hygiene, e2e script and harness instructions check pass.\nChanged: .swissknifeman/provider-artifacts.lock.json, CHANGELOG.md, docs/project-launcher.md, packages/aicore/lib/aicore/project/cli.py, packages/aicore/lib/aicore/state/invocation.py, packages/aicore/lib/aicore/util/repo.py, packages/aicore/schemas/invocation-context/v1/invocation-context.schema.json, packages/aicore/tests/state/test_invocation.py, packages/aicore/tests/test_architecture.py, packages/aicore/tests/test_project_cli.py, packages/aicore/tests/test_util.py, packages/analyst/lib/analyst/readers/orch.py, packages/analyst/lib/analyst/workflow_scan.py, packages/analyst/tests/test_orch_report.py, packages/analyst/tests/test_scan.py, packages/harness/configs/common/instructions/catalog.json, packages/harness/configs/common/instructions/packages/planner/common.md, packages/harness/lib/harness/run/__init__.py, packages/harness/tests/test_run_plan_reader.py, packages/planner/CLAUDE.md, packages/planner/docs/plan-structure.md, scripts/e2e-workspace-plans.sh, scripts/test-integration.sh",
+    "deviations": [
+      "packages/aicore/tests/test_architecture.py (outside write_set) now lets the project subpackage import workspace: project/cli.py needs aicore.workspace for the plan-store check and context.",
+      "changed outside the write set: .swissknifeman/provider-artifacts.lock.json, packages/aicore/tests/test_architecture.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V3.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V9.json"
+      },
+      {
+        "id": "V50",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V50.json"
+      },
+      {
+        "id": "V51",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V51.json"
+      },
+      {
+        "id": "V52",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V52.json"
+      },
+      {
+        "id": "V53",
+        "exit": 0,
+        "at": "2026-10-17T16:34:40Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V53.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V1.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V2.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V3.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V9.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V50.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V51.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V52.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.4/evidence/V53.json"
+    ]
+  },
+  "updated_at": "2026-10-17T16:34:40Z"
 }

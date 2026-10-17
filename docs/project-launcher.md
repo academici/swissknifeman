@@ -54,8 +54,8 @@ cwd, and the lock (`launcher.lock.json`: missing is a warning, an error with `SK
 than the launcher's is refused). Messages go to stderr as `CODE: message`; stdout belongs to the module.
 
 **Authority.** With a launcher context `aicore.state.resolve_project` returns the launcher root; a `--project` naming
-another folder is `PROJECT_CONTEXT_CONFLICT`, an equal one is accepted. The planner store gives `<root>/plans` without
-a search, and `--plans-root` or a plan path outside it is `PROJECT_PATH_OVERRIDE_FORBIDDEN`. Without a launcher the
+another folder is `PROJECT_CONTEXT_CONFLICT`, an equal one is accepted. The planner store gives the plans folder of the project marker (`<root>/plans`, or the folder of the portable
+workspace for `plans_store: workspace`) without a search, and `--plans-root` or a plan path outside that folder is `PROJECT_PATH_OVERRIDE_FORBIDDEN`. Without a launcher the
 legacy order stays: `--project`, `SKM_PROJECT_ROOT`, the nearest `.git`/`.swissknifeman`.
 
 **Process binding.** The exec chain keeps the process id, so the context is honoured only when
@@ -70,8 +70,8 @@ legacy way. A conductor lane in a worktree is therefore never pinned to the main
 | `init [--marker-only] [--adopt] [--dry-run] [--json]` | writes launcher + lock at the git root of the working directory (`--marker-only` outside git) |
 | `sync [--adopt] [--dry-run] [--json]` | brings the managed files to the hub template; equal files are a no-op |
 | `verify [--json] [--no-roundtrip]` | file, lock, digest, protocol, hub on PATH, round trip launcher -> umbrella -> same root |
-| `context [--json]` | `invocation-context/v1`: root, invocation cwd, resolution, launcher (verified) |
-| `doctor [--json]` | verify + project config `schema_version` + write boundary of state, backups, plans |
+| `context [--json]` | `invocation-context/v1`: root, invocation cwd, resolution, launcher (verified), `plans_root` and `plans_store {kind, project_id, reason}` of the project marker |
+| `doctor [--json]` | verify + project config `schema_version` + write boundary of state, backups and a legacy plans folder + `project.plans-store` (the marker's store resolves; a workspace store lies outside the project by design) |
 | `exec -- <group> [args...]` | runs a group through this project's launcher |
 
 Writes: a temporary file in the same folder, `fsync`, `os.replace`, `fsync` of the folder

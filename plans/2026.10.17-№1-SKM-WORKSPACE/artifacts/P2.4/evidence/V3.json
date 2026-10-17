@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T152730Z-7c6696:P2.4:checks.2:V3",
+  "check_id": "V3",
+  "subject": "PLAN6.P2.4",
+  "candidate": {
+    "head": "47e3e4200123fe48b11b6ad5a4a607bccf1ad111",
+    "dirty_digest": "9261670fdc6d037aaaf5a498a2985a906dca500d167297c0aacc576bb80e5322"
+  },
+  "started_at": "2026-10-17T16:33:27Z",
+  "procedure": {
+    "cmd": "swissknifeman harness instructions check",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T16:33:27Z"
+}

@@ -11,6 +11,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from aicore.workspace import WorkspaceError, resolve_plans_store
 from aicore.util.cli import parse_args
 from aicore.util.io import atomic_write_json, atomic_write_text
 from aicore.util.term import die, warn
@@ -58,13 +59,19 @@ def candidate_paths(projects):
             if not root.is_dir():
                 missing.append({"project": project["id"], "location": location[:-5], "reason": "root-missing"})
                 continue
-            paths = list(root.glob("plans/*/workflows/*.js"))
-            paths.extend(root.glob("plans/archive/*/workflows/*.js"))
+            try:
+                plans_root = resolve_plans_store(root).plans_root
+            except (WorkspaceError, ValueError):
+                missing.append({"project": project["id"], "location": location[:-5], "reason": "plans-store-unresolved"})
+                continue
+            paths = list(plans_root.glob("*/workflows/*.js"))
+            paths.extend(plans_root.glob("archive/*/workflows/*.js"))
             for path in sorted(paths):
-                if not _inside(path, root):
+                if not _inside(path, plans_root):
                     missing.append({"project": project["id"], "location": location[:-5], "reason": "symlink-escape"})
                     continue
-                relative = path.relative_to(root).as_posix()
+                # The identity keeps the legacy form plans/<plan>/..., whichever store holds the plans.
+                relative = "plans/" + path.relative_to(plans_root).as_posix()
                 parts = relative.split("/")
                 plan_id = parts[2] if parts[:2] == ["plans", "archive"] else parts[1]
                 candidates.append({"path": path, "project": project["id"], "location": location[:-5],

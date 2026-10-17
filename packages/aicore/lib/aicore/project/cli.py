@@ -150,6 +150,18 @@ def verify_checks(root: Path, env: Mapping[str, str], *, roundtrip: bool = True,
     return checks
 
 
+def plans_store_of(root: Path, env: Mapping[str, str]):
+    """``(plans_root, plans_store document, error)`` of the project marker. A store that cannot be resolved (invalid
+    marker, workspace folder missing) keeps ``<root>/plans`` and names the error in ``plans_store``."""
+    from aicore.workspace import WorkspaceError, resolve_plans_store
+    try:
+        store = resolve_plans_store(root, env)
+    except (WorkspaceError, ValueError) as exc:
+        code = exc.code if isinstance(exc, WorkspaceError) else exc.__class__.__name__
+        return root / "plans", {"kind": "unresolved", "project_id": None, "reason": "error", "error": code}, exc
+    return store.plans_root, {"kind": store.kind, "project_id": store.project_id, "reason": store.reason}, None
+
+
 def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     """:func:`verify_checks` plus the project configuration and the write boundary of the project folders."""
     checks = verify_checks(root, env)
@@ -171,15 +183,35 @@ def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
         except Exception as exc:  # any parse error is a finding, not a crash of the doctor
             checks.append(_check("project.config", "fail", f"{config}: {exc}"[:400], "config",
                                  "fix the TOML: swissknifeman config explain"))
+    from aicore.workspace import WorkspaceError, resolve_plans_store
+    store = None
+    store_error = None
+    try:
+        store = resolve_plans_store(root, env)
+    except (WorkspaceError, ValueError) as exc:
+        store_error = exc
+    # A workspace store lives outside the project by design; only a legacy store must stay inside it.
+    boundary = [f"{PROJECT_DIRNAME}/state", f"{PROJECT_DIRNAME}/backups"]
+    if store is None or store.kind == "legacy":
+        boundary.append("plans")
     escaped = []
-    for relative in (f"{PROJECT_DIRNAME}/state", f"{PROJECT_DIRNAME}/backups", "plans"):
+    for relative in boundary:
         try:
             require_project_path(root, root / relative)
         except LauncherError as exc:
             escaped.append(str(exc))
     checks.append(_check("project.write-boundary", "fail" if escaped else "ok",
-                         "; ".join(escaped) or "state, backups and plans stay inside the project", "state",
+                         "; ".join(escaped) or f"{', '.join(boundary)} stay inside the project", "state",
                          "replace the symlink that leads out of the project with a folder"))
+    if store_error is not None:
+        observed = str(store_error) if isinstance(store_error, WorkspaceError) else \
+            f"{store_error.__class__.__name__}: {store_error}"
+        checks.append(_check("project.plans-store", "fail", observed[:400], "plans",
+                             "run `swissknifeman workspace clone <url>` or `swissknifeman workspace sync --pull`, "
+                             "or fix .swissknifeman/project.json"))
+    else:
+        checks.append(_check("project.plans-store", "ok",
+                             f"{store.kind} store ({store.reason}): {store.plans_root}", "plans"))
     return checks
 
 
@@ -259,7 +291,11 @@ def _doctor(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO,
 def _context(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
     flags = _flags(args, ("--json",))
     context = read_invocation_context(cwd, env=env)
-    doc = context.to_json()
+    if context.project_root is not None:
+        plans_root, plans_store, _error = plans_store_of(context.project_root, env)
+        doc = context.to_json(plans_root, plans_store)
+    else:
+        doc = context.to_json()
     if doc["launcher"] is not None and context.project_root is not None:
         try:
             lock = read_lock(context.project_root)

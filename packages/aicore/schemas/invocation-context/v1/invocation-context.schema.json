@@ -52,7 +52,31 @@
     },
     "plans_root": {
       "type": ["string", "null"],
-      "description": "Plans folder of the project (<project>/plans)."
+      "description": "Plans folder of the project: <project>/plans, or the folder in the portable workspace when the project marker says so (see plans_store)."
+    },
+    "plans_store": {
+      "type": ["object", "null"],
+      "description": "Where plans_root comes from; null when no project was found. Optional (added after the first release).",
+      "properties": {
+        "kind": {
+          "enum": ["legacy", "workspace", "unresolved"],
+          "description": "Plan store of the project; unresolved when the marker or the workspace folder could not be read (plans_root then stays <project>/plans)."
+        },
+        "project_id": {
+          "type": ["string", "null"],
+          "description": "Project id of the marker; null without a marker."
+        },
+        "reason": {
+          "enum": ["no-marker", "marker-legacy", "marker-workspace", "error"],
+          "description": "Why this store was chosen."
+        },
+        "error": {
+          "type": "string",
+          "description": "Error code when kind is unresolved."
+        }
+      },
+      "required": ["kind", "project_id", "reason"],
+      "additionalProperties": false
     }
   },
   "required": ["$schema", "project_root", "invocation_cwd", "resolution", "launcher", "config", "plans_root"],

@@ -2,7 +2,8 @@
 # Runs the tests of the modules that read a partner module's output (harness; the tools analyst and maind with
 # --with-tools) with every partner wired from the hub layout: the variables a module reads to find its partners point at
 # packages/<id> of this checkout, so tests that need a partner run instead of being skipped. analyst and maind are
-# auxiliary tools outside the core verification (standalone.tools): they join only with --with-tools.
+# auxiliary tools outside the core verification (standalone.tools): they join only with --with-tools. The end-to-end
+# check of planning in the portable workspace (scripts/e2e-workspace-plans.sh) runs after the modules.
 set -uo pipefail
 HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -29,6 +30,10 @@ for module in "${modules[@]}"; do
   echo "== $module: bash packages/$module/scripts/test.sh"
   bash "$HUB/packages/$module/scripts/test.sh" || failed+=("$module")
 done
+
+count=$((count + 1))
+echo "== workspace plans: bash scripts/e2e-workspace-plans.sh"
+bash "$HUB/scripts/e2e-workspace-plans.sh" || failed+=("e2e-workspace-plans")
 
 if [[ "${#failed[@]}" -gt 0 ]]; then
   echo "integration: FAILURE (${failed[*]})" >&2

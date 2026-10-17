@@ -61,8 +61,14 @@ class InvocationContext:
     launcher_path: Optional[Path] = None
     launcher_protocol: Optional[int] = None
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self, plans_root: Optional[PathLike] = None,
+                plans_store: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+        """The ``invocation-context/v1`` document. ``plans_root`` and ``plans_store`` come from the caller that resolved
+        the plan store of the project marker (``aicore.workspace`` lies above ``state``); without them ``plans_root`` is
+        ``<root>/plans`` and ``plans_store`` is ``null``."""
         root = self.project_root
+        if plans_root is None and root is not None:
+            plans_root = root / "plans"
         return {
             "$schema": CONTEXT_SCHEMA,
             "project_root": str(root) if root else None,
@@ -72,7 +78,8 @@ class InvocationContext:
             "launcher": {"path": str(self.launcher_path), "protocol": self.launcher_protocol}
             if self.launcher_path else None,
             "config": str(root / PROJECT_DIRNAME / "config.toml") if root else None,
-            "plans_root": str(root / "plans") if root else None,
+            "plans_root": str(plans_root) if plans_root else None,
+            "plans_store": dict(plans_store) if plans_store else None,
         }
 
 

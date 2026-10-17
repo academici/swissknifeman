@@ -2295,7 +2295,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2325,7 +2325,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2340,7 +2340,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 3,
-          "intent": "Apply this source-derived instruction: Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route.",
+          "intent": "Apply this source-derived instruction: Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route. The plans store comes from the project marker `.swissknifeman/project.json`: `<project>/plans` without a marker or with `plans_store: legacy`, `<workspace>/projects/<project_id>/plans/` with `workspace`.",
           "obligations": [
             {
               "modality": "must",
@@ -2354,7 +2354,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2369,7 +2369,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers.",
+          "intent": "Apply this source-derived instruction: Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers. Resolve the plans folder with `swissknifeman project context --json` (`plans_root`, `plans_store`), never by assuming `<project>/plans`.",
           "obligations": [
             {
               "modality": "must",
@@ -2383,7 +2383,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2413,7 +2413,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2444,7 +2444,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2474,7 +2474,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2503,7 +2503,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2534,7 +2534,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [
@@ -2566,7 +2566,7 @@
             {
               "source_id": "instruction.fragment.planner.common",
               "path": "packages/harness/configs/common/instructions/packages/planner/common.md",
-              "sha256": "757e4ba40e3ee5e4b0941dddfbf39f925f59e822bca702f95380ccac89227224"
+              "sha256": "86e8202d227b0c01a88164426bb6d5beaa6aa4af13e63d2fb01305bc1313133d"
             }
           ],
           "compatibility_assertions": [

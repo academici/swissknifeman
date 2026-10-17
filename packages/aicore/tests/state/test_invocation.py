@@ -83,6 +83,8 @@ class ResolverAuthorityTests(Base):
         self.assertEqual(context.to_json()["plans_root"], str(self.a / "plans"))
         none = read_invocation_context(self.base, env={"HOME": str(self.base)})
         self.assertEqual((none.project_root, none.resolution), (None, "none"))
+        self.assertIsNone(none.to_json()["plans_store"])
+        self.assertEqual(none.to_json()["plans_root"], None)
 
 
 class ValidateLauncherEnvTests(Base):

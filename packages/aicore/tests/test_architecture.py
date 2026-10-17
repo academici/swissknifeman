@@ -86,7 +86,7 @@ class TestImportBoundary(unittest.TestCase):
         """Layering: util -> nothing; state -> util; config -> util, state; provider -> util, artifacts;
         content -> util, provider, artifacts, config; release -> util, content;
         delivery -> everything below it; ext -> util, state, config, and nothing imports ext;
-        project -> util, state, config."""
+        project -> util, state, config, workspace."""
         def check(directory, allowed):
             for path in sorted((LIB / directory).glob("*.py")):
                 for target, line in _aicore_targets(path):
@@ -103,7 +103,7 @@ class TestImportBoundary(unittest.TestCase):
         check("release", ("util", "content"))
         check("delivery", ("util", "state", "config", "provider", "artifacts", "content", "release"))
         check("ext", ("util", "state", "config"))
-        check("project", ("util", "state", "config"))
+        check("project", ("util", "state", "config", "workspace"))
         for directory in ("util", "state", "config", "provider", "artifacts", "content", "release", "delivery"):
             for path in sorted((LIB / directory).glob("*.py")):
                 for target, line in _aicore_targets(path):

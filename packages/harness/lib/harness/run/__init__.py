@@ -8,6 +8,7 @@ from pathlib import Path
 from aicore.util.repo import find_monorepo_root
 
 from aicore.util.cli import parse_args
+from aicore.workspace import WorkspaceError, resolve_plans_store
 from aicore.util.term import die
 from . import plan_reader
 from . import worker
@@ -41,7 +42,11 @@ def _resolve_plan_dir(env, opts, plan_id):
         if repo_root is None:
             die("repository root not found - pass --plans-root")
             return None
-        plans_root = repo_root / "plans"
+        try:
+            plans_root = resolve_plans_store(repo_root).plans_root
+        except (WorkspaceError, ValueError) as exc:
+            die(f"plans store of {repo_root} cannot be resolved: {exc}")
+            return None
     return plans_root / plan_id
 
 

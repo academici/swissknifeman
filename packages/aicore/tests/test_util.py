@@ -424,6 +424,21 @@ class TestResolvePlanDir(unittest.TestCase):
             self.assertIn(str(root / "plans" / "archive" / "2026.01.01-DEMO-X"), message)
 
 
+class TestResolvePlanDirWorkspace(unittest.TestCase):
+    def test_marker_sends_the_lookup_to_the_workspace_store(self):
+        from aicore.workspace import new_id, write_marker
+        with tempfile.TemporaryDirectory() as tmp:
+            root, ws = Path(tmp) / "repo", Path(tmp) / "ws"
+            root.mkdir()
+            project_id = new_id("prj")
+            write_marker(root, project_id, "workspace")
+            plan = ws / "projects" / project_id / "plans" / "2026.01.01-DEMO-X"
+            plan.mkdir(parents=True)
+            (root / "plans" / "2026.01.01-DEMO-X").mkdir(parents=True)
+            with mock.patch.dict(os.environ, {"SKM_WORKSPACE_ROOT": str(ws)}):
+                self.assertEqual(resolve_plan_dir(root, "2026.01.01-DEMO-X"), plan)
+
+
 class TestSiblingBin(unittest.TestCase):
     def test_env_override_wins_when_exists(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -293,6 +293,31 @@ class TestWebSocket(Case):
                     time.sleep(0.05)
                 self.assertIsNone(self.state.terminals.get(session_id))
 
+    def test_blocked_input_write_does_not_stop_credit_from_being_processed(self):
+        document = self.open_session()
+        session = self.state.terminals.get(document["session_id"])
+        release = threading.Event()
+        real_write = session.write
+
+        def blocked(data):
+            release.wait(10)
+            real_write(data)
+
+        session.write = blocked
+        try:
+            with self.connect(document["session_id"]) as ws:
+                ws.send_text(json.dumps({"t": "input", "data": b64("echo X\n")}))
+                ws.send_text(json.dumps({"t": "credit", "bytes": 4096}))
+                deadline = time.monotonic() + 5
+                while session.gate.available == 4096 and not session.bytes_out and time.monotonic() < deadline:
+                    time.sleep(0.02)
+                # the credit was granted (and maybe spent on the prompt) while the write is still blocked
+                self.assertFalse(release.is_set())
+                self.assertTrue(session.gate.available > 0 or session.bytes_out > 0)
+                release.set()
+        finally:
+            release.set()
+
     def test_credit_is_summed_up_to_the_cap(self):
         document = self.open_session()
         with self.connect(document["session_id"]) as ws:

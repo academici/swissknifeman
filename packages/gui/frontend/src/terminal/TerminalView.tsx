@@ -52,11 +52,20 @@ export function TerminalView({ sessionId, cols = 80, rows = 24, socketFactory, o
   useEffect(() => {
     let cancelled = false;
     let teardown: (() => void) | null = null;
+    let refused = false; // the server refused the attachment: the session belongs to another client
+
+    const closeRemote = () => {
+      if (refused) return;
+      void transport.request("POST", `/v1/terminal/sessions/${encodeURIComponent(sessionId)}:close`, {}).catch(() => undefined).finally(() => callbacks.current.onClosed?.());
+    };
 
     void (async () => {
       const [xterm, fit] = await Promise.all([import("@xterm/xterm"), import("@xterm/addon-fit"), import("@xterm/xterm/css/xterm.css")]);
       const element = host.current;
-      if (cancelled || !element) return;
+      if (cancelled || !element) {
+        if (cancelled) closeRemote(); // the backend session exists already; nothing else was created
+        return;
+      }
       const term: XTerminal = new xterm.Terminal({ convertEol: false, cursorBlink: true, scrollback: 5000, allowProposedApi: false, cols, rows });
       const fitAddon = new fit.FitAddon() as FitLike;
       term.loadAddon(fitAddon);
@@ -71,7 +80,10 @@ export function TerminalView({ sessionId, cols = 80, rows = 24, socketFactory, o
             setExit(info);
             callbacks.current.onExit?.(info);
           },
-          onError: (code, message) => setProblem(`${code}: ${message}`),
+          onError: (code, message) => {
+            if (code === "TERMINAL_BUSY" || code === "NOT_FOUND") refused = true;
+            setProblem(`${code}: ${message}`);
+          },
           onState: (next) => {
             setState(next);
             if (next === "open") refit();
@@ -85,7 +97,8 @@ export function TerminalView({ sessionId, cols = 80, rows = 24, socketFactory, o
         } catch {
           return; // the container has no size yet
         }
-        session.sendResize(term.cols, term.rows);
+        const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, Math.round(value)));
+        session.sendResize(clamp(term.cols, 10, 500), clamp(term.rows, 2, 200));
       }
 
       const input = term.onData((data) => session.sendInput(data));
@@ -99,7 +112,7 @@ export function TerminalView({ sessionId, cols = 80, rows = 24, socketFactory, o
         binary.dispose();
         session.close();
         term.dispose();
-        void transport.request("POST", `/v1/terminal/sessions/${encodeURIComponent(sessionId)}:close`, {}).catch(() => undefined).finally(() => callbacks.current.onClosed?.());
+        closeRemote();
       };
     })();
 

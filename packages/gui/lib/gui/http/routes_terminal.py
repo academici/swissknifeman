@@ -31,6 +31,7 @@ from .errors import endpoint, json_response, read_json
 CONTRACT = "urn:swissknifeman:gui:terminal:v1"
 MAX_FRAME = 96 * 1024  # a 64 KiB input frame in base64 and its JSON
 TICK_S = 0.25
+WRITE_QUEUE = 64  # input frames waiting for the PTY; more means the shell does not read
 _SESSION_ID = re.compile(r"^term-[0-9a-f]{32}$")
 
 
@@ -177,7 +178,21 @@ async def io(websocket: WebSocket) -> None:
         except (WebSocketDisconnect, RuntimeError, OSError):
             return
 
+    writes: "asyncio.Queue[bytes]" = asyncio.Queue(maxsize=WRITE_QUEUE)
+
+    async def writer() -> None:
+        """Input goes to the PTY from here, so a blocked write never stops the receiver from reading ``credit``."""
+        while True:
+            data = await writes.get()
+            try:
+                await asyncio.to_thread(session.write, data)
+            except (OSError, TimeoutError):
+                if not session.closed:
+                    await refuse("INTERNAL", "the shell does not accept input")
+                return
+
     task = asyncio.create_task(pump())
+    write_task = asyncio.create_task(writer())
     try:
         while True:
             message = await websocket.receive()
@@ -198,11 +213,10 @@ async def io(websocket: WebSocket) -> None:
                 if kind == "input":
                     data = _decode_input(frame)
                     try:
-                        await asyncio.to_thread(session.write, data)
-                    except (OSError, TimeoutError):
-                        if not session.closed:
-                            await refuse("INTERNAL", "the shell does not accept input")
-                            break
+                        writes.put_nowait(data)
+                    except asyncio.QueueFull:
+                        await refuse("INTERNAL", "the shell does not accept input")
+                        break
                 elif kind == "resize":
                     if set(frame) != {"t", "cols", "rows"}:
                         raise ValueError("a resize frame is {t, cols, rows}")
@@ -225,7 +239,8 @@ async def io(websocket: WebSocket) -> None:
         disconnected = True
     finally:
         task.cancel()
-        await asyncio.gather(task, return_exceptions=True)
+        write_task.cancel()
+        await asyncio.gather(task, write_task, return_exceptions=True)
         session.detach()
         # The socket is gone (or refused): the session ends now; version 1 has no reconnect.
         await asyncio.shield(asyncio.to_thread(manager.close, session.id, "closed"))

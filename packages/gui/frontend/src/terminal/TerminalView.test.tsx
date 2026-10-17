@@ -182,13 +182,37 @@ describe("TerminalView", () => {
     expect(fake.calls.filter((call) => call.path === "/v1/terminal/sessions/term-x:close" && call.method === "POST")).toHaveLength(1);
   });
 
-  it("creates nothing when it is unmounted before xterm has loaded", async () => {
-    const { view, socket } = mount();
+  it("creates nothing but still closes the backend session when unmounted before xterm has loaded", async () => {
+    const { view, socket, fake } = mount();
     view.unmount();
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(mocks.terminals).toHaveLength(0);
     expect(socket.closed).toBe(0);
     expect(observers.created).toBe(0);
+    expect(fake.calls.filter((call) => call.path === "/v1/terminal/sessions/term-x:close" && call.method === "POST")).toHaveLength(1);
+  });
+
+  it("does not close the session of another client when the attachment was refused", async () => {
+    const { socket, fake, view } = mount();
+    await waitFor(() => expect(mocks.terminals).toHaveLength(1));
+    socket.onmessage?.({ data: JSON.stringify({ t: "error", code: "TERMINAL_BUSY", message: "busy" }) });
+    await screen.findByRole("alert");
+    view.unmount();
+    expect(mocks.terminals[0]?.disposed).toBe(1);
+    expect(fake.calls.filter((call) => call.path.endsWith(":close"))).toHaveLength(0);
+  });
+
+  it("clamps the fitted size to 10-500 columns and 2-200 rows", async () => {
+    const { socket } = mount();
+    await waitFor(() => expect(mocks.terminals).toHaveLength(1));
+    mocks.terminals[0]!.cols = 3;
+    mocks.terminals[0]!.rows = 900;
+    socket.onopen?.({});
+    expect(socket.sent.at(-1)).toEqual({ t: "resize", cols: 10, rows: 200 });
+    mocks.terminals[0]!.cols = 900;
+    mocks.terminals[0]!.rows = 1;
+    lastObserver?.callback();
+    expect(socket.sent.at(-1)).toEqual({ t: "resize", cols: 500, rows: 2 });
   });
 
   it("does not fail when the container has no size yet", async () => {

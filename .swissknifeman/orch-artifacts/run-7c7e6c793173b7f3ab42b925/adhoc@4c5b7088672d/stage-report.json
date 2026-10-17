@@ -1,0 +1,29 @@
+{
+  "changed_paths": [
+    "packages/gui/frontend/src/terminal/TerminalView.test.tsx",
+    "packages/gui/frontend/src/terminal/TerminalView.tsx",
+    "packages/gui/lib/gui/core/terminal.py",
+    "packages/gui/lib/gui/http/routes_terminal.py",
+    "packages/gui/tests/test_http_terminal.py",
+    "packages/gui/tests/test_terminal.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "test_env",
+      "impact": "V1 cannot be confirmed here; the new HTTP and vitest tests are unrun",
+      "kind": "difficulty",
+      "outcome": "follow_up",
+      "severity": "medium",
+      "text": "deviation: npm run check (eslint, vitest), affected-tests.py --run (git diff exit 128; with --no-cache an unrelated skiller skills.json permission error) and tests.test_http_terminal fail only because *.lock and *.min.js are replaced by unreadable char devices in this sandbox (e.g. packages/gui/requirements.lock, node_modules/esquery/dist/esquery.min.js). Code-side checks that ran: tests.test_terminal 28 OK, tsc --noEmit exit 0."
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "CHECKS_RED: acceptance checks V1 stay red after 1 correction(s): past the target of 1 for check_fixes the last correction made no progress"
+    }
+  ],
+  "summary": "The earlier fixes stay unchanged; no further edits were needed. The routes_terminal.py writer queue, the TerminalView.tsx refused flag, the close on early cancel and the size clamp, and the ps session-membership lookup in core/terminal.py are in place, with tests in test_terminal.py, test_http_terminal.py and TerminalView.test.tsx. V1 stays red in this sandbox because lock and min.js files are masked as unreadable device nodes, so eslint, vitest, the HTTP tests and affected-tests.py cannot run. Only tests.test_terminal (28 OK) and tsc --noEmit (exit 0) ran green.",
+  "status": "blocked"
+}

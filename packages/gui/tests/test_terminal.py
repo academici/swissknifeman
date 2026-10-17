@@ -376,6 +376,25 @@ class TestSettings(unittest.TestCase):
                 settings.load({**env, "SKM_GUI_TERMINAL__CREDIT_BYTES": "100"})
 
 
+class TestSessionMembersWithoutProc(unittest.TestCase):
+    PS = ("  100     1   100 0xaa\n"   # the shell is gone: pid 100 is not listed
+          "  200     1   200 0xaa\n"   # a background job of the session, in a group of its own
+          "  300   200   300 0xbb\n"   # a child of a job in another session; not reachable from the leader
+          "  400     1   400 0xcc\n"   # a stranger
+          "  500     1   200 0xaa\n")  # a job process whose group is led by 200
+
+    def test_jobs_are_found_by_session_after_the_shell_exited(self):
+        # the group id 100 is still the group of a process of the session: 100 is the leader's pid
+        text = self.PS + "  600     1   100 0xaa\n"
+        done = mock.Mock(stdout=text)
+        with mock.patch.object(core.sys, "platform", "darwin"), \
+                mock.patch.object(core.subprocess, "run", return_value=done) as run:
+            members = core.session_members(100)
+        self.assertEqual({100, 200, 500, 600}, members)  # the leader pid is always listed
+        self.assertIn("sess=", run.call_args[0][0][-1])
+        self.assertIsNotNone(run.call_args[1].get("timeout"))
+
+
 class TestPlatform(unittest.TestCase):
     def test_import_and_refusal_without_a_pty(self):
         manager = core.TerminalManager(core.Limits(), env={})

@@ -139,8 +139,8 @@ class Limits:
 
 def session_members(sid: int) -> Set[int]:
     """Pids of the processes of session ``sid``: the shell, its jobs (each job has a group of its own) and the
-    descendants that were detached from the shell. Linux reads ``/proc``; elsewhere the descendants of ``sid``
-    found by ``ps`` and nothing more."""
+    descendants that were detached from the shell. Linux reads ``/proc``; elsewhere ``ps`` finds the members by
+    session and the descendants of ``sid``."""
     found: Set[int] = set()
     if sys.platform.startswith("linux"):
         try:
@@ -159,22 +159,37 @@ def session_members(sid: int) -> Set[int]:
             if len(fields) > 3 and fields[3] == str(sid):
                 found.add(int(name))
         return found
+    return found.union(_ps_members(sid))
+
+
+def _ps_members(sid: int) -> Set[int]:
+    """Members of session ``sid`` where there is no ``/proc``: every process in the same session as the leader or as
+    a process of its group (``ps`` ``sess``), so jobs stay found after the shell exited, plus the descendants of ``sid``."""
+    found: Set[int] = set()
     try:
-        result = subprocess.run(["ps", "-axo", "pid=,ppid="], capture_output=True, text=True, timeout=5,
+        result = subprocess.run(["ps", "-axo", "pid=,ppid=,pgid=,sess="], capture_output=True, text=True, timeout=5,
                                 env={"LC_ALL": "C", "PATH": os.environ.get("PATH", "/bin:/usr/bin")})
     except (OSError, subprocess.SubprocessError):
         return found
-    children: Dict[int, List[int]] = {}
+    rows: List[Tuple[int, int, int, str]] = []
     for line in result.stdout.splitlines():
         parts = line.split()
-        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-            children.setdefault(int(parts[1]), []).append(int(parts[0]))
+        if len(parts) == 4 and parts[0].isdigit() and parts[1].isdigit() and parts[2].isdigit():
+            rows.append((int(parts[0]), int(parts[1]), int(parts[2]), parts[3]))
+    sessions = {sess for pid, _ppid, pgid, sess in rows if (pid == sid or pgid == sid) and sess not in ("0", "-")}
+    children: Dict[int, List[int]] = {}
+    for pid, ppid, _pgid, sess in rows:
+        children.setdefault(ppid, []).append(pid)
+        if sess in sessions:
+            found.add(pid)
     todo = [sid]
+    seen: Set[int] = set()
     while todo:
         pid = todo.pop()
-        if pid not in found:
-            found.add(pid)
+        if pid not in seen:
+            seen.add(pid)
             todo.extend(children.get(pid, ()))
+    found.update(seen)
     return found
 
 

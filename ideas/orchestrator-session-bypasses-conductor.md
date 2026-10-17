@@ -1,6 +1,6 @@
 # Идея: сессия «оркестратора» обходит `orch conduct` и вручную имитирует кондуктор
 
-Статус: идея, не реализовано. Источник: сессия оркестрации PLAN3 (vaulter, `2026.10.13-№1-VAULTER-KERNEL`), P4.5–P5.3,
+Статус: идея, не реализовано. Источник: сессия оркестрации PLAN3 (vaulter), P4.5–P5.3,
 2026-10-16/17. Связано: `orchestrator-ignores-plan-batches.md`, `plan-must-not-prescribe-executor-workflow.md`.
 
 ## Что произошло

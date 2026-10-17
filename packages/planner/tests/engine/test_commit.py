@@ -614,3 +614,32 @@ class WorkspaceCommitTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CliWorkspaceCommitExitTests(unittest.TestCase):
+    """``plan.py commit`` in text mode fails when the workspace commit failed or was locked, and says why."""
+
+    def run_cli(self, workspace_commit: dict, sha=None) -> tuple:
+        import argparse
+        import contextlib
+        import io
+        from planner.plan import cli
+        args = argparse.Namespace(ref="P1.1", role="executor", path=[], leave_outside=False, dry_run=False, type=None,
+                                  scope=None, summary=None, trailer=[], actor=None, json=False, output="text")
+        result = {"sha": sha, "ref": "P1.1", "role": "executor", "paths": [], "workspace_sha": None,
+                  "workspace_commit": workspace_commit}
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(cli, "_plan_dir", return_value=Path(".")), mock.patch.object(gitops, "commit", return_value=result), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = cli.cmd_commit(args)
+        return code, err.getvalue()
+
+    def test_a_locked_or_failed_workspace_commit_exits_non_zero_with_the_reason(self):
+        code, err = self.run_cli({"status": "locked", "error": "workspace lock held"})
+        self.assertEqual(code, 1)
+        self.assertIn("workspace commit locked: workspace lock held", err)
+        self.assertEqual(self.run_cli({"status": "failed", "error": "x"})[0], 1)
+
+    def test_a_committed_or_skipped_workspace_commit_exits_zero(self):
+        self.assertEqual(self.run_cli({"status": "committed"}, sha="abc")[0], 0)
+        self.assertEqual(self.run_cli({"status": "skipped-no-git"})[0], 0)

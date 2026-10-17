@@ -653,7 +653,13 @@ def cmd_commit(args) -> int:
     else:
         sha = result["sha"] or result.get("workspace_sha") or ("dry-run" if args.dry_run else "no-commit")
         print(f"{sha} {result['ref']} {result['role']} ({len(result['paths'])} paths)")
+    workspace_commit = result.get("workspace_commit") or {}
+    # JSON callers read workspace_commit from the envelope next to the source commit
+    if workspace_commit.get("status") in ("failed", "locked") and not (args.json or args.output == "json"):
+        print(f"workspace commit {workspace_commit['status']}: {workspace_commit.get('error', '')}", file=sys.stderr)
+        return 1
     return 0
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="plan.py", description="Planner plan (layout v4): authoring and lifecycle verbs.")

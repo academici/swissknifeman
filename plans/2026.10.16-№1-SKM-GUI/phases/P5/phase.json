@@ -2,17 +2,97 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P5",
   "title": "Платформа плагинов: состояние, доверие, карантин",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Каталог плагинов показывает совместимость и permissions (declared/enforced/advisory); включение и отключение с drain; карантин после сбоев; grants с digest manifest и повторным approval; внешний subprocess-плагин подключается без изменения frontend routing; `gui check` — conformance gate.",
-  "context": "knowledge/architecture#plugins, knowledge/roadmap#p5; контракт trust/v1 (P1). Review P5 на Grok (доверие, изоляция).",
+  "context": "Дизайн — knowledge/p5-design (сверен с кодом HEAD bc87c4489: #code-facts, #state-model, #grants, #gates, #api, #frontend, #fixture-e2e); цели — knowledge/architecture#plugins и roadmap#p5. По решению D16 review фазы — одна групповая review codex/gpt-6.1-sol/high после P5.4 (вместо Grok из roadmap); жёсткие риски названы в why пунктов. Журнал прогона docs/skm-gui-run-findings.md: исполнитель не запускает E2E и реальный backend, поведение дублируется Python-тестами ASGI.",
+  "scope": {
+    "include": [
+      "packages/gui (lib/gui/core/plugins.py, http/routes_plugins.py, схемы plugin-api, frontend, тесты, docs)",
+      "packages/gui/tests/fixtures/extensions/ext-demo",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "изменения aicore, planner, orch",
+      "песочница процессов плагинов и enforced-статусы (P7)",
+      "desktop (P6), терминал и runs orch (P7)",
+      "произвольный JS плагинов (вне v1)"
+    ]
+  },
   "depends_on": [
     "P2"
+  ],
+  "validation": [
+    {
+      "id": "V28",
+      "cmd": "python3 scripts/affected-tests.py --run --tier all --with-tools",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V29",
+      "cmd": "bash packages/gui/scripts/test.sh && bash bridges/gui-hub/scripts/test.sh && bash bridges/gui-planner/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V30",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V31",
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base bc87c4489",
+      "expect": "exit 0; нет ломающих изменений контрактов (plugin-api — новый; api-error — только новые значения enum)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V32",
+      "cmd": "npm --prefix packages/gui/frontend ci && npm --prefix packages/gui/frontend run check && npm --prefix packages/gui/frontend run build",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V33",
+      "cmd": "npm --prefix packages/gui/frontend run e2e",
+      "expect": "exit 0; все сценарии passed",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V34",
+      "cmd": "bash packages/gui/scripts/smoke.sh && packages/gui/bin/gui check bridges/gui-hub --json > /dev/null && packages/gui/bin/gui check bridges/gui-planner --json > /dev/null && packages/gui/bin/gui check packages/gui/tests/fixtures/extensions/ext-demo --json > /dev/null",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
   ],
   "deliverables": [
     "PluginHost + /v1/plugins*",
     "экраны плагинов",
     "пример внешнего расширения и E2E disable во время run"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P5.1",
+    "P5.2",
+    "P5.3",
+    "P5.4"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P5.1",
+        "P5.2",
+        "P5.3",
+        "P5.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

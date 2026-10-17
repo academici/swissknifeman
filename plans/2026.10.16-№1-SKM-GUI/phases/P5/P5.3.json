@@ -1,0 +1,213 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.3",
+  "title": "Frontend плагинов: каталог, детали, permissions, grants, health, history, Enable/Disable/Release, события",
+  "status": "todo",
+  "summary": "Экраны `/plugins` и `/plugins/:pluginId`: таблица плагинов, permissions с enforcement, grants (Grant/Revoke через диалог подтверждения), health, карантин и Release, Enable/Disable, history; подписка на `gui.plugin.*` обновляет список и каталог (`useCatalog`), пункт навигации ядра.",
+  "why": "Жёсткие риски: UI называет `enforced`, чего API не отдал (I12); подтверждение 428 обходится повторным запросом без показа summary; Disable отправляется без показа числа runs; после gui.plugin.state маршрут отключённого плагина остаётся в навигации (каталог не обновлён); диалог Grant допускает `read`/`terminal` или capability вне объявленных; состояние передано только цветом (a11y). Описание — knowledge/p5-design#frontend.",
+  "scope": {
+    "include": [
+      "packages/gui/frontend/src/pages/Plugins.tsx",
+      "packages/gui/frontend/src/pages/PluginPage.tsx",
+      "packages/gui/frontend/src/plugins/**",
+      "packages/gui/frontend/src/app/App.tsx",
+      "packages/gui/frontend/src/app/catalog.ts",
+      "packages/gui/frontend/src/test/**",
+      "packages/gui/frontend/src/styles.css",
+      "packages/gui/docs/frontend.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui/lib/**",
+      "packages/gui/schemas/**",
+      "packages/gui/frontend/e2e/**",
+      "packages/gui/frontend/src/contracts/generated/**"
+    ]
+  },
+  "depends_on": [
+    "P5.2"
+  ],
+  "decisions": [
+    "D23",
+    "D25"
+  ],
+  "reads": [
+    {
+      "why": "страницы, блоки, диалоги, события, тесты",
+      "required": true,
+      "ref": "knowledge/p5-design#frontend"
+    },
+    {
+      "why": "формы запросов и ответов plugin-api/v1",
+      "required": true,
+      "ref": "knowledge/p5-design#api"
+    },
+    {
+      "why": "правила grant и подпись «start requires a grant»",
+      "required": true,
+      "ref": "knowledge/p5-design#grants"
+    },
+    {
+      "path": "packages/gui/frontend/src/contracts/generated/plugin-api.ts",
+      "why": "типы plugin-api/v1 (создаёт P5.2)",
+      "required": false
+    },
+    {
+      "path": "packages/gui/frontend/src/contracts/generated/trust.ts",
+      "why": "типы trust/v1",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/app/App.tsx",
+      "why": "маршруты и навигация ядра",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/app/catalog.ts",
+      "why": "useCatalog и ключ запроса каталога",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/Runs.tsx",
+      "why": "образец страницы со списком и подпиской на события",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/ConfigEditor.tsx",
+      "why": "образец диалога подтверждения 428",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/forms/PreviewDialog.tsx",
+      "why": "образец диалога",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/components/RunLog.tsx",
+      "why": "как читаются кадры событий",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/transport/Transport.ts",
+      "why": "request/subscribe",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/test/fakes.tsx",
+      "why": "FakeTransport и Wrapper",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/ContributionRoute.test.tsx",
+      "why": "образец теста страницы",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/frontend/src/pages/Plugins.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/PluginPage.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/plugins/api.ts",
+      "change": "create",
+      "note": "запросы и ключи react-query /v1/plugins*"
+    },
+    {
+      "path": "packages/gui/frontend/src/plugins/Badges.tsx",
+      "change": "create",
+      "note": "StateBadge, EnforcementBadge: текст + цвет"
+    },
+    {
+      "path": "packages/gui/frontend/src/plugins/GrantDialog.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/plugins/useConfirmed.ts",
+      "change": "create",
+      "note": "общий повтор запроса с confirm из 428"
+    },
+    {
+      "path": "packages/gui/frontend/src/plugins/useGuiPluginEvents.ts",
+      "change": "create",
+      "note": "подписка на gui.plugin.* и invalidate"
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/Plugins.test.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/PluginPage.test.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/src/app/App.tsx",
+      "change": "modify",
+      "note": "маршруты /plugins, /plugins/:pluginId; пункт навигации Plugins"
+    },
+    {
+      "path": "packages/gui/frontend/src/styles.css",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/docs/frontend.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "Типы только из `src/contracts/generated/*` (plugin-api.ts, trust.ts); свои типы форм ответов не заводи. Если generated/plugin-api.ts нет — это ошибка зависимости P5.2: остановись и сообщи, не пиши типы руками.",
+    "Бейдж enforcement рисует значение из API как есть и подпись из словаря {declared, advisory, enforced}; текст всегда виден, цвет — дополнение. Тест: для данных с `advisory` нет текста `enforced`.",
+    "Подтверждение: ответ 428 с `details.confirm` и `summary` → диалог с summary → повтор того же запроса с `confirm`; без показа summary повтор невозможен. Тесты на Grant и Disable.",
+    "Диалог Grant предлагает только объявленные effects плагина кроме `read` и `terminal`; срок: none | 1 day | 7 days | 30 days → RFC 3339 UTC (без float; время через Date → toISOString без миллисекунд).",
+    "После событий `gui.plugin.state` и `gui.plugin.grant` обновляются запросы списка, детали, history и каталога (ключ из app/catalog.ts); тест на FakeTransport с кадром события.",
+    "Все кнопки действий доступны по роли и имени (`Enable ext-demo`, `Disable ext-demo`); состояние плагина — текстом."
+  ],
+  "guidance": "Порядок: (1) прочитать образцы (Runs.tsx, ConfigEditor/PreviewDialog, FakeTransport) и plugin-api.ts; (2) plugins/api.ts (ключи `['plugins', project]`, `['plugin', id]`, `['plugin-history', id]`), useGuiPluginEvents (подписка, как в RunLog/Runs, invalidate включая каталог), useConfirmed (перехват ApiError CONFIRMATION_REQUIRED, диалог, повтор); (3) Badges; (4) Plugins.tsx: таблица по knowledge/p5-design#frontend, ссылка на детали; (5) PluginPage.tsx: Permissions, Grants (+GrantDialog, Revoke), Health (карантин, Release), History, Enable/Disable; (6) App.tsx и навигация; styles; (7) тесты: список (состояния, флаги, сбои), детали (permissions без `enforced`), Grant через 428 и список обновился, Revoke, Disable с подтверждением и числом runs в summary, Release после quarantined, событие `gui.plugin.state` обновляет каталог (проверка вызова invalidate/повторного запроса `/v1/ui/contributions`), a11y-имена кнопок; (8) docs/frontend.md, CHANGELOG; V1–V2.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "npm --prefix packages/gui/frontend run check",
+      "expect": "exit 0; typecheck, eslint, vitest зелёные",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "экраны плагинов",
+    "диалоги подтверждения",
+    "обновление каталога по событиям"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T02:09:36Z"
+}

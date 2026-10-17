@@ -1,0 +1,199 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P5.4",
+  "title": "Внешнее расширение-образец, интеграционные и E2E-сценарии (enable, grants, disable во время run, карантин); закрытие фазы P5",
+  "status": "todo",
+  "summary": "Образец внешнего subprocess-расширения `tests/fixtures/extensions/ext-demo` (gui.json, handler, bin/slow); Python-тесты на фикстуре и `gui check`; E2E `plugins.spec.ts` (подключение без правок frontend routing, Grant, disable во время run, карантин и Release); wiring e2e/backend.ts через конфиг aicore в throwaway-HOME; документация подключения расширения; закрытие фазы.",
+  "why": "Закрывает вертикаль P5 доказательством на внешнем плагине. Жёсткие риски: образец читает/пишет вне throwaway-проекта (handler не пишет на диск; slow печатает тики); E2E зависит от реального окружения разработчика (всё через `backend.ts`, свой HOME, `[aicore.plugins]` с абсолютным путём фикстуры); flaky E2E из-за таймингов (drain_timeout_s=2 задан в config.toml, bin/slow спит 30 с, ожидания по состоянию UI, а не по sleep); hub-реестр (`SKM_UNITS_PATH`) не должен включать фикстуру extension как unit; исполнитель не запускает E2E (журнал п. 12), поэтому поведение дублируется Python-тестом уровня ASGI. Сценарии — knowledge/p5-design#fixture-e2e.",
+  "scope": {
+    "include": [
+      "packages/gui/tests/fixtures/extensions/ext-demo/**",
+      "packages/gui/tests/test_plugin_fixture.py",
+      "packages/gui/frontend/e2e/backend.ts",
+      "packages/gui/frontend/e2e/plugins.spec.ts",
+      "packages/gui/docs/contribution.md (раздел подключения внешнего расширения)",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui/lib/**",
+      "packages/gui/schemas/**",
+      "packages/gui/frontend/src/**"
+    ]
+  },
+  "depends_on": [
+    "P5.3"
+  ],
+  "decisions": [
+    "D24",
+    "D25"
+  ],
+  "reads": [
+    {
+      "why": "состав образца и сценарии E2E",
+      "required": true,
+      "ref": "knowledge/p5-design#fixture-e2e"
+    },
+    {
+      "why": "маршруты, коды, настройки plugins",
+      "required": true,
+      "ref": "knowledge/p5-design#api"
+    },
+    {
+      "why": "состояния, drain, карантин",
+      "required": true,
+      "ref": "knowledge/p5-design#state-model"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/units/e2e/demo/gui.json",
+      "why": "образец gui.json с route, queries, commands",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/fixtures/units/e2e/demo/handler/extension.json",
+      "why": "образец extension.json",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/fixtures/units/e2e/demo/handler/handler.py",
+      "why": "образец handler протокола aicore",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/fixtures/units/e2e/demo/bin/ticks",
+      "why": "образец потокового argv-скрипта",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/backend.ts",
+      "why": "setup throwaway backend",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/commands.spec.ts",
+      "why": "образец сценария запуска команды",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/session.ts",
+      "why": "signIn, api()",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/PluginPage.tsx",
+      "why": "имена кнопок и текстов экрана плагина (P5.3)",
+      "required": false
+    },
+    {
+      "path": "packages/gui/frontend/src/pages/Plugins.tsx",
+      "why": "тексты экрана списка (P5.3)",
+      "required": false
+    },
+    {
+      "path": "packages/gui/docs/contribution.md",
+      "why": "куда добавить раздел подключения расширения",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/http_support.py",
+      "why": "ASGI-хелперы",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/tests/fixtures/extensions/ext-demo/extension.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/extensions/ext-demo/gui.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/extensions/ext-demo/handler/handler.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/fixtures/extensions/ext-demo/bin/slow",
+      "change": "create",
+      "note": "исполняемый; chmod +x"
+    },
+    {
+      "path": "packages/gui/tests/test_plugin_fixture.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/e2e/backend.ts",
+      "change": "modify",
+      "note": "config.toml с [aicore.plugins.ext-demo] и [gui.plugins] drain_timeout_s = 2 в throwaway HOME"
+    },
+    {
+      "path": "packages/gui/frontend/e2e/plugins.spec.ts",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/docs/contribution.md",
+      "change": "modify",
+      "note": "раздел «Подключение внешнего расширения»: [aicore.plugins], Enable, grants"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "Ответы API, события и тела не содержат float (canonical JSON бэкенда его отвергает): доли и проценты — целые.",
+    "Исполнитель не запускает E2E и реальный backend (песочница не видит requirements.lock и браузер, журнал прогона п. 12): каждое поведение E2E покрыто Python-тестом уровня ASGI (образец tests/http_support.py) и/или тестом компонента.",
+    "Образец не пишет на диск вне временного каталога теста; `ext-demo.note` отвечает ok без записи; `bin/slow` печатает по тику в секунду 30 секунд и обрабатывает SIGTERM.",
+    "`SKM_UNITS_PATH` в `backend.ts` не получает каталог `tests/fixtures/extensions`; расширение подключается только `[aicore.plugins.ext-demo]` в `config.toml` throwaway-HOME (абсолютный путь к `extension.json`, `enabled = true`, `trusted = true`).",
+    "E2E-ожидания — по состоянию UI (`expect(...).toBeVisible()`, `toHaveText`), без `waitForTimeout`; сценарии `test.describe.serial`; тексты и роли берутся из экранов P5.3 (читай PluginPage.tsx/Plugins.tsx, не угадывай).",
+    "Python-тест `tests/test_plugin_fixture.py` повторяет сценарии E2E на ASGI-уровне и должен быть зелёным до сдачи пункта; `packages/gui/bin/gui check packages/gui/tests/fixtures/extensions/ext-demo --json` без fail.",
+    "Не меняй `lib/gui`, схемы и `frontend/src`: если сценарий требует правки там — это дефект P5.2/P5.3: остановись и сообщи в report как escalation с точным описанием, не обходи в тесте."
+  ],
+  "guidance": "Порядок: (1) образец: extension.json (id `ext-demo`, kind command, points gui:query и gui:command), gui.json (route `ext-demo.home` путь `/x/ext-demo/home` view resource-list, queries `ext-demo.items`/`ext-demo.flaky`, commands `ext-demo.slow` (argv, effects process.spawn, supports cancel и stream) и `ext-demo.note` (invoke, effects project.write)), handler.py, bin/slow; `gui check` до зелёного; (2) tests/test_plugin_fixture.py: временный HOME с config.toml, ASGI-приложение, сценарии из #fixture-e2e (compatible → enable → grant → note; slow + disable → cancelled; три flaky → quarantined → release); (3) backend.ts: запись config.toml и экспорт путей; (4) plugins.spec.ts: четыре сценария serial; (5) docs: contribution.md «Подключение внешнего расширения»; CHANGELOG; V1–V6. Закрывает фазу: широкие проверки — в phase.validation, их запускает conductor.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "packages/gui/bin/gui check packages/gui/tests/fixtures/extensions/ext-demo --json > /dev/null",
+      "expect": "exit 0: ни одного fail",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "пример внешнего расширения",
+    "E2E disable во время run",
+    "docs/plugins.md"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T02:10:05Z"
+}

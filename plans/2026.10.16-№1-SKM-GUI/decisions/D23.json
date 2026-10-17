@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D23",
+  "title": "Enforcement в v1: advisory для требующих grant effects, enforced не заявляется до подтверждённой песочницы",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "question": "Какой enforcement показывать для effects плагина?",
+  "options": [
+    {
+      "id": "A",
+      "text": "`declared` для read и необъявленных, `advisory` для объявленных effects, требующих grant; `enforced` не выдаётся (резерв P7); гейт старта по grants — отдельная подпись",
+      "pros": "I12 соблюдён: UI не обещает ограничения процесса, которого нет",
+      "cons": "в UI нет зелёного «enforced» до P7"
+    },
+    {
+      "id": "B",
+      "text": "считать enforced всё, что закрыто гейтом grants",
+      "pros": "красивее",
+      "cons": "процесс после старта не ограничен: статус вводит в заблуждение"
+    }
+  ],
+  "decision": "A — `declared` для read и необъявленных, `advisory` для объявленных effects, требующих grant; `enforced` не выдаётся (резерв P7); гейт старта по grants — отдельная подпись",
+  "rationale": "I12 и архитектура plugins: платформа без песочницы не ограничивает процесс. Гейт grants запрещает старт, а не поведение запущенного процесса.",
+  "consequences": [
+    "функция enforcement() возвращает declared|advisory",
+    "тест: ни один ответ API не содержит `enforced`",
+    "P7 расширит функцию, когда песочница подтверждена"
+  ],
+  "applies_to": [
+    "P5.1",
+    "P5.2",
+    "P5.3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

@@ -11,6 +11,7 @@
     "maind": "pass",
     "orch": "pass",
     "planner": "pass",
-    "skiller": "pass"
+    "skiller": "pass",
+    "workspace": "pass"
   }
 }

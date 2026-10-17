@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P1.2",
   "title": "Модуль packages/workspace: регистрация в хабе, swissknifeman workspace init|status|doctor|project attach|list|show|scan|rebind|detach",
-  "status": "todo",
+  "status": "done",
   "summary": "Новый модуль `workspace` (kind capability, requires aicore) с группой `swissknifeman workspace`: `init` создаёт layout v1, git-репозиторий и device; `status` и `doctor` (структурные проверки в формате check-result/v1) читают состояние; `project attach|list|show|scan|rebind|detach` управляют project.json, маркером в checkout и bindings машины; события `workspace.initialized`, `workspace.project.attached`.",
   "why": "CLI — единственный путь создания workspace и привязки проектов; на нём строятся миграция, sync и GUI. Жёсткие риски: init поверх непустого каталога (потеря данных владельца), attach по совпадению basename (склейка разных проектов), запись маркера в чужой checkout без явного действия.",
   "scope": {
@@ -238,6 +238,20 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/9a611d46482d5ba9b90a149b7a2fd80b7a1dcb368731316c55751156a15aa547",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/7891968e29e203680e435373f557c0101531d468f236f82dcbab409bbf2e1935",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/41afd87a9864b94335093e0cb3c9cc2cefed7b7ac029020aa552b9b1f108bbe9",
+      "role": "input"
+    }
+  ],
   "rules": [
     "lib/workspace импортирует только stdlib, aicore и себя; имена packages/<другой модуль> и bridges/ в коде модуля запрещены (ecosystem-units check).",
     "`init` на каталоге с `workspace.json` — no-op с `already_initialized: true`; на непустом каталоге без него — `WORKSPACE_ROOT_NOT_EMPTY`, ничего не пишется.",
@@ -304,6 +318,59 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T10:22:14Z"
+  "result": {
+    "started_at": "2026-10-17T11:05:10Z",
+    "finished_at": "2026-10-17T11:50:35Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-94757b67116be92a58a596f7-P1.2",
+    "notes": "Correction for the red V9: the only failing check was scripts/test-ecosystem-units.py::RealRepositoryTests.test_modules_and_aliases, whose expected bridge list (orch-harness, orch-skiller, planner-orch) was stale because the gui bridges gui-hub, gui-orch and gui-planner are already registered in the hub; the test now expects all six bridges. Nothing else changed. Ran: python3 scripts/test-ecosystem-units.py RealRepositoryTests (6 tests, OK).\nChanged: CHANGELOG.md, configs/ecosystem-baseline.json, configs/ecosystem-units.json, configs/install-profiles.json, docs/architecture/ecosystem.md, docs/architecture/ownership.md, packages/workspace/CHANGELOG.md, packages/workspace/README.md, packages/workspace/bin/workspace, packages/workspace/config.example.toml, packages/workspace/configs/config.schema.json, packages/workspace/lib/workspace/__init__.py, packages/workspace/lib/workspace/cli.py, packages/workspace/lib/workspace/doctor.py, packages/workspace/lib/workspace/events.py, packages/workspace/lib/workspace/gitutil.py, packages/workspace/lib/workspace/layout.py, packages/workspace/lib/workspace/projects.py, packages/workspace/schemas/event-data/v1/workspace.project.attached.schema.json, packages/workspace/schemas/event-data/v1/workspace.root.initialized.schema.json, packages/workspace/scripts/test.sh, packages/workspace/tests/__init__.py, packages/workspace/tests/test_cli.py, packages/workspace/tests/test_doctor.py, packages/workspace/tests/test_init.py, packages/workspace/tests/test_projects.py, packages/workspace/unit.json, scripts/test-aicore-locator.py, scripts/test-dev-guard.py, scripts/test-ecosystem-units.py, tests/golden/cases.json, tests/golden/cli/swissknifeman-help.txt, tests/golden/cli/swissknifeman-unknown-subcommand.txt, tests/golden/generation.json",
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T11:50:35Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T11:50:35Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T11:50:35Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T11:50:35Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V4.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T11:50:35Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V9.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V1.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V2.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V3.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V4.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.2/evidence/V9.json"
+    ]
+  },
+  "updated_at": "2026-10-17T11:50:35Z"
 }

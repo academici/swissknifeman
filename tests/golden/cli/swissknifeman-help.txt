@@ -26,14 +26,15 @@ Aliases (configs/umbrella.json):
   other aliases: connect init integrate list lock registry sync topology update vendor
 
 Modules (provides.cli in unit.json):
-  aicore   Shared foundation: contracts and, later, utilities, providers and content delivery
-  analyst  Session and usage analysis
-  brain    Obsidian vault: lookup, document sync and notes from ecosystem events
-  gui      GUI: desktop and browser control plane for Swiss Knife Man
-  harness  Provider environment setup: permissions, MCP, hooks, instructions
-  maind    Project memory and code graph hub
-  orch     Engine-neutral orchestration of agent runs
-  planner  Planner: plans, phases, items and execution commands
-  skiller  Skill registry, delivery and quality gates
+  aicore     Shared foundation: contracts and, later, utilities, providers and content delivery
+  analyst    Session and usage analysis
+  brain      Obsidian vault: lookup, document sync and notes from ecosystem events
+  gui        GUI: desktop and browser control plane for Swiss Knife Man
+  harness    Provider environment setup: permissions, MCP, hooks, instructions
+  maind      Project memory and code graph hub
+  orch       Engine-neutral orchestration of agent runs
+  planner    Planner: plans, phases, items and execution commands
+  skiller    Skill registry, delivery and quality gates
+  workspace  Portable workspace: the plans of all projects in one git root
 --- stderr ---
 

@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "150968fdbf8c",
-  "reason": "planner: new verb plans",
+  "captured_from": "fdd073c0597a",
+  "reason": "PLAN6.P1.2",
   "generators": [
     {
       "id": "skiller-registry",

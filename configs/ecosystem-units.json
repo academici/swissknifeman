@@ -11,6 +11,7 @@
     "harness",
     "brain",
     "gui",
+    "workspace",
     "bridges/planner-orch",
     "bridges/orch-skiller",
     "bridges/orch-harness",
@@ -37,6 +38,10 @@
     },
     "gui": {
       "path": "packages/gui/lib/gui/__init__.py",
+      "read": "python:__version__"
+    },
+    "workspace": {
+      "path": "packages/workspace/lib/workspace/__init__.py",
       "read": "python:__version__"
     },
     "harness": {

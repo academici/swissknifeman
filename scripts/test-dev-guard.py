@@ -25,6 +25,7 @@ ENTRY_POINTS = [
     "packages/harness/bin/harness",
     "packages/maind/bin/maind",
     "packages/skiller/bin/skiller",
+    "packages/workspace/bin/workspace",
     "install.sh",
     "packages/analyst/install.sh",
     "packages/harness/install.sh",

@@ -6,17 +6,17 @@
   "profiles": {
     "minimal": {
       "description": "Skills and plans: foundation, skill library, planner.",
-      "units": ["aicore", "skiller", "planner"],
+      "units": ["aicore", "skiller", "planner", "workspace"],
       "options": {}
     },
     "standard": {
       "description": "Minimal plus the environment harness, the second brain and the orchestrator.",
-      "units": ["aicore", "skiller", "planner", "harness", "brain", "orch"],
+      "units": ["aicore", "skiller", "planner", "workspace", "harness", "brain", "orch"],
       "options": {}
     },
     "full": {
       "description": "Every hub module, including the maind, analyst and gui tools and the gui-hub, gui-planner and gui-orch bridges.",
-      "units": ["aicore", "skiller", "harness", "maind", "analyst", "planner", "brain", "orch", "gui", "gui-hub", "gui-planner", "gui-orch"],
+      "units": ["aicore", "skiller", "harness", "maind", "analyst", "planner", "workspace", "brain", "orch", "gui", "gui-hub", "gui-planner", "gui-orch"],
       "options": {}
     }
   }

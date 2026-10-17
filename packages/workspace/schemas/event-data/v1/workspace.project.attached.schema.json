@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:event-data:workspace-project-attached:v1",
+  "title": "workspace.project.attached",
+  "description": "A checkout of this machine was attached to a project of the workspace.",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Id of the project."
+    },
+    "created": {
+      "type": "boolean",
+      "description": "Whether the project record was created by this attach."
+    }
+  },
+  "required": [
+    "project_id",
+    "created"
+  ],
+  "additionalProperties": false
+}

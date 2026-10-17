@@ -1,0 +1,50 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "configs/ecosystem-baseline.json",
+    "configs/ecosystem-units.json",
+    "configs/install-profiles.json",
+    "docs/architecture/ecosystem.md",
+    "docs/architecture/ownership.md",
+    "packages/workspace/CHANGELOG.md",
+    "packages/workspace/README.md",
+    "packages/workspace/bin/workspace",
+    "packages/workspace/config.example.toml",
+    "packages/workspace/configs/config.schema.json",
+    "packages/workspace/lib/workspace/__init__.py",
+    "packages/workspace/lib/workspace/cli.py",
+    "packages/workspace/lib/workspace/doctor.py",
+    "packages/workspace/lib/workspace/events.py",
+    "packages/workspace/lib/workspace/gitutil.py",
+    "packages/workspace/lib/workspace/layout.py",
+    "packages/workspace/lib/workspace/projects.py",
+    "packages/workspace/schemas/event-data/v1/workspace.project.attached.schema.json",
+    "packages/workspace/schemas/event-data/v1/workspace.root.initialized.schema.json",
+    "packages/workspace/scripts/test.sh",
+    "packages/workspace/tests/__init__.py",
+    "packages/workspace/tests/test_cli.py",
+    "packages/workspace/tests/test_doctor.py",
+    "packages/workspace/tests/test_init.py",
+    "packages/workspace/tests/test_projects.py",
+    "packages/workspace/unit.json",
+    "scripts/test-aicore-locator.py",
+    "scripts/test-dev-guard.py",
+    "scripts/test-ecosystem-units.py",
+    "tests/golden/cases.json",
+    "tests/golden/cli/swissknifeman-help.txt",
+    "tests/golden/cli/swissknifeman-unknown-subcommand.txt",
+    "tests/golden/generation.json"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "scripts/test-ecosystem-units.py expectation of the bridge list",
+      "kind": "note",
+      "next": "none",
+      "text": "The stale bridge expectation in scripts/test-ecosystem-units.py predates this piece (gui bridges were registered earlier); it was fixed here because the file is in the write set and V9 runs it. The class RealRepositoryTests passes; the remaining tests of the file passed in the red run and were not touched."
+    }
+  ],
+  "status": "done",
+  "summary": "Correction for the red V9: the only failing check was scripts/test-ecosystem-units.py::RealRepositoryTests.test_modules_and_aliases, whose expected bridge list (orch-harness, orch-skiller, planner-orch) was stale because the gui bridges gui-hub, gui-orch and gui-planner are already registered in the hub; the test now expects all six bridges. Nothing else changed. Ran: python3 scripts/test-ecosystem-units.py RealRepositoryTests (6 tests, OK)."
+}

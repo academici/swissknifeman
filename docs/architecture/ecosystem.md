@@ -42,6 +42,7 @@ swissknifeman/                      # the hub repository
     analyst/   destination: hub
     harness/   destination: hub
     brain/     destination: hub        # Obsidian vault
+    workspace/ destination: hub        # portable workspace: the plans of all projects in one git root
     gui/       destination: own-repo   # desktop and browser control plane (tool module, Python 3.11+)
   bridges/
     planner-orch/                    # glue between two modules (hub)
@@ -71,6 +72,7 @@ swissknifeman/                      # the hub repository
 | `analyst` | analytics, lessons, traces, run analytics, subscriber of run events | `aicore` | `packages/analyst` (run analytics from the former `core`) |
 | `harness` | provider environment: permissions, hooks, MCP, agent packs, profiles, instructions | `aicore` | `packages/harness` |
 | `brain` | Obsidian vault: search, document sync, notes, event subscriptions, own skills | `aicore` | new; `brain_sync` from `skiller`, skill `brain-locator`, vault parts of `maind` |
+| `workspace` | portable workspace: `workspace_root()` as the one git root of the plans of all projects, project identity by the marker `.swissknifeman/project.json`, bindings of checkouts per machine; commands `init`, `status`, `doctor`, `project` ([ADR 0085](decisions/0085-portable-workspace.md)) | `aicore` | new; the places, contracts and resolver live in `aicore.workspace` |
 | `gui` | local control plane for desktop (Tauri 2) and browser mode: contracts, contribution resolver, API, frontend; a tool module (`standalone.tools`, Python 3.11+) | `aicore` | new ([ADR 0080](decisions/0080-gui-tauri-shell-react-python-control-plane.md)–[ADR 0084](decisions/0084-gui-state-canonical-files.md)) |
 | `bridges/*` | glue between modules | both sides through their CLI | `bridges/planner-orch`, `bridges/orch-skiller`, `bridges/orch-harness` (moved out of `planner` and `orch`), `bridges/gui-hub`, `bridges/gui-planner`, `bridges/gui-orch` (GUI adapters, [ADR 0081](decisions/0081-gui-domains-through-bridges.md)) |
 | hub root | assembly, install, update, docs, CI, the `skm` front door | all modules | `bin/`, `scripts/`, `configs/`, `bootstrap/`, `plugins/`, `docs/` |
@@ -97,6 +99,7 @@ flowchart LR
   analyst --> aicore
   harness --> aicore
   brain --> aicore
+  workspace --> aicore
   gui --> aicore
   planner <-- "bridge planner-orch" --> orch
   orch <-- "bridge orch-skiller" --> skiller

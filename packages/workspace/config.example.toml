@@ -1,0 +1,23 @@
+# workspace configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[workspace]
+# Id of the bridge that fills the plans-migrator extension point. String.
+# Allowed in layers: defaults, machine.
+# plans_migrator = "workspace-planner"
+
+[workspace.publish]
+# Files larger than this many bytes stay local-only (not in git). Integer >= 1.
+# Allowed in layers: defaults, machine.
+# max_tracked_bytes = 5242880
+
+# Binary files larger than this many bytes stay local-only (not in git). Integer >= 1.
+# Allowed in layers: defaults, machine.
+# max_binary_tracked_bytes = 1048576
+
+[workspace.git]
+# Seconds to wait for the workspace git lock before WORKSPACE_GIT_LOCKED. Integer >= 1.
+# Allowed in layers: defaults, machine.
+# lock_timeout_s = 60

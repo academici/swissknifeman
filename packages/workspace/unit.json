@@ -1,0 +1,71 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "workspace",
+  "title": "Portable workspace: the plans of all projects in one git root",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "hub",
+  "requires": [
+    {
+      "unit": "aicore",
+      "range": "^0.1",
+      "description": "Foundation: locations, workspace documents and bindings, configuration, events."
+    }
+  ],
+  "execution": {
+    "project": "optional",
+    "cwd": "preserve",
+    "writes": "project-and-machine"
+  },
+  "provides": {
+    "cli": [
+      "bin/workspace"
+    ],
+    "config": "configs/config.schema.json",
+    "contracts": [
+      {
+        "id": "urn:swissknifeman:workspace:event-data",
+        "path": "schemas/event-data/v1",
+        "version": "v1",
+        "stability": "development"
+      }
+    ],
+    "events": [
+      "workspace.root.initialized",
+      "workspace.project.attached"
+    ],
+    "extension_points": [
+      {
+        "id": "plans-migrator",
+        "description": "The command that moves the plans of a checkout into the workspace (migrate); filled by a bridge, never imported."
+      }
+    ],
+    "doctor": [
+      {
+        "id": "workspace.layout",
+        "category": "state",
+        "probe": [
+          "bin/workspace",
+          "doctor"
+        ],
+        "output": "text"
+      }
+    ]
+  },
+  "permissions": {
+    "filesystem": [
+      "project",
+      "state",
+      "home"
+    ],
+    "network": true,
+    "shell": true
+  },
+  "dev": {
+    "test": [
+      "bash",
+      "scripts/test.sh"
+    ]
+  }
+}

@@ -663,6 +663,23 @@ for.
   `warnings` for every role that declares `network: none` while nothing enforces it (the grok `reviewer`; every Claude role
   when the sandbox is off or cannot start).
 
+## The runs of a project: `conduct runs`
+
+`orch conduct runs [--limit N] [--json]` lists the conductor runs of the project, newest first (by the first line of
+the journal, then by run id), reading only the run folders (`run.json`, `progress.jsonl`). It is additive: no existing
+command and no contract changes. `--json` prints one object:
+
+```json
+{"runs": [{"run_id": "cnd-...", "status": "running|finished|blocked|...", "reason_code": null,
+           "created": "2026-10-17T09:00:00Z", "items": ["P1.1"], "resumes": 0}]}
+```
+
+`status` and `reason_code` are those of `conduct status` (from the journal), `created` is the time of the first journal
+line (`null` before any line), `items` are the pieces of work seen in the journal (else those of `run.json`), `resumes`
+counts the `run.resume` lines. A project without runs gives `{"runs": []}`; a run whose `run.json` cannot be read is
+`{"run_id": "cnd-...", "status": "unreadable"}` and never an error. `--limit` is at least 1. Without `--json` one line
+per run is printed. Exit 0; the project is required as for every other `conduct` verb.
+
 ## Observer
 
 The observer only reads: the journal and state of the run and the `orch.run.*` and `planner.*` events of the

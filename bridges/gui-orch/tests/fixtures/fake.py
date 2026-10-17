@@ -1,0 +1,109 @@
+"""Fake `swissknifeman orch ...`: canned answers of the conductor CLI by argv; every call is logged to $HOME/umbrella.log.
+
+Scenarios (the wrappers umbrella-*): ok, empty (no runs), fail (exit 4 with ANSI noise), garbage (exit 0, not JSON),
+missing (every run is RUN_UNKNOWN), escape (observe prints a report path outside the reports folder), symlink (the
+report is a symlink to a file outside it).
+"""
+import json
+import os
+import sys
+
+RUNS = [
+    {"run_id": "cnd-new", "status": "running", "reason_code": None, "created": "2026-10-17T09:00:00Z",
+     "items": ["P2.1", "P2.2"], "resumes": 1},
+    {"run_id": "cnd-old", "status": "finished", "reason_code": None, "created": "2026-10-16T10:00:00Z",
+     "items": ["P1.1"], "resumes": 0},
+    {"run_id": "cnd-bad", "status": "unreadable"},
+]
+STATUS = {
+    "status": "running", "reason_code": None, "run": "cnd-new", "lines": 12, "last_ts": "2026-10-17T09:05:00Z",
+    "current": {"item": "P2.2", "stage": "executor.1", "role": "executor", "route": "claude-code", "since": "2026-10-17T09:04:00Z"},
+    "beacon": None,
+    "items": [
+        {"item": "P2.1", "stages": 4, "outcome": "done", "reason_code": None, "last": {"stage": "close", "verdict": "pass", "ts": "t"}},
+        {"item": "P2.2", "stages": 1, "outcome": None, "last": {"stage": "scout", "verdict": None, "ts": "t"}},
+        {"item": "P2.3", "stages": 2, "outcome": "blocked", "reason_code": "REVIEW_FAILED", "last": {"stage": "review.1", "verdict": "fail", "ts": "t"}},
+        {"item": "P2.4", "stages": 3, "outcome": "done_with_deviations", "reason_code": None, "last": None},
+        {"item": "P2.5", "stages": 0, "outcome": "weird", "reason_code": None, "last": None},
+    ],
+    "tokens": {"input": 1200, "output": 340}, "stop": None,
+    "agents": [{"agent_run_id": "a1", "role": "executor", "step": "executor.1", "status": "running",
+                "tokens": {"input": 10, "output": 5}}],
+}
+QUESTIONS = {"run": "cnd-new", "questions": [
+    {"item": "P2.3", "id": "Q1", "revision": 1, "kind": "decision", "text": "Which \x1b[31mshell\x1b[0m?", "answered": False,
+     "age_s": 120, "overdue": True},
+    {"item": "P2.4", "id": "Q2", "revision": 2, "kind": "clarification", "text": "Wording?", "answered": True,
+     "age_s": 5, "overdue": False}]}
+DOCTOR = [
+    {"$schema": "urn:swissknifeman:aicore:check-result:v1", "check_id": "orch.conductor-gitignore", "status": "ok",
+     "category": "config", "observed": "the conductor runtime folder is ignored", "evidence": [".swissknifeman/x"]},
+    {"$schema": "urn:swissknifeman:aicore:check-result:v1", "check_id": "orch.sandbox", "status": "warn",
+     "category": "config", "observed": "the provider sandbox cannot start \x1b[1mhere\x1b[0m",
+     "evidence": ["bwrap: /usr/bin/bwrap", "bwrap-user-net-namespaces: Operation not permitted"]},
+    {"$schema": "urn:swissknifeman:aicore:check-result:v1", "check_id": "aicore.ext", "status": "ok",
+     "category": "integration", "observed": "not an orch check", "evidence": []},
+]
+REPORT = "# Observer report\n\nRun cnd-new.\n\n- <script>alert(1)</script>\n"
+
+
+def main(scenario):
+    home = os.environ.get("HOME", "/")
+    with open(os.path.join(home, "umbrella.log"), "a", encoding="utf-8") as log:
+        log.write(json.dumps({"argv": sys.argv[1:], "cwd": os.getcwd()}) + "\n")
+    args = sys.argv[1:]
+    if scenario == "fail":
+        sys.stderr.write("\x1b[31mCONFIG_INVALID: broken \x1b[0mconfiguration\n")
+        return 4
+    if scenario == "garbage":
+        sys.stdout.write("not json at all")
+        return 0
+    if args[:1] != ["orch"]:
+        sys.stderr.write("USAGE: only orch is faked\n")
+        return 2
+    rest = args[1:]
+    if rest[:1] == ["doctor"]:
+        print(json.dumps(DOCTOR))
+        return 0
+    if rest[:1] != ["conduct"]:
+        sys.stderr.write("USAGE: unknown\n")
+        return 2
+    verb, tail = rest[1], rest[2:]
+    run = tail[tail.index("--run") + 1] if "--run" in tail else None
+    if verb in ("run", "resume", "release"):
+        print(json.dumps({"ok": True, "verb": verb}))
+        return 0
+    if verb == "runs":
+        rows = [] if scenario == "empty" else RUNS
+        if "--limit" in tail:
+            rows = rows[:int(tail[tail.index("--limit") + 1])]
+        print(json.dumps({"runs": rows}))
+        return 0
+    if scenario in ("empty", "missing") or (run and run not in ("cnd-new", "cnd-old")):
+        sys.stderr.write(f"RUN_UNKNOWN: no conductor run {run or ''} in /x\n")
+        return 1
+    if verb == "status":
+        print(json.dumps(STATUS))
+        return 0
+    if verb == "questions":
+        print(json.dumps(QUESTIONS))
+        return 0
+    if verb == "observe":
+        folder = os.path.join(os.getcwd(), ".swissknifeman", "orch", "reports", run)
+        os.makedirs(folder, exist_ok=True)
+        target = os.path.join(folder, "observer.md")
+        outside = os.path.join(home, "outside.md")
+        with open(outside, "w", encoding="utf-8") as handle:
+            handle.write("SECRET OUTSIDE\n")
+        if scenario == "symlink":
+            if os.path.lexists(target):
+                os.unlink(target)
+            os.symlink(outside, target)
+        else:
+            with open(target, "w", encoding="utf-8") as handle:
+                handle.write(REPORT)
+        print(json.dumps({"json": os.path.join(folder, "observer.json"),
+                          "markdown": outside if scenario == "escape" else target}))
+        return 0
+    sys.stderr.write("USAGE: unknown verb\n")
+    return 2

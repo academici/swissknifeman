@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``swissknifeman orch conduct run|resume|settle|release|status|observe|answer|questions|prompt|gates``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|settle|release|status|runs|observe|answer|questions|prompt|gates``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 130 interrupted (resume continues).
@@ -16,7 +16,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, frozen, gates, observer, progress, prompts, questions
+from orch.conductor import agents, engine, frozen, gates, observer, progress, prompts, questions, runs
 from orch.conductor.infrastructure import roles
 
 
@@ -257,6 +257,10 @@ def main(argv: list | None = None) -> int:
     status = verbs.add_parser("status", help="state of a run from its journal (default: the latest run)")
     status.add_argument("--run", metavar="RUN")
     status.add_argument("--json", action="store_true")
+    listing = verbs.add_parser("runs", help="the conductor runs of the project, newest first")
+    listing.add_argument("--limit", type=int, default=None, metavar="N", help="at most N runs (default: all)")
+    listing.add_argument("--json", action="store_true", help='print {"runs": [{run_id, status, reason_code, created, '
+                                                              'items, resumes}]}')
     observe = verbs.add_parser("observe", help="write the observer report of a run, or --follow a running one")
     observe.add_argument("--run", metavar="RUN")
     observe.add_argument("--follow", action="store_true")
@@ -296,6 +300,8 @@ def main(argv: list | None = None) -> int:
             parser.error("one of --items or --ready is required with --plan")
         if args.commit and not args.input:
             parser.error("--commit belongs to --input: a plan source commits as its own policy says")
+    if args.verb == "runs" and args.limit is not None and args.limit < 1:
+        parser.error("--limit must be at least 1")
     if args.verb == "gates":
         return _gates(args)
 
@@ -309,6 +315,10 @@ def main(argv: list | None = None) -> int:
         except frozen.FrozenError as error:
             print(f"{error.code}: {error}", file=sys.stderr)
             return 1
+    if args.verb == "runs":
+        rows = runs.listing(project, args.limit)
+        print(json.dumps({"runs": rows}, ensure_ascii=False, indent=2) if args.json else runs.text(rows))
+        return 0
     if args.verb in ("answer", "questions"):
         return _questions(args, project)
     if args.verb == "prompt":

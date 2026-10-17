@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T053652Z-0171d1:P7.3:checks.1:V5",
+  "check_id": "V5",
+  "subject": "PLAN5.P7.3",
+  "candidate": {
+    "head": "dfd2e21774f1be502d335c63acf6e012bd85beca",
+    "dirty_digest": "9d8dc27c5a756d081e402f41ea0308e3062c13fb1fe8f55c2ed0782559f3d57b"
+  },
+  "started_at": "2026-10-17T06:10:57Z",
+  "procedure": {
+    "cmd": "packages/gui/bin/gui contributions --json | python3 -c 'import json,sys; c=json.load(sys.stdin); assert any(e[\"owner\"]==\"gui-orch\" for e in c[\"contributions\"]), c[\"rejected\"]'",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T06:10:58Z"
+}

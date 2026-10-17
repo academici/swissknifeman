@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "description": "GUI queries of the orchestrator: conductor runs, one run with its items, the observer report, open questions and the provider sandbox, read from the orch command line as view-data; and the run, resume and release commands of the conductor.",
+  "entrypoint": [
+    "adapter.py"
+  ],
+  "example_input": {
+    "context": {},
+    "id": "gui-orch.runs",
+    "params": {}
+  },
+  "id": "gui-orch",
+  "kind": "command",
+  "permissions": {
+    "env": [
+      "SKM_UMBRELLA"
+    ],
+    "filesystem": [
+      "project"
+    ],
+    "network": false,
+    "shell": true
+  },
+  "protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "provides": {
+    "points": [
+      "gui:query",
+      "gui:command"
+    ]
+  },
+  "timeout_seconds": 60,
+  "version": "0.1.0"
+}

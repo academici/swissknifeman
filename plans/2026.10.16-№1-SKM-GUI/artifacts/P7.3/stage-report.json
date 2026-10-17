@@ -1,0 +1,108 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/README.md",
+    "bridges/gui-orch/README.md",
+    "bridges/gui-orch/adapter.py",
+    "bridges/gui-orch/extension.json",
+    "bridges/gui-orch/gui.json",
+    "bridges/gui-orch/run.py",
+    "bridges/gui-orch/scripts/test.sh",
+    "bridges/gui-orch/tests/__init__.py",
+    "bridges/gui-orch/tests/fixtures/fake.py",
+    "bridges/gui-orch/tests/fixtures/umbrella-empty",
+    "bridges/gui-orch/tests/fixtures/umbrella-escape",
+    "bridges/gui-orch/tests/fixtures/umbrella-fail",
+    "bridges/gui-orch/tests/fixtures/umbrella-garbage",
+    "bridges/gui-orch/tests/fixtures/umbrella-missing",
+    "bridges/gui-orch/tests/fixtures/umbrella-ok",
+    "bridges/gui-orch/tests/fixtures/umbrella-symlink",
+    "bridges/gui-orch/tests/test_commands.py",
+    "bridges/gui-orch/tests/test_queries.py",
+    "bridges/gui-orch/unit.json",
+    "configs/ecosystem-units.json",
+    "configs/install-profiles.json",
+    "docs/architecture/ecosystem.md",
+    "docs/architecture/ownership.md",
+    "packages/orch/docs/conductor.md",
+    "packages/orch/lib/orch/conductor/cli.py",
+    "packages/orch/lib/orch/conductor/runs.py",
+    "packages/orch/tests/test_conduct_runs.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "impact": "The commit takes run.py and the executable fixtures.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "bridges/gui-orch/run.py is a new file outside the write set (the argv commands need a program inside the owner root; same pattern as gui-hub/run.py), and bridges/gui-orch/tests/fixtures/umbrella-* scripts must be executable (mode 755) in the commit."
+    },
+    {
+      "class": "spec_mismatch",
+      "impact": "Consumers of the CLI output read .runs.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "`conduct runs --json` prints an object {\"runs\": [...]} instead of the bare list in the design text (consistent with `conduct questions --json`); the bridge reads the object. Documented in docs/conductor.md."
+    },
+    {
+      "class": "spec_mismatch",
+      "impact": "Command argv differs from the design wording.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "The real CLI `conduct release` takes `--item REF` (repeatable) or `--all`, not a positional item-ref as the design wrote; gui-orch.release uses `--run R --item I`."
+    },
+    {
+      "impact": "One extra query.",
+      "kind": "note",
+      "next": "none",
+      "text": "Added a query gui-orch.latest (one row) for the dashboard widget; the design listed no query for it."
+    },
+    {
+      "impact": "Whole-suite orch result is unverified by me.",
+      "kind": "difficulty",
+      "next": "Conductor V1.",
+      "text": "bash packages/orch/scripts/test.sh and validate.sh did not finish inside the executor sandbox (the run was moved to the background and hit denied network calls); only the orch tests of the changed code were run. `standalone orch` was not run. Their results are left to the conductor (V1)."
+    },
+    {
+      "impact": "V4 may be red because of that file, not because of this piece.",
+      "kind": "note",
+      "next": "Regenerate with `skiller registry` if V4 fails on it.",
+      "text": "`python3 scripts/golden.py check` printed DRIFT for packages/skiller/skills.json (modified in the working tree before this piece; not touched by it)."
+    },
+    {
+      "impact": "UI wording lives in the data of this row.",
+      "kind": "note",
+      "next": "none",
+      "text": "`gui-orch.sandbox` shows the `orch.*` rows of `orch doctor --json` and adds a last row 'scope' (status unknown) with the caption about the provider sandbox and advisory plugin permissions; no enforcement of the GUI changed (D23)."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "bridges/gui-orch/run.py"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: bridges/gui-orch/run.py"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "bridges/gui-orch/run.py and gui.json commands (I4: one scalar per argv element, --ready not a list)",
+      "adapter.py _report_path (reports folder rule)",
+      "packages/orch/lib/orch/conductor/runs.py and the cli.py verb (additive)"
+    ],
+    "reason_codes": [
+      "security_touched",
+      "public_api_changed",
+      "scope_expanded"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Added orch `conduct runs [--limit N] [--json]` (runs.py, cli verb, tests, docs/conductor.md; prints {\"runs\": [...]}) and the bridge bridges/gui-orch: queries runs, latest, run, items, report (path rule under .swissknifeman/orch/reports/<run>/), questions, sandbox; routes and widget; argv commands run-ready, resume, release through a strict run.py; registered in ecosystem-units, install profile full, bridges/README, ecosystem.md, ownership.md; CHANGELOG. Ran tests.test_conduct_runs and tests.test_cli_conduct_group (9 OK), bridges/gui-orch/scripts/test.sh (29 OK), gui check bridges/gui-orch (exit 0), gui contributions (gui-orch accepted), ecosystem-units check --strict clean. Full orch test.sh/validate.sh did not finish in the sandbox (a background run was still going); standalone orch not run."
+}

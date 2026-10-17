@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P7.3",
   "title": "orch conduct runs (аддитивно) и bridges/gui-orch: runs, статус, отчёт observer, вопросы, sandbox-индикатор, команды запуска",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "В orch: команда `conduct runs [--limit N] [--json]` (формат вывода описан в docs/conductor.md и закреплён тестами) без нового контракта. Мост `bridges/gui-orch` (unit.json, extension.json, gui.json, adapter.py, README, scripts/test.sh, тесты на фейковом umbrella): запросы runs, run, items, report, questions, sandbox; маршруты и виджет; команды run-ready, resume, release (argv, без shell); регистрация в хабе.",
   "why": "Жёсткие риски: мост читает внутренние каталоги orch (граница модулей, I3); путь отчёта выходит за корень проекта (traversal через run_id, symlink); команды запуска собирают argv склейкой (I4: один скаляр = один элемент argv, `--items` строкой запрещён, используется `--ready --max-items`); запуск без подтверждения (risk high, confirmation always); несовместимое изменение CLI orch (только аддитивно; golden orch и `aicore schema compat`). Решение D31; описание — knowledge/p7-design#orch-bridge.",
   "scope": {
@@ -194,6 +194,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/53a6ef3babdb93d39f0cb731550fcc38a01ed6e271c6b7d1bbccbafb6dad1f13",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/e00477e9ee01d2c2dc9c9a250e00b9e3d06f545985c514b99b19b25eb967115f",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками.",
@@ -267,6 +277,72 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T05:36:18Z"
+  "result": {
+    "started_at": "2026-10-17T05:36:57Z",
+    "finished_at": "2026-10-17T06:13:34Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-4b0ac6db7a1b6da193512a43-P7.3",
+    "notes": "Added orch `conduct runs [--limit N] [--json]` (runs.py, cli verb, tests, docs/conductor.md; prints {\"runs\": [...]}) and the bridge bridges/gui-orch: queries runs, latest, run, items, report (path rule under .swissknifeman/orch/reports/<run>/), questions, sandbox; routes and widget; argv commands run-ready, resume, release through a strict run.py; registered in ecosystem-units, install profile full, bridges/README, ecosystem.md, ownership.md; CHANGELOG. Ran tests.test_conduct_runs and tests.test_cli_conduct_group (9 OK), bridges/gui-orch/scripts/test.sh (29 OK), gui check bridges/gui-orch (exit 0), gui contributions (gui-orch accepted), ecosystem-units check --strict clean. Full orch test.sh/validate.sh did not finish in the sandbox (a background run was still going); standalone orch not run.\nChanged: CHANGELOG.md, bridges/README.md, bridges/gui-orch/README.md, bridges/gui-orch/adapter.py, bridges/gui-orch/extension.json, bridges/gui-orch/gui.json, bridges/gui-orch/run.py, bridges/gui-orch/scripts/test.sh, bridges/gui-orch/tests/__init__.py, bridges/gui-orch/tests/fixtures/fake.py, bridges/gui-orch/tests/fixtures/umbrella-empty, bridges/gui-orch/tests/fixtures/umbrella-escape, bridges/gui-orch/tests/fixtures/umbrella-fail, bridges/gui-orch/tests/fixtures/umbrella-garbage, bridges/gui-orch/tests/fixtures/umbrella-missing, bridges/gui-orch/tests/fixtures/umbrella-ok, bridges/gui-orch/tests/fixtures/umbrella-symlink, bridges/gui-orch/tests/test_commands.py, bridges/gui-orch/tests/test_queries.py, bridges/gui-orch/unit.json, configs/ecosystem-units.json, configs/install-profiles.json, docs/architecture/ecosystem.md, docs/architecture/ownership.md, packages/orch/docs/conductor.md, packages/orch/lib/orch/conductor/cli.py, packages/orch/lib/orch/conductor/runs.py, packages/orch/tests/test_conduct_runs.py",
+    "deviations": [
+      "bridges/gui-orch/run.py is a new file outside the write set (the argv commands need a program inside the owner root; same pattern as gui-hub/run.py), and bridges/gui-orch/tests/fixtures/umbrella-* scripts must be executable (mode 755) in the commit.",
+      "`conduct runs --json` prints an object {\"runs\": [...]} instead of the bare list in the design text (consistent with `conduct questions --json`); the bridge reads the object. Documented in docs/conductor.md.",
+      "The real CLI `conduct release` takes `--item REF` (repeatable) or `--all`, not a positional item-ref as the design wrote; gui-orch.release uses `--run R --item I`.",
+      "changed outside the write set: bridges/gui-orch/run.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T06:13:34Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T06:13:34Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T06:13:34Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T06:13:34Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V4.json"
+      },
+      {
+        "id": "V5",
+        "exit": 0,
+        "at": "2026-10-17T06:13:34Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V5.json"
+      },
+      {
+        "id": "V6",
+        "exit": 0,
+        "at": "2026-10-17T06:13:34Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V6.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V3.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V4.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V5.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P7.3/evidence/V6.json"
+    ]
+  },
+  "updated_at": "2026-10-17T06:13:34Z"
 }

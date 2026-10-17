@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.4",
   "title": "Bundling и updater: tauri.conf bundle, createUpdaterArtifacts, pubkey-плейсхолдер, make-update-json, smoke, runbook владельца; закрытие фазы P6",
-  "status": "todo",
+  "status": "done",
   "summary": "Дополнения `tauri.conf.json` (bundle targets, externalBin, resources, createUpdaterArtifacts, updater с плейсхолдерами), скрипты `desktop/scripts/{check-release-config.py, make-update-json.py, smoke.sh}` с тестами, `docs/desktop-release.md` (шаги владельца GUI_TOOLCHAIN), согласование tauri-плагина updater в `app`; закрытие фазы.",
   "why": "Жёсткие риски (подпись, обновления): релизная сборка с плейсхолдер-ключом или `.invalid` endpoint; update JSON с http:// или пустой подписью; приватный ключ или его путь в репозитории/скриптах; версия в update JSON не совпадает с подписываемой (`--app-version`, `requireSignedVersion`); заявление о проверенной сборке без toolchain (smoke обязан печатать SKIPPED). Описание — knowledge/p6-design#release, решения D9, D26.",
   "scope": {
@@ -116,6 +116,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/ff603b7205b480f7f847cc94e818107bf90dc5898ba2f6eb2280f308add96890",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/4446e426a058fe1e205f8f34a79140279ff0858401dda61030918de78c819bef",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками.",
@@ -176,6 +186,104 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T03:23:15Z"
+  "result": {
+    "started_at": "2026-10-17T03:23:34Z",
+    "finished_at": "2026-10-17T05:26:08Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-4d7f01e5eb398a8244d937d2-P6.4",
+    "notes": "tauri.conf.json got bundle targets appimage/deb/app, createUpdaterArtifacts, resources for the sidecar onedir tree and plugins.updater with the placeholders OWNER_PUBKEY_REQUIRED and updates.invalid. New desktop/scripts: check-release-config.py (structure; --release exit 1 on placeholders), make-update-json.py (deterministic, strict refusals), smoke.sh (exit 3 GUI_TOOLCHAIN_MISSING or SKIPPED with --allow-missing; spawn-to-READY when a sidecar exists). New tests/test_desktop_release.py (16 tests, both modes of every script, no key material in scripts/conf, updater plugin in main.rs). docs/desktop-release.md, desktop.md and CHANGELOG updated. Ran only test_desktop_release and test_desktop_config (30 tests OK).\nChanged: CHANGELOG.md, packages/gui/desktop/scripts/check-release-config.py, packages/gui/desktop/scripts/make-update-json.py, packages/gui/desktop/scripts/smoke.sh, packages/gui/desktop/src-tauri/tauri.conf.json, packages/gui/docs/desktop-release.md, packages/gui/docs/desktop.md, packages/gui/tests/test_desktop_release.py",
+    "pending": [
+      "Not verified (no Rust, PyInstaller, Tauri CLI): Rust compilation and cargo test, the sidecar build, the bundle, signing, deb/AppImage installation, WebKitGTK behaviour, the real spawn-to-READY branch of smoke.sh, and that bundle.resources with a directory source and a trailing slash is accepted by the Tauri bundler. All are listed in docs/desktop-release.md 'Not checked in the repository'."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V4.json"
+      },
+      {
+        "id": "V35",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V35.json"
+      },
+      {
+        "id": "V36",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V36.json"
+      },
+      {
+        "id": "V37",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V37.json"
+      },
+      {
+        "id": "V38",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V38.json"
+      },
+      {
+        "id": "V39",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V39.json"
+      },
+      {
+        "id": "V40",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V40.json"
+      },
+      {
+        "id": "V41",
+        "exit": 0,
+        "at": "2026-10-17T05:26:08Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V41.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V3.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V4.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V35.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V36.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V37.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V38.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V39.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V40.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.4/evidence/V41.json"
+    ]
+  },
+  "updated_at": "2026-10-17T05:26:08Z"
 }

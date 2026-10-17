@@ -64,7 +64,10 @@ ipc: http://ipc.localhost; img-src 'self' data:`, `frontendDist: ../../frontend/
 `tests/test_desktop_config.py`: `core:app|event|window:default`, the six `allow-*` permissions of the commands (generated
 from `app/build.rs`), `shell:allow-spawn` scoped to the sidecar `binaries/gui-backend`, `updater:default`,
 `dialog:allow-open`, `deep-link:default`. No `fs:`, `http:`, `process:` and no `shell:allow-execute`. The single-instance
-plugin has no permissions. Bundling, resources of the onedir tree, the updater key and endpoints are P6.4.
+plugin has no permissions. Bundle: `targets: ["appimage","deb","app"]`, `createUpdaterArtifacts: true`, `resources` copies the sidecar onedir tree
+`binaries/gui-backend-onedir/` to `gui-backend/`, and `plugins.updater` holds the placeholders `OWNER_PUBKEY_REQUIRED` and
+`https://updates.invalid/...` that the owner replaces (`desktop/scripts/check-release-config.py --release` fails while
+they stay). The updater plugin is registered in `app/src/main.rs`. Release steps: `docs/desktop-release.md`.
 
 ## Checked and not checked
 
@@ -74,4 +77,5 @@ toolchain on the development machine, decision D26): that any Rust file compiles
 the behaviour of the supervisor and the adapter at run time, the crate versions (chosen by major; `Cargo.lock` is not
 committed), the build-script options `capabilities_path_pattern` and `app_manifest` with the config in `src-tauri`
 while the crate lives in `src-tauri/app`, and the shell plugin sidecar resolution of a PyInstaller onedir tree. The
-owner runs `cargo test -p skm-gui-core` and the first `cargo tauri build` (see `docs/desktop-release.md`, P6.4).
+owner runs `cargo test -p skm-gui-core` and the first `cargo tauri build` (see `docs/desktop-release.md`). `test_desktop_release.py` covers the release scripts (`check-release-config.py`,
+`make-update-json.py`, `smoke.sh`) on fake files.

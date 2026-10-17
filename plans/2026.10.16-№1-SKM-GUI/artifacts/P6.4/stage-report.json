@@ -1,0 +1,61 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/gui/desktop/scripts/check-release-config.py",
+    "packages/gui/desktop/scripts/make-update-json.py",
+    "packages/gui/desktop/scripts/smoke.sh",
+    "packages/gui/desktop/src-tauri/tauri.conf.json",
+    "packages/gui/docs/desktop-release.md",
+    "packages/gui/docs/desktop.md",
+    "packages/gui/tests/test_desktop_release.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "two write_set paths unchanged",
+      "kind": "note",
+      "next": "none",
+      "text": "main.rs not edited: the updater plugin (tauri_plugin_updater::Builder::new().build()) and the dependency were already present from P6.2; test_desktop_release asserts them. test_desktop_config.py was also left unchanged (the new conf keys do not break it)."
+    },
+    {
+      "impact": "owner gate GUI_TOOLCHAIN",
+      "kind": "pending",
+      "next": "owner runs the steps of docs/desktop-release.md",
+      "text": "Not verified (no Rust, PyInstaller, Tauri CLI): Rust compilation and cargo test, the sidecar build, the bundle, signing, deb/AppImage installation, WebKitGTK behaviour, the real spawn-to-READY branch of smoke.sh, and that bundle.resources with a directory source and a trailing slash is accepted by the Tauri bundler. All are listed in docs/desktop-release.md 'Not checked in the repository'."
+    },
+    {
+      "impact": "the coordinator should not commit these with P6.4 without checking them",
+      "kind": "note",
+      "next": "coordinator: inspect git status before commit",
+      "text": "The working tree has modifications not made by this item: docs/package-lock.json, packages/gui/frontend/package-lock.json, packages/gui/requirements.lock, packages/maind/package-lock.json, packages/skiller/package-lock.json, packages/skiller/skills.json, plus untracked .bash_profile and .bashrc, and a stray directory packages/gui/desktop/src-tauri/.claude."
+    },
+    {
+      "impact": "the first owner build may need the path adjusted",
+      "kind": "assumption",
+      "next": "owner verifies in step 8 and 11 of the runbook",
+      "text": "resources and the onedir directory binaries/gui-backend-onedir/ plus the externalBin copy are a convention of this item (documented in desktop-release.md step 3); the sidecar resolution in app/sidecar.rs was not re-read against it."
+    },
+    {
+      "impact": "none",
+      "kind": "note",
+      "next": "none",
+      "text": "the conductor mended the form of this report: status done_with_deviations named no deviation issue; it is done"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "tauri.conf.json updater and bundle.resources",
+      "make-update-json.py refusals",
+      "smoke.sh exit codes and unverified spawn branch"
+    ],
+    "reason_codes": [
+      "security_touched",
+      "low_confidence"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done",
+  "summary": "tauri.conf.json got bundle targets appimage/deb/app, createUpdaterArtifacts, resources for the sidecar onedir tree and plugins.updater with the placeholders OWNER_PUBKEY_REQUIRED and updates.invalid. New desktop/scripts: check-release-config.py (structure; --release exit 1 on placeholders), make-update-json.py (deterministic, strict refusals), smoke.sh (exit 3 GUI_TOOLCHAIN_MISSING or SKIPPED with --allow-missing; spawn-to-READY when a sidecar exists). New tests/test_desktop_release.py (16 tests, both modes of every script, no key material in scripts/conf, updater plugin in main.rs). docs/desktop-release.md, desktop.md and CHANGELOG updated. Ran only test_desktop_release and test_desktop_config (30 tests OK)."
+}

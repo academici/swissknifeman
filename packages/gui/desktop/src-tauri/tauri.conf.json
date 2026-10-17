@@ -1,38 +1,58 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "SKM GUI",
-  "version": "0.1.0",
-  "identifier": "app.swissknifeman.gui",
+  "app": {
+    "security": {
+      "capabilities": [
+        "default"
+      ],
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' data:"
+    },
+    "windows": [
+      {
+        "height": 800,
+        "label": "main",
+        "minHeight": 600,
+        "minWidth": 960,
+        "title": "SKM GUI",
+        "width": 1280
+      }
+    ],
+    "withGlobalTauri": true
+  },
   "build": {
     "frontendDist": "../../frontend/dist"
   },
-  "app": {
-    "withGlobalTauri": true,
-    "windows": [
-      {
-        "label": "main",
-        "title": "SKM GUI",
-        "width": 1280,
-        "height": 800,
-        "minWidth": 960,
-        "minHeight": 600
-      }
-    ],
-    "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' data:",
-      "capabilities": ["default"]
-    }
-  },
   "bundle": {
     "active": true,
-    "targets": "all",
-    "externalBin": ["binaries/gui-backend"]
+    "createUpdaterArtifacts": true,
+    "externalBin": [
+      "binaries/gui-backend"
+    ],
+    "resources": {
+      "binaries/gui-backend-onedir/": "gui-backend/"
+    },
+    "targets": [
+      "appimage",
+      "deb",
+      "app"
+    ]
   },
+  "identifier": "app.swissknifeman.gui",
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["skm-gui"]
+        "schemes": [
+          "skm-gui"
+        ]
       }
+    },
+    "updater": {
+      "endpoints": [
+        "https://updates.invalid/skm-gui/{{target}}/{{arch}}/{{current_version}}"
+      ],
+      "pubkey": "OWNER_PUBKEY_REQUIRED"
     }
-  }
+  },
+  "productName": "SKM GUI",
+  "version": "0.1.0"
 }

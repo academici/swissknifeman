@@ -2,6 +2,7 @@
 roles really changed in the tree."""
 from __future__ import annotations
 
+import json
 from typing import Optional
 
 from orch.conductor import prompts, questions as questions_mod, scope as scopes
@@ -9,7 +10,7 @@ from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import evidence_paths, report_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import REPORTS, write_json
+from orch.conductor.infrastructure.files import REPORTS, safe, write_json
 
 
 def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
@@ -69,17 +70,32 @@ def batch_note(self, item: Item) -> str:
     """The run block of the executor prompt: every piece of the run with its title and state, so one shared session
     knows the whole batch from the first prompt."""
     refs = self.run_doc.get("items") or []
-    if len(refs) < 2 or self._session_mode(item) != "shared" \
+    mode = self._session_mode(item)
+    if len(refs) < 2 or mode not in ("shared", "handoff") \
             or item.routes["executor"].get("provider") != "claude-code":
         return ""
     claims = {value["ref"]: value for value in (self.state.get("claims") or {}).values()}
-    rows = []
+    rows, done_refs = [], []
     for ref in refs:
         done = (self.state["items"].get(ref) or {}).get("outcome")
+        if ref != item.ref and done in ("done", "done_with_deviations"):
+            done_refs.append(ref)
         mark = "this piece" if ref == item.ref else ("done and committed" if done in ("done", "done_with_deviations")
                                                      else "next" if done is None else done)
         title = (claims.get(ref) or {}).get("title")
         rows.append(f"- `{ref}`{' — ' + title if title else ''} ({mark})")
+    if mode == "handoff":
+        resumed = self.state.get("executor_session_item") == item.ref and bool(self.state.get("executor_session"))
+        lines = ["## Run batch", "", "All pieces of this run are in progress; each piece has a session of its own, in order:",
+                 *rows, "",
+                 (f"You are resuming the session of {item.ref}; the instructions below are for its next round." if resumed
+                  else f"You start {item.ref} in a fresh session. Keep the choices you make here compatible with the later "
+                       "pieces and say in `open_issues` what the next piece must know."
+                       + (" The earlier pieces are done and committed; their handoff follows: read the code they committed "
+                          "only where this piece needs it." if done_refs else ""))]
+        if not resumed:
+            lines += [block for ref in done_refs for block in ("", handoff_of(self, ref))]
+        return "\n".join(lines)
     resumed = bool(self.state.get("executor_session"))
     lines = ["## Run batch", "", "All pieces of this run are in progress and one session carries them in order:", *rows, "",
              (f"You are resuming that session: the pieces before {item.ref} are done and committed, what you learned stays "
@@ -87,6 +103,35 @@ def batch_note(self, item: Item) -> str:
               if resumed else
               f"You start with {item.ref}; the later pieces arrive in this session as new messages, so keep the "
               "choices you make here compatible with them and say in `open_issues` what the next piece must know.")]
+    return "\n".join(lines)
+
+
+HANDOFF_ISSUES = 8  # the open issues of an earlier piece named in a handoff
+HANDOFF_TEXT = 400  # characters of the summary and of each issue
+HANDOFF_PATHS = 25  # changed paths named
+
+
+def handoff_of(self, ref: str) -> str:
+    """What a later piece of the run must know of the done piece ``ref``: its commit, summary, open issues and changed
+    paths, from the report it registered (``register-report.json``), each part bounded."""
+    state = self.state["items"].get(ref) or {}
+    sha = (((state.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+    try:
+        report = json.loads((self.directory / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        report = {}
+    lines = [f"### Handoff of `{ref}`" + (f" (commit {sha[:12]})" if sha else "")]
+    if report.get("summary"):
+        lines += ["", str(report["summary"])[:HANDOFF_TEXT]]
+    issues = [row for row in report.get("open_issues") or [] if isinstance(row, dict) and row.get("text")]
+    if issues:
+        lines += ["", "Open issues:"] + [f"- [{row.get('kind', 'note')}] {str(row['text'])[:HANDOFF_TEXT]}"
+                                         for row in issues[:HANDOFF_ISSUES]]
+    paths = [str(path) for path in report.get("changed_paths") or []]
+    if paths:
+        rest = len(paths) - HANDOFF_PATHS
+        lines += ["", "Changed: " + ", ".join(f"`{path}`" for path in paths[:HANDOFF_PATHS])
+                  + (f" and {rest} more" if rest > 0 else "")]
     return "\n".join(lines)
 
 

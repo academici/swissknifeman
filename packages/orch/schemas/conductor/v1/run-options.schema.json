@@ -79,9 +79,9 @@
       "type": "object",
       "properties": {
         "executor": {
-          "description": "`shared` (default): the executor of a piece, and of every correction round of it, resumes the session of the previous executor of the run (`--resume`), so the later pieces start with the context of the earlier ones and the first prompt names the pieces of the run; `per-item`: each executor step starts a fresh session. A provider that cannot resume starts fresh either way.",
+          "description": "`handoff` (default): each piece starts a fresh session that its correction rounds resume (`--resume`), and its first prompt names the pieces of the run and carries the handoff of the earlier ones (commit, summary, open issues, changed paths); `shared`: the executor of a piece, and of every correction round of it, resumes the session of the previous executor of the run, so the later pieces start with the whole transcript of the earlier ones; `per-item`: each executor step starts a fresh session. A provider that cannot resume starts fresh either way.",
           "type": "string",
-          "enum": ["shared", "per-item"]
+          "enum": ["handoff", "shared", "per-item"]
         }
       },
       "required": [],

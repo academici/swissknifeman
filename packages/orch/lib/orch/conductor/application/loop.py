@@ -481,7 +481,7 @@ def resolve(self, item: Item, persist: bool = True) -> None:
         layers.append({"source": "invocation:--options", "options": found, "trusted": True})
     if self.run_doc.get("grouped") is not None:
         layers.append({"source": "invocation:--batch" if self.run_doc["grouped"] else "invocation:--no-batch",
-                       "options": {"session": {"executor": "shared" if self.run_doc["grouped"] else "per-item"}},
+                       "options": {"session": {"executor": "handoff" if self.run_doc["grouped"] else "per-item"}},
                        "trusted": True})
     flags = {key: self.run_doc[name] for key, name in (("fence", "fence"), ("extra_paths", "extra_paths"))
              if self.run_doc.get(name)}

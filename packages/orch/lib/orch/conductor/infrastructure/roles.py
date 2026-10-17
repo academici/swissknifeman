@@ -417,13 +417,14 @@ def scope_option(item: Item, key: str, default):
 
 
 def session_mode(item: Item) -> str:
-    return (item.options.get("session") or {}).get("executor", "shared")
+    return (item.options.get("session") or {}).get("executor", "handoff")
 
 
 def shared_session(self, item: Item, role: str, route: dict) -> bool:
-    """The executor of this run keeps one provider session across its pieces and correction rounds (``session.executor``)."""
+    """The executor of this run keeps a provider session (``session.executor``): across its pieces (``shared``) or across
+    the correction rounds of one piece (``handoff``)."""
     return role == "executor" and route.get("provider") == "claude-code" \
-        and self._session_mode(item) == "shared"
+        and self._session_mode(item) in ("shared", "handoff")
 
 
 def route_label(route: dict) -> str:
@@ -438,6 +439,8 @@ def resume_args(self, item: Item, role: str, route: dict) -> list:
     session = state.get("executor_session")
     if not (session and self._shared_session(item, role, route)):
         return []
+    if self._session_mode(item) == "handoff" and state.get("executor_session_item") != item.ref:
+        return []  # a new piece starts fresh; the handoff of the earlier pieces is in its prompt
     before, now = state.get("executor_session_route"), route_label(route)
     if before and before != now and state.get("executor_session_route_said") != now:
         state["executor_session_route_said"] = now
@@ -454,9 +457,11 @@ def keep_session(self, item: Item, role: str, route: dict, run) -> None:
     if run.error or not run.session:
         self.state.pop("executor_session", None)
         self.state.pop("executor_session_route", None)
+        self.state.pop("executor_session_item", None)
     else:
         self.state["executor_session"] = run.session
         self.state["executor_session_route"] = route_label(route)
+        self.state["executor_session_item"] = item.ref
     self._save()
 
 

@@ -239,7 +239,8 @@ class ReviewVerdict(unittest.TestCase):
 
 class SessionRoute(unittest.TestCase):
     def me(self, state: dict):
-        return types.SimpleNamespace(state=state, _shared_session=lambda item, role, route: True, progress=mock.Mock())
+        return types.SimpleNamespace(state=state, _shared_session=lambda item, role, route: True, progress=mock.Mock(),
+                                     _session_mode=lambda item: "shared")  # a later piece resumes only a shared session
 
     def test_a_piece_on_another_model_resumes_the_session_and_says_so_once(self):
         item = types.SimpleNamespace(ref="W2")

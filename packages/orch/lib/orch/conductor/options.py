@@ -43,10 +43,12 @@ DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-
 # write set as deviations; ``plan`` keeps the write set a fence (a path outside it blocks the piece). ``extra_paths``:
 # directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``).
 DEFAULT_SCOPE = {"outside": "deviation", "fence": "project", "extra_paths": []}
-# One executor session for all pieces of a run: a piece (and a correction round of it) resumes the session of the
-# previous executor, so the later pieces start with what the earlier ones learned. ``per-item``: a fresh session each.
-SESSION_MODES = ("shared", "per-item")
-DEFAULT_SESSION = {"executor": "shared"}
+# How the executor sessions of a run of several pieces are kept. ``handoff`` (default): each piece starts a fresh session
+# that its correction rounds resume, and its prompt carries the handoff of the earlier pieces (summary, commit, notes), so
+# a later piece does not re-read the whole transcript of the earlier ones on every turn. ``shared``: one session for all
+# pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
+SESSION_MODES = ("handoff", "shared", "per-item")
+DEFAULT_SESSION = {"executor": "handoff"}
 DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
                   "red_first": True,
                   "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}

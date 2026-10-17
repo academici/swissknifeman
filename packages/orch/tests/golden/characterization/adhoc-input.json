@@ -140,7 +140,7 @@
    "item": "adhoc@<digest>",
    "role": "deterministic",
    "stage": "commit",
-   "verdict": "no-op"
+   "verdict": "no-op a file input does not commit unless the run asked for it (--commit); the changes stay in the tree"
   },
   {
    "event": "item.end",
@@ -164,6 +164,7 @@
    }
   },
   "executor_session": "executor-session-1",
+  "executor_session_item": "adhoc@<digest>",
   "executor_session_route": "claude-code/sonnet/high",
   "items": {
    "adhoc@9b97afced891": {
@@ -217,13 +218,14 @@
      "commit": {
       "ended": "<time>",
       "result": {
+       "message": "a file input does not commit unless the run asked for it (--commit); the changes stay in the tree",
        "outcome": "no-op",
        "sha": null
       },
       "role": "deterministic",
       "route": null,
       "status": "done",
-      "verdict": "no-op"
+      "verdict": "no-op a file input does not commit unless the run asked for it (--commit); the changes stay in the tree"
      },
      "executor.1": {
       "ended": "<time>",

@@ -1,7 +1,7 @@
 ---
 name: orch-debug
 bucket: repository-bootstrap
-version: 0.4.0
+version: 0.5.0
 description: "Debug-mode protocol for an agent that drives the orch conductor run by run (team-lead observer): estimate, watch the beacons, measure, fix the mechanism, log, hand the logs to a final reviewer. Activate when the user names this skill or a run prints the DEBUG_MODE beacon ([orch] debug = true, --debug); otherwise the agent is a plain supervisor."
 when_to_use: "On an explicit request to run orch in debug mode ('use orch-debug', '/orch-debug', 'conduct with --debug') or when a conductor run prints DEBUG_MODE; never by inference from a plan alone."
 risk: write
@@ -49,7 +49,7 @@ conductor's"; copy the finished journal and findings into the plan or `docs/` af
   long time, or a loop of the same command, is not. Never kill a working role and never reset a working result to get
   a "clean" run. A blocked piece with good work continues with `resume --retry` after the plan is fixed, a dirty tree
   with an earlier attempt with `run --adopt`, a piece finished by hand with `settle`.
-- **One run = one roadmap batch, one executor session.** Start the pieces of a roadmap row together (`run --items A B C D`, never one run per item): by default (`--batch`, `session.executor: shared`) all pieces go in progress together and the executor keeps ONE session across them, knows the whole batch from the first prompt and builds each piece on the earlier ones; checks, review, register and commit stay per piece. One common review per batch after the last piece: `packages/orch/scripts/batch-review.py RUN` (grok, `--effort medium` when the diff is small); fix Major+ in a separate commit. `--no-batch` is for a deliberate separate-session start; `--ready` (not `--batch`) selects the next ready pieces. When a piece closes: measure, log, fix the mechanism in a separate worktree and merge between pieces; the run itself goes on.
+- **One run = one roadmap batch.** Start the pieces of a roadmap row together (`run --items A B C D`, never one run per item): by default (`--batch`, `session.executor: handoff`) all pieces go in progress together, each piece gets a fresh executor session that its correction rounds resume, and its prompt names the whole batch and carries the handoff of the done pieces (commit, summary, open issues, changed paths); `shared` keeps ONE session across the pieces at the price of re-reading the whole transcript of the earlier pieces on every turn; checks, review, register and commit stay per piece. One common review per batch after the last piece: `packages/orch/scripts/batch-review.py RUN` (grok, `--effort medium` when the diff is small); fix Major+ in a separate commit. `--no-batch` is for a deliberate separate-session start; `--ready` (not `--batch`) selects the next ready pieces. When a piece closes: measure, log, fix the mechanism in a separate worktree and merge between pieces; the run itself goes on.
 - **The main tree is the conductor's.** While a run is active change no file in it, not even a journal. Develop fixes in a
   separate git worktree, merge between items. Commit only with explicit paths (`git commit -- <paths>`); never sweep the
   index. Run `python3 scripts/public-hygiene.py` before committing documents (no concrete plan ids in committed docs).

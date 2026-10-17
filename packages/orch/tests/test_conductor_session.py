@@ -16,8 +16,8 @@ from tests.test_conductor_prompts import fixture
 
 
 class SessionOptionsTests(unittest.TestCase):
-    def test_shared_is_the_default(self):
-        self.assertEqual(options.DEFAULTS["session"], {"executor": "shared"})
+    def test_handoff_is_the_default(self):
+        self.assertEqual(options.DEFAULTS["session"], {"executor": "handoff"})
 
     def test_a_layer_can_choose_per_item_and_a_bad_value_is_refused(self):
         merged = options.merge(options.DEFAULTS, {"session": {"executor": "per-item"}})
@@ -45,9 +45,14 @@ class SharedSessionTests(ConductorCase):
         self.set_items({"W1": {}, "W2": {}})
         self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN, GREEN]})
 
+    def shared(self) -> tuple:
+        path = self.project.parent / "shared.json"
+        path.write_text(json.dumps({"session": {"executor": "shared"}}), encoding="utf-8")
+        return ("--options", path)
+
     def test_the_second_piece_resumes_the_session_of_the_first(self):
         self.two_items()
-        code, _, err = self.run_items("W1", "W2")
+        code, _, err = self.run_items("W1", "W2", extra=self.shared())
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertEqual(self.calls("executor"), 2)
         self.assertNotIn("--resume", self.argv(1))
@@ -62,7 +67,7 @@ class SharedSessionTests(ConductorCase):
 
     def test_a_shared_executor_keeps_its_session_on_disk(self):
         self.with_no_persistence()
-        code, _, err = self.run_items("W1", "W2")
+        code, _, err = self.run_items("W1", "W2", extra=self.shared())
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertNotIn("--no-session-persistence", self.argv(1))
 
@@ -74,7 +79,7 @@ class SharedSessionTests(ConductorCase):
 
     def test_the_prompts_name_the_run_and_say_whether_the_session_is_resumed(self):
         self.two_items()
-        self.run_items("W1", "W2")
+        self.run_items("W1", "W2", extra=self.shared())
         first, second = self.prompt("executor", 1), self.prompt("executor", 2)
         self.assertIn("## Run batch", first)
         self.assertIn("`W1`", first)
@@ -98,6 +103,41 @@ class SharedSessionTests(ConductorCase):
         self.assertNotIn("--resume", self.argv(1))
 
 
+
+
+class HandoffSessionTests(ConductorCase):
+    """``handoff`` (default): a new piece starts a fresh session with the handoff of the earlier pieces; its correction
+    rounds resume its own session."""
+
+    def argv(self, number: int) -> list:
+        return json.loads((self.fake / f"executor-{number}.argv").read_text(encoding="utf-8"))
+
+    def test_the_second_piece_starts_fresh_with_the_handoff_of_the_first(self):
+        self.set_items({"W1": {}, "W2": {}})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN, GREEN]})
+        code, _, err = self.run_items("W1", "W2")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("--resume", self.argv(2))
+        first, second = self.prompt("executor", 1), self.prompt("executor", 2)
+        self.assertIn("You start W1 in a fresh session", first)
+        self.assertNotIn("Handoff of", first)
+        self.assertIn("You start W2 in a fresh session", second)
+        self.assertIn("### Handoff of `W1` (commit ", second)
+        self.assertEqual(self.state(err)["executor_session_item"], "W2")
+
+    def test_a_correction_round_resumes_the_session_of_its_own_piece_only(self):
+        from types import SimpleNamespace
+        from orch.conductor.infrastructure import roles
+        owner = engine.Conductor.__new__(engine.Conductor)
+        owner.state = {"executor_session": "s1", "executor_session_item": "W2"}
+        route = {"provider": "claude-code", "model": "m", "effort": "high"}
+        item = SimpleNamespace(ref="W2", options={"session": {"executor": "handoff"}})
+        owner.progress = SimpleNamespace(emit=lambda *a, **k: None)
+        self.assertEqual(roles.resume_args(owner, item, "executor", route), ["--resume", "s1"])
+        item.ref = "W3"
+        self.assertEqual(roles.resume_args(owner, item, "executor", route), [])
+        item.options["session"]["executor"] = "shared"
+        self.assertEqual(roles.resume_args(owner, item, "executor", route), ["--resume", "s1"])
 
 
 class OptionsCopyTests(ConductorCase):

@@ -17,7 +17,7 @@ import re
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, Dict, Mapping, Optional
+from typing import Any, BinaryIO, Callable, Dict, Iterable, Mapping, Optional
 
 PROTOCOL = 1
 MAX_LINE = 4096
@@ -144,6 +144,51 @@ def check_digest(root: Optional[Path] = None) -> Optional[str]:
     except OSError as error:  # a file that cannot be read cannot be trusted either
         return f"{sidecar_digest.TAMPERED}: {error.filename or folder} ({error.strerror})"
     return None
+
+
+_PYTHON_RUNTIME = ("PYTHONHOME", "PYTHONPATH", "PYTHONDONTWRITEBYTECODE")
+
+
+def scrub_environment(env: Dict[str, str], roots: Iterable[str]) -> Dict[str, str]:
+    """Remove from ``env`` (in place) what a bundler put there for its own runtime; returns ``env``.
+
+    An AppImage (``APPDIR``) and a PyInstaller tree prepend their folders to ``PATH``, ``LD_LIBRARY_PATH`` and friends
+    and set ``PYTHONHOME``/``PYTHONPATH``. The processes the backend starts (the hub umbrella, plugins, commands, the
+    terminal) would load the bundled libraries and Python instead of the system's. A list variable loses the
+    components inside ``roots``; a variable left empty is deleted; the Python runtime variables go when ``roots`` is not
+    empty.
+    """
+    folders = [os.path.realpath(root).rstrip(os.sep) + os.sep for root in roots if root]
+    if not folders:
+        return env
+
+    def inside(component: str) -> bool:
+        probe = os.path.realpath(component).rstrip(os.sep) + os.sep if component else ""
+        return any(probe.startswith(folder) for folder in folders)
+
+    for name in _PYTHON_RUNTIME:
+        env.pop(name, None)
+    for name, value in list(env.items()):
+        if not any(folder.rstrip(os.sep) in value for folder in folders):
+            continue
+        kept = [component for component in value.split(os.pathsep) if component and not inside(component)]
+        if kept:
+            env[name] = os.pathsep.join(kept)
+        else:
+            del env[name]
+    return env
+
+
+def scrub_process_environment() -> None:
+    """Scrub ``os.environ`` of the AppImage folder (``APPDIR``) and of the frozen tree this process runs from."""
+    import sys
+
+    roots = []
+    if os.environ.get("APPDIR"):
+        roots.append(os.environ["APPDIR"])
+    if getattr(sys, "frozen", False):
+        roots.append(str(Path(sys.executable).resolve().parent))
+    scrub_environment(os.environ, roots)  # type: ignore[arg-type]
 
 
 def stdin_stream() -> BinaryIO:

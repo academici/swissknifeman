@@ -1,5 +1,5 @@
 [workspace]
-members = ["core", "app"]
+members = ["core"]
 resolver = "2"
 
 [workspace.package]
@@ -7,6 +7,40 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 publish = false
+
+[package]
+name = "skm-gui-app"
+description = "SKM GUI desktop shell (Tauri 2): sidecar supervisor and the restricted IPC adapter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+build = "build.rs"
+
+[[bin]]
+name = "skm-gui"
+path = "src/main.rs"
+
+[dependencies]
+skm-gui-core = { path = "core" }
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-deep-link = "2"
+tauri-plugin-updater = "2"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+tokio-tungstenite = "0.26"
+getrandom = "0.3"
+base64 = "0.22"
+# serde, serde_json: command arguments and results; tokio, futures-util: select!/timers and the split WebSocket
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["time", "sync", "macros"] }
+futures-util = "0.3"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
 
 [profile.release]
 opt-level = "s"

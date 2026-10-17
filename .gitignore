@@ -118,5 +118,10 @@ plans/**/views/
 
 # gui frontend build output (npm --prefix packages/gui/frontend run build)
 packages/gui/frontend/dist/
+packages/gui/desktop/src-tauri/target/
+packages/gui/desktop/src-tauri/binaries/
+packages/gui/desktop/src-tauri/gen/
+packages/gui/sidecar/dist/
 packages/gui/frontend/test-results/
 packages/gui/frontend/playwright-report/
+packages/gui/desktop/src-tauri/permissions/

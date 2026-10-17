@@ -6,7 +6,7 @@ import sys
 
 SPEC_DIR = os.path.abspath(SPECPATH)  # noqa: F821 - provided by PyInstaller
 MODULE = os.path.dirname(SPEC_DIR)
-AICORE = os.environ.get("AICORE_ROOT") or os.path.join(os.path.dirname(os.path.dirname(MODULE)), "aicore")
+AICORE = os.environ.get("AICORE_ROOT") or os.path.join(os.path.dirname(MODULE), "aicore")
 
 sys.path[:0] = [os.path.join(MODULE, "lib"), os.path.join(AICORE, "lib")]
 from gui import deps  # noqa: E402

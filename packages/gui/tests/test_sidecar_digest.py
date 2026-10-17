@@ -57,6 +57,16 @@ class TestDigest(DigestCase):
         message = sidecar.check_digest(self.root)
         self.assertTrue(message.startswith("SIDECAR_TAMPERED: pkg0/sub/f0.bin"), message)
 
+    def test_elf_files_are_checked_by_name_not_by_bytes(self):
+        elf = self.root / "lib.so"
+        elf.write_bytes(b"\x7fELF" + b"a" * 100)
+        sidecar_digest.write(self.root, "0.1.0")
+        elf.write_bytes(b"\x7fELF" + b"b" * 100)  # a bundler patched it
+        self.assertTrue(sidecar_digest.verify(self.root))
+        elf.unlink()
+        with self.assertRaises(sidecar_digest.SidecarTampered):
+            sidecar_digest.verify(self.root)
+
     def test_added_file(self):
         (self.root / "evil.so").write_bytes(b"x")
         with self.assertRaises(sidecar_digest.SidecarTampered) as caught:

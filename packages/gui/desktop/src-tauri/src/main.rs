@@ -47,7 +47,7 @@ fn main() {
             commands::sidecar_restart,
             commands::sidecar_log,
         ])
-        .build(tauri::generate_context!("../tauri.conf.json"))
+        .build(tauri::generate_context!())
         .expect("tauri application");
 
     app.run(|handle, event| {

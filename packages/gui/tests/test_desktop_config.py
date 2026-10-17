@@ -102,15 +102,16 @@ class Capabilities(unittest.TestCase):
         self.assertNotIn("remote", self.cap)
         self.assertNotIn("webviews", self.cap)
 
-    def test_build_script_reads_config_from_the_parent(self):
-        build = (TAURI / "app" / "build.rs").read_text(encoding="utf-8")
-        self.assertIn('set_current_dir("..")', build)
+    def test_build_script_and_config_sit_in_the_crate_folder(self):
+        build = (TAURI / "build.rs").read_text(encoding="utf-8")
+        self.assertNotIn("set_current_dir", build)
+        self.assertTrue((TAURI / "Cargo.toml").is_file())
         self.assertIn('capabilities_path_pattern("capabilities/**/*")', build)
         self.assertTrue((TAURI / "tauri.conf.json").is_file())
 
     def test_commands_match_build_and_main(self):
-        build = (TAURI / "app" / "build.rs").read_text(encoding="utf-8")
-        main = (TAURI / "app" / "src" / "main.rs").read_text(encoding="utf-8")
+        build = (TAURI / "build.rs").read_text(encoding="utf-8")
+        main = (TAURI / "src" / "main.rs").read_text(encoding="utf-8")
         allowed = {p[len("allow-"):].replace("-", "_") for p in map(identifier, self.perms) if p.startswith("allow-")}
         self.assertEqual(allowed, set(COMMANDS))
         for command in COMMANDS:
@@ -122,8 +123,8 @@ class AdapterSurface(unittest.TestCase):
     """The adapter commands take no URL, host or header and return no secret (static reading of the Rust source)."""
 
     def setUp(self):
-        self.commands = (TAURI / "app" / "src" / "commands.rs").read_text(encoding="utf-8")
-        self.sidecar = (TAURI / "app" / "src" / "sidecar.rs").read_text(encoding="utf-8")
+        self.commands = (TAURI / "src" / "commands.rs").read_text(encoding="utf-8")
+        self.sidecar = (TAURI / "src" / "sidecar.rs").read_text(encoding="utf-8")
 
     def command_signatures(self):
         return re.findall(r"#\[tauri::command\]\s*pub (?:async )?fn (\w+)\((.*?)\)\s*(?:->|\{)", self.commands, re.S)

@@ -213,6 +213,7 @@ def _serve_sidecar(args: argparse.Namespace) -> int:
         print("gui: usage: --sidecar cannot be combined with --detached or --port (the port is in the handshake)",
               file=sys.stderr)
         return EXIT_USAGE
+    sidecar.scrub_process_environment()  # the bundler's PYTHONHOME/LD_LIBRARY_PATH must not reach the children
     problem = sidecar.check_digest()  # before the handshake is read and before any socket exists
     if problem:
         print(problem, file=sys.stderr, flush=True)

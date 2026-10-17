@@ -9,9 +9,9 @@ secret.
 
 | Path | Content |
 |---|---|
-| `desktop/src-tauri/Cargo.toml` | workspace: `core`, `app` |
+| `desktop/src-tauri/Cargo.toml` | the app crate `skm-gui-app` (binary `skm-gui`) and the workspace member `core` |
 | `core/` | `skm-gui-core`, no Tauri, only `serde`/`serde_json`: `adapter`, `ready`, `backoff` (delays and `Policy`), `batch` |
-| `app/` | `skm-gui-app` (binary `skm-gui`): `main.rs` (builder, plugins, single instance, window events), `sidecar.rs` (supervisor), `commands.rs` (adapter) |
+| `src/`, `build.rs` | the app: `main.rs` (builder, plugins, single instance, window events), `sidecar.rs` (supervisor), `commands.rs` (adapter); `icons/` (placeholder icons from `cargo tauri icon`; replace with the product icon) |
 | `tauri.conf.json`, `capabilities/default.json` | configuration, checked structurally |
 | `desktop/tests/vectors/*.json` | expected values of the core, the only source |
 | `tests/desktop_oracle.py` | Python oracle of the core rules (test code, not in the product) |
@@ -69,20 +69,33 @@ ipc: http://ipc.localhost; img-src 'self' data:`, `frontendDist: ../../frontend/
 no `bundle.externalBin`, deep link scheme `skm-gui` (the handler only brings the window forward).
 `capabilities/default.json` lists the window `main` and exactly the permissions of the allowlist in
 `tests/test_desktop_config.py`: `core:app|event|window:default`, the six `allow-*` permissions of the commands (generated
-from `app/build.rs`), `updater:default`,
+from `build.rs`), `updater:default`,
 `dialog:allow-open`, `deep-link:default`. No `fs:`, `http:`, `process:` and no `shell:allow-execute`. The single-instance
 plugin has no permissions. Bundle: `targets: ["appimage","deb","app"]`, `createUpdaterArtifacts: true`, `resources` copies the sidecar onedir tree
-`binaries/gui-backend-onedir/` to `gui-backend/`, and `plugins.updater` holds the placeholders `OWNER_PUBKEY_REQUIRED` and
+`binaries/gui-backend-onedir/` to `gui-backend/`, and `plugins.updater` holds the public key of the updater and the placeholder endpoint
 `https://updates.invalid/...` that the owner replaces (`desktop/scripts/check-release-config.py --release` fails while
-they stay). The updater plugin is registered in `app/src/main.rs`. Release steps: `docs/desktop-release.md`.
+it stays). The updater plugin is registered in `src/main.rs`. Release steps: `docs/desktop-release.md`.
 
 ## Checked and not checked
 
 Checked by Python tests (`test_desktop_vectors.py`, `test_desktop_config.py`): the rules of the core through the oracle
-over the vectors, the structure of the configuration, and a static reading of the commands. **Not checked** (no Rust
-toolchain on the development machine, decision D26): that any Rust file compiles, that `core/tests/vectors.rs` passes,
-the behaviour of the supervisor and the adapter at run time, the crate versions (chosen by major; `Cargo.lock` is not
-committed), the build script (`set_current_dir("..")`, `capabilities_path_pattern`, `app_manifest`) with the config in `src-tauri`
-while the crate lives in `src-tauri/app`, and the start of the PyInstaller onedir executable from the resource directory. The
-owner runs `cargo test -p skm-gui-core` and the first `cargo tauri build` (see `docs/desktop-release.md`). `test_desktop_release.py` covers the release scripts (`check-release-config.py`,
-`make-update-json.py`, `smoke.sh`) on fake files.
+over the vectors, the structure of the configuration, and a static reading of the commands.
+
+Checked on the owner's machine (Ubuntu 24.04, Rust 1.99, Tauri CLI 2.12, PyInstaller 6.22, first build, 2026-10-17):
+`cargo test -p skm-gui-core` (vectors, 5 tests); the PyInstaller onedir build of the sidecar and its handshake, `GUI_READY`
+in about 1 s and `GET /v1/bootstrap` with the Bearer secret (`desktop/scripts/smoke.sh`); `cargo tauri build` produces the
+AppImage and the deb with signed updater artifacts; the AppImage starts, the shell starts the sidecar from the resource
+directory (`gui-backend/gui-backend`), the web view renders the application through `TauriTransport` under the production CSP
+(Dashboard, Plugins, the fleet widget with real data), the sidecar answers 401 without the secret, and no `gui-backend`
+or `skm-gui` process is left after the window is closed.
+
+Findings of that first build (fixed in the repository): the crate and `tauri.conf.json` now share the folder `src-tauri` (the
+CLI looks for the config next to the crate), `icons/` are required, the PyInstaller spec found `aicore` by a wrong path, the
+AppImage rewrites ELF files so the sidecar digest covers ELF files by name only (`gui.sidecar_digest`), the AppImage puts
+`PYTHONHOME`, `PYTHONPATH` and `LD_LIBRARY_PATH` into the environment and the sidecar removes them before it starts the hub
+umbrella (`gui.sidecar.scrub_environment`), and `rust-ini` is pinned to 0.21.1 in `Cargo.lock` because 0.21.3 breaks
+`tauri-plugin-deep-link` 2.6.2.
+
+**Not checked:** installing the `.deb`, the update flow with a real https endpoint and a wrong signature, macOS, the
+behaviour of the supervisor after a crash of the sidecar (restart with backoff) and of the diagnostics screen in the real
+web view, closing the window while a run is active, and the stability of `Cargo.lock` against newer crate versions.

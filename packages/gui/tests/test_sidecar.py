@@ -1,5 +1,7 @@
 """The sidecar protocol (parser, READY line) and the desktop mode of the backend at ASGI level."""
 import io
+import shutil
+import tempfile
 import json
 import time
 import unittest
@@ -196,3 +198,24 @@ class TestDesktopMode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestScrubEnvironment(unittest.TestCase):
+    def test_bundler_folders_leave_the_environment(self):
+        app = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, app, True)
+        env = {"PATH": f"{app}/usr/bin:/usr/bin:/bin", "LD_LIBRARY_PATH": f"{app}/usr/lib:{app}/usr/lib64",
+               "PYTHONHOME": f"{app}/usr", "PYTHONPATH": f"{app}/usr/share", "PYTHONDONTWRITEBYTECODE": "1",
+               "XDG_DATA_DIRS": f"{app}/usr/share:/usr/share", "GIO_EXTRA_MODULES": f"{app}/usr/lib/gio",
+               "HOME": "/home/x", "APPDIR": app}
+        sidecar.scrub_environment(env, [app])
+        self.assertEqual("/usr/bin:/bin", env["PATH"])
+        self.assertEqual("/usr/share", env["XDG_DATA_DIRS"])
+        for gone in ("LD_LIBRARY_PATH", "PYTHONHOME", "PYTHONPATH", "PYTHONDONTWRITEBYTECODE", "GIO_EXTRA_MODULES"):
+            self.assertNotIn(gone, env)
+        self.assertEqual("/home/x", env["HOME"])
+
+    def test_without_roots_nothing_changes(self):
+        env = {"PATH": "/usr/bin", "PYTHONPATH": "/x"}
+        self.assertEqual({"PATH": "/usr/bin", "PYTHONPATH": "/x"}, sidecar.scrub_environment(env, []))
+

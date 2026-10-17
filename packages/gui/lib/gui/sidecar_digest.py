@@ -4,6 +4,11 @@
 checks the tree against it before it opens a socket. The file lists every file of the onedir tree (sorted, without the
 digest file itself) with its sha256, and ``tree`` is the sha256 of that list as canonical JSON.
 
+ELF files (the executable, shared libraries, extension modules) are listed by name only (``sha256`` is ``"elf"``): the
+bundlers (linuxdeploy, patchelf, strip) rewrite them after the build, so their bytes are not known at build time and are
+the business of the platform signature. Everything else (the Python sources and data of gui and aicore, the schemas) is
+hashed.
+
 Limit: the digest is not signed. It detects a changed, added or removed file of the tree, not an attacker who also
 rewrites the digest file; when the file is absent (a run from sources) the check is skipped silently. Both facts are in
 docs/security.md.
@@ -23,6 +28,8 @@ DIGEST_NAME = "gui-backend.digest"
 TAMPERED = "SIDECAR_TAMPERED"
 EXIT_TAMPERED = 3
 BLOCK = 1024 * 1024
+ELF_MAGIC = b"\x7fELF"
+ELF_MARK = "elf"  # listed by name only: bundlers rewrite ELF files after the build
 
 
 class SidecarTampered(Exception):
@@ -41,6 +48,9 @@ def _file_digest(path: str) -> str:
         sha.update(b"symlink:" + os.readlink(path).encode("utf-8", "surrogateescape"))
         return sha.hexdigest()
     with open(path, "rb") as handle:
+        if handle.read(4) == ELF_MAGIC:
+            return ELF_MARK
+        handle.seek(0)
         while True:
             block = handle.read(BLOCK)
             if not block:

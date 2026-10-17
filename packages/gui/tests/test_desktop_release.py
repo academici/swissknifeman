@@ -34,15 +34,26 @@ class CheckReleaseConfig(unittest.TestCase):
         self.assertEqual(bundle["targets"], ["appimage", "deb", "app"])
         self.assertIs(bundle["createUpdaterArtifacts"], True)
         updater = self.conf["plugins"]["updater"]
-        self.assertEqual(updater["pubkey"], PLACEHOLDER_KEY)
+        # the owner generated the updater key: the public half is in the config, only the endpoint is still a placeholder
+        import base64
+
+        self.assertNotEqual(updater["pubkey"], PLACEHOLDER_KEY)
+        self.assertTrue(base64.b64decode(updater["pubkey"]).startswith(b"untrusted comment: minisign public key"))
         self.assertEqual(updater["endpoints"], ["https://updates.invalid/skm-gui/{{target}}/{{arch}}/{{current_version}}"])
 
     def test_structure_mode_accepts_the_repository_conf(self):
         result = run(sys.executable, str(SCRIPTS / "check-release-config.py"))
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_release_mode_rejects_both_placeholders(self):
+    def test_release_mode_rejects_the_placeholder_endpoint_of_the_repository(self):
         result = run(sys.executable, str(SCRIPTS / "check-release-config.py"), "--release")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(".invalid", result.stderr)
+
+    def test_release_mode_rejects_both_placeholders(self):
+        conf = copy.deepcopy(self.conf)
+        conf["plugins"]["updater"]["pubkey"] = PLACEHOLDER_KEY
+        result = self.check(conf, "--release")
         self.assertEqual(result.returncode, 1)
         self.assertIn(PLACEHOLDER_KEY, result.stderr)
         self.assertIn(".invalid", result.stderr)
@@ -183,9 +194,9 @@ class NoSecretsInRepository(unittest.TestCase):
             self.assertNotRegex(text, r"\.key\b", path.name)
 
     def test_main_registers_the_updater_plugin(self):
-        main = (DESKTOP / "src-tauri" / "app" / "src" / "main.rs").read_text(encoding="utf-8")
+        main = (DESKTOP / "src-tauri" / "src" / "main.rs").read_text(encoding="utf-8")
         self.assertIn("tauri_plugin_updater::Builder::new().build()", main)
-        cargo = (DESKTOP / "src-tauri" / "app" / "Cargo.toml").read_text(encoding="utf-8")
+        cargo = (DESKTOP / "src-tauri" / "Cargo.toml").read_text(encoding="utf-8")
         self.assertIn("tauri-plugin-updater", cargo)
 
 

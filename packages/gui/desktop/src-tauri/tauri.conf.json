@@ -32,6 +32,13 @@
       "appimage",
       "deb",
       "app"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
     ]
   },
   "identifier": "app.swissknifeman.gui",
@@ -47,7 +54,7 @@
       "endpoints": [
         "https://updates.invalid/skm-gui/{{target}}/{{arch}}/{{current_version}}"
       ],
-      "pubkey": "OWNER_PUBKEY_REQUIRED"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg0Q0U5QjZDMjc0Q0FCMDQKUldRRXEwd25iSnZPaFAvLzBsbDhZY1A1WWp2Nk5JcWNaMU5CN0Y3K0ZEVkpoRWpPZk4vekFBTkUK"
     }
   },
   "productName": "SKM GUI",

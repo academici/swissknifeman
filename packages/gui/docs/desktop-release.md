@@ -10,7 +10,7 @@ it only from the owner's environment (`TAURI_SIGNING_PRIVATE_KEY` holds the key 
 
 1. **Toolchain.** Install `rustup` (stable) and the Tauri Linux packages: `build-essential`, `libssl-dev`,
    `libwebkit2gtk-4.1-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `patchelf`; install the Tauri CLI
-   (`cargo install tauri-cli --version "^2" --locked`) and `pip install pyinstaller`. Check the versions against the
+   (`cargo install tauri-cli --version "^2" --locked`) and PyInstaller in a virtual environment (`python3 -m venv ~/.venvs/skm-build && ~/.venvs/skm-build/bin/pip install pyinstaller`; run step 3 with `source ~/.venvs/skm-build/bin/activate`, because `build.sh` calls `python3 -m PyInstaller`). Check the versions against the
    registries; `Cargo.lock` is not committed, commit it after the first build.
 2. **Rust core tests.** `cd packages/gui/desktop/src-tauri && cargo test -p skm-gui-core` (reads `desktop/tests/vectors/*.json`).
 3. **Sidecar.** `bash packages/gui/sidecar/build.sh` builds `sidecar/dist/gui-backend-<target-triple>/`. Copy the tree to
@@ -25,7 +25,7 @@ it only from the owner's environment (`TAURI_SIGNING_PRIVATE_KEY` holds the key 
 7. **Release config.** `python3 packages/gui/desktop/scripts/check-release-config.py --release` must exit 0.
 8. **Bundle.** `cd packages/gui/desktop/src-tauri && cargo tauri build` (AppImage, deb, `.app` on macOS; with
    `createUpdaterArtifacts` it also writes the update archives). If the build cannot find `tauri.conf.json` or the
-   capabilities (the crate lives in `src-tauri/app`), see "Not checked".
+   capabilities (both sit in `src-tauri`), see "Not checked".
 9. **Sign.** On the trusted machine, with the key in the environment: `cargo tauri signer sign` for each updater artifact,
    passing the app version (`--app-version`), so a signed version cannot be swapped in an unsigned update JSON; use
    `requireSignedVersion` of the CLI (2.12.0 or newer, check the registry).
@@ -43,16 +43,20 @@ Updater signing (minisign) is not platform signing: on macOS the owner also sign
 Developer ID, `notarytool`); on Linux there is no notarization. Updating a `.deb` may need `sudo`/`dpkg`; check this flow on
 each supported distribution.
 
-## Not checked in the repository
+## Status of the first build (2026-10-17)
 
-- Compilation of any Rust file (`core`, `app`) and the `cargo test` of the vectors.
-- The PyInstaller build of the sidecar: the `gui-backend.spec` data layout (`src/gui/lib`, `src/aicore/lib` with schemas and
-  `unit.json`) and the in-place filter of `a.pure` are confirmed only by the first build; run the built `gui-backend`, give
-  the handshake, get `GUI_READY` and `GET /v1/bootstrap`.
-- The `tauri build` bundle, the use of `generate_context!("../tauri.conf.json")` and `set_current_dir("..")` in `build.rs` with the config
-  outside the crate directory, and the shell plugin starting a sidecar from the onedir resource tree.
-- Signing, the update JSON against a real updater, the update flow of deb and AppImage.
-- Installation of deb and AppImage and the behaviour of the web view (WebKitGTK) with the CSP and the global `__TAURI__`.
-- The supervisor (restart policy, SIGTERM instead of closing stdin) and the adapter at run time.
+Steps 1 to 8 ran on the owner's machine: the Rust core tests pass, the sidecar builds and reaches `GUI_READY` in about 1 s,
+`cargo tauri build` writes `SKM GUI_0.1.0_amd64.AppImage` and `.deb` with `.sig` files, and the AppImage starts the
+application with the sidecar. Details and the findings of that build: `docs/desktop.md`, "Checked and not checked".
+Left for the owner: the real https endpoint in `plugins.updater.endpoints` (then `check-release-config.py --release` passes),
+a product icon (`cargo tauri icon <png>`), the key policy (the key of this build was created without a password in
+`~/.keys/skm-gui-updater.key`; generate a new one with a password for releases and replace `plugins.updater.pubkey`), the
+install and update checks (steps 11 and 12), macOS signing and notarization.
 
-`smoke.sh`, `sidecar/build.sh` with `--allow-missing` only report `SKIPPED: GUI_TOOLCHAIN`; such a line is not a verified build.
+## Not checked
+
+- Installing the `.deb`, the update flow against a real updater endpoint and the refusal of a wrong signature.
+- The restart of the sidecar after a crash and the diagnostics screen in the real web view.
+- macOS and other distributions; the behaviour of `Cargo.lock` against newer crate versions.
+
+`smoke.sh` and `sidecar/build.sh` with `--allow-missing` only report `SKIPPED: GUI_TOOLCHAIN` when the tools are missing; such a line is not a verified build.

@@ -39,7 +39,7 @@ python3 -I .swissknifeman/launcher.py orch conduct questions [--run RUN] [--json
 
 A beacon (`STAGE_SLOW`, `STAGE_IDLE`, `CHECK_SLOW`, `BUDGET_OVER`, `LIMIT_OVER`, `RUN_SLOW`, `RESULT_SILENT_DENIAL`,
 `QUESTION_QUEUED` …) is a report, not a stop: look at what runs and decide. Exit code 0 means the run finished, 1 it
-stopped (`CODE: message` on stderr, the code is in `status`), 130 it was interrupted.
+stopped (`CODE: message` on stderr, the code is in `status`), 130 it was interrupted. `stop` in `status --json` and in the state file belongs to a run that is stopped now; a `resume` moves it to `last_stop` (`code`, `message`, `resume` number), so a finished run has no `stop`.
 
 ## 4. After a stop
 

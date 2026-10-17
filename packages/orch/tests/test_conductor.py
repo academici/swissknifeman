@@ -550,6 +550,25 @@ class StopTests(ConductorCase):
         self.assertEqual(skipped, ["brief", "prepare", "scout", "executor.1", "checks.1", "review.1"])
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
+    def test_a_finished_run_keeps_the_earlier_stop_only_as_last_stop(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        self.set_items({"W1": {}}, refuse=["register"])
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "REGISTER_REFUSED")), err)
+        run_id = self.run_dir(err).name
+        stopped = json.loads(self.conduct("status", "--run", run_id, "--json")[1])
+        self.assertEqual(stopped["stop"]["code"], "REGISTER_REFUSED")
+        self.assertIsNone(stopped["last_stop"])
+        code, _, err = self.conduct("resume", "--run", run_id, "--json-lines")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        finished = json.loads(self.conduct("status", "--run", run_id, "--json")[1])
+        self.assertEqual(finished["status"], "finished")
+        self.assertIsNone(finished["stop"])
+        self.assertEqual((finished["last_stop"]["code"], finished["last_stop"]["resume"]), ("REGISTER_REFUSED", 1))
+        report_doc = json.loads((self.run_dir(err) / engine.STATE_FILE).read_text())
+        self.assertNotIn("stop", report_doc)
+        self.assertEqual(report_doc["last_stop"]["code"], "REGISTER_REFUSED")
+
     def test_a_repeated_registration_is_a_no_op(self):
         self.set_items({"W1": {}}, refuse=["commit"])
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})

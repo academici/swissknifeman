@@ -484,6 +484,11 @@
     }
    }
   },
+  "last_stop": {
+   "code": "ITEM_BLOCKED",
+   "message": "W1 is blocked; see its escalation",
+   "resume": 1
+  },
   "on_blocked": "stop",
   "questions": {
    "W1": {
@@ -520,10 +525,6 @@
   },
   "resumes": 1,
   "status": "finished",
-  "stop": {
-   "code": "ITEM_BLOCKED",
-   "message": "W1 is blocked; see its escalation"
-  },
   "tokens": {
    "cached": 0,
    "input": 300,

@@ -162,6 +162,7 @@ def build(directory: Path, project: Path) -> dict:
         "wall_s": round(wall, 1),
         "checks_share": round(seconds.get("deterministic", 0) / wall, 2) if wall else 0.0,
         "ended": lines[-1]["ts"] if lines else None, "status": state.get("status"), "stop": state.get("stop"),
+        "last_stop": state.get("last_stop"),
         "resumes": sum(1 for line in lines if line.get("event") == "run.resume"),
         "repeats": [{"item": line.get("item"), "stage": line.get("stage"), "message": line.get("message")}
                     for line in repeats],
@@ -238,7 +239,9 @@ def proposals(report: dict) -> list:
 def markdown(report: dict) -> str:
     lines = [f"# Observer report {report['run']}", "",
              f"- Status: {report['status']}" + (f" ({report['stop']['code']}: {report['stop']['message']})"
-                                                 if report.get("stop") else ""),
+                                                 if report.get("stop") else "")
+             + (f"; last stop {report['last_stop']['code']} before resume {report['last_stop']['resume']}"
+                if report.get("last_stop") else ""),
              f"- Time: {report['started']} → {report['ended']}; resumes {report['resumes']}",
              f"- Repeated role runs: {len(report['repeats'])}",
              f"- Red checks: {', '.join(f'{k}×{v}' for k, v in report['red_checks'].items()) or 'none'}",

@@ -68,6 +68,9 @@ def resume(self, run_id: str, retry=()) -> int:
         self._retry(ref)
     state["status"] = "running"
     state["resumes"] = state.get("resumes", 0) + 1
+    earlier = state.pop("stop", None)  # the stop that this resume answers is history now, not the state of the run
+    if earlier:
+        state["last_stop"] = {**earlier, "resume": state["resumes"]}
     self._save()
     self.progress.emit("run.resume", message=f"resume {state['resumes']}")
     debug_mode.announce(self.progress, self.directory, run_id, self.settings)

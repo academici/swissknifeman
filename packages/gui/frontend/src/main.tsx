@@ -3,12 +3,13 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { App } from "./app/App";
+import { SidecarGate } from "./desktop/Diagnostics";
 import { ApiError } from "./transport/ApiError";
-import { HttpTransport } from "./transport/HttpTransport";
 import { TransportContext } from "./transport/context";
+import { desktopMode, selectTransport } from "./transport/select";
 import "./styles.css";
 
-const transport = new HttpTransport();
+const transport = selectTransport();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -25,7 +26,13 @@ if (root) {
       <TransportContext.Provider value={transport}>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <App />
+            {desktopMode() ? (
+              <SidecarGate>
+                <App />
+              </SidecarGate>
+            ) : (
+              <App />
+            )}
           </BrowserRouter>
         </QueryClientProvider>
       </TransportContext.Provider>

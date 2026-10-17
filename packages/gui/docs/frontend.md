@@ -37,6 +37,21 @@ shell will bring a second implementation with the same interface.
 The UI sends only typed bodies of the contracts (`context`, `params`, `input`, `dry_run`, `confirm`): it never builds
 an argv and knows no path of a program or an owner (I2).
 
+### Desktop transport
+
+In the Tauri shell (`withGlobalTauri`) `main.tsx` takes `TauriTransport` when `window.__TAURI__.core.invoke` exists and
+`HttpTransport` otherwise (`transport/select.ts`). `request` calls `api_request` and gets `{status, body}`: status >= 400
+becomes an `ApiError` from the envelope, 2xx the body, anything else `TRANSPORT_MALFORMED`; no header or secret reaches the
+UI. `subscribe` creates a `Channel` per subscription and calls `api_subscribe(filter, channel)`; frames arrive in batches
+(an array), `{dropped: N}` means `snapshot_required(overflow)`, `[{closed: true}]` makes the transport resubscribe with the
+backoff 0.5–8 s and ask for a snapshot (the shell does not resume from a cursor). `close()` clears `channel.onmessage` and
+calls `api_unsubscribe({id})`. The rules shared with `HttpTransport` (each seq once, reset on a new epoch or
+`snapshot_required`) live in `transport/stream.ts`.
+
+`desktop/Diagnostics.tsx`: until `sidecar_status` is `ready` the app is replaced by a screen with the state as a word
+(`starting|ready|restarting|failed`), the restart count, `last_error`, the log tail (<= 200 lines, as text) and
+`Restart sidecar`; the status is polled every 2 s. On `PROTOCOL_INCOMPATIBLE` the same screen shows the versions.
+
 ## Shell and pages
 
 The bootstrap gate reads `/v1/bootstrap`; a backend whose `gui_protocol` excludes protocol 1 or that lacks a contract

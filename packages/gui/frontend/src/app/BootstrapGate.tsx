@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import type { Bootstrap } from "../contracts";
+import { Diagnostics } from "../desktop/Diagnostics";
+import { desktopMode } from "../transport/select";
 import { useTransport } from "../transport/context";
 import { GUI_PROTOCOL, incompatibility } from "./compat";
 import { ErrorPanel } from "./ErrorView";
@@ -20,7 +22,7 @@ export function BootstrapGate({ children }: { children: (bootstrap: Bootstrap) =
   if (query.isError) return <ErrorPanel error={query.error} title="The backend is not reachable" />;
   const problem = incompatibility(query.data);
   if (problem) {
-    return (
+    const versions = (
       <div className="error-panel" role="alert">
         <strong>The backend and this frontend do not fit</strong>
         <div className="error-code">PROTOCOL_INCOMPATIBLE</div>
@@ -31,6 +33,7 @@ export function BootstrapGate({ children }: { children: (bootstrap: Bootstrap) =
         </div>
       </div>
     );
+    return desktopMode() ? <Diagnostics>{versions}</Diagnostics> : versions;
   }
   return <>{children(query.data)}</>;
 }

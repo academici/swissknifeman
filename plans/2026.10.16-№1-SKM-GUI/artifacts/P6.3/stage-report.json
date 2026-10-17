@@ -1,0 +1,75 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/gui/docs/frontend.md",
+    "packages/gui/frontend/src/app/BootstrapGate.tsx",
+    "packages/gui/frontend/src/desktop/Diagnostics.test.tsx",
+    "packages/gui/frontend/src/desktop/Diagnostics.tsx",
+    "packages/gui/frontend/src/main.tsx",
+    "packages/gui/frontend/src/styles.css",
+    "packages/gui/frontend/src/transport/HttpTransport.ts",
+    "packages/gui/frontend/src/transport/TauriTransport.test.ts",
+    "packages/gui/frontend/src/transport/TauriTransport.ts",
+    "packages/gui/frontend/src/transport/select.ts",
+    "packages/gui/frontend/src/transport/stream.test.ts",
+    "packages/gui/frontend/src/transport/stream.ts"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/gui/frontend/src/transport/stream.test.ts"
+      ],
+      "impact": "one extra new test file to commit",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Added packages/gui/frontend/src/transport/stream.test.ts, which is not in the write_set (required by item rule: new stream logic covered by stream.ts tests)."
+    },
+    {
+      "impact": "Diagnostics tests and lint are unverified until the conductor runs V1 outside the sandbox",
+      "kind": "difficulty",
+      "next": "conductor: V1; if red, fix Diagnostics.test.tsx or Diagnostics.tsx",
+      "text": "In this sandbox eslint and the jsdom vitest workers fail with EACCES on node_modules/**/*.min.js. tsc --noEmit passes, and the node-env tests pass (HttpTransport.test.ts unchanged, stream.test.ts, TauriTransport.test.ts: 19 tests). Diagnostics.test.tsx (jsdom) and eslint have not run. V1 and V2 were not run."
+    },
+    {
+      "impact": "after a stream reconnect in desktop mode data is reloaded instead of replayed",
+      "kind": "assumption",
+      "next": "if replay is required, add cursor/epoch parameters to api_subscribe in a later item",
+      "text": "api_subscribe takes only a filter, so the shell cannot resume from a cursor. After a stream close ({closed:true}) TauriTransport resubscribes with backoff 0.5-8 s, resets lastSeq and calls onSnapshotRequired('cursor_expired'); {dropped:N} maps to onSnapshotRequired('overflow'). This is weaker than HttpTransport's cursor resume. It follows the P6.2 Rust API, not the design wording 'same replay semantics'."
+    },
+    {
+      "impact": "possible timing flakiness in the first run",
+      "kind": "note",
+      "next": "conductor V1",
+      "text": "Diagnostics.test.tsx assumes testing-library's act with vitest fake timers (advanceTimersByTimeAsync); not executed."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/gui/frontend/src/transport/stream.test.ts"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/gui/frontend/src/transport/stream.test.ts"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "transport/stream.ts and HttpTransport equivalence",
+      "TauriTransport reconnect and close races",
+      "Diagnostics tests, which have not run"
+    ],
+    "reason_codes": [
+      "shared_module_changed",
+      "low_confidence"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "stream.ts (registry plus seq/epoch/replay rules) extracted and HttpTransport rewritten on it; TauriTransport (invoke + Channel per subscription, ApiError/TRANSPORT_MALFORMED, backoff resubscribe with snapshot request, close() clears onmessage and calls api_unsubscribe); select.ts and main.tsx; desktop/Diagnostics.tsx (state word, restarts, last_error, log tail <=200, Restart sidecar, 2 s poll with cleanup, SidecarGate) integrated in main.tsx and in BootstrapGate for PROTOCOL_INCOMPATIBLE; tests; styles, docs, CHANGELOG."
+}

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.3",
   "title": "Frontend: TauriTransport, общий код потоков, выбор транспорта, экран диагностики sidecar",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`TauriTransport` по knowledge/p6-design#frontend (invoke + Channel через `window.__TAURI__`, без npm-зависимостей), общий код seq/epoch/replay в `transport/stream.ts` для обоих транспортов, выбор транспорта в `main.tsx`, `desktop/Diagnostics.tsx` (состояние sidecar, перезапуск, хвост лога).",
   "why": "Жёсткие риски: расхождение семантики потоков между транспортами (потеря/повтор кадров при reconnect и смене epoch); регрессия HttpTransport при выносе общего кода; UI получает или показывает секрет/заголовки; экран диагностики скрывает состояние (только цвет); webview без `__TAURI__` (browser mode) ломается выбором транспорта. Решение D27.",
   "scope": {
@@ -131,6 +131,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/45633c4c1a222fbc16e2a85954eafc5c4ffb2502745d64e3dd503a2bc153dd80",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/555cd532ab3237c8a178e210477dc4e6d0fe251210e91b9b8f890fbe345a524b",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками.",
@@ -175,6 +185,42 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T03:23:01Z"
+  "result": {
+    "started_at": "2026-10-17T03:23:32Z",
+    "finished_at": "2026-10-17T05:15:14Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-ac1811b0c51b949f9bbf037d-P6.3",
+    "notes": "stream.ts (registry plus seq/epoch/replay rules) extracted and HttpTransport rewritten on it; TauriTransport (invoke + Channel per subscription, ApiError/TRANSPORT_MALFORMED, backoff resubscribe with snapshot request, close() clears onmessage and calls api_unsubscribe); select.ts and main.tsx; desktop/Diagnostics.tsx (state word, restarts, last_error, log tail <=200, Restart sidecar, 2 s poll with cleanup, SidecarGate) integrated in main.tsx and in BootstrapGate for PROTOCOL_INCOMPATIBLE; tests; styles, docs, CHANGELOG.\nChanged: CHANGELOG.md, packages/gui/docs/frontend.md, packages/gui/frontend/src/app/BootstrapGate.tsx, packages/gui/frontend/src/desktop/Diagnostics.test.tsx, packages/gui/frontend/src/desktop/Diagnostics.tsx, packages/gui/frontend/src/main.tsx, packages/gui/frontend/src/styles.css, packages/gui/frontend/src/transport/HttpTransport.ts, packages/gui/frontend/src/transport/TauriTransport.test.ts, packages/gui/frontend/src/transport/TauriTransport.ts, packages/gui/frontend/src/transport/select.ts, packages/gui/frontend/src/transport/stream.test.ts, packages/gui/frontend/src/transport/stream.ts",
+    "deviations": [
+      "Added packages/gui/frontend/src/transport/stream.test.ts, which is not in the write_set (required by item rule: new stream logic covered by stream.ts tests).",
+      "changed outside the write set: packages/gui/frontend/src/transport/stream.test.ts"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T05:15:14Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T05:15:14Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.3/evidence/V2.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.3/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P6.3/evidence/V2.json"
+    ]
+  },
+  "updated_at": "2026-10-17T05:15:14Z"
 }

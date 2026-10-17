@@ -1,8 +1,6 @@
 import { ApiError } from "./ApiError";
+import { StreamRegistry, backoffDelay, type StreamEntry } from "./stream";
 import type { Method, ServerFrame, StreamFilter, StreamHandlers, Subscription, Transport } from "./Transport";
-
-const STREAM = "urn:swissknifeman:gui:stream:v1";
-const BACKOFF_MS = [500, 1000, 2000, 4000, 8000];
 
 interface SocketLike {
   readyState: number;
@@ -21,24 +19,15 @@ export interface HttpTransportOptions {
   setTimeout?: (callback: () => void, ms: number) => unknown;
 }
 
-interface Entry {
-  id: string;
-  filter: StreamFilter;
-  handlers: StreamHandlers;
-  lastSeq: number | null;
-}
-
 /** Browser mode: same-origin fetch with the session cookie, and one WebSocket for every subscription. */
 export class HttpTransport implements Transport {
   private readonly fetchImpl: typeof fetch;
   private readonly SocketImpl: new (url: string) => SocketLike;
   private readonly location: { protocol: string; host: string };
   private readonly schedule: (callback: () => void, ms: number) => unknown;
-  private readonly entries = new Map<string, Entry>();
+  private readonly entries = new StreamRegistry();
   private socket: SocketLike | null = null;
-  private epoch: string | null = null;
   private attempt = 0;
-  private counter = 0;
   private closedByUs = false;
 
   constructor(options: HttpTransportOptions = {}) {
@@ -49,10 +38,7 @@ export class HttpTransport implements Transport {
   }
 
   setEpoch(epoch: string): void {
-    if (this.epoch !== null && this.epoch !== epoch) {
-      for (const entry of this.entries.values()) entry.lastSeq = null; // another backend process: no resume
-    }
-    this.epoch = epoch;
+    this.entries.setEpoch(epoch);
   }
 
   async request<T>(method: Method, path: string, body?: unknown): Promise<T> {
@@ -75,16 +61,14 @@ export class HttpTransport implements Transport {
   }
 
   subscribe(filter: StreamFilter, handlers: StreamHandlers): Subscription {
-    this.counter += 1;
-    const entry: Entry = { id: `s${this.counter}`, filter, handlers, lastSeq: null };
-    this.entries.set(entry.id, entry);
+    const entry = this.entries.add(filter, handlers);
     if (this.socket && this.socket.readyState === 1) this.sendSubscribe(entry);
     else this.connect();
     return {
       close: () => {
-        if (!this.entries.delete(entry.id)) return;
+        if (!this.entries.remove(entry.id)) return;
         if (this.socket && this.socket.readyState === 1) {
-          this.socket.send(JSON.stringify({ $schema: STREAM, kind: "unsubscribe", id: entry.id }));
+          this.socket.send(JSON.stringify(this.entries.unsubscribeFrame(entry)));
         }
         if (this.entries.size === 0 && this.socket) {
           this.closedByUs = true;
@@ -109,7 +93,7 @@ export class HttpTransport implements Transport {
     socket.onclose = () => {
       if (this.socket === socket) this.socket = null;
       if (this.closedByUs || this.entries.size === 0) return;
-      const delay = BACKOFF_MS[Math.min(this.attempt, BACKOFF_MS.length - 1)] ?? 8000;
+      const delay = backoffDelay(this.attempt);
       this.attempt += 1;
       this.schedule(() => {
         if (!this.socket && this.entries.size > 0) this.connect();
@@ -118,18 +102,8 @@ export class HttpTransport implements Transport {
     socket.onerror = () => undefined;
   }
 
-  private sendSubscribe(entry: Entry): void {
-    const resume = entry.lastSeq !== null && this.epoch !== null;
-    this.socket?.send(
-      JSON.stringify({
-        $schema: STREAM,
-        kind: "subscribe",
-        id: entry.id,
-        filter: entry.filter,
-        cursor: resume ? entry.lastSeq : null,
-        epoch: resume ? this.epoch : null,
-      }),
-    );
+  private sendSubscribe(entry: StreamEntry): void {
+    this.socket?.send(JSON.stringify(this.entries.subscribeFrame(entry)));
   }
 
   private receive(data: unknown): void {
@@ -139,20 +113,6 @@ export class HttpTransport implements Transport {
     } catch {
       return;
     }
-    if (frame.kind === "heartbeat") return;
-    const entry = "sub" in frame && frame.sub ? this.entries.get(frame.sub) : undefined;
-    if (!entry) return;
-    if (frame.kind === "snapshot_required") {
-      entry.lastSeq = null;
-      entry.handlers.onSnapshotRequired?.(frame.reason);
-      return;
-    }
-    if (frame.kind === "error") {
-      entry.handlers.onError?.(frame);
-      return;
-    }
-    if (entry.lastSeq !== null && frame.seq <= entry.lastSeq) return; // already applied
-    entry.lastSeq = frame.seq;
-    entry.handlers.onFrame(frame);
+    this.entries.dispatch(frame);
   }
 }

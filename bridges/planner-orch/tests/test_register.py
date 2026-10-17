@@ -53,7 +53,8 @@ def report(**changes) -> dict:
 
 
 def flag_values(argv: list[str], flag: str) -> list[str]:
-    return [argv[i + 1] for i, value in enumerate(argv) if value == flag]
+    split = [argv[i + 1] for i, value in enumerate(argv) if value == flag]
+    return split + [value[len(flag) + 1:] for value in argv if value.startswith(flag + "=")]
 
 
 class PlanCallsTests(unittest.TestCase):

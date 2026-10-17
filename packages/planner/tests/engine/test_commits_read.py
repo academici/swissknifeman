@@ -103,5 +103,93 @@ class CommitsReadTests(unittest.TestCase):
         self.assertEqual(len(doc["data"]["commits"]), 2)
 
 
+PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+
+
+@unittest.skipUnless(shutil.which("git"), "git is not installed")
+class WorkspacePlanCommitsTests(unittest.TestCase):
+    """``commits`` of a plan in the portable workspace reads the history of its checkout, not of the workspace."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(tmp.name)
+        self.src, self.ws, self.home = base / "src-repo", base / "ws", base / "home"
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SKM_") and k != "GIT_INDEX_FILE"}
+        env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, HOME=str(base), SKM_HOME=str(self.home),
+                   SKM_WORKSPACE_ROOT=str(self.ws))
+        patch = mock.patch.dict(os.environ, env, clear=True)
+        patch.start()
+        self.addCleanup(patch.stop)
+        for repo in (self.src, self.ws):
+            repo.mkdir()
+            self.git(repo, "init", "-q", "-b", "main")
+            for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"),
+                               ("commit.gpgsign", "false"), ("gc.auto", "0"), ("maintenance.auto", "false")):
+                self.git(repo, "config", key, value)  # no detached maintenance process writing during the cleanup
+        (self.src / ".git/info/exclude").write_text(".swissknifeman/state/\n")
+        self.write(self.src / ".swissknifeman/project.json", json.dumps({
+            "$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PID, "plans_store": "workspace"}))
+        self.write(self.src / "src/a.txt", "0\n")
+        self.git(self.src, "add", "-A")
+        self.git(self.src, "commit", "-q", "-m", "base")
+        self.bindings = self.home / "state" / "workspace" / "bindings.json"
+        self.write(self.bindings, json.dumps({
+            "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",
+            "projects": {PID: {"paths": [str(self.src)], "primary": str(self.src), "bound_at": "2026-10-17T09:30:00Z"}}}))
+        self.root = demo.make_demo_plan(self.ws / "projects" / PID / "plans")
+        (self.root / ".gitignore").write_text("views/\ncontext/\n.lock\n")
+        store.ensure_gitattributes(self.root)
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(
+            task_files=[{"path": "src/**", "change": "modify"}], reads=[], status="todo", result=None))
+        self.git(self.ws, "add", "-A")
+        self.git(self.ws, "commit", "-q", "-m", "base")
+
+    def git(self, repo, *args):
+        return subprocess.run(["git", *args], cwd=repo, text=True, capture_output=True, check=True).stdout
+
+    def write(self, path, text):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+
+    def bookkeeping(self):
+        # by hand: ``lifecycle.start`` spawns the detached delivery of the event journal, which writes into the
+        # temporary directory while it is removed
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(status="in_progress"))
+        event = store.new_event("note", "started", demo.AUTHORING)
+        with (self.root / "log.jsonl").open("a", encoding="utf-8") as log:
+            log.write(json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+    def test_reads_the_checkout_and_ignores_workspace_commits(self):
+        self.bookkeeping()
+        self.write(self.src / "src/a.txt", "1\n")
+        done = gitops.commit(self.root, "P1.1", role="executor")
+        self.assertEqual(done["workspace_commit"], {"status": "committed"})
+        self.assertIn("Plan: " + demo.PLAN_ID, self.git(self.ws, "log", "-1", "--format=%B"))
+        listed = gitops.list_commits(self.root)
+        self.assertEqual(schema.validate(listed, "read-commits"), [])
+        self.assertEqual([c["sha"] for c in listed["commits"]], [done["sha"]])
+        self.assertNotIn("source_unbound", listed)
+        self.assertEqual(gitops.list_commits(self.root, "P1.1", role="reviewer")["commits"], [])
+        status, out, err = test_envelope.run("commits", self.root, "P1.1", "--json")
+        self.assertEqual(status, 0, err)
+        self.assertEqual(len(json.loads(out)["data"]["commits"]), 1)
+
+    def test_a_reviewer_commit_lives_in_the_workspace_and_is_not_listed(self):
+        self.write(self.root / "knowledge/report.json", "{}\n")
+        done = gitops.commit(self.root, "P1.1", role="reviewer")
+        self.assertEqual(done["repo"], "workspace")
+        self.assertEqual(gitops.list_commits(self.root, "P1.1")["commits"], [])
+
+    def test_without_a_checkout_the_list_is_empty_and_marked(self):
+        self.bookkeeping()
+        self.write(self.src / "src/a.txt", "1\n")
+        gitops.commit(self.root, "P1.1", role="executor")
+        self.bindings.unlink()
+        listed = gitops.list_commits(self.root)
+        self.assertEqual(listed, {"plan": demo.PLAN_ID, "ref": None, "commits": [], "source_unbound": True})
+        self.assertEqual(schema.validate(listed, "read-commits"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

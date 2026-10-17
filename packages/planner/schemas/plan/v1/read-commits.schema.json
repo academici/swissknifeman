@@ -24,6 +24,11 @@
         "description": "One linked commit.",
         "$ref": "urn:swissknifeman:task:plan:read-commits:v1#/$defs/commit"
       }
+    },
+    "source_unbound": {
+      "type": "boolean",
+      "description": "True when the plan lives in the portable workspace and no checkout is bound to its project on this machine; commits holds only finish-recorded entries. Absent otherwise.",
+      "const": true
     }
   },
   "required": [

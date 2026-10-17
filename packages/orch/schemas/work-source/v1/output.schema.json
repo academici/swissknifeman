@@ -155,6 +155,18 @@
         "op": {"description": "Operation.", "const": "commit"},
         "outcome": {"description": "committed, no-op or refused.", "type": "string", "enum": ["committed", "no-op", "refused"]},
         "sha": {"description": "Commit revision.", "type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+        "repo": {"description": "Repository of sha: the project checkout or, when only plan files changed, the plan workspace. Given by a source whose plans live outside the checkout.", "type": "string", "enum": ["source", "workspace"]},
+        "workspace_sha": {"description": "Local commit of the plan files in the plan workspace, null when there is none.", "type": ["string", "null"], "pattern": "^[0-9a-f]{7,40}$"},
+        "workspace_commit": {
+          "description": "Outcome of the plan-file commit in the plan workspace; a failure does not undo the commit of sha.",
+          "type": "object",
+          "properties": {
+            "status": {"description": "Outcome.", "type": "string", "enum": ["committed", "nothing", "skipped-no-git", "locked", "failed"]},
+            "error": {"description": "Code and message of the failure.", "type": "string"}
+          },
+          "required": ["status"],
+          "additionalProperties": false
+        },
         "reason_code": {"description": "Why the commit was refused.", "$ref": "#/$defs/reasonCode"},
         "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
       },

@@ -456,12 +456,23 @@ def op_commit(fields: dict) -> dict:
     except ValueError:
         return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_RESULT_INVALID",
                 "message": "plan.py commit printed no JSON"}
+    split = result.get("workspace_commit") or {}
     if not result.get("sha"):
+        detail = f" (workspace commit {split['status']}: {split.get('error', 'no detail')})" if split.get("error") else ""
         return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_RESULT_INVALID",
-                "message": "plan.py commit created no commit"}
+                "message": "plan.py commit created no commit" + detail}
     answer = {"op": "commit", "outcome": "committed", "sha": result["sha"]}
+    if split.get("status") not in (None, "skipped-legacy"):
+        # a plan in the portable workspace: the product commit and the local commit of the plan files are two commits
+        answer.update(repo=result.get("repo", "source"), workspace_sha=result.get("workspace_sha"),
+                      workspace_commit=split)
+    notes = []
     if left:
-        answer["message"] = ("left outside, not the work of this piece: " + ", ".join(left))[:1000]
+        notes.append("left outside, not the work of this piece: " + ", ".join(left))
+    if split.get("error"):  # the product commit stands; the plan files wait for the next commit or `workspace sync`
+        notes.append(f"workspace commit {split['status']}: {split['error']}")
+    if notes:
+        answer["message"] = "; ".join(notes)[:1000]
     return answer
 
 

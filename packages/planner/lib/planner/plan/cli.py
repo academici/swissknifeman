@@ -651,7 +651,8 @@ def cmd_commit(args) -> int:
     if args.json or args.output == "json":
         _print_json(result)
     else:
-        print(f"{result['sha'] or 'dry-run'} {result['ref']} {result['role']} ({len(result['paths'])} paths)")
+        sha = result["sha"] or result.get("workspace_sha") or ("dry-run" if args.dry_run else "no-commit")
+        print(f"{sha} {result['ref']} {result['role']} ({len(result['paths'])} paths)")
     return 0
 
 def build_parser() -> argparse.ArgumentParser:

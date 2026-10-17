@@ -1,4 +1,5 @@
 """Scoped Git commits: ownership, literal paths, refusal atomicity and plan locking."""
+import fcntl
 import hashlib
 import json
 import os
@@ -361,6 +362,254 @@ class CommitTests(unittest.TestCase):
         code, out, err = test_envelope.run("--output", "json", *args)
         self.assertEqual((code, err), (0, ""))
         self.assertTrue(json.loads(out)["ok"])
+
+
+PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+
+
+@unittest.skipUnless(shutil.which("git"), "git is not installed")
+class WorkspaceCommitTests(unittest.TestCase):
+    """A plan in the portable workspace: product in the source repository, plan files in the workspace repository (D7)."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(tmp.name)
+        self.src, self.ws, self.home = base / "src-repo", base / "ws", base / "home"
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SKM_") and k != "GIT_INDEX_FILE"}
+        env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, HOME=str(base), SKM_HOME=str(self.home),
+                   SKM_WORKSPACE_ROOT=str(self.ws))
+        patch = mock.patch.dict(os.environ, env, clear=True)
+        patch.start()
+        self.addCleanup(patch.stop)
+        for repo in (self.src, self.ws):
+            repo.mkdir()
+            self.git(repo, "init", "-q", "-b", "main")
+            for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"),
+                               ("commit.gpgsign", "false"), ("gc.auto", "0"), ("maintenance.auto", "false")):
+                self.git(repo, "config", key, value)  # no detached maintenance process writing during the cleanup
+        (self.src / ".git/info/exclude").write_text(".swissknifeman/state/\n")
+        self.write(self.src, ".swissknifeman/project.json", json.dumps({
+            "$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PID, "plans_store": "workspace"}))
+        self.write(self.src, "src/old.txt", "old\n")
+        self.write(self.src, "foreign.txt", "owner\n")
+        self.git(self.src, "add", "-A")
+        self.git(self.src, "commit", "-q", "-m", "base")
+        state = self.home / "state" / "workspace"
+        state.mkdir(parents=True)
+        (state / "bindings.json").write_text(json.dumps({
+            "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",
+            "projects": {PID: {"paths": [str(self.src)], "primary": str(self.src), "bound_at": "2026-10-17T09:30:00Z"}}}))
+        self.root = demo.make_demo_plan(self.ws / "projects" / PID / "plans")
+        (self.root / ".gitignore").write_text("views/\ncontext/\n.lock\n")
+        store.ensure_gitattributes(self.root)
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(
+            task_files=[{"path": "src/**", "change": "modify"}], reads=[], status="todo", result=None))
+        self.other = self.ws / "projects" / PID / "plans" / "other-plan"
+        self.write(self.other, "plan.json", "{}\n")
+        self.git(self.ws, "add", "-A")
+        self.git(self.ws, "commit", "-q", "-m", "base")
+        self.prefix = self.root.relative_to(self.ws).as_posix()
+
+    def git(self, repo, *args):
+        return subprocess.run(["git", *args], cwd=repo, text=True, capture_output=True, check=True).stdout
+
+    def write(self, repo, path, text="changed\n"):
+        p = Path(repo) / path
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+        return p
+
+    def commit(self, ref="P1.1", role="executor", **kwargs):
+        return gitops.commit(self.root, ref, role=role, **kwargs)
+
+    def changed(self, repo):
+        return set(self.git(repo, "diff-tree", "--no-commit-id", "--name-only", "-r", "-z", "HEAD").rstrip("\0").split("\0"))
+
+    def head(self, repo):
+        return self.git(repo, "rev-parse", "HEAD").strip()
+
+    def start(self):
+        """Bookkeeping dirt of an item and its journal. Written by hand: ``lifecycle.start`` would also spawn the detached
+        delivery of the project event journal, which writes into the temporary directory while it is removed."""
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(status="in_progress"))
+        event = store.new_event("note", "started", demo.AUTHORING)
+        with (self.root / "log.jsonl").open("a", encoding="utf-8") as log:
+            log.write(json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+    def test_product_and_bookkeeping_are_two_linked_commits(self):
+        self.write(self.src, "src/old.txt")
+        self.start()
+        result = self.commit()
+        self.assertEqual((result["repo"], result["sha"], result["workspace_sha"]),
+                         ("source", self.head(self.src), self.head(self.ws)))
+        self.assertEqual(result["workspace_commit"], {"status": "committed"})
+        self.assertEqual(result["paths"], ["src/old.txt"])
+        self.assertEqual(self.changed(self.src), {"src/old.txt"})
+        self.assertEqual(self.changed(self.ws), {f"{self.prefix}/phases/P1/P1.1.json", f"{self.prefix}/log.jsonl"})
+        self.assertEqual(set(result["workspace_paths"]), self.changed(self.ws))
+        source_message = self.git(self.src, "log", "-1", "--format=%B")
+        ws_message = self.git(self.ws, "log", "-1", "--format=%B")
+        self.assertEqual(ws_message.splitlines()[0], source_message.splitlines()[0])
+        for line in (f"Plan: {demo.PLAN_ID}", "Plan-Ref: P1.1", "Plan-Role: executor"):
+            self.assertIn(line, source_message)
+            self.assertIn(line, ws_message)
+        self.assertNotIn("Plan-Project", source_message)
+        self.assertIn(f"Plan-Project: {PID}", ws_message)
+        self.assertIn(f"Plan-Source-Commit: {result['sha']}", ws_message)
+        self.assertEqual(self.git(self.src, "status", "--porcelain"), "")
+        self.assertEqual(self.git(self.ws, "status", "--porcelain"), "")
+
+    def test_reviewer_commits_plan_files_in_the_workspace_only(self):
+        note = self.write(self.root, "knowledge/report.json", "{}\n")
+        source_head = self.head(self.src)
+        self.write(self.src, "src/old.txt")  # product dirt is not a reviewer's concern and is not even looked at
+        result = self.commit(role="reviewer")
+        self.assertEqual((result["repo"], result["sha"]), ("workspace", self.head(self.ws)))
+        self.assertEqual(result["workspace_sha"], result["sha"])
+        self.assertEqual(self.changed(self.ws), {note.relative_to(self.ws).as_posix()})
+        self.assertEqual(set(result["paths"]), self.changed(self.ws))
+        self.assertEqual(self.head(self.src), source_head)
+        self.assertNotIn("Plan-Source-Commit", self.git(self.ws, "log", "-1", "--format=%B"))
+        self.assertIn(f"Plan-Project: {PID}", self.git(self.ws, "log", "-1", "--format=%B"))
+
+    def test_workspace_without_git_skips_the_plan_files(self):
+        self.write(self.src, "src/old.txt")
+        shutil.rmtree(self.ws / ".git")
+        result = self.commit()
+        self.assertEqual(result["sha"], self.head(self.src))
+        self.assertEqual((result["workspace_sha"], result["workspace_commit"]), (None, {"status": "skipped-no-git"}))
+
+    def test_busy_git_lock_leaves_the_plan_files_for_later(self):
+        self.write(self.src, "src/old.txt")
+        self.start()
+        state = self.home / "state" / "workspace"
+        fd = os.open(state / "git.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        self.addCleanup(os.close, fd)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        workspace_head = self.head(self.ws)
+        with mock.patch.object(gitops, "WORKSPACE_LOCK_TIMEOUT", 0.2):
+            result = self.commit()
+        self.assertEqual(result["sha"], self.head(self.src))
+        self.assertEqual((result["workspace_sha"], result["workspace_commit"]["status"]), (None, "locked"))
+        self.assertIn("WORKSPACE_GIT_LOCKED", result["workspace_commit"]["error"])
+        self.assertEqual(self.head(self.ws), workspace_head)
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        self.assertEqual(self.commit(role="fix")["workspace_commit"]["status"], "committed")  # the next commit takes them
+
+    def test_dirty_files_of_other_plans_never_enter_the_workspace_commit(self):
+        self.start()
+        self.write(self.other, "plan.json", "dirty\n")
+        self.write(self.other, "notes/new.txt")
+        self.write(self.ws, "workspace.json", "{}\n")
+        self.write(self.root, "context/pack.json", "{}\n")
+        self.write(self.src, "src/old.txt")
+        result = self.commit()  # no OUTSIDE_SCOPE for the workspace part
+        self.assertEqual(result["workspace_commit"], {"status": "committed"})
+        self.assertEqual(self.changed(self.ws), {f"{self.prefix}/phases/P1/P1.1.json", f"{self.prefix}/log.jsonl"})
+        other = self.other.relative_to(self.ws).as_posix()
+        self.assertEqual(set(result["workspace_outside"]), {f"{other}/plan.json", f"{other}/notes/new.txt", "workspace.json"})
+        self.assertIn("workspace.json", self.git(self.ws, "status", "--porcelain"))
+
+    def test_foreign_product_dirt_refuses_before_any_commit(self):
+        self.write(self.src, "src/old.txt")
+        self.write(self.src, "foreign.txt")
+        self.start()
+        heads = (self.head(self.src), self.head(self.ws))
+        with self.assertRaises(PlanError) as cm:
+            self.commit()
+        self.assertEqual(cm.exception.code, "OUTSIDE_SCOPE")
+        self.assertEqual((self.head(self.src), self.head(self.ws)), heads)
+        result = self.commit(leave_outside=True)
+        self.assertEqual(result["outside"], ["foreign.txt"])
+        self.assertEqual(result["workspace_commit"]["status"], "committed")
+
+    def test_failed_workspace_commit_keeps_the_product_commit(self):
+        self.write(self.src, "src/old.txt")
+        self.start()
+        hook = self.ws / ".git/hooks/pre-commit"
+        hook.write_text("#!/bin/sh\necho nope >&2\nexit 1\n")
+        hook.chmod(0o755)
+        workspace_head = self.head(self.ws)
+        result = self.commit()
+        self.assertEqual(result["sha"], self.head(self.src))
+        self.assertEqual(result["workspace_commit"]["status"], "failed")
+        self.assertTrue(result["workspace_commit"]["error"].startswith("GIT_FAILED:"), result["workspace_commit"])
+        self.assertEqual(self.head(self.ws), workspace_head)
+        self.assertFalse((self.ws / ".git/index.lock").exists())
+
+    def test_nothing_in_both_repositories(self):
+        with self.assertRaises(PlanError) as cm:
+            self.commit()
+        self.assertEqual(cm.exception.code, "NOTHING_TO_COMMIT")
+        self.write(self.src, "src/old.txt")  # product only: the workspace part has nothing
+        result = self.commit()
+        self.assertEqual(result["workspace_commit"], {"status": "nothing"})
+        self.assertEqual(result["workspace_sha"], None)
+
+    def test_dry_run_shows_both_parts_and_writes_nothing(self):
+        self.write(self.src, "src/old.txt")
+        self.start()
+        heads = (self.head(self.src), self.head(self.ws))
+        status = (self.git(self.src, "status", "--porcelain"), self.git(self.ws, "status", "--porcelain"))
+        result = self.commit(dry_run=True)
+        self.assertEqual((result["sha"], result["workspace_sha"]), (None, None))
+        self.assertEqual(result["paths"], ["src/old.txt"])
+        self.assertEqual(set(result["workspace_paths"]), {f"{self.prefix}/phases/P1/P1.1.json", f"{self.prefix}/log.jsonl"})
+        self.assertEqual((self.head(self.src), self.head(self.ws)), heads)
+        self.assertEqual((self.git(self.src, "status", "--porcelain"), self.git(self.ws, "status", "--porcelain")), status)
+
+    def test_plan_paths_route_to_the_workspace_and_product_paths_to_the_source(self):
+        self.write(self.src, "foreign.txt")
+        extra = self.write(self.root, "research/R1.json", "{}\n")
+        result = self.commit(paths=["foreign.txt", "@plan/research/R1.json"])
+        self.assertEqual(result["paths"], ["foreign.txt"])
+        self.assertEqual(self.changed(self.ws), {extra.relative_to(self.ws).as_posix()})
+        with self.assertRaises(PlanError) as cm:
+            self.commit(role="reviewer", paths=["foreign.txt"])
+        self.assertEqual(cm.exception.code, "PATH_INVALID")
+        with self.assertRaises(PlanError) as cm:
+            self.commit(paths=["../escape"])
+        self.assertEqual(cm.exception.code, "PATH_INVALID")
+
+    def test_unbound_source_refuses_an_executor_but_not_a_reviewer(self):
+        (self.home / "state" / "workspace" / "bindings.json").unlink()
+        self.write(self.root, "knowledge/report.json", "{}\n")
+        with self.assertRaises(PlanError) as cm:
+            self.commit()
+        self.assertEqual(cm.exception.code, "PLAN_SOURCE_UNBOUND")
+        self.assertEqual(self.commit(role="reviewer")["repo"], "workspace")
+
+    def test_identity_trailers_of_the_workspace_part_cannot_be_overridden(self):
+        self.write(self.src, "src/old.txt")
+        for trailer in ("Plan-Project: spoofed", "Plan-Source-Commit: abc1234"):
+            with self.subTest(trailer=trailer), self.assertRaises(PlanError) as cm:
+                self.commit(trailers=[trailer])
+            self.assertEqual(cm.exception.code, "CONTENT_INVALID")
+
+    def test_cli_json_carries_the_split(self):
+        self.write(self.src, "src/old.txt")
+        code, out, err = test_envelope.run("commit", self.root, "P1.1", "--role", "executor", "--json")
+        self.assertEqual((code, err), (0, ""))
+        doc = json.loads(out)
+        self.assertEqual((doc["repo"], doc["workspace_commit"]["status"]), ("source", "nothing"))
+
+    def test_legacy_plan_reports_the_new_keys_as_skipped(self):
+        # a plan folder outside the workspace keeps its single commit
+        (self.src / ".swissknifeman/project.json").unlink()  # no marker: the checkout keeps its plans
+        legacy = self.src / "plans"
+        root = demo.make_demo_plan(legacy)
+        demo.rewrite(root, "phases/P1/P1.1.json", lambda d: d.update(
+            task_files=[{"path": "src/**", "change": "modify"}], reads=[], status="todo", result=None))
+        (root / ".gitignore").write_text("views/\ncontext/\n.lock\n")
+        store.ensure_gitattributes(root)
+        self.write(self.src, "src/old.txt")
+        result = gitops.commit(root, "P1.1", role="executor", leave_outside=True)
+        self.assertEqual((result["repo"], result["workspace_sha"], result["workspace_commit"]),
+                         ("source", None, {"status": "skipped-legacy"}))
+        self.assertNotIn("workspace_paths", result)
+        self.assertIn("src/old.txt", result["paths"])
+        self.assertTrue(any(path.startswith("plans/") for path in result["paths"]))
 
 
 if __name__ == "__main__":

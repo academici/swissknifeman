@@ -149,7 +149,7 @@ def _log(args, item: str, issue: dict, kind: str | None = None, prefix: str = ""
     argv = ["log", args.plan, item, "--type", kind or issue["kind"], "--summary", prefix + issue["text"]]
     for key in ("impact", "next"):
         if issue.get(key):
-            argv += [f"--{key}", issue[key]]
+            argv.append(f"--{key}={issue[key]}")  # "=" form: a value that starts with "-" is not an option
     data = {key: issue[key] for key in _DATA_FIELDS if key in issue}
     if data:  # class, severity, outcome, auto_fixable, evidence: the event keeps them in its data object
         argv += ["--data", json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))]

@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.3",
   "title": "planner commit: продукт в source repo, файлы плана — локальный коммит в workspace (Plan-Project, Plan-Source-Commit); commits читает source repo; planner-orch op_commit",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Для плана в workspace `plan.py commit` коммитит продуктовые пути в checkout (как сейчас, с трейлерами Plan*) и затем файлы плана в git workspace под `git.lock` с трейлерами `Plan-Project` и `Plan-Source-Commit`; ответ получает `repo`, `workspace_sha`, `workspace_commit.status`; `plan.py commits` читает историю checkout; `op_commit` моста planner-orch передаёт новые поля и не меняет поведение для legacy.",
   "why": "Коммит пункта сегодня — одна транзакция «продукт + bookkeeping» в одном репозитории (knowledge/audit-verification#corrected C4); после переноса без разделения либо пропадёт продуктовый коммит, либо файлы плана останутся грязными навсегда. Жёсткие риски: продуктовый коммит, захвативший чужие пути, коммит workspace, захвативший файлы других планов, потеря связи коммитов, гонка с `workspace sync`.",
   "scope": {
@@ -86,6 +86,12 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/7ab276cf560fe99a5541e2053fd53d3ccac5730b11010e0c604e4d7edb8eb650",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Legacy-план (внутри checkout): поведение и вывод `commit`/`commits` без изменений; новые ключи ответа добавляются со значениями `repo: source`, `workspace_sha: null`, `workspace_commit.status: skipped-legacy`.",
     "Workspace-часть никогда не возвращает `OUTSIDE_SCOPE`: чужие грязные пути workspace остаются вне коммита.",
@@ -143,6 +149,61 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T10:22:16Z"
+  "result": {
+    "started_at": "2026-10-17T15:27:32Z",
+    "finished_at": "2026-10-17T15:50:13Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-43f7c0c2dafd53fa1d3fa128-P2.3",
+    "notes": "plan.py commit for a plan in the workspace now makes two commits: product paths in the source repo (Plan.source_root), then plan files in the workspace repo under git.lock (10 s) with Plan-Project and Plan-Source-Commit. Foreign workspace paths stay out and never give OUTSIDE_SCOPE; a workspace failure after the source commit is status failed with exit 0; NOTHING_TO_COMMIT only when both parts are empty; a reviewer commits to the workspace only. Result gets repo, workspace_sha, workspace_commit (legacy: source, null, skipped-legacy), and workspace_paths and workspace_outside for workspace plans. commits reads the checkout history, with source_unbound true when no checkout is bound. op_commit passes the new fields on for workspace plans and names a failed workspace part in message; the legacy answer is unchanged. Old commit logic moved into _commit_part; _allowed split into _plan_patterns and product patterns, plus a router (_route) that sends each path to the right repo.\nChanged: CHANGELOG.md, bridges/planner-orch/register.py, bridges/planner-orch/tests/test_commit_bridge.py, bridges/planner-orch/tests/test_register.py, bridges/planner-orch/worksource.py, ideas/conductor-register-next-flag-dash.md, packages/orch/schemas/work-source/v1/output.schema.json, packages/planner/lib/planner/plan/cli.py, packages/planner/lib/planner/plan/gitops.py, packages/planner/schemas/plan/v1/read-commits.schema.json, packages/planner/tests/engine/test_commit.py, packages/planner/tests/engine/test_commits_read.py",
+    "deviations": [
+      "Changed packages/planner/schemas/plan/v1/read-commits.schema.json (outside write_set): optional const-true property source_unbound, because the schema is closed (additionalProperties false) and the contract requires source_unbound in the commits answer.",
+      "Changed packages/orch/schemas/work-source/v1/output.schema.json (another module, outside write_set): the commit answer got optional repo, workspace_sha and workspace_commit. orch validates answers against this closed schema, so op_commit could not pass the new fields on without it.",
+      "In a dry run workspace_commit.status is 'dry-run' (paths a real run would commit) or 'nothing'. The contract lists only committed|nothing|skipped-no-git|locked|failed; 'dry-run' is an addition so a preview is not mistaken for a real commit.",
+      "changed outside the write set: bridges/planner-orch/register.py, bridges/planner-orch/tests/test_register.py, ideas/conductor-register-next-flag-dash.md, packages/orch/schemas/work-source/v1/output.schema.json, packages/planner/schemas/plan/v1/read-commits.schema.json"
+    ],
+    "pending": [
+      "follow_up(write_set): Changed packages/orch/schemas/work-source/v1/output.schema.json (another module, outside write_set): the commit answer got optional repo, workspace_sha and workspace_commit. orch validates answers against this closed schema, so op_commit could not pass the new fields on without it."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T15:50:13Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T15:50:13Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T15:50:13Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V3.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T15:50:13Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V9.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V1.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V2.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V3.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.3/evidence/V9.json"
+    ]
+  },
+  "updated_at": "2026-10-17T15:50:13Z"
 }

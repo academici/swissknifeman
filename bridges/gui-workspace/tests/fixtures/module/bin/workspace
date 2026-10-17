@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Fake workspace command line: canned JSON answers by argv; every call is logged to $HOME/workspace.log."""
+import json
+import os
+import sys
+from pathlib import Path
+
+FIXTURES = Path(__file__).resolve().parents[2]
+args = sys.argv[1:]
+# The plugin runner passes only a few variables: switches (FAKE_*) may also come from $HOME/fake.json.
+try:
+    os.environ.update(json.loads(Path(os.environ.get("HOME", "/tmp"), "fake.json").read_text(encoding="utf-8")))
+except (OSError, ValueError):
+    pass
+with open(os.path.join(os.environ.get("HOME", "/tmp"), "workspace.log"), "a", encoding="utf-8") as log:
+    log.write(json.dumps(args) + "\n")
+if args[-1:] == ["--json"]:
+    args = args[:-1]
+files = {("status",): "status.json", ("project", "list"): "project-list.json", ("migrate", "discover"): "discover.json"}
+if tuple(args) in files:
+    text = (FIXTURES / files[tuple(args)]).read_text(encoding="utf-8")
+    if os.environ.get("FAKE_WORK"):
+        text = text.replace("/work/alpha", os.environ["FAKE_WORK"])
+    if os.environ.get("FAKE_LEAK"):
+        text = text.replace("https://example.com", "https://user:token123@example.com")
+    if os.environ.get("FAKE_BARE"):
+        text = text.replace('"remote": "https://example.com/team/plans.git"', '"remote": null')
+    sys.stdout.write(text)
+elif args == ["doctor", "--publish-safety"]:
+    block = os.environ.get("FAKE_PUBLISH") == "block"
+    sys.stdout.write((FIXTURES / ("publish-block.json" if block else "publish-ok.json")).read_text(encoding="utf-8"))
+    sys.exit(1 if block else 0)
+elif os.environ.get("FAKE_FAIL"):
+    print("WORKSPACE_FAILED: boom", file=sys.stderr)
+    sys.exit(1)
+else:
+    print(json.dumps({"ran": args}))

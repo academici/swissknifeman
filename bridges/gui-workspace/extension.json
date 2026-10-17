@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "description": "GUI queries of the portable workspace: overview, projects, migration, sync and conflicts, read from the workspace command line as view-data.",
+  "entrypoint": [
+    "adapter.py"
+  ],
+  "example_input": {
+    "context": {},
+    "id": "gui-workspace.overview",
+    "params": {}
+  },
+  "id": "gui-workspace",
+  "kind": "command",
+  "permissions": {
+    "env": [
+      "SKM_WORKSPACE_MODULE_ROOT",
+      "SKM_WORKSPACE_ROOT",
+      "SKM_UMBRELLA"
+    ],
+    "filesystem": [
+      "state"
+    ],
+    "network": false,
+    "shell": true
+  },
+  "protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "provides": {
+    "points": [
+      "gui:query"
+    ]
+  },
+  "timeout_seconds": 60,
+  "version": "0.1.0"
+}

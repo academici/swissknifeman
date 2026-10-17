@@ -1,0 +1,4 @@
+{"candidates": [{"path": "/work/alpha", "sources": ["launcher"], "marker": {"project_id": "p-alpha", "plans_store": "workspace"}, "plans": {"v4": 3, "legacy": 2, "files": 40, "bytes": 1000}},
+                {"path": "/work/clean", "sources": ["registry"], "marker": {"project_id": "p-clean", "plans_store": "workspace"}, "plans": {"v4": 1, "legacy": 0, "files": 5, "bytes": 10}},
+                {"path": "/work/bad", "sources": ["launcher"], "marker": null, "marker_error": "MARKER_INVALID: bad json", "plans": {"v4": 0, "legacy": 0, "files": 0, "bytes": 0}}],
+ "skipped": []}

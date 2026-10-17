@@ -1,0 +1,2 @@
+{"projects": [{"project_id": "p-alpha", "name": "alpha", "status": "active", "bound": true, "paths": ["/work/alpha"]},
+              {"project_id": "p-beta", "name": "beta", "status": "active", "bound": false, "paths": []}]}

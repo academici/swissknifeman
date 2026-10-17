@@ -1,0 +1,781 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "commands": [
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "risk-based",
+      "description": "workspace init: create the layout and the git repository of the workspace.",
+      "effects": [
+        "config.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "init"
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.init",
+      "input": [
+        {
+          "description": "Absolute folder of the new workspace; default is the configured root.",
+          "flag": "--root",
+          "name": "root",
+          "required": false,
+          "title": "Workspace folder",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Create the workspace"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "risk-based",
+      "description": "workspace project attach: give the checkout a project_id and bind it here.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "project-attach",
+          {
+            "input": "project"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.project-attach",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "project",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Attach a project"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "risk-based",
+      "description": "workspace project scan: bind checkouts that carry a marker.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "project-scan",
+          {
+            "input": "dir"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.project-scan",
+      "input": [
+        {
+          "description": "Absolute folder to scan (depth 4).",
+          "name": "dir",
+          "required": true,
+          "title": "Folder",
+          "type": "string"
+        }
+      ],
+      "risk": "low",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 600,
+      "title": "Scan folders for projects"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "risk-based",
+      "description": "workspace project rebind: replace the binding of a project by one folder.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "project-rebind",
+          {
+            "input": "project_id"
+          },
+          {
+            "input": "path"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.project-rebind",
+      "input": [
+        {
+          "name": "project_id",
+          "pattern": "[A-Za-z0-9][A-Za-z0-9._-]*",
+          "required": true,
+          "title": "Project id",
+          "type": "string"
+        },
+        {
+          "description": "Absolute folder; its marker must carry this id.",
+          "name": "path",
+          "required": true,
+          "title": "Checkout folder",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Rebind a project"
+    },
+    {
+      "confirmation": "none",
+      "description": "workspace migrate plan: dry run, nothing is written.",
+      "effects": [
+        "read",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "migrate-plan",
+          {
+            "input": "project"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.migrate-plan",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "project",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        },
+        {
+          "description": "How to treat a plan that exists both in the workspace and in the project.",
+          "enum": [
+            "keep-workspace",
+            "import-copy"
+          ],
+          "flag": "--on-conflict",
+          "name": "on_conflict",
+          "required": false,
+          "title": "On conflict",
+          "type": "enum"
+        }
+      ],
+      "risk": "low",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 600,
+      "title": "Plan a plans migration"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "always",
+      "description": "workspace migrate apply: move the plans of the project into the workspace.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "migrate-apply",
+          {
+            "input": "project"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.migrate-apply",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "project",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        },
+        {
+          "description": "How to treat a plan that exists both in the workspace and in the project.",
+          "enum": [
+            "keep-workspace",
+            "import-copy"
+          ],
+          "flag": "--on-conflict",
+          "name": "on_conflict",
+          "required": false,
+          "title": "On conflict",
+          "type": "enum"
+        }
+      ],
+      "risk": "high",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 7200,
+      "title": "Apply a plans migration"
+    },
+    {
+      "confirmation": "none",
+      "description": "workspace migrate verify: compare the workspace with the last report.",
+      "effects": [
+        "read",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "migrate-verify",
+          {
+            "input": "project"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.migrate-verify",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "project",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        }
+      ],
+      "risk": "low",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 1800,
+      "title": "Verify a plans migration"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "always",
+      "description": "workspace migrate cleanup: remove the legacy plans; type the project_id to confirm.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "migrate-cleanup",
+          {
+            "input": "project"
+          },
+          {
+            "input": "confirm"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.migrate-cleanup",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "project",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        },
+        {
+          "description": "Must equal the project_id of the project.",
+          "name": "confirm",
+          "required": true,
+          "title": "Project id",
+          "type": "string"
+        }
+      ],
+      "risk": "high",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 3600,
+      "title": "Clean up migrated plans"
+    },
+    {
+      "concurrency_key": "gui-workspace:sync",
+      "confirmation": "risk-based",
+      "description": "workspace sync --commit: commit after the publish-safety check.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "sync-commit"
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.sync-commit",
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 600,
+      "title": "Commit the workspace"
+    },
+    {
+      "concurrency_key": "gui-workspace:sync",
+      "confirmation": "risk-based",
+      "description": "workspace sync --pull: fetch and merge, or report conflicts.",
+      "effects": [
+        "project.write",
+        "process.spawn",
+        "network"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "sync-pull"
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.sync-pull",
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 900,
+      "title": "Pull the workspace"
+    },
+    {
+      "concurrency_key": "gui-workspace:sync",
+      "confirmation": "always",
+      "description": "workspace sync --push: publish the workspace to its remote and branch (no force); the page Sync shows both.",
+      "effects": [
+        "process.spawn",
+        "network"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "sync-push"
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.sync-push",
+      "risk": "high",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 900,
+      "title": "Push the workspace"
+    },
+    {
+      "concurrency_key": "gui-workspace:sync",
+      "confirmation": "always",
+      "description": "workspace sync --resolve PATH=side: decide one conflicting path; the merge runs when all are decided.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "sync-resolve",
+          {
+            "input": "path"
+          },
+          {
+            "input": "side"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.sync-resolve",
+      "input": [
+        {
+          "description": "Conflicting path inside the workspace.",
+          "name": "path",
+          "required": true,
+          "title": "Path",
+          "type": "string"
+        },
+        {
+          "enum": [
+            "local",
+            "remote"
+          ],
+          "name": "side",
+          "required": true,
+          "title": "Side",
+          "type": "enum"
+        }
+      ],
+      "risk": "high",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 900,
+      "title": "Resolve a conflict"
+    },
+    {
+      "concurrency_key": "gui-workspace:sync",
+      "confirmation": "risk-based",
+      "description": "workspace sync --resolve-reset: forget the decisions made so far.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "sync-resolve-reset"
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.sync-resolve-reset",
+      "risk": "low",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Reset decisions"
+    },
+    {
+      "concurrency_key": "gui-workspace:sync",
+      "confirmation": "always",
+      "description": "workspace connect: set the remote of the workspace.",
+      "effects": [
+        "config.write",
+        "process.spawn",
+        "network"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "connect",
+          {
+            "input": "remote"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACE_ROOT",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.connect",
+      "input": [
+        {
+          "description": "Git remote URL without a password or token.",
+          "name": "remote",
+          "required": true,
+          "title": "Remote URL",
+          "type": "string"
+        },
+        {
+          "flag": "--branch",
+          "name": "branch",
+          "pattern": "[A-Za-z0-9][A-Za-z0-9._/-]*",
+          "required": false,
+          "title": "Branch",
+          "type": "string"
+        }
+      ],
+      "risk": "high",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Connect a remote"
+    }
+  ],
+  "gui_protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "handler": {
+    "extension": "extension.json"
+  },
+  "owner": "gui-workspace",
+  "queries": [
+    {
+      "cache_s": 10,
+      "description": "Projects, git state and publish-safety verdict of the workspace.",
+      "id": "gui-workspace.overview",
+      "returns": "metric-group",
+      "scope": "fleet",
+      "timeout_s": 60,
+      "title": "Workspace"
+    },
+    {
+      "cache_s": 10,
+      "description": "Projects of the workspace and their bindings on this machine.",
+      "id": "gui-workspace.projects",
+      "returns": "resource-list",
+      "scope": "fleet",
+      "timeout_s": 60,
+      "title": "Projects"
+    },
+    {
+      "cache_s": 30,
+      "description": "Projects with plans to migrate into the workspace.",
+      "id": "gui-workspace.migration",
+      "returns": "status-table",
+      "scope": "fleet",
+      "timeout_s": 60,
+      "title": "Migration"
+    },
+    {
+      "cache_s": 10,
+      "description": "Publish-safety report, push target and the last sync operation.",
+      "id": "gui-workspace.sync",
+      "returns": "status-table",
+      "scope": "fleet",
+      "timeout_s": 60,
+      "title": "Sync"
+    },
+    {
+      "cache_s": 5,
+      "description": "Conflicts of the last pull.",
+      "id": "gui-workspace.conflicts",
+      "returns": "resource-list",
+      "scope": "fleet",
+      "timeout_s": 60,
+      "title": "Conflicts"
+    }
+  ],
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "routes": [
+    {
+      "actions": [
+        "gui-workspace.init",
+        "gui-workspace.connect"
+      ],
+      "id": "gui-workspace.overview",
+      "nav": {
+        "order": 110,
+        "section": "fleet"
+      },
+      "path": "overview",
+      "query": "gui-workspace.overview",
+      "scope": "fleet",
+      "title": "Overview",
+      "view": "metric-group"
+    },
+    {
+      "actions": [
+        "gui-workspace.project-attach",
+        "gui-workspace.project-scan",
+        "gui-workspace.project-rebind"
+      ],
+      "id": "gui-workspace.projects",
+      "nav": {
+        "order": 120,
+        "section": "fleet"
+      },
+      "path": "projects",
+      "query": "gui-workspace.projects",
+      "scope": "fleet",
+      "title": "Projects",
+      "view": "resource-list"
+    },
+    {
+      "actions": [
+        "gui-workspace.migrate-plan",
+        "gui-workspace.migrate-apply",
+        "gui-workspace.migrate-verify",
+        "gui-workspace.migrate-cleanup"
+      ],
+      "id": "gui-workspace.migration",
+      "nav": {
+        "order": 130,
+        "section": "fleet"
+      },
+      "path": "migration",
+      "query": "gui-workspace.migration",
+      "scope": "fleet",
+      "title": "Migration",
+      "view": "status-table"
+    },
+    {
+      "actions": [
+        "gui-workspace.sync-commit",
+        "gui-workspace.sync-pull",
+        "gui-workspace.sync-push",
+        "gui-workspace.connect"
+      ],
+      "id": "gui-workspace.sync",
+      "nav": {
+        "order": 140,
+        "section": "fleet"
+      },
+      "path": "sync",
+      "query": "gui-workspace.sync",
+      "scope": "fleet",
+      "title": "Sync",
+      "view": "status-table"
+    },
+    {
+      "actions": [
+        "gui-workspace.sync-resolve",
+        "gui-workspace.sync-resolve-reset"
+      ],
+      "id": "gui-workspace.conflicts",
+      "nav": {
+        "order": 150,
+        "section": "fleet"
+      },
+      "path": "conflicts",
+      "query": "gui-workspace.conflicts",
+      "scope": "fleet",
+      "title": "Conflicts",
+      "view": "resource-list"
+    }
+  ],
+  "version": "0.1.0",
+  "widgets": [
+    {
+      "id": "gui-workspace.summary",
+      "query": "gui-workspace.overview",
+      "scope": "fleet",
+      "size": "medium",
+      "title": "Workspace",
+      "view": "metric-group"
+    }
+  ]
+}

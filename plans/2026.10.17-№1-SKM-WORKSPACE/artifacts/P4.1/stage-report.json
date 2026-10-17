@@ -1,0 +1,63 @@
+{
+  "changed_paths": [
+    "docs/getting-started.md",
+    "docs/workspace.md",
+    "packages/workspace/CHANGELOG.md",
+    "packages/workspace/lib/workspace/cli.py",
+    "packages/workspace/lib/workspace/gitutil.py",
+    "packages/workspace/lib/workspace/layout.py",
+    "packages/workspace/lib/workspace/remote.py",
+    "packages/workspace/tests/test_remote.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "spec_mismatch",
+      "impact": "the goal line 'events without userinfo' is trivially met; no event for connect/clone exists",
+      "kind": "deviation",
+      "outcome": "follow_up",
+      "severity": "low",
+      "text": "No workspace.* events emitted for connect/clone: a new event type needs unit.json and a data schema outside the write set, and the contract names no connect/clone event. Nothing carrying a URL is emitted."
+    },
+    {
+      "impact": "P4.2 sync pushes HEAD:<branch> with branch = local branch; no branch is stored",
+      "kind": "assumption",
+      "next": "P4.2 should use the local branch name as remote branch",
+      "text": "connect --branch must equal the local workspace branch (else usage error exit 2); a remote lacking the requested branch but having others is REMOTE_FOREIGN. The contract does not define a differing branch."
+    },
+    {
+      "impact": "P4.2 pull/merge-tree must handle a missing merge base and a missing remote-tracking ref",
+      "kind": "note",
+      "next": "P4.2: fetch first, handle unrelated histories explicitly",
+      "text": "connect does not fetch: origin/<branch> is absent until status --fetch or sync --pull; a fresh init repo and a remote of the same workspace may have unrelated histories (no merge base)."
+    },
+    {
+      "impact": "none for GUI; interactive terminal users cannot type a password to git",
+      "kind": "note",
+      "next": "none",
+      "text": "GIT_TERMINAL_PROMPT=0 is applied on all git calls (already so in gitutil.run), not only with --json or without a TTY; stricter than item.rules[2]."
+    },
+    {
+      "impact": "the coordinator should not commit them with this piece",
+      "kind": "note",
+      "next": "none",
+      "text": "Unrelated modified lock files (docs/package-lock.json, Cargo.lock, requirements.lock, skills.json etc.) appear in git status; not touched by this piece."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "remote.py classify/connect/clone ordering and cleanup",
+      "URL redaction in errors",
+      "gitutil.network_env"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "security_touched"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Added remote.py (classify, connect, clone), gitutil helpers (require_version, network_env, network, fetch, ahead_behind), CLI commands connect/clone and status --fetch against origin/<branch>; tests on local bare file:// repositories; docs and changelog updated. Related tests (test_remote, test_init, test_cli) pass: 60 tests."
+}

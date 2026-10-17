@@ -80,6 +80,51 @@ def git_version(cwd: PathLike = ".") -> Optional[Tuple[int, ...]]:
     return tuple(int(part) for part in match.groups(default="0")) if match else None
 
 
+def require_version(minimum: Tuple[int, ...] = MIN_GIT_WORKSPACE) -> Tuple[int, ...]:
+    """The installed git version; ``WORKSPACE_GIT_TOO_OLD`` when git is missing or older than ``minimum``."""
+    version = git_version()
+    text = ".".join(str(part) for part in minimum)
+    if version is None:
+        raise WorkspaceError("WORKSPACE_GIT_TOO_OLD", f"git {text} or newer is required; git is missing or unreadable")
+    if version[:len(minimum)] < minimum:
+        raise WorkspaceError("WORKSPACE_GIT_TOO_OLD",
+                             f"git {text} or newer is required (this is {'.'.join(str(p) for p in version)})")
+    return version
+
+
+def network_env(env: Env = None) -> Dict[str, str]:
+    """The environment of a git call that reaches a remote: no password prompt (also for ssh: ``BatchMode``, unless the
+    owner set ``GIT_SSH_COMMAND`` or ``GIT_SSH``). Credential helpers and git configuration are left as they are."""
+    environment = dict(os.environ if env is None else env)
+    environment["GIT_TERMINAL_PROMPT"] = "0"
+    if "GIT_SSH_COMMAND" not in environment and "GIT_SSH" not in environment:
+        environment["GIT_SSH_COMMAND"] = "ssh -o BatchMode=yes"
+    return environment
+
+
+def network(args: Sequence[str], cwd: PathLike, what: str, env: Env = None) -> "subprocess.CompletedProcess[str]":
+    """``git`` with network access; a failure is ``REMOTE_UNREACHABLE`` with the redacted message."""
+    done = git(args, cwd, env=network_env(env))
+    if done.returncode != 0:
+        detail = redact_remote_text(done.stderr.strip() or done.stdout.strip() or f"exit {done.returncode}")
+        raise WorkspaceError("REMOTE_UNREACHABLE", f"git {what} failed: {detail}")
+    return done
+
+
+def fetch(cwd: PathLike, remote: str = "origin", env: Env = None) -> None:
+    """``git fetch <remote>``; ``REMOTE_UNREACHABLE`` on an authentication or network failure."""
+    network(["fetch", "--quiet", remote], cwd, "fetch", env)
+
+
+def ahead_behind(cwd: PathLike, branch: str, remote: str = "origin") -> Optional[Tuple[int, int]]:
+    """``(ahead, behind)`` of ``HEAD`` against ``<remote>/<branch>`` as last fetched; ``None`` when there is no such ref."""
+    done = git(["rev-list", "--left-right", "--count", f"HEAD...refs/remotes/{remote}/{branch}"], cwd)
+    parts = done.stdout.split()
+    if done.returncode != 0 or len(parts) != 2:
+        return None
+    return int(parts[0]), int(parts[1])
+
+
 def lock_timeout(env: Env = None, home: Optional[PathLike] = None) -> float:
     """``workspace.git.lock_timeout_s`` of the configuration (machine and defaults layers); 60 s when unreadable."""
     try:

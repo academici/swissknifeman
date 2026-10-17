@@ -127,11 +127,29 @@ The workspace is pushed to a remote, and anything that reaches git history stays
 
 A secret value is never printed; the report names the rule, the line and the mask.
 
+## Remote and a second machine
+
+Needs git 2.38 or newer (`WORKSPACE_GIT_TOO_OLD` otherwise).
+
+- `swissknifeman workspace connect --remote URL` looks at the remote first (`git ls-remote`, then a shallow clone in
+  `.staging/connect-<id>` that is always removed). An empty remote or one holding this workspace becomes `origin`;
+  a repository without `workspace.json` is `REMOTE_FOREIGN` and another workspace is `REMOTE_OTHER_WORKSPACE` (use
+  `workspace clone`); the git configuration is not touched in these cases. `connect` never commits or pushes; it prints
+  `next: swissknifeman workspace sync --push`.
+- `swissknifeman workspace clone URL [--root DIR]` makes the workspace from a remote into an absent or empty folder
+  (`WORKSPACE_ROOT_NOT_EMPTY` otherwise) and creates this machine's device if it has none. Then run
+  `swissknifeman workspace project scan ~/projects`.
+- `swissknifeman workspace status --fetch` fetches `origin` and shows ahead, behind and diverged against `origin/<branch>`.
+
+Git never asks for a password here: an authentication or network failure is `REMOTE_UNREACHABLE`, with the URL shown
+without user information.
+
 ## Error codes
 
 Workspace: `WORKSPACE_NOT_INITIALIZED`, `WORKSPACE_ROOT_NOT_EMPTY`, `WORKSPACE_LAYOUT_INVALID`, `WORKSPACE_GIT_LOCKED`,
 `WORKSPACE_GIT_TOO_OLD`, `ATTACH_CONFIRM_REQUIRED`, `PROJECT_UNKNOWN`, `PROJECT_AMBIGUOUS`, `PROJECT_MARKER_INVALID`,
-`BINDING_MARKER_MISMATCH`, `BINDING_PATH_MISSING`, `REMOTE_UNREACHABLE`, `PUBLISH_BLOCKED`.
+`BINDING_MARKER_MISMATCH`, `BINDING_PATH_MISSING`, `REMOTE_UNREACHABLE`, `REMOTE_ALREADY_SET`, `REMOTE_FOREIGN`,
+`REMOTE_OTHER_WORKSPACE`, `PUBLISH_BLOCKED`.
 
 Migration: `MIGRATION_BLOCKED_SECRET`, `MIGRATION_BLOCKED_SYMLINK`, `MIGRATION_IN_PROGRESS`, `MIGRATION_CONFLICT`,
 `MIGRATION_LOCKED` (a plan lock or the project migration lock was not free in time), `MIGRATION_SOURCE_CHANGED` (the source

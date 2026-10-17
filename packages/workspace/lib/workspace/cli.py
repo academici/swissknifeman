@@ -14,7 +14,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired, resolve_project
 from aicore.workspace import WorkspaceError
 
-from . import __version__, doctor, events, layout, migrate, projects
+from . import __version__, doctor, events, layout, migrate, projects, remote
 
 USAGE = """usage: workspace <command> [options]
 
@@ -46,6 +46,9 @@ commands:
                                     marker back to legacy and the folders the migration brought in removed
   migrate cleanup --project DIR --confirm PROJECT_ID [--json]
                                     remove the old plans folders whose copy in the workspace is equal
+  connect --remote URL [--branch B] [--json]
+                                    classify the remote (empty or the same workspace) and add it as origin; never pushes
+  clone URL [--root DIR] [--json]   make this machine's workspace from a remote (the folder must be absent or empty)
   version                           print the version
   help                              show this text
 
@@ -73,6 +76,14 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("--all", action="store_true")
     p.add_argument("--json", action="store_true")
     sub.add_parser("version")
+    p = sub.add_parser("connect")
+    p.add_argument("--remote", metavar="URL", required=True)
+    p.add_argument("--branch", metavar="B", default=None)
+    p.add_argument("--json", action="store_true")
+    p = sub.add_parser("clone")
+    p.add_argument("url", metavar="URL")
+    p.add_argument("--root", metavar="DIR", default=None)
+    p.add_argument("--json", action="store_true")
     project = sub.add_parser("project")
     commands = project.add_subparsers(dest="project_command", parser_class=_Parser)
     commands.required = True
@@ -153,6 +164,7 @@ def _cmd_status(args: argparse.Namespace) -> int:
     else:
         remote = git["remote"] or "no remote"
         tracking = "" if git["ahead"] is None else f", ahead {git['ahead']}, behind {git['behind']}"
+        tracking += " (diverged)" if git["diverged"] else ""
         print(f"git: branch {git['branch']}, {git['dirty']} changed, {remote}{tracking}")
     for row in doc["projects"]:
         where = ", ".join(row["paths"]) if row["bound"] else "not bound here"
@@ -202,6 +214,29 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             if "remediation" in item:
                 print(f"    fix: {item['remediation']}")
     return 1 if any(item["status"] == "fail" for item in checks) else 0
+
+
+def _cmd_connect(args: argparse.Namespace) -> int:
+    doc = remote.connect(args.remote, args.branch)
+    if args.json:
+        _dump(doc)
+        return 0
+    print(f"connected {doc['remote']} as origin (branch {doc['branch']}, remote is {doc['classification']})")
+    print(f"next: {doc['next']}")
+    return 0
+
+
+def _cmd_clone(args: argparse.Namespace) -> int:
+    doc = remote.clone(args.url, args.root)
+    if args.root is not None and layout.root_of(args.root) != layout.root_of(None):
+        print(f"note: other commands use {layout.root_of(None)}; set SKM_WORKSPACE_ROOT={doc['root']} to use this "
+              f"workspace", file=sys.stderr)
+    if args.json:
+        _dump(doc)
+        return 0
+    print(f"cloned workspace {doc['workspace_id']} from {doc['remote']} to {doc['root']} (device {doc['device_id']})")
+    print(f"next: {doc['next']}")
+    return 0
 
 
 def _cmd_version(args: argparse.Namespace) -> int:
@@ -402,7 +437,8 @@ def _cmd_migrate_cleanup(args: argparse.Namespace) -> int:
     return 0
 
 
-_COMMANDS = {"init": _cmd_init, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version}
+_COMMANDS = {"init": _cmd_init, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version,
+             "connect": _cmd_connect, "clone": _cmd_clone}
 _PROJECT = {"attach": _cmd_attach, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
             "detach": _cmd_detach}
 _MIGRATE = {"discover": _cmd_discover, "plan": _cmd_migrate_plan, "apply": _cmd_migrate_apply,

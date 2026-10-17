@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.1",
   "title": "Git-слой workspace: connect --remote (классификация remote), clone, status --fetch, redact_remote, проверка версии git",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`workspace connect --remote URL` классифицирует remote (empty / same / other workspace / foreign) через `git ls-remote` и временный shallow clone и только добавляет `origin`; `workspace clone URL` создаёт workspace на машине из remote и device; `workspace status --fetch` показывает ahead/behind/diverged после fetch; все выводы и события без userinfo URL; git < 2.38 → `WORKSPACE_GIT_TOO_OLD`.",
   "why": "Подключение remote и клон — входная точка второй машины (P6.3); ошибка классификации может слить два разных workspace или запушить workspace в чужой репозиторий. Жёсткие риски: токен из URL в логах/событиях, интерактивный запрос пароля в неинтерактивном вызове (GUI), clone поверх существующих данных.",
   "scope": {
@@ -100,6 +100,12 @@
       "note": "создаётся предыдущим пунктом плана"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/27ec755a209fc2d94964dd90ae944c92555f36578501e5a1c24392d94d9700bf",
+      "role": "input"
+    }
+  ],
   "rules": [
     "connect никогда не коммитит и не пушит; при `REMOTE_FOREIGN`/`REMOTE_OTHER_WORKSPACE` конфиг git не меняется.",
     "Временный clone для классификации — в `.staging/connect-<id>`, удаляется в finally.",
@@ -148,6 +154,51 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T10:23:02Z"
+  "result": {
+    "started_at": "2026-10-17T22:22:47Z",
+    "finished_at": "2026-10-17T22:25:58Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-bae9519b75070dc34a650eb9-P4.1",
+    "notes": "Added remote.py (classify, connect, clone), gitutil helpers (require_version, network_env, network, fetch, ahead_behind), CLI commands connect/clone and status --fetch against origin/<branch>; tests on local bare file:// repositories; docs and changelog updated. Related tests (test_remote, test_init, test_cli) pass: 60 tests.\nChanged: docs/getting-started.md, docs/workspace.md, packages/workspace/CHANGELOG.md, packages/workspace/lib/workspace/cli.py, packages/workspace/lib/workspace/gitutil.py, packages/workspace/lib/workspace/layout.py, packages/workspace/lib/workspace/remote.py, packages/workspace/tests/test_remote.py",
+    "deviations": [
+      "No workspace.* events emitted for connect/clone: a new event type needs unit.json and a data schema outside the write set, and the contract names no connect/clone event. Nothing carrying a URL is emitted."
+    ],
+    "pending": [
+      "follow_up(spec_mismatch): No workspace.* events emitted for connect/clone: a new event type needs unit.json and a data schema outside the write set, and the contract names no connect/clone event. Nothing carrying a URL is emitted."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T22:25:58Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P4.1/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T22:25:58Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P4.1/evidence/V2.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T22:25:58Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P4.1/evidence/V9.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P4.1/evidence/V1.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P4.1/evidence/V2.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P4.1/evidence/V9.json"
+    ]
+  },
+  "updated_at": "2026-10-17T22:25:58Z"
 }

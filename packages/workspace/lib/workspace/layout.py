@@ -181,19 +181,17 @@ def _git_state(target: Path, fetch: bool, env: Env, home: Optional[PathLike]) ->
     fetched_at: Optional[str] = None
     if fetch and remote is not None:
         with gitutil.git_lock(env, home):
-            done = gitutil.git(["fetch", "--quiet"], target)
-        if done.returncode != 0:
-            raise WorkspaceError("REMOTE_UNREACHABLE", "git fetch failed: " +
-                                 gitutil.redact_remote_text(done.stderr.strip() or "no output"))
+            gitutil.fetch(target, "origin", env)
         fetched_at = utc_now()
     elif (target / ".git" / "FETCH_HEAD").is_file():
         stamp = (target / ".git" / "FETCH_HEAD").stat().st_mtime
         fetched_at = datetime.fromtimestamp(stamp, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     ahead: Optional[int] = None
     behind: Optional[int] = None
-    counts = gitutil.git(["rev-list", "--left-right", "--count", "HEAD...@{u}"], target)
-    if counts.returncode == 0 and len(counts.stdout.split()) == 2:
-        ahead, behind = (int(part) for part in counts.stdout.split())
+    if branch is not None and remote is not None:
+        counts = gitutil.ahead_behind(target, branch)
+        if counts is not None:
+            ahead, behind = counts
     return {"branch": branch, "dirty": dirty, "remote": remote, "ahead": ahead, "behind": behind,
             "diverged": bool(ahead and behind), "fetched_at": fetched_at}
 

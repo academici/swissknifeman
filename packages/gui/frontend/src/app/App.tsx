@@ -5,8 +5,11 @@ import { ConfigModules } from "../pages/ConfigModules";
 import { CatalogPage } from "../pages/CatalogPage";
 import { ContributionRoute } from "../pages/ContributionRoute";
 import { Dashboard } from "../pages/Dashboard";
+import { PluginPage } from "../pages/PluginPage";
+import { Plugins } from "../pages/Plugins";
 import { ProjectPage, Projects } from "../pages/Projects";
 import { RunPage, Runs } from "../pages/Runs";
+import { useGuiPluginEvents } from "../plugins/useGuiPluginEvents";
 import { BootstrapGate } from "./BootstrapGate";
 import { navRoutes, routePath, useCatalog } from "./catalog";
 import { ErrorBoundary } from "./ErrorView";
@@ -22,6 +25,7 @@ function Navigation() {
       <NavLink to="/projects">Projects</NavLink>
       <NavLink to="/runs">Runs</NavLink>
       <NavLink to="/catalog">Catalog</NavLink>
+      <NavLink to="/plugins">Plugins</NavLink>
       {sections.map((section) => {
         const routes = navRoutes(catalog.data, section);
         if (routes.length === 0 && section !== "settings") return null;
@@ -45,6 +49,7 @@ function Navigation() {
 }
 
 function Shell({ bootstrap }: { bootstrap: Bootstrap }) {
+  useGuiPluginEvents(); // a plugin that is enabled or disabled changes the catalog and so the navigation
   return (
     <div className="shell">
       <header>
@@ -63,6 +68,8 @@ function Shell({ bootstrap }: { bootstrap: Bootstrap }) {
             <Route path="/runs" element={<Runs />} />
             <Route path="/runs/:runId" element={<RunPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/plugins" element={<Plugins />} />
+            <Route path="/plugins/:pluginId" element={<PluginPage />} />
             <Route path="/settings/config" element={<ConfigModules />} />
             <Route path="/settings/config/:module" element={<ConfigEditor />} />
             <Route path="/x/:owner/*" element={<ContributionRoute />} />

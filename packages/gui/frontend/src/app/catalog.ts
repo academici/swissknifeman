@@ -10,10 +10,13 @@ export interface OwnedWidget extends ContributionWidget {
   owner: string;
 }
 
+/** Query key of the catalog; the plugin events invalidate it so the navigation follows Enable and Disable. */
+export const CATALOG_KEY = ["catalog"] as const;
+
 export function useCatalog() {
   const transport = useTransport();
   return useQuery({
-    queryKey: ["catalog"],
+    queryKey: CATALOG_KEY,
     queryFn: () => transport.request<Catalog>("GET", "/v1/ui/contributions"),
     staleTime: 60_000,
   });

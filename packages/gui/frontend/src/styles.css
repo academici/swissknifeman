@@ -139,3 +139,11 @@ button:disabled { opacity: 0.5; cursor: default; }
 .graph-edge { stroke: var(--muted); stroke-width: 1.5; }
 .graph-arrowhead { fill: var(--muted); }
 .graph-table { margin-top: 12px; }
+.flag { font-size: 12px; padding: 0 6px; border: 1px solid var(--line); border-radius: 4px; }
+.flag-off { color: var(--muted); }
+.enforcement-advisory { color: var(--warn); }
+.enforcement-declared { color: var(--unknown); }
+.enforcement-enforced { color: var(--ok); }
+.findings { white-space: pre-wrap; border: 1px solid var(--line); padding: 8px; }
+.grant-dialog label { display: flex; flex-direction: column; font-size: 12px; gap: 2px; }
+.confirm-dialog { flex-basis: 100%; }

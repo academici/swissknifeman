@@ -134,6 +134,31 @@ kept in git; `npm run check` compares them and never updates them — to change 
 lock) and the E2E `e2e/config.spec.ts` (edit, preview, apply, an outside change, Reapply) on the `demo` fixture unit, which
 provides `configs/config.schema.json`.
 
+## Plugins
+
+`/plugins` (`pages/Plugins.tsx`) lists every plugin of `GET /v1/plugins`: id (a link), source, state as text with a
+badge (colour only adds to the words), the flags `runtime` and `ui` as text, compatibility (`protocol ok` or
+`protocol mismatch`, missing contracts), failures (`count in window_s s`, last code) and the number of grants.
+`/plugins/:pluginId` (`pages/PluginPage.tsx`) has the blocks Health (state, failures, manifest digest, a quarantine
+notice with **Release**), Permissions, Grants, History and the buttons **Enable** and **Disable**. Every action button
+has the accessible name `<Action> <plugin id>` (`Enable ext-demo`, `Release ext-demo`, `Revoke network grant of
+ext-demo`). Types come only from `contracts/generated/plugin-api.ts`.
+
+- **Permissions** draw the `enforcement` value of the API as it is, always with its word (`declared`, `advisory`,
+  `enforced`); the UI never invents `enforced`. An extension effect other than `read` carries "start requires a
+  grant": the grant gates the start of work, it does not limit a running process.
+- **Confirmation.** A `428 CONFIRMATION_REQUIRED` answer opens a dialog with its `summary` and `risk`; only its button
+  repeats the same request with `details.confirm` (`plugins/useConfirmed.ts`). Disable of a plugin with active runs
+  shows the number of runs and the drain time of the backend summary first; Cancel sends nothing. A grant body is made
+  once, so the repeat is the request the token was made for.
+- **Grant dialog** (`plugins/GrantDialog.tsx`) offers the declared effects except `read` and `terminal`, a project
+  (or all projects) and an expiry (none, 1, 7 or 30 days; RFC 3339 UTC without fractions).
+- **Events.** The shell subscribes to `gui.plugin.*` (`plugins/useGuiPluginEvents.ts`); every frame and every
+  `snapshot_required` invalidate the plugin list, details, history and the catalog (`CATALOG_KEY`), so a plugin that is
+  enabled or disabled appears in or leaves the navigation at once.
+- **Enable** of an extension that fails the conformance check shows the findings lines of
+  `PLUGIN_CONFORMANCE_FAILED`.
+
 ## Security rules
 
 Data from the API is text: `dangerouslySetInnerHTML` and `innerHTML` are refused by eslint, markdown skips raw HTML.

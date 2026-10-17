@@ -79,6 +79,7 @@ class _Context:
     def __init__(self, plan: store.Plan, out: list[Issue]):
         self.p = plan
         self.out = out
+        self.unbound_warned = False
 
     # ---- helpers
     def error(self, code: str, where: str, message: str) -> None:
@@ -687,7 +688,14 @@ class _Context:
                           "drop the rest")
 
     def exists(self, path: str) -> bool:
-        base = self.p.root if path.startswith("@plan/") else self.p.repo_root
+        base = self.p.root if path.startswith("@plan/") else self.p.source_root
+        if base is None:  # no checkout bound: repository paths cannot be verified; say so once per plan
+            if not self.unbound_warned:
+                self.unbound_warned = True
+                self.warn("source_unbound", "plan.json",
+                          "no checkout is bound to this plan; existence of repository paths is not checked "
+                          "(swissknifeman workspace project attach --project DIR)")
+            return True
         return (base / path.removeprefix("@plan/")).exists()
 
     def produced_paths(self, item_id: str) -> set[str]:

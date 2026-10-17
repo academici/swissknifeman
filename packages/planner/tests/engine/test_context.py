@@ -246,6 +246,34 @@ class JsonContextTests(test_lifecycle.LifeCase):
 DECISION = {"status": "accepted", "decision": "rule", "rationale": "why"}
 
 
+class SourceRootTests(test_lifecycle.LifeCase):
+    def setUp(self):
+        super().setUp()
+        (self.plans.parent / "lib").mkdir()
+        (self.plans.parent / "lib" / "x.py").write_text("print(1)\n", encoding="utf-8")
+
+    def test_repository_paths_resolve_from_the_source_root(self):
+        plan = self.load()
+        self.assertEqual(context._resolve(plan, "lib/x.py"), self.plans.parent / "lib" / "x.py")
+        plan.__dict__["source_root"] = self.plans.parent / "elsewhere"
+        self.assertEqual(context._resolve(plan, "lib/x.py"), self.plans.parent / "elsewhere" / "lib" / "x.py")
+
+    def test_without_a_source_root_a_repository_path_has_no_base_but_plan_paths_work(self):
+        plan = self.load()
+        plan.__dict__["source_root"] = None
+        self.assertIsNone(context._resolve(plan, "lib/x.py"))
+        self.assertEqual(context._resolve(plan, "@plan/knowledge/a.json"), plan.root / "knowledge" / "a.json")
+        entry = context.read_entry(plan, {"path": "lib/x.py", "why": "w", "required": True})
+        self.assertFalse(entry["exists"])
+
+    def test_a_required_repository_read_is_not_reported_missing_without_a_checkout(self):
+        ops.patch(self.root, "P1.1", {"reads": [{"path": "lib/none.py", "why": "w", "required": True}]})
+        plan = self.load()
+        self.assertEqual(context.missing_reads(plan, "P1.1"), ["lib/none.py"])
+        plan.__dict__["source_root"] = None
+        self.assertEqual(context.missing_reads(plan, "P1.1"), [])
+
+
 class ScopeTests(test_lifecycle.LifeCase):
     """``settings.context_pack``: legacy sends unbound content everywhere, scoped only bound, global or explicit."""
 

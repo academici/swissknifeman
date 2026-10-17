@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P2.2",
   "title": "planner и мосты: context, check, scout, refs на source root; brief встраивает @plan/-чтения для плана вне checkout; метка gui-planner raw",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`context`, `check`, `scout` берут базу путей репозитория из `Plan.source_root` (без source root `check` пропускает проверку существования путей репозитория с warning `source_unbound`, остальное работает); `refs` находит планы другого репозитория через `resolve_plans_store`; `bridges/planner-orch/brief.py` для плана в workspace встраивает содержимое всех `@plan/` reads и context pack и не выдаёт абсолютных путей workspace; `bridges/gui-planner` `raw` показывает `<plan-id>/<file>`.",
   "why": "Исполнитель orch ограничен проектом и не видит workspace (knowledge/audit-verification#corrected C5); без встраивания пункты с knowledge-чтениями ломаются молча. Жёсткие риски: утечка абсолютного пути workspace в промпт, рост токенов при встраивании целых документов вместо секций, ложные ошибки check при несвязанном checkout.",
   "scope": {
@@ -121,6 +121,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/6e54a44c2c47dd9f859f1dadd8d2dafa74b75bdd50df5522867aa0b0e70ed0fe",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/059013d32321c0edb029b90b8c5f502f79cd399346271bbee206d6b4d5de8e11",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Для плана внутри checkout (legacy) вывод brief, context и check байт-в-байт прежний (golden/существующие тесты без правок ожиданий).",
     "Встраивание для knowledge-чтения с `#section` — только текст секции; без секции — документ целиком; бинарные/не-UTF-8 файлы не встраиваются, read получает `error: not-text`.",
@@ -170,6 +180,52 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T10:22:16Z"
+  "result": {
+    "started_at": "2026-10-17T12:56:00Z",
+    "finished_at": "2026-10-17T15:10:25Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-2462d3d614ed31af1771c18c-P2.2",
+    "notes": "context, check, scout and refs read the base of repository paths from Plan.source_root. Without a checkout, check skips the existence of repository paths and warns source_unbound once per plan. context does not report a required repository read missing, and scout is skipped with reason source_unbound. refs takes the own-repository plans next to the plan, and the plans of another repository through the marker of its checkout (store.plans_store_of). brief.py, for a plan outside its checkout, embeds the content of every @plan/ read (only the section for knowledge#section; a non-text file gets error not-text) and the context pack in context_refs. It keeps @plan paths and replaces any absolute workspace path with @workspace. gui-planner raw labels the file <plan-id>/<file>. A plan inside its checkout produces the same brief as before. The code and tests were already in the working tree when the session started; I checked them against the goal and ran the tests, and changed nothing myself.\nChanged: CHANGELOG.md, bridges/gui-planner/adapter.py, bridges/gui-planner/tests/test_queries.py, bridges/planner-orch/brief.py, bridges/planner-orch/tests/test_brief.py, packages/orch/schemas/exec/v1/execution-input.schema.json, packages/planner/lib/planner/plan/check.py, packages/planner/lib/planner/plan/context.py, packages/planner/lib/planner/plan/refs.py, packages/planner/lib/planner/plan/scout.py, packages/planner/tests/engine/test_check.py, packages/planner/tests/engine/test_context.py, packages/planner/tests/engine/test_refs.py, packages/planner/tests/engine/test_scout.py",
+    "deviations": [
+      "Changed packages/orch/schemas/exec/v1/execution-input.schema.json outside the write set: the context_refs item gets an optional content, so the brief with the embedded pack validates against exec/v1.",
+      "changed outside the write set: packages/orch/schemas/exec/v1/execution-input.schema.json"
+    ],
+    "pending": [
+      "The P2.1 pending issue stays open for check/context: after this piece, mutations of workspace plans without a checkout no longer fail with PLAN_SOURCE_UNBOUND in check/context (they use source_root with a warning). lifecycle.py still reads plan.repo_root directly; I did not review it, as it is out of scope."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T15:10:25Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T15:10:25Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.2/evidence/V2.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T15:10:25Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.2/evidence/V9.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.2/evidence/V1.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.2/evidence/V2.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P2.2/evidence/V9.json"
+    ]
+  },
+  "updated_at": "2026-10-17T15:10:25Z"
 }

@@ -209,6 +209,92 @@ class ReadsTests(BriefCase):
             self.assertEqual(len(read["sha256"]), 64)
 
 
+class WorkspacePlanTests(BriefCase):
+    """The plan folder lives in the workspace, outside the checkout: the executor cannot read it, so the brief carries it."""
+    PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+
+    def setUp(self):
+        super().setUp()
+        import os
+        import shutil
+        import tempfile
+        from unittest import mock
+        (self.root / "research").mkdir()
+        (self.root / "research" / "notes.txt").write_text("plain notes\n", encoding="utf-8")
+        (self.root / "research" / "blob.bin").write_bytes(b"\xff\xfe\x00")
+        ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
+                                     "sections": [{"id": "a", "title": "A", "text": "text-a"},
+                                                  {"id": "b", "title": "B", "text": "text-b"}]})
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"path": "lib/x.py", "why": "source", "required": True},
+            {"ref": "knowledge/design#a", "why": "design", "required": True},
+            {"path": "@plan/research/notes.txt", "why": "notes", "required": True},
+            {"path": "@plan/research/blob.bin", "why": "blob", "required": False}]})
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(os.path.realpath(tmp.name))
+        self.ws, home = base / "workspace-secret-root", base / "home"
+        marker = self.repo / ".swissknifeman" / "project.json"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1",
+                                      "project_id": self.PID, "plans_store": "workspace"}), encoding="utf-8")
+        bindings = home / "state" / "workspace" / "bindings.json"
+        bindings.parent.mkdir(parents=True)
+        bindings.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:workspace-bindings:v1", "projects": {
+            self.PID: {"paths": [str(self.repo)], "primary": str(self.repo), "bound_at": "2026-10-17T09:30:00Z"}}}),
+            encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
+        env.update(HOME=str(home), SKM_HOME=str(home), SKM_WORKSPACE_ROOT=str(self.ws))
+        patcher = mock.patch.dict(os.environ, env, clear=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        target = self.ws / "projects" / self.PID / "plans"
+        target.mkdir(parents=True)
+        self.moved = Path(shutil.move(str(self.root), str(target / self.root.name)))
+
+    def ws_brief(self, item="P1.1", **kwargs):
+        plan = store.load_plan(self.moved)
+        self.assertNotEqual(plan.source_root, None)
+        return brief.build(plan, item, **kwargs)
+
+    def test_every_plan_read_carries_its_content_without_the_inline_flag(self):
+        by_path = {r["path"]: r for r in self.ws_brief()["reads"]}
+        self.assertEqual(by_path["@plan/research/notes.txt"]["content"], "plain notes\n")
+        section = by_path["@plan/knowledge/design.json"]
+        self.assertEqual([x["id"] for x in section["content"]["sections"]], ["a"])
+        self.assertNotIn("text-b", json.dumps(section))
+        self.assertNotIn("content", by_path["lib/x.py"])  # repository reads keep the flag behaviour
+
+    def test_a_binary_plan_read_is_not_embedded_and_says_not_text(self):
+        read = {r["path"]: r for r in self.ws_brief()["reads"]}["@plan/research/blob.bin"]
+        self.assertEqual(read["error"], "not-text")
+        self.assertNotIn("content", read)
+
+    def test_the_pack_travels_in_context_refs_under_a_plan_relative_path(self):
+        doc = self.ws_brief()
+        pack, = [r for r in doc["context_refs"] if r["kind"] == "pack"]
+        self.assertEqual(pack["path"], "@plan/context/P1.1.json")
+        self.assertEqual(pack["content"]["item"]["id"], "P1.1")
+        self.assertTrue(all(r["path"].startswith("@plan/") for r in doc["context_refs"]))
+        self.assertEqual(doc["provenance"]["plan_dir"], "@plan")
+
+    def test_no_absolute_workspace_path_is_in_the_serialized_brief(self):
+        text = brief.render(store.load_plan(self.moved), "P1.1", inline_reads=True)
+        self.assertNotIn(str(self.ws), text)
+        self.assertNotIn("workspace-secret-root", text)
+
+    def test_a_legacy_plan_keeps_relative_paths_and_no_forced_content(self):
+        import shutil
+        shutil.move(str(self.moved), str(self.plans / self.moved.name))
+        marker = self.repo / ".swissknifeman" / "project.json"
+        marker.unlink()
+        doc = brief.build(store.load_plan(self.plans / self.moved.name), "P1.1")
+        self.assertTrue(doc["provenance"]["plan_dir"].startswith("plans/"))
+        by_path = {r["path"]: r for r in doc["reads"]}
+        self.assertNotIn("content", by_path["@plan/research/notes.txt"])
+        self.assertTrue(all("content" not in r for r in doc["context_refs"]))
+
+
 class UnitTests(BriefCase):
     def test_unit_brief_uses_unit_goal_files_and_checks(self):
         unit_id = units.add_unit(self.root, "P1.1", "Part", {

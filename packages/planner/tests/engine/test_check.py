@@ -426,6 +426,28 @@ class PathTests(CheckCase):
         self.assertEqual(self.found("path"), [])
 
 
+class SourceUnboundTests(CheckCase):
+    def setUp(self):
+        super().setUp()
+        self.edit(P1 + "P1.2.json", lambda d: d.update(
+            reads=[{"path": "lib/gone.py", "why": "w", "required": True}],
+            task_files=[{"path": "lib/gone2.py", "change": "modify"}]))
+
+    def test_a_bound_checkout_checks_repository_paths_as_before(self):
+        self.assertFound("read_missing", "P1.2.json", level="warning", count=1)
+        self.assertFound("modify_missing", "P1.2.json", level="warning", count=1)
+        self.assertEqual(self.found("source_unbound", level="warning"), [])
+
+    def test_without_a_checkout_repository_paths_are_not_checked_and_one_warning_says_so(self):
+        plan = store.load_plan(self.root)
+        plan.__dict__["source_root"] = None  # a workspace plan with no checkout on this machine
+        issues = check.check(plan)
+        self.assertEqual([i for i in issues if i.code in ("read_missing", "modify_missing") and "P1.2.json" in i.where], [])
+        unbound = [i for i in issues if i.code == "source_unbound"]
+        self.assertEqual([i.level for i in unbound], ["warning"])
+        self.assertEqual([i for i in issues if i.level == "error"], [])
+
+
 class ResultStatusTests(CheckCase):
     def test_done_needs_finished_at_in_progress_needs_started_at_skipped_needs_decision(self):
         self.edit(P1 + "P1.1.json", lambda d: d["result"].pop("finished_at"))

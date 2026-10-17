@@ -113,6 +113,8 @@ def run(plan, item_id: str, provider: str, *, runner: Callable | None = None,
         entry, outcome, reason, lines = None, "failed", f"routing config unreadable: {exc}", 0
     else:
         outcome, reason, lines = ("skipped", f"no scout entry for provider {provider}", 0) if entry is None else (None, "", 0)
+    if entry is not None and snapshot.source_root is None:
+        entry, outcome, reason, lines = None, "skipped", "source_unbound", 0  # nothing to scout without a checkout
     if entry is not None:
         outcome, reason, lines = _attempt(snapshot, item_id, entry, runner)
     seconds = round(time.monotonic() - started, 1)

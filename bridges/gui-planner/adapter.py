@@ -490,7 +490,7 @@ def raw(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
         body = body[:RAW_LIMIT] + "\n… (truncated)"
     longest = max((len(run) for run in re.findall(r"`+", body)), default=0)
     fence = "`" * max(3, longest + 1)
-    where = f"plans/{_plan_dir(plan_id, root, timeout_s)}/{_file_of(ref)}"
+    where = f"{_plan_dir(plan_id, root, timeout_s)}/{_file_of(ref)}"
     return {"$schema": VIEW, "view": "markdown", "text": f"File: `{where}` (read-only)\n\n{fence}json\n{body}\n{fence}"}
 
 

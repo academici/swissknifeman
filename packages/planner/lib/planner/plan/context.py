@@ -80,7 +80,9 @@ def _resolve(plan: store.Plan, path: str) -> Path | None:
     rel = path.removeprefix("@plan/")
     if ".." in re.split(r"[\\/]", rel) or rel.startswith(("/", "~")):
         return None
-    base = plan.root if path.startswith("@plan/") else plan.repo_root
+    base = plan.root if path.startswith("@plan/") else plan.source_root
+    if base is None:  # no checkout bound on this machine: a repository path has no base
+        return None
     target = base / rel
     try:
         target.resolve().relative_to(base.resolve())
@@ -163,10 +165,13 @@ def _pending_producer(plan: store.Plan, item_id: str, path: str) -> str | None:
 
 def missing_reads(plan: store.Plan, item_id: str) -> list[str]:
     missing = []
+    unbound = plan.source_root is None
     for read in _reads(plan.items[item_id]):
         if not read.get("required"):
             continue
         path = normalize_read(plan, read).get("path")
+        if unbound and isinstance(path, str) and not path.startswith("@plan/"):
+            continue  # repository path without a bound checkout: cannot be verified (check warns source_unbound)
         exists = path is not None and _exists(plan, path)
         if path is None or (not exists and _pending_producer(plan, item_id, path) is None):
             missing.append(path or read["ref"])

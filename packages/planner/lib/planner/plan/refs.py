@@ -39,13 +39,14 @@ def _env_repos() -> Mapping[str, str]:
 def _plans_root(plan: store.Plan, repo: str | None, repos: Mapping[str, str] | None) -> tuple[Path, bool]:
     """Plans root of the referenced repository and whether it is the repository of ``plan``."""
     if repo is None or repo == plan.plan.get("repository"):
-        return plan.repo_root / "plans", True
+        folder = plan.root.parent  # the plans folder of the plan, wherever it lives (checkout or workspace)
+        return (folder.parent if folder.name == "archive" else folder), True
     path = (repos or {}).get(repo)
     if path is None:
         path = _env_repos().get(repo)
     if not isinstance(path, (str, os.PathLike)) or not str(path):
         raise PlanError("REPO_UNKNOWN", f"repository {repo!r} is not mapped; pass --repo {repo}=PATH or set {ENV_REPOS}")
-    return Path(path) / "plans", False
+    return store.plans_store_of(path), False  # the path is a checkout; its marker names the plans folder
 
 
 def _find_plan_dir(plans_root: Path, short_id: str) -> Path:
@@ -91,7 +92,13 @@ def resolve(plan: store.Plan, ref: str, *, repos: Mapping[str, str] | None = Non
     source = target.path(kind, key)
     shown_dir = plan_dir
     if same_repo:
-        shown_dir = plan_dir.resolve().relative_to(target.repo_root.resolve())
+        base = plan.source_root
+        try:
+            shown_dir = plan_dir.resolve().relative_to(base.resolve()) if base is not None else None
+        except ValueError:
+            shown_dir = None
+        if shown_dir is None:  # workspace plan: shown relative to its plans folder, as ``plans/<id>``
+            shown_dir = Path("plans") / plan_dir.resolve().relative_to(plans_root.resolve())
         source = shown_dir / source.relative_to(plan_dir)
     entry = {"ref": ref, "loaded": True, "plan": parsed.plan, "plan_dir": shown_dir.as_posix(), "kind": kind,
              "status": doc.get("status"), "title": doc.get("title")}

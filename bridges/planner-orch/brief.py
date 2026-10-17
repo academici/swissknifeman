@@ -20,7 +20,8 @@ import partners
 partners.use_aicore()
 from aicore.util.digest import canonical_json_bytes, sha256_hex  # noqa: E402
 
-context, store, _model = partners.planner_engine("plan.context", "plan.store", "plan.model")
+context, store, _model, _workspace = partners.planner_engine("plan.context", "plan.store", "plan.model",
+                                                             "plan.workspace")
 ITEM_ID, PlanError, item_phase = _model.ITEM_ID, _model.PlanError, _model.item_phase
 TERMINAL = {str(getattr(status, "value", status)) for status in _model.TERMINAL}
 
@@ -37,6 +38,7 @@ _TOKEN = re.compile(r"[a-z][a-z0-9_]*", re.ASCII)  # a denied input of a role ma
 _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")
 _FOREIGN_KEYS = ("ref", "loaded", *_DECISION_KEYS, "source", "reason")
+_PACK_PROCESS_KEYS = ("batch", "orchestration", "ready_units", "policy")  # lifecycle and run policy: never the executor's
 _LESSON_KEYS = ("type", "summary", "ts", "item", "impact", "next")
 
 
@@ -56,11 +58,37 @@ def _task_version() -> str:
         return "unknown"
 
 
+def _outside(plan: store.Plan) -> bool:
+    """The plan directory is not inside its checkout (a plan in the workspace): the executor cannot read the plan files."""
+    source = plan.source_root
+    return source is None or not plan.root.resolve().is_relative_to(source.resolve())
+
+
 def _plan_dir(plan: store.Plan) -> str:
+    if _outside(plan):
+        return "@plan"  # no absolute path of the workspace enters the brief
     try:
         return plan.root.resolve().relative_to(plan.repo_root.resolve()).as_posix()
     except ValueError:
         return plan.root.as_posix()
+
+
+def _json_safe(value):
+    """``value`` as it enters a canonical document: a value with floats travels as its JSON text."""
+    if _has_float(value):
+        return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return copy.deepcopy(value)
+
+
+def _scrub(value, secret: str):
+    """``value`` with every occurrence of the absolute workspace path replaced by ``@workspace``."""
+    if isinstance(value, str):
+        return value.replace(secret, "@workspace")
+    if isinstance(value, dict):
+        return {key: _scrub(child, secret) for key, child in value.items()}
+    if isinstance(value, list):
+        return [_scrub(child, secret) for child in value]
+    return value
 
 
 def _has_float(value) -> bool:
@@ -73,7 +101,7 @@ def _has_float(value) -> bool:
     return False
 
 
-def _read(plan: store.Plan, entry: dict, inline: bool) -> dict:
+def _read(plan: store.Plan, entry: dict, inline: bool, *, outside: bool = False) -> dict:
     """Existing files get ``sha256`` of their bytes; ``inline`` adds the full UTF-8 text when no content is attached."""
     entry = copy.deepcopy(entry)
     if not isinstance(entry.get("path"), str):
@@ -88,15 +116,25 @@ def _read(plan: store.Plan, entry: dict, inline: bool) -> dict:
     try:
         data = target.read_bytes()
     except OSError as exc:
-        entry["error"] = str(exc)
+        entry["error"] = "unreadable" if outside else str(exc)  # an OS message can carry the workspace path
         return entry
     entry["sha256"] = sha256_hex(data)
     if inline and "content" not in entry and "error" not in entry:
         try:
             entry["content"] = data.decode("utf-8")
         except UnicodeDecodeError:
-            entry["error"] = "binary or non-utf8"
+            entry["error"] = "not-text" if outside else "binary or non-utf8"
     return entry
+
+
+def _plan_content(plan: store.Plan, entry: dict) -> dict:
+    """A plan read the pack already holds elsewhere (``included``) has no content; the executor gets its own text (the
+    selected section of a document, not the whole of it)."""
+    path = entry.get("path")
+    if not (isinstance(path, str) and path.startswith("@plan/") and entry.get("included")):
+        return entry
+    again = {key: value for key, value in entry.items() if key not in ("included", "content", "exists", "sha256")}
+    return context.read_entry(plan, again)
 
 
 def _research(item: dict) -> dict | None:
@@ -159,8 +197,10 @@ def _phase_checks(plan: store.Plan, item_id: str, taken: set) -> list[dict]:
     return [dict(copy.deepcopy(check), cadence="phase") for check in broad]
 
 
-def _context_refs(plan: store.Plan, pack: dict, plan_dir: str) -> list[dict]:
+def _context_refs(plan: store.Plan, pack: dict, plan_dir: str, outside: bool = False) -> list[dict]:
     refs = [{"kind": "pack", "ref": pack["ref"], "path": f"{plan_dir}/{context.PACK_DIR}/{pack['item']['id']}.json"}]
+    if outside:  # the executor cannot open the pack file: it travels in the brief
+        refs[0]["content"] = _json_safe({k: v for k, v in pack.items() if k not in _PACK_PROCESS_KEYS})
     for doc in pack["documents"]:
         ref = {"kind": "document", "ref": f"knowledge/{doc['id']}", "path": f"{plan_dir}/knowledge/{doc['id']}.json"}
         source = plan.path("document", doc["id"])
@@ -272,6 +312,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     if unresolved:
         raise PlanError("REF_UNRESOLVED", f"required decisions of other plans are not resolved: {'; '.join(unresolved)}")
     item, short = pack["item"], plan.plan.get("short_id") or plan.plan["id"]
+    outside = _outside(plan)
     plan_dir = _plan_dir(plan)
     read_only = bool(unit is not None and not unit.get("files"))
     reads = list(pack["reads"])
@@ -302,8 +343,10 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     optional = {
         "why": item.get("why"), "guidance": item.get("guidance"), "sections": copy.deepcopy(item.get("sections")),
         "constraints": _constraints(pack, unit), "decisions": _decisions(pack),
-        "reads": [_read(plan, r, inline_reads) for r in reads],
-        "context_refs": _context_refs(plan, pack, plan_dir), "upstream": _upstream(pack),
+        "reads": [_read(plan, _plan_content(plan, r) if outside else r,
+                        inline_reads or (outside and str(r.get("path", "")).startswith("@plan/")), outside=outside)
+                  for r in reads],
+        "context_refs": _context_refs(plan, pack, plan_dir, outside), "upstream": _upstream(pack),
         "lessons": [{key: e[key] for key in _LESSON_KEYS if key in e} for e in pack["lessons"]],
         "hints": [{"text": text, "source": "scout"} for text in pack.get("scout", {}).get("entries", [])],
         "research": _research(item),
@@ -312,6 +355,9 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     missing = verify(plan, item_id, doc, unit_id=unit_id)
     if missing:
         raise PlanError("BRIEF_INCOMPLETE", "; ".join(missing))
+    if outside:
+        for secret in {str(_workspace.workspace_root()), str(_workspace.workspace_root().resolve())}:
+            doc = _scrub(doc, secret)
     doc["digest"] = canonical_digest(doc)
     doc["input_id"] += f"@{doc['digest'][:12]}"
     return doc

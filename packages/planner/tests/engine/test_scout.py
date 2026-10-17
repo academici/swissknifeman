@@ -63,6 +63,19 @@ class ScoutCase(unittest.TestCase):
         return scout.run(self.root, "P1.1", provider, runner=runner)
 
 
+class SourceUnboundTests(ScoutCase):
+    def test_scout_is_off_without_a_checkout_and_says_why(self):
+        plan = store.load_plan(self.root)
+        plan.__dict__["source_root"] = None
+        runner = FakeRunner(completed(ANSWER))
+        result = scout.run(plan, "P1.1", "claude-code", runner=runner)
+        self.assertEqual((result.outcome, runner.calls), ("skipped", []))
+        self.assertIn("source_unbound", result.reason)
+        self.assertFalse(self.scout_file.exists())
+        (event,) = self.events()
+        self.assertEqual(event["data"]["reason"], "source_unbound")
+
+
 class RunTests(ScoutCase):
     def test_ok_keeps_entries_and_unknowns_and_logs_the_event(self):
         runner = FakeRunner(completed(ANSWER))

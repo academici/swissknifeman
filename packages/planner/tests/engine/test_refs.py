@@ -189,6 +189,37 @@ class ForeignRepositoryTests(RefsCase):
         self.assertEqual((entry["loaded"], entry["reason"].split(":")[0]), (False, "PLAN_NOT_FOUND"))
 
 
+class WorkspaceRefsTests(RefsCase):
+    """A plan whose folder is outside the checkout; a foreign checkout is a path whose marker names its plans."""
+
+    def test_a_foreign_checkout_with_a_workspace_marker_is_read_from_the_workspace(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(os.path.realpath(tmp.name))
+        pid = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+        repo, ws = base / "ext", base / "ws"
+        marker = repo / ".swissknifeman" / "project.json"
+        marker.parent.mkdir(parents=True)
+        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": pid,
+                                      "plans_store": "workspace"}), encoding="utf-8")
+        plans = ws / "projects" / pid / "plans"
+        plans.mkdir(parents=True)
+        root = new_plan(plans, "EXTERNAL", "ext")
+        accepted(root, "Shared rule", "no network")
+        env = {"SKM_HOME": str(base / "home"), "SKM_WORKSPACE_ROOT": str(ws)}
+        with mock.patch.dict(os.environ, env):
+            entry = self.resolve("ext:PLAN1.D1", repos={"ext": str(repo)})
+        self.assertTrue(entry["loaded"], entry)
+        self.assertEqual(entry["source"]["path"], str(root / "decisions" / "D1.json"))
+
+    def test_the_own_repository_uses_the_folder_of_the_plan_even_without_a_checkout(self):
+        plan = self.load()
+        plan.__dict__["source_root"] = None
+        entry = refs.resolve(plan, f"{self.short}.D1")
+        self.assertTrue(entry["loaded"], entry)
+        self.assertEqual(entry["plan_dir"], f"plans/{self.other.name}")
+
+
 class ContextTests(RefsCase):
     def test_context_inlines_resolved_decisions_and_keeps_the_old_keys(self):
         ops.patch(self.root, "P1.2", {"decisions": ["PLAN2.D1", "PLAN7.D4", "r:PLAN2.D9"]})

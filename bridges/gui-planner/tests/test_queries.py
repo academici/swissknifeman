@@ -181,11 +181,11 @@ class TestQueries(AdapterCase):
     def test_raw_is_a_fenced_json_block_longer_than_any_backtick_run_of_the_content(self):
         out = self.ok("gui-planner.raw", params={"ref": "plan"})
         text = out["text"]
-        self.assertTrue(text.startswith("File: `plans/2026.10.16-№1-DEMO/plan.json` (read-only)\n\n````json\n"), text)
+        self.assertTrue(text.startswith("File: `2026.10.16-№1-DEMO/plan.json` (read-only)\n\n````json\n"), text)
         self.assertTrue(text.endswith("\n````"))
         self.assertIn("Ship the demo.", text)
         path = self.ok("gui-planner.raw", params={"ref": "P2.2"})["text"]
-        self.assertIn("`plans/2026.10.16-№1-DEMO/phases/P2/P2.2.json`", path)
+        self.assertIn("`2026.10.16-№1-DEMO/phases/P2/P2.2.json`", path)
         self.assertIn("decisions/D1.json", self.ok("gui-planner.raw", params={"ref": "D1"})["text"])
 
     def test_raw_refuses_a_ref_outside_the_pattern(self):

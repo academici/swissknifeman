@@ -19,6 +19,7 @@ EXPECTED_WARNINGS_0_28_3 = {
     "read_missing": 1,
     "context_unbound": 1,
     "validation_id_clash": 4,
+    "review_strategy": 4,  # the 0.28.3 items have review none without a reason
 }
 
 

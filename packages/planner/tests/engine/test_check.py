@@ -59,7 +59,7 @@ class BaselineTests(CheckCase):
 
     def test_demo_plan_warnings_are_only_missing_files_and_shared_validation_ids(self):
         warnings = {i.code for i in self.run_check() if i.level == "warning"}
-        self.assertEqual(warnings, {"read_missing", "modify_missing", "validation_id_clash"})
+        self.assertEqual(warnings, {"read_missing", "modify_missing", "validation_id_clash", "review_strategy"})
 
     def test_issue_shape(self):
         self.edit(P1 + "P1.2.json", lambda d: d.pop("why"))
@@ -329,6 +329,23 @@ class BatchTests(CheckCase):
                                                                  {"id": "B1", "items": ["P1.2"], "mode": "recommended"}]))
         self.assertFound("batch_id", "phase.json/batches/1/id")
         self.assertEqual(self.found("batch_coverage"), [])
+
+
+class ReviewStrategyTests(CheckCase):
+    def test_none_without_reason_is_a_warning_and_a_reason_or_a_cover_clears_it(self):
+        self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "none"}))
+        self.assertFound("review_strategy", "P1.1.json/review", level="warning", count=1)
+        self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "none", "reason": "no risk: docs only"}))
+        self.assertEqual(self.found("review_strategy", "warning", "P1.1.json"), [])
+        self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "none"}))
+        self.edit(P1 + "P1.2.json", lambda d: d.update(review={"mode": "requested", "covers": ["P1.1"], "rounds_max": 2,
+                                                              "reviewer": {"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh"}}))
+        self.assertEqual(self.found("review_strategy", "warning", "P1.1.json"), [])  # P1.2 reviews P1.1 too
+
+    def test_a_requested_review_without_reviewer_or_rounds_is_a_warning(self):
+        self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "requested"}))
+        hit = self.assertFound("review_strategy", "P1.1.json/review", level="warning", count=1)[0]
+        self.assertIn("no reviewer and no rounds_max", hit.message)
 
 
 class CompletenessTests(CheckCase):

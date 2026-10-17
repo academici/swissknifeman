@@ -60,6 +60,7 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.cycles()
     ctx.deadlock()
     ctx.batches()
+    ctx.review_strategy()
     ctx.completeness()
     ctx.validation_shapes()
     ctx.authority()
@@ -338,6 +339,37 @@ class _Context:
                     self.warn("batch_coverage", f"{rel}/batches",
                               f"item {item_id} is in 0 batches (batches are a recommendation; it can be started alone or "
                               "with other pieces on purpose)")
+
+    def review_strategy(self) -> None:
+        """A detailed phase says how each item is reviewed: ``none``/``self`` with a ``reason`` or under a requested review
+        that ``covers`` it, ``requested`` with a reviewer and ``rounds_max``. Warnings: the conductor runs only the review
+        the plan records, so a gap here is a review that will not happen (or an unexplained choice)."""
+        p = self.p
+        for phase_id, phase in p.phases.items():
+            if phase.get("design") != "detailed":
+                continue
+            ids = self.items_of(phase_id)
+            covered: set = set()
+            for item_id in ids:
+                review = p.items[item_id].get("review")
+                if isinstance(review, dict) and review.get("mode") == "requested" and isinstance(review.get("covers"), list):
+                    covered.update(x for x in review["covers"] if isinstance(x, str))
+            for item_id in ids:
+                item = p.items[item_id]
+                review, rel = item.get("review"), self.file_of("item", item_id)
+                if not isinstance(review, dict):
+                    continue
+                mode = review.get("mode")
+                if mode in ("none", "self") and not review.get("reason") and item_id not in covered:
+                    self.warn("review_strategy", f"{rel}/review",
+                              f"item {item_id}: review.mode {mode} has no reason and no requested review that covers it")
+                elif mode == "requested":
+                    lacking = [name for name, found in (("reviewer", review.get("reviewer")), ("rounds_max", review.get("rounds_max")))
+                               if not found]
+                    if lacking:
+                        self.warn("review_strategy", f"{rel}/review",
+                                  f"item {item_id}: requested review has no {' and no '.join(lacking)}; the conductor "
+                                  "runs the review only as the plan records it")
 
     def completeness(self) -> None:
         p = self.p

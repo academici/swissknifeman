@@ -349,6 +349,25 @@
           },
           "required": [],
           "additionalProperties": false
+        },
+        "reason": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Why this review mode: expected for none and self (the risk, or the requested review that covers this item)."
+        },
+        "rounds_max": {
+          "type": "integer",
+          "description": "Most review rounds the plan allows for this item (requested).",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "covers": {
+          "type": "array",
+          "description": "Item ids this requested review reads together with its own item (a group or phase checkpoint).",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
         }
       },
       "required": [

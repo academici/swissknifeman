@@ -686,6 +686,24 @@ class StopTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "WORKTREE_DIRTY")), err)
         self.assertEqual([call["op"] for call in self.source()["calls"]], [])
 
+    def test_kept_untracked_files_of_someone_else_start_the_run_and_stay_out_of_the_piece(self):
+        self.write_config(extra='[orch.conductor]\nforeign_untracked = "keep"')
+        (self.project / "stray.txt").write_text("x", encoding="utf-8")
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertTrue([line for line in self.lines(err) if line.get("reason_code") == "FOREIGN_KEPT"])
+        self.assertNotIn("stray.txt", self.source()["commits"][0]["paths"])
+        self.assertTrue((self.project / "stray.txt").exists())
+
+    def test_a_kept_file_the_piece_changes_is_its_work(self):
+        from orch.conductor import scope
+        (self.project / "stray.txt").write_text("x", encoding="utf-8")
+        kept = scope.fingerprint(self.project, ["stray.txt", "gone.txt"])
+        self.assertEqual(scope.untouched(self.project, kept), {"stray.txt", "gone.txt"})  # still missing: untouched
+        (self.project / "stray.txt").write_text("changed", encoding="utf-8")
+        self.assertEqual(scope.untouched(self.project, kept), {"gone.txt"})
+
     def test_a_route_below_the_minimum_stops_before_the_executor(self):
         self.set_items({"W1": {"route": {"class": "frontier", "effort": "high"}}})
         code, _, err = self.run_items("W1")

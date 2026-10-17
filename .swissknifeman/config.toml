@@ -3,3 +3,8 @@ schema_version = 1
 # The planner finds the bridges of this repository in bridges/ (relative to the project root).
 [planner.bridges]
 roots = ["bridges"]
+
+# This tree is shared by several agent sessions: an untracked file of another session does not stop a conductor run;
+# it stays out of every piece while unchanged (FOREIGN_KEPT).
+[orch.conductor]
+foreign_untracked = "keep"

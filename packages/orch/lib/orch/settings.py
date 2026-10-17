@@ -79,6 +79,7 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "registrar": resolved.get("conductor.registrar"),
         "rules": list(resolved.get("conductor.rules") or []),
         "on_blocked": resolved.get("conductor.on_blocked"),
+        "foreign_untracked": resolved.get("conductor.foreign_untracked"),
         "session_executor": resolved.get("conductor.session_executor"),
         "questions": resolved.get("conductor.questions"),
         "limits": {key: resolved.get(f"conductor.limits.{key}")

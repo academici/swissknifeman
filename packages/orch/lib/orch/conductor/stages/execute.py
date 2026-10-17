@@ -310,7 +310,9 @@ def changed_now(self, item: Item) -> list:
     """The paths the roles have changed so far: the dirty tree without what the work source wrote when it claimed,
     the artifact folder, the plan folder of the input and the conductor reports."""
     source = set(item.state.get("source_paths") or [])
-    return [path for path in scopes.own(self._dirty_paths(), self._not_the_role(item)) if path not in source]
+    foreign = scopes.untouched(self.project, self.state.get("foreign") or {})  # kept at the start, not changed since
+    return [path for path in scopes.own(self._dirty_paths(), self._not_the_role(item))
+            if path not in source and path not in foreign]
 
 
 def not_the_role(self, item: Item) -> list:

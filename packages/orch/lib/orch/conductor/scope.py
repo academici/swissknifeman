@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from fnmatch import fnmatchcase
 from functools import lru_cache
+import hashlib
 from pathlib import Path
 
 from orch.conductor import checks as checks_mod
@@ -31,6 +32,24 @@ def dirty(project: Path) -> list:
             found.append(entries[index])
             index += 1
     return sorted(set(found))
+
+
+def fingerprint(project: Path, paths) -> dict:
+    """``{path: sha256 of its bytes}`` (``""`` for a path that is not a readable file): a path whose fingerprint is
+    unchanged was not touched."""
+    found = {}
+    for path in paths:
+        try:
+            found[path] = hashlib.sha256((project / path).read_bytes()).hexdigest()
+        except OSError:
+            found[path] = ""
+    return found
+
+
+def untouched(project: Path, kept: dict) -> set:
+    """The paths of ``kept`` (a :func:`fingerprint`) whose content is still the same."""
+    now = fingerprint(project, kept)
+    return {path for path, digest in kept.items() if now.get(path) == digest}
 
 
 def diff_lines(project: Path, paths) -> int:

@@ -10,7 +10,7 @@ import time
 from typing import Any, Callable, Optional
 
 from orch import events, policies as run_policies
-from orch.conductor import observer, options as opts, prompts, scope as scopes
+from orch.conductor import checks as checks_mod, observer, options as opts, prompts, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
@@ -245,8 +245,20 @@ def dirty_paths(self) -> list:
 
 def require_clean_tree(self) -> None:
     """New work starts on a clean tree: changes outside the conductor reports would leak into it (``run --adopt``
-    takes the changes of an earlier attempt of the first piece instead)."""
+    takes the changes of an earlier attempt of the first piece instead). With ``[orch.conductor] foreign_untracked =
+    "keep"`` untracked files that are already there (a tree shared with another session) do not stop the run: they are
+    fingerprinted in ``state.foreign`` and are never the work of a piece while their content stays the same."""
     dirty = self._dirty_paths()
+    if dirty and (self.conductor.get("foreign_untracked") or "refuse") == "keep":
+        untracked = set(checks_mod.untracked(self.project))
+        kept = [path for path in dirty if path in untracked]
+        if kept and len(kept) == len(dirty):
+            self.state["foreign"] = scopes.fingerprint(self.project, kept)
+            self._save()
+            self.progress.emit("info", reason_code="FOREIGN_KEPT",
+                               message=f"{len(kept)} untracked path(s) of someone else stay in the tree and out of every "
+                                       f"piece, such as {kept[0]}")
+            return
     if dirty:
         raise Stop("WORKTREE_DIRTY", f"{len(dirty)} changed path(s) before new work, such as {dirty[0]}; "
                                      "commit or set them aside, or take them over with run --adopt, then resume")

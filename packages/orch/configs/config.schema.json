@@ -143,6 +143,15 @@
             "per-item"
           ]
         },
+        "foreign_untracked": {
+          "type": "string",
+          "description": "Untracked files already in the tree when a run starts new work (a tree shared with another session): refuse stops with WORKTREE_DIRTY; keep lets the run start, fingerprints them and never counts them as the work of a piece while their content stays the same (FOREIGN_KEPT). Tracked changes always stop the run.",
+          "default": "refuse",
+          "enum": [
+            "refuse",
+            "keep"
+          ]
+        },
         "on_blocked": {
           "type": "string",
           "description": "What a blocked piece of work does to the run: stop it, or report it and go on.",

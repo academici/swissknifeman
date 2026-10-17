@@ -151,6 +151,36 @@ gui check PATH [--json]                      one contribution (a gui.json, or a 
 
 Exit 2 is a usage error.
 
+## Connecting an external extension
+
+A bridge of the hub is found through the unit registry; an external extension is an aicore command plugin that
+declares a contribution and is connected by the operator, never by the GUI:
+
+1. The extension folder holds `extension.json` (`kind: command`, `provides.points` with `gui:query` and
+   `gui:command` as needed, and `provides.gui: "gui.json"`), `gui.json` (the `owner` equals the extension id; a
+   `handler.extension` that points at the same `extension.json` or another command extension) and the handler. All
+   paths stay inside the folder.
+2. `gui check <folder>` must show no `fail` (contribution rules and the conformance of the handler).
+3. Trust it for aicore in the machine layer of the configuration (the file `config.toml` under `SKM_HOME` or the
+   user config folder; a project layer is not accepted for these keys):
+
+   ```toml
+   [aicore.plugins.ext-demo]
+   manifest = "/absolute/path/to/ext-demo/extension.json"
+   enabled = true
+   trusted = true
+   ```
+
+4. The GUI lists it at `/plugins` as `compatible`, with its routes hidden. **Enable** runs the conformance check and
+   turns it on; from then on its routes and widgets appear in the catalog without a reload of the frontend. A command
+   whose effect is not `read` needs a grant (**Grant**: effect, project or all projects, expiry) before it starts.
+   Repeated protocol failures put it in quarantine until **Release**; **Disable** waits for its runs, then cancels
+   them. See [plugins.md](plugins.md) for the states, grants and quarantine rules.
+
+`tests/fixtures/extensions/ext-demo` is a complete sample (a list route, a flaky query, a streamed `bin/slow` command
+and an `invoke` command; it writes nothing to disk). It is kept outside `tests/fixtures/units` so it never reaches the
+hub registry path; the tests and `e2e/plugins.spec.ts` connect it through `[aicore.plugins.ext-demo]` as above.
+
 ## Limits
 
 Limits the schema cannot express; the resolver enforces them (`CONTRIB_UNREADABLE` for the file size, `CONTRIB_INVALID`

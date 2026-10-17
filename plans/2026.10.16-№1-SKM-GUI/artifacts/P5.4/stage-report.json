@@ -1,0 +1,39 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/gui/docs/contribution.md",
+    "packages/gui/docs/plugins.md",
+    "packages/gui/frontend/e2e/backend.ts",
+    "packages/gui/frontend/e2e/plugins.spec.ts",
+    "packages/gui/tests/fixtures/extensions/ext-demo/bin/slow",
+    "packages/gui/tests/fixtures/extensions/ext-demo/extension.json",
+    "packages/gui/tests/fixtures/extensions/ext-demo/gui.json",
+    "packages/gui/tests/fixtures/extensions/ext-demo/handler/handler.py",
+    "packages/gui/tests/test_plugin_fixture.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "test_env",
+      "impact": "V33 unverified by execution",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "medium",
+      "text": "The E2E cannot run in this sandbox (no browser, locked deps). The red log of this correction round is byte-identical to the previous one, so it likely predates the fix of the previous round (beforeAll restoring the machine config). V33 must be re-run on the current tree; if it is still red, the next suspects are the beforeAll env variables reaching the worker and the selectors of the Grant dialog in plugins.spec.ts."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/gui/docs/plugins.md"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/gui/docs/plugins.md"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "No new change this round: the red V33 log is identical to the one already diagnosed and fixed. Cause: config.spec.ts overwrites the whole machine-layer config.toml on the shared backend, removing [aicore.plugins.ext-demo], so the home query of ext-demo answered PLUGIN_UNAVAILABLE (the cached catalog still listed it). The fix is in the tree: e2e/backend.ts writes the config before start and exports GUI_E2E_CONFIG_FILE/GUI_E2E_CONFIG_TEXT; e2e/plugins.spec.ts rewrites that text in a beforeAll (line 40) so the extension is connected again whatever ran before. Verified by reading both files; not executed."
+}

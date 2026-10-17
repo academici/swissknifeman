@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "owner": "ext-demo",
+  "version": "0.1.0",
+  "gui_protocol": {"min": "1", "max": "1"},
+  "requires_contracts": [{"id": "urn:swissknifeman:gui:view-data", "version": "v1"}],
+  "handler": {"extension": "extension.json"},
+  "routes": [
+    {"id": "ext-demo.home", "title": "Ext demo home", "path": "home", "view": "resource-list", "scope": "fleet",
+     "query": "ext-demo.items", "nav": {"section": "fleet", "order": 50}},
+    {"id": "ext-demo.note", "title": "Ext demo note", "path": "note", "view": "command-form", "scope": "fleet",
+     "command": "ext-demo.note", "nav": {"section": "fleet", "order": 51}},
+    {"id": "ext-demo.slow", "title": "Ext demo slow", "path": "slow", "view": "command-form", "scope": "fleet",
+     "command": "ext-demo.slow", "nav": {"section": "fleet", "order": 52}}
+  ],
+  "queries": [
+    {"id": "ext-demo.items", "title": "Items", "scope": "fleet", "returns": "resource-list", "timeout_s": 30},
+    {"id": "ext-demo.flaky", "title": "Flaky", "scope": "fleet", "returns": "resource-list", "timeout_s": 30}
+  ],
+  "commands": [
+    {"id": "ext-demo.slow", "title": "Slow", "description": "Prints a tick a second for 30 seconds.", "scope": "fleet",
+     "effects": ["process.spawn"], "risk": "low", "confirmation": "none", "timeout_s": 120,
+     "supports": ["cancel", "stream"], "exec": {"kind": "argv", "argv": ["bin/slow"], "cwd": "owner"}},
+    {"id": "ext-demo.note", "title": "Note", "description": "Answers ok and writes nothing.", "scope": "fleet",
+     "effects": ["project.write"], "risk": "low", "confirmation": "none", "timeout_s": 20, "exec": {"kind": "invoke"}}
+  ]
+}

@@ -140,3 +140,8 @@ does. A query `admit`s with `["read"]`, a command with its declared effects; for
 `Broker.submit(ticket=...)`: its grants become `permission.grants`, `enforcement()` tells the enforcement of each
 effect, and the broker finishes the ticket when the run ends (a failure to start is `PROCESS_SPAWN`, a non-zero exit,
 a timeout and a cancel judge nothing).
+
+## Sample extension
+
+`tests/fixtures/extensions/ext-demo` is the sample external extension used by the tests and the E2E; how to connect an
+extension is in [contribution.md](contribution.md#connecting-an-external-extension).

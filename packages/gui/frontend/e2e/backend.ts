@@ -1,5 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
-import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
@@ -19,6 +19,10 @@ const umbrella = join(hub, "bin", "swissknifeman");
 const planner = join(hub, "packages", "planner");
 const foundation = join(hub, "packages", "aicore");
 const planFixture = join(gui, "tests", "fixtures", "plans", "e2e");
+// The sample external extension lives outside tests/fixtures/units on purpose: it is not a hub unit, so it is never
+// on SKM_UNITS_PATH. It reaches the backend only through [aicore.plugins.ext-demo] of the machine layer of the
+// throwaway home (an absolute manifest path, enabled and trusted for aicore); the GUI still needs an explicit Enable.
+const extension = join(gui, "tests", "fixtures", "extensions", "ext-demo");
 
 /** Global setup: one `gui serve` for every spec, on a free port, in a throwaway home; returns the teardown. */
 export default async function setup(): Promise<() => Promise<void>> {
@@ -28,6 +32,24 @@ export default async function setup(): Promise<() => Promise<void>> {
   mkdirSync(join(project, ".git"), { recursive: true });
   mkdirSync(join(base, "home"));
   cpSync(planFixture, join(project, "plans"), { recursive: true });
+  mkdirSync(join(base, "skm", "config"), { recursive: true });
+  const configFile = join(base, "skm", "config", "config.toml");
+  const config = [
+    "schema_version = 1",
+    "",
+    "[gui.plugins]",
+    "drain_timeout_s = 2",
+    "",
+    "[gui.runs]",
+    "cancel_grace_s = 2",
+    "",
+    "[aicore.plugins.ext-demo]",
+    `manifest = ${JSON.stringify(join(extension, "extension.json"))}`,
+    "enabled = true",
+    "trusted = true",
+    "",
+  ].join("\n");
+  writeFileSync(configFile, config);
   const env = {
     PATH: process.env.PATH ?? "/usr/bin:/bin",
     HOME: join(base, "home"),
@@ -60,6 +82,9 @@ export default async function setup(): Promise<() => Promise<void>> {
   process.env.GUI_E2E_PROJECT = project;
   process.env.GUI_E2E_UMBRELLA = umbrella;
   process.env.GUI_E2E_HOME = join(base, "home");
+  // config.spec.ts rewrites the machine layer; plugins.spec.ts puts this text back before it needs the extension
+  process.env.GUI_E2E_CONFIG_FILE = configFile;
+  process.env.GUI_E2E_CONFIG_TEXT = config;
   return async () => {
     child.kill("SIGTERM");
     await new Promise((done) => {

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:publish-report:v1",
+  "title": "publish-report",
+  "type": "object",
+  "description": "Result of `workspace doctor --publish-safety`: what stops a commit or a push of the workspace (block), what is only reported (warn) and what stays out of git (local-only). A detail never holds a secret value.",
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "description": "One finding of a publish-safety rule.",
+      "properties": {
+        "rule": {
+          "type": "string",
+          "pattern": "^PS-[A-Z]+(-[A-Z]+)*$",
+          "description": "Rule id such as PS-SECRET."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?![/~]|[A-Za-z]:[\\\\/]).+$",
+          "description": "POSIX path relative to the workspace root."
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What was found: the rule, the place and a mask instead of any secret value."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line of the first match in a text file."
+        }
+      },
+      "required": ["rule", "path", "detail"],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:workspace:publish-report:v1",
+      "description": "Schema identifier."
+    },
+    "files_checked": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of files the rules were applied to."
+    },
+    "block": {
+      "type": "array",
+      "description": "Findings that forbid a commit and a push (PUBLISH_BLOCKED).",
+      "items": {
+        "$ref": "#/$defs/finding",
+        "description": "One blocking finding."
+      }
+    },
+    "warn": {
+      "type": "array",
+      "description": "Findings that are reported and do not stop a commit.",
+      "items": {
+        "$ref": "#/$defs/finding",
+        "description": "One warning."
+      }
+    },
+    "local_only": {
+      "type": "array",
+      "description": "Files that stay out of git on this machine, sorted by path.",
+      "items": {
+        "type": "object",
+        "description": "One local-only file.",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?![/~]|[A-Za-z]:[\\\\/]).+$",
+            "description": "POSIX path relative to the workspace root."
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Size in bytes."
+          },
+          "reason": {
+            "enum": ["size", "binary"],
+            "description": "Why the file is not in git: larger than max_tracked_bytes, or binary and larger than max_binary_tracked_bytes."
+          }
+        },
+        "required": ["path", "bytes", "reason"],
+        "additionalProperties": false
+      }
+    },
+    "verdict": {
+      "enum": ["ok", "warn", "block"],
+      "description": "block when any finding blocks, else warn when any finding warns, else ok."
+    }
+  },
+  "required": ["$schema", "files_checked", "block", "warn", "local_only", "verdict"],
+  "additionalProperties": false
+}

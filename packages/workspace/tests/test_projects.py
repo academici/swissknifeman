@@ -48,7 +48,7 @@ class AttachTests(ProjectCase):
         self.assertIn(str(root), result["next"])
 
     def test_a_checkout_with_plan_folders_waits_for_migration(self):
-        root = self.checkout("alpha", plans=["2026.10.01-№1-X"])
+        root = self.checkout("alpha", plans=["2026.10.01-№1-DEMO"])
         result = projects.attach(root)
         self.assertEqual(result["plans_store"], "legacy")
         self.assertEqual(read_marker(root)["plans_store"], "legacy")
@@ -194,7 +194,7 @@ class ListShowTests(ProjectCase):
                                             "paths": [str(root)]})
         self.assertEqual((rows[other["project_id"]]["bound"], rows[other["project_id"]]["paths"]), (False, []))
         folder = self.ws / "projects" / project_id
-        (folder / "plans" / "2026.10.17-№1-X").mkdir(parents=True)
+        (folder / "plans" / "2026.10.17-№1-DEMO").mkdir(parents=True)
         (folder / "plans" / "archive" / "old").mkdir(parents=True)
         (folder / "legacy-plans" / "notes").mkdir(parents=True)
         (folder / "migrations").mkdir()
@@ -202,7 +202,7 @@ class ListShowTests(ProjectCase):
         shown = projects.show(project_id)
         self.assertEqual(shown["project"]["name"], "alpha")
         self.assertEqual(shown["binding"]["paths"], [str(root)])
-        self.assertEqual(shown["plans"], {"plans": ["2026.10.17-№1-X"], "archived": ["old"], "legacy": ["notes"],
+        self.assertEqual(shown["plans"], {"plans": ["2026.10.17-№1-DEMO"], "archived": ["old"], "legacy": ["notes"],
                                           "migrations": ["mig_X"]})
 
     def test_show_of_an_unknown_project(self):

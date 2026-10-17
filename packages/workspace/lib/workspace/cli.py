@@ -22,6 +22,9 @@ commands:
   init [--root DIR] [--json]        create the workspace layout, its git repository and the device file
   status [--fetch] [--json]         layout, git state, projects and their bindings on this machine
   doctor [--json]                   structural checks of the workspace and of the bindings
+  doctor --publish-safety [--all] [--json]
+                                    publish-safety rules on the files of the next commit (--all: every file);
+                                    exit 1 when a rule blocks (PUBLISH_BLOCKED)
   project attach [--project DIR] [--name N] [--yes] [--json]
                                     attach a checkout to a project (writes the marker, never commits it)
   project list [--json]             projects of the workspace and their bindings on this machine
@@ -54,6 +57,8 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("--fetch", action="store_true")
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("doctor")
+    p.add_argument("--publish-safety", action="store_true", dest="publish_safety")
+    p.add_argument("--all", action="store_true")
     p.add_argument("--json", action="store_true")
     sub.add_parser("version")
     project = sub.add_parser("project")
@@ -124,7 +129,35 @@ def _cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _publish_text(report: Any) -> None:
+    print(f"publish-safety: {report.verdict} ({report.files_checked} files checked)")
+    for label, items in (("block", report.block), ("warn", report.warn)):
+        for item in items:
+            where = item["path"] + (f":{item['line']}" if "line" in item else "")
+            print(f"[{label}] {item['rule']} {where}: {item['detail']}")
+    for item in sorted(report.local_only, key=lambda entry: entry["path"]):
+        print(f"[local-only] {item['path']} ({item['reason']}, {item['bytes']} bytes)")
+
+
+def _cmd_publish_safety(args: argparse.Namespace) -> int:
+    report = doctor.publish_safety(every_file=args.all)
+    if args.json:
+        _dump(report.to_dict())
+    else:
+        _publish_text(report)
+    if report.block:
+        print(f"PUBLISH_BLOCKED: {len(report.block)} finding(s) forbid publishing the workspace; fix them and run "
+              f"`workspace doctor --publish-safety` again", file=sys.stderr)
+        return 1
+    return 0
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
+    if args.publish_safety:
+        return _cmd_publish_safety(args)
+    if args.all:
+        print("workspace: usage: --all needs --publish-safety", file=sys.stderr)
+        return 2
     checks = doctor.run_checks()
     if args.json:
         _dump({"checks": checks})

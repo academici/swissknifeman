@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 from aicore.workspace import (WorkspaceError, legacy_plans_present, read_bindings, read_marker, read_workspace,
                               validate_document)
 
-from . import gitutil, layout
+from . import gitutil, layout, safety
 
 RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
 PROJECT_ENTRIES = ("project.json", "plans", "legacy-plans", "migrations", "local-only.json")
@@ -173,6 +173,14 @@ def _git() -> Dict[str, Any]:
         return _result(check, "warn", f"WORKSPACE_GIT_TOO_OLD: git {text} is older than {layout.GIT_MIN_TEXT}",
                        "environment", remediation="Update git to 2.38 or newer before using sync.")
     return _result(check, "ok", f"git {text}", "environment")
+
+
+def publish_safety(root: Optional[PathLike] = None, every_file: bool = False, env: Env = None,
+                   home: Optional[PathLike] = None) -> "safety.Report":
+    """The publish-safety report of the workspace at ``root``: the files of the next commit, or every file."""
+    target = layout.root_of(root, env, home)
+    layout.require_initialized(target)
+    return safety.check(target, every_file, env, home)
 
 
 def run_checks(root: Optional[PathLike] = None, env: Env = None, home: Optional[PathLike] = None) -> List[Dict[str, Any]]:

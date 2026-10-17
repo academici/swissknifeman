@@ -110,3 +110,4 @@ by a new record.
 | [0082](0082-gui-declarative-contributions.md) | GUI contributions are declarative; UI annotations stay outside canonical schemas | Accepted |
 | [0083](0083-gui-local-api-security.md) | GUI local API: loopback, session secret, desktop transport adapter | Accepted |
 | [0084](0084-gui-state-canonical-files.md) | GUI state: canonical files are the source of truth; SQLite is a rebuildable index | Accepted |
+| [0085](0085-portable-workspace.md) | Portable workspace: plans leave the project repository and live in one git root of their own | Accepted |

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:project-marker:v1",
+  "title": "project-marker",
+  "type": "object",
+  "description": "Identity of a project inside its repository (.swissknifeman/project.json), committed with the project. It names the project and where its plans live; it holds no path.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:project-marker:v1",
+      "description": "Schema identifier."
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Project id: prj_ and 26 Crockford base32 characters."
+    },
+    "plans_store": {
+      "enum": [
+        "legacy",
+        "workspace"
+      ],
+      "description": "Where the plans of the project live: `legacy` is <project>/plans, `workspace` is the portable workspace. The one switch of the store."
+    }
+  },
+  "required": [
+    "$schema",
+    "project_id",
+    "plans_store"
+  ],
+  "additionalProperties": false
+}

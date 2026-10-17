@@ -102,6 +102,15 @@
       "why": "Generated from the committed project configuration ([harness.hooks] in .swissknifeman/config.toml); hooks read it without a TOML parser. A fresh clone gets the hook modes from it."
     },
     {
+      "id": "project-marker",
+      "owner": "aicore.workspace (workspace project attach)",
+      "paths": [
+        ".swissknifeman/project.json"
+      ],
+      "policy": "commit",
+      "why": "Identity of the project (project_id) and where its plans live (plans_store): it must reach every clone with git pull, so the plan store resolves the same way on every machine. Holds no path or secret; the command that writes it never commits it."
+    },
+    {
       "id": "role-stubs",
       "owner": "orch stubs publish",
       "paths": [

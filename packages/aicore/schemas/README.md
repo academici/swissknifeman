@@ -22,6 +22,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 - Fixtures of every contract are exercised by `tests/test_contracts.py` through `aicore.util.schema.load_contract`;
   `scripts/ecosystem-units.py check` loads every contract under the closed profile.
 - `digest/v1` also ships `vectors.json`: language-neutral test vectors for the canonical JSON rules.
+- `workspace/v1` also ships `resolution-vectors.json`: language-neutral vectors of the plan-store resolution rule (`aicore.workspace.resolve_plans_store`, `source_root_of`); every implementation of the rule (aicore, the planner copy) must pass them, and a vector changes only together with all implementations.
 
 ## Contracts
 
@@ -50,6 +51,13 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `telemetry-conventions` | v1 | Names of spans and attributes for traces and metrics, with the cardinality of each attribute and the rule that only low-cardinality attributes label metrics; data in `configs/telemetry-conventions.json`, API `aicore.util.telemetry` |
 | `plugin-catalog` | v1 | Plugins a module generates itself (`provides.plugins[].catalog` in `unit.json`); `aicore.content.marketplace` assembles the Claude marketplace and the Codex index of the hub from them and from the plugin manifests of all modules |
 | `compat-manifest` | v1 | Versions, dependency ranges and contracts of every module and bridge of a hub release (`compat.json` of `aicore release bundle`) |
+| `workspace` | v1 | Root document of the portable workspace (`workspace.json`): workspace id, layout version, creator device; portable, no absolute path; read and written by `aicore.workspace.documents` |
+| `workspace-project` | v1 | Project record in the workspace (`projects/<project_id>/project.json`): name, normalized remotes, aliases, status; portable |
+| `project-marker` | v1 | Identity of a project inside its repository (`.swissknifeman/project.json`, committed): `project_id` and `plans_store` (`legacy` or `workspace`); the one switch of where plans live |
+| `workspace-bindings` | v1 | Machine file `bindings.json` (`aicore.state.workspace_state_dir()`): checkouts of each project on this machine, with a primary; absolute paths, never in git; written under `flock` by `aicore.workspace.bindings` |
+| `workspace-device` | v1 | Machine file `device.json`: device id, host name, creation time; never in git |
+| `workspace-local-only` | v1 | Index of project files kept out of git (`projects/<project_id>/local-only.json`): path, size, SHA-256, device, reason `size` or `binary`; portable |
+| `workspace-migration` | v1 | Report of one migration of a project's plans into the workspace (`projects/<project_id>/migrations/<op_id>.json`): per-plan class, action, file count and digest; portable |
 
 ## Module config schemas
 

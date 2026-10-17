@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:aicore:workspace-project:v1",
+  "project_id": "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM",
+  "name": "swissknifeman",
+  "created_at": "2026-10-17T09:30:00Z",
+  "identity": {
+    "remotes": [
+      "github.com/academici/swissknifeman"
+    ]
+  },
+  "aliases": [
+    "skm"
+  ],
+  "status": "active"
+}

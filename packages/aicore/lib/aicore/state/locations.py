@@ -90,6 +90,26 @@ def cache_dir(app: Optional[str] = None, *, env: Optional[Mapping[str, str]] = N
     return _sub(machine_locations(env, home).cache, app)
 
 
+ENV_WORKSPACE_ROOT = "SKM_WORKSPACE_ROOT"
+
+
+def workspace_root(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
+    """The root of the portable workspace (its one git root): ``SKM_WORKSPACE_ROOT`` (an absolute path) or
+    ``data_dir()/workspace``. Nothing is created."""
+    environment = os.environ if env is None else env
+    value = environment.get(ENV_WORKSPACE_ROOT, "")
+    if value:
+        if not os.path.isabs(value):
+            raise ValueError(f"{ENV_WORKSPACE_ROOT} must be an absolute path, got {value!r}")
+        return Path(value)
+    return data_dir(env=environment, home=home) / "workspace"
+
+
+def workspace_state_dir(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
+    """Machine files of the workspace (bindings, device, sync state, audit, locks); never in the workspace git tree."""
+    return state_dir("workspace", env=env, home=home)
+
+
 def machine_config_file(*, env: Optional[Mapping[str, str]] = None,
                         home: Optional[PathLike] = None) -> Path:
     return config_dir(env=env, home=home) / "config.toml"

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:workspace-device:v1",
+  "title": "workspace-device",
+  "type": "object",
+  "description": "Machine file (state/workspace/device.json): the identity of this device. Not portable and never in git.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:workspace-device:v1",
+      "description": "Schema identifier."
+    },
+    "device_id": {
+      "type": "string",
+      "pattern": "^dev_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Device id: dev_ and 26 Crockford base32 characters."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Host name of the device."
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "Creation time, UTC, second precision."
+    }
+  },
+  "required": [
+    "$schema",
+    "device_id",
+    "name",
+    "created_at"
+  ],
+  "additionalProperties": false
+}

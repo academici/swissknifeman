@@ -33,7 +33,14 @@
       {"id": "urn:swissknifeman:aicore:plugin-describe", "path": "schemas/plugin-describe/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:telemetry-conventions", "path": "schemas/telemetry-conventions/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:plugin-catalog", "path": "schemas/plugin-catalog/v1", "version": "v1", "stability": "development"},
-      {"id": "urn:swissknifeman:aicore:compat-manifest", "path": "schemas/compat-manifest/v1", "version": "v1", "stability": "development"}
+      {"id": "urn:swissknifeman:aicore:compat-manifest", "path": "schemas/compat-manifest/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:workspace", "path": "schemas/workspace/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:workspace-project", "path": "schemas/workspace-project/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:project-marker", "path": "schemas/project-marker/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:workspace-bindings", "path": "schemas/workspace-bindings/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:workspace-device", "path": "schemas/workspace-device/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:workspace-local-only", "path": "schemas/workspace-local-only/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:workspace-migration", "path": "schemas/workspace-migration/v1", "version": "v1", "stability": "development"}
     ],
     "doctor": [
       {"id": "aicore.ext", "category": "integration", "probe": ["bin/aicore", "ext", "status"], "output": "text"}

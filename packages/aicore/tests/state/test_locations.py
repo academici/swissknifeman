@@ -76,6 +76,46 @@ def _umask():
     return current
 
 
+class WorkspaceLocationsTests(unittest.TestCase):
+    def test_workspace_root_follows_the_data_directory(self):
+        self.assertEqual(loc.workspace_root({"SKM_HOME": "/sb"}), Path("/sb/data/workspace"))
+        self.assertEqual(loc.workspace_root({"XDG_DATA_HOME": "/x/d"}, home="/h"), Path("/x/d/swissknifeman/workspace"))
+        self.assertEqual(loc.workspace_root({}, home="/h"), Path("/h/.local/share/swissknifeman/workspace"))
+        self.assertEqual(loc.workspace_root({"HOME": "/e"}), Path("/e/.local/share/swissknifeman/workspace"))
+
+    def test_skm_home_wins_over_xdg_data_home(self):
+        self.assertEqual(loc.workspace_root({"SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d"}), Path("/sb/data/workspace"))
+
+    def test_override_wins_over_everything(self):
+        env = {"SKM_WORKSPACE_ROOT": "/ws", "SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d"}
+        self.assertEqual(loc.workspace_root(env), Path("/ws"))
+        self.assertEqual(loc.workspace_state_dir(env), Path("/sb/state/workspace"))
+
+    def test_empty_override_is_not_set(self):
+        self.assertEqual(loc.workspace_root({"SKM_WORKSPACE_ROOT": "", "SKM_HOME": "/sb"}), Path("/sb/data/workspace"))
+
+    def test_relative_override_is_rejected(self):
+        with self.assertRaises(ValueError) as caught:
+            loc.workspace_root({"SKM_WORKSPACE_ROOT": "ws", "SKM_HOME": "/sb"})
+        self.assertIn("SKM_WORKSPACE_ROOT", str(caught.exception))
+
+    def test_state_directory_is_the_workspace_application_directory(self):
+        self.assertEqual(loc.workspace_state_dir({"SKM_HOME": "/sb"}), Path("/sb/state/workspace"))
+        self.assertEqual(loc.workspace_state_dir({}, home="/h"), Path("/h/.local/state/swissknifeman/workspace"))
+
+    def test_nothing_is_created(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"SKM_HOME": tmp + "/sb", "SKM_WORKSPACE_ROOT": tmp + "/ws"}
+            loc.workspace_root(env)
+            loc.workspace_state_dir(env)
+            self.assertEqual(os.listdir(tmp), [])
+
+    def test_package_exports(self):
+        from aicore import state
+        self.assertIs(state.workspace_root, loc.workspace_root)
+        self.assertIs(state.workspace_state_dir, loc.workspace_state_dir)
+
+
 class ProjectLocationsTests(unittest.TestCase):
     def test_project_paths(self):
         root = Path("/p")

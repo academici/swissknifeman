@@ -31,6 +31,11 @@ class PolicyFileTests(unittest.TestCase):
         self.assertEqual(entries["config-locks"]["policy"], "ignore")
         self.assertEqual(entries["config-locks"]["paths"], [".swissknifeman/config.toml.lock"])
 
+    def test_project_marker_is_committed(self):
+        entries = {entry["id"]: entry for entry in gp.load_policy()["entries"]}
+        self.assertEqual(entries["project-marker"]["policy"], "commit")
+        self.assertEqual(entries["project-marker"]["paths"], [".swissknifeman/project.json"])
+
     def test_hook_modes_carrier_is_committed_and_the_legacy_files_stay_listed(self):
         entries = {entry["id"]: entry for entry in gp.load_policy()["entries"]}
         self.assertEqual(entries["hook-modes-carrier"]["policy"], "commit")

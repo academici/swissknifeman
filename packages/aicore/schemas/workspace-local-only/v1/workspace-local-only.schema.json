@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:workspace-local-only:v1",
+  "title": "workspace-local-only",
+  "type": "object",
+  "description": "Index of files of a project that stay out of git (projects/<project_id>/local-only.json): too large or binary. Portable: paths are relative to the project folder of the workspace.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:workspace-local-only:v1",
+      "description": "Schema identifier."
+    },
+    "files": {
+      "type": "array",
+      "description": "Local-only files sorted by path.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "One local-only file.",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^(?![/~]|[A-Za-z]:[\\\\/]).+$",
+            "description": "POSIX path relative to the project folder of the workspace."
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Size in bytes."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the content, lowercase hex."
+          },
+          "device_id": {
+            "type": "string",
+            "pattern": "^dev_[0-9A-HJKMNP-TV-Z]{26}$",
+            "description": "Device that holds the file."
+          },
+          "reason": {
+            "enum": [
+              "size",
+              "binary"
+            ],
+            "description": "Why the file is not in git."
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "device_id",
+          "reason"
+        ]
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "files"
+  ],
+  "additionalProperties": false
+}

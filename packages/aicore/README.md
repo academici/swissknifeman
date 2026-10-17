@@ -12,10 +12,10 @@ packages/aicore/
   bin/aicore                           # command line: `aicore config|events|ext|schema ...`
   configs/       provider-{capabilities,distribution,projection,errors}.json  model-catalog.json  gitignore-policy.json
                  config.schema.json  telemetry-conventions.json
-  lib/aicore/    util/  provider/  artifacts/  state/  config/  content/  delivery/  release/  ext/  usage.py  cli.py  _vendor/tomli/
+  lib/aicore/    util/  provider/  artifacts/  state/  config/  content/  delivery/  release/  ext/  workspace/  usage.py  cli.py  _vendor/tomli/
   schemas/       <contract>/v1/  and README.md
   scripts/       test.sh  validate.sh  aicore-locator.sh
-  tests/         util, io, text, usage, contracts, architecture, vendor; provider/, artifacts/, state/, config/, content/, delivery/, release/ and ext/
+  tests/         util, io, text, usage, contracts, architecture, vendor; provider/, artifacts/, state/, config/, content/, delivery/, release/, ext/ and workspace (`test_workspace.py`)
 ```
 
 `lib/aicore/__init__.py` carries only the version; there is no flat facade. Import the subpackages directly.
@@ -28,6 +28,7 @@ packages/aicore/
 | `aicore.provider` | provider capability manifests, configuration layers, control plane, health, adapter registry, request lifecycle, `errors` (failure classes and classification by data), `models` (model catalog), `mcp` (pure MCP projection: catalog and bindings documents in, native Codex/Cursor/Grok/Claude files and whole-file artifact plans out; the caller names the artifact sources and adapter); data in `configs/` found from the package file (`provider.data.config_path`, `manifest.default_manifest_path()`) | harness, maind, planner, orch, skiller |
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile | skiller, harness, maind |
 | `aicore.state` | standard machine and project places (`SKM_HOME`, XDG, `.swissknifeman/`), legacy lookup, timestamped backups with rotation, the gitignore policy | `aicore.config`, all modules |
+| `aicore.workspace` | the portable workspace: ids (`new_id`), remotes (`normalize_remote`, `redact_remote`, `checkout_remotes`), documents (project marker `.swissknifeman/project.json`, `workspace.json`, `project.json`, device file; validated by the contracts, no absolute path in a portable document), machine `bindings` (under `flock`), and the one resolution rule `resolve_plans_store` / `source_root_of` | `workspace`, planner (its copy passes the same vectors), harness, analyst, GUI |
 | `aicore.config` | module settings from layers (`resolve`): schema defaults, machine file, project file, extra layers, environment, `--config` file, flags; `explain` (origin of every value), secret references (`Secret`, `register_secret_resolver`), `edit_layer_file` (comment-preserving write with backup); module discovery and `config.example.toml` generation; the `aicore config` CLI; the one TOML entry (`toml`, `toml_edit`) | all modules |
 | `aicore.content` | what a skill or command is and what it costs: `skill` (frontmatter, content hash and `skill_digest`, `describe_skill` for `skill-descriptor/v1`, transitive `requires`), `budget` (the one token estimate, skill, set and listing budgets, first-turn meters and verdict), `publication` (manifest bytes, whole-file artifacts, Codex plugin manifest and marketplace entry, publication lock, runtime-file walk), `commands` (the shared part of command projection), `eval` (grader, validators, benchmarks, `claude -p` runner, `eval-context/v1`) | skiller, harness, planner |
 | `aicore.delivery` | how skills and plugins reach a project: `codex` (explicit plugin selection in `.codex/config.toml`), `claude` (enabled marketplace plugins and their price, settings merge), `distribution` (vendor and marketplace plans per provider, Codex bundle, native install), `materialize` (managed skill copies, marker, manifest, `skills-lock.json`, `sync_skillset`) | skiller, hub |
@@ -42,7 +43,7 @@ Managed skill copies require a destination strictly below the skills root. The p
 errors. It also refuses replacing the root itself, which would delete other installed skills.
 
 `ext` imports `util`, `state` and `config`, and no older subpackage imports `ext`; `content` imports `util`, `provider`, `artifacts` and `config`; `release` imports `util` and `content`; `delivery`
-imports everything below it; the older subpackages import none of the three (`tests/test_architecture.py`). The three
+imports everything below it; `workspace` imports `state` and `util` only; the older subpackages import none of the three (`tests/test_architecture.py`). The three
 take their data from the caller as explicit parameters (the package that owns the publication versions, the identities
 in generated provenance, the host-owned MCP servers), so the foundation names no library and reads no host
 configuration.
@@ -62,6 +63,8 @@ parses `config.toml` itself. Places come from `aicore.state`.
 | cache | `$XDG_CACHE_HOME/swissknifeman` (`~/.cache/...`) | `<dir>/cache` |
 | project config (in git) | `<project>/.swissknifeman/config.toml` | same |
 | project state, backups (ignored) | `<project>/.swissknifeman/{state,backups}/` | same |
+| portable workspace (its own git root) | `$XDG_DATA_HOME/swissknifeman/workspace` (`~/.local/share/...`); `SKM_WORKSPACE_ROOT=<abs dir>` overrides | `<dir>/data/workspace` |
+| workspace machine files (bindings, device, sync state, audit) | `<state>/workspace` | `<dir>/state/workspace` |
 
 `SKM_HOME` isolates a sandbox or a test: all four machine places move under it and no legacy location is read. It
 must be an absolute path; a relative `XDG_*` value is ignored. A file that exists only at an old location
@@ -234,6 +237,8 @@ source of truth and the code implements it. The layout rules and the full table 
 | `extension/v1` | manifest of an external plugin (`extension.json`) |
 | `plugin-request/v1`, `plugin-response/v1`, `plugin-describe/v1` | the plugin protocol, version `1` |
 | `telemetry-conventions/v1` | `aicore.util.telemetry`; data in `configs/telemetry-conventions.json` |
+| `workspace/v1`, `workspace-project/v1`, `project-marker/v1`, `workspace-local-only/v1`, `workspace-migration/v1` | portable documents of the workspace (`aicore.workspace.documents`); `schemas/workspace/v1/resolution-vectors.json` holds the vectors of the plan-store resolution rule (ADR 0085) |
+| `workspace-bindings/v1`, `workspace-device/v1` | machine files in `workspace_state_dir()` (`aicore.workspace.bindings`, `aicore.workspace.documents`); absolute paths, never in git |
 
 ## Extensions (`aicore.ext`)
 

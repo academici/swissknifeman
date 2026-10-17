@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:aicore:workspace-migration:v1",
+  "op_id": "mig_01JC0Z8Q3M5T7V9XABCDEFGHJP",
+  "project_id": "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM",
+  "device_id": "dev_01JC0Z8Q3M5T7V9XABCDEFGHJN",
+  "started_at": "2026-10-17T09:30:00Z",
+  "finished_at": "2026-10-17T09:30:00Z",
+  "mode": "initial",
+  "source": {
+    "checkout_name": "swissknifeman",
+    "head": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "plans": [
+    {
+      "name": "2026.10.17-№1-DEMO-WORKSPACE",
+      "class": "v4",
+      "action": "moved",
+      "files": 12,
+      "bytes": 4096,
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "local_only": 1,
+  "warnings": [
+    "HOME_PATH_IN_PLAN_DATA"
+  ]
+}

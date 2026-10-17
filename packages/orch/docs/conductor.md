@@ -446,7 +446,8 @@ triager sees every piece (title, goal, write set, route) and the choice the rule
 failed call or `review.strategist: rules` falls back to the rules (`policies/review_strategy.py`): neighbours that work on the
 same folders are read together, a piece on the foundation or a `frontier` piece is read alone, security wording raises the
 effort to `high`. Naming a mode in `review.strategy` skips the strategist. The plan is kept in `state.review_strategy` and
-`review-strategy.json` of the run (a resume keeps it) and announced as `REVIEW_STRATEGY`.
+`review-strategy.json` of the run (a resume keeps it) and announced as `REVIEW_STRATEGY` with the effort the group review
+will run at (an effort named by `reviewer` wins over the plan's).
 
 In `groups`, `single` and `none` a piece has no review of its own. After the last piece of a group the conductor reads the
 commits of the group once (`review_batch`: production code only, the same as `batch-review.py`), with the reviewer of the run

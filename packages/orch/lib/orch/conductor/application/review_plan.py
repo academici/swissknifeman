@@ -92,9 +92,9 @@ def decide(self, answers: list) -> None:
     write_json(self.directory / "review-strategy.json", plan)
     self._save()
     groups = "; ".join(" + ".join(group) for group in plan["groups"]) or "none"
+    effort = group_effort(self, first.options["reviewer"], plan["reviewer"]["effort"])
     self.progress.emit("info", reason_code="REVIEW_STRATEGY",
-                       message=f"{plan['mode']} ({plan['source']}): {groups} at effort {plan['reviewer']['effort']}; "
-                               f"{plan['reason']}")
+                       message=f"{plan['mode']} ({plan['source']}): {groups} at effort {effort}; {plan['reason']}")
 
 
 def per_piece_off(self) -> bool:
@@ -121,6 +121,14 @@ def reviewer_effort(selector: dict, planned: str) -> str:
     return selector.get("effort") or planned
 
 
+def group_effort(self, reviewer: str, planned: str) -> str:
+    """The effort a group review runs at, as ``REVIEW_STRATEGY`` announces it: the strategy's under a fixed reviewer
+    command line (``conductor.argv``), else the one the ``reviewer`` option names, else the strategy's."""
+    if (self.conductor.get("argv") or {}).get("reviewer"):
+        return planned
+    return reviewer_effort(opts.parse_selector(reviewer), planned)
+
+
 def group_review(self, number: int, group: list, effort: str) -> None:
     refs, shas = review_batch.commits_of_state({"items": {r: self.state["items"][r] for r in group}})
     if not shas:
@@ -141,7 +149,7 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     route = self._route(item, "reviewer")
     if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route; an effort the option names wins
         selector = opts.parse_selector(item.options["reviewer"])
-        effort = reviewer_effort(selector, effort)
+        effort = group_effort(self, item.options["reviewer"], effort)
         route = dict(route, effort=effort, argv=launch.build_argv(launch.load_catalog(), "reviewer", selector["provider"],
                                                                   model=selector["model"], effort=effort, cwd=self.project))
     provider, model = route["provider"], route.get("model")

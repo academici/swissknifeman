@@ -76,6 +76,15 @@ class ReviewPlanTests(ConductorCase):
         self.assertEqual(review_plan.reviewer_effort(named, "medium"), "high")
         self.assertEqual(review_plan.reviewer_effort(opts.parse_selector("codex/gpt-6.1-sol"), "medium"), "medium")
 
+    def test_the_strategy_beacon_announces_the_effort_the_group_review_runs_at(self):
+        from types import SimpleNamespace
+        from orch.conductor.application import review_plan
+        catalog = SimpleNamespace(conductor={})
+        self.assertEqual(review_plan.group_effort(catalog, "codex/gpt-6.1-sol/xhigh", "medium"), "xhigh")
+        self.assertEqual(review_plan.group_effort(catalog, "codex/gpt-6.1-sol", "medium"), "medium")
+        fixed = SimpleNamespace(conductor={"argv": {"reviewer": ["fake"]}})
+        self.assertEqual(review_plan.group_effort(fixed, "codex/gpt-6.1-sol/xhigh", "medium"), "medium")
+
     def test_the_followup_asks_no_more_effort_than_the_executor_of_the_run_has(self):
         import tempfile
         from types import SimpleNamespace

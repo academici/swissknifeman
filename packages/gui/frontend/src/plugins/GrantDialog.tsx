@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import type { GrantRequest, GrantResult } from "../contracts/generated/plugin-api";
 import { ErrorPanel } from "../app/ErrorView";
+import { useDialog } from "../components/Dialog";
 import { useProjects } from "../pages/Projects";
 import { useTransport } from "../transport/context";
 import { invalidatePlugins, paths, PLUGIN_API, type PluginDoc } from "./api";
@@ -27,8 +28,9 @@ export function expiryAt(days: number, now: Date = new Date()): string | null {
 
 /** The confirmation of a 428: the summary of the backend is shown and only the button repeats the request. */
 export function ConfirmDialog({ pending, busy, action, onCancel }: { pending: Pending; busy: boolean; action: string; onCancel: () => void }) {
+  const dialog = useDialog<HTMLDivElement>(onCancel);
   return (
-    <div className="dialog confirm-dialog" role="dialog" aria-label={pending.title}>
+    <div className="dialog confirm-dialog" role="dialog" aria-label={pending.title} {...dialog}>
       <p>
         <strong>{pending.title}</strong> ({pending.risk} risk): {pending.summary}
       </p>
@@ -51,6 +53,7 @@ export function GrantDialog({ plugin, projectId, onClose }: { plugin: PluginDoc;
   const [project, setProject] = useState(projectId ?? "");
   const [expiry, setExpiry] = useState<(typeof EXPIRIES)[number]["id"]>("none");
   const confirmed = useConfirmed();
+  const dialog = useDialog<HTMLFormElement>(onClose);
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -71,7 +74,7 @@ export function GrantDialog({ plugin, projectId, onClose }: { plugin: PluginDoc;
   }
 
   return (
-    <form className="dialog grant-dialog" role="dialog" aria-label={`Grant for ${plugin.id}`} onSubmit={submit}>
+    <form className="dialog grant-dialog" role="dialog" aria-label={`Grant for ${plugin.id}`} onSubmit={submit} {...dialog}>
       <h3>Grant for {plugin.id}</h3>
       {effects.length === 0 ? (
         <div className="muted">This plugin declares no effect that needs a grant.</div>

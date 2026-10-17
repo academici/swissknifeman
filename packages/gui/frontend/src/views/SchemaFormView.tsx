@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Run, RunRequest, ViewData } from "../contracts";
 import { useCatalog } from "../app/catalog";
 import { ErrorPanel } from "../app/ErrorView";
+import { Dialog } from "../components/Dialog";
 import { ApiError } from "../transport/ApiError";
 import { useTransport } from "../transport/context";
 import { PLAN_ENUMS } from "./plan-enums";
@@ -372,7 +373,7 @@ function Form({ data, projectId, context, saved, setSaved }: {
       {notice && <div className="cfg-notice" role="status">{notice}</div>}
       {failure ? <ErrorPanel error={failure} /> : null}
       {pending && (
-        <div className="dialog" role="dialog" aria-label="Confirm the save">
+        <Dialog label="Confirm the save" onEscape={() => setPending(null)}>
           <p>
             <strong>Confirm</strong> ({pending.risk} risk): {pending.summary}
           </p>
@@ -382,10 +383,10 @@ function Form({ data, projectId, context, saved, setSaved }: {
           <button type="button" onClick={() => setPending(null)}>
             Cancel
           </button>
-        </div>
+        </Dialog>
       )}
       {conflict && (
-        <div className="dialog conflict-view" role="dialog" aria-label="The plan changed">
+        <Dialog className="conflict-view" label="The plan changed">
           <h3>The plan changed since you opened the form</h3>
           <p>
             Reload drops your changes and shows the current item. Reapply saves your changes ({Object.keys(conflict).join(", ")}) on top of
@@ -399,7 +400,7 @@ function Form({ data, projectId, context, saved, setSaved }: {
               Reapply
             </button>
           </div>
-        </div>
+        </Dialog>
       )}
     </form>
   );

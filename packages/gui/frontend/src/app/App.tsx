@@ -19,7 +19,7 @@ function Navigation({ features }: { features: string[] }) {
   const catalog = useCatalog();
   const sections = ["fleet", "plan", "settings", "plugins"] as const;
   return (
-    <nav className="sidebar">
+    <nav className="sidebar" aria-label="Main">
       <NavLink to="/" end>
         Dashboard
       </NavLink>

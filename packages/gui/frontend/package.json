@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "budget": "node scripts/check-budget.mjs",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "gen:types": "node scripts/gen-types.mjs",
     "check": "node scripts/gen-types.mjs --check && tsc --noEmit -p tsconfig.json && eslint . && vitest run",

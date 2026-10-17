@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ErrorPanel } from "../app/ErrorView";
+import { useDialog } from "../components/Dialog";
 import { ApiError } from "../transport/ApiError";
 import { useTransport } from "../transport/context";
 import { previewRequest, type Draft } from "./draft";
@@ -36,6 +37,7 @@ export function PreviewDialog({
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [nonce, setNonce] = useState(0);
+  const dialog = useDialog<HTMLDivElement>(onClose);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,7 +87,7 @@ export function PreviewDialog({
   }
 
   return (
-    <div className="dialog preview-dialog" role="dialog" aria-label="Preview of the change">
+    <div className="dialog preview-dialog" role="dialog" aria-label="Preview of the change" {...dialog}>
       <h3>
         Preview: {draft.module} · {draft.layer}
       </h3>

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import type { Command, CommandList, Field, Run, RunRequest } from "../contracts";
 import { ErrorPanel } from "../app/ErrorView";
 import { ApiError } from "../transport/ApiError";
+import { Dialog } from "./Dialog";
 import { useTransport } from "../transport/context";
 
 type Value = string | number | boolean;
@@ -191,7 +192,7 @@ export function CommandForm({
       </div>
       {error ? <ErrorPanel error={error} /> : null}
       {pending && (
-        <div className="dialog" role="dialog" aria-label="Confirm the run">
+        <Dialog label="Confirm the run" onEscape={() => setPending(null)}>
           <p>
             <strong>Confirm</strong> ({pending.risk} risk): {pending.summary}
           </p>
@@ -201,7 +202,7 @@ export function CommandForm({
           <button type="button" onClick={() => setPending(null)}>
             Cancel
           </button>
-        </div>
+        </Dialog>
       )}
     </form>
   );

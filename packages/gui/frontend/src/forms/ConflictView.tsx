@@ -1,3 +1,4 @@
+import { useDialog } from "../components/Dialog";
 import { threeWay, type Draft } from "./draft";
 import { formatValue } from "./ProvenanceBadge";
 import type { Value } from "./types";
@@ -20,8 +21,9 @@ export function ConflictView({
   onReapply: () => void;
 }) {
   const states = threeWay(draft, current);
+  const dialog = useDialog<HTMLDivElement>();
   return (
-    <div className="dialog conflict-view" role="dialog" aria-label="The file changed">
+    <div className="dialog conflict-view" role="dialog" aria-label="The file changed" {...dialog}>
       <h3>The {draft.layer} file changed since you started</h3>
       <table className="table">
         <thead>

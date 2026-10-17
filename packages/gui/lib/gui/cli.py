@@ -17,6 +17,7 @@ PYTHON_TOO_OLD = "PYTHON_TOO_OLD"
 
 EXIT_FAILURE = 1
 EXIT_USAGE = 2
+EXIT_TAMPERED = 3  # SIDECAR_TAMPERED: the frozen sidecar differs from its digest
 
 
 class _Parser(argparse.ArgumentParser):
@@ -45,6 +46,13 @@ def build_parser() -> argparse.ArgumentParser:
     schemas_sub = p.add_subparsers(dest="schemas_command", parser_class=_Parser, metavar="<action>", required=True)
     q = schemas_sub.add_parser("bundle", help="write <contract>.schema.json per contract of unit.json, refs inlined")
     q.add_argument("--out", metavar="DIR", required=True, help="output folder (created)")
+    p = sub.add_parser("state", help="check or rebuild the state database gui.db")
+    state_sub = p.add_subparsers(dest="state_command", parser_class=_Parser, metavar="<action>", required=True)
+    q = state_sub.add_parser("check", help="integrity, foreign keys, schema version and row counts (read-only)")
+    q.add_argument("--json", action="store_true", help="print the report as JSON")
+    q = state_sub.add_parser("rebuild", help="backup, build a fresh gui.db, copy every row, verify, swap atomically")
+    q.add_argument("--json", action="store_true", help="print the report as JSON")
+    q.add_argument("--dry-run", action="store_true", help="print the plan and write nothing")
     p = sub.add_parser("serve", help="run the loopback backend in the foreground and print a one-time browser URL")
     p.add_argument("--port", type=int, default=None, metavar="N", help="TCP port on 127.0.0.1 (default: [gui] port)")
     p.add_argument("--project", metavar="DIR", default=None, help="register this project (default: the current one)")
@@ -132,6 +140,45 @@ def _fail(code: str, message: str) -> int:
     return EXIT_FAILURE
 
 
+def _state(args: argparse.Namespace) -> int:
+    from .backend import BackendError, InstanceLock, gui_state_dir
+    from .core import state_admin
+    from .storage import db
+
+    folder = gui_state_dir()
+    if args.state_command == "check":
+        report = state_admin.check(folder / db.DB_NAME)
+        if args.json:
+            print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
+        else:
+            print(f"{'ok' if report['ok'] else 'FAILED'}: {report['path']} (schema {report['schema_version']}, "
+                  f"known {report['known_version']})")
+            for table, count in report["tables"].items():
+                print(f"  {table}: {count}")
+            for problem in report["problems"]:
+                print(f"  problem: {problem}")
+        return 0 if report["ok"] else EXIT_FAILURE
+    try:
+        lock = InstanceLock(folder).acquire()  # the backend must not run: it holds the database open
+    except BackendError as error:
+        return _fail(error.code, error.message)
+    try:
+        report = state_admin.rebuild(folder, dry_run=args.dry_run)
+    except state_admin.StateError as error:
+        return _fail(error.code, error.message)
+    finally:
+        lock.release()
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True))
+    else:
+        verb = "would rebuild" if args.dry_run else "rebuilt"
+        print(f"{verb}: {report['path']} (schema {report['from_version']} -> {report['to_version']})")
+        for table, entry in report["tables"].items():
+            print(f"  {table}: {entry['rows']} row(s)")
+        print(f"backup: {report['backup']}" + (" (planned)" if args.dry_run else ""))
+    return 0
+
+
 def _project_dir(args: argparse.Namespace) -> Optional[Path]:
     from .backend import project_marker_root
 
@@ -166,6 +213,10 @@ def _serve_sidecar(args: argparse.Namespace) -> int:
         print("gui: usage: --sidecar cannot be combined with --detached or --port (the port is in the handshake)",
               file=sys.stderr)
         return EXIT_USAGE
+    problem = sidecar.check_digest()  # before the handshake is read and before any socket exists
+    if problem:
+        print(problem, file=sys.stderr, flush=True)
+        return EXIT_TAMPERED
     stdin = sidecar.stdin_stream()
     try:
         handshake = sidecar.read_handshake(stdin)
@@ -318,6 +369,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _deps(args)
     if args.command == "schemas":
         return _schemas(args)
+    if args.command == "state":
+        return _state(args)
     if args.command in ("serve", "open"):
         from aicore.config import ConfigError
 

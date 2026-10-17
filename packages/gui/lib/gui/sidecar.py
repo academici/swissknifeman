@@ -16,6 +16,7 @@ import queue
 import re
 import threading
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, BinaryIO, Callable, Dict, Mapping, Optional
 
 PROTOCOL = 1
@@ -124,6 +125,25 @@ def watch_stdin(stream: BinaryIO, on_eof: Callable[[], None]) -> threading.Threa
     thread = threading.Thread(target=run, name="sidecar-watchdog", daemon=True)
     thread.start()
     return thread
+
+
+def check_digest(root: Optional[Path] = None) -> Optional[str]:
+    """The ``SIDECAR_TAMPERED: <file> (<reason>)`` message when the frozen tree differs from its digest, else ``None``.
+
+    ``root`` defaults to the folder of the frozen executable; from sources (and without a digest file) nothing is checked.
+    """
+    from . import sidecar_digest
+
+    folder = root if root is not None else sidecar_digest.frozen_root()
+    if folder is None:
+        return None
+    try:
+        sidecar_digest.verify(folder)
+    except sidecar_digest.SidecarTampered as error:
+        return str(error)
+    except OSError as error:  # a file that cannot be read cannot be trusted either
+        return f"{sidecar_digest.TAMPERED}: {error.filename or folder} ({error.strerror})"
+    return None
 
 
 def stdin_stream() -> BinaryIO:

@@ -41,4 +41,6 @@ python3 -m PyInstaller --noconfirm --clean --distpath "$work/dist" --workpath "$
 mkdir -p "$out"
 rm -rf "$out/gui-backend-$triple"
 mv "$work/dist/gui-backend" "$out/gui-backend-$triple"
+# The digest of the tree (every file with its sha256); `gui serve --sidecar` checks it at start (SIDECAR_TAMPERED).
+PYTHONPATH="$MODULE_ROOT/lib" python3 -m gui.sidecar_digest write "$out/gui-backend-$triple" >/dev/null
 echo "built: $out/gui-backend-$triple/gui-backend"

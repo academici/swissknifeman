@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router";
 import type { ProjectDocument, ProjectList } from "../contracts";
 import { navRoutes, routePath, useCatalog } from "../app/catalog";
 import { ErrorPanel } from "../app/ErrorView";
+import { Dialog } from "../components/Dialog";
 import { ApiError } from "../transport/ApiError";
 import { useTransport } from "../transport/context";
 import { WidgetGrid } from "./Dashboard";
@@ -49,7 +50,7 @@ function AddProject() {
         Add
       </button>
       {confirm && (
-        <div className="dialog" role="dialog" aria-label="Confirm the project">
+        <Dialog label="Confirm the project" onEscape={() => setConfirm(null)}>
           <p>{confirm.summary}</p>
           <button type="button" onClick={() => void add(confirm.token)}>
             Trust this project
@@ -57,7 +58,7 @@ function AddProject() {
           <button type="button" onClick={() => setConfirm(null)}>
             Cancel
           </button>
-        </div>
+        </Dialog>
       )}
       {error ? <ErrorPanel error={error} /> : null}
     </form>
@@ -99,7 +100,7 @@ export function ProjectPage() {
       <h1>{project.data.name}</h1>
       <div className="muted">{project.data.root}</div>
       {routes.length > 0 && (
-        <nav className="tabs">
+        <nav className="tabs" aria-label="Project sections">
           {routes.map((route) => {
             const path = routePath(route, {}, project.data.id);
             return path ? (

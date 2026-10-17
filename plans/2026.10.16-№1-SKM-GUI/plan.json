@@ -3,9 +3,9 @@
   "id": "2026.10.16-№1-SKM-GUI",
   "short_id": "PLAN5",
   "title": "Plan №1 — SKM GUI: desktop control plane — Tauri 2, React/TypeScript, Python sidecar",
-  "status": "active",
+  "status": "done",
   "created": "2026-10-16",
-  "updated_at": "2026-10-16T18:15:04Z",
+  "updated_at": "2026-10-17T06:46:49Z",
   "repository": "swissknifeman",
   "owner": "repository owner",
   "authoring": {

@@ -1,0 +1,121 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/gui/docs/mvp-dod.md",
+    "packages/gui/docs/security.md",
+    "packages/gui/frontend/package.json",
+    "packages/gui/frontend/scripts/check-budget.mjs",
+    "packages/gui/frontend/src/a11y.test.tsx",
+    "packages/gui/frontend/src/app/App.tsx",
+    "packages/gui/frontend/src/components/CommandRunner.tsx",
+    "packages/gui/frontend/src/components/Dialog.tsx",
+    "packages/gui/frontend/src/forms/ConflictView.tsx",
+    "packages/gui/frontend/src/forms/PreviewDialog.tsx",
+    "packages/gui/frontend/src/pages/Projects.tsx",
+    "packages/gui/frontend/src/plugins/GrantDialog.tsx",
+    "packages/gui/frontend/src/views/SchemaFormView.tsx",
+    "packages/gui/lib/gui/cli.py",
+    "packages/gui/lib/gui/core/state_admin.py",
+    "packages/gui/lib/gui/sidecar.py",
+    "packages/gui/lib/gui/sidecar_digest.py",
+    "packages/gui/scripts/sbom.py",
+    "packages/gui/sidecar/build.sh",
+    "packages/gui/tests/test_frontend_budget.py",
+    "packages/gui/tests/test_mvp_dod.py",
+    "packages/gui/tests/test_sbom.py",
+    "packages/gui/tests/test_sidecar_digest.py",
+    "packages/gui/tests/test_state_admin.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "A wrong assumption in a11y.test.tsx (jsdom focus, fixture shapes) or a react-hooks lint complaint about the spread of the useDialog result would show only in V2.",
+      "kind": "difficulty",
+      "next": "Conductor V2 is authoritative; if a11y.test.tsx fails, adjust the test, not the components.",
+      "text": "Frontend changes (Dialog.tsx, 7 component edits, a11y.test.tsx) are verified by tsc --noEmit only. vitest and eslint cannot run here (EACCES on frontend/node_modules). The a11y tests, and the existing page tests after the dialog changes, were never executed."
+    },
+    {
+      "impact": "V3 and the real-lock test may reveal a format surprise (for example a multi-line requirements.lock).",
+      "kind": "difficulty",
+      "next": "Conductor V3; test_sbom.test_real_module_counts_match_its_locks runs there.",
+      "text": "requirements.lock and frontend/package-lock.json are unreadable in this sandbox, so scripts/sbom.py was never run against the real locks and the real-lock count test skips here. The parser follows deps.read_lock (name==version --hash=sha256:...) and lockfileVersion 2/3 'packages'."
+    },
+    {
+      "impact": "Regression in test_sidecar_process/test_backend_cli would show only in V1.",
+      "kind": "difficulty",
+      "next": "Conductor V1.",
+      "text": "Tests that need the locked backend packages (test_sidecar, test_http_*, test_backend_cli) could not run here because requirements.lock is unreadable. The sidecar.py change (check_digest) and cli.py (state command, digest check at the start of _serve_sidecar) are covered by my tests only; test_sidecar_process was not run."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/gui/frontend/src/components/Dialog.tsx:1",
+        "packages/gui/tests/test_frontend_budget.py:1"
+      ],
+      "impact": "The commit takes these paths with the piece.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Created packages/gui/frontend/src/components/Dialog.tsx and edited existing components (App, Projects, SchemaFormView, CommandRunner, GrantDialog, PreviewDialog, ConflictView) and added tests/test_frontend_budget.py. The scope include allows src/**/*.tsx for accessibility fixes and tests/**, but they are not listed in write_set."
+    },
+    {
+      "impact": "Rebuild repairs index/schema state, not a physically unreadable file; documented in security.md.",
+      "kind": "note",
+      "next": "None.",
+      "text": "rebuild --dry-run and check use a read-only SQLite connection, which can leave gui.db-wal/-shm next to a WAL database. gui.db keeps its hash and mtime (tested). A database SQLite cannot read at all cannot be rebuilt (the command fails, gui.db stays)."
+    },
+    {
+      "impact": "Known limits, not defects.",
+      "kind": "note",
+      "next": "The owner commits Cargo.lock after the first build.",
+      "text": "The sidecar digest is not signed and a missing digest file skips the check silently (as designed); recorded as a stated limit in docs/security.md. Cargo.lock does not exist yet, so the SBOM lists crates from Cargo.toml requirements marked skm:locked=false."
+    },
+    {
+      "impact": "Standalone gui checks only its own rows.",
+      "kind": "assumption",
+      "next": "None.",
+      "text": "test_mvp_dod resolves the DoD files from the repository root (bridges/*), so it skips rows outside packages/gui when there is no bridges/ folder (the module alone)."
+    },
+    {
+      "impact": "A browser that blurs a disabled opener will not return the focus to it on that page.",
+      "kind": "note",
+      "next": "Possible follow-up: keep the button enabled while busy.",
+      "text": "Terminal dialog focus return is not tested: the Open terminal button is disabled while the request runs, and jsdom's handling of a disabled focused element is uncertain. The hook still restores focus where the opener stays connected."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/gui/frontend/src/app/App.tsx",
+        "packages/gui/frontend/src/components/CommandRunner.tsx",
+        "packages/gui/frontend/src/components/Dialog.tsx",
+        "packages/gui/frontend/src/forms/ConflictView.tsx",
+        "packages/gui/frontend/src/forms/PreviewDialog.tsx",
+        "packages/gui/frontend/src/pages/Projects.tsx",
+        "packages/gui/frontend/src/plugins/GrantDialog.tsx",
+        "packages/gui/frontend/src/views/SchemaFormView.tsx",
+        "packages/gui/tests/test_frontend_budget.py"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/gui/frontend/src/app/App.tsx, packages/gui/frontend/src/components/CommandRunner.tsx, packages/gui/frontend/src/components/Dialog.tsx, packages/gui/frontend/src/forms/ConflictView.tsx, packages/gui/frontend/src/forms/PreviewDialog.tsx, packages/gui/frontend/src/pages/Projects.tsx, packages/gui/frontend/src/plugins/GrantDialog.tsx, packages/gui/frontend/src/views/SchemaFormView.tsx, packages/gui/tests/test_frontend_budget.py"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/gui/lib/gui/core/state_admin.py: the swap sequence, the WAL checkpoint and the -wal/-shm removal",
+      "packages/gui/lib/gui/sidecar_digest.py and the check in cli._serve_sidecar",
+      "packages/gui/frontend/src/a11y.test.tsx: unrun, so check its fixtures and jsdom focus assumptions"
+    ],
+    "reason_codes": [
+      "scope_expanded",
+      "low_confidence",
+      "security_touched"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "P7.4 hardening: gui state check|rebuild (backup, row-exact copy and compare, integrity check, atomic os.replace, untouched original on failure, dry-run writes nothing), sidecar digest (sidecar_digest.py, build.sh writes it, serve --sidecar checks it before handshake/socket, SIDECAR_TAMPERED exit 3), deterministic CycloneDX SBOM, frontend budget script + npm run budget, accessibility (Dialog/useDialog focus handling applied to all 8 dialogs, nav labels, a11y.test.tsx over real screens), docs/mvp-dod.md + test_mvp_dod.py, docs/security.md, CHANGELOG. Python tests for the new code pass; frontend vitest/eslint could not be run in this sandbox (only tsc, clean)."
+}

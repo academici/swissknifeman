@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P3.3",
   "title": "E2E миграции на копиях реальных структур, docs/workspace.md (миграция); закрытие фазы P3",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "`scripts/e2e-workspace-migrate.sh` проверяет на временных проектах полный путь: plan → apply → planner видит планы из workspace → повторный apply noop → verify equal → конкурентный planner-писатель получает PLANS_MIGRATED → rollback → повторный apply → cleanup; import-режим второй «машины» (второй SKM_HOME на той же копии workspace). `docs/workspace.md` описывает модель, команды и миграцию.",
   "why": "Фаза меняет хранилище всех планов; модульные тесты не доказывают совместную работу CLI, порта, planner и маркера. Жёсткий риск: неидемпотентный повтор после частичного сбоя.",
   "scope": {
@@ -74,6 +74,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/7d60bb4ec5659355385d943b82e9cd3d2b88d28ce96b2fc3138975ff87b2c1ce",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/bbb6881d90ec39c295cdc10a88daee255d48b5fad2d7076f9807bd307b5de014",
+      "role": "input"
+    }
+  ],
   "rules": [
     "E2E только во временных каталогах; никаких обращений к ~/projects и реальному workspace.",
     "Сценарий конкурентной записи — реальный второй процесс planner, ждущий PlanLock, а не mock."
@@ -113,6 +123,63 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T10:22:18Z"
+  "result": {
+    "started_at": "2026-10-17T17:34:31Z",
+    "finished_at": "2026-10-17T21:21:10Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-3cc80ee2d6148befb2106bed-P3.3",
+    "notes": "Fixed the three red harness gate tests. The cause was the fixture plan (packages/harness/tests/plan_fixture.py): items had review.mode none without a reason, so plan.py check gave the review_strategy warning (commit 77c9a7f03) and the gate returned ATTENTION. The fixture item now carries a review reason, plan.py check on it reports 0 warnings and test_run_gate.py passes (21 tests). The e2e script and docs are unchanged this round.\nChanged: CHANGELOG.md, docs/.vitepress/config.mts, docs/index.md, docs/workspace.md, packages/harness/tests/plan_fixture.py, packages/workspace/tests/test_migrate.py, scripts/e2e-workspace-migrate.sh, scripts/test-integration.sh",
+    "deviations": [
+      "Edited packages/harness/tests/plan_fixture.py (outside the write set): added a review reason to the fixture item so plan.py check emits no review_strategy warning. Test data only, no product code.",
+      "changed outside the write set: packages/harness/tests/plan_fixture.py, packages/workspace/tests/test_migrate.py"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T21:21:10Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V1.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T21:21:10Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V9.json"
+      },
+      {
+        "id": "V50",
+        "exit": 0,
+        "at": "2026-10-17T21:21:10Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V50.json"
+      },
+      {
+        "id": "V51",
+        "exit": 0,
+        "at": "2026-10-17T21:21:10Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V51.json"
+      },
+      {
+        "id": "V52",
+        "exit": 0,
+        "at": "2026-10-17T21:21:10Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V52.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V1.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V9.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V50.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V51.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P3.3/evidence/V52.json"
+    ]
+  },
+  "updated_at": "2026-10-17T21:21:10Z"
 }

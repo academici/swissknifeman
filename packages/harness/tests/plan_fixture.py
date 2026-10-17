@@ -15,6 +15,7 @@ _DETAIL = {
     "scope": {"include": ["fixture.py"]}, "deliverables": ["fixture"],
     "task_files": [{"path": "lib/fixture.py", "change": "any"}],
     "validation": [{"id": "V1", "cmd": "true", "expect": "exit 0", "kind": "acceptance"}],
+    "review": {"mode": "none", "reason": "synthetic fixture item"},
 }
 
 

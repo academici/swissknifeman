@@ -37,6 +37,9 @@ features:
   - icon: 🗺️
     title: Plans and a conductor
     details: Plans are JSON (phases, items, checks, write sets); the orch conductor runs their items through narrow roles — scout, executor, reviewer, triager — with checks, review and resumable stops. See How it works.
+  - icon: 🗄️
+    title: Portable workspace
+    details: The plans of all projects live in one git repository of their own, outside product history; a marker in each project names its store, and a migration moves existing plans without losing a write. See Portable workspace (workspace.md).
   - icon: 🧩
     title: Provider-neutral
     details: Skill is a folder with SKILL.md and snippets/. One format works in Claude Code, Cursor and Perplexity via adapters.

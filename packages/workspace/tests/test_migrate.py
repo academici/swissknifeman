@@ -22,7 +22,7 @@ DEMO = PLANNER_ROOT / "tests" / "engine" / "fixtures" / "demo-plan"
 AICORE_ROOT = HUB_ROOT / "packages" / "aicore"
 PLAN = "2026.10.05-№7-DEMO"
 ARCHIVED = "archive/2026.09.01-№3-DEMO"
-NEW_PLAN = "2026.10.08-№9-NEW"
+NEW_PLAN = "2026.10.08-№9-DEMO"
 BIG = "old-thing/artifacts/big.bin"
 SECRET = "SECRET-VALUE-MUST-NOT-APPEAR"
 
@@ -238,11 +238,11 @@ class PlanTests(MigrateCase):
 
     def test_an_item_in_progress_blocks_unless_allowed(self):
         root = self.build()
-        make_plan(root / "plans", "2026.10.07-№8-RUNNING", running=True)
+        make_plan(root / "plans", "2026.10.07-№8-DEMO", running=True)
         code, out, err = self.run_cli("migrate", "plan", "--project", str(root), "--json")
         self.assertEqual(code, 1)
         self.assertTrue(err.startswith("MIGRATION_IN_PROGRESS: "), err)
-        self.assertEqual(json.loads(out)["blockers"][0]["items"], ["2026.10.07-№8-RUNNING/P2.1"])
+        self.assertEqual(json.loads(out)["blockers"][0]["items"], ["2026.10.07-№8-DEMO/P2.1"])
         allowed = self.json_cli("migrate", "plan", "--project", str(root), "--allow-in-progress")
         self.assertEqual(allowed["blockers"], [])
         self.assertIn("MIGRATION_IN_PROGRESS", [item["code"] for item in allowed["warnings"]])
@@ -380,7 +380,7 @@ class ApplyTests(MigrateCase):
 
     def test_an_item_in_progress_is_refused_unless_allowed(self):
         root = self.build(plans=(PLAN,))
-        make_plan(root / "plans", "2026.10.07-№8-RUNNING", running=True)
+        make_plan(root / "plans", "2026.10.07-№8-DEMO", running=True)
         err = self.failing("migrate", "apply", "--project", str(root), "--yes")
         self.assertTrue(err.startswith("MIGRATION_IN_PROGRESS: "), err)
         doc = self.apply(root, "--allow-in-progress")

@@ -288,6 +288,7 @@ export default withMermaid(defineConfig({
             { text: 'Ecosystem', link: '/architecture/ecosystem' },
             { text: 'Contracts', link: '/architecture/contracts' },
             { text: 'Ownership map', link: '/architecture/ownership' },
+            { text: 'Portable workspace', link: '/workspace' },
           ],
         },
         {

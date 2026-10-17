@@ -17,6 +17,9 @@ const umbrella = join(hub, "bin", "swissknifeman");
 // plugin passes it on), so the umbrella the bridge calls can find the planner only if the planner is on the path too;
 // the bridge finds the model catalog of the foundation through AICORE_ROOT, which also reaches the plugin.
 const planner = join(hub, "packages", "planner");
+// The workspace bridge and the workspace module it calls (workspace.spec.ts); the workspace root is throwaway too.
+const workspaceBridge = join(hub, "bridges", "gui-workspace");
+const workspaceModule = join(hub, "packages", "workspace");
 const foundation = join(hub, "packages", "aicore");
 const planFixture = join(gui, "tests", "fixtures", "plans", "e2e");
 // The sample external extension lives outside tests/fixtures/units on purpose: it is not a hub unit, so it is never
@@ -48,13 +51,26 @@ export default async function setup(): Promise<() => Promise<void>> {
     "enabled = true",
     "trusted = true",
     "",
+    "[aicore.plugins.workspace-planner]",
+    `manifest = ${JSON.stringify(join(hub, "bridges", "workspace-planner", "extension.json"))}`,
+    "enabled = true",
+    "trusted = true",
+    "",
   ].join("\n");
   writeFileSync(configFile, config);
   const env = {
     PATH: process.env.PATH ?? "/usr/bin:/bin",
     HOME: join(base, "home"),
     SKM_HOME: join(base, "skm"),
-    SKM_UNITS_PATH: [fixtures, bridge, planner].join(delimiter),
+    SKM_UNITS_PATH: [fixtures, bridge, planner, workspaceBridge, workspaceModule].join(delimiter),
+    SKM_WORKSPACE_ROOT: join(base, "workspace"),
+    SKM_WORKSPACE_MODULE_ROOT: workspaceModule,
+    GIT_CONFIG_GLOBAL: "/dev/null",
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_AUTHOR_NAME: "e2e",
+    GIT_AUTHOR_EMAIL: "e2e@example.invalid",
+    GIT_COMMITTER_NAME: "e2e",
+    GIT_COMMITTER_EMAIL: "e2e@example.invalid",
     AICORE_ROOT: foundation,
     SKM_UMBRELLA: umbrella,
     GUI_PYDEPS_DIR: pydeps,
@@ -82,6 +98,10 @@ export default async function setup(): Promise<() => Promise<void>> {
   process.env.GUI_E2E_PROJECT = project;
   process.env.GUI_E2E_UMBRELLA = umbrella;
   process.env.GUI_E2E_HOME = join(base, "home");
+  process.env.GUI_E2E_BASE = base;
+  process.env.GUI_E2E_SKM_HOME = join(base, "skm");
+  process.env.GUI_E2E_WORKSPACE = join(base, "workspace");
+  process.env.GUI_E2E_WORKSPACE_MODULE = workspaceModule;
   // config.spec.ts rewrites the machine layer; plugins.spec.ts puts this text back before it needs the extension
   process.env.GUI_E2E_CONFIG_FILE = configFile;
   process.env.GUI_E2E_CONFIG_TEXT = config;

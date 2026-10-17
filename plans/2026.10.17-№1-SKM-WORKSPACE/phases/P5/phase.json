@@ -61,6 +61,11 @@
       "mode": "recommended"
     }
   ],
+  "closed": {
+    "at": "2026-10-17T23:53:49Z",
+    "result": "done_with_deviations",
+    "summary": "2 item(s): 2 done_with_deviations"
+  },
   "orchestration": {
     "instructions": "Групповое ревью батча P5 — grok/grok-4.7/high (малый дифф; D15).",
     "options": {

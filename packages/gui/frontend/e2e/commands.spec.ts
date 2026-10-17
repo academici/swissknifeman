@@ -3,7 +3,7 @@ import { api, signIn } from "./session";
 
 test("greet runs as a dry run and for real, with its log", async ({ page }) => {
   await signIn(page);
-  await page.getByRole("link", { name: "Projects" }).click();
+  await page.locator('a[href="/projects"]').click();
   await page.getByRole("link", { name: "project", exact: true }).click();
   await page.getByRole("link", { name: "Greet" }).click();
   await page.getByLabel("Name *").fill("World");

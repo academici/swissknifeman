@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P5.2",
   "title": "GUI: страница Projects с project_id и binding из workspace, доверие привязанного проекта, E2E workspace-сценариев; README gui; закрытие фазы P5",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "Страница Projects показывает у доверенных проектов workspace `project_id`, binding и plans_store (запрос `gui-workspace.projects`, если мост доступен), список привязанных, но не доверенных проектов с кнопкой «Доверять» (существующий `POST /v1/projects` с подтверждением); Playwright-сценарии: overview workspace, attach, migrate plan, конфликт sync в таблице, подтверждение push с remote/branch; устаревший статус в packages/gui/README.md исправлен.",
   "why": "Проекты в GUI сегодня идентифицируются хэшем пути (code-facts#consumers) и не связаны между машинами; workspace даёт стабильный список (B5). Жёсткие риски: неявное доверие проекту из workspace (нарушение D12 плана GUI), регресс существующей страницы Projects и E2E.",
   "scope": {
@@ -82,6 +82,28 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/6d71cb94e60a24e41f14e491e72ca08abe9d117ede831938c3ef6c089720e7a5",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/559376a9aaf7171d82eed2aadc535a6adef761a49ca7661d53272a5fd6c69b29",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/ea0aa5dad6a5bce3e1418aec4357c5d8948d9de1a8603d0468bd54cbe914cbf5",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/808e745f068de001251986b200f6c975d2af90833ea28f21b4c4c515297ea8bc",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/edfbed4f7380f03748c3877772be5c1643b87f69ff7af1245a7522ffa6811eeb",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Без моста gui-workspace страница Projects работает как сейчас (тест: запрос недоступен → колонки workspace скрыты, ошибок нет).",
     "Доверие только через существующий `POST /v1/projects` с подтверждением; автоматического добавления нет.",
@@ -129,6 +151,70 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-17T10:23:02Z"
+  "result": {
+    "started_at": "2026-10-17T23:53:47Z",
+    "finished_at": "2026-10-17T23:53:49Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-1bee88a06f232639f29868d3-P5.2",
+    "notes": "V52 red cause: the gui-workspace bridge adds a second nav link named 'Projects', so the older specs' getByRole('link', {name: 'Projects'}) violated strict mode. planner.spec.ts and commands.spec.ts now click the core link by href (a[href=\"/projects\"]). All five workspace.spec.ts scenarios already passed in the reported run. Not re-run here (sandbox cannot start the e2e backend); tsc --noEmit passes.\nChanged: CHANGELOG.md, packages/gui/README.md, packages/gui/frontend/e2e/backend.ts, packages/gui/frontend/e2e/commands.spec.ts, packages/gui/frontend/e2e/planner.spec.ts, packages/gui/frontend/e2e/workspace.spec.ts, packages/gui/frontend/src/pages/Projects.test.tsx, packages/gui/frontend/src/pages/Projects.tsx",
+    "deviations": [
+      "Edited planner.spec.ts and commands.spec.ts (outside write_set): their 'Projects' nav link selector became ambiguous once the bridge gui-workspace adds a fleet nav link with the same title.",
+      "changed outside the write set: packages/gui/frontend/e2e/backend.ts, packages/gui/frontend/e2e/commands.spec.ts, packages/gui/frontend/e2e/planner.spec.ts"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T23:53:49Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T23:53:49Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V2.json"
+      },
+      {
+        "id": "V9",
+        "exit": 0,
+        "at": "2026-10-17T23:53:49Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V9.json"
+      },
+      {
+        "id": "V50",
+        "exit": 0,
+        "at": "2026-10-17T23:53:49Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V50.json"
+      },
+      {
+        "id": "V51",
+        "exit": 0,
+        "at": "2026-10-17T23:53:49Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V51.json"
+      },
+      {
+        "id": "V52",
+        "exit": 0,
+        "at": "2026-10-17T23:53:49Z",
+        "evidence": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V52.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V1.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V2.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V9.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V50.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V51.json",
+      "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P5.2/evidence/V52.json"
+    ]
+  },
+  "updated_at": "2026-10-17T23:53:49Z"
 }

@@ -20,7 +20,7 @@ function planner(...args: string[]): { ok: boolean; data?: Record<string, unknow
 }
 
 async function projectId(page: Page): Promise<string> {
-  await page.getByRole("link", { name: "Projects" }).click();
+  await page.locator('a[href="/projects"]').click();
   await page.getByRole("link", { name: "project", exact: true }).click();
   await page.getByRole("link", { name: "Plans" }).click();
   await page.getByRole("link", { name: /E2E demo plan/ }).click();

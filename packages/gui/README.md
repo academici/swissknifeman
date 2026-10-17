@@ -8,7 +8,8 @@ catalog with isolation and quarantine.
 
 Status: `development`, version 0.1.0: the frozen v1 contracts, the contribution resolver, the loopback backend
 (`gui serve` / `gui open`: projects, queries, command runs, the event stream, browser session), the browser frontend and the commands
-`contributions`, `check` and `schemas bundle`; the desktop shell comes next.
+`contributions`, `check` and `schemas bundle`, the Tauri 2 desktop shell (`desktop/`) and the PyInstaller sidecar
+(`sidecar/`).
 
 ## Principles
 
@@ -48,7 +49,7 @@ bridges/gui-orch/                  # conductor runs
 
 In 0.1.0 the contracts (`schemas/`), `lib/gui/contracts.py`, `lib/gui/errors.py`, `lib/gui/core/` (run states,
 project registry), `lib/gui/catalog/`, `lib/gui/storage/` (`gui.db`), `lib/gui/settings.py`, `lib/gui/deps.py`, `lib/gui/backend.py`,
-`lib/gui/http/`, `frontend/` and the CLI exist; desktop and sidecar are the target layout.
+`lib/gui/http/`, `frontend/`, `desktop/` (Tauri 2 shell), `sidecar/` (PyInstaller onedir spec of the backend) and the CLI exist.
 
 `gui` is a tool module of the hub (`standalone.tools`): its third-party dependencies, Node and Rust are not part of the
 core check; it is checked by its own `dev.test`.
@@ -63,6 +64,15 @@ core check; it is checked by its own `dev.test`.
 `swissknifeman install --profile full` (or `bash install.sh`) links `gui`, installs the locked backend packages and
 builds the frontend when npm is present; `gui open` opens the GUI. Start, security, configuration and the error
 codes of this mode: [docs/browser-mode.md](docs/browser-mode.md).
+
+## Workspace
+
+With the bridge `bridges/gui-workspace` (portable workspace of ADR 0085) the section Fleet gets the pages Overview,
+Projects, Migration, Sync and Conflicts of the workspace. The page Projects of the GUI itself asks the query
+`gui-workspace.projects`: a trusted project shows its workspace `project_id`, its binding on this machine and its plans store, and
+a project that is bound in the workspace but not trusted is listed with a Trust button. Trust stays an explicit act: the button
+calls the existing `POST /v1/projects` and the owner confirms the dialog; nothing is added automatically. Without the bridge (or
+without a workspace) the page is the plain list of trusted projects. The end-to-end scenarios are `frontend/e2e/workspace.spec.ts`.
 
 ## Third-party packages
 

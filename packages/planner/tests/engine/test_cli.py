@@ -188,7 +188,7 @@ class LifecycleFlowTests(CliCase):
         self.designed_plan()
         self.assertEqual(self.verb("design-done", "PLAN1", "P1").stdout.splitlines()[0], "P1 detailed")
         plan_id = "2026.10.05-№1-DEMO"
-        self.assertEqual(self.verb("next", "PLAN1").stdout.strip(), f"run-items: planner:plan-run {plan_id} P1.1  (implementation/high)")
+        self.assertEqual(self.verb("next", "PLAN1").stdout.splitlines()[0], f"run-items: planner:plan-run {plan_id} P1.1  (implementation/high)")
         started = self.verb("start", "PLAN1", "P1.1", "--actor", ACTOR, "--session", "auto")
         self.assertIn("started P1.1 (phase P1, batch BP1-1; route ok)", started.stdout)
         self.verb("log", "PLAN1", "P1.1", "--type", "difficulty", "--summary", "tests import config", "--next", "reuse fixture")

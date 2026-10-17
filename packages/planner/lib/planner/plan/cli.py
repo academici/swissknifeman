@@ -354,7 +354,22 @@ def cmd_next(args) -> int:
         return 0
     route = action.route
     print(action.exact + (f"  ({route['class']}/{route['effort']})" if route else ""))
+    if action.batch_line:
+        print(action.batch_line)
+        print(_overlays_line("planner:plan-run"))
     return 0
+
+
+def _overlays_line(slot: str) -> str:
+    """``overlays: …`` for the slot a command reads first, so that step 0 of ``plan-run`` cannot be skipped."""
+    from ..integration import overlays
+    try:
+        found = overlays.resolve(slot, project=overlays.project_root())
+    except (LookupError, ValueError, OSError) as exc:
+        return f"overlays {slot}: unavailable ({exc}); run plan.py overlays {slot}"
+    listed = found.get("overlays") or []
+    return f"overlays {slot}: " + (", ".join(str(o.get("path", o)) if isinstance(o, dict) else str(o) for o in listed)
+                                   if listed else "none")
 
 
 def cmd_start(args) -> int:
@@ -368,7 +383,7 @@ def cmd_start(args) -> int:
     if args.json:
         _print_json({"items": list(result.items), "phase": result.phase, "batch": result.batch, "route": result.route,
                      "resumed": list(result.resumed), "packs": [str(path) for path in result.packs],
-                     "scouts": list(result.scouts)})
+                     "scouts": list(result.scouts), "warnings": list(result.warnings)})
     else:
         print(result.text(plan_dir.name))
     return 0

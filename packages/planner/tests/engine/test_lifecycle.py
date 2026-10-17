@@ -139,7 +139,7 @@ class StartTests(LifeCase):
             self.assertIn("started_at", item["result"])
         events = self.events("start")
         self.assertEqual([e["item"] for e in events], ["P1.1", "P1.2"])
-        self.assertEqual(events[0]["data"], {"requested": ["P1.1", "P1.2"], "route": "ok"})
+        self.assertEqual(events[0]["data"], {"requested": ["P1.1", "P1.2"], "route": "ok", "batch": "B1"})
         self.assertIn("P1.1", (self.root / "views/status.md").read_text(encoding="utf-8"))
         self.assertEqual([i for i in check.check(plan) if i.level == "error"], [])
 
@@ -234,6 +234,36 @@ class StartTests(LifeCase):
         self.assertEqual(lifecycle.next(self.load()).exact, f"waiting: external gate {label}")
         self.refused("EXTERNAL_GATE", lambda root, *a: lifecycle.start(root, ["P1.1"], OPUS))
         self.refused("GATE_UNKNOWN", lambda root, *a: lifecycle.grant(root, label, "Owner says go."))
+
+
+class BatchHintTests(LifeCase):
+    def test_next_names_the_batch_its_mode_and_the_ready_command(self):
+        action = lifecycle.next(self.load())
+        self.assertEqual((action.kind, action.mode), ("run-items", "recommended"))
+        self.assertEqual(action.batch_line, f"batch B1 (recommended: run together, a split needs log --type deviation) "
+                                            f"-> {action.command}")
+        self.assertEqual(action.as_dict()["mode"], "recommended")
+
+    def test_a_required_batch_says_run_as_one(self):
+        ops.set_batches(self.load(), "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "required"}])
+        self.assertIn("required: run as one", lifecycle.next(self.load()).batch_line)
+
+    def test_start_of_part_of_a_batch_warns_and_records_the_batch(self):
+        result = self.start("P1.1")
+        self.assertEqual(len(result.warnings), 1)
+        self.assertIn("P1.1 is in batch B1 [P1.1, P1.2]", result.warnings[0])
+        self.assertIn("log --type deviation", result.warnings[0])
+        self.assertIn(result.warnings[0], result.text("LIFE"))
+        self.assertEqual(self.events("start")[0]["data"]["batch"], "B1")
+
+    def test_start_of_the_whole_batch_does_not_warn(self):
+        self.assertEqual(self.start("P1.1", "P1.2").warnings, ())
+
+    def test_the_item_pack_carries_its_batch(self):
+        from planner.plan import context
+        found = context.collect(self.load(), "P1.2", with_scout=False)["batch"]
+        self.assertEqual((found["id"], found["items"], found["mode"]), ("B1", ["P1.1", "P1.2"], "recommended"))
+        self.assertEqual(found["run_with"], f"planner:plan-run {self.load().plan['id']} P1.1 P1.2")
 
 
 class PhaseChecksTests(LifeCase):

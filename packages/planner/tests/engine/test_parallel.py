@@ -400,7 +400,7 @@ class ReadOnlyTests(ParallelCase):
             action = lifecycle.next(plan)
             route = action.route
             code, out, _ = self.run_cli("next", self.root)
-            self.assertEqual((code, out), (0, action.exact + (f"  ({route['class']}/{route['effort']})" if route else "") + "\n"))
+            self.assertEqual((code, out.splitlines()[0]), (0, action.exact + (f"  ({route['class']}/{route['effort']})" if route else "")))
             code, out, _ = self.run_cli("next", self.root, "--json")
             self.assertEqual((code, json.loads(out)), (0, action.as_dict()))
 

@@ -313,6 +313,9 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
         "ready_units": units.ready(plan, item_id),
         "policy": policy(plan),
     }
+    batch = lifecycle.batch_context(plan, phase_id, item_id)
+    if batch:
+        result["batch"] = batch
     if mode == "scoped":
         result["projection"] = {"mode": mode, "note": PROJECTION_NOTE}
         result["upstream"] = [_project_upstream(d) for d in result["upstream"]]

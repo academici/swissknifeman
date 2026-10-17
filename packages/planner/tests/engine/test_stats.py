@@ -35,6 +35,40 @@ class StatsCase(unittest.TestCase):
         return stats.collect(store.load_plan(self.root))
 
 
+class BatchReportTests(StatsCase):
+    def setUp(self):
+        super().setUp()
+        plan = store.load_plan(self.root)
+        ops.add_phase(plan, "One")
+        ops.add_item(plan, "P1", "First")
+        ops.add_item(plan, "P1", "Second")
+        ops.set_batches(plan, "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "recommended"}])
+
+    def start(self, item, *requested):
+        self.log("start", item=item, phase="P1", data={"requested": list(requested)})
+
+    def batches(self):
+        return self.collect()["batches"]
+
+    def test_unstarted_batch_is_pending(self):
+        self.assertEqual([b["how"] for b in self.batches()], ["pending"])
+
+    def test_one_start_call_for_all_members_is_a_batch(self):
+        self.start("P1.1", "P1.1", "P1.2")
+        self.start("P1.2", "P1.1", "P1.2")
+        self.assertEqual([b["how"] for b in self.batches()], ["batch"])
+        self.assertIn("1 of 1 run as a batch", stats.text(self.collect()))
+
+    def test_separate_starts_are_a_split_and_the_deviation_is_reported(self):
+        self.start("P1.1", "P1.1")
+        self.start("P1.2", "P1.2")
+        row = self.batches()[0]
+        self.assertEqual((row["how"], row["deviation_logged"]), ("split", False))
+        self.assertIn("B1 (recommended) P1.1, P1.2: split, no deviation logged", stats.text(self.collect()))
+        self.log("deviation", item="P1.1", phase="P1")
+        self.assertTrue(self.batches()[0]["deviation_logged"])
+
+
 class CollectTests(StatsCase):
     def test_an_empty_plan_has_no_numbers(self):
         result = self.collect()

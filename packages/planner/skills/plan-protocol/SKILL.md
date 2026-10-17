@@ -101,6 +101,7 @@ For query shapes, typed links, write rules and parser-derived discovery, read [r
 Parallel work uses `plan.py next <plan> --parallel N`; lanes never share `task_files` or a dependency path; the integrator alone runs `plan.py reconcile <plan>`.
 `next` returns exactly one semantic step: `design-phase`, `run-items` (a ready batch with its
 route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or `terminal`.
+For `run-items`, `next` and `finish` also print `batch <id> (<mode>) -> <command>` (`plan.py next` adds the `overlays planner:plan-run` result): `recommended` batches run together and a split needs `log --type deviation`, `required` batches run as one. `start` of part of a batch prints a `warn:` line; `context` carries `batch {id, items, mode, note, run_with}`; `stats` lists the batches run as a batch and the split ones.
 `start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input.
 `finish --status done` needs every acceptance check recorded with exit 0.
 Every operation ends with one scoped `plan.py commit … --role executor|reviewer|fix` (never `git add -A`,

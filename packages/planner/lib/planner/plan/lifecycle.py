@@ -158,6 +158,16 @@ class Next:
     items: tuple[str, ...] = ()
     route: dict | None = None
     command: str | None = None
+    mode: str | None = None  # batch mode of a run-items step
+
+    @property
+    def batch_line(self) -> str | None:
+        """What the batch asks for (``run-items`` only): its mode, the rule of a split and the ready command."""
+        if self.kind != "run-items" or not self.batch or not self.command:
+            return None
+        rule = ("required: run as one" if self.mode == "required"
+                else "recommended: run together, a split needs log --type deviation")
+        return f"batch {self.batch} ({rule}) -> {self.command}"
 
     @property
     def exact(self) -> str:
@@ -172,7 +182,7 @@ class Next:
     def as_dict(self) -> dict:
         return {"kind": self.kind, "exact": self.exact, "phase": self.phase, "batch": self.batch,
                 "items": list(self.items), "route": self.route, "launch": self.launch,
-                "command": self.command, "reason": self.reason}
+                "command": self.command, "reason": self.reason, "mode": self.mode, "batch_line": self.batch_line}
 
 
 def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa: A001 — dossier §6.1 name
@@ -206,7 +216,8 @@ def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa:
             if not ready:
                 return Next("waiting", reason or f"batch {batch.get('id')}", phase=phase_id, batch=batch.get("id"))
             return Next("run-items", phase=phase_id, batch=batch.get("id"), items=tuple(ready),
-                        route=route_of(plan, ready), command=f"{COMMAND_NAMESPACE}:plan-run {plan_id} {' '.join(ready)}")
+                        route=route_of(plan, ready), command=f"{COMMAND_NAMESPACE}:plan-run {plan_id} {' '.join(ready)}",
+                        mode=batch.get("mode"))
         if all(status_of(plan, i) in TERMINAL for i in phase_items(plan, phase_id)):  # finished in other trees
             return Next("waiting", f"{phase_id} closure: plan.py reconcile {plan_id}", phase=phase_id)
         return Next("waiting", f"{phase_id} closure (finish the last item)", phase=phase_id)
@@ -525,10 +536,12 @@ class StartResult:
     resumed: tuple[str, ...]
     packs: tuple[Path, ...] = ()  # context packs, one per item, in request order
     scouts: tuple[str, ...] = ()  # one outcome line per scouted item (``scout <item>: ok (…)``)
+    warnings: tuple[str, ...] = ()  # items started apart from the rest of their batch
 
     def text(self, plan_id: str) -> str:
         lines = [f"started {', '.join(self.items)} (phase {self.phase}"
                  + (f", batch {self.batch}" if self.batch else "") + f"; route {self.route})"]
+        lines.extend(self.warnings)
         if self.resumed:
             lines.append(f"resumed: {', '.join(self.resumed)} (started_at kept)")
         if self.packs:
@@ -552,6 +565,35 @@ def _owner_conflict(doc: Mapping, actor: Mapping) -> dict | None:
     if prior["session"] != actor["session"] or prior.get("provider") != actor.get("provider"):
         return dict(prior)
     return None
+
+
+def batch_context(plan: store.Plan, phase_id: str, item_id: str) -> dict | None:
+    """``{id, items, mode, note, run_with}`` of the batch that holds ``item_id``, or None."""
+    for batch in batches_of(plan, phase_id):
+        if item_id in (batch.get("items") or []):
+            members = batch_members(plan, phase_id, batch)
+            plan_id = plan.plan.get("id", plan.root.name)
+            found = {"id": batch.get("id"), "items": members, "mode": batch.get("mode"),
+                     "run_with": f"{COMMAND_NAMESPACE}:plan-run {plan_id} {' '.join(members)}"}
+            if batch.get("note"):
+                found["note"] = batch["note"]
+            return found
+    return None
+
+
+def batch_split_warnings(p: store.Plan, phase_id: str, requested: Iterable[str]) -> list[str]:
+    """One ``warn:`` line per batch whose not yet started members are left out of this start."""
+    requested = list(requested)
+    lines = []
+    for batch in batches_of(p, phase_id):
+        members = batch_members(p, phase_id, batch)
+        started = [i for i in members if i in requested]
+        left = [i for i in members if i not in requested and status_of(p, i) == "todo"]
+        if started and left:
+            rule = "must run as one" if batch.get("mode") == "required" else "is recommended as one run"
+            lines.append(f"warn: {', '.join(started)} is in batch {batch.get('id')} [{', '.join(members)}] "
+                         f"({batch.get('mode')}: {rule}); start them together or log --type deviation")
+    return lines
 
 
 def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = (),
@@ -626,6 +668,7 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
                     raise PlanError("EXTERNAL_GATE", f"{item_id} needs {wait}; reconcile the external evidence first")
                 raise PlanError("GATE_NOT_GRANTED", f"{item_id} needs {wait} (plan.py grant, or start --grant)")
         verdict = _route_verdict(p, requested, actor)
+        split_warnings = batch_split_warnings(p, phase_id, requested)
         for item_id in requested:
             validate_route(p.items[item_id].get("route") or {}, actor, item_id)
         from . import context  # context imports this module for scheduling
@@ -656,6 +699,8 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             changes.append(("item", item_id, doc))
             batch_id = next_batch_id(p, phase_id, item_id)
             data = {"requested": requested, "route": verdict}
+            if batch_id:
+                data["batch"] = batch_id
             if owners[item_id]:
                 data["take_over"] = {"previous": owners[item_id]}
             event = store.new_event(
@@ -673,7 +718,7 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         project_root, plan_id = event_project_root(p), p.plan["id"]
         packs = tuple(context.build(p, item_id) for item_id in requested)
         result = StartResult(tuple(requested), phase_id, next_batch_id(p, phase_id, requested[0]), verdict,
-                             tuple(resumed), packs)
+                             tuple(resumed), packs, warnings=tuple(split_warnings))
         wanted = (p.plan.get("settings") or {}).get("scout") == "auto" if scout is None else scout
         root = p.root
     emission.emit_all(announce, project_root=project_root, plan_id=plan_id)
@@ -686,7 +731,8 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
     if isinstance(plan, store.Plan):
         plan.adopt(fresh)
     packs = tuple(context.build(fresh, item_id) for item_id in requested)
-    return StartResult(result.items, result.phase, result.batch, result.route, result.resumed, packs, scouts)
+    return StartResult(result.items, result.phase, result.batch, result.route, result.resumed, packs, scouts,
+                       result.warnings)
 
 
 # ---------------------------------------------------------------- finish
@@ -710,6 +756,8 @@ class FinishResult:
         if self.plan_done:
             lines.append("plan done")
         lines.append(f"next: {self.next.exact}")
+        if self.next.batch_line:
+            lines.append(self.next.batch_line)
         return "\n".join(lines)
 
 

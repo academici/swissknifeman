@@ -346,6 +346,20 @@
         "reason": {
           "type": "string",
           "description": "Wait reason; empty when not waiting."
+        },
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Batch mode (recommended or required) of a run-items step, else null."
+        },
+        "batch_line": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Batch id, mode, split rule and ready command of a run-items step, else null."
         }
       },
       "required": [

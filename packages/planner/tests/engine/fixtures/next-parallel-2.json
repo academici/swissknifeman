@@ -63,6 +63,8 @@
       "codex": "$ planner:plan-run 2026.10.05-№1-DEMO P2.1 P2.2"
     },
     "command": "planner:plan-run 2026.10.05-№1-DEMO P2.1 P2.2",
-    "reason": ""
+    "reason": "",
+    "mode": "recommended",
+    "batch_line": "batch B1 (recommended: run together, a split needs log --type deviation) -> planner:plan-run 2026.10.05-№1-DEMO P2.1 P2.2"
   }
 }

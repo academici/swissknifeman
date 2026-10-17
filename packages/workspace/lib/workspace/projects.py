@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Union
 from aicore.workspace import (MARKER_RELPATH, WorkspaceError, bind, checkout_remotes, new_id, project_dir,
                               read_bindings, read_marker, read_project, set_paths, unbind, write_marker, write_project)
 
-from . import layout
+from . import gitutil, layout
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
@@ -65,6 +65,12 @@ def attach(project: PathLike, name: Optional[str] = None, yes: bool = False, int
         raise WorkspaceError("BINDING_PATH_MISSING", f"{root} is not a directory")
     target = layout.root_of(None, env, home)
     layout.require_initialized(target)
+    with gitutil.git_lock(env, home):  # read the marker, pick or create the project and write the marker as one step
+        return _attach_locked(root, target, name, yes, interactive, confirm, env, home)
+
+
+def _attach_locked(root: Path, target: Path, name: Optional[str], yes: bool, interactive: Optional[bool],
+                   confirm: Optional[Callable[[str], bool]], env: Env, home: Optional[PathLike]) -> Dict[str, Any]:
     marker = read_marker(root)
     remotes = checkout_remotes(root)
     created = False
@@ -101,7 +107,9 @@ def attach(project: PathLike, name: Optional[str] = None, yes: bool = False, int
         write_marker(root, project_id, plans_store)
         marker_written = True
         if plans_store == "workspace":
-            (project_dir(target, project_id) / "plans").mkdir(parents=True, exist_ok=True)
+            plans = project_dir(target, project_id) / "plans"
+            plans.mkdir(parents=True, exist_ok=True)
+            (plans / ".gitkeep").touch()  # git keeps no empty folder: without a file the store is lost in a transfer
     entry = bind(project_id, root, env, home)
     doc: Dict[str, Any] = {"project_id": project_id, "name": record["name"], "created": created,
                            "marker_written": marker_written, "plans_store": plans_store,

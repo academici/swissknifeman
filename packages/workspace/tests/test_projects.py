@@ -2,6 +2,7 @@
 import json
 import os
 import subprocess
+import threading
 import unittest
 
 from aicore.workspace import (WorkspaceError, bind, new_id, read_bindings, read_marker, read_project, write_marker,
@@ -37,6 +38,36 @@ class AttachTests(ProjectCase):
         self.assertTrue((self.ws / "projects" / project_id / "plans").is_dir())
         self.assertEqual(result["binding"], {"paths": [str(root)], "primary": str(root)})
         self.assertEqual(read_bindings()["projects"][project_id]["paths"], [str(root)])
+
+    def test_the_empty_plans_store_is_tracked_by_git(self):
+        result = projects.attach(self.checkout("alpha"))
+        keep = f"projects/{result['project_id']}/plans/.gitkeep"
+        git(self.ws, "add", "-A")
+        self.assertIn(keep, git(self.ws, "ls-files").split("\n"))
+        self.assertEqual(projects.show(result["project_id"])["plans"]["plans"], [])
+
+    def test_concurrent_attaches_of_one_checkout_share_one_project(self):
+        root = self.checkout("alpha")
+        results, errors = [], []
+        barrier = threading.Barrier(4)
+
+        def work():
+            try:
+                barrier.wait()
+                results.append(projects.attach(root))
+            except Exception as exc:  # reported below
+                errors.append(exc)
+
+        threads = [threading.Thread(target=work) for _ in range(4)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(errors, [])
+        self.assertEqual(len({item["project_id"] for item in results}), 1)
+        self.assertEqual(sum(1 for item in results if item["created"]), 1)
+        self.assertEqual(len(list((self.ws / "projects").glob("prj_*"))), 1)
+        self.assertEqual(read_marker(root)["project_id"], results[0]["project_id"])
 
     def test_the_marker_is_written_but_never_committed(self):
         root = self.checkout("alpha")

@@ -14,7 +14,7 @@ import re
 import stat
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
 from aicore.config import ConfigError, resolve
 from aicore.util.redact import MASK, PATTERNS
@@ -36,9 +36,11 @@ _HOME_PATH = re.compile(r"/home/[^/\s\"']+/|/Users/[^/\s\"']+/|[A-Za-z]:\\\\?Use
 _ABSOLUTE = re.compile(r"^(?:[/~]|[A-Za-z]:[\\/])")
 # Matches of the redaction patterns that are not secrets: a lower-case hyphenated word that starts with ``sk-`` (the tail of
 # a slug such as ``task-development-workflow``; real keys carry digits or capitals) and the value of a ``name = value`` pair
-# that is a placeholder (``<NAME>``, ``$NAME``, ``{name}``) or a secret reference (``env://NAME``).
+# that is a placeholder (``<NAME>``, ``$NAME``, ``${NAME}``, ``{name}``) or a secret reference (``env://NAME``). The whole
+# value must have that shape: a secret that merely starts with ``<`` or ``$`` is still a secret.
 _SLUG = re.compile(r"sk-[a-z]+(?:-[a-z]+)*")
-_PLACEHOLDER_PREFIXES = ("<", "$", "{", "env://")
+_PLACEHOLDER = re.compile(r"<[A-Za-z][A-Za-z0-9_.-]*>|\$\{[A-Za-z_][A-Za-z0-9_]*\}|\$[A-Za-z_][A-Za-z0-9_]*"
+                          r"|\{[A-Za-z][A-Za-z0-9_.-]*\}|env://[A-Za-z0-9_][A-Za-z0-9_./-]*")
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
@@ -76,11 +78,12 @@ class Report:
 
     def to_dict(self) -> Dict[str, Any]:
         return {"$schema": SCHEMA, "files_checked": self.files_checked, "block": self.block, "warn": self.warn,
-                "local_only": sorted(self.local_only, key=lambda item: item["path"]), "verdict": self.verdict}
+                "local_only": [dict(item, path=_display(item["path"])) for item in
+                              sorted(self.local_only, key=lambda item: item["path"])], "verdict": self.verdict}
 
 
 def _finding(rule: str, path: str, detail: str, line: Optional[int] = None) -> Dict[str, Any]:
-    item: Dict[str, Any] = {"rule": rule, "path": path, "detail": detail}
+    item: Dict[str, Any] = {"rule": rule, "path": _display(path), "detail": detail}
     if line is not None:
         item["line"] = line
     return item
@@ -164,7 +167,7 @@ def _not_a_secret(index: int, match: "re.Match[str]") -> bool:
     text = match.group(0)
     if index == 0:
         return _SLUG.fullmatch(text) is not None
-    return text[len(match.group(1)):].startswith(_PLACEHOLDER_PREFIXES)
+    return _PLACEHOLDER.fullmatch(text[len(match.group(1)):]) is not None
 
 
 def _secret_finding(rel: str, text: str) -> Optional[Dict[str, Any]]:
@@ -185,9 +188,138 @@ def _secret_finding(rel: str, text: str) -> Optional[Dict[str, Any]]:
                     first)
 
 
+def _add(found: List[Dict[str, Any]], items: Iterable[Dict[str, Any]]) -> None:
+    for item in items:
+        if item not in found:
+            found.append(item)
+
+
+@dataclass(frozen=True)
+class _Version:
+    """One form of a file that a commit could publish: the working-tree file or the blob in the index."""
+
+    kind: str  # "link" | "file" | "other"
+    size: int
+    executable: bool
+    head: Callable[[], bytes]
+    body: Callable[[], bytes]
+
+
+def _index_entries(root: Path) -> Dict[str, List[Tuple[str, str]]]:
+    """``git ls-files -s -z``: path -> ``[(mode, object id)]`` of what the index holds (a conflict has several stages)."""
+    out = gitutil.require(gitutil.git(["ls-files", "-s", "-z"], root), "ls-files")
+    entries: Dict[str, List[Tuple[str, str]]] = {}
+    for record in out.split("\0"):
+        if record:
+            meta, _, path = record.partition("\t")
+            mode, oid, _stage = meta.split(" ")
+            entries.setdefault(path, []).append((mode, oid))
+    return entries
+
+
+def _worktree_version(root: Path, rel: str) -> Optional[_Version]:
+    full = root / rel
+    try:
+        info = os.lstat(full)
+    except OSError:
+        return None
+    if stat.S_ISDIR(info.st_mode):
+        return None
+
+    def head() -> bytes:
+        with open(full, "rb") as handle:
+            return handle.read(BINARY_PROBE)
+
+    kind = "link" if stat.S_ISLNK(info.st_mode) else "file" if stat.S_ISREG(info.st_mode) else "other"
+    return _Version(kind, info.st_size, bool(info.st_mode & 0o111), head, full.read_bytes)
+
+
+def _blob_version(root: Path, mode: str, oid: str) -> _Version:
+    cache: List[bytes] = []
+
+    def body() -> bytes:
+        if not cache:
+            done = gitutil.git_bytes(["cat-file", "blob", oid], root)
+            if done.returncode != 0:
+                raise OSError(f"git cat-file {oid} failed")
+            cache.append(done.stdout)
+        return cache[0]
+
+    size_done = gitutil.git(["cat-file", "-s", oid], root)
+    size = int(size_done.stdout.strip() or 0) if size_done.returncode == 0 else 0
+    kind = "link" if mode == "120000" else "file" if mode in ("100644", "100755") else "other"
+    return _Version(kind, size, mode == "100755", lambda: body()[:BINARY_PROBE], body)
+
+
+def _versions(root: Path, rel: str, entries: Sequence[Tuple[str, str]]) -> List[_Version]:
+    """What a commit could publish for ``rel``: the staged blob(s), which is what ``git commit`` takes, and the working-tree
+    file, which ``git add`` would take."""
+    found = [_blob_version(root, mode, oid) for mode, oid in dict.fromkeys(entries)]
+    current = _worktree_version(root, rel)
+    if current is not None:
+        found.append(current)
+    return found
+
+
+def _scan_version(report: Report, limits: Settings, rel: str, parts: Sequence[str], version: _Version) -> None:
+    if version.kind == "link":
+        _add(report.block, [_finding("PS-SYMLINK", rel, "symbolic links are not published")])
+        return
+    if version.kind != "file":
+        return
+    if any(fnmatch.fnmatchcase(parts[-1].lower(), pattern) for pattern in SECRET_NAMES):
+        _add(report.block, [_finding("PS-SECRET", rel, f"the file name is a secret file name: {MASK}")])
+    size = version.size
+    binary = False
+    if size <= limits.max_tracked_bytes:
+        try:
+            binary = b"\0" in version.head()
+        except OSError:
+            return
+    reason = "size" if size > limits.max_tracked_bytes else \
+        "binary" if binary and size > limits.max_binary_tracked_bytes else None
+    if reason is not None:
+        item = {"path": rel, "bytes": size, "reason": reason}
+        if item not in report.local_only:
+            report.local_only.append(item)
+        return
+    if version.executable:
+        _add(report.warn, [_finding("PS-EXECUTABLE", rel, "the execute bit is set; clear it in the index with "
+                                    "git update-index --chmod=-x")])
+    if binary:
+        return
+    try:
+        text = version.body().decode("utf-8")
+    except (OSError, UnicodeDecodeError):
+        return
+    secret = _secret_finding(rel, text)
+    if secret is not None:
+        _add(report.block, [secret])
+    if is_manifest(parts):
+        try:
+            pointers = _absolute_pointers(json.loads(text))
+        except ValueError:
+            pointers = []
+        for pointer in pointers:
+            _add(report.block, [_finding("PS-MANIFEST-PATH", rel, f"an absolute path at {pointer} of a portable document")])
+    elif parts[0] == "projects":
+        count = len(_HOME_PATH.findall(text))
+        if count:
+            _add(report.warn, [_finding("PS-HOME-PATH", rel, f"{count} home-directory path(s) in plan data")])
+
+
+def _display(rel: str) -> str:
+    """``rel`` as printable text: the bytes of a name that is not UTF-8 become ``\\xNN`` instead of lone surrogates."""
+    return os.fsencode(rel).decode("utf-8", "backslashreplace")
+
+
 def scan(ws_root: PathLike, paths: Iterable[str], settings: Optional[Settings] = None,
          tracked: Optional[Set[str]] = None) -> Report:
-    """Apply the PS-* rules to ``paths`` (relative to ``ws_root``). A path that no longer exists is skipped.
+    """Apply the PS-* rules to ``paths`` (relative to ``ws_root``). A path that is neither in the index nor in the working
+    tree is skipped.
+
+    A file is judged in both forms a commit can publish: the blob in the git index (the staged content, which can differ
+    from the file on disk) and the working-tree file (what ``git add`` would take).
 
     ``tracked`` is the set of files git already tracks (computed when a local-only file needs it); a tracked file that is
     local-only is a ``PS-TRACKED-LOCAL-ONLY`` warning.
@@ -195,59 +327,16 @@ def scan(ws_root: PathLike, paths: Iterable[str], settings: Optional[Settings] =
     root = Path(ws_root)
     limits = settings or Settings()
     report = Report()
+    staged = _index_entries(root) if (root / ".git").exists() else {}
     for rel in sorted(set(paths)):
         parts = rel.split("/")
-        full = root / rel
-        try:
-            info = os.lstat(full)
-        except OSError:
-            continue
-        if stat.S_ISDIR(info.st_mode):
+        versions = _versions(root, rel, staged.get(rel, ()))
+        if not versions:
             continue
         report.files_checked += 1
-        report.block.extend(_layout_findings(rel, parts))
-        if stat.S_ISLNK(info.st_mode):
-            report.block.append(_finding("PS-SYMLINK", rel, "symbolic links are not published"))
-            continue
-        if not stat.S_ISREG(info.st_mode):
-            continue
-        if any(fnmatch.fnmatchcase(parts[-1].lower(), pattern) for pattern in SECRET_NAMES):
-            report.block.append(_finding("PS-SECRET", rel, f"the file name is a secret file name: {MASK}"))
-        size = info.st_size
-        try:
-            with open(full, "rb") as handle:
-                head = handle.read(BINARY_PROBE)
-        except OSError:
-            continue
-        binary = b"\0" in head
-        reason = "size" if size > limits.max_tracked_bytes else \
-            "binary" if binary and size > limits.max_binary_tracked_bytes else None
-        if reason is not None:
-            report.local_only.append({"path": rel, "bytes": size, "reason": reason})
-            continue
-        if info.st_mode & 0o111:
-            report.warn.append(_finding("PS-EXECUTABLE", rel, "the execute bit is set; clear it in the index with "
-                                        "git update-index --chmod=-x"))
-        if binary:
-            continue
-        try:
-            text = full.read_bytes().decode("utf-8")
-        except (OSError, UnicodeDecodeError):
-            continue
-        secret = _secret_finding(rel, text)
-        if secret is not None:
-            report.block.append(secret)
-        if is_manifest(parts):
-            try:
-                pointers = _absolute_pointers(json.loads(text))
-            except ValueError:
-                pointers = []
-            for pointer in pointers:
-                report.block.append(_finding("PS-MANIFEST-PATH", rel, f"an absolute path at {pointer} of a portable document"))
-        elif parts[0] == "projects":
-            count = len(_HOME_PATH.findall(text))
-            if count:
-                report.warn.append(_finding("PS-HOME-PATH", rel, f"{count} home-directory path(s) in plan data"))
+        _add(report.block, _layout_findings(rel, parts))
+        for version in versions:
+            _scan_version(report, limits, rel, parts, version)
     if report.local_only:
         known = tracked if tracked is not None else tracked_paths(root)
         for item in report.local_only:

@@ -87,6 +87,14 @@ class SecretTests(SafetyCase):
                 path = self.put(self.plan(f"loud{index}.md"), content + "\n")
                 self.assertEqual(self.rules(safety.scan(self.ws, [path])), [("PS-SECRET", path)])
 
+    def test_a_value_that_only_starts_like_a_placeholder_is_still_a_secret(self):
+        loud = ['token = "<abcdefgh1234567890"', "SECRET={Abcd1234efgh5678", 'password: "$abcd1234efgh!x"',
+                "api_key=env://a1b2c3d4e5f6?x=1", "token=<NAME>suffix1234", "password=${HOME}x1234567"]
+        for index, content in enumerate(loud):
+            with self.subTest(content=content):
+                path = self.put(self.plan(f"loud{index}.md"), content + "\n")
+                self.assertEqual(self.rules(safety.scan(self.ws, [path])), [("PS-SECRET", path)])
+
     def test_ordinary_prose_and_short_values_pass(self):
         path = self.put(self.plan("ok.md"), "the token budget is large\npassword: short\nsecret handling is discussed\n")
         self.assertEqual(safety.scan(self.ws, [path]).verdict, "ok")
@@ -271,12 +279,48 @@ class PathListTests(SafetyCase):
 
     def test_renames_and_deletions(self):
         git(self.ws, "mv", "README.md", "README-old.md")
-        (self.ws / ".gitattributes").unlink()
+        git(self.ws, "rm", "-q", ".gitattributes")
         paths = safety.changed_paths(self.ws)
         self.assertIn("README-old.md", paths)
         report = safety.scan(self.ws, paths)
         self.assertEqual(self.rules(report), [("PS-TOP-LEVEL", "README-old.md")])
-        self.assertEqual(report.files_checked, 1)  # the deleted file is skipped
+        self.assertEqual(report.files_checked, 1)  # the file removed from the index and the disk is skipped
+
+    def test_staged_content_is_checked_even_when_the_file_on_disk_is_clean_or_gone(self):
+        edited = self.put(self.plan("edited.md"), f"key {TOKEN}\n")
+        removed = self.put(self.plan("removed.md"), f"key {TOKEN}\n")
+        git(self.ws, "add", edited, removed)
+        (self.ws / edited).write_text("clean\n", encoding="utf-8")  # the commit still takes the staged blob
+        (self.ws / removed).unlink()
+        report = safety.check(self.ws)
+        self.assertEqual(self.rules(report), sorted([("PS-SECRET", edited), ("PS-SECRET", removed)]))
+        self.assertNotIn(TOKEN, json.dumps(report.to_dict()))
+
+    def test_staged_symlink_and_mode_are_judged_by_the_index(self):
+        link = f"projects/{self.pid}/plans/link"
+        os.makedirs(self.ws / link.rsplit("/", 1)[0], exist_ok=True)
+        os.symlink("elsewhere", self.ws / link)
+        git(self.ws, "add", link)
+        os.unlink(self.ws / link)
+        self.put(self.plan("link"), "now a file")  # the disk differs from the index
+        self.assertIn(("PS-SYMLINK", link), self.rules(safety.check(self.ws)))
+
+    def test_a_name_that_is_not_utf8_is_still_inspected(self):
+        folder = os.fsencode(self.ws / "projects" / self.pid / "plans")
+        os.makedirs(folder, exist_ok=True)
+        raw = folder + b"/caf\xe9.md"
+        with open(raw, "wb") as handle:
+            handle.write(f"key {TOKEN}\n".encode())
+        rel = os.fsdecode(raw[len(os.fsencode(self.ws)) + 1:])
+        self.assertIn(rel, safety.changed_paths(self.ws))
+        self.assertIn(rel, safety.all_paths(self.ws))
+        report = safety.check(self.ws)
+        self.assertEqual([item["rule"] for item in report.block], ["PS-SECRET"])
+        self.assertEqual(report.files_checked, 1)
+        self.assertIn("caf\\xe9.md", report.block[0]["path"])  # printable, not a lone surrogate
+        json.dumps(report.to_dict(), ensure_ascii=False).encode("utf-8")
+        git(self.ws, "add", "-A")
+        self.assertEqual([item["rule"] for item in safety.check(self.ws).block], ["PS-SECRET"])
 
     def test_all_paths_lists_tracked_and_untracked_but_not_ignored(self):
         untracked = self.put(self.plan("new.md"), "x")

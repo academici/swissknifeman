@@ -9,7 +9,7 @@ import subprocess
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, Mapping, Optional, Sequence, Tuple, Union
 
 from aicore.config import ConfigError, resolve
 from aicore.state import ensure_dir, workspace_state_dir
@@ -27,14 +27,18 @@ Env = Optional[Mapping[str, str]]
 
 
 def run(argv: Sequence[str], cwd: PathLike, input: Optional[str] = None, timeout: float = 300.0,
-        env: Env = None) -> "subprocess.CompletedProcess[str]":
+        env: Env = None, binary: bool = False) -> "subprocess.CompletedProcess[Any]":
     """Run ``argv`` in ``cwd`` without a shell, with ``LC_ALL=C`` and no terminal prompts; never raises for a failing
-    command (read ``returncode``). A missing git is ``WORKSPACE_GIT_TOO_OLD``."""
+    command (read ``returncode``). A missing git is ``WORKSPACE_GIT_TOO_OLD``.
+
+    Text is decoded with ``surrogateescape``: a byte that is not UTF-8 (a pathname from ``-z`` output) comes back as a lone
+    surrogate and ``os.fsencode`` restores it, so the path still names the same file. ``binary`` returns bytes."""
     environment = dict(os.environ if env is None else env)
     environment.update(LC_ALL="C", GIT_TERMINAL_PROMPT="0")
+    mode: Dict[str, Any] = {} if binary else {"text": True, "errors": "surrogateescape"}
     try:
-        return subprocess.run(list(argv), cwd=str(cwd), input=input, capture_output=True, text=True, errors="replace",
-                              env=environment, timeout=timeout, check=False)
+        return subprocess.run(list(argv), cwd=str(cwd), input=input, capture_output=True, env=environment,
+                              timeout=timeout, check=False, **mode)
     except FileNotFoundError:
         raise WorkspaceError("WORKSPACE_GIT_TOO_OLD", "git is not installed or not on PATH") from None
     except subprocess.TimeoutExpired:
@@ -43,6 +47,11 @@ def run(argv: Sequence[str], cwd: PathLike, input: Optional[str] = None, timeout
 
 def git(args: Sequence[str], cwd: PathLike, input: Optional[str] = None, env: Env = None) -> "subprocess.CompletedProcess[str]":
     return run(["git", *args], cwd, input=input, env=env)
+
+
+def git_bytes(args: Sequence[str], cwd: PathLike, env: Env = None) -> "subprocess.CompletedProcess[bytes]":
+    """``git`` with the output kept as bytes (file content)."""
+    return run(["git", *args], cwd, env=env, binary=True)
 
 
 def require(done: "subprocess.CompletedProcess[str]", what: str) -> str:

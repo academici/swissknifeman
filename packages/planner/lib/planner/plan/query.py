@@ -5,6 +5,7 @@ import copy
 from datetime import datetime
 from hashlib import sha256
 import json
+from pathlib import Path
 import re
 from typing import Mapping, Sequence
 
@@ -33,10 +34,23 @@ def _target(plan: store.Plan, ref: str, repos: Mapping[str, str] | None = None):
     return target, kind, doc, parsed.section
 
 
+REVISION = re.compile(r"sha256:[0-9a-f]{64}")
+
+
+def revision_of(doc) -> str:
+    """Revision of a whole document: ``sha256:`` + hex of its canonical JSON. ``get`` reports it and ``set``/``push``
+    compare it under the plan lock (``--expected-revision``), so both must use this one function."""
+    text = json.dumps(doc, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return "sha256:" + sha256(text.encode("utf-8")).hexdigest()
+
+
 def get(plan: store.Plan, ref: str, *, section: str | None = None,
         fields: Sequence[str] | None = None, repos: Mapping[str, str] | None = None) -> dict:
-    """One complete document, optionally narrowed to a knowledge section or top-level fields."""
+    """One complete document, optionally narrowed to a knowledge section or top-level fields.
+
+    ``revision`` is that of the complete stored document, whatever the projection."""
     _plan, kind, source, embedded_section = _target(plan, ref, repos)
+    revision = revision_of(source)
     if section is not None and embedded_section is not None and section != embedded_section:
         raise PlanError("SECTION_UNKNOWN", "section flag conflicts with the reference fragment")
     selected = section if section is not None else embedded_section
@@ -53,7 +67,41 @@ def get(plan: store.Plan, ref: str, *, section: str | None = None,
         if missing:
             raise PlanError("FIELD_UNKNOWN", f"unknown top-level fields: {', '.join(missing)}")
         doc = {key: doc[key] for key in fields}
-    return {"ref": ref, "kind": kind, "doc": doc}
+    return {"ref": ref, "kind": kind, "doc": doc, "revision": revision}
+
+
+_DONE_ITEM = ("done", "done_with_deviations", "skipped")
+
+
+def plans_overview(plans_root) -> dict:
+    """The live plans of a project, ascending by directory id, with their progress.
+
+    ``archive`` and directories without ``plan.json`` are skipped; a plan whose ``plan.json`` cannot be read is listed
+    as ``{"id": <directory>, "error": <code>}`` instead of failing the list.
+    """
+    root = Path(plans_root)
+    rows = []
+    for path in sorted(root.iterdir(), key=lambda p: p.name) if root.is_dir() else []:
+        if not path.is_dir() or path.name == store.ARCHIVE or path.name.startswith(".") \
+                or not (path / "plan.json").is_file():
+            continue
+        try:
+            plan = store.load_plan(path)
+        except (PlanError, OSError):
+            rows.append({"id": path.name, "error": "PLAN_INVALID"})
+            continue
+        if any(name == "plan.json" for name, _message in plan.problems):
+            rows.append({"id": path.name, "error": "PLAN_INVALID"})
+            continue
+        doc = plan.plan
+        listed = [p for p in doc.get("phases", []) if p in plan.phases] if isinstance(doc.get("phases"), list) else []
+        done = sum(1 for item in plan.items.values() if item.get("status") in _DONE_ITEM)
+        rows.append({"id": doc.get("id") if isinstance(doc.get("id"), str) else path.name,
+                     "short_id": doc.get("short_id"), "title": doc.get("title"), "status": doc.get("status"),
+                     "updated_at": doc.get("updated_at"),
+                     "progress": {"phases": len(plan.phases), "phases_closed": sum(1 for p in plan.phases.values() if p.get("closed")),
+                                  "items": len(plan.items), "items_done": done}})
+    return {"plans": rows}
 
 
 _LIST_KINDS = {"items": "item", "phases": "phase", "decisions": "decision",

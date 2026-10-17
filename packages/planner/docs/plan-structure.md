@@ -73,6 +73,19 @@ Knowledge references for show/set are `knowledge/<id>`. `apply` accepts a non-em
 fields are protected from authoring edits. Refusals write nothing and carry a stable code.
 `--output json` provides an `{ok, data}` or `{ok: false, error}` envelope.
 
+`plans [--json]` (read, no plan argument; schema `read-plans`) lists the live plans of the project by ascending id:
+`{plans: [{id, short_id, title, status, updated_at, progress: {phases, phases_closed, items, items_done}}]}`.
+`items_done` counts `done`, `done_with_deviations` and `skipped`. The `archive` folder and folders without `plan.json`
+are skipped; a plan whose `plan.json` cannot be read is listed as `{id: <folder>, error: "PLAN_INVALID"}` and does not
+fail the list.
+
+`get` adds `revision` (`sha256:` + hex of the canonical JSON of the complete stored document,
+`json.dumps(doc, sort_keys=True, separators=(",", ":"), ensure_ascii=False)`), also for a section or field projection.
+`set` and `push` accept `--expected-revision REV`: under the plan lock, after the reference is resolved and before
+anything is written, the current revision must equal `REV`, else `PLAN_REVISION_CONFLICT` and the files stay
+unchanged. A `REV` that is not `sha256:<64 lowercase hex>` is a `USAGE` error. Without the option nothing changes;
+`apply` takes no revision.
+
 `export` includes every current JSON document and the event log. `import` validates a complete
 snapshot, stages the destination with supporting files, then publishes it with rollback on
 publication failure. Existing JSON requires `--replace`. Historical dates, states and evidence

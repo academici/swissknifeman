@@ -37,6 +37,11 @@
     "doc": {
       "type": "object",
       "description": "Complete source document, or the explicitly requested projection; fields depend on kind."
+    },
+    "revision": {
+      "type": "string",
+      "description": "Revision of the complete stored document (sha256 of its canonical JSON), whatever the projection; pass it to set/push --expected-revision.",
+      "pattern": "^sha256:[0-9a-f]{64}$"
     }
   },
   "required": [

@@ -15,7 +15,7 @@ from typing import Any, Iterator
 
 from planner.integration import events as emission
 
-from . import lifecycle, settings, store, views
+from . import lifecycle, query, settings, store, views
 from .model import SHORT_ID, PlanError, parse_ref
 
 _DIR_ID = re.compile(r"^(\d{4}\.\d{2}\.\d{2})-№([1-9][0-9]*)-[A-Z][A-Z0-9-]*$", re.ASCII)
@@ -69,6 +69,15 @@ def _commit(p: store.Plan, changes: list[tuple[str, str | None, dict]]) -> None:
         else:
             {"phase": p.phases, "item": p.items, "decision": p.decisions, "unit": p.units,
              "document": p.documents}[kind][key] = doc
+
+
+def _expect_revision(doc: Any, expected: str | None) -> None:
+    """Compare the document's revision with ``expected`` inside the lock; a mismatch refuses before any write."""
+    if expected is None:
+        return
+    current = query.revision_of(doc)
+    if current != expected:
+        raise PlanError("PLAN_REVISION_CONFLICT", f"the document changed since revision {expected}; now {current}")
 
 
 def _guard_owned(kind: str, keys) -> None:
@@ -284,23 +293,29 @@ def resolve_target(p: store.Plan, ref: str) -> tuple[str, str, dict]:
     return kind, ref, table[ref]
 
 
-def patch(plan, ref: str, merge_patch_doc: dict) -> None:
-    """Apply an RFC 7386 merge patch to the stable fields of a phase, item, decision or unit."""
+def patch(plan, ref: str, merge_patch_doc: dict, *, expected_revision: str | None = None) -> None:
+    """Apply an RFC 7386 merge patch to the stable fields of a phase, item, decision or unit.
+
+    ``expected_revision`` (``query.revision_of`` of the document) is compared under the lock."""
     if not isinstance(merge_patch_doc, dict):
         raise PlanError("PATCH_INVALID", "a merge patch must be a JSON object")
     with _mutation(plan) as p:
         kind, key, doc = resolve_target(p, ref)
+        _expect_revision(doc, expected_revision)
         _guard_owned(kind, merge_patch_doc)
         changed = merge_patch(doc, merge_patch_doc)
         _refuse_new_errors(p, kind, key, changed)
         _commit(p, [(kind, key, changed)])
 
 
-def push(plan, ref: str, field: str, value: Any) -> None:
-    """Append ``value`` to an array field; ``field`` may be dotted (``scope.include``)."""
+def push(plan, ref: str, field: str, value: Any, *, expected_revision: str | None = None) -> None:
+    """Append ``value`` to an array field; ``field`` may be dotted (``scope.include``).
+
+    ``expected_revision`` is compared under the lock, as in ``patch``."""
     parts = field.split(".")
     with _mutation(plan) as p:
         kind, key, doc = resolve_target(p, ref)
+        _expect_revision(doc, expected_revision)
         _guard_owned(kind, parts[:1])
         doc = copy.deepcopy(doc)
         holder = doc
@@ -326,20 +341,22 @@ def set_batches(plan, phase: str, batches: list) -> None:
         _commit(p, [("phase", phase, doc)])
 
 
-def set_plan(plan, merge_patch_doc: dict) -> None:
+def set_plan(plan, merge_patch_doc: dict, *, expected_revision: str | None = None) -> None:
     """Merge-patch plan.json (goal, context, rules, links, settings, ...); identity and status stay owned."""
     if not isinstance(merge_patch_doc, dict):
         raise PlanError("PATCH_INVALID", "a merge patch must be a JSON object")
     with _mutation(plan) as p:
+        _expect_revision(p.plan, expected_revision)
         _guard_owned("plan", merge_patch_doc)
         _commit(p, [("plan", None, merge_patch(p.plan, merge_patch_doc))])
 
 
-def set_brief(plan, merge_patch_doc: dict) -> None:
+def set_brief(plan, merge_patch_doc: dict, *, expected_revision: str | None = None) -> None:
     """Merge-patch brief.json (messages, requirements, constraints, ...)."""
     if not isinstance(merge_patch_doc, dict):
         raise PlanError("PATCH_INVALID", "a merge patch must be a JSON object")
     with _mutation(plan) as p:
+        _expect_revision(p.brief, expected_revision)
         _guard_owned("brief", merge_patch_doc)
         changed = merge_patch(p.brief, merge_patch_doc)
         _refuse_new_errors(p, "brief", None, changed)

@@ -16,7 +16,7 @@ VERB_DATA = {
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
     "supersede": None, "grant": None, "design-done": None, "reopen": None, "reconcile": None, "archive": None, "commit": None, "commits": "read-commits", "followups": "read-followups",
-    "config": None, "overlays": None,
+    "plans": "read-plans", "config": None, "overlays": None,
 }
 
 # Mode describes the default invocation's writes; mixed verbs are conservative (unit is write; bridge verbs may write).
@@ -29,7 +29,7 @@ VERB_MODES = {
     "bridge": "write", "finish": "write", "unit": "write", "stats": "read", "log": "write",
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
     "reconcile": "write",
-    "archive": "write", "commit": "write", "commits": "read", "followups": "read", "config": "read",
+    "archive": "write", "commit": "write", "commits": "read", "followups": "read", "plans": "read", "config": "read",
     "overlays": "read",
 }
 
@@ -46,7 +46,7 @@ ID_DUPLICATE ITEMS_DUPLICATE ITEMS_REQUIRED ITEMS_SPAN_PHASES ITEM_NOT_IN_PROGRE
 KIND_UNKNOWN LIMIT_INVALID LINK_INVALID LOG_DATA_INVALID LOG_INVALID LOG_TYPE_INVALID MESSAGE_REQUIRED MINUTES_INVALID NOTES_REQUIRED
 NOTE_REQUIRED NOT_STARTED NOT_TERMINAL OPTION_UNKNOWN OVERLAY_SLOT_UNKNOWN OVERLAY_TOO_LARGE PARALLEL_LIMIT PATCH_INVALID
 PATH_INVALID PHASE_NOT_DETAILED PLAN_AMBIGUOUS PLAN_CODENAME_INVALID PLAN_DATE_INVALID PLAN_EXISTS
-PLAN_INVALID PLAN_LOCKED PLAN_NOT_DONE PLAN_NOT_FOUND PROJECT_PATH_OVERRIDE_FORBIDDEN RATIONALE_REQUIRED READ_MISSING REASON_REQUIRED
+PLAN_INVALID PLAN_LOCKED PLAN_NOT_DONE PLAN_NOT_FOUND PLAN_REVISION_CONFLICT PROJECT_PATH_OVERRIDE_FORBIDDEN RATIONALE_REQUIRED READ_MISSING REASON_REQUIRED
 REF_INVALID REF_QUALIFIED REF_UNKNOWN REPO_UNKNOWN ROUTE_MISMATCH ROUTE_UNDERSHOOT
 ROUTING_UNAVAILABLE SCHEMA_INVALID SECTION_UNKNOWN SINCE_INVALID STATUS_INVALID UNITS_OPEN
 UNIT_DEPENDENCY UNIT_INVALID UNIT_SELF UNIT_STATE IO_ERROR USAGE VERB_FAILED
@@ -76,7 +76,7 @@ VERB_ERRORS = {
     "links": _PLAN | _TARGET | {"SECTION_UNKNOWN", "DIRECTION_INVALID", "DEPTH_INVALID", "KIND_UNKNOWN"},
     "neighborhood": _PLAN | _TARGET | {"SECTION_UNKNOWN"},
     "schema": set(),
-    "set": _PLAN | _TARGET | _WRITE | {"FIELD_OWNED", "PATCH_INVALID", "PLAN_INVALID"},
+    "set": _PLAN | _TARGET | _WRITE | {"FIELD_OWNED", "PATCH_INVALID", "PLAN_INVALID", "PLAN_REVISION_CONFLICT"},
     "apply": _PLAN | _TARGET | _WRITE | {"FIELD_OWNED", "PATCH_INVALID", "PLAN_INVALID"},
     "export": _PLAN | {"LOG_INVALID"},
     "import": _PLAN | _WRITE | {"ID_DUPLICATE", "PLAN_INVALID", "PLAN_EXISTS", "LOG_INVALID"},
@@ -84,7 +84,7 @@ VERB_ERRORS = {
     "link": _PLAN | _TARGET | _WRITE | _LINK | {"PLAN_INVALID"},
     "unlink": _PLAN | _TARGET | _WRITE | _LINK | {"PLAN_INVALID"},
     "add-artifact": _PLAN | _TARGET | _WRITE | {"LINK_INVALID", "FIELD_NOT_ARRAY", "PLAN_INVALID"},
-    "push": _PLAN | _TARGET | _WRITE | {"FIELD_OWNED", "FIELD_NOT_ARRAY", "PLAN_INVALID"},
+    "push": _PLAN | _TARGET | _WRITE | {"FIELD_OWNED", "FIELD_NOT_ARRAY", "PLAN_INVALID", "PLAN_REVISION_CONFLICT"},
     "add-phase": _PLAN | _WRITE | {"FIELD_OWNED"},
     "add-item": _PLAN | _WRITE | {"REF_UNKNOWN", "FIELD_OWNED"},
     "add-decision": _PLAN | _WRITE | {"FIELD_OWNED"},
@@ -116,6 +116,7 @@ VERB_ERRORS = {
     "config": _PLAN,
     "overlays": {"OVERLAY_SLOT_UNKNOWN", "OVERLAY_TOO_LARGE", "VERB_FAILED"},
     "followups": _PLAN,
+    "plans": set(),
     "commits": _PLAN | _TARGET | {"CONTENT_INVALID", "GIT_UNAVAILABLE", "GIT_FAILED", "SCHEMA_INVALID"},
     "commit": _PLAN | {"REF_INVALID", "REF_UNKNOWN", "PATH_INVALID", "PLAN_LOCKED", "CONTENT_INVALID",
                        "GIT_UNAVAILABLE", "GIT_BUSY", "GIT_CONFLICT", "GIT_FAILED", "OUTSIDE_SCOPE", "NOTHING_TO_COMMIT"},

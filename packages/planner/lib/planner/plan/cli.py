@@ -20,7 +20,7 @@ from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
 _UNIT_VERBS = ("dispatch", "return", "accept", "rework", "reject")
-_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "commits", "followups")
+_READ_VERBS = ("get", "list", "events", "artifact", "links", "neighborhood", "schema", "commits", "followups", "plans")
 
 
 class UsageError(Exception):
@@ -107,6 +107,13 @@ def _json_value(inline: str | None, file: Path | None, *, required: bool = True)
         raise UsageError(f"invalid JSON: {exc}") from exc
 
 
+def _expected_revision(args) -> str | None:
+    value = getattr(args, "expected_revision", None)
+    if value is not None and not query.REVISION.fullmatch(value):
+        raise UsageError("--expected-revision must look like sha256:<64 lowercase hex digits>")
+    return value
+
+
 def _plan_dir(args) -> Path:
     return store.resolve_plan_dir(args.plan, args.plans_root)
 
@@ -181,6 +188,10 @@ def cmd_get(args) -> int:
                                   fields=args.fields, repos=_repos(args)), "read-get")
 
 
+def cmd_plans(args) -> int:
+    return _read_result(query.plans_overview(args.plans_root or store.find_plans_root()), "read-plans")
+
+
 def cmd_list(args) -> int:
     return _read_result(query.list_rows(store.load_plan(_plan_dir(args)), args.kind, status=args.status,
                                        phase=args.phase, applies_to=args.applies_to), "read-list")
@@ -241,19 +252,21 @@ def cmd_bridge(args) -> int:
 
 def cmd_set(args) -> int:
     patch = _json_value(args.json, args.file)
+    expected = _expected_revision(args)
     target = _plan_dir(args)
     if args.ref == "plan":
-        ops.set_plan(target, patch)
+        ops.set_plan(target, patch, expected_revision=expected)
     elif args.ref == "brief":
-        ops.set_brief(target, patch)
+        ops.set_brief(target, patch, expected_revision=expected)
     else:
-        ops.patch(target, args.ref, patch)
+        ops.patch(target, args.ref, patch, expected_revision=expected)
     print(f"updated {args.ref}")
     return 0
 
 
 def cmd_push(args) -> int:
-    ops.push(_plan_dir(args), args.ref, args.field, _json_value(args.json, args.file))
+    expected = _expected_revision(args)
+    ops.push(_plan_dir(args), args.ref, args.field, _json_value(args.json, args.file), expected_revision=expected)
     print(f"pushed to {args.ref}.{args.field}")
     return 0
 
@@ -684,6 +697,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--fields", type=_csv, help="comma-separated top-level fields")
     p.add_argument("--repo", action="append", type=_repo_mapping, default=[], metavar="NAME=PATH")
 
+    p = verb("plans", cmd_plans, "list the live plans of the project with their progress (JSON envelope)", plan=False)
+    p.add_argument("--json", action="store_true", help="accepted for symmetry; output is always JSON")
+
     p = verb("list", cmd_list, "list document rows with filters (JSON envelope)")
     p.add_argument("kind", help="item, phase, decision, document or unit (plural names also accepted)")
     p.add_argument("--status")
@@ -732,6 +748,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = verb("set", cmd_set, "merge-patch plan, brief, a phase, item, decision or unit")
     p.add_argument("ref", help="plan | brief | Pn | Pn.m | D# | Pn.m/U#")
     value_args(p, True)
+    p.add_argument("--expected-revision", metavar="REV",
+                   help="refuse with PLAN_REVISION_CONFLICT unless the document still has this revision (as in get)")
 
     p = verb("apply", cmd_apply, "validate and apply a JSON array of {ref, patch} edits together")
     value_args(p, True)
@@ -765,6 +783,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("ref")
     p.add_argument("field")
     value_args(p, True)
+    p.add_argument("--expected-revision", metavar="REV",
+                   help="refuse with PLAN_REVISION_CONFLICT unless the document still has this revision (as in get)")
 
     p = verb("add-phase", cmd_add_phase, "add a skeleton phase")
     p.add_argument("--title", required=True)

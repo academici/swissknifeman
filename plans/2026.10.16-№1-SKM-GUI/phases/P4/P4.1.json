@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.1",
   "title": "planner: глагол plans, revision в get, --expected-revision у set и push (аддитивно)",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "packages/planner аддитивно: глагол `plans` (список планов проекта с прогрессом, схема read-plans), `revision` в envelope `get` (опционально в схеме read-get), `--expected-revision REV` у `set` и `push` с проверкой под PlanLock и кодом PLAN_REVISION_CONFLICT; тесты, каталог глаголов и ошибок, docs.",
   "why": "Мост P4.2/P4.3 не может ни перечислить планы проекта (G1), ни безопасно записать (G2/G3). Жёсткие риски: сверка revision вне PlanLock (TOCTOU — запись conductor между сверкой и записью теряется); ломающее изменение envelope (`revision` и новые поля только опциональные, существующие схемы read-* не сужать); глагол `plans` обходит `archive` и не падает на битом плане; формула revision расходится у `get` и у `set` (одна функция); `apply` не расширять.",
   "scope": {
@@ -127,6 +127,16 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/0afd4648ba1f14134caeea12d433c73c7db61c365db7eef0c92f7a6425c673f8",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/31c625ceea38aaebd413a81fa1ff942f33baad19a823e68a9d29a16d7cbdff2c",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками (I3, I7).",
@@ -177,6 +187,49 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T20:02:46Z"
+  "result": {
+    "started_at": "2026-10-16T20:03:16Z",
+    "finished_at": "2026-10-17T00:27:40Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-86c37fa378fa5c7786475824-P4.1",
+    "notes": "Fixed the two red causes of V1/V3: test_query.GetTests now expects the additive `revision` (query.revision_of(doc)) in the get result, and the golden CLI fixtures plan-help and plan-unknown-subcommand were recaptured because the new `plans` verb appears in the help and in the argparse choices. Planner tests test_c*, test_q*, test_e* (329 tests) pass.\nChanged: CHANGELOG.md, packages/planner/docs/plan-structure.md, packages/planner/lib/planner/plan/catalog.py, packages/planner/lib/planner/plan/cli.py, packages/planner/lib/planner/plan/ops.py, packages/planner/lib/planner/plan/query.py, packages/planner/lib/planner/plan/schema.py, packages/planner/schemas/plan/v1/read-catalog.schema.json, packages/planner/schemas/plan/v1/read-get.schema.json, packages/planner/schemas/plan/v1/read-plans.schema.json, packages/planner/tests/engine/test_envelope.py, packages/planner/tests/engine/test_query.py, packages/planner/tests/engine/test_revision.py, tests/golden/cases.json, tests/golden/cli/plan-help.txt, tests/golden/cli/plan-unknown-subcommand.txt, tests/golden/generation.json",
+    "deviations": [
+      "Recaptured golden fixtures tests/golden/cli/plan-help.txt and plan-unknown-subcommand.txt with `scripts/golden.py capture --only plan-help,plan-unknown-subcommand`; capture also rewrote captured_from/reason in tests/golden/cases.json and generation.json (metadata only). These paths are outside scope.write_set.",
+      "changed outside the write set: tests/golden/cases.json, tests/golden/cli/plan-help.txt, tests/golden/cli/plan-unknown-subcommand.txt, tests/golden/generation.json"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T00:27:40Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.1/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T00:27:40Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.1/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T00:27:40Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.1/evidence/V3.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.1/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.1/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.1/evidence/V3.json"
+    ]
+  },
+  "updated_at": "2026-10-17T00:27:40Z"
 }

@@ -13,6 +13,8 @@ positional arguments:
                         (planner:<command>)
     show                overview of a plan, or one document as canonical JSON
     get                 read one document by reference (JSON envelope)
+    plans               list the live plans of the project with their progress
+                        (JSON envelope)
     list                list document rows with filters (JSON envelope)
     events              read journal events with filters (JSON envelope)
     commits             read commits linked to a plan by Plan trailers (JSON

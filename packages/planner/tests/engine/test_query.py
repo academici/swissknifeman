@@ -60,7 +60,7 @@ class GetTests(QueryCase):
                                ("artifact/payload", "artifact", plan.items["P1.1"]["artifacts"][0])):
             with self.subTest(ref=ref):
                 result = query.get(plan, ref)
-                self.assertEqual(result, {"ref": ref, "kind": kind, "doc": doc})
+                self.assertEqual(result, {"ref": ref, "kind": kind, "doc": doc, "revision": query.revision_of(doc)})
                 self.assertEqual(schema.validate(result, "read-get"), [])
                 result["doc"]["extra"] = "caller mutation"
         self.assertEqual(plan.__dict__, before)

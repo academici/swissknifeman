@@ -152,6 +152,41 @@
         }
       }
     },
+    "plugins": {
+      "type": "object",
+      "description": "Trust and life cycle of plugins (hub bridges and external extensions).",
+      "additionalProperties": false,
+      "properties": {
+        "drain_timeout_s": {
+          "type": "integer",
+          "description": "Seconds Disable waits for the calls and runs of a plugin to finish before it cancels the runs.",
+          "default": 10,
+          "minimum": 0,
+          "maximum": 300
+        },
+        "quarantine_failures": {
+          "type": "integer",
+          "description": "Plugin failures inside the window that put the plugin in quarantine.",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 20
+        },
+        "quarantine_window_s": {
+          "type": "integer",
+          "description": "Length in seconds of the window in which plugin failures are counted.",
+          "default": 300,
+          "minimum": 10,
+          "maximum": 86400
+        },
+        "history_limit": {
+          "type": "integer",
+          "description": "History entries kept per plugin; older ones are removed when a new one is written.",
+          "default": 200,
+          "minimum": 10,
+          "maximum": 2000
+        }
+      }
+    },
     "query": {
       "type": "object",
       "description": "GUI queries of contributions.",

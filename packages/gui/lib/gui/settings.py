@@ -53,6 +53,14 @@ class Config:
 
 
 @dataclass(frozen=True)
+class Plugins:
+    drain_timeout_s: int
+    quarantine_failures: int
+    quarantine_window_s: int
+    history_limit: int
+
+
+@dataclass(frozen=True)
 class Settings:
     """The effective ``[gui]`` configuration; ``resolved`` explains where each value comes from."""
 
@@ -63,6 +71,7 @@ class Settings:
     retention: Retention
     query: Query
     config: Config
+    plugins: Plugins
     resolved: Optional[ResolvedConfig] = None
 
 
@@ -79,5 +88,5 @@ def load(env: Optional[Mapping[str, str]] = None, project: Optional[PathLike] = 
     return Settings(port=resolved.get("port"), open_browser=bool(resolved.get("open_browser")),
                     runs=_group(resolved, Runs, "runs"), events=_group(resolved, Events, "events"),
                     retention=_group(resolved, Retention, "retention"), query=_group(resolved, Query, "query"),
-                    config=_group(resolved, Config, "config"),
+                    config=_group(resolved, Config, "config"), plugins=_group(resolved, Plugins, "plugins"),
                     resolved=resolved)

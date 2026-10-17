@@ -26,6 +26,18 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(settings.Retention(30, 1024), loaded.retention)
         self.assertEqual(settings.Query(1048576), loaded.query)
         self.assertEqual(settings.Config(5, 600), loaded.config)
+        self.assertEqual(settings.Plugins(10, 3, 300, 200), loaded.plugins)
+
+    def test_plugins_keys_are_bounded(self):
+        path = self.tmp / "skm" / "config" / "config.toml"
+        self.write(path, "[gui.plugins]\ndrain_timeout_s = 0\nquarantine_failures = 20\nquarantine_window_s = 10\n"
+                         "history_limit = 2000\n")
+        self.assertEqual(settings.Plugins(0, 20, 10, 2000), settings.load(self.env).plugins)
+        for bad in ("drain_timeout_s = 301", "quarantine_failures = 0", "quarantine_failures = 21",
+                    "quarantine_window_s = 9", "history_limit = 9", "history_limit = 2001"):
+            self.write(path, f"[gui.plugins]\n{bad}\n")
+            with self.assertRaises(ConfigError, msg=bad):
+                settings.load(self.env)
 
     def test_machine_project_and_env_layers(self):
         self.write(self.tmp / "skm" / "config" / "config.toml", "[gui]\nport = 8123\n\n[gui.runs]\nmax_global = 6\n")

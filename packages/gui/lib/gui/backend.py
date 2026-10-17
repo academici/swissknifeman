@@ -185,6 +185,7 @@ class Catalog:
     owners: Dict[str, resolve.Owner]
     queries: Dict[str, Tuple[str, Dict[str, Any]]]  # query id -> (owner, descriptor)
     commands: Dict[str, Tuple[str, Dict[str, Any]]]  # command id -> (owner, descriptor)
+    sources: Dict[str, sources.Source] = field(default_factory=dict)  # owner -> declared source, rejected ones too
 
 
 def build_catalog(collected: sources.Collected) -> Catalog:
@@ -196,7 +197,11 @@ def build_catalog(collected: sources.Collected) -> Catalog:
             queries[query["id"]] = (owner, query)
         for command in entry.document.get("commands", ()):
             commands[command["id"]] = (owner, command)
-    return Catalog(document, owners, queries, commands)
+    declared: Dict[str, sources.Source] = {}
+    for source in sorted(collected.sources, key=sources.Source.sort_key):
+        if source.owner:
+            declared.setdefault(source.owner, source)
+    return Catalog(document, owners, queries, commands, declared)
 
 
 def _journal_read(root: str, offset: Optional[int]) -> Tuple[List[Dict[str, Any]], int]:

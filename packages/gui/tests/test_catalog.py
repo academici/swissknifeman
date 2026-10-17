@@ -522,6 +522,39 @@ class TestCheck(CatalogCase):
         conformance.assert_not_called()
 
 
+class TestCompatibility(CatalogCase):
+    def source(self, gui):
+        return sources.unit_sources([self.unit("demo", gui, uid="demo")])[0]
+
+    def test_compatible_source(self):
+        self.assertEqual({"protocol_ok": True, "missing_contracts": []}, resolve.compatibility(self.source(demo())))
+
+    def test_protocol_out_of_range_and_missing_contracts_are_named(self):
+        gui = demo()
+        gui["gui_protocol"] = {"min": "2", "max": "3"}
+        gui["requires_contracts"] = [{"id": "urn:swissknifeman:gui:view-data", "version": "v9"},
+                                     {"id": "urn:swissknifeman:gui:catalog", "version": "v1"}]
+        found = resolve.compatibility(self.source(gui))
+        self.assertFalse(found["protocol_ok"])
+        self.assertEqual([{"id": "urn:swissknifeman:gui:view-data", "version": "v9"}], found["missing_contracts"])
+
+    def test_unreadable_or_malformed_file_says_nothing_against_the_host(self):
+        for text in ("not json", json.dumps({"gui_protocol": "x", "requires_contracts": [1]})):
+            self.assertEqual({"protocol_ok": True, "missing_contracts": []},
+                             resolve.compatibility(self.source(text)))
+
+    def test_catalog_keeps_the_sources_of_rejected_owners(self):
+        from gui import backend
+
+        gui = demo()
+        gui["gui_protocol"] = {"min": "2", "max": "3"}
+        collected = Collected(sources=sources.unit_sources([self.unit("demo", gui, uid="demo")]), problems=[])
+        catalog = backend.build_catalog(collected)
+        self.assertEqual({}, catalog.owners)
+        self.assertEqual({"demo"}, set(catalog.sources))
+        self.assertEqual("unit", catalog.sources["demo"].kind)
+
+
 class TestCatalogContract(unittest.TestCase):
     def test_rejection_codes_are_the_registered_ones(self):
         from gui import errors

@@ -1,0 +1,111 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/gui/config.example.toml",
+    "packages/gui/configs/config.schema.json",
+    "packages/gui/docs/plugins.md",
+    "packages/gui/lib/gui/backend.py",
+    "packages/gui/lib/gui/catalog/resolve.py",
+    "packages/gui/lib/gui/core/plugins.py",
+    "packages/gui/lib/gui/settings.py",
+    "packages/gui/lib/gui/storage/db.py",
+    "packages/gui/tests/test_catalog.py",
+    "packages/gui/tests/test_plugins.py",
+    "packages/gui/tests/test_settings.py",
+    "packages/gui/tests/test_storage.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "PYTHONPATH=packages/aicore/lib:packages/gui/lib python3 -c \"import gui.core.plugins as p; assert p.derive_state\"",
+      "exit": 0,
+      "id": "V2"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "impact": "the commit must include config.example.toml",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "packages/gui/config.example.toml is outside write_set. I regenerated it with `aicore config example packages/gui --write` because the hub check config-example requires it to match the schema."
+    },
+    {
+      "class": "test_env",
+      "impact": "the conductor must run V1 and V3 outside the sandbox",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "medium",
+      "text": "V1 (packages/gui/scripts/test.sh) and V3 (affected-tests.py --run) cannot pass in this sandbox. requirements.lock, package-lock.json and skills.json are masked as character devices, so `gui deps ensure` and `git diff packages/gui` fail. git status shows those files as modified; that is a sandbox artifact, not my change. I ran the gui test modules directly with unittest instead."
+    },
+    {
+      "impact": "P5.2 integration",
+      "kind": "note",
+      "next": "P5.2 registers the two codes, wires the callables and gates, and calls sync from refresh_catalog",
+      "text": "Interface notes for P5.2. (1) PluginError subclasses GuiError. PLUGIN_DISABLED and PLUGIN_CONFORMANCE_FAILED are not registered in errors.py (not in my write set), so PluginError carries code, message and details for them but .envelope() raises KeyError until P5.2 registers them (errors.py, api-error schema, docs/api.md, test_runtime_contracts). (2) enable returns view(); disable returns {drained, cancelled}; release returns view(); grant and revoke return a trust grant dict. P5.2 builds action_result and grant_result from view(). (3) conformance(observed) returns the failing checks as [{id, observed}] (plugins.failing(check_results) converts check-result/v1); its wiring to resolve.check(observed.root) is left to P5.2. (4) active_runs(owner) returns run ids; cancel_run(run_id) may be a coroutine. (5) The host does not check that project_id is a registered project; the route must. (6) grant(..., digest=) takes the digest the client saw. (7) busy(plugin) gives the run and call count for the Disable confirmation. (8) Pass PROCESS_EXIT to Ticket.finish only for invoke results, never for a non-zero exit of an argv command. (9) Ticket.grants holds the grant ids for run.permission.grants. (10) clock() is epoch seconds. (11) sync must be called at start and after every refresh_catalog; unknown or unsynced owners are refused with PLUGIN_UNAVAILABLE."
+    },
+    {
+      "impact": "small departure from the literal design text",
+      "kind": "assumption",
+      "next": "the reviewer confirms",
+      "text": "reapproval is set on a digest change with widened effects only when the plugin is an extension and at least one live grant was voided. The spec says only 'widened'. Setting it for hub units or for plugins with no grants would leave a hub unit permission_denied with no way to grant."
+    },
+    {
+      "impact": "an enable after a failed check always re-runs the check",
+      "kind": "assumption",
+      "next": "none",
+      "text": "The conformance cache keeps passes only, per digest, so a failure caused by the environment can be retried. The spec says the result is cached by digest."
+    },
+    {
+      "impact": "Release clears a degraded count",
+      "kind": "assumption",
+      "next": "none",
+      "text": "release also writes the history marker that restarts failure counting when the plugin is not quarantined but has failures in the window. It writes nothing for a plugin with neither."
+    },
+    {
+      "impact": "P5.3 must pass project_id to see project-scoped grants",
+      "kind": "assumption",
+      "next": "none",
+      "text": "view() returns only effective grants (not revoked, voided or expired). With project_id=None it returns only grants for every project (project_id null), per the spec's 'grants of every project and of the chosen one'."
+    },
+    {
+      "impact": "none for the design",
+      "kind": "assumption",
+      "next": "none",
+      "text": "A grant for a hub unit is refused with INPUT_INVALID, since units need no grants."
+    },
+    {
+      "impact": "none",
+      "kind": "note",
+      "next": "none",
+      "text": "history() clamps limit to 1..history_limit; the route limit of 1..200 is the route's job."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/gui/config.example.toml"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/gui/config.example.toml"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "plugins.py _mutation, admit, _finish and disable: lock order and the closing flag (PI2/PI3/PI5)",
+      "grant digest binding, rebind and void logic in _rebind",
+      "migration 3 in storage/db.py"
+    ],
+    "reason_codes": [
+      "security_touched",
+      "shared_module_changed",
+      "schema_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "frontier"
+  },
+  "status": "done_with_deviations",
+  "summary": "Added PluginHost (lib/gui/core/plugins.py): pure derive_state, Facts, enforcement() (never 'enforced'), observe(catalog), sync with grant rebind/void and reapproval, admit/Ticket gate, failure classification and quarantine, enable with conformance gate, disable with drain and cancel, release, grant/revoke, view/views (trust/v1), history. Added migration 3 (plugins, plugin_events, grants), the [gui.plugins] settings group and schema, resolve.compatibility(), Catalog.sources, docs/plugins.md and a CHANGELOG entry. Tests: new test_plugins.py (70 tests) plus additions to test_storage, test_settings and test_catalog."
+}

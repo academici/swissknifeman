@@ -26,6 +26,32 @@ class TestOpen(unittest.TestCase):
         self.assertEqual(0o600, stat.S_IMODE(os.stat(self.path).st_mode))
         self.assertEqual(0o700, stat.S_IMODE(os.stat(self.path.parent).st_mode))
 
+    def test_migration_3_creates_the_plugin_tables(self):
+        conn = db.open_db(self.path)
+        self.addCleanup(conn.close)
+        self.assertGreaterEqual(db.schema_version(), 3)
+        columns = {table: [row[1] for row in conn.execute(f"PRAGMA table_info({table})")]
+                   for table in ("plugins", "plugin_events", "grants")}
+        self.assertEqual(["id", "desired", "quarantined_at", "quarantine_code", "reapproval", "digest", "effects_json",
+                          "source", "updated_at"], columns["plugins"])
+        self.assertEqual(["id", "plugin", "at", "kind", "code", "detail"], columns["plugin_events"])
+        self.assertEqual(["id", "plugin", "capability", "project_id", "manifest_digest", "granted_at", "expires_at",
+                          "granted_by", "revoked_at", "voided_at", "void_reason"], columns["grants"])
+        indexes = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'index'")}
+        self.assertLessEqual({"plugin_events_by_plugin", "grants_by_plugin"}, indexes)
+        with self.assertRaises(sqlite3.IntegrityError):
+            conn.execute("INSERT INTO plugins (id, desired, source, updated_at) VALUES ('x', 'bogus', 'unit', 'now')")
+
+    def test_database_of_version_2_is_upgraded_to_3(self):
+        conn = db.open_db(self.path, migrations=db.MIGRATIONS[:2])
+        conn.execute("INSERT INTO prefs (key, value_json, updated_at) VALUES ('k', '1', 'now')")
+        conn.close()
+        conn = db.open_db(self.path)
+        self.addCleanup(conn.close)
+        self.assertEqual(db.schema_version(), conn.execute("PRAGMA user_version").fetchone()[0])
+        self.assertEqual(1, conn.execute("SELECT COUNT(*) FROM prefs").fetchone()[0])
+        self.assertEqual(0, conn.execute("SELECT COUNT(*) FROM plugins").fetchone()[0])
+
     def test_reopen_is_a_no_op(self):
         db.open_db(self.path).close()
         conn = db.open_db(self.path)

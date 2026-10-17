@@ -83,6 +83,42 @@ CREATE TABLE run_transitions (
     PRIMARY KEY (run_id, seq)
 );
 """),
+    (3, """
+CREATE TABLE plugins (
+    id TEXT PRIMARY KEY,
+    desired TEXT NOT NULL CHECK (desired IN ('new', 'enabled', 'disabled')),
+    quarantined_at TEXT,
+    quarantine_code TEXT,
+    reapproval INTEGER NOT NULL DEFAULT 0,
+    digest TEXT,
+    effects_json TEXT NOT NULL DEFAULT '[]',
+    source TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE plugin_events (
+    id INTEGER PRIMARY KEY,
+    plugin TEXT NOT NULL,
+    at TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    code TEXT,
+    detail TEXT
+);
+CREATE INDEX plugin_events_by_plugin ON plugin_events (plugin, id);
+CREATE TABLE grants (
+    id TEXT PRIMARY KEY,
+    plugin TEXT NOT NULL,
+    capability TEXT NOT NULL,
+    project_id TEXT,
+    manifest_digest TEXT NOT NULL,
+    granted_at TEXT NOT NULL,
+    expires_at TEXT,
+    granted_by TEXT NOT NULL,
+    revoked_at TEXT,
+    voided_at TEXT,
+    void_reason TEXT
+);
+CREATE INDEX grants_by_plugin ON grants (plugin);
+"""),
 ]
 
 

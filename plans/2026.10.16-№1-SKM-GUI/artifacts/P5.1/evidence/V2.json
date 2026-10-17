@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T021037Z-9aba13:P5.1:checks.1:V2",
+  "check_id": "V2",
+  "subject": "PLAN5.P5.1",
+  "candidate": {
+    "head": "8db4997399830d5c595d6271b8e4c10b6e4bfa5a",
+    "dirty_digest": "f9226f9c138bbb4deb299fdfb50b49841baed48aaab052c413b6a1a2d3c23651"
+  },
+  "started_at": "2026-10-17T02:22:33Z",
+  "procedure": {
+    "cmd": "PYTHONPATH=packages/aicore/lib:packages/gui/lib python3 -c \"import gui.core.plugins as p; assert p.derive_state\"",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T02:22:33Z"
+}

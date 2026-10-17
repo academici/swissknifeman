@@ -265,6 +265,37 @@ def _protocol(document: dict, host: Tuple[str, str], supported: Set[Tuple[str, s
     return found
 
 
+def compatibility(source: Source, *, host_protocol: Tuple[str, str] = HOST_PROTOCOL,
+                  supported: Optional[Set[Tuple[str, str]]] = None) -> Dict[str, Any]:
+    """``{protocol_ok, missing_contracts}`` of a source against the host: the data of ``trust/v1`` ``compatibility``.
+
+    Reads only ``gui_protocol`` and ``requires_contracts`` of the file, so it works for a contribution that other
+    rules reject. A file that cannot be read, or whose fields are malformed, says nothing against the host
+    (``protocol_ok`` true, nothing missing): the reason is then the rejection itself, not compatibility.
+    """
+    supported = host_contracts() if supported is None else supported
+    target = _inside(Path(source.root), source.gui)
+    try:
+        document = json.loads(target.read_bytes().decode("utf-8")) if target is not None else None
+    except (OSError, ValueError):
+        document = None
+    protocol_ok, missing = True, []
+    if isinstance(document, dict):
+        window = document.get("gui_protocol")
+        try:
+            low, high = int(window["min"]), int(window["max"])
+            protocol_ok = low <= high and not (high < int(host_protocol[0]) or low > int(host_protocol[1]))
+        except (KeyError, TypeError, ValueError):
+            pass
+        needs = document.get("requires_contracts")
+        for need in needs if isinstance(needs, list) else ():
+            if isinstance(need, dict) and isinstance(need.get("id"), str) and isinstance(need.get("version"), str) \
+                    and (need["id"], need["version"]) not in supported:
+                missing.append({"id": need["id"], "version": need["version"]})
+    missing.sort(key=lambda entry: (entry["id"], entry["version"]))
+    return {"protocol_ok": protocol_ok, "missing_contracts": missing}
+
+
 def _handler(document: dict, root: Path) -> Tuple[List[Finding], Optional[Path]]:
     points = set()
     if document.get("queries"):

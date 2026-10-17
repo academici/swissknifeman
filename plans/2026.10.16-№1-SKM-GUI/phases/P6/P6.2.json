@@ -1,0 +1,237 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.2",
+  "title": "Desktop shell: Rust-ядро (адаптер, READY, backoff, батчинг), приложение Tauri, conf и capabilities, векторы с Python-оракулом",
+  "status": "todo",
+  "summary": "`desktop/src-tauri` как workspace: библиотека `core` (validate запроса адаптера, разбор READY, backoff и Policy перезапуска, Batcher) и `app` (Tauri 2: запуск sidecar, handshake, health-check, команды api_request/api_subscribe/sidecar_status/sidecar_restart/sidecar_log, single-instance); tauri.conf.json, capabilities/default.json; векторы `desktop/tests/vectors/*.json`; Python-оракул и структурные тесты конфигов.",
+  "why": "Жёсткие риски (IPC-адаптер, секрет, изоляция webview): адаптер как произвольный прокси (хост/путь/заголовки от webview, `..`, percent-кодирование, тело без лимита); секрет достижим из frontend (команда возвращает заголовки/секрет, логирование); capabilities шире нужных или remote URL в CSP/окнах; подписка живёт после закрытия окна; бесконечный перезапуск sidecar без backoff. Rust не компилируется на этой машине (D26): ожидания вынесены в векторы, которые читают и Rust-тесты, и Python-оракул; конфиги проверяются структурно. Описание — knowledge/p6-design#desktop-shell.",
+  "scope": {
+    "include": [
+      "packages/gui/desktop/**",
+      "packages/gui/tests/test_desktop_*.py",
+      "packages/gui/tests/desktop_oracle.py",
+      "packages/gui/docs/desktop.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui/lib/**",
+      "packages/gui/frontend/**",
+      "packages/gui/sidecar/**",
+      "bundle, updater, подпись (P6.4)"
+    ]
+  },
+  "depends_on": [
+    "P6.1"
+  ],
+  "decisions": [
+    "D26",
+    "D27",
+    "D28"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p6-design#desktop-shell",
+      "why": "ядро, адаптер, supervisor, conf, capabilities, структурные тесты",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p6-design#sidecar-protocol",
+      "why": "handshake, READY, завершение",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p6-design#code-facts",
+      "why": "окружение и границы",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-16#transport",
+      "why": "модель адаптера, Channel, Origin",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-16#sidecar",
+      "why": "externalBin, onedir, суффикс target triple",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#transport",
+      "why": "API, Desktop-абзац",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/test_contracts.py",
+      "why": "образец Python-тестов, чтение JSON-файлов модуля",
+      "required": true
+    },
+    {
+      "path": "packages/gui/scripts/test.sh",
+      "why": "как собираются Python-тесты модуля (новые test_*.py подхватываются)",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/transport/HttpTransport.ts",
+      "why": "семантика потоков, бэкофф (для сверки батчинга)",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/desktop/src-tauri/Cargo.toml",
+      "change": "create",
+      "note": "workspace members core, app"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/core/Cargo.toml",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/core/src/lib.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/core/src/adapter.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/core/src/ready.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/core/src/backoff.rs",
+      "change": "create",
+      "note": "backoff + supervisor::Policy"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/core/src/batch.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/core/tests/vectors.rs",
+      "change": "create",
+      "note": "читает ../../../tests/vectors/*.json"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/app/Cargo.toml",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/app/build.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/app/src/main.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/app/src/sidecar.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/app/src/commands.rs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/tauri.conf.json",
+      "change": "create",
+      "note": "без bundle/updater — их добавляет P6.4"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/capabilities/default.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/tests/vectors/adapter.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/tests/vectors/ready.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/tests/vectors/backoff.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/tests/vectors/batch.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/desktop_oracle.py",
+      "change": "create",
+      "note": "Python-оракул тех же правил (тестовый код)"
+    },
+    {
+      "path": "packages/gui/tests/test_desktop_vectors.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_desktop_config.py",
+      "change": "create",
+      "note": "структурные проверки conf и capabilities"
+    },
+    {
+      "path": "packages/gui/docs/desktop.md",
+      "change": "create"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "Rust, PyInstaller и Tauri CLI недоступны на этой машине (D26): не пытайся их запускать и не объявляй Rust-код проверенным. Проверяемое — Python-тестами, векторами и структурными тестами; в report перечисли, что осталось непроверенным.",
+    "Адаптер `api_request` не принимает URL, хост, заголовки или схему от webview и не возвращает заголовков/секрета; `Authorization` и `Origin` ставит Rust; секрет не логируется и не входит в `sidecar_status`/`sidecar_log` (лог проходит фильтр по значению секрета).",
+    "Векторы — единственный источник ожидаемых значений; в каждом файле не меньше: adapter — 20 случаев (допустимые GET/POST/PATCH; DELETE/PUT/HEAD; путь без /v1/, `/v1/../x`, `/v1/%2e%2e/x`, `/v1/a\\\\b`, NUL, пробел, `#`, `http://x/v1/`, длина 2049, тело 1048576 и 1048577); ready — 8; backoff — таблица попыток 0..10 и сброс; batch — 6 (порог 50 кадров, 50 мс, переполнение 1000 с отчётом dropped).",
+    "Структурный тест conf: CSP не содержит `unsafe-eval`, `unsafe-inline` для script-src и `http(s)://` кроме `http://ipc.localhost`; окна не имеют `url` с remote-схемой; `withGlobalTauri` true; множество разрешений capabilities равно allowlist из knowledge/p6-design#desktop-shell; в capabilities нет `shell:allow-execute` с произвольной командой и нет `fs:`, `http:`, `process:` разрешений.",
+    "Код Rust пиши минимальным по зависимостям: core — только serde/serde_json (и std); app — tauri 2, tauri-plugin-shell, tauri-plugin-single-instance, tauri-plugin-dialog, tauri-plugin-deep-link, tauri-plugin-updater (подключается, настройка в P6.4), reqwest (rustls), tokio-tungstenite, getrandom, base64. Версии указывай мажорами (`\"2\"`), Cargo.lock не создавай.",
+    "Не меняй `lib/gui`, `frontend`, `sidecar`: если нужно — escalation в report."
+  ],
+  "guidance": "Порядок: (1) vectors/*.json — сначала, по правилам протокола; (2) desktop_oracle.py: validate_request, parse_ready, backoff_delay, Policy, Batcher на чистом Python по тем же правилам; test_desktop_vectors.py гоняет оракул по всем векторам (+ целостность: каждый вектор имеет `name`, `expect`); (3) Rust core: те же правила + tests/vectors.rs, читающий те же JSON; (4) app: sidecar.rs (spawn через shell-плагин, handshake по строке, health, Policy), commands.rs (пять команд), main.rs (builder, single-instance, окно, закрытие -> остановка sidecar); (5) tauri.conf.json и capabilities/default.json; test_desktop_config.py; (6) docs/desktop.md (архитектура, границы, что проверено и что нет), CHANGELOG; V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 -c \"import json,glob; [json.load(open(p)) for p in glob.glob('packages/gui/desktop/**/*.json', recursive=True)]\"",
+      "expect": "exit 0: все JSON desktop/ валидны",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "desktop/src-tauri (core, app)",
+    "векторы и оракул",
+    "структурные проверки конфигов"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T03:23:01Z"
+}

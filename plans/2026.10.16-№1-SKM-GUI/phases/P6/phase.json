@@ -2,17 +2,96 @@
   "$schema": "urn:swissknifeman:task:plan:phase:v1",
   "id": "P6",
   "title": "Desktop shell: Tauri 2, sidecar, подписанные обновления",
-  "design": "skeleton",
+  "design": "detailed",
   "goal": "Устанавливаемое desktop-приложение (Linux AppImage/deb, macOS .app) на Tauri 2 запускает и надзирает PyInstaller onedir sidecar, хранит секрет сессии вне frontend, пересылает API через ограниченный Rust-адаптер (invoke + Channel), переживает сбой sidecar и обновляется подписанными артефактами; тот же frontend build, что и browser mode.",
-  "context": "knowledge/architecture#desktop, #transport; knowledge/research-2026-10-16#sidecar, #transport, #updater; knowledge/roadmap#p6. Требует owner gate GUI_TOOLCHAIN (rustup/cargo, системные пакеты Tauri, ключ updater у владельца). Review P6 на Grok.",
+  "context": "Дизайн — knowledge/p6-design (сверен с HEAD 284f22695): #code-facts, #sidecar-protocol, #desktop-shell, #frontend, #release. Owner gate GUI_TOOLCHAIN (D9, D26): rustup/cargo, PyInstaller, системные пакеты Tauri и ключ updater есть только у владельца, на этой машине Rust не компилируется — реализуется и проверяется всё, что проверяемо без инструментов (Python-сторона sidecar, векторы с Python-оракулом, структурные тесты конфигов, TauriTransport), остальное — docs/desktop-release.md и список в отчёте. По D16 review фазы — одна групповая review codex/gpt-6.1-sol/high после P6.4 (вместо Grok из roadmap).",
+  "scope": {
+    "include": [
+      "packages/gui (lib/gui/sidecar.py, cli, backend, http, sidecar/, desktop/, frontend/src/transport|desktop, тесты, docs)",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "изменения aicore, planner, orch",
+      "компиляция Rust, сборка bundle, подпись и установка (шаги владельца)",
+      "терминал и runs orch, hardening (P7)",
+      "Windows (вне v1)"
+    ]
+  },
   "depends_on": [
     "P2"
+  ],
+  "validation": [
+    {
+      "id": "V35",
+      "cmd": "python3 scripts/affected-tests.py --run --tier all --with-tools",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V36",
+      "cmd": "bash packages/gui/scripts/test.sh && bash bridges/gui-hub/scripts/test.sh && bash bridges/gui-planner/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V37",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check && python3 scripts/public-hygiene.py",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V38",
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base 284f22695",
+      "expect": "exit 0; нет ломающих изменений контрактов",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V39",
+      "cmd": "npm --prefix packages/gui/frontend ci && npm --prefix packages/gui/frontend run check && npm --prefix packages/gui/frontend run build",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V40",
+      "cmd": "npm --prefix packages/gui/frontend run e2e",
+      "expect": "exit 0; все сценарии passed",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V41",
+      "cmd": "bash packages/gui/scripts/smoke.sh && bash packages/gui/desktop/scripts/smoke.sh --allow-missing && bash packages/gui/sidecar/build.sh --allow-missing && python3 packages/gui/desktop/scripts/check-release-config.py",
+      "expect": "exit 0; без toolchain — строки SKIPPED: GUI_TOOLCHAIN",
+      "kind": "acceptance",
+      "cwd": "."
+    }
   ],
   "deliverables": [
     "sidecar onedir + READY handshake",
     "Tauri shell + Rust-адаптер + TauriTransport",
-    "bundling и updater"
+    "bundling и updater (конфиг, скрипты, runbook владельца)"
   ],
-  "items": [],
-  "batches": []
+  "items": [
+    "P6.1",
+    "P6.2",
+    "P6.3",
+    "P6.4"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P6.1",
+        "P6.2",
+        "P6.3",
+        "P6.4"
+      ],
+      "mode": "recommended"
+    }
+  ]
 }

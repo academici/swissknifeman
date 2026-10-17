@@ -1,0 +1,224 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.1",
+  "title": "Sidecar backend: gui serve --sidecar, stdin-handshake, GUI_READY, режим desktop (только Bearer), PyInstaller spec и build.sh",
+  "status": "todo",
+  "summary": "Режим `gui serve --sidecar` по knowledge/p6-design#sidecar-protocol: разбор stdin-handshake, `BackendState(mode='desktop')` с секретом из Rust, отключение токен-обмена/cookie/раздачи frontend, отсутствие backend.json, строка GUI_READY, watchdog EOF stdin, graceful shutdown; `sidecar/entry.py`, `sidecar/gui-backend.spec`, `sidecar/build.sh` (gated).",
+  "why": "Жёсткие риски (auth, секреты, осиротевшие процессы): секрет попал в argv/env/диск/лог (I6, I9); в desktop остался путь для браузера (cookie, `GET /?t=`, `POST /v1/session/tokens`); второй sidecar при живом backend; sidecar переживает родителя; READY напечатан до того, как порт принимает соединения; stdout засорён после READY; bootstrap отдаёт browser вместо desktop. Протокол — knowledge/p6-design#sidecar-protocol, решение D28.",
+  "scope": {
+    "include": [
+      "packages/gui/lib/gui/cli.py",
+      "packages/gui/lib/gui/sidecar.py",
+      "packages/gui/lib/gui/backend.py",
+      "packages/gui/lib/gui/http/**",
+      "packages/gui/sidecar/**",
+      "packages/gui/tests/**",
+      "packages/gui/docs/api.md",
+      "packages/gui/docs/architecture.md (только раздел desktop, если есть)",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui/desktop/**",
+      "packages/gui/frontend/**",
+      "packages/gui/schemas/** (bootstrap/v1 уже имеет desktop)",
+      "aicore и другие модули"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D26",
+    "D28"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p6-design#sidecar-protocol",
+      "why": "протокол, режим desktop, завершение, сборка",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p6-design#code-facts",
+      "why": "где что лежит в backend, безопасность, bootstrap",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#transport",
+      "why": "модель безопасности API",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I6, I9, I10",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "why": "_serve, аргументы, _fail",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/backend.py",
+      "why": "BackendState, Sessions, bootstrap, runtime_info, start_detached",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/security.py",
+      "why": "SecurityMiddleware: аутентификация, token exchange, Origin",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/routes_core.py",
+      "why": "bootstrap, session/tokens",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/static.py",
+      "why": "раздача frontend",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/server.py",
+      "why": "serve, сигналы",
+      "required": true
+    },
+    {
+      "path": "packages/gui/schemas/bootstrap/v1/bootstrap.schema.json",
+      "why": "вариант desktop",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/test_backend_cli.py",
+      "why": "образец подпроцессных тестов serve",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/http_support.py",
+      "why": "ASGI-хелперы",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/test_http_security.py",
+      "why": "образец тестов безопасности",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/lib/gui/sidecar.py",
+      "change": "create",
+      "note": "stdlib: parse_handshake(line) -> Handshake, ready_line(...), HandshakeError(reason); без секрета в сообщениях"
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "change": "modify",
+      "note": "флаг --sidecar у serve; ветка _serve_sidecar"
+    },
+    {
+      "path": "packages/gui/lib/gui/backend.py",
+      "change": "modify",
+      "note": "BackendState(mode, shell_version); bootstrap desktop; без backend.json"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/security.py",
+      "change": "modify",
+      "note": "desktop: только Bearer, без token exchange и cookie"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/routes_core.py",
+      "change": "modify",
+      "note": "session/tokens отказывает в desktop"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/static.py",
+      "change": "modify",
+      "note": "desktop: не-/v1 -> 404"
+    },
+    {
+      "path": "packages/gui/sidecar/entry.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/sidecar/gui-backend.spec",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/sidecar/build.sh",
+      "change": "create",
+      "note": "GUI_TOOLCHAIN_MISSING: pyinstaller, exit 3; --allow-missing -> SKIPPED, exit 0"
+    },
+    {
+      "path": "packages/gui/tests/test_sidecar.py",
+      "change": "create",
+      "note": "разбор handshake (таблица), ready_line, ASGI-режим desktop"
+    },
+    {
+      "path": "packages/gui/tests/test_sidecar_process.py",
+      "change": "create",
+      "note": "подпроцесс: handshake -> READY -> запросы -> EOF; секрет вне cmdline/environ/диска"
+    },
+    {
+      "path": "packages/gui/docs/api.md",
+      "change": "modify",
+      "note": "режим desktop"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "`gui` импортирует только `lib/gui/` и aicore; имена `packages/<id>/` в файлах gui запрещены (sibling-package); сторонние пакеты — только в `lib/gui/http`, не в `lib/gui/core`.",
+    "Ответы API, события и тела не содержат float (canonical JSON бэкенда его отвергает): доли и проценты — целые.",
+    "Исполнитель не запускает E2E и реальный backend на requirements.lock (журнал прогона п. 12): поведение покрывай тестами уровня ASGI (tests/http_support.py), подпроцессными тестами на stdlib и тестами компонентов.",
+    "Секрет: не печатать (stdout/stderr/log), не класть в argv, env, backend.json, run-логи; сообщения `SIDECAR_HANDSHAKE_INVALID` называют причину, не значение. Тест подпроцесса читает `/proc/<pid>/cmdline`, `/proc/<pid>/environ` и содержимое state-папки и не находит секрет.",
+    "stdout после `GUI_READY` пуст: логи только в stderr/backend.log; `GUI_READY` печатается после того, как сокет слушает и `BackendState` создан (запрос к порту сразу после строки проходит).",
+    "Режим desktop не меняет browser-режим: все существующие тесты security и http остаются зелёными без правок ожиданий.",
+    "Подпроцессные тесты запускают `bin/gui serve --sidecar` с временным HOME/SKM_HOME и стеком зависимостей, как делает test_backend_cli.py; они пропускаются с причиной (`skipTest`), только если `gui deps path` недоступен — а не молча.",
+    "Стандартная библиотека в `lib/gui/sidecar.py`; Starlette-код только в `lib/gui/http`."
+  ],
+  "guidance": "Порядок: (1) sidecar.py: Handshake dataclass, parse_handshake по правилам протокола (JSON, v==1, секрет base64url >= 32 символов, порт 0..65535, shell_version semver, длина <= 4096), ready_line(port, epoch, pid, backend, protocol) -> строка; таблица тестов на все отказы; (2) BackendState(mode, shell_version) + bootstrap desktop (проверь контракт `gui.contracts.validate(doc,'bootstrap')`); security: в desktop cookie и token exchange недоступны, Bearer работает; session/tokens -> PERMISSION_DENIED; static -> 404; ASGI-тесты; (3) cli: `--sidecar` (несовместим с --detached и --port: порт приходит в handshake; --no-browser не нужен), чтение ОДНОЙ строки stdin с таймаутом 10 с (поток + очередь), `deps.activate()`, InstanceLock, open_db, bind, BackendState, ready_line в stdout flush, watchdog-поток (EOF stdin -> сигнал остановки server как SIGTERM), без write_runtime; exit 2 при невалидном handshake; (4) подпроцессные тесты по правилам; (5) sidecar/entry.py, gui-backend.spec (onedir, hidden imports: uvicorn, wsproto, starlette, anyio, h11-нет; данные: schemas, configs; пути относительно spec), build.sh с gated-поведением; (6) docs/api.md, CHANGELOG; V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash packages/gui/sidecar/build.sh --allow-missing",
+      "expect": "exit 0: либо сборка, либо строка SKIPPED: GUI_TOOLCHAIN",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "gui serve --sidecar",
+    "sidecar/ (spec, entry, build.sh)"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T03:23:00Z"
+}

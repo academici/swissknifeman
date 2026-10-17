@@ -1,0 +1,181 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P6.4",
+  "title": "Bundling и updater: tauri.conf bundle, createUpdaterArtifacts, pubkey-плейсхолдер, make-update-json, smoke, runbook владельца; закрытие фазы P6",
+  "status": "todo",
+  "summary": "Дополнения `tauri.conf.json` (bundle targets, externalBin, resources, createUpdaterArtifacts, updater с плейсхолдерами), скрипты `desktop/scripts/{check-release-config.py, make-update-json.py, smoke.sh}` с тестами, `docs/desktop-release.md` (шаги владельца GUI_TOOLCHAIN), согласование tauri-плагина updater в `app`; закрытие фазы.",
+  "why": "Жёсткие риски (подпись, обновления): релизная сборка с плейсхолдер-ключом или `.invalid` endpoint; update JSON с http:// или пустой подписью; приватный ключ или его путь в репозитории/скриптах; версия в update JSON не совпадает с подписываемой (`--app-version`, `requireSignedVersion`); заявление о проверенной сборке без toolchain (smoke обязан печатать SKIPPED). Описание — knowledge/p6-design#release, решения D9, D26.",
+  "scope": {
+    "include": [
+      "packages/gui/desktop/src-tauri/tauri.conf.json",
+      "packages/gui/desktop/src-tauri/app/**",
+      "packages/gui/desktop/scripts/**",
+      "packages/gui/tests/test_desktop_release.py",
+      "packages/gui/docs/desktop-release.md",
+      "packages/gui/docs/desktop.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui/lib/**",
+      "packages/gui/frontend/**",
+      "packages/gui/sidecar/**",
+      "приватные ключи, секреты, реальные URL обновлений"
+    ]
+  },
+  "depends_on": [
+    "P6.3"
+  ],
+  "decisions": [
+    "D9",
+    "D26"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p6-design#release",
+      "why": "bundle, updater, скрипты, runbook",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-16#updater",
+      "why": "факты updater, форматы, requireSignedVersion",
+      "required": true
+    },
+    {
+      "ref": "knowledge/research-2026-10-16#sidecar",
+      "why": "externalBin и onedir",
+      "required": true
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/tauri.conf.json",
+      "why": "конфиг P6.2, который дополняется (создаёт более ранний пункт)",
+      "required": false
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/capabilities/default.json",
+      "why": "разрешения (создаёт более ранний пункт)",
+      "required": false
+    },
+    {
+      "path": "packages/gui/tests/test_desktop_config.py",
+      "why": "структурные тесты P6.2 (создаёт более ранний пункт)",
+      "required": false
+    },
+    {
+      "path": "packages/gui/sidecar/build.sh",
+      "why": "образец gated-скрипта",
+      "required": false
+    },
+    {
+      "path": "packages/gui/docs/desktop.md",
+      "why": "документ P6.2 (создаёт более ранний пункт)",
+      "required": false
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/desktop/src-tauri/tauri.conf.json",
+      "change": "modify",
+      "note": "bundle.targets, externalBin, resources, createUpdaterArtifacts, plugins.updater"
+    },
+    {
+      "path": "packages/gui/desktop/src-tauri/app/src/main.rs",
+      "change": "modify",
+      "note": "подключение tauri-plugin-updater"
+    },
+    {
+      "path": "packages/gui/desktop/scripts/check-release-config.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/scripts/make-update-json.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/desktop/scripts/smoke.sh",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_desktop_release.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_desktop_config.py",
+      "change": "modify",
+      "note": "bundle и updater в структурных проверках"
+    },
+    {
+      "path": "packages/gui/docs/desktop-release.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/docs/desktop.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "Rust, PyInstaller и Tauri CLI недоступны на этой машине (D26): не пытайся их запускать и не объявляй Rust-код проверенным. Проверяемое — Python-тестами, векторами и структурными тестами; в report перечисли, что осталось непроверенным.",
+    "Ни приватный ключ, ни его путь, ни пароль не появляются в репозитории; скрипты читают их только из окружения владельца (`TAURI_SIGNING_PRIVATE_KEY*`) и в P6 не вызываются.",
+    "`check-release-config.py --release` падает (exit 1) при плейсхолдерах `OWNER_PUBKEY_REQUIRED` и `updates.invalid`; без флага проверяет только структуру. Оба режима покрыты тестами.",
+    "`make-update-json.py`: детерминированный вывод (sorted keys), `pub_date` UTC без миллисекунд, отказ при пустой подписи, не-semver, не-https url, несуществующих файлах; тесты на фиктивных `.sig`.",
+    "`smoke.sh` без `--allow-missing` и без toolchain/bundle выходит с кодом 3 и строкой `GUI_TOOLCHAIN_MISSING`; с `--allow-missing` печатает `SKIPPED: GUI_TOOLCHAIN (...)` и выходит 0. Тест запускает оба режима.",
+    "`docs/desktop-release.md` перечисляет шаги владельца по порядку и отдельным разделом «Не проверено в репозитории»: компиляция Rust, сборка sidecar, bundle, подпись, установка deb/AppImage, поведение WebKitGTK."
+  ],
+  "guidance": "Порядок: (1) tauri.conf.json: bundle и updater по knowledge/p6-design#release; (2) main.rs: плагин updater; (3) check-release-config.py + тесты; (4) make-update-json.py + тесты; (5) smoke.sh + тест двух режимов; (6) docs/desktop-release.md, desktop.md, CHANGELOG; V1–V4. Закрывает фазу: широкие проверки в phase.validation (conductor).",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "python3 packages/gui/desktop/scripts/check-release-config.py",
+      "expect": "exit 0: структура conf и capabilities корректна",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "bash packages/gui/desktop/scripts/smoke.sh --allow-missing",
+      "expect": "exit 0; без toolchain — строка SKIPPED: GUI_TOOLCHAIN",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "bundle и updater в conf",
+    "make-update-json, check-release-config, smoke",
+    "docs/desktop-release.md (шаги владельца)"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T03:23:15Z"
+}

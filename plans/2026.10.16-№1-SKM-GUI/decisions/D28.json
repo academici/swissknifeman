@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D28",
+  "title": "Протокол sidecar: секрет через stdin, READY одной строкой stdout, режим desktop только Bearer",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "question": "Как передать секрет и порт sidecar и как узнать о готовности?",
+  "options": [
+    {
+      "id": "A",
+      "text": "одна JSON-строка в stdin (секрет не в argv/env/на диске), `GUI_READY {json}` в stdout, EOF stdin = завершение; в режиме desktop отключены токен-обмен, cookie и раздача frontend",
+      "pros": "секрет вне argv/env (виден в /proc) и вне backend.json; нет осиротевших sidecar; нет браузер-клиентов",
+      "cons": "backend в desktop нельзя открыть отдельным браузером (для этого есть browser mode)"
+    },
+    {
+      "id": "B",
+      "text": "секрет в env/argv",
+      "pros": "проще",
+      "cons": "утечка через /proc и список процессов"
+    }
+  ],
+  "decision": "A — одна JSON-строка в stdin (секрет не в argv/env/на диске), `GUI_READY {json}` в stdout, EOF stdin = завершение; в режиме desktop отключены токен-обмен, cookie и раздача frontend",
+  "rationale": "I9 и architecture#transport: секрет генерирует Rust и во frontend не попадает.",
+  "consequences": [
+    "gui serve --sidecar",
+    "тест: секрет отсутствует в /proc/<pid>/cmdline и environ",
+    "backend.json не пишется"
+  ],
+  "applies_to": [
+    "P6.1",
+    "P6.2"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

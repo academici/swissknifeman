@@ -3,30 +3,74 @@
   "id": "P13",
   "title": "Переход: swissknifeman upgrade, upgrade guide, репетиция, слияние",
   "design": "skeleton",
-  "goal": "swissknifeman upgrade (--dry-run, apply, --rollback) переводит машину и проекты; docs/upgrade/<version>.md; репетиция на копиях и на втором компьютере; guard и маркер dev-клона удалены; слияние в main и major-тег; старый тег — точка отката.",
-  "context": "D9, D11; knowledge/architecture §11. Детализируется после P12. Внешнее ревью E1: тезисы E06, E34, E41, E52 (knowledge/review-e1-*). Внешнее ревью E2: R04 — миграция файлов конфига по schema_version.",
+  "goal": "Выпуск v0.31.0: swissknifeman upgrade (--dry-run, apply, --rollback) переводит машину и проекты шагами модулей (provides.upgrade) с журналом, откатом и штампом провижининга; файлы конфига мигрируют по schema_version; репетиция в песочнице и shadow-сравнение заменяют scripts/migrate-machine.py и scripts/upgrade-project.py; guard и маркер dev-клона удалены; алиас task снят, маркетплейс получил renames; docs/upgrade/; второй компьютер переведён командой; кандидат v0.31.0 с локальным тегом, точка отката v0.30.3.",
+  "context": "D86 (слияние в main и тег v0.30.0 выполнены владельцем 2026-10-16; P13 их не повторяет), D87, D88, D11, D23, D26, D56, D69; knowledge/cutover-p13 (#facts, #rules, #checks — для всех пунктов). Внешнее ревью E1: E06, E34, E41, E52; E2: R04 (knowledge/cutover-p13#e1e2). База сравнения фазы — тег v0.30.3, не origin/ecosystem-split.",
   "scope": {
     "include": [
-      "команда upgrade",
-      "upgrade guide",
-      "репетиция",
-      "слияние и тег",
-      "штамп провижининга проекта",
-      "план отката перехода",
-      "удаление shim и алиасов по окнам совместимости",
-      "миграция файлов конфига по schema_version (R04)"
+      "команда upgrade: aicore.upgrade, provides.upgrade, upgrade-plan/v1, журнал и откат",
+      "шаги upgrade модулей aicore, maind, skiller, harness, brain, analyst",
+      "штамп провижининга provision-stamp/v1 проекта и машины",
+      "миграция файлов конфига по schema_version (R04)",
+      "репетиция в песочнице: фикстура наследной раскладки, e2e-upgrade, shadow-сравнение; удаление двух скриптов перехода",
+      "удаление guard и маркера dev-клона",
+      "снятие алиаса task и renames маркетплейса",
+      "upgrade guide docs/upgrade/, ADR, CHANGELOG",
+      "переход второго компьютера (шлюз владельца)",
+      "кандидат выпуска v0.31.0 и план отката"
     ],
     "exclude": [
+      "слияние в main и тег новой линии (выполнены, D86)",
+      "удаление наследных ступеней чтения в модулях (v0.32.0, D88)",
+      "перенос данных демона памяти (D69)",
+      "push, публикация тега, release-fleet (владелец)",
       "вынос модулей в отдельные репозитории"
     ]
   },
   "depends_on": [
     "P12"
   ],
+  "validation": [
+    {
+      "id": "V20",
+      "cmd": "python3 scripts/ci-matrix.py run --all --include-tools",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V21",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/ecosystem-units.py render --check && python3 scripts/golden.py check && python3 scripts/public-hygiene.py && for t in scripts/test-*.py; do python3 \"$t\" || exit 1; done && bash scripts/test-integration.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V22",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p13-e2e-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bash scripts/e2e-plan-events.sh && bash scripts/e2e-work-source.sh && bash scripts/e2e-module-skills.sh && bash scripts/e2e-upgrade.sh && bash scripts/smoke-installed.sh'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; строки e2e … OK, e2e-upgrade OK и smoke-installed OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V23",
+      "cmd": "PYTHONPATH=packages/aicore/lib HOME=$(mktemp -d) python3 -m aicore schema compat --base v0.30.3 && python3 scripts/docs-impact.py --base v0.30.3 --head HEAD",
+      "expect": "exit 0; нет ломающих изменений",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V24",
+      "cmd": "SB=$(scripts/dev-sandbox.sh new --name p13-bud-$$ | tail -1) && { scripts/dev-sandbox.sh run \"$SB\" -- bash -c 'bash packages/skiller/bin/skiller budget --first-turn && bash packages/skiller/bin/skiller budget --first-turn --with-plugins'; rc=$?; scripts/dev-sandbox.sh remove \"$SB\" >/dev/null; exit $rc; }",
+      "expect": "exit 0; first-turn ≤ 23K",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
   "deliverables": [
-    "команда upgrade",
-    "upgrade guide",
-    "major-выпуск"
+    "swissknifeman upgrade (--dry-run, apply, --rollback)",
+    "шаги upgrade модулей и штамп провижининга",
+    "docs/upgrade/ (0.30, 0.31)",
+    "кандидат выпуска v0.31.0"
   ],
   "items": [],
   "batches": []

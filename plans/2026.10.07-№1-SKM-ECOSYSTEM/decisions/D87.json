@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D87",
+  "title": "swissknifeman upgrade: шаги модулей через provides.upgrade, движок в aicore.upgrade",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "question": "Где живут шаги upgrade и движок, если хаб импортирует только aicore, а модули не знают друг о друге?",
+  "options": [
+    {
+      "id": "A",
+      "text": "Шаги принадлежат модулю-владельцу наследного формата: unit/v1 получает необязательное provides.upgrade {command, steps[{id, scope, summary}]}; команда модуля `<cli> upgrade-steps plan|apply` печатает upgrade-plan/v1. Движок, журнал, откат, блокировка и штамп — aicore.upgrade (CLI `aicore upgrade`), umbrella — алиас `upgrade` в configs/umbrella.json. Модуль пишет файлы только через aicore.upgrade.journal (резервная копия и строка журнала до записи). Порядок: модули по id, aicore последним (удаляет опустевший .swissknife.json).",
+      "pros": "Тот же образец, что provides.doctor (D79); границы модулей не нарушаются; откат общий"
+    },
+    {
+      "id": "B",
+      "text": "Один скрипт хаба с логикой всех модулей (развитие migrate-machine.py/upgrade-project.py)",
+      "cons": "Импорт maind из хаба — нарушение границ (root.module-folders); знание чужих форматов в хабе"
+    }
+  ],
+  "context": "knowledge/cutover-p13#engine, #invariants, #steps",
+  "decision": "A — Шаги принадлежат модулю-владельцу наследного формата: unit/v1 получает необязательное provides.upgrade {command, steps[{id, scope, summary}]}; команда модуля `<cli> upgrade-steps plan|apply` печатает upgrade-plan/v1. Движок, журнал, откат, блокировка и штамп — aicore.upgrade (CLI `aicore upgrade`), umbrella — алиас `upgrade` в configs/umbrella.json. Модуль пишет файлы только через aicore.upgrade.journal (резервная копия и строка журнала до записи). Порядок: модули по id, aicore последним (удаляет опустевший .swissknife.json).",
+  "rationale": "Образец provides.doctor уже принят (D79); журнал и откат в фундаменте дают одну точку целостности данных",
+  "applies_to": [
+    "P13.1",
+    "P13.2",
+    "P13.3",
+    "P13.4",
+    "P13.5",
+    "P13.6"
+  ],
+  "actor": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "xhigh"
+  },
+  "answered_by": "agent"
+}

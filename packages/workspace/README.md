@@ -7,7 +7,7 @@ machine to them. It is a small command-line tool built on the `aicore` foundatio
 
 The places, the seven document contracts, the resolver that tells where the plans of a project live and the shared
 resolution vectors belong to `aicore.workspace` ([ADR 0085](../../docs/architecture/decisions/0085-portable-workspace.md)).
-This module is the command line over them. Migration of existing plans, connecting a remote and sync come later.
+This module is the command line over them. Connecting a remote and sync come later.
 
 ## Commands
 
@@ -18,7 +18,7 @@ JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; w
 | --- | --- |
 | `init [--root DIR]` | Create the layout (`workspace.json`, `projects/`, baseline `.gitignore`, `.gitattributes`, `README.md`, `.staging/`), `git init -b main`, the first commit `skm(workspace): init` with a `Workspace-Device` trailer, and the device file of this machine. On a workspace that exists it changes nothing (`already_initialized`). A non-empty folder without `workspace.json` is `WORKSPACE_ROOT_NOT_EMPTY` and nothing is written. |
 | `status [--fetch]` | Git state (branch, changed paths, remote without user information, ahead and behind of the last fetch; `--fetch` fetches first), the projects with their bindings here, the last sync. |
-| `doctor` | Checks as `check-result/v1`: `workspace.layout`, `workspace.documents`, `workspace.bindings`, `workspace.legacy-plans`, `workspace.git`. Exit 1 only on `fail`; a machine without a workspace gets a warning. |
+| `doctor` | Checks as `check-result/v1`: `workspace.layout`, `workspace.documents`, `workspace.bindings`, `workspace.legacy-plans`, `workspace.git`, `workspace.plans-migrator`. Exit 1 only on `fail`; a machine without a workspace gets a warning. |
 | `doctor --publish-safety [--all]` | Publish-safety rules on the files of the next commit (`--all`: every tracked and untracked file that is not ignored); prints a `publish-report/v1` document (see below). Exit 1 and `PUBLISH_BLOCKED` on stderr when a rule blocks; warnings and local-only files exit 0. |
 | `project attach [--project DIR] [--name N] [--yes]` | Tie a checkout to a project: use the id of its marker, else match its remotes against the projects of the workspace (never its name), else create a project. Writes the marker `.swissknifeman/project.json` and prints the command that commits it; it never commits. |
 | `project list` | Projects of the workspace and where they are bound on this machine. |
@@ -26,6 +26,12 @@ JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; w
 | `project scan DIR...` | Find checkouts with a marker (depth 4; `node_modules`, `.git` and `vendor` are skipped) and bind those of known projects. A marker with an unknown id is reported as `unknown`; no project is created. |
 | `project rebind PROJECT_ID --path DIR` | Replace the bound paths by one checkout whose marker names the project (`BINDING_MARKER_MISMATCH` otherwise). |
 | `project detach PROJECT_ID [--path DIR]` | Drop a binding of this machine; the workspace is not changed. |
+| `migrate discover [DIR...]` | Checkouts that hold a `plans/` folder: launcher projects (`.swissknifeman/launcher.py`) under DIR (default `~/projects`, depth 4) and `local_path` of `<state>/maind/registry.json`. Reads the structure and the sizes, never a plan file; shows the marker and the number of plan and legacy folders. |
+| `migrate plan --project DIR [--on-conflict keep-workspace\|import-copy] [--allow-in-progress] [--yes]` | Dry run, writes nothing: the project, the class, digest and action of each folder, local-only files, warnings and blockers (exit 1 on a blocker). |
+| `migrate apply --project DIR [same flags] [--lock-timeout S]` | Runs the checks of `plan`, calls the port, then writes `local-only.json`, the report and the binding. Prints `next`, never commits. |
+| `migrate verify --project DIR` | The last report of this device against the workspace copies and the old folders. |
+| `migrate rollback --project DIR` | Marker back to `legacy`; removes the folders the migration brought in. |
+| `migrate cleanup --project DIR --confirm PROJECT_ID` | Removes the old folders whose copy in the workspace has the same digest. |
 
 ## Publish-safety
 
@@ -56,6 +62,35 @@ folder, size, SHA-256, owning device, reason; sorted, portable) and `localonly.r
 `# skm:local-only begin` and `# skm:local-only end` in `.git/info/exclude` from the entries of this device, leaving every
 other line alone. Sync and migrate call them; neither takes `git.lock` itself, the caller holds it.
 
+## Migration
+
+`migrate` moves the plans of a checkout (`<root>/plans`) into `projects/<project_id>/` of the workspace (contract
+`workspace-contract#migration`, decisions D4, D8, D12, D13). The critical section (locks, copy, verify, rename, marker) runs in
+the bridge `workspace-planner` behind the port `workspace:plans-migrator`; this module never imports it. It finds the plugin named
+by `workspace.plans_migrator` in `[aicore.plugins]`, else a module of the hub that declares the port in `provides.ports`. Register the
+bridge with `swissknifeman config set aicore plugins.workspace-planner.manifest <hub>/bridges/workspace-planner/extension.json`
+and set `trusted = true` so it receives `PLANNER_ROOT`; `workspace doctor` shows whether it is found.
+
+- **Classes.** A folder with a `plan.json` of the plan schema is v4 (`plans/<id>`, `plans/archive/<id>`); any other folder is
+  legacy and is copied byte for byte to `legacy-plans/<name>`; loose files go to `legacy-plans/_root`. `views/`, `context/` and
+  `.lock` of a plan and `__pycache__` / `.DS_Store` are derived and not copied. A symlink blocks the migration.
+- **Dry run.** `plan` and `apply` judge every file by the publish-safety rules as if it stood in the workspace: a secret is a
+  blocker (`MIGRATION_BLOCKED_SECRET`, the value is never printed), a file over `max_tracked_bytes` (or a large binary) is
+  local-only and ends in `local-only.json` and the exclude block, home paths warn. An item in progress is
+  `MIGRATION_IN_PROGRESS` unless `--allow-in-progress`.
+- **A workspace that already has the project** (the second machine). Equal digest: `skipped-equal`; absent: `copied`; different:
+  `conflict` and `apply` refuses with `MIGRATION_CONFLICT` unless `--on-conflict keep-workspace` (keep the workspace copy) or
+  `import-copy` (keep both; the checkout copy is stored as `<name>~<device>`, the last 8 characters of the device id). Nothing is
+  overwritten.
+- **Report.** `migrations/<op_id>.json` (`workspace-migration/v1`) holds no absolute path. Archived plans have a `/` in their
+  name; the schema forbids it in a report name, so it is written `%2F` (`archive%2F<id>`; `%` is `%25`).
+- **Rollback and cleanup.** `rollback` is possible while the workspace copy of every plan equals the report and the old folder
+  still has the digest of the report (`MIGRATION_DIVERGED` with the list otherwise); it removes only what the migration put in. The
+  source is never deleted by `apply`; `cleanup` deletes an old folder only when its digest equals a copy in the workspace.
+  `cleanup` and `apply` do not run git: they print the commands (`git rm -r --cached plans`, commit the marker, `workspace sync`).
+- **One device.** `verify`, `rollback` and `cleanup` use the newest report of this machine's device; a report of another device
+  describes another checkout.
+
 ## Where things are
 
 | What | Where |
@@ -75,7 +110,7 @@ The `[workspace]` table (machine layer and defaults only; see `config.example.to
 
 ## Events
 
-`workspace.root.initialized` (`{workspace_id}`) and `workspace.project.attached` (`{project_id, created}`), described by
+`workspace.root.initialized` (`{workspace_id}`), `workspace.project.attached` (`{project_id, created}`), `workspace.migration.applied` (`{project_id, op_id, mode, plans, local_only}`) and `workspace.migration.rolled-back` (`{project_id, op_id}`), described by
 `schemas/event-data/v1/`. They are journaled in the machine journal after the locks are released; a failing journal does
 not change the result of a command. The extension point `workspace:plans-migrator` is filled by a bridge.
 

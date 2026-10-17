@@ -65,3 +65,8 @@ docs/guides/errors.md, docs/reference/errors.md, docs/ru/reference/errors.md, pa
 - Попытка отложена: `git stash list` → `stash@{0}: P5.3 partial work of killed manual agent` (174 tracked + 5 untracked).
   Восстановить: `git stash show -p stash@{0}`, `git checkout stash@{0} -- <path>`, untracked — из `stash@{0}^3`.
 - P5.3/P5.4 запущены кондуктором с нуля (`--batch --debug`, frontier-исполнитель через `--options`).
+
+## Дополнение (2026-10-17): `run --input followup.json --commit` — COMMIT_REFUSED
+Правки по групповому ревью (adhoc-пункт) прошли executor и checks (green), но коммит упал: кондуктор делает `git add` пути
+`.swissknifeman` (игнорируется .gitignore). Работа осталась в индексе, закоммитил вручную. Исправить: исключать
+игнорируемые пути из списка коммита; не считать их изменением пункта.

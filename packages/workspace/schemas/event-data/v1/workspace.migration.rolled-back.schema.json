@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:event-data:workspace-migration-rolled-back:v1",
+  "title": "workspace.migration.rolled-back",
+  "description": "A migration was rolled back: the marker points at the checkout again and the folders it brought in are removed.",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Id of the project."
+    },
+    "op_id": {
+      "type": "string",
+      "pattern": "^mig_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Id of the migration; the name of its report."
+    }
+  },
+  "required": [
+    "project_id",
+    "op_id"
+  ],
+  "additionalProperties": false
+}

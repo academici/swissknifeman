@@ -13,6 +13,8 @@ from typing import Sequence, Tuple
 from unittest import mock
 
 MODULE_ROOT = Path(__file__).resolve().parents[1]
+HUB_ROOT = MODULE_ROOT.parents[1]
+BRIDGE_ROOT = HUB_ROOT / "bridges" / "workspace-planner"  # the bridge that fills workspace:plans-migrator (hub layout)
 
 
 def git(cwd, *args: str) -> str:
@@ -32,8 +34,9 @@ class TempCase(unittest.TestCase):
         self.home = self.root / "home"
         self.home.mkdir()
         self.ws = self.root / "ws"
+        units = os.pathsep.join(str(path) for path in (MODULE_ROOT, BRIDGE_ROOT) if path.is_dir())
         self.env = {"HOME": str(self.home), "SKM_HOME": str(self.root / "skm"), "SKM_WORKSPACE_ROOT": str(self.ws),
-                    "SKM_UNITS_PATH": str(MODULE_ROOT), "SKM_AICORE_EVENTS__DELIVERY": "off",
+                    "SKM_UNITS_PATH": units, "SKM_AICORE_EVENTS__DELIVERY": "off",
                     "PATH": os.environ.get("PATH", ""), "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
         patcher = mock.patch.dict(os.environ, self.env, clear=True)
         patcher.start()

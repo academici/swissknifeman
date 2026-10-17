@@ -8,11 +8,12 @@ import aicore
 from aicore.util import schema
 from aicore.workspace import bind, new_id, write_marker, write_project
 
-from tests import TempCase
+from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase
 from workspace import doctor, gitutil, layout, projects
 
 CHECK_RESULT = Path(aicore.__file__).resolve().parents[2] / "schemas" / "check-result" / "v1"
-IDS = ["workspace.layout", "workspace.documents", "workspace.bindings", "workspace.legacy-plans", "workspace.git"]
+IDS = ["workspace.layout", "workspace.documents", "workspace.bindings", "workspace.legacy-plans", "workspace.git",
+       "workspace.plans-migrator"]
 
 
 class DoctorCase(TempCase):
@@ -158,6 +159,23 @@ class GitTests(DoctorCase):
                 self.assertEqual(item["status"], status)
                 if status != "ok":
                     self.assertIn("WORKSPACE_GIT_TOO_OLD", item["observed"])
+
+
+
+@unittest.skipUnless(BRIDGE_ROOT.is_dir(), "the hub bridge workspace-planner is not next to the module")
+class MigratorTests(DoctorCase):
+    def test_the_bridge_of_the_hub_is_found_by_its_port(self):
+        item = self.checks()["workspace.plans-migrator"]
+        self.assertEqual(item["status"], "ok")
+        self.assertIn("workspace-planner", item["observed"])
+
+    def test_without_a_plugin_the_check_warns_with_the_way_to_register_it(self):
+        with mock.patch.dict("os.environ", {"SKM_UNITS_PATH": str(MODULE_ROOT)}):
+            with mock.patch("workspace.migrator_port._unit_folders", return_value=[]):
+                item = self.checks()["workspace.plans-migrator"]
+        self.assertEqual(item["status"], "warn")
+        self.assertIn("MIGRATOR_UNAVAILABLE", item["observed"])
+        self.assertIn("plugins.workspace-planner.manifest", item["remediation"])
 
 
 if __name__ == "__main__":

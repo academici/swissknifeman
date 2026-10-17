@@ -200,11 +200,18 @@ class ApplyTests(BridgeCase):
         code = ("import sys\n"
                 f"sys.path.insert(0, {str(partners.require_planner_root() / 'lib')!r})\n"
                 "from planner.plan import store\n"
-                "try:\n"
-                "    with store.PlanLock(sys.argv[1], timeout=20):\n"
-                "        print('GRANTED')\n"
-                "except store.PlanError as exc:\n"
-                "    print(exc.code)\n")
+                "import time\n"
+                # The waiting writer and the migration compete for the lock the holder lets go (flock is not fair):
+                # a writer granted before the switch is right, it only has to see PLANS_MIGRATED once the switch is done.
+                "deadline = time.monotonic() + 30\n"
+                "while time.monotonic() < deadline:\n"
+                "    try:\n"
+                "        with store.PlanLock(sys.argv[1], timeout=20):\n"
+                "            print('GRANTED', flush=True)\n"
+                "    except store.PlanError as exc:\n"
+                "        print(exc.code, flush=True)\n"
+                "        break\n"
+                "    time.sleep(0.05)\n")
         self.hold(self.plans / PLAN_NAME, 2)
         writer = subprocess.Popen([sys.executable, "-c", code, str(self.plans / PLAN_NAME)],
                                   stdout=subprocess.PIPE, text=True, env=dict(os.environ))
@@ -212,7 +219,9 @@ class ApplyTests(BridgeCase):
         self.addCleanup(writer.wait)
         time.sleep(0.3)  # the writer waits for the plan lock
         self.assertEqual(self.apply(lock_timeout_s=10)["result"], "applied")
-        self.assertEqual(writer.communicate(timeout=15)[0].strip(), "PLANS_MIGRATED")
+        seen = writer.communicate(timeout=40)[0].split()
+        self.assertEqual(seen[-1:], ["PLANS_MIGRATED"], seen)
+        self.assertEqual(set(seen[:-1]) - {"GRANTED"}, set(), seen)
 
     # ----------------------------------------------------------------------------------- failure paths
 

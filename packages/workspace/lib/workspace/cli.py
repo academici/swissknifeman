@@ -14,7 +14,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired, resolve_project
 from aicore.workspace import WorkspaceError
 
-from . import __version__, doctor, events, layout, projects
+from . import __version__, doctor, events, layout, migrate, projects
 
 USAGE = """usage: workspace <command> [options]
 
@@ -34,6 +34,18 @@ commands:
                                     replace the bound paths of a project by one checkout
   project detach PROJECT_ID [--path DIR] [--json]
                                     drop a binding of this machine; the workspace is not changed
+  migrate discover [DIR...] [--json]
+                                    checkouts with plans: launcher projects under DIR (default ~/projects) and the maind registry
+  migrate plan --project DIR [--on-conflict keep-workspace|import-copy] [--allow-in-progress] [--yes] [--json]
+                                    dry run: classes, digests, publish-safety, comparison with the workspace; writes nothing
+  migrate apply --project DIR [--on-conflict ...] [--lock-timeout S] [--allow-in-progress] [--yes] [--json]
+                                    move the plans into the workspace through the plans-migrator port; prints, never commits
+  migrate verify --project DIR [--json]
+                                    digests of the workspace copies and of the old folders against the last report
+  migrate rollback --project DIR [--json]
+                                    marker back to legacy and the folders the migration brought in removed
+  migrate cleanup --project DIR --confirm PROJECT_ID [--json]
+                                    remove the old plans folders whose copy in the workspace is equal
   version                           print the version
   help                              show this text
 
@@ -85,6 +97,27 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("project_id")
     p.add_argument("--path", metavar="DIR", default=None)
     p.add_argument("--json", action="store_true")
+    migrator = sub.add_parser("migrate")
+    steps = migrator.add_subparsers(dest="migrate_command", parser_class=_Parser)
+    steps.required = True
+    p = steps.add_parser("discover")
+    p.add_argument("directories", nargs="*", metavar="DIR")
+    p.add_argument("--json", action="store_true")
+    for name in ("plan", "apply"):
+        p = steps.add_parser(name)
+        p.add_argument("--project", metavar="DIR", default=None)
+        p.add_argument("--on-conflict", dest="on_conflict", choices=migrate.ON_CONFLICT, default=None)
+        p.add_argument("--allow-in-progress", dest="allow_in_progress", action="store_true")
+        p.add_argument("--yes", action="store_true")
+        p.add_argument("--json", action="store_true")
+        if name == "apply":
+            p.add_argument("--lock-timeout", dest="lock_timeout", type=int, default=30, metavar="S")
+    for name in ("verify", "rollback", "cleanup"):
+        p = steps.add_parser(name)
+        p.add_argument("--project", metavar="DIR", default=None)
+        p.add_argument("--json", action="store_true")
+        if name == "cleanup":
+            p.add_argument("--confirm", metavar="PROJECT_ID", required=True)
     return parser
 
 
@@ -257,9 +290,123 @@ def _cmd_detach(args: argparse.Namespace) -> int:
     return 0
 
 
+def _mib(size: int) -> str:
+    return f"{size / 1048576:.1f} MiB"
+
+
+def _cmd_discover(args: argparse.Namespace) -> int:
+    doc = migrate.discover(args.directories)
+    if args.json:
+        _dump(doc)
+        return 0
+    for row in doc["candidates"]:
+        marker = row["marker"]
+        state = f"{marker['project_id']} store {marker['plans_store']}" if marker else row.get("marker_error", "no marker")
+        counts = row["plans"]
+        print(f"{row['path']}  [{', '.join(row['sources'])}]  {counts['v4']} plans, {counts['legacy']} legacy, "
+              f"{counts['files']} files, {_mib(counts['bytes'])}  ({state})")
+    for item in doc["skipped"]:
+        print(f"skipped {item['path']} ({item['reason']})")
+    return 0
+
+
+def _cmd_migrate_plan(args: argparse.Namespace) -> int:
+    plan = migrate.build_plan(_project_root(args.project), args.on_conflict, args.allow_in_progress, args.yes)
+    doc = plan.document
+    if args.json:
+        _dump(doc)
+    else:
+        project = doc["project"]
+        print(f"project {project['project_id'] or '(new)'} {project['name']}: mode {doc['mode']}"
+              + (", already migrated" if doc["already_migrated"] else ""))
+        for row in doc["plans"]:
+            suffix = f" as {row['stored_as']}" if "stored_as" in row else ""
+            print(f"  {row['action']:<14} {row['class']:<6} {row['name']}{suffix}  ({row['files']} files, {_mib(row['bytes'])})")
+        for item in doc["warnings"]:
+            print(f"warn {item['code']}: {item['count']} (e.g. {', '.join(item['paths'][:3])})")
+        if doc["local_only"]:
+            print(f"local-only: {len(doc['local_only'])} file(s), {_mib(sum(item['bytes'] for item in doc['local_only']))}")
+        if doc["conflicts"]:
+            print(f"conflicts: {', '.join(doc['conflicts'])}; apply needs --on-conflict keep-workspace|import-copy")
+        for blocker in doc["blockers"]:
+            print(f"BLOCKED {blocker['code']}: {blocker['message']}")
+    if doc["blockers"]:
+        print(f"{doc['blockers'][0]['code']}: {doc['blockers'][0]['message']}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _print_next(doc: Any) -> None:
+    for line in doc.get("next", []):
+        print(f"next: {line}")
+
+
+def _cmd_migrate_apply(args: argparse.Namespace) -> int:
+    doc = migrate.apply(_project_root(args.project), args.on_conflict, args.lock_timeout, args.allow_in_progress, args.yes)
+    attached = doc.pop("attached", None)
+    if attached is not None:
+        events.emit("workspace.project.attached", {"project_id": attached["project_id"], "created": attached["created"]},
+                    subject=attached["project_id"])
+    if not doc["noop"]:
+        events.emit("workspace.migration.applied", {"project_id": doc["project_id"], "op_id": doc["op_id"],
+                                                    "mode": doc["mode"], "plans": len(doc["plans"]),
+                                                    "local_only": doc["local_only"]}, subject=doc["project_id"])
+    if args.json:
+        _dump(doc)
+        return 0
+    if doc["noop"]:
+        print("nothing to do: the plans are already in the workspace")
+        return 0
+    print(f"migrated {len(doc['plans'])} folder(s) of {doc['project_id']} ({doc['mode']}), {doc['local_only']} local-only; "
+          f"report {doc['report']}")
+    for line in doc["notes"]:
+        print(f"note: {line}")
+    _print_next(doc)
+    return 0
+
+
+def _cmd_migrate_verify(args: argparse.Namespace) -> int:
+    doc = migrate.verify(_project_root(args.project))
+    if args.json:
+        _dump(doc)
+        return 0
+    for row in doc["plans"]:
+        print(f"{row['state']:<21} {row['class']:<6} {row['name']}")
+    return 0
+
+
+def _cmd_migrate_rollback(args: argparse.Namespace) -> int:
+    doc = migrate.rollback(_project_root(args.project))
+    events.emit("workspace.migration.rolled-back", {"project_id": doc["project_id"], "op_id": doc["op_id"]},
+                subject=doc["project_id"])
+    if args.json:
+        _dump(doc)
+        return 0
+    print(f"rolled back {doc['op_id']}: the marker of {doc['project_id']} is legacy, {len(doc['removed'])} folder(s) removed")
+    _print_next(doc)
+    return 0
+
+
+def _cmd_migrate_cleanup(args: argparse.Namespace) -> int:
+    doc = migrate.cleanup(_project_root(args.project), args.confirm)
+    if args.json:
+        _dump(doc)
+        return 0
+    for name in doc["removed"]:
+        print(f"removed {name}")
+    for item in doc["kept"]:
+        print(f"kept {item['name']} ({item['reason']})")
+    if doc["plans_removed"]:
+        print("removed the empty plans folder")
+    _print_next(doc)
+    return 0
+
+
 _COMMANDS = {"init": _cmd_init, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version}
 _PROJECT = {"attach": _cmd_attach, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
             "detach": _cmd_detach}
+_MIGRATE = {"discover": _cmd_discover, "plan": _cmd_migrate_plan, "apply": _cmd_migrate_apply,
+            "verify": _cmd_migrate_verify, "rollback": _cmd_migrate_rollback, "cleanup": _cmd_migrate_cleanup}
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -272,14 +419,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 0
     if args[0] == "--version":
         args = ["version"]
-    if args[0] not in (*_COMMANDS, "project"):
+    if args[0] not in (*_COMMANDS, "project", "migrate"):
         sys.stderr.write(f"workspace: unknown command {args[0]!r}\n{USAGE}")
         return 2
     try:
         namespace = _build().parse_args(args)
     except SystemExit as exc:  # argparse reports a usage error by exiting with 2
         return exc.code if isinstance(exc.code, int) else 2
-    handler = _PROJECT[namespace.project_command] if namespace.command == "project" else _COMMANDS[namespace.command]
+    if namespace.command == "project":
+        handler = _PROJECT[namespace.project_command]
+    elif namespace.command == "migrate":
+        handler = _MIGRATE[namespace.migrate_command]
+    else:
+        handler = _COMMANDS[namespace.command]
     try:
         return handler(namespace)
     except WorkspaceError as exc:

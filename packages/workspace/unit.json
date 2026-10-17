@@ -45,7 +45,9 @@
     ],
     "events": [
       "workspace.root.initialized",
-      "workspace.project.attached"
+      "workspace.project.attached",
+      "workspace.migration.applied",
+      "workspace.migration.rolled-back"
     ],
     "extension_points": [
       {

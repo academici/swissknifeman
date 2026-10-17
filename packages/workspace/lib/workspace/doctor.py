@@ -2,7 +2,8 @@
 
 ``workspace.layout`` (folders and files), ``workspace.documents`` (every JSON document against its contract),
 ``workspace.bindings`` (checkouts of this machine), ``workspace.legacy-plans`` (plans left beside a workspace store) and
-``workspace.git`` (git version). A machine without a workspace is normal before the first ``init``: that is a warning.
+``workspace.git`` (git version) and ``workspace.plans-migrator`` (the plugin of the migration is found). A machine without a
+workspace is normal before the first ``init``: that is a warning.
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 from aicore.workspace import (WorkspaceError, legacy_plans_present, read_bindings, read_marker, read_workspace,
                               validate_document)
 
-from . import gitutil, layout, safety
+from . import gitutil, layout, migrator_port, safety
 
 RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
 PROJECT_ENTRIES = ("project.json", "plans", "legacy-plans", "migrations", "local-only.json")
@@ -175,6 +176,18 @@ def _git() -> Dict[str, Any]:
     return _result(check, "ok", f"git {text}", "environment")
 
 
+def _migrator(env: Env, home: Optional[PathLike]) -> Dict[str, Any]:
+    check = "workspace.plans-migrator"
+    try:
+        found = migrator_port.registration(env, home)
+    except WorkspaceError as exc:
+        return _result(check, "warn", str(exc), "environment",
+                       remediation="Register the bridge: swissknifeman config set aicore plugins.workspace-planner.manifest "
+                       "<hub>/bridges/workspace-planner/extension.json (needed by workspace migrate only)")
+    return _result(check, "ok", f"plans migrator {found.id} {found.manifest.version} provides {migrator_port.POINT}",
+                   "environment")
+
+
 def publish_safety(root: Optional[PathLike] = None, every_file: bool = False, env: Env = None,
                    home: Optional[PathLike] = None) -> "safety.Report":
     """The publish-safety report of the workspace at ``root``: the files of the next commit, or every file."""
@@ -201,4 +214,5 @@ def run_checks(root: Optional[PathLike] = None, env: Env = None, home: Optional[
     results.append(_bindings(target if initialized else None, env, home))
     results.append(_legacy_plans(env, home))
     results.append(_git())
+    results.append(_migrator(env, home))
     return results

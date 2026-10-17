@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:event-data:workspace-migration-applied:v1",
+  "title": "workspace.migration.applied",
+  "description": "The plans of a checkout were moved into the workspace and the report of the migration was written.",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Id of the project."
+    },
+    "op_id": {
+      "type": "string",
+      "pattern": "^mig_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Id of the migration; the name of its report."
+    },
+    "mode": {
+      "enum": [
+        "initial",
+        "import"
+      ],
+      "description": "initial: the workspace held no plans of the project; import: it did."
+    },
+    "plans": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of folders in the report."
+    },
+    "local_only": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of files kept out of git."
+    }
+  },
+  "required": [
+    "project_id",
+    "op_id",
+    "mode",
+    "plans",
+    "local_only"
+  ],
+  "additionalProperties": false
+}

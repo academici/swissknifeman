@@ -49,7 +49,10 @@ units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
 The separate `section` key accepts a knowledge section id or exact title; it cannot
 accompany a ref fragment. `check` resolves both ref forms, and `start`
 refuses an unreadable required section in a ref read with `READ_MISSING` before
-writing any state.
+writing any state. A required path that does not exist yet is not missing while an
+open item it depends on (directly or transitively) promises it: an `output` artifact
+with that path, or a `task_files` entry with that path and `change: create`; this
+lets one batch start an item that reads what an earlier item of the batch creates.
 
 An item's optional `skills` is a unique list of skill or capability names, such as
 `skill-creator` or `blender:mcp-blender`. These names declare what the executor must load;

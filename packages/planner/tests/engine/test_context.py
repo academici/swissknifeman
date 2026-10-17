@@ -201,6 +201,14 @@ class JsonContextTests(test_lifecycle.LifeCase):
         lifecycle.start(self.root, ["P1.1"], test_lifecycle.OPUS)  # a repeated claim of the same run
         self.assertEqual(self.load().items["P1.1"]["status"], "in_progress")
 
+    def test_a_file_an_open_dependency_creates_is_not_missing(self):
+        force_patch(self.root, "P1.1", {"task_files": [{"path": "lib/new.py", "change": "create"}]})
+        force_patch(self.root, "P1.2", {"depends_on": ["P1.1"],
+                                        "reads": [{"path": "lib/new.py", "why": "API of P1.1", "required": True}]})
+        self.assertEqual(context.missing_reads(self.load(), "P1.2"), [])
+        force_patch(self.root, "P1.1", {"task_files": [{"path": "lib/new.py", "change": "modify"}]})
+        self.assertEqual(context.missing_reads(self.load(), "P1.2"), ["lib/new.py"])  # only a created file is promised
+
     def test_missing_required_input_is_refused_without_mutation(self):
         force_patch(self.root, "P1.1", {"reads": [{"path": "gone.py", "why": "needed", "required": True}]})
         self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))

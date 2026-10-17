@@ -152,8 +152,10 @@ def _pending_producer(plan: store.Plan, item_id: str, path: str) -> str | None:
             continue
         seen.add(dep)
         doc = plan.items[dep]
-        if doc.get("status") not in TERMINAL and any(
-                a.get("role") == "output" and a.get("path") == path for a in doc.get("artifacts", [])):
+        # An open dependency produces the path when it declares it as an output artifact or as a file it creates.
+        if doc.get("status") not in TERMINAL and (
+                any(a.get("role") == "output" and a.get("path") == path for a in doc.get("artifacts", []))
+                or any(t.get("change") == "create" and t.get("path") == path for t in doc.get("task_files", []))):
             return dep
         stack.extend(doc.get("depends_on", []))
     return None

@@ -197,7 +197,10 @@ def commit(self, item: Item, paths: list) -> dict:
     if not isinstance(answer, dict) or answer.get("outcome") not in ("committed", "no-op"):
         reason = (answer or {}).get("reason_code") or "COMMIT_REFUSED"
         raise Stop("COMMIT_REFUSED", f"{reason}: {(answer or {}).get('message') or err}")
-    return {"outcome": answer["outcome"], "sha": answer.get("sha")}
+    kept = {"outcome": answer["outcome"], "sha": answer.get("sha")}
+    if answer.get("message"):  # what the source left out of the commit, or why nothing was committed
+        kept["message"] = answer["message"]
+    return kept
 
 
 def open_artifacts(self, item: Item, brief: dict) -> None:

@@ -220,5 +220,18 @@ class CycleTests(SourceCase):
         self.assertEqual(caught.exception.code, 2)
 
 
+class ConductorCommitTests(unittest.TestCase):
+    def test_the_message_of_a_commit_reaches_the_conductor(self):
+        from types import SimpleNamespace
+        from orch.conductor.infrastructure import work_source
+        answer = {"op": "commit", "outcome": "committed", "sha": "abc1234",
+                  "message": "left outside, not the work of this piece: ideas/x.md"}
+        owner = SimpleNamespace(_orch=lambda *args: (0, answer, ""))
+        kept = work_source.commit(owner, SimpleNamespace(orch_run="run-1"), ["a.py"])
+        self.assertEqual(kept, {"outcome": "committed", "sha": "abc1234", "message": answer["message"]})
+        owner = SimpleNamespace(_orch=lambda *args: (0, {"op": "commit", "outcome": "committed", "sha": "abc1234"}, ""))
+        self.assertNotIn("message", work_source.commit(owner, SimpleNamespace(orch_run="run-1"), ["a.py"]))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -174,6 +174,24 @@ ext-demo`). Types come only from `contracts/generated/plugin-api.ts`.
 - **Enable** of an extension that fails the conformance check shows the findings lines of
   `PLUGIN_CONFORMANCE_FAILED`.
 
+## Terminal
+
+`/terminal` (`pages/Terminal.tsx`) and the nav item `Terminal` exist for the user only when `bootstrap.features` has
+`terminal` (the owner turned on `[gui.terminal] enabled`; never in desktop mode, decision D30); without it the page says
+"Terminal is disabled" and names `[gui.terminal] enabled`. The page picks a project (`/v1/projects`), `Open terminal`
+sends `POST /v1/terminal/sessions`, the 428 summary of the backend is shown in a confirmation dialog and only `Confirm`
+repeats the request with the token. The active sessions (`GET /v1/terminal/sessions`) can be attached or closed.
+
+`terminal/TerminalView.tsx` imports `@xterm/xterm`, its CSS and `@xterm/addon-fit` dynamically (a chunk of their own,
+outside the initial bundle). Output goes only through `term.write(bytes, callback)`: no `innerHTML`, no clipboard (OSC
+52) and no link addon. `terminal/session.ts` is the client of the WebSocket `/v1/terminal/{id}/io` (same origin, `ws`
+or `wss` by the page): input is UTF-8 in base64 (pieces of 32 KiB), a `ResizeObserver` refits the terminal and sends
+`resize`, `exit` shows the code and reason. **Credit:** the first credit (16384 bytes, which fits the smallest server
+cap of 4 x 4096) is sent at once; credit for bytes goes back to the server only from the write callback, in batches of
+at least a quarter of the window and always before `exit`. Unmounting closes the socket (the server ends the session),
+disconnects the observer, disposes the terminal and sends `:close`. The frame types are written by hand in `session.ts`:
+the frames are in `$defs` of `terminal/v1`, which the type generator does not emit.
+
 ## Security rules
 
 Data from the API is text: `dangerouslySetInnerHTML` and `innerHTML` are refused by eslint, markdown skips raw HTML.

@@ -7,6 +7,7 @@ import { ContributionRoute } from "../pages/ContributionRoute";
 import { Dashboard } from "../pages/Dashboard";
 import { PluginPage } from "../pages/PluginPage";
 import { Plugins } from "../pages/Plugins";
+import { Terminal } from "../pages/Terminal";
 import { ProjectPage, Projects } from "../pages/Projects";
 import { RunPage, Runs } from "../pages/Runs";
 import { useGuiPluginEvents } from "../plugins/useGuiPluginEvents";
@@ -14,7 +15,7 @@ import { BootstrapGate } from "./BootstrapGate";
 import { navRoutes, routePath, useCatalog } from "./catalog";
 import { ErrorBoundary } from "./ErrorView";
 
-function Navigation() {
+function Navigation({ features }: { features: string[] }) {
   const catalog = useCatalog();
   const sections = ["fleet", "plan", "settings", "plugins"] as const;
   return (
@@ -26,6 +27,7 @@ function Navigation() {
       <NavLink to="/runs">Runs</NavLink>
       <NavLink to="/catalog">Catalog</NavLink>
       <NavLink to="/plugins">Plugins</NavLink>
+      {features.includes("terminal") && <NavLink to="/terminal">Terminal</NavLink>}
       {sections.map((section) => {
         const routes = navRoutes(catalog.data, section);
         if (routes.length === 0 && section !== "settings") return null;
@@ -58,7 +60,7 @@ function Shell({ bootstrap }: { bootstrap: Bootstrap }) {
           backend {bootstrap.backend.version} · {bootstrap.platform.os}/{bootstrap.platform.arch}
         </span>
       </header>
-      <Navigation />
+      <Navigation features={bootstrap.features} />
       <main>
         <ErrorBoundary>
           <Routes>
@@ -70,6 +72,7 @@ function Shell({ bootstrap }: { bootstrap: Bootstrap }) {
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/plugins" element={<Plugins />} />
             <Route path="/plugins/:pluginId" element={<PluginPage />} />
+            <Route path="/terminal" element={<Terminal />} />
             <Route path="/settings/config" element={<ConfigModules />} />
             <Route path="/settings/config/:module" element={<ConfigEditor />} />
             <Route path="/x/:owner/*" element={<ContributionRoute />} />

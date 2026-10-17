@@ -240,6 +240,12 @@ def source_root_of(plan_dir: "str | os.PathLike[str]", env: Env = None,
         for candidate in (Path(real), *Path(real).parents):
             if candidate.name == "plans":
                 return candidate.parent
+        # a custom legacy location (``--plans-root DIR``) inside the launcher project belongs to that checkout
+        inside = Path(launcher) if launcher is not None else launcher_root(env)
+        if inside is not None:
+            inside_real = Path(os.path.realpath(str(inside)))
+            if Path(real) == inside_real or inside_real in Path(real).parents:
+                return inside
         return None
     bound = Path(launcher) if launcher is not None else launcher_root(env)
     if bound is not None:

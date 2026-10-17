@@ -1,0 +1,30 @@
+{
+  "changed_paths": [
+    "bridges/planner-orch/brief.py",
+    "packages/planner/lib/planner/plan/workspace.py"
+  ],
+  "checks_run": [
+    {
+      "id": "V1",
+      "procedure": "both findings fixed; tests covering the touched code pass (V3 module set 103 OK; planner-orch bridge tests 167 OK)",
+      "verdict": "pass"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "finding fixed only for custom locations inside the launcher project",
+      "kind": "note",
+      "next": "owner may change the vector and test if the old behaviour is wanted",
+      "text": "A custom --plans-root outside both a plans/ folder and the launcher project stays unbound (PLAN_SOURCE_UNBOUND); a generic parent-of-plans fallback contradicts the shared contract vector and test_a_plan_folder_outside_plans_has_no_checkout."
+    },
+    {
+      "impact": "must not enter the commit of this piece",
+      "kind": "note",
+      "next": "coordinator excludes them",
+      "text": "git status shows modified lock files, packages/skiller/skills.json and untracked .bash_profile that this piece did not touch."
+    }
+  ],
+  "summary": "brief.py _scrub replaces the workspace path only as a whole path (boundary lookarounds), so relative repository paths with the same substring are not corrupted. workspace.py source_root_of binds a plan folder outside the workspace and without a 'plans' ancestor to the launcher project when it lies inside it (custom legacy --plans-root); other locations stay unbound as the resolution vector and test_store require. Re-ran tests.engine.test_workspace/test_store/test_settings/test_launcher_mode (103 OK) and bridges/planner-orch/scripts/test.sh (167 OK, 1 skipped).",
+  "status": "done"
+}

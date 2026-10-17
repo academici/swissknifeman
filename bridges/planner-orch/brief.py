@@ -83,7 +83,8 @@ def _json_safe(value):
 def _scrub(value, secret: str):
     """``value`` with every occurrence of the absolute workspace path replaced by ``@workspace``."""
     if isinstance(value, str):
-        return value.replace(secret, "@workspace")
+        # only a whole path: not the tail of a longer or relative path, not the head of a longer name
+        return re.sub(r"(?<![\w.\-/])" + re.escape(secret) + r"(?![\w.\-])", "@workspace", value)
     if isinstance(value, dict):
         return {key: _scrub(child, secret) for key, child in value.items()}
     if isinstance(value, list):

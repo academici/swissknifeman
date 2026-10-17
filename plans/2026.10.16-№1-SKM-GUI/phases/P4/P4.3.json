@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P4.3",
   "title": "bridges/gui-planner: мутации item/phase/decision, lifecycle reopen/grant, формы и model-picker",
-  "status": "todo",
+  "status": "done_with_deviations",
   "summary": "bridges/gui-planner: команды-мутации (item-set, phase-set, decision-decide, item-reopen, grant, log-note) как exec invoke с allowlist полей и проверкой статуса item, формы gui-planner.item/phase/decision (forms[]), запросы item-form, phase-form и models (каталог моделей aicore) для model-picker; тесты.",
   "why": "Запись в планы из GUI. Жёсткие риски (knowledge/p4-design#integrity): обход lifecycle (I7) — поля status/result/updated_at/id/units/artifacts/sections недоступны (FIELD_NOT_EDITABLE до запуска CLI, FIELD_OWNED от planner); запись без сверки revision (всегда `--expected-revision`); правка item в статусе in_progress (ITEM_IN_PROGRESS); значение input, начинающееся с `-`, как опция CLI (JSON-патч — только объект, текст — в форме `--flag=значение`); автозамена недоступной модели (запрещена, только drift); `start`/`finish` не публикуются (D21).",
   "scope": {
@@ -104,6 +104,20 @@
       "change": "modify"
     }
   ],
+  "artifacts": [
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/ed309d3e8cc9eee4bc7bbf0e89ab58ee92c1d62fd66652cf4252c1da45f0eb52",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/89d36fbc5539b65f09565e4630a83bcb87f9b62d1bec2b45d8c459515fc2921d",
+      "role": "input"
+    },
+    {
+      "path": ".swissknifeman/state/artifacts/sha256/9175d883bfcd934dfc211a20db5da37cd57b099bbfb790bc4afbc48876cfc3b6",
+      "role": "input"
+    }
+  ],
   "rules": [
     "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
     "Планы меняет только planner; в `plans/**` ничего не правь руками (I3, I7).",
@@ -162,6 +176,55 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-16T20:03:03Z"
+  "result": {
+    "started_at": "2026-10-16T20:03:19Z",
+    "finished_at": "2026-10-17T00:46:27Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "medium"
+    },
+    "registered_by": {
+      "provider": "orch",
+      "model": "conductor"
+    },
+    "attempt_id": "att-run-eb43e334ce88f956fa6027a6-P4.3",
+    "notes": "Fixed the red public-hygiene step of V4: the fake planner fixture used a concrete-looking plan id (2026.10.01-№1-BROKEN) for the unreadable-plan scenario; it now uses 2026.10.01-№1-DEMO. public-hygiene.py reports 0 violations; bridge tests (50) pass.\nChanged: CHANGELOG.md, bridges/README.md, bridges/gui-planner/README.md, bridges/gui-planner/adapter.py, bridges/gui-planner/gui.json, bridges/gui-planner/tests/fixtures/fake.py, bridges/gui-planner/tests/fixtures/plan-enums.json, bridges/gui-planner/tests/test_commands.py, bridges/gui-planner/tests/test_forms.py, bridges/gui-planner/tests/test_queries.py, docs/architecture/ecosystem.md",
+    "deviations": [
+      "changed outside the write set: bridges/README.md, bridges/gui-planner/README.md, bridges/gui-planner/adapter.py, bridges/gui-planner/gui.json, bridges/gui-planner/tests/test_queries.py, docs/architecture/ecosystem.md"
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-17T00:46:27Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V1.json"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-17T00:46:27Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V2.json"
+      },
+      {
+        "id": "V3",
+        "exit": 0,
+        "at": "2026-10-17T00:46:27Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V3.json"
+      },
+      {
+        "id": "V4",
+        "exit": 0,
+        "at": "2026-10-17T00:46:27Z",
+        "evidence": "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V4.json"
+      }
+    ],
+    "evidence": [
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V1.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V2.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V3.json",
+      "plans/2026.10.16-№1-SKM-GUI/artifacts/P4.3/evidence/V4.json"
+    ]
+  },
+  "updated_at": "2026-10-17T00:46:27Z"
 }

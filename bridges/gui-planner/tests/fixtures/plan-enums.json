@@ -1,0 +1,49 @@
+{
+  "/route/class": [
+    "economy",
+    "implementation",
+    "frontier"
+  ],
+  "/route/effort": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra"
+  ],
+  "/review/mode": [
+    "none",
+    "self",
+    "requested"
+  ],
+  "/review/reviewer/class": [
+    "economy",
+    "implementation",
+    "frontier"
+  ],
+  "/review/reviewer/effort": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra"
+  ],
+  "/authority/kind": [
+    "routine",
+    "owner_gate",
+    "external_gate"
+  ],
+  "/rag/need": [
+    "none",
+    "optional",
+    "required"
+  ],
+  "/rag/status": [
+    "not_needed",
+    "pending",
+    "complete",
+    "failed"
+  ]
+}

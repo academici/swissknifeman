@@ -28,6 +28,7 @@ class AdapterCase(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.home, True)
         self.project = self.home / "project"
         self.project.mkdir()
+        (self.home / "aicore-root").write_text(os.environ["AICORE_ROOT"], encoding="utf-8")  # for the model catalog
         manifest = load_manifest(BRIDGE / "extension.json")
         self.plugin = Registration(id=manifest.id, manifest_path=str(BRIDGE / "extension.json"), trusted=True,
                                    timeout_seconds=30, enabled=True, manifest=manifest, problem=None)
@@ -53,7 +54,7 @@ class TestQueries(AdapterCase):
     def test_every_query_answers_its_view(self):
         for query_id in RETURNS:
             with self.subTest(query=query_id):
-                self.ok(query_id, context={"item_id": "P2.2"}, params={"plan_id": PLAN, "item_id": "P2.2", "ref": "P2.2"})
+                self.ok(query_id, context={"item_id": "P2.2"}, params={"plan_id": PLAN, "item_id": "P2.2", "ref": "P2.2", "phase": "P2"})
 
     def test_plans_list_moves_the_progress_of_the_planner(self):
         out = self.ok("gui-planner.plans")

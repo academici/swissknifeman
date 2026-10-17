@@ -1,0 +1,43 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/README.md",
+    "bridges/gui-planner/README.md",
+    "bridges/gui-planner/adapter.py",
+    "bridges/gui-planner/gui.json",
+    "bridges/gui-planner/tests/fixtures/fake.py",
+    "bridges/gui-planner/tests/fixtures/plan-enums.json",
+    "bridges/gui-planner/tests/test_commands.py",
+    "bridges/gui-planner/tests/test_forms.py",
+    "bridges/gui-planner/tests/test_queries.py",
+    "docs/architecture/ecosystem.md"
+  ],
+  "checks_run": [
+    {
+      "cmd": "bash bridges/gui-planner/scripts/test.sh",
+      "exit": 0,
+      "id": "V1"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "bridges/README.md",
+        "bridges/gui-planner/README.md",
+        "bridges/gui-planner/adapter.py",
+        "bridges/gui-planner/gui.json",
+        "bridges/gui-planner/tests/test_queries.py",
+        "docs/architecture/ecosystem.md"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: bridges/README.md, bridges/gui-planner/README.md, bridges/gui-planner/adapter.py, bridges/gui-planner/gui.json, bridges/gui-planner/tests/test_queries.py, docs/architecture/ecosystem.md"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Fixed the red public-hygiene step of V4: the fake planner fixture used a concrete-looking plan id (2026.10.01-№1-BROKEN) for the unreadable-plan scenario; it now uses 2026.10.01-№1-DEMO. public-hygiene.py reports 0 violations; bridge tests (50) pass."
+}

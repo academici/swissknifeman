@@ -3,6 +3,7 @@
 Scenarios (the wrappers umbrella-*): ok, empty (no plans), broken (a plan with an unreadable plan.json in the list),
 fail (exit 4 with ANSI noise), garbage (exit 0, not JSON), missing (every plan is PLAN_NOT_FOUND).
 """
+import hashlib
 import json
 import os
 import sys
@@ -78,6 +79,23 @@ def get(ref):
     return None
 
 
+def _state_path():
+    return os.path.join(os.environ.get("HOME", "/tmp"), "umbrella-state.json")
+
+
+def _writes():
+    try:
+        with open(_state_path(), encoding="utf-8") as handle:
+            return json.load(handle)
+    except OSError:
+        return {}
+
+
+def revision(ref):
+    """The revision of a document: it changes with every accepted `set` of that ref."""
+    return "sha256:" + hashlib.sha256(f"{ref}:{_writes().get(ref, 0)}".encode()).hexdigest()
+
+
 def main(scenario):
     args = sys.argv[1:]
     home = os.environ.get("HOME", "/tmp")
@@ -89,6 +107,14 @@ def main(scenario):
         return 4
     if scenario == "garbage":
         print("this is not json")
+        return 0
+    if args == ["units", "list", "--json"]:
+        try:
+            with open(os.path.join(home, "aicore-root"), encoding="utf-8") as handle:
+                root = handle.read().strip()
+        except OSError:
+            root = "/nonexistent"
+        print(json.dumps({"hub_root": "", "units": [{"id": "aicore", "root": root}]}))
         return 0
     if args[:1] != ["planner"]:
         print(f"unknown command {args}", file=sys.stderr)
@@ -110,7 +136,7 @@ def main(scenario):
         return 1
 
     if args == ["plans"]:
-        rows = {"empty": [], "broken": [{"id": "2026.10.01-№1-BROKEN", "error": "PLAN_INVALID"}, plan_row(scenario)]}
+        rows = {"empty": [], "broken": [{"id": "2026.10.01-№1-DEMO", "error": "PLAN_INVALID"}, plan_row(scenario)]}
         return ok({"plans": rows.get(scenario, [plan_row(scenario)])})
     plan = args[1] if len(args) > 1 else None
     if scenario == "missing" or plan not in ("PLAN1", DIR_ID):
@@ -120,8 +146,44 @@ def main(scenario):
         return 0
     if args[0] == "get" and len(args) == 3:
         found = get(args[2])
-        return ok({"ref": args[2], "kind": found["kind"], "doc": found["doc"], "revision": "sha256:" + "0" * 64}) \
+        return ok({"ref": args[2], "kind": found["kind"], "doc": found["doc"], "revision": revision(args[2])}) \
             if found else refuse("REF_UNKNOWN", f"unknown {args[2]}")
+    if args[0] == "get" and args[3:4] == ["--fields"]:
+        found = get(args[2])
+        if not found:
+            return refuse("REF_UNKNOWN", f"unknown {args[2]}")
+        fields = args[4].split(",")
+        return ok({"ref": args[2], "kind": found["kind"], "doc": {k: found["doc"][k] for k in fields if k in found["doc"]},
+                   "revision": revision(args[2])})
+    if args[0] == "set":
+        ref, body = args[2], json.loads(args[4])
+        expected = args[5].split("=", 1)[1] if len(args) > 5 and args[5].startswith("--expected-revision=") else None
+        if get(ref) is None:
+            return refuse("REF_UNKNOWN", f"unknown {ref}")
+        if set(body) & {"status", "result", "id", "updated_at"}:
+            return refuse("FIELD_OWNED", "identity or lifecycle-owned")
+        if expected != revision(ref):
+            return refuse("PLAN_REVISION_CONFLICT", f"the document changed since revision {expected}")
+        writes = _writes()
+        writes[ref] = writes.get(ref, 0) + 1
+        with open(_state_path(), "w", encoding="utf-8") as handle:
+            json.dump(writes, handle)
+        return ok({"message": f"updated {ref}"}) if envelope else 0
+    if args[0] == "check":
+        broken = _writes().get("P2.4")
+        if broken:
+            if envelope:
+                print(json.dumps({"ok": False, "error": {"code": "VERB_FAILED", "message": "check exited 1", "issues": [
+                    {"level": "error", "code": "x", "where": "P2.4", "message": "bad"},
+                    {"level": "error", "code": "y", "where": "P2.4", "message": "worse"},
+                    {"level": "warning", "code": "z", "where": "plan", "message": "meh"}]}}))
+            return 1
+        return ok({"ok": True, "errors": 0, "warnings": 1, "issues": [{"level": "warning", "code": "z", "where": "plan",
+                                                                         "message": "meh"}]})
+    if args[0] == "grant" and args[2] == "NOGATE":
+        return refuse("GATE_UNKNOWN", "no item declares owner gate 'NOGATE'")
+    if args[0] in ("decide", "reopen", "grant", "log"):
+        return ok({"message": f"{args[0]} done"})
     if args[0] == "list" and args[2] == "item":
         phase = args[args.index("--phase") + 1] if "--phase" in args else None
         return ok([{"ref": k, "title": v["title"], "status": v["status"]} for k, v in ITEMS.items()

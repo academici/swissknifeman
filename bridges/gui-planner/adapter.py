@@ -41,15 +41,30 @@ KIND_BAD = re.compile(r"[^a-z0-9._-]+")
 _ANSI = re.compile(r"\x1b(?:\[[0-9;?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])")
 _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
 _MARKDOWN_CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
+REVISION = re.compile(r"^sha256:[0-9a-f]{64}$")
+DECISION_REF = re.compile(r"^D[0-9]+$")
+GATE = re.compile(r"^[A-Z0-9][A-Z0-9._-]*$")
+TARGET_REF = re.compile(r"^P[0-9]+(?:\.[0-9]+)?$")
+MODEL_REF = re.compile(r"^[a-z0-9][a-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._:-]*$")
+ACTOR = "gui/browser"  # PROVIDER/MODEL of the planner: the journal names the browser as the actor
+LOG_TYPES = ("deviation", "blocker", "difficulty", "assumption", "note")
+# Top-level fields a form may write (the planner stays the authority: FIELD_OWNED, SCHEMA_INVALID). Identity and
+# lifecycle fields (id, status, result, updated_at, units, artifacts, sections, $schema) are not here (I7).
+ALLOW_ITEM = frozenset({"title", "summary", "why", "scope", "depends_on", "related", "decisions", "skills", "reads",
+                        "task_files", "rules", "guidance", "examples", "validation", "deliverables", "route", "review",
+                        "authority", "rag", "orchestration"})
+ALLOW_PHASE = frozenset({"title", "goal", "context", "scope", "depends_on", "deliverables", "validation"})
+PATCH_LIMIT = 65536
 RAW_LIMIT = 100_000
 EVENT_LIMIT = 200
 
 
 class PlannerError(Exception):
-    def __init__(self, code: str, message: str) -> None:
+    def __init__(self, code: str, message: str, issues: Optional[List[Any]] = None) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
+        self.issues = issues or []
 
 
 def safe_text(value: Any, limit: int = 300) -> str:
@@ -107,7 +122,8 @@ def planner_json(args: List[str], project_root: Optional[str], timeout_s: float)
         raise PlannerError("PLANNER_CLI_FAILED", f"planner {' '.join(args)} did not answer an envelope")
     if not doc["ok"]:
         error = doc.get("error") if isinstance(doc.get("error"), dict) else {}
-        raise PlannerError(_code(error.get("code")), safe_text(error.get("message") or "the planner refused"))
+        raise PlannerError(_code(error.get("code")), safe_text(error.get("message") or "the planner refused"),
+                           _list(error.get("issues")))
     return doc.get("data")
 
 
@@ -373,6 +389,8 @@ def item(root: Optional[str], timeout_s: float, context: Dict[str, Any], params:
                               "fields": fields}
     if sections:
         detail["sections"] = sections
+    if doc.get("status") in ("done", "done_with_deviations", "blocked", "skipped"):
+        detail["actions"] = [{"command": f"{OWNER}.item-reopen"}]
     return detail
 
 
@@ -471,10 +489,209 @@ def raw(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
     return {"$schema": VIEW, "view": "markdown", "text": f"File: `{where}` (read-only)\n\n{fence}json\n{body}\n{fence}"}
 
 
+# --- forms and the model picker --------------------------------------------------------------------------------
+
+
+def item_form(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: Dict[str, Any],
+              **_: Any) -> Dict[str, Any]:
+    plan_id, item_id = _plan_id(context, params), _item_id(context, params)
+    data = _dict(planner_json(["get", plan_id, item_id], root, timeout_s))
+    return _schema_form(f"{OWNER}.item", data)
+
+
+def phase_form(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: Dict[str, Any],
+               **_: Any) -> Dict[str, Any]:
+    plan_id = _plan_id(context, params)
+    phase = _phase(params)
+    if phase is None:
+        raise PlannerError("PLANNER_CONTEXT_MISSING", "the query needs a phase")
+    return _schema_form(f"{OWNER}.phase", _dict(planner_json(["get", plan_id, phase], root, timeout_s)))
+
+
+def _schema_form(form: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    revision = data.get("revision")
+    if not isinstance(data.get("doc"), dict) or not isinstance(revision, str) or not REVISION.match(revision):
+        raise PlannerError("PLANNER_CLI_FAILED", "planner get has no document revision")
+    return {"$schema": VIEW, "view": "schema-form", "form": form, "document": data["doc"], "revision": revision}
+
+
+def _aicore_lib(timeout_s: float) -> Optional[str]:
+    """The ``lib`` folder of aicore: ``AICORE_ROOT``, else the hub registry (``units list --json``)."""
+    root = os.environ.get("AICORE_ROOT")
+    if not root:
+        try:
+            doc = json.loads(subprocess.run([umbrella(), "units", "list", "--json"], capture_output=True, text=True,
+                                            timeout=max(1.0, timeout_s), stdin=subprocess.DEVNULL).stdout)
+        except (PlannerError, OSError, ValueError, subprocess.TimeoutExpired):
+            return None
+        for unit in _list(_dict(doc).get("units")):
+            if isinstance(unit, dict) and unit.get("id") == "aicore" and isinstance(unit.get("root"), str):
+                root = os.path.join(str(_dict(doc).get("hub_root") or ""), unit["root"])
+    return os.path.join(root, "lib") if root and os.path.isdir(os.path.join(root, "lib")) else None
+
+
+def models(root: Optional[str], timeout_s: float, **_: Any) -> Dict[str, Any]:
+    """The model catalog of aicore as rows ``provider/model`` for the model picker; no model is ever substituted."""
+    try:
+        try:
+            from aicore.provider.models import load_model_catalog
+        except ImportError:
+            lib = _aicore_lib(timeout_s)
+            if lib is None:
+                raise
+            sys.path.insert(0, lib)
+            from aicore.provider.models import load_model_catalog
+        catalog = load_model_catalog()
+    except (ImportError, ValueError, OSError):
+        raise PlannerError("MODEL_CATALOG_UNAVAILABLE", "the aicore model catalog cannot be read") from None
+    rows = []
+    for provider in catalog.providers:
+        classes = {name: tuple(selectors) for name, selectors in provider.class_selectors.items()}
+        for entry in _list(_dict(provider.inventory_dict()).get("entries")):
+            model = _dict(entry).get("id")
+            row_id = f"{provider.provider_id}/{model}"
+            if not isinstance(model, str) or not MODEL_REF.match(row_id):
+                continue
+            rows.append({"id": row_id, "cells": {
+                "provider": provider.provider_id, "model": model,
+                "class": ", ".join(name for name, selectors in classes.items() if model in selectors) or "-",
+                "roles": ", ".join(safe_text(r, 32) for r in _list(_dict(entry).get("roles"))) or "-"}})
+    columns = [{"id": "provider", "title": "Provider", "type": "text"}, {"id": "model", "title": "Model", "type": "text"},
+               {"id": "class", "title": "Default of class", "type": "text"}, {"id": "roles", "title": "Roles", "type": "text"}]
+    return {"$schema": VIEW, "view": "resource-list", "columns": columns, "rows": rows, "total": len(rows)}
+
+
+# --- commands --------------------------------------------------------------------------------------------------
+
+
+def _invalid(message: str) -> PlannerError:
+    return PlannerError("INPUT_INVALID", message)
+
+
+def _scalar(values: Dict[str, Any], name: str, limit: int, *, required: bool = True,
+            pattern: Optional["re.Pattern[str]"] = None) -> Optional[str]:
+    value = values.get(name)
+    if value is None:
+        if required:
+            raise _invalid(f"{name} is required")
+        return None
+    if not isinstance(value, str) or not value.strip() or len(value) > limit or "\x00" in value:
+        raise _invalid(f"{name} must be a non-empty text of at most {limit} characters")
+    if pattern is not None and not pattern.match(value):
+        raise _invalid(f"{name} has an invalid form")
+    return value
+
+
+def _patch(values: Dict[str, Any], allowed: frozenset) -> Dict[str, Any]:
+    """The merge patch: a JSON object whose top-level keys are all in ``allowed`` (else FIELD_NOT_EDITABLE)."""
+    text = _scalar(values, "patch", PATCH_LIMIT)
+    if not text.lstrip().startswith("{"):
+        raise _invalid("patch must be a JSON object")
+    try:
+        patch = json.loads(text)
+    except ValueError:
+        raise _invalid("patch is not valid JSON") from None
+    if not isinstance(patch, dict) or not patch:
+        raise _invalid("patch must be a non-empty JSON object")
+    refused = sorted(str(key) for key in patch if key not in allowed)
+    if refused:
+        raise PlannerError("FIELD_NOT_EDITABLE", f"not editable here: {', '.join(safe_text(k, 64) for k in refused)}")
+    return patch
+
+
+def _revision(values: Dict[str, Any]) -> str:
+    revision = _scalar(values, "expected_revision", 71, pattern=REVISION)
+    assert revision is not None
+    return revision
+
+
+def _check_report(plan_id: str, root: Optional[str], timeout_s: float) -> Dict[str, int]:
+    """Errors and warnings of ``check`` after a write; the write is never rolled back by the bridge."""
+    try:
+        data = _dict(planner_json(["check", plan_id, "--json"], root, timeout_s))
+        return {"errors": int(data.get("errors") or 0), "warnings": int(data.get("warnings") or 0)}
+    except PlannerError as error:
+        if error.code != "VERB_FAILED":
+            raise
+        issues = [i for i in error.issues if isinstance(i, dict)]
+        return {"errors": sum(1 for i in issues if i.get("level") == "error") or 1,
+                "warnings": sum(1 for i in issues if i.get("level") == "warning")}
+
+
+def _set(plan_id: str, ref: str, patch: Dict[str, Any], revision: str, root: Optional[str], timeout_s: float,
+         *, refuse_running: bool) -> Dict[str, Any]:
+    # Order: the patch was validated by the caller; the status of the item next; then the write; then the read-back.
+    if refuse_running:
+        status = _dict(_doc(planner_json(["get", plan_id, ref, "--fields", "status"], root, timeout_s))).get("status")
+        if status == "in_progress":
+            raise PlannerError("ITEM_IN_PROGRESS", f"{ref} is being executed; edit it after it stops")
+    body = json.dumps(patch, ensure_ascii=False, separators=(",", ":"))
+    planner_json(["set", plan_id, ref, "--json", body, f"--expected-revision={revision}"], root, timeout_s)
+    fresh = _dict(planner_json(["get", plan_id, ref], root, timeout_s)).get("revision")
+    return {"revision": fresh if isinstance(fresh, str) else None, "check": _check_report(plan_id, root, timeout_s)}
+
+
+def item_set(root, timeout_s, context, values):
+    plan_id, item_id = _plan_id(context, {}), _item_id(context, {})
+    patch, revision = _patch(values, ALLOW_ITEM), _revision(values)
+    return _set(plan_id, item_id, patch, revision, root, timeout_s, refuse_running=True)
+
+
+def phase_set(root, timeout_s, context, values):
+    plan_id = _plan_id(context, {})
+    phase = _scalar(values, "phase", 16, pattern=PHASE_REF)
+    patch, revision = _patch(values, ALLOW_PHASE), _revision(values)
+    return _set(plan_id, phase, patch, revision, root, timeout_s, refuse_running=False)
+
+
+def _done(message: Any) -> Dict[str, Any]:
+    text = _dict(message).get("message") if isinstance(message, dict) else None
+    return {"done": True, "message": safe_text(text or "done")}
+
+
+def decision_decide(root, timeout_s, context, values):
+    plan_id = _plan_id(context, {})
+    decision = _scalar(values, "decision", 16, pattern=DECISION_REF)
+    accept, rationale = _scalar(values, "accept", 2000), _scalar(values, "rationale", 4000)
+    by = _scalar(values, "by", 16, required=False) or "owner"
+    if by not in ("owner", "agent"):
+        raise _invalid("by must be owner or agent")
+    return _done(planner_json(["decide", plan_id, decision, f"--accept={accept}", f"--rationale={rationale}",
+                               f"--by={by}", f"--actor={ACTOR}"], root, timeout_s))
+
+
+def item_reopen(root, timeout_s, context, values):
+    plan_id, item_id = _plan_id(context, {}), _item_id(context, {})
+    reason = _scalar(values, "reason", 2000)
+    return _done(planner_json(["reopen", plan_id, item_id, f"--reason={reason}", f"--actor={ACTOR}"], root, timeout_s))
+
+
+def grant(root, timeout_s, context, values):
+    plan_id = _plan_id(context, {})
+    gate, note = _scalar(values, "gate", 128, pattern=GATE), _scalar(values, "note", 2000)
+    return _done(planner_json(["grant", plan_id, gate, f"--note={note}", f"--actor={ACTOR}"], root, timeout_s))
+
+
+def log_note(root, timeout_s, context, values):
+    plan_id = _plan_id(context, {})
+    target = _scalar(values, "target", 16, pattern=TARGET_REF)
+    kind, summary = _scalar(values, "type", 16), _scalar(values, "summary", 1000)
+    if kind not in LOG_TYPES:
+        raise _invalid("type must be one of " + ", ".join(LOG_TYPES))
+    return _done(planner_json(["log", plan_id, target, f"--type={kind}", f"--summary={summary}", f"--actor={ACTOR}"],
+                              root, timeout_s))
+
+
+COMMANDS: Dict[str, Callable[..., Dict[str, Any]]] = {
+    f"{OWNER}.item-set": item_set, f"{OWNER}.phase-set": phase_set, f"{OWNER}.decision-decide": decision_decide,
+    f"{OWNER}.item-reopen": item_reopen, f"{OWNER}.grant": grant, f"{OWNER}.log-note": log_note}
+
+
 QUERIES: Dict[str, Callable[..., Dict[str, Any]]] = {
     f"{OWNER}.plans": plans, f"{OWNER}.overview": overview, f"{OWNER}.phases": phases, f"{OWNER}.board": board,
     f"{OWNER}.graph": graph, f"{OWNER}.item": item, f"{OWNER}.decisions": decisions, f"{OWNER}.evidence": evidence,
-    f"{OWNER}.timeline": timeline, f"{OWNER}.raw": raw}
+    f"{OWNER}.timeline": timeline, f"{OWNER}.raw": raw, f"{OWNER}.item-form": item_form,
+    f"{OWNER}.phase-form": phase_form, f"{OWNER}.models": models}
 
 
 # --- the plugin protocol ---------------------------------------------------------------------------------------
@@ -496,15 +713,22 @@ def answer(request: Dict[str, Any]) -> Dict[str, Any]:
             "capabilities_digest": "sha256:" + hashlib.sha256(_canonical(manifest["provides"])).hexdigest(),
             "transport": "stdio-json"}}
     given = request.get("input") if isinstance(request.get("input"), dict) else {}
+    command = COMMANDS.get(given.get("id")) if request.get("point") == "gui:command" else None
     query = QUERIES.get(given.get("id")) if request.get("point") == "gui:query" else None
-    if query is None:
-        return {**reply, "status": "error", "error": {"code": "PLANNER_UNKNOWN_QUERY",
-                                                      "message": f"no query {safe_text(given.get('id'))}"}}
+    if query is None and command is None:
+        return {**reply, "status": "error", "error": {
+            "code": "PLANNER_UNKNOWN_COMMAND" if request.get("point") == "gui:command" else "PLANNER_UNKNOWN_QUERY",
+            "message": f"no {'command' if request.get('point') == 'gui:command' else 'query'} {safe_text(given.get('id'))}"}}
     host = request.get("context") if isinstance(request.get("context"), dict) else {}
     context = given.get("context") if isinstance(given.get("context"), dict) else {}
     params = given.get("params") if isinstance(given.get("params"), dict) else {}
     timeout_s = max(1.0, float(request.get("deadline_ms", 60000)) / 1000 - 1)
+    values = given.get("input") if isinstance(given.get("input"), dict) else {}
     try:
+        if command is not None:
+            if not host.get("project_root"):
+                raise PlannerError("PLANNER_CONTEXT_MISSING", "the command needs a project")
+            return {**reply, "status": "ok", "output": command(host["project_root"], timeout_s, context, values)}
         return {**reply, "status": "ok", "output": query(
             host.get("project_root"), timeout_s, context=context, params=params)}
     except PlannerError as error:

@@ -46,7 +46,7 @@ swissknifeman/                      # the hub repository
   bridges/
     planner-orch/                    # glue between two modules (hub)
     gui-hub/                         # GUI adapter of the hub: fleet, control surface, doctor, units
-    gui-planner/                     # GUI adapter of the planner: plans, board, graph, items, timeline (reads)
+    gui-planner/                     # GUI adapter of the planner: plans, board, graph, items, timeline, forms and writes
     orch-skiller/
     orch-harness/
     gui-orch/                        # planned: GUI adapter of the orchestrator

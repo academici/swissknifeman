@@ -11,7 +11,7 @@ and scans the bridge code for imports of partner packages and for the paths of o
 | [`orch-skiller`](orch-skiller/README.md) | orch ↔ skiller | `resolve_role.py`: the skill closure of a role and the skill delivery mode |
 | [`orch-harness`](orch-harness/README.md) | orch ↔ harness | conformance of the role manifests with the agent-pack role catalog |
 | [`gui-hub`](gui-hub/README.md) | gui ↔ hub | GUI queries (fleet, control-surface layers, doctor, units) and commands (`doctor`, `sync <cap>`) over the hub command line |
-| [`gui-planner`](gui-planner/README.md) | gui ↔ planner | GUI queries (plans, overview, phases, board, dependency graph, items, decisions, evidence, timeline, raw documents) over the planner command line |
+| [`gui-planner`](gui-planner/README.md) | gui ↔ planner | GUI queries (plans, overview, phases, board, dependency graph, items, decisions, evidence, timeline, raw documents, edit forms, model picker) and commands (item and phase edits, decide, reopen, grant, log) over the planner command line |
 
 ## Finding the partners
 

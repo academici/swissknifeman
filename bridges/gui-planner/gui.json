@@ -1,5 +1,613 @@
 {
   "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "commands": [
+    {
+      "concurrency_key": "gui-planner:{project_id}:{plan_id}",
+      "confirmation": "risk-based",
+      "description": "Merge-patch editable fields of an item; refused when the revision changed or the item is being executed.",
+      "effects": [
+        "plan.write"
+      ],
+      "exec": {
+        "kind": "invoke"
+      },
+      "id": "gui-planner.item-set",
+      "input": [
+        {
+          "description": "A JSON object of editable item fields.",
+          "name": "patch",
+          "required": true,
+          "title": "JSON patch",
+          "type": "string"
+        },
+        {
+          "name": "expected_revision",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "required": true,
+          "title": "Revision the form was built on",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "item",
+      "timeout_s": 60,
+      "title": "Edit item"
+    },
+    {
+      "concurrency_key": "gui-planner:{project_id}:{plan_id}",
+      "confirmation": "risk-based",
+      "description": "Merge-patch editable fields of a phase; refused when the revision changed.",
+      "effects": [
+        "plan.write"
+      ],
+      "exec": {
+        "kind": "invoke"
+      },
+      "id": "gui-planner.phase-set",
+      "input": [
+        {
+          "name": "phase",
+          "pattern": "^P[0-9]+$",
+          "required": true,
+          "title": "Phase",
+          "type": "string"
+        },
+        {
+          "description": "A JSON object of editable phase fields.",
+          "name": "patch",
+          "required": true,
+          "title": "JSON patch",
+          "type": "string"
+        },
+        {
+          "name": "expected_revision",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "required": true,
+          "title": "Revision the form was built on",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "plan",
+      "timeout_s": 60,
+      "title": "Edit phase"
+    },
+    {
+      "concurrency_key": "gui-planner:{project_id}:{plan_id}",
+      "confirmation": "risk-based",
+      "description": "Accept an open decision with a rationale.",
+      "effects": [
+        "plan.write"
+      ],
+      "exec": {
+        "kind": "invoke"
+      },
+      "id": "gui-planner.decision-decide",
+      "input": [
+        {
+          "name": "decision",
+          "pattern": "^D[0-9]+$",
+          "required": true,
+          "title": "Decision",
+          "type": "string"
+        },
+        {
+          "name": "accept",
+          "required": true,
+          "title": "Accepted option or text",
+          "type": "string"
+        },
+        {
+          "name": "rationale",
+          "required": true,
+          "title": "Rationale",
+          "type": "string"
+        },
+        {
+          "default": "owner",
+          "enum": [
+            "owner",
+            "agent"
+          ],
+          "name": "by",
+          "required": false,
+          "title": "Decided by",
+          "type": "enum"
+        }
+      ],
+      "risk": "medium",
+      "scope": "plan",
+      "timeout_s": 60,
+      "title": "Decide"
+    },
+    {
+      "concurrency_key": "gui-planner:{project_id}:{plan_id}",
+      "confirmation": "always",
+      "description": "Reopen a finished item (owner amendment); the item returns to todo.",
+      "effects": [
+        "plan.write"
+      ],
+      "exec": {
+        "kind": "invoke"
+      },
+      "id": "gui-planner.item-reopen",
+      "input": [
+        {
+          "name": "reason",
+          "required": true,
+          "title": "Reason",
+          "type": "string"
+        }
+      ],
+      "risk": "high",
+      "scope": "item",
+      "timeout_s": 60,
+      "title": "Reopen item"
+    },
+    {
+      "concurrency_key": "gui-planner:{project_id}:{plan_id}",
+      "confirmation": "always",
+      "description": "Record an owner gate grant for the items that wait for it.",
+      "effects": [
+        "plan.write"
+      ],
+      "exec": {
+        "kind": "invoke"
+      },
+      "id": "gui-planner.grant",
+      "input": [
+        {
+          "name": "gate",
+          "pattern": "^[A-Z0-9][A-Z0-9._-]*$",
+          "required": true,
+          "title": "Gate",
+          "type": "string"
+        },
+        {
+          "name": "note",
+          "required": true,
+          "title": "Note quoting the owner",
+          "type": "string"
+        }
+      ],
+      "risk": "high",
+      "scope": "plan",
+      "timeout_s": 60,
+      "title": "Grant gate"
+    },
+    {
+      "concurrency_key": "gui-planner:{project_id}:{plan_id}",
+      "confirmation": "none",
+      "description": "Record a deviation, blocker, difficulty, assumption or note for a phase or an item.",
+      "effects": [
+        "plan.write"
+      ],
+      "exec": {
+        "kind": "invoke"
+      },
+      "id": "gui-planner.log-note",
+      "input": [
+        {
+          "name": "target",
+          "pattern": "^P[0-9]+(\\.[0-9]+)?$",
+          "required": true,
+          "title": "Phase or item",
+          "type": "string"
+        },
+        {
+          "enum": [
+            "deviation",
+            "blocker",
+            "difficulty",
+            "assumption",
+            "note"
+          ],
+          "name": "type",
+          "required": true,
+          "title": "Type",
+          "type": "enum"
+        },
+        {
+          "name": "summary",
+          "required": true,
+          "title": "Summary",
+          "type": "string"
+        }
+      ],
+      "risk": "low",
+      "scope": "plan",
+      "timeout_s": 60,
+      "title": "Log a note"
+    }
+  ],
+  "forms": [
+    {
+      "fields": [
+        {
+          "group": "intent",
+          "order": 0,
+          "pointer": "/title",
+          "widget": "text"
+        },
+        {
+          "group": "intent",
+          "order": 10,
+          "pointer": "/summary",
+          "widget": "textarea"
+        },
+        {
+          "group": "intent",
+          "order": 20,
+          "pointer": "/why",
+          "widget": "textarea"
+        },
+        {
+          "group": "intent",
+          "order": 30,
+          "pointer": "/scope/include",
+          "widget": "list"
+        },
+        {
+          "group": "intent",
+          "order": 40,
+          "pointer": "/scope/exclude",
+          "widget": "list"
+        },
+        {
+          "group": "inputs",
+          "order": 0,
+          "pointer": "/depends_on",
+          "widget": "list"
+        },
+        {
+          "group": "inputs",
+          "order": 10,
+          "pointer": "/related",
+          "widget": "list"
+        },
+        {
+          "group": "inputs",
+          "order": 20,
+          "pointer": "/decisions",
+          "widget": "list"
+        },
+        {
+          "group": "inputs",
+          "order": 30,
+          "pointer": "/skills",
+          "widget": "list"
+        },
+        {
+          "group": "inputs",
+          "order": 40,
+          "pointer": "/reads",
+          "widget": "json"
+        },
+        {
+          "group": "inputs",
+          "order": 50,
+          "pointer": "/artifacts",
+          "readonly": true,
+          "widget": "json"
+        },
+        {
+          "group": "execution",
+          "order": 0,
+          "pointer": "/route/class",
+          "widget": "select"
+        },
+        {
+          "group": "execution",
+          "order": 10,
+          "pointer": "/route/effort",
+          "widget": "select"
+        },
+        {
+          "group": "execution",
+          "order": 20,
+          "pointer": "/orchestration",
+          "widget": "json"
+        },
+        {
+          "group": "execution",
+          "order": 30,
+          "pointer": "/rules",
+          "widget": "list"
+        },
+        {
+          "group": "execution",
+          "order": 40,
+          "pointer": "/guidance",
+          "widget": "textarea"
+        },
+        {
+          "group": "execution",
+          "order": 50,
+          "pointer": "/task_files",
+          "widget": "json"
+        },
+        {
+          "group": "execution",
+          "order": 60,
+          "pointer": "/examples",
+          "widget": "json"
+        },
+        {
+          "group": "execution",
+          "order": 70,
+          "pointer": "/deliverables",
+          "widget": "list"
+        },
+        {
+          "group": "review",
+          "order": 0,
+          "pointer": "/review/mode",
+          "widget": "select"
+        },
+        {
+          "group": "review",
+          "order": 10,
+          "pointer": "/review/reviewer/class",
+          "widget": "select"
+        },
+        {
+          "group": "review",
+          "order": 20,
+          "pointer": "/review/reviewer/model",
+          "widget": "model-picker"
+        },
+        {
+          "group": "review",
+          "order": 30,
+          "pointer": "/review/reviewer/provider",
+          "widget": "select"
+        },
+        {
+          "group": "review",
+          "order": 40,
+          "pointer": "/review/reviewer/effort",
+          "widget": "select"
+        },
+        {
+          "group": "gates",
+          "order": 0,
+          "pointer": "/authority/kind",
+          "widget": "select"
+        },
+        {
+          "group": "gates",
+          "order": 10,
+          "pointer": "/authority/gate",
+          "widget": "text"
+        },
+        {
+          "group": "gates",
+          "order": 20,
+          "pointer": "/authority/scope",
+          "widget": "text"
+        },
+        {
+          "group": "research",
+          "order": 0,
+          "pointer": "/rag/need",
+          "widget": "select"
+        },
+        {
+          "group": "research",
+          "order": 10,
+          "pointer": "/rag/status",
+          "widget": "select"
+        },
+        {
+          "group": "research",
+          "order": 20,
+          "pointer": "/rag/notes",
+          "widget": "textarea"
+        },
+        {
+          "group": "validation",
+          "order": 0,
+          "pointer": "/validation",
+          "widget": "json"
+        },
+        {
+          "group": "result",
+          "order": 0,
+          "pointer": "/status",
+          "readonly": true,
+          "widget": "text"
+        },
+        {
+          "group": "result",
+          "order": 10,
+          "pointer": "/result",
+          "readonly": true,
+          "widget": "json"
+        },
+        {
+          "group": "result",
+          "order": 20,
+          "pointer": "/updated_at",
+          "readonly": true,
+          "widget": "text"
+        }
+      ],
+      "groups": [
+        {
+          "id": "intent",
+          "order": 0,
+          "title": "Intent"
+        },
+        {
+          "id": "inputs",
+          "order": 10,
+          "title": "Inputs"
+        },
+        {
+          "id": "execution",
+          "order": 20,
+          "title": "Execution"
+        },
+        {
+          "id": "review",
+          "order": 30,
+          "title": "Review"
+        },
+        {
+          "id": "gates",
+          "order": 40,
+          "title": "Gates"
+        },
+        {
+          "id": "research",
+          "order": 50,
+          "title": "Research"
+        },
+        {
+          "id": "validation",
+          "order": 60,
+          "title": "Validation"
+        },
+        {
+          "id": "result",
+          "order": 70,
+          "title": "Result"
+        }
+      ],
+      "id": "gui-planner.item",
+      "schema": "urn:swissknifeman:task:plan:item:v1"
+    },
+    {
+      "fields": [
+        {
+          "group": "intent",
+          "order": 0,
+          "pointer": "/title",
+          "widget": "text"
+        },
+        {
+          "group": "intent",
+          "order": 10,
+          "pointer": "/goal",
+          "widget": "textarea"
+        },
+        {
+          "group": "intent",
+          "order": 20,
+          "pointer": "/context",
+          "widget": "textarea"
+        },
+        {
+          "group": "intent",
+          "order": 30,
+          "pointer": "/scope",
+          "widget": "json"
+        },
+        {
+          "group": "execution",
+          "order": 0,
+          "pointer": "/depends_on",
+          "widget": "list"
+        },
+        {
+          "group": "execution",
+          "order": 10,
+          "pointer": "/deliverables",
+          "widget": "list"
+        },
+        {
+          "group": "execution",
+          "order": 20,
+          "pointer": "/validation",
+          "widget": "json"
+        },
+        {
+          "group": "result",
+          "order": 0,
+          "pointer": "/design",
+          "readonly": true,
+          "widget": "text"
+        },
+        {
+          "group": "result",
+          "order": 10,
+          "pointer": "/closed",
+          "readonly": true,
+          "widget": "json"
+        }
+      ],
+      "groups": [
+        {
+          "id": "intent",
+          "order": 0,
+          "title": "Intent"
+        },
+        {
+          "id": "execution",
+          "order": 10,
+          "title": "Execution"
+        },
+        {
+          "id": "result",
+          "order": 20,
+          "title": "Result"
+        }
+      ],
+      "id": "gui-planner.phase",
+      "schema": "urn:swissknifeman:task:plan:phase:v1"
+    },
+    {
+      "fields": [
+        {
+          "group": "question",
+          "order": 0,
+          "pointer": "/title",
+          "widget": "text"
+        },
+        {
+          "group": "question",
+          "order": 10,
+          "pointer": "/question",
+          "widget": "textarea"
+        },
+        {
+          "group": "question",
+          "order": 20,
+          "pointer": "/options",
+          "readonly": true,
+          "widget": "json"
+        },
+        {
+          "group": "result",
+          "order": 0,
+          "pointer": "/status",
+          "readonly": true,
+          "widget": "text"
+        },
+        {
+          "group": "result",
+          "order": 10,
+          "pointer": "/date",
+          "readonly": true,
+          "widget": "text"
+        }
+      ],
+      "groups": [
+        {
+          "id": "question",
+          "order": 0,
+          "title": "Question"
+        },
+        {
+          "id": "result",
+          "order": 10,
+          "title": "Result"
+        }
+      ],
+      "id": "gui-planner.decision",
+      "schema": "urn:swissknifeman:task:plan:decision:v1"
+    }
+  ],
   "gui_protocol": {
     "max": "1",
     "min": "1"
@@ -209,6 +817,62 @@
       "scope": "plan",
       "timeout_s": 30,
       "title": "Raw document"
+    },
+    {
+      "cache_s": 0,
+      "description": "The item document and its revision for the edit form.",
+      "id": "gui-planner.item-form",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "item_id",
+          "required": true,
+          "title": "Item",
+          "type": "item-ref"
+        }
+      ],
+      "returns": "schema-form",
+      "scope": "item",
+      "timeout_s": 30,
+      "title": "Item form"
+    },
+    {
+      "cache_s": 0,
+      "description": "The phase document and its revision for the edit form.",
+      "id": "gui-planner.phase-form",
+      "params": [
+        {
+          "name": "plan_id",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "name": "phase",
+          "pattern": "^P[0-9]+$",
+          "required": true,
+          "title": "Phase",
+          "type": "string"
+        }
+      ],
+      "returns": "schema-form",
+      "scope": "plan",
+      "timeout_s": 30,
+      "title": "Phase form"
+    },
+    {
+      "cache_s": 60,
+      "description": "Models of the aicore model catalog (provider/model) for the model picker.",
+      "id": "gui-planner.models",
+      "returns": "resource-list",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Models"
     }
   ],
   "requires_contracts": [
@@ -231,6 +895,10 @@
       "view": "resource-list"
     },
     {
+      "actions": [
+        "gui-planner.grant",
+        "gui-planner.log-note"
+      ],
       "id": "gui-planner.overview",
       "nav": {
         "order": 10,
@@ -279,6 +947,9 @@
       "view": "dependency-graph"
     },
     {
+      "actions": [
+        "gui-planner.decision-decide"
+      ],
       "id": "gui-planner.decisions",
       "nav": {
         "order": 50,
@@ -311,6 +982,9 @@
       "view": "markdown"
     },
     {
+      "actions": [
+        "gui-planner.item-reopen"
+      ],
       "id": "gui-planner.item",
       "path": "plans/:plan_id/items/:item_id",
       "query": "gui-planner.item",

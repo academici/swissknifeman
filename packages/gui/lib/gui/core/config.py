@@ -357,7 +357,7 @@ class ConfigService:
 
     @staticmethod
     def _key_ok(key: str) -> bool:
-        return re.fullmatch(r"[a-z][a-z0-9_]*(\.[a-z0-9_-]+)*", key) is not None
+        return re.fullmatch(r"[a-z][a-z0-9_]*(\.[a-z0-9_:-]+)*", key) is not None
 
     @staticmethod
     def _secret_ref_ok(value: Any) -> bool:

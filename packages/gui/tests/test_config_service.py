@@ -109,6 +109,18 @@ class ServiceCase(unittest.TestCase):
         return found
 
 
+class TestMapKeyWithColon(ServiceCase):
+    units = "config-demo"
+
+    def test_aicore_overlay_slot_key_passes_the_view_contract(self):
+        env = {key: value for key, value in self.env.items() if key != "SKM_UNITS_PATH"}
+        service = self.make(env)
+        self.write(self.project, 'schema_version = 1\n[aicore.overlays]\n"planner:plan-design" = ["extra.md"]\n')
+        document = service.view("aicore", str(self.root), "proj-1")
+        self.assertEqual([], contracts.validate(document, "config-view"))
+        self.assertIn("overlays.planner:plan-design", [entry["key"] for entry in document["entries"]])
+
+
 class TestModulesAndView(ServiceCase):
     def test_modules(self):
         document = self.service.modules()

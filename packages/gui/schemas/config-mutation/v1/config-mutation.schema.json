@@ -151,7 +151,7 @@
                   },
                   "key": {
                     "type": "string",
-                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_:-]+)*$",
                     "description": "Dotted key of the module configuration."
                   },
                   "value": {
@@ -175,7 +175,7 @@
                   },
                   "key": {
                     "type": "string",
-                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_:-]+)*$",
                     "description": "Dotted key of the module configuration."
                   }
                 },
@@ -253,7 +253,7 @@
             "properties": {
               "key": {
                 "type": "string",
-                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_:-]+)*$",
                 "description": "Dotted key of the module configuration."
               },
               "before": {
@@ -308,7 +308,7 @@
             "properties": {
               "key": {
                 "type": "string",
-                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_-]+)*$",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_:-]+)*$",
                 "description": "Dotted key of the module configuration."
               },
               "code": {

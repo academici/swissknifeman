@@ -108,6 +108,11 @@ def _must(done: "Any", what: str, code: str = "WORKSPACE_SYNC_FAILED") -> str:
     return done.stdout
 
 
+def _literal_env() -> Dict[str, str]:
+    """The environment of a git call whose path arguments are file names, never pathspecs (no glob, no magic)."""
+    return dict(os.environ, GIT_LITERAL_PATHSPECS="1")
+
+
 def _in_chunks(items: Sequence[str]) -> List[List[str]]:
     return [list(items[start:start + CHUNK]) for start in range(0, len(items), CHUNK)]
 
@@ -277,6 +282,8 @@ def _step_commit(run: _Run) -> None:
     staged = _executable_fix(target, paths)
     names = [item for item in _must(gitutil.git(["diff", "--cached", "--name-only", "-z"], target),
                                     "diff --cached").split("\0") if item]
+    if names:
+        _recheck_staged(run, names, first, warn, settings)
     local_only = [dict(item, path=safety._display(item["path"])) for item in sorted(first.local_only,
                                                                                     key=lambda entry: entry["path"])]
     result: Dict[str, Any] = {"status": "nothing", "sha": None, "files": 0, "warn": warn, "local_only": local_only,
@@ -299,6 +306,26 @@ def _step_commit(run: _Run) -> None:
     _write_state(run.env, run.home, last_commit_at=now, last_result="ok")
     run.audit("commit", "ok", sha=sha, files=len(names))
     run.events.append(("workspace.sync.committed", {"sha": sha, "files": len(names)}))
+
+
+def _recheck_staged(run: _Run, names: Sequence[str], first: "safety.Report", warn: List[Dict[str, Any]],
+                    settings: "safety.Settings") -> None:
+    """Judge the staged content again: a file can change between the scan and ``git add``, and the commit takes what the
+    index holds. A block, or a local-only file the first scan did not know, unstages the offending paths and stops."""
+    target = run.target
+    again = safety.scan(target, names, settings)
+    known = {item["path"] for item in first.local_only}
+    block = list(again.block)
+    offending = {item["path"] for item in again.local_only if item["path"] not in known}
+    for path in sorted(offending):
+        block.append({"rule": "PS-CHANGED-DURING-SYNC", "path": safety._display(path),
+                      "detail": "the file became size- or binary-limited after the safety scan; run sync again"})
+    if block:
+        shown = {item["path"] for item in block}
+        for chunk in _in_chunks([name for name in names if safety._display(name) in shown]):
+            gitutil.git(["reset", "-q", "--", *chunk], target, env=_literal_env())
+        raise _blocked(run, block, warn, again.files_checked)
+    warn.extend(item for item in again.warn if item not in warn)
 
 
 def _executable_fix(target: Path, paths: Sequence[str]) -> List[str]:
@@ -456,14 +483,15 @@ def _merge_resolved(run: _Run, last: Mapping[str, Any], pending: Mapping[str, st
 
 def _apply_side(target: Path, path: str, side: str) -> None:
     """Take ``local`` (ours) or ``remote`` (theirs) for an unmerged path; a side that deleted the file deletes it."""
+    literal = _literal_env()  # a file name is a name, not a pathspec: no glob or magic reaches other files
     stages = {record.partition("\t")[0].split(" ")[2] for record in
-              _must(gitutil.git(["ls-files", "-u", "-z", "--", path], target), "ls-files").split("\0") if record}
+              _must(gitutil.git(["ls-files", "-u", "-z", "--", path], target, env=literal), "ls-files").split("\0") if record}
     wanted = "2" if side == "local" else "3"
     if wanted in stages:
-        _must(gitutil.git(["checkout", SIDES[side], "--", path], target), "checkout")
-        _must(gitutil.git(["add", "--", path], target), "add")
+        _must(gitutil.git(["checkout", SIDES[side], "--", path], target, env=literal), "checkout")
+        _must(gitutil.git(["add", "--", path], target, env=literal), "add")
     else:
-        _must(gitutil.git(["rm", "-q", "--", path], target), "rm")
+        _must(gitutil.git(["rm", "-q", "--", path], target, env=literal), "rm")
 
 
 # --------------------------------------------------------------------------------------------------- 4. push
@@ -477,12 +505,19 @@ def _step_push(run: _Run) -> None:
     run.report["push"] = {"status": "pending", "head": head, **info}
     if run.announce is not None:
         run.announce(dict(info))
-    if _ref(target, f"refs/remotes/origin/{branch}") == head:
+    # the remote itself is asked: the tracking ref can outlive a branch that was deleted on the remote
+    listed = gitutil.git(["ls-remote", "origin", f"refs/heads/{branch}"], target, env=gitutil.network_env(run.env))
+    if listed.returncode != 0:
+        detail = gitutil.redact_remote_text(listed.stderr.strip() or listed.stdout.strip() or f"exit {listed.returncode}")
+        run.report["push"]["status"] = "failed"
+        raise SyncError("REMOTE_UNREACHABLE", f"git ls-remote failed: {detail}", run.report)
+    published = [line.split("\t")[0] for line in listed.stdout.splitlines() if line.endswith(f"\trefs/heads/{branch}")]
+    if head in published:
         run.report["push"]["status"] = "up-to-date"
         run.audit("push", "ok", head=head, status="up-to-date")
         _write_state(run.env, run.home, last_push_at=utc_now(), last_result="ok")
         return
-    done = gitutil.git(["push", "origin", f"HEAD:{branch}"], target, env=gitutil.network_env(run.env))
+    done = gitutil.git(["push", "origin", f"HEAD:refs/heads/{branch}"], target, env=gitutil.network_env(run.env))
     if done.returncode != 0:
         detail = gitutil.redact_remote_text(done.stderr.strip() or done.stdout.strip() or f"exit {done.returncode}")
         if "[rejected]" in detail or "non-fast-forward" in detail or "fetch first" in detail:

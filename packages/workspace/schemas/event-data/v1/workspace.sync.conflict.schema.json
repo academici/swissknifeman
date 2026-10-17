@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:event-data:workspace-sync-conflict:v1",
+  "title": "workspace.sync.conflict",
+  "description": "A pull found files changed on both sides; nothing was merged.",
+  "type": "object",
+  "properties": {
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Conflicting paths relative to the workspace."
+    }
+  },
+  "required": [
+    "paths"
+  ],
+  "additionalProperties": false
+}

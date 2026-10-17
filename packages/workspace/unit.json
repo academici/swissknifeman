@@ -47,7 +47,11 @@
       "workspace.root.initialized",
       "workspace.project.attached",
       "workspace.migration.applied",
-      "workspace.migration.rolled-back"
+      "workspace.migration.rolled-back",
+      "workspace.sync.committed",
+      "workspace.sync.pulled",
+      "workspace.sync.conflict",
+      "workspace.sync.pushed"
     ],
     "extension_points": [
       {

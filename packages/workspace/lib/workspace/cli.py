@@ -14,7 +14,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired, resolve_project
 from aicore.workspace import WorkspaceError
 
-from . import __version__, doctor, events, layout, migrate, projects, remote
+from . import __version__, doctor, events, layout, migrate, projects, remote, sync
 
 USAGE = """usage: workspace <command> [options]
 
@@ -49,6 +49,9 @@ commands:
   connect --remote URL [--branch B] [--json]
                                     classify the remote (empty or the same workspace) and add it as origin; never pushes
   clone URL [--root DIR] [--json]   make this machine's workspace from a remote (the folder must be absent or empty)
+  sync [--commit] [--pull] [--push] [--resolve PATH=local|remote ...] [--resolve-reset] [--json]
+                                    commit (publish-safety first), pull (dry merge, typed conflicts), resolve, push; no flag:
+                                    commit and pull; --push needs and runs both; a conflict is never decided for you
   version                           print the version
   help                              show this text
 
@@ -83,6 +86,13 @@ def _build() -> argparse.ArgumentParser:
     p = sub.add_parser("clone")
     p.add_argument("url", metavar="URL")
     p.add_argument("--root", metavar="DIR", default=None)
+    p.add_argument("--json", action="store_true")
+    p = sub.add_parser("sync")
+    p.add_argument("--commit", action="store_true")
+    p.add_argument("--pull", action="store_true")
+    p.add_argument("--push", action="store_true")
+    p.add_argument("--resolve", action="append", default=[], metavar="PATH=local|remote")
+    p.add_argument("--resolve-reset", action="store_true", dest="resolve_reset")
     p.add_argument("--json", action="store_true")
     project = sub.add_parser("project")
     commands = project.add_subparsers(dest="project_command", parser_class=_Parser)
@@ -236,6 +246,63 @@ def _cmd_clone(args: argparse.Namespace) -> int:
         return 0
     print(f"cloned workspace {doc['workspace_id']} from {doc['remote']} to {doc['root']} (device {doc['device_id']})")
     print(f"next: {doc['next']}")
+    return 0
+
+
+def _sync_text(doc: Any) -> None:
+    commit = doc.get("commit")
+    if commit is not None:
+        if commit["status"] == "committed":
+            print(f"commit {commit['sha'][:12]}: {commit['subject']}")
+        elif commit["status"] == "nothing":
+            print("commit: nothing to commit")
+        else:
+            for label in ("block", "warn"):
+                for item in commit.get(label, []):
+                    where = item["path"] + (f":{item['line']}" if "line" in item else "")
+                    print(f"[{label}] {item['rule']} {where}: {item['detail']}")
+        for item in commit.get("warn", []):
+            if commit["status"] != "blocked":
+                where = item["path"] + (f":{item['line']}" if "line" in item else "")
+                print(f"[warn] {item['rule']} {where}: {item['detail']}")
+        for path in commit.get("untracked", []):
+            print(f"[warn] {path} is local-only now: removed from the git index, kept on disk")
+        for item in commit.get("local_only", []):
+            print(f"[local-only] {item['path']} ({item['reason']}, {item['bytes']} bytes)")
+    pull = doc.get("pull")
+    if pull is not None:
+        print(f"pull: {pull['status']} (HEAD {pull['head'][:12]})")
+    for row in doc.get("conflicts", []):
+        where = " ".join(f"{key} {row[key]}" for key in ("project_id", "plan", "ref") if row.get(key))
+        print(f"conflict {row['path']}" + (f"  ({where})" if where else ""))
+    resolution = doc.get("resolution")
+    if resolution is not None:
+        print(f"resolve: {resolution['decided']} decided, {len(resolution['remaining'])} remaining"
+              + (f": {', '.join(resolution['remaining'])}" if resolution["remaining"] else ""))
+    push = doc.get("push")
+    if push is not None:
+        print(f"push: {push['status']} ({push['remote']} {push['branch']}, HEAD {push['head'][:12]})")
+
+
+def _cmd_sync(args: argparse.Namespace) -> int:
+    def announce(info: Any) -> None:
+        if not args.json:
+            print(f"pushing to {info['remote']} branch {info['branch']}", flush=True)
+
+    try:
+        doc = sync.sync(commit=args.commit, pull=args.pull, push=args.push, resolve=args.resolve,
+                        resolve_reset=args.resolve_reset, announce=announce)
+    except sync.SyncError as exc:
+        if args.json:
+            _dump(exc.report)
+        else:
+            _sync_text(exc.report)
+        print(str(exc), file=sys.stderr)
+        return 1
+    if args.json:
+        _dump(doc)
+    else:
+        _sync_text(doc)
     return 0
 
 
@@ -438,7 +505,7 @@ def _cmd_migrate_cleanup(args: argparse.Namespace) -> int:
 
 
 _COMMANDS = {"init": _cmd_init, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version,
-             "connect": _cmd_connect, "clone": _cmd_clone}
+             "connect": _cmd_connect, "clone": _cmd_clone, "sync": _cmd_sync}
 _PROJECT = {"attach": _cmd_attach, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
             "detach": _cmd_detach}
 _MIGRATE = {"discover": _cmd_discover, "plan": _cmd_migrate_plan, "apply": _cmd_migrate_apply,

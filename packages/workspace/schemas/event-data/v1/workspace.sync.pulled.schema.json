@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:event-data:workspace-sync-pulled:v1",
+  "title": "workspace.sync.pulled",
+  "description": "origin was fetched and, when it had news, merged into the workspace.",
+  "type": "object",
+  "properties": {
+    "head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40,64}$",
+      "description": "HEAD of the workspace after the pull."
+    },
+    "merged": {
+      "type": "boolean",
+      "description": "Whether changes of the remote were merged."
+    }
+  },
+  "required": [
+    "head",
+    "merged"
+  ],
+  "additionalProperties": false
+}

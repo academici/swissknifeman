@@ -848,6 +848,8 @@ class NamesTests(unittest.TestCase):
 
     def test_the_contract_in_the_hub_knows_rolled_back_at(self):
         path = HUB_ROOT / "packages" / "aicore" / "schemas" / "workspace-migration" / "v1" / "workspace-migration.schema.json"
+        if not path.is_file():
+            self.skipTest("aicore is not in the hub layout (standalone copy)")
         schema = json.loads(path.read_text(encoding="utf-8"))
         self.assertIn("rolled_back_at", schema["properties"])
         self.assertNotIn("rolled_back_at", schema["required"])

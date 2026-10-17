@@ -144,12 +144,53 @@ Needs git 2.38 or newer (`WORKSPACE_GIT_TOO_OLD` otherwise).
 Git never asks for a password here: an authentication or network failure is `REMOTE_UNREACHABLE`, with the URL shown
 without user information.
 
+## Sync between machines
+
+`swissknifeman workspace sync [--commit] [--pull] [--push] [--resolve PATH=local|remote ...] [--resolve-reset] [--json]`
+is the only way plans move between machines. It is manual: there is no background mode and no hook. Without a flag it
+commits and pulls; `--push` also needs both, so it runs them first. Everything runs under the one `git.lock`.
+
+1. **Commit.** The files that would enter the commit are judged by the publish-safety rules. A `block` (a secret, an absolute
+   path in a manifest, a symlink, an unknown entry) is `PUBLISH_BLOCKED`: nothing is committed or pushed. Files that are too
+   large are written to `local-only.json` and `.git/info/exclude` instead of git; a file git already tracks that became
+   local-only is removed from the index (`git rm --cached`) in the sync commit, with a warning, and stays on disk. The execute
+   bit is cleared in the index. The commit is `skm(plan): <plan-id> sync <N> files` when only one plan changed, else
+   `skm(workspace): sync <N> files`; its body lists the projects and plans and it ends with `Workspace-Device: dev_…`.
+2. **Pull.** `git fetch origin`, then a dry merge with `git merge-tree --write-tree` (git 2.38). A clean result is merged,
+   fast-forward where possible. `log.jsonl` of a plan merges by the `union` driver, so two machines that only append to the
+   journal never conflict. When a file changed on both sides nothing is merged and the working tree and `HEAD` stay as they
+   were: the answer lists `conflicts[{path, project_id, plan, ref}]` (the `ref` is the document: `phases/P2/P2.3.json` is
+   `P2.3`, `decisions/D4.json` is `D4`, `plan.json` is `plan`) and the exit is 1 with `WORKSPACE_CONFLICT`.
+3. **Resolve.** Name the side for every conflicting path: `--resolve PATH=local` keeps this machine's file, `--resolve
+   PATH=remote` takes the other machine's. It can be given in parts; the decisions wait in `sync.json` and the answer shows
+   `{"resolution": {"decided": N, "remaining": [...]}}` until every path is decided. A path that is not in the last conflict
+   report is `RESOLUTION_INCOMPLETE`. When all are decided, sync fetches again; if `origin/<branch>` or `HEAD` moved since the
+   conflicts were found the decisions are dropped (`WORKSPACE_CONFLICT_STALE`) and you run `--pull` again. Otherwise it merges
+   (`merge --no-commit`), takes the sides and commits `skm(workspace): merge origin/<branch> (resolved N)`; any error aborts
+   the merge. `--resolve-reset` drops the decisions. `--resolve` replaces `--pull` and cannot be combined with it.
+4. **Push.** `git push origin HEAD:<branch>`, never forced. The remote (without user information) and the branch are printed
+   before the push. A remote that has news is `WORKSPACE_BEHIND`: run `sync --pull`, then push again.
+
+`sync.json` and `audit.jsonl` in the machine state record the last commit, pull and push, the last result, the pending
+conflicts and decisions, and one line per operation. Events: `workspace.sync.committed`, `.pulled`, `.conflict`, `.pushed`.
+
+Two machines: on A `workspace init`, `project attach` or `migrate apply`, `connect --remote URL`, `sync --push`; on B
+`workspace clone URL`, `project scan ~/projects`, then `sync --push` on either side whenever its plans changed (the other
+side runs `sync` to receive them). `scripts/e2e-workspace-sync.sh` runs this with two `SKM_HOME` and two workspaces on one bare
+remote.
+
 ## Error codes
 
 Workspace: `WORKSPACE_NOT_INITIALIZED`, `WORKSPACE_ROOT_NOT_EMPTY`, `WORKSPACE_LAYOUT_INVALID`, `WORKSPACE_GIT_LOCKED`,
 `WORKSPACE_GIT_TOO_OLD`, `ATTACH_CONFIRM_REQUIRED`, `PROJECT_UNKNOWN`, `PROJECT_AMBIGUOUS`, `PROJECT_MARKER_INVALID`,
 `BINDING_MARKER_MISMATCH`, `BINDING_PATH_MISSING`, `REMOTE_UNREACHABLE`, `REMOTE_ALREADY_SET`, `REMOTE_FOREIGN`,
-`REMOTE_OTHER_WORKSPACE`, `PUBLISH_BLOCKED`.
+`REMOTE_OTHER_WORKSPACE`, `REMOTE_NOT_SET`, `PUBLISH_BLOCKED`.
+
+Sync: `WORKSPACE_CONFLICT` (files changed on both sides), `RESOLUTION_INCOMPLETE` (a `--resolve` path is not in the last
+conflict report, or there is none), `WORKSPACE_CONFLICT_STALE` (the remote or this workspace moved; decisions dropped),
+`WORKSPACE_BEHIND` (push rejected: pull first), `WORKSPACE_MERGE_FAILED`, `WORKSPACE_MERGE_IN_PROGRESS` (an unfinished merge in
+the workspace repository), `WORKSPACE_UNRELATED_HISTORIES` (this workspace and the remote share no commit),
+`WORKSPACE_SYNC_FAILED` (a git step of the commit failed).
 
 Migration: `MIGRATION_BLOCKED_SECRET`, `MIGRATION_BLOCKED_SYMLINK`, `MIGRATION_IN_PROGRESS`, `MIGRATION_CONFLICT`,
 `MIGRATION_LOCKED` (a plan lock or the project migration lock was not free in time), `MIGRATION_SOURCE_CHANGED` (the source

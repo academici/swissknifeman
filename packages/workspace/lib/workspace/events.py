@@ -8,7 +8,8 @@ from typing import Any, Mapping, Optional, Union
 SOURCE = "workspace"
 DATA_SCHEMA = "urn:swissknifeman:workspace:event-data:{name}:v1"
 EVENT_TYPES = ("workspace.root.initialized", "workspace.project.attached", "workspace.migration.applied",
-               "workspace.migration.rolled-back")
+               "workspace.migration.rolled-back", "workspace.sync.committed", "workspace.sync.pulled",
+               "workspace.sync.conflict", "workspace.sync.pushed")
 
 
 def data_schema(event_type: str) -> str:

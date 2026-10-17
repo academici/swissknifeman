@@ -5,7 +5,7 @@ import subprocess
 import unittest
 from unittest import mock
 
-from tests import MODULE_ROOT, TempCase
+from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase
 from workspace import __version__
 
 
@@ -42,7 +42,9 @@ class CommandTests(TempCase):
         self.assertEqual(set(status["git"]), {"branch", "dirty", "remote", "ahead", "behind", "diverged", "fetched_at"})
         doctor = self.json_cli("doctor")
         self.assertEqual(set(doctor), {"checks"})
-        self.assertEqual({item["status"] for item in doctor["checks"]}, {"ok"})
+        # outside the hub nothing fills the port workspace:plans-migrator: that one check warns
+        checks = [item for item in doctor["checks"] if BRIDGE_ROOT.is_dir() or item["check_id"] != "workspace.plans-migrator"]
+        self.assertEqual({item["status"] for item in checks}, {"ok"})
 
     def test_json_is_one_object_on_stdout(self):
         code, out, err = self.run_cli("init", "--json")

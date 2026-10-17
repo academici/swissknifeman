@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261017T222246Z-aa780f:P4.2:checks.2:V51",
+  "check_id": "V51",
+  "subject": "PLAN6.P4.2",
+  "candidate": {
+    "head": "a170f04e0cf8055e12586ee17781a13b6a7373bd",
+    "dirty_digest": "680dc002856fa464aa5a9993753197e0fcb75855c844bd045fd5a54a499ef1f3"
+  },
+  "started_at": "2026-10-17T22:57:59Z",
+  "procedure": {
+    "cmd": "bash scripts/test-integration.sh",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-17T22:59:35Z"
+}

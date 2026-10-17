@@ -4,7 +4,8 @@
 # packages/<id> of this checkout, so tests that need a partner run instead of being skipped. analyst and maind are
 # auxiliary tools outside the core verification (standalone.tools): they join only with --with-tools. The end-to-end
 # checks of planning in the portable workspace (scripts/e2e-workspace-plans.sh) and of the migration of plans into it
-# (scripts/e2e-workspace-migrate.sh) run after the modules.
+# (scripts/e2e-workspace-migrate.sh) and the sync of two machines through a bare remote (scripts/e2e-workspace-sync.sh) run
+# after the modules.
 set -uo pipefail
 HUB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -39,6 +40,10 @@ bash "$HUB/scripts/e2e-workspace-plans.sh" || failed+=("e2e-workspace-plans")
 count=$((count + 1))
 echo "== workspace migrate: bash scripts/e2e-workspace-migrate.sh"
 bash "$HUB/scripts/e2e-workspace-migrate.sh" || failed+=("e2e-workspace-migrate")
+
+count=$((count + 1))
+echo "== workspace sync: bash scripts/e2e-workspace-sync.sh"
+bash "$HUB/scripts/e2e-workspace-sync.sh" || failed+=("e2e-workspace-sync")
 
 if [[ "${#failed[@]}" -gt 0 ]]; then
   echo "integration: FAILURE (${failed[*]})" >&2

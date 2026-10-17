@@ -32,6 +32,9 @@ JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; w
 | `migrate verify --project DIR` | The last report of this device against the workspace copies and the old folders. |
 | `migrate rollback --project DIR` | Marker back to `legacy`; removes the folders the migration brought in. |
 | `migrate cleanup --project DIR --confirm PROJECT_ID` | Removes the old folders whose copy in the workspace has the same digest. |
+| `connect --remote URL [--branch B]` | Classify the remote (`empty` or the same workspace; `REMOTE_FOREIGN`, `REMOTE_OTHER_WORKSPACE`) and add it as `origin`; never commits or pushes. |
+| `clone URL [--root DIR]` | Make this machine's workspace from a remote into an absent or empty folder, and the device file. |
+| `sync [--commit] [--pull] [--push] [--resolve PATH=local\|remote ...] [--resolve-reset]` | Commit (publish-safety first), pull (dry merge with `git merge-tree`, typed conflicts), resolve and push without force (see Sync). No flag: commit and pull; `--push` runs both first. |
 
 ## Publish-safety
 
@@ -102,6 +105,26 @@ and set `trusted = true` so it receives `PLANNER_ROOT`; `workspace doctor` shows
 Every command that changes the workspace repository holds `git.lock` (`WORKSPACE_GIT_LOCKED` after the configured
 wait). Git is always called with an argument list, never through a shell, and never with force, `reset --hard` or `clean`.
 
+## Sync
+
+`sync` runs under `git.lock` and follows `workspace-contract#sync`: **commit** (publish-safety over the changed files; a
+`block` stops everything with `PUBLISH_BLOCKED` and nothing is committed; local-only files go to `local-only.json` and the
+exclude block; a tracked file that became local-only is removed from the index with a warning and stays on disk; the execute
+bit is cleared in the index; `git add -A` of `projects`, `workspace.json`, `.gitignore`, `.gitattributes`, `README.md`; the
+commit is `skm(plan): <plan-id> sync <N> files` when one plan changed, else `skm(workspace): sync <N> files`, with the trailer
+`Workspace-Device`), **pull** (`git fetch origin`, then `git merge-tree --write-tree`: clean is merged, fast-forward where
+possible; a conflict changes neither the working tree nor `HEAD`, lists `conflicts[{path, project_id, plan, ref}]` and exits 1
+`WORKSPACE_CONFLICT`), **resolve** (`--resolve PATH=local|remote`, repeatable and in parts; decisions are kept in `sync.json`
+only for the paths of the last conflict report, else `RESOLUTION_INCOMPLETE`; when every path is decided and `origin/<branch>`
+and `HEAD` are as at the pull the merge is made, else `WORKSPACE_CONFLICT_STALE` and the decisions are dropped;
+`--resolve-reset` drops them; an error during the merge runs `git merge --abort`) and **push** (`git push origin HEAD:<branch>`,
+never forced; `WORKSPACE_BEHIND` when the remote has news; the remote without user information and the branch are printed
+before the push and are in the `--json` answer). `--resolve` cannot be combined with `--pull`. The side is always yours to
+name: nothing here picks one.
+
+`sync.json` (machine state) holds `last_commit_at`, `last_pull_at`, `last_push_at`, `last_result`, `last_conflicts` and
+`pending_resolutions`; `audit.jsonl` gets one line per operation. Both live in `workspace_state_dir()`, never in git.
+
 ## Configuration
 
 The `[workspace]` table (machine layer and defaults only; see `config.example.toml`): `publish.max_tracked_bytes`
@@ -110,7 +133,7 @@ The `[workspace]` table (machine layer and defaults only; see `config.example.to
 
 ## Events
 
-`workspace.root.initialized` (`{workspace_id}`), `workspace.project.attached` (`{project_id, created}`), `workspace.migration.applied` (`{project_id, op_id, mode, plans, local_only}`) and `workspace.migration.rolled-back` (`{project_id, op_id}`), described by
+`workspace.root.initialized` (`{workspace_id}`), `workspace.project.attached` (`{project_id, created}`), `workspace.migration.applied` (`{project_id, op_id, mode, plans, local_only}`) and `workspace.migration.rolled-back` (`{project_id, op_id}`), `workspace.sync.committed` (`{sha, files}`), `workspace.sync.pulled` (`{head, merged}`), `workspace.sync.conflict` (`{paths}`) and `workspace.sync.pushed` (`{head}`), described by
 `schemas/event-data/v1/`. They are journaled in the machine journal after the locks are released; a failing journal does
 not change the result of a command. The extension point `workspace:plans-migrator` is filled by a bridge.
 

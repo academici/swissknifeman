@@ -39,7 +39,10 @@ class StructureTests(DoctorCase):
 
     def test_a_fresh_workspace_is_all_ok(self):
         layout.init()
-        self.assertEqual(set(self.statuses().values()), {"ok"})
+        statuses = self.statuses()
+        if not BRIDGE_ROOT.is_dir():  # outside the hub nothing fills the port workspace:plans-migrator: that check warns
+            self.assertEqual(statuses.pop("workspace.plans-migrator"), "warn")
+        self.assertEqual(set(statuses.values()), {"ok"})
 
     def test_unknown_entries_are_warnings(self):
         layout.init()

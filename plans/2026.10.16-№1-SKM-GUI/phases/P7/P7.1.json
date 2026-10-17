@@ -1,0 +1,277 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.1",
+  "title": "Терминал (backend): PTY-сессии, privilege-гейт, WebSocket с credits, аудит, контракт terminal/v1",
+  "status": "todo",
+  "summary": "`lib/gui/core/terminal.py` (stdlib: PTY, запуск shell, resize, закрытие группы процессов, credits-счётчик, лимиты и таймауты), `lib/gui/http/routes_terminal.py` (сессии и WebSocket `/v1/terminal/{id}/io`), контракт `terminal/v1`, группа настроек `[gui.terminal]`, код `TERMINAL_LIMIT`, feature `terminal`, аудит terminal.start/end, документация.",
+  "why": "Жёсткие риски (произвольный shell, auth, ресурсы): терминал доступен при `enabled=false` или без подтверждения; сессия вне доверенного проекта; утечка секретов окружения в shell; содержимое терминала попало в аудит/лог (I6); WebSocket без Origin/Host-проверки или угадываемый session_id; backpressure не работает (вывод копится в памяти, потеря байтов); осиротевшие процессы после закрытия/остановки backend; гонка закрытия (close vs чтение vs idle-таймер); второй WebSocket к чужой сессии. Решения D29, D30; описание — knowledge/p7-design#terminal.",
+  "scope": {
+    "include": [
+      "packages/gui/lib/gui/core/terminal.py",
+      "packages/gui/lib/gui/http/routes_terminal.py",
+      "packages/gui/lib/gui/http/app.py",
+      "packages/gui/lib/gui/backend.py",
+      "packages/gui/lib/gui/settings.py",
+      "packages/gui/configs/config.schema.json",
+      "packages/gui/lib/gui/errors.py",
+      "packages/gui/schemas/terminal/v1/**",
+      "packages/gui/schemas/api-error/v1/**",
+      "packages/gui/unit.json (contracts)",
+      "packages/gui/frontend/src/contracts/generated/**",
+      "packages/gui/tests/**",
+      "packages/gui/docs/api.md",
+      "packages/gui/docs/desktop.md (ограничение терминала)",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui/frontend/src (кроме contracts/generated)",
+      "packages/gui/desktop",
+      "aicore и другие модули"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D29",
+    "D30"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p7-design#terminal",
+      "why": "привилегия, процесс, протокол, credits, аудит, коды",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p7-design#code-facts",
+      "why": "WebSocket, confirm, settings, аудит",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I2, I5, I6, I9",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#transport",
+      "why": "модель безопасности API",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/routes_events.py",
+      "why": "образец WebSocket-маршрута и закрытия",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/security.py",
+      "why": "Host/Origin/аутентификация для websocket",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/confirm.py",
+      "why": "HMAC-подтверждение",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/routes_config.py",
+      "why": "образец маршрутов с подтверждением и аудитом",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/http/errors.py",
+      "why": "endpoint, read_json, json_response",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/core/projects.py",
+      "why": "ProjectRegistry.resolve",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/core/broker.py",
+      "why": "процессы: группы, SIGTERM/SIGKILL, clean_environment (образец)",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/backend.py",
+      "why": "BackendState, features, stop",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/settings.py",
+      "why": "группы настроек",
+      "required": true
+    },
+    {
+      "path": "packages/gui/configs/config.schema.json",
+      "why": "формат групп",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/errors.py",
+      "why": "реестр кодов",
+      "required": true
+    },
+    {
+      "path": "packages/gui/schemas/run-api/v1/run-api.schema.json",
+      "why": "образец контракта с kind-вариантами",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/http_support.py",
+      "why": "ASGI-хелперы",
+      "required": true
+    },
+    {
+      "path": "packages/gui/tests/test_runtime_contracts.py",
+      "why": "реестр кодов, контрактов, docs",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/lib/gui/core/terminal.py",
+      "change": "create",
+      "note": "TerminalManager, Session (PTY), CreditGate; stdlib"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/routes_terminal.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/http/app.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/lib/gui/backend.py",
+      "change": "modify",
+      "note": "TerminalManager в BackendState; feature terminal (browser, enabled); закрытие сессий в stop()"
+    },
+    {
+      "path": "packages/gui/lib/gui/settings.py",
+      "change": "modify",
+      "note": "dataclass Terminal"
+    },
+    {
+      "path": "packages/gui/configs/config.schema.json",
+      "change": "modify",
+      "note": "группа terminal"
+    },
+    {
+      "path": "packages/gui/lib/gui/errors.py",
+      "change": "modify",
+      "note": "TERMINAL_LIMIT"
+    },
+    {
+      "path": "packages/gui/schemas/api-error/v1/api-error.schema.json",
+      "change": "modify",
+      "note": "enum code: TERMINAL_LIMIT (аддитивно)"
+    },
+    {
+      "path": "packages/gui/schemas/terminal/v1/terminal.schema.json",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/schemas/terminal/v1/examples/**",
+      "change": "create",
+      "note": "valid/invalid"
+    },
+    {
+      "path": "packages/gui/unit.json",
+      "change": "modify",
+      "note": "contract terminal/v1"
+    },
+    {
+      "path": "packages/gui/frontend/src/contracts/generated/**",
+      "change": "modify",
+      "note": "сгенерировать terminal.ts и обновить api-error (npm run gen-types)"
+    },
+    {
+      "path": "packages/gui/tests/test_terminal.py",
+      "change": "create",
+      "note": "stdlib: PTY-сессия на /bin/sh, resize, credits, лимиты, закрытие группы"
+    },
+    {
+      "path": "packages/gui/tests/test_http_terminal.py",
+      "change": "create",
+      "note": "ASGI: гейты, подтверждение, WebSocket, аудит"
+    },
+    {
+      "path": "packages/gui/tests/test_runtime_contracts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/tests/test_contracts.py",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/docs/api.md",
+      "change": "modify"
+    },
+    {
+      "path": "packages/gui/docs/desktop.md",
+      "change": "modify",
+      "note": "терминал в desktop не поддержан (D30)"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "`gui` импортирует только `lib/gui/` и aicore; имена `packages/<id>/` в файлах gui запрещены (sibling-package); сторонние пакеты — только в `lib/gui/http`, не в `lib/gui/core`.",
+    "Ответы API, события и тела не содержат float (canonical JSON бэкенда его отвергает): доли и проценты — целые.",
+    "Исполнитель не запускает E2E и backend на requirements.lock (песочница не видит requirements.lock и браузер, журнал прогона п. 12): поведение покрывай stdlib-тестами ядра, тестами уровня ASGI (tests/http_support.py) и тестами компонентов.",
+    "Подпроцессные и сетевые тесты — с таймаутами на каждое ожидание; не читай `read()` пайпа живого процесса (stderr/stdout остаются открытыми) и не вычисляй сообщение assert с блокирующим чтением (журнал прогона п. 14: такой тест повис на час).",
+    "Содержимое терминала (ввод и вывод) не записывается нигде: ни в логи, ни в аудит, ни в события; тест: после сессии с «секретной» строкой в выводе её нет ни в одном файле state-папки и в audit.details.",
+    "Окружение shell — `clean_environment` (без секретов, без `GUI_*`, без токенов сессии) плюс TERM/COLORTERM/LANG; тест: переменная с секретным именем из окружения backend в shell не видна.",
+    "`credits`: непогашенный кредит клиента ограничен сверху `4 * credit_bytes`; при нулевом кредите сервер не читает мастер PTY; тест на stdlib-уровне: источник, пишущий быстрее потребителя, не раздувает память сервера выше `output_chunk_bytes` + константа, байты не теряются и приходят по порядку (`seq`).",
+    "Закрытие: тест, что после `close`, EOF, idle-таймера (инжектируемые часы), max-таймера и остановки менеджера процесс shell и его потомки (`sleep 300 &`) завершены, а `os.waitpid` не оставляет зомби.",
+    "PTY-код платформо-зависим: на не-Linux/macOS (`os.name != 'posix'`) менеджер отказывает `PERMISSION_DENIED` с понятным текстом; импорт модуля не падает.",
+    "Новый контракт `terminal/v1` — отдельная директория; существующие контракты не меняются кроме добавления значения в enum `code`."
+  ],
+  "guidance": "Порядок: (1) контракт terminal/v1 + примеры + unit.json + TS-типы (запусти gen-types) + код TERMINAL_LIMIT во всех четырёх местах; (2) settings Terminal; (3) core/terminal.py: LAUNCHER, выбор shell, Session (spawn, read-loop по запросу, write, resize, close), CreditGate, TerminalManager (лимиты, idle/max по инжектируемым часам, close_all); stdlib-тесты на реальном /bin/sh; (4) routes_terminal.py: создание (гейты: enabled, проект, лимит, confirm), список, close, WebSocket (кадры по knowledge/p7-design#terminal, TERMINAL_BUSY, ошибки как error-кадры, закрытие при обрыве), аудит; (5) backend: менеджер, feature, stop(); (6) ASGI-тесты: выключено -> PERMISSION_DENIED; без confirm -> 428; чужой проект; лимит -> 429; WebSocket: output после credit, без кредита ничего не приходит, input эхо, resize, exit; Origin отсутствует -> отказ; (7) docs, CHANGELOG; V1–V3.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "npm --prefix packages/gui/frontend run check",
+      "expect": "exit 0; generated актуален",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "терминал backend (PTY, WebSocket, credits, аудит)",
+    "terminal/v1"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T05:36:17Z"
+}

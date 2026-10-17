@@ -1,0 +1,272 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.3",
+  "title": "orch conduct runs (аддитивно) и bridges/gui-orch: runs, статус, отчёт observer, вопросы, sandbox-индикатор, команды запуска",
+  "status": "todo",
+  "summary": "В orch: команда `conduct runs [--limit N] [--json]` (формат вывода описан в docs/conductor.md и закреплён тестами) без нового контракта. Мост `bridges/gui-orch` (unit.json, extension.json, gui.json, adapter.py, README, scripts/test.sh, тесты на фейковом umbrella): запросы runs, run, items, report, questions, sandbox; маршруты и виджет; команды run-ready, resume, release (argv, без shell); регистрация в хабе.",
+  "why": "Жёсткие риски: мост читает внутренние каталоги orch (граница модулей, I3); путь отчёта выходит за корень проекта (traversal через run_id, symlink); команды запуска собирают argv склейкой (I4: один скаляр = один элемент argv, `--items` строкой запрещён, используется `--ready --max-items`); запуск без подтверждения (risk high, confirmation always); несовместимое изменение CLI orch (только аддитивно; golden orch и `aicore schema compat`). Решение D31; описание — knowledge/p7-design#orch-bridge.",
+  "scope": {
+    "include": [
+      "packages/orch/lib/orch/conductor/cli.py (и модуль команды runs)",
+      "packages/orch/tests/**",
+      "packages/orch/docs/**",
+      "packages/orch/CHANGELOG.md (если есть)",
+      "bridges/gui-orch/**",
+      "configs/ecosystem-units.json",
+      "configs/install-profiles.json",
+      "bridges/README.md",
+      "docs/architecture/ownership.md (только render)",
+      "docs/architecture/ecosystem.md",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui",
+      "packages/planner",
+      "packages/aicore",
+      "изменение существующих команд orch и контрактов exec/v1, conductor/v1"
+    ]
+  },
+  "depends_on": [],
+  "decisions": [
+    "D31"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p7-design#orch-bridge",
+      "why": "команда runs, запросы, маршруты, команды, ограничения",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p7-design#code-facts",
+      "why": "CLI orch и образцы мостов",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#invariants",
+      "why": "I2, I3, I4, I6",
+      "required": true
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "why": "подкоманды conduct, status --json",
+      "required": true
+    },
+    {
+      "path": "packages/orch/CLAUDE.md",
+      "why": "правила модуля: Python 3.9, английская диагностика, validate/test",
+      "required": true
+    },
+    {
+      "path": "packages/orch/scripts/test.sh",
+      "why": "как тестируется orch",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/adapter.py",
+      "why": "образец адаптера: CLI через umbrella, safe_text, коды ошибок",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/gui.json",
+      "why": "образец routes, widgets, queries, commands",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/extension.json",
+      "why": "образец манифеста",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/unit.json",
+      "why": "образец unit.json моста",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/scripts/test.sh",
+      "why": "образец поиска партнёров",
+      "required": true
+    },
+    {
+      "path": "bridges/gui-planner/tests/test_queries.py",
+      "why": "образец тестов через invoke_one",
+      "required": true
+    },
+    {
+      "path": "packages/gui/schemas/view-data/v1/view-data.schema.json",
+      "why": "формы resource-list, resource-detail, status-table, markdown",
+      "required": true
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "why": "запись gui-planner как образец",
+      "required": true
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "why": "включение gui-planner в профили",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/orch/lib/orch/conductor/runs.py",
+      "change": "create",
+      "note": "runs_document(project) -> dict; читает только свои run.json/state.json"
+    },
+    {
+      "path": "packages/orch/lib/orch/conductor/cli.py",
+      "change": "modify",
+      "note": "подкоманда `conduct runs`"
+    },
+    {
+      "path": "packages/orch/tests/test_conduct_runs.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/orch/docs/conductor.md",
+      "change": "modify",
+      "note": "описание `conduct runs`"
+    },
+    {
+      "path": "bridges/gui-orch/unit.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/extension.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/gui.json",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/adapter.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/README.md",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/scripts/test.sh",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/tests/__init__.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/tests/test_queries.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/tests/test_commands.py",
+      "change": "create"
+    },
+    {
+      "path": "bridges/gui-orch/tests/fixtures/**",
+      "change": "create",
+      "note": "фейковый umbrella и ответы orch"
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "change": "modify"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "change": "modify"
+    },
+    {
+      "path": "bridges/README.md",
+      "change": "modify"
+    },
+    {
+      "path": "docs/architecture/ownership.md",
+      "change": "modify",
+      "note": "только `python3 scripts/ecosystem-units.py render`"
+    },
+    {
+      "path": "docs/architecture/ecosystem.md",
+      "change": "modify"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "Модуль orch: Python 3.9, английская диагностика, аддитивность; перед сдачей в report укажи результат `bash packages/orch/scripts/test.sh`, `bash packages/orch/scripts/validate.sh`, `python3 scripts/ecosystem-units.py standalone orch` (conductor запускает их в phase.validation).",
+    "`conduct runs` читает только каталоги состояния orch проекта; вывод детерминирован (новые первыми, затем по run_id); пустой список — валидный ответ; битый run.json — запись `{run_id, status: \"unreadable\"}`, не исключение.",
+    "Мост вызывает только CLI хаба (`SKM_UMBRELLA`/`swissknifeman` -> `orch`), не импортирует код orch, не читает каталоги состояния orch; отчёт — через путь, который печатает CLI, и только если realpath внутри `<проект>/.swissknifeman/orch/reports/`.",
+    "`run_id` и `plan` проверяются шаблонами (`cnd-[0-9A-Za-z-]+`, `plan-ref` хоста) до вызова; один скаляр = один элемент argv; `--dry-run` добавляет флаг command descriptor (`dry_run`), не строка пользователя.",
+    "Ошибки CLI -> коды плагина (`ORCH_UNAVAILABLE`, `ORCH_CLI_FAILED`, `ORCH_RUN_NOT_FOUND`), тексты через safe_text; каждый ответ валиден view-data/v1 и не содержит float (проценты и токены — целые).",
+    "Ответы API, события и тела не содержат float (canonical JSON бэкенда его отвергает): доли и проценты — целые."
+  ],
+  "guidance": "Порядок: (1) orch: runs.py, подкоманда, схема, тесты (пустой проект, два run, битый run.json), docs; `bash packages/orch/scripts/test.sh`; (2) мост: unit.json/extension.json/gui.json (queries runs, run, items, report, questions, sandbox; routes; widget; commands run-ready, resume, release), `packages/gui/bin/gui check bridges/gui-orch --json` до зелёного; (3) adapter.py по образцу gui-planner; (4) тесты: фейковый umbrella с ответами `conduct runs/status/questions`, `observe`, `doctor`; каждый запрос валиден view-data; traversal через run_id/report; команды: argv точный (`run --plan P --ready --max-items 3`), отказ при плохих значениях; (5) регистрация в хабе, render ownership; CHANGELOG; V1–V6.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/orch/scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "bash bridges/gui-orch/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "packages/gui/bin/gui check bridges/gui-orch --json > /dev/null",
+      "expect": "exit 0 (ни одного fail)",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/ecosystem-units.py check --strict && python3 scripts/golden.py check",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V5",
+      "cmd": "packages/gui/bin/gui contributions --json | python3 -c 'import json,sys; c=json.load(sys.stdin); assert any(e[\"owner\"]==\"gui-orch\" for e in c[\"contributions\"]), c[\"rejected\"]'",
+      "expect": "exit 0: gui-orch принят каталогом хаба",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V6",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "orch conduct runs",
+    "bridges/gui-orch"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T05:36:18Z"
+}

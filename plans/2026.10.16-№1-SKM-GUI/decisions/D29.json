@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D29",
+  "title": "Терминал — привилегия хоста: выключен по умолчанию, подтверждение на каждую сессию, без записи содержимого",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "question": "Как вводится интерактивный терминал?",
+  "options": [
+    {
+      "id": "A",
+      "text": "функция хоста (не вклад плагина): `[gui.terminal] enabled=false`, HMAC-подтверждение на сессию, PTY в доверенном проекте, WebSocket с credits-backpressure, аудит метаданных без содержимого",
+      "pros": "arbitrary shell остаётся отдельной привилегией (architecture#invariants, ideas/gui п. 8); нет утечки секретов в аудит",
+      "cons": "нет записи сессий для разбора инцидентов"
+    },
+    {
+      "id": "B",
+      "text": "разрешить эффект `terminal` плагинам",
+      "pros": "расширяемость",
+      "cons": "плагин получает произвольный shell; сломан I13"
+    }
+  ],
+  "decision": "A — функция хоста (не вклад плагина): `[gui.terminal] enabled=false`, HMAC-подтверждение на сессию, PTY в доверенном проекте, WebSocket с credits-backpressure, аудит метаданных без содержимого",
+  "rationale": "Каталог команд первичен, терминал — отдельная привилегия; грант плагину на shell не вводится.",
+  "consequences": [
+    "core/terminal.py, routes_terminal.py, terminal/v1",
+    "[gui.terminal] в config schema",
+    "аудит terminal.start/end"
+  ],
+  "applies_to": [
+    "P7.1",
+    "P7.2"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

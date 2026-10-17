@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D31",
+  "title": "Runs orch в GUI: список runs даёт orch (аддитивный `conduct runs`), мост не читает каталоги состояния orch",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "question": "Откуда gui-orch берёт список runs?",
+  "options": [
+    {
+      "id": "A",
+      "text": "аддитивная команда `orch conduct runs --json`; мост вызывает только CLI",
+      "pros": "I3 и границы модулей; внутренняя раскладка orch не становится API",
+      "cons": "правка модуля orch (аддитивная, с тестами)"
+    },
+    {
+      "id": "B",
+      "text": "мост читает `.swissknifeman/state/orch/conductor/*`",
+      "pros": "без правки orch",
+      "cons": "связь с внутренней раскладкой; нарушение границы"
+    }
+  ],
+  "decision": "A — аддитивная команда `orch conduct runs --json`; мост вызывает только CLI",
+  "rationale": "architecture#boundaries: модуль-владелец не меняется ради GUI иначе как аддитивной публичной возможностью CLI отдельным пунктом.",
+  "consequences": [
+    "P7.3: orch conduct runs + схема + тесты orch",
+    "bridges/gui-orch"
+  ],
+  "applies_to": [
+    "P7.3"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

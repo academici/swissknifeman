@@ -1,0 +1,260 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P7.4",
+  "title": "Hardening и MVP DoD: gui state check|rebuild, digest sidecar, SBOM, бюджеты, a11y; docs/mvp-dod.md; закрытие фазы P7 и плана",
+  "status": "todo",
+  "summary": "`gui state check|rebuild`, проверка digest sidecar при старте, `scripts/sbom.py`, `frontend/scripts/check-budget.mjs`, a11y-тесты и исправления фокуса/имён, `docs/mvp-dod.md` + `tests/test_mvp_dod.py`; закрытие фазы и плана.",
+  "why": "Жёсткие риски (целостность данных, supply chain): `rebuild` теряет состояние оператора (плагины, grants живут только в SQLite, D22) или оставляет БД наполовину заменённой (атомарная замена, резервная копия, проверка до замены); проверка digest пропускается молча при подмене (SIDECAR_TAMPERED только при наличии digest-файла — зафиксировано как ограничение); SBOM недетерминирован; бюджет не ловит xterm в начальном бандле; a11y-тест формальный. Описание — knowledge/p7-design#hardening.",
+  "scope": {
+    "include": [
+      "packages/gui/lib/gui/core/state_admin.py",
+      "packages/gui/lib/gui/sidecar_digest.py",
+      "packages/gui/lib/gui/cli.py",
+      "packages/gui/lib/gui/sidecar.py (вызов проверки)",
+      "packages/gui/sidecar/build.sh",
+      "packages/gui/scripts/sbom.py",
+      "packages/gui/frontend/scripts/check-budget.mjs",
+      "packages/gui/frontend/package.json (только scripts)",
+      "packages/gui/frontend/src/**/*.tsx (только исправления доступности)",
+      "packages/gui/frontend/src/a11y.test.tsx",
+      "packages/gui/tests/**",
+      "packages/gui/docs/**",
+      "CHANGELOG.md"
+    ],
+    "exclude": [
+      "packages/gui/frontend/package-lock.json и зависимости",
+      "aicore и другие модули",
+      "enforcement плагинов (D23 остаётся)"
+    ]
+  },
+  "depends_on": [
+    "P7.2",
+    "P7.3"
+  ],
+  "decisions": [
+    "D22",
+    "D23",
+    "D26"
+  ],
+  "reads": [
+    {
+      "ref": "knowledge/p7-design#hardening",
+      "why": "state rebuild, digest, SBOM, бюджеты, a11y, DoD",
+      "required": true
+    },
+    {
+      "ref": "knowledge/p7-design#code-facts",
+      "why": "платформа-песочница, раскладка",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#hardening",
+      "why": "исходные требования hardening",
+      "required": true
+    },
+    {
+      "ref": "knowledge/architecture#testing",
+      "why": "стратегия тестов",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/storage/db.py",
+      "why": "миграции, open_db, audit",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/backend.py",
+      "why": "InstanceLock, gui_state_dir",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "why": "подкоманды",
+      "required": true
+    },
+    {
+      "path": "packages/gui/lib/gui/sidecar.py",
+      "why": "запуск sidecar (P6.1)",
+      "required": true
+    },
+    {
+      "path": "packages/gui/sidecar/build.sh",
+      "why": "сборка sidecar (P6.1)",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/package.json",
+      "why": "scripts",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/forms/PreviewDialog.tsx",
+      "why": "диалог: фокус",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/plugins/GrantDialog.tsx",
+      "why": "диалог: фокус",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/app/App.tsx",
+      "why": "навигация, landmarks",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/src/test/fakes.tsx",
+      "why": "FakeTransport и Wrapper",
+      "required": true
+    },
+    {
+      "path": "ideas/gui/skm-gui-architecture.md",
+      "why": "исходный MVP DoD (раздел «MVP DoD»)",
+      "required": true
+    },
+    {
+      "path": "packages/gui/frontend/e2e/plugins.spec.ts",
+      "why": "образец E2E для таблицы DoD",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "packages/gui/lib/gui/core/state_admin.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/sidecar_digest.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/lib/gui/cli.py",
+      "change": "modify",
+      "note": "подкоманда `state check|rebuild`"
+    },
+    {
+      "path": "packages/gui/lib/gui/sidecar.py",
+      "change": "modify",
+      "note": "вызов проверки digest до bind"
+    },
+    {
+      "path": "packages/gui/sidecar/build.sh",
+      "change": "modify",
+      "note": "запись gui-backend.digest"
+    },
+    {
+      "path": "packages/gui/scripts/sbom.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/scripts/check-budget.mjs",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/frontend/package.json",
+      "change": "modify",
+      "note": "script `budget`"
+    },
+    {
+      "path": "packages/gui/frontend/src/a11y.test.tsx",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_state_admin.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_sidecar_digest.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_sbom.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/tests/test_mvp_dod.py",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/docs/mvp-dod.md",
+      "change": "create"
+    },
+    {
+      "path": "packages/gui/docs/security.md",
+      "change": "create",
+      "note": "модель угроз v1: что enforced/advisory, терминал, sidecar digest, supply chain"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "modify"
+    }
+  ],
+  "rules": [
+    "Запускай только тесты изменённого кода: `python3 scripts/affected-tests.py --run`; для frontend — `npm --prefix packages/gui/frontend run check`, только если frontend менялся. `--tier all`, E2E, smoke, `npm ci`, сборки не запускай: их запускает conductor в phase.validation.",
+    "Планы меняет только planner; в `plans/**` ничего не правь руками.",
+    "`gui` импортирует только `lib/gui/` и aicore; имена `packages/<id>/` в файлах gui запрещены (sibling-package); сторонние пакеты — только в `lib/gui/http`, не в `lib/gui/core`.",
+    "Подпроцессные и сетевые тесты — с таймаутами на каждое ожидание; не читай `read()` пайпа живого процесса (stderr/stdout остаются открытыми) и не вычисляй сообщение assert с блокирующим чтением (журнал прогона п. 14: такой тест повис на час).",
+    "`state rebuild`: сначала резервная копия и проверка новой БД, затем атомарная замена (`os.replace`); при любой ошибке исходный `gui.db` не тронут; тест на падение посреди переноса.",
+    "Таблицы оператора (`plugins`, `plugin_events`, `grants`) переносятся без потерь и проверяются сравнением строк до и после; `--dry-run` ничего не пишет (проверка mtime и хеша).",
+    "Проверка digest sidecar: читает файлы блоками; при несовпадении exit 3 и `SIDECAR_TAMPERED` до открытия сокета; тест с деревом из 500 файлов.",
+    "SBOM детерминирован: два запуска дают побайтово равный файл; число компонентов равно числу записей lock-файлов.",
+    "a11y-тест проверяет реальные экраны (рендер с FakeTransport), а не пустые заглушки; найденные дефекты имён/фокуса исправляются в компонентах в рамках этого пункта.",
+    "`docs/mvp-dod.md`: таблица пунктов DoD -> файл теста и имя теста; `test_mvp_dod.py` проверяет существование файла и вхождение имени; пункты, требующие toolchain владельца, помечены `owner`.",
+    "Закрывающий пункт фазы и плана: `phase.validation` запускает conductor; после него `plan.py check` обязан быть без ошибок (проверяет оркестратор)."
+  ],
+  "guidance": "Порядок: (1) state_admin.py + CLI + тесты; (2) sidecar_digest.py + build.sh + проверка при старте + тесты; (3) sbom.py + тест; (4) check-budget.mjs + script; (5) a11y.test.tsx -> исправления компонентов; (6) mvp-dod.md + test_mvp_dod.py; security.md; (7) CHANGELOG; V1–V5.",
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash packages/gui/scripts/test.sh",
+      "expect": "exit 0; tests: OK",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V2",
+      "cmd": "npm --prefix packages/gui/frontend run check",
+      "expect": "exit 0; typecheck, eslint, vitest зелёные",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V3",
+      "cmd": "python3 packages/gui/scripts/sbom.py --out /dev/null",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    },
+    {
+      "id": "V4",
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "gui state check|rebuild",
+    "digest sidecar",
+    "SBOM",
+    "бюджеты производительности",
+    "a11y",
+    "docs/mvp-dod.md"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T05:36:19Z"
+}

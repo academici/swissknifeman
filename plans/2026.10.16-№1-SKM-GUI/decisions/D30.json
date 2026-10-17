@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D30",
+  "title": "Терминал в desktop-режиме не поддержан в v1",
+  "date": "2026-10-17",
+  "status": "accepted",
+  "question": "Нужен ли терминал в Tauri-режиме?",
+  "options": [
+    {
+      "id": "A",
+      "text": "нет: Rust-адаптер пересылает только /v1/events; `bootstrap.features` в desktop без `terminal`",
+      "pros": "адаптер остаётся узким и проверяемым (P6); нет WebSocket-прокси в Rust, который нельзя проверить без toolchain",
+      "cons": "в desktop терминала нет до отдельной работы"
+    },
+    {
+      "id": "B",
+      "text": "добавить api_terminal в адаптер",
+      "pros": "паритет",
+      "cons": "ещё один непроверяемый Rust-код и расширение IPC-поверхности"
+    }
+  ],
+  "decision": "A — нет: Rust-адаптер пересылает только /v1/events; `bootstrap.features` в desktop без `terminal`",
+  "rationale": "D26: Rust не компилируется на этой машине; расширять IPC-поверхность без возможности проверки нельзя.",
+  "consequences": [
+    "docs/desktop.md: ограничение",
+    "feature terminal только в browser mode"
+  ],
+  "applies_to": [
+    "P7.1",
+    "P7.2"
+  ],
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "effort": "high"
+  },
+  "answered_by": "agent"
+}

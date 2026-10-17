@@ -39,7 +39,7 @@ class CheckReleaseConfig(unittest.TestCase):
 
         self.assertNotEqual(updater["pubkey"], PLACEHOLDER_KEY)
         self.assertTrue(base64.b64decode(updater["pubkey"]).startswith(b"untrusted comment: minisign public key"))
-        self.assertEqual(updater["endpoints"], ["https://updates.invalid/skm-gui/{{target}}/{{arch}}/{{current_version}}"])
+        self.assertEqual(updater["endpoints"], ["https://localhost:8443/skm-gui/{{target}}/{{arch}}/{{current_version}}"])
 
     def test_structure_mode_accepts_the_repository_conf(self):
         result = run(sys.executable, str(SCRIPTS / "check-release-config.py"))

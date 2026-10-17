@@ -72,8 +72,8 @@ no `bundle.externalBin`, deep link scheme `skm-gui` (the handler only brings the
 from `build.rs`), `updater:default`,
 `dialog:allow-open`, `deep-link:default`. No `fs:`, `http:`, `process:` and no `shell:allow-execute`. The single-instance
 plugin has no permissions. Bundle: `targets: ["appimage","deb","app"]`, `createUpdaterArtifacts: true`, `resources` copies the sidecar onedir tree
-`binaries/gui-backend-onedir/` to `gui-backend/`, and `plugins.updater` holds the public key of the updater and the placeholder endpoint
-`https://updates.invalid/...` that the owner replaces (`desktop/scripts/check-release-config.py --release` fails while
+`binaries/gui-backend-onedir/` to `gui-backend/`, and `plugins.updater` holds the public key of the updater and the local endpoint
+`https://localhost:8443/...` that the owner replaces before a release (`desktop/scripts/check-release-config.py --release` fails while
 it stays). The updater plugin is registered in `src/main.rs`. Release steps: `docs/desktop-release.md`.
 
 ## Checked and not checked

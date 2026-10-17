@@ -43,13 +43,31 @@ Updater signing (minisign) is not platform signing: on macOS the owner also sign
 Developer ID, `notarytool`); on Linux there is no notarization. Updating a `.deb` may need `sudo`/`dpkg`; check this flow on
 each supported distribution.
 
+## Local build and test (no release)
+
+For local testing the release steps 6, 7, 9, 10 and 12 are not needed. The public key in `tauri.conf.json` belongs to the
+key of the first build (`~/.keys/skm-gui-updater.key`, no password), and the endpoint is `https://localhost:8443/...`, a
+local address with no server behind it (`check-release-config.py --release` rejects local hosts on purpose, so it still
+guards a real release). Build and run:
+
+1. Steps 1 to 5 above (toolchain, core tests, sidecar, sidecar check, frontend).
+2. `export TAURI_SIGNING_PRIVATE_KEY_PATH=~/.keys/skm-gui-updater.key TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""`
+   (the build signs the updater artifacts; without the key `cargo tauri build` fails at the end).
+3. `cd packages/gui/desktop/src-tauri && cargo tauri build`.
+4. Run `target/release/bundle/appimage/SKM GUI_0.1.0_amd64.AppImage`. No root rights are needed.
+5. Optional: install the deb with `apt install` on `target/release/bundle/deb/SKM GUI_0.1.0_amd64.deb` (`dpkg` writes
+   into `/usr`, hence root rights).
+
+The icons are generated from `src-tauri/icons/source.png` (`cargo tauri icon icons/source.png`; the desktop build does
+not need the generated `icons/android` and `icons/ios`); replace the source with a real logo when there is one.
+
 ## Status of the first build (2026-10-17)
 
 Steps 1 to 8 ran on the owner's machine: the Rust core tests pass, the sidecar builds and reaches `GUI_READY` in about 1 s,
 `cargo tauri build` writes `SKM GUI_0.1.0_amd64.AppImage` and `.deb` with `.sig` files, and the AppImage starts the
 application with the sidecar. Details and the findings of that build: `docs/desktop.md`, "Checked and not checked".
-Left for the owner: the real https endpoint in `plugins.updater.endpoints` (then `check-release-config.py --release` passes),
-a product icon (`cargo tauri icon <png>`), the key policy (the key of this build was created without a password in
+Left for the owner: the real https endpoint in `plugins.updater.endpoints` (now a local `https://localhost:8443/...`; `check-release-config.py --release` fails until it is replaced),
+a product logo (the icons are generated from a placeholder), the key policy (the key of this build was created without a password in
 `~/.keys/skm-gui-updater.key`; generate a new one with a password for releases and replace `plugins.updater.pubkey`), the
 install and update checks (steps 11 and 12), macOS signing and notarization.
 

@@ -3,7 +3,7 @@
 
 Usage: check-release-config.py [--release] [--conf PATH]
   default:   structure only (bundle targets, updater artifacts, sidecar, updater plugin keys); placeholders are allowed.
-  --release: also fails (exit 1) while the updater pubkey is OWNER_PUBKEY_REQUIRED or an endpoint is on `.invalid`.
+  --release: also fails (exit 1) while the updater pubkey is OWNER_PUBKEY_REQUIRED or an endpoint is on `.invalid` or a local host.
 Exit: 0 ok, 1 problems (listed on stderr), 2 usage or unreadable file.
 """
 import argparse
@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 DEFAULT_CONF = Path(__file__).resolve().parents[1] / "src-tauri" / "tauri.conf.json"
 PLACEHOLDER_KEY = "OWNER_PUBKEY_REQUIRED"
 TARGETS = {"appimage", "deb", "app"}
+LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 
 def structure(conf: dict) -> list:
@@ -54,8 +55,8 @@ def release(conf: dict) -> list:
         problems.append(f"plugins.updater.pubkey is a placeholder ({PLACEHOLDER_KEY}): the owner inserts the public key")
     for endpoint in updater.get("endpoints") or []:
         host = urlparse(endpoint).hostname or ""
-        if host == "invalid" or host.endswith(".invalid"):
-            problems.append(f"updater endpoint is a placeholder (.invalid): {endpoint}")
+        if host == "invalid" or host.endswith(".invalid") or host in LOCAL_HOSTS:
+            problems.append(f"updater endpoint is a placeholder (.invalid or local host): {endpoint}")
     return problems
 
 

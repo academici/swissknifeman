@@ -39,23 +39,35 @@ export function valueAt(doc: Doc, pointer: string): unknown {
   return current;
 }
 
-function withValue(base: unknown, keys: string[], value: unknown): unknown {
-  const [key, ...rest] = keys;
-  if (key === undefined) return value;
-  const object: Doc = isObject(base) ? { ...base } : {};
-  object[key] = withValue(object[key], rest, value);
-  return object;
+/** The RFC 7386 merge patch that turns `old` into `value`: a removed object key is `null`, an array or a scalar replaces. */
+function diff(old: unknown, value: unknown): unknown {
+  if (value === undefined) return null;
+  if (!isObject(value) || !isObject(old)) return value;
+  const out: Doc = {};
+  for (const key of Object.keys(old)) if (!(key in value)) out[key] = null;
+  for (const [key, entry] of Object.entries(value)) if (!same(old[key], entry)) out[key] = diff(old[key], entry);
+  return out;
 }
 
-/** A merge patch of the changed root keys only: a root is sent whole (arrays and objects replace), the unchanged
- * roots and the locked ones never. Empty when nothing changed. */
+function putAt(patch: Doc, keys: string[], value: unknown): void {
+  let object = patch;
+  for (const key of keys.slice(0, -1)) {
+    const next = object[key];
+    if (isObject(next)) object = next;
+    else object = object[key] = {};
+  }
+  object[keys[keys.length - 1]!] = value;
+}
+
+/** A merge patch (RFC 7386) of the changed fields only, down to the nested key: a removed value is `null`, the
+ * unchanged fields and the locked roots never. Empty when nothing changed. */
 export function buildPatch(doc: Doc, edits: Record<string, unknown>): Doc {
   const patch: Doc = {};
   for (const [pointer, value] of Object.entries(edits)) {
-    const [root, ...rest] = parts(pointer);
-    if (root === undefined || LOCKED_ROOTS.has(root) || same(valueAt(doc, pointer), value)) continue;
+    const keys = parts(pointer);
+    if (keys[0] === undefined || LOCKED_ROOTS.has(keys[0]) || same(valueAt(doc, pointer), value)) continue;
     if (value === "" && valueAt(doc, pointer) === undefined) continue;
-    patch[root] = withValue(patch[root] ?? doc[root], rest, value);
+    putAt(patch, keys, diff(valueAt(doc, pointer), value));
   }
   return patch;
 }

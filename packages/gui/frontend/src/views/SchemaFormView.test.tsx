@@ -68,15 +68,21 @@ const failed = (plugin: string) => ({ run_id: RUN, state: "failed", error: { cod
 const patchOf = (call: Call) => JSON.parse((call.body as { input: { patch: string } }).input.patch) as Record<string, unknown>;
 
 describe("buildPatch", () => {
-  it("sends the changed roots whole and nothing else", () => {
+  it("sends the changed fields only, down to the nested key", () => {
     expect(buildPatch(DOC, { "/summary": "New", "/title": "Edit me", "/scope/include": ["a", "b"] })).toEqual({
-      summary: "New", scope: { include: ["a", "b"], exclude: [] } });
+      summary: "New", scope: { include: ["a", "b"] } });
   });
 
-  it("merges nested fields into their root and never touches the locked roots", () => {
+  it("merges nested fields and never touches the locked roots", () => {
     const patch = buildPatch(DOC, { "/review/reviewer/model": "sonnet", "/review/reviewer/provider": "claude-code", "/status": "done", "/result": {} });
-    expect(patch).toEqual({ review: { mode: "requested", reviewer: { class: "frontier", provider: "claude-code", model: "sonnet", effort: "high" } } });
+    expect(patch).toEqual({ review: { reviewer: { provider: "claude-code", model: "sonnet" } } });
     expect(buildPatch(DOC, {})).toEqual({});
+  });
+
+  it("represents a removed JSON value as null, also for a removed key inside an object", () => {
+    expect(buildPatch(DOC, { "/summary": undefined })).toEqual({ summary: null });
+    expect(buildPatch(DOC, { "/scope": { include: ["a"] } })).toEqual({ scope: { exclude: null } });
+    expect(buildPatch(DOC, { "/guidance": undefined })).toEqual({});
   });
 
   it("does not send an empty text for a field that was absent", () => {
@@ -114,8 +120,7 @@ describe("SchemaFormView", () => {
     const body = runs[0]!.body as { context: Record<string, string>; input: { expected_revision: string } };
     expect(body.context).toEqual({ plan_id: "PLAN1", item_id: "P1.1", project_id: "proj-1" });
     expect(body.input.expected_revision).toBe(REV1);
-    expect(patchOf(runs[0]!)).toEqual({ summary: "New summary",
-      review: { mode: "requested", reviewer: { class: "frontier", provider: "claude-code", model: "sonnet", effort: "high" } } });
+    expect(patchOf(runs[0]!)).toEqual({ summary: "New summary", review: { reviewer: { provider: "claude-code", model: "sonnet" } } });
   });
 
   it("shows a model that is not in the catalog as drift and does not replace it", async () => {
@@ -142,6 +147,28 @@ describe("SchemaFormView", () => {
     expect((runs[1]!.body as { input: { expected_revision: string } }).input.expected_revision).toBe(REV2);
     expect(patchOf(runs[1]!)).toEqual(patchOf(runs[0]!));
     await screen.findByText("Saved.");
+  });
+
+  it("Reapply sends only the edited nested key, so concurrent changes to its siblings survive", async () => {
+    const state = { run: failed("PLAN_REVISION_CONFLICT") as unknown };
+    const { transport, runs } = setup(state);
+    show(transport);
+    fireEvent.change(await screen.findByRole("combobox", { name: "review/mode" }), { target: { value: "self" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByRole("dialog", { name: "The plan changed" });
+    state.run = { run_id: RUN, state: "succeeded" };
+    fireEvent.click(screen.getByRole("button", { name: "Reapply" }));
+    await waitFor(() => expect(runs).toHaveLength(2));
+    expect(patchOf(runs[1]!)).toEqual({ review: { mode: "self" } });
+  });
+
+  it("saves a cleared JSON field as a null deletion", async () => {
+    const { transport, runs } = setup({ run: { run_id: RUN, state: "succeeded" } });
+    show(transport);
+    fireEvent.change(await screen.findByLabelText("scope"), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByText("Saved.");
+    expect(patchOf(runs[0]!)).toEqual({ scope: null });
   });
 
   it("Reload drops the draft without writing", async () => {

@@ -173,6 +173,22 @@ class TestSync(HostCase):
         self.assertEqual(before, self.host.history("ext", 100))
         self.assertEqual("enabled", self.state())
 
+    def test_hub_unit_replaced_by_an_extension_must_be_enabled_again(self):
+        self.host.sync([obs("ext", "unit")])
+        self.assertEqual("enabled", self.state())
+        self.host.sync([obs("ext", "extension", digest=D2)])
+        self.assertEqual("new", self.conn.execute("SELECT desired FROM plugins WHERE id='ext'").fetchone()[0])
+        self.assertEqual("compatible", self.state())
+        self.refuses("PLUGIN_DISABLED", "ext", "query", ["read"], None)
+        run(self.host.enable("ext"))
+        self.assertEqual(["ext"], self.conformance_calls)
+        self.assertEqual("enabled", self.state())
+
+    def test_hub_unit_replaced_by_an_extension_with_the_same_digest(self):
+        self.host.sync([obs("ext", "unit")])
+        self.host.sync([obs("ext", "extension")])
+        self.assertEqual("compatible", self.state())
+
     def test_rejected_and_missing_plugins(self):
         self.host.sync([obs("old"), obs("bad", verdict="invalid"), obs("inc", verdict="incompatible",
                         compatibility={"protocol_ok": False, "missing_contracts": []})])
@@ -564,9 +580,39 @@ class TestEnableDisable(HostCase):
         self.runs = {"run-1": "ext"}
         self.finish_on_cancel = False
         started = self.mono.now
-        self.assertEqual({"drained": 0, "cancelled": 1}, run(self.host.disable("ext")))
+        self.assertEqual({"drained": 0, "cancelled": 0, "failed": ["run-1"]}, run(self.host.disable("ext")))
+        self.assertEqual("plugin.disable.incomplete", self.audits[-1][0])
         waited = self.mono.now - started
         self.assertGreaterEqual(waited, self.settings.plugins.drain_timeout_s + self.settings.runs.cancel_grace_s)
+
+    def test_concurrent_disables_keep_the_plugin_closed_until_the_last_ends(self):
+        self.enabled_extension()
+        self.runs = {"run-1": "ext"}
+        seen = []
+
+        async def scenario():
+            async def sleep(seconds):
+                self.mono.advance(seconds)
+                await asyncio.sleep(0)
+
+            self.host._sleep = sleep
+            first = asyncio.ensure_future(self.host.disable("ext"))
+            await asyncio.sleep(0)
+            second = asyncio.ensure_future(self.host.disable("ext"))
+            await first
+            self.runs.clear()
+            seen.append("ext" in self.host._closing)
+            await second
+            seen.append("ext" in self.host._closing)
+
+        self.runs = {"run-1": "ext"}
+        self.finish_on_cancel = False
+        # the first Disable ends while the run is still active; the second one is still draining
+        async def hold():
+            await scenario()
+
+        run(hold())
+        self.assertEqual([True, False], seen)
 
     def test_closing_blocks_admit_while_draining(self):
         self.enabled_extension()
@@ -800,6 +846,25 @@ class TestAtomicity(HostCase):
 
 
 class TestHistory(HostCase):
+    def test_pruning_the_display_history_keeps_the_failures_that_count(self):
+        self.enabled_extension()
+        self.blow("OUTPUT_INVALID", 2)
+        for _ in range(self.settings.plugins.history_limit + 5):
+            with self.host._mutation():
+                self.host._history("ext", "grant", "granted", "noise")
+        self.assertEqual(2, self.host.view("ext")["failures"]["count"])
+        self.blow("OUTPUT_INVALID")
+        self.assertEqual("quarantined", self.state())
+
+    def test_pruning_keeps_the_release_marker(self):
+        self.enabled_extension()
+        self.blow("OUTPUT_INVALID", 3)
+        self.host.release("ext")
+        for _ in range(self.settings.plugins.history_limit + 5):
+            with self.host._mutation():
+                self.host._history("ext", "grant", "granted", "noise")
+        self.assertEqual(0, self.host.view("ext")["failures"]["count"])
+
     def test_limit_trim_and_order(self):
         self.enabled_extension()
         limit = self.settings.plugins.history_limit

@@ -261,6 +261,7 @@ class PluginHost:
         self._inflight: Dict[str, int] = {}
         self._last_ok: Dict[str, Optional[bool]] = {}
         self._closing: Set[str] = set()
+        self._closers: Dict[str, int] = {}  # plugin -> Disable calls draining it; it stays closing until the last ends
         self._conformed: Dict[str, str] = {}  # plugin -> digest whose conformance passed
 
     # --- plumbing ---
@@ -327,13 +328,18 @@ class PluginHost:
             pass
 
     def _history(self, plugin: str, kind: str, code: Optional[str] = None, detail: Optional[str] = None) -> None:
-        """One history row (in the open transaction); the oldest rows beyond ``history_limit`` go."""
+        """One history row (in the open transaction); the oldest rows beyond ``history_limit`` go. The rows that quarantine
+        counting needs (failures and releases inside the failure window, the latest release) stay until they age out."""
         self.conn.execute("INSERT INTO plugin_events (plugin, at, kind, code, detail) VALUES (?, ?, ?, ?, ?)",
                           (plugin, self._iso(), kind, code, self._clean(detail)))
+        since = self._iso(self._epoch() - int(self._cfg().quarantine_window_s))
         self.conn.execute(
             "DELETE FROM plugin_events WHERE plugin = ? AND id <= COALESCE("
-            "(SELECT id FROM plugin_events WHERE plugin = ? ORDER BY id DESC LIMIT 1 OFFSET ?), 0)",
-            (plugin, plugin, int(self._cfg().history_limit)))
+            "(SELECT id FROM plugin_events WHERE plugin = ? ORDER BY id DESC LIMIT 1 OFFSET ?), 0) "
+            "AND (at < ? OR NOT (kind = 'failure' OR (kind = 'admin' AND code = 'release')) "
+            "OR (kind = 'admin' AND code = 'release' AND id < (SELECT MAX(id) FROM plugin_events "
+            "WHERE plugin = ? AND kind = 'admin' AND code = 'release') AND at < ?))",
+            (plugin, plugin, int(self._cfg().history_limit), since, plugin, since))
 
     # --- facts and state ---
 
@@ -410,8 +416,7 @@ class PluginHost:
                     elif accepted and row["digest"] != entry.digest:
                         reasons[plugin] = self._rebind(after, row, entry, now)
                     elif row["source"] != entry.source:
-                        self.conn.execute("UPDATE plugins SET source = ?, updated_at = ? WHERE id = ?",
-                                          (entry.source, now, plugin))
+                        self._resource(row, entry, now)
                 self._observed = dict(incoming)
                 for plugin in ids:
                     self._watch(after, plugin, before[plugin], reasons.get(plugin, "sync"))
@@ -447,8 +452,22 @@ class PluginHost:
         self.conn.execute("UPDATE plugins SET digest = ?, effects_json = ?, source = ?, reapproval = ?, updated_at = ? "
                           "WHERE id = ?", (entry.digest, json.dumps(list(entry.effects)), entry.source, reapproval,
                                            now, plugin))
+        if row["source"] != entry.source:
+            self._resource(row, entry, now, stored=True)
         self._history(plugin, "digest", code, f"{row['digest']} -> {entry.digest}")
         return reason
+
+    def _resource(self, row: sqlite3.Row, entry: Observed, now: str, stored: bool = False) -> None:
+        """The source of ``row`` changed. A plugin that becomes an extension never keeps the enabled decision it had as a
+        hub unit: it goes back to ``new`` and has to pass Enable (conformance, grants) again."""
+        plugin = row["id"]
+        if not stored:
+            self.conn.execute("UPDATE plugins SET source = ?, updated_at = ? WHERE id = ?", (entry.source, now, plugin))
+        if entry.source == "extension":
+            self._conformed.pop(plugin, None)
+            if row["desired"] != "new":
+                self.conn.execute("UPDATE plugins SET desired = 'new', updated_at = ? WHERE id = ?", (now, plugin))
+                self._history(plugin, "admin", "source", f"{row['source']} -> {entry.source}: enable again")
 
     # --- admit and finish ---
 
@@ -568,14 +587,16 @@ class PluginHost:
             raise PluginError("PLUGIN_DISABLED", f"plugin {plugin!r} is being disabled", details={"plugin": plugin})
         return observed
 
-    async def disable(self, plugin: str) -> Dict[str, int]:
+    async def disable(self, plugin: str) -> Dict[str, Any]:
         """Close the plugin (no new work from the moment this returns its first step), then drain: wait for the calls
         and runs in flight up to ``drain_timeout_s``, cancel the runs left and wait ``runs.cancel_grace_s`` for them.
-        Returns ``{drained, cancelled}``: runs that finished on their own and runs cancelled."""
+        Returns ``{drained, cancelled, failed}``: runs that finished on their own, runs cancelled (no longer active
+        after the grace period) and the ids of the runs still active after it (the key is there only when there are some)."""
         with self._mutation() as after:
             row = self._require(plugin)
             before = self._state(plugin, row)
             self._closing.add(plugin)
+            self._closers[plugin] = self._closers.get(plugin, 0) + 1
             self.conn.execute("UPDATE plugins SET desired = 'disabled', updated_at = ? WHERE id = ?",
                               (self._iso(), plugin))
             self._history(plugin, "admin", "disable")
@@ -594,10 +615,23 @@ class PluginHost:
                     pass
             if remaining:
                 await self._wait(plugin, int(self._runs_cfg().cancel_grace_s))
-            return {"drained": len(started - set(remaining)), "cancelled": len(remaining)}
+            still = set(self.active_runs(plugin))
+            failed = [run_id for run_id in remaining if run_id in still]
+            if failed:
+                self._log("plugin.disable.incomplete", plugin, {"runs": failed})
+            outcome: Dict[str, Any] = {"drained": len(started - set(remaining)),
+                                       "cancelled": len(remaining) - len(failed)}
+            if failed:
+                outcome["failed"] = failed
+            return outcome
         finally:
             with self.lock:
-                self._closing.discard(plugin)
+                left = self._closers.get(plugin, 1) - 1
+                if left > 0:
+                    self._closers[plugin] = left
+                else:
+                    self._closers.pop(plugin, None)
+                    self._closing.discard(plugin)
 
     async def _wait(self, plugin: str, seconds: int) -> None:
         deadline = self._monotonic() + seconds

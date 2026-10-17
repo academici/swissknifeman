@@ -285,7 +285,7 @@ def compatibility(source: Source, *, host_protocol: Tuple[str, str] = HOST_PROTO
         try:
             low, high = int(window["min"]), int(window["max"])
             protocol_ok = low <= high and not (high < int(host_protocol[0]) or low > int(host_protocol[1]))
-        except (KeyError, TypeError, ValueError):
+        except (KeyError, TypeError, ValueError, OverflowError):
             pass
         needs = document.get("requires_contracts")
         for need in needs if isinstance(needs, list) else ():

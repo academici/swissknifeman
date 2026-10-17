@@ -543,6 +543,10 @@ class TestCompatibility(CatalogCase):
             self.assertEqual({"protocol_ok": True, "missing_contracts": []},
                              resolve.compatibility(self.source(text)))
 
+    def test_huge_numeric_bounds_do_not_raise(self):
+        for text in ('{"gui_protocol": {"min": 1e999, "max": 2}}', '{"gui_protocol": {"min": 1, "max": -1e999}}'):
+            self.assertEqual({"protocol_ok": True, "missing_contracts": []}, resolve.compatibility(self.source(text)))
+
     def test_catalog_keeps_the_sources_of_rejected_owners(self):
         from gui import backend
 

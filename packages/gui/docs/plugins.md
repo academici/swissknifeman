@@ -98,7 +98,12 @@ remembered per digest until `sync` sees another digest.
 `disable` closes the plugin and writes `desired = disabled` in one step, then waits for the calls in flight and the
 active runs of the owner up to `plugins.drain_timeout_s`, cancels the runs that are left and waits
 `runs.cancel_grace_s` for them. It returns `{drained, cancelled}`: runs that finished on their own and runs that were
-cancelled.
+cancelled and are no longer active after the grace period; runs still active after it are listed in `failed` (present
+only then), written to the audit as `plugin.disable.incomplete`, and not part of the HTTP `action_result`. Concurrent
+Disable calls of one plugin keep it closed until the last of them ends.
+
+A plugin whose source changes from a hub unit to an extension goes back to `new`: it passes Enable (conformance) again.
+The history keeps the failures and releases of the quarantine window when it is trimmed to `history_limit`.
 
 ## Transactions and events
 

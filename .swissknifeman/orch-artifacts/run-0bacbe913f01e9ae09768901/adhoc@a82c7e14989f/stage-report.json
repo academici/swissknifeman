@@ -1,0 +1,39 @@
+{
+  "changed_paths": [
+    "packages/gui/docs/plugins.md",
+    "packages/gui/lib/gui/catalog/resolve.py",
+    "packages/gui/lib/gui/core/plugins.py",
+    "packages/gui/tests/test_catalog.py",
+    "packages/gui/tests/test_plugins.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "python3 -m unittest tests.test_plugins tests.test_catalog tests.test_plugin_gates (from packages/gui, PYTHONPATH=gui/lib:aicore/lib)",
+      "exit": 0,
+      "id": "V1"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "The full gui suite and affected-tests are unverified here; test_plugin_fixture and test_http_plugins could not run.",
+      "kind": "difficulty",
+      "next": "Run both commands outside the sandbox / with a clean lock-file state.",
+      "text": "bash packages/gui/scripts/test.sh exits 1 (requirements.lock: Permission denied) and python3 scripts/affected-tests.py --run exits 1 (git diff fails: cannot hash packages/gui/frontend/package-lock.json, unsupported file type). Both are environment failures unrelated to the change."
+    },
+    {
+      "class": "spec_mismatch",
+      "impact": "The browser cannot see runs that outlived the grace period; they appear in the host return value and the plugin.disable.incomplete audit entry.",
+      "kind": "difficulty",
+      "outcome": "follow_up",
+      "text": "deviation: The 'failed' list of disable() is not in the HTTP action_result because the plugin-api schema has additionalProperties:false and is outside the write set; routes_plugins.py is unchanged."
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "CHECKS_RED: acceptance checks V1 stay red after 1 correction(s): past the target of 1 for check_fixes the last correction made no progress"
+    }
+  ],
+  "summary": "No code change this round; the four Major fixes and the Minor change from the previous attempt stand. The required commands test.sh and affected-tests.py --run still cannot run in this sandbox (unreadable requirements.lock; git cannot hash packages/gui/frontend/package-lock.json). The directly run suites test_plugins, test_catalog and test_plugin_gates pass (151 tests).",
+  "status": "blocked"
+}

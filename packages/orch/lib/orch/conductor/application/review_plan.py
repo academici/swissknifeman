@@ -116,6 +116,11 @@ def group_review_due(self, ref: str) -> None:
         return
 
 
+def reviewer_effort(selector: dict, planned: str) -> str:
+    """The effort of the group review: the one the ``reviewer`` option names, else the strategy's."""
+    return selector.get("effort") or planned
+
+
 def group_review(self, number: int, group: list, effort: str) -> None:
     refs, shas = review_batch.commits_of_state({"items": {r: self.state["items"][r] for r in group}})
     if not shas:
@@ -134,8 +139,9 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
     self._resolve(item, persist=False)
     route = self._route(item, "reviewer")
-    if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route, at the effort the strategy chose
+    if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route; an effort the option names wins
         selector = opts.parse_selector(item.options["reviewer"])
+        effort = reviewer_effort(selector, effort)
         route = dict(route, effort=effort, argv=launch.build_argv(launch.load_catalog(), "reviewer", selector["provider"],
                                                                   model=selector["model"], effort=effort, cwd=self.project))
     provider, model = route["provider"], route.get("model")

@@ -69,6 +69,13 @@ class ReviewPlanTests(ConductorCase):
         message = self.events(err, "GROUP_REVIEW")[0]["message"]
         self.assertIn("orch conduct run --input", message)
 
+    def test_an_effort_named_by_the_reviewer_option_beats_the_strategy(self):
+        from orch.conductor import options as opts
+        from orch.conductor.application import review_plan
+        named = opts.parse_selector("codex/gpt-6.1-sol/high")
+        self.assertEqual(review_plan.reviewer_effort(named, "medium"), "high")
+        self.assertEqual(review_plan.reviewer_effort(opts.parse_selector("codex/gpt-6.1-sol"), "medium"), "medium")
+
     def test_the_followup_asks_no_more_effort_than_the_executor_of_the_run_has(self):
         import tempfile
         from types import SimpleNamespace

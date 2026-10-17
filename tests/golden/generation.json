@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "47e3e4200123",
-  "reason": "PLAN6 observer: plan-run review rule, roadmap review column",
+  "captured_from": "9f8be838d76e",
+  "reason": "review_strategy warnings из 77c9a7f03 (PLAN6)",
   "generators": [
     {
       "id": "skiller-registry",

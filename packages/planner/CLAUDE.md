@@ -17,7 +17,7 @@
 Keep the intent and plan command catalog in `commands/`; each intent command declares its routed model class and effort.
 <!-- instruction:planner.plan-protocol -->
 ## planner.plan-protocol
-Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route. The plans store comes from the project marker `.swissknifeman/project.json`: `<project>/plans` without a marker or with `plans_store: legacy`, `workspaces/<workspace>/projects/<project>/plans/` with `workspace` (both are codes of the marker).
+Keep executable plans in `plans/<PLAN-ID>/`; `plan-run` inherits the owner session route. The plans store comes from the project marker `.swissknifeman/project.json`: `<project>/plans` without a marker or with `plans_store: legacy`, `<workspace>/projects/<project_id>/plans/` with `workspace`.
 <!-- instruction:planner.plan-files -->
 ## planner.plan-files
 Planner plans `plans/<ID>/` with `plan.json`: JSON is the source of truth; use `python3 <planner>/scripts/plan.py` and read JSON context/worker briefs. Human Markdown lives in `views/`: never read, edit or index it, and never use it as an agent input. Get state with `plan.py next|show|context`; plan directories contain no AGENTS.md/CLAUDE.md carriers. Resolve the plans folder with `swissknifeman project context --json` (`plans_root`, `plans_store`), never by assuming `<project>/plans`.

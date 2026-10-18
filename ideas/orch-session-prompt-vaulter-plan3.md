@@ -12,7 +12,7 @@
 
 ## Запуск
 ```
-SK=/home/vostrikov/projects/packages/swissknifeman/packages
+SK=<REPO_ROOT>/packages
 export PLANNER_ROOT=$SK/planner SKM_ORCH_ROOT=$SK/orch AICORE_ROOT=$SK/aicore
 python3 -I .swissknifeman/launcher.py orch conduct run --plan "<PLAN>" --items P.. P.. --batch --debug --options OPTS.json
 ```

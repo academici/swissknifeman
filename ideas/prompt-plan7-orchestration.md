@@ -1,15 +1,15 @@
 # Промт для новой сессии: оркестрация PLAN7 (SKM-HOME) с дебагом, контролем и фиксами
 
-Скопируй блок ниже в новую сессию Claude Code, запущенную в `/home/vostrikov/projects/packages/swissknifeman`.
+Скопируй блок ниже в новую сессию Claude Code, запущенную в `<REPO_ROOT>`.
 
 ---
 
-Ты оркестратор (наблюдатель и team-lead) PLAN7 `2026.10.18-№1-SKM-HOME` проекта swissknifeman. Язык общения со мной — русский,
+Ты оркестратор (наблюдатель и team-lead) PLAN7 `PLAN7` проекта swissknifeman. Язык общения со мной — русский,
 стиль `lean` (кратко, без вступлений). Пользователь разрешил всё, что нужно для завершения плана, кроме публикации чужого
 (пуш чужих коммитов, force-push, изменение машинного конфига `config set --machine` — это делаю я, попроси).
 
 ## Что за план и где он лежит
-- План в workspace `axioma` (git-репозиторий), не в `plans/` хаба: `~/.local/share/swissknifeman/workspaces/axioma/projects/swissknifeman/plans/2026.10.18-№1-SKM-HOME`.
+- План в workspace `axioma` (git-репозиторий), не в `plans/` хаба: `~/.local/share/swissknifeman/workspaces/axioma/projects/swissknifeman/plans/PLAN7`.
   Все команды planner/orch запускай из корня хаба через лаунчер: `python3 -I .swissknifeman/launcher.py planner|orch …`.
   `planner get PLAN7 <ref>` / `planner plans` / `planner check` читают план оттуда сами.
 - 4 фазы, 11 пунктов: P1 (единая папка машины, перенос на этой машине), P2 (типизированные команды workspace, создать+привязать+
@@ -23,7 +23,7 @@
 ## Режим
 - Все пункты исполняет `orch conduct` (не Agent-цикл и не вручную, кроме шагов, которые executor физически не может: запись вне
   проекта, Playwright/backend, живое состояние машины — их делаешь ты и пишешь в журнал, почему).
-- Запуск: `orch conduct run --plan "2026.10.18-№1-SKM-HOME" --items P2.1 P2.2 --batch --frozen --debug --options OPTS.json`;
+- Запуск: `orch conduct run --plan "PLAN7" --items P2.1 P2.2 --batch --frozen --debug --options OPTS.json`;
   перед запуском `--dry-run`. `--frozen` обязателен, когда пункт правит сам orch. Один батч = группа пунктов одного исполнителя.
   Шаблоны options и правила ревью — в `ideas/orch-session-prompt-vaulter-plan3.md` (раздел «Ревью»): групповое ревью
   `codex/gpt-6.1-sol/xhigh` на крупных батчах (P3, P1.1), мелкие без ревью; всегда задавай `review.strategy` и `dynamic:false`.

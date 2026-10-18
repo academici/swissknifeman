@@ -153,7 +153,8 @@ def read_exclude(root: PathLike) -> List[str]:
 def write_exclude(root: PathLike, names: Sequence[str]) -> Optional[Path]:
     """Make the links block of ``.git/info/exclude`` list exactly ``names`` (``/name`` lines); every line outside the block
     stays. Without names the block is removed, and a file without a block is not touched. Returns the file, or ``None`` when
-    ``root`` is not a git working tree (nothing to exclude from). A half block is ``LINKS_EXCLUDE_INVALID``."""
+    ``root`` is not a git working tree (nothing to exclude from). A half block is ``LINKS_EXCLUDE_INVALID``. After the write
+    git is asked (``git check-ignore``) about every name; one it does not ignore is ``LINKS_EXCLUDE_INEFFECTIVE``."""
     path = exclude_file(root)
     if path is None:
         return None
@@ -176,4 +177,24 @@ def write_exclude(root: PathLike, names: Sequence[str]) -> Optional[Path]:
     if text != old:
         path.parent.mkdir(parents=True, exist_ok=True)
         atomic_write_text(path, text)
+    _require_ignored(root, path, [line[1:] for line in wanted])
     return path
+
+
+def _require_ignored(root: PathLike, exclude: Path, names: Sequence[str]) -> None:
+    """Ask git itself (``git check-ignore``) whether each name is ignored in ``root``; a line in the file is no proof (a
+    tracked ``.gitignore`` can negate it, and git may read another file). ``LINKS_EXCLUDE_INEFFECTIVE`` when a name is
+    not ignored or git cannot tell."""
+    for name in names:
+        try:
+            done = subprocess.run(["git", "check-ignore", "-q", "--no-index", "--", name], cwd=str(root),
+                                  capture_output=True, text=True, check=False, timeout=30)
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise WorkspaceError("LINKS_EXCLUDE_INEFFECTIVE", f"cannot ask git whether {name} is ignored in {root}: "
+                                 f"{exc.__class__.__name__}") from None
+        if done.returncode == 1:
+            raise WorkspaceError("LINKS_EXCLUDE_INEFFECTIVE", f"git does not ignore /{name} in {root} although {exclude} "
+                                 f"lists it (a .gitignore may negate it)")
+        if done.returncode != 0:
+            raise WorkspaceError("LINKS_EXCLUDE_INEFFECTIVE", f"git could not check whether {name} is ignored in {root}: "
+                                 f"{done.stderr.strip() or done.returncode}")

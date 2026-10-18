@@ -120,6 +120,17 @@ def _sync_exclude(root: Path, folder: Path) -> Optional[Path]:
     return write_exclude(root, names)
 
 
+def _take_back(rows: List[Dict[str, Any]]) -> None:
+    """Remove the links a failed :func:`link` call made: an absolute link that no exclude line covers would show up in the
+    checkout as an untracked path."""
+    for row in rows:
+        if row.get("action") == "created":
+            try:
+                os.unlink(row["path"])
+            except OSError:
+                pass
+
+
 def link(root: PathLike, env: Env = None, home: Optional[PathLike] = None, remember: bool = True,
          locked: bool = False) -> Dict[str, Any]:
     """Make the links ``plans`` and ``tasks`` in the checkout ``root`` and list them in ``.git/info/exclude``.
@@ -149,12 +160,17 @@ def link(root: PathLike, env: Env = None, home: Optional[PathLike] = None, remem
                 try:
                     os.symlink(str(_real(target)), found["path"])
                 except OSError as exc:
+                    _take_back(rows)
                     raise WorkspaceError("LINK_FAILED", f"cannot link {found['path']}: {exc}") from None
                 row["action"] = "created"
             else:
                 row["action"] = "kept"
         rows.append(row)
-    exclude = _sync_exclude(checkout, folder)
+    try:
+        exclude = _sync_exclude(checkout, folder)
+    except (WorkspaceError, OSError):
+        _take_back(rows)
+        raise
     problem = None
     now: Optional[bool] = None
     if remember and any(row["action"] in ("created", "kept") for row in rows):

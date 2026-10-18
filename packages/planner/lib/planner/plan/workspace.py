@@ -82,14 +82,15 @@ def _machine_dir(environment: Mapping[str, str], kind: str, legacy: Path) -> Pat
 
 
 def workspaces_root(env: Env = None) -> Path:
-    """The folder of the workspaces: ``SKM_WORKSPACES_ROOT`` (absolute), else ``<machine home>/workspaces``
-    (``$SKM_HOME`` or ``~/.local/share/swissknifeman``). Nothing is created."""
+    """The folder of the workspaces: ``SKM_WORKSPACES_ROOT``, else ``SKM_WORKSPACES`` (absolute), else
+    ``<machine home>/workspaces`` (``$SKM_HOME`` or ``~/.local/share/swissknifeman``). Nothing is created."""
     environment = _environment(env)
-    value = environment.get("SKM_WORKSPACES_ROOT", "")
-    if value:
-        if not os.path.isabs(value):
-            raise ValueError(f"SKM_WORKSPACES_ROOT must be an absolute path, got {value!r}")
-        return Path(value)
+    for name in ("SKM_WORKSPACES_ROOT", "SKM_WORKSPACES"):
+        value = environment.get(name, "")
+        if value:
+            if not os.path.isabs(value):
+                raise ValueError(f"{name} must be an absolute path, got {value!r}")
+            return Path(value)
     old = _xdg(environment, "XDG_DATA_HOME", _user_home(environment) / ".local" / "share") / "swissknifeman" / "workspaces"
     return _machine_dir(environment, "workspaces", old)
 

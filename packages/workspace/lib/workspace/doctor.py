@@ -2,7 +2,9 @@
 
 ``workspace.layout`` (folders and files), ``workspace.documents`` (every JSON document against its contract),
 ``workspace.git-policy`` (the tracking policy of the repository: ``policy.py``), ``workspace.bindings`` (checkouts of this machine), ``workspace.legacy-plans`` (plans left beside a workspace store) and
-``workspace.git`` (git version) and ``workspace.plans-migrator`` (the plugin of the migration is found). A machine without a
+``workspace.git`` (git version), ``workspace.plans-migrator`` (the plugin of the migration is found) and
+``workspace.env-snippet`` / ``workspace.env-variables`` (the shell-profile snippet and the ``SKM_*`` variables, from
+``aicore.state.shellenv``). A machine without a
 workspace is normal before the first ``init``: that is a warning.
 """
 from __future__ import annotations
@@ -12,6 +14,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Union
 
+from aicore.state import shellenv as shell_env
 from aicore.workspace import (is_code, WorkspaceError, legacy_plans_present, read_bindings, read_marker, read_workspace,
                               validate_document)
 
@@ -252,4 +255,5 @@ def run_checks(root: Optional[PathLike] = None, env: Env = None, home: Optional[
     results.append(_legacy_plans(env, home))
     results.append(_git())
     results.append(_migrator(env, home))
+    results.extend(shell_env.doctor_checks("workspace", env, home))
     return results

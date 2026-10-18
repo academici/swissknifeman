@@ -40,7 +40,7 @@ fixed once a project exists; two projects with the same code in one workspace ar
 
 ```text
 ~/.local/share/swissknifeman/      the machine home (SKM_HOME moves it)
-  workspaces/                      SKM_WORKSPACES_ROOT; one folder, one git repository per workspace
+  workspaces/                      SKM_WORKSPACES (older name SKM_WORKSPACES_ROOT); one folder, one git repository per workspace
     axioma/                        the workspace "axioma"
       workspace.json               code, workspace id and format
       .gitignore  .gitattributes  README.md

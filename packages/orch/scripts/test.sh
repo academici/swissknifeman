@@ -35,6 +35,7 @@ cd "$ORCH_ROOT"
 # The tests never touch the developer's HOME, state or event delivery.
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
+unset SKM_WORKSPACES SKM_WORKSPACES_ROOT SKM_WORKSPACE
 export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_AICORE_EVENTS__DELIVERY=off
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME
 PYTHONPATH="lib:$AICORE_LIB" _unittest discover -s tests -t . "$@"

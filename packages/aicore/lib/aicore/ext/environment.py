@@ -12,9 +12,10 @@ from __future__ import annotations
 from typing import Dict, List, Mapping, Optional, Tuple
 
 from ..config import secrets as _secrets
+from ..state import envtable
 from .errors import ExtError
 
-BASE_ALLOW = ("PATH", "HOME", "USER", "LOGNAME", "LANG", "LANGUAGE", "TZ", "TMPDIR", "TERM", "SKM_HOME",
+BASE_ALLOW = ("PATH", "HOME", "USER", "LOGNAME", "LANG", "LANGUAGE", "TZ", "TMPDIR", "TERM", *envtable.NAMES,
               "AICORE_ROOT", "SKM_UNITS_PATH", "XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_DATA_HOME",
               "XDG_CACHE_HOME")
 LOCALE_PREFIX = "LC_"

@@ -6,10 +6,12 @@
 #
 # Usage:
 #   ./install.sh [--bin-dir DIR] [--force] [--no-codex-plugins] [--no-grok-plugins]
+#                   [--no-shell-env]
 #   --bin-dir DIR   where to put symlinks (default ~/.local/bin)
 #   --force         overwrite other people's symlinks without asking
 #   --no-codex-plugins  do not install basic Codex-plugins core + planner
 #   --no-grok-plugins   do not install the Grok planner plugin
+#   --no-shell-env  do not add the SKM environment snippet to the shell profile
 set -euo pipefail
 # --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
 _skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
@@ -34,7 +36,8 @@ while [[ $# -gt 0 ]]; do
     --force)   args+=(--force); shift ;;
     --no-codex-plugins) args+=(--option skiller=--no-codex-plugins); shift ;;
     --no-grok-plugins) args+=(--option skiller=--no-grok-plugins); shift ;;
-    -h|--help) grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,12p'; exit 0 ;;
+    --no-shell-env) args+=(--option skiller=--no-shell-env --option maind=--no-shell-env); shift ;;
+    -h|--help) grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,13p'; exit 0 ;;
     *) echo "ERROR: unknown argument: $1" >&2; exit 1 ;;
   esac
 done

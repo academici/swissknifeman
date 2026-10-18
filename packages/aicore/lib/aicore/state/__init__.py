@@ -2,7 +2,7 @@
 
 Layering: ``state`` uses only :mod:`aicore.util` and the standard library.
 """
-from . import gitignore
+from . import envtable, gitignore, shellenv
 from .backups import DEFAULT_KEEP, backup, list_backups
 from .blobs import blob_path, put_bytes, put_json, read_bytes
 from .locations import (Locations, ProjectContext, ProjectContextConflict, ProjectContextRequired, cache_dir,
@@ -17,7 +17,7 @@ from .locations import legacy_machine_dirs, machine_home
 from .migrate import MigrationError, Move, migrate_home
 
 __all__ = [
-    "MigrationError", "Move", "legacy_machine_dirs", "machine_home", "migrate_home",
+    "envtable", "shellenv", "MigrationError", "Move", "legacy_machine_dirs", "machine_home", "migrate_home",
     "DEFAULT_KEEP", "InvocationContext", "LauncherError", "Locations", "ProjectContext", "ProjectContextConflict",
     "ProjectContextRequired", "ProjectWriteError", "backup", "blob_path", "cache_dir",
     "config_dir", "data_dir", "ensure_dir", "find_project_root", "gitignore", "launcher_root", "list_backups", "machine_config_file", "machine_locations",

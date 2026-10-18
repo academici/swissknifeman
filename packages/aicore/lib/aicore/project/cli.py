@@ -7,7 +7,8 @@
     context [--json]                                         where this command runs and how the project was found
     migrate [--dry-run] [--json]                             move config.toml, state, backups, stubs of the checkout
                                                              into projects/<code>/local/ of the workspace
-    doctor  [--json]                                         verify plus the project config, the local folder, leftovers
+    doctor  [--json]                                         verify plus the project config, the local folder, leftovers,
+                                                             the SKM environment snippet and variables
     exec    -- <group> [args...]                             run a group through this project's launcher
 
 No command takes a target path: the project is the one the launcher bound, else the nearest ``.git``/``.swissknifeman``
@@ -26,7 +27,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, TextIO, Tuple
 
 from . import artifacts, migrate
 from aicore.state import (LauncherError, ProjectContextRequired, read_invocation_context, require_project_path,
-                          resolve_project)
+                          resolve_project, shellenv)
 from aicore.state.invocation import (LAUNCHER_PROTOCOL, MIN_LAUNCHER_PROTOCOL, launcher_file, lock_file,
                                      read_lock)
 from aicore.state.locations import (LAUNCHER_ENV, LOCAL_DIRNAME, PROJECT_DIRNAME, project_config_file,
@@ -264,6 +265,7 @@ def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
                                  "fix the TOML: swissknifeman config explain"))
     checks.extend(local_checks(root, env))
     checks.append(links_check(root, env))
+    checks.extend(shellenv.doctor_checks("project", env))
     from aicore.workspace import WorkspaceError, is_workspace_link, resolve_plans_store
     store = None
     store_error = None

@@ -121,6 +121,30 @@ class InstallScriptCase(unittest.TestCase):
     def lines(self, path):
         return path.read_text(encoding="utf-8").splitlines()
 
+    def test_the_environment_snippet_is_added_to_the_shell_profile_once(self):
+        profile = self.home / ".bashrc"
+        for _ in range(2):  # a second run changes nothing
+            result = self.run_installer("--force", SHELL="/bin/bash", SKM_HOME=str(self.root / "skm"))
+            self.assertEqual(result.returncode, 0, result.stderr)
+        text = profile.read_text(encoding="utf-8")
+        self.assertEqual(text.count("# >>> swissknifeman environment"), 1)
+        self.assertIn(f"SKM_HOME={self.root / 'skm'}\n", text)
+        self.assertIn("export SKM_WORKSPACES\n", text)
+
+    def test_the_environment_snippet_can_be_switched_off(self):
+        profile = self.home / ".bashrc"
+        self.assertEqual(self.run_installer("--force", "--no-shell-env", SHELL="/bin/bash").returncode, 0)
+        self.assertEqual(self.run_installer("--force", SHELL="/bin/bash", SKM_NO_SHELL_ENV="1").returncode, 0)
+        self.assertFalse(profile.exists())
+
+    def test_a_broken_profile_snippet_warns_and_does_not_stop_the_installation(self):
+        profile = self.home / ".bashrc"
+        profile.write_text("# >>> swissknifeman environment (broken)\n", encoding="utf-8")
+        result = self.run_installer("--force", SHELL="/bin/bash")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("SKM environment snippet was not added", result.stderr)
+        self.assertEqual(profile.read_text(encoding="utf-8"), "# >>> swissknifeman environment (broken)\n")
+
     def test_force_on_a_terminal_does_not_wait_for_the_topology_question(self):
         import pty
         master, slave = pty.openpty()  # a terminal on stdin, no answer will ever come

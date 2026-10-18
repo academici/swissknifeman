@@ -64,7 +64,7 @@ parses `config.toml` itself. Places come from `aicore.state`.
 | data of a module (`data_dir("maind")`) | `<home>/<module>` | `<dir>/<module>` |
 | project config (in git) | `<project>/.swissknifeman/config.toml` | same |
 | project state, backups (ignored) | `<project>/.swissknifeman/{state,backups}/` | same |
-| portable workspaces (one git root each) | `<home>/workspaces/<code>`; `SKM_WORKSPACES_ROOT=<abs dir>` moves the folder, `SKM_WORKSPACE=<code>` chooses the workspace | `<dir>/workspaces/<code>` |
+| portable workspaces (one git root each) | `<home>/workspaces/<code>`; `SKM_WORKSPACES=<abs dir>` (older name `SKM_WORKSPACES_ROOT`, which wins when both are set) moves the folder, `SKM_WORKSPACE=<code>` chooses the workspace | `<dir>/workspaces/<code>` |
 | workspace machine files (bindings, sync state, audit) | `<state>/workspaces/<code>`; the device file `<state>/workspaces/device.json` | `<dir>/state/workspaces/<code>` |
 
 The machine keeps everything in one folder. The `XDG_*` variables no longer move it. `SKM_HOME` (an absolute path) is
@@ -76,6 +76,15 @@ data is a conflict and is left alone; exit code 1). A file that exists only at a
 (for example `~/.swissknifeman/analyst`) is still read, with one warning per process; nothing is copied or removed
 until `swissknifeman upgrade`. Before a write the old file is copied to `.swissknifeman/backups/<UTC stamp>/` (machine
 files: to the state directory), and the newest ten copies are kept. `aicore config paths` prints the resolved places.
+
+### The SKM environment variables and the shell snippet
+
+`SKM_HOME`, `SKM_WORKSPACES` and `SKM_WORKSPACE` are the three variables the installers export from the shell profile; their
+names are one table, `aicore.state.envtable` (`ENV_HOME`, `ENV_WORKSPACES`, `ENV_WORKSPACE`, `TABLE`, `NAMES`). `aicore.state.shellenv`
+plans the values of a machine (`planned_values`), writes and removes the managed block of the profile (`install`, `uninstall`,
+`inspect`, idempotent, nothing outside the markers changes) and yields the doctor checks `<prefix>.env-snippet` and
+`<prefix>.env-variables` (`doctor_checks`; `project doctor` and `workspace doctor` use it). `aicore shell-env show|install|uninstall|doctor`
+is the command line. A plugin process receives the three variables (`aicore.ext.environment.BASE_ALLOW`). See `docs/skm-environment.md`.
 
 ### Writing configuration: lock and revision
 

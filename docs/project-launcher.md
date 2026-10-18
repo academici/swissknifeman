@@ -72,7 +72,7 @@ legacy way. A conductor lane in a worktree is therefore never pinned to the main
 | `verify [--json] [--no-roundtrip]` | file, lock, digest, protocol, hub on PATH, round trip launcher -> umbrella -> same root |
 | `context [--json]` | `invocation-context/v1`: root, invocation cwd, resolution, launcher (verified), `plans_root` and `plans_store {kind, project_id, workspace, reason}` of the project marker |
 | `migrate [--dry-run] [--json]` | moves `config.toml`, `state/`, `backups/`, `stubs/` of `.swissknifeman/` into `projects/<code>/local/` of the workspace the marker names (`PROJECT_LOCAL_UNAVAILABLE` without the workspace project folder). A file is never overwritten: identical bytes are dropped from the checkout, other bytes are `PROJECT_MIGRATE_CONFLICT` (both stay), a symbolic link is `PROJECT_MIGRATE_SYMLINK`. A second run finds nothing |
-| `doctor [--json]` | verify + project config `schema_version` + `project.local` (the `local/` folder the marker names, its config against `project-local-config/v1`, `repo.path` against this checkout) + `project.checkout-layer` (warns about `config.toml`, `state`, `backups`, `stubs` left in the checkout: `project migrate`) + write boundary of state, backups and a legacy plans folder + `project.plans-store` (the marker's store resolves; a workspace store lies outside the project by design) |
+| `doctor [--json]` | verify + project config `schema_version` + `project.local` (the `local/` folder the marker names, its config against `project-local-config/v1`, `repo.path` against this checkout) + `project.checkout-layer` (warns about `config.toml`, `state`, `backups`, `stubs` left in the checkout: `project migrate`) + write boundary of state, backups and a legacy plans folder + `project.plans-store` (the marker's store resolves; a workspace store lies outside the project by design) + `project.env-snippet` / `project.env-variables` (the shell-profile snippet and the `SKM_HOME`, `SKM_WORKSPACES`, `SKM_WORKSPACE` variables: [skm-environment.md](skm-environment.md)) |
 | `exec -- <group> [args...]` | runs a group through this project's launcher |
 
 Writes: a temporary file in the same folder, `fsync`, `os.replace`, `fsync` of the folder
@@ -85,6 +85,13 @@ project layer; `config.toml`, state, plans and unknown files are never touched b
 
 Contracts (aicore): `project-launcher-lock/v1` (`$schema`, `protocol`, `template_sha256`, `managed_files`; nothing
 machine-specific, committed with the project) and `invocation-context/v1`. Template: `packages/aicore/templates/project/launcher.py`.
+
+## Environment variables
+
+The launcher copies its environment to the hub, so `SKM_HOME`, `SKM_WORKSPACES` and `SKM_WORKSPACE` (exported from the
+shell profile by the installers, `aicore shell-env`) reach every group unchanged; it sets none of them and works without
+them. A project therefore needs only the launcher and these variables to find the machine and its workspace; see
+[skm-environment.md](skm-environment.md).
 
 ## Unit execution policy
 

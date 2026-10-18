@@ -6,6 +6,11 @@ import shlex
 import shutil
 import sys
 
+# The environment variables of SKM; the one table is aicore.state.envtable (this stdlib-only copy is pinned to it by
+# harness tests.test_skm_env_table).
+SKM_ENV = ("SKM_HOME", "SKM_WORKSPACES", "SKM_WORKSPACE")
+ENV_HOME = SKM_ENV[0]
+
 _PUNCT = ";|&<>()"
 _GLOB_CHARS = ("*", "?", "[")
 _FORBIDDEN = ("$", "`", "{", "}")
@@ -39,7 +44,7 @@ def _machine_dir(home, kind, xdg_variable, xdg_default):
     """``<machine home>/<kind>`` (the machine home is ``$SKM_HOME`` or ``~/.local/share/swissknifeman``); without
     ``SKM_HOME`` the old XDG folder while the new one does not exist and the old one does. The same rule as
     ``aicore.state.locations``; this hook library is stdlib-only and stands alone."""
-    skm_home = os.environ.get("SKM_HOME", "")
+    skm_home = os.environ.get(ENV_HOME, "")
     if skm_home and os.path.isabs(skm_home):
         return os.path.join(skm_home, kind)
     new = os.path.join(home, ".local", "share", "swissknifeman", kind)
@@ -108,7 +113,7 @@ def _state_file(home, owner, name):
     or the old XDG state directory while the new one does not exist), then the legacy ``~/.swissknifeman/<name>`` (not
     under ``SKM_HOME``). The same ladder as ``aicore.state.locations``; this hook library is stdlib-only and stands alone."""
     own = os.path.join(_machine_dir(home, "state", "XDG_STATE_HOME", (".local", "state")), owner, name)
-    skm_home = os.environ.get("SKM_HOME", "")
+    skm_home = os.environ.get(ENV_HOME, "")
     if skm_home and os.path.isabs(skm_home):
         return [own]
     return [own, os.path.join(home, ".swissknifeman", name)]

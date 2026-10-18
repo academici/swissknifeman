@@ -65,6 +65,10 @@ brain_store()   { expandtilde "$(cfg ".brains[\"$1\"].store")"; }
 brain_am_url()  { cfg ".brains[\"$1\"].agentmemory.url"; }
 brain_am_ns()   { local v; v="$(cfg ".brains[\"$1\"].agentmemory.namespace")"; printf '%s' "${v:-$1}"; }
 
+# The environment variables of SKM; the one table is aicore.state.envtable (this copy is pinned to it by harness
+# tests.test_skm_env_table). SKM_HOME is the machine home read below.
+SKM_ENV_NAMES="SKM_HOME SKM_WORKSPACES SKM_WORKSPACE"
+
 # An owner's registry file: its own state file (<machine home>/state/<owner>/<name>; the machine home is $SKM_HOME or
 # ~/.local/share/swissknifeman), else the old XDG state directory (~/.local/state/swissknifeman, or $XDG_STATE_HOME/...)
 # while the new state directory does not exist, else the legacy ~/.swissknifeman/<name> while only that one exists

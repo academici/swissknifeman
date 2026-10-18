@@ -15,6 +15,8 @@ GROUPS = {
     "ext": ("aicore.ext.cli", "ext_main", "extensions: plugins, overlays, conformance, status"),
     "marketplace": ("aicore.content.marketplace", "main", "hub marketplace from unit.json: build [--check]"),
     "release": ("aicore.release.bundle", "main", "release bundle: compat manifest, schema package, attestation, checksums"),
+    "shell-env": ("aicore.state.shellenv_cli", "main",
+                  "shell-profile snippet exporting SKM_HOME, SKM_WORKSPACES, SKM_WORKSPACE: show, install, uninstall, doctor"),
     "project": ("aicore.project.cli", "main", "project-local launcher: init, sync, verify, context, doctor, exec"),
 }
 

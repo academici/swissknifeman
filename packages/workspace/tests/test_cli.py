@@ -43,8 +43,13 @@ class CommandTests(TempCase):
         doctor = self.json_cli("doctor")
         self.assertEqual(set(doctor), {"checks"})
         # outside the hub nothing fills the port workspace:plans-migrator: that one check warns
-        checks = [item for item in doctor["checks"] if BRIDGE_ROOT.is_dir() or item["check_id"] != "workspace.plans-migrator"]
+        # the snippet in the shell profile and the SKM_* variables belong to the machine, not to the workspace (test_doctor.EnvTests)
+        checks = [item for item in doctor["checks"]
+                  if (BRIDGE_ROOT.is_dir() or item["check_id"] != "workspace.plans-migrator")
+                  and not item["check_id"].startswith(("workspace.env-snippet", "workspace.env-variables"))]
         self.assertEqual({item["status"] for item in checks}, {"ok"})
+        self.assertEqual({item["check_id"] for item in doctor["checks"]} - {item["check_id"] for item in checks}
+                         - {"workspace.plans-migrator"}, {"workspace.env-snippet", "workspace.env-variables"})
 
     def test_json_is_one_object_on_stdout(self):
         code, out, err = self.run_cli("init", "--code", "axioma", "--json")

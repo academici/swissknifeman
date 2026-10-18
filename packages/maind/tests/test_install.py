@@ -54,6 +54,23 @@ class InstallRegistryStep(unittest.TestCase):
         self.install(isolated=False, XDG_STATE_HOME=str(moved))
         self.assertTrue((moved / "swissknifeman/maind/registry.json").is_file())
 
+    def test_the_environment_snippet_is_added_when_aicore_is_next_to_the_module(self):
+        shutil.copytree(PACKAGE.parent / "aicore", self.mono / "packages" / "aicore",
+                        ignore=shutil.ignore_patterns("__pycache__", "tests"))
+        profile = self.home / ".bashrc"
+        for _ in range(2):  # idempotent
+            self.install(SHELL="/bin/bash", AICORE_ROOT="")
+        text = profile.read_text(encoding="utf-8")
+        self.assertEqual(text.count("# >>> swissknifeman environment"), 1)
+        self.assertIn(f"SKM_HOME={self.skm}\n", text)
+        self.install(SHELL="/bin/zsh", SKM_NO_SHELL_ENV="1")
+        self.assertFalse((self.home / ".zshrc").exists())
+
+    def test_without_aicore_the_snippet_step_is_skipped_and_the_install_goes_on(self):
+        self.install(SHELL="/bin/bash", AICORE_ROOT="")
+        self.assertFalse((self.home / ".bashrc").exists())
+        self.assertTrue(self.registry.is_file())
+
     def test_creates_the_registry_when_there_is_no_source(self):
         self.install()
         self.assertTrue(self.registry.is_file())

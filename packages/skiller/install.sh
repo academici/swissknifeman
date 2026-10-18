@@ -9,12 +9,14 @@
 #
 # Usage:
 #   ./install.sh [--bin-dir DIR] [--force] [--codex-plugin NAME] [--no-codex-plugins] [--no-grok-plugins]
+#                [--no-shell-env]
 #
 #   --bin-dir DIR   link destination (default: ~/.local/bin)
 #   --force         replace a foreign file or link without prompting
 #   --codex-plugin  install additional Codex plugin NAME (repeatable)
 #   --no-codex-plugins  skip the base core and host command Codex plugins
 #   --no-grok-plugins   skip the host Grok plugins
+#   --no-shell-env  do not add the SKM environment snippet to the shell profile
 #
 # Next - from any consuming project:
 #   skiller connect    # Claude Code (plugin marketplace)
@@ -65,9 +67,10 @@ CODEX_PLUGIN_EXTRAS=()
 CODEX_PLUGINS_ENABLED=true
 CODEX_PLUGIN_EXPLICIT=false
 GROK_PLUGINS_ENABLED=true
+SHELL_ENV_ENABLED=true
 MARKETPLACE="swissknifeman"
 
-usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,19p'; }
+usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,21p'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -79,6 +82,7 @@ while [[ $# -gt 0 ]]; do
       shift 2 ;;
     --no-codex-plugins) CODEX_PLUGINS_ENABLED=false; shift ;;
     --no-grok-plugins) GROK_PLUGINS_ENABLED=false; shift ;;
+    --no-shell-env) SHELL_ENV_ENABLED=false; shift ;;
     -h|--help) usage; exit 0 ;;
     *)
       echo "ERROR: install.sh now installs CLI skiller." >&2
@@ -118,6 +122,13 @@ install_link() {  # $1 — name in BIN_DIR
 }
 
 install_link skiller          # main CLI (alias swissknifeman — umbrella install.sh)
+
+# SKM_HOME, SKM_WORKSPACES and SKM_WORKSPACE for the shell and the agent's Bash: a managed snippet in the shell profile
+# (aicore shell-env; the names are one table in aicore). Idempotent; a failure never stops the installation.
+if [[ "$SHELL_ENV_ENABLED" == true && "${SKM_NO_SHELL_ENV:-}" != 1 ]]; then
+  "$AICORE_ROOT/bin/aicore" shell-env install || \
+    echo "WARN: the SKM environment snippet was not added to the shell profile (see above); retry: aicore shell-env install" >&2
+fi
 
 # Local Environment Map (<state>/maind/topology.json, `maind topology`) — machine-specific
 # (path to Brain-volta, swissknifeman and project database), is therefore created

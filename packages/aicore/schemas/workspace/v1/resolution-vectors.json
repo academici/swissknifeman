@@ -159,6 +159,45 @@
    }
   },
   {
+   "name": "SKM_WORKSPACES moves the workspace",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "folder/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home",
+    "SKM_WORKSPACES": "{tmp}/folder"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/folder/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "SKM_WORKSPACES_ROOT wins over SKM_WORKSPACES",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "custom/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home",
+    "SKM_WORKSPACES": "{tmp}/folder",
+    "SKM_WORKSPACES_ROOT": "{tmp}/custom"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/custom/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
    "name": "SKM_HOME places the workspace in its workspaces folder",
    "op": "resolve",
    "files": {

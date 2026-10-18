@@ -22,6 +22,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple, Union
 
+from . import envtable
+
 APP = "swissknifeman"
 PROJECT_DIRNAME = ".swissknifeman"
 
@@ -155,8 +157,9 @@ def cache_dir(app: Optional[str] = None, *, env: Optional[Mapping[str, str]] = N
     return _sub(machine_locations(env, home).cache, app)
 
 
-ENV_WORKSPACES_ROOT = "SKM_WORKSPACES_ROOT"
-ENV_WORKSPACE = "SKM_WORKSPACE"
+ENV_WORKSPACES_ROOT = envtable.ENV_WORKSPACES_ROOT
+ENV_WORKSPACES = envtable.ENV_WORKSPACES
+ENV_WORKSPACE = envtable.ENV_WORKSPACE
 WORKSPACE_FILE = "workspace.json"
 CODE_PATTERN = r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*"
 CODE_MAX = 40
@@ -179,14 +182,15 @@ class WorkspaceSelectionError(ValueError):
 
 
 def workspaces_root(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
-    """The folder that holds the workspaces (one git repository each): ``SKM_WORKSPACES_ROOT`` (an absolute path) or
-    ``<machine home>/workspaces``. Nothing is created."""
+    """The folder that holds the workspaces (one git repository each): ``SKM_WORKSPACES_ROOT``, else ``SKM_WORKSPACES``
+    (an absolute path) or ``<machine home>/workspaces``. Nothing is created."""
     environment = os.environ if env is None else env
-    value = environment.get(ENV_WORKSPACES_ROOT, "")
-    if value:
-        if not os.path.isabs(value):
-            raise ValueError(f"{ENV_WORKSPACES_ROOT} must be an absolute path, got {value!r}")
-        return Path(value)
+    for name in (ENV_WORKSPACES_ROOT, ENV_WORKSPACES):
+        value = environment.get(name, "")
+        if value:
+            if not os.path.isabs(value):
+                raise ValueError(f"{name} must be an absolute path, got {value!r}")
+            return Path(value)
     return machine_locations(environment, home).workspaces
 
 

@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest import mock
 
 import aicore
+from aicore.state import shellenv
 from aicore.util import schema
 from aicore.workspace import bind, new_id, write_marker, write_project
 
@@ -13,7 +14,7 @@ from workspace import doctor, gitutil, layout, projects
 
 CHECK_RESULT = Path(aicore.__file__).resolve().parents[2] / "schemas" / "check-result" / "v1"
 IDS = ["workspace.layout", "workspace.documents", "workspace.git-policy", "workspace.bindings", "workspace.legacy-plans", "workspace.git",
-       "workspace.plans-migrator"]
+       "workspace.plans-migrator", "workspace.env-snippet", "workspace.env-variables"]
 
 
 class DoctorCase(TempCase):
@@ -42,6 +43,8 @@ class StructureTests(DoctorCase):
         statuses = self.statuses()
         if not BRIDGE_ROOT.is_dir():  # outside the hub nothing fills the port workspace:plans-migrator: that check warns
             self.assertEqual(statuses.pop("workspace.plans-migrator"), "warn")
+        # the shell profile and the variables belong to the machine, not to the workspace: EnvTests
+        self.assertEqual({statuses.pop("workspace.env-snippet"), statuses.pop("workspace.env-variables")}, {"warn"})
         self.assertEqual(set(statuses.values()), {"ok"})
 
     def test_unknown_entries_are_warnings(self):
@@ -163,6 +166,37 @@ class GitTests(DoctorCase):
                 if status != "ok":
                     self.assertIn("WORKSPACE_GIT_TOO_OLD", item["observed"])
 
+
+
+class EnvTests(DoctorCase):
+    """``workspace.env-snippet`` and ``workspace.env-variables``: the shell-profile snippet and the SKM_* variables."""
+
+    def setUp(self):
+        super().setUp()
+        layout.init("axioma")
+        self.bashrc = self.home / ".bashrc"
+
+    def test_without_the_snippet_and_the_variables_both_warn_with_the_remedy(self):
+        found = self.checks()
+        for check_id in ("workspace.env-snippet", "workspace.env-variables"):
+            self.assertEqual(found[check_id]["status"], "warn", found[check_id])
+            self.assertIn("shell-env install", found[check_id]["remediation"])
+        self.assertIn("SKM_WORKSPACES", found["workspace.env-variables"]["observed"])
+
+    def test_the_snippet_and_the_variables_of_the_shell_are_ok(self):
+        values, _ = shellenv.planned_values()
+        shellenv.install(self.bashrc, values)
+        with mock.patch.dict("os.environ", values):
+            found = self.checks()
+        self.assertEqual(found["workspace.env-snippet"]["status"], "ok")
+        self.assertEqual(found["workspace.env-variables"]["status"], "ok", found["workspace.env-variables"])
+
+    def test_a_broken_snippet_fails_and_a_workspace_the_variable_does_not_know_warns(self):
+        self.bashrc.write_text(shellenv.BEGIN + "\n", encoding="utf-8")
+        with mock.patch.dict("os.environ", {"SKM_WORKSPACE": "ghost"}):
+            found = self.checks()
+        self.assertEqual(found["workspace.env-snippet"]["status"], "fail")
+        self.assertIn("SKM_WORKSPACE=ghost is not a workspace", found["workspace.env-variables"]["observed"])
 
 
 @unittest.skipUnless(BRIDGE_ROOT.is_dir(), "the hub bridge workspace-planner is not next to the module")

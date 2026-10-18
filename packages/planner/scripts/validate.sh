@@ -49,7 +49,7 @@ err() { echo "  FAIL: $*" >&2; fail=1; }
 # they run journal planner.* events: delivery stays off so no subscriber (brain notes) starts; test_events enables it.
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
-hermetic() { env HOME="$TEST_HOME" SKM_HOME="$TEST_HOME" SKM_AICORE_EVENTS__DELIVERY=off "$@"; }
+hermetic() { env -u SKM_WORKSPACES -u SKM_WORKSPACES_ROOT -u SKM_WORKSPACE HOME="$TEST_HOME" SKM_HOME="$TEST_HOME" SKM_AICORE_EVENTS__DELIVERY=off "$@"; }
 
 echo "[1/6] python compile"
 python3 -m compileall -q lib tests scripts || err "py_compile"

@@ -5,13 +5,14 @@
 # agents.json) live in the swissknifeman state directory and are created by the CLI on first write.
 #
 # Usage:
-#   ./install.sh [--bin-dir DIR] [--force] [--with-memory] [--with-service]
+#   ./install.sh [--bin-dir DIR] [--force] [--with-memory] [--with-service] [--no-shell-env]
 #
 #   --bin-dir DIR   where to put the symlink (default ~/.local/bin)
 #   --force         replace someone else's file/symlink without question
 #   --with-memory   npm install at the root maind (memory daemon @agentmemory/agentmemory)
 #   --with-service  register memory daemon as systemd --user service
 #                   (maind service install — autorun + auto-restart)
+#   --no-shell-env  do not add the SKM environment snippet (SKM_HOME, SKM_WORKSPACES, SKM_WORKSPACE) to the shell profile
 #
 # Full bootstrap: ./install.sh --with-memory --with-service
 # Daemon ports are configured via .env (see .env.example), so as not to conflict
@@ -36,8 +37,9 @@ BIN_DIR="$HOME/.local/bin"
 FORCE=false
 WITH_MEMORY=false
 WITH_SERVICE=false
+SHELL_ENV_ENABLED=true
 
-usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
+usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,19p'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -45,6 +47,7 @@ while [[ $# -gt 0 ]]; do
     --force) FORCE=true; shift ;;
     --with-memory) WITH_MEMORY=true; shift ;;
     --with-service) WITH_SERVICE=true; shift ;;
+    --no-shell-env) SHELL_ENV_ENABLED=false; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 1 ;;
   esac
@@ -84,6 +87,24 @@ case ":$PATH:" in
       *)    echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc" ;;
     esac ;;
 esac
+
+# ── SKM environment variables in the shell profile ───────────────────────
+# SKM_HOME, SKM_WORKSPACES and SKM_WORKSPACE for the shell and the agent's Bash: a managed, idempotent snippet written by
+# `aicore shell-env install` (the names are one table in aicore). aicore is looked up like the locator of the other modules
+# (AICORE_ROOT, then _vendor/aicore, then the sibling aicore) but its absence only skips the step: maind installs alone.
+if [[ "$SHELL_ENV_ENABLED" == true && "${SKM_NO_SHELL_ENV:-}" != 1 ]]; then
+  _aicore_cli=""
+  for _aicore_dir in "${AICORE_ROOT:-}" "$REPO_ROOT/_vendor/aicore" "$REPO_ROOT/../aicore"; do
+    if [[ -n "$_aicore_dir" && -x "$_aicore_dir/bin/aicore" ]]; then _aicore_cli="$_aicore_dir/bin/aicore"; break; fi
+  done
+  if [[ -z "$_aicore_cli" ]]; then
+    echo "INFO: aicore not found - the SKM environment snippet was not added to the shell profile"
+  else
+    "$_aicore_cli" shell-env install || \
+      echo "WARN: the SKM environment snippet was not added to the shell profile (see above); retry: aicore shell-env install" >&2
+  fi
+  unset _aicore_cli _aicore_dir
+fi
 
 # ── optional bootstrap memory daemon ─────────────────────────────────────
 if [[ "$WITH_MEMORY" == true ]]; then

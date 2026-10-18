@@ -29,6 +29,9 @@ marketplace/plugin paths. Flags: `--bin-dir DIR` (default `~/.local/bin`),
 `--force` (replace an occupied binary path), `--no-codex-plugins`, and
 `--no-grok-plugins`. Add a global Codex plugin with repeatable
 `./install.sh --codex-plugin NAME`; default selection remains enabled.
+The installer also adds a managed snippet to the shell profile (`~/.bashrc` or `~/.zshrc`) that exports `SKM_HOME`,
+`SKM_WORKSPACES` and `SKM_WORKSPACE` (`aicore shell-env install`; idempotent, `--no-shell-env` or `SKM_NO_SHELL_ENV=1`
+skips it, a failure only warns); open a new shell afterwards. See the hub's `docs/skm-environment.md`.
 An already configured or installed Grok plugin counts as success.
 If `~/.local/bin` is absent from `PATH`, the installer prints the shell command.
 Check the installation with `skiller doctor`.

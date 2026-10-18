@@ -1,0 +1,302 @@
+{
+  "runs": [
+    {
+      "run_id": "cnd-20261018T001549Z-1018e4",
+      "status": "running",
+      "reason_code": null,
+      "created": "2026-10-18T00:15:49Z",
+      "items": [
+        "P6.1"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261018T000701Z-296833",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-18T00:07:01Z",
+      "items": [
+        "adhoc@72b602beeaf0"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T230718Z-d4c317",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T23:07:18Z",
+      "items": [
+        "P5.1",
+        "P5.2"
+      ],
+      "resumes": 2
+    },
+    {
+      "run_id": "cnd-20261017T230403Z-31df27",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T23:04:03Z",
+      "items": [
+        "adhoc@430906510506"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T222246Z-aa780f",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T22:22:46Z",
+      "items": [
+        "P4.1",
+        "P4.2"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T212640Z-764810",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T21:26:40Z",
+      "items": [
+        "adhoc@f0702e1aa343"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T173427Z-548283",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T17:34:27Z",
+      "items": [
+        "P3.1",
+        "P3.2",
+        "P3.3"
+      ],
+      "resumes": 2
+    },
+    {
+      "run_id": "cnd-20261017T163828Z-3c4448",
+      "status": "stopped",
+      "reason_code": "ITEM_BLOCKED",
+      "created": "2026-10-17T16:38:28Z",
+      "items": [
+        "adhoc@05377e6c9a3a"
+      ],
+      "resumes": 1
+    },
+    {
+      "run_id": "cnd-20261017T152730Z-7c6696",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T15:27:31Z",
+      "items": [
+        "P2.3",
+        "P2.4"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T151552Z-0f960f",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T15:15:52Z",
+      "items": [
+        "adhoc@42088aa50558"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T125557Z-de5687",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T12:55:57Z",
+      "items": [
+        "P2.1",
+        "P2.2"
+      ],
+      "resumes": 1
+    },
+    {
+      "run_id": "cnd-20261017T122422Z-4d1ba6",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T12:24:22Z",
+      "items": [
+        "adhoc@be2ad30a93e2"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T105000Z-7eed5a",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T10:50:00Z",
+      "items": [
+        "P1.1",
+        "P1.2",
+        "P1.3"
+      ],
+      "resumes": 4
+    },
+    {
+      "run_id": "cnd-20261017T064926Z-e563ee",
+      "status": "stopped",
+      "reason_code": "ITEM_BLOCKED",
+      "created": "2026-10-17T06:49:26Z",
+      "items": [
+        "adhoc@4c5b7088672d"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T053652Z-0171d1",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T05:36:52Z",
+      "items": [
+        "P7.1",
+        "P7.2",
+        "P7.3",
+        "P7.4"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T052805Z-cfd01c",
+      "status": "stopped",
+      "reason_code": "ITEM_BLOCKED",
+      "created": "2026-10-17T05:28:05Z",
+      "items": [
+        "adhoc@e0e5449f1592"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T032328Z-36051a",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T03:23:28Z",
+      "items": [
+        "P6.1",
+        "P6.2",
+        "P6.3",
+        "P6.4"
+      ],
+      "resumes": 2
+    },
+    {
+      "run_id": "cnd-20261017T031458Z-5eafe1",
+      "status": "stopped",
+      "reason_code": "ITEM_BLOCKED",
+      "created": "2026-10-17T03:14:58Z",
+      "items": [
+        "adhoc@a82c7e14989f"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261017T021037Z-9aba13",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-17T02:10:37Z",
+      "items": [
+        "P5.1",
+        "P5.2",
+        "P5.3",
+        "P5.4"
+      ],
+      "resumes": 1
+    },
+    {
+      "run_id": "cnd-20261017T015815Z-0dcf04",
+      "status": "stopped",
+      "reason_code": "ITEM_BLOCKED",
+      "created": "2026-10-17T01:58:15Z",
+      "items": [
+        "adhoc@08b672435f92"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261016T200314Z-c9dfc5",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-16T20:03:14Z",
+      "items": [
+        "P4.1",
+        "P4.2",
+        "P4.3",
+        "P4.4",
+        "P4.5"
+      ],
+      "resumes": 3
+    },
+    {
+      "run_id": "cnd-20261016T194113Z-676f3a",
+      "status": "stopped",
+      "reason_code": "ITEM_BLOCKED",
+      "created": "2026-10-16T19:41:13Z",
+      "items": [
+        "adhoc@03d65e323d0a"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261016T194025Z-7c4d08",
+      "status": "stopped",
+      "reason_code": "ROUTE_UNDERSHOOT",
+      "created": "2026-10-16T19:40:25Z",
+      "items": [
+        "adhoc@01e0b0344e80"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261016T182456Z-83fc8d",
+      "status": "finished",
+      "reason_code": null,
+      "created": "2026-10-16T18:24:56Z",
+      "items": [
+        "P3.1",
+        "P3.2",
+        "P3.3"
+      ],
+      "resumes": 2
+    },
+    {
+      "run_id": "cnd-20261016T182428Z-836840",
+      "status": "stopped",
+      "reason_code": "CLAIM_BLOCKED",
+      "created": "2026-10-16T18:24:28Z",
+      "items": [
+        "P3.1",
+        "P3.2",
+        "P3.3"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261016T182335Z-af25aa",
+      "status": "stopped",
+      "reason_code": "CLAIM_BLOCKED",
+      "created": "2026-10-16T18:23:35Z",
+      "items": [
+        "P3.1",
+        "P3.2"
+      ],
+      "resumes": 0
+    },
+    {
+      "run_id": "cnd-20261016T182245Z-3c08e4",
+      "status": "stopped",
+      "reason_code": "WORK_SOURCE_FAILED",
+      "created": "2026-10-16T18:22:45Z",
+      "items": [
+        "P3.1",
+        "P3.2",
+        "P3.3"
+      ],
+      "resumes": 0
+    }
+  ]
+}

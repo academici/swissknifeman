@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "data": {
+    "plans": [
+      {
+        "id": "2026.10.14-№1-BILLIUM-V1",
+        "short_id": "PLAN1",
+        "title": "Plan №1 — Billium: целевая архитектура и реализация биллинга",
+        "status": "active",
+        "updated_at": "2026-10-17T12:03:39Z",
+        "progress": {
+          "phases": 10,
+          "phases_closed": 2,
+          "items": 33,
+          "items_done": 21
+        }
+      }
+    ]
+  }
+}

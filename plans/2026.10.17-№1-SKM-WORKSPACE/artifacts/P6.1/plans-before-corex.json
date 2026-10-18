@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "data": {
+    "plans": [
+      {
+        "id": "2026.09.19-№1-COREX-PLATFORM-HARDENING",
+        "short_id": "PLAN2",
+        "title": "План №1 — Платформенное доведение CoreX до коммерческого 1.0",
+        "status": "paused",
+        "updated_at": "2026-09-27T18:40:56Z",
+        "progress": {
+          "phases": 17,
+          "phases_closed": 16,
+          "items": 178,
+          "items_done": 176
+        }
+      }
+    ]
+  }
+}

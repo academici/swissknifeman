@@ -1,0 +1,8 @@
+swissknifeman workspace migrate plan --project <dir> --json  (all 7 projects) exit 1
+WORKSPACE_NOT_INITIALIZED: no workspace at <module root>/packages/workspace; run `swissknifeman workspace init`
+Retried with SKM_WORKSPACE_ROOT unset: same code, no workspace at <repo>/packages/workspace
+(~/.local/share/swissknifeman/workspace does not exist)
+Round 2 (init/attach now allowed by D16): `env -u SKM_WORKSPACE_ROOT workspace init` still resolved to the module root
+(the swissknifeman wrapper re-injects it): WORKSPACE_ROOT_NOT_EMPTY. With an explicit --root ~/.local/share/swissknifeman/workspace:
+mkdir fails "Read-only file system" (sandbox: ~/.local/share and project .swissknifeman/ dirs, e.g. billium, are not writable).
+Neither init nor attach could be executed; nothing was written.

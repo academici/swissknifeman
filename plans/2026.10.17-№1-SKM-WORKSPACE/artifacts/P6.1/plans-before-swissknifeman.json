@@ -1,0 +1,59 @@
+{
+  "ok": true,
+  "data": {
+    "plans": [
+      {
+        "id": "2026.10.07-№1-SKM-ECOSYSTEM",
+        "short_id": "PLAN3",
+        "title": "Plan №1 — Разделение экосистемы на модули: aicore, skiller, planner, orch, brain и хаб",
+        "status": "active",
+        "updated_at": "2026-10-09T17:11:09Z",
+        "progress": {
+          "phases": 13,
+          "phases_closed": 12,
+          "items": 109,
+          "items_done": 109
+        }
+      },
+      {
+        "id": "2026.10.13-№1-SKM-FEATURES",
+        "short_id": "PLAN4",
+        "title": "Единый control plane: ошибки провайдеров, конфиг, deviations, вопросы, review, skills и промпт",
+        "status": "active",
+        "updated_at": "2026-10-13T19:39:27Z",
+        "progress": {
+          "phases": 13,
+          "phases_closed": 12,
+          "items": 56,
+          "items_done": 52
+        }
+      },
+      {
+        "id": "2026.10.16-№1-SKM-GUI",
+        "short_id": "PLAN5",
+        "title": "Plan №1 — SKM GUI: desktop control plane — Tauri 2, React/TypeScript, Python sidecar",
+        "status": "done",
+        "updated_at": "2026-10-17T06:46:49Z",
+        "progress": {
+          "phases": 7,
+          "phases_closed": 7,
+          "items": 30,
+          "items_done": 30
+        }
+      },
+      {
+        "id": "2026.10.17-№1-SKM-WORKSPACE",
+        "short_id": "PLAN6",
+        "title": "Plan №1 — Portable workspace: планы вне репозиториев, идентичность проектов, миграция, git-синхронизация и GUI",
+        "status": "active",
+        "updated_at": "2026-10-17T10:45:08Z",
+        "progress": {
+          "phases": 6,
+          "phases_closed": 5,
+          "items": 19,
+          "items_done": 14
+        }
+      }
+    ]
+  }
+}

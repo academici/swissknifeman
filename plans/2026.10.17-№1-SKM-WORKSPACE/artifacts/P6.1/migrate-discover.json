@@ -1,0 +1,151 @@
+{
+  "candidates": [
+    {
+      "path": "/home/vostrikov/projects/packages/azguard",
+      "name": "azguard",
+      "sources": [
+        "launcher",
+        "registry"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 2,
+        "legacy": 1,
+        "files": 2863,
+        "bytes": 145077858
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/billium",
+      "name": "billium",
+      "sources": [
+        "launcher",
+        "registry"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 1,
+        "legacy": 0,
+        "files": 314,
+        "bytes": 4793279
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/chatom",
+      "name": "chatom",
+      "sources": [
+        "launcher",
+        "registry"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 2,
+        "legacy": 4,
+        "files": 6547,
+        "bytes": 236008612
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/commerz",
+      "name": "commerz",
+      "sources": [
+        "launcher",
+        "registry"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 1,
+        "legacy": 0,
+        "files": 460,
+        "bytes": 26096754
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/corex",
+      "name": "corex",
+      "sources": [
+        "launcher",
+        "registry"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 2,
+        "legacy": 5,
+        "files": 12641,
+        "bytes": 833028898
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/skm-wt-clean",
+      "name": "skm-wt-clean",
+      "sources": [
+        "launcher"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 5,
+        "legacy": 0,
+        "files": 1092,
+        "bytes": 11269880
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/skm-wt-plan6",
+      "name": "skm-wt-plan6",
+      "sources": [
+        "launcher"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 5,
+        "legacy": 0,
+        "files": 1096,
+        "bytes": 11294102
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/sockit",
+      "name": "sockit",
+      "sources": [
+        "launcher"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 1,
+        "legacy": 0,
+        "files": 112,
+        "bytes": 947962
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/swissknifeman",
+      "name": "swissknifeman",
+      "sources": [
+        "launcher"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 5,
+        "legacy": 0,
+        "files": 1612,
+        "bytes": 19690421
+      }
+    },
+    {
+      "path": "/home/vostrikov/projects/packages/vaulter",
+      "name": "vaulter",
+      "sources": [
+        "launcher",
+        "registry"
+      ],
+      "marker": null,
+      "plans": {
+        "v4": 2,
+        "legacy": 10,
+        "files": 9746,
+        "bytes": 834372723
+      }
+    }
+  ],
+  "skipped": []
+}

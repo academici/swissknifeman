@@ -1,0 +1,26 @@
+{
+  "changed_paths": [
+    "ideas/observer-run-end-notification-lost.md"
+  ],
+  "checks_run": [],
+  "evidence": [
+    "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P6.1/migrate-plan-errors.txt",
+    "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P6.1/summary.md"
+  ],
+  "open_issues": [
+    {
+      "impact": "migrate plan reports for the 7 projects cannot be produced; V1 fails; gate summary lacks blockers/warn/local-only data.",
+      "kind": "escalation",
+      "next": "Owner runs `workspace init` and `project attach --yes` for billium, commerz, azguard, chatom, corex, swissknifeman (not vaulter) from an unsandboxed clean shell (or widens sandbox write access), then P6.1 is rerun for migrate plan.",
+      "text": "Sandbox is read-only for /home/vostrikov/.local/share (workspace data root) and for other projects' .swissknifeman/ dirs (billium test write failed), so workspace init and project attach cannot run in this session."
+    },
+    {
+      "impact": "item.rules[0] instruction is insufficient; P6.2 must pass an explicit data root.",
+      "kind": "difficulty",
+      "next": "Document explicit --root / SKM_WORKSPACE_ROOT=<data root> in the runbook or fix the variable name collision.",
+      "text": "env -u SKM_WORKSPACE_ROOT does not help when invoked through the swissknifeman wrapper: the module root is re-injected and workspace init fails with WORKSPACE_ROOT_NOT_EMPTY. An explicit --root plus SKM_WORKSPACE_ROOT is needed."
+    }
+  ],
+  "status": "blocked",
+  "summary": "Round 2: init/attach are allowed by D16 but could not run: the sandbox mounts ~/.local/share and other projects' .swissknifeman/ read-only, and the wrapper re-injects the module SKM_WORKSPACE_ROOT. No workspace, so migrate plan still cannot run for any project; V1 cannot pass. Round-1 artifacts (discover, runs, plans-before, summary.md with 'not ready') are unchanged; migrate-plan-errors.txt updated with round-2 findings. No state was written."
+}

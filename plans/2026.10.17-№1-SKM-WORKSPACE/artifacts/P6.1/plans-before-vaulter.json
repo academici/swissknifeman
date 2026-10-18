@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "data": {
+    "plans": [
+      {
+        "id": "2026.10.13-№1-VAULTER-KERNEL",
+        "short_id": "PLAN3",
+        "title": "Plan №1 — Vaulter: лёгкое ядро, модульное владение и стабилизация API к 1.0",
+        "status": "active",
+        "updated_at": "2026-10-16T16:58:32Z",
+        "progress": {
+          "phases": 7,
+          "phases_closed": 4,
+          "items": 74,
+          "items_done": 67
+        }
+      }
+    ]
+  }
+}

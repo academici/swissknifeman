@@ -70,3 +70,7 @@ docs/guides/errors.md, docs/reference/errors.md, docs/ru/reference/errors.md, pa
 Правки по групповому ревью (adhoc-пункт) прошли executor и checks (green), но коммит упал: кондуктор делает `git add` пути
 `.swissknifeman` (игнорируется .gitignore). Работа осталась в индексе, закоммитил вручную. Исправить: исключать
 игнорируемые пути из списка коммита; не считать их изменением пункта.
+
+## Дополнение (2026-10-18): `--dry-run` не проверяет digest ручного followup
+Ручной `execution-input` (правка текста goal) прошёл `--dry-run`, а реальный запуск упал `INPUT_INVALID: DIGEST_MISMATCH`.
+Нужно: dry-run валидирует вход по контракту; команда `orch conduct input seal FILE` пересчитывает digest и input_id.

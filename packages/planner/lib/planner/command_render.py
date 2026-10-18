@@ -544,6 +544,8 @@ def plan_provider_invocation(
         from planner import review_selection
         try:
             selected = review_selection.invocation_selection(f"{record.command_id} {arguments}")
+            if selected is None:
+                raise review_selection.ReviewError("REVIEW_ROUTE_MISMATCH", "the reviewer cannot be read from the arguments")
             if selected["provider"] != mapping.provider_id or selected["effort"] != observed_effort:
                 raise review_selection.ReviewError("REVIEW_ROUTE_MISMATCH", "render with the selected provider and effort")
             model_selector = selected["model"]

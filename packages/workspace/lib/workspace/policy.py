@@ -12,14 +12,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 from aicore.util.io import atomic_write_text
 from aicore.workspace import LOCAL_DIRNAME, WorkspaceError
 
 from . import gitutil
+from .pathtypes import PathLike
 
-PathLike = Union[str, "os.PathLike[str]"]
 
 BEGIN = "# skm:policy begin (managed by swissknifeman workspace: do not edit between the markers)"
 END = "# skm:policy end"

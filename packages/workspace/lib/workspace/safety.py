@@ -14,13 +14,14 @@ import re
 import stat
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
 from aicore.config import ConfigError, resolve
 from aicore.util.redact import MASK, PATTERNS
 from aicore.workspace import WorkspaceError
 
 from . import gitutil, policy
+from .pathtypes import PathLike
 
 SCHEMA = "urn:swissknifeman:workspace:publish-report:v1"
 DEFAULT_MAX_TRACKED = 5242880
@@ -42,7 +43,6 @@ _SLUG = re.compile(r"sk-[a-z]+(?:-[a-z]+)*")
 _PLACEHOLDER = re.compile(r"<[A-Za-z][A-Za-z0-9_.-]*>|\$\{[A-Za-z_][A-Za-z0-9_]*\}|\$[A-Za-z_][A-Za-z0-9_]*"
                           r"|\{[A-Za-z][A-Za-z0-9_.-]*\}|env://[A-Za-z0-9_][A-Za-z0-9_./-]*")
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 

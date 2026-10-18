@@ -9,11 +9,12 @@ import subprocess
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Iterator, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, Mapping, Optional, Sequence, Tuple
 
 from aicore.config import ConfigError, resolve
 from aicore.state import ensure_dir, workspace_state_dir
 from aicore.workspace import WorkspaceError, redact_remote
+from .pathtypes import PathLike
 
 UNIT_ROOT = Path(__file__).resolve().parents[2]
 LOCK_FILE = "git.lock"
@@ -22,7 +23,6 @@ MIN_GIT_INIT = (2, 28)  # git init -b
 MIN_GIT_WORKSPACE = (2, 38)
 _POLL_S = 0.05
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 

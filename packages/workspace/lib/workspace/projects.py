@@ -14,14 +14,14 @@ import shlex
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 from aicore.workspace import (MARKER_RELPATH, WorkspaceError, bind, checkout_remotes, is_code, project_dir,
                               read_bindings, read_marker, read_project, set_paths, unbind, write_marker, write_project)
 
 from . import gitutil, layout, links
+from .pathtypes import PathLike
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 SCAN_DEPTH = 4
@@ -311,12 +311,16 @@ def rebind(project_id: str, path: PathLike, env: Env = None, home: Optional[Path
     if not root.is_dir():
         raise WorkspaceError("BINDING_PATH_MISSING", f"{root} is not a directory")
     marker = read_marker(root)
-    if marker is not None and marker["workspace"] != layout.require_initialized(target)["code"]:
+    if marker is None:
+        raise WorkspaceError("BINDING_MARKER_MISMATCH", f"{root} has no marker, not the marker of {project_id}")
+    if marker["workspace"] != layout.require_initialized(target)["code"]:
         raise WorkspaceError("WORKSPACE_MISMATCH", f"{root} belongs to the workspace {marker['workspace']!r}")
-    if marker is None or marker["project_id"] != project_id:
-        found = "no marker" if marker is None else f"the marker of {marker['project_id']}"
-        raise WorkspaceError("BINDING_MARKER_MISMATCH", f"{root} has {found}, not the marker of {project_id}")
+    if marker["project_id"] != project_id:
+        raise WorkspaceError("BINDING_MARKER_MISMATCH",
+                             f"{root} has the marker of {marker['project_id']}, not the marker of {project_id}")
     entry = set_paths(project_id, [root], env, home)
+    if entry is None:  # set_paths removes a project only for no paths
+        raise WorkspaceError("BINDING_PATH_MISSING", f"{root} could not be bound to {project_id}")
     return {"project_id": project_id, "binding": {"paths": entry["paths"], "primary": entry["primary"]}}
 
 

@@ -12,18 +12,18 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional
 
 from aicore.state import shellenv as shell_env
 from aicore.workspace import (is_code, WorkspaceError, legacy_plans_present, read_bindings, read_marker, read_workspace,
                               validate_document)
 
 from . import gitutil, layout, migrator_port, policy, safety
+from .pathtypes import PathLike
 
 RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
 PROJECT_ENTRIES = (*policy.TRACKED_PROJECT_ENTRIES, "local")
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 
@@ -223,7 +223,7 @@ def _migrator(env: Env, home: Optional[PathLike]) -> Dict[str, Any]:
         return _result(check, "warn", str(exc), "environment",
                        remediation="Register the bridge: swissknifeman config set aicore plugins.workspace-planner.manifest "
                        "<hub>/bridges/workspace-planner/extension.json (needed by workspace migrate only)")
-    return _result(check, "ok", f"plans migrator {found.id} {found.manifest.version} provides {migrator_port.POINT}",
+    return _result(check, "ok", f"plans migrator {found.id} {found.manifest.version if found.manifest else '?'} provides {migrator_port.POINT}",
                    "environment")
 
 

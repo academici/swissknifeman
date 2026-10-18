@@ -10,20 +10,20 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from aicore.util.io import atomic_write_text
 from aicore.workspace import WorkspaceError, is_code, project_dir, read_workspace, validate_document
 
 from . import gitutil
 from .safety import Report
+from .pathtypes import PathLike
 
 SCHEMA = "urn:swissknifeman:aicore:workspace-local-only:v1"
 INDEX_FILE = "local-only.json"
 BEGIN = "# skm:local-only begin"
 END = "# skm:local-only end"
 
-PathLike = Union[str, "os.PathLike[str]"]
 
 
 def _digest(path: Path) -> str:

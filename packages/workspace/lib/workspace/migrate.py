@@ -24,7 +24,7 @@ import shutil
 import time
 import urllib.parse
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 from aicore.state import state_dir, workspace_state_dir
 from aicore.util.io import atomic_write_text
@@ -32,8 +32,8 @@ from aicore.workspace import (WorkspaceError, bind, is_workspace_link, checkout_
                               read_project, utc_now, validate_document, write_marker)
 
 from . import gitutil, layout, localonly, migrator_port, projects, safety
+from .pathtypes import PathLike
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 PLAN_SCHEMA = "urn:swissknifeman:task:plan:plan:v1"
@@ -692,9 +692,9 @@ def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: in
     if not plan.document["already_migrated"] and plan.units:
         if plan.marker is None or read_project(ws, plan.marker["project_id"]) is None:
             attached = projects.attach(root, yes=yes, env=env, home=home, code=code)
-            plan.project_id = attached["project_id"]
+            attached_id = plan.project_id = attached["project_id"]
             if attached["plans_store"] == "workspace":  # the plans folder holds only loose files: still to move
-                write_marker(root, attached["workspace"], plan.project_id, "legacy")
+                write_marker(root, attached["workspace"], attached_id, "legacy")
     project_id = plan.project_id
     device = read_device(env, home) or layout._ensure_device(env, home)
     op_id = new_id("mig")

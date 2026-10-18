@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional
 
 from aicore.config import ConfigError, resolve
 from aicore.ext import plugins, units
@@ -18,13 +18,13 @@ from aicore.ext.errors import ExtError
 from aicore.workspace import WorkspaceError
 
 from . import gitutil
+from .pathtypes import PathLike
 
 POINT = "workspace:plans-migrator"
 DEFAULT_PLUGIN = "workspace-planner"
 HINT = ("register the bridge: swissknifeman config set aicore plugins.workspace-planner.manifest "
         "<hub>/bridges/workspace-planner/extension.json")
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 

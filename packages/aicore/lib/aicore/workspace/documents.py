@@ -8,6 +8,7 @@ the schemas reject the fields that could carry one and :func:`validate_document`
 from __future__ import annotations
 
 import json
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,7 +29,7 @@ MACHINE_KINDS = ("workspace-bindings", "workspace-device", "project-local-config
 _SCHEMAS = Path(__file__).resolve().parents[3] / "schemas"
 _ABSOLUTE = re.compile(r"^(?:[/~]|[A-Za-z]:[\\/])")
 
-PathLike = Union[str, "Path"]
+PathLike = Union[str, "os.PathLike[str]"]
 
 
 def utc_now() -> str:

@@ -43,7 +43,8 @@ def project_root(cwd: str | Path | None = None, project: str | Path | None = Non
         return Path(project) if project is not None else None
     from aicore.state import find_project_root, resolve_project
     if project is not None:
-        return resolve_project(cwd if cwd is not None else os.getcwd(), explicit=project).root
+        context = resolve_project(cwd if cwd is not None else os.getcwd(), explicit=project)
+        return context.root if context is not None else None  # an empty ``project`` falls back to the search, which can find none
     root = find_project_root(cwd if cwd is not None else os.getcwd())
     return root if (root / ".git").exists() or (root / ".swissknifeman").is_dir() else None
 

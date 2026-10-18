@@ -3,10 +3,7 @@
   "typeCheckingMode": "basic",
   "include": [
     "packages/workspace/lib",
-    "packages/brain/lib",
-    "packages/gui/lib",
-    "packages/orch/lib",
-    "packages/planner/lib"
+    "packages/brain/lib"
   ],
   "exclude": ["**/_vendor", "**/__pycache__"],
   "extraPaths": [

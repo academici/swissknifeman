@@ -7,15 +7,15 @@ import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional
 
 from aicore.state import is_code, workspace_root, workspace_state_dir
 from aicore.workspace import (WorkspaceError, new_id, read_bindings, read_device, read_marker,
                               read_project, read_workspace, utc_now, write_device, write_workspace)
 
 from . import gitutil, policy
+from .pathtypes import PathLike
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 BASELINE_IGNORE = """/.staging/
@@ -133,6 +133,8 @@ def init(code: str, root: Optional[PathLike] = None, env: Env = None,
     with gitutil.git_lock(env, home):
         if (target / "workspace.json").is_file():
             document = read_workspace(target)
+            if document is None:
+                raise WorkspaceError("WORKSPACE_LAYOUT_INVALID", f"{target / 'workspace.json'} vanished while it was read")
             if document["code"] != code:
                 raise WorkspaceError("WORKSPACE_CODE_MISMATCH", f"{target} holds the workspace {document['code']!r}, "
                                      f"not {code!r}")

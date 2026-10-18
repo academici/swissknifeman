@@ -109,6 +109,12 @@ class OverlayCase(unittest.TestCase):
         self.addCleanup(patcher.stop)
         self.base = base
 
+    def test_an_empty_project_without_a_project_around_is_no_root(self):
+        outside = self.base / "outside"
+        outside.mkdir()
+        from planner.integration import overlays
+        self.assertIsNone(overlays.project_root(cwd=outside, project=""))
+
     def machine(self, text):
         from aicore.state import machine_config_file
         path = Path(machine_config_file())

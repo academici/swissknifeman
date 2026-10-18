@@ -2,7 +2,7 @@
 # typecheck.sh — pyright over the typed modules (config in pyrightconfig.json, mode basic).
 # Usage: scripts/typecheck.sh [pyright args...]
 # pyright is a development tool, not a runtime dependency. It must be on PATH (`pipx install pyright`) or runnable by
-# pipx. Also runs through uvx or pipx. Exit 2 and TYPECHECK_TOOL_MISSING when none is there. Not a CI step yet: the first run sets the baseline.
+# pipx. Also runs through uvx or pipx. Exit 2 and TYPECHECK_TOOL_MISSING when none is there. Checks workspace and brain (0 errors). planner, orch and gui are a known debt, not included. Manual step: pyright is not pinned, so it is not in ci-matrix.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"

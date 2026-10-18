@@ -401,10 +401,11 @@ def handle(event_doc: Any, *, project_root: Optional[PathLike], settings: _setti
     except OSError as exc:
         raise BrainError(errors.NOTE_IO, f"the note cannot be written: {exc.strerror or exc}") from None
     result.note = _ledger_name(written, vault_root)
+    note = result.note or written.name
     if outcome == "duplicate":
         result.status, result.reason = "skipped", "DUPLICATE_EVENT"
         return result
-    _announce(plan, result.note, root, environment, home_path, result.warnings)
+    _announce(plan, note, root, environment, home_path, result.warnings)
     return result
 
 

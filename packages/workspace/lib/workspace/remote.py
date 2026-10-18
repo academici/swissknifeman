@@ -7,13 +7,13 @@ import os
 import shutil
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional
 
 from aicore.workspace import WorkspaceError, read_workspace, redact_remote
 
 from . import gitutil, layout
+from .pathtypes import PathLike
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 EMPTY, SAME = "empty", "same"

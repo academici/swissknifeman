@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional
 
 from aicore.config import ConfigError, resolve
 from aicore.config.model import edit_layer_file
@@ -29,8 +29,8 @@ from aicore.workspace import (LINK_NAMES, WorkspaceError, bound_project_folder, 
 from aicore.workspace.links import read_exclude, write_exclude
 
 from . import gitutil, layout
+from .pathtypes import PathLike
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 SETTING = "link_folders"
@@ -196,6 +196,8 @@ def unlink(root: PathLike, env: Env = None, home: Optional[PathLike] = None, rem
         raise WorkspaceError("WORKSPACE_MISMATCH", f"the marker of {checkout.name} names the workspace "
                              f"{marker['workspace']!r}, this command works with {workspace!r} (--workspace)")
     folder = bound_project_folder(checkout, env, home)
+    if folder is None:
+        raise WorkspaceError("PROJECT_MARKER_MISSING", f"{checkout} has no project marker")
     context = {"marker": marker, "folder": folder, "workspace": workspace}
     rows: List[Dict[str, Any]] = []
     for name in LINK_NAMES:

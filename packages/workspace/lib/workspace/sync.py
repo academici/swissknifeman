@@ -23,15 +23,15 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 from aicore.state import ensure_dir, workspace_state_dir
 from aicore.util.io import atomic_write_text
 from aicore.workspace import WorkspaceError, is_code, project_dir, utc_now
 
 from . import events, gitutil, layout, links, localonly, policy, safety
+from .pathtypes import PathLike
 
-PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
 STATE_FILE = "sync.json"
@@ -452,7 +452,7 @@ def _merge_resolved(run: _Run, last: Mapping[str, Any], pending: Mapping[str, st
     target, branch = run.target, run.branch
     gitutil.fetch(target, "origin", run.env)
     theirs = _ref(target, f"refs/remotes/origin/{branch}")
-    if theirs != last["origin_head"]:
+    if theirs is None or theirs != last["origin_head"]:
         raise _stale(run, f"origin/{branch} moved since the conflicts were found")
     if _head(target) != last["local_head"]:
         raise _stale(run, "this workspace has new commits since the conflicts were found")
@@ -603,6 +603,8 @@ def sync(commit: bool = False, pull: bool = False, push: bool = False, resolve: 
     finally:
         if run is not None:
             _emit(run)
+    if run is None:  # unreachable: every path that leaves the try without a run raised
+        raise WorkspaceError("WORKSPACE_LAYOUT_INVALID", "the sync did not start")
     return run.report
 
 

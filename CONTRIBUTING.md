@@ -39,7 +39,7 @@ Runtime needs only `python3` (>= 3.9) and `bash`; nothing is pip-installed. Cont
 |:--|:--|:--|
 | `git` | the file list of `scripts/ecosystem-units.py` and `golden.py` comes from git | system package |
 | `pipx` (or `ruff==0.15.19` on `PATH`) | `bash scripts/lint.sh` — the CI lint step (ruff F + B, `ruff.toml`) | `sudo apt install pipx` or `python3 -m pip install --user pipx` |
-| `pyright` | `bash scripts/typecheck.sh` — type check of the typed modules (`pyrightconfig.json`, mode `basic`); not a CI step yet | `pipx install pyright` |
+| `pyright` | `bash scripts/typecheck.sh` — type check of the typed modules (`pyrightconfig.json`, mode `basic`); not a CI step yet | `uv tool install pyright` or `pipx install pyright` |
 
 `scripts/lint.sh` fetches the pinned ruff on demand, prints `LINT_TOOL_MISSING` with the install hint when neither
 pipx nor ruff is available, and is the single place that holds the ruff version and the linted paths (CI calls it).

@@ -175,7 +175,7 @@ opt composer "PHP projects" "$(pkg composer)"
 opt pnpm "Node projects that use pnpm (husky, lint)" "corepack enable  (or: npm install -g pnpm)"
 opt ruff "linting this repository (scripts/lint.sh)" "pipx install ruff   (or: pip install --user ruff)"
 opt rsync "dev sandbox (scripts/dev-sandbox.sh)" "$(pkg rsync)"
-opt pyright "type checking this repository (scripts/typecheck.sh)" "pipx install pyright   (or: npm install -g pyright)"
+opt pyright "type checking this repository (scripts/typecheck.sh)" "uv tool install pyright   (or: pipx install pyright, npm install -g pyright)"
 
 # ------------------------------------------------------------------ report
 REQ_FAIL=0 REC_FAIL=0

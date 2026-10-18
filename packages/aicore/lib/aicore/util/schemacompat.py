@@ -46,6 +46,8 @@ RULES: Dict[str, bool] = {
     "pattern-property-added": False,
     "property-names-changed": True,
     "unique-added": True,
+    "not-changed": True,
+    "dependent-required-added": True,
     "oneof-changed": True,
     "ref-changed": False,
     "ref-sibling-conflict": True,
@@ -60,7 +62,9 @@ DEFAULT_REF = "HEAD"
 GIT_TIMEOUT = 30
 
 # (keyword, value when absent, direction): a "min" bound is tightened by growing, a "max" bound by shrinking
-_BOUNDS = (("minLength", 0, "min"), ("minItems", 0, "min"), ("minimum", None, "min"), ("maximum", None, "max"))
+_BOUNDS = (("minLength", 0, "min"), ("minItems", 0, "min"), ("minimum", None, "min"), ("maximum", None, "max"),
+           ("maxLength", None, "max"), ("maxItems", None, "max"), ("minProperties", 0, "min"),
+           ("maxProperties", None, "max"))
 _SCHEMA_FILE = re.compile(r"[a-z][a-z0-9-]*/v[1-9][0-9]*/[^/]+\.schema\.json")  # any name: the loader reads every file
 FOUNDATION_ROOT = "packages/aicore/schemas"  # the foundation contracts that a module's schemas may reference
 
@@ -72,9 +76,26 @@ class Change(NamedTuple):
     message: str
 
 
-def compare(old: Registry, old_id: str, new: Registry, new_id: str) -> List[Change]:
-    """Changes from the schema ``old_id`` of ``old`` to the schema ``new_id`` of ``new``."""
-    return _Comparer(old, new).run(old_id, new_id)
+DIRECTIONS = ("input", "output", "both")
+
+
+def compare(old: Registry, old_id: str, new: Registry, new_id: str, direction: str = "input") -> List[Change]:
+    """Changes from the schema ``old_id`` of ``old`` to the schema ``new_id`` of ``new``.
+
+    ``direction`` says who is bound by the schema. ``input`` (default): a document valid by the old schema must stay
+    valid by the new one (readers of documents that writers made earlier). ``output``: a document valid by the new
+    schema must be valid by the old one, because consumers check what producers emit with the schema they know
+    (a new property or enum value breaks a consumer that holds a closed schema). ``both`` reports either.
+    """
+    if direction not in DIRECTIONS:
+        raise ValueError(f"direction must be one of {DIRECTIONS}, got {direction!r}")
+    forward = _Comparer(old, new).run(old_id, new_id) if direction != "output" else []
+    if direction == "input":
+        return forward
+    backward = [Change(c.path, c.rule, c.breaking, f"[output] {c.message}")
+                for c in _Comparer(new, old).run(new_id, old_id)]
+    seen = {(c.path, c.rule) for c in forward}
+    return forward + [c for c in backward if (c.path, c.rule) not in seen]
 
 
 class _Comparer:
@@ -113,6 +134,7 @@ class _Comparer:
         self._bounds(old, new, path)
         if new.get("uniqueItems") is True and old.get("uniqueItems") is not True:
             self._add(path, "unique-added", "uniqueItems is now required")
+        self._conditions(old, new, path)
         self._objects(old, old_base, new, new_base, path)
         if "items" in old or "items" in new:
             self._walk(old.get("items", {}), old_base, new.get("items", {}), new_base, f"{path}/items")
@@ -162,6 +184,17 @@ class _Comparer:
                 self._add(path, "bound-tightened", f"{keyword} is now {new_value} (was {_bound(old_value)})")
             else:
                 self._add(path, "bound-relaxed", f"{keyword} is now {_bound(new_value)} (was {old_value})")
+
+    def _conditions(self, old: dict, new: dict, path: str) -> None:
+        """``not`` and ``dependentRequired`` narrow the valid set unless they were already there or were removed."""
+        if "not" in new and new["not"] != old.get("not"):
+            self._add(path, "not-changed", "a not constraint was added or changed")
+        old_deps, new_deps = old.get("dependentRequired", {}), new.get("dependentRequired", {})
+        for name, needed in new_deps.items():
+            gained = [other for other in needed if other not in old_deps.get(name, ())]
+            if gained:
+                self._add(f"{path}/dependentRequired/{_escape(name)}", "dependent-required-added",
+                          f"property {name!r} now requires {gained}")
 
     def _objects(self, old: dict, old_base: str, new: dict, new_base: str, path: str) -> None:
         old_props, new_props = old.get("properties", {}), new.get("properties", {})
@@ -420,6 +453,7 @@ def _compat(options: argparse.Namespace, cwd: Path, env: Optional[Mapping[str, s
         raise _Refusal("SCHEMA_COMPAT_ROOT", f"{root} is outside the repository {repo}") from None
     unit_path = Path(options.unit).resolve() if options.unit else root.parent / "unit.json"
     stabilities, module_stability = _read_stabilities(unit_path)
+    directions = _read_directions(unit_path)
     current = _contracts(root)
     if options.contract is not None:
         current = {key: value for key, value in current.items() if key[0] == options.contract}
@@ -446,14 +480,17 @@ def _compat(options: argparse.Namespace, cwd: Path, env: Optional[Mapping[str, s
         base_contracts = _contracts(base_root)
         for (name, version), directory in sorted(current.items(), key=lambda item: (item[0][0], _major(item[0][1]))):
             stability = stabilities.get((name, version), module_stability)
+            direction = directions.get((name, version), "input")
             entry = {"contract": name, "version": version, "stability": stability, "status": "compared",
                      "changes": []}
+            if direction != "input":
+                entry["direction"] = direction
             if (name, version) not in base_contracts:
                 previous = [v for (n, v) in base_contracts if n == name and _major(v) < _major(version)]
                 entry["status"] = "major" if previous else "new"
             else:
                 found = _compare_dirs(base_contracts[(name, version)], directory, name, version,
-                                      base_foundation if foundation_files else None, foundation)
+                                      base_foundation if foundation_files else None, foundation, direction)
                 entry["changes"] = _grade(found, stability)
             contracts.append(entry)
     return {"base": options.base, "contracts": contracts}
@@ -477,7 +514,7 @@ def _extract(repo: Path, ref: str, relroot: str, files: Sequence[str], target_ro
 
 def _compare_dirs(base_dir: Path, current_dir: Path, name: str, version: str,
                   base_foundation: Optional[Path] = None,
-                  foundation: Optional[Path] = None) -> List[Tuple[Optional[str], Change]]:
+                  foundation: Optional[Path] = None, direction: str = "input") -> List[Tuple[Optional[str], Change]]:
     """Changes as ``(kind, change)``; ``kind`` is ``None`` for a contract of one document.
 
     A reference to a foundation contract is resolved in the foundation of its own side: the base of the reference
@@ -500,7 +537,7 @@ def _compare_dirs(base_dir: Path, current_dir: Path, name: str, version: str,
                 found.append((kind, Change("", "kind-removed", RULES["kind-removed"], f"document {kind!r} removed")))
                 continue
             found += [(None if single else kind, change)
-                      for change in compare(old, old.for_kind(kind)[1], new, new.for_kind(kind)[1])]
+                      for change in compare(old, old.for_kind(kind)[1], new, new.for_kind(kind)[1], direction)]
         for kind in new_kinds:
             if kind not in old_kinds:
                 found.append((kind, Change("", "kind-added", RULES["kind-added"], f"document {kind!r} added")))
@@ -610,6 +647,19 @@ def _read_stabilities(unit_path: Path) -> Tuple[Dict[Tuple[str, str], str], str]
         name = str(contract.get("id", "")).rpartition(":")[2]
         stabilities[(name, contract.get("version"))] = contract.get("stability", "development")
     return stabilities, unit.get("stability", "development")  # an unlisted contract follows its module
+
+
+def _read_directions(unit_path: Path) -> Dict[Tuple[str, str], str]:
+    """``direction`` of the contract families that declare one (the others are ``input``)."""
+    try:
+        unit = json.loads(unit_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}   # _read_stabilities already refused an unreadable unit.json
+    found = {}
+    for contract in (unit.get("provides") or {}).get("contracts") or ():
+        if contract.get("direction") in DIRECTIONS:
+            found[(str(contract.get("id", "")).rpartition(":")[2], contract.get("version"))] = contract["direction"]
+    return found
 
 
 def _git(repo: Path, arguments: Sequence[str], env: Optional[Mapping[str, str]]) -> "subprocess.CompletedProcess[bytes]":

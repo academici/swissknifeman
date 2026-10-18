@@ -18,8 +18,8 @@
     ],
     "contracts": [
       {"id": "urn:skiller", "path": "schema", "version": "v1", "stability": "beta"},
-      {"id": "urn:swissknifeman:skiller:profiles-list", "path": "schemas/profiles-list/v1", "version": "v1", "stability": "alpha"},
-      {"id": "urn:swissknifeman:skiller:projects-list", "path": "schemas/projects-list/v1", "version": "v1", "stability": "alpha"}
+      {"id": "urn:swissknifeman:skiller:profiles-list", "path": "schemas/profiles-list/v1", "version": "v1", "stability": "alpha", "direction": "output"},
+      {"id": "urn:swissknifeman:skiller:projects-list", "path": "schemas/projects-list/v1", "version": "v1", "stability": "alpha", "direction": "output"}
     ],
     "doctor": [
       {"id": "skiller.environment", "category": "environment", "probe": ["bin/skiller", "doctor"], "output": "text"}

@@ -19,7 +19,7 @@
     ],
     "contracts": [
       {"id": "urn:swissknifeman:task:plan", "path": "schemas/plan/v1", "version": "v1", "stability": "beta"},
-      {"id": "urn:swissknifeman:planner:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "beta"},
+      {"id": "urn:swissknifeman:planner:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "beta", "direction": "output"},
       {"id": "urn:swissknifeman:planner:check-plugin", "path": "schemas/check-plugin/v1", "version": "v1", "stability": "beta"}
     ],
     "extension_points": [

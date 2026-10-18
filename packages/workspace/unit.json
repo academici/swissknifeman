@@ -34,7 +34,8 @@
         "id": "urn:swissknifeman:workspace:event-data",
         "path": "schemas/event-data/v1",
         "version": "v1",
-        "stability": "development"
+        "stability": "development",
+        "direction": "output"
       },
       {
         "id": "urn:swissknifeman:workspace:plans-migrator",

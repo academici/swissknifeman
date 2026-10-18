@@ -137,6 +137,11 @@
               "stability": {
                 "$ref": "#/$defs/stability",
                 "description": "Stability stage of the contract."
+              },
+              "direction": {
+                "type": "string",
+                "enum": ["input", "output", "both"],
+                "description": "Who the schema binds in `aicore schema compat`: input (default) keeps old documents valid; output keeps new documents valid by the old schema, because consumers check what producers emit; both checks either."
               }
             },
             "required": ["id", "path", "version", "stability"],

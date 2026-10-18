@@ -15,8 +15,8 @@
     "config": "configs/config.schema.json",
     "plugins": [{"name": "analyst", "manifest": ".claude-plugin/plugin.json"}],
     "contracts": [
-      {"id": "urn:swissknifeman:analyst:run-lookup", "path": "schemas/run-lookup/v1", "version": "v1", "stability": "alpha"},
-      {"id": "urn:swissknifeman:analyst:run-codegraph", "path": "schemas/run-codegraph/v1", "version": "v1", "stability": "alpha"}
+      {"id": "urn:swissknifeman:analyst:run-lookup", "path": "schemas/run-lookup/v1", "version": "v1", "stability": "alpha", "direction": "output"},
+      {"id": "urn:swissknifeman:analyst:run-codegraph", "path": "schemas/run-codegraph/v1", "version": "v1", "stability": "alpha", "direction": "output"}
     ],
     "doctor": [
       {"id": "analyst.environment", "category": "environment", "probe": ["bin/analyst", "doctor", "--json"], "output": "check-result/v1"},

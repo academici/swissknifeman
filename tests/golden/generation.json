@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "68c8938eaae7",
-  "reason": "обработчики lifecycle.py под golden (аудит 2026-10-17, этап 7)",
+  "captured_from": "4211bd140459",
+  "reason": "ядро валидатора схем в aicore, вендорная копия в planner (аудит 2026-10-17, этап 10)",
   "generators": [
     {
       "id": "skiller-registry",
@@ -179,6 +179,19 @@
         "docs/provider-support.md"
       ],
       "note": "the README.md block is covered by --check only, the rest of README.md is hand-written"
+    },
+    {
+      "id": "jsonschema-core-planner",
+      "check_argv": [
+        "python3",
+        "scripts/vendor-jsonschema-core.py",
+        "--check"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "packages/planner/lib/planner/plan/_jsonschema_core.py"
+      ],
+      "note": "planner vendors the validator core of aicore byte for byte (planner runs without aicore)"
     }
   ],
   "digests": {

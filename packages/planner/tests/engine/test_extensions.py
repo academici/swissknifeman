@@ -142,8 +142,8 @@ class UnavailableTests(SlotCase):
         self.assert_unavailable("bridges first, second all supply it")
 
     def test_an_unusable_supplied_schema_is_unavailable_not_a_crash(self):
-        self.add_bridge("broken", document={"type": "object", "maxProperties": 1})
-        self.assert_unavailable("unsupported keyword 'maxProperties'")
+        self.add_bridge("broken", document={"type": "object", "format": "uri"})
+        self.assert_unavailable("unsupported keyword 'format'")
 
     def test_check_reports_the_field_and_the_cli_returns_the_code(self):
         status, out, _ = test_envelope.run("--output", "json", "set", str(self.root), "P1.1", "--json",

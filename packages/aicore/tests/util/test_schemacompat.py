@@ -54,6 +54,42 @@ STR = {"type": "string"}
 INT = {"type": "integer"}
 
 
+def directed(old_body, new_body, direction):
+    old, old_id = registry(doc(old_body))
+    new, new_id = registry(doc(new_body))
+    return sorted((change.rule, change.breaking) for change in compare(old, old_id, new, new_id, direction))
+
+
+class TestDirection(unittest.TestCase):
+    """An output contract is checked from the consumer side: new documents must stay valid by the old schema."""
+
+    def test_a_new_property_breaks_an_output_contract_only(self):
+        old, new = obj({"a": STR}), obj({"a": STR, "b": STR})
+        self.assertEqual([("property-added", False)], directed(old, new, "input"))
+        self.assertEqual([("property-removed", True)], directed(old, new, "output"))
+        self.assertEqual(sorted([("property-added", False), ("property-removed", True)]), directed(old, new, "both"))
+
+    def test_a_wider_enum_or_type_breaks_an_output_contract(self):
+        self.assertEqual([("enum-narrowed", True)], directed({"enum": ["a"]}, {"enum": ["a", "b"]}, "output"))
+        self.assertEqual([("type-changed", True)], directed(INT, {"type": "number"}, "output"))
+
+    def test_a_removed_property_is_fine_for_an_output_contract(self):
+        old, new = obj({"a": STR, "b": STR}), obj({"a": STR})
+        self.assertEqual([("property-removed", True)], directed(old, new, "input"))
+        self.assertEqual([("property-added", False)], directed(old, new, "output"))
+
+    def test_messages_of_the_output_side_are_marked(self):
+        old, old_id = registry(doc(obj({})))
+        new, new_id = registry(doc(obj({"b": STR})))
+        found = compare(old, old_id, new, new_id, "output")
+        self.assertTrue(found[0].message.startswith("[output] "))
+
+    def test_unknown_direction_is_a_programming_error(self):
+        old, old_id = registry(doc(OPEN))
+        with self.assertRaises(ValueError):
+            compare(old, old_id, old, old_id, "sideways")
+
+
 class TestRules(unittest.TestCase):
     # rule -> (old schema, new schema) in which exactly that rule fires
     CASES = {
@@ -77,7 +113,18 @@ class TestRules(unittest.TestCase):
         "property-names-changed": ({}, {"propertyNames": {"pattern": "^[a-z]+$"}}),
         "unique-added": ({"type": "array"}, {"type": "array", "uniqueItems": True}),
         "oneof-changed": ({"oneOf": [STR, INT]}, {"oneOf": [STR]}),
+        "not-changed": ({"type": "object"}, {"type": "object", "not": {"required": ["a"]}}),
+        "dependent-required-added": (OPEN, dict(OPEN, dependentRequired={"a": ["b"]})),
     }
+
+    def test_conditions_only_break_when_they_narrow(self):
+        deps = dict(OPEN, dependentRequired={"a": ["b"]})
+        self.assertEqual([], rules(deps, OPEN))
+        self.assertEqual([], rules(deps, deps))
+        self.assertEqual(["dependent-required-added"], rules(deps, dict(OPEN, dependentRequired={"a": ["b", "c"]})))
+        negated = dict(OPEN, **{"not": {"required": ["a"]}})
+        self.assertEqual([], rules(negated, OPEN))
+        self.assertEqual([], rules(negated, negated))
 
     def test_every_rule_has_a_case(self):
         self.assertEqual(set(RULES), set(self.CASES) | {"ref-changed", "ref-sibling-conflict", "kind-removed",
@@ -130,7 +177,9 @@ class TestRules(unittest.TestCase):
         self.assertEqual(["enum-narrowed", "enum-widened"], rules({"enum": ["a", "b"]}, {"enum": ["b", "c"]}))
 
     def test_bound_rules_for_every_keyword(self):
-        for keyword, tight, loose in (("minLength", 3, 1), ("minItems", 3, 1), ("minimum", 3, 1), ("maximum", 1, 3)):
+        for keyword, tight, loose in (("minLength", 3, 1), ("minItems", 3, 1), ("minimum", 3, 1), ("maximum", 1, 3),
+                                      ("maxLength", 1, 3), ("maxItems", 1, 3), ("minProperties", 3, 1),
+                                      ("maxProperties", 1, 3)):
             with self.subTest(keyword=keyword):
                 self.assertEqual(["bound-tightened"], rules({keyword: loose}, {keyword: tight}))
                 self.assertEqual(["bound-relaxed"], rules({keyword: tight}, {keyword: loose}))

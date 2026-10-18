@@ -15,7 +15,7 @@
     "config": "configs/config.schema.json",
     "contracts": [
       {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"},
-      {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha", "direction": "output"},
       {"id": "urn:swissknifeman:orch:work-source", "path": "schemas/work-source/v1", "version": "v1", "stability": "alpha"},
       {"id": "urn:swissknifeman:orch:conductor", "path": "schemas/conductor/v1", "version": "v1", "stability": "alpha"}
     ],

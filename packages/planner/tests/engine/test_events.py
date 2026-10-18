@@ -326,7 +326,7 @@ class ArchitectureTests(unittest.TestCase):
         unit = json.loads((PLANNER / "unit.json").read_text(encoding="utf-8"))
         self.assertEqual(set(unit["provides"]["events"]), set(TYPES))
         self.assertIn({"id": "urn:swissknifeman:planner:event-data", "path": "schemas/event-data/v1", "version": "v1",
-                       "stability": "beta"}, unit["provides"]["contracts"])
+                       "stability": "beta", "direction": "output"}, unit["provides"]["contracts"])
         for event_type in TYPES:
             schema = json.loads((SCHEMAS / f"{event_type}.schema.json").read_text(encoding="utf-8"))
             self.assertEqual(schema["$id"], emission.data_schema(event_type))

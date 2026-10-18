@@ -1,7 +1,8 @@
 """Parity of the closed schema profile: orch supports every keyword and error code planner's validator uses.
 
 orch keeps no validator of its own: ``orch/schema.py`` re-exports the one of the foundation, so the profile orch
-supports is the one of ``aicore/util/schema.py``. All sources are read with ``ast``; no package is imported.
+supports is the one of ``aicore/util/jsonschema_core.py``, which planner vendors byte for byte
+(``scripts/vendor-jsonschema-core.py``). All sources are read with ``ast``; no package is imported.
 """
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ import unittest
 import bridge_fixture
 import partners
 
-PLANNER_SCHEMA = bridge_fixture.PLANNER / "lib/planner/plan/schema.py"
+PLANNER_SCHEMA = bridge_fixture.PLANNER / "lib/planner/plan/_jsonschema_core.py"
 ORCH = partners.find_orch_root()
 NAMES = ("SUPPORTED_KEYWORDS", "ERROR_CODES")
 
@@ -36,7 +37,7 @@ def orch_profile_source() -> Path | None:
     if module_values(own):
         return own
     lib = partners.aicore_lib()
-    return lib / "aicore/util/schema.py" if lib else None
+    return lib / "aicore/util/jsonschema_core.py" if lib else None
 
 
 @unittest.skipUnless(ORCH, "orch not found")
@@ -50,6 +51,12 @@ class SchemaProfileParity(unittest.TestCase):
         self.assertEqual(set(orch), set(NAMES))
         for name in NAMES:
             self.assertTrue(set(orch[name]).issuperset(task[name]), name)
+
+    def test_planner_core_is_the_vendored_foundation_core(self):
+        lib = partners.aicore_lib()
+        if lib is None:
+            self.skipTest("aicore not found (set AICORE_ROOT)")
+        self.assertEqual(PLANNER_SCHEMA.read_bytes(), (lib / "aicore/util/jsonschema_core.py").read_bytes())
 
 
 if __name__ == "__main__":

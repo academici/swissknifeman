@@ -14,7 +14,7 @@
     "install": ["install.sh"],
     "config": "configs/config.schema.json",
     "contracts": [
-      {"id": "urn:swissknifeman:maind:projects-list", "path": "schemas/projects-list/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:maind:projects-list", "path": "schemas/projects-list/v1", "version": "v1", "stability": "alpha", "direction": "output"},
       {"id": "urn:swissknifeman:maind:mcp-tools", "path": "schemas/mcp-tools/v1", "version": "v1", "stability": "alpha"}
     ],
     "plugins": [{"name": "maind", "manifest": ".claude-plugin/plugin.json"}],

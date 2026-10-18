@@ -64,7 +64,10 @@ class FixtureTests(unittest.TestCase):
                 seen.add(code)
         # `ref` cannot be produced by a document; it is covered by test_dangling_ref below. No plan schema has a
         # numeric bound: `minimum` and `maximum` come from a slot schema a bridge supplies (test_extensions).
-        self.assertEqual(seen | {"ref", "minimum", "maximum"}, set(schema.ERROR_CODES))
+        # The codes below come from the shared core (tests/engine/test_schema_core.py exercises each of them).
+        core_only = {"ref", "minimum", "maximum", "property_name", "max_length", "max_items", "min_properties",
+                     "max_properties", "dependent_required", "not"}
+        self.assertEqual(seen | core_only, set(schema.ERROR_CODES))
 
     def test_every_valid_fixture_is_canonical_json(self):
         for path in sorted((FIXTURES / "valid").glob("*.json")):

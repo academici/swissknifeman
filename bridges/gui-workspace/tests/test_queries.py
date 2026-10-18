@@ -67,7 +67,7 @@ class TestQueries(AdapterCase):
 
     def test_projects_merge_list_and_status(self):
         rows = {row["id"]: row["cells"] for row in self.ok("gui-workspace.projects")["rows"]}
-        self.assertEqual({"name": "alpha", "status": "active", "bound": "yes", "paths": "/work/alpha",
+        self.assertEqual({"name": "alpha", "status": "active", "bound": "yes", "paths": "/work/alpha", "paths_json": '["/work/alpha"]',
                           "plans_store": "workspace", "plans": 3}, rows["p-alpha"])
         self.assertEqual(("no", "-", "legacy"), (rows["p-beta"]["bound"], rows["p-beta"]["paths"],
                                                  rows["p-beta"]["plans_store"]))

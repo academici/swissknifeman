@@ -88,6 +88,19 @@ function cellText(cells: Record<string, unknown>, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
+/** Bound paths from the exact JSON list cell; the display cell is split only when the list is absent and a path is unambiguous. */
+function cellPaths(cells: Record<string, unknown>, key: string, display: string): string[] {
+  const raw = cells[key];
+  let list: unknown;
+  try {
+    list = typeof raw === "string" ? JSON.parse(raw) : null;
+  } catch {
+    list = null;
+  }
+  if (Array.isArray(list)) return list.filter((path): path is string => typeof path === "string" && path.startsWith("/"));
+  return display.includes(", /") || !display.includes(", ") ? display.split(", ").filter((path) => path.startsWith("/")) : [];
+}
+
 /** The workspace projects, or null when the bridge or the workspace is not there: the page then shows nothing of it. */
 export function useWorkspaceProjects() {
   const transport = useTransport();
@@ -105,7 +118,7 @@ export function useWorkspaceProjects() {
             id: row.id,
             name: cellText(cells, "name") || row.id,
             bound: cellText(cells, "bound") === "yes",
-            paths: cellText(cells, "paths").split(", ").filter((path) => path.startsWith("/")),
+            paths: cellPaths(cells, "paths_json", cellText(cells, "paths")),
             plansStore: cellText(cells, "plans_store"),
           };
         });

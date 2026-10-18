@@ -119,6 +119,7 @@ def overview(timeout_s: float, **_: Any) -> Dict[str, Any]:
     projects = [p for p in _list(doc.get("projects")) if isinstance(p, dict)]
     bound = sum(1 for p in projects if p.get("bound"))
     dirty, behind, ahead = _int(git.get("dirty")), _int(git.get("behind")), _int(git.get("ahead"))
+    untracked = git.get("ahead") is None or git.get("behind") is None  # no remote-tracking ref: the counts are unknown
     report = _publish(timeout_s)
     verdict = _VERDICT.get(report["verdict"], "unknown") if report else "unknown"
     return {"$schema": VIEW, "view": "metric-group", "metrics": [
@@ -126,8 +127,10 @@ def overview(timeout_s: float, **_: Any) -> Dict[str, Any]:
         {"id": "bound", "label": "Bound on this machine", "value": bound,
          "status": "ok" if bound == len(projects) else "warn"},
         {"id": "dirty", "label": "Changed files", "value": dirty, "status": "warn" if dirty else "ok"},
-        {"id": "ahead", "label": "Ahead of remote", "value": ahead, "status": "ok"},
-        {"id": "behind", "label": "Behind remote", "value": behind, "status": "warn" if behind else "ok"},
+        {"id": "ahead", "label": "Ahead of remote" + (" (unknown)" if untracked else ""), "value": ahead,
+         "status": "unknown" if untracked else "ok"},
+        {"id": "behind", "label": "Behind remote" + (" (unknown)" if untracked else ""), "value": behind,
+         "status": "unknown" if untracked else ("warn" if behind else "ok")},
         {"id": "diverged", "label": "Diverged", "value": 1 if git.get("diverged") else 0,
          "status": "fail" if git.get("diverged") else "ok"},
         {"id": "remote", "label": "Remote connected", "value": 1 if git.get("remote") else 0,
@@ -150,6 +153,7 @@ def projects(timeout_s: float, **_: Any) -> Dict[str, Any]:
             "status": safe_text(project.get("status") or "unknown"),
             "bound": "yes" if project.get("bound") else "no",
             "paths": safe_text(", ".join(paths) or "-", 500),
+            "paths_json": json.dumps(paths, ensure_ascii=False),
             "plans_store": safe_text(more.get("plans_store") or "-"),
             "plans": plans if isinstance(plans, int) and not isinstance(plans, bool) else None}})
     columns = [{"id": "name", "title": "Project", "type": "text"}, {"id": "status", "title": "Status", "type": "text"},
@@ -197,7 +201,9 @@ def sync(timeout_s: float, **_: Any) -> Dict[str, Any]:
     git, last = doc["git"], _dict(doc.get("last_sync"))
     remote = git.get("remote")
     rows: List[Dict[str, Any]] = []
-    target = (f"{remote} · branch {git.get('branch')} · ahead {_int(git.get('ahead'))}, behind {_int(git.get('behind'))}"
+    counts = ("ahead/behind unknown (remote not fetched)" if git.get("ahead") is None or git.get("behind") is None
+              else f"ahead {_int(git.get('ahead'))}, behind {_int(git.get('behind'))}")
+    target = (f"{remote} · branch {git.get('branch')} · {counts}"
               if remote else "no remote connected")
     row: Dict[str, Any] = {"id": "push-target", "label": "Push target", "status": "ok" if remote else "warn",
                            "detail": safe_text(target, 500)}

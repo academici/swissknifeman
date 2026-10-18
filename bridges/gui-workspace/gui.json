@@ -4,7 +4,7 @@
     {
       "concurrency_key": "gui-workspace:workspace",
       "confirmation": "risk-based",
-      "description": "workspace init: create the layout and the git repository of the workspace.",
+      "description": "workspace init: create the layout and the git repository of the configured workspace root.",
       "effects": [
         "config.write",
         "process.spawn"
@@ -23,16 +23,6 @@
         "kind": "argv"
       },
       "id": "gui-workspace.init",
-      "input": [
-        {
-          "description": "Absolute folder of the new workspace; default is the configured root.",
-          "flag": "--root",
-          "name": "root",
-          "required": false,
-          "title": "Workspace folder",
-          "type": "string"
-        }
-      ],
       "risk": "medium",
       "scope": "fleet",
       "supports": [

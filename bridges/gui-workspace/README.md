@@ -32,8 +32,8 @@ field values, never argv. All values are strings or enums; `run.py` checks them 
 
 | Command | Inputs | Runs | Confirmation |
 | --- | --- | --- | --- |
-| `init` | `root`? | `init [--root]` | risk-based |
-| `project-attach` | `project` (absolute folder) | `project attach --project DIR --yes` | risk-based |
+| `init` | - | `init` (the configured root) | risk-based |
+| `project-attach` | `project` (absolute folder) | `project attach --project DIR` (no `--yes`: an existing project is never reused silently) | risk-based |
 | `project-scan` | `dir` | `project scan DIR` | risk-based |
 | `project-rebind` | `project_id`, `path` | `project rebind ID --path DIR` | risk-based |
 | `migrate-plan` | `project`, `on_conflict`? | `migrate plan` (dry run) | none |

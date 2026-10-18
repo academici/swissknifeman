@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gui-workspace commands for the GUI broker: a fixed set of verbs, each one `workspace ... --json`, nothing else runs.
 
-    run.py init [--root DIR]                        run.py sync-commit | sync-pull | sync-push | sync-resolve-reset
+    run.py init                                     run.py sync-commit | sync-pull | sync-push | sync-resolve-reset
     run.py project-attach DIR                       run.py sync-resolve PATH local|remote
     run.py project-scan DIR                         run.py connect URL [--branch B]
     run.py project-rebind PROJECT_ID DIR
@@ -84,8 +84,8 @@ def enum(allowed: Tuple[str, ...]) -> Callable[[str], str]:
 
 # verb -> (positional checks, allowed flags {flag: check}, builder of workspace args from the checked values)
 SPEC: Dict[str, Tuple[List[Callable[[str], str]], Dict[str, Callable[[str], str]], Callable[[List[str], Dict[str, str]], List[str]]]] = {
-    "init": ([], {"--root": folder}, lambda p, f: ["init", *_flags(f)]),
-    "project-attach": ([folder], {}, lambda p, f: ["project", "attach", "--project", p[0], "--yes"]),
+    "init": ([], {}, lambda p, f: ["init"]),
+    "project-attach": ([folder], {}, lambda p, f: ["project", "attach", "--project", p[0]]),
     "project-scan": ([folder], {}, lambda p, f: ["project", "scan", p[0]]),
     "project-rebind": ([project_id, folder], {}, lambda p, f: ["project", "rebind", p[0], "--path", p[1]]),
     "migrate-plan": ([folder], {"--on-conflict": enum(ON_CONFLICT)},

@@ -87,8 +87,8 @@ class TestRun(RunCase):
     def test_argv_of_each_verb(self):
         proj = str(self.home / "proj")
         self.assertEqual(["init", "--json"], self.ran("init"))
-        self.assertEqual(["init", "--root", proj, "--json"], self.ran("init", "--root", proj))
-        self.assertEqual(["project", "attach", "--project", proj, "--yes", "--json"], self.ran("project-attach", proj))
+        self.assertEqual(["init", "--json"], self.ran("init"))
+        self.assertEqual(["project", "attach", "--project", proj, "--json"], self.ran("project-attach", proj))
         self.assertEqual(["project", "scan", proj, "--json"], self.ran("project-scan", proj))
         self.assertEqual(["project", "rebind", "p-alpha", "--path", proj, "--json"],
                          self.ran("project-rebind", "p-alpha", proj))
@@ -105,7 +105,7 @@ class TestRun(RunCase):
 
     def test_nothing_else_runs(self):
         proj = str(self.home / "proj")
-        bad = [(), ("rm",), ("sync-push", "--force"), ("sync-commit", "x"), ("init", "--root"), ("init", "--yes", "x"),
+        bad = [(), ("rm",), ("sync-push", "--force"), ("sync-commit", "x"), ("init", "--root"), ("init", "--root", proj), ("init", "--yes", "x"),
                ("project-attach", "relative/dir"), ("project-attach", str(self.home / "missing")),
                ("project-attach", "-rf"), ("project-rebind", "-x", proj), ("project-rebind", "a b", proj),
                ("migrate-plan", proj, "--on-conflict", "overwrite"), ("migrate-apply", proj, "--lock-timeout", "1"),

@@ -1,0 +1,832 @@
+{
+  "project": {
+    "project_id": null,
+    "name": "vaulter",
+    "origin": "new",
+    "marker_store": null
+  },
+  "mode": "initial",
+  "source": {
+    "checkout_name": "vaulter",
+    "head": "07b17e1118ba47e09f07ee6d4fdc29c9eff8320a"
+  },
+  "already_migrated": false,
+  "plans": [
+    {
+      "name": "2026.09.29-№1-VAULTER-STABLE",
+      "class": "legacy",
+      "action": "copied",
+      "files": 16,
+      "bytes": 73001309,
+      "digest": "sha256:2d1fdf47d71be10f205e7e6fdeecb897e2e89b44a5fff43bc4a68837310f2eb8"
+    },
+    {
+      "name": "2026.10.13-№1-VAULTER-KERNEL",
+      "class": "v4",
+      "action": "copied",
+      "files": 459,
+      "bytes": 58220951,
+      "digest": "sha256:b232f1a757f746220b1e020a297549fda76da08a4f9443258388df0a9dc6c593"
+    },
+    {
+      "name": "archive/2026.09.29-№1-VAULTER-STABLE",
+      "class": "v4",
+      "action": "copied",
+      "files": 4676,
+      "bytes": 418289538,
+      "digest": "sha256:d6338ad3a10dbb14856f7322d4ba129314f58d7b1eaa9ba42cfbdf734f9aecf2"
+    },
+    {
+      "name": "archive/AUDIT-VLT",
+      "class": "legacy",
+      "action": "copied",
+      "files": 124,
+      "bytes": 1677124,
+      "digest": "sha256:d95b173bc388ae470b03c8ec26f0a7ae0ac89938f7c7874f57f28ed22ef5a4b7"
+    },
+    {
+      "name": "archive/AUDIT-VLT-MIGRATION-PREVIEW",
+      "class": "legacy",
+      "action": "copied",
+      "files": 117,
+      "bytes": 662925,
+      "digest": "sha256:f990f6ef18eb65e0dee65a1ff26bd134ab8ad567e95d8e6f4857b1febd7e565c"
+    },
+    {
+      "name": "archive/REMAINING-WORK",
+      "class": "legacy",
+      "action": "copied",
+      "files": 492,
+      "bytes": 64815782,
+      "digest": "sha256:c7debb972e2a7fd25fb37bed28421eee27d11304be21bf7f4df67f46543f07db"
+    },
+    {
+      "name": "archive/VLT-CANON",
+      "class": "legacy",
+      "action": "copied",
+      "files": 8,
+      "bytes": 264997,
+      "digest": "sha256:24aa72c32ccb5780a870c40cd9a81f7130774ad7a04cffccd07e0a76cedcd615"
+    },
+    {
+      "name": "archive/VLT-HSEAM",
+      "class": "legacy",
+      "action": "copied",
+      "files": 45,
+      "bytes": 183914,
+      "digest": "sha256:0d828482a967ca10621082f112c58352a1f11bab9ecaed78b429b5c9a211812e"
+    },
+    {
+      "name": "archive/VLT-LOAD",
+      "class": "legacy",
+      "action": "copied",
+      "files": 3133,
+      "bytes": 170977553,
+      "digest": "sha256:d969c872cb664f921beb38aca4bbc17737e7a350446714b5da79b7efc2f94c0b"
+    },
+    {
+      "name": "archive/VLT-MUT",
+      "class": "legacy",
+      "action": "copied",
+      "files": 5,
+      "bytes": 99537,
+      "digest": "sha256:b266669c249fcfa596c8bd23119b3e5268b16ee1138ec9d29493d7bfd35975af"
+    },
+    {
+      "name": "archive/VLT-REL",
+      "class": "legacy",
+      "action": "copied",
+      "files": 13,
+      "bytes": 280897,
+      "digest": "sha256:9c0c18eba3da7ecc32e91853555b39c5d49f21e0e7bd94f8ec794ced4baa1b01"
+    },
+    {
+      "name": "archive/VLT-REMED",
+      "class": "legacy",
+      "action": "copied",
+      "files": 22,
+      "bytes": 1182954,
+      "digest": "sha256:d1393d49cad57200910c0ef64cca6badabfeeb482e7af1fb45522dd584d82fe4"
+    },
+    {
+      "name": "_root",
+      "class": "legacy",
+      "action": "copied",
+      "files": 2,
+      "bytes": 585,
+      "digest": "sha256:9cf9a07ac930df6c2c375e6ccc6e4a4fce9e8b8065f1acaa40208d9678ff70c1"
+    }
+  ],
+  "conflicts": [],
+  "local_only": [
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P2.4.json",
+      "bytes": 5955532,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P2.5.json",
+      "bytes": 6054490,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P2.6.json",
+      "bytes": 6022627,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.1.json",
+      "bytes": 6561383,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.2.json",
+      "bytes": 6647198,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.3.json",
+      "bytes": 6686843,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.4.json",
+      "bytes": 6564950,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.5.json",
+      "bytes": 6559457,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.6.json",
+      "bytes": 6551908,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.7.json",
+      "bytes": 6657834,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P3.8.json",
+      "bytes": 6564825,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.6/grok-updates.jsonl",
+      "bytes": 7710473,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/owner-review/attempt-0003/provider-output.jsonl",
+      "bytes": 5571313,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T074749768785Z/before-writable-testbench-app-directory-fix/dependency-runtime.json",
+      "bytes": 22588253,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T074749768785Z/installer-expanded-candidate-before-symlink-filter.json",
+      "bytes": 9456294,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/validation-20261005T074749768785Z/tools/dependency-runtime.json",
+      "bytes": 22582516,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/owner-review/attempt-0003/provider-output.jsonl",
+      "bytes": 5580102,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.1/review-grok-stream.jsonl",
+      "bytes": 5355141,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.3/U1/brief.json",
+      "bytes": 6661426,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.3/U2/brief.json",
+      "bytes": 6662744,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.3/U3/brief.json",
+      "bytes": 6678723,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.3/U4/brief.json",
+      "bytes": 6672986,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.3/U5/brief.json",
+      "bytes": 6674874,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.3/U6/brief.json",
+      "bytes": 6676090,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.7/U1/brief.json",
+      "bytes": 6679379,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.7/U2/brief.json",
+      "bytes": 6680710,
+      "reason": "size"
+    },
+    {
+      "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P3/P3.7/U3/brief.json",
+      "bytes": 6679934,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R09-B02-memory-52cc42c8-1cb5-48a5-8e5b-0a3c0b9b0201.tar.gz",
+      "bytes": 2129027,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R09-P6-3df3b9e1-32b8-4e15-8b8f-c4efffe28f52.tar.gz",
+      "bytes": 15532594,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R09-P6-aecd7112-8d5c-4fbc-a7ae-a4fe468ced57.tar.gz",
+      "bytes": 2925248,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R09-P6-bc199ced-5b0f-4e77-b5ca-1a73055c0bfa.tar.gz",
+      "bytes": 16368179,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R09-P6-e281e5bb-1bd1-4435-8ed0-69eaa26ee134.tar.gz",
+      "bytes": 2542230,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R10-P6-56823709-fe47-4173-b965-dc51ea523bcb.tar.gz",
+      "bytes": 15606937,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/P6-R01/721dd40b-ce8e-410a-8ecf-58873644f038/sink/ledger.jsonl",
+      "bytes": 15396566,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/P6/sink/ledger.jsonl",
+      "bytes": 22365695,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/0ff73501-ddff-4906-a01b-3018c0e74c32/source.tar.gz",
+      "bytes": 1181470,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/s-baseline-bucket-catalog.stdout.gz",
+      "bytes": 1434294,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/s-baseline.sql.gz",
+      "bytes": 60155699,
+      "reason": "size"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/s-cleanup-readback-catalog.stdout.gz",
+      "bytes": 1434295,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/s-post-workload-bucket-catalog-repeat.stdout.gz",
+      "bytes": 1440211,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/s-post-workload-bucket-catalog.stdout.gz",
+      "bytes": 1440204,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/af3c88b5-ea6d-42f8-8cb2-f6ec466895c8/source.tar.gz",
+      "bytes": 1181106,
+      "reason": "binary"
+    },
+    {
+      "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/b2e80447-c8b4-48ad-967f-a9728470b805/source.tar.gz",
+      "bytes": 1167265,
+      "reason": "binary"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "PS_EXECUTABLE",
+      "count": 8,
+      "paths": [
+        "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R02-checks/parse-log.py",
+        "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R02-checks/run-one.sh",
+        "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R02-checks/run-queue.sh",
+        "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R19-checks/run-sqlite.sh",
+        "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P3.11-P3.12/runs/partB.sh"
+      ]
+    },
+    {
+      "code": "PS_HOME_PATH",
+      "count": 1825,
+      "paths": [
+        "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.1.json",
+        "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.4.json",
+        "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.6.json",
+        "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.7.json",
+        "legacy-plans/archive/AUDIT-VLT-MIGRATION-PREVIEW/artifacts/migration-source-v1/phases/P0.md"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "code": "MIGRATION_BLOCKED_SECRET",
+      "message": "92 file(s) look like secrets; remove them from the plans or from the folder before migrating",
+      "findings": [
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/VLT-LOAD/observability-spec.md",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 632: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/stand-inspect.stdout",
+          "detail": "3 match(es) of the named-secret secret pattern, the first at line 245: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/compose-seed.yml",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 20: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/VLT-LOAD/artifacts/R03/4f565edf-58ca-47a0-869f-b9148ebcd2b6/compose-resolved.stdout",
+          "detail": "5 match(es) of the named-secret secret pattern, the first at line 43: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/REMAINING-WORK/remaining-evidence/R21-checks/checks.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 84: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/REMAINING-WORK/REMAINING-WORK.md",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 639: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/AUDIT-VLT/artifacts/repro/P1.6/CollabSeamReproTest.php",
+          "detail": "3 match(es) of the named-secret secret pattern, the first at line 31: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/archive/AUDIT-VLT/artifacts/repro/P1.12/RemanenceReproTest.php",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 95: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P7/P7.1/U3/brief.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1032: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P7/P7.1/U2/brief.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1032: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P7/P7.1/U1/brief.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1033: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P6/P6.4/U3/brief.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 994: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P6/P6.4/U2/brief.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 987: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P6/P6.4/U1/brief.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 994: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P1/P1.9.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/phases/P0/P0.2.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 287: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/knowledge/decisions-_index.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 14: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/knowledge/decisions-_current.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 14: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/knowledge/artifacts-P2.3-before-source.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 54: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/knowledge/artifacts-P1.1-plan-format-preimages-P1.9.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/knowledge/P5-design-webhooks.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/decisions/D04.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.7/review-grok-stream.jsonl",
+          "detail": "23 match(es) of the named-secret secret pattern, the first at line 29: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.6/review-stream.jsonl",
+          "detail": "15 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.5/review-grok-stream.jsonl",
+          "detail": "7 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P7.5/review-grok-round2-stream.jsonl",
+          "detail": "4 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.8/review-grok.jsonl",
+          "detail": "15 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.8/review-grok-round2.jsonl",
+          "detail": "22 match(es) of the named-secret secret pattern, the first at line 19: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.7/review-grok.jsonl",
+          "detail": "6 match(es) of the named-secret secret pattern, the first at line 111: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.7/review-grok-round2.jsonl",
+          "detail": "7 match(es) of the token secret pattern, the first at line 43: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.5/review-grok.jsonl",
+          "detail": "67 match(es) of the named-secret secret pattern, the first at line 18: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.4/review-grok.jsonl",
+          "detail": "74 match(es) of the named-secret secret pattern, the first at line 17: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.4/review-grok-round2.jsonl",
+          "detail": "71 match(es) of the named-secret secret pattern, the first at line 15: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.3/review-grok.jsonl",
+          "detail": "4 match(es) of the named-secret secret pattern, the first at line 23: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.2/reviewer-stream.jsonl",
+          "detail": "9 match(es) of the named-secret secret pattern, the first at line 90: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.2/reviewer-stream-round2.jsonl",
+          "detail": "10 match(es) of the named-secret secret pattern, the first at line 52: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6.1/reviewer-stream.jsonl",
+          "detail": "45 match(es) of the named-secret secret pattern, the first at line 17: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6-audit-2026-10-11/review-grok.jsonl",
+          "detail": "42 match(es) of the named-secret secret pattern, the first at line 25: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P6-audit-2026-10-11/phase-product.diff",
+          "detail": "90 match(es) of the named-secret secret pattern, the first at line 1676: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.5/review/grok-4.7-stream.jsonl",
+          "detail": "9 match(es) of the named-secret secret pattern, the first at line 35: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.4/review/grok-4.7-verdict.md",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 12: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.4/review/grok-4.7-stream.jsonl",
+          "detail": "158 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.4/review/grok-4.7-round2-P5.4-stream.jsonl",
+          "detail": "131 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.4/review/grok-4.7-round2-P5.3-stream.jsonl",
+          "detail": "29 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.4/review/grok-4.7-round2-P5.2-stream.jsonl",
+          "detail": "12 match(es) of the named-secret secret pattern, the first at line 17: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P5.4/review/grok-4.7-round2-P5.1-stream.jsonl",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 49: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.8/review-grok-stream.jsonl",
+          "detail": "6 match(es) of the named-secret secret pattern, the first at line 59: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.7/review-grok-4.7.stream.jsonl",
+          "detail": "6 match(es) of the named-secret secret pattern, the first at line 59: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.5/review-grok-4.7.stream.jsonl",
+          "detail": "91 match(es) of the named-secret secret pattern, the first at line 15: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.5/review-grok-4.7.stream.interrupted.jsonl",
+          "detail": "104 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.14/review-grok-stream.jsonl",
+          "detail": "3 match(es) of the named-secret secret pattern, the first at line 21: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4.13/review-grok-stream.jsonl",
+          "detail": "9 match(es) of the named-secret secret pattern, the first at line 41: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4-review-2026-10-09/resolution.md",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 48: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P4-review-2026-10-09/grok-stream.jsonl",
+          "detail": "34 match(es) of the named-secret secret pattern, the first at line 31: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/review-round1-product-diff.patch",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1859: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/product-diff.patch",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1992: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/product-delta.git.patch",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 2098: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/baseline.patch",
+          "detail": "3 match(es) of the named-secret secret pattern, the first at line 859: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.8/V909-20261007T083839060573Z.log",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 384: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.7/candidate.diff",
+          "detail": "6 match(es) of the named-secret secret pattern, the first at line 1743: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.4/review-diff.patch",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1178: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.4/V2-first.log",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 108: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P3.3/review/candidate.diff",
+          "detail": "5 match(es) of the named-secret secret pattern, the first at line 1118: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.7/review-candidate.diff",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 4276: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.5/review/round-1/events.ndjson",
+          "detail": "56 match(es) of the named-secret secret pattern, the first at line 2086: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/validation-runner.py",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 34: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.4/validation-20261006T071936236112Z/validation-runner-073538439489.py",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 34: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.4/review-round1-20261006T074425132642Z/prompt.txt",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 13202: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.4/review-round1-20261006T074425132642Z/current/load/app/Console/SeedLoadDatasetCommand.php",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 734: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.2/owner-review/source-blobs/edbc56901f7cff8830738b24ae98025c7d1aadd386aff8b196657cb7cfe4dbe7",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 45: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.1/rector-input-dry-run.txt",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P2.1/rector-input-apply.txt",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.9/task-contract.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 31: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.9/review-packet.txt",
+          "detail": "4 match(es) of the named-secret secret pattern, the first at line 25: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.4/review-source-packet.txt",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 3909: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.4/review-compact-packet.txt",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 2387: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P1.1/review-prompt.txt",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 410: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2/validation-receipts.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.2-PA01/validation-receipts.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.1/style-6.log",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 4: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.09.29-№1-VAULTER-STABLE/artifacts/P0.1/root-rector-advisory.log",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 4: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P3.5/review-r3.jsonl",
+          "detail": "8 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P3.13-P3.15/review-R.jsonl",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 25: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P3.13-P3.15/review-O.jsonl",
+          "detail": "49 match(es) of the named-secret secret pattern, the first at line 65: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P3.13-P3.15/review-E.jsonl",
+          "detail": "7 match(es) of the named-secret secret pattern, the first at line 29: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P2.3/review-grok.jsonl",
+          "detail": "4 match(es) of the named-secret secret pattern, the first at line 35: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P2.1/review-grok-stream.jsonl",
+          "detail": "17 match(es) of the named-secret secret pattern, the first at line 49: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.13-№1-VAULTER-KERNEL/artifacts/P1.1/baseline.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 2910: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.7.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1352: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.6.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 811: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.4.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 940: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "legacy-plans/2026.09.29-№1-VAULTER-STABLE/context/P6.1.json",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1537: ‹redacted›"
+        }
+      ]
+    }
+  ],
+  "manifest_digest": "sha256:313d8497d481e73d2def87aef214bb7d1fdb3d11d569fd88f35c2b10c22199c6",
+  "ready": false
+}

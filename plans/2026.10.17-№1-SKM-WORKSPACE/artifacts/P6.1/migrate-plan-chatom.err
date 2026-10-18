@@ -1,1 +1,1 @@
-MIGRATOR_UNAVAILABLE: plugin workspace-planner inspect: PROTOCOL_STDOUT_TOO_LARGE: plugin workspace-planner: PROTOCOL_STDOUT_TOO_LARGE (exit -9)
+MIGRATION_BLOCKED_SECRET: 61 file(s) look like secrets; remove them from the plans or from the folder before migrating

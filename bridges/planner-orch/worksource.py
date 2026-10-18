@@ -284,6 +284,23 @@ def _worker_view(doc: dict) -> dict:
     return view
 
 
+def _declared_path(plan, path: Path, project) -> str:
+    """The path an artifact is declared by: repository-relative, or ``@plan/`` when a workspace plan keeps the file
+    outside the checkout (the plan folder, or the project's state folder of the workspace). A file outside both is
+    copied into the plan folder, so the declaration never points outside what the plan can resolve."""
+    resolved = path.resolve()
+    if resolved.is_relative_to(Path(project).resolve()):
+        return resolved.relative_to(Path(project).resolve()).as_posix()
+    root = plan.root.resolve()
+    if resolved.is_relative_to(root):
+        return "@plan/" + resolved.relative_to(root).as_posix()
+    target = root / "inputs" / resolved.name
+    if not target.is_file():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(resolved.read_bytes())
+    return "@plan/inputs/" + resolved.name
+
+
 def _previous_brief(plan, item_id: str, unit: str | None, project: Path, blobs):
     """The newest brief of the item (or of its unit) already declared as an input of the item, or None."""
     item = plan.items.get(item_id) or {}
@@ -326,7 +343,7 @@ def op_brief(fields: dict) -> dict:
     reused = blobs.blob_path(sha256_tagged(canonical_json_bytes(doc)), project=project).is_file()
     stored = blobs.put_json(doc, sensitivity="normal", name=f"brief-{ref}", project=project)
     path = blobs.blob_path(stored, project=project)
-    relative = path.resolve().relative_to(Path(project).resolve()).as_posix()
+    relative = _declared_path(plan, path, project)
     # The brief is an input of the item; a planner artifact id names an output, so the input is declared by path
     # (content-addressed, unique per digest) and the id is returned to orch only.
     plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "input"], plans_root,
@@ -523,7 +540,7 @@ def op_research(fields: dict) -> dict:
         return {"op": "research", "outcome": "refused", "reason_code": "ITEM_UNKNOWN",
                 "message": f"plan {plan_ref} has no item {item}"}
     target = plan.root / "research" / f"{item}-{number}.json"
-    relative = target.resolve().relative_to(Path(plan.repo_root).resolve()).as_posix()
+    relative = _declared_path(plan, target, plan.repo_root)
     body = json.dumps(fields["result"], ensure_ascii=False, indent=2) + "\n"
     same = target.is_file() and target.read_text(encoding="utf-8") == body
     if not same:

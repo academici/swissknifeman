@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:project-list:v1",
+  "title": "workspace project list",
+  "description": "Stdout of `workspace project list --json`: the projects of the workspace with their checkouts on this machine, sorted by code.",
+  "type": "object",
+  "properties": {
+    "projects": {
+      "type": "array",
+      "description": "One row per project folder of the workspace.",
+      "items": {
+        "type": "object",
+        "description": "One project.",
+        "properties": {
+          "project_id": {
+            "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+            "description": "Code of the project (the name of its folder)."
+          },
+          "name": {
+            "type": ["string", "null"],
+            "description": "Display name; null when project.json is invalid."
+          },
+          "status": {
+            "enum": ["active", "archived", "invalid"],
+            "description": "The status of project.json, or invalid when it cannot be read."
+          },
+          "bound": {
+            "type": "boolean",
+            "description": "Whether a checkout of the project is bound on this machine."
+          },
+          "paths": {
+            "type": "array",
+            "uniqueItems": true,
+            "description": "Absolute paths of the bound checkouts; empty when not bound.",
+            "items": {
+              "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/abs_path",
+              "description": "One checkout path."
+            }
+          },
+          "error": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "Code of the failure to read project.json; present only when the status is invalid."
+          }
+        },
+        "required": ["project_id", "name", "status", "bound", "paths"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["projects"],
+  "additionalProperties": false
+}

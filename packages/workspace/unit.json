@@ -25,6 +25,12 @@
     "config": "configs/config.schema.json",
     "contracts": [
       {
+        "id": "urn:swissknifeman:workspace:command",
+        "path": "schemas/command/v1",
+        "version": "v1",
+        "stability": "development"
+      },
+      {
         "id": "urn:swissknifeman:workspace:event-data",
         "path": "schemas/event-data/v1",
         "version": "v1",

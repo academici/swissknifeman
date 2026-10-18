@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:list:v1",
+  "title": "workspace list",
+  "description": "Stdout of `workspace list --json`: the workspaces of this machine, sorted by code.",
+  "type": "object",
+  "properties": {
+    "workspaces": {
+      "type": "array",
+      "description": "One row per workspace folder that holds a workspace.json.",
+      "items": {
+        "type": "object",
+        "description": "One workspace of this machine.",
+        "properties": {
+          "code": {
+            "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+            "description": "Code of the workspace (the name of its folder)."
+          },
+          "workspace_id": {
+            "oneOf": [
+              {"$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/workspace_id"},
+              {"type": "null"}
+            ],
+            "description": "Id of the workspace; null when its workspace.json cannot be read."
+          },
+          "root": {
+            "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/abs_path",
+            "description": "Folder of the workspace repository."
+          },
+          "remote": {
+            "type": ["string", "null"],
+            "description": "The origin of the workspace without user information; null when it has none."
+          },
+          "projects": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of project folders in the workspace."
+          }
+        },
+        "required": ["code", "workspace_id", "root", "remote", "projects"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["workspaces"],
+  "additionalProperties": false
+}

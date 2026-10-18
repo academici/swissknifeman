@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any, List, Optional, Sequence
@@ -69,7 +70,10 @@ commands:
   help                              show this text
 
 exit codes: 0 ok, 1 failure (CODE: message on stderr), 2 usage error
+with --json a refusal also prints {"error": {"code", "message"}} on stdout (contract schemas/command error)
 """
+
+_ERROR_CODE = re.compile(r"[A-Z][A-Z0-9_]*")
 
 
 class _Parser(argparse.ArgumentParser):
@@ -600,6 +604,27 @@ def _select_workspace(command: str, option: Optional[str]) -> None:
     os.environ["SKM_WORKSPACE"] = selected_workspace()  # the only workspace, else WORKSPACE_NOT_FOUND / _AMBIGUOUS
 
 
+def _error_document(exc: BaseException, code: Optional[str] = None) -> dict:
+    """The failure as the ``error`` contract of ``schemas/command``: a stable ``code`` and the message after ``CODE: ``."""
+    text = str(exc)
+    if code is None:
+        code = getattr(exc, "code", None)
+        if not (isinstance(code, str) and _ERROR_CODE.fullmatch(code)):
+            found = re.match(r"([A-Z][A-Z0-9_]*): ", text)
+            code = found.group(1) if found else "ERROR"
+    prefix = f"{code}: "
+    message = text[len(prefix):] if text.startswith(prefix) else text
+    return {"error": {"code": code, "message": message or code}}
+
+
+def _fail(namespace: argparse.Namespace, exc: BaseException, code: Optional[str] = None) -> None:
+    """Print a refusal as ``CODE: message`` on stderr; with ``--json`` also the ``error`` document on stdout."""
+    document = _error_document(exc, code)
+    print(f"{document['error']['code']}: {document['error']['message']}" if code else str(exc), file=sys.stderr)
+    if getattr(namespace, "json", False):
+        _dump(document)
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     saved = os.environ.get("SKM_WORKSPACE")
     try:
@@ -638,17 +663,11 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         _select_workspace(namespace.command, option)
         return handler(namespace)
-    except (WorkspaceError, WorkspaceSelectionError) as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-    except ProjectContextRequired as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-    except ConfigError as exc:
-        print(str(exc), file=sys.stderr)
+    except (WorkspaceError, WorkspaceSelectionError, ProjectContextRequired, ConfigError) as exc:
+        _fail(namespace, exc)
         return 1
     except ValueError as exc:
-        print(f"INVALID_ARGUMENT: {exc}", file=sys.stderr)
+        _fail(namespace, exc, "INVALID_ARGUMENT")
         return 2
 
 

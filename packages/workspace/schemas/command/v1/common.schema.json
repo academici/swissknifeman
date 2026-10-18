@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:common:v1",
+  "title": "command common",
+  "description": "Shared definitions of the `workspace` command outputs, referenced by the other documents of this contract through $ref; the document itself is not an output.",
+  "$defs": {
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Code of a workspace or of a project: lowercase words of letters and digits joined by single hyphens, starting with a letter, at most 40 characters."
+    },
+    "workspace_id": {
+      "type": "string",
+      "pattern": "^ws_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Workspace id: ws_ and 26 Crockford base32 characters."
+    },
+    "device_id": {
+      "type": "string",
+      "pattern": "^dev_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Device id: dev_ and 26 Crockford base32 characters."
+    },
+    "abs_path": {
+      "type": "string",
+      "pattern": "^(/|[A-Za-z]:[\\\\/]).+$",
+      "description": "Absolute path on this machine."
+    },
+    "binding": {
+      "type": "object",
+      "description": "The checkouts of a project on this machine.",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Absolute real paths of the checkouts.",
+          "items": {
+            "$ref": "#/$defs/abs_path",
+            "description": "One checkout path."
+          }
+        },
+        "primary": {
+          "$ref": "#/$defs/abs_path",
+          "description": "The checkout used first; one of `paths`."
+        }
+      },
+      "required": ["paths", "primary"],
+      "additionalProperties": false
+    }
+  }
+}

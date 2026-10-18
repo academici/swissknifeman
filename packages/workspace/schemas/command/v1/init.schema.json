@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:init:v1",
+  "title": "workspace init",
+  "description": "Stdout of `workspace init --code CODE --json`: the workspace that was created, or that already existed at the root.",
+  "type": "object",
+  "properties": {
+    "code": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+      "description": "Code of the workspace."
+    },
+    "root": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/abs_path",
+      "description": "Folder of the workspace repository."
+    },
+    "workspace_id": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/workspace_id",
+      "description": "Id of the workspace, from its workspace.json."
+    },
+    "device_id": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/device_id",
+      "description": "Id of this machine's device file."
+    },
+    "created": {
+      "type": "boolean",
+      "description": "Whether this call created the workspace."
+    },
+    "already_initialized": {
+      "type": "boolean",
+      "description": "Whether the root already held this workspace; always the opposite of `created`."
+    }
+  },
+  "required": ["code", "root", "workspace_id", "device_id", "created", "already_initialized"],
+  "additionalProperties": false
+}

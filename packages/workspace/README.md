@@ -12,7 +12,8 @@ This module is the command line over them. Connecting a remote and sync come lat
 ## Commands
 
 Run as `swissknifeman workspace <command>` or `bin/workspace <command>`. A machine can hold several workspaces; a command works with the one chosen by `--workspace CODE` (anywhere in the arguments), `SKM_WORKSPACE`, the marker of the project you are in, or the only workspace there is. Every command takes `--json`, which prints one
-JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; wrong arguments exit 2.
+JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; wrong arguments exit 2. With `--json` a refusal (and an invalid
+argument value, code `INVALID_ARGUMENT`) also prints `{"error": {"code", "message"}}` on stdout; see [Typed outputs](#typed-outputs).
 
 | Command | What it does |
 | --- | --- |
@@ -36,6 +37,24 @@ JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; w
 | `clone URL [--code CODE] [--root DIR]` | Make a workspace of this machine from a remote: cloned beside the workspaces and moved to `workspaces/<code>` (the code is read from the remote's `workspace.json`), and the device file. |
 | `list` | The workspaces of this machine: code, root, remote, number of projects. |
 | `sync [--commit] [--pull] [--push] [--resolve PATH=local\|remote ...] [--resolve-reset]` | Commit (publish-safety first), pull (dry merge with `git merge-tree`, typed conflicts), resolve and push without force (see Sync). No flag: commit and pull; `--push` runs both first. |
+
+## Typed outputs
+
+The `--json` output of the commands is a contract of its own, `schemas/command/v1` (`urn:swissknifeman:workspace:command`,
+one closed JSON Schema per document, shared definitions in `common`). `tests/test_command_contracts.py` validates the real
+output of each command against it.
+
+| Document | Command |
+| --- | --- |
+| `init` | `init --code CODE` |
+| `list` | `list` |
+| `connect` | `connect --remote URL` |
+| `project-list` | `project list` |
+| `project-attach` | `project attach` |
+| `error` | any command with `--json` that is refused: exit 1 (`CODE: message`), or exit 2 for `INVALID_ARGUMENT`; commands whose failure carries a report of its own (`sync`, `doctor --publish-safety`, `migrate plan`) print that report |
+
+The documents of the other commands (`status`, `doctor`, `sync`, `migrate`, `project show|scan|rebind|detach`) have no
+contract yet; `publish-report/v1` and the event data have theirs.
 
 ## Publish-safety
 

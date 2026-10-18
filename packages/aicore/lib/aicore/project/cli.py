@@ -207,6 +207,40 @@ def local_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     return checks
 
 
+def links_check(root: Path, env: Mapping[str, str]) -> Dict[str, Any]:
+    """``project.links``: the optional links ``plans/`` and ``tasks/`` of the checkout (``workspace project link``). A link
+    that points to the workspace folder of the project and is listed in ``.git/info/exclude`` is ``ok``; a dangling link, a
+    link to another place and a link missing from the exclude file are ``warn``. A real folder is not a finding (it is never
+    replaced); no link at all is ``skip``."""
+    from aicore.workspace import WorkspaceError, inspect_folders
+    from aicore.workspace.links import exclude_file, read_exclude
+    try:
+        found = inspect_folders(root, env)
+    except WorkspaceError:
+        return _check("project.links", "skip", "the project marker is unusable (project.plans-store reports it)", "plans")
+    if found is None:
+        return _check("project.links", "skip", f"no {PROJECT_DIRNAME}/project.json: nothing to link", "plans")
+    problems: List[str] = []
+    linked: List[str] = []
+    listed = read_exclude(root) if exclude_file(root) is not None else None
+    for item in found:
+        name = item["name"]
+        if item["state"] == "foreign":
+            problems.append(f"{name}/ is a link to {item['points_to']}, not to {item['target']}; it is left alone")
+        elif item["state"] == "linked":
+            linked.append(name)
+            if item["dangling"]:
+                problems.append(f"{name}/ points to {item['target']}, which does not exist")
+            elif listed is not None and name not in listed:
+                problems.append(f"{name}/ is not listed in .git/info/exclude")
+    remedy = "swissknifeman workspace project link (it repairs the links it owns), or remove the stray link"
+    if problems:
+        return _check("project.links", "warn", "; ".join(problems)[:400], "plans", remedy)
+    if not linked:
+        return _check("project.links", "skip", "plans/ and tasks/ are not linked to the workspace", "plans")
+    return _check("project.links", "ok", f"{', '.join(linked)} linked to the workspace project folder", "plans")
+
+
 def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     """:func:`verify_checks` plus the project configuration and the write boundary of the project folders."""
     checks = verify_checks(root, env)
@@ -229,7 +263,8 @@ def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
             checks.append(_check("project.config", "fail", f"{config}: {exc}"[:400], "config",
                                  "fix the TOML: swissknifeman config explain"))
     checks.extend(local_checks(root, env))
-    from aicore.workspace import WorkspaceError, resolve_plans_store
+    checks.append(links_check(root, env))
+    from aicore.workspace import WorkspaceError, is_workspace_link, resolve_plans_store
     store = None
     store_error = None
     try:
@@ -244,7 +279,8 @@ def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     boundary = [f"{LOCAL_DIRNAME}/state", f"{LOCAL_DIRNAME}/backups"] if local is not None else \
         [f"{PROJECT_DIRNAME}/state", f"{PROJECT_DIRNAME}/backups"]
     checked = [(home, home / relative) for relative in boundary]
-    if store is None or store.kind == "legacy":
+    if (store is None or store.kind == "legacy") and not is_workspace_link(root, "plans", env):
+        # a link to the workspace folder of this project (workspace project link) is the workspace store, not an escape
         boundary.append("plans")
         checked.append((root, root / "plans"))
     escaped = []

@@ -46,6 +46,64 @@ class Sandbox(unittest.TestCase):
         return path
 
 
+class LinksExcludeTests(Sandbox):
+    def repo(self):
+        root = Path(self.tmp) / "repo"
+        root.mkdir()
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        return root
+
+    def test_the_block_lists_exactly_the_names_and_keeps_the_other_lines(self):
+        from aicore.workspace import links
+        root = self.repo()
+        exclude = root / ".git" / "info" / "exclude"
+        exclude.write_text("*.log\n", encoding="utf-8")
+        self.assertEqual(links.write_exclude(root, ["tasks", "plans"]), exclude)
+        self.assertEqual(links.read_exclude(root), ["plans", "tasks"])
+        links.write_exclude(root, ["plans"])
+        self.assertEqual(links.read_exclude(root), ["plans"])
+        self.assertTrue(exclude.read_text(encoding="utf-8").startswith("*.log\n"))
+        links.write_exclude(root, [])
+        self.assertEqual(exclude.read_text(encoding="utf-8"), "*.log\n")
+        before = exclude.stat().st_mtime_ns
+        links.write_exclude(root, [])  # no block, no names: not touched
+        self.assertEqual(exclude.stat().st_mtime_ns, before)
+
+    def test_a_half_block_is_refused_and_a_folder_that_is_not_a_repository_is_skipped(self):
+        from aicore.workspace import links
+        root = self.repo()
+        exclude = root / ".git" / "info" / "exclude"
+        exclude.write_text(links.BEGIN + "\n/plans\n", encoding="utf-8")
+        with self.assertRaises(ws.WorkspaceError) as caught:
+            links.write_exclude(root, ["plans"])
+        self.assertEqual(caught.exception.code, "LINKS_EXCLUDE_INVALID")
+        self.assertEqual(links.read_exclude(root), [])
+        plain = Path(self.tmp) / "plain"
+        plain.mkdir()
+        self.assertIsNone(links.write_exclude(plain, ["plans"]))
+        self.assertEqual(links.read_exclude(plain), [])
+
+    def test_inspect_folder_tells_the_four_states_apart(self):
+        project = Path(self.tmp) / "wss" / WS / "projects" / PRJ
+        (project / "plans").mkdir(parents=True)
+        root = Path(self.tmp) / "co"
+        root.mkdir()
+        self.assertEqual(ws.inspect_folder(root, "plans", project)["state"], "absent")
+        os.symlink(project / "plans", root / "plans")
+        found = ws.inspect_folder(root, "plans", project)
+        self.assertEqual((found["state"], found["dangling"]), ("linked", False))
+        (root / "other").mkdir()
+        os.symlink(root / "other", root / "tasks")
+        self.assertEqual(ws.inspect_folder(root, "tasks", project)["state"], "foreign")
+        os.unlink(root / "tasks")
+        (root / "tasks").mkdir()
+        self.assertEqual(ws.inspect_folder(root, "tasks", project)["state"], "real")
+        (project / "plans").rmdir()
+        self.assertEqual(ws.inspect_folder(root, "plans", project)["dangling"], True)
+        with self.assertRaises(ValueError):
+            ws.inspect_folder(root, "docs", project)
+
+
 class ResolutionVectorTests(Sandbox):
     def test_the_vector_file_is_complete(self):
         data = json.loads(VECTORS.read_text(encoding="utf-8"))
@@ -107,6 +165,37 @@ class ResolutionVectorTests(Sandbox):
         self.assertFalse(ws.legacy_plans_present(root))
         self.write("proj/plans/p1/plan.json", "{}")
         self.assertTrue(ws.legacy_plans_present(root))
+
+    def test_a_plans_link_into_the_bound_workspace_is_not_legacy(self):
+        self.write("proj/.swissknifeman/project.json", json.dumps(
+            {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": WS, "project_id": PRJ,
+             "plans_store": "workspace"}))
+        self.write(f"wss/{WS}/projects/{PRJ}/plans/p1/plan.json", "{}")
+        root = self.tmp + "/proj"
+        os.symlink(f"{self.tmp}/wss/{WS}/projects/{PRJ}/plans", root + "/plans")
+        self.assertTrue(ws.is_workspace_link(root, "plans", env=self.env))
+        self.assertFalse(ws.legacy_plans_present(root, env=self.env))
+        os.unlink(root + "/plans")
+        self.write("other/p1/plan.json", "{}")
+        os.symlink(self.tmp + "/other", root + "/plans")
+        self.assertFalse(ws.is_workspace_link(root, "plans", env=self.env))
+        self.assertTrue(ws.legacy_plans_present(root, env=self.env))
+        os.unlink(root + "/plans")
+        self.write(f"wss/{WS}/projects/{OTHER}/plans/p1/plan.json", "{}")
+        os.symlink(f"{self.tmp}/wss/{WS}/projects/{OTHER}/plans", root + "/plans")  # another project of the workspace
+        self.assertFalse(ws.is_workspace_link(root, "plans", env=self.env))
+        self.assertTrue(ws.legacy_plans_present(root, env=self.env))
+
+    def test_without_a_usable_marker_no_link_is_a_workspace_link(self):
+        root = self.tmp + "/proj"
+        self.write("wss/axioma/projects/billium/plans/p1/plan.json", "{}")
+        os.makedirs(root)
+        os.symlink(f"{self.tmp}/wss/{WS}/projects/{PRJ}/plans", root + "/plans")
+        self.assertFalse(ws.is_workspace_link(root, "plans", env=self.env))
+        self.assertTrue(ws.legacy_plans_present(root, env=self.env))
+        self.write("proj/.swissknifeman/project.json", "{broken")
+        self.assertFalse(ws.is_workspace_link(root, "plans", env=self.env))
+        self.assertTrue(ws.legacy_plans_present(root, env=self.env))
 
     def test_the_launcher_of_this_process_is_used_by_default(self):
         self.write("co1/.swissknifeman/project.json", json.dumps(

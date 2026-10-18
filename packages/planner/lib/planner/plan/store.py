@@ -274,7 +274,8 @@ def short_id_of(plan_dir: Path) -> str | None:
 def _guard_migrated(plan_dir: Path) -> None:
     """``PLANS_MIGRATED`` when ``plan_dir`` is ``<x>/plans[/archive]/<plan>`` outside the workspace and the marker of ``<x>``
     says the plans moved to the workspace (a write to the old copy would be lost). Folders inside the workspace and
-    folders without a marker beside them are not checked."""
+    folders without a marker beside them are not checked. A plan reached through the link ``<x>/plans`` into the workspace
+    (``workspace project link``) resolves to the workspace folder first, so it is a workspace plan, not the old copy."""
     real = Path(os.path.realpath(plan_dir))
     plans = real.parent.parent if real.parent.name == ARCHIVE else real.parent
     if plans.name != "plans" or not (plans.parent / workspace.MARKER_RELPATH).exists():

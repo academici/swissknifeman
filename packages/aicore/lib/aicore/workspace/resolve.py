@@ -17,6 +17,7 @@ from aicore.state.locations import is_code, workspace_root, workspaces_root
 from . import WorkspaceError
 from .bindings import read_bindings
 from .documents import read_marker
+from .links import is_workspace_link
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
@@ -52,8 +53,12 @@ def resolve_plans_store(project_root: PathLike, env: Env = None, home: Optional[
                          f"({workspace}); run `swissknifeman workspace clone <url>` or `swissknifeman workspace sync --pull`")
 
 
-def legacy_plans_present(project_root: PathLike) -> bool:
-    """Whether ``<project_root>/plans`` still holds a plan folder (a child directory with ``plan.json``)."""
+def legacy_plans_present(project_root: PathLike, env: Env = None, home: Optional[PathLike] = None) -> bool:
+    """Whether ``<project_root>/plans`` still holds a plan folder (a child directory with ``plan.json``). A symbolic link
+    ``plans`` that points into the workspace project folder the marker binds is the workspace store itself (the optional link
+    of ``workspace project link``), not an old copy: it holds nothing legacy."""
+    if is_workspace_link(project_root, "plans", env, home):
+        return False
     plans = Path(project_root) / "plans"
     try:
         return any((child / "plan.json").is_file() for child in plans.iterdir() if child.is_dir())

@@ -28,7 +28,7 @@ from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 from aicore.state import state_dir, workspace_state_dir
 from aicore.util.io import atomic_write_text
-from aicore.workspace import (WorkspaceError, bind, checkout_remotes, new_id, project_dir, read_device, read_marker,
+from aicore.workspace import (WorkspaceError, bind, is_workspace_link, checkout_remotes, new_id, project_dir, read_device, read_marker,
                               read_project, utc_now, validate_document, write_marker)
 
 from . import gitutil, layout, localonly, migrator_port, projects, safety
@@ -468,6 +468,7 @@ def build_plan(project: PathLike, on_conflict: Optional[str] = None, allow_in_pr
     plan.root = _real(project)
     if not plan.root.is_dir():
         raise WorkspaceError("BINDING_PATH_MISSING", f"{plan.root} is not a directory")
+    _refuse_linked(plan.root, env, home)
     plan.ws = layout.root_of(None, env, home)
     layout.require_initialized(plan.ws)
     identity = _identity(plan.root, plan.ws, yes, plan, code)
@@ -759,6 +760,15 @@ def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: in
 
 # -------------------------------------------------------------------------------------- reports of the project
 
+def _refuse_linked(root: Path, env: Env, home: Optional[PathLike]) -> None:
+    """``PLANS_LINKED`` while ``<root>/plans`` is the optional link into the workspace (``project link``): it is the workspace
+    store itself, so a migration (or a cleanup, which would remove what it takes for an old copy) would work on the plans it
+    moves. Nothing is touched."""
+    if is_workspace_link(root, "plans", env, home):
+        raise WorkspaceError("PLANS_LINKED", f"{root}/plans is a link to the workspace, not a copy of the plans; run "
+                             f"`swissknifeman workspace project unlink` first")
+
+
 def _project_of(root: Path) -> Tuple[Dict[str, Any], str]:
     marker = read_marker(root)
     if marker is None:
@@ -893,6 +903,7 @@ def rollback(project: PathLike, env: Env = None, home: Optional[PathLike] = None
     ws = layout.root_of(None, env, home)
     layout.require_initialized(ws)
     _marker, project_id = _project_of(root)
+    _refuse_linked(root, env, home)
     pdir = project_dir(ws, project_id)
     with _migration_lock(project_id, env, home), gitutil.git_lock(env, home), contextlib.ExitStack() as plan_locks:
         marker, current = _project_of(root)
@@ -1035,6 +1046,7 @@ def cleanup(project: PathLike, confirm: str, env: Env = None, home: Optional[Pat
     ws = layout.root_of(None, env, home)
     layout.require_initialized(ws)
     marker, project_id = _project_of(root)
+    _refuse_linked(root, env, home)
     if confirm != project_id:
         raise WorkspaceError("CLEANUP_CONFIRM_MISMATCH", f"--confirm {confirm} is not the project id of this checkout")
     if marker["plans_store"] != "workspace":

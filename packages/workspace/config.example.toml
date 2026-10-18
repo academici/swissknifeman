@@ -8,6 +8,10 @@ schema_version = 1
 # Allowed in layers: defaults, machine.
 # plans_migrator = "workspace-planner"
 
+# Link plans/ and tasks/ in the checkout to the folders of the project in the workspace (symbolic links listed in .git/info/exclude), so an IDE sees them. `workspace project attach|add` and `workspace sync` keep the links of a project while this is true; `workspace project link|unlink` set it for one project (projects/<code>/local/config.toml). Boolean.
+# Allowed in layers: defaults, machine, project.
+# link_folders = false
+
 [workspace.publish]
 # Files larger than this many bytes stay local-only (not in git). Integer >= 1.
 # Allowed in layers: defaults, machine.

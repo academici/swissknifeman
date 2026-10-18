@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:workspace:config:v1",
   "title": "workspace config",
-  "description": "Settings of the workspace module: publish-safety limits, the git lock and the plans migrator. Machine-wide: a project file cannot set them.",
+  "description": "Settings of the workspace module: publish-safety limits, the git lock, the plans migrator and the optional links plans/ and tasks/ in a checkout. All but `link_folders` are machine-wide: a project file cannot set them.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -58,6 +58,16 @@
       "x-skm-layers": [
         "defaults",
         "machine"
+      ]
+    },
+    "link_folders": {
+      "type": "boolean",
+      "description": "Link plans/ and tasks/ in the checkout to the folders of the project in the workspace (symbolic links listed in .git/info/exclude), so an IDE sees them. `workspace project attach|add` and `workspace sync` keep the links of a project while this is true; `workspace project link|unlink` set it for one project (projects/<code>/local/config.toml).",
+      "default": false,
+      "x-skm-layers": [
+        "defaults",
+        "machine",
+        "project"
       ]
     }
   }

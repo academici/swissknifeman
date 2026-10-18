@@ -1,7 +1,7 @@
 """What the workspace repository tracks: the allowlist and the ignore list.
 
 The repository carries only what a plan needs on another machine. Tracked: ``workspace.json``, ``README.md``,
-``.gitignore``, ``.gitattributes`` and, per project, ``project.json``, ``plans/``, ``decisions/`` and the records the
+``.gitignore``, ``.gitattributes`` and, per project, ``project.json``, ``plans/``, ``tasks/``, ``decisions/`` and the records the
 workspace itself keeps (``legacy-plans/``, ``migrations/``, ``local-only.json``). Never tracked: ``projects/<code>/local/``
 (the project-local config with ``repo.path``, state, backups, stubs), run files and orchestration artifacts, model and
 provider settings of a project, and build output. The ignore list lives in a block of the workspace ``.gitignore`` between
@@ -24,7 +24,7 @@ PathLike = Union[str, "os.PathLike[str]"]
 BEGIN = "# skm:policy begin (managed by swissknifeman workspace: do not edit between the markers)"
 END = "# skm:policy end"
 TRACKED_TOP_LEVEL = (".gitignore", ".gitattributes", "README.md", "workspace.json")
-TRACKED_PROJECT_ENTRIES = ("project.json", "plans", "decisions", "legacy-plans", "migrations", "local-only.json")
+TRACKED_PROJECT_ENTRIES = ("project.json", "plans", "tasks", "decisions", "legacy-plans", "migrations", "local-only.json")
 
 # (comment, patterns): root-anchored gitignore lines.
 IGNORE_POLICY = (

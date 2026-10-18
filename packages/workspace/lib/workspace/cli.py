@@ -10,14 +10,14 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from aicore.config import ConfigError
 from aicore.state import (ProjectContextRequired, WorkspaceSelectionError, is_code, list_workspaces, resolve_project,
                           selected_workspace, workspaces_root)
 from aicore.workspace import WorkspaceError, read_marker
 
-from . import __version__, doctor, events, layout, migrate, projects, remote, sync
+from . import __version__, doctor, events, gitutil, layout, links, migrate, projects, remote, sync
 
 USAGE = """usage: workspace <command> [options]
 
@@ -35,10 +35,17 @@ commands:
   doctor --publish-safety [--all] [--json]
                                     publish-safety rules on the files of the next commit (--all: every file);
                                     exit 1 when a rule blocks (PUBLISH_BLOCKED)
-  project attach [--project DIR] [--name N] [--code CODE] [--yes] [--json]
-                                    attach a checkout to a project (writes the marker, never commits it)
-  project add --path DIR [--name N] [--code CODE] [--yes] [--json]
+  project attach [--project DIR] [--name N] [--code CODE] [--link-folders] [--yes] [--json]
+                                    attach a checkout to a project (writes the marker, never commits it);
+                                    --link-folders also links plans/ and tasks/ (see project link)
+  project add --path DIR [--name N] [--code CODE] [--link-folders] [--yes] [--json]
                                     add the checkout DIR to the workspace as a project and bind it (same as attach)
+  project link [--project DIR] [--json]
+                                    make plans/ and tasks/ in the checkout symbolic links to the project's workspace folders
+                                    (listed in .git/info/exclude; a real folder is never replaced) and keep them for this
+                                    project (workspace.link_folders = true in its local/config.toml)
+  project unlink [--project DIR] [--json]
+                                    remove those links and set workspace.link_folders = false for this project
   project remove CODE [--json]      remove a project that holds no plans from the workspace and from this machine
   project list [--all] [--json]     projects of the workspace and their bindings on this machine (--all: of every workspace)
   project show PROJECT_ID [--json]  project (code) record, binding and the plans the workspace holds
@@ -127,14 +134,20 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("--project", metavar="DIR", default=None)
     p.add_argument("--name", metavar="N", default=None)
     p.add_argument("--code", metavar="CODE", default=None)
+    p.add_argument("--link-folders", action="store_true", dest="link_folders")
     p.add_argument("--yes", action="store_true")
     p.add_argument("--json", action="store_true")
     p = commands.add_parser("add")
     p.add_argument("--path", metavar="DIR", required=True)
     p.add_argument("--name", metavar="N", default=None)
     p.add_argument("--code", metavar="CODE", default=None)
+    p.add_argument("--link-folders", action="store_true", dest="link_folders")
     p.add_argument("--yes", action="store_true")
     p.add_argument("--json", action="store_true")
+    for name in ("link", "unlink"):
+        p = commands.add_parser(name)
+        p.add_argument("--project", metavar="DIR", default=None)
+        p.add_argument("--json", action="store_true")
     p = commands.add_parser("remove")
     p.add_argument("project_id", metavar="CODE")
     p.add_argument("--json", action="store_true")
@@ -375,7 +388,7 @@ def _project_root(value: Optional[str]) -> Path:
 
 
 def _attached(args: argparse.Namespace, root: Path) -> int:
-    result = projects.attach(root, name=args.name, yes=args.yes, code=args.code)
+    result = projects.attach(root, name=args.name, yes=args.yes, code=args.code, link_folders=args.link_folders)
     events.emit("workspace.project.attached", {"project_id": result["project_id"], "created": result["created"]},
                 subject=result["project_id"])
     if args.json:
@@ -384,8 +397,29 @@ def _attached(args: argparse.Namespace, root: Path) -> int:
     print(f"attached {result['name']} as {result['project_id']} (plans store: {result['plans_store']})")
     if result["marker_written"]:
         print("marker written to the checkout")
+    if "links" in result:
+        _print_links(result["links"])
     if "next" in result:
         print(f"next: {result['next']}")
+    return 0
+
+
+def _print_links(doc: Dict[str, Any]) -> None:
+    for row in doc["links"]:
+        why = f" ({row['reason']})" if "reason" in row else ""
+        print(f"{row['action']} {row['path']}{why}", file=sys.stderr if row["action"] == "refused" else sys.stdout)
+    if doc.get("problem"):
+        print(f"links: {doc['problem']}" + (f": {doc['message']}" if doc.get("message") else ""), file=sys.stderr)
+
+
+def _cmd_link(args: argparse.Namespace) -> int:
+    root = _project_root(args.project)
+    with gitutil.git_lock():
+        doc = links.link(root, locked=True) if args.project_command == "link" else links.unlink(root)
+    if args.json:
+        _dump(doc)
+    else:
+        _print_links(doc)
     return 0
 
 
@@ -594,7 +628,7 @@ def _cmd_migrate_cleanup(args: argparse.Namespace) -> int:
 
 _COMMANDS = {"init": _cmd_init, "list": _cmd_list_workspaces, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version,
              "connect": _cmd_connect, "clone": _cmd_clone, "sync": _cmd_sync}
-_PROJECT = {"attach": _cmd_attach, "add": _cmd_add, "remove": _cmd_remove, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
+_PROJECT = {"attach": _cmd_attach, "add": _cmd_add, "link": _cmd_link, "unlink": _cmd_link, "remove": _cmd_remove, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
             "detach": _cmd_detach}
 _MIGRATE = {"discover": _cmd_discover, "plan": _cmd_migrate_plan, "apply": _cmd_migrate_apply,
             "verify": _cmd_migrate_verify, "rollback": _cmd_migrate_rollback, "cleanup": _cmd_migrate_cleanup}

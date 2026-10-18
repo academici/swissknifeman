@@ -152,6 +152,14 @@
           "required": false,
           "title": "Project code",
           "type": "string"
+        },
+        {
+          "description": "Make plans/ and tasks/ in the checkout symbolic links to the project folders of the workspace (listed in .git/info/exclude, so they stay out of the code repository) and keep them for this project. A real folder of that name is never replaced.",
+          "flag": "--link-folders",
+          "name": "link_folders",
+          "required": false,
+          "title": "Link plans/ and tasks/ in the checkout",
+          "type": "boolean"
         }
       ],
       "risk": "medium",
@@ -241,6 +249,14 @@
           "required": true,
           "title": "Project folder",
           "type": "string"
+        },
+        {
+          "description": "Make plans/ and tasks/ in the checkout symbolic links to the project folders of the workspace (listed in .git/info/exclude, so they stay out of the code repository) and keep them for this project. A real folder of that name is never replaced.",
+          "flag": "--link-folders",
+          "name": "link_folders",
+          "required": false,
+          "title": "Link plans/ and tasks/ in the checkout",
+          "type": "boolean"
         }
       ],
       "risk": "medium",
@@ -251,6 +267,94 @@
       ],
       "timeout_s": 300,
       "title": "Bind a checkout"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "risk-based",
+      "description": "workspace project link: make plans/ and tasks/ of the checkout symbolic links to the project folders of the workspace and keep them for this project (workspace.link_folders = true). A real folder is never replaced.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "project-link",
+          {
+            "input": "project"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.project-link",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "project",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Link plans/ and tasks/"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "risk-based",
+      "description": "workspace project unlink: remove those links and stop keeping them for this project (workspace.link_folders = false). The folders of the workspace stay.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "project-unlink",
+          {
+            "input": "project"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.project-unlink",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "project",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Unlink plans/ and tasks/"
     },
     {
       "concurrency_key": "gui-workspace:workspace",
@@ -882,6 +986,8 @@
         "gui-workspace.project-add",
         "gui-workspace.project-remove",
         "gui-workspace.project-attach",
+        "gui-workspace.project-link",
+        "gui-workspace.project-unlink",
         "gui-workspace.project-scan",
         "gui-workspace.project-rebind"
       ],

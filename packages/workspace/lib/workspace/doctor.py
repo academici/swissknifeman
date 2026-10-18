@@ -191,7 +191,7 @@ def _legacy_plans(env: Env, home: Optional[PathLike]) -> Dict[str, Any]:
             except WorkspaceError:
                 continue
             if marker and marker["project_id"] == project_id and marker["plans_store"] == "workspace" \
-                    and legacy_plans_present(path):
+                    and legacy_plans_present(path, env, home):
                 notes.append(f"LEGACY_PLANS_PRESENT: {project_id}: {path}/plans still holds plans; the workspace copy is used")
     if notes:
         return _result(check, "warn", f"{len(notes)} checkouts still hold plans beside the workspace store", "state",

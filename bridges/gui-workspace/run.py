@@ -3,9 +3,10 @@
 
     run.py init CODE                                     run.py sync-commit | sync-pull | sync-push | sync-resolve-reset
     run.py init-remote CODE URL                          run.py sync-resolve PATH local|remote
-    run.py project-add DIR [--name N] [--code CODE]      run.py connect URL [--branch B]
+    run.py project-add DIR [--name N] [--code CODE] [--link-folders]      run.py connect URL [--branch B]
     run.py project-remove PROJECT_ID
-    run.py project-attach DIR
+    run.py project-attach DIR [--link-folders]
+    run.py project-link DIR | project-unlink DIR       (plans/ and tasks/ of the checkout as links into the workspace)
     run.py project-scan DIR
     run.py project-rebind PROJECT_ID DIR
     run.py migrate-plan|migrate-apply DIR [--on-conflict keep-workspace|import-copy]
@@ -86,6 +87,11 @@ def remote_url(value: str) -> str:
     return value
 
 
+def switch(value: str) -> str:
+    """The check of a flag that takes no value (``--link-folders``): ``parse`` never passes it a value."""
+    return ""
+
+
 def enum(allowed: Tuple[str, ...]) -> Callable[[str], str]:
     def check(value: str) -> str:
         if value not in allowed:
@@ -98,10 +104,13 @@ def enum(allowed: Tuple[str, ...]) -> Callable[[str], str]:
 SPEC: Dict[str, Tuple[List[Callable[[str], str]], Dict[str, Callable[[str], str]], Callable[[List[str], Dict[str, str]], List[str]]]] = {
     "init": ([project_id], {}, lambda p, f: ["init", "--code", p[0]]),
     "init-remote": ([project_id, remote_url], {}, lambda p, f: ["init", "--code", p[0], "--remote", p[1]]),
-    "project-add": ([folder], {"--name": name, "--code": project_id},
+    "project-add": ([folder], {"--name": name, "--code": project_id, "--link-folders": switch},
                     lambda p, f: ["project", "add", "--path", p[0], *_flags(f)]),
     "project-remove": ([project_id], {}, lambda p, f: ["project", "remove", p[0]]),
-    "project-attach": ([folder], {}, lambda p, f: ["project", "attach", "--project", p[0]]),
+    "project-attach": ([folder], {"--link-folders": switch},
+                       lambda p, f: ["project", "attach", "--project", p[0], *_flags(f)]),
+    "project-link": ([folder], {}, lambda p, f: ["project", "link", "--project", p[0]]),
+    "project-unlink": ([folder], {}, lambda p, f: ["project", "unlink", "--project", p[0]]),
     "project-scan": ([folder], {}, lambda p, f: ["project", "scan", p[0]]),
     "project-rebind": ([project_id, folder], {}, lambda p, f: ["project", "rebind", p[0], "--path", p[1]]),
     "migrate-plan": ([folder], {"--on-conflict": enum(ON_CONFLICT)},
@@ -121,7 +130,7 @@ USAGE = "usage: run.py <" + "|".join(SPEC) + "> [values] (see the header of run.
 
 
 def _flags(values: Dict[str, str]) -> List[str]:
-    return [item for flag, value in values.items() for item in (flag, value)]
+    return [item for flag, value in values.items() for item in ((flag, value) if value else (flag,))]
 
 
 def parse(argv: List[str]) -> List[str]:
@@ -136,7 +145,13 @@ def parse(argv: List[str]) -> List[str]:
     rest = rest[len(checks):]
     given: Dict[str, str] = {}
     while rest:
-        if len(rest) < 2 or rest[0] not in flags or rest[0] in given:
+        if rest[0] not in flags or rest[0] in given:
+            raise Invalid("USAGE", USAGE)
+        if flags[rest[0]] is switch:  # a flag without a value
+            given[rest[0]] = ""
+            rest = rest[1:]
+            continue
+        if len(rest) < 2:
             raise Invalid("USAGE", USAGE)
         given[rest[0]] = flags[rest[0]](rest[1])
         rest = rest[2:]

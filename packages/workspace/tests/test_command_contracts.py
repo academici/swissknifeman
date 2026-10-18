@@ -12,7 +12,7 @@ from aicore.workspace import write_project
 from tests import MODULE_ROOT, TempCase, git
 
 CONTRACT = MODULE_ROOT / "schemas" / "command" / "v1"
-KINDS = ["common", "connect", "error", "init", "list", "project-add", "project-attach", "project-list", "project-remove"]
+KINDS = ["common", "connect", "error", "init", "list", "project-add", "project-attach", "project-link", "project-list", "project-remove"]
 
 
 def load_schema(kind: str) -> dict:
@@ -131,6 +131,20 @@ class SuccessOutputTests(CommandOutputCase):
         legacy = self.valid("project-attach", "project", "attach", "--project", str(self.checkout("beta", plans=["p1"])),
                             "--name", "Beta", "--code", "beta-code")
         self.assertEqual((legacy["plans_store"], legacy["project_id"], legacy["name"]), ("legacy", "beta-code", "Beta"))
+
+    def test_project_link_unlink_and_the_links_of_attach(self):
+        self.run_cli("init", "--code", "axioma")
+        alpha = self.checkout("alpha")
+        added = self.valid("project-add", "project", "add", "--path", str(alpha), "--link-folders")
+        self.assertEqual([row["action"] for row in added["links"]["links"]], ["created", "created"])
+        (alpha / "tasks").unlink()
+        (alpha / "tasks").mkdir()  # a real folder is reported, not replaced
+        linked = self.valid("project-link", "project", "link", "--project", str(alpha))
+        self.assertEqual([(row["name"], row["action"]) for row in linked["links"]], [("plans", "kept"), ("tasks", "refused")])
+        self.assertEqual(linked["enabled"], True)
+        gone = self.valid("project-link", "project", "unlink", "--project", str(alpha))
+        self.assertEqual([row["action"] for row in gone["links"]], ["removed", "skipped"])
+        self.assertEqual(gone["enabled"], False)
 
 
 class CreateBindAddTests(CommandOutputCase):
@@ -322,6 +336,10 @@ class BrokenDocumentTests(CommandOutputCase):
                              {"projects": [], "skipped": [{"workspace": "a", "error": "lower"}]}],
             "project-attach": [dict(attach, plans_store="elsewhere"),
                                dict(attach, binding={"paths": [], "primary": "/p"}), dict(attach, next="")],
+            "project-link": [{}, {"path": "/p"}, {"path": "rel", "links": []},
+                             {"path": "/p", "links": [{"name": "logs", "path": "/p/logs", "target": "/w/logs", "action": "created"}]},
+                             {"path": "/p", "links": [{"name": "plans", "path": "/p/plans", "target": "/w/plans", "action": "moved"}]},
+                             {"path": "/p", "links": [], "extra": 1}],
             "error": [{}, {"error": {"code": "lower", "message": "m"}}, {"error": {"code": "A", "message": ""}},
                       {"code": "A", "message": "m"}],
         }

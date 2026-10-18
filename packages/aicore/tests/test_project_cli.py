@@ -204,6 +204,65 @@ class ProjectCliTests(unittest.TestCase):
         self.assertEqual(found["project.plans-store"], "ok")
         self.assertEqual(found["project.write-boundary"], "ok")
 
+    def _linked_project(self):
+        from aicore.workspace import write_marker
+        run(self.root, "init")
+        ws = Path(self._tmp.name).resolve() / "wss" / "axioma"
+        env = {"HOME": "/nonexistent-home", "PATH": "", "SKM_WORKSPACES_ROOT": str(ws.parent), "SKM_WORKSPACE": "axioma"}
+        write_marker(self.root, "axioma", "demo", "workspace")
+        for name in ("plans", "tasks"):
+            (ws / "projects" / "demo" / name).mkdir(parents=True)
+
+        def found():
+            _code, out, _ = run(self.root, "doctor", "--json", env=env)
+            return {item["check_id"]: item for item in json.loads(out)}
+
+        return ws, found
+
+    def test_doctor_checks_the_optional_links(self):
+        import subprocess
+        from aicore.workspace.links import write_exclude
+        ws, found = self._linked_project()
+        self.assertEqual(found()["project.links"]["status"], "skip")
+        for name in ("plans", "tasks"):
+            (self.root / name).symlink_to(ws / "projects" / "demo" / name)
+        self.assertEqual(found()["project.links"]["status"], "ok")  # not a git repository: no exclude file to compare
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        warned = found()["project.links"]
+        self.assertEqual(warned["status"], "warn")
+        self.assertIn("plans/ is not listed in .git/info/exclude", warned["observed"])
+        write_exclude(self.root, ["plans", "tasks"])
+        self.assertEqual(found()["project.links"]["status"], "ok")
+        self.assertEqual(found()["project.write-boundary"]["status"], "ok")
+        (self.root / "tasks").unlink()
+        outside = Path(self._tmp.name).resolve() / "outside"
+        outside.mkdir()
+        (self.root / "tasks").symlink_to(outside)
+        warned = found()["project.links"]
+        self.assertEqual(warned["status"], "warn")
+        self.assertIn("tasks/ is a link to", warned["observed"])
+        self.assertIn("left alone", warned["observed"])
+
+    def test_doctor_reports_a_link_to_a_missing_workspace_folder(self):
+        ws, found = self._linked_project()
+        (self.root / "tasks").symlink_to(ws / "projects" / "demo" / "tasks")
+        (ws / "projects" / "demo" / "tasks").rmdir()
+        warned = found()["project.links"]
+        self.assertEqual(warned["status"], "warn")
+        self.assertIn("does not exist", warned["observed"])
+
+    def test_the_write_boundary_lets_a_legacy_store_link_into_the_workspace_pass(self):
+        from aicore.workspace import write_marker
+        ws, found = self._linked_project()
+        write_marker(self.root, "axioma", "demo", "legacy")
+        (self.root / "plans").symlink_to(ws / "projects" / "demo" / "plans")
+        self.assertEqual(found()["project.write-boundary"]["status"], "ok")
+        (self.root / "plans").unlink()
+        outside = Path(self._tmp.name).resolve() / "outside"
+        outside.mkdir()
+        (self.root / "plans").symlink_to(outside)
+        self.assertEqual(found()["project.write-boundary"]["status"], "fail")
+
     def test_context_reports_the_plans_store(self):
         from aicore.workspace import write_marker
         ws = Path(self._tmp.name).resolve() / "wss" / "axioma"

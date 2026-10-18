@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:project-link:v1",
+  "title": "workspace project link|unlink",
+  "description": "Stdout of `workspace project link --json` and `workspace project unlink --json`: the symbolic links plans/ and tasks/ of the checkout to the folders of its project in the workspace were made or removed. A real folder is never replaced (its row is `refused` or `skipped`). Nothing is committed.",
+  "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/links_result"
+}

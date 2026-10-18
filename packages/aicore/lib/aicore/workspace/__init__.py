@@ -23,12 +23,13 @@ from .localconfig import (CONFIG_FILE as LOCAL_CONFIG_FILE, LOCAL_DIRNAME, LOCAL
                           clear_repo_path, ensure_local, local_backups_dir, local_config_file,  # noqa: E402
                           local_dir, local_state_dir, local_stubs_dir, read_local_config, repo_path, set_repo_path)
 from .ids import is_code, is_id, new_id  # noqa: E402
+from .links import LINK_NAMES, bound_project_folder, inspect_folder, inspect_folders, is_workspace_link  # noqa: E402
 from .remotes import checkout_remotes, normalize_remote, redact_remote  # noqa: E402
 from .resolve import PlansStore, legacy_plans_present, resolve_plans_store, source_root_of  # noqa: E402
 
 __all__ = [
-    "LOCAL_CONFIG_FILE", "LOCAL_DIRNAME", "LOCAL_FOLDERS", "MARKER_RELPATH", "PlansStore", "WorkspaceError", "bind", "bindings_path", "checkout_remotes", "clear_repo_path",
-    "ensure_local", "is_code", "is_id", "legacy_plans_present", "local_backups_dir", "local_config_file", "local_dir",
+    "LINK_NAMES", "LOCAL_CONFIG_FILE", "LOCAL_DIRNAME", "LOCAL_FOLDERS", "MARKER_RELPATH", "PlansStore", "WorkspaceError", "bind", "bindings_path", "bound_project_folder", "checkout_remotes", "clear_repo_path",
+    "ensure_local", "inspect_folder", "inspect_folders", "is_code", "is_id", "is_workspace_link", "legacy_plans_present", "local_backups_dir", "local_config_file", "local_dir",
     "local_state_dir", "local_stubs_dir", "new_id", "normalize_remote", "project_dir", "read_bindings", "read_device",
     "read_local_config", "read_marker", "read_project", "read_workspace", "redact_remote", "repo_path",
     "resolve_plans_store", "set_paths", "set_repo_path", "source_root_of", "unbind", "utc_now",

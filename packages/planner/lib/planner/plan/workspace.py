@@ -217,8 +217,29 @@ def resolve_plans_store(project_root: "str | os.PathLike[str]", env: Env = None)
                     f"run `swissknifeman workspace clone <url>` or `swissknifeman workspace sync --pull`")
 
 
-def legacy_plans_present(project_root: "str | os.PathLike[str]") -> bool:
-    """Whether ``<project_root>/plans`` still holds a plan folder (a child directory with ``plan.json``)."""
+def is_workspace_link(project_root: "str | os.PathLike[str]", name: str = "plans", env: Env = None) -> bool:
+    """Whether ``<project_root>/<name>`` is a symbolic link that points into the workspace project folder the marker binds
+    (the optional link of ``workspace project link``). Same rule as ``aicore.workspace.is_workspace_link``; a checkout without
+    a marker, an unusable marker and any other entry give ``False``."""
+    path = Path(project_root) / name
+    if not path.is_symlink():
+        return False
+    try:
+        marker = read_marker(project_root)
+        if marker is None:
+            return False
+        folder = os.path.realpath(str(workspace_root(marker["workspace"], env) / "projects" / marker["project_id"]))
+    except (PlanError, ValueError, OSError):
+        return False
+    real = os.path.realpath(str(path))
+    return real == folder or real.startswith(folder.rstrip(os.sep) + os.sep)
+
+
+def legacy_plans_present(project_root: "str | os.PathLike[str]", env: Env = None) -> bool:
+    """Whether ``<project_root>/plans`` still holds a plan folder (a child directory with ``plan.json``). A symbolic link
+    ``plans`` into the workspace project folder the marker binds is the workspace store, not an old copy."""
+    if is_workspace_link(project_root, "plans", env):
+        return False
     plans = Path(project_root) / "plans"
     try:
         return any((child / "plan.json").is_file() for child in plans.iterdir() if child.is_dir())

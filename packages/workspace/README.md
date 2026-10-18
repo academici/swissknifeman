@@ -21,8 +21,10 @@ argument value, code `INVALID_ARGUMENT`) also prints `{"error": {"code", "messag
 | `status [--fetch]` | Git state (branch, changed paths, remote without user information, ahead and behind of the last fetch; `--fetch` fetches first), the projects with their bindings here, the last sync. |
 | `doctor` | Checks as `check-result/v1`: `workspace.layout`, `workspace.documents`, `workspace.git-policy`, `workspace.bindings`, `workspace.legacy-plans`, `workspace.git`, `workspace.plans-migrator`. Exit 1 only on `fail`; a machine without a workspace gets a warning. |
 | `doctor --publish-safety [--all]` | Publish-safety rules on the files of the next commit (`--all`: every tracked and untracked file that is not ignored); prints a `publish-report/v1` document (see below). Exit 1 and `PUBLISH_BLOCKED` on stderr when a rule blocks; warnings and local-only files exit 0. |
-| `project attach [--project DIR] [--name N] [--code CODE] [--yes]` | Tie a checkout to a project: use the code of its marker, else match its remotes against the projects of the workspace (a name is not an identity), else create a project whose code is made from the folder name (or `--code`; `PROJECT_CODE_TAKEN` if another project has it). Writes the marker `.swissknifeman/project.json` and prints the command that commits it; it never commits. |
-| `project add --path DIR [--name N] [--code CODE] [--yes]` | Add the checkout `DIR` to the workspace as a project and bind it: the same work and the same output as `project attach --project DIR`, but the path is required and the current folder is never used. |
+| `project attach [--project DIR] [--name N] [--code CODE] [--link-folders] [--yes]` | Tie a checkout to a project: use the code of its marker, else match its remotes against the projects of the workspace (a name is not an identity), else create a project whose code is made from the folder name (or `--code`; `PROJECT_CODE_TAKEN` if another project has it). Writes the marker `.swissknifeman/project.json` and prints the command that commits it; it never commits. |
+| `project add --path DIR [--name N] [--code CODE] [--link-folders] [--yes]` | Add the checkout `DIR` to the workspace as a project and bind it: the same work and the same output as `project attach --project DIR`, but the path is required and the current folder is never used. |
+| `project link [--project DIR]` | Make `plans/` and `tasks/` of the checkout symbolic links to `projects/CODE/plans` and `projects/CODE/tasks` of the workspace (D5), list them in the checkout's `.git/info/exclude` (a managed block `# skm:links begin` … `end`; never a tracked file) and keep them for this project: `link_folders = true` in its `local/config.toml`. A real folder or file of that name, and a link that points anywhere else, is never replaced (row `refused`, reason `real-folder` / `link-elsewhere`; the command still exits 0 and prints the refusal on stderr). `plans/` is linked only while the marker says `plans_store: workspace` (`skipped`, `plans-store-legacy`). A missing `tasks/` is created in the workspace with a `.gitkeep`. `--link-folders` of `attach`/`add` does the same after the attach. |
+| `project unlink [--project DIR]` | Remove the links that point to the project folder and their lines in `.git/info/exclude`; real folders and links elsewhere stay (`skipped`). Sets `link_folders = false` for this project, so `sync` does not make them again while the machine setting is on. The folders of the workspace are not touched. |
 | `project remove CODE` | Remove a project from the workspace: its folder `projects/CODE/` and its binding on this machine. Only a project that holds nothing but `project.json` and an empty plans store is removed; plans, legacy plans, migrations or a local-only index make it `PROJECT_NOT_EMPTY` and nothing changes (`project detach` drops only the binding). The markers in the checkouts are left alone and listed (`markers`); `project add` writes the project again. Nothing is committed (`sync` takes the deletion). |
 | `project list [--all]` | Projects of the workspace and where they are bound on this machine. `--all` lists the projects of every workspace of the machine (each row has its `workspace`; no workspace needs to be chosen); a workspace whose documents cannot be read is listed in `skipped`. |
 | `project show CODE` | The project record, its binding and the folders it holds in the workspace. |
@@ -53,7 +55,8 @@ output of each command against it.
 | `connect` | `connect --remote URL` |
 | `project-list` | `project list [--all]` (`workspace` in a row and `skipped` only with `--all`) |
 | `project-add` | `project add --path DIR` (the shape of `project-attach`) |
-| `project-attach` | `project attach` |
+| `project-attach` | `project attach` (`links` only when links were made, kept or refused) |
+| `project-link` | `project link`, `project unlink` |
 | `project-remove` | `project remove CODE` |
 | `error` | any command with `--json` that is refused: exit 1 (`CODE: message`), or exit 2 for `INVALID_ARGUMENT`; commands whose failure carries a report of its own (`sync`, `doctor --publish-safety`, `migrate plan`) print that report |
 
@@ -145,7 +148,7 @@ The workspace repository carries only what a plan needs on another machine (`pol
 | Tracked (allowlist) | Never tracked (ignore list, a managed block of `.gitignore`) |
 | --- | --- |
 | `workspace.json`, `README.md`, `.gitignore`, `.gitattributes`, `projects/.gitkeep` | `projects/<code>/local/`: `config.toml` (`repo.path`, the project layer of the configuration), `state/`, `backups/`, `stubs/` |
-| per project: `project.json`, `plans/`, `decisions/` and the records of the workspace itself (`legacy-plans/`, `migrations/`, `local-only.json`) | run files (`runs/`, `artifacts/**/*.jsonl`) and orchestration artifacts (`orch/`, `orch-artifacts/`) |
+| per project: `project.json`, `plans/`, `tasks/`, `decisions/` and the records of the workspace itself (`legacy-plans/`, `migrations/`, `local-only.json`) | run files (`runs/`, `artifacts/**/*.jsonl`) and orchestration artifacts (`orch/`, `orch-artifacts/`) |
 | | model and provider settings of a project (`.swissknifeman/`, `.claude/`, `.codex/`, `.cursor/`, `.grok/`, `*.local.toml`, `*.local.json`) and build output (`dist/`, `build/`, `node_modules/`, `__pycache__/`) |
 
 `init` writes the block; `sync --commit` rewrites it in an older workspace before it stages, so a file of `local/` is never
@@ -175,9 +178,16 @@ name: nothing here picks one.
 
 ## Configuration
 
-The `[workspace]` table (machine layer and defaults only; see `config.example.toml`): `publish.max_tracked_bytes`
+The `[workspace]` table (see `config.example.toml`). Machine layer and defaults only: `publish.max_tracked_bytes`
 (5242880), `publish.max_binary_tracked_bytes` (1048576), `git.lock_timeout_s` (60) and `plans_migrator`
-(`workspace-planner`).
+(`workspace-planner`). `link_folders` (false; also the project layer, i.e. `projects/<code>/local/config.toml`) turns on the
+links `plans/` and `tasks/` in the checkout (D5): while it is true for a project, `project attach|add` and every
+`sync` make or repair the links of its bound checkouts (`sync --json` lists them in `links` when one was made or refused); the
+project value beats the machine value in both directions, and `project link|unlink` write the project value. Readers of the old
+`<checkout>/plans` (`legacy_plans_present`, the planner warning `LEGACY_PLANS_PRESENT`, `project doctor`'s
+`project.write-boundary`, the lock check `PLANS_MIGRATED`) ignore a link that points into the bound workspace project;
+`migrate plan|apply|rollback|cleanup` refuse such a checkout (`PLANS_LINKED`) until `project unlink`; `project doctor` has the
+check `project.links`.
 
 ## Events
 

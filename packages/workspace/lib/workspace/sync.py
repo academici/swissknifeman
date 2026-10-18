@@ -29,7 +29,7 @@ from aicore.state import ensure_dir, workspace_state_dir
 from aicore.util.io import atomic_write_text
 from aicore.workspace import WorkspaceError, is_code, project_dir, utc_now
 
-from . import events, gitutil, layout, localonly, policy, safety
+from . import events, gitutil, layout, links, localonly, policy, safety
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
@@ -598,11 +598,24 @@ def sync(commit: bool = False, pull: bool = False, push: bool = False, resolve: 
                 if exc.code != "WORKSPACE_CONFLICT":
                     _fail(run, exc.code)
                 raise exc from None
+            _keep_links(run)
             run.report["result"] = "ok"
     finally:
         if run is not None:
             _emit(run)
     return run.report
+
+
+def _keep_links(run: _Run) -> None:
+    """Make or repair the optional links ``plans/`` and ``tasks/`` of the bound checkouts whose ``workspace.link_folders`` is on
+    (a pull may have brought the project folders they point to). Never fails the sync; ``report["links"]`` lists the checkouts
+    where a link was made or refused, or where it failed."""
+    try:
+        found = links.keep(run.env, run.home, locked=True)
+    except (WorkspaceError, OSError):
+        return
+    if found:
+        run.report["links"] = found
 
 
 def _fail(run: _Run, code: str) -> None:

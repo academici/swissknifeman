@@ -21,8 +21,8 @@ class TestDescriptors(unittest.TestCase):
     def test_confirmation_levels(self):
         self.assertEqual(ALWAYS, {name for name, c in COMMANDS.items() if c["confirmation"] == "always"})
         self.assertEqual({"migrate-plan", "migrate-verify"}, {n for n, c in COMMANDS.items() if c["confirmation"] == "none"})
-        self.assertEqual({"init", "project-add", "project-attach", "project-scan", "project-rebind", "sync-commit", "sync-pull",
-                          "sync-resolve-reset"}, {n for n, c in COMMANDS.items() if c["confirmation"] == "risk-based"})
+        self.assertEqual({"init", "project-add", "project-attach", "project-link", "project-unlink", "project-scan",
+                          "project-rebind", "sync-commit", "sync-pull", "sync-resolve-reset"}, {n for n, c in COMMANDS.items() if c["confirmation"] == "risk-based"})
 
     def test_every_command_is_a_fixed_argv_of_run_py(self):
         for name, command in COMMANDS.items():
@@ -35,7 +35,10 @@ class TestDescriptors(unittest.TestCase):
                     self.assertIn(part["input"], fields)
                     self.assertNotIn("flag", fields[part["input"]])
                 for field in fields.values():
-                    self.assertIn(field["type"], ("string", "enum", "project-path"))
+                    self.assertIn(field["type"], ("string", "enum", "project-path", "boolean"))
+                    if field["type"] == "boolean":  # a switch is a flag without a value
+                        self.assertTrue(field["flag"].startswith("--"))
+                        self.assertFalse(field["required"])
                 self.assertIn("stream", command["supports"])
                 self.assertIn("cancel", command["supports"])
 
@@ -45,10 +48,16 @@ class TestDescriptors(unittest.TestCase):
         self.assertEqual(["gui-workspace.init", "gui-workspace.init-remote", "gui-workspace.connect"],
                          routes["gui-workspace.overview"])
         self.assertEqual(["gui-workspace.project-add", "gui-workspace.project-remove", "gui-workspace.project-attach",
-                          "gui-workspace.project-scan", "gui-workspace.project-rebind"], routes["gui-workspace.projects"])
+                          "gui-workspace.project-link", "gui-workspace.project-unlink", "gui-workspace.project-scan",
+                          "gui-workspace.project-rebind"], routes["gui-workspace.projects"])
         required = lambda name: {f["name"] for f in COMMANDS[name]["input"] if f["required"]}
         self.assertEqual({"code", "remote"}, required("init-remote"))
         self.assertEqual({"path"}, required("project-add"))
+        toggle = {f["name"]: f for f in COMMANDS["project-add"]["input"]}["link_folders"]
+        self.assertEqual(("boolean", "--link-folders", False), (toggle["type"], toggle["flag"], toggle["required"]))
+        self.assertIn("link_folders", {f["name"] for f in COMMANDS["project-attach"]["input"]})
+        self.assertEqual({"project"}, required("project-link"))
+        self.assertEqual({"project"}, required("project-unlink"))
         self.assertEqual({"project_id"}, required("project-remove"))
         self.assertEqual({"high"}, {COMMANDS[n]["risk"] for n in ("init-remote", "project-remove")})
         for name in ("init-remote", "project-add", "project-remove"):
@@ -109,6 +118,14 @@ class TestRun(RunCase):
         self.assertEqual(["project", "add", "--path", proj, "--json"], self.ran("project-add", proj))
         self.assertEqual(["project", "add", "--path", proj, "--name", "Alpha app", "--code", "alpha", "--json"],
                          self.ran("project-add", proj, "--name", "Alpha app", "--code", "alpha"))
+        self.assertEqual(["project", "add", "--path", proj, "--link-folders", "--json"],
+                         self.ran("project-add", proj, "--link-folders"))
+        self.assertEqual(["project", "add", "--path", proj, "--link-folders", "--name", "Alpha", "--json"],
+                         self.ran("project-add", proj, "--link-folders", "--name", "Alpha"))
+        self.assertEqual(["project", "attach", "--project", proj, "--link-folders", "--json"],
+                         self.ran("project-attach", proj, "--link-folders"))
+        self.assertEqual(["project", "link", "--project", proj, "--json"], self.ran("project-link", proj))
+        self.assertEqual(["project", "unlink", "--project", proj, "--json"], self.ran("project-unlink", proj))
         self.assertEqual(["project", "remove", "alpha", "--json"], self.ran("project-remove", "alpha"))
         self.assertEqual(["project", "scan", proj, "--json"], self.ran("project-scan", proj))
         self.assertEqual(["project", "rebind", "p-alpha", "--path", proj, "--json"],
@@ -137,6 +154,9 @@ class TestRun(RunCase):
                ("project-add", proj, "--yes"), ("project-add", proj, "--path", proj),
                ("project-remove",), ("project-remove", "-x"), ("project-remove", "a b"), ("project-remove", "a", "b"),
                ("project-remove", "a", "--force"),
+               ("project-add", proj, "--link-folders", "yes"), ("project-add", proj, "--link-folders", "--link-folders"),
+               ("project-attach", proj, "--link-folders=1"), ("project-link",), ("project-link", "relative/dir"),
+               ("project-link", proj, "--link-folders"), ("project-unlink", str(self.home / "missing")), ("project-unlink", "-rf"),
                ("project-attach", "relative/dir"), ("project-attach", str(self.home / "missing")),
                ("project-attach", "-rf"), ("project-rebind", "-x", proj), ("project-rebind", "a b", proj),
                ("migrate-plan", proj, "--on-conflict", "overwrite"), ("migrate-apply", proj, "--lock-timeout", "1"),

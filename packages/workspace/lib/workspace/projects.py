@@ -19,7 +19,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Union
 from aicore.workspace import (MARKER_RELPATH, WorkspaceError, bind, checkout_remotes, is_code, project_dir,
                               read_bindings, read_marker, read_project, set_paths, unbind, write_marker, write_project)
 
-from . import gitutil, layout
+from . import gitutil, layout, links
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
@@ -70,12 +70,14 @@ def _confirm_default(question: str) -> bool:
 
 def attach(project: PathLike, name: Optional[str] = None, yes: bool = False, interactive: Optional[bool] = None,
            confirm: Optional[Callable[[str], bool]] = None, env: Env = None, home: Optional[PathLike] = None,
-           code: Optional[str] = None) -> Dict[str, Any]:
+           code: Optional[str] = None, link_folders: bool = False) -> Dict[str, Any]:
     """Attach the checkout ``project`` to a project of the workspace (contract: identity). ``code`` is the project code of
     a new project (default: made from the folder name; ``PROJECT_CODE_TAKEN`` when another project has it).
 
-    Returns ``{workspace, project_id, name, created, marker_written, plans_store, binding, next}``. ``interactive`` (default: stdin is
-    a terminal) allows a question when remotes match one existing project and ``yes`` is not given.
+    Returns ``{workspace, project_id, name, created, marker_written, plans_store, binding, next, links}``. ``interactive`` (default: stdin is
+    a terminal) allows a question when remotes match one existing project and ``yes`` is not given. ``links`` (only when links were
+    made, kept or refused) is the result of :func:`workspace.links.link`: ``link_folders`` asks for the links of ``plans/`` and
+    ``tasks/`` and records the choice for the project, else they are made while ``workspace.link_folders`` is on.
     """
     root = _real(project)
     if not root.is_dir():
@@ -86,7 +88,11 @@ def attach(project: PathLike, name: Optional[str] = None, yes: bool = False, int
     target = layout.root_of(None, env, home)
     layout.require_initialized(target)
     with gitutil.git_lock(env, home):  # read the marker, pick or create the project and write the marker as one step
-        return _attach_locked(root, target, name, yes, interactive, confirm, env, home, code)
+        doc = _attach_locked(root, target, name, yes, interactive, confirm, env, home, code)
+        made = links.ensure(root, env, home, locked=True, force=link_folders, remember=link_folders)
+    if made is not None:
+        doc["links"] = made
+    return doc
 
 
 def _attach_locked(root: Path, target: Path, name: Optional[str], yes: bool, interactive: Optional[bool],
@@ -182,7 +188,7 @@ def list_all(env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]
 def _held(folder: Path) -> List[str]:
     """What a project folder of the workspace holds besides ``project.json`` and an empty plans store (paths relative to
     the folder, sorted); a symbolic link counts as held."""
-    free = {"project.json", "plans/.gitkeep"}
+    free = {"project.json", *(f"{name}/.gitkeep" for name in ("plans", "tasks"))}
     held: List[str] = []
     for current, dirs, files in os.walk(str(folder)):
         relative = Path(current).relative_to(folder)

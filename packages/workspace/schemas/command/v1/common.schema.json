@@ -45,6 +45,102 @@
       },
       "required": ["paths", "primary"],
       "additionalProperties": false
+    },
+    "links_result": {
+      "type": "object",
+      "description": "What `workspace project link|unlink` (or the automatic keeping of the links by attach and sync) did to plans/ and tasks/ of one checkout.",
+      "properties": {
+        "workspace": {
+          "$ref": "#/$defs/code",
+          "description": "Code of the workspace."
+        },
+        "project_id": {
+          "$ref": "#/$defs/code",
+          "description": "Code of the project."
+        },
+        "path": {
+          "$ref": "#/$defs/abs_path",
+          "description": "Real path of the checkout."
+        },
+        "links": {
+          "type": "array",
+          "description": "One row per linkable folder (plans, tasks); empty when the call failed (`problem`).",
+          "items": {
+            "type": "object",
+            "description": "What happened to one folder of the checkout.",
+            "properties": {
+              "name": {
+                "enum": [
+                  "plans",
+                  "tasks"
+                ],
+                "description": "The folder."
+              },
+              "path": {
+                "$ref": "#/$defs/abs_path",
+                "description": "The folder (or link) in the checkout."
+              },
+              "target": {
+                "$ref": "#/$defs/abs_path",
+                "description": "The folder of the project in the workspace the link points to."
+              },
+              "action": {
+                "enum": [
+                  "created",
+                  "kept",
+                  "removed",
+                  "absent",
+                  "refused",
+                  "skipped"
+                ],
+                "description": "`created`: a link was made; `kept`: it was already right; `removed`: unlink took it away; `absent`: unlink found none; `refused`: link found a real folder or a link elsewhere and left it; `skipped`: nothing to do for this folder (see `reason`)."
+              },
+              "reason": {
+                "enum": [
+                  "real-folder",
+                  "link-elsewhere",
+                  "plans-store-legacy"
+                ],
+                "description": "Why a folder was refused or skipped: a real folder or file is there; a link to another place is there; the plans of the project are in the checkout, not in the workspace."
+              }
+            },
+            "required": [
+              "name",
+              "path",
+              "target",
+              "action"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "exclude": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The .git/info/exclude file that lists the links; null when the checkout is not a git working tree."
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "The value of workspace.link_folders this call wrote for the project; null when it wrote none."
+        },
+        "problem": {
+          "type": "string",
+          "description": "Error code of a failure that did not stop the command (the setting could not be written; an automatic call failed)."
+        },
+        "message": {
+          "type": "string",
+          "description": "Text of that failure."
+        }
+      },
+      "required": [
+        "path",
+        "links"
+      ],
+      "additionalProperties": false
     }
   }
 }

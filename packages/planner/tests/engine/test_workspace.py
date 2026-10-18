@@ -5,6 +5,7 @@ import io
 import json
 import os
 import sys
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -217,6 +218,21 @@ class LegacyWarningTests(WorkspaceCase):
         (self.project / "plans" / "archive").mkdir(parents=True)
         self.assertEqual(self.find(), "")
 
+    def test_a_plans_link_into_the_bound_workspace_is_the_store_not_a_legacy_copy(self):
+        demo.make_demo_plan(self.ws_plans)
+        os.symlink(self.ws_plans, self.project / "plans")
+        self.assertTrue(workspace.is_workspace_link(self.project))
+        self.assertFalse(workspace.legacy_plans_present(self.project))
+        self.assertEqual(self.find(), "")
+
+    def test_a_plans_link_to_another_place_still_warns(self):
+        elsewhere = self.tmp / "elsewhere"
+        put(elsewhere / "old-plan" / "plan.json", "{}\n")
+        os.symlink(elsewhere, self.project / "plans")
+        self.assertFalse(workspace.is_workspace_link(self.project))
+        self.assertTrue(workspace.legacy_plans_present(self.project))
+        self.assertIn("LEGACY_PLANS_PRESENT", self.find())
+
     def test_a_legacy_store_never_warns(self):
         self.mark("legacy")
         put(self.project / "plans" / "old-plan" / "plan.json", "{}\n")
@@ -337,6 +353,16 @@ class PlansMigratedTests(WorkspaceCase):
             ops.patch(store.load_plan(self.legacy), "plan", {"context": "lost write"})
         self.assertEqual(caught.exception.code, "PLANS_MIGRATED")
         self.assertEqual((self.legacy / "plan.json").read_bytes(), before)
+
+    def test_a_plan_reached_through_the_plans_link_is_a_workspace_plan(self):
+        self.mark("workspace")
+        copy = demo.make_demo_plan(self.ws_plans)
+        shutil.rmtree(self.legacy_plans)
+        os.symlink(self.ws_plans, self.legacy_plans)
+        with store.PlanLock(self.legacy_plans / copy.name):
+            pass
+        ops.patch(store.load_plan(self.legacy_plans / copy.name), "plan", {"context": "through the link"})
+        self.assertEqual(json.loads((copy / "plan.json").read_text(encoding="utf-8"))["context"], "through the link")
 
     def test_the_workspace_copy_is_locked_without_the_check(self):
         self.mark("workspace")

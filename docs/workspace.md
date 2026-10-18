@@ -79,6 +79,17 @@ Exactly one store is in use at any moment; plans are never written to both. The 
 after `git pull` a second machine knows the workspace and the project and only has to bind the checkout (`workspace project scan`).
 A project without a marker behaves as before.
 
+### Optional links `plans/` and `tasks/` in the checkout
+
+To open the code in an IDE and see the plans next to it, a checkout can carry the symbolic links `plans/` and `tasks/` to
+`workspaces/<workspace>/projects/<code>/plans` and `tasks`. They are off by default: `workspace project link` makes them for one
+project (and remembers it in `projects/<code>/local/config.toml`), `workspace project unlink` removes them, the setting
+`workspace.link_folders` turns them on for every project of the machine (a project value beats it), and `project attach|add` and
+`sync` keep the links of the projects where it is on. The links are listed in the checkout's own `.git/info/exclude`, so the
+code repository never tracks them. A real `plans/` or `tasks/` folder, or a link that points anywhere else, is never replaced;
+the plans stay in the workspace (`plans/` is linked only with `plans_store: workspace`). `migrate` refuses a checkout whose `plans/`
+is such a link (`PLANS_LINKED`): `project unlink` first. `project doctor` checks the links (`project.links`).
+
 ## Migration
 
 `workspace migrate` moves `<checkout>/plans` into the workspace.
@@ -225,7 +236,7 @@ remote.
 ## Error codes
 
 Workspace: `WORKSPACE_NOT_INITIALIZED`, `WORKSPACE_ROOT_NOT_EMPTY`, `WORKSPACE_LAYOUT_INVALID`, `WORKSPACE_GIT_LOCKED`,
-`WORKSPACE_GIT_TOO_OLD`, `ATTACH_CONFIRM_REQUIRED`, `PROJECT_UNKNOWN`, `PROJECT_AMBIGUOUS`, `PROJECT_MARKER_INVALID`,
+`WORKSPACE_GIT_TOO_OLD`, `ATTACH_CONFIRM_REQUIRED`, `PROJECT_UNKNOWN`, `PROJECT_MARKER_MISSING` (link: no marker), `PLANS_LINKED`, `LINK_FAILED`, `LINKS_EXCLUDE_INVALID`, `PROJECT_AMBIGUOUS`, `PROJECT_MARKER_INVALID`,
 `BINDING_MARKER_MISMATCH`, `BINDING_PATH_MISSING`, `REMOTE_UNREACHABLE`, `REMOTE_ALREADY_SET`, `REMOTE_FOREIGN`,
 `REMOTE_OTHER_WORKSPACE`, `REMOTE_NOT_SET`, `PUBLISH_BLOCKED`.
 

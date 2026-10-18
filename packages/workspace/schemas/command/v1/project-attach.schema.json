@@ -38,6 +38,10 @@
       "type": "string",
       "minLength": 1,
       "description": "The command that commits the marker; present only when the marker was written."
+    },
+    "links": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/links_result",
+      "description": "The links plans/ and tasks/ of the checkout, present only when links were made, kept or refused: `--link-folders` was given or workspace.link_folders is on."
     }
   },
   "required": ["workspace", "project_id", "name", "created", "marker_written", "plans_store", "binding"],

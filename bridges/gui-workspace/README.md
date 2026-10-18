@@ -27,16 +27,17 @@ pages sit in `fleet` with orders 110–150 until the GUI adds the section.
 ## Commands
 
 Declared only in `gui.json` as `exec.kind = argv` with the fixed argv `run.py <verb> <inputs>`; the frontend sends
-field values, never argv. All values are strings or enums; `run.py` checks them (exit 2, nothing runs) and builds the
+field values, never argv. All values are strings or enums, except the switch `link_folders` (a boolean: only the flag is passed when it is on); `run.py` checks them (exit 2, nothing runs) and builds the
 `workspace` argv as a list without a shell.
 
 | Command | Inputs | Runs | Confirmation |
 | --- | --- | --- | --- |
 | `init` | `code` | `init --code CODE` (the configured root) | risk-based |
 | `init-remote` | `code`, `remote` | `init --code CODE --remote URL`: create the workspace and bind it to an empty remote as `origin`; nothing is pushed | always |
-| `project-add` | `path` (absolute folder), `name`?, `project_code`? | `project add --path DIR [--name N] [--code CODE]` (no `--yes`) | risk-based |
+| `project-add` | `path` (absolute folder), `name`?, `project_code`?, `link_folders`? (switch) | `project add --path DIR [--name N] [--code CODE] [--link-folders]` (no `--yes`) | risk-based |
 | `project-remove` | `project_id` | `project remove CODE`: only a project without plans; otherwise `PROJECT_NOT_EMPTY` | always |
-| `project-attach` | `project` (absolute folder) | `project attach --project DIR` (no `--yes`: an existing project is never reused silently); the form "Bind a checkout" | risk-based |
+| `project-attach` | `project` (absolute folder), `link_folders`? (switch) | `project attach --project DIR [--link-folders]` (no `--yes`: an existing project is never reused silently); the form "Bind a checkout" | risk-based |
+| `project-link` / `project-unlink` | `project` (absolute folder) | `project link --project DIR` / `project unlink --project DIR`: `plans/` and `tasks/` of the checkout as symbolic links into the project folders of the workspace (D5), kept for this project; a real folder is never replaced | risk-based |
 | `project-scan` | `dir` | `project scan DIR` | risk-based |
 | `project-rebind` | `project_id`, `path` | `project rebind ID --path DIR` | risk-based |
 | `migrate-plan` | `project`, `on_conflict`? | `migrate plan` (dry run) | none |
@@ -55,8 +56,9 @@ field values, never argv. All values are strings or enums; `run.py` checks them 
   the CLI, refuses a remote with userinfo and a workspace without a remote. The generic confirmation text of the GUI
   does not name the target; the page Sync shows it in the row `push-target`.
 - Forms (D4): Overview offers `init`, `init-remote` and `connect` (create a workspace, create it on a remote, connect a
-  remote); Projects offers `project-add`, `project-remove`, `project-attach` (bind a checkout), `project-scan` and
-  `project-rebind`. The host renders each form from the `input` of the command; `code`, `project_code` and `project_id`
+  remote); Projects offers `project-add`, `project-remove`, `project-attach` (bind a checkout), `project-link`,
+  `project-unlink`, `project-scan` and `project-rebind`. The forms `project-add` and `project-attach` carry the toggle
+  "Link plans/ and tasks/ in the checkout" (D5). The host renders each form from the `input` of the command; `code`, `project_code` and `project_id`
   carry the pattern of a code, so the browser refuses a bad value before the request and `run.py` again before the CLI.
   `init` and `init-remote` are two commands because binding a remote needs the confirmation `always`.
   `project-remove` cannot remove a project with plans (no force): such a project is refused with `PROJECT_NOT_EMPTY`.

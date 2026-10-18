@@ -4,6 +4,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -460,7 +461,7 @@ class ReadOnlyTests(BriefCase):
         before = tree_hashes(self.root)
         self.brief()
         subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, str(self.root), "P1.1"],
-                       capture_output=True, text=True, timeout=30, check=True)
+                       capture_output=True, text=True, timeout=30, check=True, cwd=self.root)
         self.assertEqual(tree_hashes(self.root), before)
         self.assertFalse((self.root / "context").exists())
 
@@ -469,7 +470,7 @@ class CliTests(BriefCase):
     def run_cli(self, *args, output=None):
         head = ["--output", output] if output else []
         return subprocess.run([sys.executable, str(SCRIPT), *head, *BRIDGE, str(self.root), *args],
-                              capture_output=True, text=True, timeout=30)
+                              capture_output=True, text=True, timeout=30, cwd=self.root)
 
     def test_stdout_is_the_document(self):
         result = self.run_cli("P1.1")
@@ -503,11 +504,11 @@ class CliTests(BriefCase):
 
     def test_main_takes_the_plan_reference_and_plans_root(self):
         result = subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, self.root.name, "P1.1", "--plans-root",
-                                 str(self.plans)], capture_output=True, text=True, timeout=30)
+                                 str(self.plans)], capture_output=True, text=True, timeout=30, cwd=self.root)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), self.brief())
         missing = subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, "absent", "P1.1", "--plans-root",
-                                  str(self.plans)], capture_output=True, text=True, timeout=30)
+                                  str(self.plans)], capture_output=True, text=True, timeout=30, cwd=self.root)
         self.assertEqual(missing.returncode, 1)
         self.assertTrue(missing.stderr.startswith("PLAN_NOT_FOUND:"), missing.stderr)
 
@@ -526,7 +527,7 @@ class OutTests(BriefCase):
 
     def run_cli(self, *args):
         return subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, str(self.root), *args],
-                              capture_output=True, text=True, timeout=30)
+                              capture_output=True, text=True, timeout=30, cwd=self.root)
 
     def test_out_must_be_a_file_outside_the_plan(self):
         plan = store.load_plan(self.root)
@@ -646,10 +647,10 @@ class CrossPlanTests(test_refs.RefsCase):
         repo, _ = self.foreign_repo()
         ops.patch(self.root, "P1.1", {"decisions": ["ext:PLAN1.D1"]})
         base = [sys.executable, str(SCRIPT), *BRIDGE, str(self.root), "P1.1"]
-        refused = subprocess.run(base, capture_output=True, text=True, timeout=30)
+        refused = subprocess.run(base, capture_output=True, text=True, timeout=30, cwd=self.root)
         self.assertEqual(refused.returncode, 1)
         self.assertTrue(refused.stderr.startswith("REF_UNRESOLVED: "), refused.stderr)
-        ok = subprocess.run([*base, "--repo", f"ext={repo}"], capture_output=True, text=True, timeout=30)
+        ok = subprocess.run([*base, "--repo", f"ext={repo}"], capture_output=True, text=True, timeout=30, cwd=self.root)
         self.assertEqual(ok.returncode, 0, ok.stderr)
         self.assertTrue(json.loads(ok.stdout)["decisions"][0]["loaded"])
 
@@ -687,13 +688,13 @@ class DigestTests(unittest.TestCase):
 class CoreVerbTests(unittest.TestCase):
     def test_brief_is_no_longer_a_core_verb(self):
         result = subprocess.run([sys.executable, str(SCRIPT), "brief", "PLAN1", "P1.1"],
-                                capture_output=True, text=True, timeout=30)
+                                capture_output=True, text=True, timeout=30, cwd=tempfile.gettempdir())
         self.assertEqual(result.returncode, 2)
         self.assertIn("invalid choice: 'brief'", result.stderr)
 
     def test_bridge_list_names_the_brief_verb(self):
         result = subprocess.run([sys.executable, str(SCRIPT), "--output", "json", "bridge", "list"],
-                                capture_output=True, text=True, timeout=30)
+                                capture_output=True, text=True, timeout=30, cwd=tempfile.gettempdir())
         self.assertEqual(result.returncode, 0, result.stderr)
         row, = [r for r in json.loads(result.stdout)["data"]["bridges"] if r["name"] == "planner-orch"]
         self.assertIn("brief", row["verbs"])

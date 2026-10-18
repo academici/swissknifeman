@@ -1,5 +1,6 @@
 """`--output json` is one API: every verb answers with the envelope schema and refusals carry a code."""
 import io
+import os
 import json
 import sys
 import tempfile
@@ -117,6 +118,10 @@ class VerbCoverageTests(EnvelopeCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             (tmp / "snapshot.json").write_text(run("export", self.root)[1])
+            # a verb without --plans-root finds the store from the cwd; the hub checkout holds a workspace marker
+            here = os.getcwd()
+            os.chdir(self.root)
+            self.addCleanup(os.chdir, here)
             for verb, argv, expected in self.cases(tmp):
                 with self.subTest(verb=verb):
                     document = self.envelope(*argv, code=expected)

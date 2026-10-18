@@ -105,6 +105,33 @@ def connect(url: str, branch: Optional[str] = None, root: Optional[PathLike] = N
             "next": NEXT_PUSH}
 
 
+def create(code: str, url: str, root: Optional[PathLike] = None, env: Env = None,
+           home: Optional[PathLike] = None) -> Dict[str, Any]:
+    """Create the workspace ``code`` (``layout.init``) and bind it to the remote ``url`` (``connect``) in one step: the
+    result is the ``init`` document plus ``remote`` (``{url, branch, classification}``) and ``next``.
+
+    A workspace that is new has an id no remote can hold yet, so the remote is read first and must be empty
+    (``REMOTE_NOT_EMPTY`` otherwise, ``REMOTE_UNREACHABLE`` when it cannot be read): a refusal creates nothing. A workspace
+    that exists is connected as it is (``REMOTE_ALREADY_SET`` when it has an origin)."""
+    url = _check_url(url)
+    scoped = layout.scoped_env(code, env)
+    target = layout.root_of(root, scoped, home)
+    gitutil.require_version()
+    if not (target / "workspace.json").is_file():
+        probe = target
+        while not probe.is_dir() and probe != probe.parent:
+            probe = probe.parent
+        heads = _heads(url, probe, scoped)
+        if heads:
+            raise WorkspaceError("REMOTE_NOT_EMPTY", f"{redact_remote(url)} already holds branches ({', '.join(sorted(heads))}); "
+                                 f"a new workspace needs an empty remote; to use the workspace it holds run "
+                                 f"`swissknifeman workspace clone <URL>`")
+    created = layout.init(code, root, scoped, home)
+    found = connect(url, None, root=created["root"], env=scoped, home=home)
+    return {**created, "remote": {"url": found["remote"], "branch": found["branch"],
+                                  "classification": found["classification"]}, "next": found["next"]}
+
+
 def clone(url: str, root: Optional[PathLike] = None, env: Env = None, home: Optional[PathLike] = None,
           code: Optional[str] = None) -> Dict[str, Any]:
     """Make a workspace of this machine from ``url``. Without ``root`` the clone is made beside the workspaces and moved to

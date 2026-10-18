@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:project-remove:v1",
+  "title": "workspace project remove",
+  "description": "Stdout of `workspace project remove CODE --json`: a project that held no plans was removed from the workspace and from the bindings of this machine. Nothing is committed; the markers in the checkouts are not touched.",
+  "type": "object",
+  "properties": {
+    "workspace": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+      "description": "Code of the workspace."
+    },
+    "project_id": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+      "description": "Code of the removed project."
+    },
+    "removed": {
+      "const": true,
+      "description": "Always true: a refusal prints the error document instead."
+    },
+    "unbound": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Absolute paths of the checkouts whose binding on this machine was dropped; empty when the project was not bound.",
+      "items": {
+        "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/abs_path",
+        "description": "One checkout path."
+      }
+    },
+    "markers": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Absolute paths of the checkouts that still hold the marker of the removed project (a subset of `unbound`).",
+      "items": {
+        "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/abs_path",
+        "description": "One checkout path."
+      }
+    }
+  },
+  "required": [
+    "workspace",
+    "project_id",
+    "removed",
+    "unbound",
+    "markers"
+  ],
+  "additionalProperties": false
+}

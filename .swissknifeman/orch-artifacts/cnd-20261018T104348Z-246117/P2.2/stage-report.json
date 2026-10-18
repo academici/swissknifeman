@@ -1,0 +1,75 @@
+{
+  "changed_paths": [
+    "packages/workspace/CHANGELOG.md",
+    "packages/workspace/README.md",
+    "packages/workspace/lib/workspace/cli.py",
+    "packages/workspace/lib/workspace/projects.py",
+    "packages/workspace/lib/workspace/remote.py",
+    "packages/workspace/schemas/command/v1/init.schema.json",
+    "packages/workspace/schemas/command/v1/project-add.schema.json",
+    "packages/workspace/schemas/command/v1/project-list.schema.json",
+    "packages/workspace/schemas/command/v1/project-remove.schema.json",
+    "packages/workspace/tests/test_command_contracts.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "The GUI form (P2.3) can only remove empty projects; for a project with plans it must offer detach or show the PROJECT_NOT_EMPTY message. If the owner wants a destructive removal with plans (--force, or archiving via status=archived), it is a separate decision.",
+      "kind": "assumption",
+      "next": "Owner to confirm the semantics of remove or ask for a force/archive variant.",
+      "text": "The goal says 'project remove CODE' without defining it. I implemented it as removal of an empty project from the workspace plus its binding, and refuse any project that holds plans, legacy plans, migrations or a local-only index (PROJECT_NOT_EMPTY). There is no force option. It is not a rename of detach: detach still only drops the binding."
+    },
+    {
+      "impact": "Consumers of the event journal do not see removals.",
+      "kind": "note",
+      "next": "Add workspace.project.removed with a data schema if P2.3 or other modules need it.",
+      "text": "Nothing is emitted for project remove. I added no new event type, to avoid new event-data schemas and a unit.json change. project add emits workspace.project.attached like attach, on every call including repeats with created=false (existing attach behaviour)."
+    },
+    {
+      "impact": "Not fully atomic across a network failure after the creation step.",
+      "kind": "note",
+      "next": "None needed; re-run connect.",
+      "text": "init --remote on a new workspace has a small window: the remote is read first, then the workspace is created, then origin is added. If the final connect fails (for example the remote changed or went away in between), the new workspace stays without a remote and the error is shown. Re-running init --remote or connect fixes it."
+    },
+    {
+      "impact": "P2.3 can call `project list --all --json` for the all-workspaces view.",
+      "kind": "note",
+      "next": "P2.3 should use the project-list contract (optional `workspace`, `skipped`).",
+      "text": "project list --all does not need a workspace to be chosen. With --all, --workspace and SKM_WORKSPACE are ignored for selection. Plain `project list` is unchanged."
+    },
+    {
+      "impact": "P2.3 forms must map these codes to messages.",
+      "kind": "note",
+      "next": "P2.3: wire the forms in bridges/gui-workspace and packages/gui.",
+      "text": "The contracts are still in the workspace module (schemas/command/v1), as noted by P2.1. The GUI module cannot import them directly; bridges/gui-workspace is the place to reach the commands. I did not touch bridges/ or packages/gui. P2.3 needs to know the new commands and documents: init --remote (init), project add (project-add), project remove (project-remove), project list --all (project-list); error codes REMOTE_NOT_EMPTY, PROJECT_NOT_EMPTY, PROJECT_REMOVE_FAILED are new."
+    },
+    {
+      "impact": "None for this piece.",
+      "kind": "note",
+      "next": "Later piece if the GUI needs them.",
+      "text": "Commands still without a contract: status, doctor, sync, clone, project show|scan|rebind|detach, migrate *. README says so."
+    },
+    {
+      "impact": "The commit must not take them by accident.",
+      "kind": "note",
+      "next": "Coordinator: stage only changed_paths.",
+      "text": "git status shows modified lock and manifest files (package-lock.json, *.lock, skills.json) that this piece did not touch and are not in changed_paths."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/workspace/lib/workspace/projects.py remove(): what counts as 'held' and the rmtree + unbind order under git_lock",
+      "packages/workspace/lib/workspace/remote.py create(): the REMOTE_NOT_EMPTY precheck before layout.init",
+      "schemas/command/v1/init.schema.json and project-list.schema.json: optional fields added to closed schemas"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "schema_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done",
+  "summary": "init --code CODE --remote URL now creates the workspace and binds it to the remote as origin in one step (remote.create). The remote is read first and must be empty, otherwise REMOTE_NOT_EMPTY or REMOTE_UNREACHABLE and nothing is created. On an existing workspace it only connects (REMOTE_ALREADY_SET if origin exists). Nothing is pushed. project add --path DIR [--name] [--code] [--yes] does the work of attach with a required path and the same output and event. project remove CODE deletes projects/CODE/ and its binding on this machine, but only when the project holds nothing but project.json and an empty plans store; otherwise PROJECT_NOT_EMPTY and nothing changes. Markers in checkouts are left alone and listed in `markers`. project list --all lists the projects of every workspace without choosing one (rows carry `workspace`, unreadable workspaces go to `skipped`). Contracts: new project-add and project-remove; init gained optional `remote` and `next`; project-list gained optional row field `workspace` and `skipped`. Tests (CreateBindAddTests plus broken-document cases) are in tests/test_command_contracts.py. README and CHANGELOG are updated. Test commands run: unittest discover of packages/workspace/tests (311 tests, OK), the touched test files again (113 tests, OK), scripts/ecosystem-units.py check (exit 0)."
+}

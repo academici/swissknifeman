@@ -1,4 +1,5 @@
-"""Projects of the workspace and the checkouts of this machine: attach, list, show, scan, rebind, detach.
+"""Projects of the workspace and the checkouts of this machine: attach (``project add`` is the same call), list (also of
+all workspaces), show, scan, rebind, detach, remove.
 
 Identity is the pair ``workspace`` + ``project_id`` (both codes) of the marker in the repository
 (``.swissknifeman/project.json``); the code of a project is the name of its folder in the workspace and, as a rule, the
@@ -10,6 +11,7 @@ from __future__ import annotations
 import os
 import re
 import shlex
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Union
@@ -159,6 +161,72 @@ def list_projects(env: Env = None, home: Optional[PathLike] = None) -> List[Dict
             item["error"] = row["error"]
         rows.append(item)
     return rows
+
+
+def list_all(env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]:
+    """The projects of every workspace of this machine: ``{projects, skipped}``. A row is the row of ``list_projects`` plus
+    ``workspace`` (its code); a workspace whose documents cannot be read is in ``skipped`` as ``{workspace, error}``."""
+    from aicore.state import list_workspaces
+    rows: List[Dict[str, Any]] = []
+    skipped: List[Dict[str, str]] = []
+    for code in list_workspaces(env, home):
+        try:
+            found = list_projects(layout.scoped_env(code, env), home)
+        except WorkspaceError as exc:
+            skipped.append({"workspace": code, "error": exc.code})
+            continue
+        rows.extend({"workspace": code, **row} for row in found)
+    return {"projects": rows, "skipped": skipped}
+
+
+def _held(folder: Path) -> List[str]:
+    """What a project folder of the workspace holds besides ``project.json`` and an empty plans store (paths relative to
+    the folder, sorted); a symbolic link counts as held."""
+    free = {"project.json", "plans/.gitkeep"}
+    held: List[str] = []
+    for current, dirs, files in os.walk(str(folder)):
+        relative = Path(current).relative_to(folder)
+        held.extend((relative / name).as_posix() for name in files if (relative / name).as_posix() not in free)
+        held.extend((relative / name).as_posix() for name in dirs if os.path.islink(os.path.join(current, name)))
+    return sorted(held)
+
+
+def remove(project_id: str, env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]:
+    """Remove a project that holds nothing from the workspace: its folder (``project.json``, an empty plans store) and its
+    binding on this machine. A project that holds files (plans, legacy plans, migrations, local-only index) is
+    ``PROJECT_NOT_EMPTY`` and nothing changes; the markers in the checkouts are left alone (``markers`` lists those that
+    still name the project; ``attach`` writes the record again). Returns ``{workspace, project_id, removed, unbound, markers}``."""
+    target = layout.root_of(None, env, home)
+    workspace = layout.require_initialized(target)["code"]
+    try:
+        folder = project_dir(target, project_id)
+    except ValueError:
+        raise WorkspaceError("PROJECT_UNKNOWN", f"{project_id!r} is not a project id") from None
+    with gitutil.git_lock(env, home):
+        if not folder.is_dir() or folder.is_symlink():
+            raise WorkspaceError("PROJECT_UNKNOWN", f"no project {project_id} in the workspace")
+        held = _held(folder)
+        if held:
+            shown = ", ".join(held[:3]) + (f" and {len(held) - 3} more" if len(held) > 3 else "")
+            raise WorkspaceError("PROJECT_NOT_EMPTY", f"the project {project_id} holds {len(held)} file(s) ({shown}); a "
+                                 f"project with plans is not removed; `project detach {project_id}` drops only its "
+                                 f"binding on this machine")
+        entry = read_bindings(env, home)["projects"].get(project_id)
+        paths = list(entry["paths"]) if entry else []
+        markers = []
+        for path in paths:
+            try:
+                marker = read_marker(path) if os.path.isdir(path) else None
+            except WorkspaceError:
+                marker = None
+            if marker is not None and marker["workspace"] == workspace and marker["project_id"] == project_id:
+                markers.append(path)
+        try:
+            shutil.rmtree(folder)
+        except OSError as exc:
+            raise WorkspaceError("PROJECT_REMOVE_FAILED", f"cannot remove {folder}: {exc}") from None
+        unbind(project_id, None, env, home)
+    return {"workspace": workspace, "project_id": project_id, "removed": True, "unbound": paths, "markers": markers}
 
 
 def _names(folder: Path, only_dirs: bool = True) -> List[str]:

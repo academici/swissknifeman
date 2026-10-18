@@ -17,12 +17,14 @@ argument value, code `INVALID_ARGUMENT`) also prints `{"error": {"code", "messag
 
 | Command | What it does |
 | --- | --- |
-| `init --code CODE [--root DIR]` | Create the workspace `CODE` under `workspaces/CODE`: the layout (`workspace.json`, `projects/`, baseline `.gitignore`, `.gitattributes`, `README.md`, `.staging/`), `git init -b main`, the first commit `skm(workspace): init` with a `Workspace-Device` trailer, and the device file of this machine. On a workspace that exists it changes nothing (`already_initialized`). A non-empty folder without `workspace.json` is `WORKSPACE_ROOT_NOT_EMPTY` and nothing is written. |
+| `init --code CODE [--root DIR] [--remote URL]` | Create the workspace `CODE` under `workspaces/CODE`: the layout (`workspace.json`, `projects/`, baseline `.gitignore`, `.gitattributes`, `README.md`, `.staging/`), `git init -b main`, the first commit `skm(workspace): init` with a `Workspace-Device` trailer, and the device file of this machine. On a workspace that exists it changes nothing (`already_initialized`). A non-empty folder without `workspace.json` is `WORKSPACE_ROOT_NOT_EMPTY` and nothing is written. With `--remote URL` the new workspace is also bound to that remote as `origin` in the same step (like `connect`; nothing is pushed): a new workspace has an id no remote can hold, so the remote is read first and must be empty (`REMOTE_NOT_EMPTY`, `REMOTE_UNREACHABLE`; a refusal creates nothing; to use a workspace a remote already holds run `clone`). On a workspace that exists `--remote` only connects it (`REMOTE_ALREADY_SET` when it has an origin). |
 | `status [--fetch]` | Git state (branch, changed paths, remote without user information, ahead and behind of the last fetch; `--fetch` fetches first), the projects with their bindings here, the last sync. |
 | `doctor` | Checks as `check-result/v1`: `workspace.layout`, `workspace.documents`, `workspace.bindings`, `workspace.legacy-plans`, `workspace.git`, `workspace.plans-migrator`. Exit 1 only on `fail`; a machine without a workspace gets a warning. |
 | `doctor --publish-safety [--all]` | Publish-safety rules on the files of the next commit (`--all`: every tracked and untracked file that is not ignored); prints a `publish-report/v1` document (see below). Exit 1 and `PUBLISH_BLOCKED` on stderr when a rule blocks; warnings and local-only files exit 0. |
 | `project attach [--project DIR] [--name N] [--code CODE] [--yes]` | Tie a checkout to a project: use the code of its marker, else match its remotes against the projects of the workspace (a name is not an identity), else create a project whose code is made from the folder name (or `--code`; `PROJECT_CODE_TAKEN` if another project has it). Writes the marker `.swissknifeman/project.json` and prints the command that commits it; it never commits. |
-| `project list` | Projects of the workspace and where they are bound on this machine. |
+| `project add --path DIR [--name N] [--code CODE] [--yes]` | Add the checkout `DIR` to the workspace as a project and bind it: the same work and the same output as `project attach --project DIR`, but the path is required and the current folder is never used. |
+| `project remove CODE` | Remove a project from the workspace: its folder `projects/CODE/` and its binding on this machine. Only a project that holds nothing but `project.json` and an empty plans store is removed; plans, legacy plans, migrations or a local-only index make it `PROJECT_NOT_EMPTY` and nothing changes (`project detach` drops only the binding). The markers in the checkouts are left alone and listed (`markers`); `project add` writes the project again. Nothing is committed (`sync` takes the deletion). |
+| `project list [--all]` | Projects of the workspace and where they are bound on this machine. `--all` lists the projects of every workspace of the machine (each row has its `workspace`; no workspace needs to be chosen); a workspace whose documents cannot be read is listed in `skipped`. |
 | `project show CODE` | The project record, its binding and the folders it holds in the workspace. |
 | `project scan DIR...` | Find checkouts with a marker (depth 4; `node_modules`, `.git` and `vendor` are skipped) and bind those of known projects. A marker with an unknown id is reported as `unknown`; no project is created. |
 | `project rebind PROJECT_ID --path DIR` | Replace the bound paths by one checkout whose marker names the project (`BINDING_MARKER_MISMATCH` otherwise). |
@@ -46,11 +48,13 @@ output of each command against it.
 
 | Document | Command |
 | --- | --- |
-| `init` | `init --code CODE` |
+| `init` | `init --code CODE [--remote URL]` (`remote` and `next` are present only with `--remote`) |
 | `list` | `list` |
 | `connect` | `connect --remote URL` |
-| `project-list` | `project list` |
+| `project-list` | `project list [--all]` (`workspace` in a row and `skipped` only with `--all`) |
+| `project-add` | `project add --path DIR` (the shape of `project-attach`) |
 | `project-attach` | `project attach` |
+| `project-remove` | `project remove CODE` |
 | `error` | any command with `--json` that is refused: exit 1 (`CODE: message`), or exit 2 for `INVALID_ARGUMENT`; commands whose failure carries a report of its own (`sync`, `doctor --publish-safety`, `migrate plan`) print that report |
 
 The documents of the other commands (`status`, `doctor`, `sync`, `migrate`, `project show|scan|rebind|detach`) have no

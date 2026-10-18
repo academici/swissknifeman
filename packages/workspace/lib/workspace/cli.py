@@ -26,8 +26,9 @@ named by --workspace CODE (anywhere in the arguments), else SKM_WORKSPACE, else 
 else the only workspace of the machine.
 
 commands:
-  init --code CODE [--root DIR] [--json]
-                                    create the workspace CODE (workspaces/CODE): layout, git repository, device file
+  init --code CODE [--root DIR] [--remote URL] [--json]
+                                    create the workspace CODE (workspaces/CODE): layout, git repository, device file;
+                                    --remote also binds it to an empty remote as origin (nothing is pushed)
   list [--json]                     the workspaces of this machine
   status [--fetch] [--json]         layout, git state, projects and their bindings on this machine
   doctor [--json]                   structural checks of the workspace and of the bindings
@@ -36,7 +37,10 @@ commands:
                                     exit 1 when a rule blocks (PUBLISH_BLOCKED)
   project attach [--project DIR] [--name N] [--code CODE] [--yes] [--json]
                                     attach a checkout to a project (writes the marker, never commits it)
-  project list [--json]             projects of the workspace and their bindings on this machine
+  project add --path DIR [--name N] [--code CODE] [--yes] [--json]
+                                    add the checkout DIR to the workspace as a project and bind it (same as attach)
+  project remove CODE [--json]      remove a project that holds no plans from the workspace and from this machine
+  project list [--all] [--json]     projects of the workspace and their bindings on this machine (--all: of every workspace)
   project show PROJECT_ID [--json]  project (code) record, binding and the plans the workspace holds
   project scan DIR... [--json]      bind the checkouts with a known marker found under DIR (depth 4)
   project rebind PROJECT_ID --path DIR [--json]
@@ -88,6 +92,7 @@ def _build() -> argparse.ArgumentParser:
     p = sub.add_parser("init")
     p.add_argument("--code", metavar="CODE", required=True)
     p.add_argument("--root", metavar="DIR", default=None)
+    p.add_argument("--remote", metavar="URL", default=None)
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("list")
     p.add_argument("--json", action="store_true")
@@ -124,7 +129,17 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("--code", metavar="CODE", default=None)
     p.add_argument("--yes", action="store_true")
     p.add_argument("--json", action="store_true")
+    p = commands.add_parser("add")
+    p.add_argument("--path", metavar="DIR", required=True)
+    p.add_argument("--name", metavar="N", default=None)
+    p.add_argument("--code", metavar="CODE", default=None)
+    p.add_argument("--yes", action="store_true")
+    p.add_argument("--json", action="store_true")
+    p = commands.add_parser("remove")
+    p.add_argument("project_id", metavar="CODE")
+    p.add_argument("--json", action="store_true")
     p = commands.add_parser("list")
+    p.add_argument("--all", action="store_true", dest="all_workspaces")
     p.add_argument("--json", action="store_true")
     p = commands.add_parser("show")
     p.add_argument("project_id")
@@ -171,7 +186,7 @@ def _dump(doc: Any) -> None:
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
-    result = layout.init(args.code, args.root)
+    result = layout.init(args.code, args.root) if args.remote is None else remote.create(args.code, args.remote, args.root)
     if result["created"]:
         events.emit("workspace.root.initialized", {"code": result["code"], "workspace_id": result["workspace_id"]},
                     subject=result["workspace_id"])
@@ -185,6 +200,10 @@ def _cmd_init(args: argparse.Namespace) -> int:
     else:
         print(f"created workspace {result['code']} ({result['workspace_id']}) at {result['root']} "
               f"(device {result['device_id']})")
+    if "remote" in result and not args.json:
+        print(f"connected {result['remote']['url']} as origin (branch {result['remote']['branch']}, remote is "
+              f"{result['remote']['classification']})")
+        print(f"next: {result['next']}")
     return 0
 
 
@@ -355,8 +374,8 @@ def _project_root(value: Optional[str]) -> Path:
     return context.root
 
 
-def _cmd_attach(args: argparse.Namespace) -> int:
-    result = projects.attach(_project_root(args.project), name=args.name, yes=args.yes, code=args.code)
+def _attached(args: argparse.Namespace, root: Path) -> int:
+    result = projects.attach(root, name=args.name, yes=args.yes, code=args.code)
     events.emit("workspace.project.attached", {"project_id": result["project_id"], "created": result["created"]},
                 subject=result["project_id"])
     if args.json:
@@ -370,14 +389,44 @@ def _cmd_attach(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_list(args: argparse.Namespace) -> int:
-    rows = projects.list_projects()
+def _cmd_attach(args: argparse.Namespace) -> int:
+    return _attached(args, _project_root(args.project))
+
+
+def _cmd_add(args: argparse.Namespace) -> int:
+    return _attached(args, Path(args.path))
+
+
+def _cmd_remove(args: argparse.Namespace) -> int:
+    doc = projects.remove(args.project_id)
     if args.json:
-        _dump({"projects": rows})
+        _dump(doc)
         return 0
+    print(f"removed {doc['project_id']} from the workspace {doc['workspace']}")
+    for path in doc["markers"]:
+        print(f"note: {path} still holds the marker of {doc['project_id']}; `project add` or `project attach` writes the "
+              f"project again")
+    return 0
+
+
+def _cmd_list(args: argparse.Namespace) -> int:
+    if args.all_workspaces:
+        doc = projects.list_all()
+        if args.json:
+            _dump(doc)
+            return 0
+        rows = doc["projects"]
+        for row in doc["skipped"]:
+            print(f"skipped workspace {row['workspace']} ({row['error']})", file=sys.stderr)
+    else:
+        rows = projects.list_projects()
+        if args.json:
+            _dump({"projects": rows})
+            return 0
     for row in rows:
         where = ", ".join(row["paths"]) if row["bound"] else "not bound here"
-        print(f"{row['project_id']}  {row['name']}  [{row['status']}]  {where}")
+        prefix = f"{row['workspace']}/" if "workspace" in row else ""
+        print(f"{prefix}{row['project_id']}  {row['name']}  [{row['status']}]  {where}")
     return 0
 
 
@@ -545,7 +594,7 @@ def _cmd_migrate_cleanup(args: argparse.Namespace) -> int:
 
 _COMMANDS = {"init": _cmd_init, "list": _cmd_list_workspaces, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version,
              "connect": _cmd_connect, "clone": _cmd_clone, "sync": _cmd_sync}
-_PROJECT = {"attach": _cmd_attach, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
+_PROJECT = {"attach": _cmd_attach, "add": _cmd_add, "remove": _cmd_remove, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
             "detach": _cmd_detach}
 _MIGRATE = {"discover": _cmd_discover, "plan": _cmd_migrate_plan, "apply": _cmd_migrate_apply,
             "verify": _cmd_migrate_verify, "rollback": _cmd_migrate_rollback, "cleanup": _cmd_migrate_cleanup}
@@ -583,10 +632,11 @@ def _workspace_of_cwd() -> Optional[str]:
 _WITHOUT_SELECTION = frozenset({"init", "list", "clone", "version"})
 
 
-def _select_workspace(command: str, option: Optional[str]) -> None:
+def _select_workspace(command: str, option: Optional[str], every: bool = False) -> None:
     """Make ``SKM_WORKSPACE`` name the workspace of this run (``--workspace``, the environment, the project you are in,
-    the only workspace of the machine). ``init`` names it with ``--code``; ``clone`` reads it from the remote."""
-    if command in _WITHOUT_SELECTION:
+    the only workspace of the machine). ``init`` names it with ``--code``; ``clone`` reads it from the remote;
+    ``project list --all`` (``every``) works with all of them."""
+    if every or command in _WITHOUT_SELECTION:
         if option is not None:
             os.environ["SKM_WORKSPACE"] = option
         return
@@ -661,7 +711,7 @@ def _main(argv: Optional[Sequence[str]] = None) -> int:
     else:
         handler = _COMMANDS[namespace.command]
     try:
-        _select_workspace(namespace.command, option)
+        _select_workspace(namespace.command, option, getattr(namespace, "all_workspaces", False))
         return handler(namespace)
     except (WorkspaceError, WorkspaceSelectionError, ProjectContextRequired, ConfigError) as exc:
         _fail(namespace, exc)

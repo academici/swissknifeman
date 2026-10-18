@@ -1,0 +1,107 @@
+{
+  "project": {
+    "project_id": "prj_01M56FGK72H0V3ECK3P8SJ08SF",
+    "name": "swissknifeman",
+    "origin": "marker",
+    "marker_store": "legacy",
+    "in_workspace": true
+  },
+  "mode": "initial",
+  "source": {
+    "checkout_name": "swissknifeman",
+    "head": "d49c36bb3dcb8b9ac402248eb15dc9ef34d2c51f"
+  },
+  "already_migrated": false,
+  "plans": [
+    {
+      "name": "2026.10.07-№1-SKM-ECOSYSTEM",
+      "class": "v4",
+      "action": "copied",
+      "files": 522,
+      "bytes": 8344441,
+      "digest": "sha256:e647f071a8ba78573dd69f17f3d0c1cd73bafd6b53c40831eda2812034cb1541"
+    },
+    {
+      "name": "2026.10.13-№1-SKM-FEATURES",
+      "class": "v4",
+      "action": "copied",
+      "files": 202,
+      "bytes": 1078870,
+      "digest": "sha256:cd5b1e41170a1ae5fcf66df92cabeb160742679578c4d3e8d4df7fda087bdf32"
+    },
+    {
+      "name": "2026.10.16-№1-SKM-GUI",
+      "class": "v4",
+      "action": "copied",
+      "files": 232,
+      "bytes": 1098779,
+      "digest": "sha256:46724d896714122b5c1dd90269ab5f8cc4159ba2c231b8cd333bc24171c05f06"
+    },
+    {
+      "name": "2026.10.17-№1-SKM-WORKSPACE",
+      "class": "v4",
+      "action": "copied",
+      "files": 161,
+      "bytes": 650121,
+      "digest": "sha256:70c51cca6105106663564efd306390f9cc374963f5369b52562cc26438310bc5"
+    },
+    {
+      "name": "archive/2026.10.05-№1-TASK-PLAN-JSON",
+      "class": "v4",
+      "action": "copied",
+      "files": 44,
+      "bytes": 276465,
+      "digest": "sha256:7f500caf9aeddf1ea19f4a705c44ed77111d3209f733b8a3e97e0b5e5ff02b85"
+    }
+  ],
+  "conflicts": [],
+  "local_only": [],
+  "warnings": [
+    {
+      "code": "PS_HOME_PATH",
+      "count": 60,
+      "paths": [
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P10.10/argv.json",
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P10.10/launch.json",
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P10.10/review-brief.md",
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P10.2/launch.json",
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P10.2/launch2.json"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "code": "MIGRATION_BLOCKED_SECRET",
+      "message": "5 file(s) look like secrets; remove them from the plans or from the folder before migrating",
+      "findings": [
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.17-№1-SKM-WORKSPACE/log.jsonl",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 25: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.3/stage-report.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 58: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/P6.5-review-grok.md",
+          "detail": "3 match(es) of the named-secret secret pattern, the first at line 12: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/E2-perplexity-oss-reuse.md",
+          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1277: ‹redacted›"
+        },
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/knowledge/hub-p11-closure.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
+        }
+      ]
+    }
+  ],
+  "manifest_digest": "sha256:6af5448a27995454dea6f5bcfbb4aa61ec69c75c97424ed75d1871fc514fda37",
+  "ready": false
+}

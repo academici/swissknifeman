@@ -1,0 +1,63 @@
+{
+  "project": {
+    "project_id": "prj_01M56FGHJ3FB35KWJMR6ZK9X9Q",
+    "name": "commerz",
+    "origin": "marker",
+    "marker_store": "legacy",
+    "in_workspace": true
+  },
+  "mode": "initial",
+  "source": {
+    "checkout_name": "commerz",
+    "head": "729779b2f7d8368243ff8d4736a945fed1741349"
+  },
+  "already_migrated": false,
+  "plans": [
+    {
+      "name": "archive/2026.10.08-№1-COMMERZ-FOUNDATION",
+      "class": "v4",
+      "action": "copied",
+      "files": 256,
+      "bytes": 13401381,
+      "digest": "sha256:cff339d78cda4a424b52188bb85d8b52a2e0293f6992a783f2c989d11e3e7dbb"
+    },
+    {
+      "name": "_root",
+      "class": "legacy",
+      "action": "copied",
+      "files": 1,
+      "bytes": 215,
+      "digest": "sha256:d3a956f9e41f3d87d98c29c1cb4068826be882b5c0393965519d2247557bcad8"
+    }
+  ],
+  "conflicts": [],
+  "local_only": [],
+  "warnings": [
+    {
+      "code": "PS_HOME_PATH",
+      "count": 45,
+      "paths": [
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/decisions/D2.json",
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/knowledge/assembly-design.json",
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/knowledge/audit-p7-2026-10-10.json",
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.2.json",
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.3.json"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "code": "MIGRATION_BLOCKED_SECRET",
+      "message": "1 file(s) look like secrets; remove them from the plans or from the folder before migrating",
+      "findings": [
+        {
+          "rule": "PS-SECRET",
+          "path": "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.2.json",
+          "detail": "1 match(es) of the named-secret secret pattern, the first at line 14: ‹redacted›"
+        }
+      ]
+    }
+  ],
+  "manifest_digest": "sha256:b37b617340e8b9fc4e5078ee4fcb43523a9cf73a91b071449356caafd909a06c",
+  "ready": false
+}

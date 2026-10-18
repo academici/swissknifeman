@@ -220,6 +220,7 @@ class CommitTests(SyncCase):
         rel = f"projects/{PID}/plans/{PLAN}/tools/run.sh"
         self.assertEqual(doc["commit"]["executable_cleared"], [rel])
         self.assertTrue(git(self.ws, "ls-files", "-s", "--", rel).startswith("100644"))
+        self.assertEqual(git(self.ws, "status", "--porcelain"), "")  # the working file lost its execute bit too
 
     def test_remote_is_shown_without_user_information(self):
         layout.init()

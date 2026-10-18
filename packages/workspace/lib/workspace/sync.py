@@ -340,6 +340,10 @@ def _executable_fix(target: Path, paths: Sequence[str]) -> List[str]:
                 executable.append(path)
     for chunk in _in_chunks(executable):
         _must(gitutil.git(["update-index", "--chmod=-x", "--", *chunk], target), "update-index")
+    for path in executable:  # the working file too, or git status keeps reporting a mode change
+        file = target / path
+        if file.is_file() and not file.is_symlink():
+            os.chmod(file, file.stat().st_mode & ~0o111)
     return sorted(executable)
 
 

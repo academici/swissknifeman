@@ -29,12 +29,30 @@ class InstallRegistryStep(unittest.TestCase):
         self.skm = self.tmp / "skm"
         self.registry = self.skm / "state" / "maind" / "registry.json"
 
-    def install(self, script=None):
+    def install(self, script=None, isolated=True, **extra):
         script = script or self.pkg / "install.sh"
         env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
-        env.update(HOME=str(self.home), SKM_HOME=str(self.skm))
+        env.update(HOME=str(self.home), **extra)
+        if isolated:
+            env["SKM_HOME"] = str(self.skm)
         subprocess.run(["bash", str(script), "--bin-dir", str(self.tmp / "bin")],
                        env=env, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def test_the_machine_home_holds_the_registry_without_skm_home(self):
+        self.install(isolated=False)
+        self.assertTrue((self.home / ".local/share/swissknifeman/state/maind/registry.json").is_file())
+        self.assertFalse((self.home / ".local/state/swissknifeman").exists())
+
+    def test_the_old_xdg_state_folder_is_kept_while_the_new_one_does_not_exist(self):
+        old = self.home / ".local/state/swissknifeman"
+        old.mkdir(parents=True)
+        self.install(isolated=False)
+        self.assertTrue((old / "maind/registry.json").is_file())
+        self.assertFalse((self.home / ".local/share/swissknifeman/state").exists())
+        moved = self.home / "xdg-state"
+        (moved / "swissknifeman").mkdir(parents=True)
+        self.install(isolated=False, XDG_STATE_HOME=str(moved))
+        self.assertTrue((moved / "swissknifeman/maind/registry.json").is_file())
 
     def test_creates_the_registry_when_there_is_no_source(self):
         self.install()

@@ -58,25 +58,35 @@ class LadderParityCase(unittest.TestCase):
         self.assertEqual(harness, hook)
         self.assertEqual(harness, expected)
 
+    NEW = ".local/share/swissknifeman/config/harness/safe-dirs.json"
+
     def test_without_any_file_both_name_the_new_place(self):
-        self.assertSame(self.home / ".config/swissknifeman/harness/safe-dirs.json", {})
+        self.assertSame(self.home / self.NEW, {})
 
     def test_skm_home_moves_the_config_directory(self):
         skm = self.tmp / "skm"
         self.assertSame(skm / "config/harness/safe-dirs.json", {"SKM_HOME": str(skm)})
 
-    def test_xdg_config_home_moves_it_and_a_relative_value_is_ignored(self):
+    def test_xdg_config_home_no_longer_moves_the_new_place(self):
         xdg = self.tmp / "xdg"
-        self.assertSame(xdg / "swissknifeman/harness/safe-dirs.json", {"XDG_CONFIG_HOME": str(xdg)})
-        self.assertSame(self.home / ".config/swissknifeman/harness/safe-dirs.json",
-                        {"XDG_CONFIG_HOME": "relative/dir"})
+        self.assertSame(self.home / self.NEW, {"XDG_CONFIG_HOME": str(xdg)})
+        self.assertSame(self.home / self.NEW, {"XDG_CONFIG_HOME": "relative/dir"})
+
+    def test_the_old_xdg_config_folder_is_used_while_the_new_one_does_not_exist(self):
+        xdg = self.tmp / "xdg"
+        old = self.touch(xdg / "swissknifeman/harness/safe-dirs.json")
+        self.assertSame(old, {"XDG_CONFIG_HOME": str(xdg)})
+        old_default = self.touch(self.home / ".config/swissknifeman/harness/safe-dirs.json")
+        self.assertSame(old_default, {})
+        (self.home / ".local/share/swissknifeman/config").mkdir(parents=True)
+        self.assertSame(self.home / self.NEW, {})
+        self.assertSame(self.home / self.NEW, {"XDG_CONFIG_HOME": str(xdg)})
 
     def test_a_relative_skm_home_is_ignored_by_both(self):
-        self.assertSame(self.home / ".config/swissknifeman/harness/safe-dirs.json",
-                        {"SKM_HOME": "relative/dir"})
+        self.assertSame(self.home / self.NEW, {"SKM_HOME": "relative/dir"})
 
     def test_the_override_is_exclusive(self):
-        self.touch(self.home / ".config/swissknifeman/harness/safe-dirs.json")
+        self.touch(self.home / self.NEW)
         other = self.tmp / "other.json"
         self.assertSame(other, {"SKM_SAFE_DIRS_CONFIG": str(other)})
 
@@ -90,7 +100,7 @@ class LadderParityCase(unittest.TestCase):
     def test_the_new_place_beats_both_legacy_files(self):
         self.touch(self.home / ".swissknifeman/safe-dirs.json")
         self.touch(self.hub / "safe-dirs.json")
-        new = self.touch(self.home / ".config/swissknifeman/harness/safe-dirs.json")
+        new = self.touch(self.home / self.NEW)
         self.assertSame(new, {})
         skm = self.tmp / "skm"
         isolated = self.touch(skm / "config/harness/safe-dirs.json")

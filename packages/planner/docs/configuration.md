@@ -9,7 +9,7 @@ is generated from the schema with `aicore config example`.
 From the lowest to the highest priority:
 
 1. schema defaults;
-2. the machine file (`config.toml` in the swissknifeman configuration folder, `~/.config/swissknifeman` by default);
+2. the machine file (`config.toml` in the swissknifeman configuration folder, `~/.local/share/swissknifeman/config` by default);
 3. the project file (`.swissknifeman/config.toml`);
 4. `plan.settings` of the plan (only `context_budget_kb`, which sets `context.budget_kb`);
 5. environment variables named `SKM_PLANNER_<TABLE>__<KEY>` in capitals, for example `SKM_PLANNER_CONTEXT__BUDGET_KB=512`;

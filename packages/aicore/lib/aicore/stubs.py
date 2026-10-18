@@ -7,7 +7,7 @@ slots, from the general to the specific::
 
     _all.md   <package>/_all.md   <package>/<kind>s/_all.md   <package>/<kind>s/<name>.md
 
-each looked up in two layers: the machine (``<config dir>/stubs``, ``~/.config/swissknifeman/stubs``) and the project
+each looked up in two layers: the machine (``<config dir>/stubs``, ``~/.local/share/swissknifeman/config/stubs``) and the project
 (``<project>/.swissknifeman/stubs``). Within a slot the project file decides by its mode; an empty file (or one with
 comments only) inherits the machine one, so publishing every empty file masks nothing:
 

@@ -196,19 +196,31 @@ class TestAllowlistLoading(_Fixture):
     def test_registered_projects_read_from_the_owner_state_file(self):
         proj = self.tmp / "elsewhere" / "owner-repo"
         proj.mkdir(parents=True)
-        self._registry(self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json", proj)
+        self._registry(self.home / ".local" / "share" / "swissknifeman" / "state" / "skiller" / "projects.json", proj)
         self.write_config(dirs=[], include_registered_projects=True)
         with unittest.mock.patch.dict(os.environ, {}, clear=False):
             for name in ("SKM_HOME", "XDG_STATE_HOME"):
                 os.environ.pop(name, None)
             self.assertEqual(self.roots(), [str(proj.resolve())])
 
+    def test_registry_in_the_old_xdg_state_folder_is_read_until_the_new_one_exists(self):
+        proj = self.tmp / "elsewhere" / "old-xdg-repo"
+        proj.mkdir(parents=True)
+        self._registry(self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json", proj)
+        self.write_config(dirs=[], include_registered_projects=True)
+        with unittest.mock.patch.dict(os.environ, {}, clear=False):
+            for name in ("SKM_HOME", "XDG_STATE_HOME"):
+                os.environ.pop(name, None)
+            self.assertEqual(self.roots(), [str(proj.resolve())])
+            (self.home / ".local" / "share" / "swissknifeman" / "state").mkdir(parents=True)
+            self.assertEqual(self.roots(), [])
+
     def test_the_owner_state_file_wins_over_the_legacy_one(self):
         old, new = self.tmp / "old" / "repo", self.tmp / "new" / "repo"
         old.mkdir(parents=True)
         new.mkdir(parents=True)
         self._registry(self.home / ".swissknifeman" / "projects.json", old)
-        self._registry(self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json", new)
+        self._registry(self.home / ".local" / "share" / "swissknifeman" / "state" / "skiller" / "projects.json", new)
         self.write_config(dirs=[], include_registered_projects=True)
         with unittest.mock.patch.dict(os.environ, {}, clear=False):
             for name in ("SKM_HOME", "XDG_STATE_HOME"):
@@ -219,7 +231,7 @@ class TestAllowlistLoading(_Fixture):
         old = self.tmp / "old" / "repo"
         old.mkdir(parents=True)
         self._registry(self.home / ".swissknifeman" / "projects.json", old)
-        broken = self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json"
+        broken = self.home / ".local" / "share" / "swissknifeman" / "state" / "skiller" / "projects.json"
         broken.parent.mkdir(parents=True, exist_ok=True)
         broken.write_text("{not json", encoding="utf-8")
         self.write_config(dirs=[], include_registered_projects=True)

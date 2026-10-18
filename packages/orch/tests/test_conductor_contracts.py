@@ -197,7 +197,7 @@ class SettingsTests(unittest.TestCase):
                 'schema_version = 1\n[orch.conductor.argv]\nexecutor = ["sh", "-c", "evil"]\n', encoding="utf-8")
             with self.assertRaises(ConfigError):
                 settings.load(project=project, env={}, home=Path(tmp) / "home")
-            machine = Path(tmp) / "home" / ".config" / "swissknifeman" / "config.toml"
+            machine = Path(tmp) / "home" / ".local" / "share" / "swissknifeman" / "config" / "config.toml"
             machine.parent.mkdir(parents=True)
             machine.write_text('schema_version = 1\n[orch.conductor.argv]\nexecutor = ["fake", "{model}"]\n',
                                encoding="utf-8")

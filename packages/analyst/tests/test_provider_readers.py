@@ -203,7 +203,9 @@ class DoctorPartnerTests(unittest.TestCase):
 
     def _run_doctor(self, env_vars):
         from analyst.common import Env
-        env = Env("/tmp/analyst-root", "doctor", home="/tmp/fakehome")
+        home = tempfile.TemporaryDirectory()  # a writable home: the state check probes the nearest existing parent
+        self.addCleanup(home.cleanup)
+        env = Env("/tmp/analyst-root", "doctor", home=home.name)
         out = io.StringIO()
         clean = {k: v for k, v in os.environ.items()
                  if k not in ("PLANNER_PLAN_PY", "PLANNER_ROOT", "SKM_TASK_ROOT", "SKM_MAIND_BIN",

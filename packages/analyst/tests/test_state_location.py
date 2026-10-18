@@ -27,7 +27,7 @@ class TestStateLocation(unittest.TestCase):
         state.locations._WARNED.clear()
         self.addCleanup(state.locations._WARNED.clear)
         self.env = Env("/tmp/analyst-root", "doctor", home=self.home)
-        self.new = self.home / ".local" / "state" / "swissknifeman" / "analyst"
+        self.new = self.home / ".local" / "share" / "swissknifeman" / "state" / "analyst"
         self.legacy = self.home / ".swissknifeman" / "analyst"
 
     def state_dir(self):
@@ -64,9 +64,15 @@ class TestStateLocation(unittest.TestCase):
         self.assertEqual(self.home / "sandbox" / "state" / "analyst", self.state_dir())
         self.assertEqual([], self.warnings)
 
-    def test_xdg_state_home_is_honoured(self):
+    def test_xdg_state_home_does_not_move_the_new_place(self):
         os.environ["XDG_STATE_HOME"] = str(self.home / "xdg")
-        self.assertEqual(self.home / "xdg" / "swissknifeman" / "analyst", self.state_dir())
+        self.assertEqual(self.new, self.state_dir())
+
+    def test_the_old_xdg_state_folder_is_used_while_the_new_one_does_not_exist(self):
+        old = self.home / "xdg" / "swissknifeman" / "analyst"
+        old.mkdir(parents=True)
+        os.environ["XDG_STATE_HOME"] = str(self.home / "xdg")
+        self.assertEqual(old, self.state_dir())
 
 
 if __name__ == "__main__":

@@ -124,9 +124,13 @@ install_link skiller          # main CLI (alias swissknifeman — umbrella insta
 # interactive, rather than sitting silently. We suggest setting it up immediately if available. TTY.
 _topology_state="${SKM_HOME:+$SKM_HOME/state}"
 if [[ -z "$_topology_state" ]]; then
-  _topology_state="${XDG_STATE_HOME:-}"
-  [[ "$_topology_state" == /* ]] || _topology_state="$HOME/.local/state"
-  _topology_state="$_topology_state/swissknifeman"
+  # the machine home is ~/.local/share/swissknifeman; the old XDG state folder is kept while the new one does not exist
+  _topology_state="$HOME/.local/share/swissknifeman/state"
+  _old_state="${XDG_STATE_HOME:-}"
+  [[ "$_old_state" == /* ]] || _old_state="$HOME/.local/state"
+  if [[ ! -e "$_topology_state" && -e "$_old_state/swissknifeman" ]]; then
+    _topology_state="$_old_state/swissknifeman"
+  fi
 fi
 if [[ ! -f "$_topology_state/maind/topology.json" && ( -n "${SKM_HOME:-}" || ! -f "$HOME/.swissknifeman/topology.json" ) && "$FORCE" != true && -t 0 ]]; then
   read -r -p "Configure local environment map (skiller topology init)? [y/N] " ans

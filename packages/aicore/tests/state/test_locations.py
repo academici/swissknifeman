@@ -8,37 +8,59 @@ from aicore.state import locations as loc
 
 
 class MachineLocationsTests(unittest.TestCase):
-    def test_defaults_come_from_the_home_directory(self):
+    def test_defaults_are_one_machine_home_under_the_home_directory(self):
         got = loc.machine_locations({}, home="/h")
-        self.assertEqual(got.config, Path("/h/.config/swissknifeman"))
-        self.assertEqual(got.state, Path("/h/.local/state/swissknifeman"))
-        self.assertEqual(got.data, Path("/h/.local/share/swissknifeman"))
-        self.assertEqual(got.cache, Path("/h/.cache/swissknifeman"))
+        base = Path("/h/.local/share/swissknifeman")
+        self.assertEqual((got.config, got.state, got.cache, got.workspaces),
+                         (base / "config", base / "state", base / "cache", base / "workspaces"))
+        self.assertEqual(got.data, base)
+        self.assertEqual((got.home, got.legacy), (base, ()))
         self.assertFalse(got.isolated)
 
     def test_home_comes_from_env_when_not_passed(self):
-        self.assertEqual(loc.config_dir(env={"HOME": "/e"}), Path("/e/.config/swissknifeman"))
+        self.assertEqual(loc.config_dir(env={"HOME": "/e"}), Path("/e/.local/share/swissknifeman/config"))
 
-    def test_absolute_xdg_variables_win(self):
+    def test_xdg_variables_no_longer_move_the_default(self):
         env = {"XDG_CONFIG_HOME": "/x/c", "XDG_STATE_HOME": "/x/s",
                "XDG_DATA_HOME": "/x/d", "XDG_CACHE_HOME": "/x/k"}
         got = loc.machine_locations(env, home="/h")
+        base = Path("/h/.local/share/swissknifeman")
         self.assertEqual((got.config, got.state, got.data, got.cache),
-                         (Path("/x/c/swissknifeman"), Path("/x/s/swissknifeman"),
-                          Path("/x/d/swissknifeman"), Path("/x/k/swissknifeman")))
+                         (base / "config", base / "state", base, base / "cache"))
 
-    def test_relative_or_empty_xdg_is_ignored(self):
-        env = {"XDG_CONFIG_HOME": "rel/dir", "XDG_STATE_HOME": ""}
-        got = loc.machine_locations(env, home="/h")
-        self.assertEqual(got.config, Path("/h/.config/swissknifeman"))
-        self.assertEqual(got.state, Path("/h/.local/state/swissknifeman"))
-
-    def test_skm_home_moves_everything_and_isolates(self):
+    def test_skm_home_is_the_machine_home_and_isolates(self):
         env = {"SKM_HOME": "/sb", "XDG_CONFIG_HOME": "/x/c"}
         got = loc.machine_locations(env, home="/h")
-        self.assertEqual((got.config, got.state, got.data, got.cache),
-                         (Path("/sb/config"), Path("/sb/state"), Path("/sb/data"), Path("/sb/cache")))
+        self.assertEqual((got.config, got.state, got.data, got.cache, got.workspaces),
+                         (Path("/sb/config"), Path("/sb/state"), Path("/sb"), Path("/sb/cache"), Path("/sb/workspaces")))
         self.assertTrue(got.isolated)
+        self.assertEqual(loc.machine_home(env, home="/h"), Path("/sb"))
+
+    def test_the_old_xdg_folders_are_used_while_the_new_ones_do_not_exist(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp).resolve()
+            xdg = home / "xdg"
+            (xdg / "c" / "swissknifeman").mkdir(parents=True)
+            (home / ".local" / "state" / "swissknifeman").mkdir(parents=True)
+            (xdg / "d" / "swissknifeman" / "workspaces").mkdir(parents=True)
+            env = {"XDG_CONFIG_HOME": str(xdg / "c"), "XDG_DATA_HOME": str(xdg / "d")}
+            got = loc.machine_locations(env, home=home)
+            base = home / ".local" / "share" / "swissknifeman"
+            self.assertEqual(got.config, xdg / "c" / "swissknifeman")
+            self.assertEqual(got.state, home / ".local" / "state" / "swissknifeman")
+            self.assertEqual(got.workspaces, xdg / "d" / "swissknifeman" / "workspaces")
+            self.assertEqual(got.cache, base / "cache")
+            self.assertEqual(got.legacy, ("config", "state", "workspaces"))
+            (base / "config").mkdir(parents=True)
+            self.assertEqual(loc.machine_locations(env, home=home).config, base / "config")
+            self.assertNotIn("config", loc.machine_locations(env, home=home).legacy)
+
+    def test_skm_home_never_looks_at_the_old_folders(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp).resolve()
+            (home / ".config" / "swissknifeman").mkdir(parents=True)
+            got = loc.machine_locations({"SKM_HOME": str(home / "sb")}, home=home)
+            self.assertEqual((got.config, got.legacy), (home / "sb" / "config", ()))
 
     def test_relative_skm_home_is_rejected(self):
         with self.assertRaises(ValueError) as caught:
@@ -52,7 +74,7 @@ class MachineLocationsTests(unittest.TestCase):
         env = {"SKM_HOME": "/sb"}
         self.assertEqual(loc.state_dir(env=env), Path("/sb/state"))
         self.assertEqual(loc.state_dir("analyst", env=env), Path("/sb/state/analyst"))
-        self.assertEqual(loc.data_dir("maind", env=env), Path("/sb/data/maind"))
+        self.assertEqual(loc.data_dir("maind", env=env), Path("/sb/maind"))
         self.assertEqual(loc.cache_dir("skiller", env=env), Path("/sb/cache/skiller"))
         self.assertEqual(loc.machine_config_file(env=env), Path("/sb/config/config.toml"))
 
@@ -77,16 +99,17 @@ def _umask():
 
 
 class WorkspaceLocationsTests(unittest.TestCase):
-    def test_workspaces_follow_the_data_directory(self):
-        self.assertEqual(loc.workspaces_root({"SKM_HOME": "/sb"}), Path("/sb/data/workspaces"))
-        self.assertEqual(loc.workspaces_root({"XDG_DATA_HOME": "/x/d"}, home="/h"), Path("/x/d/swissknifeman/workspaces"))
+    def test_workspaces_follow_the_machine_home(self):
+        self.assertEqual(loc.workspaces_root({"SKM_HOME": "/sb"}), Path("/sb/workspaces"))
+        self.assertEqual(loc.workspaces_root({"XDG_DATA_HOME": "/x/d"}, home="/h"),
+                         Path("/h/.local/share/swissknifeman/workspaces"))
         self.assertEqual(loc.workspaces_root({}, home="/h"), Path("/h/.local/share/swissknifeman/workspaces"))
         self.assertEqual(loc.workspace_root({"HOME": "/e"}, code="axioma"),
                          Path("/e/.local/share/swissknifeman/workspaces/axioma"))
 
     def test_skm_home_wins_over_xdg_data_home(self):
         self.assertEqual(loc.workspace_root({"SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d"}, code="axioma"),
-                         Path("/sb/data/workspaces/axioma"))
+                         Path("/sb/workspaces/axioma"))
 
     def test_override_of_the_folder_wins_over_everything(self):
         env = {"SKM_WORKSPACES_ROOT": "/ws", "SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d", "SKM_WORKSPACE": "axioma"}
@@ -96,10 +119,10 @@ class WorkspaceLocationsTests(unittest.TestCase):
 
     def test_the_old_override_is_ignored(self):
         env = {"SKM_WORKSPACE_ROOT": "/ws", "SKM_HOME": "/sb"}
-        self.assertEqual(loc.workspaces_root(env), Path("/sb/data/workspaces"))
+        self.assertEqual(loc.workspaces_root(env), Path("/sb/workspaces"))
 
     def test_empty_override_is_not_set(self):
-        self.assertEqual(loc.workspaces_root({"SKM_WORKSPACES_ROOT": "", "SKM_HOME": "/sb"}), Path("/sb/data/workspaces"))
+        self.assertEqual(loc.workspaces_root({"SKM_WORKSPACES_ROOT": "", "SKM_HOME": "/sb"}), Path("/sb/workspaces"))
 
     def test_relative_override_is_rejected(self):
         with self.assertRaises(ValueError) as caught:
@@ -109,7 +132,7 @@ class WorkspaceLocationsTests(unittest.TestCase):
     def test_state_directory_is_one_per_workspace(self):
         self.assertEqual(loc.workspace_state_dir({"SKM_HOME": "/sb"}, code="axioma"), Path("/sb/state/workspaces/axioma"))
         self.assertEqual(loc.workspace_state_dir({}, home="/h", code="axioma"),
-                         Path("/h/.local/state/swissknifeman/workspaces/axioma"))
+                         Path("/h/.local/share/swissknifeman/state/workspaces/axioma"))
         self.assertEqual(loc.device_file({"SKM_HOME": "/sb"}), Path("/sb/state/workspaces/device.json"))
 
     def test_nothing_is_created(self):

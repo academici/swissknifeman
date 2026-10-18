@@ -128,7 +128,7 @@ class CodeTests(Sandbox):
 
     def test_the_layout_of_a_machine(self):
         env = {"SKM_HOME": self.tmp + "/home"}
-        base = Path(self.tmp) / "home" / "data" / "workspaces"
+        base = Path(self.tmp) / "home" / "workspaces"
         self.assertEqual(locations.workspaces_root(env), base)
         self.assertEqual(locations.workspace_root(env, code="axioma"), base / "axioma")
         self.assertEqual(locations.workspace_state_dir(env, code="axioma"),
@@ -137,8 +137,8 @@ class CodeTests(Sandbox):
             locations.selected_workspace(env)
         self.assertEqual(caught.exception.code, "WORKSPACE_NOT_FOUND")
         for code in ("axioma", "other"):
-            self.write("home/data/workspaces/%s/workspace.json" % code, "{}")
-        self.write("home/data/workspaces/not-a-workspace/readme", "x")
+            self.write("home/workspaces/%s/workspace.json" % code, "{}")
+        self.write("home/workspaces/not-a-workspace/readme", "x")
         self.assertEqual(locations.list_workspaces(env), ["axioma", "other"])
         with self.assertRaises(locations.WorkspaceSelectionError) as caught:
             locations.selected_workspace(env)
@@ -148,7 +148,7 @@ class CodeTests(Sandbox):
 
     def test_a_single_workspace_is_selected_without_a_choice(self):
         env = {"SKM_HOME": self.tmp + "/home"}
-        self.write("home/data/workspaces/axioma/workspace.json", "{}")
+        self.write("home/workspaces/axioma/workspace.json", "{}")
         self.assertEqual(locations.selected_workspace(env), "axioma")
 
     def test_bad_values_are_refused(self):

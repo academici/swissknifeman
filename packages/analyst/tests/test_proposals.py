@@ -222,7 +222,7 @@ class TestProposals(unittest.TestCase):
 
     # ── invariant: zero records out ~/.swissknifeman/analyst/ ────────────────
     def test_zero_writes_outside_swissknifeman_analyst(self):
-        allowed_root = self.home / ".local" / "state" / "swissknifeman" / "analyst"
+        allowed_root = self.home / ".local" / "share" / "swissknifeman" / "state" / "analyst"
         before = {str(p) for p in self.base.rglob("*")}
 
         p1 = self._run_json(["create", "--type", "stack-pack", "--title", "General extension-point",
@@ -244,7 +244,7 @@ class TestProposals(unittest.TestCase):
         new_paths = after - before
         self.assertTrue(new_paths, "test did not execute any records - does not check the invariant")
         # the only valid marker paths OUTSIDE the tree analyst/ — its parent directories
-        # (`~/.local/state/swissknifeman` and above, created on the first call); everything
+        # (`~/.local/share/swissknifeman/state` and above, created on the first call); everything
         # else - strictly inside allowed_root.
         allowed_markers = {str(parent) for parent in allowed_root.parents}
         offenders = [p for p in new_paths

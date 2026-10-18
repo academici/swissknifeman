@@ -985,7 +985,7 @@ def _main(argv: list[str] | None = None) -> int:
     actions = command.add_subparsers(dest="action", required=True)
     publish = actions.add_parser("publish", help="create the missing stub files (never overwrites one)")
     publish.add_argument("--scope", choices=("project", "machine"), default="project",
-                         help="project: <project>/.swissknifeman/stubs (default); machine: ~/.config/swissknifeman/stubs")
+                         help="project: <project>/.swissknifeman/stubs (default); machine: ~/.local/share/swissknifeman/config/stubs")
     publish.add_argument("--dry-run", action="store_true", help="say what would be created, write nothing")
     publish.add_argument("--json", action="store_true")
     listing = actions.add_parser("list", help="the effective stubs of every role (read-only)")

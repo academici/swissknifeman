@@ -35,18 +35,28 @@ def _repo_root():
     return None
 
 
+def _machine_dir(home, kind, xdg_variable, xdg_default):
+    """``<machine home>/<kind>`` (the machine home is ``$SKM_HOME`` or ``~/.local/share/swissknifeman``); without
+    ``SKM_HOME`` the old XDG folder while the new one does not exist and the old one does. The same rule as
+    ``aicore.state.locations``; this hook library is stdlib-only and stands alone."""
+    skm_home = os.environ.get("SKM_HOME", "")
+    if skm_home and os.path.isabs(skm_home):
+        return os.path.join(skm_home, kind)
+    new = os.path.join(home, ".local", "share", "swissknifeman", kind)
+    if not os.path.exists(new):
+        xdg = os.environ.get(xdg_variable, "")
+        old = os.path.join(xdg if xdg and os.path.isabs(xdg) else os.path.join(home, *xdg_default), "swissknifeman")
+        if os.path.exists(old):
+            return old
+    return new
+
+
 def config_candidates(home):
     """The safe-dirs.json ladder, nearest first (the same order as `harness safe-dirs`)."""
     env = os.environ.get("SKM_SAFE_DIRS_CONFIG")
     if env:
         return [env]
-    skm_home = os.environ.get("SKM_HOME", "")
-    if skm_home and os.path.isabs(skm_home):
-        base = os.path.join(skm_home, "config")
-    else:
-        xdg = os.environ.get("XDG_CONFIG_HOME", "")
-        base = os.path.join(xdg if xdg and os.path.isabs(xdg) else os.path.join(home, ".config"),
-                            "swissknifeman")
+    base = _machine_dir(home, "config", "XDG_CONFIG_HOME", (".config",))
     found = [os.path.join(base, "harness", "safe-dirs.json")]
     root = _repo_root()  # legacy rung
     if root:
@@ -94,17 +104,14 @@ def load_allowlist(home, path=None):
 
 
 def _state_file(home, owner, name):
-    """Candidate files of an owner's registry, first the owner's own state file (the XDG state directory of
-    swissknifeman, or ``$SKM_HOME/state``), then the legacy ``~/.swissknifeman/<name>`` (not under ``SKM_HOME``).
-    The same ladder as ``aicore.state.locations``; this hook library is stdlib-only and stands alone."""
+    """Candidate files of an owner's registry, first the owner's own state file (``<machine home>/state/<owner>/<name>``,
+    or the old XDG state directory while the new one does not exist), then the legacy ``~/.swissknifeman/<name>`` (not
+    under ``SKM_HOME``). The same ladder as ``aicore.state.locations``; this hook library is stdlib-only and stands alone."""
+    own = os.path.join(_machine_dir(home, "state", "XDG_STATE_HOME", (".local", "state")), owner, name)
     skm_home = os.environ.get("SKM_HOME", "")
     if skm_home and os.path.isabs(skm_home):
-        return [os.path.join(skm_home, "state", owner, name)]
-    base = os.environ.get("XDG_STATE_HOME", "")
-    if not (base and os.path.isabs(base)):
-        base = os.path.join(home, ".local", "state")
-    return [os.path.join(base, "swissknifeman", owner, name),
-            os.path.join(home, ".swissknifeman", name)]
+        return [own]
+    return [own, os.path.join(home, ".swissknifeman", name)]
 
 
 def _registered_projects(home):

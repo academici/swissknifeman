@@ -10,7 +10,7 @@ from analyst.common import Env
 class TestCli(unittest.TestCase):
     def test_env_paths(self):
         env = Env("/tmp/analyst-root", "doctor", home="/tmp/fakehome")
-        self.assertEqual(str(env.state_dir), "/tmp/fakehome/.local/state/swissknifeman/analyst")
+        self.assertEqual(str(env.state_dir), "/tmp/fakehome/.local/share/swissknifeman/state/analyst")
 
     def test_unknown_command_exits_1(self):
         with self.assertRaises(SystemExit) as cm, redirect_stderr(io.StringIO()):

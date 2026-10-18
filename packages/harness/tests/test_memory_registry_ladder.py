@@ -30,9 +30,21 @@ class MemoryRegistryLadderTests(unittest.TestCase):
         path.write_text(json.dumps({"nodes": {"brain": {"path": node}}}), encoding="utf-8")
 
     def test_the_owner_state_file_is_used_first(self):
-        self.write(self.home / ".local/state/swissknifeman/maind/topology.json", "/owner/brain")
+        self.write(self.home / ".local/share/swissknifeman/state/maind/topology.json", "/owner/brain")
         self.write(self.home / ".swissknifeman/topology.json", "/legacy/brain")
-        self.assertTrue(topology(self.home).endswith("|/owner/brain"), topology(self.home))
+        out = topology(self.home)
+        self.assertTrue(out.startswith(str(self.home / ".local/share/swissknifeman/state/maind/topology.json") + "|"), out)
+        self.assertTrue(out.endswith("|/owner/brain"), out)
+
+    def test_the_old_xdg_state_folder_is_used_while_the_new_one_does_not_exist(self):
+        self.write(self.home / ".local/state/swissknifeman/maind/topology.json", "/xdg/brain")
+        self.write(self.home / ".swissknifeman/topology.json", "/legacy/brain")
+        self.assertTrue(topology(self.home).endswith("|/xdg/brain"), topology(self.home))
+        self.write(self.home / "xdg-state/swissknifeman/maind/topology.json", "/moved/brain")
+        out = topology(self.home, {"XDG_STATE_HOME": str(self.home / "xdg-state")})
+        self.assertTrue(out.endswith("|/moved/brain"), out)
+        (self.home / ".local/share/swissknifeman/state").mkdir(parents=True)
+        self.assertTrue(topology(self.home, {"XDG_STATE_HOME": str(self.home / "xdg-state")}).endswith("|/legacy/brain"))
 
     def test_the_legacy_file_is_the_fallback_while_it_is_the_only_one(self):
         self.write(self.home / ".swissknifeman/topology.json", "/legacy/brain")

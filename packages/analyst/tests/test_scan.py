@@ -243,18 +243,18 @@ class TestWorkflowScanStore(unittest.TestCase):
     def test_workflows_are_found_in_the_workspace_store(self):
         import os
         from unittest import mock
-        from aicore.workspace import new_id, write_marker
+        from aicore.workspace import write_marker
         from analyst import workflow_scan
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
-            project, ws = base / "proj", base / "ws"
+            project, ws = base / "proj", base / "wss" / "axioma"
             project.mkdir()
-            project_id = new_id("prj")
-            write_marker(project, project_id, "workspace")
+            project_id = "billium"
+            write_marker(project, "axioma", project_id, "workspace")
             flow = ws / "projects" / project_id / "plans" / "PLAN-ONE" / "workflows" / "a.js"
             flow.parent.mkdir(parents=True)
             flow.write_text("export const meta = {};\n", encoding="utf-8")
-            with mock.patch.dict(os.environ, {"SKM_WORKSPACE_ROOT": str(ws)}):
+            with mock.patch.dict(os.environ, {"SKM_WORKSPACES_ROOT": str(ws.parent)}):
                 found, missing = workflow_scan.candidate_paths(
                     [{"id": "p", "local_path": str(project), "vault_path": ""}])
             self.assertEqual(missing, [])

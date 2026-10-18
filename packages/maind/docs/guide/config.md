@@ -214,7 +214,9 @@ node file is accepted with a warning and normalized in `federation`.
 | data (graph.db, graphs/, agentmemory.pid and .log) | `<data>/maind` | `<module>/data` |
 | backups before a file is replaced | `<project>/.swissknifeman/backups/<stamp>/` | `*.bak` next to the file |
 
-`<state>` and `<data>` are the swissknifeman state and data directories (`SKM_HOME` or XDG). A legacy
-place is used, with one warning, while the new one does not exist; nothing is copied.
+`<state>` and `<data>` are the swissknifeman state folder and the machine home (`~/.local/share/swissknifeman/state` and
+`~/.local/share/swissknifeman/maind`, or under `SKM_HOME`; the `XDG_*` variables no longer move them). A legacy
+place (the old XDG state folder, `~/.maind`, `<module>/data`) is used while the new one does not exist; nothing is
+copied (`swissknifeman config migrate-home` moves the old XDG folders).
 
 Next: [Memory →](./memory)

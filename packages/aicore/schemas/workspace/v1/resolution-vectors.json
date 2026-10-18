@@ -41,7 +41,7 @@
    "op": "resolve",
    "files": {
     "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
-    "home/data/workspaces/axioma/projects/billium/plans/p1/plan.json": "{}\n"
+    "home/workspaces/axioma/projects/billium/plans/p1/plan.json": "{}\n"
    },
    "env": {
     "SKM_HOME": "{tmp}/home"
@@ -49,7 +49,7 @@
    "project_root": "{tmp}/proj",
    "expect": {
     "kind": "workspace",
-    "plans_root": "{tmp}/home/data/workspaces/axioma/projects/billium/plans",
+    "plans_root": "{tmp}/home/workspaces/axioma/projects/billium/plans",
     "project_id": "billium",
     "reason": "marker-workspace"
    }
@@ -73,7 +73,7 @@
    "op": "resolve",
    "files": {
     "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
-    "home/data/workspaces/axioma/projects/billium/plans": "x"
+    "home/workspaces/axioma/projects/billium/plans": "x"
    },
    "env": {
     "SKM_HOME": "{tmp}/home"
@@ -159,11 +159,11 @@
    }
   },
   {
-   "name": "SKM_HOME places the workspace in data/workspace",
+   "name": "SKM_HOME places the workspace in its workspaces folder",
    "op": "resolve",
    "files": {
     "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
-    "home/data/workspaces/axioma/projects/billium/plans/.keep": ""
+    "home/workspaces/axioma/projects/billium/plans/.keep": ""
    },
    "env": {
     "SKM_HOME": "{tmp}/home"
@@ -171,7 +171,7 @@
    "project_root": "{tmp}/proj",
    "expect": {
     "kind": "workspace",
-    "plans_root": "{tmp}/home/data/workspaces/axioma/projects/billium/plans",
+    "plans_root": "{tmp}/home/workspaces/axioma/projects/billium/plans",
     "project_id": "billium",
     "reason": "marker-workspace"
    }
@@ -181,7 +181,7 @@
    "op": "resolve",
    "files": {
     "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
-    "home/data/workspaces/axioma/projects/billium/plans/.keep": ""
+    "home/workspaces/axioma/projects/billium/plans/.keep": ""
    },
    "env": {
     "SKM_HOME": "{tmp}/home",
@@ -190,13 +190,13 @@
    "project_root": "{tmp}/proj",
    "expect": {
     "kind": "workspace",
-    "plans_root": "{tmp}/home/data/workspaces/axioma/projects/billium/plans",
+    "plans_root": "{tmp}/home/workspaces/axioma/projects/billium/plans",
     "project_id": "billium",
     "reason": "marker-workspace"
    }
   },
   {
-   "name": "XDG_DATA_HOME places the workspace",
+   "name": "XDG_DATA_HOME is a legacy place: used while the new workspaces folder does not exist",
    "op": "resolve",
    "files": {
     "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
@@ -210,6 +210,26 @@
    "expect": {
     "kind": "workspace",
     "plans_root": "{tmp}/xdg/swissknifeman/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "the new workspaces folder wins over the legacy XDG_DATA_HOME one",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans/.keep": "",
+    "xdg/swissknifeman/workspaces/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "HOME": "{tmp}/h",
+    "XDG_DATA_HOME": "{tmp}/xdg"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans",
     "project_id": "billium",
     "reason": "marker-workspace"
    }
@@ -262,7 +282,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "source_root": "{tmp}/co1"
    }
@@ -278,7 +298,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "source_root": "{tmp}/co2"
    }
@@ -293,7 +313,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "source_root": "{tmp}/co2"
    }
@@ -308,7 +328,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "source_root": null
    }
@@ -322,7 +342,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "source_root": null
    }
@@ -336,7 +356,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "source_root": null
    }
@@ -351,7 +371,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans",
    "expect": {
     "source_root": "{tmp}/co1"
    }
@@ -366,7 +386,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/archive/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/archive/p1",
    "expect": {
     "source_root": "{tmp}/co1"
    }
@@ -380,7 +400,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "source_root": "{tmp}/co1"
    },
@@ -395,7 +415,7 @@
    "env": {
     "SKM_HOME": "{tmp}/home"
    },
-   "plan_dir": "{tmp}/home/data/workspaces/axioma/projects/billium/plans/p1",
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
    "expect": {
     "error": "PROJECT_CONTEXT_CONFLICT"
    },

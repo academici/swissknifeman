@@ -158,7 +158,7 @@ class SafedirsCliCase(unittest.TestCase):
         (proj / ".claude").mkdir(parents=True)
         (proj / ".claude" / "settings.local.json").write_text(
             json.dumps({"permissions": {"ask": ["Bash(rm -r *)"]}}), encoding="utf-8")
-        registry = self.home / ".local" / "state" / "swissknifeman" / "skiller" / "projects.json"
+        registry = self.home / ".local" / "share" / "swissknifeman" / "state" / "skiller" / "projects.json"
         registry.parent.mkdir(parents=True)
         registry.write_text(json.dumps({"version": 1, "projects": [{"path": str(proj)}]}), encoding="utf-8")
         out = run(self.env, ["prune-ask", "--all-projects"])

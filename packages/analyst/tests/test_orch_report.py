@@ -134,17 +134,17 @@ if __name__ == "__main__":
 
 class TestWorkspaceStore(OrchCase):
     def test_artifacts_are_read_from_the_marker_store(self):
-        from aicore.workspace import new_id, write_marker
-        ws = Path(self.project).parent / "ws"
-        project_id = new_id("prj")
-        write_marker(self.project, project_id, "workspace")
+        from aicore.workspace import write_marker
+        ws = Path(self.project).parent / "wss" / "axioma"
+        project_id = "billium"
+        write_marker(self.project, "axioma", project_id, "workspace")
         store = ws / "projects" / project_id / "plans"
         store.parent.mkdir(parents=True)
         shutil.move(str(self.project / "plans"), str(store))
-        old = os.environ.get("SKM_WORKSPACE_ROOT")
-        os.environ["SKM_WORKSPACE_ROOT"] = str(ws)
-        self.addCleanup(lambda: os.environ.pop("SKM_WORKSPACE_ROOT", None) if old is None
-                        else os.environ.__setitem__("SKM_WORKSPACE_ROOT", old))
+        old = os.environ.get("SKM_WORKSPACES_ROOT")
+        os.environ["SKM_WORKSPACES_ROOT"] = str(ws.parent)
+        self.addCleanup(lambda: os.environ.pop("SKM_WORKSPACES_ROOT", None) if old is None
+                        else os.environ.__setitem__("SKM_WORKSPACES_ROOT", old))
         data = reader.read(self.project, plan="T")
         self.assertIn("W1", data["artifacts"])
         self.assertFalse(any("artifact folder" in text for text in data["problems"]), data["problems"])

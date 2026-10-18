@@ -65,23 +65,33 @@ def _user_home(env: Mapping[str, str]) -> Path:
     return Path(env["HOME"]) if env.get("HOME") else Path.home()
 
 
-def _data_dir(environment: Mapping[str, str]) -> Path:
+def _machine_home(environment: Mapping[str, str]) -> Path:
+    """The machine home: ``$SKM_HOME``, else ``~/.local/share/swissknifeman`` (same rule as ``aicore.state.machine_home``)."""
     home = _skm_home(environment)
     if home is not None:
-        return home / "data"
-    return _xdg(environment, "XDG_DATA_HOME", _user_home(environment) / ".local" / "share") / "swissknifeman"
+        return home
+    return _user_home(environment) / ".local" / "share" / "swissknifeman"
+
+
+def _machine_dir(environment: Mapping[str, str], kind: str, legacy: Path) -> Path:
+    """``<machine home>/<kind>``; without ``SKM_HOME`` the old XDG folder ``legacy`` while only that one exists."""
+    new = _machine_home(environment) / kind
+    if _skm_home(environment) is None and not new.exists() and legacy.exists():
+        return legacy
+    return new
 
 
 def workspaces_root(env: Env = None) -> Path:
-    """The folder of the workspaces: ``SKM_WORKSPACES_ROOT`` (absolute), else ``<data>/workspaces`` (``$SKM_HOME/data`` or
-    ``$XDG_DATA_HOME|~/.local/share`` + ``/swissknifeman``). Nothing is created."""
+    """The folder of the workspaces: ``SKM_WORKSPACES_ROOT`` (absolute), else ``<machine home>/workspaces``
+    (``$SKM_HOME`` or ``~/.local/share/swissknifeman``). Nothing is created."""
     environment = _environment(env)
     value = environment.get("SKM_WORKSPACES_ROOT", "")
     if value:
         if not os.path.isabs(value):
             raise ValueError(f"SKM_WORKSPACES_ROOT must be an absolute path, got {value!r}")
         return Path(value)
-    return _data_dir(environment) / "workspaces"
+    old = _xdg(environment, "XDG_DATA_HOME", _user_home(environment) / ".local" / "share") / "swissknifeman" / "workspaces"
+    return _machine_dir(environment, "workspaces", old)
 
 
 def workspace_root(code: str, env: Env = None) -> Path:
@@ -92,16 +102,12 @@ def workspace_root(code: str, env: Env = None) -> Path:
 
 
 def state_dir(code: str, env: Env = None) -> Path:
-    """Machine files of the workspace ``code`` (bindings, locks): ``$SKM_HOME/state/workspaces/<code>`` or
-    ``$XDG_STATE_HOME|~/.local/state`` + ``/swissknifeman/workspaces/<code>``."""
+    """Machine files of the workspace ``code`` (bindings, locks): ``<machine home>/state/workspaces/<code>``."""
     if not _CODE.match(code):
         raise ValueError(f"invalid workspace code {code!r}")
     environment = _environment(env)
-    home = _skm_home(environment)
-    if home is not None:
-        return home / "state" / "workspaces" / code
-    return (_xdg(environment, "XDG_STATE_HOME", _user_home(environment) / ".local" / "state") / "swissknifeman"
-            / "workspaces" / code)
+    old = _xdg(environment, "XDG_STATE_HOME", _user_home(environment) / ".local" / "state") / "swissknifeman"
+    return _machine_dir(environment, "state", old) / "workspaces" / code
 
 
 def launcher_root(env: Env = None) -> Optional[Path]:

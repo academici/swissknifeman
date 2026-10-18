@@ -13,8 +13,11 @@ from .locations import (Locations, ProjectContext, ProjectContextConflict, Proje
                         selected_workspace, workspaces_root)
 from .invocation import (InvocationContext, LauncherError, ProjectWriteError, read_invocation_context,
                          require_project_path, validate_launcher_env)
+from .locations import legacy_machine_dirs, machine_home
+from .migrate import MigrationError, Move, migrate_home
 
 __all__ = [
+    "MigrationError", "Move", "legacy_machine_dirs", "machine_home", "migrate_home",
     "DEFAULT_KEEP", "InvocationContext", "LauncherError", "Locations", "ProjectContext", "ProjectContextConflict",
     "ProjectContextRequired", "ProjectWriteError", "backup", "blob_path", "cache_dir",
     "config_dir", "data_dir", "ensure_dir", "find_project_root", "gitignore", "launcher_root", "list_backups", "machine_config_file", "machine_locations",

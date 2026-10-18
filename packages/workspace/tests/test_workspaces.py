@@ -20,6 +20,10 @@ class TwoWorkspaces(TempCase):
         self.other = self.ws.parent / "other"
         # no selection by the environment: the commands choose by --workspace, the project or the only workspace
         os.environ.pop("SKM_WORKSPACE", None)
+        # the commands run from the sandbox, not from the checkout of the test run, whose own marker would choose a workspace
+        patcher = mock.patch("workspace.cli.Path.cwd", return_value=self.root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_a_code_names_the_folder_and_the_document(self):
         self.assertEqual(read_workspace(self.ws)["code"], "axioma")

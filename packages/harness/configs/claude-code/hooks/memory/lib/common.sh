@@ -65,13 +65,19 @@ brain_store()   { expandtilde "$(cfg ".brains[\"$1\"].store")"; }
 brain_am_url()  { cfg ".brains[\"$1\"].agentmemory.url"; }
 brain_am_ns()   { local v; v="$(cfg ".brains[\"$1\"].agentmemory.namespace")"; printf '%s' "${v:-$1}"; }
 
-# An owner's registry file: its own state file (the XDG state directory of swissknifeman, or $SKM_HOME/state), else the
-# legacy ~/.swissknifeman/<name> while only that one exists (not under SKM_HOME). Same ladder as aicore.state.locations.
+# An owner's registry file: its own state file (<machine home>/state/<owner>/<name>; the machine home is $SKM_HOME or
+# ~/.local/share/swissknifeman), else the old XDG state directory (~/.local/state/swissknifeman, or $XDG_STATE_HOME/...)
+# while the new state directory does not exist, else the legacy ~/.swissknifeman/<name> while only that one exists
+# (neither of the last two under SKM_HOME). Same ladder as aicore.state.locations.
 mem_state_file() {
-  local owner="$1" name="$2" base new
+  local owner="$1" name="$2" state old new
   if [ -n "${SKM_HOME:-}" ]; then printf '%s' "$SKM_HOME/state/$owner/$name"; return; fi
-  base="${XDG_STATE_HOME:-}"; case "$base" in /*) ;; *) base="$HOME/.local/state" ;; esac
-  new="$base/swissknifeman/$owner/$name"
+  state="$HOME/.local/share/swissknifeman/state"
+  if [ ! -e "$state" ]; then
+    old="${XDG_STATE_HOME:-}"; case "$old" in /*) ;; *) old="$HOME/.local/state" ;; esac
+    if [ -e "$old/swissknifeman" ]; then state="$old/swissknifeman"; fi
+  fi
+  new="$state/$owner/$name"
   if [ ! -f "$new" ] && [ -f "$HOME/.swissknifeman/$name" ]; then printf '%s' "$HOME/.swissknifeman/$name"; else printf '%s' "$new"; fi
 }
 MEM_TOPO="$(mem_state_file maind topology.json)"

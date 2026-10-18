@@ -401,7 +401,7 @@ class MapsCli(unittest.TestCase):
 class TestExample(unittest.TestCase):
     EXPECTED = '''\
 # maps configuration, generated from configs/config.schema.json; do not edit by hand.
-# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml
+# Copy into ~/.local/share/swissknifeman/config/config.toml or <project>/.swissknifeman/config.toml
 # (swissknifeman config init does it) and uncomment the keys you change.
 schema_version = 1
 

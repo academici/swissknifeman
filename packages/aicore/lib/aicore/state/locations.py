@@ -1,10 +1,14 @@
 """Standard locations of swissknifeman configuration and state.
 
-Machine locations follow the XDG base directories; ``SKM_HOME`` (an absolute path) moves all
-four of them under one directory and switches off every legacy-location lookup, so a sandbox
-or a test never reads the real home directory. Project locations live in ``.swissknifeman/``
-at the project root. Nothing here creates anything on disk except :func:`ensure_dir`.
-stdlib only.
+The machine keeps everything in one folder, ``~/.local/share/swissknifeman`` (the machine home):
+``config/``, ``state/``, ``cache/`` and ``workspaces/``, the data of the modules beside them
+(``<home>/<module>``). The ``XDG_*`` variables no longer move the default. ``SKM_HOME`` (an absolute
+path) is the machine home of a sandbox or a test and switches off every legacy-location lookup, so
+it never reads the real home directory. A machine that still has the old XDG folders
+(``~/.config/swissknifeman``, ``~/.local/state/swissknifeman``, ``~/.cache/swissknifeman``, ...)
+keeps using each of them while the new folder of that kind does not exist yet; :mod:`.migrate`
+(``aicore config migrate-home``) moves them. Project locations live in ``.swissknifeman/`` at the
+project root. Nothing here creates anything on disk except :func:`ensure_dir`. stdlib only.
 """
 from __future__ import annotations
 
@@ -13,7 +17,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable, Mapping, Optional, Union
+from typing import Callable, Dict, Iterable, Mapping, Optional, Tuple, Union
 
 APP = "swissknifeman"
 PROJECT_DIRNAME = ".swissknifeman"
@@ -23,13 +27,29 @@ PathLike = Union[str, "os.PathLike[str]"]
 
 @dataclass(frozen=True)
 class Locations:
-    """The four machine directories and whether they come from ``SKM_HOME``."""
+    """The machine directories, whether they come from ``SKM_HOME``, and which of them are still the old XDG ones.
+
+    ``data`` is the machine home itself (module data is ``<home>/<module>``); ``legacy`` names the kinds
+    (``config``, ``state``, ``cache``, ``workspaces``) that resolve to an old XDG folder.
+    """
 
     config: Path
     state: Path
     data: Path
     cache: Path
     isolated: bool
+    workspaces: Optional[Path] = None
+    legacy: Tuple[str, ...] = ()
+    home: Optional[Path] = None
+
+
+# The machine folders of the layout before the machine home: kind -> (XDG variable, default below the user home).
+LEGACY_XDG = {
+    "config": ("XDG_CONFIG_HOME", (".config",)),
+    "state": ("XDG_STATE_HOME", (".local", "state")),
+    "data": ("XDG_DATA_HOME", (".local", "share")),
+    "cache": ("XDG_CACHE_HOME", (".cache",)),
+}
 
 
 def _home(env: Mapping[str, str], home: Optional[PathLike]) -> Path:
@@ -48,24 +68,49 @@ def _xdg(env: Mapping[str, str], name: str, default: Path) -> Path:
     return default
 
 
-def machine_locations(env: Optional[Mapping[str, str]] = None,
-                      home: Optional[PathLike] = None) -> Locations:
-    """Resolve the machine config/state/data/cache directories (nothing is created)."""
+def machine_home(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
+    """The machine home: ``SKM_HOME`` (absolute), else ``~/.local/share/swissknifeman`` (nothing is created)."""
     env = os.environ if env is None else env
     skm_home = env.get("SKM_HOME", "")
     if skm_home:
         if not os.path.isabs(skm_home):
             raise ValueError(f"SKM_HOME must be an absolute path, got {skm_home!r}")
-        base = Path(skm_home)
-        return Locations(base / "config", base / "state", base / "data", base / "cache", True)
+        return Path(skm_home)
+    return _home(env, home) / ".local" / "share" / APP
+
+
+def legacy_machine_dirs(env: Optional[Mapping[str, str]] = None,
+                        home: Optional[PathLike] = None) -> Dict[str, Path]:
+    """The ``config``, ``state``, ``data`` and ``cache`` folders of the XDG layout that was used before the machine home."""
+    env = os.environ if env is None else env
     user = _home(env, home)
-    return Locations(
-        _xdg(env, "XDG_CONFIG_HOME", user / ".config") / APP,
-        _xdg(env, "XDG_STATE_HOME", user / ".local" / "state") / APP,
-        _xdg(env, "XDG_DATA_HOME", user / ".local" / "share") / APP,
-        _xdg(env, "XDG_CACHE_HOME", user / ".cache") / APP,
-        False,
-    )
+    return {kind: _xdg(env, variable, user.joinpath(*below)) / APP for kind, (variable, below) in LEGACY_XDG.items()}
+
+
+def machine_locations(env: Optional[Mapping[str, str]] = None,
+                      home: Optional[PathLike] = None) -> Locations:
+    """Resolve the machine config/state/cache/workspaces directories (nothing is created).
+
+    Each of them is ``<machine home>/<kind>``; without ``SKM_HOME`` a kind falls back to its old XDG folder
+    while the new one does not exist and the old one does (reported in ``Locations.legacy``).
+    """
+    env = os.environ if env is None else env
+    base = machine_home(env, home)
+    if env.get("SKM_HOME", ""):
+        return Locations(base / "config", base / "state", base, base / "cache", True, base / "workspaces", (), base)
+    old = legacy_machine_dirs(env, home)
+    old["workspaces"] = old["data"] / "workspaces"
+    chosen: Dict[str, Path] = {}
+    used = []
+    for kind in ("config", "state", "cache", "workspaces"):
+        new = base / kind
+        if not new.exists() and old[kind].exists():
+            chosen[kind] = old[kind]
+            used.append(kind)
+        else:
+            chosen[kind] = new
+    return Locations(chosen["config"], chosen["state"], base, chosen["cache"], False, chosen["workspaces"],
+                     tuple(used), base)
 
 
 def _sub(base: Path, app: Optional[str]) -> Path:
@@ -116,14 +161,14 @@ class WorkspaceSelectionError(ValueError):
 
 def workspaces_root(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
     """The folder that holds the workspaces (one git repository each): ``SKM_WORKSPACES_ROOT`` (an absolute path) or
-    ``data_dir()/workspaces``. Nothing is created."""
+    ``<machine home>/workspaces``. Nothing is created."""
     environment = os.environ if env is None else env
     value = environment.get(ENV_WORKSPACES_ROOT, "")
     if value:
         if not os.path.isabs(value):
             raise ValueError(f"{ENV_WORKSPACES_ROOT} must be an absolute path, got {value!r}")
         return Path(value)
-    return data_dir(env=environment, home=home) / "workspaces"
+    return machine_locations(environment, home).workspaces
 
 
 def list_workspaces(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> list:

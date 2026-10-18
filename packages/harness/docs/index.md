@@ -72,7 +72,7 @@ harness hooks sync|show [--target P] [--json]     # render / inspect .swissknife
 
 Machine-owned allowlist trusted directories: inside its roots auto-approve
 skips `rm`/`rmdir` past deny_hard (code below git — deletion is reversible), out —
-blocks as before. The config is `safe-dirs.json` in `<config>/harness/` (`~/.config/swissknifeman/harness/safe-dirs.json`,
+blocks as before. The config is `safe-dirs.json` in `<config>/harness/` (`~/.local/share/swissknifeman/config/harness/safe-dirs.json`; the old `~/.config/swissknifeman/...` is read while the new `config/` folder does not exist,
 `$SKM_HOME/config/harness/safe-dirs.json` when `SKM_HOME` is set; template
 `configs/safe-dirs.example.json`). One search ladder for the command and the hook:
 `$SKM_SAFE_DIRS_CONFIG` (exclusive override) → the file above → legacy `<hub root>/safe-dirs.json`

@@ -65,7 +65,7 @@ Nine thresholds are settings (the model parameters of `confidence.py` stay in th
 | `digest.pathology_window` | 5 | latest runs inspected for a recurring pathology |
 | `digest.pathology_min_hits` | 2 | runs of the window that must show the code |
 
-Layers, lowest to highest: the schema defaults, the machine file (`~/.config/swissknifeman/config.toml`), the
+Layers, lowest to highest: the schema defaults, the machine file (`~/.local/share/swissknifeman/config/config.toml`), the
 project file (`<project>/.swissknifeman/config.toml`, under `[analyst]`), the environment
 (`SKM_ANALYST_RECOMPUTE__CANDIDATE_MIN_N=7`), and `--config FILE`. Without any file the behaviour is unchanged.
 
@@ -75,8 +75,8 @@ swissknifeman config explain analyst recompute.candidate_min_n   # value, layer,
 ```
 
 An invalid value stops the command with the file and line. The cross-project state (`scan`, `suggest`, proposals)
-lives in the `analyst` folder of the machine state directory (`~/.local/state/swissknifeman/analyst`, or under
-`SKM_HOME`); a folder left at `~/.swissknifeman/analyst` is still read, with one warning, until it is moved.
+lives in the `analyst` folder of the machine state directory (`~/.local/share/swissknifeman/state/analyst`, or under
+`SKM_HOME`; the old `~/.local/state/swissknifeman/analyst` is used while the new folder does not exist); a folder left at `~/.swissknifeman/analyst` is still read, with one warning, until it is moved.
 Documentation that says `<state>` means that directory.
 
 ## Partners and events

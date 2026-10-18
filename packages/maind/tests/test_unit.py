@@ -18,11 +18,11 @@ class TestEnvPaths(unittest.TestCase):
             for name in ("SKM_HOME", "XDG_STATE_HOME", "XDG_DATA_HOME"):
                 os.environ.pop(name, None)
             env = Env("/srv/maind", home="/h")
-            # aicore.state places (XDG defaults under the home directory)
-            self.assertEqual(env.state_dir, Path("/h/.local/state/swissknifeman/maind"))
-            self.assertEqual(env.agents_db, Path("/h/.local/state/swissknifeman/maind/agents.json"))
+            # aicore.state places (the machine home under the home directory)
+            self.assertEqual(env.state_dir, Path("/h/.local/share/swissknifeman/state/maind"))
+            self.assertEqual(env.agents_db, Path("/h/.local/share/swissknifeman/state/maind/agents.json"))
             self.assertEqual(env.registry_file,
-                             Path("/h/.local/state/swissknifeman/maind/registry.json"))
+                             Path("/h/.local/share/swissknifeman/state/maind/registry.json"))
             self.assertEqual(env.data_dir, Path("/h/.local/share/swissknifeman/maind"))
             self.assertEqual(env.graph_db, Path("/h/.local/share/swissknifeman/maind/graph.db"))
             self.assertEqual(env.memory_pidfile,
@@ -39,7 +39,7 @@ class TestEnvPaths(unittest.TestCase):
         with mock.patch.dict(os.environ, {"SKM_HOME": "/iso"}):
             env = Env("/srv/maind", home="/h")
             self.assertEqual(env.state_dir, Path("/iso/state/maind"))
-            self.assertEqual(env.data_dir, Path("/iso/data/maind"))
+            self.assertEqual(env.data_dir, Path("/iso/maind"))
 
     def test_legacy_places_used_until_new_ones_exist(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -53,7 +53,7 @@ class TestEnvPaths(unittest.TestCase):
                 self.assertEqual(env.state_dir, home / ".maind")
                 self.assertEqual(env.data_dir, root / "data")
                 self.assertEqual(env.agents_db, home / ".maind" / "agents.json")
-                new_state = home / ".local/state/swissknifeman/maind"
+                new_state = home / ".local/share/swissknifeman/state/maind"
                 new_state.mkdir(parents=True)
                 self.assertEqual(env.state_dir, new_state)   # the new place wins once it exists
 

@@ -20,10 +20,7 @@ def setUpModule():
     # `onboard` starts the real skiller; without a throwaway machine state it would register the temporary
     # projects of these tests in the developer's own skiller/projects.json.
     _XDG["dir"] = tempfile.TemporaryDirectory()
-    _XDG["patch"] = mock.patch.dict(os.environ, {
-        "XDG_CONFIG_HOME": os.path.join(_XDG["dir"].name, "config"),
-        "XDG_STATE_HOME": os.path.join(_XDG["dir"].name, "state"),
-        "XDG_DATA_HOME": os.path.join(_XDG["dir"].name, "data")})
+    _XDG["patch"] = mock.patch.dict(os.environ, {"SKM_HOME": os.path.join(_XDG["dir"].name, "home")})
     _XDG["patch"].start()
 
 

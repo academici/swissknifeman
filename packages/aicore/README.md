@@ -27,7 +27,7 @@ packages/aicore/
 | `aicore.util` | atomic write, paths, text, terminal, CLI and processes, HTTP, repository root, managed blocks, project type, `digest` (canonical JSON and tagged SHA-256), `schema` (closed-profile JSON Schema validator), `partners` (find a partner module's command and read its JSON output as a child process) | all modules |
 | `aicore.provider` | provider capability manifests, configuration layers, control plane, health, adapter registry, request lifecycle, `errors` (failure classes and classification by data), `models` (model catalog), `mcp` (pure MCP projection: catalog and bindings documents in, native Codex/Cursor/Grok/Claude files and whole-file artifact plans out; the caller names the artifact sources and adapter); data in `configs/` found from the package file (`provider.data.config_path`, `manifest.default_manifest_path()`) | harness, maind, planner, orch, skiller |
 | `aicore.artifacts` | plan, apply and lock of artifacts in projects, reconcile | skiller, harness, maind |
-| `aicore.state` | standard machine and project places (`SKM_HOME`, XDG, `.swissknifeman/`), legacy lookup, timestamped backups with rotation, the gitignore policy | `aicore.config`, all modules |
+| `aicore.state` | standard machine and project places (the machine home `~/.local/share/swissknifeman` or `SKM_HOME`, `.swissknifeman/`), `migrate_home`, legacy lookup, timestamped backups with rotation, the gitignore policy | `aicore.config`, all modules |
 | `aicore.workspace` | the portable workspace: ids (`new_id`), remotes (`normalize_remote`, `redact_remote`, `checkout_remotes`), documents (project marker `.swissknifeman/project.json`, `workspace.json`, `project.json`, device file; validated by the contracts, no absolute path in a portable document), machine `bindings` (under `flock`), and the one resolution rule `resolve_plans_store` / `source_root_of` | `workspace`, planner (its copy passes the same vectors), harness, analyst, GUI |
 | `aicore.config` | module settings from layers (`resolve`): schema defaults, machine file, project file, extra layers, environment, `--config` file, flags; `explain` (origin of every value), secret references (`Secret`, `register_secret_resolver`), `edit_layer_file` (comment-preserving write with backup); module discovery and `config.example.toml` generation; the `aicore config` CLI; the one TOML entry (`toml`, `toml_edit`) | all modules |
 | `aicore.content` | what a skill or command is and what it costs: `skill` (frontmatter, content hash and `skill_digest`, `describe_skill` for `skill-descriptor/v1`, transitive `requires`), `budget` (the one token estimate, skill, set and listing budgets, first-turn meters and verdict), `publication` (manifest bytes, whole-file artifacts, Codex plugin manifest and marketplace entry, publication lock, runtime-file walk), `commands` (the shared part of command projection), `eval` (grader, validators, benchmarks, `claude -p` runner, `eval-context/v1`) | skiller, harness, planner |
@@ -57,17 +57,22 @@ parses `config.toml` itself. Places come from `aicore.state`.
 
 | What | Default | With `SKM_HOME=<dir>` |
 | --- | --- | --- |
-| machine config file | `$XDG_CONFIG_HOME/swissknifeman/config.toml` (`~/.config/...`) | `<dir>/config/config.toml` |
-| state (registries, machine backups) | `$XDG_STATE_HOME/swissknifeman` (`~/.local/state/...`) | `<dir>/state` |
-| data | `$XDG_DATA_HOME/swissknifeman` (`~/.local/share/...`) | `<dir>/data` |
-| cache | `$XDG_CACHE_HOME/swissknifeman` (`~/.cache/...`) | `<dir>/cache` |
+| machine home | `~/.local/share/swissknifeman` | `<dir>` |
+| machine config file | `<home>/config/config.toml` | `<dir>/config/config.toml` |
+| state (registries, machine backups) | `<home>/state` | `<dir>/state` |
+| cache | `<home>/cache` | `<dir>/cache` |
+| data of a module (`data_dir("maind")`) | `<home>/<module>` | `<dir>/<module>` |
 | project config (in git) | `<project>/.swissknifeman/config.toml` | same |
 | project state, backups (ignored) | `<project>/.swissknifeman/{state,backups}/` | same |
-| portable workspaces (one git root each) | `$XDG_DATA_HOME/swissknifeman/workspaces/<code>` (`~/.local/share/...`); `SKM_WORKSPACES_ROOT=<abs dir>` moves the folder, `SKM_WORKSPACE=<code>` chooses the workspace | `<dir>/data/workspaces/<code>` |
+| portable workspaces (one git root each) | `<home>/workspaces/<code>`; `SKM_WORKSPACES_ROOT=<abs dir>` moves the folder, `SKM_WORKSPACE=<code>` chooses the workspace | `<dir>/workspaces/<code>` |
 | workspace machine files (bindings, sync state, audit) | `<state>/workspaces/<code>`; the device file `<state>/workspaces/device.json` | `<dir>/state/workspaces/<code>` |
 
-`SKM_HOME` isolates a sandbox or a test: all four machine places move under it and no legacy location is read. It
-must be an absolute path; a relative `XDG_*` value is ignored. A file that exists only at an old location
+The machine keeps everything in one folder. The `XDG_*` variables no longer move it. `SKM_HOME` (an absolute path) is
+the machine home of a sandbox or a test: no legacy location is read under it. A machine that still has the old XDG
+folders (`~/.config/swissknifeman`, `~/.local/state/swissknifeman`, `~/.cache/swissknifeman`, or the `XDG_*` variants of
+them) keeps using each of them while the new folder of that kind does not exist; `aicore config paths` lists these in
+`legacy`, and `aicore config migrate-home [--dry-run]` moves them into the machine home (a target that already holds
+data is a conflict and is left alone; exit code 1). A file that exists only at an older location
 (for example `~/.swissknifeman/analyst`) is still read, with one warning per process; nothing is copied or removed
 until `swissknifeman upgrade`. Before a write the old file is copied to `.swissknifeman/backups/<UTC stamp>/` (machine
 files: to the state directory), and the newest ten copies are kept. `aicore config paths` prints the resolved places.

@@ -101,7 +101,8 @@ if [[ "$WITH_SERVICE" == true ]]; then
 fi
 
 # ── fleet registry from the example (only when no registry source exists yet) ───────
-# registry.json lives in the swissknifeman state directory (SKM_HOME, then XDG, as aicore.state).
+# registry.json lives in the swissknifeman state directory (<machine home>/state: SKM_HOME or
+# ~/.local/share/swissknifeman, with the old XDG state folder while it is the only one, as aicore.state).
 # A legacy node file (config.json in the ROOT monorepo, two levels above the package) is still a
 # source until `swissknifeman upgrade`; it is never copied or replaced here.
 # Settings (code graph policy, memory ports, ...) are the [maind] table of config.toml, see
@@ -117,7 +118,13 @@ fi
 if [[ -n "${SKM_HOME:-}" ]]; then
   STATE_DIR="$SKM_HOME/state"
 else
-  STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/swissknifeman"
+  # the machine home is ~/.local/share/swissknifeman; the old XDG state folder is kept while the new one does not exist
+  STATE_DIR="$HOME/.local/share/swissknifeman/state"
+  _old_state="${XDG_STATE_HOME:-}"
+  [[ "$_old_state" == /* ]] || _old_state="$HOME/.local/state"
+  if [[ ! -e "$STATE_DIR" && -e "$_old_state/swissknifeman" ]]; then
+    STATE_DIR="$_old_state/swissknifeman"
+  fi
 fi
 REGISTRY="$STATE_DIR/maind/registry.json"
 if [[ ! -f "$REGISTRY" && ! -f "$CFG_ROOT/config.json" && ! -f "$CFG_ROOT/.maind.json" \

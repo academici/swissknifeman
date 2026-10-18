@@ -107,7 +107,7 @@ and set `trusted = true` so it receives `PLANNER_ROOT`; `workspace doctor` shows
 
 | What | Where |
 | --- | --- |
-| the workspaces | `SKM_WORKSPACES_ROOT`, else `<data>/workspaces` (`~/.local/share/swissknifeman/workspaces/<code>`, one git root each); chosen by `--workspace`, `SKM_WORKSPACE`, the marker, or the only one |
+| the workspaces | `SKM_WORKSPACES_ROOT`, else `<machine home>/workspaces` (`~/.local/share/swissknifeman/workspaces/<code>`, `$SKM_HOME/workspaces/<code>`, one git root each); chosen by `--workspace`, `SKM_WORKSPACE`, the marker, or the only one |
 | bindings, sync state, git lock | `<state>/workspaces/<code>` (`bindings.json`, `sync.json`, `git.lock`); the device `<state>/workspaces/device.json`; never in git |
 | the marker of a project | `<checkout>/.swissknifeman/project.json`, committed with the project |
 

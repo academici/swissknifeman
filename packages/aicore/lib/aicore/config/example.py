@@ -137,7 +137,7 @@ def render_sections(schema: ModuleSchema) -> str:
 def render(schema: ModuleSchema, source: str = "configs/config.schema.json") -> str:
     """The full ``config.example.toml`` text of a module."""
     head = (f"# {schema.module_id} configuration, generated from {source}; do not edit by hand.\n"
-            "# Copy into ~/.config/swissknifeman/config.toml or <project>/.swissknifeman/config.toml\n"
+            "# Copy into ~/.local/share/swissknifeman/config/config.toml or <project>/.swissknifeman/config.toml\n"
             "# (swissknifeman config init does it) and uncomment the keys you change.\n")
     return head + "schema_version = 1\n\n" + render_sections(schema)
 

@@ -1,4 +1,4 @@
-"""``aicore config``: show, explain, set, unset, init, example and paths.
+"""``aicore config``: show, explain, set, unset, init, example, paths and migrate-home.
 
 Exit codes: 0 success, 1 configuration error or refusal, 2 usage error.
 """
@@ -12,8 +12,8 @@ import sys
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Sequence, TextIO
 
-from ..state import (backup, ensure_dir, find_project_root, machine_config_file, machine_locations,
-                     project_backups_dir, project_config_file, project_state_dir)
+from ..state import (MigrationError, backup, ensure_dir, find_project_root, machine_config_file, machine_locations,
+                     migrate_home, project_backups_dir, project_config_file, project_state_dir)
 from ..util import io as _io
 from . import (ConfigError, apply_layer_patch, layer_revision, load_module_schema, parse_value, resolve,
                toml_edit)
@@ -85,6 +85,10 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--check", action="store_true", help="exit 1 with a diff if the file differs")
 
     commands.add_parser("paths", parents=[common], help="where configuration and state live")
+
+    migrate = commands.add_parser("migrate-home", parents=[common],
+                                  help="move the old XDG folders (~/.config, ~/.local/state, ~/.cache) into the machine home")
+    migrate.add_argument("--dry-run", action="store_true", help="only report what would move")
     return parser
 
 
@@ -270,7 +274,8 @@ def _cmd_paths(ctx: _Context) -> int:
     where = machine_locations(ctx.env)
     doc = {
         "config": str(where.config), "state": str(where.state), "data": str(where.data),
-        "cache": str(where.cache), "isolated": where.isolated,
+        "cache": str(where.cache), "workspaces": str(where.workspaces), "isolated": where.isolated,
+        "legacy": list(where.legacy),
         "machine_config_file": str(machine_config_file(env=ctx.env)),
         "machine_revision": _revision_of(Path(machine_config_file(env=ctx.env))),
         "project": {"root": str(ctx.root), "config_file": str(project_config_file(ctx.root)),
@@ -285,13 +290,35 @@ def _cmd_paths(ctx: _Context) -> int:
             for sub, path in value.items():
                 ctx.say(f"project.{sub}: {path}")
         else:
-            ctx.say(f"{name}: {str(value).lower() if isinstance(value, bool) else value}")
+            shown = ", ".join(value) or "none" if isinstance(value, list) else value
+            ctx.say(f"{name}: {str(shown).lower() if isinstance(shown, bool) else shown}")
     return 0
+
+
+def _cmd_migrate_home(ctx: _Context) -> int:
+    try:
+        moves = migrate_home(ctx.env, dry_run=ctx.args.dry_run)
+    except MigrationError as exc:
+        raise _Refusal(str(exc)) from None
+    conflicts = [move for move in moves if move.status == "conflict"]
+    if ctx.args.json:
+        ctx.emit_json({"dry_run": ctx.args.dry_run, "moves": [move.as_dict() for move in moves]})
+    else:
+        for move in moves:
+            if move.status != "absent":
+                ctx.say(f"{move.status}: {move.source} -> {move.target}")
+        if not any(move.status != "absent" for move in moves):
+            ctx.say("nothing to move: no old XDG folder of swissknifeman is left")
+    for move in conflicts:
+        print(f"aicore config migrate-home: {move.target} already holds data; merge {move.source} into it by hand",
+              file=ctx.err)
+    return 1 if conflicts else 0
 
 
 _COMMANDS = {
     "show": _cmd_show, "explain": _cmd_explain, "set": lambda ctx: _edit(ctx, remove=False),
     "unset": lambda ctx: _edit(ctx, remove=True), "init": _cmd_init, "example": _cmd_example, "paths": _cmd_paths,
+    "migrate-home": _cmd_migrate_home,
 }
 
 

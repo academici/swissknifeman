@@ -34,11 +34,13 @@
     "text": {
       "type": "string",
       "minLength": 1,
+      "maxLength": 4096,
       "description": "Text shown to the user."
     },
     "item_id": {
       "type": "string",
       "minLength": 1,
+      "maxLength": 256,
       "description": "Id of an element, unique inside its list."
     },
     "scalar": {
@@ -64,6 +66,7 @@
     "cursor": {
       "type": "string",
       "minLength": 1,
+      "maxLength": 512,
       "description": "Opaque cursor of the next page."
     },
     "link": {
@@ -169,7 +172,7 @@
             "required": ["title", "markdown"],
             "properties": {
               "title": {"$ref": "#/$defs/text", "description": "Section title."},
-              "markdown": {"type": "string", "description": "Section text in markdown (sanitized, no raw HTML)."}
+              "markdown": {"type": "string", "maxLength": 262144, "description": "Section text in markdown (sanitized, no raw HTML)."}
             },
             "additionalProperties": false
           }
@@ -285,7 +288,7 @@
       "properties": {
         "$schema": {"$ref": "#/$defs/contract", "description": "Contract id."},
         "view": {"const": "markdown", "description": "Kind of view."},
-        "text": {"type": "string", "description": "Markdown text (sanitized, no raw HTML)."},
+        "text": {"type": "string", "maxLength": 262144, "description": "Markdown text (sanitized, no raw HTML)."},
         "base_route": {"$ref": "#/$defs/local_id", "description": "Route that relative links resolve against."}
       },
       "additionalProperties": false

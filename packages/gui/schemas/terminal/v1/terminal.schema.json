@@ -77,7 +77,8 @@
         "project_id": {
           "type": "string",
           "minLength": 1,
-          "description": "Id of a registered project; the shell starts in its root."
+          "description": "Id of a registered project; the shell starts in its root.",
+          "maxLength": 256
         },
         "cols": {
           "$ref": "#/$defs/cols",
@@ -124,12 +125,14 @@
         "project_id": {
           "type": "string",
           "minLength": 1,
-          "description": "Project of the session."
+          "description": "Project of the session.",
+          "maxLength": 256
         },
         "shell": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the shell program."
+          "description": "Absolute path of the shell program.",
+          "maxLength": 4096
         },
         "cols": {
           "$ref": "#/$defs/cols",
@@ -173,7 +176,8 @@
           "items": {
             "$ref": "#/$defs/session_entry",
             "description": "One session."
-          }
+          },
+          "maxItems": 1024
         }
       },
       "additionalProperties": false
@@ -197,12 +201,14 @@
         "project_id": {
           "type": "string",
           "minLength": 1,
-          "description": "Project of the session."
+          "description": "Project of the session.",
+          "maxLength": 256
         },
         "shell": {
           "type": "string",
           "minLength": 1,
-          "description": "Absolute path of the shell program."
+          "description": "Absolute path of the shell program.",
+          "maxLength": 4096
         },
         "cols": {
           "$ref": "#/$defs/cols",
@@ -390,7 +396,8 @@
         },
         "message": {
           "type": "string",
-          "description": "Text that is safe to show."
+          "description": "Text that is safe to show.",
+          "maxLength": 4096
         }
       },
       "additionalProperties": false

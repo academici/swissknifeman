@@ -34,11 +34,13 @@
     "point": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$",
-      "description": "Extension point being called (invoke)."
+      "description": "Extension point being called (invoke).",
+      "maxLength": 256
     },
     "input": {
       "type": "object",
-      "description": "Input of the call (invoke)."
+      "description": "Input of the call (invoke).",
+      "maxProperties": 1024
     },
     "event": {
       "$ref": "urn:swissknifeman:aicore:event:v1",
@@ -53,7 +55,8 @@
             "string",
             "null"
           ],
-          "description": "Root of the project, or null outside a project."
+          "description": "Root of the project, or null outside a project.",
+          "maxLength": 4096
         },
         "attempt": {
           "type": "integer",

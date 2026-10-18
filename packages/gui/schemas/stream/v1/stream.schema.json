@@ -83,8 +83,10 @@
               "items": {
                 "type": "string",
                 "minLength": 1,
-                "description": "Project id."
-              }
+                "description": "Project id.",
+                "maxLength": 256
+              },
+              "maxItems": 1024
             },
             "runs": {
               "type": "array",
@@ -94,7 +96,8 @@
               "items": {
                 "$ref": "urn:swissknifeman:gui:run:v1#/$defs/run_id",
                 "description": "Run id."
-              }
+              },
+              "maxItems": 1024
             },
             "owners": {
               "type": "array",
@@ -104,7 +107,8 @@
               "items": {
                 "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
                 "description": "Owner."
-              }
+              },
+              "maxItems": 1024
             },
             "types": {
               "type": "array",
@@ -115,7 +119,8 @@
                 "type": "string",
                 "pattern": "^[a-z*][a-z0-9.*_-]*$",
                 "description": "Event type pattern."
-              }
+              },
+              "maxItems": 1024
             }
           },
           "additionalProperties": false
@@ -171,7 +176,8 @@
             },
             "epoch": {
               "type": "string",
-              "description": "Epoch."
+              "description": "Epoch.",
+              "maxLength": 128
             }
           }
         }
@@ -287,7 +293,8 @@
         },
         "text": {
           "type": "string",
-          "description": "Redacted text of the chunk."
+          "description": "Redacted text of the chunk.",
+          "maxLength": 65536
         },
         "truncated": {
           "type": "boolean",

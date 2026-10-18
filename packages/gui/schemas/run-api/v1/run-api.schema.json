@@ -106,7 +106,8 @@
         "description": {
           "type": "string",
           "minLength": 1,
-          "description": "What the command does."
+          "description": "What the command does.",
+          "maxLength": 2000
         },
         "scope": {
           "$ref": "urn:swissknifeman:gui:contribution:v1#/$defs/scope",
@@ -233,7 +234,8 @@
         "next_cursor": {
           "type": "string",
           "minLength": 1,
-          "description": "Cursor of the next page; absent on the last page."
+          "description": "Cursor of the next page; absent on the last page.",
+          "maxLength": 512
         }
       },
       "additionalProperties": false
@@ -259,7 +261,8 @@
         },
         "text": {
           "type": "string",
-          "description": "Text of the chunk, cleaned of terminal control sequences."
+          "description": "Text of the chunk, cleaned of terminal control sequences.",
+          "maxLength": 1048576
         },
         "truncated": {
           "type": "boolean",
@@ -331,7 +334,8 @@
         "project_id": {
           "type": "string",
           "minLength": 1,
-          "description": "Project id."
+          "description": "Project id.",
+          "maxLength": 256
         },
         "plan_id": {
           "type": "string",

@@ -53,7 +53,15 @@ def _move(kind: str, source: Path, target: Path, dry_run: bool) -> Move:
             return Move(kind, source, target, "conflict")
     if not dry_run:
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(source), str(target))
+        if source.is_symlink():
+            # A relative link target is read from the link's own folder: keep it pointing at the same place.
+            link = os.readlink(source)
+            if not os.path.isabs(link):
+                link = os.path.normpath(os.path.join(os.path.realpath(source.parent), link))
+            os.symlink(link, target)
+            source.unlink()
+        else:
+            shutil.move(str(source), str(target))
     return Move(kind, source, target, "planned" if dry_run else "moved")
 
 
@@ -69,6 +77,13 @@ def migrate_home(env: Optional[Mapping[str, str]] = None, home: Optional[PathLik
         raise MigrationError("SKM_HOME is set: the sandbox machine home has no old XDG folders to move; unset it to migrate")
     base = machine_home(environment, home)
     old = legacy_machine_dirs(environment, home)
+    present = [kind for kind in (*KINDS, "data") if old[kind].exists() or old[kind].is_symlink()]
+    for position, first in enumerate(present):
+        for second in present[position + 1:]:
+            if _same(old[first], old[second]):
+                raise MigrationError(f"the old {first} and {second} folders are the same folder {old[first]} "
+                                     f"(their XDG_*_HOME variables coincide): it cannot be split by kind; "
+                                     f"separate them (or unset one variable) and run the migration again")
     report: List[Move] = []
     for kind in KINDS:
         source, target = old[kind], base / kind

@@ -87,6 +87,14 @@ def legacy_machine_dirs(env: Optional[Mapping[str, str]] = None,
     return {kind: _xdg(env, variable, user.joinpath(*below)) / APP for kind, (variable, below) in LEGACY_XDG.items()}
 
 
+def _present(path: Path) -> bool:
+    """Whether ``path`` exists; a folder that cannot be read (``PermissionError``) counts as absent, as in the shell."""
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
 def machine_locations(env: Optional[Mapping[str, str]] = None,
                       home: Optional[PathLike] = None) -> Locations:
     """Resolve the machine config/state/cache/workspaces directories (nothing is created).
@@ -104,7 +112,7 @@ def machine_locations(env: Optional[Mapping[str, str]] = None,
     used = []
     for kind in ("config", "state", "cache", "workspaces"):
         new = base / kind
-        if not new.exists() and old[kind].exists():
+        if not _present(new) and _present(old[kind]):
             chosen[kind] = old[kind]
             used.append(kind)
         else:
@@ -128,7 +136,15 @@ def state_dir(app: Optional[str] = None, *, env: Optional[Mapping[str, str]] = N
 
 def data_dir(app: Optional[str] = None, *, env: Optional[Mapping[str, str]] = None,
              home: Optional[PathLike] = None) -> Path:
-    return _sub(machine_locations(env, home).data, app)
+    """The machine home, or its ``app`` folder; until ``migrate-home`` ran, the data of a module that still lives in the
+    old ``$XDG_DATA_HOME/swissknifeman/<app>`` is used while ``<machine home>/<app>`` does not exist."""
+    where = machine_locations(env, home)
+    target = _sub(where.data, app)
+    if app and not where.isolated and not _present(target):
+        old = legacy_machine_dirs(env, home)["data"] / app
+        if _present(old):
+            return old
+    return target
 
 
 def cache_dir(app: Optional[str] = None, *, env: Optional[Mapping[str, str]] = None,

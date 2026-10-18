@@ -70,6 +70,27 @@ class MigrateHomeTests(unittest.TestCase):
         self.assertTrue((self.base / "maind" / "graph.db").is_file())
         self.assertTrue((data / "workspaces" / "axioma" / "workspace.json").is_file())
 
+    def test_a_relative_symlink_keeps_pointing_at_the_same_place(self):
+        self.make(self.home / ".config" / "dotfiles" / "skm" / "config.toml")
+        (self.home / ".config" / "swissknifeman").symlink_to("dotfiles/skm")
+        moves = migrate_home({}, home=self.home)
+        self.assertEqual(moves[0].status, "moved")
+        moved = self.base / "config"
+        self.assertTrue(moved.is_symlink())
+        self.assertTrue((moved / "config.toml").is_file())
+        self.assertEqual(moved.resolve(), (self.home / ".config" / "dotfiles" / "skm").resolve())
+        self.assertFalse((self.home / ".config" / "swissknifeman").is_symlink())
+
+    def test_coinciding_state_and_data_folders_are_refused_untouched(self):
+        xdg = self.home / "xdg"
+        self.make(xdg / "swissknifeman" / "maind" / "graph.db")
+        env = {"XDG_STATE_HOME": str(xdg), "XDG_DATA_HOME": str(xdg)}
+        with self.assertRaises(MigrationError) as caught:
+            migrate_home(env, home=self.home)
+        self.assertIn("same folder", str(caught.exception))
+        self.assertTrue((xdg / "swissknifeman" / "maind" / "graph.db").is_file())
+        self.assertFalse(self.base.exists())
+
     def test_skm_home_refuses(self):
         with self.assertRaises(MigrationError):
             migrate_home({"SKM_HOME": str(self.home / "sb")}, home=self.home)

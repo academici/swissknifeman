@@ -3,6 +3,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from aicore.state import locations as loc
 
@@ -54,6 +55,36 @@ class MachineLocationsTests(unittest.TestCase):
             (base / "config").mkdir(parents=True)
             self.assertEqual(loc.machine_locations(env, home=home).config, base / "config")
             self.assertNotIn("config", loc.machine_locations(env, home=home).legacy)
+
+    def test_module_data_stays_in_the_old_xdg_data_folder_until_migrated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp).resolve()
+            old = home / "xdg" / "swissknifeman" / "maind"
+            old.mkdir(parents=True)
+            env = {"XDG_DATA_HOME": str(home / "xdg")}
+            base = home / ".local" / "share" / "swissknifeman"
+            self.assertEqual(loc.data_dir("maind", env=env, home=home), old)
+            self.assertEqual(loc.data_dir(env=env, home=home), base)
+            (base / "maind").mkdir(parents=True)
+            self.assertEqual(loc.data_dir("maind", env=env, home=home), base / "maind")
+            self.assertEqual(loc.data_dir("other", env=env, home=home), base / "other")
+
+    def test_an_unreadable_old_folder_counts_as_absent(self):
+        original = Path.exists
+
+        def exists(path, *args, **kwargs):
+            if "denied" in path.parts:
+                raise PermissionError(13, "Permission denied", str(path))
+            return original(path, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp).resolve()
+            env = {"XDG_CACHE_HOME": str(home / "denied")}
+            with mock.patch.object(Path, "exists", exists):
+                got = loc.machine_locations(env, home=home)
+                self.assertEqual(loc.state_dir(env=env, home=home), got.state)
+            base = home / ".local" / "share" / "swissknifeman"
+            self.assertEqual((got.cache, got.legacy), (base / "cache", ()))
 
     def test_skm_home_never_looks_at_the_old_folders(self):
         with tempfile.TemporaryDirectory() as tmp:

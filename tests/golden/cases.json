@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "9f8be838d76e",
-  "reason": "review_strategy warnings из 77c9a7f03 (PLAN6)",
+  "captured_from": "68c8938eaae7",
+  "reason": "обработчики lifecycle.py под golden (аудит 2026-10-17, этап 7)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

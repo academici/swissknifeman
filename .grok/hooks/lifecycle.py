@@ -82,12 +82,32 @@ def _normalize_payload(raw, expected_event):
     return payload
 
 
+def _carrier_value(cwd, name):
+    """Value of `name` in the committed carrier .swissknifeman/hooks.env: the provider key, then the general one."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        found[key.strip()] = value.strip()
+    return found.get(name + "__" + _PROVIDER_ID.upper(), found.get(name))
+
+
 def _read_mode(cwd, filename):
-    """MODE from <cwd>/<_STATE_DIR>/<filename> (harness hooks writes it).
+    """MODE from the carrier .swissknifeman/hooks.env, then from <cwd>/<_STATE_DIR>/<filename>.
     Missing/unreadable/unknown value -> off (safe default, matches the Claude-side
     gates and the phase's explicit "inactive by default" requirement)."""
     if not cwd:
         return "off"
+    carried = _carrier_value(cwd, filename.split(".")[0].replace("-", "_").upper() + "_MODE")
+    if carried is not None:
+        carried = carried.lower()
+        return carried if carried in _GATE_MODES else "off"
     f = Path(cwd) / _STATE_DIR / filename
     try:
         text = f.read_text(encoding="utf-8")
@@ -341,6 +361,12 @@ def _memory(payload):
     cwd = payload.get("cwd")
     mode, brain = "maind", "core"
     if cwd:
+        carried_mode = _carrier_value(cwd, "MEMORY_MODE")
+        carried_brain = _carrier_value(cwd, "MEMORY_BRAIN")
+        if carried_mode is not None:
+            mode = carried_mode
+        if carried_brain:
+            brain = carried_brain
         ini = Path(cwd) / _STATE_DIR / "memory.env.ini"
         try:
             for line in ini.read_text(encoding="utf-8").splitlines():
@@ -348,9 +374,9 @@ def _memory(payload):
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 key, value = (part.strip() for part in line.split("=", 1))
-                if key == "MODE":
+                if key == "MODE" and carried_mode is None:
                     mode = value
-                elif key == "BRAIN":
+                elif key == "BRAIN" and not carried_brain:
                     brain = value
         except OSError:
             pass

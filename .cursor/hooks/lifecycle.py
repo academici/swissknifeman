@@ -84,9 +84,33 @@ def _payload_cwd(payload):
     return os.getcwd()
 
 
+def _carrier_value(cwd, name):
+    """Value of `name` in the committed carrier .swissknifeman/hooks.env: the Cursor key, then the general one."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        found[key.strip()] = value.strip()
+    return found.get(name + "__CURSOR", found.get(name))
+
+
+def _carrier_name(filename, key):
+    return filename.split(".")[0].replace("-", "_").upper() + "_" + key
+
+
 def _read_mode(cwd, filename):
     if not cwd:
         return "off"
+    carried = _carrier_value(cwd, _carrier_name(filename, "MODE"))
+    if carried is not None:
+        carried = carried.lower()
+        return carried if carried in _GATE_MODES else "off"
     env_file = Path(cwd) / ".cursor" / filename
     try:
         text = env_file.read_text(encoding="utf-8")
@@ -141,6 +165,15 @@ def _read_memory_config(cwd):
     mode, brain = "off", "core"
     if not cwd:
         return mode, brain
+    carried_mode = _carrier_value(cwd, "MEMORY_MODE")
+    carried_brain = _carrier_value(cwd, "MEMORY_BRAIN")
+    if carried_mode is not None:
+        lowered = carried_mode.lower()
+        mode = lowered if lowered in _MEMORY_MODES else "off"
+    if carried_brain:
+        brain = carried_brain
+    if carried_mode is not None and carried_brain:
+        return mode, brain
     env_file = Path(cwd) / ".cursor" / "memory.env.ini"
     try:
         text = env_file.read_text(encoding="utf-8")
@@ -151,10 +184,10 @@ def _read_memory_config(cwd):
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = (part.strip() for part in line.split("=", 1))
-        if key == "MODE":
+        if key == "MODE" and carried_mode is None:
             lowered = value.lower()
             mode = lowered if lowered in _MEMORY_MODES else "off"
-        elif key == "BRAIN" and value:
+        elif key == "BRAIN" and value and not carried_brain:
             brain = value
     return mode, brain
 

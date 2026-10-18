@@ -25,7 +25,7 @@ PATHS=(packages/aicore/lib packages/aicore/tests
   packages/brain/lib packages/brain/tests
   packages/gui/lib packages/gui/tests
   packages/analyst/lib packages/analyst/tests
-  bridges scripts)
+  bridges scripts .codex/hooks .cursor/hooks .grok/hooks)
 
 cd "$ROOT"
 FLAGS=()

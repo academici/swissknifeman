@@ -64,8 +64,9 @@ slight miss «write to global instead project». Now the plugin **MCP-does not s
 Hub Tools (`maind_projects_list`, `maind_projects_status`, `maind_agents_list`, graph traversals,
 memory) gives **per-project server `maind`** from `.mcp.json` project (`maind mcp --scope project:<id>`,
 writes `deploy`/`onboard`). Count, `projects_*`, `links` — **scope-independent**: one project-server
-sees the entire ecosystem. `scope` affects only the default memory bucket; ecosystem-fact when necessary
-is written explicitly `scope:"global"` in `maind_memory_store`. See [MCP-server](./mcp).
+sees the entire ecosystem. `scope` affects only the default memory bucket. A project-pinned server does
+**not** write to `global` (every project reads it, so one injected fact would reach them all): the owner
+writes an ecosystem fact with `maind memory remember --scope global ...`. See [MCP-server](./mcp).
 
 ## Cross-provider
 

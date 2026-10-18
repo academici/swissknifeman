@@ -241,6 +241,21 @@ def _cross_scope_allowed():
     return bool(os.environ.get("MAIND_MCP_ALLOW_CROSS_SCOPE"))
 
 
+def _audit_cross_scope(env, tool, scope, default_scope):
+    """One JSONL line per memory call made with isolation switched off (never raises)."""
+    import json
+    from datetime import datetime, timezone
+    try:
+        env.data_dir.mkdir(parents=True, exist_ok=True)
+        line = json.dumps({"ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "tool": tool,
+                           "scope": scope, "server_scope": default_scope,
+                           "reason": "MAIND_MCP_ALLOW_CROSS_SCOPE"}, sort_keys=True)
+        with open(env.data_dir / "mcp-cross-scope.jsonl", "a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+    except OSError:
+        pass
+
+
 def _allowed_scopes(config, default_scope):
     """Scope's allowed for this MCP-server. Server pinned to the project
     (`maind mcp --scope project:<id>` — rolls it out like that deploy), limited to buckets
@@ -307,6 +322,12 @@ def _run_tool(env, config, name, args, default_scope):
         denied = _scope_error(scope, allowed)
         if denied:
             return denied
+        if _cross_scope_allowed():
+            _audit_cross_scope(env, name, scope, default_scope)
+        elif name == "maind_memory_store" and allowed is not None and scope == "global":
+            # `global` is read by every project: one injected fact reaches them all (audit 2026-10-17 §6.6).
+            return _content({"error": "a project-pinned MCP server does not write to 'global'; the owner "
+                                      "writes it: maind memory remember --scope global ..."}, is_error=True)
         if name == "maind_memory_store":
             return _content(memory_mod.store_managed(
                 url, scope, args.get("key", "context"), args["value"], headers=headers,

@@ -101,7 +101,10 @@ existing nodes do not change behavior). For multiple persistent machines
 - **`secret_file`** — bearer-token for `AGENTMEMORY_SECRET` on host; resolution order:
   env `AGENTMEMORY_SECRET` → `memory.secret_file` → without token (anonymous, like today).
   The secret is NOT stored inline in the config (diffs/copies of the config light it would have been leaked) and not
-  is printed in the logs/error messages.
+  is printed in the logs/error messages. With a non-loopback `bind_host` the secret is **required**: no
+  secret, an unreadable or empty `secret_file`, or a file open to group/others (not `0600`) stops the
+  start with an error, and `maind doctor` reports `maind.memory` as `fail`. The transport is plain
+  HTTP: put the LAN hop behind a tunnel (ssh/wireguard/`tailscale serve`).
 - **LAN-stage (closest, D80).** Transport - LAN: daemon bindend not on `127.0.0.1`, and on
   **specific LAN-host address**. The machine address is NOT stored in the repository: tracked
   `config/memory/iii-config.yaml` remains a portable template (`host: 127.0.0.1`), and the address

@@ -379,6 +379,9 @@ class TestBindHost(unittest.TestCase):
         _, env = make_repo(tmp)
         env.memory_config.parent.mkdir(parents=True, exist_ok=True)
         env.memory_config.write_text(self.TEMPLATE, encoding="utf-8")
+        patcher = mock.patch.dict(os.environ, {"AGENTMEMORY_SECRET": "lan-secret"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         return env
 
     def test_without_bind_host_the_tracked_template_is_used_unchanged(self):
@@ -411,6 +414,38 @@ class TestBindHost(unittest.TestCase):
             with mock.patch.dict(os.environ, {"AGENTMEMORY_BIND_HOST": "192.0.2.5"}):
                 path = memory.effective_memory_config(env, {"memory": {"role": "host"}})
             self.assertIn("host: 192.0.2.5", path.read_text(encoding="utf-8"))
+
+    def test_lan_bind_needs_a_usable_secret(self):
+        host = {"memory": {"role": "host", "bind_host": "192.0.2.10"}}
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            with mock.patch.dict(os.environ, {}, clear=False):
+                os.environ.pop("AGENTMEMORY_SECRET", None)
+                with self.assertRaises(SystemExit):
+                    memory.effective_memory_config(env, host)
+                self.assertIn("secret", memory.lan_bind_without_secret(env, host))
+                missing = {"memory": {**host["memory"], "secret_file": "absent.secret"}}
+                with self.assertRaises(SystemExit):
+                    memory.effective_memory_config(env, missing)
+                secret_path = env.root / "memory.secret"
+                secret_path.write_text("tok\n", encoding="utf-8")
+                secret_path.chmod(0o644)
+                cfg = {"memory": {**host["memory"], "secret_file": "memory.secret"}}
+                with self.assertRaises(SystemExit):
+                    memory.effective_memory_config(env, cfg)
+                self.assertIn("group/others", memory.lan_bind_without_secret(env, cfg))
+                secret_path.chmod(0o600)
+                self.assertIsNone(memory.lan_bind_without_secret(env, cfg))
+                self.assertIn("host: 192.0.2.10", memory.effective_memory_config(env, cfg).read_text(encoding="utf-8"))
+            with mock.patch.dict(os.environ, {"AGENTMEMORY_SECRET": "from-env"}):
+                self.assertIsNone(memory.lan_bind_without_secret(env, host))
+
+    def test_loopback_bind_keeps_the_anonymous_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = self._env(tmp)
+            cfg = {"memory": {"role": "host", "bind_host": "127.0.0.1"}}
+            self.assertIsNone(memory.lan_bind_without_secret(env, cfg))
+            memory.effective_memory_config(env, cfg)
 
     def test_unsafe_or_misplaced_bind_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:

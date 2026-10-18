@@ -8,7 +8,7 @@ from pathlib import Path
 from aicore import MIN_PYTHON
 from aicore.util.cli import parse_args
 from .config import config_available
-from .memory import auth_headers, check_auth, health, resolve_ports, resolve_secret
+from .memory import auth_headers, check_auth, health, lan_bind_without_secret, resolve_ports, resolve_secret
 
 
 RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
@@ -103,6 +103,11 @@ def _memory_result(env, config):
         return _result("maind.memory", "skip", "the configuration was not loaded", category="integration")
     http_port, stream_port, url = resolve_ports(env, config)
     evidence = [f"url: {url}", f"ports: http {http_port}, stream {stream_port}"]
+    lan_problem = lan_bind_without_secret(env, config)
+    if lan_problem:
+        return _result("maind.memory", "fail", f"the memory daemon is bound to the network without a secret: {lan_problem}",
+                       category="integration", evidence=evidence,
+                       remediation="Set AGENTMEMORY_SECRET or memory.secret_file (mode 0600), or bind to loopback.")
     if not health(url):
         return _result("maind.memory", "warn", f"the memory daemon does not respond at {url}", category="integration",
                        evidence=evidence, remediation="Run: maind start --only memory")

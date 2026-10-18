@@ -30,6 +30,13 @@ project writes/reads memory automatically in its `project:<id>`, without transmi
 missing the namespace. Without a flag - `global`.
 :::
 
+::: warning Shared writes
+A server pinned with `--scope project:<id>` writes to its private scope and to the `ns:<group>` of its
+project, never to `global` (`maind memory remember --scope global` is the owner's command). Setting
+`MAIND_MCP_ALLOW_CROSS_SCOPE` removes the isolation and writes one line per memory call to
+`<data>/mcp-cross-scope.jsonl`.
+:::
+
 ## Tools
 
 | Tool | Arguments | Delegates |

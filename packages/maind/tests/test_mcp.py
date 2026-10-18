@@ -439,6 +439,28 @@ class TestScopeIsolation(unittest.TestCase):
                     del os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"]
                 self.assertFalse(r["result"].get("isError"))  # explicit admin mode removes isolation
 
+    def test_pinned_server_does_not_write_global_and_cross_scope_is_audited(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                config = cfg(projects=self.NS, memory={"url": url})
+                refused = scoped_call(env, config, "maind_memory_store",
+                                      {"scope": "global", "value": "injected"}, "project:a")
+                self.assertTrue(refused["result"].get("isError"))
+                self.assertEqual(memory_mod.recall(url, "global", "injected"), [])
+                own = scoped_call(env, config, "maind_memory_store", {"value": "own fact"}, "project:a")
+                self.assertFalse(own["result"].get("isError"))
+                log = env.data_dir / "mcp-cross-scope.jsonl"
+                self.assertFalse(log.exists())
+                os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"] = "1"
+                try:
+                    admin = scoped_call(env, config, "maind_memory_store",
+                                        {"scope": "global", "value": "owner fact"}, "project:a")
+                finally:
+                    del os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"]
+                self.assertFalse(admin["result"].get("isError"))
+                self.assertIn('"scope": "global"', log.read_text(encoding="utf-8"))
+
     def test_hub_global_default_unrestricted(self):
         # default_scope=global (hub server without --scope) → enforce is disabled, back-compat
         with tempfile.TemporaryDirectory() as tmp:

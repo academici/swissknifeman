@@ -120,6 +120,8 @@ def effective_memory_config(env, config):
     host = resolve_bind_host(config)
     if host is None:
         return env.memory_config
+    if not ipaddress.ip_address(host).is_loopback:
+        resolve_secret(env, config, required=True)
     lines = env.memory_config.read_text(encoding="utf-8").splitlines()
     out, in_http, done = [], False, False
     for line in lines:
@@ -140,25 +142,65 @@ def effective_memory_config(env, config):
 
 
 # ── authentication (ADR-0001 p.3/clause 4, D29) ───────────────────────────────────
-def resolve_secret(env, config):
-    """Bearer-token for protected memory calls. Order (ADR-0001): env
-    `AGENTMEMORY_SECRET` → `memory.secret_file` (path to 0600 file; relative -
-    from node root) → no secret (anonymous local daemon, like today - default
-    doesn't change anything)."""
+def _read_secret(env, config, *, required):
+    """(secret, problem): the secret or None, and a text when a LAN bind (required=True) is not
+    covered. A problem that matters without `required` (unreadable file, open mode) is a warning."""
     env_secret = os.environ.get("AGENTMEMORY_SECRET")
     if env_secret:
-        return env_secret
+        return env_secret, None
     secret_file = ((config or {}).get("memory") or {}).get("secret_file")
     if not secret_file:
-        return None
+        return None, ("memory.bind_host is not loopback: set AGENTMEMORY_SECRET or memory.secret_file "
+                      "(a LAN memory daemon without a secret is open to every host of the network)"
+                      if required else None)
     path = Path(os.path.expanduser(secret_file))
     if not path.is_absolute():
         path = env.root / path
     try:
-        return path.read_text(encoding="utf-8").strip() or None
+        mode = path.stat().st_mode
+        secret = path.read_text(encoding="utf-8").strip()
     except OSError as e:
+        if required:
+            return None, f"memory.secret_file not readable ({path}: {e}) — a LAN memory daemon needs a secret"
         warn(f"memory.secret_file not readable ({path}: {e}) — memory calls will proceed without a token")
+        return None, None
+    if mode & 0o077:
+        message = f"memory.secret_file {path} is readable by group/others (mode {mode & 0o777:04o}); chmod 600"
+        if required:
+            return None, message
+        warn(message)
+    if not secret and required:
+        return None, f"memory.secret_file {path} is empty — a LAN memory daemon needs a secret"
+    return secret or None, None
+
+
+def resolve_secret(env, config, *, required=False):
+    """Bearer-token for protected memory calls. Order (ADR-0001): env
+    `AGENTMEMORY_SECRET` → `memory.secret_file` (path to 0600 file; relative -
+    from node root) → no secret (anonymous local daemon, like today - default
+    doesn't change anything).
+
+    required=True (a LAN bind, audit 2026-10-17 §1.3): the daemon is reachable by the network, so a
+    missing secret, an unreadable or empty secret_file and a file open to group/others are errors."""
+    secret, problem = _read_secret(env, config, required=required)
+    if problem:
+        die(problem)
+    return secret
+
+
+def lan_bind_without_secret(env, config):
+    """Problem text when the node binds the memory daemon to a non-loopback address without a
+    usable secret (doctor RED), else None. Never exits."""
+    mem = (config or {}).get("memory") or {}
+    value = (os.environ.get("AGENTMEMORY_BIND_HOST") or mem.get("bind_host") or "").strip()
+    if value == "auto":
+        value = lan_address() or ""
+    try:
+        if not value or ipaddress.ip_address(value).is_loopback:
+            return None
+    except ValueError:
         return None
+    return _read_secret(env, config, required=True)[1]
 
 
 def auth_headers(secret):

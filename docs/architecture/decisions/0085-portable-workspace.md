@@ -56,6 +56,32 @@ are `workspaces/<workspace>/projects/<project_id>/plans`. `workspace.json` gets 
 replace `SKM_WORKSPACE_ROOT`. `project doctor` checks the wiring of a checkout (`project.workspace`). The migration of a
 machine that used layout 1 is done once by hand.
 
+## Amendment 2026-10-18: machine home and project layer (PLAN7)
+
+- **One machine home.** The machine keeps `config/`, `state/`, `cache/` and `workspaces/` below `SKM_HOME` (default
+  `~/.local/share/swissknifeman`); the `XDG_*` variables no longer move it. A machine with the old XDG folders uses each of them
+  until `config migrate-home` moves it; a set `SKM_HOME` marks a sandbox and switches that lookup off. This amends D2: the
+  places of `aicore.state` are `<home>/…`, and `workspaces_root()` is `<home>/workspaces`.
+- **Project layer in the workspace.** The config, state, backups and stubs of a project on a machine are
+  `workspaces/<workspace>/projects/<code>/local/` (contract `project-local-config/v1`, `repo.path` absolute because it is a machine
+  document). `local/` is never tracked: the tracking policy of the workspace repository names it in the ignore list, so another
+  machine builds its own. Resolution goes through the marker; a checkout without a marker, or whose project folder is not on the
+  machine, keeps `.swissknifeman/` as before. This amends D3: the marker still decides identity, and now also where the project
+  layer is.
+- **Launcher-only checkout.** A checkout holds the launcher, its lock and the marker, nothing else of Swiss Knife Man.
+  `project init --project CODE` writes the marker, `project migrate` moves an older checkout's project layer into `local/`
+  without overwriting (a differing file is `PROJECT_MIGRATE_CONFLICT`, both copies stay), `project doctor` reports `project.local`
+  and `project.checkout-layer`.
+- **Optional links.** `plans/` and `tasks/` of a checkout may be symbolic links into the project folder of the workspace
+  (`workspace project link|unlink`, setting `workspace.link_folders`, off by default). They are listed in the checkout's
+  `.git/info/exclude`, a real folder is never replaced, and the plans stay in the workspace. This does not reopen D4: the marker
+  stays the single switch.
+- **Environment.** `SKM_HOME`, `SKM_WORKSPACES` and `SKM_WORKSPACE` are exported from the shell profile by the installers
+  (`aicore shell-env`, one table in `aicore.state.envtable`), so a project and the agent's shell see the same machine; the launcher
+  passes them on and invents none.
+- **Second machine.** The runbook `MIGRATION-HOST-B.md` runs `config migrate-home` and `shell-env install` before the clone and
+  `project migrate` after the plans are replaced; `local/` of machine A never arrives on B.
+
 ## Supersedes
 
 None.

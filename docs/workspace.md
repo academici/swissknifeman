@@ -2,8 +2,9 @@
 
 The plans of a project normally live in its repository, in `plans/`. That ties them to one checkout: a second machine
 sees only what was committed, plans mix with product history, and large artifacts of runs end up in git. The *portable
-workspace* moves the plans of all projects into one git repository of their own. A project keeps only a small marker
-that says where its plans live.
+workspace* moves the plans of all projects into one git repository of their own. A project keeps only the launcher and a small
+marker that says where its plans live; the config, state and backups of the project on a machine are in the workspace folder of
+the project too (`local/`, never in git).
 
 A machine can hold several workspaces (say `axioma` for the company and `home` for private work). Each is a git repository
 of its own in `workspaces/<code>/`; a project belongs to exactly one of them.
@@ -15,17 +16,25 @@ swissknifeman workspace migrate plan --project .               # dry run for a p
 swissknifeman workspace migrate apply --project .              # move them
 ```
 
-## The five areas of data
+## The six areas of data
 
 | Area | What it is | Where | In git |
 | --- | --- | --- | --- |
-| Product | the code of the project | its own repository | yes, its own |
+| Product | the code of the project (and nothing of Swiss Knife Man but the launcher and the marker) | its own repository | yes, its own |
 | Marker | `{workspace, project_id, plans_store}`: the workspace and the project by code, and where the plans live | `<checkout>/.swissknifeman/project.json` | yes, with the product |
-| Plans | plan folders (`plan.json`, phases, items, notes) | `<workspace>/projects/<code>/plans/` | yes, in the workspace repository |
+| Plans | plan folders (`plan.json`, phases, items, notes); `tasks/` and `decisions/` of the project | `<workspace>/projects/<code>/plans/` (`tasks/`, `decisions/` beside it) | yes, in the workspace repository |
 | Legacy plans | old-format folders and loose files, kept as they were | `<workspace>/projects/<code>/legacy-plans/` | yes, in the workspace repository |
+| Project-local | the config of the project on this machine (`config.toml` with `[repo] path`, the module tables), its state, backups and stubs | `<workspace>/projects/<code>/local/` | never (ignored by the workspace repository) |
 | Machine state | bindings of checkouts to projects, the sync state, the git lock; the device id | `<home>/state/workspaces/<code>/`; `<home>/state/workspaces/device.json` | never |
 
-Large run artifacts are a sixth case handled inside the Plans area: they stay on the machine that made them
+A checkout holds only the product, the launcher (`.swissknifeman/launcher.py`, `launcher.lock.json`) and the marker. Its config,
+state, backups and stubs live in `projects/<code>/local/` of the workspace the marker names (`aicore.state.project_config_file`,
+`project_state_dir`, `project_backups_dir`, `project_stubs_dir` resolve it; a checkout without a marker, or whose project folder is
+not on this machine, keeps them in `.swissknifeman/` as before). `swissknifeman project migrate` moves an older checkout's files
+there; `project doctor` checks `project.local` and `project.checkout-layer`. `local/` is machine state that sits next to the plans
+because it belongs to the project, and it is excluded from git so a second machine builds its own.
+
+Large run artifacts are a special case handled inside the Plans area: they stay on the machine that made them
 (`local-only.json`, see publish-safety below).
 
 ## Codes
@@ -40,6 +49,8 @@ fixed once a project exists; two projects with the same code in one workspace ar
 
 ```text
 ~/.local/share/swissknifeman/      the machine home (SKM_HOME moves it)
+  config/  state/  cache/          machine layer: settings, machine state (state/workspaces/<code>/, device.json), caches
+  <module>/                        data of a module (maind, skiller, ...)
   workspaces/                      SKM_WORKSPACES (older name SKM_WORKSPACES_ROOT); one folder, one git repository per workspace
     axioma/                        the workspace "axioma"
       workspace.json               code, workspace id and format
@@ -50,10 +61,18 @@ fixed once a project exists; two projects with the same code in one workspace ar
           project.json             project record (code, name, remotes)
           plans/<plan-id>/...      plans of the planner
           plans/archive/<plan-id>/...  archived plans
+          tasks/  decisions/       task files and decisions of the project
           legacy-plans/<name>/...  folders that are not plans; legacy-plans/_root holds loose files
           migrations/<op_id>.json  one report per migration
           local-only.json          large files that stay out of git
+          local/                   config.toml, state/, backups/, stubs/ of this project on this machine (never in git)
 ```
+
+The machine home holds everything of the machine below one folder; the `XDG_*` variables no longer move it. A machine that still
+has the old folders (`~/.config/swissknifeman`, `~/.local/state/swissknifeman`, `~/.cache/swissknifeman`) keeps using each of them
+until `swissknifeman config migrate-home` moved it (refused while `SKM_HOME` is set, which marks a sandbox). The three variables
+that name the machine, `SKM_HOME`, `SKM_WORKSPACES` and `SKM_WORKSPACE`, are exported from the shell profile by the installers
+(`aicore shell-env`): see [skm-environment.md](skm-environment.md).
 
 **Which workspace a command uses.** `--workspace CODE` (anywhere in the arguments), else `SKM_WORKSPACE`, else the workspace
 named by the marker of the project you are in, else the only workspace of the machine. Several workspaces and none chosen is
@@ -190,10 +209,13 @@ without user information.
 
 1. Machine A: `migrate apply` per project, commit the marker (`git add -f .swissknifeman/project.json`; most repositories
    ignore `.swissknifeman`), `workspace connect --remote URL`, `workspace sync --commit --push`, push the marker commits.
-2. Machine B: update swissknifeman, `git pull` the checkouts (the marker arrives), `workspace clone URL`,
+2. Machine B: update swissknifeman, `config migrate-home` (old XDG folders into the machine home) and `aicore shell-env install`
+   (the three SKM variables), `git pull` the checkouts (the marker arrives), `workspace clone URL`,
    `workspace project scan ~/projects`, `migrate plan` and `apply` in import mode (equal folders are skipped, new ones are
-   copied, a conflict needs `--on-conflict keep-workspace|import-copy`), `workspace sync --commit --pull --push`.
-   The step-by-step runbook for an agent on B is `MIGRATION-HOST-B.md` in the repository root.
+   copied, a conflict needs `--on-conflict keep-workspace|import-copy`), `workspace sync --commit --pull --push`, then
+   `project migrate` in every checkout (its config, state, backups and stubs go to `projects/<code>/local/`, which stays on B).
+   The step-by-step runbook for an agent on B is `MIGRATION-HOST-B.md` in the repository root (it pulls a checkout only after
+   the merge, because the pull removes the local `plans/`).
 3. Only after `migrate verify` is `equal` on both machines: `migrate cleanup --confirm <code>` and
    `git rm -r --cached plans` per repository. Files with secret-like content (`--local-only-secrets`) stay on the machine
    that held them; they are not in the workspace git.

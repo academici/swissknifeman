@@ -1,4 +1,4 @@
-# Machine B: join the workspace `axioma` and merge the newer plans (PLAN6 P6.4, layout 2)
+# Machine B: join the workspace `axioma` and merge the newer plans (PLAN6 P6.4, layout 2; machine home and project layer, PLAN7)
 
 Audience: an agent session on machine B, started by the owner. Do the steps in order and stop at every `STOP`.
 Never use `--force`, never `git push --force`, never delete a plan without a verified copy. Report at the end (step 10).
@@ -6,13 +6,25 @@ Never use `--force`, never `git push --force`, never delete a plan without a ver
 ## What is true
 
 - There is **one workspace, `axioma`**: the git repository `https://github.com/academici/swissknifeman-axioma-workspace`
-  (private, branch `main`). On a machine it lives in `~/.local/share/swissknifeman/workspaces/axioma/`.
+  (private, branch `main`). On a machine it lives in `$SKM_WORKSPACES/axioma/`, by default
+  `~/.local/share/swissknifeman/workspaces/axioma/`.
+- **One machine home.** Everything the machine keeps is below `SKM_HOME` (default `~/.local/share/swissknifeman`):
+  `config/`, `state/`, `cache/`, `workspaces/` and the data of the modules. The older XDG folders
+  (`~/.config/swissknifeman`, `~/.local/state/swissknifeman`, `~/.cache/swissknifeman`) are used only until step 2b moves them.
+  Three variables name the machine, exported from the shell profile: `SKM_HOME`, `SKM_WORKSPACES` (the folder of the
+  workspaces), `SKM_WORKSPACE` (the code of the active workspace, here `axioma`). `docs/skm-environment.md` has the details.
 - It holds the plans of 8 projects, as `projects/<code>/plans/…`. The code of a project is the name of its checkout folder.
   Machine A moved the plans there and removed `plans/` from the repositories of the projects.
+- **The project layer is in the workspace too.** Besides `plans/`, a project has `projects/<code>/local/` (its `config.toml`
+  with `[repo] path`, `state/`, `backups/`, `stubs/`). `local/` is **never committed** (the workspace `.gitignore` and the exclude
+  block keep it out of git): it belongs to the machine, so B builds its own in step 8b and nothing of A's arrives.
 - **Machine B has newer plans** in the `plans/` folders of its checkouts. They must be merged into the workspace by hand, plan
   by plan, before anything of B is thrown away. After that the checkouts of B work only with the workspace.
-- A checkout carries only a marker `.swissknifeman/project.json` (`{workspace, project_id, plans_store}`), committed with the
-  project. B gets it with `git pull`, but **pull comes after the merge** (step 8): pulling earlier would delete the local `plans/`.
+- A checkout carries only the launcher (`.swissknifeman/launcher.py`, `launcher.lock.json`) and the marker
+  `.swissknifeman/project.json` (`{workspace, project_id, plans_store}`), committed with the project. No `plans/`, `tasks/`,
+  `config.toml`, `state/`, `backups/` or `stubs/` stay in the checkout (an optional link `plans/` or `tasks/` to the workspace
+  may; step 8b). B gets the marker with `git pull`, but **pull comes after the merge** (step 8): pulling earlier would delete the
+  local `plans/`.
 - About 600 files with secret-like content stayed on machine A (local-only). If B has such files in its plans, they stay on B too.
 
 | code | checkout folder | remote to fetch | branch with the marker |
@@ -35,8 +47,12 @@ Use `<P>` for the checkout, `<code>` for the code and `<remote>/<branch>` from t
 git --version; python3 --version
 git ls-remote https://github.com/academici/swissknifeman-axioma-workspace | head -2   # needs git credentials (private repo)
 for p in billium commerz azguard chatom corex sockit swissknifeman vaulter; do d=~/projects/packages/$p; test -d $d && echo "have $d"; done
+env | grep -E '^SKM_(HOME|WORKSPACES|WORKSPACE)='              # empty on a machine that has no snippet yet: step 2b
+ls -d ~/.config/swissknifeman ~/.local/state/swissknifeman ~/.cache/swissknifeman ~/.local/share/swissknifeman 2>&1
 ```
 `STOP` if the remote is not readable: the owner sets up credentials. Adapt the base folder if the checkouts are elsewhere.
+`STOP` if `SKM_HOME` is set and the old XDG folders exist: a set `SKM_HOME` switches the old folders off and `config migrate-home`
+refuses to run (ask the owner to unset it for this session; step 2b exports it again from the profile).
 No conductor or planner run may be active in these projects (`ps aux | grep -E "conduct|plan.py"`): `STOP` if one is.
 
 ## 1. Back up everything that will be touched
@@ -52,6 +68,12 @@ for p in <the checkouts that exist>; do
   git -C $d branch --show-current >> $B/$p-log.txt
 done
 test -d ~/.local/share/swissknifeman && tar -C ~/.local/share -czf $B/skm-data.tgz swissknifeman
+test -d ~/.config/swissknifeman && tar -C ~/.config -czf $B/skm-config-xdg.tgz swissknifeman      # old XDG folders, moved in step 2b
+test -d ~/.local/state/swissknifeman && tar -C ~/.local/state -czf $B/skm-state-xdg.tgz swissknifeman
+for p in <the checkouts that exist>; do                                                           # the project layer still in the checkouts
+  d=~/projects/packages/$p
+  test -d $d/.swissknifeman && tar -C $d -czf $B/$p-dot-swissknifeman.tgz .swissknifeman
+done
 ls -la $B
 ```
 Every archive must be non-empty (`tar -tzf … | head`). `STOP` otherwise. Nothing below deletes a file: things are moved into `$B`.
@@ -73,6 +95,28 @@ git -C ~/projects/packages/swissknifeman worktree add ~/skm-hub-b origin/main   
 ```
 Below, `skm` means `~/skm-hub-b/bin/swissknifeman`. (Once the hub itself is finished in step 8, the normal checkout is used again.)
 
+## 2b. One machine home and the SKM variables (OWNER step for the shell profile)
+
+The new code reads `config/`, `state/` and `cache/` below the machine home. A machine that still has the old XDG folders keeps
+using each of them until the new folder of that kind exists, so **move them before anything writes to the new place**
+(step 3 writes the machine config):
+```bash
+skm config migrate-home --dry-run --json        # lists the moves; nothing is written
+skm config migrate-home --json                  # an empty target is replaced; a target that holds data is a conflict
+skm config paths                                # config, state, cache, workspaces: all below ~/.local/share/swissknifeman, legacy empty
+```
+`conflict` (exit 1: the new folder already holds data): `STOP` and report both paths; do not merge by hand. The backup of step 1
+holds the old folders. The command is refused while `SKM_HOME` is set (step 0).
+
+Then ask the owner to write the managed block of the shell profile, which exports `SKM_HOME`, `SKM_WORKSPACES` and (when the
+machine has exactly one workspace, or one is chosen) `SKM_WORKSPACE`:
+```bash
+~/skm-hub-b/packages/aicore/bin/aicore shell-env show           # what would be exported, state of the snippet
+~/skm-hub-b/packages/aicore/bin/aicore shell-env install        # ~/.bashrc or ~/.zshrc by $SHELL; idempotent
+```
+`SKM_WORKSPACE` is left out while there is no workspace yet: run `shell-env install` again after step 4 and open a new shell.
+`aicore shell-env uninstall` takes the block out. The agent session does not edit the profile itself.
+
 ## 3. Trust the plans migrator (OWNER step)
 
 The agent must not change machine config. Ask the owner to run:
@@ -81,18 +125,21 @@ skm config set --machine aicore.plugins.workspace-planner.manifest ~/skm-hub-b/b
 skm config set --machine aicore.plugins.workspace-planner.enabled true
 skm config set --machine aicore.plugins.workspace-planner.trusted true
 ```
-Wait for the confirmation. (After step 8 the manifest path is changed to the real hub checkout.)
+Wait for the confirmation. (`--machine` writes `<machine home>/config/`, which is why step 2b comes first. After step 8 the manifest
+path is changed to the real hub checkout.)
 
 ## 4. Clone the workspace
 
 ```bash
-ls ~/.local/share/swissknifeman/workspaces 2>/dev/null            # must be empty or absent; else STOP and report
+ls "${SKM_WORKSPACES:-${SKM_HOME:-$HOME/.local/share/swissknifeman}/workspaces}" 2>/dev/null   # must be empty or absent; else STOP and report
 skm workspace clone https://github.com/academici/swissknifeman-axioma-workspace --json
 skm workspace status --json          # code axioma, git.dirty 0, behind 0
-skm workspace doctor                 # no [fail]
-ls ~/.local/share/swissknifeman/workspaces/axioma/projects       # the 8 codes
+skm workspace doctor                 # no [fail]; env-snippet / env-variables may warn until the owner reruns shell-env install
+ls "${SKM_WORKSPACES:-${SKM_HOME:-$HOME/.local/share/swissknifeman}/workspaces}/axioma/projects"   # the 8 codes
 ```
-There is only one workspace, so no `--workspace` is needed. (With several: `--workspace axioma` after any command.)
+There is only one workspace, so no `--workspace` is needed. (With several: `--workspace axioma`, or `SKM_WORKSPACE=axioma`, which
+the snippet of step 2b exports.) Below, `W0` is the workspace folder `$SKM_WORKSPACES/axioma` (default
+`~/.local/share/swissknifeman/workspaces/axioma`). If `SKM_WORKSPACE` was not exported yet, the owner reruns `shell-env install` now.
 
 ## 5. Per project: classify B's plans against the workspace (dry run, nothing written to the workspace)
 
@@ -144,7 +191,7 @@ B's version is newer, but the workspace copy may hold work of machine A that B n
    The workspace now has `plans/<plan>` (A's) and `plans/<plan>~<device>` (B's). The marker is `workspace`.
 2. For every conflicting plan compare the two folders:
    ```bash
-   W=~/.local/share/swissknifeman/workspaces/axioma/projects/<code>/plans
+   W=$W0/projects/<code>/plans          # W0 from step 4
    diff -rq "$W/<plan>" "$W/<plan>~<device>" | grep -v '/views/\|/context/\|\.lock'
    ```
 3. Merge file by file into `$W/<plan>` (the plan that stays), as an editor of JSON would:
@@ -196,22 +243,54 @@ For the hub (`swissknifeman`): after its pull, update the manifest of the migrat
 `config set` commands with `~/projects/packages/swissknifeman/bridges/workspace-planner/extension.json`), remove the temporary
 worktree (`git worktree remove ~/skm-hub-b`), and use `swissknifeman` from the normal checkout from now on.
 
+## 8b. The project layer: carry the checkout's own config and state into `local/`
+
+After step 8 each checkout holds the marker and the launcher. If B's checkout still has `config.toml`, `state/`, `backups/` or
+`stubs/` in `.swissknifeman/` (it does when B used the project before the project layer), they move to the workspace, to
+`projects/<code>/local/`, which stays on B (never committed):
+
+```bash
+cd <P>
+python3 -I .swissknifeman/launcher.py project migrate --dry-run --json      # items: move | drop | conflict; nothing is written
+python3 -I .swissknifeman/launcher.py project migrate --json
+python3 -I .swissknifeman/launcher.py project doctor | grep -E "project\.(local|checkout-layer|links|env)"
+```
+`migrate` never overwrites: a file already in `local/` with the same bytes is dropped from the checkout, other bytes are
+`PROJECT_MIGRATE_CONFLICT` (both stay: report the path, the owner decides), a symbolic link is `PROJECT_MIGRATE_SYMLINK`,
+and a checkout without a marker, or whose workspace has no folder for the project on this machine, is `PROJECT_LOCAL_UNAVAILABLE`
+(the marker comes with step 8 and the project folder with the clone of step 4; if it still appears, `STOP` and report, the remedy
+named in the message is `workspace project attach`, which the owner decides). Afterwards `project.checkout-layer` is `ok` (a `warn` lists what is left) and `project.local`
+is `ok`: `local/config.toml` has `[repo] path` of this checkout (an absolute path, valid on B only). A repeat finds nothing.
+
+Optional, only if the owner wants to see `plans/` and `tasks/` next to the code in an IDE:
+```bash
+skm workspace project link --project <P>        # symbolic links <P>/plans and <P>/tasks into the workspace; listed in <P>/.git/info/exclude
+skm workspace project unlink --project <P>      # removes them
+```
+The links are off by default (setting `workspace.link_folders`). Do them **after** step 8 and the final check of `plans/` below: the
+real `plans/` folder of step 8 is moved away by then, and a real folder is never replaced. They are never tracked by the code
+repository. A link is not a `plans/` folder in the sense of step 9 (it is allowed there).
+
 ## 9. Final checks on B
 
 ```bash
 swissknifeman workspace status --fetch --json | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['code'],d['git'])"
 swissknifeman workspace doctor
-for p in <the checkouts>; do (cd ~/projects/packages/$p && python3 -I .swissknifeman/launcher.py project doctor | grep -E "plans-store|workspace"; python3 -I .swissknifeman/launcher.py planner plans | head -3); done
-for p in <the checkouts>; do test -d ~/projects/packages/$p/plans && echo "plans/ still in $p"; done
+swissknifeman project doctor | grep -E "env-"                    # env-snippet and env-variables: ok (a new shell after shell-env install)
+for p in <the checkouts>; do (cd ~/projects/packages/$p && python3 -I .swissknifeman/launcher.py project doctor | grep -E "plans-store|workspace|project\.local|checkout-layer"; python3 -I .swissknifeman/launcher.py planner plans | head -3); done
+for p in <the checkouts>; do test -d ~/projects/packages/$p/plans && ! test -L ~/projects/packages/$p/plans && echo "plans/ still in $p"; done
+for p in <the checkouts>; do (cd ~/projects/packages/$p && ls .swissknifeman); done            # launcher.py launcher.lock.json project.json only
 ```
 Every project: `project.plans-store` is a workspace store, `project.workspace` is `ok` (a `warn` for a folder name that differs from the
-code is acceptable), `planner plans` lists the merged plans, no `plans/` folder in the checkout.
+code is acceptable), `project.local` is `ok`, `project.checkout-layer` is `ok`, `planner plans` lists the merged plans, no real
+`plans/` folder in the checkout (a link made in step 8b does not count) and `.swissknifeman/` holds the launcher, its lock and the marker.
 
 ## 10. Report to the owner (short)
 
-- hub commit and `--version`; workspace head (`git -C ~/.local/share/swissknifeman/workspaces/axioma rev-parse --short HEAD`).
+- hub commit and `--version`; workspace head (`git -C $W0 rev-parse --short HEAD`); the result of `config migrate-home`
+  (moves or conflicts) and the state of the snippet (`aicore shell-env show`).
 - Per project: found / branch / plans by action (`skipped-equal`, `copied`, `conflict`) / conflicts merged and how / pull done /
-  `planner plans` count.
+  `planner plans` count / `project migrate` result (moved, dropped, conflicts) / links made or not.
 - Everything skipped or stopped, with the exact error code.
 - Where the backup is (`$B`) and what is in `removed-*` and `merged-*`. Do not paste secrets or file contents.
 
@@ -219,6 +298,8 @@ The owner brings the report back to the planner session on machine A. Machine A'
 
 ## Do not
 
-- touch machine config yourself; push `--force`; pull a checkout before step 8; delete anything instead of moving it into `$B`;
+- touch machine config yourself (the three `config set` lines, the shell profile); push `--force`; pull a checkout before step 8;
+  delete anything instead of moving it into `$B`; run `config migrate-home` with `SKM_HOME` set or merge a `conflict` of it by hand;
+  commit anything of `projects/<code>/local/` (it is machine state);
 - resolve a field-level conflict of two different values without the owner; leave `~<device>` copies in the workspace;
 - commit the temporary marker of step 5; run migrations while a conductor or planner of that project is running.

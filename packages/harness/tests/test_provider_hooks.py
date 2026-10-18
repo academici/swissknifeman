@@ -79,7 +79,9 @@ class ProviderHookTests(unittest.TestCase):
         self.assertEqual(set(rendered["hooks"]), {"SessionStart"})
         self.assertEqual(rendered["hooks"]["SessionStart"][0]["matcher"],
                          "startup|resume|clear|compact")
-        self.assertIn("$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py",
+        self.assertIn("$(git rev-parse --show-toplevel)",
+                      rendered["hooks"]["SessionStart"][0]["hooks"][0]["command"])
+        self.assertIn('/.codex/hooks/lifecycle.py" --surface context.observer',
                       rendered["hooks"]["SessionStart"][0]["hooks"][0]["command"])
         self.assertTrue(all(binding.kill_switch == "[features].hooks=false" for binding in plan.bindings))
 
@@ -166,6 +168,27 @@ class ProviderHookTests(unittest.TestCase):
             second = plan_artifact_lock(root, artifacts, lock_bytes=lock)
             self.assertEqual([action.action for action in second.actions],
                              [ArtifactActionKind.NOOP, ArtifactActionKind.NOOP])
+
+    def test_codex_and_grok_command_runs_the_outer_handler_inside_a_nested_repository(self):
+        import shutil
+        if shutil.which("git") is None or shutil.which("sh") is None:
+            self.skipTest("git and sh are needed")
+        requests = (LifecycleRequest("context.observer"),)
+        for provider in (ProviderId.CODEX, ProviderId.GROK):
+            bindings = PACKAGE / f"configs/{provider.value}/hooks/lifecycle-context-bindings.json"
+            plan = plan_lifecycle(self.catalog, provider_id=provider, trusted=True, requests=requests,
+                                  codex_bindings_path=bindings)
+            command = json.loads(render_codex_hooks(plan))["hooks"]["SessionStart"][0]["hooks"][0]["command"]
+            state = ".codex" if provider is ProviderId.CODEX else ".grok"
+            with self.subTest(provider=provider.value), tempfile.TemporaryDirectory() as tmp:
+                outer, nested, loose = Path(tmp) / "outer", Path(tmp) / "outer" / "vendor" / "dep", Path(tmp) / "loose"
+                for repo, mark in ((outer, "OUTER"), (nested, "FOREIGN"), (loose, "LOOSE")):
+                    (repo / state / "hooks").mkdir(parents=True)
+                    (repo / state / "hooks" / "lifecycle.py").write_text(f"import sys\nprint('{mark}', *sys.argv[1:])\n")
+                    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+                for cwd, expected in ((nested, "OUTER"), (outer, "OUTER"), (loose, "LOOSE")):
+                    done = subprocess.run(["sh", "-c", command], cwd=cwd, capture_output=True, text=True, timeout=60)
+                    self.assertEqual(f"{expected} --surface context.observer", done.stdout.strip(), done.stderr)
 
     def test_d104_fragment_validates_only_native_memory_observer_composition(self):
         lifecycle = plan_lifecycle(self.catalog, provider_id=ProviderId.CODEX, trusted=True,

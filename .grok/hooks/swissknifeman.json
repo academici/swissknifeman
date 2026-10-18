@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.grok/hooks/lifecycle.py\" --surface context.observer"
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.grok/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.grok/hooks/lifecycle.py\" --surface context.observer"
           }
         ],
         "matcher": "startup|resume|clear|compact"
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.grok/hooks/lifecycle.py\" --surface security.safe-dirs"
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.grok/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.grok/hooks/lifecycle.py\" --surface security.safe-dirs"
           }
         ],
         "matcher": "^Bash$"
@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.grok/hooks/lifecycle.py\" --surface lifecycle.daemon-safety"
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.grok/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.grok/hooks/lifecycle.py\" --surface lifecycle.daemon-safety"
           }
         ],
         "matcher": "^Bash$"
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.grok/hooks/lifecycle.py\" --surface lifecycle.command-log"
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.grok/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.grok/hooks/lifecycle.py\" --surface lifecycle.command-log"
           }
         ],
         "matcher": "^Bash$"
@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.grok/hooks/lifecycle.py\" --surface lifecycle.tool-telemetry"
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.grok/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.grok/hooks/lifecycle.py\" --surface lifecycle.tool-telemetry"
           }
         ]
       }
@@ -54,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$(git rev-parse --show-toplevel)/.grok/hooks/lifecycle.py\" --surface lifecycle.run-report"
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.grok/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.grok/hooks/lifecycle.py\" --surface lifecycle.run-report"
           }
         ]
       }

@@ -246,6 +246,21 @@ def claude_shaped_hook_paths(provider_id: ProviderId) -> tuple[str, str]:
     return f"{state_dir}/hooks.json", handler
 
 
+def _handler_command(state_dir: str, surface_id: str) -> str:
+    """Shell command that runs ``<state_dir>/hooks/lifecycle.py`` of the OUTERMOST repository that holds it.
+
+    ``git rev-parse --show-toplevel`` alone names the repository of the current directory; inside a nested repository
+    (a vendored clone, a submodule) that is another project's tree and so another project's ``lifecycle.py``. Starting from
+    that root the command goes up while the enclosing repository also holds the handler, so the project that registered the
+    hook wins over anything cloned inside it. Compromise: a nested repository that is not inside a project with the
+    handler still runs its own.
+    """
+    handler = f"{state_dir}/hooks/lifecycle.py"
+    root = ('$(d=$(git rev-parse --show-toplevel); while p=$(git -C "$d/.." rev-parse --show-toplevel 2>/dev/null) '
+            f'&& [ -f "$p/{handler}" ]; do d=$p; done; printf %s "$d")')
+    return f'python3 "{root}/{handler}" --surface {surface_id}'
+
+
 def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
     """Render Claude-shaped hooks.json; Codex and Grok share this wire format."""
     state_dir = _CLAUDE_SHAPED_HOOK_DIRS.get(plan.provider_id)
@@ -256,7 +271,7 @@ def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
         if binding.support_level != "hook-native":
             continue
         group = {"hooks": [{"type": "command", "command":
-                 f'python3 "$(git rev-parse --show-toplevel)/{state_dir}/hooks/lifecycle.py" --surface {binding.surface_id}'}]}
+                 _handler_command(state_dir, binding.surface_id)}]}
         if binding.matcher:
             group["matcher"] = binding.matcher
         hooks.setdefault(binding.event, []).append(group)
@@ -2088,7 +2103,7 @@ def codex_d104_observer_fragment(plan: LifecycleRenderPlan) -> CodexLifecycleFra
     if binding.event != "SessionStart":
         raise ValueError("HARNESS_MAPPING_MISSING")
     group = {"hooks": [{"type": "command", "command":
-             f'python3 "$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py" --surface {binding.surface_id}'}]}
+             _handler_command(".codex", binding.surface_id)}]}
     if binding.matcher:
         group["matcher"] = binding.matcher
     return CodexLifecycleFragment(_D104_CODEX_HOOKS_TARGET, binding.event, group,

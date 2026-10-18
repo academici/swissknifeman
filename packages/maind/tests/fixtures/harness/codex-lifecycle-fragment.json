@@ -7,7 +7,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py\" --surface context.observer"
+          "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.codex/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.codex/hooks/lifecycle.py\" --surface context.observer"
         }
       ],
       "matcher": "startup|resume|clear|compact"
@@ -17,7 +17,7 @@
     "source": {
       "id": "harness.d104.observer-fragment",
       "path": "@HARNESS_PKG@/lib/harness/hooks.py",
-      "sha256": "sha256:3b1b60ba99b78349a6978be02c514c4e3e40412b1cc22f7f87e8203fb8c415c3"
+      "sha256": "sha256:e99f1cb060a6ee58d8491dd722df35f915060346b02297fd50ebebce485b96e2"
     }
   }
 }

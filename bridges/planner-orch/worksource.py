@@ -331,9 +331,12 @@ def op_brief(fields: dict) -> dict:
     # (content-addressed, unique per digest) and the id is returned to orch only.
     plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "input"], plans_root,
               code="ARTIFACT_REFUSED")
-    artifacts = plan.root.resolve().relative_to(Path(project).resolve()).as_posix() + "/artifacts/" + ref
-    return {"op": "brief", "input_ref": stored, "input_id": doc["input_id"], "digest": doc["digest"],
-            "reused": reused, "artifact_id": artifact_id(ref, doc["digest"]), "artifacts_dir": artifacts}
+    answer = {"op": "brief", "input_ref": stored, "input_id": doc["input_id"], "digest": doc["digest"],
+              "reused": reused, "artifact_id": artifact_id(ref, doc["digest"])}
+    if plan.root.resolve().is_relative_to(Path(project).resolve()):
+        # a plan in a workspace has no repository-relative folder: orch keeps the records in its fallback folder
+        answer["artifacts_dir"] = plan.root.resolve().relative_to(Path(project).resolve()).as_posix() + "/artifacts/" + ref
+    return answer
 
 
 # ------------------------------------------------------------------------------------------------ register

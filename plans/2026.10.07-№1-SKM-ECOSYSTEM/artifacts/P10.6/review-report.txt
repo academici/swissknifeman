@@ -1,9 +1,0 @@
-The concurrency model holds on the paths the suite covers. Two defects remain, both reproduced outside those tests.
-
-`bash packages/orch/scripts/test.sh` ran 270 tests in 8.2s and passed. `bash packages/orch/scripts/validate.sh` passed, including that same suite. Retry budgets, fencing, path checks, and the effect precondition order behaved as specified.
-
-1. `packages/orch/lib/orch/journal.py:114` — A crash after the event body is written and before its newline makes the next `append_event` commit that body with a prefixed newline and then write the event again, so one `event_id` and `seq` appear twice.
-REPRODUCTION: With `os.write` raising after it had written the body of seq 2 and not the trailing newline, `read_events` returned `[1]`, the retry returned `True`, and the next read returned `[1, 2, 2]`. Both lines were the canonical event `evt-2`.
-
-2. `packages/orch/lib/orch/port.py:214` — `stage_result` copies each stage error with `dict(error)`, so the nested normalized `error` object stays shared with the reducer and a caller can change the recorded failure.
-REPRODUCTION: After a `failed` event whose error code was `BAD`, mutating `stage_result(...)["errors"][0]["error"]["code"]` to `MUTATED` made `stages()["primary"]["errors"][0]["error"]["code"]` return `MUTATED`. `stages()` itself deep-copies, so the alias is only on this builder.

@@ -154,6 +154,18 @@ Needs git 2.38 or newer (`WORKSPACE_GIT_TOO_OLD` otherwise).
 Git never asks for a password here: an authentication or network failure is `REMOTE_UNREACHABLE`, with the URL shown
 without user information.
 
+## Two machines: the order
+
+1. Machine A: `migrate apply` per project, commit the marker (`git add -f .swissknifeman/project.json`; most repositories
+   ignore `.swissknifeman`), `workspace connect --remote URL`, `workspace sync --commit --push`, push the marker commits.
+2. Machine B: update swissknifeman, `git pull` the checkouts (the marker arrives), `workspace clone URL`,
+   `workspace project scan ~/projects`, `migrate plan` and `apply` in import mode (equal folders are skipped, new ones are
+   copied, a conflict needs `--on-conflict keep-workspace|import-copy`), `workspace sync --commit --pull --push`.
+   The step-by-step runbook for an agent on B is `MIGRATION-HOST-B.md` in the repository root.
+3. Only after `migrate verify` is `equal` on both machines: `migrate cleanup --confirm <project_id>` and
+   `git rm -r --cached plans` per repository. Files with secret-like content (`--local-only-secrets`) stay on the machine
+   that held them; they are not in the workspace git.
+
 ## Sync between machines
 
 `swissknifeman workspace sync [--commit] [--pull] [--push] [--resolve PATH=local|remote ...] [--resolve-reset] [--json]`

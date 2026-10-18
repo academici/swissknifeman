@@ -1,3 +1,0 @@
-extension/v1 /properties/provides/properties/gui: property-added (info) property 'gui' added
-unit/v1 /properties/provides/properties/gui: property-added (info) property 'gui' added
-compat: 23 contracts against 177b3ecc9: 0 errors, 0 warnings, 2 notes

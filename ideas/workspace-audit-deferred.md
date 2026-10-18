@@ -88,3 +88,11 @@ project-слой с абсолютным путём машины (`maind doctor 
 
 Устаревшая строка статуса `packages/gui/README.md` («desktop and sidecar are the target layout») при существующих
 `packages/gui/desktop` и `packages/gui/sidecar` правится в PLAN6 P5.2, где этот README затрагивается.
+
+## Наблюдения миграции PLAN6 (P6)
+
+- Живой conduct (vaulter) нельзя мигрировать: план пишется постоянно, `MIGRATION_SOURCE_CHANGED`. Нужна пауза/останов run, а не флаг.
+- `.swissknifeman` в `.gitignore` проектов: маркер коммитится через `git add -f`; стоит добавить исключение для `project.json` в шаблон launcher.
+- Около 500 файлов с секрето-подобным содержимым (логи провайдеров, diff ревью) остались local-only на A; ключи в логах azguard/chatom/corex/vaulter владелец проверит до публикации пакетов.
+- В корне репозитория остались пустые заглушки песочницы исполнителей (`.bashrc`, `.gitconfig`, `.idea`, `.vscode`, `.claude/*`).
+- Проверка `equal` на второй машине не выполнена (D18): по `MIGRATION-HOST-B.md`.

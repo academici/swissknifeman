@@ -64,6 +64,8 @@ CONTENT_PLAN_EXEMPT: dict[str, str] = {}
 # The exemption holds only while the sealed file is byte-identical to the reviewed one.
 CONTENT_PLAN_EXEMPT_SHA256: dict[str, str] = {}
 
+# Records the conductor commits for a piece of a plan kept outside the checkout name the item (`PLANn.Pm`): generated, not authored.
+GENERATED_RECORD_DIRS = (".swissknifeman/orch-artifacts/",)
 # Working documents are local-only; nothing tracked may live under or point into them.
 WORKING_DOC_DIRS = ("plans/", "roadmap/", "tasks/", ".cursor/plans/")
 # Concrete plan identity: dated plan ID, Short-ID citation, or a link into the working directories.
@@ -97,7 +99,8 @@ def plan_reference_violations(paths, read=None):
     found = [(path, "tracked working document (plans/, roadmap/, tasks/, .cursor/plans/ are local-only)")
              for path in paths if path.startswith(WORKING_DOC_DIRS)]
     for path in paths:
-        if path.startswith(WORKING_DOC_DIRS) or path.startswith(tuple(PLAN_SYNTAX_TEST_TREES)):
+        if (path.startswith(WORKING_DOC_DIRS) or path.startswith(tuple(PLAN_SYNTAX_TEST_TREES))
+                or path.startswith(GENERATED_RECORD_DIRS)):
             continue
         text = read(path)
         if path in CONTENT_PLAN_EXEMPT:

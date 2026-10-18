@@ -683,6 +683,17 @@ counts the `run.resume` lines. A project without runs gives `{"runs": []}`; a ru
 `{"run_id": "cnd-...", "status": "unreadable"}` and never an error. `--limit` is at least 1. Without `--json` one line
 per run is printed. Exit 0; the project is required as for every other `conduct` verb.
 
+### Removing old runs: `conduct prune`
+
+`orch conduct prune --older-than DAYS [--dry-run] [--apply] [--json]` removes what runs that ended more than `DAYS` days ago
+(`DAYS` at least 1; counted from the last journal line, else the folder time) left behind: the run state folder, the observer
+reports `.swissknifeman/orch/reports/<run id>` and the fallback artifacts `.swissknifeman/orch-artifacts/<run id>`. It is a
+dry run unless `--apply` is given (`--dry-run` says so explicitly; both together are refused), so by default it lists
+`{run_id, status, age_days, paths, removed}` per run and removes nothing. The latest run (the default of `conduct status`), a
+run that is running, and a run whose `run.json` cannot be read are never listed. Not touched: an `artifacts_dir` that a work
+source names itself, and the aicore event journal (its compaction changes delivery offsets and is the owner's decision). The
+fallback artifacts are committed records: after `--apply` the removal shows in `git status` and is committed by the owner.
+
 ## Observer
 
 The observer only reads: the journal and state of the run and the `orch.run.*` and `planner.*` events of the

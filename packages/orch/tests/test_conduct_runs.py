@@ -99,5 +99,68 @@ class ConductRunsTests(unittest.TestCase):
         self.assertNotRegex(self.conduct("runs", "--json")[1], r"\d\.\d")
 
 
+class ConductPruneTests(ConductRunsTests):
+    NOW = 1792000000.0  # 2026-10-14
+
+    def ended(self, run_id: str, day: str, outcome: str = "done") -> Path:
+        directory = self.make(run_id, [line(f"{day}T09:00:00Z", "run.start"),
+                                       line(f"{day}T10:00:00Z", "run.end", outcome=outcome)])
+        (self.project / ".swissknifeman" / "orch-artifacts" / run_id / "P1.1").mkdir(parents=True)
+        (self.project / ".swissknifeman" / "orch" / "reports" / run_id).mkdir(parents=True)
+        return directory
+
+    def test_a_dry_run_lists_and_removes_nothing(self):
+        old = self.ended("cnd-old", "2026-09-01")
+        self.ended("cnd-new", "2026-10-13")
+        rows = runs.prune(self.project, 30, now=self.NOW)
+        self.assertEqual(["cnd-old"], [row["run_id"] for row in rows])
+        self.assertFalse(rows[0]["removed"])
+        self.assertTrue(old.is_dir())
+        self.assertEqual(3, len(rows[0]["paths"]))
+
+    def test_apply_removes_the_state_the_reports_and_the_artifacts_of_old_runs_only(self):
+        old = self.ended("cnd-old", "2026-09-01")
+        older = self.ended("cnd-older", "2026-08-01", "blocked")
+        recent = self.ended("cnd-new", "2026-10-13")
+        rows = runs.prune(self.project, 30, apply=True, now=self.NOW)
+        self.assertEqual({"cnd-old", "cnd-older"}, {row["run_id"] for row in rows})
+        self.assertTrue(all(row["removed"] for row in rows))
+        for path in (old, older):
+            self.assertFalse(path.exists())
+        for run_id in ("cnd-old", "cnd-older"):
+            self.assertFalse((self.project / ".swissknifeman" / "orch-artifacts" / run_id).exists())
+            self.assertFalse((self.project / ".swissknifeman" / "orch" / "reports" / run_id).exists())
+        self.assertTrue(recent.is_dir())
+        self.assertTrue((self.project / ".swissknifeman" / "orch-artifacts" / "cnd-new").is_dir())
+
+    def test_the_latest_a_running_and_an_unreadable_run_stay(self):
+        self.ended("cnd-a", "2026-07-01")
+        running = self.make("cnd-running", [line("2026-07-02T09:00:00Z", "run.start")])
+        self.make("cnd-broken", raw="{")
+        latest = self.ended("cnd-z-latest", "2026-07-03")
+        os.utime(latest / "progress.jsonl", (self.NOW * 2, self.NOW * 2))  # the last journal to change
+        rows = runs.prune(self.project, 1, apply=True, now=self.NOW)
+        self.assertEqual(["cnd-a"], [row["run_id"] for row in rows])
+        for path in (running, runs_root(self.project) / "cnd-broken", latest):
+            self.assertTrue(path.is_dir(), path)
+
+    def test_the_cli_is_a_dry_run_unless_apply_and_checks_its_flag(self):
+        self.ended("cnd-old", "2026-01-01")
+        self.ended("cnd-last", "2026-01-02")
+        os.utime(runs_root(self.project) / "cnd-last" / "progress.jsonl", (self.NOW * 2, self.NOW * 2))
+        code, out, _ = self.conduct("prune", "--older-than", "30")
+        self.assertEqual(0, code)
+        self.assertIn("would remove", out)
+        self.assertIn("--apply", out)
+        self.assertTrue((runs_root(self.project) / "cnd-old").is_dir())
+        code, out, _ = self.conduct("prune", "--older-than", "30", "--apply", "--json")
+        self.assertEqual(0, code)
+        self.assertEqual([True], [row["removed"] for row in json.loads(out)["runs"]])
+        self.assertFalse((runs_root(self.project) / "cnd-old").exists())
+        for bad in (("--older-than", "0"), ("--older-than", "5", "--apply", "--dry-run")):
+            with self.assertRaises(SystemExit):
+                self.conduct("prune", *bad)
+
+
 if __name__ == "__main__":
     unittest.main()

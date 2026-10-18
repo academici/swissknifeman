@@ -39,11 +39,7 @@ def _mode(args) -> str:
 
 
 def _latest(project: Path) -> str | None:
-    root = engine.runs_root(project)
-    runs = sorted((path for path in root.glob("cnd-*") if (path / engine.RUN_FILE).is_file()),
-                  key=lambda path: (path / progress.PROGRESS_FILE).stat().st_mtime
-                  if (path / progress.PROGRESS_FILE).exists() else 0)
-    return runs[-1].name if runs else None
+    return runs.latest_run_id(project)
 
 
 def _preview(conductor: engine.Conductor, args) -> dict:
@@ -261,6 +257,12 @@ def main(argv: list | None = None) -> int:
     listing.add_argument("--limit", type=int, default=None, metavar="N", help="at most N runs (default: all)")
     listing.add_argument("--json", action="store_true", help='print {"runs": [{run_id, status, reason_code, created, '
                                                               'items, resumes}]}')
+    prune = verbs.add_parser("prune", help="remove the folders of runs that ended long ago (dry run unless --apply); the latest "
+                                           "and a running run stay")
+    prune.add_argument("--older-than", type=int, required=True, metavar="DAYS", help="runs that ended more than DAYS days ago")
+    prune.add_argument("--dry-run", action="store_true", help="only list what would be removed (the default)")
+    prune.add_argument("--apply", action="store_true", help="remove them")
+    prune.add_argument("--json", action="store_true", help='print {"runs": [{run_id, status, age_days, paths, removed}]}')
     observe = verbs.add_parser("observe", help="write the observer report of a run, or --follow a running one")
     observe.add_argument("--run", metavar="RUN")
     observe.add_argument("--follow", action="store_true")
@@ -302,6 +304,11 @@ def main(argv: list | None = None) -> int:
             parser.error("--commit belongs to --input: a plan source commits as its own policy says")
     if args.verb == "runs" and args.limit is not None and args.limit < 1:
         parser.error("--limit must be at least 1")
+    if args.verb == "prune":
+        if args.older_than < 1:
+            parser.error("--older-than must be at least 1")
+        if args.apply and args.dry_run:
+            parser.error("--apply and --dry-run exclude each other")
     if args.verb == "gates":
         return _gates(args)
 
@@ -318,6 +325,10 @@ def main(argv: list | None = None) -> int:
     if args.verb == "runs":
         rows = runs.listing(project, args.limit)
         print(json.dumps({"runs": rows}, ensure_ascii=False, indent=2) if args.json else runs.text(rows))
+        return 0
+    if args.verb == "prune":
+        rows = runs.prune(project, args.older_than, apply=args.apply)
+        print(json.dumps({"runs": rows}, ensure_ascii=False, indent=2) if args.json else runs.prune_text(rows, args.apply))
         return 0
     if args.verb in ("answer", "questions"):
         return _questions(args, project)

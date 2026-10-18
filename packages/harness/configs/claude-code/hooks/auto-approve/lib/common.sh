@@ -62,14 +62,25 @@ read_mode() {
   if [ "$(_mode_rank "$pm")" -lt "$(_mode_rank "${gm:-off}")" ]; then printf '%s' "$pm"; else printf '%s' "${gm:-off}"; fi
 }
 
+# Masks the token formats of aicore.util.redact (same patterns as hooks/log-bash-command.sh).
+_JQ_REDACT='def redact: gsub("sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|Bearer\\s+\\S{20,}"; "‹redacted›")
+  | gsub("(?<k>(api[_-]?key|token|secret|password)[\"\u0027]?\\s*[=:]\\s*[\"\u0027]?)[^\\s\"\u0027,;]{8,}"; "\(.k)‹redacted›"; "i");'
+
 log_decision() {
-  local dir="$HOME/.claude/logs"
-  mkdir -p "$dir" 2>/dev/null || return 0
-  jq -cn \
-    --arg hook "${HOOK_NAME:-}" --arg cwd "${HOOK_CWD:-}" \
-    --arg decision "${1:-}" --arg command "${2:-}" --arg reason "${3:-}" \
-    '{ts:(now|todate), hook:$hook, cwd:$cwd, decision:$decision, command:$command, reason:$reason}' \
-    >> "$dir/auto-approve-decisions.jsonl" 2>/dev/null || true
+  local dir="$HOME/.claude/logs" file max="${CLAUDE_LOG_MAX_BYTES:-5242880}"
+  file="$dir/auto-approve-decisions.jsonl"
+  ( umask 077; mkdir -p "$dir" ) 2>/dev/null || return 0
+  if [ -f "$file" ] && [ "$(wc -c < "$file" 2>/dev/null || echo 0)" -gt "$max" ]; then
+    mv -f "$file" "$file.1" 2>/dev/null
+  fi
+  (
+    umask 077
+    jq -cn \
+      --arg hook "${HOOK_NAME:-}" --arg cwd "${HOOK_CWD:-}" \
+      --arg decision "${1:-}" --arg command "${2:-}" --arg reason "${3:-}" \
+      "$_JQ_REDACT"'{ts:(now|todate), hook:$hook, cwd:$cwd, decision:$decision, command:($command|redact), reason:($reason|redact)}' \
+      >> "$file" 2>/dev/null
+  ) || true
 }
 
 emit_allow() {

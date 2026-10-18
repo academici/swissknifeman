@@ -42,7 +42,8 @@
   ],
   "rules": [
     "URL берётся только из grant владельца; в артефакты пишется redacted URL.",
-    "Отказ `REMOTE_FOREIGN`/`REMOTE_OTHER_WORKSPACE` → остановка и вопрос владельцу."
+    "Отказ `REMOTE_FOREIGN`/`REMOTE_OTHER_WORKSPACE` → остановка и вопрос владельцу.",
+    "D16: vaulter исключён — 6 проектов (billium, commerz, azguard, chatom, corex, swissknifeman); vaulter остаётся на legacy plans/, его не attach/apply/cleanup, маркер не коммитить."
   ],
   "guidance": "```bash\nswissknifeman workspace connect --remote \"$URL\" --json\nswissknifeman workspace sync --push --json\nfor p in billium commerz azguard chatom corex vaulter swissknifeman; do git -C ~/projects/packages/$p push; done\nswissknifeman workspace status --fetch --json > status-after.json\n```",
   "validation": [
@@ -82,5 +83,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-17T10:22:22Z"
+  "updated_at": "2026-10-18T03:00:42Z"
 }

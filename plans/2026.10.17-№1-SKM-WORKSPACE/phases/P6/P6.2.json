@@ -58,7 +58,9 @@
     "Начинать только после grant MIGRATE-HOST-A.",
     "Порядок проектов: billium, commerz, azguard, chatom, corex, vaulter, swissknifeman.",
     "Ошибка apply проекта → остановиться на нём, не продолжать следующие; повтор после устранения причины.",
-    "Коммит маркера — только файл `.swissknifeman/project.json`, отдельным коммитом в каждом репозитории; чужие изменения рабочих деревьев не трогать."
+    "Коммит маркера — только файл `.swissknifeman/project.json`, отдельным коммитом в каждом репозитории; чужие изменения рабочих деревьев не трогать.",
+    "D16: vaulter исключён — 6 проектов (billium, commerz, azguard, chatom, corex, swissknifeman); vaulter остаётся на legacy plans/, его не attach/apply/cleanup, маркер не коммитить.",
+    "init и apply запускать без SKM_WORKSPACE_ROOT модуля (`env -u SKM_WORKSPACE_ROOT`) или с явным корнем данных."
   ],
   "guidance": "```bash\nmkdir -p \"$PLAN_DIR/artifacts/P6.2\" && cd \"$PLAN_DIR/artifacts/P6.2\"   # после apply swissknifeman каталог PLAN6 переезжает: сохранить отчёты последнего шага в новый каталог (planner show PLAN6)\nswissknifeman workspace init\nswissknifeman config set aicore plugins.workspace-planner.manifest ~/projects/packages/swissknifeman/bridges/workspace-planner/extension.json   # если doctor сообщает MIGRATOR_UNAVAILABLE\nfor p in billium commerz azguard chatom corex vaulter swissknifeman; do D=~/projects/packages/$p\n  swissknifeman workspace project attach --project $D --yes --json > attach-$p.json\n  swissknifeman workspace migrate apply --project $D --json > migrate-apply-$p.json || break\n  swissknifeman workspace migrate verify --project $D --json > verify-$p.json\n  (cd $D && python3 -I .swissknifeman/launcher.py planner plans) > plans-after-$p.json\n  git -C $D add .swissknifeman/project.json && git -C $D commit -m \"chore(skm): маркер проекта portable workspace\"\ndone\nswissknifeman workspace doctor --publish-safety --all --json > publish-report.json\nswissknifeman workspace sync --commit --json\n```",
   "validation": [
@@ -113,5 +115,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-17T10:22:21Z"
+  "updated_at": "2026-10-18T03:00:41Z"
 }

@@ -49,7 +49,8 @@
   "rules": [
     "Выполняется на машине B; если план исполняется агентом на машине A, пункт ждёт результатов от владельца (finish с notes и артефактами).",
     "Конфликт import — только решение владельца; по умолчанию apply отказывает `MIGRATION_CONFLICT`.",
-    "Версия swissknifeman на B — та же коммит-база main, что запушена в P6.3 (`swissknifeman --version` на обеих машинах совпадает)."
+    "Версия swissknifeman на B — та же коммит-база main, что запушена в P6.3 (`swissknifeman --version` на обеих машинах совпадает).",
+    "D16: vaulter исключён — 6 проектов (billium, commerz, azguard, chatom, corex, swissknifeman); vaulter остаётся на legacy plans/, его не attach/apply/cleanup, маркер не коммитить."
   ],
   "guidance": "Команды — knowledge/migration-runbook#host-b. После sync на B: на машине A `swissknifeman workspace sync --pull`, чтобы A получила планы, импортированные с B.",
   "validation": [
@@ -89,5 +90,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-17T10:22:22Z"
+  "updated_at": "2026-10-18T03:00:43Z"
 }

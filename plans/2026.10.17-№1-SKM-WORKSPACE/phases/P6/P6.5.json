@@ -67,7 +67,8 @@
   "rules": [
     "Начинать только после grant CLEANUP-LEGACY и после того, как P6.4 V1 и V2 выполнены.",
     "cleanup с `kept` для любого каталога → не делать `git rm` в этом репозитории, разобрать расхождение (verify) и сообщить владельцу.",
-    "Push удаления — после того, как машина B синхронизирована (P6.4)."
+    "Push удаления — после того, как машина B синхронизирована (P6.4).",
+    "D16: vaulter исключён — 6 проектов (billium, commerz, azguard, chatom, corex, swissknifeman); vaulter остаётся на legacy plans/, его не attach/apply/cleanup, маркер не коммитить."
   ],
   "guidance": "```bash\nfor p in billium commerz azguard chatom corex vaulter swissknifeman; do D=~/projects/packages/$p; ID=$(python3 -c \"import json;print(json.load(open('$D/.swissknifeman/project.json'))['project_id'])\")\n  swissknifeman workspace migrate cleanup --project $D --confirm $ID --json > cleanup-$p.json\n  git -C $D rm -r -q --cached plans && git -C $D commit -m \"chore(skm): планы перенесены в portable workspace\" && git -C $D push\ndone\nswissknifeman workspace doctor --json > doctor-final.json\n```\nЗакрытие: phase.validation P6, затем закрытие плана (lifecycle).",
   "validation": [
@@ -115,5 +116,5 @@
     "status": "not_needed"
   },
   "result": null,
-  "updated_at": "2026-10-17T10:23:02Z"
+  "updated_at": "2026-10-18T03:00:43Z"
 }

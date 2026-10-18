@@ -26,6 +26,7 @@ from .connect import do_connect
 from .vendor import do_vendor
 from .skillset import do_sync
 from .hub import generate_hub
+from aicore.util.proc import run as run_with_timeout
 
 # Channels for publishing skills in the project (skills only; memory/graph — separately).
 SKILLS_CHANNELS = ("connect", "vendor", "skip")
@@ -122,8 +123,8 @@ def _available_mcp(env):
     if argv is None:
         return []
     try:
-        out = subprocess.run([*argv, "mcp", "--list"],
-                             capture_output=True, text=True, check=False).stdout
+        out = run_with_timeout([*argv, "mcp", "--list"],
+                             capture_output=True, text=True, check=False, timeout=120).stdout
     except OSError:
         return []
     return [ln.strip() for ln in out.splitlines() if ln.strip()]
@@ -161,7 +162,7 @@ def _block_prereqs(env, dry, interactive):
         print("  ✗ no topology — coordinator and memory resolve nodes from weak "
               "defaults")
         if not dry and interactive and _yn("  Run maind topology init now?", False):
-            subprocess.run(require_partner("maind") + ["topology", "init"])
+            run_with_timeout(require_partner("maind") + ["topology", "init"], timeout=120)
     hooks = env.home / ".claude" / "hooks"
     have = all((hooks / d).exists() for d in ("notify", "auto-approve", "memory"))
     if have:

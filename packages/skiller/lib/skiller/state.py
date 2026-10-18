@@ -7,6 +7,7 @@ from aicore.util.io import atomic_write_text, load_json_db
 
 from .common import DB_VERSION
 from aicore.util.term import now_iso
+from aicore.util.proc import run as run_with_timeout
 
 
 def load_db(env):
@@ -57,13 +58,13 @@ def registry_git_state(env):
     """(short sha | None, dirty: bool) — dirty considers skills/ + manifests."""
     root = env.root
     try:
-        sha = subprocess.run(
+        sha = run_with_timeout(
             ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, check=True).stdout.strip()
-        porcelain = subprocess.run(
+            capture_output=True, text=True, check=True, timeout=60).stdout.strip()
+        porcelain = run_with_timeout(
             ["git", "-C", str(root), "status", "--porcelain",
              "skills", "generate-skill", "skills.json", ".claude-plugin"],
-            capture_output=True, text=True, check=True).stdout.strip()
+            capture_output=True, text=True, check=True, timeout=60).stdout.strip()
         return sha, bool(porcelain)
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None, False

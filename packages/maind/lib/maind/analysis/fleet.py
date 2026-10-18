@@ -16,7 +16,6 @@ import math
 import os
 import re
 import shutil
-import subprocess
 import tempfile
 from pathlib import Path
 
@@ -26,6 +25,7 @@ from ..config import load_config
 from ..federation import federated_graph, graph_disabled
 from ..namespaces import group_scopes, namespaces_of, private_scope
 from ..projects import listing
+from aicore.util.proc import run as run_with_timeout
 
 
 # ── manifest ─────────────────────────────────────────────────────────────────
@@ -140,8 +140,8 @@ def find_duplicates(env, config, opts):
     pattern = opts.get("pattern") or "**/*.php"
     ignore = opts.get("ignore") or "**/vendor/**,**/node_modules/**,**/packages/**"
     with tempfile.TemporaryDirectory() as out:
-        proc = subprocess.run(_jscpd_cmd(paths, out, min_tokens=min_tokens, pattern=pattern,
-                                         ignore=ignore), capture_output=True, text=True)
+        proc = run_with_timeout(_jscpd_cmd(paths, out, min_tokens=min_tokens, pattern=pattern,
+                                         ignore=ignore), capture_output=True, text=True, timeout=900)
         if proc.returncode != 0:
             die(f"jscpd failed with code {proc.returncode} — check npx/network "
                 f"(first run installs the package):\n{(proc.stderr or '').strip()[:500]}")
@@ -234,7 +234,7 @@ def _embed(texts, embed_cfg):
                        encoding="utf-8")
         argv = [a.replace("{input}", str(inp)).replace("{output}", str(outp))
                 for a in embed_cfg["command"]]
-        proc = subprocess.run(argv, capture_output=True, text=True)
+        proc = run_with_timeout(argv, capture_output=True, text=True, timeout=120)
         if proc.returncode != 0:
             die(f"embedder exited with code {proc.returncode} "
                 f"(code_graph.embed.command):\n{(proc.stderr or '').strip()[:500]}")

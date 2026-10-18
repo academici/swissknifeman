@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
-import subprocess
 from typing import Optional
+from aicore.util.proc import run as run_with_timeout
 
 PROMPT = """You are an independent code reviewer. READ ONLY: do not run any command and do not edit anything. Work from the diff \
 below; open a file only when a defect cannot be judged without it, and use at most {max_tools} tool calls in total. Keep your \
@@ -52,8 +52,8 @@ def commits_of_state(state: dict) -> tuple:
 def diff_of(project: Path, shas: list, include: list, exclude: list) -> str:
     out = []
     for sha in shas:
-        shown = subprocess.run(["git", "diff", f"{sha}~1", sha, "--", *include], cwd=project, capture_output=True,
-                               text=True, check=True).stdout
+        shown = run_with_timeout(["git", "diff", f"{sha}~1", sha, "--", *include], cwd=project, capture_output=True,
+                               text=True, check=True, timeout=60).stdout
         for block in shown.split("\ndiff --git ")[0:]:
             head = block.splitlines()[0] if block else ""
             if any(mark in head for mark in exclude):

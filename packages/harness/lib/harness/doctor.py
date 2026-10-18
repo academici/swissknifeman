@@ -116,6 +116,21 @@ def _environment_check(env):
                    evidence=evidence)
 
 
+def _differs(shipped, installed):
+    return shipped.is_file() and _sha256(shipped) != _sha256(installed)
+
+
+def _auto_approve_drift(env, hooks):
+    """Code files of the shipped auto-approve hook (and the command logger) that the installed copy lacks or has
+    changed; ``env.ini`` and ``config.json`` are the machine's own and are not compared."""
+    source = env.configs_dir / "hooks"
+    pairs = [(source / "log-bash-command.sh", hooks / "log-bash-command.sh")]
+    for pattern in ("auto-approve.sh", "lib/*.sh", "lib/*.py", "modes/*.sh"):
+        for shipped in sorted((source / "auto-approve").glob(pattern)):
+            pairs.append((shipped, hooks / "auto-approve" / shipped.relative_to(source / "auto-approve")))
+    return [str(installed.relative_to(hooks)) for shipped, installed in pairs if _differs(shipped, installed)]
+
+
 def _hooks_check(env):
     hooks = env.home / ".claude" / "hooks"
     missing = [name for name in ("notify", "auto-approve", "memory") if not (hooks / name).exists()]
@@ -126,6 +141,16 @@ def _hooks_check(env):
     stale = [f for f in _RUN_REPORT_FILES
              if _sha256(env.configs_dir / "hooks" / "run-report" / f) != _sha256(hooks / "run-report" / f)]
     evidence.append(f"review-gate: {_review_gate_state(hooks)}")
+    code_drift = _auto_approve_drift(env, hooks)
+    if code_drift:
+        return _result("harness.hooks", "warn",
+                       f"installed auto-approve hook differs from the shipped one ({', '.join(code_drift)})",
+                       category="integration", evidence=evidence, remediation="harness hooks --global")
+    config_drift = [name for name in ("config.json",) if _differs(
+        env.configs_dir / "hooks" / "auto-approve" / name, hooks / "auto-approve" / name)]
+    if config_drift:
+        evidence.append("auto-approve/config.json is a local copy that differs from the shipped one "
+                        "(kept on purpose; compare it to pick up new deny patterns)")
     if stale:
         return _result("harness.hooks", "warn", f"hook run-report is stale ({', '.join(stale)})",
                        category="integration", evidence=evidence, remediation="harness hooks --global")

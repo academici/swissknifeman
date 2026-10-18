@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import shlex
-import subprocess
 import sys
 from typing import Optional
 
@@ -21,6 +20,7 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import safe, write_json
 from orch.settings import ORCH_ROOT
+from aicore.util.proc import run as run_with_timeout
 
 FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"  # committed records of a source without artifacts_dir
 
@@ -32,8 +32,8 @@ def run_orch(self, *args: str) -> tuple:
         argv += ["--project-resolution", self.project_resolution]
     if self.config_file:
         argv += ["--config", str(self.config_file)]
-    done = subprocess.run(argv + list(args), cwd=str(self.project), capture_output=True, text=True,
-                          env=self.env)
+    done = run_with_timeout(argv + list(args), cwd=str(self.project), capture_output=True, text=True,
+                          env=self.env, timeout=600)
     try:
         doc = json.loads(done.stdout) if done.stdout.strip() else None
     except ValueError:

@@ -26,7 +26,7 @@ scripts/check-env.sh
 | recommended | one agent client | | `claude`, `codex` or `grok`: the program that reads skills and commands | see each vendor |
 | optional | `php`, `composer` | | Laravel and PHP packs (`pint`) | `sudo apt install php-cli composer` |
 | optional | `pnpm` | | Node projects with husky or lint | `corepack enable` |
-| optional | `ruff`, `rsync` | | development of this repository (`scripts/lint.sh`, `scripts/dev-sandbox.sh`) | `pipx install ruff`, `sudo apt install rsync` |
+| optional | `ruff`, `pyright`, `rsync` | | development of this repository (`scripts/lint.sh`, `scripts/typecheck.sh`, `scripts/dev-sandbox.sh`) | `pipx install ruff`, `pipx install pyright`, `sudo apt install rsync` |
 
 On macOS use `brew install` with the same package names; the sandbox needs no `bubblewrap` there (the system sandbox is used).
 `swissknifeman doctor` checks the same things later from inside the installed modules (`orch.sandbox`, `maind.environment`, ...);

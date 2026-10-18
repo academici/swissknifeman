@@ -16,12 +16,16 @@ import time
 from . import settings, store, workspace
 from .model import PlanError, parse_ref
 
+GIT_TIMEOUT_S = 600   # a commit runs the hooks of the repository
+
 
 def _git(repo: Path, *args: str, code: str = "GIT_FAILED", env: dict | None = None) -> bytes:
     try:
-        result = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, env=env)
+        result = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, env=env, timeout=GIT_TIMEOUT_S)
     except OSError as exc:
         raise PlanError("GIT_UNAVAILABLE", str(exc)) from exc
+    except subprocess.TimeoutExpired as exc:
+        raise PlanError(code, f"git {args[0] if args else ''} did not finish in {GIT_TIMEOUT_S}s") from exc
     if result.returncode:
         detail = (result.stderr or result.stdout).decode("utf-8", errors="replace").strip()
         raise PlanError(code, detail or "git command failed")

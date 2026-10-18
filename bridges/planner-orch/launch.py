@@ -42,7 +42,7 @@ class LaunchRefused(Exception):
 
 def _orch(*args: str) -> dict:
     root = require_orch()
-    done = subprocess.run([sys.executable, str(root / "scripts" / "orch.py"), "launch", *args],
+    done = subprocess.run([sys.executable, str(root / "scripts" / "orch.py"), "launch", *args],  # no-timeout: the launch is the agent run itself
                           capture_output=True, text=True, encoding="utf-8", check=False)
     if done.returncode:
         raise LaunchRefused(*(done.stderr.strip().split(": ", 1) if ": " in done.stderr else ("LAUNCH_FAILED", done.stderr.strip())))

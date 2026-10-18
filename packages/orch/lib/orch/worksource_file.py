@@ -28,6 +28,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_tagged
 
 from orch import contracts
 from orch.worksource import WorkSourceError, problems
+from aicore.util.proc import run as run_with_timeout
 
 ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
 RECEIPT = "register.json"
@@ -206,8 +207,8 @@ class FileWorkSource:
 
     def _git(self, *args: str) -> subprocess.CompletedProcess:
         # literal pathspecs: a path such as ``item[1].txt`` is that file, never a pattern that takes foreign files along
-        return subprocess.run(["git", "--literal-pathspecs", "-C", str(self.project), *args], capture_output=True,
-                              text=True, check=False)
+        return run_with_timeout(["git", "--literal-pathspecs", "-C", str(self.project), *args], capture_output=True,
+                              text=True, check=False, timeout=60)
 
     def _commit(self, request: dict) -> dict:
         if not self.commit_enabled:

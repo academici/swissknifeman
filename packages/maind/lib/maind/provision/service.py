@@ -10,6 +10,7 @@ import subprocess
 from aicore.util.term import die
 from ..config import load_config
 from ..memory import refuse_if_client_role
+from aicore.util.proc import run as run_with_timeout
 
 UNIT = "maind-memory.service"
 SERVICE_SUBCMDS = {"install", "uninstall", "start", "stop", "restart",
@@ -48,8 +49,8 @@ def _ensure_systemd():
     if shutil.which("systemctl") is None:
         die("systemctl not found - this is not systemd-system; "
             "raise memory manually: maind start --only memory")
-    r = subprocess.run(["systemctl", "--user", "is-system-running"],
-                       text=True, capture_output=True)
+    r = run_with_timeout(["systemctl", "--user", "is-system-running"],
+                       text=True, capture_output=True, timeout=30)
     # Empty nonzero output means no user instance (for example bare SSH without linger).
     if r.returncode != 0 and not (r.stdout or "").strip():
         die("no user-sessions systemd. By SSH: log into the graphics session "
@@ -57,7 +58,7 @@ def _ensure_systemd():
 
 
 def _sc(*args):
-    return subprocess.run(["systemctl", "--user", *args])
+    return run_with_timeout(["systemctl", "--user", *args], timeout=120)
 
 
 def cmd_service(env, argv):
@@ -95,7 +96,7 @@ def cmd_service(env, argv):
 
     if sub == "logs":
         args = rest if rest else ["-n", "100", "-f"]
-        subprocess.run(["journalctl", "--user", "-u", UNIT, *args])
+        subprocess.run(["journalctl", "--user", "-u", UNIT, *args])  # no-timeout: journalctl may follow the log (-f) until interrupted
         return
 
     if sub in ("start", "stop", "restart", "status", "enable", "disable"):

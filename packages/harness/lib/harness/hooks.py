@@ -2590,7 +2590,7 @@ def install_global(env, dry):
     if dry:
         cmd.append("--dry-run")
     sys.stdout.flush()
-    rc = subprocess.run(cmd, check=False).returncode
+    rc = subprocess.run(cmd, check=False).returncode  # no-timeout: runs the installer script of the global hooks
     if rc:
         sys.exit(rc)
 

@@ -20,6 +20,7 @@ from orch.port import PortError
 from orch.schema import SchemaProfileError
 from orch.worksource import PluginWorkSource, WorkSourceError
 from orch.worksource_file import FileWorkSource
+from aicore.util.proc import run as run_with_timeout
 
 
 def _launch(args: argparse.Namespace) -> int:
@@ -424,10 +425,9 @@ def _check(check_id: str, status: str, observed: str, *, evidence=(), remediatio
 
 def _ignored(project: Path, relative: str) -> bool | None:
     """Whether git ignores ``relative`` in ``project`` (``None`` when git cannot answer)."""
-    import subprocess
     try:
-        done = subprocess.run(["git", "check-ignore", "-q", "--no-index", relative], cwd=str(project),
-                              capture_output=True, text=True)
+        done = run_with_timeout(["git", "check-ignore", "-q", "--no-index", relative], cwd=str(project),
+                              capture_output=True, text=True, timeout=60)
     except OSError:
         return None
     return {0: True, 1: False}.get(done.returncode)

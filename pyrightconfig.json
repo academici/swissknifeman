@@ -1,9 +1,25 @@
 {
-  "typeCheckingMode": "off",
+  "pythonVersion": "3.9",
+  "typeCheckingMode": "basic",
+  "include": [
+    "packages/workspace/lib",
+    "packages/brain/lib",
+    "packages/gui/lib",
+    "packages/orch/lib",
+    "packages/planner/lib"
+  ],
+  "exclude": ["**/_vendor", "**/__pycache__"],
   "extraPaths": [
     "packages/aicore/lib",
+    "packages/planner/lib",
+    "packages/orch/lib",
+    "packages/gui/lib",
+    "packages/workspace/lib",
+    "packages/brain/lib",
     "packages/skiller/lib",
     "packages/harness/lib",
-    "packages/maind/lib"
-  ]
+    "packages/maind/lib",
+    "packages/analyst/lib"
+  ],
+  "reportMissingModuleSource": false
 }

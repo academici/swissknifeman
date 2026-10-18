@@ -161,7 +161,7 @@ def evaluate(source: Source, *, host_protocol: Tuple[str, str] = HOST_PROTOCOL,
     evaluation.digest = digest_json(document)
     issues = contracts.validate(document, "contribution")
     if issues:
-        results["schema"].findings.extend(Finding(INVALID, issue.message, issue.path, issue.code) for issue in issues)
+        results["schema"].findings.extend(_schema_finding(document, issue) for issue in issues)
         skip_from("limits", "the schema rule failed")
         return evaluation
 
@@ -195,6 +195,23 @@ def _walk(node: Any, pointer: str = "") -> Iterable[Tuple[str, str, Any]]:
             child = f"{pointer}/{index}"
             yield child, str(index), value
             yield from _walk(value, child)
+
+
+def _schema_finding(document: Any, issue: Any) -> Finding:
+    """A schema issue as a finding. A path value that the ``relpath`` pattern refused because a segment is ``.`` or
+    ``..`` is a path escape (the more specific, forbidden code), not a plain schema error."""
+    if issue.code == "pattern":
+        value: Any = document
+        for part in issue.path.split("/")[1:]:
+            part = part.replace("~1", "/").replace("~0", "~")
+            try:
+                value = value[int(part)] if isinstance(value, list) else value[part]
+            except (KeyError, IndexError, ValueError, TypeError):
+                value = None
+                break
+        if isinstance(value, str) and (".." in value.split("/") or value.startswith("/")):
+            return Finding(PATH_ESCAPE, f"{issue.path}: {value!r} leaves the owner root", issue.path, issue.code)
+    return Finding(INVALID, issue.message, issue.path, issue.code)
 
 
 def _limits(document: dict) -> List[Finding]:

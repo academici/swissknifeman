@@ -337,8 +337,8 @@ def guard(args, item: str, unit: str) -> dict | None:
 
 
 def run_plan(argv: list[str]) -> subprocess.CompletedProcess:
-    return subprocess.run([*plan_argv(), *argv], capture_output=True, text=True, encoding="utf-8",
-                          check=False)
+    return partners.run_bounded([*plan_argv(), *argv], timeout=300, capture_output=True, text=True,
+                                encoding="utf-8", check=False)
 
 
 def _data_key(data) -> str:

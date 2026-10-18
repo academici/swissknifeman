@@ -224,7 +224,7 @@ def _measure_skills(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
     }
 
 def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
-                      timeout=HOOK_TIMEOUT,
+                      timeout=HOOK_TIMEOUT, run_hooks=True,
                       listing_fraction=SKILL_LISTING_BUDGET_FRACTION,
                       listing_context_window=SKILL_LISTING_CONTEXT_WINDOW):
     """Amount always-on footprint of the first progress of the project based on five sources.
@@ -243,7 +243,7 @@ def first_turn_report(env, target, *, provider=DEFAULT_LISTING_PROVIDER,
                                   listing_context_window=listing_context_window),
         "agents": _measure_agents(target, provider=provider),
         "claude_md": _measure_instructions(target, provider=provider),
-        "hooks": _measure_hooks(target, timeout=timeout, provider=provider),
+        "hooks": _measure_hooks(target, timeout=timeout, provider=provider, run_hooks=run_hooks),
         "mcp": _measure_mcp(target),
     }
     total = sum(s["tokens"] for s in sources.values() if s["tokens"] is not None)
@@ -292,7 +292,7 @@ def cmd_budget(env, argv):
         "--profile": "str", "--buckets": "str", "--exclude": "str",
         "--json": "bool", "--no-core": "bool", "--write-map": "bool",
         "--check-core": "bool", "--strict": "bool", "--first-turn": "bool",
-        "--provider": "str", "--profiles": "bool", "--with-plugins": "bool",
+        "--provider": "str", "--profiles": "bool", "--with-plugins": "bool", "--run-hooks": "bool",
     })
     if opts["help"]:
         print("skiller budget [--config F.json | --compare a,b | --target DIR]\n"
@@ -300,7 +300,7 @@ def cmd_budget(env, argv):
               "               [--provider claude-code|codex|cursor|grok] [--profiles]\n"
               "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
               "               [--first-turn [--provider claude-code|codex|cursor|grok] "
-              "[--json] [--strict]]\n"
+              "[--json] [--strict] [--run-hooks]]\n"
               "  Three-tier token budget for skill sets (⊕ always / ↻ on-trigger\n"
               "  / ⌥ on-demand). --write-map will regenerate docs/guide/budget.md.\n"
               "  --check-core: resident (⊕ tier-0) budget CORE_SKILLS vs target (gate\n"
@@ -312,6 +312,8 @@ def cmd_budget(env, argv):
               "  and actual native prompt inventory with duplicate/policy diagnostics;\n"
               "  target ≤16K / warn >23K current; --strict — exit 1 when WARN/INCOMPLETE\n"
               "  or Codex duplicate/policy drift (CI).\n"
+              "  --run-hooks: the SessionStart hooks of a project OTHER than the current one (--target) are\n"
+              "  shell commands of that project and run only with this flag; the current project's hooks always run.\n"
               "  --with-plugins (only together with --first-turn): adds always-on price\n"
               "  installed marketplace-project plugins (`claude plugin list/details`)\n"
               "  additive keys `plugins`/`session_total`/`session_verdict` — without\n"
@@ -348,7 +350,9 @@ def cmd_budget(env, argv):
         provider = opts.get("provider") or DEFAULT_LISTING_PROVIDER
         if provider not in LISTING_PROVIDERS:
             die("--provider: expected " + "|".join(LISTING_PROVIDERS))
-        report = first_turn_report(env, target, provider=provider)
+        own, _via = find_project_root(env)
+        run_hooks = bool(opts.get("run_hooks")) or (own is not None and Path(own).resolve() == target)
+        report = first_turn_report(env, target, provider=provider, run_hooks=run_hooks)
         if opts.get("with_plugins"):
             if provider != "claude-code":
                 die("--with-plugins currently only measures Claude Code; for Codex use "

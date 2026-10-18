@@ -308,11 +308,12 @@ class TestWebSocket(Case):
                 ws.send_text(json.dumps({"t": "input", "data": b64("echo X\n")}))
                 ws.send_text(json.dumps({"t": "credit", "bytes": 4096}))
                 deadline = time.monotonic() + 5
-                while session.gate.available == 4096 and not session.bytes_out and time.monotonic() < deadline:
+                while session.output_state() == (4096, 0) and time.monotonic() < deadline:
                     time.sleep(0.02)
                 # the credit was granted (and maybe spent on the prompt) while the write is still blocked
                 self.assertFalse(release.is_set())
-                self.assertTrue(session.gate.available > 0 or session.bytes_out > 0)
+                available, sent = session.output_state()
+                self.assertTrue(available > 0 or sent > 0, (available, sent))
                 release.set()
         finally:
             release.set()

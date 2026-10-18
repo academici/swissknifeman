@@ -1,7 +1,9 @@
 """Plan store: snapshot, canonical JSON, atomic validated saves, lock, event log."""
 import json
 import multiprocessing
+import os
 import sys
+import time
 import tempfile
 import unittest
 from pathlib import Path
@@ -291,3 +293,73 @@ class LogTests(DemoCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SaveManyIsAllOrNothingTests(unittest.TestCase):
+    """audit 2026-10-17 §3.3: validation before any write, rollback of a failed replace, no early stamp."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.dir = Path(tmp.name)
+
+    def test_a_failed_replace_restores_the_files_already_replaced(self):
+        first, second = self.dir / "a.json", self.dir / "b.json"
+        first.write_text("old-a", encoding="utf-8")
+        second.write_text("old-b", encoding="utf-8")
+        real_replace = os.replace
+        calls = []
+
+        def flaky(src, dst):
+            calls.append(dst)
+            if len([c for c in calls if str(c) in (str(first), str(second))]) == 2 and str(dst) == str(second):
+                raise OSError("disk full")
+            return real_replace(src, dst)
+
+        with mock.patch.object(store.os, "replace", side_effect=flaky):
+            with self.assertRaises(OSError):
+                store._write_all([(first, "new-a"), (second, "new-b")])
+        self.assertEqual(first.read_text(encoding="utf-8"), "old-a")
+        self.assertEqual(second.read_text(encoding="utf-8"), "old-b")
+        self.assertEqual(sorted(path.name for path in self.dir.iterdir()), ["a.json", "b.json"])
+
+    def test_a_new_file_is_removed_when_a_later_replace_fails(self):
+        first, second = self.dir / "a.json", self.dir / "b.json"
+        second.write_text("old-b", encoding="utf-8")
+        real_replace = os.replace
+
+        def flaky(src, dst):
+            if str(dst) == str(second):
+                raise OSError("disk full")
+            return real_replace(src, dst)
+
+        with mock.patch.object(store.os, "replace", side_effect=flaky):
+            with self.assertRaises(OSError):
+                store._write_all([(first, "new-a"), (second, "new-b")])
+        self.assertFalse(first.exists())
+        self.assertEqual(second.read_text(encoding="utf-8"), "old-b")
+
+    def test_temporary_names_do_not_collide_between_threads(self):
+        names = set()
+        for _ in range(20):
+            tmp = store._stage(self.dir / "x.json", "x")
+            names.add(tmp.name)
+        self.assertEqual(len(names), 20)
+
+    def test_plan_lock_is_not_reentrant_in_one_thread_and_reports_it_at_once(self):
+        with store.PlanLock(self.dir, timeout=5) as lock:
+            self.assertTrue(lock.held)
+            started = time.monotonic()
+            with self.assertRaises(PlanError) as caught:
+                with store.PlanLock(self.dir, timeout=5):
+                    pass
+            self.assertEqual(caught.exception.code, "PLAN_LOCKED")
+            self.assertLess(time.monotonic() - started, 1.0)
+        self.assertFalse(lock.held)
+        with store.PlanLock(self.dir, timeout=1):   # released: a new holder is fine
+            pass
+
+    def test_append_log_refuses_a_lock_that_is_not_held(self):
+        event = store.new_event("note", "x", {"provider": "claude-code", "model": "m", "effort": "high"})
+        with self.assertRaises(ValueError):
+            store.append_log(self.dir, event, lock=store.PlanLock(self.dir))

@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 
 import partners
@@ -41,8 +40,8 @@ def fragment(result: dict) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     args, rest = parser().parse_known_args(argv)
-    done = subprocess.run([*plan_argv(), "commit", args.plan, args.ref, *rest, "--json"],
-                          capture_output=True, text=True, encoding="utf-8", check=False)
+    done = partners.run_bounded([*plan_argv(), "commit", args.plan, args.ref, *rest, "--json"], timeout=900,
+                                capture_output=True, text=True, encoding="utf-8", check=False)
     if done.returncode:
         print((done.stderr or done.stdout).strip(), file=sys.stderr)
         return 1

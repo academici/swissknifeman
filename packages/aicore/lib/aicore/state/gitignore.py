@@ -12,7 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
-import subprocess
+from ..util.proc import run as run_with_timeout
 
 # The shipped policy lives next to the package (packages/aicore/configs), not at the repository root.
 DEFAULT_POLICY = Path(__file__).resolve().parents[3] / "configs" / "gitignore-policy.json"
@@ -70,8 +70,8 @@ _SHARED_EXCLUDES = ("--exclude-per-directory=.gitignore",)
 
 
 def _git(root: Path, *args: str) -> list[str]:
-    done = subprocess.run(("git", "-C", str(root), "-c", f"core.excludesFile={os.devnull}", *args),
-                          capture_output=True, check=False, env=_ENV)
+    done = run_with_timeout(("git", "-C", str(root), "-c", f"core.excludesFile={os.devnull}", *args),
+                          capture_output=True, check=False, env=_ENV, timeout=60)
     if done.returncode != 0:
         raise PolicyError(f"git {' '.join(args)} failed: {done.stderr.decode(errors='replace').strip()}")
     return [item.decode("utf-8", "replace") for item in done.stdout.split(b"\0") if item]

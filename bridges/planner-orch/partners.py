@@ -14,6 +14,22 @@ import shutil
 import subprocess
 import sys
 
+
+TIMEOUT_RETURNCODE = 124   # the exit status of coreutils `timeout`
+
+
+def run_bounded(argv, *, timeout, **kwargs):
+    """``subprocess.run`` with a mandatory ``timeout``; a child that hangs is killed and reported as exit status 124
+    (stderr says so) instead of raising ``TimeoutExpired``, so the callers' return-code handling covers it."""
+    try:
+        return subprocess.run(argv, timeout=timeout, **kwargs)
+    except subprocess.TimeoutExpired as expired:
+        def text(value):
+            return value.decode("utf-8", "replace") if isinstance(value, bytes) else (value or "")
+        note = f"timed out after {timeout}s: {argv[0] if argv else ''}"
+        return subprocess.CompletedProcess(argv, TIMEOUT_RETURNCODE, text(expired.stdout),
+                                           (text(expired.stderr) + "\n" + note).strip())
+
 BRIDGE = Path(__file__).resolve().parent
 UNAVAILABLE = "BRIDGE_PARTNER_UNAVAILABLE: {name} not found (set {var})"
 AICORE_NOT_FOUND = "AICORE_NOT_FOUND: aicore library not found (set AICORE_ROOT)"
@@ -109,8 +125,8 @@ def require_orch() -> Path:
 def orch_validate(kind: str, path: str | Path) -> tuple[int, str]:
     """Exit code and stdout of ``orch.py validate <kind> <path>``."""
     root = require_orch()
-    done = subprocess.run([sys.executable, str(root / "scripts" / "orch.py"), "validate", kind, str(path)],
-                          capture_output=True, text=True, encoding="utf-8", check=False)
+    done = run_bounded([sys.executable, str(root / "scripts" / "orch.py"), "validate", kind, str(path)],
+                       timeout=60, capture_output=True, text=True, encoding="utf-8", check=False)
     return done.returncode, done.stdout
 
 

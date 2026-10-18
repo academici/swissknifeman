@@ -4,7 +4,10 @@ Moved from maind.http for JSON GET/POST and health-check probes.
 """
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
+
+ALLOWED_SCHEMES = ("http", "https")
 
 
 class HTTPUnauthorizedError(RuntimeError):
@@ -14,7 +17,15 @@ class HTTPUnauthorizedError(RuntimeError):
     """
 
 
+def _check_scheme(url):
+    """Only http and https: urllib would also open ``file://`` and ``ftp://`` URLs that come from configuration."""
+    scheme = urllib.parse.urlsplit(str(url)).scheme.lower()
+    if scheme not in ALLOWED_SCHEMES:
+        raise RuntimeError(f"unsupported URL scheme {scheme or '(none)'!r} in {url}: only http and https")
+
+
 def _request(url, *, method, data=None, headers=None, timeout):
+    _check_scheme(url)
     req = urllib.request.Request(url, data=data, method=method, headers=headers or {})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -44,10 +55,11 @@ def http_post_json(url: str, payload, *, timeout: float = 10, headers=None):
 def ping(url: str, *, timeout: float = 3, headers=None) -> bool:
     """Return whether an HTTP server responds, including 4xx and 401 responses."""
     try:
+        _check_scheme(url)
         urllib.request.urlopen(urllib.request.Request(url, method="GET", headers=headers or {}),
                                timeout=timeout)
         return True
     except urllib.error.HTTPError:
         return True
-    except (urllib.error.URLError, OSError):
+    except (urllib.error.URLError, OSError, RuntimeError):
         return False

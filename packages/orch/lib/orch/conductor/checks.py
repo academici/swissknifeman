@@ -20,6 +20,7 @@ import time
 from aicore.util.io import durable_replace
 
 from orch import contracts
+from aicore.util.proc import run as run_with_timeout
 
 RUN_KINDS = ("acceptance", "impact")
 TAIL_LINES = 40
@@ -30,7 +31,7 @@ def _utc() -> str:
 
 
 def git(project: Path, *args: str) -> str:
-    done = subprocess.run(["git", *args], cwd=str(project), capture_output=True, text=True)
+    done = run_with_timeout(["git", *args], cwd=str(project), capture_output=True, text=True, timeout=60)
     if done.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)}: {done.stderr.strip() or done.returncode}")
     return done.stdout

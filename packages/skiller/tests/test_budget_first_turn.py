@@ -282,6 +282,34 @@ class FirstTurnReportCase(unittest.TestCase):
                 cmd_budget(self.env, ["--first-turn", "--target", str(self.proj),
                                      "--strict"])
 
+    def test_hooks_of_another_project_run_only_with_run_hooks(self):
+        marker = self.proj / "hook-ran"
+        _write_hook(self.proj / ".claude" / "hooks" / "stub.sh",
+                    f"#!/usr/bin/env bash\ntouch '{marker}'\n")
+        other = Path(self._tmp.name) / "elsewhere"
+        other.mkdir()
+        with mock.patch("skiller.budget.find_project_root", return_value=(other, "test")):
+            report = first_turn_report(self.env, self.proj, run_hooks=False)
+            self.assertIsNone(report["sources"]["hooks"]["tokens"])
+            self.assertIn("--run-hooks", report["sources"]["hooks"]["detail"])
+            self.assertEqual(report["verdict"], "INCOMPLETE")
+            self.assertFalse(marker.exists())
+            with contextlib.redirect_stdout(io.StringIO()):
+                cmd_budget(self.env, ["--first-turn", "--target", str(self.proj), "--json"])
+            self.assertFalse(marker.exists(), "a foreign project's hook ran without --run-hooks")
+            with contextlib.redirect_stdout(io.StringIO()):
+                cmd_budget(self.env, ["--first-turn", "--target", str(self.proj), "--run-hooks", "--json"])
+            self.assertTrue(marker.exists())
+
+    def test_hooks_of_the_current_project_always_run(self):
+        marker = self.proj / "hook-ran"
+        _write_hook(self.proj / ".claude" / "hooks" / "stub.sh",
+                    f"#!/usr/bin/env bash\ntouch '{marker}'\n")
+        with mock.patch("skiller.budget.find_project_root", return_value=(self.proj, "test")):
+            with contextlib.redirect_stdout(io.StringIO()):
+                cmd_budget(self.env, ["--first-turn", "--target", str(self.proj), "--json"])
+        self.assertTrue(marker.exists())
+
     def test_cli_json_output_shape(self):
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
@@ -467,7 +495,7 @@ class FirstTurnReportCase(unittest.TestCase):
         self._write_skill_fm("silent-entry", "disable-model-invocation: true\n")
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            cmd_budget(self.env, ["--first-turn", "--target", str(self.proj), "--json"])
+            cmd_budget(self.env, ["--first-turn", "--target", str(self.proj), "--run-hooks", "--json"])
         data = json.loads(buf.getvalue())
         self.assertEqual(set(data), {"target", "sources", "total", "verdict"})
         self.assertIsInstance(data["total"], int)

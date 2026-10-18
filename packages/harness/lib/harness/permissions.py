@@ -20,7 +20,7 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
     if dry_run:
         cmd.append("--dry-run")
     sys.stdout.flush()
-    subprocess.run(cmd, check=False)
+    subprocess.run(cmd, check=False)  # no-timeout: runs the installer script of the presets
     return True
 
 
@@ -55,6 +55,6 @@ def cmd_permissions(env, argv):
         if opts["dry_run"]:
             cmd.append("--dry-run")
     sys.stdout.flush()
-    rc = subprocess.run(cmd, check=False).returncode
+    rc = subprocess.run(cmd, check=False).returncode  # no-timeout: runs the installer script of the presets
     if rc:
         sys.exit(rc)

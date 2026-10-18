@@ -123,10 +123,10 @@ def run_capability(env, config, project_id, capability, extra=None, *, dry=False
     if dry:
         if capability in DRY_CAPABLE:
             # neighbor knows how to --dry-run → honest preview (real rc/conflicts), not rc0
-            return subprocess.run(argv + ["--dry-run"], check=False).returncode
+            return subprocess.run(argv + ["--dry-run"], check=False).returncode  # no-timeout: runs the partner sync of a whole project
         print("[dry-run] " + " ".join(argv))
         return 0
-    return subprocess.run(argv, check=False).returncode
+    return subprocess.run(argv, check=False).returncode  # no-timeout: runs the partner sync of a whole project
 
 
 def list_capabilities():

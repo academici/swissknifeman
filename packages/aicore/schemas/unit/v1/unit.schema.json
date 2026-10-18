@@ -385,8 +385,8 @@
     },
     "relpath": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$",
-      "description": "Relative POSIX path without leading slash and without empty segments."
+      "pattern": "^(?!\\.{1,2}(/|$))(?!.*/\\.{1,2}(/|$))[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$",
+      "description": "Relative POSIX path without leading slash, without empty segments and without . or .. segments."
     },
     "argv": {
       "type": "array",

@@ -22,21 +22,22 @@ from .settings import configured_skills_paths
 from aicore.release.attestation import digest
 from .state import load_db
 from .update import update_one
+from aicore.util.proc import run as run_with_timeout
 
 
 def release_history(root, current_release):
     """Load attested history from snapshots committed at matching release tags."""
-    result = subprocess.run(
+    result = run_with_timeout(
         ["git", "tag", "--list", "v*", "--sort=-version:refname"],
-        cwd=root, capture_output=True, text=True, check=True,
+        cwd=root, capture_output=True, text=True, check=True, timeout=60,
     )
     history = []
     for ref in result.stdout.splitlines():
         if ref == current_release:
             continue
-        snapshot = subprocess.run(
+        snapshot = run_with_timeout(
             ["git", "show", f"{ref}:releases/{ref}.json"],
-            cwd=root, capture_output=True, text=True, check=False,
+            cwd=root, capture_output=True, text=True, check=False, timeout=60,
         )
         if snapshot.returncode != 0:
             continue
@@ -45,9 +46,9 @@ def release_history(root, current_release):
         except json.JSONDecodeError:
             continue
         if value.get("umbrella", {}).get("tag") == ref and isinstance(value.get("units"), list):
-            commit = subprocess.run(
+            commit = run_with_timeout(
                 ["git", "rev-parse", f"{ref}^{{commit}}"], cwd=root,
-                capture_output=True, text=True, check=False,
+                capture_output=True, text=True, check=False, timeout=60,
             )
             if commit.returncode == 0:
                 value["_tag_commit"] = commit.stdout.strip()
@@ -71,8 +72,8 @@ def _provider_references(env):
         pass
     if shutil.which("codex"):
         try:
-            result = subprocess.run(["codex", "plugin", "list", "--json"],
-                                    capture_output=True, text=True, check=True)
+            result = run_with_timeout(["codex", "plugin", "list", "--json"],
+                                    capture_output=True, text=True, check=True, timeout=120)
             for entry in json.loads(result.stdout).get("installed", []):
                 if entry.get("marketplaceName") != "swissknifeman":
                     continue
@@ -398,7 +399,7 @@ def project_readback(target, value):
 
 
 def _run(command, *, cwd=None):
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
+    result = run_with_timeout(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=120)
     return result.returncode == 0, (result.stderr or result.stdout).strip()[-3000:]
 
 
@@ -408,8 +409,8 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
     path = root / "releases" / (release + ".json")
     value = json.loads(path.read_text())
     errors = check(root, value)
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True).stdout.strip()
-    tagged = subprocess.run(["git", "rev-parse", release + "^{commit}"], cwd=root, check=True, capture_output=True, text=True).stdout.strip()
+    head = run_with_timeout(["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True, timeout=60).stdout.strip()
+    tagged = run_with_timeout(["git", "rev-parse", release + "^{commit}"], cwd=root, check=True, capture_output=True, text=True, timeout=60).stdout.strip()
     if errors or head != tagged:
         raise ValueError("DELIVERY_SOURCE_MISMATCH: " + "; ".join(errors))
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ-") + uuid.uuid4().hex[:8]
@@ -470,7 +471,7 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
         from aicore.delivery.distribution import run_codex_native_install
         units = {u["id"]: u for u in value["units"]}
         if shutil.which("codex"):
-            listed = subprocess.run(["codex", "plugin", "list", "--json"], capture_output=True, text=True, check=True)
+            listed = run_with_timeout(["codex", "plugin", "list", "--json"], capture_output=True, text=True, check=True, timeout=120)
             installed = json.loads(listed.stdout)["installed"]
             for entry in installed:
                 name = entry.get("name")
@@ -496,7 +497,7 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
                     row["status"] = "updated"
                     row["digest"] = projection["tree_digest"]
                 save()
-            marketplaces = subprocess.run(["codex", "plugin", "marketplace", "list", "--json"], capture_output=True, text=True, check=True)
+            marketplaces = run_with_timeout(["codex", "plugin", "marketplace", "list", "--json"], capture_output=True, text=True, check=True, timeout=120)
             roots = [Path(m["root"]) for m in json.loads(marketplaces.stdout).get("marketplaces", []) if m.get("name") == "swissknifeman"]
             row = {"surface": "codex-marketplace-runtime", "status": "blocked", "readback": []}
             receipt["targets"].append(row)
@@ -579,8 +580,8 @@ def deliver(env, release, *, all_projects=False, target=None, dry_run=False, nat
             ok = removed and installed_ok
             row["reason"] = "uninstall: " + remove_detail + "; install: " + install_detail
             try:
-                listed = subprocess.run(["grok", "plugin", "list", "--json"],
-                                        capture_output=True, text=True, check=False)
+                listed = run_with_timeout(["grok", "plugin", "list", "--json"],
+                                        capture_output=True, text=True, check=False, timeout=120)
                 entries = json.loads(listed.stdout) if listed.returncode == 0 else []
             except (OSError, json.JSONDecodeError):
                 entries = []

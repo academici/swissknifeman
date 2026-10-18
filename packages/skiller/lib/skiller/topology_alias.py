@@ -13,4 +13,4 @@ def cmd_topology(env, argv):
     except PartnerUnavailable as exc:
         print(str(exc), file=sys.stderr)
         sys.exit(3)
-    sys.exit(subprocess.run(command + ["topology", *argv]).returncode)
+    sys.exit(subprocess.run(command + ["topology", *argv]).returncode)  # no-timeout: passes the maind topology command through; its duration is the user's

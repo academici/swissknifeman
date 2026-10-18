@@ -708,13 +708,18 @@ def run_hook(cmd, target, timeout=HOOK_TIMEOUT):
     return estimate_tokens(ctx), True
 
 
-def measure_hooks(target, timeout=HOOK_TIMEOUT, provider=DEFAULT_LISTING_PROVIDER):
+def measure_hooks(target, timeout=HOOK_TIMEOUT, provider=DEFAULT_LISTING_PROVIDER, run_hooks=True):
+    """Price of the SessionStart hooks of ``target``. The hooks are shell commands of that project: with
+    ``run_hooks=False`` they are counted but not run (the tokens are then unknown, ``None``)."""
     if provider != "claude-code":
         return {"tokens": 0,
                 "detail": f"no measurable SessionStart-contract for {provider}"}
     cmds = settings_hook_commands(target, "SessionStart")
     if not cmds:
         return {"tokens": 0, "detail": "no SessionStart-hooks"}
+    if not run_hooks:
+        return {"tokens": None,
+                "detail": f"n/a ({len(cmds)} SessionStart hook(s) of another project not run; --run-hooks runs them)"}
     total, ok_n, fail_n = 0, 0, 0
     for cmd in cmds:
         tokens, ok = run_hook(cmd, target, timeout=timeout)

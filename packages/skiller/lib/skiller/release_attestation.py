@@ -13,6 +13,7 @@ from aicore.util.cli import parse_flags
 from aicore.util.io import atomic_write_json
 from aicore.util.repo import find_repo_root
 from aicore.util.term import die
+from aicore.util.proc import run as run_with_timeout
 
 # Location of this Skiller package; its prefix in the host root names the
 # publication-version map and the skill sources released as their own units.
@@ -53,7 +54,7 @@ def cmd_version(env, argv):
     opts = parse_flags(argv, {"--json": "bool"})
     root = find_repo_root(env.root) or env.root
     value = build(root)
-    result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True)
+    result = run_with_timeout(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, timeout=60)
     value["umbrella"]["commit"] = result.stdout.strip() or "unknown"
     for unit in value["units"]:
         for projection in unit["providers"].values():

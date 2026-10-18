@@ -16,8 +16,23 @@
     },
     "relpath": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$",
-      "description": "Relative POSIX path without leading slash and without empty segments."
+      "pattern": "^(?!\\.{1,2}(/|$))(?!.*/\\.{1,2}(/|$))[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$",
+      "description": "Relative POSIX path without leading slash, without empty segments and without . or .. segments."
+    },
+    "sha256_hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Lower-case hex SHA-256 digest."
+    },
+    "sha256_prefixed": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 digest written as sha256:<64 lower-case hex digits>."
+    },
+    "version_dir": {
+      "type": "string",
+      "pattern": "^v[1-9][0-9]*$",
+      "description": "Contract major version directory such as v1 (no v0, no leading zeros)."
     },
     "argv": {
       "type": "array",

@@ -33,6 +33,22 @@ import sys
 
 from partners import require_orch_root, require_skiller
 
+
+TIMEOUT_RETURNCODE = 124   # the exit status of coreutils `timeout`
+
+
+def run_bounded(argv, *, timeout, **kwargs):
+    """``subprocess.run`` with a mandatory ``timeout``; a child that hangs is killed and reported as exit status 124
+    (stderr says so) instead of raising ``TimeoutExpired``, so the callers' return-code handling covers it."""
+    try:
+        return subprocess.run(argv, timeout=timeout, **kwargs)
+    except subprocess.TimeoutExpired as expired:
+        def text(value):
+            return value.decode("utf-8", "replace") if isinstance(value, bytes) else (value or "")
+        note = f"timed out after {timeout}s: {argv[0] if argv else ''}"
+        return subprocess.CompletedProcess(argv, TIMEOUT_RETURNCODE, text(expired.stdout),
+                                           (text(expired.stderr) + "\n" + note).strip())
+
 CONTRACT_VERSION = "exec/v1"
 PROVIDERS = ("claude-code", "codex", "grok")
 BINDINGS = ("native", "cao", "claude-only")
@@ -102,8 +118,8 @@ def delivery(binding: str, provider: str, diagnostics: list[dict]) -> dict:
 
 def run_skiller(skills: list[str], provider: str) -> dict:
     launcher = require_skiller()
-    done = subprocess.run([str(launcher), "resolve", *skills, "--provider", provider, "--json"],
-                          capture_output=True, text=True, encoding="utf-8", check=False)
+    done = run_bounded([str(launcher), "resolve", *skills, "--provider", provider, "--json"], timeout=120,
+                       capture_output=True, text=True, encoding="utf-8", check=False)
     try:
         return json.loads(done.stdout)
     except ValueError as error:
@@ -113,8 +129,8 @@ def run_skiller(skills: list[str], provider: str) -> dict:
 def run_describe(skill_id: str) -> str | None:
     """The content digest of a skill from ``skiller describe <id> --json``, or ``None`` when it cannot be read."""
     launcher = require_skiller()
-    done = subprocess.run([str(launcher), "describe", skill_id, "--json"],
-                          capture_output=True, text=True, encoding="utf-8", check=False)
+    done = run_bounded([str(launcher), "describe", skill_id, "--json"], timeout=120,
+                       capture_output=True, text=True, encoding="utf-8", check=False)
     try:
         digest = json.loads(done.stdout)["digest"]
     except (ValueError, KeyError, TypeError):
@@ -140,7 +156,7 @@ def select_role(role: str, provider: str, paths: list[str], project: str | None,
         argv += ["--project", project]
     if budget is not None:
         argv += ["--budget", str(budget)]
-    done = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", check=False)
+    done = run_bounded(argv, timeout=120, capture_output=True, text=True, encoding="utf-8", check=False)
     try:
         chosen = json.loads(done.stdout)
     except ValueError as error:

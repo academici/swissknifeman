@@ -172,7 +172,7 @@ def _run(shard: Sequence[Tuple[str, str]], args: argparse.Namespace, top: Path, 
         argv = [sys.executable, "-m", "aicore.util.par_unittest", "discover", "--worker", "-t", str(top), "--times", str(times)]
         argv += (["-v"] if args.verbose else []) + [item for file, name in shard for item in ("--unit", f"{file}::{name}")]
         path = str(top) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")  # what discover does with -t
-        done = subprocess.run(argv, env=dict(worker_env(env, home), PYTHONPATH=path), capture_output=True, text=True)
+        done = subprocess.run(argv, env=dict(worker_env(env, home), PYTHONPATH=path), capture_output=True, text=True)  # no-timeout: a test worker runs as long as its tests
         if spent is not None:
             spent.update(_read_times(times))
         return done
@@ -208,7 +208,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         command = [sys.executable, "-m", "unittest", "discover", "-s", args.start_directory, "-p", args.pattern]
         if args.top_level_directory:
             command += ["-t", args.top_level_directory]
-        return subprocess.call(command + (["-v"] if args.verbose else []))
+        return subprocess.call(command + (["-v"] if args.verbose else []))  # no-timeout: the sequential fallback runs the whole suite
 
     if jobs <= 1 or not start.is_dir():
         return plain()

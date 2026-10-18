@@ -20,6 +20,7 @@ from aicore.util.term import warn
 from .host import host_command, load_host
 from .module_skills import check_collisions, host_bucket_plugins
 from .state import registry_git_state
+from aicore.util.proc import run as run_with_timeout
 
 
 def _delegate_settings_doctor(env, opts):
@@ -959,8 +960,8 @@ def cmd_doctor(env, argv):
         if opts.get("fixture_out"):
             atomic_write_json(Path(opts["fixture_out"]), result["fixture_unit_set"])
         if opts.get("carrier_out"):
-            sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=env.root,
-                                 capture_output=True, text=True, check=False).stdout.strip()
+            sha = run_with_timeout(["git", "rev-parse", "HEAD"], cwd=env.root,
+                                 capture_output=True, text=True, check=False, timeout=60).stdout.strip()
             atomic_write_json(Path(opts["carrier_out"]),
                               _effective_carrier_set_document(result, commit_sha=sha or "unknown"))
         if failures:

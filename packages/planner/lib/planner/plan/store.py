@@ -14,7 +14,9 @@ import os
 from pathlib import Path
 import re
 import sys
+import threading
 import time
+import uuid
 from functools import cached_property
 from typing import Any, Iterable
 
@@ -291,14 +293,25 @@ class PlanLock:
     """Exclusive ``flock`` on ``<plan>/.lock``; waits up to ``timeout`` seconds, then ``PLAN_LOCKED``. A plan folder of a
     project whose marker moved the plans to the workspace is refused with ``PLANS_MIGRATED`` once the lock is held."""
 
+    _holders: dict = {}   # lock path -> ident of the thread of this process that holds it
+
     def __init__(self, plan_dir: str | Path, timeout: float = 30.0, poll: float = 0.05):
         self.path = Path(plan_dir) / LOCK
         self.timeout = timeout
         self.poll = poll
         self._handle = None
 
+    @property
+    def held(self) -> bool:
+        """True between ``__enter__`` and ``__exit__``."""
+        return self._handle is not None
+
     def __enter__(self) -> "PlanLock":
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        key = str(self.path.resolve())
+        if PlanLock._holders.get(key) == threading.get_ident():
+            # Not reentrant: a second descriptor of the same process would wait for the first one forever.
+            raise PlanError("PLAN_LOCKED", f"{self.path} is already held by this thread (the lock is not reentrant)")
         handle = open(self.path, "a+")
         deadline = time.monotonic() + self.timeout
         while True:
@@ -317,10 +330,12 @@ class PlanLock:
             handle.close()
             raise
         self._handle = handle
+        PlanLock._holders[key] = threading.get_ident()
         return self
 
     def __exit__(self, *exc) -> None:
         if self._handle is not None:
+            PlanLock._holders.pop(str(self.path.resolve()), None)
             fcntl.flock(self._handle, fcntl.LOCK_UN)
             self._handle.close()
             self._handle = None
@@ -375,33 +390,98 @@ def check_doc(doc: object, kind: str, label: str, registry: _schema.Registry | N
 
 
 def save_many(entries: Iterable[tuple[Path, dict, str]], registry: _schema.Registry | None = None) -> list[Path]:
-    """Validate every ``(path, doc, kind)`` first, then write them all; one invalid doc writes nothing."""
+    """Validate every ``(path, doc, kind)`` first, then write them all; one invalid doc writes nothing.
+
+    The writes are all-or-nothing as far as the process can make them: every new text is staged in a temporary file
+    next to its target first, then the targets are replaced one by one; if a replace fails, the targets already
+    replaced get their previous text back. ``updated_at`` of the caller's documents changes only after the save.
+    """
     reg = registry if registry is not None else _schema.load_registry()
     prepared = []
+    stamped = []
     for path, doc, kind in entries:
         root_schema, _ = reg.for_kind(kind)
+        candidate = doc
         if "updated_at" in root_schema.get("properties", {}) and isinstance(doc, dict):
-            doc["updated_at"] = now()
-        check_doc(doc, kind, Path(path).name, reg)
-        prepared.append((Path(path), canonical_dump(doc, kind, reg)))
-    for path, text in prepared:
-        atomic_write(path, text)
+            candidate = {**doc, "updated_at": now()}
+            stamped.append((doc, candidate["updated_at"]))
+        check_doc(candidate, kind, Path(path).name, reg)
+        prepared.append((Path(path), canonical_dump(candidate, kind, reg)))
+    _write_all(prepared)
+    for doc, stamp in stamped:
+        doc["updated_at"] = stamp
     return [path for path, _ in prepared]
+
+
+def _write_all(prepared: list[tuple[Path, str]]) -> None:
+    staged: list[tuple[Path, Path]] = []
+    replaced: list[tuple[Path, str | None]] = []
+    try:
+        for path, text in prepared:
+            staged.append((path, _stage(path, text)))
+        for path, tmp in staged:
+            try:
+                previous = path.read_text(encoding="utf-8")
+            except FileNotFoundError:
+                previous = None
+            os.replace(tmp, path)
+            replaced.append((path, previous))
+            _sync_dir(path.parent)
+    except BaseException:
+        for path, previous in reversed(replaced):
+            try:
+                if previous is None:
+                    path.unlink()
+                else:
+                    atomic_write(path, previous)
+            except OSError:
+                pass   # best effort: the original error is the one to report
+        raise
+    finally:
+        for _, tmp in staged:
+            if tmp.exists():
+                tmp.unlink()
 
 
 def save(path: str | Path, doc: dict, kind: str, registry: _schema.Registry | None = None) -> Path:
     return save_many([(Path(path), doc, kind)], registry)[0]
 
 
-def atomic_write(path: Path, text: str) -> None:
+def _stage(path: Path, text: str) -> Path:
+    """Write ``text`` to a fresh temporary file next to ``path`` (flushed to disk) and return its name."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.{uuid.uuid4().hex[:8]}.tmp")
     try:
         with open(tmp, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
+    except BaseException:
+        if tmp.exists():
+            tmp.unlink()
+        raise
+    return tmp
+
+
+def _sync_dir(directory: Path) -> None:
+    """Flush the rename to disk; a platform or file system that cannot sync a directory is not an error."""
+    try:
+        fd = os.open(directory, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
+def atomic_write(path: Path, text: str) -> None:
+    tmp = _stage(path, text)
+    try:
         os.replace(tmp, path)
+        _sync_dir(path.parent)
     finally:
         if tmp.exists():
             tmp.unlink()
@@ -448,6 +528,8 @@ def append_log(plan_dir: str | Path, event: dict, *, lock: PlanLock | None = Non
             os.fsync(handle.fileno())
 
     if lock is not None:
+        if not lock.held:
+            raise ValueError("append_log was given a PlanLock that is not held; enter it first")
         write()
     else:
         with PlanLock(plan_dir, timeout=lock_timeout):

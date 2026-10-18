@@ -425,11 +425,17 @@ class Session:
         info["reason"] = self.reason or "closed"
         return info
 
+    def output_state(self) -> Tuple[int, int]:
+        """``(unpaid credit, bytes sent)`` as one consistent pair: the output pump spends credit and counts the bytes
+        under the session lock, so a reader that takes the lock never sees the credit spent but the bytes not counted."""
+        with self._lock:
+            return self.gate.available, self.bytes_out
+
     def metadata(self) -> Dict[str, Any]:
         """The audit details of the end; no content."""
         info = self.exit_info()
         details: Dict[str, Any] = {"project_id": self.project_id, "reason": info["reason"], "exit_code": info["code"],
-                                   "bytes_in": self.bytes_in, "bytes_out": self.bytes_out,
+                                   "bytes_in": self.bytes_in, "bytes_out": self.output_state()[1],
                                    "duration_s": max(0, int(self._clock() - self.started))}
         if "signal" in info:
             details["signal"] = info["signal"]

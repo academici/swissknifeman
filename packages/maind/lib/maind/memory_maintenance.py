@@ -1,6 +1,5 @@
 """Read-only audits and explicit, recoverable collection of expired/junk memory."""
 import json
-import subprocess
 import time
 import uuid
 from collections import Counter
@@ -10,6 +9,7 @@ from . import memory_policy as policy
 from aicore.util.io import atomic_write_json, atomic_write_text
 from aicore.util.term import die
 from aicore.util.cli import parse_args
+from aicore.util.proc import run as run_with_timeout
 
 
 def audit(rows, *, now=None, selected_ids=()):
@@ -111,8 +111,8 @@ RandomizedDelaySec=60
 [Install]
 WantedBy=timers.target
 ''')
-    subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
-    subprocess.run(["systemctl", "--user", "enable", "--now", "maind-memory-gc.timer"], check=True)
+    run_with_timeout(["systemctl", "--user", "daemon-reload"], check=True, timeout=120)
+    run_with_timeout(["systemctl", "--user", "enable", "--now", "maind-memory-gc.timer"], check=True, timeout=120)
     print(f"Hourly memory GC enabled: {directory / 'maind-memory-gc.timer'}")
 
 

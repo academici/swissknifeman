@@ -380,7 +380,7 @@ def _fleet_context(env, config):
             continue
         try:
             r = subprocess.run(
-                [str(skm_bin), "budget", "--first-turn", "--target", str(path), "--json"],
+                [str(skm_bin), "budget", "--first-turn", "--target", str(path), "--run-hooks", "--json"],
                 capture_output=True, text=True, timeout=20, check=False)
             data = json.loads(r.stdout)
             rows.append({"id": pid,

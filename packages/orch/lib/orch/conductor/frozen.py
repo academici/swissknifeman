@@ -20,6 +20,7 @@ import time
 from typing import Optional
 
 from orch.settings import ORCH_ROOT
+from aicore.util.proc import run as run_with_timeout
 
 SNAPSHOT_PATHS = ("packages", "bridges")
 CACHE = Path.home() / ".cache" / "skm-frozen-runs"
@@ -33,7 +34,7 @@ class FrozenError(Exception):
 
 def hub_root() -> Path:
     """The git checkout the running orchestrator belongs to (the orchestrator lies under its ``packages``)."""
-    found = subprocess.run(["git", "-C", str(ORCH_ROOT), "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    found = run_with_timeout(["git", "-C", str(ORCH_ROOT), "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=60)
     top = Path(found.stdout.strip()) if found.returncode == 0 and found.stdout.strip() else None
     if top is None or not (top / SNAPSHOT_PATHS[0]).is_dir() or top.resolve() not in ORCH_ROOT.resolve().parents:
         raise FrozenError("FROZEN_UNAVAILABLE", f"the orchestrator at {ORCH_ROOT} is not in a git checkout with a "
@@ -44,7 +45,7 @@ def hub_root() -> Path:
 def freeze(hub: Path, destination: Path) -> Path:
     """Unpack the committed state of ``SNAPSHOT_PATHS`` of ``hub`` into ``destination``."""
     present = [path for path in SNAPSHOT_PATHS if (hub / path).is_dir()]
-    done = subprocess.run(["git", "-C", str(hub), "archive", "--format=tar", "HEAD", *present], capture_output=True)
+    done = run_with_timeout(["git", "-C", str(hub), "archive", "--format=tar", "HEAD", *present], capture_output=True, timeout=300)
     if done.returncode:
         raise FrozenError("FROZEN_FAILED", f"git archive failed: {done.stderr.decode('utf-8', 'replace').strip()}")
     destination.mkdir(parents=True, exist_ok=True)
@@ -99,6 +100,6 @@ def relaunch(argv: list, project: Path) -> int:
         entry = snapshot / "packages/orch/scripts/conduct.py"
         command = [sys.executable, str(entry), "--project", str(project), *strip(argv)]
         print(f"frozen: running from a snapshot of {hub} at HEAD ({snapshot})", file=sys.stderr, flush=True)
-        return subprocess.run(command, env=environment(snapshot, hub), cwd=str(project)).returncode
+        return subprocess.run(command, env=environment(snapshot, hub), cwd=str(project)).returncode  # no-timeout: this is the conductor run itself
     finally:
         shutil.rmtree(snapshot, ignore_errors=True)

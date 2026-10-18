@@ -5,12 +5,12 @@ laravel-boost). Merge is idempotent (restarting does not change anything), befor
 a backup under .swissknifeman/backups. This is the most security-sensitive primitive - isolated and covered with tests."""
 import json
 import os
-import subprocess
 from pathlib import Path
 
 from aicore.util.io import atomic_write_json
 from aicore.util.term import warn
 from .common import save_backup
+from aicore.util.proc import run as run_with_timeout
 
 EXAMPLE_SUFFIX = ".example"
 
@@ -123,9 +123,9 @@ def write_example(real_path, data, project_root, *, dry=False):
 def _is_tracked(project_root, rel):
     """True, if rel is already in the index git project (best-effort — no git/error → False)."""
     try:
-        return subprocess.run(
+        return run_with_timeout(
             ["git", "-C", str(project_root), "ls-files", "--error-unmatch", rel],
-            capture_output=True).returncode == 0
+            capture_output=True, timeout=60).returncode == 0
     except OSError:
         return False
 

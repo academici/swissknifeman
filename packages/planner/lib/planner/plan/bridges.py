@@ -180,4 +180,5 @@ def run(name: str, verb: str | None, args: list[str], root: Path | None = None) 
     entry = directory.resolve() / manifest["entrypoints"][verb]
     sys.stdout.flush()
     sys.stderr.flush()
-    return subprocess.run([sys.executable, str(entry), *args], env=environment(), check=False).returncode
+    return subprocess.run([sys.executable, str(entry), *args], env=environment(),  # no-timeout: a bridge verb is a partner's own run
+                          check=False).returncode

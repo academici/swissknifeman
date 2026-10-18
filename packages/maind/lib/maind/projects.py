@@ -16,6 +16,7 @@ from aicore.util.cli import parse_args
 from .config import (REGISTRY_VERSION, load_brain_projects, load_config, normalize_docs_folders,
                      registry_of)
 from .namespaces import in_namespace, namespaces_of
+from aicore.util.proc import run as run_with_timeout
 
 # Fields that are updated from brain with sync (rest - maind-only, save).
 BRAIN_SOURCED = ("name", "local_path", "vault_path", "type", "enabled", "docs_folders")
@@ -53,10 +54,10 @@ def match_cwd(env, config, cwd=None):
 def _git_worktree_identity(path):
     """Return (worktree_root, common_git_dir) or None without guessing paths."""
     try:
-        root = subprocess.run(["git", "-C", str(path), "rev-parse", "--show-toplevel"],
-                              check=True, capture_output=True, text=True).stdout.strip()
-        common = subprocess.run(["git", "-C", str(path), "rev-parse", "--git-common-dir"],
-                                check=True, capture_output=True, text=True).stdout.strip()
+        root = run_with_timeout(["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+                              check=True, capture_output=True, text=True, timeout=60).stdout.strip()
+        common = run_with_timeout(["git", "-C", str(path), "rev-parse", "--git-common-dir"],
+                                check=True, capture_output=True, text=True, timeout=60).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return None
     root = Path(root).resolve()

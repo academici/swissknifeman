@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "4211bd140459",
-  "reason": "ядро валидатора схем в aicore, вендорная копия в planner (аудит 2026-10-17, этап 10)",
+  "captured_from": "53514d84149a",
+  "reason": "ядро валидатора схем: цифры после коммита (аудит 2026-10-17, этап 10)",
   "generators": [
     {
       "id": "skiller-registry",
@@ -243,6 +243,7 @@
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "50e60c7e08c92e547d700a28d9e4f6ae4538522987c0894ea3e1f3cf23bd47cd",
     "packages/planner/docs/reference/provider-commands.md": "62ffe979eeff67ca6ac2b461aa531f5f95b0cf68068206582bec5b4ade0d60d2",
     "packages/planner/docs/reference/provider-model-roles.md": "ec1886f069bad540e2a430ea5160f78473aa434bf8c8853a9642f72b611db266",
+    "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json": "f3d989b8c4e122d6d1b596a17231508730959f7a5f047f8d90c51b06de92ab8a",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/design.md": "edaf219f32ad36a1ca6265f1e350a3de86fcc3c2a91388da890eba6b91081cd0",
     "packages/planner/tests/fixtures_data/claude-command-golden/aliases/task/commands/dev.md": "a0840c4420080b7086e123a4f36cd7f58e5a4054de9f9f84b277b8f37b807f04",

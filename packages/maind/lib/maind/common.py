@@ -15,6 +15,7 @@ from aicore.state import state_dir as _state_dir
 from aicore.util.env import BaseEnv
 from aicore.util.io import load_json_db as _core_load_json_db
 from aicore.util.repo import find_monorepo_root
+from aicore.util.proc import run as run_with_timeout
 
 DB_VERSION = 1
 
@@ -117,9 +118,9 @@ class Env(BaseEnv):
         if self.legacy_node_config.exists():
             return None
         try:
-            result = subprocess.run(
+            result = run_with_timeout(
                 ["git", "-C", str(self.monorepo_root), "rev-parse", "--git-common-dir"],
-                check=True, capture_output=True, text=True)
+                check=True, capture_output=True, text=True, timeout=60)
         except (OSError, subprocess.CalledProcessError):
             return None
         common_dir = Path(result.stdout.strip())
@@ -133,9 +134,9 @@ class Env(BaseEnv):
         if not candidate.is_file() or candidate == self.legacy_node_config:
             return None
         try:
-            primary_common = subprocess.run(
+            primary_common = run_with_timeout(
                 ["git", "-C", str(primary_root), "rev-parse", "--git-common-dir"],
-                check=True, capture_output=True, text=True).stdout.strip()
+                check=True, capture_output=True, text=True, timeout=60).stdout.strip()
         except (OSError, subprocess.CalledProcessError):
             return None
         primary_common = Path(primary_common)

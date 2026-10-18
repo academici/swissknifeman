@@ -89,8 +89,8 @@ def refusal_of(text: str, fallback: str) -> Blocked:
 
 def plan_py(argv: list, plans_root=None) -> subprocess.CompletedProcess:
     tail = ["--plans-root", str(plans_root)] if plans_root else []
-    return subprocess.run([*partners.require_plan_argv(), *argv, *tail], capture_output=True, text=True,
-                          encoding="utf-8", check=False)
+    return partners.run_bounded([*partners.require_plan_argv(), *argv, *tail], timeout=300, capture_output=True,
+                                text=True, encoding="utf-8", check=False)
 
 
 def plan_json(argv: list, plans_root=None, *, code: str = "PLAN_UNREADABLE"):
@@ -113,8 +113,8 @@ def policy_exists(scenario: str, config: str | None = None) -> Blocked | None:
     ``config`` is the invocation configuration of the orch command that asked (its ``profiles.dirs`` count)."""
     root = partners.require_orch()
     head = ["--config", config] if config else []
-    done = subprocess.run([sys.executable, str(root / "scripts" / "orch.py"), *head, "policy", "show", scenario],
-                          capture_output=True, text=True, encoding="utf-8", check=False)
+    done = partners.run_bounded([sys.executable, str(root / "scripts" / "orch.py"), *head, "policy", "show", scenario],
+                                timeout=60, capture_output=True, text=True, encoding="utf-8", check=False)
     if done.returncode == 0:
         return None
     reason = refusal_of(done.stderr, "POLICY_UNKNOWN")
@@ -403,7 +403,7 @@ def op_register(fields: dict) -> dict:
             argv += ["--evidence", f"{check_id}={path}"]
         if fields.get("plans_root"):
             argv += ["--plans-root", str(fields["plans_root"])]
-        done = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", check=False)
+        done = partners.run_bounded(argv, timeout=900, capture_output=True, text=True, encoding="utf-8", check=False)
     if done.returncode not in (0, 1):
         raise refusal_of(done.stderr, "REGISTER_FAILED")
     try:

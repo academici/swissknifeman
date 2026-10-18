@@ -105,7 +105,7 @@
           "description": "Directories outside the project that the executor may also change (absolute, or `~/...`): they are named in its prompt and added to its filesystem guard (`ro-run.py --rw`). Default none.",
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "pattern": "^(/|~/)"}
+          "items": {"type": "string", "maxLength": 4096, "pattern": "^(?!.*(^|/)\\.\\.(/|$))(/|~/)"}
         }
       },
       "required": [],

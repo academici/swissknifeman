@@ -4,9 +4,9 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import subprocess
 
 from ..content.skill import SKILL_IGNORE
+from ..util.proc import run as run_with_timeout
 
 POLICY_PATH = "configs/release-units.json"
 POLICY_SCHEMA = "release-unit-policy/v1"
@@ -25,12 +25,12 @@ class Source:
         self.root, self.ref = Path(root), ref
         self.paths = None
         if ref:
-            result = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref],
-                                    cwd=root, check=True, capture_output=True, text=True)
+            result = run_with_timeout(["git", "ls-tree", "-r", "--name-only", ref],
+                                    cwd=root, check=True, capture_output=True, text=True, timeout=60)
             self.paths = result.stdout.splitlines()
         else:
-            result = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"],
-                                    cwd=root, check=True, capture_output=True, text=True)
+            result = run_with_timeout(["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+                                    cwd=root, check=True, capture_output=True, text=True, timeout=60)
             self.paths = [path for path in result.stdout.splitlines()
                           if self._present_in_worktree(path)]
 
@@ -49,8 +49,8 @@ class Source:
 
     def read(self, path):
         if self.ref:
-            return subprocess.run(["git", "show", f"{self.ref}:{path}"], cwd=self.root,
-                                  check=True, capture_output=True).stdout
+            return run_with_timeout(["git", "show", f"{self.ref}:{path}"], cwd=self.root,
+                                  check=True, capture_output=True, timeout=60).stdout
         candidate = self.root / path
         if not candidate.resolve().is_relative_to(self.root.resolve()):
             raise ValueError(f"RELEASE_PATH_UNCONTAINED: {path}")
@@ -329,8 +329,8 @@ def check(root, value, *, previous_ref=None, package_root=None):
     for path in sorted((Path(root) / "releases").glob("v*.json")):
         historical = json.loads(path.read_text())
         if historical["umbrella"]["tag"] == value["umbrella"]["tag"]:
-            tagged = subprocess.run(["git", "rev-parse", "--verify", "--quiet", "refs/tags/" + value["umbrella"]["tag"]],
-                                    cwd=root, capture_output=True, check=False)
+            tagged = run_with_timeout(["git", "rev-parse", "--verify", "--quiet", "refs/tags/" + value["umbrella"]["tag"]],
+                                    cwd=root, capture_output=True, check=False, timeout=60)
             if tagged.returncode != 0:
                 continue  # A draft can be regenerated; published tuples stay immutable.
         errors.extend(check_transition(historical, value))

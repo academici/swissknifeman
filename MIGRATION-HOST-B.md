@@ -262,6 +262,15 @@ and a checkout without a marker, or whose workspace has no folder for the projec
 named in the message is `workspace project attach`, which the owner decides). Afterwards `project.checkout-layer` is `ok` (a `warn` lists what is left) and `project.local`
 is `ok`: `local/config.toml` has `[repo] path` of this checkout (an absolute path, valid on B only). A repeat finds nothing.
 
+**Run `project migrate` first in each checkout.** Any other launcher command (even `planner plans`) that runs after the new code is
+in place writes a fresh `local/state/events.jsonl`, `ext/cursors.json` and `ext/deliveries.jsonl`; then `migrate` reports these three
+as `PROJECT_MIGRATE_CONFLICT` and leaves them in the checkout (this happened to `vaulter` on machine A). The rest of the project is
+moved anyway and nothing is lost. If it happens on B (the project has no running conductor), merge as the owner approves:
+`events.jsonl` and `ext/deliveries.jsonl` are append-only, so the new file is appended to the old one (old bytes first, a missing
+final newline added); in `ext/cursors.json` add the byte size of the old `events.jsonl` to every `offset` and `last_offset`
+(the new offsets pointed into the new file, which now starts after the old bytes); put the three results in `local/state/`, `mv` the
+old files into `$B`, then repeat `project migrate`. The steps must not run while a conductor or planner of the project runs.
+
 Optional, only if the owner wants to see `plans/` and `tasks/` next to the code in an IDE:
 ```bash
 skm workspace project link --project <P>        # symbolic links <P>/plans and <P>/tasks into the workspace; listed in <P>/.git/info/exclude

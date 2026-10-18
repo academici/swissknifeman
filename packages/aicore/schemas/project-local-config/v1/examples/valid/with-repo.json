@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "repo": {
+    "path": "/home/user/src/skm"
+  },
+  "planner": {
+    "bridges": {
+      "roots": ["bridges"]
+    }
+  },
+  "orch": {
+    "conductor": {
+      "foreign_untracked": "keep"
+    }
+  }
+}

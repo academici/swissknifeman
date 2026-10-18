@@ -1,7 +1,7 @@
 """The documents of the workspace: the project marker, ``workspace.json``, ``project.json`` and the device file.
 
 Every document is validated against its contract (``schemas/<kind>/v1``) when it is read and before it is written.
-A portable document (everything but the machine files ``bindings.json`` and ``device.json``) must hold no absolute path:
+A portable document (everything but the machine files ``bindings.json``, ``device.json`` and ``local/config.toml``) must hold no absolute path:
 the schemas reject the fields that could carry one and :func:`validate_document` rejects any string that starts with
 ``/``, ``~`` or ``X:\\`` anywhere in the document.
 """
@@ -24,7 +24,7 @@ WORKSPACE_FILE = "workspace.json"
 PROJECT_FILE = "project.json"
 DEVICE_FILE = "device.json"
 SCHEMA_PREFIX = "urn:swissknifeman:aicore:"
-MACHINE_KINDS = ("workspace-bindings", "workspace-device")
+MACHINE_KINDS = ("workspace-bindings", "workspace-device", "project-local-config")
 _SCHEMAS = Path(__file__).resolve().parents[3] / "schemas"
 _ABSOLUTE = re.compile(r"^(?:[/~]|[A-Za-z]:[\\/])")
 

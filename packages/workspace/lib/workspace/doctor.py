@@ -1,7 +1,7 @@
 """workspace doctor: structural checks as ``check-result/v1`` documents. The checks read; they never repair.
 
 ``workspace.layout`` (folders and files), ``workspace.documents`` (every JSON document against its contract),
-``workspace.bindings`` (checkouts of this machine), ``workspace.legacy-plans`` (plans left beside a workspace store) and
+``workspace.git-policy`` (the tracking policy of the repository: ``policy.py``), ``workspace.bindings`` (checkouts of this machine), ``workspace.legacy-plans`` (plans left beside a workspace store) and
 ``workspace.git`` (git version) and ``workspace.plans-migrator`` (the plugin of the migration is found). A machine without a
 workspace is normal before the first ``init``: that is a warning.
 """
@@ -15,10 +15,10 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 from aicore.workspace import (is_code, WorkspaceError, legacy_plans_present, read_bindings, read_marker, read_workspace,
                               validate_document)
 
-from . import gitutil, layout, migrator_port, safety
+from . import gitutil, layout, migrator_port, policy, safety
 
 RESULT_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
-PROJECT_ENTRIES = ("project.json", "plans", "legacy-plans", "migrations", "local-only.json")
+PROJECT_ENTRIES = (*policy.TRACKED_PROJECT_ENTRIES, "local")
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
@@ -108,6 +108,42 @@ def _documents(target: Path) -> Dict[str, Any]:
                        evidence=failures, remediation="Restore the named files from git (git -C <workspace> checkout -- <file>) "
                        "or from another machine.")
     return _result(check, "ok", f"{count} workspace documents match their contracts", "content")
+
+
+def _shown(paths: List[str], limit: int = 20) -> List[str]:
+    return paths[:limit] + ([f"... and {len(paths) - limit} more"] if len(paths) > limit else [])
+
+
+def _git_policy(target: Path, initialized: bool) -> Dict[str, Any]:
+    """The ignore list is complete and effective, and git tracks nothing the policy forbids."""
+    check = "workspace.git-policy"
+    if not initialized or not (target / ".git").exists():
+        return _result(check, "skip", "there is no workspace repository to read", "state")
+    try:
+        found = policy.audit(target)
+        absent = policy.missing(target)
+        effective = policy.local_ignored(target)
+    except WorkspaceError as exc:
+        return _result(check, "fail", str(exc)[:400], "state", remediation="Restore the repository from its git remote.")
+    if found["local"]:
+        return _result(check, "fail", f"POLICY_LOCAL_TRACKED: {len(found['local'])} files of a local/ folder are tracked",
+                       "state", evidence=_shown(found["local"]),
+                       remediation=f"Untrack them: git -C {target} rm -r --cached -- projects/<code>/local")
+    notes: List[str] = []
+    if absent:
+        notes.append(f"POLICY_IGNORE_MISSING: .gitignore lacks {len(absent)} lines of the ignore list: " + ", ".join(absent[:5])
+                     + (" ..." if len(absent) > 5 else ""))
+    elif not effective:
+        notes.append("POLICY_LOCAL_NOT_IGNORED: a later line of .gitignore (or a negation) lets git see projects/<code>/local/")
+    notes.extend(f"POLICY_TRACKED_IGNORED: {path} is tracked but the ignore list names it" for path in found["ignored"])
+    notes.extend(f"POLICY_TRACKED_OUTSIDE_ALLOWLIST: {path} is not something the workspace tracks"
+                 for path in found["outside"])
+    if notes:
+        return _result(check, "warn", f"{len(notes)} deviations from the tracking policy of the workspace", "state",
+                       evidence=_shown(notes),
+                       remediation="Run: swissknifeman workspace sync --commit (it brings the ignore list of .gitignore up to "
+                       "date); untrack other files with git rm --cached or move them out of the workspace.")
+    return _result(check, "ok", f"{len(found['tracked'])} tracked files follow the policy; local/ is ignored", "state")
 
 
 def _bindings(target: Optional[Path], env: Env, home: Optional[PathLike]) -> Dict[str, Any]:
@@ -211,6 +247,7 @@ def run_checks(root: Optional[PathLike] = None, env: Env = None, home: Optional[
                              remediation="Restore workspace.json from git or initialize a new workspace.")
     results.append(_documents(target) if initialized else
                    _result("workspace.documents", "skip", "there is no workspace to read", "content"))
+    results.append(_git_policy(target, initialized))
     results.append(_bindings(target if initialized else None, env, home))
     results.append(_legacy_plans(env, home))
     results.append(_git())

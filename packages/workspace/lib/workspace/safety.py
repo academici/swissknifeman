@@ -20,14 +20,14 @@ from aicore.config import ConfigError, resolve
 from aicore.util.redact import MASK, PATTERNS
 from aicore.workspace import WorkspaceError
 
-from . import gitutil
+from . import gitutil, policy
 
 SCHEMA = "urn:swissknifeman:workspace:publish-report:v1"
 DEFAULT_MAX_TRACKED = 5242880
 DEFAULT_MAX_BINARY = 1048576
 BINARY_PROBE = 8000
 TOP_LEVEL = frozenset({".gitignore", ".gitattributes", "workspace.json", "README.md", "projects"})
-PROJECT_ENTRIES = frozenset({"project.json", "plans", "legacy-plans", "migrations", "local-only.json"})
+PROJECT_ENTRIES = frozenset(policy.TRACKED_PROJECT_ENTRIES)  # the allowlist of policy.py; `local/` is not in it
 KEEP_FILE = "projects/.gitkeep"  # keeps the empty projects folder in git (written by init)
 SECRET_NAMES = (".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "credentials.*", "secrets.*")
 PATTERN_NAMES = ("token", "named-secret")

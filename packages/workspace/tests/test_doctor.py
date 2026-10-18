@@ -12,7 +12,7 @@ from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase, new_code
 from workspace import doctor, gitutil, layout, projects
 
 CHECK_RESULT = Path(aicore.__file__).resolve().parents[2] / "schemas" / "check-result" / "v1"
-IDS = ["workspace.layout", "workspace.documents", "workspace.bindings", "workspace.legacy-plans", "workspace.git",
+IDS = ["workspace.layout", "workspace.documents", "workspace.git-policy", "workspace.bindings", "workspace.legacy-plans", "workspace.git",
        "workspace.plans-migrator"]
 
 

@@ -13,12 +13,12 @@ from aicore.state import is_code, workspace_root, workspace_state_dir
 from aicore.workspace import (WorkspaceError, new_id, read_bindings, read_device, read_marker,
                               read_project, read_workspace, utc_now, write_device, write_workspace)
 
-from . import gitutil
+from . import gitutil, policy
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
 
-GITIGNORE = """/.staging/
+BASELINE_IGNORE = """/.staging/
 **/.lock
 **/views/
 **/context/
@@ -34,6 +34,8 @@ GITIGNORE = """/.staging/
 Thumbs.db
 *.swp
 """
+
+GITIGNORE = BASELINE_IGNORE + policy.block()  # the tracking policy: see policy.py
 
 GITATTRIBUTES = """*.json text=auto eol=lf
 *.md text=auto eol=lf
@@ -54,6 +56,7 @@ It is created and kept by `swissknifeman workspace`; do not move it by hand.
 - `swissknifeman workspace status` shows the state of this repository and of the projects bound on this machine.
 - `swissknifeman workspace sync` commits, pulls and pushes it between machines.
 - Files that are too large for git stay on the machine that made them and are listed in `projects/<code>/local-only.json`.
+- `projects/<code>/local/` is the machine-local folder of a project (its `config.toml` with `repo.path`, state, backups, stubs): git ignores it.
 
 Machine-specific files (bindings of checkouts, the device id) are kept outside this folder and never enter git.
 """

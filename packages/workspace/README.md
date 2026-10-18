@@ -19,7 +19,7 @@ argument value, code `INVALID_ARGUMENT`) also prints `{"error": {"code", "messag
 | --- | --- |
 | `init --code CODE [--root DIR] [--remote URL]` | Create the workspace `CODE` under `workspaces/CODE`: the layout (`workspace.json`, `projects/`, baseline `.gitignore`, `.gitattributes`, `README.md`, `.staging/`), `git init -b main`, the first commit `skm(workspace): init` with a `Workspace-Device` trailer, and the device file of this machine. On a workspace that exists it changes nothing (`already_initialized`). A non-empty folder without `workspace.json` is `WORKSPACE_ROOT_NOT_EMPTY` and nothing is written. With `--remote URL` the new workspace is also bound to that remote as `origin` in the same step (like `connect`; nothing is pushed): a new workspace has an id no remote can hold, so the remote is read first and must be empty (`REMOTE_NOT_EMPTY`, `REMOTE_UNREACHABLE`; a refusal creates nothing; to use a workspace a remote already holds run `clone`). On a workspace that exists `--remote` only connects it (`REMOTE_ALREADY_SET` when it has an origin). |
 | `status [--fetch]` | Git state (branch, changed paths, remote without user information, ahead and behind of the last fetch; `--fetch` fetches first), the projects with their bindings here, the last sync. |
-| `doctor` | Checks as `check-result/v1`: `workspace.layout`, `workspace.documents`, `workspace.bindings`, `workspace.legacy-plans`, `workspace.git`, `workspace.plans-migrator`. Exit 1 only on `fail`; a machine without a workspace gets a warning. |
+| `doctor` | Checks as `check-result/v1`: `workspace.layout`, `workspace.documents`, `workspace.git-policy`, `workspace.bindings`, `workspace.legacy-plans`, `workspace.git`, `workspace.plans-migrator`. Exit 1 only on `fail`; a machine without a workspace gets a warning. |
 | `doctor --publish-safety [--all]` | Publish-safety rules on the files of the next commit (`--all`: every tracked and untracked file that is not ignored); prints a `publish-report/v1` document (see below). Exit 1 and `PUBLISH_BLOCKED` on stderr when a rule blocks; warnings and local-only files exit 0. |
 | `project attach [--project DIR] [--name N] [--code CODE] [--yes]` | Tie a checkout to a project: use the code of its marker, else match its remotes against the projects of the workspace (a name is not an identity), else create a project whose code is made from the folder name (or `--code`; `PROJECT_CODE_TAKEN` if another project has it). Writes the marker `.swissknifeman/project.json` and prints the command that commits it; it never commits. |
 | `project add --path DIR [--name N] [--code CODE] [--yes]` | Add the checkout `DIR` to the workspace as a project and bind it: the same work and the same output as `project attach --project DIR`, but the path is required and the current folder is never used. |
@@ -73,7 +73,7 @@ A secret value is never printed: the detail names the rule, the line and the mas
 | `PS-MANIFEST-PATH` | an absolute path in `workspace.json`, `projects/*/project.json`, `projects/*/local-only.json`, `projects/*/migrations/*.json` | block |
 | `PS-SYMLINK` | any symbolic link | block |
 | `PS-TOP-LEVEL` | a top-level entry outside `.gitignore`, `.gitattributes`, `workspace.json`, `README.md`, `projects` | block |
-| `PS-PROJECT-LEVEL` | `projects/` holds anything but folders named by a project code, or a project folder holds anything but `project.json`, `plans`, `legacy-plans`, `migrations`, `local-only.json` | block |
+| `PS-PROJECT-LEVEL` | `projects/` holds anything but folders named by a project code, or a project folder holds anything but `project.json`, `plans`, `decisions`, `legacy-plans`, `migrations`, `local-only.json` (so a visible `local/` blocks) | block |
 | `PS-EXECUTABLE` | the execute bit | warn |
 | `PS-HOME-PATH` | `/home/<user>/`, `/Users/<user>/` or `C:\Users\` in the text of plan data | warn |
 | `PS-TRACKED-LOCAL-ONLY` | git already tracks a file that is now local-only; nothing is removed from the index here | warn |
@@ -133,9 +133,25 @@ and set `trusted = true` so it receives `PLANNER_ROOT`; `workspace doctor` shows
 | the workspaces | `SKM_WORKSPACES_ROOT`, else `<machine home>/workspaces` (`~/.local/share/swissknifeman/workspaces/<code>`, `$SKM_HOME/workspaces/<code>`, one git root each); chosen by `--workspace`, `SKM_WORKSPACE`, the marker, or the only one |
 | bindings, sync state, git lock | `<state>/workspaces/<code>` (`bindings.json`, `sync.json`, `git.lock`); the device `<state>/workspaces/device.json`; never in git |
 | the marker of a project | `<checkout>/.swissknifeman/project.json`, committed with the project |
+| the project-local folder | `<workspace>/projects/<code>/local/` (`config.toml` with `repo.path` and the project layer of the configuration, `state/`, `backups/`, `stubs/`; contract `project-local-config/v1`, API `aicore.workspace.localconfig`); ignored by the workspace `.gitignore`, never in git |
 
 Every command that changes the workspace repository holds `git.lock` (`WORKSPACE_GIT_LOCKED` after the configured
 wait). Git is always called with an argument list, never through a shell, and never with force, `reset --hard` or `clean`.
+
+## What the repository tracks
+
+The workspace repository carries only what a plan needs on another machine (`policy.py`).
+
+| Tracked (allowlist) | Never tracked (ignore list, a managed block of `.gitignore`) |
+| --- | --- |
+| `workspace.json`, `README.md`, `.gitignore`, `.gitattributes`, `projects/.gitkeep` | `projects/<code>/local/`: `config.toml` (`repo.path`, the project layer of the configuration), `state/`, `backups/`, `stubs/` |
+| per project: `project.json`, `plans/`, `decisions/` and the records of the workspace itself (`legacy-plans/`, `migrations/`, `local-only.json`) | run files (`runs/`, `artifacts/**/*.jsonl`) and orchestration artifacts (`orch/`, `orch-artifacts/`) |
+| | model and provider settings of a project (`.swissknifeman/`, `.claude/`, `.codex/`, `.cursor/`, `.grok/`, `*.local.toml`, `*.local.json`) and build output (`dist/`, `build/`, `node_modules/`, `__pycache__/`) |
+
+`init` writes the block; `sync --commit` rewrites it in an older workspace before it stages, so a file of `local/` is never
+staged. `doctor` (`workspace.git-policy`) fails when git tracks a file of `local/` and warns about a missing or overridden
+ignore line, a tracked file that the ignore list names and a tracked file outside the allowlist; the publish-safety rule
+`PS-PROJECT-LEVEL` blocks a `local/` that git can see.
 
 ## Sync
 

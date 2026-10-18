@@ -29,7 +29,7 @@ from aicore.state import ensure_dir, workspace_state_dir
 from aicore.util.io import atomic_write_text
 from aicore.workspace import WorkspaceError, is_code, project_dir, utc_now
 
-from . import events, gitutil, layout, localonly, safety
+from . import events, gitutil, layout, localonly, policy, safety
 
 PathLike = Union[str, "os.PathLike[str]"]
 Env = Optional[Mapping[str, str]]
@@ -254,6 +254,7 @@ def _blocked(run: _Run, block: Sequence[Dict[str, Any]], warn: Sequence[Dict[str
 def _step_commit(run: _Run) -> None:
     run.operation = "commit"
     target = run.target
+    policy.apply(target)  # an older workspace gets the ignore list first: projects/<code>/local/ is never staged
     settings = safety.load_settings(run.env, run.home)
     paths = safety.changed_paths(target)
     first = safety.scan(target, paths, settings)

@@ -38,6 +38,7 @@
       {"id": "urn:swissknifeman:aicore:workspace-project", "path": "schemas/workspace-project/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:project-marker", "path": "schemas/project-marker/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:workspace-bindings", "path": "schemas/workspace-bindings/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:aicore:project-local-config", "path": "schemas/project-local-config/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:workspace-device", "path": "schemas/workspace-device/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:workspace-local-only", "path": "schemas/workspace-local-only/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:aicore:workspace-migration", "path": "schemas/workspace-migration/v1", "version": "v1", "stability": "development"}

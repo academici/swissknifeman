@@ -4,6 +4,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/); versioning: [S
 
 ## [Unreleased]
 
+### Changed
+- **Workspaces and codes (breaking):** `aicore.state` gets `workspaces_root`, `workspace_root(code=)`, `workspace_state_dir(code=)`, `selected_workspace`, `list_workspaces`, `device_file`, `is_code`; `SKM_WORKSPACES_ROOT` and `SKM_WORKSPACE` replace `SKM_WORKSPACE_ROOT`. `project-marker/v1` is `{workspace, project_id, plans_store}`, `workspace/v1` has `code` and layout 2, project ids are codes in `workspace-project`, `workspace-bindings`, `workspace-migration`; `write_marker(root, workspace, project_id, store)`, `write_workspace(ws, code, id, device)`. `invocation-context/v1` `plans_store` gets the optional `workspace`. New `aicore.workspace.integration.check_project` and the `project doctor` check `project.workspace`.
+
 ### Added
 - **`secret-pattern` reason in `workspace-local-only/v1`:** the `reason` enum of a local-only file gets the value `secret-pattern` (a file with a secret pattern kept on the machine by `workspace migrate --local-only-secrets`, PLAN6 D17); additive. Example `examples/valid/secret-pattern.json`. `workspace-migration/v1` is unchanged.
 - **`limits.max_stdout_bytes` in `extension/v1`:** an optional integer (1 MiB to 64 MiB, default 1 MiB = `MAX_STDOUT`) that `aicore.ext.plugins` passes as `max_stdout` to `run_json` for that plugin; a value below 1 MiB, above the cap or not an integer is `PLUGIN_MANIFEST_INVALID`. Additive. `bridges/workspace-planner` declares 32 MiB (`workspace migrate plan` of a project with thousands of plan files failed with `PROTOCOL_STDOUT_TOO_LARGE`).

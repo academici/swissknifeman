@@ -1,10 +1,13 @@
-"""Ids of workspace documents: ``<prefix>_`` and 26 Crockford base32 characters (48 bits of milliseconds, 80 random)."""
+"""Ids of workspace documents (devices, the workspace identity): ``<prefix>_`` and 26 Crockford base32 characters (48 bits of
+milliseconds, 80 random). Workspaces and projects are named by a code (:func:`is_code`), not by an id."""
 from __future__ import annotations
 
 import re
 import secrets
 import time
 from typing import Optional
+
+from aicore.state.locations import is_code  # noqa: F401  (re-exported: codes of workspaces and projects)
 
 ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 TIME_CHARS = 10

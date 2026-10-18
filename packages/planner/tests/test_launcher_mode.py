@@ -70,7 +70,7 @@ class LauncherWorkspaceTests(unittest.TestCase):
     """A launcher project whose marker moved the plans to the workspace: that folder is the plans root, the old
     ``<project>/plans`` and the folders of other projects stay refused."""
 
-    PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+    PID = "billium"
 
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
@@ -80,15 +80,15 @@ class LauncherWorkspaceTests(unittest.TestCase):
         (self.root / "plans").mkdir(parents=True)
         (self.root / ".swissknifeman").mkdir()
         (self.root / ".swissknifeman" / "project.json").write_text(json.dumps({
-            "$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": self.PID,
+            "$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": "axioma", "project_id": self.PID,
             "plans_store": "workspace"}), encoding="utf-8")
-        self.ws = base / "ws"
+        self.ws = base / "wss" / "axioma"
         self.plans = self.ws / "projects" / self.PID / "plans"
-        self.other = self.ws / "projects" / "prj_01JC0Z8Q3M5T7V9XABCDEFGHJN" / "plans"
+        self.other = self.ws / "projects" / "commerz" / "plans"
         for folder in (self.plans, self.other):
             folder.mkdir(parents=True)
         env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
-        env.update(HOME=str(base / "home"), SKM_HOME=str(base / "home"), SKM_WORKSPACE_ROOT=str(self.ws), **launcher(self.root))
+        env.update(HOME=str(base / "home"), SKM_HOME=str(base / "home"), SKM_WORKSPACES_ROOT=str(self.ws.parent), **launcher(self.root))
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)

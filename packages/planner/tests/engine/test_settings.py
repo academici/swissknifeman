@@ -345,13 +345,13 @@ class ConsumerTests(ConfigCase):
 class WorkspaceProjectTests(ConfigCase):
     """Plans in the portable workspace take the project configuration of the checkout bound to them."""
 
-    PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+    PID = "billium"
 
     def setUp(self):
         super().setUp()
         self.project = Path(os.path.realpath(self.project))
-        self.ws = self.home / "ws"
-        patcher = mock.patch.dict(os.environ, {"SKM_WORKSPACE_ROOT": str(self.ws)})
+        self.ws = self.home / "wss" / "axioma"
+        patcher = mock.patch.dict(os.environ, {"SKM_WORKSPACES_ROOT": str(self.ws.parent)})
         patcher.start()
         self.addCleanup(patcher.stop)
         self.ws_plans = self.ws / "projects" / self.PID / "plans"
@@ -361,8 +361,8 @@ class WorkspaceProjectTests(ConfigCase):
         marker = self.project / ".swissknifeman" / "project.json"
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1",
-                                      "project_id": self.PID, "plans_store": "workspace"}), encoding="utf-8")
-        bindings = self.home / "state" / "workspace" / "bindings.json"
+                                      "workspace": "axioma", "project_id": self.PID, "plans_store": "workspace"}), encoding="utf-8")
+        bindings = self.home / "state" / "workspaces" / "axioma" / "bindings.json"
         bindings.parent.mkdir(parents=True, exist_ok=True)
         bindings.write_text(json.dumps({
             "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",

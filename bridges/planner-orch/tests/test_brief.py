@@ -219,7 +219,7 @@ class ReadsTests(BriefCase):
 
 class WorkspacePlanTests(BriefCase):
     """The plan folder lives in the workspace, outside the checkout: the executor cannot read it, so the brief carries it."""
-    PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+    PID = "billium"
 
     def setUp(self):
         super().setUp()
@@ -241,18 +241,19 @@ class WorkspacePlanTests(BriefCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         base = Path(os.path.realpath(tmp.name))
-        self.ws, home = base / "workspace-secret-root", base / "home"
+        self.ws, home = base / "workspace-secret-root" / "axioma", base / "home"
         marker = self.repo / ".swissknifeman" / "project.json"
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1",
-                                      "project_id": self.PID, "plans_store": "workspace"}), encoding="utf-8")
-        bindings = home / "state" / "workspace" / "bindings.json"
+                                      "workspace": "axioma", "project_id": self.PID,
+                                      "plans_store": "workspace"}), encoding="utf-8")
+        bindings = home / "state" / "workspaces" / "axioma" / "bindings.json"
         bindings.parent.mkdir(parents=True)
         bindings.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:workspace-bindings:v1", "projects": {
             self.PID: {"paths": [str(self.repo)], "primary": str(self.repo), "bound_at": "2026-10-17T09:30:00Z"}}}),
             encoding="utf-8")
         env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
-        env.update(HOME=str(home), SKM_HOME=str(home), SKM_WORKSPACE_ROOT=str(self.ws))
+        env.update(HOME=str(home), SKM_HOME=str(home), SKM_WORKSPACES_ROOT=str(self.ws.parent))
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)

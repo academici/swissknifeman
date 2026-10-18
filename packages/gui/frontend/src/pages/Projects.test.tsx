@@ -10,7 +10,7 @@ const LIST = { $schema: "urn:swissknifeman:gui:project-list:v1", projects: [TRUS
 const row = (id: string, name: string, paths: string, bound = "yes", store = "workspace") => ({
   id, cells: { name, status: "attached", bound, paths, plans_store: store, plans: 1 } });
 const WORKSPACE = { $schema: "urn:swissknifeman:gui:view-data:v1", view: "resource-list", columns: [], total: 2,
-  rows: [row("prj_aaa", "alpha", "/work/alpha"), row("prj_bbb", "beta", "/work/beta")] };
+  rows: [row("alpha", "alpha", "/work/alpha"), row("beta", "beta", "/work/beta")] };
 
 function open(fake: FakeTransport) {
   return render(<Wrapper transport={fake}><Projects /></Wrapper>);
@@ -21,7 +21,7 @@ describe("Projects", () => {
     const fake = new FakeTransport({ "GET /v1/projects": LIST, "POST /v1/queries/gui-workspace.projects": WORKSPACE });
     open(fake);
     const binding = await screen.findByTestId("workspace-binding");
-    expect(binding.textContent).toContain("project_id prj_aaa");
+    expect(binding.textContent).toContain("project alpha");
     expect(binding.textContent).toContain("bound here");
     expect(binding.textContent).toContain("plans store: workspace");
     expect(await screen.findByRole("button", { name: "Trust beta at /work/beta" })).toBeTruthy();

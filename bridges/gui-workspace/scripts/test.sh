@@ -33,7 +33,7 @@ export PYTHONPATH="$AICORE_ROOT/lib:$SKM_GUI_ROOT/lib:$BRIDGE_ROOT${PYTHONPATH:+
 # The tests never touch the developer's HOME, state, workspace or event delivery.
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
-export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_WORKSPACE_ROOT="$TEST_HOME/workspace" SKM_AICORE_EVENTS__DELIVERY=off
+export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_WORKSPACES_ROOT="$TEST_HOME/workspaces" SKM_WORKSPACE=axioma SKM_AICORE_EVENTS__DELIVERY=off
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UMBRELLA
 
 out="$(python3 -m unittest discover -s tests -t . -p "test_*.py" "$@" 2>&1)" || { echo "$out" >&2; echo "ERROR: tests failed" >&2; exit 1; }

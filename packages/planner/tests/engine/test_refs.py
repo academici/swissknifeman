@@ -196,17 +196,17 @@ class WorkspaceRefsTests(RefsCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         base = Path(os.path.realpath(tmp.name))
-        pid = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
-        repo, ws = base / "ext", base / "ws"
+        pid = "billium"
+        repo, ws = base / "ext", base / "wss" / "axioma"
         marker = repo / ".swissknifeman" / "project.json"
         marker.parent.mkdir(parents=True)
-        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": pid,
+        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": "axioma", "project_id": pid,
                                       "plans_store": "workspace"}), encoding="utf-8")
         plans = ws / "projects" / pid / "plans"
         plans.mkdir(parents=True)
         root = new_plan(plans, "EXTERNAL", "ext")
         accepted(root, "Shared rule", "no network")
-        env = {"SKM_HOME": str(base / "home"), "SKM_WORKSPACE_ROOT": str(ws)}
+        env = {"SKM_HOME": str(base / "home"), "SKM_WORKSPACES_ROOT": str(ws.parent)}
         with mock.patch.dict(os.environ, env):
             entry = self.resolve("ext:PLAN1.D1", repos={"ext": str(repo)})
         self.assertTrue(entry["loaded"], entry)

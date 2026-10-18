@@ -9,6 +9,11 @@
       "const": "urn:swissknifeman:aicore:workspace:v1",
       "description": "Schema identifier."
     },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Workspace code: the folder name under workspaces/ on every machine."
+    },
     "workspace_id": {
       "type": "string",
       "pattern": "^ws_[0-9A-HJKMNP-TV-Z]{26}$",
@@ -16,8 +21,8 @@
     },
     "layout": {
       "type": "integer",
-      "minimum": 1,
-      "maximum": 1,
+      "minimum": 2,
+      "maximum": 2,
       "description": "Layout version of the workspace."
     },
     "created_at": {
@@ -33,6 +38,7 @@
   },
   "required": [
     "$schema",
+    "code",
     "workspace_id",
     "layout",
     "created_at",

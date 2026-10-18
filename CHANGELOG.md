@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- workspace: several workspaces per machine, named by codes (**breaking** for layout 1). A machine keeps `workspaces/<code>/` (one git repository each; `SKM_WORKSPACES_ROOT` moves the folder, `SKM_WORKSPACE` or `--workspace CODE` chooses); a project is named by its code (the folder name, `projects/<code>/`) instead of `prj_<26 characters>`; the marker `.swissknifeman/project.json` is `{workspace, project_id, plans_store}`; `workspace.json` has `code` (layout 2); machine files are in `state/workspaces/<code>/` and the device file in `state/workspaces/device.json`. `workspace init --code CODE`, `workspace list`, `workspace clone URL [--code]` (the code comes from the remote), `project attach|migrate plan|apply --code` (code of a new project; `PROJECT_CODE_TAKEN`), new refusals `WORKSPACE_AMBIGUOUS`, `WORKSPACE_NOT_FOUND`, `WORKSPACE_CODE_INVALID`, `WORKSPACE_CODE_MISMATCH`, `WORKSPACE_MISMATCH`, `PROJECT_CODE_INVALID`. `SKM_WORKSPACE_ROOT` is no longer read. `aicore.workspace.integration.check_project` and the doctor check `project.workspace` say whether a checkout is wired into its workspace. Docs: `docs/workspace.md`, ADR 0085 (amendment), `MIGRATION-HOST-B.md`.
+
 ### Added
 
 - workspace: migration of the plans of billium, commerz, azguard, chatom, corex, sockit and swissknifeman into the portable workspace (PLAN6 P6); `docs/workspace.md` section "Two machines: the order" and the runbook `MIGRATION-HOST-B.md` for an agent on a second machine. vaulter stays on `plans/` until its run ends.

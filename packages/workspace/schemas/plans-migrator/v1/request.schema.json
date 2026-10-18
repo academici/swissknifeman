@@ -66,7 +66,7 @@
         "op": {"const": "apply", "description": "Operation."},
         "project_root": {"$ref": "#/$defs/folder", "description": "Root of the checkout."},
         "workspace_root": {"$ref": "#/$defs/folder", "description": "Root of the workspace; staging lives inside it."},
-        "project_id": {"type": "string", "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$", "description": "Id of the project."},
+        "project_id": {"type": "string", "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$", "description": "Code of the project."},
         "op_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$", "description": "Id of the operation; names the staging folder."},
         "manifest": {"$ref": "#/$defs/manifest", "description": "Manifest of the dry run."},
         "mode": {"enum": ["initial", "import"], "default": "initial", "description": "initial: the workspace holds no plans of the project; import: it may."},

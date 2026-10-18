@@ -35,7 +35,7 @@ class RemoteCase(TempCase):
 
 class ConnectTests(RemoteCase):
     def test_empty_remote_is_added_and_nothing_is_pushed(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         head = git(self.ws, "rev-parse", "HEAD")
         doc = remote.connect(self.url(bare))
@@ -47,17 +47,17 @@ class ConnectTests(RemoteCase):
         self.assertEqual(list((self.ws / ".staging").iterdir()), [])
 
     def test_same_workspace_is_connected(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         self.push_all(bare)
         self.assertEqual(remote.connect(self.url(bare))["classification"], "same")
         self.assertEqual(list((self.ws / ".staging").iterdir()), [])
 
     def test_other_workspace_is_refused_and_config_is_unchanged(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         other = self.root / "other"
-        layout.init(other)
+        layout.init("axioma", other)
         git(other, "push", "-q", str(bare), "HEAD:refs/heads/main")
         before = (self.ws / ".git" / "config").read_text(encoding="utf-8")
         self.assertEqual(self.code(remote.connect, self.url(bare)), "REMOTE_OTHER_WORKSPACE")
@@ -65,7 +65,7 @@ class ConnectTests(RemoteCase):
         self.assertEqual(list((self.ws / ".staging").iterdir()), [])
 
     def test_foreign_repository_is_refused(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         work = self.root / "work"
         work.mkdir()
@@ -78,13 +78,13 @@ class ConnectTests(RemoteCase):
         self.assertEqual(list((self.ws / ".staging").iterdir()), [])
 
     def test_second_connect_is_refused(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         remote.connect(self.url(bare))
         self.assertEqual(self.code(remote.connect, self.url(bare)), "REMOTE_ALREADY_SET")
 
     def test_unreachable_remote_hides_the_token(self):
-        layout.init()
+        layout.init("axioma")
         with self.assertRaises(WorkspaceError) as caught:
             remote.connect("file://user:s3cret@" + str(self.root / "missing.git"))
         self.assertEqual(caught.exception.code, "REMOTE_UNREACHABLE")
@@ -95,7 +95,7 @@ class ConnectTests(RemoteCase):
         self.assertEqual(self.code(remote.connect, self.url(self.bare())), "WORKSPACE_NOT_INITIALIZED")
 
     def test_old_git_is_refused(self):
-        layout.init()
+        layout.init("axioma")
         with mock.patch.object(gitutil, "git_version", return_value=(2, 37, 9)):
             self.assertEqual(self.code(remote.connect, self.url(self.bare())), "WORKSPACE_GIT_TOO_OLD")
             self.assertEqual(self.code(remote.clone, self.url(self.bare()), self.root / "c"), "WORKSPACE_GIT_TOO_OLD")
@@ -103,7 +103,7 @@ class ConnectTests(RemoteCase):
             self.assertEqual(gitutil.require_version(), (2, 38))
 
     def test_cli_output_has_no_userinfo(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         url = "file://tok:s3cret@" + str(bare)
         code, out, err = self.run_cli("connect", "--remote", url)
@@ -116,14 +116,14 @@ class ConnectTests(RemoteCase):
         self.assertNotIn("s3cret", out + err)
 
     def test_option_like_url_is_a_usage_error(self):
-        layout.init()
+        layout.init("axioma")
         code, _, err = self.run_cli("connect", "--remote=--upload-pack=x")
         self.assertEqual(code, 2, err)
 
 
 class CloneTests(RemoteCase):
     def source(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         self.push_all(bare)
         return bare
@@ -192,7 +192,7 @@ class CloneTests(RemoteCase):
 
 class StatusFetchTests(RemoteCase):
     def test_ahead_behind_diverged_after_fetch(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         self.push_all(bare)
         remote.connect(self.url(bare))
@@ -211,7 +211,7 @@ class StatusFetchTests(RemoteCase):
         self.assertEqual(state["remote"], self.url(bare))
 
     def test_fetch_failure_is_unreachable(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.bare()
         remote.connect(self.url(bare))
         bare.rename(self.root / "gone.git")

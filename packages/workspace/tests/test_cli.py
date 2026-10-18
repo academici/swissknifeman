@@ -33,12 +33,12 @@ class UsageTests(TempCase):
 
 class CommandTests(TempCase):
     def test_init_status_doctor_in_json(self):
-        init = self.json_cli("init")
-        self.assertEqual(set(init), {"root", "workspace_id", "device_id", "created", "already_initialized"})
+        init = self.json_cli("init", "--code", "axioma")
+        self.assertEqual(set(init), {"code", "root", "workspace_id", "device_id", "created", "already_initialized"})
         self.assertTrue(init["workspace_id"].startswith("ws_"))
-        self.assertEqual(self.json_cli("init")["already_initialized"], True)
+        self.assertEqual(self.json_cli("init", "--code", "axioma")["already_initialized"], True)
         status = self.json_cli("status")
-        self.assertEqual(set(status), {"root", "workspace_id", "git", "projects", "last_sync"})
+        self.assertEqual(set(status), {"code", "root", "workspace_id", "git", "projects", "last_sync"})
         self.assertEqual(set(status["git"]), {"branch", "dirty", "remote", "ahead", "behind", "diverged", "fetched_at"})
         doctor = self.json_cli("doctor")
         self.assertEqual(set(doctor), {"checks"})
@@ -47,7 +47,7 @@ class CommandTests(TempCase):
         self.assertEqual({item["status"] for item in checks}, {"ok"})
 
     def test_json_is_one_object_on_stdout(self):
-        code, out, err = self.run_cli("init", "--json")
+        code, out, err = self.run_cli("init", "--code", "axioma", "--json")
         self.assertEqual(code, 0)
         self.assertEqual(err, "")
         json.loads(out)  # the whole stdout is one document
@@ -58,19 +58,19 @@ class CommandTests(TempCase):
         self.assertTrue(err.startswith("WORKSPACE_NOT_INITIALIZED: "), err)
         self.ws.mkdir()
         (self.ws / "x").write_text("x", encoding="utf-8")
-        code, _, err = self.run_cli("init", "--json")
+        code, _, err = self.run_cli("init", "--code", "axioma", "--json")
         self.assertEqual(code, 1)
         self.assertTrue(err.startswith("WORKSPACE_ROOT_NOT_EMPTY: "), err)
 
     def test_a_relative_workspace_root_is_exit_two(self):
-        with mock.patch.dict(os.environ, {"SKM_WORKSPACE_ROOT": "relative"}):
-            code, _, err = self.run_cli("init")
+        with mock.patch.dict(os.environ, {"SKM_WORKSPACES_ROOT": "relative"}):
+            code, _, err = self.run_cli("init", "--code", "axioma")
         self.assertEqual(code, 2)
-        self.assertIn("SKM_WORKSPACE_ROOT", err)
+        self.assertIn("SKM_WORKSPACES_ROOT", err)
 
     def test_doctor_exits_one_only_on_a_failure(self):
         self.assertEqual(self.run_cli("doctor")[0], 0)  # no workspace: a warning
-        self.run_cli("init")
+        self.run_cli("init", "--code", "axioma")
         (self.ws / "workspace.json").write_text("{", encoding="utf-8")
         code, out, _ = self.run_cli("doctor")
         self.assertEqual(code, 1)
@@ -78,16 +78,16 @@ class CommandTests(TempCase):
 
     def test_init_with_root_names_the_variable_other_commands_need(self):
         other = self.root / "elsewhere"
-        code, out, err = self.run_cli("init", "--root", str(other), "--json")
+        code, out, err = self.run_cli("init", "--code", "axioma", "--root", str(other), "--json")
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out)["root"], str(other))
-        self.assertIn("SKM_WORKSPACE_ROOT=", err)
+        self.assertIn("outside", err)
 
     def test_project_commands(self):
-        self.run_cli("init")
+        self.run_cli("init", "--code", "axioma")
         root = self.checkout("alpha")
         attached = self.json_cli("project", "attach", "--project", str(root))
-        self.assertEqual(set(attached), {"project_id", "name", "created", "marker_written", "plans_store", "binding", "next"})
+        self.assertEqual(set(attached), {"workspace", "project_id", "name", "created", "marker_written", "plans_store", "binding", "next"})
         project_id = attached["project_id"]
         listed = self.json_cli("project", "list")
         self.assertEqual([row["project_id"] for row in listed["projects"]], [project_id])
@@ -103,7 +103,7 @@ class CommandTests(TempCase):
         self.assertEqual((detached["removed"], detached["binding"]), (True, None))
 
     def test_attach_without_a_project_context_is_refused(self):
-        self.run_cli("init")
+        self.run_cli("init", "--code", "axioma")
         empty = self.root / "empty"
         empty.mkdir()
         cwd = os.getcwd()
@@ -115,7 +115,7 @@ class CommandTests(TempCase):
         self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
 
     def test_attach_without_confirmation_and_without_a_terminal(self):
-        self.run_cli("init")
+        self.run_cli("init", "--code", "axioma")
         first = self.checkout("alpha", remotes=[("origin", "git@github.com:a/b.git")])
         project_id = self.json_cli("project", "attach", "--project", str(first))["project_id"]
         second = self.checkout("beta", remotes=[("origin", "https://github.com/a/b")])
@@ -127,7 +127,7 @@ class CommandTests(TempCase):
         self.assertEqual(attached["project_id"], project_id)
 
     def test_attach_journals_its_event(self):
-        self.run_cli("init")
+        self.run_cli("init", "--code", "axioma")
         project_id = self.json_cli("project", "attach", "--project", str(self.checkout("alpha")))["project_id"]
         journal = self.root / "skm" / "state" / "events" / "events.jsonl"
         events = [json.loads(line) for line in journal.read_text(encoding="utf-8").splitlines()]
@@ -136,7 +136,7 @@ class CommandTests(TempCase):
 
     def test_a_failing_journal_does_not_change_the_result(self):
         with mock.patch("aicore.ext.events.emit", side_effect=RuntimeError("journal down")):
-            code, out, err = self.run_cli("init", "--json")
+            code, out, err = self.run_cli("init", "--code", "axioma", "--json")
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out)["created"], True)
         self.assertIn("WORKSPACE_EVENT_NOT_EMITTED", err)

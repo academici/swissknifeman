@@ -3,7 +3,7 @@
   "$id": "urn:swissknifeman:aicore:workspace-project:v1",
   "title": "workspace-project",
   "type": "object",
-  "description": "Project record in the workspace (projects/<project_id>/project.json). Portable: it holds no absolute path.",
+  "description": "Project record in the workspace (projects/<code>/project.json). Portable: it holds no absolute path.",
   "properties": {
     "$schema": {
       "const": "urn:swissknifeman:aicore:workspace-project:v1",
@@ -11,8 +11,8 @@
     },
     "project_id": {
       "type": "string",
-      "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$",
-      "description": "Project id: prj_ and 26 Crockford base32 characters."
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Project code (the folder name under projects/)."
     },
     "name": {
       "type": "string",

@@ -8,7 +8,7 @@
 # The import mode: a second machine (a second SKM_HOME on a copy of the same workspace) migrates its own checkout of the
 # project; an equal plan is skipped-equal, a plan changed on that machine is a MIGRATION_CONFLICT until --on-conflict.
 #
-# It runs only in temporary folders: HOME, SKM_HOME and SKM_WORKSPACE_ROOT are set to a throwaway directory, so
+# It runs only in temporary folders: HOME, SKM_HOME and SKM_WORKSPACES_ROOT are set to a throwaway directory, so
 # neither the real HOME nor the real workspace is touched. Exit 0 and the line "e2e-workspace-migrate: OK" when
 # everything held; otherwise "e2e-workspace-migrate: FAIL ..." and exit 1.
 set -euo pipefail
@@ -19,8 +19,9 @@ fail() { say "FAIL $*"; exit 1; }
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-export HOME="$WORK/home" SKM_HOME="$WORK/skm" SKM_WORKSPACE_ROOT="$WORK/ws"
+export HOME="$WORK/home" SKM_HOME="$WORK/skm" SKM_WORKSPACES_ROOT="$WORK/wss"
 export SKM_AICORE_EVENTS__DELIVERY=off
+WS_ROOT="$SKM_WORKSPACES_ROOT/axioma"   # the workspace axioma
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_PROJECT_ROOT
 unset SKM_LAUNCHER_ACTIVE SKM_LAUNCHER_PID SKM_LAUNCHER_PROJECT_ROOT SKM_LAUNCHER_PATH SKM_LAUNCHER_PROTOCOL SKM_INVOCATION_CWD
 export AICORE_ROOT="$HUB/packages/aicore"
@@ -75,11 +76,11 @@ printf 'artifact\n' > plans/old-format/artifacts/a.txt
 printf 'loose\n' > plans/README.md
 planner plans --json | grep -q "$PLAN_ID" || fail "the planner does not list $PLAN_ID before the migration"
 
-swissknifeman workspace init >/dev/null || fail "workspace init"
+swissknifeman workspace init --code axioma >/dev/null || fail "workspace init"
 
 # ------------------------------------------------------------------------------------------------------------ plan
 swissknifeman workspace migrate plan --project "$A" --json > "$WORK/plan.json" || fail "migrate plan: $(cat "$WORK/plan.json")"
-[ -z "$(ls -d "$SKM_WORKSPACE_ROOT"/projects/prj_* 2>/dev/null)" ] \
+[ -z "$(ls -d "$WS_ROOT"/projects/*/ 2>/dev/null)" ] \
   || fail "the dry run wrote into the workspace projects/"
 [ ! -e .swissknifeman/project.json ] || fail "the dry run wrote the marker"
 python3 -I - "$WORK/plan.json" "$PLAN_ID" <<'PY' || fail "the plan document is not as expected"
@@ -98,8 +99,8 @@ PY
 swissknifeman workspace migrate apply --project "$A" --json > "$WORK/apply.json" || fail "migrate apply: $(cat "$WORK/apply.json")"
 [ "$(json "$WORK/apply.json" noop)" = "False" ] || fail "the first apply is a noop"
 PROJECT_ID="$(json "$WORK/apply.json" project_id)"
-case "$PROJECT_ID" in prj_*) ;; *) fail "unexpected project id '$PROJECT_ID'" ;; esac
-PDIR="$SKM_WORKSPACE_ROOT/projects/$PROJECT_ID"
+[ "$PROJECT_ID" = "$(basename "$A")" ] || fail "unexpected project code '$PROJECT_ID'"
+PDIR="$WS_ROOT/projects/$PROJECT_ID"
 grep -q '"plans_store": "workspace"' .swissknifeman/project.json || fail "the marker does not say plans_store=workspace"
 [ -f "$PDIR/plans/$PLAN_ID/plan.json" ] || fail "the plan is not in the workspace"
 [ -f "$PDIR/legacy-plans/old-format/notes.md" ] || fail "the old-format folder is not in legacy-plans/"
@@ -196,10 +197,11 @@ doc = json.load(open(path))
 doc["plans_store"] = "legacy"
 open(path, "w").write(json.dumps(doc, indent=2) + "\n")
 PY
-WS_B="$WORK/ws-b"
-cp -a "$SKM_WORKSPACE_ROOT" "$WS_B"
+WS_B="$WORK/wss-b/axioma"
+mkdir -p "$WORK/wss-b"
+cp -a "$WS_ROOT" "$WS_B"
 (
-  export SKM_HOME="$WORK/skm-b" SKM_WORKSPACE_ROOT="$WS_B" HOME="$WORK/home-b"
+  export SKM_HOME="$WORK/skm-b" SKM_WORKSPACES_ROOT="$WORK/wss-b" HOME="$WORK/home-b"
   mkdir -p "$HOME"
   cd "$B"
   register_bridge
@@ -234,7 +236,7 @@ swissknifeman workspace migrate cleanup --project "$A" --confirm "$PROJECT_ID" -
 [ ! -e "$A/plans/$PLAN_ID" ] || fail "cleanup left the migrated plan folder"
 [ ! -e "$A/plans/old-format" ] || fail "cleanup left the old-format folder"
 [ -f "$PDIR/plans/$PLAN_ID/plan.json" ] || fail "cleanup removed the workspace copy"
-swissknifeman workspace migrate cleanup --project "$A" --confirm prj_wrong --json >/dev/null 2>&1 \
+swissknifeman workspace migrate cleanup --project "$A" --confirm wrong-project --json >/dev/null 2>&1 \
   && fail "cleanup accepted a wrong project id"
 planner plans --json | grep -q "$PLAN_ID" || fail "the planner lost the plan after cleanup"
 swissknifeman workspace doctor --json >/dev/null || fail "workspace doctor after the migration"

@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Union
 
-from aicore.workspace import (WorkspaceError, legacy_plans_present, read_bindings, read_marker, read_workspace,
+from aicore.workspace import (is_code, WorkspaceError, legacy_plans_present, read_bindings, read_marker, read_workspace,
                               validate_document)
 
 from . import gitutil, layout, migrator_port, safety
@@ -54,7 +54,7 @@ def _layout(target: Path, initialized: bool) -> Dict[str, Any]:
         for child in sorted(projects.iterdir()):
             if child.name == ".gitkeep":
                 continue
-            if not (child.is_dir() and child.name.startswith("prj_")):
+            if not (child.is_dir() and is_code(child.name)):
                 notes.append(f"WORKSPACE_LAYOUT_INVALID: projects/{child.name} is not a project folder")
                 continue
             for entry in sorted(child.iterdir()):

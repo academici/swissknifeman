@@ -15,7 +15,8 @@
       "PLANNER_PLAN_PY",
       "AICORE_ROOT",
       "SKM_HOME",
-      "SKM_WORKSPACE_ROOT",
+      "SKM_WORKSPACES_ROOT",
+      "SKM_WORKSPACE",
       "SKM_WORKSPACE_MODULE_ROOT"
     ],
     "filesystem": [

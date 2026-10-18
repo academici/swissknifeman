@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Union
 
-from aicore.state import workspace_root, workspace_state_dir
+from aicore.state import is_code, workspace_root, workspace_state_dir
 from aicore.workspace import (WorkspaceError, new_id, read_bindings, read_device, read_marker,
                               read_project, read_workspace, utc_now, write_device, write_workspace)
 
@@ -50,10 +50,10 @@ README = """# SwissKnifeMan workspace
 This folder is a portable workspace: the plans of all your projects in one git repository.
 It is created and kept by `swissknifeman workspace`; do not move it by hand.
 
-- `workspace.json` names this workspace; `projects/<project_id>/` holds the plans of one project.
+- `workspace.json` names this workspace (its code is the name of this folder); `projects/<code>/` holds the plans of one project.
 - `swissknifeman workspace status` shows the state of this repository and of the projects bound on this machine.
 - `swissknifeman workspace sync` commits, pulls and pushes it between machines.
-- Files that are too large for git stay on the machine that made them and are listed in `projects/<project_id>/local-only.json`.
+- Files that are too large for git stay on the machine that made them and are listed in `projects/<code>/local-only.json`.
 
 Machine-specific files (bindings of checkouts, the device id) are kept outside this folder and never enter git.
 """
@@ -62,8 +62,18 @@ TOP_LEVEL = (".git", ".gitignore", ".gitattributes", "workspace.json", "README.m
 GIT_MIN_TEXT = "2.38"
 
 
+def scoped_env(code: str, env: Env = None) -> Dict[str, str]:
+    """A copy of the environment that selects the workspace ``code`` (``SKM_WORKSPACE``) for the machine files."""
+    if not is_code(code):
+        raise WorkspaceError("WORKSPACE_CODE_INVALID", f"{code!r} is not a code: lowercase letters, digits and single "
+                             f"hyphens, starting with a letter, at most 40 characters")
+    scoped = dict(os.environ if env is None else env)
+    scoped["SKM_WORKSPACE"] = code
+    return scoped
+
+
 def root_of(root: Optional[PathLike], env: Env = None, home: Optional[PathLike] = None) -> Path:
-    """``--root`` (made absolute) or ``workspace_root()``."""
+    """``--root`` (made absolute) or ``workspace_root()`` of the selected workspace."""
     if root is not None and str(root) != "":
         return Path(os.path.abspath(os.path.expanduser(str(root))))
     return workspace_root(env, home)
@@ -102,23 +112,30 @@ def _refuse_foreign(target: Path) -> None:
     if (target.exists() or target.is_symlink()) and (not target.is_dir() or any(target.iterdir())):
         raise WorkspaceError("WORKSPACE_ROOT_NOT_EMPTY",
                              f"{target} is not empty and holds no workspace.json; choose an empty folder "
-                             f"(SKM_WORKSPACE_ROOT or --root)")
+                             f"(another --code or --root)")
 
 
-def init(root: Optional[PathLike] = None, env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]:
-    """Create the workspace at ``root``. Returns ``{root, workspace_id, device_id, created, already_initialized}``.
+def init(code: str, root: Optional[PathLike] = None, env: Env = None,
+         home: Optional[PathLike] = None) -> Dict[str, Any]:
+    """Create the workspace ``code`` at ``root`` (default ``workspaces/<code>``). Returns ``{code, root, workspace_id,
+    device_id, created, already_initialized}``.
 
-    A root that holds ``workspace.json`` is left alone (``already_initialized``); a non-empty root without it is
-    ``WORKSPACE_ROOT_NOT_EMPTY`` and nothing is written. A failure part way removes what this call created.
+    A root that holds ``workspace.json`` is left alone (``already_initialized``; another code in it is
+    ``WORKSPACE_CODE_MISMATCH``); a non-empty root without it is ``WORKSPACE_ROOT_NOT_EMPTY`` and nothing is written.
+    A failure part way removes what this call created.
     """
+    env = scoped_env(code, env)
     target = root_of(root, env, home)
     _refuse_foreign(target)  # before the lock: a refusal writes nothing, not even the lock file
     with gitutil.git_lock(env, home):
         if (target / "workspace.json").is_file():
             document = read_workspace(target)
+            if document["code"] != code:
+                raise WorkspaceError("WORKSPACE_CODE_MISMATCH", f"{target} holds the workspace {document['code']!r}, "
+                                     f"not {code!r}")
             device = _ensure_device(env, home)
-            return {"root": str(target), "workspace_id": document["workspace_id"], "device_id": device["device_id"],
-                    "created": False, "already_initialized": True}
+            return {"code": code, "root": str(target), "workspace_id": document["workspace_id"],
+                    "device_id": device["device_id"], "created": False, "already_initialized": True}
         existed = target.exists() or target.is_symlink()
         _refuse_foreign(target)
         version = gitutil.git_version()
@@ -128,7 +145,7 @@ def init(root: Optional[PathLike] = None, env: Env = None, home: Optional[PathLi
         try:
             target.mkdir(parents=True, exist_ok=True)
             workspace_id = new_id("ws")
-            write_workspace(target, workspace_id, device["device_id"])
+            write_workspace(target, code, workspace_id, device["device_id"])
             (target / "projects").mkdir()
             (target / "projects" / ".gitkeep").write_text("", encoding="utf-8")
             (target / ".staging").mkdir()
@@ -142,8 +159,8 @@ def init(root: Optional[PathLike] = None, env: Env = None, home: Optional[PathLi
         except BaseException:
             _clean_partial(target, existed)
             raise
-    return {"root": str(target), "workspace_id": workspace_id, "device_id": device["device_id"], "created": True,
-            "already_initialized": False}
+    return {"code": code, "root": str(target), "workspace_id": workspace_id, "device_id": device["device_id"],
+            "created": True, "already_initialized": False}
 
 
 def require_initialized(target: Path) -> Dict[str, Any]:
@@ -151,15 +168,15 @@ def require_initialized(target: Path) -> Dict[str, Any]:
     document = read_workspace(target) if target.is_dir() else None
     if document is None:
         raise WorkspaceError("WORKSPACE_NOT_INITIALIZED",
-                             f"no workspace at {target}; run `swissknifeman workspace init`")
+                             f"no workspace at {target}; run `swissknifeman workspace init --code CODE`")
     return document
 
 
 def project_ids(target: Path) -> List[str]:
-    """Folder names under ``projects/`` that look like project ids, sorted."""
+    """Folder names under ``projects/`` that are project codes, sorted."""
     folder = target / "projects"
     try:
-        return sorted(child.name for child in folder.iterdir() if child.is_dir() and child.name.startswith("prj_"))
+        return sorted(child.name for child in folder.iterdir() if child.is_dir() and is_code(child.name))
     except OSError:
         return []
 
@@ -233,11 +250,27 @@ def project_rows(target: Path, env: Env, home: Optional[PathLike]) -> List[Dict[
     return rows
 
 
+def list_rows(env: Env = None, home: Optional[PathLike] = None) -> List[Dict[str, Any]]:
+    """One row per workspace of this machine: code, id, root, remote and the number of projects."""
+    from aicore.state import list_workspaces, workspaces_root
+    rows = []
+    for code in list_workspaces(env, home):
+        target = workspaces_root(env, home) / code
+        try:
+            document = read_workspace(target)
+        except WorkspaceError:
+            document = None
+        rows.append({"code": code, "workspace_id": document["workspace_id"] if document else None, "root": str(target),
+                     "remote": gitutil.remote_of(target) if (target / ".git").exists() else None,
+                     "projects": len(project_ids(target))})
+    return rows
+
+
 def status(root: Optional[PathLike] = None, fetch: bool = False, env: Env = None,
            home: Optional[PathLike] = None) -> Dict[str, Any]:
     """Layout, git state (no network unless ``fetch``), projects and the last sync of the workspace."""
     target = root_of(root, env, home)
     document = require_initialized(target)
     state = _git_state(target, fetch, env, home) if (target / ".git").exists() else None
-    return {"root": str(target), "workspace_id": document["workspace_id"], "git": state,
+    return {"code": document["code"], "root": str(target), "workspace_id": document["workspace_id"], "git": state,
             "projects": project_rows(target, env, home), "last_sync": _last_sync(env, home)}

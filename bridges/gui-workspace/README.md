@@ -63,6 +63,6 @@ bash scripts/test.sh
 
 Fixture tests use a fake workspace module (`tests/fixtures/module/bin/workspace`, canned JSON; switches `FAKE_*`
 from the environment or `$HOME/fake.json`). One scenario (init → attach → overview/projects) runs the real CLI in a
-throwaway `SKM_HOME` and `SKM_WORKSPACE_ROOT`; it is skipped when `SKM_WORKSPACE_MODULE_ROOT` is unset (the hub
+throwaway `SKM_HOME` and `SKM_WORKSPACES_ROOT`; it is skipped when `SKM_WORKSPACE_MODULE_ROOT` is unset (the hub
 script `scripts/test-bridges.sh` sets it). The GUI host and aicore come from `SKM_GUI_ROOT` and `AICORE_ROOT`, else
 from `swissknifeman units list --json`.

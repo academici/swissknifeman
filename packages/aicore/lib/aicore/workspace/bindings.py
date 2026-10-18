@@ -17,7 +17,7 @@ from aicore.util.io import atomic_write_text
 
 from . import WorkspaceError
 from .documents import SCHEMA_PREFIX, utc_now, validate_document
-from .ids import is_id
+from .ids import is_code
 
 BINDINGS_FILE = "bindings.json"
 LOCK_TIMEOUT_S = 10.0
@@ -78,8 +78,8 @@ def _real(path: PathLike) -> str:
 
 
 def _check_id(project_id: str) -> None:
-    if not is_id(project_id, "prj"):
-        raise ValueError(f"invalid project id {project_id!r}")
+    if not is_code(project_id):
+        raise ValueError(f"invalid project code {project_id!r}")
 
 
 def _save(document: dict, env: Env, home: Optional[PathLike]) -> None:

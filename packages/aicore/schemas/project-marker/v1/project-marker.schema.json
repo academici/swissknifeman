@@ -3,16 +3,21 @@
   "$id": "urn:swissknifeman:aicore:project-marker:v1",
   "title": "project-marker",
   "type": "object",
-  "description": "Identity of a project inside its repository (.swissknifeman/project.json), committed with the project. It names the project and where its plans live; it holds no path.",
+  "description": "Identity of a project inside its repository (.swissknifeman/project.json), committed with the project. It names the workspace and the project by code and says where the plans live; it holds no path.",
   "properties": {
     "$schema": {
       "const": "urn:swissknifeman:aicore:project-marker:v1",
       "description": "Schema identifier."
     },
+    "workspace": {
+      "type": "string",
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Code of the workspace that holds the project (the folder name under workspaces/)."
+    },
     "project_id": {
       "type": "string",
-      "pattern": "^prj_[0-9A-HJKMNP-TV-Z]{26}$",
-      "description": "Project id: prj_ and 26 Crockford base32 characters."
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Project code: the folder name under projects/ of the workspace; usually the name of the checkout folder."
     },
     "plans_store": {
       "enum": [
@@ -24,6 +29,7 @@
   },
   "required": [
     "$schema",
+    "workspace",
     "project_id",
     "plans_store"
   ],

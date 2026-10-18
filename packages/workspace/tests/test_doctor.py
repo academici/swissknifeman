@@ -8,7 +8,7 @@ import aicore
 from aicore.util import schema
 from aicore.workspace import bind, new_id, write_marker, write_project
 
-from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase
+from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase, new_code
 from workspace import doctor, gitutil, layout, projects
 
 CHECK_RESULT = Path(aicore.__file__).resolve().parents[2] / "schemas" / "check-result" / "v1"
@@ -38,34 +38,34 @@ class StructureTests(DoctorCase):
         self.assertIn("WORKSPACE_NOT_INITIALIZED", self.checks()["workspace.layout"]["observed"])
 
     def test_a_fresh_workspace_is_all_ok(self):
-        layout.init()
+        layout.init("axioma")
         statuses = self.statuses()
         if not BRIDGE_ROOT.is_dir():  # outside the hub nothing fills the port workspace:plans-migrator: that check warns
             self.assertEqual(statuses.pop("workspace.plans-migrator"), "warn")
         self.assertEqual(set(statuses.values()), {"ok"})
 
     def test_unknown_entries_are_warnings(self):
-        layout.init()
+        layout.init("axioma")
         (self.ws / "stray.txt").write_text("x", encoding="utf-8")
-        project_id = new_id("prj")
+        project_id = new_code()
         write_project(self.ws, project_id, "p")
         (self.ws / "projects" / project_id / "scratch").mkdir()
-        (self.ws / "projects" / "loose").mkdir()
+        (self.ws / "projects" / "Loose_Dir").mkdir()
         item = self.checks()["workspace.layout"]
         self.assertEqual(item["status"], "warn")
         text = "\n".join(item["evidence"])
         self.assertIn("'stray.txt'", text)
-        self.assertIn("projects/loose", text)
+        self.assertIn("projects/Loose_Dir", text)
         self.assertIn(f"projects/{project_id}/scratch", text)
 
     def test_a_missing_git_repository_fails_the_layout(self):
-        layout.init()
+        layout.init("axioma")
         import shutil
         shutil.rmtree(self.ws / ".git")
         self.assertEqual(self.statuses()["workspace.layout"], "fail")
 
     def test_a_damaged_workspace_json_fails_the_layout_and_skips_documents(self):
-        layout.init()
+        layout.init("axioma")
         (self.ws / "workspace.json").write_text("{broken", encoding="utf-8")
         item = self.checks()["workspace.layout"]
         self.assertEqual(item["status"], "fail")
@@ -73,8 +73,8 @@ class StructureTests(DoctorCase):
         self.assertEqual(self.checks()["workspace.documents"]["status"], "skip")
 
     def test_documents_are_checked_against_their_contracts(self):
-        layout.init()
-        project_id = new_id("prj")
+        layout.init("axioma")
+        project_id = new_code()
         write_project(self.ws, project_id, "p")
         folder = self.ws / "projects" / project_id
         self.assertEqual(self.statuses()["workspace.documents"], "ok")
@@ -82,7 +82,7 @@ class StructureTests(DoctorCase):
         (folder / "local-only.json").write_text("{}", encoding="utf-8")
         (folder / "migrations").mkdir()
         (folder / "migrations" / "mig_X.json").write_text("[]", encoding="utf-8")
-        other = new_id("prj")
+        other = new_code()
         write_project(self.ws, other, "q")
         (self.ws / "projects" / other / "project.json").write_text(
             (self.ws / "projects" / other / "project.json").read_text(encoding="utf-8").replace(other, project_id),
@@ -95,15 +95,15 @@ class StructureTests(DoctorCase):
             self.assertIn(fragment, text)
 
     def test_a_project_folder_without_project_json_fails(self):
-        layout.init()
-        (self.ws / "projects" / new_id("prj")).mkdir()
+        layout.init("axioma")
+        (self.ws / "projects" / new_code()).mkdir()
         self.assertEqual(self.statuses()["workspace.documents"], "fail")
 
 
 class BindingTests(DoctorCase):
     def setUp(self):
         super().setUp()
-        layout.init()
+        layout.init("axioma")
 
     def test_bound_checkouts_are_ok(self):
         projects.attach(self.checkout("alpha"))
@@ -115,7 +115,7 @@ class BindingTests(DoctorCase):
         project_id = projects.attach(root)["project_id"]
         gone = self.checkout("gone")
         stranger = self.checkout("stranger")
-        write_marker(stranger, new_id("prj"), "workspace")
+        write_marker(stranger, "axioma", new_code(), "workspace")
         plain = self.checkout("plain")
         for path in (gone, stranger, plain):
             bind(project_id, path)
@@ -129,7 +129,7 @@ class BindingTests(DoctorCase):
         self.assertIn("project rebind", item["remediation"])
 
     def test_a_binding_of_a_project_missing_in_the_workspace_is_reported(self):
-        bind(new_id("prj"), self.checkout("alpha"))
+        bind(new_code(), self.checkout("alpha"))
         self.assertIn("PROJECT_UNKNOWN", "\n".join(self.checks()["workspace.bindings"]["evidence"]))
 
     def test_a_damaged_bindings_file_fails(self):

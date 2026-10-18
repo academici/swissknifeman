@@ -232,9 +232,9 @@ class _GitLocked(Exception):
 
 
 @contextmanager
-def _workspace_git_lock(timeout: float):
-    """``flock`` on ``workspace_state_dir()/git.lock``, the file the workspace module locks (invariant W7)."""
-    folder = workspace.state_dir()
+def _workspace_git_lock(timeout: float, code: str):
+    """``flock`` on ``workspace_state_dir(code)/git.lock``, the file the workspace module locks (invariant W7)."""
+    folder = workspace.state_dir(code)
     folder.mkdir(parents=True, exist_ok=True)
     fd = os.open(folder / "git.lock", os.O_RDWR | os.O_CREAT | getattr(os, "O_CLOEXEC", 0), 0o600)
     try:
@@ -369,8 +369,8 @@ def _commit_part(repo: Path, patterns: list[str], excluded: list[str], message: 
     return result
 
 
-def _in_workspace(root: Path) -> str | None:
-    """The project id when the plan directory lives in the portable workspace, else ``None`` (also for a bad environment:
+def _in_workspace(root: Path) -> tuple[str, str] | None:
+    """``(workspace code, project code)`` when the plan directory lives in the portable workspace, else ``None`` (also for a bad environment:
     the legacy path must not start failing on it)."""
     try:
         return workspace.workspace_project_of(root)
@@ -392,8 +392,9 @@ def commit(plan_dir: str | Path, ref: str, *, role: str, paths: list[str] = (), 
         raise PlanError("CONTENT_INVALID", "commit role must be executor, reviewer or fix")
     root = Path(plan_dir).resolve()
     _target(store.load_plan(root), ref)
-    project_id = _in_workspace(root)
-    if project_id is not None:
+    found = _in_workspace(root)
+    if found is not None:
+        project_id = found[1]
         return _commit_split(root, ref, project_id, role=role, paths=list(paths), leave_outside=leave_outside,
                              dry_run=dry_run, commit_type=commit_type, scope=scope, summary=summary,
                              trailers=list(trailers), actor=actor)
@@ -435,7 +436,7 @@ def _workspace_part(ws_repo: Path, plan: store.Plan, patterns: list[str], exclud
         if dry_run:
             part = run()
         else:
-            with _workspace_git_lock(WORKSPACE_LOCK_TIMEOUT):
+            with _workspace_git_lock(WORKSPACE_LOCK_TIMEOUT, ws_repo.name):
                 part = run()
     except _GitLocked:
         answer["status"] = "locked"
@@ -456,7 +457,7 @@ def _workspace_part(ws_repo: Path, plan: store.Plan, patterns: list[str], exclud
 def _commit_split(root: Path, ref: str, project_id: str, *, role: str, paths: list[str], leave_outside: bool,
                   dry_run: bool, commit_type: str | None, scope: str | None, summary: str | None, trailers: list[str],
                   actor: dict | None) -> dict:
-    ws_repo = workspace.workspace_root().resolve()
+    ws_repo = workspace.workspace_root(_in_workspace(root)[0]).resolve()
     with store.PlanLock(root, timeout=float(settings.for_root(root.parent).get("lock.timeout_seconds"))):
         plan = store.load_plan(root)
         item, target = _target(plan, ref)

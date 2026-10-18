@@ -1,17 +1,20 @@
 """Projects of the workspace and the checkouts of this machine: attach, list, show, scan, rebind, detach.
 
-Identity is the ``project_id`` of the marker in the repository (``.swissknifeman/project.json``); remotes only help
-``attach`` find a project that already exists. ``attach`` writes the marker but never commits it.
+Identity is the pair ``workspace`` + ``project_id`` (both codes) of the marker in the repository
+(``.swissknifeman/project.json``); the code of a project is the name of its folder in the workspace and, as a rule, the
+name of the checkout folder. Remotes only help ``attach`` find a project that already exists. ``attach`` writes the marker
+but never commits it.
 """
 from __future__ import annotations
 
 import os
+import re
 import shlex
 import sys
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Union
 
-from aicore.workspace import (MARKER_RELPATH, WorkspaceError, bind, checkout_remotes, new_id, project_dir,
+from aicore.workspace import (MARKER_RELPATH, WorkspaceError, bind, checkout_remotes, is_code, project_dir,
                               read_bindings, read_marker, read_project, set_paths, unbind, write_marker, write_project)
 
 from . import gitutil, layout
@@ -25,6 +28,16 @@ SCAN_SKIP = frozenset({"node_modules", ".git", "vendor"})
 
 def _real(path: PathLike) -> Path:
     return Path(os.path.realpath(os.path.abspath(os.path.expanduser(str(path)))))
+
+
+def slug(name: str) -> str:
+    """A project code made from a folder name: lowercase words of letters and digits joined by ``-``."""
+    text = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    if not text:
+        return "project"
+    if not text[0].isalpha():
+        text = "p-" + text
+    return text[:40].rstrip("-")
 
 
 def _has_plan_folder(root: Path) -> bool:
@@ -54,28 +67,38 @@ def _confirm_default(question: str) -> bool:
 
 
 def attach(project: PathLike, name: Optional[str] = None, yes: bool = False, interactive: Optional[bool] = None,
-           confirm: Optional[Callable[[str], bool]] = None, env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]:
-    """Attach the checkout ``project`` to a project of the workspace (contract: identity).
+           confirm: Optional[Callable[[str], bool]] = None, env: Env = None, home: Optional[PathLike] = None,
+           code: Optional[str] = None) -> Dict[str, Any]:
+    """Attach the checkout ``project`` to a project of the workspace (contract: identity). ``code`` is the project code of
+    a new project (default: made from the folder name; ``PROJECT_CODE_TAKEN`` when another project has it).
 
-    Returns ``{project_id, name, created, marker_written, plans_store, binding, next}``. ``interactive`` (default: stdin is
+    Returns ``{workspace, project_id, name, created, marker_written, plans_store, binding, next}``. ``interactive`` (default: stdin is
     a terminal) allows a question when remotes match one existing project and ``yes`` is not given.
     """
     root = _real(project)
     if not root.is_dir():
         raise WorkspaceError("BINDING_PATH_MISSING", f"{root} is not a directory")
+    if code is not None and not is_code(code):
+        raise WorkspaceError("PROJECT_CODE_INVALID", f"{code!r} is not a code: lowercase letters, digits and single "
+                             f"hyphens, starting with a letter, at most 40 characters")
     target = layout.root_of(None, env, home)
     layout.require_initialized(target)
     with gitutil.git_lock(env, home):  # read the marker, pick or create the project and write the marker as one step
-        return _attach_locked(root, target, name, yes, interactive, confirm, env, home)
+        return _attach_locked(root, target, name, yes, interactive, confirm, env, home, code)
 
 
 def _attach_locked(root: Path, target: Path, name: Optional[str], yes: bool, interactive: Optional[bool],
-                   confirm: Optional[Callable[[str], bool]], env: Env, home: Optional[PathLike]) -> Dict[str, Any]:
+                   confirm: Optional[Callable[[str], bool]], env: Env, home: Optional[PathLike],
+                   code: Optional[str] = None) -> Dict[str, Any]:
+    workspace = layout.require_initialized(target)["code"]
     marker = read_marker(root)
     remotes = checkout_remotes(root)
     created = False
     marker_written = False
     if marker is not None:
+        if marker["workspace"] != workspace:
+            raise WorkspaceError("WORKSPACE_MISMATCH", f"the marker of {root.name} names the workspace "
+                                 f"{marker['workspace']!r}, this command works with {workspace!r} (--workspace)")
         project_id = marker["project_id"]
         plans_store = marker["plans_store"]
         record = read_project(target, project_id)
@@ -100,18 +123,22 @@ def _attach_locked(root: Path, target: Path, name: Optional[str], yes: bool, int
                                          f"({found['name']}); repeat with --yes to use it")
             record = found
         else:
-            record = write_project(target, new_id("prj"), name or root.name, remotes=remotes)
+            project_id = code or slug(root.name)
+            if read_project(target, project_id) is not None:
+                raise WorkspaceError("PROJECT_CODE_TAKEN", f"the workspace {workspace!r} already has a project "
+                                     f"{project_id!r} with other remotes; choose another code with --code")
+            record = write_project(target, project_id, name or root.name, remotes=remotes)
             created = True
         project_id = record["project_id"]
         plans_store = "legacy" if _has_plan_folder(root) else "workspace"
-        write_marker(root, project_id, plans_store)
+        write_marker(root, workspace, project_id, plans_store)
         marker_written = True
         if plans_store == "workspace":
             plans = project_dir(target, project_id) / "plans"
             plans.mkdir(parents=True, exist_ok=True)
             (plans / ".gitkeep").touch()  # git keeps no empty folder: without a file the store is lost in a transfer
     entry = bind(project_id, root, env, home)
-    doc: Dict[str, Any] = {"project_id": project_id, "name": record["name"], "created": created,
+    doc: Dict[str, Any] = {"workspace": workspace, "project_id": project_id, "name": record["name"], "created": created,
                            "marker_written": marker_written, "plans_store": plans_store,
                            "binding": {"paths": entry["paths"], "primary": entry["primary"]}}
     if marker_written:
@@ -166,6 +193,7 @@ def scan(directories: Sequence[PathLike], env: Env = None, home: Optional[PathLi
     is not in the workspace is reported as ``unknown``; no project is created."""
     target = layout.root_of(None, env, home)
     layout.require_initialized(target)
+    workspace = layout.require_initialized(target)["code"]
     known = {record["project_id"] for record in _known_projects(target)}
     bound: List[Dict[str, str]] = []
     unknown: List[Dict[str, str]] = []
@@ -186,7 +214,9 @@ def scan(directories: Sequence[PathLike], env: Env = None, home: Optional[PathLi
                     continue
                 if marker is None:
                     continue
-                if marker["project_id"] in known:
+                if marker["workspace"] != workspace:
+                    skipped.append({"path": current, "reason": "OTHER_WORKSPACE", "workspace": marker["workspace"]})
+                elif marker["project_id"] in known:
                     bind(marker["project_id"], current, env, home)
                     bound.append({"project_id": marker["project_id"], "path": current})
                 else:
@@ -207,6 +237,8 @@ def rebind(project_id: str, path: PathLike, env: Env = None, home: Optional[Path
     if not root.is_dir():
         raise WorkspaceError("BINDING_PATH_MISSING", f"{root} is not a directory")
     marker = read_marker(root)
+    if marker is not None and marker["workspace"] != layout.require_initialized(target)["code"]:
+        raise WorkspaceError("WORKSPACE_MISMATCH", f"{root} belongs to the workspace {marker['workspace']!r}")
     if marker is None or marker["project_id"] != project_id:
         found = "no marker" if marker is None else f"the marker of {marker['project_id']}"
         raise WorkspaceError("BINDING_MARKER_MISMATCH", f"{root} has {found}, not the marker of {project_id}")

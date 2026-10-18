@@ -364,7 +364,7 @@ class CommitTests(unittest.TestCase):
         self.assertTrue(json.loads(out)["ok"])
 
 
-PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+PID = "billium"
 
 
 @unittest.skipUnless(shutil.which("git"), "git is not installed")
@@ -375,27 +375,27 @@ class WorkspaceCommitTests(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         base = Path(tmp.name)
-        self.src, self.ws, self.home = base / "src-repo", base / "ws", base / "home"
+        self.src, self.ws, self.home = base / "src-repo", base / "wss" / "axioma", base / "home"
         env = {k: v for k, v in os.environ.items() if not k.startswith("SKM_") and k != "GIT_INDEX_FILE"}
         env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, HOME=str(base), SKM_HOME=str(self.home),
-                   SKM_WORKSPACE_ROOT=str(self.ws))
+                   SKM_WORKSPACES_ROOT=str(self.ws.parent))
         patch = mock.patch.dict(os.environ, env, clear=True)
         patch.start()
         self.addCleanup(patch.stop)
         for repo in (self.src, self.ws):
-            repo.mkdir()
+            repo.mkdir(parents=True)
             self.git(repo, "init", "-q", "-b", "main")
             for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"),
                                ("commit.gpgsign", "false"), ("gc.auto", "0"), ("maintenance.auto", "false")):
                 self.git(repo, "config", key, value)  # no detached maintenance process writing during the cleanup
         (self.src / ".git/info/exclude").write_text(".swissknifeman/state/\n")
         self.write(self.src, ".swissknifeman/project.json", json.dumps({
-            "$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PID, "plans_store": "workspace"}))
+            "$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": "axioma", "project_id": PID, "plans_store": "workspace"}))
         self.write(self.src, "src/old.txt", "old\n")
         self.write(self.src, "foreign.txt", "owner\n")
         self.git(self.src, "add", "-A")
         self.git(self.src, "commit", "-q", "-m", "base")
-        state = self.home / "state" / "workspace"
+        state = self.home / "state" / "workspaces" / "axioma"
         state.mkdir(parents=True)
         (state / "bindings.json").write_text(json.dumps({
             "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",
@@ -483,7 +483,7 @@ class WorkspaceCommitTests(unittest.TestCase):
     def test_busy_git_lock_leaves_the_plan_files_for_later(self):
         self.write(self.src, "src/old.txt")
         self.start()
-        state = self.home / "state" / "workspace"
+        state = self.home / "state" / "workspaces" / "axioma"
         fd = os.open(state / "git.lock", os.O_RDWR | os.O_CREAT, 0o600)
         self.addCleanup(os.close, fd)
         fcntl.flock(fd, fcntl.LOCK_EX)
@@ -573,7 +573,7 @@ class WorkspaceCommitTests(unittest.TestCase):
         self.assertEqual(cm.exception.code, "PATH_INVALID")
 
     def test_unbound_source_refuses_an_executor_but_not_a_reviewer(self):
-        (self.home / "state" / "workspace" / "bindings.json").unlink()
+        (self.home / "state" / "workspaces" / "axioma" / "bindings.json").unlink()
         self.write(self.root, "knowledge/report.json", "{}\n")
         with self.assertRaises(PlanError) as cm:
             self.commit()

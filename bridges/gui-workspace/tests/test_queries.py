@@ -1,5 +1,5 @@
 """gui-workspace adapter through the aicore plugin protocol: against a fake workspace command line (fixtures) and one
-scenario against the real one (init -> attach -> overview) in a throwaway SKM_HOME and SKM_WORKSPACE_ROOT."""
+scenario against the real one (init -> attach -> overview) in a throwaway SKM_HOME and SKM_WORKSPACES_ROOT."""
 import importlib
 import json
 import os
@@ -131,7 +131,7 @@ class TestRealCli(AdapterCase):
         if not module or not (Path(module) / "bin" / "workspace").is_file() or not shutil.which("git"):
             self.skipTest("the workspace module or git is not available")
         self.env.update({"SKM_WORKSPACE_MODULE_ROOT": module, "SKM_HOME": str(self.home / "skm"),
-                         "SKM_WORKSPACE_ROOT": str(self.home / "ws")})
+                         "SKM_WORKSPACES_ROOT": str(self.home / "wss"), "SKM_WORKSPACE": "axioma"})
         for name in ("AICORE_ROOT", "GIT_CONFIG_GLOBAL"):
             if os.environ.get(name):
                 self.env[name] = os.environ[name]
@@ -148,7 +148,7 @@ class TestRealCli(AdapterCase):
     def test_init_attach_overview(self):
         project = self.home / "proj"
         project.mkdir()
-        self.assertTrue(self.cli("init")["root"])
+        self.assertTrue(self.cli("init", "--code", "axioma")["root"])
         self.assertTrue(self.cli("project", "attach", "--project", str(project), "--yes")["project_id"])
         metrics = {m["id"]: m["value"] for m in self.ok("gui-workspace.overview")["metrics"]}
         self.assertEqual((1, 1), (metrics["projects"], metrics["bound"]))

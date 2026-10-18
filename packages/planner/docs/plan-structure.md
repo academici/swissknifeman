@@ -61,18 +61,18 @@ the plan API does not install or launch them.
 ## Where the plans live
 
 The plans store of a checkout is decided by its marker `<root>/.swissknifeman/project.json`
-(`{project_id, plans_store}`), one rule for aicore (`aicore.workspace.resolve_plans_store`) and
+(`{workspace, project_id, plans_store}`, the first two are codes), one rule for aicore (`aicore.workspace.resolve_plans_store`) and
 the planner copy (`planner.plan.workspace`):
 
 | Marker | Plans folder |
 | --- | --- |
 | none, or `plans_store: legacy` | `<root>/plans` |
-| `plans_store: workspace` | `<workspace>/projects/<project_id>/plans/` (`SKM_WORKSPACE_ROOT`, else the data directory `workspace`) |
+| `plans_store: workspace` | `workspaces/<workspace>/projects/<project_id>/plans/` (`SKM_WORKSPACES_ROOT`, else the data directory `workspaces`) |
 
 The folder is the same layout v4 in both stores. A marker that points at a workspace whose project
 folder is missing is `WORKSPACE_PROJECT_MISSING`; a legacy folder of a migrated project refuses
 mutations with `PLANS_MIGRATED`. `swissknifeman project context --json` prints `plans_root` and
-`plans_store {kind, project_id, reason}`; `project doctor` checks it as `project.plans-store`.
+`plans_store {kind, project_id, workspace, reason}`; `project doctor` checks it as `project.plans-store` and the wiring of the checkout (workspace, project, binding, folder name) as `project.workspace`.
 
 A workspace plan is separate from its source checkout (`Plan.source_root`, bound with
 `swissknifeman workspace project attach`). Operations that need the checkout (`context`, `check` of

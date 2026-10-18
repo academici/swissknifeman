@@ -105,29 +105,55 @@ def connect(url: str, branch: Optional[str] = None, root: Optional[PathLike] = N
             "next": NEXT_PUSH}
 
 
-def clone(url: str, root: Optional[PathLike] = None, env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]:
-    """Make the workspace of this machine from ``url``: the target is absent or empty (else
-    ``WORKSPACE_ROOT_NOT_EMPTY``), the clone must hold a valid ``workspace.json`` (else ``REMOTE_FOREIGN`` and nothing is
-    left behind), the device is created when this machine has none and never overwritten."""
-    target = layout.root_of(root, env, home)
+def clone(url: str, root: Optional[PathLike] = None, env: Env = None, home: Optional[PathLike] = None,
+          code: Optional[str] = None) -> Dict[str, Any]:
+    """Make a workspace of this machine from ``url``. Without ``root`` the clone is made beside the workspaces and moved to
+    ``workspaces/<code>``, the code read from the remote's ``workspace.json`` (``code`` must agree when given); an existing
+    non-empty ``workspaces/<code>`` is ``WORKSPACE_ROOT_NOT_EMPTY``. The clone must hold a valid ``workspace.json`` (else
+    ``REMOTE_FOREIGN`` and nothing is left behind); the device is created when this machine has none and never overwritten."""
+    from aicore.state import workspaces_root
     url = _check_url(url)
     shown = redact_remote(url)
+    if code is not None:
+        layout.scoped_env(code)  # WORKSPACE_CODE_INVALID for a bad code
+    gitutil.require_version()
+    if root is not None:
+        target = layout.root_of(root, env, home)
+        _refuse_taken(target)
+        staging = target
+    else:
+        base = workspaces_root(env, home)
+        staging = base / f".clone-{uuid.uuid4().hex[:12]}"
+        target = None
+    existed = staging.exists()
+    placed: Optional[Path] = None  # the folder this call renamed the clone to
+    try:
+        staging.parent.mkdir(parents=True, exist_ok=True)
+        gitutil.network(["clone", "-q", "--", url, str(staging)], staging.parent, "clone", env)
+        document = _read_remote_workspace(staging, shown, "HEAD")
+        if code is not None and document["code"] != code:
+            raise WorkspaceError("WORKSPACE_CODE_MISMATCH", f"{shown} holds the workspace {document['code']!r}, not {code!r}")
+        if target is None:
+            target = base / document["code"]
+            _refuse_taken(target)
+            if target.is_dir():
+                target.rmdir()  # empty: git clone needs an absent or empty folder, rename needs an absent one
+            os.rename(staging, target)
+            placed = target
+        scoped = layout.scoped_env(document["code"], env)
+        with gitutil.git_lock(scoped, home):
+            device = layout._ensure_device(scoped, home)
+        (target / ".staging").mkdir(exist_ok=True)
+    except BaseException:
+        layout._clean_partial(placed if placed is not None else staging, existed and placed is None)
+        raise
+    branch = gitutil.git(["symbolic-ref", "--short", "-q", "HEAD"], target).stdout.strip() or None
+    return {"code": document["code"], "root": str(target), "workspace_id": document["workspace_id"],
+            "device_id": device["device_id"], "remote": shown, "branch": branch, "next": NEXT_SCAN}
+
+
+def _refuse_taken(target: Path) -> None:
     if target.exists() or target.is_symlink():
         if not target.is_dir() or target.is_symlink() or any(target.iterdir()):
             raise WorkspaceError("WORKSPACE_ROOT_NOT_EMPTY", f"{target} is not empty; choose an absent or empty folder "
-                                 f"(SKM_WORKSPACE_ROOT or --root)")
-    gitutil.require_version()
-    existed = target.exists()
-    with gitutil.git_lock(env, home):
-        try:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            gitutil.network(["clone", "-q", "--", url, str(target)], target.parent, "clone", env)
-            document = _read_remote_workspace(target, shown, "HEAD")
-            device = layout._ensure_device(env, home)
-            (target / ".staging").mkdir(exist_ok=True)
-        except BaseException:
-            layout._clean_partial(target, existed)
-            raise
-    branch = gitutil.git(["symbolic-ref", "--short", "-q", "HEAD"], target).stdout.strip() or None
-    return {"root": str(target), "workspace_id": document["workspace_id"], "device_id": device["device_id"],
-            "remote": shown, "branch": branch, "next": NEXT_SCAN}
+                                 f"(another workspace code or --root)")

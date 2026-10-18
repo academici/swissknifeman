@@ -64,7 +64,11 @@
         },
         "project_id": {
           "type": ["string", "null"],
-          "description": "Project id of the marker; null without a marker."
+          "description": "Project code of the marker; null without a marker."
+        },
+        "workspace": {
+          "type": ["string", "null"],
+          "description": "Workspace code of the marker; null without a marker. Optional."
         },
         "reason": {
           "enum": ["no-marker", "marker-legacy", "marker-workspace", "error"],

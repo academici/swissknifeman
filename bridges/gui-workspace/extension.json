@@ -14,7 +14,8 @@
   "permissions": {
     "env": [
       "SKM_WORKSPACE_MODULE_ROOT",
-      "SKM_WORKSPACE_ROOT",
+      "SKM_WORKSPACES_ROOT",
+      "SKM_WORKSPACE",
       "SKM_UMBRELLA"
     ],
     "filesystem": [

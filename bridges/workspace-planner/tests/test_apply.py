@@ -56,7 +56,8 @@ class ApplyTests(BridgeCase):
         for derived in ("views", "context", ".lock", "__pycache__"):
             self.assertFalse((plans / PLAN_NAME / derived).exists(), derived)
         self.assertEqual(fx.read_marker(self.checkout), {"$schema": "urn:swissknifeman:aicore:project-marker:v1",
-                                                       "project_id": PROJECT_ID, "plans_store": "workspace"})
+                                                       "workspace": "axioma", "project_id": PROJECT_ID,
+                                                       "plans_store": "workspace"})
         after = tree(self.plans)
         after = {key: value for key, value in after.items() if not key.endswith(".lock")}  # PlanLock makes .lock files
         self.assertEqual(after, {key: value for key, value in source.items() if not key.endswith(".lock")},
@@ -139,15 +140,15 @@ class ApplyTests(BridgeCase):
         self.assertEqual(again["paths"], [PLAN_NAME])
 
     def test_marker_of_another_project_is_refused(self):
-        other = "prj_" + "0" * 24 + "22"
-        fx.aicore_workspace.write_marker(self.checkout, other, "legacy")
+        other = "other-project"
+        fx.aicore_workspace.write_marker(self.checkout, "axioma", other, "legacy")
         answer = self.apply()
         self.assertEqual((answer["result"], answer["code"], answer["phase"]),
                          ("refused", "PROJECT_MARKER_MISMATCH", "request"))
         self.assertFalse((self.project_dir / "plans").exists())
 
     def test_legacy_marker_is_switched_and_keeps_its_project(self):
-        fx.aicore_workspace.write_marker(self.checkout, PROJECT_ID, "legacy")
+        fx.aicore_workspace.write_marker(self.checkout, "axioma", PROJECT_ID, "legacy")
         self.assertEqual(self.apply()["result"], "applied")
         self.assertEqual(fx.read_marker(self.checkout)["plans_store"], "workspace")
 
@@ -202,7 +203,7 @@ class ApplyTests(BridgeCase):
         self.assert_nothing_moved()
 
     def test_second_migration_of_the_project_is_locked(self):
-        with migrate_apply.migration_lock(PROJECT_ID):
+        with migrate_apply.migration_lock(PROJECT_ID, "axioma"):
             answer = self.apply()
         self.assertEqual((answer["code"], answer["phase"]), ("MIGRATION_LOCKED", "lock"))
         self.assertEqual(answer["locked"], [f"migrate-{PROJECT_ID}"])
@@ -319,12 +320,12 @@ class ApplyTests(BridgeCase):
 
     def test_staging_of_another_operation_is_left_alone(self):
         fx.write(self.workspace / ".staging" / "mig_other" / "keep.txt", "another operation\n")
-        with migrate_apply.migration_lock(PROJECT_ID):
+        with migrate_apply.migration_lock(PROJECT_ID, "axioma"):
             self.apply(op_id="mig_other")  # refused: the lock is held; must not remove the staging of that operation
         self.assertTrue((self.workspace / ".staging" / "mig_other" / "keep.txt").exists())
 
     def test_invalid_requests(self):
-        for fields, code in (({"project_id": "nope"}, "INPUT_INVALID"), ({"op_id": "../x"}, "INPUT_INVALID"),
+        for fields, code in (({"project_id": "Nope_1"}, "INPUT_INVALID"), ({"op_id": "../x"}, "INPUT_INVALID"),
                              ({"manifest": {"x": 1}}, "INPUT_INVALID"), ({"on_conflict": "merge"}, "INPUT_INVALID"),
                              ({"project_root": "relative"}, "INPUT_INVALID"), ({"lock_timeout_s": -1}, "INPUT_INVALID")):
             answer = self.apply(**fields)

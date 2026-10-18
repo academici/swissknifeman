@@ -14,7 +14,7 @@ from unittest import mock
 import bridge_fixture
 import partners
 
-PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
+PID = "billium"
 # The workspace tests exercise the planner of this checkout: a run can point PLANNER_ROOT at a frozen older copy.
 CHECKOUT_PLANNER = Path(__file__).resolve().parents[3] / "packages" / "planner"
 ORCH = partners.find_orch_root()
@@ -100,14 +100,14 @@ class WorkspaceCommitBridge(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         base = Path(tmp.name)
-        self.src, self.ws, self.home = base / "src-repo", base / "ws", base / "home"
+        self.src, self.ws, self.home = base / "src-repo", base / "wss" / "axioma", base / "home"
         self.env = {k: v for k, v in os.environ.items() if not k.startswith("SKM_") and k != "GIT_INDEX_FILE"}
         self.env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull, HOME=str(base), SKM_HOME=str(self.home),
-                        SKM_WORKSPACE_ROOT=str(self.ws), SKM_AICORE_EVENTS__DELIVERY="off",
+                        SKM_WORKSPACES_ROOT=str(self.ws.parent), SKM_AICORE_EVENTS__DELIVERY="off",
                         SKM_PLANNER_BRIDGES__ROOTS=os.environ.get("SKM_PLANNER_BRIDGES__ROOTS", ""),
                         PLANNER_ROOT=str(CHECKOUT_PLANNER), PLANNER_PLAN_PY=str(CHECKOUT_PLANNER / "scripts/plan.py"))
         for repo in (self.src, self.ws):
-            repo.mkdir()
+            repo.mkdir(parents=True)
             self.git(repo, "init", "-q", "-b", "main")
             for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"),
                                ("commit.gpgsign", "false"), ("gc.auto", "0"), ("maintenance.auto", "false")):
@@ -115,13 +115,13 @@ class WorkspaceCommitBridge(unittest.TestCase):
         (self.src / ".git/info/exclude").write_text(".swissknifeman/state/\n")
         marker = self.src / ".swissknifeman/project.json"
         marker.parent.mkdir()
-        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PID,
+        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": "axioma", "project_id": PID,
                                       "plans_store": "workspace"}))
         (self.src / "lib/pkg").mkdir(parents=True)
         (self.src / "lib/pkg/config.py").write_text("DEFAULT = 1\n", encoding="utf-8")
         self.git(self.src, "add", "-A")
         self.git(self.src, "commit", "-q", "-m", "base")
-        state = self.home / "state" / "workspace"
+        state = self.home / "state" / "workspaces" / "axioma"
         state.mkdir(parents=True)
         (state / "bindings.json").write_text(json.dumps({
             "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",

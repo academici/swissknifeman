@@ -47,6 +47,15 @@ GUI) would compute a second location on its own (audit finding A10).
 - A plan without a bound checkout (`source_root` is `None`) can be read and edited but not run (`PLAN_SOURCE_UNBOUND`).
 - Deferred: background sync, per-device journal, merge UI, cross-machine run claims, selective sync (`ideas/workspace-audit-deferred.md`).
 
+## Amendment 2026-10-18: workspaces and codes
+
+A machine holds several workspaces, each a git repository in `workspaces/<code>/`. A workspace and a project are named by a
+code (the folder name), not by a generated id: the marker is `{workspace, project_id, plans_store}` and the plans of a project
+are `workspaces/<workspace>/projects/<project_id>/plans`. `workspace.json` gets `code` and layout 2. Machine files move to
+`state/workspaces/<code>/` (the device file is shared). `SKM_WORKSPACES_ROOT` (the folder) and `SKM_WORKSPACE` (the choice)
+replace `SKM_WORKSPACE_ROOT`. `project doctor` checks the wiring of a checkout (`project.workspace`). The migration of a
+machine that used layout 1 is done once by hand.
+
 ## Supersedes
 
 None.

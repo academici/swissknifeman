@@ -7,7 +7,7 @@ from aicore.util import schema
 from aicore.util.redact import MASK
 from aicore.workspace import new_id, write_project
 
-from tests import MODULE_ROOT, TempCase, git
+from tests import MODULE_ROOT, TempCase, git, new_code
 from workspace import doctor, layout, safety
 
 TOKEN = "ghp_" + "a1B2" * 9  # 36 characters after the prefix
@@ -18,8 +18,8 @@ SMALL = safety.Settings(max_tracked_bytes=1000, max_binary_tracked_bytes=100)
 class SafetyCase(TempCase):
     def setUp(self):
         super().setUp()
-        layout.init()
-        self.pid = new_id("prj")
+        layout.init("axioma")
+        self.pid = new_code()
         write_project(self.ws, self.pid, "demo")
         git(self.ws, "add", "-A")
         git(self.ws, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "project")
@@ -389,7 +389,7 @@ class CommandTests(SafetyCase):
         code, _, err = self.run_cli("doctor", "--all")
         self.assertEqual(code, 2)
         self.assertIn("--publish-safety", err)
-        os.environ["SKM_WORKSPACE_ROOT"] = str(self.root / "none")
+        os.environ["SKM_WORKSPACE"] = "no-workspace"
         code, _, err = self.run_cli("doctor", "--publish-safety")
         self.assertEqual(code, 1)
         self.assertTrue(err.startswith("WORKSPACE_NOT_INITIALIZED: "), err)

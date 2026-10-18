@@ -86,8 +86,7 @@ class RunCase(unittest.TestCase):
 class TestRun(RunCase):
     def test_argv_of_each_verb(self):
         proj = str(self.home / "proj")
-        self.assertEqual(["init", "--json"], self.ran("init"))
-        self.assertEqual(["init", "--json"], self.ran("init"))
+        self.assertEqual(["init", "--code", "axioma", "--json"], self.ran("init", "axioma"))
         self.assertEqual(["project", "attach", "--project", proj, "--json"], self.ran("project-attach", proj))
         self.assertEqual(["project", "scan", proj, "--json"], self.ran("project-scan", proj))
         self.assertEqual(["project", "rebind", "p-alpha", "--path", proj, "--json"],

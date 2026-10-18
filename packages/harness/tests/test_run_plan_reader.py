@@ -122,18 +122,18 @@ if __name__ == "__main__":
 class ResolvePlanDirTest(unittest.TestCase):
     def test_marker_sends_the_run_to_the_workspace_store(self):
         from types import SimpleNamespace
-        from aicore.workspace import new_id, write_marker
+        from aicore.workspace import write_marker
         from harness.run import _resolve_plan_dir
         with tempfile.TemporaryDirectory() as tmp:
-            root, ws = Path(tmp) / "repo", Path(tmp) / "ws"
+            root, ws = Path(tmp) / "repo", Path(tmp) / "wss" / "axioma"
             (root / "packages").mkdir(parents=True)
             env = SimpleNamespace(root=root)
             opts = {"plans_root": None}
             self.assertEqual(_resolve_plan_dir(env, opts, "P"), root / "plans" / "P")
-            project_id = new_id("prj")
-            write_marker(root, project_id, "workspace")
+            project_id = "billium"
+            write_marker(root, "axioma", project_id, "workspace")
             plans = ws / "projects" / project_id / "plans"
             plans.mkdir(parents=True)
-            with mock.patch.dict(os.environ, {"SKM_WORKSPACE_ROOT": str(ws)}):
+            with mock.patch.dict(os.environ, {"SKM_WORKSPACES_ROOT": str(ws.parent)}):
                 self.assertEqual(_resolve_plan_dir(env, opts, "P"), plans / "P")
                 self.assertEqual(_resolve_plan_dir(env, {"plans_root": str(root / "x")}, "P"), root / "x" / "P")

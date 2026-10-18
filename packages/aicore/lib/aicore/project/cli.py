@@ -158,8 +158,10 @@ def plans_store_of(root: Path, env: Mapping[str, str]):
         store = resolve_plans_store(root, env)
     except (WorkspaceError, ValueError) as exc:
         code = exc.code if isinstance(exc, WorkspaceError) else exc.__class__.__name__
-        return root / "plans", {"kind": "unresolved", "project_id": None, "reason": "error", "error": code}, exc
-    return store.plans_root, {"kind": store.kind, "project_id": store.project_id, "reason": store.reason}, None
+        return root / "plans", {"kind": "unresolved", "project_id": None, "reason": "error", "error": code,
+                                "workspace": None}, exc
+    return store.plans_root, {"kind": store.kind, "project_id": store.project_id, "reason": store.reason,
+                              "workspace": store.workspace}, None
 
 
 def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
@@ -212,6 +214,13 @@ def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     else:
         checks.append(_check("project.plans-store", "ok",
                              f"{store.kind} store ({store.reason}): {store.plans_root}", "plans"))
+    from aicore.workspace.integration import check_project
+    findings = check_project(root, env)
+    order = ("fail", "warn", "ok", "skip")
+    worst = min((item["status"] for item in findings), key=order.index)
+    notable = [item for item in findings if item["status"] in ("fail", "warn")] or findings
+    checks.append(_check("project.workspace", worst, "; ".join(item["observed"] for item in notable)[:600], "plans",
+                         "; ".join(item["remedy"] for item in notable if item["remedy"])[:400]))
     return checks
 
 

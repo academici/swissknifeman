@@ -63,8 +63,8 @@ parses `config.toml` itself. Places come from `aicore.state`.
 | cache | `$XDG_CACHE_HOME/swissknifeman` (`~/.cache/...`) | `<dir>/cache` |
 | project config (in git) | `<project>/.swissknifeman/config.toml` | same |
 | project state, backups (ignored) | `<project>/.swissknifeman/{state,backups}/` | same |
-| portable workspace (its own git root) | `$XDG_DATA_HOME/swissknifeman/workspace` (`~/.local/share/...`); `SKM_WORKSPACE_ROOT=<abs dir>` overrides | `<dir>/data/workspace` |
-| workspace machine files (bindings, device, sync state, audit) | `<state>/workspace` | `<dir>/state/workspace` |
+| portable workspaces (one git root each) | `$XDG_DATA_HOME/swissknifeman/workspaces/<code>` (`~/.local/share/...`); `SKM_WORKSPACES_ROOT=<abs dir>` moves the folder, `SKM_WORKSPACE=<code>` chooses the workspace | `<dir>/data/workspaces/<code>` |
+| workspace machine files (bindings, sync state, audit) | `<state>/workspaces/<code>`; the device file `<state>/workspaces/device.json` | `<dir>/state/workspaces/<code>` |
 
 `SKM_HOME` isolates a sandbox or a test: all four machine places move under it and no legacy location is read. It
 must be an absolute path; a relative `XDG_*` value is ignored. A file that exists only at an old location

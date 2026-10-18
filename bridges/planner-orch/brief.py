@@ -358,7 +358,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     if missing:
         raise PlanError("BRIEF_INCOMPLETE", "; ".join(missing))
     if outside:
-        for secret in {str(_workspace.workspace_root()), str(_workspace.workspace_root().resolve())}:
+        for secret in {str(_workspace.workspaces_root()), str(_workspace.workspaces_root().resolve())}:
             doc = _scrub(doc, secret)
     doc["digest"] = canonical_digest(doc)
     doc["input_id"] += f"@{doc['digest'][:12]}"

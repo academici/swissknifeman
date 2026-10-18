@@ -1,7 +1,7 @@
 """Shared fixtures of the bridge tests: a temporary checkout with plans of every class and a temporary workspace.
 
 Every test works in a temporary folder; the real HOME, workspace and plans are never touched (``scripts/test.sh`` sets a
-temporary HOME, SKM_HOME and SKM_WORKSPACE_ROOT).
+temporary HOME, SKM_HOME and SKM_WORKSPACES_ROOT).
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ from aicore import workspace as aicore_workspace  # noqa: E402
 DEMO = PLANNER / "tests/engine/fixtures/demo-plan"
 PLAN_NAME = "2026.10.05-№7-DEMO"
 ARCHIVED_NAME = "archive/2026.09.01-№3-DEMO"
-PROJECT_ID = "prj_" + "0" * 25 + "1"
+PROJECT_ID = "alpha"
 DEVICE = "a1b2c3"
 SECRET = "SECRET-CONTENT-MUST-NOT-APPEAR"
 
@@ -80,13 +80,14 @@ class BridgeCase(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.tmp = Path(self._tmp.name).resolve()
         self.checkout = make_checkout(self.tmp / "checkout")
-        self.workspace = self.tmp / "workspace"
+        self.workspace = self.tmp / "workspaces" / "axioma"
         (self.workspace / "projects").mkdir(parents=True)
         (self.workspace / ".staging").mkdir()
         self.state = self.tmp / "skm"
-        saved = {key: os.environ.get(key) for key in ("SKM_HOME", "SKM_WORKSPACE_ROOT", "SKM_MIGRATOR_FAIL_AT")}
+        saved = {key: os.environ.get(key) for key in ("SKM_HOME", "SKM_WORKSPACES_ROOT", "SKM_WORKSPACE", "SKM_MIGRATOR_FAIL_AT")}
         os.environ["SKM_HOME"] = str(self.state)
-        os.environ["SKM_WORKSPACE_ROOT"] = str(self.workspace)
+        os.environ["SKM_WORKSPACES_ROOT"] = str(self.workspace.parent)
+        os.environ["SKM_WORKSPACE"] = "axioma"
         os.environ.pop("SKM_MIGRATOR_FAIL_AT", None)
 
         def restore():

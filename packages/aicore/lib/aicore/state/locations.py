@@ -9,6 +9,7 @@ stdlib only.
 from __future__ import annotations
 
 import os
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -90,24 +91,92 @@ def cache_dir(app: Optional[str] = None, *, env: Optional[Mapping[str, str]] = N
     return _sub(machine_locations(env, home).cache, app)
 
 
-ENV_WORKSPACE_ROOT = "SKM_WORKSPACE_ROOT"
+ENV_WORKSPACES_ROOT = "SKM_WORKSPACES_ROOT"
+ENV_WORKSPACE = "SKM_WORKSPACE"
+WORKSPACE_FILE = "workspace.json"
+CODE_PATTERN = r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*"
+CODE_MAX = 40
+_CODE = re.compile(CODE_PATTERN)
 
 
-def workspace_root(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
-    """The root of the portable workspace (its one git root): ``SKM_WORKSPACE_ROOT`` (an absolute path) or
-    ``data_dir()/workspace``. Nothing is created."""
+def is_code(value: object) -> bool:
+    """Whether ``value`` is a code of a workspace or a project: lowercase words of letters and digits joined by ``-``,
+    starting with a letter, at most 40 characters. A code is also the name of a folder, so it is never a path."""
+    return isinstance(value, str) and len(value) <= CODE_MAX and _CODE.fullmatch(value) is not None
+
+
+class WorkspaceSelectionError(ValueError):
+    """No workspace can be chosen: ``code`` is ``WORKSPACE_NOT_FOUND`` or ``WORKSPACE_AMBIGUOUS``."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
+def workspaces_root(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
+    """The folder that holds the workspaces (one git repository each): ``SKM_WORKSPACES_ROOT`` (an absolute path) or
+    ``data_dir()/workspaces``. Nothing is created."""
     environment = os.environ if env is None else env
-    value = environment.get(ENV_WORKSPACE_ROOT, "")
+    value = environment.get(ENV_WORKSPACES_ROOT, "")
     if value:
         if not os.path.isabs(value):
-            raise ValueError(f"{ENV_WORKSPACE_ROOT} must be an absolute path, got {value!r}")
+            raise ValueError(f"{ENV_WORKSPACES_ROOT} must be an absolute path, got {value!r}")
         return Path(value)
-    return data_dir(env=environment, home=home) / "workspace"
+    return data_dir(env=environment, home=home) / "workspaces"
 
 
-def workspace_state_dir(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
-    """Machine files of the workspace (bindings, device, sync state, audit, locks); never in the workspace git tree."""
-    return state_dir("workspace", env=env, home=home)
+def list_workspaces(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> list:
+    """Codes of the workspaces of this machine (folders of :func:`workspaces_root` that hold ``workspace.json``)."""
+    root = workspaces_root(env, home)
+    try:
+        return sorted(child.name for child in root.iterdir() if is_code(child.name) and (child / WORKSPACE_FILE).is_file())
+    except OSError:
+        return []
+
+
+def selected_workspace(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> str:
+    """The code of the workspace this process works with: ``SKM_WORKSPACE``, else the only workspace of the machine.
+    ``WORKSPACE_NOT_FOUND`` when the machine has none, ``WORKSPACE_AMBIGUOUS`` when there are several and none is chosen."""
+    environment = os.environ if env is None else env
+    value = environment.get(ENV_WORKSPACE, "")
+    if value:
+        if not is_code(value):
+            raise ValueError(f"{ENV_WORKSPACE} must be a workspace code, got {value!r}")
+        return value
+    codes = list_workspaces(environment, home)
+    if len(codes) == 1:
+        return codes[0]
+    if not codes:
+        raise WorkspaceSelectionError("WORKSPACE_NOT_FOUND", f"no workspace in {workspaces_root(environment, home)}; "
+                                      f"run `swissknifeman workspace init --code CODE` or `workspace clone URL`")
+    raise WorkspaceSelectionError("WORKSPACE_AMBIGUOUS", f"several workspaces ({', '.join(codes)}); choose one with "
+                                  f"--workspace CODE or {ENV_WORKSPACE}")
+
+
+def workspace_root(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None,
+                   code: Optional[str] = None) -> Path:
+    """The root (the one git root) of a workspace: ``workspaces_root()/<code>``; without ``code`` the selected workspace
+    (:func:`selected_workspace`). Nothing is created."""
+    chosen = code if code is not None else selected_workspace(env, home)
+    if not is_code(chosen):
+        raise ValueError(f"invalid workspace code {chosen!r}")
+    return workspaces_root(env, home) / chosen
+
+
+def workspace_state_dir(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None,
+                        code: Optional[str] = None) -> Path:
+    """Machine files of a workspace (bindings, sync state, audit, locks); never in the workspace git tree. The same
+    ``code`` rule as :func:`workspace_root`."""
+    chosen = code if code is not None else selected_workspace(env, home)
+    if not is_code(chosen):
+        raise ValueError(f"invalid workspace code {chosen!r}")
+    return state_dir("workspaces", env=env, home=home) / chosen
+
+
+def device_file(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Path:
+    """The device file of this machine, shared by every workspace (``state/workspaces/device.json``)."""
+    return state_dir("workspaces", env=env, home=home) / "device.json"
 
 
 def machine_config_file(*, env: Optional[Mapping[str, str]] = None,

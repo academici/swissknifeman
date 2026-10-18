@@ -5,8 +5,11 @@ sees only what was committed, plans mix with product history, and large artifact
 workspace* moves the plans of all projects into one git repository of their own. A project keeps only a small marker
 that says where its plans live.
 
+A machine can hold several workspaces (say `axioma` for the company and `home` for private work). Each is a git repository
+of its own in `workspaces/<code>/`; a project belongs to exactly one of them.
+
 ```sh
-swissknifeman workspace init                                   # once per machine: create the workspace repository
+swissknifeman workspace init --code axioma                     # once per workspace: create its repository
 swissknifeman workspace project attach --project . --yes       # write the marker; new plans go to the workspace
 swissknifeman workspace migrate plan --project .               # dry run for a project that already has plans/
 swissknifeman workspace migrate apply --project .              # move them
@@ -17,47 +20,63 @@ swissknifeman workspace migrate apply --project .              # move them
 | Area | What it is | Where | In git |
 | --- | --- | --- | --- |
 | Product | the code of the project | its own repository | yes, its own |
-| Marker | `{project_id, plans_store}` that names the plan store | `<checkout>/.swissknifeman/project.json` | yes, with the product |
-| Plans | plan folders (`plan.json`, phases, items, notes) | `<workspace>/projects/<id>/plans/` | yes, in the workspace repository |
-| Legacy plans | old-format folders and loose files, kept as they were | `<workspace>/projects/<id>/legacy-plans/` | yes, in the workspace repository |
-| Machine state | bindings of checkouts to projects, the device id, the git lock | `<state>/workspace/` | never |
+| Marker | `{workspace, project_id, plans_store}`: the workspace and the project by code, and where the plans live | `<checkout>/.swissknifeman/project.json` | yes, with the product |
+| Plans | plan folders (`plan.json`, phases, items, notes) | `<workspace>/projects/<code>/plans/` | yes, in the workspace repository |
+| Legacy plans | old-format folders and loose files, kept as they were | `<workspace>/projects/<code>/legacy-plans/` | yes, in the workspace repository |
+| Machine state | bindings of checkouts to projects, the sync state, the git lock; the device id | `<home>/state/workspaces/<code>/`; `<home>/state/workspaces/device.json` | never |
 
 Large run artifacts are a sixth case handled inside the Plans area: they stay on the machine that made them
 (`local-only.json`, see publish-safety below).
 
+## Codes
+
+A workspace and a project are named by a **code**: lowercase words of letters and digits joined by single hyphens, starting
+with a letter, at most 40 characters (`axioma`, `billium`, `skm-wt`). There is no generated id to read: the code is the folder
+name (`workspaces/axioma/projects/billium/`), the key in the machine bindings and the value in the marker. For a project the
+code is, as a rule, the name of the checkout folder (`attach` makes it from the folder name; `--code` chooses another). A code is
+fixed once a project exists; two projects with the same code in one workspace are refused (`PROJECT_CODE_TAKEN`).
+
 ## Layout
 
 ```text
-<workspace>/                       SKM_WORKSPACE_ROOT, else ~/.local/share/swissknifeman/workspace
-  workspace.json                   workspace id and format
-  .gitignore  .gitattributes  README.md
-  .staging/                        scratch space of a migration; inside the workspace so a rename never crosses a volume
-  projects/
-    prj_<id>/
-      project.json                 project record (name, remotes)
-      plans/<plan-id>/...          plans of the planner
-      plans/archive/<plan-id>/...  archived plans
-      legacy-plans/<name>/...      folders that are not plans; legacy-plans/_root holds loose files
-      migrations/<op_id>.json      one report per migration
-      local-only.json              large files that stay out of git
+~/.local/share/swissknifeman/      the machine home (SKM_HOME moves it)
+  workspaces/                      SKM_WORKSPACES_ROOT; one folder, one git repository per workspace
+    axioma/                        the workspace "axioma"
+      workspace.json               code, workspace id and format
+      .gitignore  .gitattributes  README.md
+      .staging/                    scratch space of a migration; inside the workspace so a rename never crosses a volume
+      projects/
+        billium/                   the project "billium"
+          project.json             project record (code, name, remotes)
+          plans/<plan-id>/...      plans of the planner
+          plans/archive/<plan-id>/...  archived plans
+          legacy-plans/<name>/...  folders that are not plans; legacy-plans/_root holds loose files
+          migrations/<op_id>.json  one report per migration
+          local-only.json          large files that stay out of git
 ```
+
+**Which workspace a command uses.** `--workspace CODE` (anywhere in the arguments), else `SKM_WORKSPACE`, else the workspace
+named by the marker of the project you are in, else the only workspace of the machine. Several workspaces and none chosen is
+`WORKSPACE_AMBIGUOUS`. `workspace list` shows the workspaces of the machine.
 
 Nothing portable (workspace, project, marker, local-only index, migration report) holds an absolute path. Absolute paths
 exist only in the machine state, which is never committed.
 
 ## Attach and the marker
 
-`workspace project attach` ties a checkout to a project. The project id comes from the marker if the checkout has one;
-else the remotes of the checkout are matched against the projects of the workspace; else a project is created. A folder
-name or a path is never an identity. The command writes the marker and prints the commit that records it; it never commits.
+`workspace project attach` ties a checkout to a project. The project code comes from the marker if the checkout has one (its
+workspace must be the chosen one: `WORKSPACE_MISMATCH`); else the remotes of the checkout are matched against the projects of
+the workspace; else a project is created, with the code made from the folder name or given with `--code`. A path is never an
+identity, and a folder name only proposes the code of a new project. The command writes the marker and prints the commit that
+records it; it never commits.
 
 The marker field `plans_store` decides where the planner reads and writes plans:
 
 - `legacy`: `<checkout>/plans`.
-- `workspace`: `<workspace>/projects/<id>/plans`.
+- `workspace`: `workspaces/<workspace>/projects/<code>/plans`.
 
 Exactly one store is in use at any moment; plans are never written to both. The marker travels with the repository, so
-after `git pull` a second machine knows the project id and only has to bind the checkout (`workspace project scan`).
+after `git pull` a second machine knows the workspace and the project and only has to bind the checkout (`workspace project scan`).
 A project without a marker behaves as before.
 
 ## Migration
@@ -71,9 +90,9 @@ A project without a marker behaves as before.
 | `migrate apply --project DIR` | runs the migration; prints the git commands to run next, never commits |
 | `migrate verify --project DIR` | compares the last report of this machine with the workspace copies and the old folders |
 | `migrate rollback --project DIR` | switches the marker back to `legacy` and removes what the migration brought in |
-| `migrate cleanup --project DIR --confirm PROJECT_ID` | deletes old folders whose copy in the workspace is identical |
+| `migrate cleanup --project DIR --confirm CODE` | deletes old folders whose copy in the workspace is identical |
 
-Flags: `--on-conflict keep-workspace|import-copy`, `--allow-in-progress`, `--local-only-secrets`, `--lock-timeout S` (apply), `--json`.
+Flags: `--on-conflict keep-workspace|import-copy`, `--allow-in-progress`, `--local-only-secrets`, `--code CODE` (the code of a project the workspace does not know yet), `--lock-timeout S` (apply), `--json`.
 
 **Classes.** A folder with a `plan.json` of the plan schema is a plan (also under `plans/archive/`). Every other folder
 is legacy and is copied byte for byte to `legacy-plans/`; the planner never reads it. Loose files in `plans/` go to
@@ -96,7 +115,7 @@ local-only files. Without the flag nothing changes (`MIGRATION_BLOCKED_SECRET`).
 **Apply.** The critical section takes the migration lock of the project and the plan lock of every plan, recomputes the
 digest of the source, copies into `.staging/` inside the workspace and checks every digest, loads each staged plan and
 runs the plan check (a plan that was red before stays exactly as red; a new error stops the migration), renames the staging
-folder into `projects/<id>/plans`, writes the marker `plans_store = workspace` and releases the locks. Afterwards the
+folder into `projects/<code>/plans`, writes the marker `plans_store = workspace` and releases the locks. Afterwards the
 module writes `local-only.json`, the report `migrations/<op_id>.json` and the binding. The source is not deleted. Before
 the rename the workspace has no `plans/` for the project, and a failure there leaves nothing behind and the marker
 unchanged. A failure after the rename is completed by repeating `apply`, which finds the copy with the same digest and only
@@ -106,7 +125,7 @@ writes the marker. A repeat of a finished migration changes nothing and reports 
 the lock only after the switch, sees the marker and fails with `PLANS_MIGRATED` ("rerun the command"); its rerun uses the
 workspace. A write into the old folder after the switch is impossible.
 
-**A second machine (import).** When `projects/<id>/plans` already exists in the workspace (it came with `git clone`), each
+**A second machine (import).** When `projects/<code>/plans` already exists in the workspace (it came with `git clone`), each
 plan is compared by digest: equal gives `skipped-equal`, absent gives `copied`, different gives a conflict. `apply` refuses a
 conflict with `MIGRATION_CONFLICT` until you choose `--on-conflict keep-workspace` (keep the workspace plan, skip the local
 one) or `import-copy` (keep both; the local plan is stored as `<plan-id>~<device>`, the last 8 characters of the device id).
@@ -117,7 +136,7 @@ of the report; otherwise `MIGRATION_DIVERGED` lists what differs. It removes onl
 
 **Cleanup.** Deletes an old folder only if its digest equals the copy in the workspace (the others are kept with a reason),
 then removes `plans/` if it is empty. It runs no git command; when `plans/` was tracked it prints
-`git -C <root> rm -r --cached plans && git commit ...`. `--confirm` must repeat the project id.
+`git -C <root> rm -r --cached plans && git commit ...`. `--confirm` must repeat the project code.
 
 The critical section runs in the bridge `workspace-planner` behind the port `workspace:plans-migrator`; register it with
 `swissknifeman config set --machine aicore.plugins.workspace-planner.manifest <hub>/bridges/workspace-planner/extension.json`
@@ -146,7 +165,9 @@ Needs git 2.38 or newer (`WORKSPACE_GIT_TOO_OLD` otherwise).
   a repository without `workspace.json` is `REMOTE_FOREIGN` and another workspace is `REMOTE_OTHER_WORKSPACE` (use
   `workspace clone`); the git configuration is not touched in these cases. `connect` never commits or pushes; it prints
   `next: swissknifeman workspace sync --push`.
-- `swissknifeman workspace clone URL [--root DIR]` makes the workspace from a remote into an absent or empty folder
+- `swissknifeman workspace clone URL [--code CODE] [--root DIR]` makes a workspace from a remote: it is cloned beside the
+  workspaces and moved to `workspaces/<code>`, the code read from the remote's `workspace.json` (`--code` must agree; a taken
+  folder is `WORKSPACE_ROOT_NOT_EMPTY`). With `--root` it goes into an absent or empty folder
   (`WORKSPACE_ROOT_NOT_EMPTY` otherwise) and creates this machine's device if it has none. Then run
   `swissknifeman workspace project scan ~/projects`.
 - `swissknifeman workspace status --fetch` fetches `origin` and shows ahead, behind and diverged against `origin/<branch>`.
@@ -162,7 +183,7 @@ without user information.
    `workspace project scan ~/projects`, `migrate plan` and `apply` in import mode (equal folders are skipped, new ones are
    copied, a conflict needs `--on-conflict keep-workspace|import-copy`), `workspace sync --commit --pull --push`.
    The step-by-step runbook for an agent on B is `MIGRATION-HOST-B.md` in the repository root.
-3. Only after `migrate verify` is `equal` on both machines: `migrate cleanup --confirm <project_id>` and
+3. Only after `migrate verify` is `equal` on both machines: `migrate cleanup --confirm <code>` and
    `git rm -r --cached plans` per repository. Files with secret-like content (`--local-only-secrets`) stay on the machine
    that held them; they are not in the workspace git.
 
@@ -196,7 +217,7 @@ commits and pulls; `--push` also needs both, so it runs them first. Everything r
 `sync.json` and `audit.jsonl` in the machine state record the last commit, pull and push, the last result, the pending
 conflicts and decisions, and one line per operation. Events: `workspace.sync.committed`, `.pulled`, `.conflict`, `.pushed`.
 
-Two machines: on A `workspace init`, `project attach` or `migrate apply`, `connect --remote URL`, `sync --push`; on B
+Two machines: on A `workspace init --code axioma`, `project attach` or `migrate apply`, `connect --remote URL`, `sync --push`; on B
 `workspace clone URL`, `project scan ~/projects`, then `sync --push` on either side whenever its plans changed (the other
 side runs `sync` to receive them). `scripts/e2e-workspace-sync.sh` runs this with two `SKM_HOME` and two workspaces on one bare
 remote.

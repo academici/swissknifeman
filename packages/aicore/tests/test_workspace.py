@@ -1,4 +1,4 @@
-"""The workspace package: ids, remotes, documents, bindings and the plan-store resolution (with the shared vectors)."""
+"""The workspace package: ids, codes, remotes, documents, bindings and the plan-store resolution (with the shared vectors)."""
 import json
 import os
 import shutil
@@ -9,12 +9,14 @@ import unittest
 from pathlib import Path
 
 from aicore import workspace as ws
+from aicore.state import locations
 from aicore.workspace import bindings as bindings_module
 from aicore.workspace import documents
 
 VECTORS = Path(__file__).resolve().parent.parent / "schemas" / "workspace" / "v1" / "resolution-vectors.json"
-PRJ = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
-OTHER = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJN"
+PRJ = "billium"
+OTHER = "commerz"
+WS = "axioma"
 
 
 def substitute(node, tmp):
@@ -34,7 +36,8 @@ class Sandbox(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.tmp = os.path.realpath(self._tmp.name)
-        self.env = {"SKM_HOME": self.tmp + "/home", "SKM_WORKSPACE_ROOT": self.tmp + "/ws", "HOME": self.tmp + "/h"}
+        self.env = {"SKM_HOME": self.tmp + "/home", "SKM_WORKSPACES_ROOT": self.tmp + "/wss", "SKM_WORKSPACE": WS,
+                    "HOME": self.tmp + "/h"}
 
     def write(self, relative, text=""):
         path = Path(self.tmp) / relative
@@ -89,7 +92,8 @@ class ResolutionVectorTests(Sandbox):
 
     def test_resolution_creates_nothing(self):
         self.write("proj/.swissknifeman/project.json", json.dumps(
-            {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PRJ, "plans_store": "legacy"}))
+            {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": WS, "project_id": PRJ,
+             "plans_store": "legacy"}))
         before = sorted(str(p) for p in Path(self.tmp).rglob("*"))
         ws.resolve_plans_store(self.tmp + "/proj", env=self.env)
         ws.source_root_of(self.tmp + "/proj/plans/p1", env=self.env)
@@ -106,11 +110,54 @@ class ResolutionVectorTests(Sandbox):
 
     def test_the_launcher_of_this_process_is_used_by_default(self):
         self.write("co1/.swissknifeman/project.json", json.dumps(
-            {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PRJ, "plans_store": "workspace"}))
+            {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": WS, "project_id": PRJ,
+             "plans_store": "workspace"}))
         env = dict(self.env, SKM_LAUNCHER_ACTIVE="1", SKM_LAUNCHER_PROJECT_ROOT=self.tmp + "/co1",
                    SKM_LAUNCHER_PID=str(os.getpid()))
-        plan = self.tmp + "/ws/projects/%s/plans/p1" % PRJ
+        plan = self.tmp + "/wss/%s/projects/%s/plans/p1" % (WS, PRJ)
         self.assertEqual(ws.source_root_of(plan, env=env), Path(self.tmp + "/co1"))
+
+
+class CodeTests(Sandbox):
+    def test_codes(self):
+        for good in ("a", "axioma", "billium", "skm-wt", "p2p", "a1-b2-c3", "a" * 40):
+            self.assertTrue(ws.is_code(good), good)
+        for bad in (None, 5, "", "A", "Axioma", "1a", "a_b", "a--b", "a-", "-a", "a b", "a/b", "..", "a" * 41,
+                    "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"):
+            self.assertFalse(ws.is_code(bad), bad)
+
+    def test_the_layout_of_a_machine(self):
+        env = {"SKM_HOME": self.tmp + "/home"}
+        base = Path(self.tmp) / "home" / "data" / "workspaces"
+        self.assertEqual(locations.workspaces_root(env), base)
+        self.assertEqual(locations.workspace_root(env, code="axioma"), base / "axioma")
+        self.assertEqual(locations.workspace_state_dir(env, code="axioma"),
+                         Path(self.tmp) / "home" / "state" / "workspaces" / "axioma")
+        with self.assertRaises(locations.WorkspaceSelectionError) as caught:
+            locations.selected_workspace(env)
+        self.assertEqual(caught.exception.code, "WORKSPACE_NOT_FOUND")
+        for code in ("axioma", "other"):
+            self.write("home/data/workspaces/%s/workspace.json" % code, "{}")
+        self.write("home/data/workspaces/not-a-workspace/readme", "x")
+        self.assertEqual(locations.list_workspaces(env), ["axioma", "other"])
+        with self.assertRaises(locations.WorkspaceSelectionError) as caught:
+            locations.selected_workspace(env)
+        self.assertEqual(caught.exception.code, "WORKSPACE_AMBIGUOUS")
+        self.assertEqual(locations.selected_workspace(dict(env, SKM_WORKSPACE="other")), "other")
+        self.assertEqual(locations.workspace_root(dict(env, SKM_WORKSPACE="other")), base / "other")
+
+    def test_a_single_workspace_is_selected_without_a_choice(self):
+        env = {"SKM_HOME": self.tmp + "/home"}
+        self.write("home/data/workspaces/axioma/workspace.json", "{}")
+        self.assertEqual(locations.selected_workspace(env), "axioma")
+
+    def test_bad_values_are_refused(self):
+        env = {"SKM_HOME": self.tmp + "/home"}
+        for call in (lambda: locations.workspace_root(env, code="../x"),
+                     lambda: locations.selected_workspace(dict(env, SKM_WORKSPACE="Bad")),
+                     lambda: locations.workspaces_root(dict(env, SKM_WORKSPACES_ROOT="relative"))):
+            with self.assertRaises(ValueError):
+                call()
 
 
 class IdTests(unittest.TestCase):
@@ -194,19 +241,21 @@ class DocumentTests(Sandbox):
     def test_marker_round_trip(self):
         root = self.tmp + "/proj"
         self.assertIsNone(ws.read_marker(root))
-        written = ws.write_marker(root, PRJ, "legacy")
-        self.assertEqual(written, {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PRJ,
-                                   "plans_store": "legacy"})
+        written = ws.write_marker(root, WS, PRJ, "legacy")
+        self.assertEqual(written, {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": WS,
+                                   "project_id": PRJ, "plans_store": "legacy"})
         self.assertEqual(ws.read_marker(root), written)
         self.assertTrue((Path(root) / ws.MARKER_RELPATH).read_text(encoding="utf-8").endswith("}\n"))
-        ws.write_marker(root, PRJ, "workspace")
+        ws.write_marker(root, WS, PRJ, "workspace")
         self.assertEqual(ws.read_marker(root)["plans_store"], "workspace")
 
     def test_invalid_markers(self):
         root = Path(self.tmp) / "proj"
         for text in ("", "{not json", "[]", "5", "null", json.dumps({"project_id": PRJ, "plans_store": "legacy"}),
-                     json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": "x",
-                                 "plans_store": "legacy"})):
+                     json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": PRJ,
+                                 "plans_store": "legacy"}),  # no workspace
+                     json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": WS,
+                                 "project_id": "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM", "plans_store": "legacy"})):
             with self.subTest(text=text):
                 self.write("proj/" + ws.MARKER_RELPATH, text)
                 with self.assertRaises(ws.WorkspaceError) as caught:
@@ -220,19 +269,19 @@ class DocumentTests(Sandbox):
         self.assertEqual(caught.exception.code, "PROJECT_MARKER_INVALID")
 
     def test_marker_writes_refuse_bad_values_and_leave_nothing(self):
-        for project_id, store in (("x", "legacy"), (PRJ, "cloud")):
+        for workspace, project_id, store in (("Bad_Id", PRJ, "legacy"), (WS, "Bad_Id", "legacy"), (WS, PRJ, "cloud")):
             with self.assertRaises(ValueError):
-                ws.write_marker(self.tmp + "/proj", project_id, store)
+                ws.write_marker(self.tmp + "/proj", workspace, project_id, store)
         self.assertFalse((Path(self.tmp) / "proj").exists())
 
     def test_workspace_and_project_documents(self):
-        root = self.tmp + "/ws"
+        root = self.tmp + "/wss/axioma"
         self.assertIsNone(ws.read_workspace(root))
         self.assertIsNone(ws.read_project(root, PRJ))
         device = ws.new_id("dev")
-        created = ws.write_workspace(root, ws.new_id("ws"), device)
+        created = ws.write_workspace(root, WS, ws.new_id("ws"), device)
         self.assertEqual(ws.read_workspace(root), created)
-        self.assertEqual(created["layout"], 1)
+        self.assertEqual((created["layout"], created["code"]), (2, WS))
         project = ws.write_project(root, PRJ, "swissknifeman", remotes=["github.com/a/b"], aliases=["skm"])
         self.assertEqual(ws.read_project(root, PRJ), project)
         self.assertEqual(project["identity"], {"remotes": ["github.com/a/b"]})
@@ -263,7 +312,7 @@ class DocumentTests(Sandbox):
         self.assertTrue(any(issue.startswith("PORTABLE_ABSOLUTE_PATH: /extra") for issue in issues), issues)
 
     def test_project_ids_are_checked_before_a_path_is_built(self):
-        for bad in ("../x", "prj_x", ""):
+        for bad in ("../x", "prj_x", "", "Billium", "-x", "a--b", "a" * 41):
             with self.assertRaises(ValueError):
                 ws.project_dir(self.tmp, bad)
 
@@ -271,7 +320,7 @@ class DocumentTests(Sandbox):
         self.assertIsNone(ws.read_device(self.env))
         written = ws.write_device(ws.new_id("dev"), "machine-a", env=self.env)
         self.assertEqual(ws.read_device(self.env), written)
-        self.assertTrue((Path(self.tmp) / "home" / "state" / "workspace" / "device.json").is_file())
+        self.assertTrue((Path(self.tmp) / "home" / "state" / "workspaces" / "device.json").is_file())
 
 
 class BindingTests(Sandbox):
@@ -334,8 +383,8 @@ class BindingTests(Sandbox):
         self.assertEqual(ws.read_bindings(self.env)["projects"], {})
 
     def test_bad_project_ids(self):
-        for call in (lambda: ws.bind("x", self.tmp, self.env), lambda: ws.unbind("x", None, self.env),
-                     lambda: ws.set_paths("x", [self.tmp], self.env)):
+        for call in (lambda: ws.bind("Bad_Id", self.tmp, self.env), lambda: ws.unbind("Bad_Id", None, self.env),
+                     lambda: ws.set_paths("Bad_Id", [self.tmp], self.env)):
             with self.assertRaises(ValueError):
                 call()
 

@@ -52,12 +52,12 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `plugin-catalog` | v1 | Plugins a module generates itself (`provides.plugins[].catalog` in `unit.json`); `aicore.content.marketplace` assembles the Claude marketplace and the Codex index of the hub from them and from the plugin manifests of all modules |
 | `compat-manifest` | v1 | Versions, dependency ranges and contracts of every module and bridge of a hub release (`compat.json` of `aicore release bundle`) |
 | `workspace` | v1 | Root document of the portable workspace (`workspace.json`): workspace id, layout version, creator device; portable, no absolute path; read and written by `aicore.workspace.documents` |
-| `workspace-project` | v1 | Project record in the workspace (`projects/<project_id>/project.json`): name, normalized remotes, aliases, status; portable |
-| `project-marker` | v1 | Identity of a project inside its repository (`.swissknifeman/project.json`, committed): `project_id` and `plans_store` (`legacy` or `workspace`); the one switch of where plans live |
+| `workspace-project` | v1 | Project record in the workspace (`projects/<code>/project.json`): name, normalized remotes, aliases, status; portable |
+| `project-marker` | v1 | Identity of a project inside its repository (`.swissknifeman/project.json`, committed): `workspace`, `project_id` (codes) and `plans_store` (`legacy` or `workspace`); the one switch of where plans live |
 | `workspace-bindings` | v1 | Machine file `bindings.json` (`aicore.state.workspace_state_dir()`): checkouts of each project on this machine, with a primary; absolute paths, never in git; written under `flock` by `aicore.workspace.bindings` |
 | `workspace-device` | v1 | Machine file `device.json`: device id, host name, creation time; never in git |
-| `workspace-local-only` | v1 | Index of project files kept out of git (`projects/<project_id>/local-only.json`): path, size, SHA-256, device, reason `size`, `binary` or `secret-pattern`; portable |
-| `workspace-migration` | v1 | Report of one migration of a project's plans into the workspace (`projects/<project_id>/migrations/<op_id>.json`): per-plan class, action, file count and digest; portable |
+| `workspace-local-only` | v1 | Index of project files kept out of git (`projects/<code>/local-only.json`): path, size, SHA-256, device, reason `size`, `binary` or `secret-pattern`; portable |
+| `workspace-migration` | v1 | Report of one migration of a project's plans into the workspace (`projects/<code>/migrations/<op_id>.json`): per-plan class, action, file count and digest; portable |
 
 ## Module config schemas
 

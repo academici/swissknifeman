@@ -8,7 +8,7 @@
 # working tree and HEAD of B stay as they were, `--resolve <path>=remote` (in parts) merges and `--push` publishes it, A pulls
 # it and both machines are at the same commit.
 #
-# It runs only in temporary folders: HOME, SKM_HOME and SKM_WORKSPACE_ROOT are set to a throwaway directory per machine, so
+# It runs only in temporary folders: HOME, SKM_HOME and SKM_WORKSPACES_ROOT are set to a throwaway directory per machine, so
 # neither the real HOME nor a real workspace is touched. Exit 0 and the line "e2e-workspace-sync: OK" when everything held;
 # otherwise "e2e-workspace-sync: FAIL ..." and exit 1.
 set -euo pipefail
@@ -20,7 +20,7 @@ fail() { say "FAIL $*"; exit 1; }
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 export SKM_AICORE_EVENTS__DELIVERY=off
-unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_PROJECT_ROOT SKM_HOME SKM_WORKSPACE_ROOT
+unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_PROJECT_ROOT SKM_HOME SKM_WORKSPACE_ROOT SKM_WORKSPACES_ROOT SKM_WORKSPACE
 unset SKM_LAUNCHER_ACTIVE SKM_LAUNCHER_PID SKM_LAUNCHER_PROJECT_ROOT SKM_LAUNCHER_PATH SKM_LAUNCHER_PROTOCOL SKM_INVOCATION_CWD
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 export AICORE_ROOT="$HUB/packages/aicore"
@@ -37,7 +37,8 @@ URL="file://$REMOTE"
 ACTOR="claude-code/claude-opus-5-5/high"
 
 machine() {  # machine a|b: the environment and the checkout of that machine
-  export HOME="$WORK/home-$1" SKM_HOME="$WORK/skm-$1" SKM_WORKSPACE_ROOT="$WORK/ws-$1"
+  export HOME="$WORK/home-$1" SKM_HOME="$WORK/skm-$1" SKM_WORKSPACES_ROOT="$WORK/wss-$1"
+  WS_ROOT="$WORK/wss-$1/axioma"  # the workspace axioma of that machine
   mkdir -p "$HOME"
   cd "$WORK/$1/project"
 }
@@ -80,10 +81,10 @@ for PLAN in "$PLAN_A" "$PLAN_B"; do
     || fail "A: add-item $PLAN"
 done
 
-ws init >/dev/null || fail "A: workspace init"
+ws init --code axioma >/dev/null || fail "A: workspace init"
 ws migrate apply --project "$A" --json > "$WORK/apply.json" || fail "A: migrate apply: $(cat "$WORK/apply.json")"
 PROJECT_ID="$(json "$WORK/apply.json" project_id)"
-case "$PROJECT_ID" in prj_*) ;; *) fail "unexpected project id '$PROJECT_ID'" ;; esac
+[ "$PROJECT_ID" = "project" ] || fail "unexpected project code '$PROJECT_ID'"
 git init -q --bare -b main "$REMOTE"
 ws connect --remote "$URL" --json > "$WORK/connect.json" || fail "A: connect: $(cat "$WORK/connect.json")"
 [ "$(json "$WORK/connect.json" classification)" = "empty" ] || fail "A: the new remote is not classified empty"
@@ -91,11 +92,11 @@ ws connect --remote "$URL" --json > "$WORK/connect.json" || fail "A: connect: $(
 # connect pushed nothing; the first sync commits the migrated plans and pushes them (the remote and the branch are printed)
 ws sync --push > "$WORK/a-push.txt" || fail "A: sync --push: $(cat "$WORK/a-push.txt")"
 grep -q "pushing to $URL branch main" "$WORK/a-push.txt" || fail "A: the push did not print the remote and the branch first"
-[ "$(git -C "$REMOTE" rev-parse main)" = "$(head_of "$SKM_WORKSPACE_ROOT")" ] || fail "A: the remote is not at the workspace HEAD"
-git -C "$SKM_WORKSPACE_ROOT" log -1 --format=%B | grep -q '^Workspace-Device: dev_' || fail "A: no Workspace-Device trailer"
-[ -f "$SKM_HOME/state/workspace/audit.jsonl" ] && [ -f "$SKM_HOME/state/workspace/sync.json" ] \
+[ "$(git -C "$REMOTE" rev-parse main)" = "$(head_of "$WS_ROOT")" ] || fail "A: the remote is not at the workspace HEAD"
+git -C "$WS_ROOT" log -1 --format=%B | grep -q '^Workspace-Device: dev_' || fail "A: no Workspace-Device trailer"
+[ -f "$SKM_HOME/state/workspaces/axioma/audit.jsonl" ] && [ -f "$SKM_HOME/state/workspaces/axioma/sync.json" ] \
   || fail "A: sync wrote no audit.jsonl or sync.json"
-if grep -rqE '(/home/|/Users/|[A-Za-z]:\\)' "$SKM_WORKSPACE_ROOT/projects/$PROJECT_ID/project.json" "$SKM_WORKSPACE_ROOT/workspace.json"; then
+if grep -rqE '(/home/|/Users/|[A-Za-z]:\\)' "$WS_ROOT/projects/$PROJECT_ID/project.json" "$WS_ROOT/workspace.json"; then
   fail "A: a portable document holds an absolute path"
 fi
 
@@ -106,7 +107,7 @@ git config user.email e2e@example.invalid
 git config user.name e2e
 swissknifeman project init >/dev/null || fail "B: project init"
 ws clone "$URL" --json > "$WORK/clone.json" || fail "B: clone: $(cat "$WORK/clone.json")"
-[ "$(head_of "$SKM_WORKSPACE_ROOT")" = "$(git -C "$REMOTE" rev-parse main)" ] || fail "B: the clone is not at the remote HEAD"
+[ "$(head_of "$WS_ROOT")" = "$(git -C "$REMOTE" rev-parse main)" ] || fail "B: the clone is not at the remote HEAD"
 cp -a "$A/.swissknifeman/project.json" "$B/.swissknifeman/project.json"
 ws project scan "$WORK/b" --json > "$WORK/scan.json" || fail "B: project scan"
 [ "$(json "$WORK/scan.json" bound.0.project_id)" = "$PROJECT_ID" ] || fail "B: scan did not bind $PROJECT_ID"
@@ -118,10 +119,10 @@ settle() {  # both machines sync until they hold the same commit
   machine a; ws sync --push >/dev/null || fail "A: settle push"
   machine b; ws sync --push >/dev/null || fail "B: settle push"
   machine a; ws sync --push >/dev/null || fail "A: settle pull"
-  [ "$(head_of "$WORK/ws-a")" = "$(head_of "$WORK/ws-b")" ] || fail "the machines are not at the same commit"
-  [ "$(git -C "$REMOTE" rev-parse main)" = "$(head_of "$WORK/ws-a")" ] || fail "the remote is not at the common commit"
+  [ "$(head_of "$WORK/wss-a/axioma")" = "$(head_of "$WORK/wss-b/axioma")" ] || fail "the machines are not at the same commit"
+  [ "$(git -C "$REMOTE" rev-parse main)" = "$(head_of "$WORK/wss-a/axioma")" ] || fail "the remote is not at the common commit"
 }
-item_file() { echo "$WORK/ws-$1/projects/$PROJECT_ID/plans/$2/phases/P1/P1.1.json"; }
+item_file() { echo "$WORK/wss-$1/axioma/projects/$PROJECT_ID/plans/$2/phases/P1/P1.1.json"; }
 
 # --------------------------------------------------------------------------------- different plans: no conflict
 machine a
@@ -145,7 +146,7 @@ machine a; ws sync --push >/dev/null || fail "A: sync log"
 machine b; ws sync --push --json > "$WORK/b-log.json" || fail "B: the log.jsonl of one plan conflicted: $(cat "$WORK/b-log.json")"
 settle
 for NAME in a b; do
-  LOG="$WORK/ws-$NAME/projects/$PROJECT_ID/plans/$PLAN_A/log.jsonl"
+  LOG="$WORK/wss-$NAME/axioma/projects/$PROJECT_ID/plans/$PLAN_A/log.jsonl"
   grep -q 'note from A' "$LOG" && grep -q 'note from B' "$LOG" || fail "$NAME: log.jsonl lost a note"
   python3 -I -c 'import json, sys
 for line in open(sys.argv[1], encoding="utf-8"):
@@ -161,8 +162,8 @@ planner set "$PLAN_A" P1.1 --json '{"summary": "item edited on B"}' >/dev/null |
 machine a; ws sync --push >/dev/null || fail "A: sync the shared item"
 machine b
 ws sync --commit >/dev/null || fail "B: commit the shared item"
-HEAD_B="$(head_of "$SKM_WORKSPACE_ROOT")"
-TREE_B="$(git -C "$SKM_WORKSPACE_ROOT" ls-tree -r HEAD | sha256sum)"
+HEAD_B="$(head_of "$WS_ROOT")"
+TREE_B="$(git -C "$WS_ROOT" ls-tree -r HEAD | sha256sum)"
 FILE_B="$(sha256sum "$(item_file b "$PLAN_A")")"
 if ws sync --pull --json > "$WORK/conflict.json" 2> "$WORK/conflict.err"; then fail "B: a conflicting pull succeeded"; fi
 grep -q '^WORKSPACE_CONFLICT' "$WORK/conflict.err" || fail "B: no WORKSPACE_CONFLICT: $(cat "$WORK/conflict.err")"
@@ -176,10 +177,10 @@ assert rows["P1.1"]["path"].endswith("/phases/P1/P1.1.json"), rows["P1.1"]
 assert "log" not in rows, "log.jsonl must merge by union, not conflict"
 assert doc["error"]["code"] == "WORKSPACE_CONFLICT"
 PY
-[ "$(head_of "$SKM_WORKSPACE_ROOT")" = "$HEAD_B" ] || fail "B: HEAD moved on a conflict"
+[ "$(head_of "$WS_ROOT")" = "$HEAD_B" ] || fail "B: HEAD moved on a conflict"
 [ "$(sha256sum "$(item_file b "$PLAN_A")")" = "$FILE_B" ] || fail "B: the working tree changed on a conflict"
-[ -z "$(git -C "$SKM_WORKSPACE_ROOT" status --porcelain)" ] || fail "B: the working tree is dirty after a conflict"
-[ ! -e "$SKM_WORKSPACE_ROOT/.git/MERGE_HEAD" ] || fail "B: a merge was left in progress"
+[ -z "$(git -C "$WS_ROOT" status --porcelain)" ] || fail "B: the working tree is dirty after a conflict"
+[ ! -e "$WS_ROOT/.git/MERGE_HEAD" ] || fail "B: a merge was left in progress"
 ws sync --push > /dev/null 2>&1 && fail "B: a push went through on top of an unresolved conflict" || true
 
 COUNT="$(json "$WORK/conflict.json" conflicts | python3 -I -c 'import json, sys; print(len(json.load(sys.stdin)))')"
@@ -192,16 +193,16 @@ if [ "$COUNT" -gt 1 ]; then  # decisions in parts: the first one leaves the rest
   ws sync "${ARGS[@]:0:2}" --json > "$WORK/part.json" || fail "B: a partial resolution failed"
   REMAINING="$(python3 -I -c 'import json, sys; print(len(json.load(open(sys.argv[1]))["resolution"]["remaining"]))' "$WORK/part.json")"
   [ "$REMAINING" -ge 1 ] || fail "B: a partial resolution left nothing remaining"
-  [ "$(head_of "$SKM_WORKSPACE_ROOT")" = "$HEAD_B" ] || fail "B: a partial resolution moved HEAD"
+  [ "$(head_of "$WS_ROOT")" = "$HEAD_B" ] || fail "B: a partial resolution moved HEAD"
 fi
 ws sync "${ARGS[@]}" --push --json > "$WORK/resolved.json" || fail "B: resolve and push: $(cat "$WORK/resolved.json")"
 [ "$(json "$WORK/resolved.json" push.status)" = "pushed" ] || fail "B: the resolved merge was not pushed"
 grep -q 'item edited on A' "$(item_file b "$PLAN_A")" || fail "B: --resolve remote did not take the side of A"
-[ -z "$(git -C "$SKM_WORKSPACE_ROOT" status --porcelain)" ] || fail "B: the working tree is dirty after the resolution"
-git -C "$SKM_WORKSPACE_ROOT" log --merges -1 --format=%s | grep -q '^skm(workspace): merge origin/main (resolved ' \
+[ -z "$(git -C "$WS_ROOT" status --porcelain)" ] || fail "B: the working tree is dirty after the resolution"
+git -C "$WS_ROOT" log --merges -1 --format=%s | grep -q '^skm(workspace): merge origin/main (resolved ' \
   || fail "B: no merge commit for the resolution"
 machine a; ws sync >/dev/null || fail "A: pull the resolution"
-[ "$(head_of "$WORK/ws-a")" = "$(head_of "$WORK/ws-b")" ] || fail "the machines are not at the same commit after the resolution"
+[ "$(head_of "$WORK/wss-a/axioma")" = "$(head_of "$WORK/wss-b/axioma")" ] || fail "the machines are not at the same commit after the resolution"
 grep -q 'item edited on A' "$(item_file a "$PLAN_A")" || fail "A: lost its own edit"
 planner plans --json | grep -q "$PLAN_A" || fail "A: the planner lost the plan after the merges"
 machine b; planner plans --json | grep -q "$PLAN_A" || fail "B: the planner lost the plan after the merges"

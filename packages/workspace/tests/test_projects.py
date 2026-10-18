@@ -8,7 +8,7 @@ import unittest
 from aicore.workspace import (WorkspaceError, bind, new_id, read_bindings, read_marker, read_project, write_marker,
                               write_project)
 
-from tests import TempCase, git
+from tests import TempCase, git, new_code
 from workspace import layout, projects
 
 REMOTE = "git@github.com:academici/swissknifeman.git"
@@ -18,7 +18,7 @@ SAME_REMOTE_URL = "https://token@github.com/academici/swissknifeman"
 class ProjectCase(TempCase):
     def setUp(self):
         super().setUp()
-        layout.init()
+        layout.init("axioma")
 
     def workspace_files(self):
         return sorted(str(p.relative_to(self.ws)) for p in self.ws.rglob("*") if ".git" not in p.parts)
@@ -29,10 +29,11 @@ class AttachTests(ProjectCase):
         root = self.checkout("alpha")
         result = projects.attach(root)
         project_id = result["project_id"]
-        self.assertTrue(project_id.startswith("prj_"))
+        self.assertEqual(project_id, "alpha")
         self.assertEqual((result["created"], result["marker_written"], result["plans_store"]), (True, True, "workspace"))
         self.assertEqual(read_marker(root), {"$schema": "urn:swissknifeman:aicore:project-marker:v1",
-                                             "project_id": project_id, "plans_store": "workspace"})
+                                             "workspace": "axioma", "project_id": project_id,
+                                             "plans_store": "workspace"})
         record = read_project(self.ws, project_id)
         self.assertEqual((record["name"], record["identity"]["remotes"], record["status"]), ("alpha", [], "active"))
         self.assertTrue((self.ws / "projects" / project_id / "plans").is_dir())
@@ -66,7 +67,7 @@ class AttachTests(ProjectCase):
         self.assertEqual(errors, [])
         self.assertEqual(len({item["project_id"] for item in results}), 1)
         self.assertEqual(sum(1 for item in results if item["created"]), 1)
-        self.assertEqual(len(list((self.ws / "projects").glob("prj_*"))), 1)
+        self.assertEqual(len([p for p in (self.ws / "projects").iterdir() if p.is_dir()]), 1)
         self.assertEqual(read_marker(root)["project_id"], results[0]["project_id"])
 
     def test_the_marker_is_written_but_never_committed(self):
@@ -106,7 +107,7 @@ class AttachTests(ProjectCase):
         first = self.checkout("alpha")
         project_id = projects.attach(first)["project_id"]
         clone = self.checkout("alpha-clone")
-        write_marker(clone, project_id, "workspace")  # arrives with git pull
+        write_marker(clone, "axioma", project_id, "workspace")  # arrives with git pull
         result = projects.attach(clone)
         self.assertEqual((result["project_id"], result["created"], result["marker_written"]), (project_id, False, False))
         self.assertEqual(result["binding"]["paths"], [str(first), str(clone)])
@@ -114,8 +115,8 @@ class AttachTests(ProjectCase):
 
     def test_a_marker_whose_project_is_missing_creates_the_project_record_only(self):
         root = self.checkout("alpha", remotes=[("origin", SAME_REMOTE_URL)])
-        project_id = new_id("prj")
-        write_marker(root, project_id, "workspace")
+        project_id = new_code()
+        write_marker(root, "axioma", project_id, "workspace")
         result = projects.attach(root)
         self.assertEqual((result["project_id"], result["created"], result["marker_written"]), (project_id, True, False))
         record = read_project(self.ws, project_id)
@@ -152,8 +153,8 @@ class AttachTests(ProjectCase):
         self.assertEqual(projects.attach(yes, interactive=True, confirm=lambda q: True)["project_id"], project_id)
 
     def test_several_matching_projects_are_ambiguous_even_with_yes(self):
-        one = write_project(self.ws, new_id("prj"), "one", remotes=["github.com/academici/swissknifeman"])
-        two = write_project(self.ws, new_id("prj"), "two", remotes=["github.com/academici/swissknifeman"])
+        one = write_project(self.ws, new_code(), "one", remotes=["github.com/academici/swissknifeman"])
+        two = write_project(self.ws, new_code(), "two", remotes=["github.com/academici/swissknifeman"])
         root = self.checkout("alpha", remotes=[("origin", REMOTE)])
         with self.assertRaises(WorkspaceError) as caught:
             projects.attach(root, yes=True)
@@ -168,12 +169,16 @@ class AttachTests(ProjectCase):
         second_dir.mkdir(parents=True)
         git(second_dir, "init", "-q")
         git(second_dir, "remote", "add", "origin", "git@github.com:a/two.git")
-        a, b = projects.attach(first), projects.attach(second_dir)
+        a = projects.attach(first)
+        with self.assertRaises(WorkspaceError) as caught:  # same folder name, other remotes: not the same project
+            projects.attach(second_dir)
+        self.assertEqual(caught.exception.code, "PROJECT_CODE_TAKEN")
+        b = projects.attach(second_dir, code="same-two")
         self.assertNotEqual(a["project_id"], b["project_id"])
         third_dir = self.root / "third" / "same"
         third_dir.mkdir(parents=True)
         git(third_dir, "init", "-q")
-        self.assertNotIn(projects.attach(third_dir)["project_id"], (a["project_id"], b["project_id"]))
+        self.assertNotIn(projects.attach(third_dir, code="same-three")["project_id"], (a["project_id"], b["project_id"]))
 
     def test_a_local_remote_is_not_an_identity(self):
         a = self.checkout("a", remotes=[("origin", "/srv/shared.git")])
@@ -196,7 +201,7 @@ class AttachTests(ProjectCase):
         with self.assertRaises(WorkspaceError) as caught:
             projects.attach(self.root / "missing")
         self.assertEqual(caught.exception.code, "BINDING_PATH_MISSING")
-        os.environ["SKM_WORKSPACE_ROOT"] = str(self.root / "no-workspace")
+        os.environ["SKM_WORKSPACE"] = "no-workspace"
         with self.assertRaises(WorkspaceError) as caught:
             projects.attach(root)
         self.assertEqual(caught.exception.code, "WORKSPACE_NOT_INITIALIZED")
@@ -219,7 +224,7 @@ class ListShowTests(ProjectCase):
     def test_list_and_show(self):
         root = self.checkout("alpha", plans=["p1"])
         project_id = projects.attach(root)["project_id"]
-        other = write_project(self.ws, new_id("prj"), "unbound")
+        other = write_project(self.ws, new_code(), "unbound")
         rows = {row["project_id"]: row for row in projects.list_projects()}
         self.assertEqual(rows[project_id], {"project_id": project_id, "name": "alpha", "status": "active", "bound": True,
                                             "paths": [str(root)]})
@@ -237,13 +242,13 @@ class ListShowTests(ProjectCase):
                                           "migrations": ["mig_X"]})
 
     def test_show_of_an_unknown_project(self):
-        for value in (new_id("prj"), "nonsense", "../x"):
+        for value in (new_code(), "nonsense", "../x"):
             with self.assertRaises(WorkspaceError) as caught:
                 projects.show(value)
             self.assertEqual(caught.exception.code, "PROJECT_UNKNOWN")
 
     def test_a_damaged_project_is_listed_as_invalid(self):
-        project_id = new_id("prj")
+        project_id = new_code()
         folder = self.ws / "projects" / project_id
         folder.mkdir(parents=True)
         (folder / "project.json").write_text("{broken", encoding="utf-8")
@@ -255,7 +260,7 @@ class ScanTests(ProjectCase):
     def marked(self, relative, project_id, store="workspace"):
         path = self.root / "scan" / relative
         path.mkdir(parents=True)
-        write_marker(path, project_id, store)
+        write_marker(path, "axioma", project_id, store)
         return path
 
     def test_scan_binds_known_projects_and_reports_unknown_ones(self):
@@ -264,7 +269,7 @@ class ScanTests(ProjectCase):
         deep = self.marked("1/2/3/4/repo", project_id)  # depth 5: too deep
         modules = self.marked("node_modules/x", project_id)
         vendor = self.marked("vendor/y", project_id)
-        stranger = self.marked("c/stranger", new_id("prj"))
+        stranger = self.marked("c/stranger", new_code())
         broken = self.root / "scan" / "d" / "broken"
         (broken / ".swissknifeman").mkdir(parents=True)
         (broken / ".swissknifeman" / "project.json").write_text("[]", encoding="utf-8")
@@ -291,7 +296,7 @@ class ScanTests(ProjectCase):
         outer = self.marked("outer", project_id)
         inner = outer / "nested"
         inner.mkdir()
-        write_marker(inner, project_id, "workspace")
+        write_marker(inner, "axioma", project_id, "workspace")
         self.assertEqual([item["path"] for item in projects.scan([self.root / "scan"])["bound"]], [str(outer)])
 
 
@@ -300,7 +305,7 @@ class RebindDetachTests(ProjectCase):
         first = self.checkout("alpha")
         project_id = projects.attach(first)["project_id"]
         second = self.checkout("moved")
-        write_marker(second, project_id, "workspace")
+        write_marker(second, "axioma", project_id, "workspace")
         result = projects.rebind(project_id, second)
         self.assertEqual(result["binding"], {"paths": [str(second)], "primary": str(second)})
 
@@ -308,10 +313,10 @@ class RebindDetachTests(ProjectCase):
         first = self.checkout("alpha")
         project_id = projects.attach(first)["project_id"]
         stranger = self.checkout("stranger")
-        write_marker(stranger, new_id("prj"), "workspace")
+        write_marker(stranger, "axioma", new_code(), "workspace")
         plain = self.checkout("plain")
         cases = ((project_id, stranger, "BINDING_MARKER_MISMATCH"), (project_id, plain, "BINDING_MARKER_MISMATCH"),
-                 (project_id, self.root / "gone", "BINDING_PATH_MISSING"), (new_id("prj"), first, "PROJECT_UNKNOWN"))
+                 (project_id, self.root / "gone", "BINDING_PATH_MISSING"), (new_code(), first, "PROJECT_UNKNOWN"))
         for pid, path, code in cases:
             with self.subTest(code=code, path=path.name):
                 with self.assertRaises(WorkspaceError) as caught:
@@ -323,7 +328,7 @@ class RebindDetachTests(ProjectCase):
         first = self.checkout("alpha")
         project_id = projects.attach(first)["project_id"]
         second = self.checkout("second")
-        write_marker(second, project_id, "workspace")
+        write_marker(second, "axioma", project_id, "workspace")
         projects.attach(second)
         files = self.workspace_files()
         result = projects.detach(project_id, second)
@@ -337,11 +342,11 @@ class RebindDetachTests(ProjectCase):
 
     def test_detach_of_an_unknown_project(self):
         with self.assertRaises(WorkspaceError) as caught:
-            projects.detach(new_id("prj"))
+            projects.detach(new_code())
         self.assertEqual(caught.exception.code, "PROJECT_UNKNOWN")
 
     def test_a_binding_of_a_project_missing_in_the_workspace_can_be_dropped(self):
-        orphan = new_id("prj")
+        orphan = new_code()
         bind(orphan, self.root)
         self.assertTrue(projects.detach(orphan)["removed"])
 

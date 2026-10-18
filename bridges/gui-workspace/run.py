@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gui-workspace commands for the GUI broker: a fixed set of verbs, each one `workspace ... --json`, nothing else runs.
 
-    run.py init                                     run.py sync-commit | sync-pull | sync-push | sync-resolve-reset
+    run.py init CODE                                     run.py sync-commit | sync-pull | sync-push | sync-resolve-reset
     run.py project-attach DIR                       run.py sync-resolve PATH local|remote
     run.py project-scan DIR                         run.py connect URL [--branch B]
     run.py project-rebind PROJECT_ID DIR
@@ -22,7 +22,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from adapter import WorkspaceError, has_userinfo, workspace_command, workspace_json
 
-PROJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+PROJECT_ID = re.compile(r"^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$")  # a code: the folder name in the workspace
 BRANCH = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
 ON_CONFLICT = ("keep-workspace", "import-copy")
 SIDES = ("local", "remote")
@@ -46,8 +46,9 @@ def folder(value: str) -> str:
 
 
 def project_id(value: str) -> str:
+    """A code of a project or a workspace."""
     if not PROJECT_ID.match(value):
-        raise Invalid("INVALID_PROJECT_ID", "not a project id")
+        raise Invalid("INVALID_PROJECT_ID", "not a code (lowercase letters, digits, single hyphens)")
     return value
 
 
@@ -84,7 +85,7 @@ def enum(allowed: Tuple[str, ...]) -> Callable[[str], str]:
 
 # verb -> (positional checks, allowed flags {flag: check}, builder of workspace args from the checked values)
 SPEC: Dict[str, Tuple[List[Callable[[str], str]], Dict[str, Callable[[str], str]], Callable[[List[str], Dict[str, str]], List[str]]]] = {
-    "init": ([], {}, lambda p, f: ["init"]),
+    "init": ([project_id], {}, lambda p, f: ["init", "--code", p[0]]),
     "project-attach": ([folder], {}, lambda p, f: ["project", "attach", "--project", p[0]]),
     "project-scan": ([folder], {}, lambda p, f: ["project", "scan", p[0]]),
     "project-rebind": ([project_id, folder], {}, lambda p, f: ["project", "rebind", p[0], "--path", p[1]]),

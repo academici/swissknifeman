@@ -4,8 +4,8 @@ import { dirname, join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { api, origin, signIn } from "./session";
 
-// The workspace of these scenarios is the throwaway one of the backend (SKM_WORKSPACE_ROOT); machine B is a second
-// SKM_HOME and workspace root next to it. The command line of the workspace module is what the bridge calls too.
+// The workspace of these scenarios is the throwaway one of the backend (workspace axioma under SKM_WORKSPACES_ROOT); machine B is a second
+// SKM_HOME and workspaces folder next to it. The command line of the workspace module is what the bridge calls too.
 const base = () => process.env.GUI_E2E_BASE ?? "";
 const module = () => process.env.GUI_E2E_WORKSPACE_MODULE ?? "";
 const remoteDir = () => join(base(), "remote.git");
@@ -19,7 +19,8 @@ function env(machine: Machine): NodeJS.ProcessEnv {
   return {
     PATH: process.env.PATH ?? "/usr/bin:/bin", HOME: home, LANG: "C.UTF-8",
     SKM_HOME: machine === "a" ? process.env.GUI_E2E_SKM_HOME : join(base(), "skm-b"),
-    SKM_WORKSPACE_ROOT: machine === "a" ? process.env.GUI_E2E_WORKSPACE : join(base(), "workspace-b"),
+    SKM_WORKSPACES_ROOT: machine === "a" ? dirname(process.env.GUI_E2E_WORKSPACE ?? "") : join(base(), "workspaces-b"),
+    SKM_WORKSPACE: "axioma",
     AICORE_ROOT: join(module(), "..", "aicore"),
     GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1",
     GIT_AUTHOR_NAME: "e2e", GIT_AUTHOR_EMAIL: "e2e@example.invalid", GIT_COMMITTER_NAME: "e2e", GIT_COMMITTER_EMAIL: "e2e@example.invalid",
@@ -60,7 +61,7 @@ async function runForm(page: Page, form: ReturnType<Page["locator"]>, confirm = 
 test.describe.configure({ mode: "serial" });
 
 test.beforeAll(() => {
-  ws("a", "init");
+  ws("a", "init", "--code", "axioma");
   mkdirSync(appDir(), { recursive: true });
   git(appDir(), "init", "-q", "-b", "main");
   writeFileSync(join(appDir(), "README.md"), "app\n");
@@ -85,7 +86,7 @@ test("attach binds a project of this machine and the Projects page offers to tru
   await form.getByLabel("Project folder *").fill(appDir());
   await runForm(page, form);
   const id = workspaceStatus().projects[0]?.project_id ?? "";
-  expect(id).toMatch(/^prj_/);
+  expect(id).toBe("app"); // the code of a project is the name of its folder
 
   // the query answer is cached by the host for a few seconds and the page was read before the attach: reload until it expires
   await expect(async () => {
@@ -145,7 +146,7 @@ test("a sync conflict of the pull is a row of the conflicts table", async ({ pag
     ws(machine, "sync", "--commit");
   };
   const rootA = process.env.GUI_E2E_WORKSPACE ?? "";
-  const rootB = join(base(), "workspace-b");
+  const rootB = join(base(), "workspaces-b", "axioma");
   mkdirSync(join(base(), "home-b"), { recursive: true });
   edit("a", rootA, "base");
   ws("a", "sync", "--push");

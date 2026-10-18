@@ -11,29 +11,30 @@ This module is the command line over them. Connecting a remote and sync come lat
 
 ## Commands
 
-Run as `swissknifeman workspace <command>` or `bin/workspace <command>`. Every command takes `--json`, which prints one
+Run as `swissknifeman workspace <command>` or `bin/workspace <command>`. A machine can hold several workspaces; a command works with the one chosen by `--workspace CODE` (anywhere in the arguments), `SKM_WORKSPACE`, the marker of the project you are in, or the only workspace there is. Every command takes `--json`, which prints one
 JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; wrong arguments exit 2.
 
 | Command | What it does |
 | --- | --- |
-| `init [--root DIR]` | Create the layout (`workspace.json`, `projects/`, baseline `.gitignore`, `.gitattributes`, `README.md`, `.staging/`), `git init -b main`, the first commit `skm(workspace): init` with a `Workspace-Device` trailer, and the device file of this machine. On a workspace that exists it changes nothing (`already_initialized`). A non-empty folder without `workspace.json` is `WORKSPACE_ROOT_NOT_EMPTY` and nothing is written. |
+| `init --code CODE [--root DIR]` | Create the workspace `CODE` under `workspaces/CODE`: the layout (`workspace.json`, `projects/`, baseline `.gitignore`, `.gitattributes`, `README.md`, `.staging/`), `git init -b main`, the first commit `skm(workspace): init` with a `Workspace-Device` trailer, and the device file of this machine. On a workspace that exists it changes nothing (`already_initialized`). A non-empty folder without `workspace.json` is `WORKSPACE_ROOT_NOT_EMPTY` and nothing is written. |
 | `status [--fetch]` | Git state (branch, changed paths, remote without user information, ahead and behind of the last fetch; `--fetch` fetches first), the projects with their bindings here, the last sync. |
 | `doctor` | Checks as `check-result/v1`: `workspace.layout`, `workspace.documents`, `workspace.bindings`, `workspace.legacy-plans`, `workspace.git`, `workspace.plans-migrator`. Exit 1 only on `fail`; a machine without a workspace gets a warning. |
 | `doctor --publish-safety [--all]` | Publish-safety rules on the files of the next commit (`--all`: every tracked and untracked file that is not ignored); prints a `publish-report/v1` document (see below). Exit 1 and `PUBLISH_BLOCKED` on stderr when a rule blocks; warnings and local-only files exit 0. |
-| `project attach [--project DIR] [--name N] [--yes]` | Tie a checkout to a project: use the id of its marker, else match its remotes against the projects of the workspace (never its name), else create a project. Writes the marker `.swissknifeman/project.json` and prints the command that commits it; it never commits. |
+| `project attach [--project DIR] [--name N] [--code CODE] [--yes]` | Tie a checkout to a project: use the code of its marker, else match its remotes against the projects of the workspace (a name is not an identity), else create a project whose code is made from the folder name (or `--code`; `PROJECT_CODE_TAKEN` if another project has it). Writes the marker `.swissknifeman/project.json` and prints the command that commits it; it never commits. |
 | `project list` | Projects of the workspace and where they are bound on this machine. |
-| `project show PROJECT_ID` | The project record, its binding and the folders it holds in the workspace. |
+| `project show CODE` | The project record, its binding and the folders it holds in the workspace. |
 | `project scan DIR...` | Find checkouts with a marker (depth 4; `node_modules`, `.git` and `vendor` are skipped) and bind those of known projects. A marker with an unknown id is reported as `unknown`; no project is created. |
 | `project rebind PROJECT_ID --path DIR` | Replace the bound paths by one checkout whose marker names the project (`BINDING_MARKER_MISMATCH` otherwise). |
 | `project detach PROJECT_ID [--path DIR]` | Drop a binding of this machine; the workspace is not changed. |
 | `migrate discover [DIR...]` | Checkouts that hold a `plans/` folder: launcher projects (`.swissknifeman/launcher.py`) under DIR (default `~/projects`, depth 4) and `local_path` of `<state>/maind/registry.json`. Reads the structure and the sizes, never a plan file; shows the marker and the number of plan and legacy folders. |
-| `migrate plan --project DIR [--on-conflict keep-workspace\|import-copy] [--allow-in-progress] [--local-only-secrets] [--yes]` | Dry run, writes nothing: the project, the class, digest and action of each folder, local-only files, warnings and blockers (exit 1 on a blocker). |
+| `migrate plan --project DIR [--on-conflict keep-workspace\|import-copy] [--allow-in-progress] [--local-only-secrets] [--code CODE] [--yes]` | Dry run, writes nothing: the project, the class, digest and action of each folder, local-only files, warnings and blockers (exit 1 on a blocker). |
 | `migrate apply --project DIR [same flags] [--lock-timeout S]` | Runs the checks of `plan`, calls the port, then writes `local-only.json`, the report and the binding. Prints `next`, never commits. |
 | `migrate verify --project DIR` | The last report of this device against the workspace copies and the old folders. |
 | `migrate rollback --project DIR` | Marker back to `legacy`; removes the folders the migration brought in. |
-| `migrate cleanup --project DIR --confirm PROJECT_ID` | Removes the old folders whose copy in the workspace has the same digest. |
+| `migrate cleanup --project DIR --confirm CODE` | Removes the old folders whose copy in the workspace has the same digest. |
 | `connect --remote URL [--branch B]` | Classify the remote (`empty` or the same workspace; `REMOTE_FOREIGN`, `REMOTE_OTHER_WORKSPACE`) and add it as `origin`; never commits or pushes. |
-| `clone URL [--root DIR]` | Make this machine's workspace from a remote into an absent or empty folder, and the device file. |
+| `clone URL [--code CODE] [--root DIR]` | Make a workspace of this machine from a remote: cloned beside the workspaces and moved to `workspaces/<code>` (the code is read from the remote's `workspace.json`), and the device file. |
+| `list` | The workspaces of this machine: code, root, remote, number of projects. |
 | `sync [--commit] [--pull] [--push] [--resolve PATH=local\|remote ...] [--resolve-reset]` | Commit (publish-safety first), pull (dry merge with `git merge-tree`, typed conflicts), resolve and push without force (see Sync). No flag: commit and pull; `--push` runs both first. |
 
 ## Publish-safety
@@ -49,7 +50,7 @@ A secret value is never printed: the detail names the rule, the line and the mas
 | `PS-MANIFEST-PATH` | an absolute path in `workspace.json`, `projects/*/project.json`, `projects/*/local-only.json`, `projects/*/migrations/*.json` | block |
 | `PS-SYMLINK` | any symbolic link | block |
 | `PS-TOP-LEVEL` | a top-level entry outside `.gitignore`, `.gitattributes`, `workspace.json`, `README.md`, `projects` | block |
-| `PS-PROJECT-LEVEL` | `projects/` holds anything but `prj_<id>` folders, or a project folder holds anything but `project.json`, `plans`, `legacy-plans`, `migrations`, `local-only.json` | block |
+| `PS-PROJECT-LEVEL` | `projects/` holds anything but folders named by a project code, or a project folder holds anything but `project.json`, `plans`, `legacy-plans`, `migrations`, `local-only.json` | block |
 | `PS-EXECUTABLE` | the execute bit | warn |
 | `PS-HOME-PATH` | `/home/<user>/`, `/Users/<user>/` or `C:\Users\` in the text of plan data | warn |
 | `PS-TRACKED-LOCAL-ONLY` | git already tracks a file that is now local-only; nothing is removed from the index here | warn |
@@ -67,7 +68,7 @@ other line alone. Sync and migrate call them; neither takes `git.lock` itself, t
 
 ## Migration
 
-`migrate` moves the plans of a checkout (`<root>/plans`) into `projects/<project_id>/` of the workspace (contract
+`migrate` moves the plans of a checkout (`<root>/plans`) into `projects/<code>/` of the workspace (contract
 `workspace-contract#migration`, decisions D4, D8, D12, D13). The critical section (locks, copy, verify, rename, marker) runs in
 the bridge `workspace-planner` behind the port `workspace:plans-migrator`; this module never imports it. It finds the plugin named
 by `workspace.plans_migrator` in `[aicore.plugins]`, else a module of the hub that declares the port in `provides.ports`. Register the
@@ -106,8 +107,8 @@ and set `trusted = true` so it receives `PLANNER_ROOT`; `workspace doctor` shows
 
 | What | Where |
 | --- | --- |
-| the workspace (the one git root) | `SKM_WORKSPACE_ROOT`, else `<data>/workspace` (`~/.local/share/swissknifeman/workspace`) |
-| bindings, device, git lock | `<state>/workspace` (`bindings.json`, `device.json`, `git.lock`); never in git |
+| the workspaces | `SKM_WORKSPACES_ROOT`, else `<data>/workspaces` (`~/.local/share/swissknifeman/workspaces/<code>`, one git root each); chosen by `--workspace`, `SKM_WORKSPACE`, the marker, or the only one |
+| bindings, sync state, git lock | `<state>/workspaces/<code>` (`bindings.json`, `sync.json`, `git.lock`); the device `<state>/workspaces/device.json`; never in git |
 | the marker of a project | `<checkout>/.swissknifeman/project.json`, committed with the project |
 
 Every command that changes the workspace repository holds `git.lock` (`WORKSPACE_GIT_LOCKED` after the configured
@@ -141,11 +142,11 @@ The `[workspace]` table (machine layer and defaults only; see `config.example.to
 
 ## Events
 
-`workspace.root.initialized` (`{workspace_id}`), `workspace.project.attached` (`{project_id, created}`), `workspace.migration.applied` (`{project_id, op_id, mode, plans, local_only}`) and `workspace.migration.rolled-back` (`{project_id, op_id}`), `workspace.sync.committed` (`{sha, files}`), `workspace.sync.pulled` (`{head, merged}`), `workspace.sync.conflict` (`{paths}`) and `workspace.sync.pushed` (`{head}`), described by
+`workspace.root.initialized` (`{code, workspace_id}`), `workspace.project.attached` (`{project_id, created}`), `workspace.migration.applied` (`{project_id, op_id, mode, plans, local_only}`) and `workspace.migration.rolled-back` (`{project_id, op_id}`), `workspace.sync.committed` (`{sha, files}`), `workspace.sync.pulled` (`{head, merged}`), `workspace.sync.conflict` (`{paths}`) and `workspace.sync.pushed` (`{head}`), described by
 `schemas/event-data/v1/`. They are journaled in the machine journal after the locks are released; a failing journal does
 not change the result of a command. The extension point `workspace:plans-migrator` is filled by a bridge.
 
 ## Tests
 
-`bash scripts/test.sh` runs the stdlib unittest suite against a throwaway `HOME`, `SKM_HOME` and `SKM_WORKSPACE_ROOT`
+`bash scripts/test.sh` runs the stdlib unittest suite against a throwaway `HOME`, `SKM_HOME` and `SKM_WORKSPACES_ROOT`
 with temporary git repositories; it never touches a real workspace.

@@ -8,7 +8,7 @@ from unittest import mock
 from aicore.util import schema
 from aicore.workspace import WorkspaceError, new_id, write_project
 
-from tests import MODULE_ROOT, TempCase, git
+from tests import MODULE_ROOT, TempCase, git, new_code
 from workspace import layout, localonly, safety
 
 SMALL = safety.Settings(max_tracked_bytes=1000, max_binary_tracked_bytes=100)
@@ -19,8 +19,8 @@ DEVICE_B = "dev_01JC0Z8Q3M5T7V9XABCDEFGHJM"
 class LocalOnlyCase(TempCase):
     def setUp(self):
         super().setUp()
-        layout.init()
-        self.pid = new_id("prj")
+        layout.init("axioma")
+        self.pid = new_code()
         write_project(self.ws, self.pid, "demo")
         self.folder = self.ws / "projects" / self.pid
         self.exclude = self.ws / ".git" / "info" / "exclude"
@@ -103,7 +103,7 @@ class IndexTests(LocalOnlyCase):
 
     def test_an_unknown_project_and_a_damaged_index(self):
         with self.assertRaises(WorkspaceError) as caught:
-            localonly.update(self.ws, new_id("prj"), [], DEVICE_A)
+            localonly.update(self.ws, new_code(), [], DEVICE_A)
         self.assertEqual(caught.exception.code, "PROJECT_UNKNOWN")
         (self.folder / "local-only.json").write_text("{broken", encoding="utf-8")
         with self.assertRaises(WorkspaceError) as caught:
@@ -115,7 +115,7 @@ class IndexTests(LocalOnlyCase):
     def test_entries_by_project_and_device_paths(self):
         self.put("plans/p1/big.log")
         self.put("plans/p1/other.bin")
-        other = new_id("prj")
+        other = new_code()
         write_project(self.ws, other, "other")
         report = safety.Report(local_only=[
             {"path": f"projects/{self.pid}/plans/p1/big.log", "bytes": 2000, "reason": "size"},

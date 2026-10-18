@@ -8,7 +8,7 @@ cd "$BRIDGE_ROOT"
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_AICORE_EVENTS__DELIVERY=off
-export SKM_WORKSPACE_ROOT="$TEST_HOME/workspace"
+export SKM_WORKSPACES_ROOT="$TEST_HOME/workspaces" SKM_WORKSPACE=axioma
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME
 # Parallel worker processes when aicore is importable (its locator: AICORE_ROOT); SKM_TEST_JOBS=1 runs them one by one.
 if [ -n "${AICORE_ROOT:-}" ] && PYTHONPATH="$AICORE_ROOT/lib" python3 -c "import aicore.util.par_unittest" 2>/dev/null; then

@@ -77,43 +77,54 @@ def _umask():
 
 
 class WorkspaceLocationsTests(unittest.TestCase):
-    def test_workspace_root_follows_the_data_directory(self):
-        self.assertEqual(loc.workspace_root({"SKM_HOME": "/sb"}), Path("/sb/data/workspace"))
-        self.assertEqual(loc.workspace_root({"XDG_DATA_HOME": "/x/d"}, home="/h"), Path("/x/d/swissknifeman/workspace"))
-        self.assertEqual(loc.workspace_root({}, home="/h"), Path("/h/.local/share/swissknifeman/workspace"))
-        self.assertEqual(loc.workspace_root({"HOME": "/e"}), Path("/e/.local/share/swissknifeman/workspace"))
+    def test_workspaces_follow_the_data_directory(self):
+        self.assertEqual(loc.workspaces_root({"SKM_HOME": "/sb"}), Path("/sb/data/workspaces"))
+        self.assertEqual(loc.workspaces_root({"XDG_DATA_HOME": "/x/d"}, home="/h"), Path("/x/d/swissknifeman/workspaces"))
+        self.assertEqual(loc.workspaces_root({}, home="/h"), Path("/h/.local/share/swissknifeman/workspaces"))
+        self.assertEqual(loc.workspace_root({"HOME": "/e"}, code="axioma"),
+                         Path("/e/.local/share/swissknifeman/workspaces/axioma"))
 
     def test_skm_home_wins_over_xdg_data_home(self):
-        self.assertEqual(loc.workspace_root({"SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d"}), Path("/sb/data/workspace"))
+        self.assertEqual(loc.workspace_root({"SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d"}, code="axioma"),
+                         Path("/sb/data/workspaces/axioma"))
 
-    def test_override_wins_over_everything(self):
-        env = {"SKM_WORKSPACE_ROOT": "/ws", "SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d"}
-        self.assertEqual(loc.workspace_root(env), Path("/ws"))
-        self.assertEqual(loc.workspace_state_dir(env), Path("/sb/state/workspace"))
+    def test_override_of_the_folder_wins_over_everything(self):
+        env = {"SKM_WORKSPACES_ROOT": "/ws", "SKM_HOME": "/sb", "XDG_DATA_HOME": "/x/d", "SKM_WORKSPACE": "axioma"}
+        self.assertEqual(loc.workspaces_root(env), Path("/ws"))
+        self.assertEqual(loc.workspace_root(env), Path("/ws/axioma"))
+        self.assertEqual(loc.workspace_state_dir(env), Path("/sb/state/workspaces/axioma"))
+
+    def test_the_old_override_is_ignored(self):
+        env = {"SKM_WORKSPACE_ROOT": "/ws", "SKM_HOME": "/sb"}
+        self.assertEqual(loc.workspaces_root(env), Path("/sb/data/workspaces"))
 
     def test_empty_override_is_not_set(self):
-        self.assertEqual(loc.workspace_root({"SKM_WORKSPACE_ROOT": "", "SKM_HOME": "/sb"}), Path("/sb/data/workspace"))
+        self.assertEqual(loc.workspaces_root({"SKM_WORKSPACES_ROOT": "", "SKM_HOME": "/sb"}), Path("/sb/data/workspaces"))
 
     def test_relative_override_is_rejected(self):
         with self.assertRaises(ValueError) as caught:
-            loc.workspace_root({"SKM_WORKSPACE_ROOT": "ws", "SKM_HOME": "/sb"})
-        self.assertIn("SKM_WORKSPACE_ROOT", str(caught.exception))
+            loc.workspaces_root({"SKM_WORKSPACES_ROOT": "ws", "SKM_HOME": "/sb"})
+        self.assertIn("SKM_WORKSPACES_ROOT", str(caught.exception))
 
-    def test_state_directory_is_the_workspace_application_directory(self):
-        self.assertEqual(loc.workspace_state_dir({"SKM_HOME": "/sb"}), Path("/sb/state/workspace"))
-        self.assertEqual(loc.workspace_state_dir({}, home="/h"), Path("/h/.local/state/swissknifeman/workspace"))
+    def test_state_directory_is_one_per_workspace(self):
+        self.assertEqual(loc.workspace_state_dir({"SKM_HOME": "/sb"}, code="axioma"), Path("/sb/state/workspaces/axioma"))
+        self.assertEqual(loc.workspace_state_dir({}, home="/h", code="axioma"),
+                         Path("/h/.local/state/swissknifeman/workspaces/axioma"))
+        self.assertEqual(loc.device_file({"SKM_HOME": "/sb"}), Path("/sb/state/workspaces/device.json"))
 
     def test_nothing_is_created(self):
         with tempfile.TemporaryDirectory() as tmp:
-            env = {"SKM_HOME": tmp + "/sb", "SKM_WORKSPACE_ROOT": tmp + "/ws"}
+            env = {"SKM_HOME": tmp + "/sb", "SKM_WORKSPACES_ROOT": tmp + "/ws", "SKM_WORKSPACE": "axioma"}
             loc.workspace_root(env)
             loc.workspace_state_dir(env)
+            loc.list_workspaces(env)
             self.assertEqual(os.listdir(tmp), [])
 
     def test_package_exports(self):
         from aicore import state
         self.assertIs(state.workspace_root, loc.workspace_root)
         self.assertIs(state.workspace_state_dir, loc.workspace_state_dir)
+        self.assertIs(state.selected_workspace, loc.selected_workspace)
 
 
 class ProjectLocationsTests(unittest.TestCase):

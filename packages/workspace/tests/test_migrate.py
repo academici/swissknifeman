@@ -68,7 +68,7 @@ class MigrateCase(TempCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         self.register(True)
-        self.assertEqual(self.run_cli("init")[0], 0)
+        self.assertEqual(self.run_cli("init", "--code", "axioma")[0], 0)
 
     def register(self, enabled: bool) -> None:
         config = self.root / "skm" / "config" / "config.toml"
@@ -153,10 +153,10 @@ class DiscoverTests(MigrateCase):
 
     def test_the_default_directory_is_projects_under_home_and_markers_are_shown(self):
         root = self.launcher(self.home / "projects", "mine")
-        write_marker(root, "prj_" + "0" * 26, "legacy")
+        write_marker(root, "axioma", "proj-zero", "legacy")
         doc = self.json_cli("migrate", "discover")
         self.assertEqual([row["path"] for row in doc["candidates"]], [str(root)])
-        self.assertEqual(doc["candidates"][0]["marker"], {"project_id": "prj_" + "0" * 26, "plans_store": "legacy"})
+        self.assertEqual(doc["candidates"][0]["marker"], {"project_id": "proj-zero", "plans_store": "legacy"})
 
     def test_the_content_of_plan_files_is_never_read(self):
         root = self.launcher(self.root / "projects", "closed")
@@ -303,7 +303,8 @@ class ApplyTests(MigrateCase):
         self.assertFalse((folder / "plans" / PLAN / "views").exists())  # derived files are not copied
         self.assertTrue((root / "plans" / PLAN / "views").is_dir())  # the source is not touched
         self.assertEqual(read_marker(root), {"$schema": "urn:swissknifeman:aicore:project-marker:v1",
-                                             "project_id": project_id, "plans_store": "workspace"})
+                                             "workspace": "axioma", "project_id": project_id,
+                                             "plans_store": "workspace"})
         self.assertEqual(read_bindings()["projects"][project_id]["paths"], [str(root)])
         self.assertEqual(git(self.ws, "rev-parse", "HEAD"), workspace_head)  # nothing is committed
         self.assertTrue(any("git -C" in line and "project.json" in line for line in doc["next"]))
@@ -446,7 +447,7 @@ class ImportTests(MigrateCase):
         shutil.rmtree(root / "plans" / ARCHIVED)
         make_plan(root / "plans", ARCHIVED, extra="changed on the other machine\n")
         make_plan(root / "plans", NEW_PLAN)
-        write_marker(root, project_id, "legacy")
+        write_marker(root, "axioma", project_id, "legacy")
         return root
 
     def test_equal_plans_are_skipped_new_ones_copied_different_ones_conflict(self):
@@ -472,7 +473,7 @@ class ImportTests(MigrateCase):
         second = self.second_checkout(project_id)
         original = migrate.folder_digest(self.project_dir(project_id) / "plans" / ARCHIVED, "v4")
         doc = self.apply(second, "--on-conflict", "import-copy")
-        short = migrate.device_short(json.loads((self.root / "skm" / "state" / "workspace" / "device.json")
+        short = migrate.device_short(json.loads((self.root / "skm" / "state" / "workspaces" / "device.json")
                                                 .read_text(encoding="utf-8"))["device_id"])
         rows = {row["name"]: row for row in doc["plans"]}
         self.assertEqual(rows[ARCHIVED]["action"], "imported-copy")
@@ -643,7 +644,7 @@ class RecoveryTests(MigrateCase):
         project_id = read_marker(root)["project_id"]
         self.assertEqual(len(self.intents()), 1)
         self.assertEqual(self.reports(project_id), [])
-        write_marker(root, project_id, "legacy")  # the second apply was planned before the switch
+        write_marker(root, "axioma", project_id, "legacy")  # the second apply was planned before the switch
         refused = {"result": "refused", "code": "MIGRATION_LOCKED", "message": "busy", "phase": "lock"}
         real = migrator_port.call
 
@@ -652,7 +653,7 @@ class RecoveryTests(MigrateCase):
         with mock.patch.object(migrator_port, "call", call), self.assertRaises(migrate.WorkspaceError):
             migrate.apply(root, yes=True)
         self.assertEqual(len(self.intents()), 1)
-        write_marker(root, project_id, "workspace")
+        write_marker(root, "axioma", project_id, "workspace")
         again = migrate.apply(root, yes=True)
         self.assertFalse(again["noop"])
         self.assertEqual(len(self.reports(project_id)), 1)
@@ -831,7 +832,7 @@ class LocalOnlySecretsTests(MigrateCase):
             answer = real(op, payload, *args, **kwargs)
             if op == "apply":  # the folders are in the workspace, the marker is back to legacy, nothing is indexed
                 seen["id"] = payload["project_id"]
-                write_marker(root, payload["project_id"], "legacy")
+                write_marker(root, "axioma", payload["project_id"], "legacy")
                 raise OSError("stopped behind the rename")
             return answer
         with mock.patch.object(migrator_port, "call", call), self.assertRaises(OSError):
@@ -896,7 +897,7 @@ class CleanupTests(MigrateCase):
     def test_the_confirmation_must_be_the_project_id_of_the_marker(self):
         root = self.build()
         project_id = self.apply(root)["project_id"]
-        for wrong in ("prj_" + "0" * 26, "yes", ""):
+        for wrong in ("proj-zero", "yes", ""):
             err = self.failing("migrate", "cleanup", "--project", str(root), "--confirm", wrong)
             self.assertTrue(err.startswith("CLEANUP_CONFIRM_MISMATCH: "), err)
         self.assertTrue((root / "plans" / PLAN).is_dir())

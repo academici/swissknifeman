@@ -19,12 +19,12 @@ from .bindings import bind, bindings_path, read_bindings, set_paths, unbind  # n
 from .documents import (MARKER_RELPATH, project_dir, read_device, read_marker, read_project,  # noqa: E402
                         read_workspace, utc_now, validate_document, write_device, write_marker,
                         write_project, write_workspace)
-from .ids import is_id, new_id  # noqa: E402
+from .ids import is_code, is_id, new_id  # noqa: E402
 from .remotes import checkout_remotes, normalize_remote, redact_remote  # noqa: E402
 from .resolve import PlansStore, legacy_plans_present, resolve_plans_store, source_root_of  # noqa: E402
 
 __all__ = [
-    "MARKER_RELPATH", "PlansStore", "WorkspaceError", "bind", "bindings_path", "checkout_remotes", "is_id",
+    "MARKER_RELPATH", "PlansStore", "WorkspaceError", "bind", "bindings_path", "checkout_remotes", "is_code", "is_id",
     "legacy_plans_present", "new_id", "normalize_remote", "project_dir", "read_bindings", "read_device",
     "read_marker", "read_project", "read_workspace", "redact_remote", "resolve_plans_store", "set_paths",
     "source_root_of", "unbind", "utc_now", "validate_document", "write_device", "write_marker", "write_project",

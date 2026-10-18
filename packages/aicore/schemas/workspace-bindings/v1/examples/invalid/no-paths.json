@@ -1,7 +1,7 @@
 {
   "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",
   "projects": {
-    "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM": {
+    "billium": {
       "paths": [],
       "primary": "/a",
       "bound_at": "2026-10-17T09:30:00Z"

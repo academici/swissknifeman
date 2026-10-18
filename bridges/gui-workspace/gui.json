@@ -4,7 +4,7 @@
     {
       "concurrency_key": "gui-workspace:workspace",
       "confirmation": "risk-based",
-      "description": "workspace init: create the layout and the git repository of the configured workspace root.",
+      "description": "workspace init: create a workspace (layout and git repository) under workspaces/<code>.",
       "effects": [
         "config.write",
         "process.spawn"
@@ -12,12 +12,16 @@
       "exec": {
         "argv": [
           "run.py",
-          "init"
+          "init",
+          {
+            "input": "code"
+          }
         ],
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -30,12 +34,21 @@
         "cancel"
       ],
       "timeout_s": 300,
-      "title": "Create the workspace"
+      "title": "Create the workspace",
+      "input": [
+        {
+          "description": "Code of the new workspace (the folder name under workspaces/), e.g. axioma.",
+          "name": "code",
+          "required": true,
+          "title": "Workspace code",
+          "type": "string"
+        }
+      ]
     },
     {
       "concurrency_key": "gui-workspace:workspace",
       "confirmation": "risk-based",
-      "description": "workspace project attach: give the checkout a project_id and bind it here.",
+      "description": "workspace project attach: give the checkout a project code and bind it here.",
       "effects": [
         "project.write",
         "process.spawn"
@@ -51,7 +64,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -94,7 +108,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -140,7 +155,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -189,7 +205,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -244,7 +261,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -298,7 +316,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -344,7 +363,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -391,7 +411,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -423,7 +444,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -454,7 +476,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -491,7 +514,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -541,7 +565,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"
@@ -576,7 +601,8 @@
         "cwd": "owner",
         "env": [
           "SKM_WORKSPACE_MODULE_ROOT",
-          "SKM_WORKSPACE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
           "SKM_UMBRELLA"
         ],
         "kind": "argv"

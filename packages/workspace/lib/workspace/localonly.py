@@ -13,7 +13,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Union
 
 from aicore.util.io import atomic_write_text
-from aicore.workspace import WorkspaceError, project_dir, read_workspace, validate_document
+from aicore.workspace import WorkspaceError, is_code, project_dir, read_workspace, validate_document
 
 from . import gitutil
 from .safety import Report
@@ -111,7 +111,7 @@ def device_paths(ws_root: PathLike, device_id: str) -> List[str]:
     found: List[str] = []
     projects = Path(ws_root) / "projects"
     try:
-        names = sorted(child.name for child in projects.iterdir() if child.is_dir() and child.name.startswith("prj_"))
+        names = sorted(child.name for child in projects.iterdir() if child.is_dir() and is_code(child.name))
     except OSError:
         return found
     for project_id in names:

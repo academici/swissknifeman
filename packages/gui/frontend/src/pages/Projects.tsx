@@ -133,7 +133,7 @@ function WorkspaceBinding({ project }: { project: WorkspaceProject }) {
   return (
     <span className="muted" data-testid="workspace-binding">
       {" "}
-      · project_id {project.id} · binding: {project.bound ? "bound here" : "not bound here"} · plans store: {project.plansStore || "-"}
+      · project {project.id} · binding: {project.bound ? "bound here" : "not bound here"} · plans store: {project.plansStore || "-"}
     </span>
   );
 }

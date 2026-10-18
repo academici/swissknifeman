@@ -67,7 +67,7 @@ the marker; with the marker already at `workspace` and every copy equal the answ
 | `PLANNER_ROOT` / `PLANNER_PLAN_PY`, then a `planner` command | the planner library (`planner.plan.store`, `planner.plan.check`) |
 | `SKM_WORKSPACE_MODULE_ROOT`, then a `swissknifeman` command | where the workspace module is (tests read its contract schemas) |
 | `AICORE_ROOT`, `_vendor/aicore`, the hub foundation | the foundation library (locations, the project marker) |
-| `SKM_HOME`, `SKM_WORKSPACE_ROOT` | the machine state (migration lock) and the workspace root, as for every aicore location |
+| `SKM_HOME`, `SKM_WORKSPACES_ROOT`, `SKM_WORKSPACE` | the machine state (migration lock) and the workspaces folder, as for every aicore location; the lock is that of the workspace named by `workspace_root` |
 | `SKM_MIGRATOR_FAIL_AT` | tests only: `copy`, `pre-rename` or `post-rename` raises an error at that point |
 
 Progress goes to stderr (`workspace-planner: scanned N files`, `copied N files`). The bridge prints no file content and no

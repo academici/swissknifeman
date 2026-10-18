@@ -328,7 +328,7 @@ def _units_of(manifest: Mapping[str, Any]) -> List[Dict[str, Any]]:
     return units
 
 
-def _identity(root: Path, ws: Path, yes: bool, plan: Plan) -> Dict[str, Any]:
+def _identity(root: Path, ws: Path, yes: bool, plan: Plan, code: Optional[str] = None) -> Dict[str, Any]:
     """The project of the checkout without writing anything: the marker, else the remote rule of ``attach``."""
     try:
         marker = read_marker(root)
@@ -337,6 +337,12 @@ def _identity(root: Path, ws: Path, yes: bool, plan: Plan) -> Dict[str, Any]:
         return {"project_id": None, "name": root.name, "origin": "invalid-marker", "marker_store": None}
     plan.marker = marker
     if marker is not None:
+        workspace = layout.require_initialized(ws)["code"]
+        if marker["workspace"] != workspace:
+            plan.blockers.append({"code": "WORKSPACE_MISMATCH", "message": f"the marker names the workspace "
+                                  f"{marker['workspace']!r}, this command works with {workspace!r} (--workspace)"})
+            return {"project_id": marker["project_id"], "name": root.name, "origin": "other-workspace",
+                    "marker_store": marker["plans_store"]}
         record = read_project(ws, marker["project_id"])
         plan.project_id = marker["project_id"]
         return {"project_id": marker["project_id"], "name": record["name"] if record else root.name,
@@ -352,7 +358,11 @@ def _identity(root: Path, ws: Path, yes: bool, plan: Plan) -> Dict[str, Any]:
         plan.project_id = matches[0]["project_id"]
         return {"project_id": matches[0]["project_id"], "name": matches[0]["name"], "origin": "remote-match",
                 "marker_store": None, "needs_confirmation": not yes}
-    return {"project_id": None, "name": root.name, "origin": "new", "marker_store": None}
+    proposed = code or projects.slug(root.name)
+    if read_project(ws, proposed) is not None:
+        plan.blockers.append({"code": "PROJECT_CODE_TAKEN", "message": f"the workspace already has a project "
+                              f"{proposed!r} with other remotes; choose another code with --code"})
+    return {"project_id": None, "name": root.name, "origin": "new", "marker_store": None, "proposed_code": proposed}
 
 
 def _workspace_digest(pdir: Optional[Path], relative: str, cls: str) -> Optional[str]:
@@ -444,7 +454,8 @@ def _warnings(units: Sequence[Dict[str, Any]], allow_in_progress: bool) -> List[
 
 
 def build_plan(project: PathLike, on_conflict: Optional[str] = None, allow_in_progress: bool = False, yes: bool = False,
-               env: Env = None, home: Optional[PathLike] = None, local_only_secrets: bool = False) -> Plan:
+               env: Env = None, home: Optional[PathLike] = None, local_only_secrets: bool = False,
+               code: Optional[str] = None) -> Plan:
     """The dry run for the checkout ``project``: classes, digests, publish-safety, the comparison with the workspace and
     the blockers. Writes nothing (not even a device file or an id).
 
@@ -459,7 +470,7 @@ def build_plan(project: PathLike, on_conflict: Optional[str] = None, allow_in_pr
         raise WorkspaceError("BINDING_PATH_MISSING", f"{plan.root} is not a directory")
     plan.ws = layout.root_of(None, env, home)
     layout.require_initialized(plan.ws)
-    identity = _identity(plan.root, plan.ws, yes, plan)
+    identity = _identity(plan.root, plan.ws, yes, plan, code)
     manifest = migrator_port.call("inspect", {"project_root": str(plan.root)}, env, home)
     plan.manifest = manifest
     migrated = identity.get("marker_store") == "workspace"
@@ -657,15 +668,17 @@ def _read_intent(project_id: str, device_id: str, ws: Path, answer: Mapping[str,
 
 def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: int = 30,
           allow_in_progress: bool = False, yes: bool = False, env: Env = None,
-          home: Optional[PathLike] = None, local_only_secrets: bool = False) -> Dict[str, Any]:
-    """Migrate the plans of a checkout into the workspace; returns the result for the command.
+          home: Optional[PathLike] = None, local_only_secrets: bool = False,
+          code: Optional[str] = None) -> Dict[str, Any]:
+    """Migrate the plans of a checkout into the workspace; returns the result for the command. ``code`` is the project code
+    of a project the workspace does not know yet (default: made from the folder name).
 
     The checks of ``plan`` run first: a blocker or an unresolved conflict is refused before the port is called. The port
     runs the critical section; afterwards the local-only index, the report, the binding are written (the caller emits the
     event and prints ``next``). A repeat after a full migration is ``noop`` and writes no report. ``local_only_secrets``
     is the flag of :func:`build_plan`; the port copies the files as it copies every other file.
     """
-    plan = build_plan(project, on_conflict, allow_in_progress, yes, env, home, local_only_secrets)
+    plan = build_plan(project, on_conflict, allow_in_progress, yes, env, home, local_only_secrets, code)
     if plan.blockers:
         first = plan.blockers[0]
         raise WorkspaceError(first["code"], first["message"])
@@ -677,10 +690,10 @@ def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: in
     attached: Optional[Dict[str, Any]] = None
     if not plan.document["already_migrated"] and plan.units:
         if plan.marker is None or read_project(ws, plan.marker["project_id"]) is None:
-            attached = projects.attach(root, yes=yes, env=env, home=home)
+            attached = projects.attach(root, yes=yes, env=env, home=home, code=code)
             plan.project_id = attached["project_id"]
             if attached["plans_store"] == "workspace":  # the plans folder holds only loose files: still to move
-                write_marker(root, plan.project_id, "legacy")
+                write_marker(root, attached["workspace"], plan.project_id, "legacy")
     project_id = plan.project_id
     device = read_device(env, home) or layout._ensure_device(env, home)
     op_id = new_id("mig")
@@ -946,7 +959,7 @@ def rollback(project: PathLike, env: Env = None, home: Optional[PathLike] = None
             if removed:
                 _drop_local_only(ws, project_id, device_id, removed)
             if marker["plans_store"] != "legacy":
-                write_marker(root, project_id, "legacy")
+                write_marker(root, marker["workspace"], project_id, "legacy")
         except BaseException:
             stuck: List[str] = []
             for target, destination in reversed(moved):

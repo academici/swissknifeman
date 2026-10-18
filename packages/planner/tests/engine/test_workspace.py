@@ -22,12 +22,12 @@ try:
 except ImportError:  # run as `discover -s tests/engine` (no parent package)
     import demo
 
-PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJM"
-OTHER_PID = "prj_01JC0Z8Q3M5T7V9XABCDEFGHJN"
+PID = "billium"
+OTHER_PID = "commerz"
 
 
 def marker_text(plans_store: str, project_id: str = PID) -> str:
-    return json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "project_id": project_id,
+    return json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": "axioma", "project_id": project_id,
                        "plans_store": plans_store}, indent=2) + "\n"
 
 
@@ -99,11 +99,11 @@ class WorkspaceCase(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         self.tmp = Path(os.path.realpath(tmp.name))
         self.home = self.tmp / "home"
-        self.ws = self.tmp / "ws"
+        self.ws = self.tmp / "wss" / "axioma"
         self.project = self.tmp / "proj"
         self.project.mkdir()
         env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
-        env.update(HOME=str(self.home), SKM_HOME=str(self.home), SKM_WORKSPACE_ROOT=str(self.ws))
+        env.update(HOME=str(self.home), SKM_HOME=str(self.home), SKM_WORKSPACES_ROOT=str(self.ws.parent))
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -121,7 +121,7 @@ class WorkspaceCase(unittest.TestCase):
         put((root or self.project) / ".swissknifeman" / "project.json", marker_text(plans_store, project_id))
 
     def bind(self, *paths: Path, project_id: str = PID) -> None:
-        put(self.home / "state" / "workspace" / "bindings.json", bindings_text(project_id, paths, paths[0]))
+        put(self.home / "state" / "workspaces" / "axioma" / "bindings.json", bindings_text(project_id, paths, paths[0]))
 
     def run_cli(self, *argv):
         out, err = io.StringIO(), io.StringIO()
@@ -290,7 +290,7 @@ class SourceRootTests(WorkspaceCase):
         self.assertEqual(ops.default_repository(self.tmp / "other" / "plans"), "other")
 
     def test_a_damaged_bindings_file_is_a_layout_error(self):
-        put(self.home / "state" / "workspace" / "bindings.json", "{not json")
+        put(self.home / "state" / "workspaces" / "axioma" / "bindings.json", "{not json")
         with self.assertRaises(PlanError) as caught:
             store.load_plan(self.plan_dir).source_root
         self.assertEqual(caught.exception.code, "WORKSPACE_LAYOUT_INVALID")

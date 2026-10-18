@@ -37,7 +37,7 @@ PHASES = ("request", "lock", "digest", "plan", "copy", "verify", "rename", "mark
 ENV_FAIL_AT = "SKM_MIGRATOR_FAIL_AT"  # tests only: pre-rename | post-rename | copy
 _OP_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 _DEVICE = re.compile(r"^[A-Za-z0-9]{1,16}$")
-_PROJECT_ID = re.compile(r"^prj_[0-9A-HJKMNP-TV-Z]{26}$")
+_PROJECT_ID = re.compile(r"^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$")
 _ACTIONS = {"copy": "copied", "equal": "skipped-equal", "import": "imported-copy", "keep": "kept-workspace"}
 DEFAULT_LOCK_TIMEOUT_S = 30.0
 
@@ -114,7 +114,7 @@ def parse(request: dict) -> Dict[str, object]:
     project_id = _text(request, "project_id")
     op_id = _text(request, "op_id")
     if not _PROJECT_ID.match(project_id):
-        raise Refusal("INPUT_INVALID", "project_id must look like prj_ and 26 Crockford base32 characters", "request")
+        raise Refusal("INPUT_INVALID", "project_id must be a code: lowercase letters, digits and single hyphens, at most 40 characters", "request")
     if not _OP_ID.match(op_id):
         raise Refusal("INPUT_INVALID", "op_id must be 1-64 letters, digits, '_' or '-'", "request")
     manifest = request.get("manifest")
@@ -174,10 +174,10 @@ def _check_unique(units: List[Unit]) -> None:
 
 
 @contextlib.contextmanager
-def migration_lock(project_id: str):
+def migration_lock(project_id: str, workspace_code: str):
     """``flock`` on ``<workspace state>/migrate-<project_id>.lock``: a second migration of the project is refused."""
     from aicore.state.locations import ensure_dir, workspace_state_dir
-    directory = ensure_dir(workspace_state_dir())
+    directory = ensure_dir(workspace_state_dir(code=workspace_code))
     handle = open(directory / f"migrate-{project_id}.lock", "a+")
     try:
         try:
@@ -428,7 +428,7 @@ def _apply(request: dict, progress, state: Dict[str, str]) -> Dict[str, object]:
     if announced != sorted(names):
         raise Refusal("MIGRATION_SOURCE_CHANGED", "the plans of the source changed since the plan; run plan again",
                       "lock", changed=sorted(set(announced) ^ set(names)))
-    with migration_lock(request["project_id"]), contextlib.ExitStack() as locks:
+    with migration_lock(request["project_id"], workspace_root.name), contextlib.ExitStack() as locks:
         lock_plans(locks, plans, names, request["timeout"])
         _phase(state, "digest", progress)
         fresh = inspector.inspect(project_root, progress)
@@ -465,7 +465,7 @@ def _apply(request: dict, progress, state: Dict[str, str]) -> Dict[str, object]:
         _transfer(units, staging, project_dir, workspace_root, progress)
         _fail_point("post-rename")
         _phase(state, "marker", progress)
-        aicore_workspace.write_marker(project_root, request["project_id"], "workspace")
+        aicore_workspace.write_marker(project_root, workspace_root.name, request["project_id"], "workspace")
         _phase(state, "done", progress)
     return {"result": "applied", "phase": "done", "mode": request["mode"], "op_id": request["op_id"],
             "plans": [unit.result() for unit in units]}

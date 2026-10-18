@@ -27,7 +27,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, 
 
 from aicore.state import ensure_dir, workspace_state_dir
 from aicore.util.io import atomic_write_text
-from aicore.workspace import WorkspaceError, project_dir, utc_now
+from aicore.workspace import WorkspaceError, is_code, project_dir, utc_now
 
 from . import events, gitutil, layout, localonly, safety
 
@@ -127,7 +127,7 @@ def conflict_row(path: str) -> Dict[str, Any]:
     project_id: Optional[str] = None
     plan: Optional[str] = None
     ref: Optional[str] = None
-    if len(parts) >= 2 and parts[0] == "projects" and parts[1].startswith("prj_"):
+    if len(parts) >= 2 and parts[0] == "projects" and is_code(parts[1]):
         project_id = parts[1]
         if len(parts) >= 5 and parts[2] == "plans":
             index = 4 if parts[3] == "archive" and len(parts) >= 6 else 3

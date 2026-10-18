@@ -31,7 +31,7 @@ PROJECT_ENTRIES = frozenset({"project.json", "plans", "legacy-plans", "migration
 KEEP_FILE = "projects/.gitkeep"  # keeps the empty projects folder in git (written by init)
 SECRET_NAMES = (".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "credentials.*", "secrets.*")
 PATTERN_NAMES = ("token", "named-secret")
-_PROJECT_ID = re.compile(r"prj_[0-9A-HJKMNP-TV-Z]{26}")
+_PROJECT_ID = re.compile(r"[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}")
 _HOME_PATH = re.compile(r"/home/[^/\s\"']+/|/Users/[^/\s\"']+/|[A-Za-z]:\\\\?Users\\\\?")
 _ABSOLUTE = re.compile(r"^(?:[/~]|[A-Za-z]:[\\/])")
 # Matches of the redaction patterns that are not secrets: a lower-case hyphenated word that starts with ``sk-`` (the tail of
@@ -147,8 +147,8 @@ def _layout_findings(rel: str, parts: Sequence[str]) -> List[Dict[str, Any]]:
         found.append(_finding("PS-TOP-LEVEL", rel, f"{parts[0]!r} is not part of the workspace layout"))
     elif parts[0] == "projects" and rel != KEEP_FILE:
         if len(parts) < 3 or not _PROJECT_ID.fullmatch(parts[1]):
-            found.append(_finding("PS-PROJECT-LEVEL", rel, "projects/ holds only folders named by a project id (prj_ and "
-                                  "26 characters)"))
+            found.append(_finding("PS-PROJECT-LEVEL", rel, "projects/ holds only folders named by a project code "
+                                  "(lowercase letters, digits, single hyphens)"))
         elif parts[2] not in PROJECT_ENTRIES:
             found.append(_finding("PS-PROJECT-LEVEL", rel, f"{parts[2]!r} is not part of a project folder"))
     return found

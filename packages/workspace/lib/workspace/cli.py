@@ -6,29 +6,37 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, List, Optional, Sequence
 
 from aicore.config import ConfigError
-from aicore.state import ProjectContextRequired, resolve_project
-from aicore.workspace import WorkspaceError
+from aicore.state import (ProjectContextRequired, WorkspaceSelectionError, is_code, list_workspaces, resolve_project,
+                          selected_workspace, workspaces_root)
+from aicore.workspace import WorkspaceError, read_marker
 
 from . import __version__, doctor, events, layout, migrate, projects, remote, sync
 
 USAGE = """usage: workspace <command> [options]
 
+A machine can hold several workspaces (one git repository each) under workspaces/<code>/. The command works with the one
+named by --workspace CODE (anywhere in the arguments), else SKM_WORKSPACE, else the workspace of the project you are in,
+else the only workspace of the machine.
+
 commands:
-  init [--root DIR] [--json]        create the workspace layout, its git repository and the device file
+  init --code CODE [--root DIR] [--json]
+                                    create the workspace CODE (workspaces/CODE): layout, git repository, device file
+  list [--json]                     the workspaces of this machine
   status [--fetch] [--json]         layout, git state, projects and their bindings on this machine
   doctor [--json]                   structural checks of the workspace and of the bindings
   doctor --publish-safety [--all] [--json]
                                     publish-safety rules on the files of the next commit (--all: every file);
                                     exit 1 when a rule blocks (PUBLISH_BLOCKED)
-  project attach [--project DIR] [--name N] [--yes] [--json]
+  project attach [--project DIR] [--name N] [--code CODE] [--yes] [--json]
                                     attach a checkout to a project (writes the marker, never commits it)
   project list [--json]             projects of the workspace and their bindings on this machine
-  project show PROJECT_ID [--json]  project record, binding and the plans the workspace holds
+  project show PROJECT_ID [--json]  project (code) record, binding and the plans the workspace holds
   project scan DIR... [--json]      bind the checkouts with a known marker found under DIR (depth 4)
   project rebind PROJECT_ID --path DIR [--json]
                                     replace the bound paths of a project by one checkout
@@ -37,10 +45,10 @@ commands:
   migrate discover [DIR...] [--json]
                                     checkouts with plans: launcher projects under DIR (default ~/projects) and the maind registry
   migrate plan --project DIR [--on-conflict keep-workspace|import-copy] [--allow-in-progress] [--local-only-secrets]
-               [--yes] [--json]
+               [--code CODE] [--yes] [--json]
                                     dry run: classes, digests, publish-safety, comparison with the workspace; writes nothing
   migrate apply --project DIR [--on-conflict ...] [--lock-timeout S] [--allow-in-progress] [--local-only-secrets]
-                [--yes] [--json]
+                [--code CODE] [--yes] [--json]
                                     move the plans into the workspace through the plans-migrator port; prints, never commits;
                                     --local-only-secrets keeps files with a secret pattern on this machine (not in git)
   migrate verify --project DIR [--json]
@@ -51,7 +59,9 @@ commands:
                                     remove the old plans folders whose copy in the workspace is equal
   connect --remote URL [--branch B] [--json]
                                     classify the remote (empty or the same workspace) and add it as origin; never pushes
-  clone URL [--root DIR] [--json]   make this machine's workspace from a remote (the folder must be absent or empty)
+  clone URL [--code CODE] [--root DIR] [--json]
+                                    make a workspace of this machine from a remote (the code comes from the remote's
+                                    workspace.json; the folder must be absent or empty)
   sync [--commit] [--pull] [--push] [--resolve PATH=local|remote ...] [--resolve-reset] [--json]
                                     commit (publish-safety first), pull (dry merge, typed conflicts), resolve, push; no flag:
                                     commit and pull; --push needs and runs both; a conflict is never decided for you
@@ -72,7 +82,10 @@ def _build() -> argparse.ArgumentParser:
     parser = _Parser(prog="workspace", add_help=False)
     sub = parser.add_subparsers(dest="command", parser_class=_Parser)
     p = sub.add_parser("init")
+    p.add_argument("--code", metavar="CODE", required=True)
     p.add_argument("--root", metavar="DIR", default=None)
+    p.add_argument("--json", action="store_true")
+    p = sub.add_parser("list")
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("status")
     p.add_argument("--fetch", action="store_true")
@@ -88,6 +101,7 @@ def _build() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("clone")
     p.add_argument("url", metavar="URL")
+    p.add_argument("--code", metavar="CODE", default=None)
     p.add_argument("--root", metavar="DIR", default=None)
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("sync")
@@ -103,6 +117,7 @@ def _build() -> argparse.ArgumentParser:
     p = commands.add_parser("attach")
     p.add_argument("--project", metavar="DIR", default=None)
     p.add_argument("--name", metavar="N", default=None)
+    p.add_argument("--code", metavar="CODE", default=None)
     p.add_argument("--yes", action="store_true")
     p.add_argument("--json", action="store_true")
     p = commands.add_parser("list")
@@ -133,6 +148,7 @@ def _build() -> argparse.ArgumentParser:
         p.add_argument("--on-conflict", dest="on_conflict", choices=migrate.ON_CONFLICT, default=None)
         p.add_argument("--allow-in-progress", dest="allow_in_progress", action="store_true")
         p.add_argument("--local-only-secrets", dest="local_only_secrets", action="store_true")
+        p.add_argument("--code", metavar="CODE", default=None)
         p.add_argument("--yes", action="store_true")
         p.add_argument("--json", action="store_true")
         if name == "apply":
@@ -151,18 +167,30 @@ def _dump(doc: Any) -> None:
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
-    result = layout.init(args.root)
+    result = layout.init(args.code, args.root)
     if result["created"]:
-        events.emit("workspace.root.initialized", {"workspace_id": result["workspace_id"]}, subject=result["workspace_id"])
+        events.emit("workspace.root.initialized", {"code": result["code"], "workspace_id": result["workspace_id"]},
+                    subject=result["workspace_id"])
     if args.root is not None and layout.root_of(args.root) != layout.root_of(None):
-        print(f"note: other commands use {layout.root_of(None)}; set SKM_WORKSPACE_ROOT={result['root']} to use this "
-              f"workspace", file=sys.stderr)
+        print(f"note: {result['root']} is outside {workspaces_root()}; commands find this workspace only there",
+              file=sys.stderr)
     if args.json:
         _dump(result)
     elif result["already_initialized"]:
-        print(f"workspace {result['workspace_id']} is already initialized at {result['root']}")
+        print(f"workspace {result['code']} ({result['workspace_id']}) is already initialized at {result['root']}")
     else:
-        print(f"created workspace {result['workspace_id']} at {result['root']} (device {result['device_id']})")
+        print(f"created workspace {result['code']} ({result['workspace_id']}) at {result['root']} "
+              f"(device {result['device_id']})")
+    return 0
+
+
+def _cmd_list_workspaces(args: argparse.Namespace) -> int:
+    rows = layout.list_rows()
+    if args.json:
+        _dump({"workspaces": rows})
+        return 0
+    for row in rows:
+        print(f"{row['code']}  {row['remote'] or 'no remote'}  {row['projects']} project(s)  {row['root']}")
     return 0
 
 
@@ -172,7 +200,7 @@ def _cmd_status(args: argparse.Namespace) -> int:
         _dump(doc)
         return 0
     git = doc["git"] or {}
-    print(f"workspace {doc['workspace_id']} at {doc['root']}")
+    print(f"workspace {doc['code']} ({doc['workspace_id']}) at {doc['root']}")
     if doc["git"] is None:
         print("git: not a repository")
     else:
@@ -241,14 +269,15 @@ def _cmd_connect(args: argparse.Namespace) -> int:
 
 
 def _cmd_clone(args: argparse.Namespace) -> int:
-    doc = remote.clone(args.url, args.root)
-    if args.root is not None and layout.root_of(args.root) != layout.root_of(None):
-        print(f"note: other commands use {layout.root_of(None)}; set SKM_WORKSPACE_ROOT={doc['root']} to use this "
-              f"workspace", file=sys.stderr)
+    doc = remote.clone(args.url, args.root, code=args.code)
+    if args.root is not None:
+        print(f"note: {doc['root']} was chosen with --root; commands find a workspace only in {workspaces_root()}",
+              file=sys.stderr)
     if args.json:
         _dump(doc)
         return 0
-    print(f"cloned workspace {doc['workspace_id']} from {doc['remote']} to {doc['root']} (device {doc['device_id']})")
+    print(f"cloned workspace {doc['code']} ({doc['workspace_id']}) from {doc['remote']} to {doc['root']} "
+          f"(device {doc['device_id']})")
     print(f"next: {doc['next']}")
     return 0
 
@@ -323,7 +352,7 @@ def _project_root(value: Optional[str]) -> Path:
 
 
 def _cmd_attach(args: argparse.Namespace) -> int:
-    result = projects.attach(_project_root(args.project), name=args.name, yes=args.yes)
+    result = projects.attach(_project_root(args.project), name=args.name, yes=args.yes, code=args.code)
     events.emit("workspace.project.attached", {"project_id": result["project_id"], "created": result["created"]},
                 subject=result["project_id"])
     if args.json:
@@ -418,7 +447,7 @@ def _cmd_discover(args: argparse.Namespace) -> int:
 
 def _cmd_migrate_plan(args: argparse.Namespace) -> int:
     plan = migrate.build_plan(_project_root(args.project), args.on_conflict, args.allow_in_progress, args.yes,
-                              local_only_secrets=args.local_only_secrets)
+                              local_only_secrets=args.local_only_secrets, code=args.code)
     doc = plan.document
     if args.json:
         _dump(doc)
@@ -450,7 +479,7 @@ def _print_next(doc: Any) -> None:
 
 def _cmd_migrate_apply(args: argparse.Namespace) -> int:
     doc = migrate.apply(_project_root(args.project), args.on_conflict, args.lock_timeout, args.allow_in_progress, args.yes,
-                        local_only_secrets=args.local_only_secrets)
+                        local_only_secrets=args.local_only_secrets, code=args.code)
     attached = doc.pop("attached", None)
     if attached is not None:
         events.emit("workspace.project.attached", {"project_id": attached["project_id"], "created": attached["created"]},
@@ -510,7 +539,7 @@ def _cmd_migrate_cleanup(args: argparse.Namespace) -> int:
     return 0
 
 
-_COMMANDS = {"init": _cmd_init, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version,
+_COMMANDS = {"init": _cmd_init, "list": _cmd_list_workspaces, "status": _cmd_status, "doctor": _cmd_doctor, "version": _cmd_version,
              "connect": _cmd_connect, "clone": _cmd_clone, "sync": _cmd_sync}
 _PROJECT = {"attach": _cmd_attach, "list": _cmd_list, "show": _cmd_show, "scan": _cmd_scan, "rebind": _cmd_rebind,
             "detach": _cmd_detach}
@@ -518,8 +547,73 @@ _MIGRATE = {"discover": _cmd_discover, "plan": _cmd_migrate_plan, "apply": _cmd_
             "verify": _cmd_migrate_verify, "rollback": _cmd_migrate_rollback, "cleanup": _cmd_migrate_cleanup}
 
 
+def _take_workspace_option(args: List[str]) -> Optional[str]:
+    """Remove ``--workspace CODE`` / ``--workspace=CODE`` from ``args`` and return the code (``None`` when absent)."""
+    found: Optional[str] = None
+    index = 0
+    while index < len(args):
+        value = args[index]
+        if value == "--workspace" and index + 1 < len(args):
+            found = args[index + 1]
+            del args[index:index + 2]
+            continue
+        if value.startswith("--workspace="):
+            found = value.split("=", 1)[1]
+            del args[index]
+            continue
+        index += 1
+    return found
+
+
+def _workspace_of_cwd() -> Optional[str]:
+    """The workspace the project you are in belongs to (its marker), else ``None``."""
+    try:
+        context = resolve_project(Path.cwd())
+        marker = read_marker(context.root) if context is not None else None
+    except Exception:  # a damaged marker is reported by the command that needs the project
+        return None
+    return marker["workspace"] if marker else None
+
+
+# commands that choose or create a workspace themselves, or need none
+_WITHOUT_SELECTION = frozenset({"init", "list", "clone", "version"})
+
+
+def _select_workspace(command: str, option: Optional[str]) -> None:
+    """Make ``SKM_WORKSPACE`` name the workspace of this run (``--workspace``, the environment, the project you are in,
+    the only workspace of the machine). ``init`` names it with ``--code``; ``clone`` reads it from the remote."""
+    if command in _WITHOUT_SELECTION:
+        if option is not None:
+            os.environ["SKM_WORKSPACE"] = option
+        return
+    if option is not None:
+        if not is_code(option):
+            raise WorkspaceError("WORKSPACE_CODE_INVALID", f"--workspace {option!r} is not a workspace code")
+        os.environ["SKM_WORKSPACE"] = option
+        return
+    if os.environ.get("SKM_WORKSPACE"):
+        return
+    chosen = _workspace_of_cwd()
+    if chosen is not None:
+        os.environ["SKM_WORKSPACE"] = chosen
+        return
+    os.environ["SKM_WORKSPACE"] = selected_workspace()  # the only workspace, else WORKSPACE_NOT_FOUND / _AMBIGUOUS
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    saved = os.environ.get("SKM_WORKSPACE")
+    try:
+        return _main(argv)
+    finally:
+        if saved is None:
+            os.environ.pop("SKM_WORKSPACE", None)
+        else:
+            os.environ["SKM_WORKSPACE"] = saved
+
+
+def _main(argv: Optional[Sequence[str]] = None) -> int:
     args: List[str] = list(sys.argv[1:] if argv is None else argv)
+    option = _take_workspace_option(args)
     if not args:
         sys.stderr.write(USAGE)
         return 2
@@ -542,8 +636,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     else:
         handler = _COMMANDS[namespace.command]
     try:
+        _select_workspace(namespace.command, option)
         return handler(namespace)
-    except WorkspaceError as exc:
+    except (WorkspaceError, WorkspaceSelectionError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
     except ProjectContextRequired as exc:

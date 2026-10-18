@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Sequence, Union
 
-from aicore.state.locations import ensure_dir, workspace_state_dir
+from aicore.state.locations import device_file, ensure_dir, is_code
 from aicore.util import schema
 from aicore.util.io import atomic_write_text
 
@@ -95,10 +95,11 @@ def read_marker(root: PathLike) -> Optional[dict]:
     return _read(Path(root) / MARKER_RELPATH, "project-marker", "PROJECT_MARKER_INVALID")
 
 
-def write_marker(root: PathLike, project_id: str, plans_store: str) -> dict:
-    """Write the marker atomically; the caller commits it. ``ValueError`` for an invalid id or store."""
+def write_marker(root: PathLike, workspace: str, project_id: str, plans_store: str) -> dict:
+    """Write the marker atomically; the caller commits it. ``workspace`` and ``project_id`` are codes. ``ValueError`` for
+    an invalid code or store."""
     return _write(Path(root) / MARKER_RELPATH, "project-marker",
-                  _doc("project-marker", project_id=project_id, plans_store=plans_store))
+                  _doc("project-marker", workspace=workspace, project_id=project_id, plans_store=plans_store))
 
 
 def read_workspace(ws: PathLike) -> Optional[dict]:
@@ -106,16 +107,17 @@ def read_workspace(ws: PathLike) -> Optional[dict]:
     return _read(Path(ws) / WORKSPACE_FILE, "workspace", "WORKSPACE_LAYOUT_INVALID")
 
 
-def write_workspace(ws: PathLike, workspace_id: str, created_by: str, created_at: Optional[str] = None) -> dict:
+def write_workspace(ws: PathLike, code: str, workspace_id: str, created_by: str,
+                    created_at: Optional[str] = None) -> dict:
     return _write(Path(ws) / WORKSPACE_FILE, "workspace",
-                  _doc("workspace", workspace_id=workspace_id, layout=1, created_at=created_at or utc_now(),
+                  _doc("workspace", code=code, workspace_id=workspace_id, layout=2, created_at=created_at or utc_now(),
                        created_by=created_by))
 
 
 def project_dir(ws: PathLike, project_id: str) -> Path:
-    """``<ws>/projects/<project_id>`` (nothing is created; the id must be a project id)."""
-    if not re.fullmatch(r"prj_[0-9A-HJKMNP-TV-Z]{26}", project_id):
-        raise ValueError(f"invalid project id {project_id!r}")
+    """``<ws>/projects/<project_id>`` (nothing is created; the id is the project code)."""
+    if not is_code(project_id):
+        raise ValueError(f"invalid project code {project_id!r}")
     return Path(ws) / "projects" / project_id
 
 
@@ -132,11 +134,11 @@ def write_project(ws: PathLike, project_id: str, name: str, remotes: Sequence[st
 
 
 def _device_path(env: Optional[Mapping[str, str]], home: Optional[PathLike]) -> Path:
-    return workspace_state_dir(env, home) / DEVICE_FILE
+    return device_file(env, home)
 
 
 def read_device(env: Optional[Mapping[str, str]] = None, home: Optional[PathLike] = None) -> Optional[dict]:
-    """The device file of this machine (``device.json`` in ``workspace_state_dir()``); ``None`` when absent."""
+    """The device file of this machine (``state/workspaces/device.json``, shared by every workspace); ``None`` when absent."""
     return _read(_device_path(env, home), "workspace-device", "WORKSPACE_LAYOUT_INVALID")
 
 

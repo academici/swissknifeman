@@ -12,7 +12,7 @@ from aicore.workspace import WorkspaceError
 from tests import TempCase, git
 from workspace import gitutil, layout, localonly, remote, sync
 
-PID = "prj_" + "0" * 26
+PID = "proj-zero"
 PLAN = "2026.10.17-n1-DEMO"
 
 
@@ -52,10 +52,10 @@ class SyncCase(TempCase):
     def machine(self, name):
         """Environment of machine ``name`` (its own SKM_HOME, HOME and workspace root)."""
         env = {"HOME": str(self.root / f"home-{name}"), "SKM_HOME": str(self.root / f"skm-{name}"),
-               "SKM_WORKSPACE_ROOT": str(self.root / f"ws-{name}")}
+               "SKM_WORKSPACES_ROOT": str(self.root / f"wss-{name}"), "SKM_WORKSPACE": "axioma"}
         (self.root / f"home-{name}").mkdir(exist_ok=True)
         with mock.patch.dict(os.environ, env):
-            yield self.root / f"ws-{name}"
+            yield self.root / f"wss-{name}" / "axioma"
 
     def put(self, ws, rel, text, plan=PLAN):
         path = ws / "projects" / PID / "plans" / plan / rel
@@ -76,7 +76,7 @@ class SyncCase(TempCase):
     def two_machines(self):
         """A pushed a workspace holding one plan; B cloned it. Returns the bare repository."""
         bare = self.bare()
-        layout.init()
+        layout.init("axioma")
         self.put(self.ws, "plan.json", '{"title": "demo"}\n')
         self.put(self.ws, "phases/P2/P2.3.json", '{"summary": "base"}\n')
         self.put(self.ws, "log.jsonl", '{"n": 0}\n')
@@ -126,13 +126,13 @@ class StepTests(unittest.TestCase):
 
 class CommitTests(SyncCase):
     def test_nothing_to_commit(self):
-        layout.init()
+        layout.init("axioma")
         doc = sync.sync(commit=True)
         self.assertEqual(doc["commit"]["status"], "nothing")
         self.assertEqual(doc["steps"], ["commit"])
 
     def test_one_plan_commit_has_plan_subject_and_trailer(self):
-        layout.init()
+        layout.init("axioma")
         self.put(self.ws, "plan.json", "{}\n")
         self.put(self.ws, "phases/P1/P1.1.json", "{}\n")
         with mock.patch.object(sync.events, "emit") as emit:
@@ -154,14 +154,14 @@ class CommitTests(SyncCase):
         self.assertEqual([(row["op"], row["result"]) for row in audit], [("commit", "ok")])
 
     def test_several_plans_get_the_workspace_subject(self):
-        layout.init()
+        layout.init("axioma")
         self.put(self.ws, "plan.json", "{}\n")
         self.put(self.ws, "plan.json", "{}\n", plan="other")
         sync.sync(commit=True)
         self.assertTrue(git(self.ws, "log", "-1", "--format=%s").startswith("skm(workspace): sync 2 files"))
 
     def test_secret_blocks_everything(self):
-        layout.init()
+        layout.init("axioma")
         before = self.head(self.ws)
         self.put(self.ws, "plan.json", "{}\n")
         self.put(self.ws, "notes.md", "token = sk-ABCDEFGHIJKLMNOPQRSTUVWX0123456789\n")
@@ -175,14 +175,14 @@ class CommitTests(SyncCase):
         self.assertEqual(git(self.ws, "diff", "--cached", "--name-only").strip(), "")
 
     def test_manifest_with_absolute_path_blocks(self):
-        layout.init()
+        layout.init("axioma")
         path = self.ws / "projects" / PID / "project.json"
         path.parent.mkdir(parents=True)
         path.write_text('{"path": "/home/someone/code"}\n', encoding="utf-8")
         self.assertEqual(self.code(sync.sync, commit=True), "PUBLISH_BLOCKED")
 
     def test_big_file_is_local_only_and_not_committed(self):
-        layout.init()
+        layout.init("axioma")
         self.put(self.ws, "plan.json", "{}\n")
         big = self.put(self.ws, "artifacts/dump.bin", "")
         big.write_bytes(b"\0" + b"x" * (1024 * 1024 + 10))
@@ -199,7 +199,7 @@ class CommitTests(SyncCase):
         self.assertEqual(sync.sync(commit=True)["commit"]["status"], "nothing")
 
     def test_tracked_file_that_becomes_local_only_leaves_the_index(self):
-        layout.init()
+        layout.init("axioma")
         data = self.put(self.ws, "artifacts/data.bin", "small\n")
         sync.sync(commit=True)
         rel = f"projects/{PID}/plans/{PLAN}/artifacts/data.bin"
@@ -213,7 +213,7 @@ class CommitTests(SyncCase):
         self.assertEqual(data.stat().st_size, 1024 * 1024 + 11)
 
     def test_execute_bit_is_cleared_in_the_index(self):
-        layout.init()
+        layout.init("axioma")
         script = self.put(self.ws, "tools/run.sh", "#!/bin/sh\n")
         script.chmod(0o755)
         doc = sync.sync(commit=True)
@@ -223,7 +223,7 @@ class CommitTests(SyncCase):
         self.assertEqual(git(self.ws, "status", "--porcelain"), "")  # the working file lost its execute bit too
 
     def test_remote_is_shown_without_user_information(self):
-        layout.init()
+        layout.init("axioma")
         git(self.ws, "remote", "add", "origin", "https://user:s3cret@example.invalid/team/ws.git")
         self.put(self.ws, "plan.json", "{}\n")
         doc = sync.sync(commit=True)
@@ -232,17 +232,17 @@ class CommitTests(SyncCase):
         self.assertNotIn("s3cret", (self.state / "audit.jsonl").read_text(encoding="utf-8"))
 
     def test_unfinished_merge_is_refused(self):
-        layout.init()
+        layout.init("axioma")
         (self.ws / ".git" / "MERGE_HEAD").write_text(self.head(self.ws) + "\n", encoding="utf-8")
         self.assertEqual(self.code(sync.sync, commit=True), "WORKSPACE_MERGE_IN_PROGRESS")
 
     def test_git_older_than_2_38_is_refused(self):
-        layout.init()
+        layout.init("axioma")
         with mock.patch.object(gitutil, "git_version", return_value=(2, 30, 0)):
             self.assertEqual(self.code(sync.sync, commit=True), "WORKSPACE_GIT_TOO_OLD")
 
     def test_pull_without_a_remote(self):
-        layout.init()
+        layout.init("axioma")
         self.assertEqual(self.code(sync.sync, pull=True), "REMOTE_NOT_SET")
         self.assertEqual(self.code(sync.sync, push=True), "REMOTE_NOT_SET")
 
@@ -250,7 +250,7 @@ class CommitTests(SyncCase):
 class PullPushTests(SyncCase):
     def test_push_to_an_empty_remote_and_clone(self):
         bare = self.bare()
-        layout.init()
+        layout.init("axioma")
         self.put(self.ws, "plan.json", "{}\n")
         remote.connect(self.url(bare))
         seen = []
@@ -281,7 +281,7 @@ class PullPushTests(SyncCase):
         doc = sync.sync(push=True)
         self.assertEqual(doc["pull"]["status"], "fast-forward")
         self.assertTrue((self.ws / "projects" / PID / "plans" / "plan-c" / "phases/P2/P2.3.json").is_file())
-        self.assertEqual(self.head(self.ws), self.head(self.root / "ws-b"))
+        self.assertEqual(self.head(self.ws), self.head(self.root / "wss-b" / "axioma"))
 
     def test_log_jsonl_of_one_plan_merges_by_union(self):
         self.two_machines()
@@ -315,7 +315,7 @@ class PullPushTests(SyncCase):
             self.assertFalse((ws_b / ".git" / "MERGE_HEAD").exists())
             emit.assert_called_once_with("workspace.sync.conflict", {"paths": [rel]}, subject=mock.ANY, env=mock.ANY,
                                          home=mock.ANY)
-            state = json.loads((self.root / "skm-b" / "state" / "workspace" / "sync.json").read_text(encoding="utf-8"))
+            state = json.loads((self.root / "skm-b" / "state" / "workspaces" / "axioma" / "sync.json").read_text(encoding="utf-8"))
             self.assertEqual(state["last_conflicts"]["conflicts"][0]["ref"], "P2.3")
             self.assertEqual(state["pending_resolutions"], {})
             self.assertEqual(state["last_result"], "WORKSPACE_CONFLICT")
@@ -331,7 +331,7 @@ class PullPushTests(SyncCase):
         self.put(self.ws, "decisions/D4.json", '{"d": "A"}\n')
         self.put(self.ws, "phases/P2/P2.3.json", '{"summary": "A again"}\n')
         sync.sync(push=True)
-        ws_b = self.root / "ws-b"
+        ws_b = self.root / "wss-b" / "axioma"
         with self.machine("b"):
             self.put(ws_b, "decisions/D4.json", '{"d": "B"}\n')
             self.put(ws_b, "phases/P2/P2.3.json", '{"summary": "B"}\n')
@@ -432,7 +432,7 @@ class PullPushTests(SyncCase):
 
     def tearDownMachines(self):
         import shutil
-        for name in ("ws", "ws-b", "origin.git", "skm", "skm-b"):
+        for name in ("wss", "wss-b", "origin.git", "skm", "skm-b"):
             shutil.rmtree(self.root / name, ignore_errors=True)
 
     def test_push_that_lost_a_race_is_behind(self):
@@ -451,14 +451,14 @@ class PullPushTests(SyncCase):
     def test_unrelated_histories_are_refused(self):
         bare = self.bare()
         other = self.root / "other"
-        layout.init(other)
+        layout.init("axioma", other)
         git(other, "push", "-q", str(bare), "HEAD:refs/heads/main")
-        layout.init()
+        layout.init("axioma")
         git(self.ws, "remote", "add", "origin", self.url(bare))
         self.assertEqual(self.code(sync.sync, pull=True), "WORKSPACE_UNRELATED_HISTORIES")
 
     def test_unreachable_remote_keeps_the_commit_and_reports_it(self):
-        layout.init()
+        layout.init("axioma")
         git(self.ws, "remote", "add", "origin", "file://" + str(self.root / "missing.git"))
         self.put(self.ws, "plan.json", "{}\n")
         with self.assertRaises(sync.SyncError) as caught:
@@ -517,7 +517,7 @@ class CliTests(SyncCase):
 
     def test_push_prints_remote_and_branch_before_it_runs(self):
         bare = self.bare()
-        layout.init()
+        layout.init("axioma")
         self.put(self.ws, "plan.json", "{}\n")
         remote.connect(self.url(bare))
         code, out, err = self.run_cli("sync", "--push")
@@ -529,7 +529,7 @@ class CliTests(SyncCase):
 
     def test_events_are_valid_against_their_schemas(self):
         bare = self.bare()
-        layout.init()
+        layout.init("axioma")
         self.put(self.ws, "plan.json", "{}\n")
         remote.connect(self.url(bare))
         code, out, err = self.run_cli("sync", "--push")

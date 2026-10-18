@@ -1,7 +1,7 @@
 {
   "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",
   "projects": {
-    "skm": {
+    "Skm_X": {
       "paths": [
         "/a"
       ],

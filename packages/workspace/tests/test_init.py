@@ -14,23 +14,23 @@ from workspace import gitutil, layout
 
 class InitTests(TempCase):
     def test_init_creates_the_layout_a_git_repository_and_the_device(self):
-        result = layout.init()
+        result = layout.init("axioma")
         self.assertEqual((result["created"], result["already_initialized"]), (True, False))
         self.assertEqual(result["root"], str(self.ws))
         for name in (".gitignore", ".gitattributes", "README.md", "workspace.json", "projects/.gitkeep"):
             self.assertTrue((self.ws / name).is_file(), name)
         self.assertTrue((self.ws / ".staging").is_dir())
         document = read_workspace(self.ws)
-        self.assertEqual((document["workspace_id"], document["layout"]), (result["workspace_id"], 1))
+        self.assertEqual((document["workspace_id"], document["layout"]), (result["workspace_id"], 2))
         self.assertEqual(document["created_by"], result["device_id"])
         device = read_device()
         self.assertEqual(device["device_id"], result["device_id"])
         self.assertEqual(validate_document("workspace-device", device), [])
         self.assertFalse((self.ws / "device.json").exists())  # machine files stay out of the git tree
-        self.assertTrue((self.state / "device.json").is_file())
+        self.assertTrue((self.state.parent / "device.json").is_file())
 
     def test_the_repository_has_one_commit_on_main_with_the_device_trailer(self):
-        result = layout.init()
+        result = layout.init("axioma")
         self.assertEqual(git(self.ws, "symbolic-ref", "--short", "HEAD").strip(), "main")
         self.assertEqual(git(self.ws, "rev-list", "--count", "HEAD").strip(), "1")
         message = git(self.ws, "log", "-1", "--format=%B")
@@ -41,7 +41,7 @@ class InitTests(TempCase):
         self.assertEqual(sorted(tracked), [".gitattributes", ".gitignore", "README.md", "projects/.gitkeep", "workspace.json"])
 
     def test_baseline_files(self):
-        layout.init()
+        layout.init("axioma")
         ignore = (self.ws / ".gitignore").read_text(encoding="utf-8").splitlines()
         for line in ("/.staging/", "**/.lock", "**/views/", "**/context/", ".env", "*.pem", "*.swp"):
             self.assertIn(line, ignore)
@@ -51,16 +51,16 @@ class InitTests(TempCase):
         self.assertIn("*.json text=auto eol=lf", attributes)
 
     def test_workspace_documents_hold_no_absolute_path(self):
-        layout.init()
+        layout.init("axioma")
         for name in ("workspace.json", "README.md", ".gitignore", ".gitattributes"):
             text = (self.ws / name).read_text(encoding="utf-8")
             self.assertNotIn(str(self.root), text, name)
             self.assertNotIn("/home/", text, name)
 
     def test_second_init_is_a_no_op(self):
-        first = layout.init()
+        first = layout.init("axioma")
         head = git(self.ws, "rev-parse", "HEAD")
-        second = layout.init()
+        second = layout.init("axioma")
         self.assertEqual((second["created"], second["already_initialized"]), (False, True))
         self.assertEqual((second["workspace_id"], second["device_id"]), (first["workspace_id"], first["device_id"]))
         self.assertEqual(git(self.ws, "rev-parse", "HEAD"), head)
@@ -69,7 +69,7 @@ class InitTests(TempCase):
         self.ws.mkdir()
         (self.ws / "notes.txt").write_text("mine", encoding="utf-8")
         with self.assertRaises(WorkspaceError) as caught:
-            layout.init()
+            layout.init("axioma")
         self.assertEqual(caught.exception.code, "WORKSPACE_ROOT_NOT_EMPTY")
         self.assertEqual(sorted(p.name for p in self.ws.iterdir()), ["notes.txt"])
         self.assertEqual((self.ws / "notes.txt").read_text(encoding="utf-8"), "mine")
@@ -79,20 +79,20 @@ class InitTests(TempCase):
         self.ws.mkdir()
         git(self.ws, "init", "-q")
         with self.assertRaises(WorkspaceError) as caught:
-            layout.init()
+            layout.init("axioma")
         self.assertEqual(caught.exception.code, "WORKSPACE_ROOT_NOT_EMPTY")
 
     def test_a_file_in_place_of_the_root_is_refused(self):
         self.ws.write_text("x", encoding="utf-8")
         with self.assertRaises(WorkspaceError) as caught:
-            layout.init()
+            layout.init("axioma")
         self.assertEqual(caught.exception.code, "WORKSPACE_ROOT_NOT_EMPTY")
         self.assertEqual(self.ws.read_text(encoding="utf-8"), "x")
 
     def test_an_empty_existing_folder_is_used_and_root_overrides_the_default(self):
         other = self.root / "elsewhere"
         other.mkdir()
-        result = layout.init(other)
+        result = layout.init("axioma", other)
         self.assertEqual(result["root"], str(other))
         self.assertTrue((other / "workspace.json").is_file())
         self.assertFalse(self.ws.exists())
@@ -107,19 +107,19 @@ class InitTests(TempCase):
 
         with mock.patch.object(gitutil, "git", failing):
             with self.assertRaises(WorkspaceError) as caught:
-                layout.init()
+                layout.init("axioma")
         self.assertNotIn("secret", str(caught.exception))
         self.assertFalse(self.ws.exists())
         self.ws.mkdir()
         with mock.patch.object(gitutil, "git", failing):
             with self.assertRaises(WorkspaceError):
-                layout.init()
+                layout.init("axioma")
         self.assertEqual(list(self.ws.iterdir()), [])
 
     def test_git_that_is_too_old_for_init_is_refused(self):
         with mock.patch.object(gitutil, "git_version", return_value=(2, 20, 0)):
             with self.assertRaises(WorkspaceError) as caught:
-                layout.init()
+                layout.init("axioma")
         self.assertEqual(caught.exception.code, "WORKSPACE_GIT_TOO_OLD")
         self.assertFalse(self.ws.exists())
 
@@ -130,7 +130,7 @@ class InitTests(TempCase):
         fcntl.flock(fd, fcntl.LOCK_EX)
         with mock.patch.object(gitutil, "lock_timeout", return_value=0.2):
             with self.assertRaises(WorkspaceError) as caught:
-                layout.init()
+                layout.init("axioma")
         self.assertEqual(caught.exception.code, "WORKSPACE_GIT_LOCKED")
         self.assertFalse(self.ws.exists())
 
@@ -142,9 +142,9 @@ class InitTests(TempCase):
         self.assertEqual(gitutil.lock_timeout(), 7.0)
 
     def test_a_relative_workspace_root_is_a_value_error(self):
-        with mock.patch.dict(os.environ, {"SKM_WORKSPACE_ROOT": "relative"}):
+        with mock.patch.dict(os.environ, {"SKM_WORKSPACES_ROOT": "relative"}):
             with self.assertRaises(ValueError):
-                layout.init()
+                layout.init("axioma")
 
     def test_git_calls_are_argument_lists_in_the_c_locale(self):
         with mock.patch("subprocess.run") as run:
@@ -157,13 +157,13 @@ class InitTests(TempCase):
         self.assertEqual(run.call_args.kwargs["env"]["LC_ALL"], "C")
 
     def test_init_journals_the_event_once(self):
-        self.run_cli("init")
-        self.run_cli("init")
+        self.run_cli("init", "--code", "axioma")
+        self.run_cli("init", "--code", "axioma")
         journal = self.root / "skm" / "state" / "events" / "events.jsonl"
         events = [json.loads(line) for line in journal.read_text(encoding="utf-8").splitlines()]
         self.assertEqual([e["type"] for e in events], ["workspace.root.initialized"])
         self.assertEqual(events[0]["source"], "urn:swissknifeman:module:workspace")
-        self.assertEqual(events[0]["data"], {"workspace_id": read_workspace(self.ws)["workspace_id"]})
+        self.assertEqual(events[0]["data"], {"code": "axioma", "workspace_id": read_workspace(self.ws)["workspace_id"]})
 
 
 class StatusTests(TempCase):
@@ -176,7 +176,7 @@ class StatusTests(TempCase):
             layout.status()
 
     def test_fresh_workspace(self):
-        result = layout.init()
+        result = layout.init("axioma")
         status = layout.status()
         self.assertEqual(status["workspace_id"], result["workspace_id"])
         self.assertEqual(status["git"], {"branch": "main", "dirty": 0, "remote": None, "ahead": None, "behind": None,
@@ -185,20 +185,20 @@ class StatusTests(TempCase):
         self.assertIsNone(status["last_sync"])
 
     def test_dirty_counts_changed_paths(self):
-        layout.init()
+        layout.init("axioma")
         (self.ws / "stray.txt").write_text("x", encoding="utf-8")
         (self.ws / "README.md").write_text("changed", encoding="utf-8")
         self.assertEqual(layout.status()["git"]["dirty"], 2)
 
     def test_the_remote_is_shown_without_user_information(self):
-        layout.init()
+        layout.init("axioma")
         git(self.ws, "remote", "add", "origin", "https://user:secret@example.com/team/ws.git")
         remote = layout.status()["git"]["remote"]
         self.assertEqual(remote, "https://example.com/team/ws.git")
         self.assertNotIn("secret", json.dumps(layout.status()))
 
     def test_ahead_behind_and_fetch_against_a_local_remote(self):
-        layout.init()
+        layout.init("axioma")
         bare = self.root / "remote.git"
         git(self.root, "init", "-q", "--bare", str(bare))
         git(self.ws, "remote", "add", "origin", str(bare))
@@ -222,14 +222,14 @@ class StatusTests(TempCase):
         self.assertRegex(fetched["fetched_at"], r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
 
     def test_fetch_failure_is_remote_unreachable(self):
-        layout.init()
+        layout.init("axioma")
         git(self.ws, "remote", "add", "origin", str(self.root / "missing.git"))
         with self.assertRaises(WorkspaceError) as caught:
             layout.status(fetch=True)
         self.assertEqual(caught.exception.code, "REMOTE_UNREACHABLE")
 
     def test_last_sync_is_read_from_the_machine_file(self):
-        layout.init()
+        layout.init("axioma")
         (self.state / "sync.json").write_text(json.dumps({"at": "2026-10-17T09:30:00Z"}), encoding="utf-8")
         self.assertEqual(layout.status()["last_sync"], {"at": "2026-10-17T09:30:00Z"})
 

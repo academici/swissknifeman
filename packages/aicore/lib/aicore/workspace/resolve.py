@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Mapping, Optional, Union
 
 from aicore.state.locations import launcher_root as _launcher_root
-from aicore.state.locations import workspace_root
+from aicore.state.locations import is_code, workspace_root, workspaces_root
 
 from . import WorkspaceError
 from .bindings import read_bindings
@@ -25,12 +25,13 @@ Env = Optional[Mapping[str, str]]
 @dataclass(frozen=True)
 class PlansStore:
     """``kind`` is ``legacy`` or ``workspace``; ``reason`` is ``no-marker``, ``marker-legacy`` or ``marker-workspace``;
-    ``project_id`` is ``None`` without a marker."""
+    ``project_id`` (the project code) and ``workspace`` (the workspace code) are ``None`` without a marker."""
 
     kind: str
     plans_root: Path
     project_id: Optional[str]
     reason: str
+    workspace: Optional[str] = None
 
 
 def resolve_plans_store(project_root: PathLike, env: Env = None, home: Optional[PathLike] = None) -> PlansStore:
@@ -41,14 +42,14 @@ def resolve_plans_store(project_root: PathLike, env: Env = None, home: Optional[
     if marker is None:
         return PlansStore("legacy", root / "plans", None, "no-marker")
     if marker["plans_store"] == "legacy":
-        return PlansStore("legacy", root / "plans", marker["project_id"], "marker-legacy")
-    workspace = workspace_root(env, home)
+        return PlansStore("legacy", root / "plans", marker["project_id"], "marker-legacy", marker.get("workspace"))
+    workspace = workspace_root(env, home, code=marker["workspace"])
     plans = workspace / "projects" / marker["project_id"] / "plans"
     if plans.is_dir():
-        return PlansStore("workspace", plans, marker["project_id"], "marker-workspace")
+        return PlansStore("workspace", plans, marker["project_id"], "marker-workspace", marker["workspace"])
     raise WorkspaceError("WORKSPACE_PROJECT_MISSING",
-                         f"plans of project {marker['project_id']} live in the portable workspace {workspace}; run "
-                         f"`swissknifeman workspace clone <url>` or `swissknifeman workspace sync --pull`")
+                         f"plans of project {marker['project_id']} live in the workspace {marker['workspace']} "
+                         f"({workspace}); run `swissknifeman workspace clone <url>` or `swissknifeman workspace sync --pull`")
 
 
 def legacy_plans_present(project_root: PathLike) -> bool:
@@ -60,25 +61,26 @@ def legacy_plans_present(project_root: PathLike) -> bool:
         return False
 
 
-def _workspace_project_of(plan_dir: str, env: Env, home: Optional[PathLike]) -> Optional[str]:
-    """The project id when ``plan_dir`` is ``<workspace>/projects/<id>/plans[/...]``, else ``None``."""
-    projects = os.path.realpath(str(workspace_root(env, home) / "projects"))
+def _workspace_project_of(plan_dir: str, env: Env, home: Optional[PathLike]) -> Optional[tuple]:
+    """``(workspace code, project code)`` when ``plan_dir`` is ``<workspaces>/<ws>/projects/<id>/plans[/...]``, else
+    ``None``."""
+    base = os.path.realpath(str(workspaces_root(env, home)))
     try:
-        relative = os.path.relpath(plan_dir, projects)
+        relative = os.path.relpath(plan_dir, base)
     except ValueError:
         return None
     parts = relative.split(os.sep)
-    if len(parts) >= 2 and parts[0] not in ("..", ".") and parts[1] == "plans":
-        return parts[0]
+    if len(parts) >= 4 and is_code(parts[0]) and parts[1] == "projects" and is_code(parts[2]) and parts[3] == "plans":
+        return parts[0], parts[2]
     return None
 
 
-def _marker_id(root: PathLike) -> Optional[str]:
+def _marker_key(root: PathLike) -> Optional[tuple]:
     try:
         marker = read_marker(root)
     except WorkspaceError:
         return None
-    return marker["project_id"] if marker else None
+    return (marker["workspace"], marker["project_id"]) if marker else None
 
 
 def source_root_of(plan_dir: PathLike, env: Env = None, home: Optional[PathLike] = None,
@@ -91,24 +93,28 @@ def source_root_of(plan_dir: PathLike, env: Env = None, home: Optional[PathLike]
     launcher project of this process (:func:`aicore.state.launcher_root`).
     """
     real = os.path.realpath(str(plan_dir))
-    project_id = _workspace_project_of(real, env, home)
-    if project_id is None:
+    found = _workspace_project_of(real, env, home)
+    if found is None:
         for candidate in (Path(real), *Path(real).parents):
             if candidate.name == "plans":
                 return candidate.parent
         return None
+    workspace, project_id = found
+    key = (workspace, project_id)
     bound = Path(launcher) if launcher is not None else _launcher_root(env)
     if bound is not None:
-        launcher_id = _marker_id(bound)
-        if launcher_id == project_id:
+        launcher_key = _marker_key(bound)
+        if launcher_key == key:
             return bound
-        if launcher_id is not None:
-            raise WorkspaceError("PROJECT_CONTEXT_CONFLICT", f"the launcher project is {launcher_id}, but the plan "
-                                 f"belongs to {project_id}; run the command from that project")
-    entry = read_bindings(env, home)["projects"].get(project_id)
+        if launcher_key is not None:
+            raise WorkspaceError("PROJECT_CONTEXT_CONFLICT", f"the launcher project is {launcher_key[0]}/{launcher_key[1]}, "
+                                 f"but the plan belongs to {workspace}/{project_id}; run the command from that project")
+    scoped = dict(os.environ if env is None else env)
+    scoped["SKM_WORKSPACE"] = workspace
+    entry = read_bindings(scoped, home)["projects"].get(project_id)
     if entry is None:
         return None
     for candidate in [entry["primary"]] + [path for path in entry["paths"] if path != entry["primary"]]:
-        if os.path.isdir(candidate) and _marker_id(candidate) == project_id:
+        if os.path.isdir(candidate) and _marker_key(candidate) == key:
             return Path(candidate)
     return None

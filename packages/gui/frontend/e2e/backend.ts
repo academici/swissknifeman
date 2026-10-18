@@ -63,7 +63,8 @@ export default async function setup(): Promise<() => Promise<void>> {
     HOME: join(base, "home"),
     SKM_HOME: join(base, "skm"),
     SKM_UNITS_PATH: [fixtures, bridge, planner, workspaceBridge, workspaceModule].join(delimiter),
-    SKM_WORKSPACE_ROOT: join(base, "workspace"),
+    SKM_WORKSPACES_ROOT: join(base, "workspaces"),
+    SKM_WORKSPACE: "axioma",
     SKM_WORKSPACE_MODULE_ROOT: workspaceModule,
     GIT_CONFIG_GLOBAL: "/dev/null",
     GIT_CONFIG_NOSYSTEM: "1",
@@ -100,7 +101,7 @@ export default async function setup(): Promise<() => Promise<void>> {
   process.env.GUI_E2E_HOME = join(base, "home");
   process.env.GUI_E2E_BASE = base;
   process.env.GUI_E2E_SKM_HOME = join(base, "skm");
-  process.env.GUI_E2E_WORKSPACE = join(base, "workspace");
+  process.env.GUI_E2E_WORKSPACE = join(base, "workspaces", "axioma");
   process.env.GUI_E2E_WORKSPACE_MODULE = workspaceModule;
   // config.spec.ts rewrites the machine layer; plugins.spec.ts puts this text back before it needs the extension
   process.env.GUI_E2E_CONFIG_FILE = configFile;

@@ -171,6 +171,9 @@ def _absolute_pointers(node: Any, pointer: str = "") -> List[str]:
 def _not_a_secret(index: int, match: "re.Match[str]") -> bool:
     text = match.group(0)
     if index == 0:
+        start = match.start()
+        if text.startswith("sk-") and start > 0 and match.string[start - 1].isalnum():
+            return True  # the tail of a word such as ``task-0204-...``, not a key
         return _SLUG.fullmatch(text) is not None
     return _PLACEHOLDER.fullmatch(text[len(match.group(1)):]) is not None
 

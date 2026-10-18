@@ -74,7 +74,7 @@ class SecretTests(SafetyCase):
                 self.assertEqual(self.rules(report), [("PS-SECRET", path)])
 
     def test_slugs_placeholders_and_references_are_not_secrets(self):
-        quiet = ["see task-development-workflow-and-more for details", "skill sk-plugin-development-guide",
+        quiet = ["see task-development-workflow-and-more for details", "skill sk-plugin-development-guide", "findings-task-0204-lifecycle-compatibility-2026-09-22.json",
                  'token = "<SET-ME-LATER>"', "SECRET=<SECRET_VALUE>", 'api_key: ${API_KEY_VALUE}', 'token = "env://MY_TOKEN_NAME"',
                  "password: $PASSWORD_FROM_ENV"]
         for index, content in enumerate(quiet):

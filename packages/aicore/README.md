@@ -290,6 +290,7 @@ The command runs in the cleaned environment with `SKM_PROJECT_ROOT`, `SKM_EVENT_
 A plugin is a folder with an `extension.json` (`extension/v1`; kinds `command` and `subscriber`), registered in the machine
 config under `[aicore.plugins.<id>]`. `aicore.ext.plugins.load_manifest` checks the manifest before anything runs
 (schema, entrypoint inside the folder, protocol range against the host's `1`, required contracts, permission profile).
+A manifest may declare `limits.max_stdout_bytes` (integer, 1 MiB to 64 MiB; default 1 MiB): the largest stdout the host accepts from one call of that plugin, above it `PROTOCOL_STDOUT_TOO_LARGE`.
 Then the plugin is started with a `plugin-request/v1` of `op` `describe` (the host adds `protocol`, `request_id`, `deadline_ms` and `context`).
 Its `id`, `version`, `kind` and `capabilities_digest` (digest of `provides`) must equal the manifest and its `protocol`
 must lie in the range shared by the manifest and the host; only then `invoke` (a point a module declared in

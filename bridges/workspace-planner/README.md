@@ -5,7 +5,7 @@ the workspace module (`provides.ports` of `unit.json`): the one place that knows
 layout of the workspace at the same time (PLAN6 decision D6, contract `workspace-contract#migration`).
 
 The workspace module never imports this code. It calls the plugin `workspace-planner` through `aicore.ext.plugins`
-(`timeout_seconds` 3600, a large project takes minutes); the request and the answer follow the contract
+(`timeout_seconds` 3600, a large project takes minutes; `limits.max_stdout_bytes` 32 MiB, because the manifest of digests of a project with thousands of plan files exceeds the default 1 MiB); the request and the answer follow the contract
 `urn:swissknifeman:workspace:plans-migrator` (`schemas/plans-migrator/v1` of the workspace module).
 
 | `op` | What it does |

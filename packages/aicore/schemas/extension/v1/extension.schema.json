@@ -155,6 +155,19 @@
       "maximum": 3600,
       "description": "Default deadline of one call, in seconds."
     },
+    "limits": {
+      "type": "object",
+      "description": "Optional limits the plugin asks the host to apply to one call.",
+      "properties": {
+        "max_stdout_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 67108864,
+          "description": "Largest stdout of one call in bytes; the default and the minimum are 1 MiB, the cap is 64 MiB."
+        }
+      },
+      "additionalProperties": false
+    },
     "example_input": {
       "type": "object",
       "description": "Input of a sample call, used by the conformance check."

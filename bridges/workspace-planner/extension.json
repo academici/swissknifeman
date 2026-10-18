@@ -6,6 +6,9 @@
   ],
   "id": "workspace-planner",
   "kind": "command",
+  "limits": {
+    "max_stdout_bytes": 33554432
+  },
   "permissions": {
     "env": [
       "PLANNER_ROOT",

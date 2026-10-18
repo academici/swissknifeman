@@ -35,7 +35,7 @@ from . import settings as _settings
 from . import units as _units
 from .environment import clean_environment, effective_profile, ignored_requests
 from .errors import ExtError
-from .process import ProcessResult, run_json
+from .process import MAX_STDOUT, ProcessResult, run_json
 
 HOST_PROTOCOL = (1, 1)
 DESCRIBE_DEADLINE_S = 10
@@ -79,6 +79,11 @@ class Manifest:
     timeout_seconds: Optional[int]
     example_input: Optional[Dict[str, Any]]
     document: Dict[str, Any] = field(repr=False, compare=False)
+
+    @property
+    def max_stdout(self) -> int:
+        """The stdout limit of one call: ``limits.max_stdout_bytes`` of the manifest, else ``MAX_STDOUT``."""
+        return (self.document.get("limits") or {}).get("max_stdout_bytes", MAX_STDOUT)
 
     @property
     def points(self) -> List[str]:
@@ -390,7 +395,7 @@ def _launch(registration: Registration, manifest: Manifest, fields: Mapping[str,
                           "trusted": registration.trusted}
     result = run_json(list(manifest.entrypoint), request, deadline_s=deadline_s, env=child_env,
                       cwd=str(project) if project is not None else str(manifest.directory),
-                      secrets_to_redact=secrets)
+                      secrets_to_redact=secrets, max_stdout=manifest.max_stdout)
     if not result.ok:
         raise _failure(registration, result)
     document = result.document

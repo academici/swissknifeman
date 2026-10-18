@@ -1,0 +1,33 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/workspace-planner/README.md",
+    "bridges/workspace-planner/extension.json",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/README.md",
+    "packages/aicore/lib/aicore/ext/plugins.py",
+    "packages/aicore/schemas/extension/v1/extension.schema.json",
+    "packages/aicore/tests/ext/test_plugins.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "kind": "note",
+      "text": "Docs sentence went into packages/aicore/README.md (inside packages/aicore, so within scope); no other doc lists manifest fields."
+    },
+    {
+      "kind": "note",
+      "severity": "low",
+      "text": "git status shows modified lock files (docs/package-lock.json, packages/gui/**/*.lock, maind/skiller package-lock, skiller/skills.json) that I did not touch; they are not part of this piece and should not be committed with it."
+    },
+    {
+      "impact": "none",
+      "kind": "note",
+      "next": "none",
+      "text": "the conductor mended the form of this report: status done_with_deviations named no deviation issue; it is done"
+    }
+  ],
+  "summary": "Added optional limits.max_stdout_bytes (1 MiB..64 MiB integer) to extension/v1; Manifest.max_stdout (default MAX_STDOUT) is passed as max_stdout to run_json in plugins._launch. workspace-planner manifest declares 33554432. Tests added for manifest validation and for large answers with and without the field. CHANGELOGs, aicore README and bridge README updated.",
+  "status": "done"
+}

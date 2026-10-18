@@ -144,6 +144,21 @@ class TestManifest(PluginCase):
         self.assertEqual(script.parent, (PLUGINS / "echo").resolve())
         self.assertEqual(manifest.capabilities_digest, digest_json(manifest.provides))
 
+    def test_max_stdout_limit_is_validated(self):
+        cap = 64 * 1024 * 1024
+        self.assertEqual(plugins.load_manifest(self.stage("echo")).max_stdout, 1048576)
+        for value in (1048576, 33554432, cap):
+            with self.subTest(value):
+                manifest = plugins.load_manifest(self.stage("echo", name=f"ok{value}",
+                                                            patch={"limits": {"max_stdout_bytes": value}}))
+                self.assertEqual(manifest.max_stdout, value)
+        for value in (0, -1, 1.5, "x", 1048575, cap + 1, True):
+            with self.subTest(value):
+                with self.assertRaises(ExtError) as caught:
+                    plugins.load_manifest(self.stage("echo", name=f"bad{value}",
+                                                     patch={"limits": {"max_stdout_bytes": value}}))
+                self.assertEqual(caught.exception.code, "PLUGIN_MANIFEST_INVALID")
+
     def test_valid_subscriber_manifest(self):
         manifest = plugins.load_manifest(PLUGINS / "sub" / "extension.json")
         self.assertEqual((manifest.kind, manifest.events), ("subscriber", ["demo.*"]))
@@ -485,6 +500,18 @@ class TestInvoke(PluginCase):
         result = self.invoke()[0]
         self.assertEqual((result.status, result.code), ("error", "PROCESS_TIMEOUT"))
         self.assertLess(time.monotonic() - started, 30)
+
+    def test_a_declared_stdout_limit_lets_a_large_answer_through(self):
+        data = {"pad": "z" * (1536 * 1024)}
+        self.plugin("echo", patch={"limits": {"max_stdout_bytes": 4 * 1024 * 1024}})
+        result = self.invoke(data=data)[0]
+        self.assertEqual((result.status, result.code), ("ok", None))
+        self.assertEqual(result.output, data)
+
+    def test_without_the_field_a_large_answer_is_too_large(self):
+        self.plugin("echo")
+        result = self.invoke(data={"pad": "z" * (1536 * 1024)})[0]
+        self.assertEqual((result.status, result.code), ("error", "PROTOCOL_STDOUT_TOO_LARGE"))
 
     def test_skipped_status_is_passed_on(self):
         script = ('def invoke(request):\n    reply(request["request_id"], "skipped")\n'

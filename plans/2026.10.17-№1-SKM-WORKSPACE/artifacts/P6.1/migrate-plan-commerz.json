@@ -31,33 +31,34 @@
     }
   ],
   "conflicts": [],
-  "local_only": [],
+  "local_only": [
+    {
+      "path": "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.2.json",
+      "bytes": 9845,
+      "reason": "secret-pattern"
+    }
+  ],
   "warnings": [
     {
       "code": "PS_HOME_PATH",
-      "count": 45,
+      "count": 44,
       "paths": [
         "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/decisions/D2.json",
         "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/knowledge/assembly-design.json",
         "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/knowledge/audit-p7-2026-10-10.json",
-        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.2.json",
-        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.3.json"
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.3.json",
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.4.json"
       ]
-    }
-  ],
-  "blockers": [
+    },
     {
-      "code": "MIGRATION_BLOCKED_SECRET",
-      "message": "1 file(s) look like secrets; remove them from the plans or from the folder before migrating",
-      "findings": [
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.2.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 14: ‹redacted›"
-        }
+      "code": "PS_SECRET_LOCAL_ONLY",
+      "count": 1,
+      "paths": [
+        "plans/archive/2026.10.08-№1-COMMERZ-FOUNDATION/phases/P1/P1.2.json"
       ]
     }
   ],
+  "blockers": [],
   "manifest_digest": "sha256:b37b617340e8b9fc4e5078ee4fcb43523a9cf73a91b071449356caafd909a06c",
-  "ready": false
+  "ready": true
 }

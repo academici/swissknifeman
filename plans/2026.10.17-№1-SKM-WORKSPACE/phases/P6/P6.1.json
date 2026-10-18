@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.1",
   "title": "Машина A: dry-run миграции всех 7 проектов, проверка живых runs, сводка для гейта владельца",
-  "status": "blocked",
+  "status": "done_with_deviations",
   "summary": "Без изменений состояния: `workspace migrate discover` и `workspace migrate plan` для billium, commerz, azguard, chatom, corex, vaulter, swissknifeman; `swissknifeman orch conduct runs --json` в каждом проекте; снимок `planner plans` каждого проекта до миграции; сводка (блокеры, in_progress-пункты, local-only объём, warn, классы каталогов) — артефакт `@plan/artifacts/P6.1/summary.md` и JSON-отчёты рядом.",
   "why": "Владелец даёт гейт MIGRATE-HOST-A по фактам dry-run; снимки `planner plans` до миграции — эталон проверки P6.2. Жёсткий риск: dry-run с записью (проверено тестом P3.2), пропуск живого run.",
   "scope": {
@@ -99,20 +99,29 @@
     "status": "not_needed"
   },
   "result": {
-    "started_at": "2026-10-18T03:03:33Z",
-    "finished_at": "2026-10-18T03:04:09Z",
+    "started_at": "2026-10-18T04:13:25Z",
+    "finished_at": "2026-10-18T04:13:25Z",
     "executor": {
       "provider": "claude-code",
       "model": "sonnet",
-      "effort": "medium"
+      "effort": "high"
     },
-    "registered_by": {
-      "provider": "orch",
-      "model": "conductor"
-    },
-    "attempt_id": "att-run-a773fae5fb1474b8dc210ecd-P6.1",
-    "notes": "migrate plan не выполнен для 7 проектов: workspace на машине A не создан, а песочница сессии даёт Read-only file system на ~/.local/share/swissknifeman и на .swissknifeman/ чужих проектов, поэтому workspace init и project attach выполнить нельзя (dangerouslyDisableSandbox отключён). Новых записей нет; в артефактах остались результаты прошлых раундов (discover, plans-before, runs, summary.md с итогом «НЕТ»).\nEvidence: plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P6.1/migrate-plan-errors.txt, plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P6.1/summary.md",
-    "escalation": "Sandbox: mkdir ~/.local/share/swissknifeman/workspace -> Read-only file system; workspace init и project attach (запись маркера в billium/commerz/azguard/chatom/corex) недоступны, поэтому migrate-plan-<p>.json получить нельзя; V1 не пройдёт."
+    "notes": "Ручное выполнение владельческих шагов в сессии наблюдателя (песочница executor не пишет вне проекта): init, attach 6 проектов, migrate plan 7 проектов; исправлены лимит stdout (cd0294c35) и PS-SECRET через --local-only-secrets (2d0ad4e4f, D17). Отчёты и summary.md в artifacts/P6.1.",
+    "deviations": [
+      "Шаги init/attach/plan выполнены наблюдателем вручную, не executor'ом; vaulter только чтение (D16)."
+    ],
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-18T04:13:25Z"
+      },
+      {
+        "id": "V2",
+        "exit": 0,
+        "at": "2026-10-18T04:13:25Z"
+      }
+    ]
   },
-  "updated_at": "2026-10-18T03:04:09Z"
+  "updated_at": "2026-10-18T04:13:25Z"
 }

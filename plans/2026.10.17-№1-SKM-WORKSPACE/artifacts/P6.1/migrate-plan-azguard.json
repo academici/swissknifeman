@@ -39,11 +39,397 @@
     }
   ],
   "conflicts": [],
-  "local_only": [],
+  "local_only": [
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-debug.log",
+      "bytes": 323088,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/norms/09-authorization-semantics.md",
+      "bytes": 42187,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Authorization/Pipeline/Stages/PrepareStage.php",
+      "bytes": 9125,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Sources/Database/DatabaseSource.php",
+      "bytes": 19445,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Sources/Folder/PanelDiscovery.php",
+      "bytes": 25784,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/tests/Fixtures/Sources/Database/DatabaseWorld.php",
+      "bytes": 5293,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/tests/Fixtures/Sources/Relation/RelationWorld.php",
+      "bytes": 5353,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/tests/Fixtures/Sources/ScopedClock.php",
+      "bytes": 295,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-debug.log",
+      "bytes": 2953079,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-debug.log",
+      "bytes": 946696,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/norms/09-authorization-semantics.md",
+      "bytes": 42187,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/packages/core/src/Authorization/Pipeline/Stages/PrepareStage.php",
+      "bytes": 9125,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/packages/core/src/Sources/Database/DatabaseSource.php",
+      "bytes": 19445,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/packages/core/src/Sources/Folder/PanelDiscovery.php",
+      "bytes": 25784,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/tests/Fixtures/Sources/Database/DatabaseWorld.php",
+      "bytes": 5293,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/tests/Fixtures/Sources/Relation/RelationWorld.php",
+      "bytes": 5353,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/tests/Fixtures/Sources/ScopedClock.php",
+      "bytes": 295,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/norms/09-authorization-semantics.md",
+      "bytes": 42187,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/packages/core/src/Authorization/Pipeline/Stages/PrepareStage.php",
+      "bytes": 9125,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/packages/core/src/Sources/Database/DatabaseSource.php",
+      "bytes": 19445,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/packages/core/src/Sources/Folder/PanelDiscovery.php",
+      "bytes": 25784,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/tests/Fixtures/Sources/Database/DatabaseWorld.php",
+      "bytes": 5293,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/tests/Fixtures/Sources/Relation/RelationWorld.php",
+      "bytes": 5353,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/tests/Fixtures/Sources/ScopedClock.php",
+      "bytes": 295,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.10.json",
+      "bytes": 2585231,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.11.json",
+      "bytes": 2540176,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.12.json",
+      "bytes": 2583839,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.13.json",
+      "bytes": 2385910,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.14.json",
+      "bytes": 2682536,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.15.json",
+      "bytes": 2347512,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.16.json",
+      "bytes": 2290152,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.18.json",
+      "bytes": 2310484,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.19.json",
+      "bytes": 2229293,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.20.json",
+      "bytes": 2485540,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.21.json",
+      "bytes": 2432617,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.22.json",
+      "bytes": 2555653,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.23.json",
+      "bytes": 2621780,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.6.json",
+      "bytes": 2234582,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.7.json",
+      "bytes": 2049667,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.8.json",
+      "bytes": 2095138,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.9.json",
+      "bytes": 2478672,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.1.json",
+      "bytes": 494142,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.2.json",
+      "bytes": 584801,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.3.json",
+      "bytes": 520197,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.4.json",
+      "bytes": 426025,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.6.json",
+      "bytes": 627967,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.7.json",
+      "bytes": 459491,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.8.json",
+      "bytes": 397775,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/evidence/batch/db-mariadb.attempt1-sigterm.log",
+      "bytes": 4052,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/evidence/batch/db-mysql.attempt1-sigterm.log",
+      "bytes": 4048,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.1/round1/stream.jsonl",
+      "bytes": 2283407,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.1/round3/stream.jsonl",
+      "bytes": 2291895,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.10/round1/stream.jsonl",
+      "bytes": 2764702,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.10/round2/stream.jsonl",
+      "bytes": 2123633,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.12/round1/grok-4.7.md",
+      "bytes": 9263,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.12/round1/prompt.md",
+      "bytes": 5847,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.12/round1/stream.jsonl",
+      "bytes": 4526297,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.13/round1/grok-4.7.md",
+      "bytes": 12886,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.13/round1/stream.jsonl",
+      "bytes": 4130117,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.14/round1/stream.jsonl",
+      "bytes": 2242118,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.2/round1/grok-4.7.md",
+      "bytes": 9269,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.2/round1/stream.jsonl",
+      "bytes": 2295045,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.2/round2/stream.jsonl",
+      "bytes": 2106532,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.7/round1/stream.jsonl",
+      "bytes": 3058521,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.8/round1/stream.jsonl",
+      "bytes": 2732448,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.1/round1/stream.jsonl",
+      "bytes": 2084150,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.1/round2/stream.jsonl",
+      "bytes": 2228240,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.11-P3.13/round1/grok-4.7.md",
+      "bytes": 9466,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.11-P3.13/round1/stream.jsonl",
+      "bytes": 2724765,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.11-P3.13/round2/stream.jsonl",
+      "bytes": 2156897,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.3/round1/stream.jsonl",
+      "bytes": 1734074,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.8-P3.10/round1/stream.jsonl",
+      "bytes": 2328949,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P4/P4.4-P4.5/round1/stream.jsonl",
+      "bytes": 1707704,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P4/P4.8/round1/stream.jsonl",
+      "bytes": 1924653,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/log.jsonl",
+      "bytes": 197804,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/phases/P2/P2.12.json",
+      "bytes": 8194,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.17-№1-AZGUARD-FINAL-HARDENING/artifacts/evidence/P3.5/findings.md",
+      "bytes": 1289,
+      "reason": "secret-pattern"
+    }
+  ],
   "warnings": [
     {
       "code": "PS_HOME_PATH",
-      "count": 137,
+      "count": 88,
       "paths": [
         "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/P4.10-validation-final-patch.json",
         "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/P4.10-validation-patch.json",
@@ -51,401 +437,20 @@
         "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/P4.11-validation-patch.json",
         "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/findings-final-patch.json"
       ]
-    }
-  ],
-  "blockers": [
+    },
     {
-      "code": "MIGRATION_BLOCKED_SECRET",
-      "message": "77 file(s) look like secrets; remove them from the plans or from the folder before migrating",
-      "findings": [
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.17-№1-AZGUARD-FINAL-HARDENING/artifacts/evidence/P3.5/findings.md",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 4: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/phases/P2/P2.12.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 101: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/log.jsonl",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 191: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P4/P4.8/round1/stream.jsonl",
-          "detail": "12 match(es) of the named-secret secret pattern, the first at line 33: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P4/P4.4-P4.5/round1/stream.jsonl",
-          "detail": "8 match(es) of the named-secret secret pattern, the first at line 13: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.8-P3.10/round1/stream.jsonl",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 34: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.3/round1/stream.jsonl",
-          "detail": "7 match(es) of the named-secret secret pattern, the first at line 25: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.11-P3.13/round2/stream.jsonl",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.11-P3.13/round1/stream.jsonl",
-          "detail": "10 match(es) of the named-secret secret pattern, the first at line 25: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.11-P3.13/round1/grok-4.7.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.1/round2/stream.jsonl",
-          "detail": "18 match(es) of the named-secret secret pattern, the first at line 21: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P3/P3.1/round1/stream.jsonl",
-          "detail": "6 match(es) of the named-secret secret pattern, the first at line 63: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.8/round1/stream.jsonl",
-          "detail": "9 match(es) of the named-secret secret pattern, the first at line 33: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.7/round1/stream.jsonl",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 97: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.2/round2/stream.jsonl",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.2/round1/stream.jsonl",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 116: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.2/round1/grok-4.7.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 8: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.14/round1/stream.jsonl",
-          "detail": "6 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.13/round1/stream.jsonl",
-          "detail": "19 match(es) of the named-secret secret pattern, the first at line 3: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.13/round1/grok-4.7.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 17: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.12/round1/stream.jsonl",
-          "detail": "149 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.12/round1/prompt.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 3: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.12/round1/grok-4.7.md",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.10/round2/stream.jsonl",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 23: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.10/round1/stream.jsonl",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 15: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.1/round3/stream.jsonl",
-          "detail": "7 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/reviews/P2/P2.1/round1/stream.jsonl",
-          "detail": "9 match(es) of the named-secret secret pattern, the first at line 13: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/evidence/batch/db-mysql.attempt1-sigterm.log",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-AZGUARD-CORE-STABILIZATION/artifacts/evidence/batch/db-mariadb.attempt1-sigterm.log",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.8.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1321: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.7.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1381: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.6.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1763: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.4.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1399: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.3.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1486: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.2.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 605: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P5.1.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1445: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.9.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.8.json",
-          "detail": "13 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.7.json",
-          "detail": "13 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.6.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.23.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.22.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.21.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.20.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.19.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.18.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.16.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.15.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.14.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.13.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.12.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.11.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/context/P4.10.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 145: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/tests/Fixtures/Sources/ScopedClock.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 16: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/tests/Fixtures/Sources/Relation/RelationWorld.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 93: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/tests/Fixtures/Sources/Database/DatabaseWorld.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 50: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/packages/core/src/Sources/Folder/PanelDiscovery.php",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 559: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/packages/core/src/Sources/Database/DatabaseSource.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 425: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/packages/core/src/Authorization/Pipeline/Stages/PrepareStage.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 98: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-input/norms/09-authorization-semantics.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 240: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/tests/Fixtures/Sources/ScopedClock.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 16: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/tests/Fixtures/Sources/Relation/RelationWorld.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 93: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/tests/Fixtures/Sources/Database/DatabaseWorld.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 50: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/packages/core/src/Sources/Folder/PanelDiscovery.php",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 559: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/packages/core/src/Sources/Database/DatabaseSource.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 425: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/packages/core/src/Authorization/Pipeline/Stages/PrepareStage.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 98: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-input/norms/09-authorization-semantics.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 240: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-final-debug.log",
-          "detail": "3 match(es) of the token secret pattern, the first at line 85: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-debug.log",
-          "detail": "3 match(es) of the token secret pattern, the first at line 84: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/tests/Fixtures/Sources/ScopedClock.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 16: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/tests/Fixtures/Sources/Relation/RelationWorld.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 93: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/tests/Fixtures/Sources/Database/DatabaseWorld.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 50: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Sources/Folder/PanelDiscovery.php",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 559: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Sources/Database/DatabaseSource.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 425: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Authorization/Pipeline/Stages/PrepareStage.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 98: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/norms/09-authorization-semantics.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 240: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-debug.log",
-          "detail": "3 match(es) of the token secret pattern, the first at line 85: ‹redacted›"
-        }
+      "code": "PS_SECRET_LOCAL_ONLY",
+      "count": 77,
+      "paths": [
+        "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-debug.log",
+        "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/norms/09-authorization-semantics.md",
+        "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Authorization/Pipeline/Stages/PrepareStage.php",
+        "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Sources/Database/DatabaseSource.php",
+        "legacy-plans/2026.10.01-№1-AZGUARD-V1/artifacts/P4.10-P4.11-execution/review-closure-input/packages/core/src/Sources/Folder/PanelDiscovery.php"
       ]
     }
   ],
+  "blockers": [],
   "manifest_digest": "sha256:2ef371c08f330bb7029b057bfc62f669d6ad31d50eccbc35ba717a6ff65aacc6",
-  "ready": false
+  "ready": true
 }

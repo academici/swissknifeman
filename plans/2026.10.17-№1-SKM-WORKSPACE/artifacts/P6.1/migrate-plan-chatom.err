@@ -1,1 +1,1 @@
-MIGRATION_BLOCKED_SECRET: 61 file(s) look like secrets; remove them from the plans or from the folder before migrating
+MIGRATION_IN_PROGRESS: 1 item(s) are in progress; finish them or repeat with --allow-in-progress

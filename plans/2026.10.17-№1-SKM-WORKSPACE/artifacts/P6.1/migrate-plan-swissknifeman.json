@@ -9,7 +9,7 @@
   "mode": "initial",
   "source": {
     "checkout_name": "swissknifeman",
-    "head": "d49c36bb3dcb8b9ac402248eb15dc9ef34d2c51f"
+    "head": "2d0ad4e4fbf46fa917ed24a9e9787ccc37f6e0da"
   },
   "already_migrated": false,
   "plans": [
@@ -41,9 +41,9 @@
       "name": "2026.10.17-№1-SKM-WORKSPACE",
       "class": "v4",
       "action": "copied",
-      "files": 161,
-      "bytes": 650121,
-      "digest": "sha256:70c51cca6105106663564efd306390f9cc374963f5369b52562cc26438310bc5"
+      "files": 164,
+      "bytes": 734723,
+      "digest": "sha256:1a4daf12e4ba9dec58946af9e1a2f4f2dfa77f234a953c876c285834afa9835c"
     },
     {
       "name": "archive/2026.10.05-№1-TASK-PLAN-JSON",
@@ -55,7 +55,38 @@
     }
   ],
   "conflicts": [],
-  "local_only": [],
+  "local_only": [
+    {
+      "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/knowledge/hub-p11-closure.json",
+      "bytes": 15024,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/E2-perplexity-oss-reuse.md",
+      "bytes": 64172,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/P6.5-review-grok.md",
+      "bytes": 9940,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.3/stage-report.json",
+      "bytes": 7982,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P6.1/migrate-plan-corex.json",
+      "bytes": 38074,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.17-№1-SKM-WORKSPACE/log.jsonl",
+      "bytes": 72446,
+      "reason": "secret-pattern"
+    }
+  ],
   "warnings": [
     {
       "code": "PS_HOME_PATH",
@@ -67,41 +98,20 @@
         "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P10.2/launch.json",
         "plans/2026.10.07-№1-SKM-ECOSYSTEM/artifacts/P10.2/launch2.json"
       ]
-    }
-  ],
-  "blockers": [
+    },
     {
-      "code": "MIGRATION_BLOCKED_SECRET",
-      "message": "5 file(s) look like secrets; remove them from the plans or from the folder before migrating",
-      "findings": [
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.17-№1-SKM-WORKSPACE/log.jsonl",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 25: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.3/stage-report.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 58: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/P6.5-review-grok.md",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 12: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/E2-perplexity-oss-reuse.md",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 1277: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.07-№1-SKM-ECOSYSTEM/knowledge/hub-p11-closure.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
-        }
+      "code": "PS_SECRET_LOCAL_ONLY",
+      "count": 6,
+      "paths": [
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/knowledge/hub-p11-closure.json",
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/E2-perplexity-oss-reuse.md",
+        "plans/2026.10.07-№1-SKM-ECOSYSTEM/research/P6.5-review-grok.md",
+        "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P1.3/stage-report.json",
+        "plans/2026.10.17-№1-SKM-WORKSPACE/artifacts/P6.1/migrate-plan-corex.json"
       ]
     }
   ],
-  "manifest_digest": "sha256:6af5448a27995454dea6f5bcfbb4aa61ec69c75c97424ed75d1871fc514fda37",
-  "ready": false
+  "blockers": [],
+  "manifest_digest": "sha256:c0dd8f3d62a0e2f46b11e23462ae72726a337731347094d41a17f10026a88f5f",
+  "ready": true
 }

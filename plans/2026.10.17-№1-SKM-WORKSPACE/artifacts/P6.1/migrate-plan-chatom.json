@@ -73,6 +73,56 @@
   "conflicts": [],
   "local_only": [
     {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.1-execution/review-final-packet.md",
+      "bytes": 93422,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.1-execution/review-packet.md",
+      "bytes": 150040,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-P09.4-grok-review/p092-p093-review-packet.txt",
+      "bytes": 139973,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-P09.4-grok-review/p092-p093-review.json",
+      "bytes": 77883,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-P09.4-grok-review/p094-review-packet.txt",
+      "bytes": 82607,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-execution/checks/secret-column-scan.log",
+      "bytes": 1779,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10-design-rag/pplx-01-wire-standards.md",
+      "bytes": 3694,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.2-grok-review/full-work.diff",
+      "bytes": 76282,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.2-grok-review/verdict.md",
+      "bytes": 8132,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.2-validation/contract.json",
+      "bytes": 18517,
+      "reason": "secret-pattern"
+    },
+    {
       "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.4/owner-review/attempt-0001/provider-output.jsonl",
       "bytes": 5719229,
       "reason": "size"
@@ -86,6 +136,261 @@
       "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.5/owner-review/attempt-0003/provider-output.jsonl",
       "bytes": 6132357,
       "reason": "size"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.7/owner-review/attempt-0001/provider-output.jsonl",
+      "bytes": 1135295,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.7/owner-review/attempt-0002/provider-output.jsonl",
+      "bytes": 4835035,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design-rag/http-09-vitest2.json",
+      "bytes": 293851,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design-rag/web-01-quality.md",
+      "bytes": 33808,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design/diagnostics-P12.6.json",
+      "bytes": 27651,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design/phpstan-max.json",
+      "bytes": 292684,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12.6/phpstan-before.json",
+      "bytes": 76985,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.1/review-grok.jsonl",
+      "bytes": 2121961,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.5/v1-same-rev.json/report.json",
+      "bytes": 601269,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.5/v2-head1-head.json/report.json",
+      "bytes": 601269,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.6/review-grok.jsonl",
+      "bytes": 2368702,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/audit-full-2026-10-08-checks/items-inventory.json",
+      "bytes": 242299,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.09.27-№1-CHATOM-RC1/phases/P10/P10.2.json",
+      "bytes": 20612,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/evidence/P3.5-P3.6-review/grok-stream.jsonl",
+      "bytes": 1478248,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/evidence/P3.9/V6.log",
+      "bytes": 4465,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2-grok-r1.jsonl",
+      "bytes": 3948656,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.1-grok-r1.jsonl",
+      "bytes": 5043213,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.10-P2.13-grok-r1.jsonl",
+      "bytes": 2436926,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.10-P2.13-grok-r3.jsonl",
+      "bytes": 1705611,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.14-P2.15-grok-r2.jsonl",
+      "bytes": 1890466,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.14-P2.15-grok-r3.jsonl",
+      "bytes": 1546446,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.15-grok-r4.jsonl",
+      "bytes": 2812922,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.16-P2.18-grok-r1.jsonl",
+      "bytes": 3221832,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.19-P2.20-grok-r1.jsonl",
+      "bytes": 2332981,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.2-P2.3-grok-r1.jsonl",
+      "bytes": 1910466,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.10-P3.11/grok-stream.jsonl",
+      "bytes": 2242110,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.14-P3.16/a1-r1.jsonl",
+      "bytes": 2892440,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.14-P3.16/a2-r1.jsonl",
+      "bytes": 2249235,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.7-P3.8-grok-4.7.jsonl",
+      "bytes": 2340892,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P4.3-P4.6/r1.jsonl",
+      "bytes": 1691950,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P4/r1.jsonl",
+      "bytes": 1989557,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/reviews/P1.6-review-prompt-r2b.md",
+      "bytes": 31476,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/phases/P3/P3.13.json",
+      "bytes": 11321,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P01-design/code/scripts/db-test-env.sh",
+      "bytes": 3313,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03-design-rag/http-01-primary-checks.md",
+      "bytes": 2215,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03-design/scripts/rename-terms.php",
+      "bytes": 18847,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03.4-execution/tool.patch",
+      "bytes": 5950,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P05-design/code/packages/core/src/Configuration/Internal/Services/JournalingConfigReader.php",
+      "bytes": 14541,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P05.1-execution/candidate.patch",
+      "bytes": 306098,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P07-design/facts/baseline-sqlite.txt",
+      "bytes": 38812,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P07-design/facts/schema-current.txt",
+      "bytes": 26471,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/containers-before-cleanup.json",
+      "bytes": 147402,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/metadata-containers-before-cleanup.json",
+      "bytes": 51193,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/pg18-containers-before-cleanup.json",
+      "bytes": 36886,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/run-pg18.sh",
+      "bytes": 1645,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27/reused-author-inspect-my.log",
+      "bytes": 11072,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27/reused-author-inspect-pg.log",
+      "bytes": 11456,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-remediation-2026-09-27-round2/containers-before-cleanup.json",
+      "bytes": 171757,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-remediation-2026-09-27/inspect-my.log",
+      "bytes": 11072,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-remediation-2026-09-27/inspect-pg.log",
+      "bytes": 11456,
+      "reason": "secret-pattern"
+    },
+    {
+      "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/research/P03-design-rag.md",
+      "bytes": 4370,
+      "reason": "secret-pattern"
     }
   ],
   "warnings": [
@@ -98,7 +403,7 @@
     },
     {
       "code": "PS_HOME_PATH",
-      "count": 659,
+      "count": 631,
       "paths": [
         "legacy-plans/archive/2026.07.26-CHATOM-API-FREEZE/brief/00-brief.md",
         "legacy-plans/archive/2026.07.26-CHATOM-API-FREEZE/findings/P0-P3-rag-sweep-2026-07-26.md",
@@ -106,320 +411,20 @@
         "legacy-plans/archive/2026.07.26-CHATOM-API-FREEZE/phases/P0.md",
         "legacy-plans/archive/2026.07.26-CHATOM-API-FREEZE/phases/P1.md"
       ]
+    },
+    {
+      "code": "PS_SECRET_LOCAL_ONLY",
+      "count": 61,
+      "paths": [
+        "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P01-design/code/scripts/db-test-env.sh",
+        "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03-design-rag/http-01-primary-checks.md",
+        "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03-design/scripts/rename-terms.php",
+        "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03.4-execution/tool.patch",
+        "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P05-design/code/packages/core/src/Configuration/Internal/Services/JournalingConfigReader.php"
+      ]
     }
   ],
   "blockers": [
-    {
-      "code": "MIGRATION_BLOCKED_SECRET",
-      "message": "61 file(s) look like secrets; remove them from the plans or from the folder before migrating",
-      "findings": [
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/research/P03-design-rag.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 12: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-remediation-2026-09-27/inspect-pg.log",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 194: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-remediation-2026-09-27/inspect-my.log",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 193: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-remediation-2026-09-27-round2/containers-before-cleanup.json",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 230: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27/reused-author-inspect-pg.log",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 194: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27/reused-author-inspect-my.log",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 193: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/run-pg18.sh",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/pg18-containers-before-cleanup.json",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 218: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/metadata-containers-before-cleanup.json",
-          "detail": "5 match(es) of the named-secret secret pattern, the first at line 230: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/design-reaudit-2026-09-27-round2/containers-before-cleanup.json",
-          "detail": "13 match(es) of the named-secret secret pattern, the first at line 230: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P07-design/facts/schema-current.txt",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 185: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P07-design/facts/baseline-sqlite.txt",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 480: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P05.1-execution/candidate.patch",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 2259: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P05-design/code/packages/core/src/Configuration/Internal/Services/JournalingConfigReader.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 13: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03.4-execution/tool.patch",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 40: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03-design/scripts/rename-terms.php",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 201: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P03-design-rag/http-01-primary-checks.md",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 51: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "legacy-plans/archive/2026.09.26-№1-CHATOM-STABLE-API/artifacts/P01-design/code/scripts/db-test-env.sh",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 26: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/phases/P3/P3.13.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/reviews/P1.6-review-prompt-r2b.md",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 81: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P4/r1.jsonl",
-          "detail": "10 match(es) of the named-secret secret pattern, the first at line 33: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P4.3-P4.6/r1.jsonl",
-          "detail": "49 match(es) of the named-secret secret pattern, the first at line 6: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.7-P3.8-grok-4.7.jsonl",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 29: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.14-P3.16/a2-r1.jsonl",
-          "detail": "15 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.14-P3.16/a1-r1.jsonl",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 31: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P3.10-P3.11/grok-stream.jsonl",
-          "detail": "12 match(es) of the token secret pattern, the first at line 7: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.2-P2.3-grok-r1.jsonl",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 17: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.19-P2.20-grok-r1.jsonl",
-          "detail": "5 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.16-P2.18-grok-r1.jsonl",
-          "detail": "40 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.15-grok-r4.jsonl",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 9: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.14-P2.15-grok-r3.jsonl",
-          "detail": "13 match(es) of the named-secret secret pattern, the first at line 5: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.14-P2.15-grok-r2.jsonl",
-          "detail": "6 match(es) of the named-secret secret pattern, the first at line 21: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.10-P2.13-grok-r3.jsonl",
-          "detail": "8 match(es) of the named-secret secret pattern, the first at line 83: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.10-P2.13-grok-r1.jsonl",
-          "detail": "18 match(es) of the named-secret secret pattern, the first at line 29: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2.1-grok-r1.jsonl",
-          "detail": "6 match(es) of the named-secret secret pattern, the first at line 50: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/review/P2-grok-r1.jsonl",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 110: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/evidence/P3.9/V6.log",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 48: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.10.10-№1-CHATOM-API-STABILIZATION/artifacts/evidence/P3.5-P3.6-review/grok-stream.jsonl",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/phases/P10/P10.2.json",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 12: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/audit-full-2026-10-08-checks/items-inventory.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1437: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.6/review-grok.jsonl",
-          "detail": "36 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.5/v2-head1-head.json/report.json",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 7325: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.5/v1-same-rev.json/report.json",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 7325: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P15.1/review-grok.jsonl",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 17: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12.6/phpstan-before.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design/phpstan-max.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 1: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design/diagnostics-P12.6.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 426: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design-rag/web-01-quality.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 11: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P12-design-rag/http-09-vitest2.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 6: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.7/owner-review/attempt-0002/provider-output.jsonl",
-          "detail": "20 match(es) of the named-secret secret pattern, the first at line 850: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.7/owner-review/attempt-0001/provider-output.jsonl",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 444: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.2-validation/contract.json",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 51: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.2-grok-review/verdict.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 13: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10.2-grok-review/full-work.diff",
-          "detail": "43 match(es) of the named-secret secret pattern, the first at line 78: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P10-design-rag/pplx-01-wire-standards.md",
-          "detail": "1 match(es) of the named-secret secret pattern, the first at line 19: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-execution/checks/secret-column-scan.log",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 7: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-P09.4-grok-review/p094-review-packet.txt",
-          "detail": "7 match(es) of the named-secret secret pattern, the first at line 476: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-P09.4-grok-review/p092-p093-review.json",
-          "detail": "2 match(es) of the named-secret secret pattern, the first at line 6: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.2-P09.4-grok-review/p092-p093-review-packet.txt",
-          "detail": "13 match(es) of the named-secret secret pattern, the first at line 241: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.1-execution/review-packet.md",
-          "detail": "4 match(es) of the named-secret secret pattern, the first at line 519: ‹redacted›"
-        },
-        {
-          "rule": "PS-SECRET",
-          "path": "plans/2026.09.27-№1-CHATOM-RC1/artifacts/P09.1-execution/review-final-packet.md",
-          "detail": "3 match(es) of the named-secret secret pattern, the first at line 366: ‹redacted›"
-        }
-      ]
-    },
     {
       "code": "MIGRATION_IN_PROGRESS",
       "message": "1 item(s) are in progress; finish them or repeat with --allow-in-progress",

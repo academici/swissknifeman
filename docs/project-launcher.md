@@ -67,19 +67,21 @@ legacy way. A conductor lane in a worktree is therefore never pinned to the main
 
 | Command | Does |
 | --- | --- |
-| `init [--marker-only] [--adopt] [--dry-run] [--json]` | writes launcher + lock at the git root of the working directory (`--marker-only` outside git) |
+| `init [--marker-only] [--adopt] [--dry-run] [--json] [--project CODE [--workspace CODE] [--plans-store workspace\|legacy]]` | writes launcher + lock at the git root of the working directory (`--marker-only` outside git); with `--project` also the marker `.swissknifeman/project.json` (workspace defaults to the selected one, plans store to `legacy` while `plans/` holds plan folders, else `workspace`). A marker that exists with other values is `PROJECT_MARKER_CONFLICT`: nothing is written. Init writes nothing else in the checkout: no config, state, backups or stubs |
 | `sync [--adopt] [--dry-run] [--json]` | brings the managed files to the hub template; equal files are a no-op |
 | `verify [--json] [--no-roundtrip]` | file, lock, digest, protocol, hub on PATH, round trip launcher -> umbrella -> same root |
 | `context [--json]` | `invocation-context/v1`: root, invocation cwd, resolution, launcher (verified), `plans_root` and `plans_store {kind, project_id, workspace, reason}` of the project marker |
-| `doctor [--json]` | verify + project config `schema_version` + write boundary of state, backups and a legacy plans folder + `project.plans-store` (the marker's store resolves; a workspace store lies outside the project by design) |
+| `migrate [--dry-run] [--json]` | moves `config.toml`, `state/`, `backups/`, `stubs/` of `.swissknifeman/` into `projects/<code>/local/` of the workspace the marker names (`PROJECT_LOCAL_UNAVAILABLE` without the workspace project folder). A file is never overwritten: identical bytes are dropped from the checkout, other bytes are `PROJECT_MIGRATE_CONFLICT` (both stay), a symbolic link is `PROJECT_MIGRATE_SYMLINK`. A second run finds nothing |
+| `doctor [--json]` | verify + project config `schema_version` + `project.local` (the `local/` folder the marker names, its config against `project-local-config/v1`, `repo.path` against this checkout) + `project.checkout-layer` (warns about `config.toml`, `state`, `backups`, `stubs` left in the checkout: `project migrate`) + write boundary of state, backups and a legacy plans folder + `project.plans-store` (the marker's store resolves; a workspace store lies outside the project by design) |
 | `exec -- <group> [args...]` | runs a group through this project's launcher |
 
 Writes: a temporary file in the same folder, `fsync`, `os.replace`, `fsync` of the folder
 (`aicore.util.io.durable_replace`); the lock is written after the launcher. A sync holds
 `.swissknifeman/project-sync.lock` (exclusive create, pid/host/start/operation; a lock of a dead process on this host
 is taken over, any other is `PROJECT_SYNC_LOCKED`). A launcher this hub did not write is `FOREIGN_LAUNCHER` and is
-replaced only with `--adopt` (a backup goes to `.swissknifeman/backups/`). `config.toml`, state, plans and unknown files
-are never touched.
+replaced only with `--adopt` (a backup goes to `local/backups/` of the workspace project when the marker names one, else
+to `.swissknifeman/backups/`). A launcher-only checkout holds `launcher.py`, `launcher.lock.json` and `project.json` of the
+project layer; `config.toml`, state, plans and unknown files are never touched by `init` and `sync`.
 
 Contracts (aicore): `project-launcher-lock/v1` (`$schema`, `protocol`, `template_sha256`, `managed_files`; nothing
 machine-specific, committed with the project) and `invocation-context/v1`. Template: `packages/aicore/templates/project/launcher.py`.

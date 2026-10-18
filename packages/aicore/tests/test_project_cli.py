@@ -241,6 +241,203 @@ class ProjectCliTests(unittest.TestCase):
         self.assertEqual(run(self.root, "exec")[0], 2)
 
 
+class LauncherOnlyTests(unittest.TestCase):
+    """PLAN7 P3.3: the checkout holds the launcher and the marker; the project layer lives in ``local/`` of the workspace."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        base = Path(self._tmp.name).resolve()
+        self.root = base / "proj"
+        (self.root / ".git").mkdir(parents=True)
+        self.ws = base / "wss" / "axioma"
+        self.env = {"HOME": "/nonexistent-home", "PATH": "", "SKM_WORKSPACES_ROOT": str(self.ws.parent)}
+        self.checkout = self.root / ".swissknifeman"
+        self.local = self.ws / "projects" / "demo" / "local"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def run_cli(self, *argv, cwd=None):
+        return run(cwd or self.root, *argv, env=self.env)
+
+    def attach_project(self):
+        (self.ws / "projects" / "demo").mkdir(parents=True)
+
+    def fill_checkout(self):
+        self.checkout.mkdir(exist_ok=True)
+        (self.checkout / "config.toml").write_text("schema_version = 1\n")
+        (self.checkout / "state" / "orch").mkdir(parents=True)
+        (self.checkout / "state" / "orch" / "journal.ndjson").write_text("{}\n")
+        (self.checkout / "backups" / "2026").mkdir(parents=True)
+        (self.checkout / "backups" / "2026" / "launcher.py").write_text("old\n")
+        (self.checkout / "stubs").mkdir()
+        (self.checkout / "stubs" / "tool").write_text("stub\n")
+
+    def test_init_writes_only_the_launcher_its_lock_and_the_marker(self):
+        code, out, err = self.run_cli("init", "--project", "demo", "--workspace", "axioma", "--json")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(json.loads(out)["actions"][-1], {"path": ".swissknifeman/project.json", "action": "create"})
+        self.assertEqual(sorted(path.name for path in self.checkout.iterdir()),
+                         ["launcher.lock.json", "launcher.py", "project.json"])
+        self.assertEqual(json.loads((self.checkout / "project.json").read_text()),
+                         {"$schema": "urn:swissknifeman:aicore:project-marker:v1", "workspace": "axioma",
+                          "project_id": "demo", "plans_store": "workspace"})
+        code, out, _ = self.run_cli("init", "--project=demo", "--workspace=axioma", "--json")
+        self.assertEqual(code, 0)
+        self.assertEqual(set(item["action"] for item in json.loads(out)["actions"]), {"unchanged"})
+
+    def test_init_without_a_project_writes_no_marker(self):
+        self.assertEqual(self.run_cli("init")[0], 0)
+        self.assertFalse((self.checkout / "project.json").exists())
+
+    def test_init_takes_the_selected_workspace_and_the_legacy_store_of_a_checkout_with_plans(self):
+        (self.ws).mkdir(parents=True)
+        (self.ws / "workspace.json").write_text("{}")
+        (self.root / "plans" / "2026.01.01-one").mkdir(parents=True)
+        code, _, err = self.run_cli("init", "--project", "demo")
+        self.assertEqual(code, 0, err)
+        marker = json.loads((self.checkout / "project.json").read_text())
+        self.assertEqual((marker["workspace"], marker["plans_store"]), ("axioma", "legacy"))
+
+    def test_init_keeps_a_marker_with_other_values_and_writes_nothing(self):
+        self.assertEqual(self.run_cli("init", "--project", "demo", "--workspace", "axioma")[0], 0)
+        before = (self.checkout / "project.json").read_text()
+        (self.checkout / "launcher.py").unlink()
+        code, _, err = self.run_cli("init", "--project", "other", "--workspace", "axioma")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_MARKER_CONFLICT", err)
+        self.assertEqual((self.checkout / "project.json").read_text(), before)
+        self.assertFalse((self.checkout / "launcher.py").exists())
+
+    def test_init_dry_run_with_a_project_writes_nothing(self):
+        code, out, _ = self.run_cli("init", "--project", "demo", "--workspace", "axioma", "--dry-run", "--json")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.actions(out)[".swissknifeman/project.json"], "create")
+        self.assertFalse(self.checkout.exists())
+
+    def actions(self, output):
+        return {item["path"]: item["action"] for item in json.loads(output)["actions"]}
+
+    def test_init_options_are_checked(self):
+        self.assertEqual(self.run_cli("init", "--workspace", "axioma")[0], 2)
+        self.assertEqual(self.run_cli("init", "--project", "Bad Code")[0], 2)
+        self.assertEqual(self.run_cli("init", "--project")[0], 2)
+        self.assertEqual(self.run_cli("init", "--project", "demo", "--workspace", "axioma", "--plans-store", "x")[0], 2)
+        code, _, err = self.run_cli("init", "--project", "demo")
+        self.assertEqual(code, 1)
+        self.assertIn("WORKSPACE_NOT_FOUND", err)
+        self.assertFalse(self.checkout.exists())
+
+    def test_migrate_moves_the_project_layer_into_local(self):
+        self.run_cli("init", "--project", "demo", "--workspace", "axioma")
+        self.attach_project()
+        self.fill_checkout()
+        code, out, err = self.run_cli("migrate", "--json")
+        self.assertEqual(code, 0, err)
+        doc = json.loads(out)
+        self.assertTrue(doc["applied"])
+        self.assertEqual(doc["remaining"], [])
+        self.assertEqual(sorted(item["action"] for item in doc["items"]), ["move"] * 4)
+        self.assertEqual((self.local / "config.toml").read_text(), "schema_version = 1\n")
+        self.assertEqual((self.local / "config.toml").stat().st_mode & 0o777, 0o600)
+        self.assertEqual((self.local / "state" / "orch" / "journal.ndjson").read_text(), "{}\n")
+        self.assertEqual((self.local / "backups" / "2026" / "launcher.py").read_text(), "old\n")
+        self.assertEqual((self.local / "stubs" / "tool").read_text(), "stub\n")
+        self.assertEqual(sorted(path.name for path in self.checkout.iterdir()),
+                         ["launcher.lock.json", "launcher.py", "project.json"])
+        code, out, _ = self.run_cli("migrate", "--json")
+        self.assertEqual((code, json.loads(out)["items"]), (0, []))
+
+    def test_migrate_dry_run_changes_nothing(self):
+        self.run_cli("init", "--project", "demo", "--workspace", "axioma")
+        self.attach_project()
+        self.fill_checkout()
+        code, out, _ = self.run_cli("migrate", "--dry-run")
+        self.assertEqual(code, 0)
+        self.assertIn("would move .swissknifeman/config.toml", out)
+        self.assertTrue((self.checkout / "config.toml").is_file())
+        self.assertFalse(self.local.exists())
+
+    def test_migrate_never_overwrites_a_different_file(self):
+        self.run_cli("init", "--project", "demo", "--workspace", "axioma")
+        self.attach_project()
+        self.fill_checkout()
+        (self.local / "state" / "orch").mkdir(parents=True)
+        (self.local / "state" / "orch" / "journal.ndjson").write_text("{}\n")  # the same bytes: dropped
+        (self.local / "config.toml").write_text("schema_version = 1\n[x]\ny = 1\n")  # other bytes: a conflict
+        code, out, err = self.run_cli("migrate", "--json")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_MIGRATE_CONFLICT", err)
+        by_path = {item["path"]: item["action"] for item in json.loads(out)["items"]}
+        self.assertEqual(by_path["config.toml"], "conflict")
+        self.assertEqual(by_path["state/orch/journal.ndjson"], "drop")
+        self.assertEqual((self.checkout / "config.toml").read_text(), "schema_version = 1\n")
+        self.assertEqual((self.local / "config.toml").read_text(), "schema_version = 1\n[x]\ny = 1\n")
+        self.assertFalse((self.checkout / "state").exists())
+        self.assertEqual((self.local / "stubs" / "tool").read_text(), "stub\n")
+
+    def test_migrate_refuses_a_symbolic_link(self):
+        self.run_cli("init", "--project", "demo", "--workspace", "axioma")
+        self.attach_project()
+        outside = Path(self._tmp.name).resolve() / "outside"
+        outside.mkdir()
+        (self.checkout / "state").symlink_to(outside)
+        code, _, err = self.run_cli("migrate")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_MIGRATE_SYMLINK", err)
+        self.assertTrue((self.checkout / "state").is_symlink())
+
+    def test_migrate_needs_the_project_folder_of_the_workspace(self):
+        code, _, err = self.run_cli("migrate")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_LOCAL_UNAVAILABLE", err)
+        self.run_cli("init", "--project", "demo", "--workspace", "axioma")
+        self.fill_checkout()
+        code, _, err = self.run_cli("migrate", "--json")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_LOCAL_UNAVAILABLE", err)
+        self.assertTrue((self.checkout / "config.toml").is_file())
+
+    def test_doctor_checks_the_local_folder_and_the_leftovers(self):
+        def checks():
+            _code, out, _ = self.run_cli("doctor", "--json")
+            return {item["check_id"]: item for item in json.loads(out)}
+
+        self.run_cli("init")
+        self.assertEqual(checks()["project.local"]["status"], "skip")
+        self.run_cli("init", "--project", "demo", "--workspace", "axioma")
+        found = checks()
+        self.assertEqual(found["project.local"]["status"], "warn")
+        self.assertNotIn("project.checkout-layer", found)
+        self.attach_project()
+        self.fill_checkout()
+        found = checks()
+        self.assertEqual(found["project.local"]["status"], "ok")
+        self.assertEqual(found["project.checkout-layer"]["status"], "warn")
+        self.assertIn("project migrate", found["project.checkout-layer"]["remediation"])
+        self.assertIn("state", found["project.checkout-layer"]["observed"])
+        self.run_cli("migrate")
+        self.assertEqual(checks()["project.checkout-layer"]["status"], "ok")
+
+    def test_doctor_reads_repo_path_and_the_contract_of_the_local_config(self):
+        from aicore.workspace import set_repo_path
+
+        def local():
+            _code, out, _ = self.run_cli("doctor", "--json")
+            return {item["check_id"]: item for item in json.loads(out)}["project.local"]
+
+        self.run_cli("init", "--project", "demo", "--workspace", "axioma")
+        self.attach_project()
+        set_repo_path(self.ws, "demo", self.root)
+        self.assertEqual(local()["status"], "ok")
+        other = Path(self._tmp.name).resolve() / "other"
+        other.mkdir()
+        set_repo_path(self.ws, "demo", other)
+        self.assertEqual(local()["status"], "warn")
+        (self.local / "config.toml").write_text("not = toml = at all\n")
+        self.assertEqual(local()["status"], "fail")
+
+
 class DurableReplaceTests(unittest.TestCase):
     def test_a_failed_write_keeps_the_old_file(self):
         with tempfile.TemporaryDirectory() as tmp:

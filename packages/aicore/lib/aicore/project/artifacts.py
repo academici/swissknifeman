@@ -2,7 +2,9 @@
 
 :func:`plan_sync` compares a project with the template and returns the exact actions (create, update, unchanged,
 refused); :func:`apply_sync` carries them out under the project sync lock, each file replaced crash-safely
-(:func:`aicore.util.io.durable_replace`). User files (config, state, plans) and unknown files are never touched.
+(:func:`aicore.util.io.durable_replace`). A launcher-only checkout holds the launcher, its lock and the project marker
+``project.json`` (workspace, project code, plans store; written only when asked for and never replaced). User files (config,
+state, plans) and unknown files are never touched.
 """
 from __future__ import annotations
 
@@ -13,7 +15,7 @@ import socket
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from aicore.state import backup, require_project_path
 from aicore.state.invocation import (LAUNCHER_PROTOCOL, LOCK_NAME, LOCK_SCHEMA, LauncherError, launcher_file,
@@ -23,6 +25,7 @@ from aicore.util.io import durable_replace
 
 TEMPLATE = Path(__file__).resolve().parents[3] / "templates" / "project" / "launcher.py"
 MANAGED = (f"{PROJECT_DIRNAME}/launcher.py",)
+MARKER = f"{PROJECT_DIRNAME}/project.json"
 SYNC_LOCK = "project-sync.lock"
 # Digests of earlier templates of the current protocol that `verify` still accepts without a warning; empty while the
 # first template is the only one.
@@ -56,7 +59,29 @@ def _file_digest(path: Path) -> Optional[str]:
         return None
 
 
-def plan_sync(root: Path, *, adopt: bool = False) -> Dict[str, Any]:
+def plan_marker(root: Path, wanted: Tuple[str, str, str]) -> Dict[str, Any]:
+    """The action for the marker ``.swissknifeman/project.json`` with ``wanted`` = ``(workspace, project_id, plans_store)``:
+    ``create``, ``unchanged``, or ``refused`` when a marker with other values, an unreadable one or a symlink is there (a
+    marker is the identity of the project: it is never replaced)."""
+    from aicore.workspace import WorkspaceError, read_marker
+    path = Path(root) / MARKER
+    if path.is_symlink():
+        return {"path": MARKER, "action": "refused", "code": "MARKER_SYMLINK_FORBIDDEN", "reason": "not a regular file"}
+    try:
+        current = read_marker(root)
+    except WorkspaceError as exc:
+        return {"path": MARKER, "action": "refused", "code": exc.code, "reason": exc.message}
+    if current is None:
+        return {"path": MARKER, "action": "create"}
+    held = (current["workspace"], current["project_id"], current["plans_store"])
+    if held == tuple(wanted):
+        return {"path": MARKER, "action": "unchanged"}
+    return {"path": MARKER, "action": "refused", "code": "PROJECT_MARKER_CONFLICT",
+            "reason": f"the marker names workspace {held[0]}, project {held[1]}, plans store {held[2]}; it is not "
+                      f"replaced (edit or remove it by hand)"}
+
+
+def plan_sync(root: Path, *, adopt: bool = False, marker: Optional[Tuple[str, str, str]] = None) -> Dict[str, Any]:
     """What a sync of ``root`` would do: ``{template_sha256, actions: [{path, action, code?, reason?}]}``.
 
     The launcher is ours when its digest is the one the lock records (any older template) or a known template; then a
@@ -100,7 +125,11 @@ def plan_sync(root: Path, *, adopt: bool = False) -> Dict[str, Any]:
         except OSError:
             same = False
         actions.append({"path": f"{PROJECT_DIRNAME}/{LOCK_NAME}", "action": "unchanged" if same else "update"})
-    return {"template_sha256": digest, "actions": actions}
+    result: Dict[str, Any] = {"template_sha256": digest, "actions": actions}
+    if marker is not None:
+        actions.append(plan_marker(root, marker))
+        result["marker"] = dict(zip(("workspace", "project_id", "plans_store"), marker))
+    return result
 
 
 class _SyncLock:
@@ -155,6 +184,13 @@ def apply_sync(root: Path, plan: Dict[str, Any]) -> Dict[str, Any]:
         raise LauncherError("LAUNCHER_TEMPLATE_CHANGED", "the hub template changed during the sync; run it again")
     by_path = {item["path"]: item for item in plan["actions"]}
     with _SyncLock(root):
+        marker = by_path.get(MARKER)
+        if marker and marker["action"] == "create":  # first: a backup of the launcher then lands where the marker says
+            from aicore.workspace import read_marker, write_marker
+            wanted = plan["marker"]
+            if read_marker(root) is not None:
+                raise LauncherError("PROJECT_MARKER_CHANGED", f"{root / MARKER} appeared during the sync; run it again")
+            write_marker(root, wanted["workspace"], wanted["project_id"], wanted["plans_store"])
         launcher = by_path.get(MANAGED[0])
         if launcher and launcher["action"] in ("create", "update"):
             target = require_project_path(root, launcher_file(root))
@@ -162,7 +198,7 @@ def apply_sync(root: Path, plan: Dict[str, Any]) -> Dict[str, Any]:
                 launcher["backup_path"] = str(backup(target, project=root))
             durable_replace(target, data, mode=0o755)
         lock = by_path.get(f"{PROJECT_DIRNAME}/{LOCK_NAME}")
-        refused = any(item["action"] == "refused" for item in plan["actions"])
+        refused = launcher is not None and launcher["action"] == "refused"
         if lock and lock["action"] in ("create", "update"):
             if refused:  # the launcher was not written: a new lock would claim a file this hub does not own
                 lock.update(action="refused", code="LAUNCHER_NOT_SYNCED", reason="the launcher was refused")

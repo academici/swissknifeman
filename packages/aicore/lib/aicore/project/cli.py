@@ -1,10 +1,13 @@
 """``aicore project`` (``swissknifeman project``): the project-local launcher and the invocation context.
 
     init    [--marker-only] [--adopt] [--dry-run] [--json]   write .swissknifeman/launcher.py and its lock
+            [--project CODE [--workspace CODE] [--plans-store workspace|legacy]]   and the marker project.json
     sync    [--adopt] [--dry-run] [--json]                   bring the managed files to the hub template (no-op if equal)
     verify  [--json] [--no-roundtrip]                        read-only checks of the managed files and the launcher chain
     context [--json]                                         where this command runs and how the project was found
-    doctor  [--json]                                         verify plus the project config and the write boundary
+    migrate [--dry-run] [--json]                             move config.toml, state, backups, stubs of the checkout
+                                                             into projects/<code>/local/ of the workspace
+    doctor  [--json]                                         verify plus the project config, the local folder, leftovers
     exec    -- <group> [args...]                             run a group through this project's launcher
 
 No command takes a target path: the project is the one the launcher bound, else the nearest ``.git``/``.swissknifeman``
@@ -19,9 +22,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, TextIO
+from typing import Any, Dict, List, Mapping, Optional, Sequence, TextIO, Tuple
 
-from . import artifacts
+from . import artifacts, migrate
 from aicore.state import (LauncherError, ProjectContextRequired, read_invocation_context, require_project_path,
                           resolve_project)
 from aicore.state.invocation import (LAUNCHER_PROTOCOL, MIN_LAUNCHER_PROTOCOL, launcher_file, lock_file,
@@ -165,6 +168,45 @@ def plans_store_of(root: Path, env: Mapping[str, str]):
                               "workspace": store.workspace}, None
 
 
+def local_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
+    """``project.local`` (the ``projects/<code>/local/`` folder the marker names, its config and ``repo.path``) and
+    ``project.checkout-layer`` (project-layer files that still sit in the checkout and are no longer read)."""
+    from aicore.workspace import WorkspaceError, read_local_config, read_marker
+    try:
+        marker = read_marker(root)
+    except WorkspaceError:
+        return []  # project.plans-store reports an unusable marker
+    if marker is None:
+        return [_check("project.local", "skip", f"no {PROJECT_DIRNAME}/project.json: the project layer stays in the "
+                       f"checkout", "config")]
+    workspace, project_id = marker["workspace"], marker["project_id"]
+    local = project_local_dir(root, env=env)
+    if local is None:
+        return [_check("project.local", "warn", f"the workspace {workspace} has no project {project_id} on this machine; "
+                       f"the project layer stays in {PROJECT_DIRNAME}/", "config",
+                       "run `swissknifeman workspace clone <url>` or `swissknifeman workspace project attach`")]
+    checks: List[Dict[str, Any]] = []
+    try:
+        document = read_local_config(local.parents[2], project_id)
+    except WorkspaceError as exc:
+        checks.append(_check("project.local", "fail", exc.message[:400], "config",
+                             f"fix {local / 'config.toml'}"))
+    else:
+        repo = (document or {}).get("repo", {}).get("path")
+        if repo is not None and os.path.realpath(repo) != str(root.resolve()):
+            checks.append(_check("project.local", "warn", f"{local}: repo.path is {repo}, this checkout is {root}",
+                                 "config", "swissknifeman workspace project bind, or run from the checkout it names"))
+        else:
+            checks.append(_check("project.local", "ok", f"{local}" + (f" (repo.path {repo})" if repo else ""), "config"))
+    left = migrate.leftovers(root)
+    if left:
+        checks.append(_check("project.checkout-layer", "warn", f"{', '.join(left)} in {PROJECT_DIRNAME}/ are no longer "
+                             f"read; the project layer is {local}", "config", "swissknifeman project migrate"))
+    else:
+        checks.append(_check("project.checkout-layer", "ok", f"{PROJECT_DIRNAME}/ holds no project layer files", "config"))
+    return checks
+
+
 def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     """:func:`verify_checks` plus the project configuration and the write boundary of the project folders."""
     checks = verify_checks(root, env)
@@ -186,6 +228,7 @@ def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
         except Exception as exc:  # any parse error is a finding, not a crash of the doctor
             checks.append(_check("project.config", "fail", f"{config}: {exc}"[:400], "config",
                                  "fix the TOML: swissknifeman config explain"))
+    checks.extend(local_checks(root, env))
     from aicore.workspace import WorkspaceError, resolve_plans_store
     store = None
     store_error = None
@@ -246,12 +289,14 @@ def _print_checks(checks: List[Dict[str, Any]], as_json: bool, out: TextIO) -> i
 
 
 def _sync(root: Path, flags: Dict[str, bool], env: Mapping[str, str], out: TextIO, err: TextIO,
-          verb: str) -> int:
-    plan = artifacts.plan_sync(root, adopt=flags["--adopt"])
+          verb: str, marker: Optional[Tuple[str, str, str]] = None) -> int:
+    plan = artifacts.plan_sync(root, adopt=flags["--adopt"], marker=marker)
     result = {"$schema": SYNC_SCHEMA, "root": str(root), "dry_run": flags["--dry-run"], **plan}
     refused = [item for item in plan["actions"] if item["action"] == "refused"]
     changes = [item for item in plan["actions"] if item["action"] in ("create", "update")]
-    if not flags["--dry-run"] and changes:
+    # A marker that cannot be written is a wrong request, not a drift of managed files: nothing is written then.
+    blocked = any(item["path"] == artifacts.MARKER for item in refused)
+    if not flags["--dry-run"] and changes and not blocked:
         result.update(artifacts.apply_sync(root, plan))
         refused = [item for item in result["actions"] if item["action"] == "refused"]
     if flags["--json"]:
@@ -269,11 +314,72 @@ def _sync(root: Path, flags: Dict[str, bool], env: Mapping[str, str], out: TextI
         return 1
     if verb == "init" and not flags["--dry-run"] and not flags["--json"]:
         out.write(f"launcher ready: python3 -I {PROJECT_DIRNAME}/launcher.py <group> <args...>  (root {root})\n")
+        if marker is not None and project_local_dir(root, env=env) is None:
+            out.write(f"note: the workspace {marker[0]} has no project {marker[1]} on this machine; run "
+                      f"`swissknifeman workspace project attach` to create it\n")
     return 0
 
 
+_VALUE_OPTIONS = ("--workspace", "--project", "--plans-store")
+
+
+def _options(args: Sequence[str], flags: Sequence[str], values: Sequence[str]) -> Tuple[Dict[str, bool], Dict[str, str]]:
+    """Split ``args`` into the boolean ``flags`` and the ``values`` options (``--name VALUE`` or ``--name=VALUE``)."""
+    found = {name: False for name in flags}
+    given: Dict[str, str] = {}
+    rest = list(args)
+    while rest:
+        arg = rest.pop(0)
+        name, _equals, inline = arg.partition("=")
+        if name in values:
+            if inline:
+                given[name] = inline
+            elif rest and not rest[0].startswith("--"):
+                given[name] = rest.pop(0)
+            else:
+                raise _Usage(f"{name} needs a value")
+        elif arg in found:
+            found[arg] = True
+        else:
+            raise _Usage(f"unknown argument {arg!r}")
+    return found, given
+
+
+def _marker_request(root: Path, given: Mapping[str, str], env: Mapping[str, str]) -> Optional[Tuple[str, str, str]]:
+    """``(workspace, project_id, plans_store)`` the options ask for, ``None`` when they ask for no marker. The workspace is
+    the selected one of this machine; the plans store is ``legacy`` while the checkout holds plan folders, else ``workspace``."""
+    if "--project" not in given:
+        if given:
+            raise _Usage(f"{', '.join(sorted(given))} only goes with --project CODE")
+        return None
+    from aicore.state import WorkspaceSelectionError, is_code, selected_workspace
+    project = given["--project"]
+    if not is_code(project):
+        raise _Usage(f"--project {project!r} is not a code: lowercase letters, digits and single hyphens, starting with "
+                     f"a letter, at most 40 characters")
+    workspace = given.get("--workspace")
+    if workspace is None:
+        try:
+            workspace = selected_workspace(env)
+        except WorkspaceSelectionError as exc:
+            raise LauncherError(exc.code, exc.message) from None
+        except ValueError as exc:
+            raise _Usage(str(exc)) from None
+    elif not is_code(workspace):
+        raise _Usage(f"--workspace {workspace!r} is not a code")
+    store = given.get("--plans-store")
+    if store is None:
+        try:
+            store = "legacy" if any(child.is_dir() for child in (root / "plans").iterdir()) else "workspace"
+        except OSError:
+            store = "workspace"
+    elif store not in ("workspace", "legacy"):
+        raise _Usage("--plans-store is workspace or legacy")
+    return workspace, project, store
+
+
 def _init(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
-    flags = _flags(args, ("--marker-only", "--adopt", "--dry-run", "--json"))
+    flags, given = _options(args, ("--marker-only", "--adopt", "--dry-run", "--json"), _VALUE_OPTIONS)
     context = resolve_project(cwd, env=env)
     if context is None:
         if not flags["--marker-only"]:
@@ -282,7 +388,7 @@ def _init(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO, e
         root = cwd.resolve()
     else:
         root = context.root.resolve()
-    return _sync(root, flags, env, out, err, "init")
+    return _sync(root, flags, env, out, err, "init", _marker_request(root, given, env))
 
 
 def _sync_cmd(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
@@ -297,6 +403,39 @@ def _verify(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO,
     flags = _flags(args, ("--json", "--no-roundtrip"))
     root = _project(env, cwd).resolve()
     return _print_checks(verify_checks(root, env, roundtrip=not flags["--no-roundtrip"]), flags["--json"], out)
+
+
+MIGRATE_SCHEMA = "urn:swissknifeman:aicore:project-migrate:v1"
+
+
+def _migrate(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
+    flags = _flags(args, ("--dry-run", "--json"))
+    root = _project(env, cwd).resolve()
+    if flags["--dry-run"]:
+        result = migrate.run(root, env, dry_run=True)
+    else:
+        with artifacts._SyncLock(root):
+            result = migrate.run(root, env)
+    result = {"$schema": MIGRATE_SCHEMA, "root": str(root), "dry_run": flags["--dry-run"], **result}
+    blocked = [item for item in result["items"] if item["action"] in ("conflict", "refused")]
+    if flags["--json"]:
+        out.write(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
+    else:
+        for item in result["items"]:
+            note = f" ({item.get('code') or 'conflict'}: {item['reason']})" if item.get("reason") else ""
+            would = "would " if flags["--dry-run"] and item["action"] in ("move", "drop") else ""
+            out.write(f"{would}{item['action']} {PROJECT_DIRNAME}/{item['path']}{note}\n")
+        if not result["items"]:
+            out.write(f"project migrate: nothing to move ({root})\n")
+        elif result["applied"] and not blocked:
+            out.write(f"moved into {result['local']}; commit the removal of the old files from {PROJECT_DIRNAME}/ "
+                      f"if git tracked them\n")
+    if blocked:
+        for item in blocked:
+            err.write(f"{item.get('code') or 'PROJECT_MIGRATE_CONFLICT'}: {PROJECT_DIRNAME}/{item['path']}: "
+                      f"{item['reason']}\n")
+        return 1
+    return 0
 
 
 def _doctor(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO, err: TextIO) -> int:
@@ -346,7 +485,7 @@ def _exec(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO, e
 
 
 _COMMANDS = {"init": _init, "sync": _sync_cmd, "verify": _verify, "context": _context, "doctor": _doctor,
-             "exec": _exec}
+             "migrate": _migrate, "exec": _exec}
 
 
 def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str]] = None,

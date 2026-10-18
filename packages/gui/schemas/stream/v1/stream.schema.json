@@ -85,8 +85,7 @@
                 "minLength": 1,
                 "description": "Project id.",
                 "maxLength": 256
-              },
-              "maxItems": 1024
+              }
             },
             "runs": {
               "type": "array",
@@ -96,8 +95,7 @@
               "items": {
                 "$ref": "urn:swissknifeman:gui:run:v1#/$defs/run_id",
                 "description": "Run id."
-              },
-              "maxItems": 1024
+              }
             },
             "owners": {
               "type": "array",
@@ -107,8 +105,7 @@
               "items": {
                 "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
                 "description": "Owner."
-              },
-              "maxItems": 1024
+              }
             },
             "types": {
               "type": "array",
@@ -119,8 +116,7 @@
                 "type": "string",
                 "pattern": "^[a-z*][a-z0-9.*_-]*$",
                 "description": "Event type pattern."
-              },
-              "maxItems": 1024
+              }
             }
           },
           "additionalProperties": false

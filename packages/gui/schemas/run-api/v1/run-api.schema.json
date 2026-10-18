@@ -261,8 +261,7 @@
         },
         "text": {
           "type": "string",
-          "description": "Text of the chunk, cleaned of terminal control sequences.",
-          "maxLength": 1048576
+          "description": "Text of the chunk, cleaned of terminal control sequences."
         },
         "truncated": {
           "type": "boolean",

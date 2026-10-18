@@ -176,8 +176,7 @@
           "items": {
             "$ref": "#/$defs/session_entry",
             "description": "One session."
-          },
-          "maxItems": 1024
+          }
         }
       },
       "additionalProperties": false

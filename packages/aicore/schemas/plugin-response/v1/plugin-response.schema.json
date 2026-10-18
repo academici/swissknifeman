@@ -28,8 +28,7 @@
     },
     "output": {
       "type": "object",
-      "description": "Result of the call; for describe a plugin-describe document.",
-      "maxProperties": 4096
+      "description": "Result of the call; for describe a plugin-describe document."
     },
     "error": {
       "type": "object",
@@ -42,8 +41,7 @@
         },
         "message": {
           "type": "string",
-          "description": "Text for people; it must not hold secrets.",
-          "maxLength": 65536
+          "description": "Text for people; it must not hold secrets."
         }
       },
       "required": [
@@ -57,8 +55,7 @@
       "description": "Notes for the log, at most 20 lines (checked by the host).",
       "items": {
         "type": "string",
-        "description": "One line.",
-        "maxLength": 65536
+        "description": "One line."
       },
       "maxItems": 20
     }

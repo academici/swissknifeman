@@ -48,8 +48,7 @@
     },
     "data": {
       "type": "object",
-      "description": "Payload as a JSON object; at most 65536 bytes of canonical JSON (checked by emit). Large or binary data travels as an artifact-ref.",
-      "maxProperties": 1024
+      "description": "Payload as a JSON object; at most 65536 bytes of canonical JSON (checked by emit). Large or binary data travels as an artifact-ref."
     },
     "traceparent": {
       "type": "string",

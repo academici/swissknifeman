@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 
 
 class SessionContextError(ValueError):
@@ -20,7 +20,7 @@ class SessionContext:
         return asdict(self)
 
 
-Adapter = Callable[[], SessionContext | None]
+Adapter = Callable[[], Optional[SessionContext]]  # runtime expression: no `X | None` on the py39 floor
 
 
 def _codex_adapter() -> SessionContext | None:

@@ -7,7 +7,7 @@ from unittest import mock
 import aicore
 from aicore.state import shellenv
 from aicore.util import schema
-from aicore.workspace import bind, new_id, write_marker, write_project
+from aicore.workspace import bind, write_marker, write_project
 
 from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase, new_code
 from workspace import doctor, gitutil, layout, projects

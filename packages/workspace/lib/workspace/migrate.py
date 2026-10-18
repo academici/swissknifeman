@@ -228,11 +228,11 @@ def _count_plans(plans: Path) -> Dict[str, int]:
                 counts["bytes"] += entry.stat(follow_symlinks=False).st_size
 
     folders, loose = source_entries(plans)
-    for name, path in folders:
+    for _name, path in folders:
         counts["v4" if (path / "plan.json").is_file() else "legacy"] += 1
         with contextlib.suppress(OSError):
             size(str(path))
-    for name, path in loose:
+    for _name, path in loose:
         with contextlib.suppress(OSError):
             counts["files"] += 1
             counts["bytes"] += path.lstat().st_size

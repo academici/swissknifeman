@@ -159,7 +159,6 @@ class TestDedupRecords(unittest.TestCase):
 
     def test_resume_duplicate_keeps_higher_completeness(self):
         partial = self._record(turn_id="turn-1", route=False)
-        full = dict(partial)
         # Simulate the resumed session re-normalizing the SAME natural key once route
         # evidence became available — same trace_id, higher completeness.
         raw = _raw()

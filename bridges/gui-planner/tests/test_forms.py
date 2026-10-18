@@ -7,7 +7,7 @@ import subprocess
 import sys
 import unittest
 
-from .test_queries import BRIDGE, FIXTURES, GUI_DOC, PLAN, AdapterCase
+from .test_queries import BRIDGE, FIXTURES, GUI_DOC, AdapterCase
 
 sys.path.insert(0, str(BRIDGE))
 import adapter  # noqa: E402

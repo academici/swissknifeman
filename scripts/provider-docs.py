@@ -17,7 +17,7 @@ if _AICORE_LIB not in sys.path:
 
 from aicore.provider.manifest import (load_provider_manifest, provider_manifest_sha256,
                                       support_for)
-from aicore.provider.values import ProviderId, SupportLevel
+from aicore.provider.values import ProviderId
 
 
 MANIFEST_REL = "packages/aicore/configs/provider-capabilities.json"

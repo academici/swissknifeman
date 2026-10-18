@@ -1,10 +1,8 @@
 """Layer writes: revision, plan_layer_edit, layer_lock, apply_layer_patch (CAS, rollback) and races of processes."""
-import json
 import os
 import random
 import subprocess
 import sys
-import tempfile
 import time
 import unittest
 from pathlib import Path
@@ -206,10 +204,10 @@ class TestPlan(Workspace):
             section = toml.loads(plan.text_after)["demo"]
             flat = {}
 
-            def walk(body, base=()):
+            def walk(body, base=(), flat=flat):
                 for name, value in body.items():
                     if isinstance(value, dict):
-                        walk(value, base + (name,))
+                        walk(value, base + (name,), flat)
                     else:
                         flat[".".join(base + (name,))] = value
             walk(section)

@@ -212,10 +212,10 @@ def load_plan(root: str | Path) -> Plan:
                                 key=lambda f: _natural(f.stem)):
             doc = _read_json(root, item_file, plan.problems)
             plan.items[item_file.stem] = doc if doc is not None else {}
-        for workspace in sorted((d for d in phase_dir.iterdir() if d.is_dir()), key=lambda d: _natural(d.name)):
-            for unit_file in sorted(workspace.glob("*.json"), key=lambda f: _natural(f.stem)):
+        for item_dir in sorted((d for d in phase_dir.iterdir() if d.is_dir()), key=lambda d: _natural(d.name)):
+            for unit_file in sorted(item_dir.glob("*.json"), key=lambda f: _natural(f.stem)):
                 doc = _read_json(root, unit_file, plan.problems)
-                plan.units[f"{workspace.name}/{unit_file.stem}"] = doc if doc is not None else {}
+                plan.units[f"{item_dir.name}/{unit_file.stem}"] = doc if doc is not None else {}
     decisions_dir = root / "decisions"
     if decisions_dir.is_dir():
         for decision_file in sorted(decisions_dir.glob("*.json"), key=lambda f: _natural(f.stem)):

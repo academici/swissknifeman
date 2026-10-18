@@ -1,7 +1,6 @@
 """gui.core.plugins: derive_state, sync, grants and digests, the admit gate, failures and quarantine, drain, views."""
 import asyncio
 import json
-import sqlite3
 import tempfile
 import threading
 import unittest
@@ -885,7 +884,7 @@ class TestHistory(HostCase):
     def test_history_is_per_plugin(self):
         self.host.sync([obs("a", "unit"), obs("b", "unit")])
         with self.host._mutation():
-            for i in range(self.settings.plugins.history_limit + 5):
+            for _ in range(self.settings.plugins.history_limit + 5):
                 self.host._history("a", "admin", "note", "x")
         self.assertEqual(1, len(self.host.history("b")))
 

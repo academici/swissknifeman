@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Tests scripts/check-env.sh — a fake PATH decides which programs the script can see."""
 import json
-import os
 import shutil
 import subprocess
 import tempfile

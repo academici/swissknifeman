@@ -195,7 +195,7 @@ class LoadAndOpenTests(DemoCase):
         plan = store.load_plan(elsewhere)
         self.assertIsNone(plan.source_root)
         with self.assertRaises(PlanError) as ctx:
-            plan.repo_root
+            _ = plan.repo_root
         self.assertEqual(ctx.exception.code, "PLAN_SOURCE_UNBOUND")
 
     def test_unknown_and_ambiguous_references(self):

@@ -4,6 +4,8 @@ The module receives a resolved semantic profile and emits one P2 artifact plan p
 provider. It never reads project/user/fleet carriers and never translates one rendered
 provider output into another.
 """
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from pathlib import Path

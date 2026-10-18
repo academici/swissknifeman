@@ -118,10 +118,11 @@ class NormalizeCommandIdTests(unittest.TestCase):
 
 
 class BridgeEnvironmentTests(unittest.TestCase):
-    def test_dispatcher_exports_the_legacy_names_for_the_window(self):
+    def test_dispatcher_no_longer_exports_the_legacy_names(self):
         env = bridges.environment()
-        self.assertEqual(env["TASK_ROOT"], env["PLANNER_ROOT"])
-        self.assertEqual(env["TASK_PLAN_PY"], env["PLANNER_PLAN_PY"])
+        self.assertNotIn("TASK_ROOT", env)
+        self.assertNotIn("TASK_PLAN_PY", env)
+        self.assertIn("PLANNER_ROOT", env)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ target project, so consumers of a hub install see the hub's host. No config mean
 empty host: every host function is off (standalone); that is neither an error nor a
 warning. Validation is closed and stdlib-only, mirroring the schema: an unknown key,
 a wrong type, an absolute path or `..` stops with `HOST_CONFIG_INVALID: <field>`."""
+from __future__ import annotations
+
 import functools
 import json
 import os

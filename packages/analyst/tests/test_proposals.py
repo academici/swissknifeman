@@ -3,7 +3,6 @@ status via separate audit-line (history is not overwritten), handoff-print by ty
 and invariant «zero records out the analyst state directory»."""
 import io
 import json
-import re
 import tempfile
 import unittest
 from contextlib import redirect_stdout

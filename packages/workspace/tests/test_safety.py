@@ -5,7 +5,7 @@ import unittest
 
 from aicore.util import schema
 from aicore.util.redact import MASK
-from aicore.workspace import new_id, write_project
+from aicore.workspace import write_project
 
 from tests import MODULE_ROOT, TempCase, git, new_code
 from workspace import doctor, layout, safety

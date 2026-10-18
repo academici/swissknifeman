@@ -3,7 +3,7 @@ import json
 import os
 import unittest
 
-from tests.http_support import PORT, Backend
+from tests.http_support import Backend
 
 from gui import contracts
 from gui.http import confirm

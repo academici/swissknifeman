@@ -1,6 +1,4 @@
 """``/v1/config*`` over the local API: modules, effective view, preview and commit (Starlette TestClient)."""
-import json
-import os
 import time
 import unittest
 from pathlib import Path

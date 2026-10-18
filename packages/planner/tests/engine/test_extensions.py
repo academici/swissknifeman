@@ -1,4 +1,6 @@
 """Extension slots: orchestration.scenario and orchestration.options stay optional; a bridge supplies the options schema."""
+from __future__ import annotations
+
 import copy
 import json
 from pathlib import Path

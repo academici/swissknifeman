@@ -8,7 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LIB = ROOT / "lib" / "aicore"
 
-# Python 3.9 has no sys.stdlib_module_names; this list covers the modules aicore uses.
+# Python 3.9 has no sys.stdlib_module_names; _stdlib_names() reads the interpreter's own library
+# folder there, and this list stays as a floor for the modules aicore uses.
 _STDLIB_FALLBACK = frozenset({
     "__future__", "ast", "collections", "concurrent", "contextlib", "copy", "dataclasses",
     "datetime", "enum", "fcntl", "functools", "hashlib", "http", "inspect", "io",
@@ -17,7 +18,20 @@ _STDLIB_FALLBACK = frozenset({
     "typing",
     "unittest", "urllib", "uuid",
 })
-STDLIB = frozenset(getattr(sys, "stdlib_module_names", ())) | _STDLIB_FALLBACK
+
+
+def _stdlib_names():
+    names = set(getattr(sys, "stdlib_module_names", ())) | _STDLIB_FALLBACK
+    if not hasattr(sys, "stdlib_module_names"):
+        import pkgutil
+        import sysconfig
+        root = Path(sysconfig.get_paths()["stdlib"])
+        folders = [str(root), str(root / "lib-dynload")]
+        names |= {module.name for module in pkgutil.iter_modules(folders)} | set(sys.builtin_module_names)
+    return frozenset(names)
+
+
+STDLIB = _stdlib_names()
 
 
 def _imports(path):

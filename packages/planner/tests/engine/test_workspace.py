@@ -62,7 +62,7 @@ class VectorParityTests(unittest.TestCase):
             with self.subTest(vector["name"]), tempfile.TemporaryDirectory() as tmp:
                 real = os.path.realpath(tmp)
 
-                def sub(value):
+                def sub(value, real=real):
                     if isinstance(value, str):
                         return value.replace("{tmp}", real)
                     if isinstance(value, dict):
@@ -74,9 +74,10 @@ class VectorParityTests(unittest.TestCase):
                 env = sub(vector["env"])
                 expect = vector["expect"]
                 if vector["op"] == "resolve":
-                    call = lambda: workspace.resolve_plans_store(sub(vector["project_root"]), env)  # noqa: E731
+                    call = lambda vector=vector, env=env: workspace.resolve_plans_store(  # noqa: E731
+                        sub(vector["project_root"]), env)
                 else:
-                    call = lambda: workspace.source_root_of(  # noqa: E731
+                    call = lambda vector=vector, env=env: workspace.source_root_of(  # noqa: E731
                         sub(vector["plan_dir"]), env, sub(vector["launcher"]) if "launcher" in vector else None)
                 if "error" in expect:
                     with self.assertRaises(PlanError) as caught:
@@ -267,7 +268,7 @@ class SourceRootTests(WorkspaceCase):
         plan = store.load_plan(self.plan_dir)
         self.assertIsNone(plan.source_root)
         with self.assertRaises(PlanError) as caught:
-            plan.repo_root
+            _ = plan.repo_root
         self.assertEqual(caught.exception.code, "PLAN_SOURCE_UNBOUND")
         self.assertIn("workspace project attach", caught.exception.message)
         store.append_log(self.plan_dir, store.new_event("note", "written without a checkout", demo.AUTHORING))
@@ -280,7 +281,7 @@ class SourceRootTests(WorkspaceCase):
             self.assertEqual(store.load_plan(self.plan_dir).source_root, self.project)
             self.mark("workspace", OTHER_PID)
             with self.assertRaises(PlanError) as caught:
-                store.load_plan(self.plan_dir).source_root
+                _ = store.load_plan(self.plan_dir).source_root
             self.assertEqual(caught.exception.code, "PROJECT_CONTEXT_CONFLICT")
 
     def test_a_legacy_plan_is_the_parent_of_plans_live_and_archived(self):
@@ -308,7 +309,7 @@ class SourceRootTests(WorkspaceCase):
     def test_a_damaged_bindings_file_is_a_layout_error(self):
         put(self.home / "state" / "workspaces" / "axioma" / "bindings.json", "{not json")
         with self.assertRaises(PlanError) as caught:
-            store.load_plan(self.plan_dir).source_root
+            _ = store.load_plan(self.plan_dir).source_root
         self.assertEqual(caught.exception.code, "WORKSPACE_LAYOUT_INVALID")
 
 

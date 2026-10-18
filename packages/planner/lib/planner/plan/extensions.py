@@ -34,7 +34,7 @@ def clear_cache() -> None:
 def suppliers(slot: str) -> list[tuple[str, Path]]:
     """``(bridge name, schema path)`` of every bridge that supplies ``slot``, in name order."""
     found = []
-    for directory, manifest in bridges.scan():
+    for directory, manifest in bridges.scan(tolerant=True):
         target = (manifest.get("extends") or {}).get(slot)
         if target:
             found.append((manifest["name"], directory.resolve() / target))

@@ -1,11 +1,10 @@
 """workspace project attach|list|show|scan|rebind|detach."""
-import json
 import os
 import subprocess
 import threading
 import unittest
 
-from aicore.workspace import (WorkspaceError, bind, new_id, read_bindings, read_marker, read_project, write_marker,
+from aicore.workspace import (WorkspaceError, bind, read_bindings, read_marker, read_project, write_marker,
                               write_project)
 
 from tests import TempCase, git, new_code

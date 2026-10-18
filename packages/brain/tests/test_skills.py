@@ -1,6 +1,5 @@
 """The skill brain-locator and the plugin manifests of the brain module."""
 import json
-import re
 import unittest
 from pathlib import Path
 

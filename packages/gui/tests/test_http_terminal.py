@@ -5,7 +5,6 @@ import re
 import threading
 import time
 import unittest
-from pathlib import Path
 
 from tests.http_support import PORT, SECRET_VALUE, Backend
 

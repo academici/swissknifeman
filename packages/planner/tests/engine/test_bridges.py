@@ -1,4 +1,6 @@
 """Bridge dispatcher: manifest discovery, validation, verb passthrough and refusals."""
+from __future__ import annotations
+
 import contextlib
 import io
 import json
@@ -137,9 +139,8 @@ class RunTests(BridgeCase):
         root = bridges.PLANNER_ROOT
         self.assertEqual(result["env"]["PLANNER_ROOT"], str(root))
         self.assertEqual(result["env"]["PLANNER_PLAN_PY"], str(root / "scripts" / "plan.py"))
-        # Compatibility alias: remove in the next minor release.
-        self.assertEqual(result["env"]["TASK_ROOT"], str(root))
-        self.assertEqual(result["env"]["TASK_PLAN_PY"], str(root / "scripts" / "plan.py"))
+        self.assertIsNone(result["env"]["TASK_ROOT"])
+        self.assertIsNone(result["env"]["TASK_PLAN_PY"])
         self.assertEqual(result["env"]["PYTHONPATH"], f"{root / 'lib'}{os.pathsep}/earlier")
         self.assertEqual(result["env"]["BRIDGE_PROBE"], str(self.probe_out))
 
@@ -248,6 +249,24 @@ class RootsTests(BridgeCase):
             found = bridges.scan()
         self.assertEqual([directory for directory, _ in found], [first.resolve()])
         self.assertIn("BRIDGE_SHADOWED: alpha", err.getvalue())
+
+    def test_one_broken_manifest_does_not_hide_the_other_bridges(self):
+        self.add_to(self.root, "alpha")
+        broken = self.add_to(self.root, "broken")
+        (broken / "bridge.json").write_text(json.dumps(manifest("broken", entrypoints={"go": "missing.py"})),
+                                            encoding="utf-8")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            found = bridges.scan(tolerant=True)
+        self.assertEqual([manifest["name"] for _, manifest in found], ["alpha"])
+        self.assertIn("BRIDGE_INVALID", err.getvalue())
+        with self.assertRaises(PlanError) as caught:
+            bridges.run("broken", "go", [])
+        self.assertEqual(caught.exception.code, "BRIDGE_INVALID")
+        with self.assertRaises(PlanError) as strict:
+            bridges.listing()
+        self.assertEqual(strict.exception.code, "BRIDGE_INVALID")
+        self.assertEqual([m["name"] for _, m in bridges.scan(self.root, tolerant=True)], ["alpha"])
 
     def test_without_configuration_only_the_built_in_root_counts(self):
         self.add_to(self.root, "alpha")

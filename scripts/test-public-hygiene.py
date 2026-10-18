@@ -2,7 +2,6 @@
 """Tests scripts/public-hygiene.py — synthetic list of paths, without real git ls-files."""
 import importlib.util
 import os
-import sys
 import unittest
 
 _spec = importlib.util.spec_from_file_location(

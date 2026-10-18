@@ -149,7 +149,7 @@ def _read_event(source: str) -> Any:
             with open(source, "rb") as handle:
                 raw = handle.read(MAX_EVENT_BYTES + 1)
     except OSError as exc:
-        raise BrainError(errors.EVENT_DATA_INVALID, f"the event cannot be read from {source}: {exc.strerror or exc}")
+        raise BrainError(errors.EVENT_DATA_INVALID, f"the event cannot be read from {source}: {exc.strerror or exc}") from exc
     if len(raw) > MAX_EVENT_BYTES:
         raise BrainError(errors.EVENT_DATA_INVALID, f"the event is larger than {MAX_EVENT_BYTES} bytes")
     try:
@@ -199,7 +199,6 @@ def _docs_integrate(args: argparse.Namespace) -> int:
         print("  doc-sync is off")
         return 0
     prefix = "[dry-run] would " if args.dry_run else ""
-    script = root / docs.SCRIPT_RELATIVE
     if config.docs_direction in ("pull", "bidirectional"):
         copied = sync.pull(dry_run=args.dry_run)
         if args.dry_run:

@@ -94,12 +94,16 @@ def plans_overview(plans_root) -> dict:
             rows.append({"id": path.name, "error": "PLAN_INVALID"})
             continue
         doc = plan.plan
-        listed = [p for p in doc.get("phases", []) if p in plan.phases] if isinstance(doc.get("phases"), list) else []
+        declared = doc.get("phases")
+        # The phases plan.json names are the plan's phases; a folder it does not name is an orphan, not progress.
+        phase_docs = [plan.phases[p] for p in declared if p in plan.phases] if isinstance(declared, list) \
+            else list(plan.phases.values())
+        phases_total = len(declared) if isinstance(declared, list) else len(plan.phases)
         done = sum(1 for item in plan.items.values() if item.get("status") in _DONE_ITEM)
         rows.append({"id": doc.get("id") if isinstance(doc.get("id"), str) else path.name,
                      "short_id": doc.get("short_id"), "title": doc.get("title"), "status": doc.get("status"),
                      "updated_at": doc.get("updated_at"),
-                     "progress": {"phases": len(plan.phases), "phases_closed": sum(1 for p in plan.phases.values() if p.get("closed")),
+                     "progress": {"phases": phases_total, "phases_closed": sum(1 for p in phase_docs if p.get("closed")),
                                   "items": len(plan.items), "items_done": done}})
     return {"plans": rows}
 

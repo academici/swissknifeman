@@ -348,11 +348,43 @@ def _check_profile(node: Any, where: str, pointer: str, *, root: bool = False) -
                 _check_profile(child, where, f"{pointer}/oneOf/{index}")
 
 
+def _anchor_end(pattern: str) -> str:
+    """Rewrite every ``$`` that is an anchor into ``\\Z``: in Python ``$`` also matches before a final newline."""
+    out: list[str] = []
+    in_class = False
+    index = 0
+    while index < len(pattern):
+        char = pattern[index]
+        if char == "\\":
+            out.append(pattern[index:index + 2])
+            index += 2
+            continue
+        if in_class:
+            if char == "]":
+                in_class = False
+        elif char == "[":
+            in_class = True
+            out.append(char)
+            index += 1
+            if pattern[index:index + 1] == "^":
+                out.append("^")
+                index += 1
+            if pattern[index:index + 1] == "]":
+                out.append("\\]")
+                index += 1
+            continue
+        elif char == "$":
+            out.append(r"\Z")
+            index += 1
+            continue
+        out.append(char)
+        index += 1
+    return "".join(out)
+
+
 def _compile(pattern: str) -> re.Pattern:
     """JSON Schema (ECMA-262) semantics: ASCII classes, and ``$`` only at the very end of the string."""
-    if pattern.endswith("$") and not pattern.endswith("\\$"):
-        pattern = pattern[:-1] + r"\Z"
-    return re.compile(pattern, re.ASCII)
+    return re.compile(_anchor_end(pattern), re.ASCII)
 
 
 def validate(doc: object, kind: str, registry: Registry) -> list[ValidationIssue]:

@@ -6,7 +6,7 @@ import unittest
 from unittest import mock
 
 from aicore.util import schema
-from aicore.workspace import WorkspaceError, new_id, write_project
+from aicore.workspace import WorkspaceError, write_project
 
 from tests import MODULE_ROOT, TempCase, git, new_code
 from workspace import layout, localonly, safety
@@ -236,7 +236,7 @@ class ExcludeTests(LocalOnlyCase):
 
     def test_the_whole_cycle_keeps_a_large_file_out_of_the_next_commit(self):
         relative = self.put("plans/p1/artifacts/dump.sql", "x" * 6000)
-        small = self.put("plans/p1/plan.json", "{}")
+        self.put("plans/p1/plan.json", "{}")
         first = safety.check(self.ws, env=None, home=None)
         report = safety.scan(self.ws, safety.changed_paths(self.ws), SMALL)
         self.assertEqual([item["path"] for item in report.local_only], [f"projects/{self.pid}/{relative}"])

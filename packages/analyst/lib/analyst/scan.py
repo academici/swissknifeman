@@ -12,7 +12,6 @@ namespace — pattern from ns:axioma does not flow into someone else's namespace
 input lessons are sorted by id before the passage). Demona/no network; everything stdlib, read-only by project."""
 import json
 import os
-from pathlib import Path
 
 from . import lessons
 from aicore.util.io import atomic_write_json, atomic_write_text, safe_load_json

@@ -1,11 +1,16 @@
 # Linter - dev-tool, NOT runtime dependency (packages remain stdlib-only).
 # B CI is launched ephemerally: `pipx run ruff==0.15.19 check` — ruff is not committed to the repo,
 # version is kicked for the sake of determinism (excludes «green yesterday, red today» without edits).
-# Narrow set: F (pyflakes — real bugs: undefined/unused) + B (bugbear), without style.
+# Narrow set: F (pyflakes — real bugs: undefined/unused) + B (bugbear) + FA102 (py39 annotations), without style.
 target-version = "py39"   # minimum from matrix CI; also gates B905 (zip strict= — 3.10 only+)
 
 # Vendored third-party code is kept byte-for-byte (see packages/aicore/lib/aicore/_vendor/VENDORED.json).
 extend-exclude = ["packages/aicore/lib/aicore/_vendor"]
 
 [lint]
-select = ["F", "B"]
+# FA102: an annotation with `X | None` or `list[int]` needs `from __future__ import annotations` on the py39 floor.
+select = ["F", "B", "FA102"]
+
+[lint.per-file-ignores]
+# Skill bundles are upstream content that the registry mirrors; their scripts do not run on the module floor.
+"packages/skiller/skills/**" = ["FA102"]

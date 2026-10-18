@@ -6,7 +6,6 @@ import multiprocessing
 import os
 import shutil
 import unittest
-from pathlib import Path
 from unittest import mock
 
 from aicore.ext import build_event, read_events

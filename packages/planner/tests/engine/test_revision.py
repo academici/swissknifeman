@@ -5,7 +5,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from planner.plan import ops, query, schema, store
+from planner.plan import ops, query, schema
 from planner.plan.model import PlanError
 
 try:

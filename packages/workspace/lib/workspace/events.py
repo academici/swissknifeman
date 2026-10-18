@@ -2,6 +2,7 @@
 a failure of the event journal never changes the result of the command and is reported on stderr."""
 from __future__ import annotations
 
+import os
 import sys
 from typing import Any, Mapping, Optional, Union
 

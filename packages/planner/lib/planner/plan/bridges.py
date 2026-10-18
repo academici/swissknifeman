@@ -88,22 +88,37 @@ def load(directory: Path) -> dict:
     return manifest
 
 
-def _scan_root(base: Path, skip: frozenset = frozenset()) -> list[tuple[Path, dict]]:
-    """Bridges of one root; a directory named in ``skip`` is not read (its name is the bridge name)."""
+def _scan_root(base: Path, skip: frozenset = frozenset(), tolerant: bool = False) -> list[tuple[Path, dict]]:
+    """Bridges of one root; a directory named in ``skip`` is not read (its name is the bridge name).
+
+    ``tolerant`` skips a bridge whose manifest is invalid, with a ``BRIDGE_INVALID`` line on stderr, so that one
+    broken bridge does not hide the others; otherwise the first invalid manifest raises.
+    """
     if not base.is_dir():
         return []
-    return [(manifest_path.parent, load(manifest_path.parent)) for manifest_path in sorted(base.glob("*/bridge.json"))
-            if manifest_path.parent.name not in skip]
+    found = []
+    for manifest_path in sorted(base.glob("*/bridge.json")):
+        if manifest_path.parent.name in skip:
+            continue
+        try:
+            found.append((manifest_path.parent, load(manifest_path.parent)))
+        except PlanError as error:
+            if not tolerant:
+                raise
+            print(f"{error.code}: {error.message} (bridge skipped)", file=sys.stderr)
+    return found
 
 
-def scan(root: Path | None = None) -> list[tuple[Path, dict]]:
+def scan(root: Path | None = None, tolerant: bool = False) -> list[tuple[Path, dict]]:
     """Every bridge in name order; a missing root means no bridges.
 
     An explicit ``root`` is scanned alone. Otherwise every root of ``roots()`` is scanned in order and a repeated name
-    keeps its first bridge, with a ``BRIDGE_SHADOWED`` warning on stderr for the others.
+    keeps its first bridge, with a ``BRIDGE_SHADOWED`` warning on stderr for the others. ``tolerant`` (dispatch and
+    extension lookup) skips an invalid manifest with a ``BRIDGE_INVALID`` line on stderr; ``listing`` stays strict
+    because it is the diagnostic view.
     """
     if root is not None:
-        return _scan_root(Path(root))
+        return _scan_root(Path(root), tolerant=tolerant)
     chosen: dict[str, Path] = {}
     found: list[tuple[Path, dict]] = []
     for base in roots():
@@ -113,7 +128,7 @@ def scan(root: Path | None = None) -> list[tuple[Path, dict]]:
                 if manifest_path.parent.name in shadowed:
                     print(f"BRIDGE_SHADOWED: {manifest_path.parent.name} in {manifest_path.parent} is shadowed by "
                           f"{chosen[manifest_path.parent.name]}", file=sys.stderr)
-        for directory, manifest in _scan_root(base, shadowed):
+        for directory, manifest in _scan_root(base, shadowed, tolerant=tolerant):
             chosen[manifest["name"]] = directory
             found.append((directory, manifest))
     return sorted(found, key=lambda pair: pair[1]["name"])
@@ -142,8 +157,6 @@ def environment() -> dict[str, str]:
     lib = str(PLANNER_ROOT / "lib")
     env["PLANNER_ROOT"] = str(PLANNER_ROOT)
     env["PLANNER_PLAN_PY"] = str(PLANNER_ROOT / "scripts" / "plan.py")
-    env["TASK_ROOT"] = env["PLANNER_ROOT"]  # Compatibility alias: remove in the next minor release.
-    env["TASK_PLAN_PY"] = env["PLANNER_PLAN_PY"]  # Compatibility alias: remove in the next minor release.
     env["PYTHONPATH"] = lib + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     from planner import integration
     aicore_root = integration.status()["root"]
@@ -154,8 +167,11 @@ def environment() -> dict[str, str]:
 
 def run(name: str, verb: str | None, args: list[str], root: Path | None = None) -> int:
     """Run ``verb`` of bridge ``name`` with ``args``; return the bridge's exit code."""
-    found = next(((d, m) for d, m in scan(root) if m["name"] == name), None)
+    found = next(((d, m) for d, m in scan(root, tolerant=True) if m["name"] == name), None)
     if found is None:
+        for base in [Path(root)] if root is not None else roots():
+            if (base / name / "bridge.json").is_file():
+                load(base / name)   # raises BRIDGE_INVALID with the reason instead of a misleading BRIDGE_UNKNOWN
         raise PlanError("BRIDGE_UNKNOWN", f"no bridge named {name!r}; see `plan.py bridge list`")
     directory, manifest = found
     available = ", ".join(sorted(manifest["entrypoints"]))

@@ -278,7 +278,7 @@ class TestClosing(Base):
     def test_concurrent_close_ends_once(self):
         session, pid = self.with_background()
         results = []
-        threads = [threading.Thread(target=lambda: results.append(self.manager.close(session.id, reason)))
+        threads = [threading.Thread(target=lambda reason=reason: results.append(self.manager.close(session.id, reason)))
                    for reason in ("closed", "idle", "backend_stop", "closed")]
         for thread in threads:
             thread.start()

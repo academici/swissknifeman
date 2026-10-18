@@ -579,7 +579,7 @@ def load_profiles(path: Optional[Path] = None) -> Dict[str, Any]:
     try:
         doc = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        raise InstallError("PROFILES_INVALID", f"{path}: {exc.__class__.__name__}")
+        raise InstallError("PROFILES_INVALID", f"{path}: {exc.__class__.__name__}") from exc
     profiles = doc.get("profiles") if isinstance(doc, dict) else None
     if not isinstance(profiles, dict) or not profiles or not isinstance(doc.get("default"), str):
         raise InstallError("PROFILES_INVALID", f"{path}: needs 'default' and a non-empty 'profiles' object")
@@ -741,7 +741,7 @@ def execute_plan(units: Mapping[str, Any], steps: List[Dict[str, Any]], bin_dir:
                     continue
                 wrap = not os.access(target, os.X_OK)
                 status, message = _link(bin_dir / name, target, force,
-                                        lambda current, rel=entry: current == os.path.realpath(target)
+                                        lambda current, rel=entry, target=target: current == os.path.realpath(target)
                                         or current.endswith("/" + rel), wrap, not as_json)
                 (say if status == "ok" else warn)(f"  {message}")
                 step["links"].append(name)

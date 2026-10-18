@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
 from aicore.config import ConfigError
-from aicore.state import (ProjectContextRequired, WorkspaceSelectionError, is_code, list_workspaces, resolve_project,
+from aicore.state import (ProjectContextRequired, WorkspaceSelectionError, is_code, resolve_project,
                           selected_workspace, workspaces_root)
 from aicore.workspace import WorkspaceError, read_marker
 

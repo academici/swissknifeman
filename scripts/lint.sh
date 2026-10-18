@@ -21,7 +21,11 @@ PATHS=(packages/aicore/lib packages/aicore/tests
   packages/maind/lib packages/maind/tests
   packages/planner/lib packages/planner/tests
   packages/orch/lib packages/orch/tests packages/orch/scripts
-  bridges)
+  packages/workspace/lib packages/workspace/tests
+  packages/brain/lib packages/brain/tests
+  packages/gui/lib packages/gui/tests
+  packages/analyst/lib packages/analyst/tests
+  bridges scripts)
 
 cd "$ROOT"
 FLAGS=()

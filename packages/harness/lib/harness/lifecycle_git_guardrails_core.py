@@ -1,7 +1,32 @@
-"""Shared git-guardrails policy core for Codex and Cursor."""
+"""Shared git-guardrails policy core for Codex, Cursor and Grok.
+
+The argv-level check lives in the Claude hook directory (`git_guard.py`) so that one implementation
+serves every provider; the regexes below stay as a safety net behind it.
+"""
 from __future__ import annotations
 
-from .lifecycle_policy_core import PolicyRule, verdict
+import importlib.util
+import re
+from pathlib import Path
+
+from .lifecycle_policy_core import PolicyMatch, PolicyRule, PolicyVerdict, normalize_mode, verdict
+
+_GUARD_PATH = (Path(__file__).resolve().parents[2] / "configs" / "claude-code" / "hooks"
+               / "git-guardrails" / "git_guard.py")
+_guard = None
+
+
+def _load_guard():
+    """Import git_guard.py by path; raises when it is missing so the handler refuses the command."""
+    global _guard
+    if _guard is None:
+        spec = importlib.util.spec_from_file_location("harness_git_guard", _GUARD_PATH)
+        if spec is None or spec.loader is None:
+            raise ImportError("git_guard.py not found: %s" % _GUARD_PATH)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _guard = module
+    return _guard
 
 RULES = (
     PolicyRule(
@@ -74,5 +99,16 @@ RULES = (
 
 
 def git_guardrails_verdict(command: str, *, mode: str):
-    """Evaluate git command against the declared off/warn/strict ladder."""
-    return verdict(command, rules=RULES, mode=mode)
+    """Evaluate a git command against the declared off/warn/strict ladder.
+
+    The argv check runs first (global options, wrappers, shell bodies, aliases, flag variants); the
+    regexes then judge the whitespace-normalized text.
+    """
+    normalized = normalize_mode(mode)
+    if normalized == "off" or not isinstance(command, str):
+        return PolicyVerdict(normalized, "allow", None)
+    found = _load_guard().check(command)
+    if found is not None:
+        match = PolicyMatch(found.id, "argv:" + found.id, found.reason, found.tier)
+        return PolicyVerdict(normalized, "deny" if normalized == "strict" else "warn", match)
+    return verdict(re.sub(r"\s+", " ", command), rules=RULES, mode=mode)

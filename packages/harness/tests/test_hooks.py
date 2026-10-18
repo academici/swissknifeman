@@ -152,7 +152,15 @@ class HooksCase(unittest.TestCase):
 
         cdir = self.proj / ".claude"; cdir.mkdir(parents=True, exist_ok=True)
         (cdir / "auto-approve.env.ini").write_text("MODE=bypass\n")
-        self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "bypass")
+        self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "strict")
+        (cdir / "auto-approve.env.ini").write_text("MODE=off\n")
+        self.assertEqual(_read_mode(common_sh, hookdir, self.proj), "off")
+
+        opted = self.tmp / "opted-hook"
+        opted.mkdir()
+        (opted / "env.ini").write_text("MODE=strict\nALLOW_PROJECT_CONFIG=1\n")
+        (cdir / "auto-approve.env.ini").write_text("MODE=bypass\n")
+        self.assertEqual(_read_mode(common_sh, opted, self.proj), "bypass")
 
     def test_memory_read_mode_priority_ladder(self):
         common_sh = _HOOKS_ROOT / "memory/lib/common.sh"
@@ -169,8 +177,10 @@ class HooksCase(unittest.TestCase):
         common_sh = _HOOKS_ROOT / "auto-approve/lib/common.sh"
         cdir = self.proj / ".claude"; cdir.mkdir(parents=True, exist_ok=True)
         (cdir / "auto-approve.env.ini").write_text("FOO=bar\nMODE=permissive\n")
-        self.assertEqual(
-            _read_mode(common_sh, _HOOKS_ROOT / "auto-approve", self.proj), "permissive")
+        opted = self.tmp / "opted-hook"
+        opted.mkdir()
+        (opted / "env.ini").write_text("MODE=strict\nALLOW_PROJECT_CONFIG=1\n")
+        self.assertEqual(_read_mode(common_sh, opted, self.proj), "permissive")
 
 
 if __name__ == "__main__":

@@ -29,17 +29,37 @@ read_hooks_env() {
   printf '%s' "$v"
 }
 
+# MODE value of one env.ini file (empty when absent).
+_ini_mode() {
+  [ -f "$1" ] || return 0
+  grep -E '^[[:space:]]*MODE[[:space:]]*=' "$1" | head -1 \
+    | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]#].*$//' | tr -d "\"'"
+}
+
+# 1 when the machine env.ini lets project files widen the hook (raise the mode, replace the lists).
+allow_project_config() {
+  local v
+  v="$(grep -E '^[[:space:]]*ALLOW_PROJECT_CONFIG[[:space:]]*=' "$1/env.ini" 2>/dev/null | head -1 \
+       | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]#].*$//' | tr -d "\"'")"
+  [ "$v" = "1" ]
+}
+
+_mode_rank() {
+  case "$1" in strict) echo 1;; permissive) echo 2;; bypass) echo 3;; *) echo 0;; esac
+}
+
+# The machine env.ini sets the mode. A project (hooks.env carrier, .claude/auto-approve.env.ini)
+# may only lower it; it replaces it only when the machine sets ALLOW_PROJECT_CONFIG=1.
 read_mode() {
-  local dir="$1" f m
-  m="$(read_hooks_env AUTO_APPROVE_MODE "${CLAUDE_PROJECT_DIR:-${HOOK_CWD:-}}")" || m=""
-  [ -n "$m" ] && { printf '%s' "$m"; return 0; }
-  for f in "${CLAUDE_PROJECT_DIR:+$CLAUDE_PROJECT_DIR/.claude/auto-approve.env.ini}" "$dir/env.ini"; do
-    [ -n "$f" ] && [ -f "$f" ] || continue
-    m="$(grep -E '^[[:space:]]*MODE[[:space:]]*=' "$f" | head -1 \
-         | sed -E 's/^[^=]*=[[:space:]]*//; s/[[:space:]#].*$//' | tr -d "\"'")"
-    [ -n "$m" ] && { printf '%s' "$m"; return 0; }
-  done
-  printf 'off'
+  local dir="$1" f m pm="" gm
+  gm="$(_ini_mode "$dir/env.ini")"
+  pm="$(read_hooks_env AUTO_APPROVE_MODE "${CLAUDE_PROJECT_DIR:-${HOOK_CWD:-}}")" || pm=""
+  if [ -z "$pm" ] && [ -n "${CLAUDE_PROJECT_DIR:-}" ]; then
+    pm="$(_ini_mode "$CLAUDE_PROJECT_DIR/.claude/auto-approve.env.ini")"
+  fi
+  if [ -z "$pm" ]; then printf '%s' "${gm:-off}"; return 0; fi
+  if allow_project_config "$dir"; then printf '%s' "$pm"; return 0; fi
+  if [ "$(_mode_rank "$pm")" -lt "$(_mode_rank "${gm:-off}")" ]; then printf '%s' "$pm"; else printf '%s' "${gm:-off}"; fi
 }
 
 log_decision() {

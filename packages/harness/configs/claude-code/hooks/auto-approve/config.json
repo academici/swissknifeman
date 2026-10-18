@@ -1,7 +1,7 @@
 {
-  "$comment": "Designs for auto-approve hook (lib/analyze.sh). The code contains only logic - all the lists and patterns are here. Per-project override: <project>/.claude/auto-approve.config.json.",
+  "$comment": "Designs for auto-approve hook (lib/analyze.sh). The code contains only logic - all the lists and patterns are here. Per-project override: <project>/.claude/auto-approve.config.json narrows these lists (allow-lists intersect, deny-lists unite); the machine env.ini key ALLOW_PROJECT_CONFIG=1 lets it replace them.",
 
-  "$comment_security": "trust_inline_interpreters OFF default: _normalize cuts out bodies in quotes, so 'python -c \"…\"' is visible to the analyzer only with the head 'python' — auto-approve interpreters = approve arbitrary code. awk/sed for the same reason NOT in allow (awk system()/print>file, sed e/w/-i perform/write, the body is hidden). Enable inline-interpreters - conscious per-project selection.",
+  "$comment_security": "trust_inline_interpreters OFF default: the scan blanks literal text in quotes, so 'python -c \"…\"' is visible to the analyzer only with the head 'python' — auto-approve interpreters = approve arbitrary code. awk/sed for the same reason NOT in allow (awk system()/print>file, sed e/w/-i perform/write, the body is hidden). Enable inline-interpreters - conscious per-project selection.",
 
   "trust_inline_interpreters": false,
   "use_shfmt_ast": true,
@@ -14,7 +14,7 @@
     "dirname", "realpath", "readlink", "date", "sleep", "test", "true", "false",
     "sort", "uniq", "cut", "tr", "comm", "diff", "cmp", "od", "xxd", "hexdump",
     "nl", "tac", "column", "fold", "fmt", "expand", "unexpand", "paste", "join",
-    "seq", "yes", "printf", "echo", "jq", "yq", "cd", "pushd",
+    "seq", "printf", "echo", "jq", "yq", "cd", "pushd",
     "popd", "dirs", "env", "printenv", "id", "whoami", "hostname", "uname",
     "uptime", "df", "du", "free", "ps", "grep"
   ],
@@ -51,11 +51,14 @@
   "deny_block_approve": [
     ">>|[^0-9&]>[[:space:]]*[^&[:space:]]|>[[:space:]]*[^&[:space:]/]",
     "(^|[^[:alnum:]_/.-])(mv|cp|ln|tee|truncate|unlink|chmod|chown|chgrp|setfacl|eval|exec|source|kill|pkill|killall|nc|ncat|netcat|telnet|ssh|scp|rsync|sftp|mount|umount|crontab|at|systemctl|service|launchctl|iptables|nft|ufw)([[:space:]]|$)",
-    "git[[:space:]]+(push|reset|clean|rebase|filter-branch|filter-repo|commit|add|stash|merge|cherry-pick|am|apply|revert|gc|prune|tag|update-ref|config|remote|fetch|pull|init|rm)",
+    "git[[:space:]]+(push|reset|clean|rebase|filter-branch|filter-repo|commit|add|stash|merge|cherry-pick|am|apply|revert|gc|prune|tag|update-ref|config|remote|fetch|pull|init|rm|mv|checkout|restore|switch|symbolic-ref|worktree|submodule|notes|replace|bundle|sparse-checkout|maintenance|repack)",
+    "git[[:space:]]+branch[[:space:]]+([^|;&]*[[:space:]])?(-[a-zA-Z]*[dDmMcCfutU]|--(delete|move|copy|force|set-upstream|unset-upstream|track|edit-description))([[:space:]=]|$)",
+    "git[[:space:]]+reflog[[:space:]]+(expire|delete)",
+    "auto-approve\\.(env\\.ini|config\\.json)|\\.swissknifeman/hooks\\.env",
     "gh[[:space:]]+(auth|config|alias|extension|gist|codespace|secret|ssh-key|gpg-key|release|workflow)",
     "gh[[:space:]]+(pr|issue)[[:space:]]+(merge|close|create|edit|comment|review|ready|reopen|delete|lock|unlock)",
     "gh[[:space:]]+repo[[:space:]]+(create|delete|fork|edit|rename|archive|sync|clone)",
-    "gh[[:space:]]+api[[:space:]]+[^|;&]*(-X|--method|-f[[:space:]]|--field|--input)",
+    "gh[[:space:]]+api[[:space:]]+[^|;&]*(-X|--method)[[:space:]=]*[PpDd]|(^|[[:space:]])(-[fF]|--field|--raw-field|--input)",
     "docker[[:space:]]+(rm|rmi|prune|kill|stop|start|restart|exec|run|build|push|pull|tag|commit|login|volume|network|system|compose)",
     "compose[[:space:]]+(up|down|build|run|exec|restart|stop|start)",
     "(npm|pnpm)[[:space:]]+(install|i|ci|add|update|publish|uninstall|remove|run|exec|dlx)",

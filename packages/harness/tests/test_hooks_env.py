@@ -381,7 +381,12 @@ class ShellReadersCase(Base):
                 self.write_carrier(f"{key}=strict")
                 self.assertEqual(self.bash(script, **project), "strict")
                 self.write_carrier(f"{key}=strict", f"{key}__CLAUDE_CODE=bypass", f"{key}__CURSOR=off")
-                self.assertEqual(self.bash(script, **project), "bypass")
+                raising = "permissive" if directory == "auto-approve" else "bypass"  # a project never raises the auto-approve mode
+                self.assertEqual(self.bash(script, **project), raising)
+                if directory == "auto-approve":
+                    (hookdir / "env.ini").write_text("MODE=permissive\nALLOW_PROJECT_CONFIG=1\n", encoding="utf-8")
+                    self.assertEqual(self.bash(script, **project), "bypass")
+                    (hookdir / "env.ini").write_text("MODE=permissive\n", encoding="utf-8")
                 self.assertEqual(self.bash(script), "permissive")  # no project dir: the global default
 
     def test_memory_brain_prefers_the_carrier_then_swissknife_json(self):

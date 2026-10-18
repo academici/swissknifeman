@@ -138,12 +138,22 @@ Claude Code**. Modes - range of autonomy:
   (read-only coreutils, read-subcommands `git`/`gh`/`docker`, `jq`/`awk`/`sed`,
   inline `python3 -c`/`node -e`).
 
-Config and mode have per-project override:
-`<project>/.claude/auto-approve.config.json` and `auto-approve.env.ini`.
+Config and mode have a per-project file, `<project>/.claude/auto-approve.config.json` and
+`auto-approve.env.ini` (or `AUTO_APPROVE_MODE` in `.swissknifeman/hooks.env`), but a project can
+only **narrow** the machine settings: the mode can only go down (`bypass` → `permissive` → `strict`
+→ `off`), `allow`-lists intersect with the machine ones, `deny_*` lists are united. A repository
+therefore cannot switch a global hook to `bypass`. To let a trusted machine take the project files
+as they are, set `ALLOW_PROJECT_CONFIG=1` in `~/.claude/hooks/auto-approve/env.ini`.
 
-Parsing: if installed `shfmt` — AST-parsing as additional. check (union: can only
-tighten); otherwise inline regex-parsing. Contents of quotes are stripped before parsing
-⇒ bodies `python3 -c`/`node -e` are trusted (flag `trust_inline_interpreters`).
+Parsing: `lib/shellscan.py` reads the command quote-aware: literal text in quotes is blanked, but
+the body of `$(...)` and of backticks stays visible even inside double quotes. If `shfmt` is
+installed its AST check is added (can only tighten); without it, `strict` asks for any command
+with a substitution (`$(`, backtick, `<(`, `>(`) and without `python3` it asks for everything.
+`deny_hard`/`deny_block_approve` also scan the unmasked text when a shell or interpreter
+(`bash -c`, `python3 -c`, `eval`, `xargs`, …) carries a quoted body. Allowed read commands are
+checked for flags that write or run code (`find -exec/-delete`, `sort -o`, `yq -i`, `env CMD`,
+`git branch -D`, `git diff --output`, `gh api -f/-F/-X POST`, …) and `VAR=x cmd` prefixes are
+limited to locale/terminal variables.
 
 ### Decision log
 
@@ -178,8 +188,7 @@ After connecting/mode change - restart Claude Code.
 
 > ⚠️ **Risk trade-offs.** `permissive` will approve an unfamiliar command outside of denilista;
 > `bypass` will approve any command other than a catastrophic one and will confirm the plan himself - only
-> trusted projects/containers. `python3 -c`/`node -e` are trusted (body not
-> is being analyzed). For complete «bypass all commands after the plan» in `bypass`-mode
+> trusted projects/containers. `python3 -c`/`node -e` are trusted only with `trust_inline_interpreters`. For complete «bypass all commands after the plan» in `bypass`-mode
 > add to project settings `"permissions": { "defaultMode": "bypassPermissions" }`.
 
 Detailed analysis of the syntax of rules and logic of presets - in

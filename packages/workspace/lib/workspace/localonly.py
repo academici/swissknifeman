@@ -1,6 +1,6 @@
 """Local-only files: the portable index ``projects/<id>/local-only.json`` and this machine's block in ``.git/info/exclude``.
 
-A local-only file (too large, or binary and large) stays out of git. The index records it for every device (path relative to
+A local-only file (too large, binary and large, or a migrated file with a secret pattern) stays out of git. The index records it for every device (path relative to
 the project folder, size, SHA-256, owner device, reason); the exclude block keeps git from adding the files of *this* device.
 The functions here do not take ``git.lock``: a caller that changes the repository (sync, migrate) holds it.
 """
@@ -65,7 +65,7 @@ def read(ws_root: PathLike, project_id: str) -> Dict[str, Any]:
 def update(ws_root: PathLike, project_id: str, entries: Iterable[Mapping[str, Any]], device_id: str) -> Dict[str, Any]:
     """Replace the entries of ``device_id`` in the index of a project by ``entries`` and keep those of other devices.
 
-    An entry is ``{"path": <relative to the project folder>, "reason": "size"|"binary"}``; the size and the SHA-256 are read
+    An entry is ``{"path": <relative to the project folder>, "reason": "size"|"binary"|"secret-pattern"}``; the size and the SHA-256 are read
     from the file. The index is sorted by path and written atomically only when it changes; with no entries and no index
     nothing is written. An entry whose file is missing, or whose path leaves the project folder, is a ``ValueError``.
     """

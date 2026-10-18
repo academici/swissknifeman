@@ -105,6 +105,25 @@ class ApplyTests(BridgeCase):
         self.assertTrue(report["ok"], report)
         self.assertEqual({row["name"] for row in report["plans"]}, {PLAN_NAME, ARCHIVED_NAME})
 
+    def test_a_file_with_a_secret_pattern_is_copied_like_any_file_and_never_reported(self):
+        """The bridge does not judge content: ``workspace migrate --local-only-secrets`` decides before the port is called,
+        and a file it keeps local-only must arrive at its place with the digest of the manifest."""
+        value = "hunter2-" + SECRET
+        fx.write(self.plans / PLAN_NAME / "artifacts/review.diff", f"+ password = {value}\n")
+        fx.write(self.plans / "old-thing/token.txt", f"api_key = {value}\n")
+        manifest = inspector.inspect(self.checkout)
+        answer = self.apply(manifest=manifest)
+        self.assertEqual(answer["result"], "applied", answer)
+        self.assertEqual((self.project_dir / "plans" / PLAN_NAME / "artifacts/review.diff").read_text(encoding="utf-8"),
+                         f"+ password = {value}\n")
+        self.assertEqual((self.project_dir / "legacy-plans/old-thing/token.txt").read_text(encoding="utf-8"),
+                         f"api_key = {value}\n")
+        digests = {plan["name"]: plan["digest"] for plan in manifest["plans"]}
+        for row in answer["plans"]:
+            if row["name"] != "_root":
+                self.assertEqual(row["digest"], digests[row["name"]])
+        self.assertNotIn(value, fx.dump(manifest) + fx.dump(answer))
+
     def test_second_apply_is_a_noop(self):
         self.assertEqual(self.apply()["result"], "applied")
         again = self.apply(op_id="mig_again")

@@ -56,7 +56,7 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `project-marker` | v1 | Identity of a project inside its repository (`.swissknifeman/project.json`, committed): `project_id` and `plans_store` (`legacy` or `workspace`); the one switch of where plans live |
 | `workspace-bindings` | v1 | Machine file `bindings.json` (`aicore.state.workspace_state_dir()`): checkouts of each project on this machine, with a primary; absolute paths, never in git; written under `flock` by `aicore.workspace.bindings` |
 | `workspace-device` | v1 | Machine file `device.json`: device id, host name, creation time; never in git |
-| `workspace-local-only` | v1 | Index of project files kept out of git (`projects/<project_id>/local-only.json`): path, size, SHA-256, device, reason `size` or `binary`; portable |
+| `workspace-local-only` | v1 | Index of project files kept out of git (`projects/<project_id>/local-only.json`): path, size, SHA-256, device, reason `size`, `binary` or `secret-pattern`; portable |
 | `workspace-migration` | v1 | Report of one migration of a project's plans into the workspace (`projects/<project_id>/migrations/<op_id>.json`): per-plan class, action, file count and digest; portable |
 
 ## Module config schemas

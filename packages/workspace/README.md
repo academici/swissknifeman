@@ -27,7 +27,7 @@ JSON object on stdout. A failure prints `CODE: message` on stderr and exits 1; w
 | `project rebind PROJECT_ID --path DIR` | Replace the bound paths by one checkout whose marker names the project (`BINDING_MARKER_MISMATCH` otherwise). |
 | `project detach PROJECT_ID [--path DIR]` | Drop a binding of this machine; the workspace is not changed. |
 | `migrate discover [DIR...]` | Checkouts that hold a `plans/` folder: launcher projects (`.swissknifeman/launcher.py`) under DIR (default `~/projects`, depth 4) and `local_path` of `<state>/maind/registry.json`. Reads the structure and the sizes, never a plan file; shows the marker and the number of plan and legacy folders. |
-| `migrate plan --project DIR [--on-conflict keep-workspace\|import-copy] [--allow-in-progress] [--yes]` | Dry run, writes nothing: the project, the class, digest and action of each folder, local-only files, warnings and blockers (exit 1 on a blocker). |
+| `migrate plan --project DIR [--on-conflict keep-workspace\|import-copy] [--allow-in-progress] [--local-only-secrets] [--yes]` | Dry run, writes nothing: the project, the class, digest and action of each folder, local-only files, warnings and blockers (exit 1 on a blocker). |
 | `migrate apply --project DIR [same flags] [--lock-timeout S]` | Runs the checks of `plan`, calls the port, then writes `local-only.json`, the report and the binding. Prints `next`, never commits. |
 | `migrate verify --project DIR` | The last report of this device against the workspace copies and the old folders. |
 | `migrate rollback --project DIR` | Marker back to `legacy`; removes the folders the migration brought in. |
@@ -81,6 +81,14 @@ and set `trusted = true` so it receives `PLANNER_ROOT`; `workspace doctor` shows
   blocker (`MIGRATION_BLOCKED_SECRET`, the value is never printed), a file over `max_tracked_bytes` (or a large binary) is
   local-only and ends in `local-only.json` and the exclude block, home paths warn. An item in progress is
   `MIGRATION_IN_PROGRESS` unless `--allow-in-progress`.
+- **`--local-only-secrets`** (`plan` and `apply`; `migrate.build_plan|apply(..., local_only_secrets=True)`). Without it nothing
+  changes. With it, a file whose *content* matches a secret pattern (`PS-SECRET`) is no blocker: it is copied into the workspace
+  at its place like a big file, listed in `local-only.json` with the reason `secret-pattern`, kept out of git by the exclude
+  block, and the plan and the report carry the warning `PS_SECRET_LOCAL_ONLY` (the plan with the file count). The files stay on
+  this machine: `doctor --publish-safety` and `sync --commit` never see them, `verify` compares them like every file,
+  `rollback` and `cleanup` treat them like other local-only files. Other blockers keep blocking: symlinks, and files with a
+  secret *name* (`.env`, `*.pem`, `*.key`, ...) even with the flag. If the exclude block is lost, publish-safety blocks the
+  files again.
 - **A workspace that already has the project** (the second machine). Equal digest: `skipped-equal`; absent: `copied`; different:
   `conflict` and `apply` refuses with `MIGRATION_CONFLICT` unless `--on-conflict keep-workspace` (keep the workspace copy) or
   `import-copy` (keep both; the checkout copy is stored as `<name>~<device>`, the last 8 characters of the device id). Nothing is

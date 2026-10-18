@@ -73,7 +73,7 @@ A project without a marker behaves as before.
 | `migrate rollback --project DIR` | switches the marker back to `legacy` and removes what the migration brought in |
 | `migrate cleanup --project DIR --confirm PROJECT_ID` | deletes old folders whose copy in the workspace is identical |
 
-Flags: `--on-conflict keep-workspace|import-copy`, `--allow-in-progress`, `--lock-timeout S` (apply), `--json`.
+Flags: `--on-conflict keep-workspace|import-copy`, `--allow-in-progress`, `--local-only-secrets`, `--lock-timeout S` (apply), `--json`.
 
 **Classes.** A folder with a `plan.json` of the plan schema is a plan (also under `plans/archive/`). Every other folder
 is legacy and is copied byte for byte to `legacy-plans/`; the planner never reads it. Loose files in `plans/` go to
@@ -82,6 +82,16 @@ is legacy and is copied byte for byte to `legacy-plans/`; the planner never read
 **Dry run.** `plan` computes a SHA-256 for every file and judges each by the publish-safety rules as if it already stood
 in the workspace. Blockers: a secret, a symlink, a plan item still `in_progress` (unless `--allow-in-progress`), an
 invalid marker. Exit code 1 on a blocker.
+
+**Secrets that stay on the machine (`--local-only-secrets`).** Plans often hold files that only look like secrets (a variable
+named `token`, a provider log, a review diff). The safety rule is not weakened and nobody certifies hundreds of files, so with
+`--local-only-secrets` (`plan` and `apply`) every file with a secret *pattern in its content* stops being a blocker and is
+migrated like a big local-only file: copied into the workspace at its place, listed in `local-only.json` with the reason
+`secret-pattern`, excluded from the workspace git by the exclude block. The plan and the report carry the warning
+`PS_SECRET_LOCAL_ONLY` (the plan with the number of files). These files are not published: `doctor --publish-safety` and
+`sync --commit` do not see them, `verify` compares them like other files, `rollback` and `cleanup` handle them like other
+local-only files. Without the flag nothing changes (`MIGRATION_BLOCKED_SECRET`). Symlinks and secret file *names* (`.env`,
+`*.pem`, `*.key`, ...) keep blocking even with the flag. Another machine does not get these files from git: it migrates its own.
 
 **Apply.** The critical section takes the migration lock of the project and the plan lock of every plan, recomputes the
 digest of the source, copies into `.staging/` inside the workspace and checks every digest, loads each staged plan and

@@ -47,6 +47,8 @@ DISCOVER_SKIP = frozenset({"node_modules", ".git", "vendor"})
 LAUNCHER = ".swissknifeman/launcher.py"
 VIRTUAL = "projects/prj/"  # prefix of the paths given to the publish-safety rules (they judge paths below projects/)
 COPY = ("copied", "imported-copy")
+SECRET_REASON = "secret-pattern"  # reason of a local-only file kept out of git by ``--local-only-secrets``
+SECRET_WARNING = "PS_SECRET_LOCAL_ONLY"
 MAX_LISTED = 5
 PLAN_LOCK_TIMEOUT_S = 30.0
 ON_CONFLICT = ("keep-workspace", "import-copy")
@@ -386,9 +388,28 @@ def _decide(units: List[Dict[str, Any]], pdir: Optional[Path], on_conflict: Opti
     return conflicts
 
 
-def _scan_units(plans: Path, units: List[Dict[str, Any]], limits: safety.Settings) -> None:
+def _keep_secrets_local(unit: Dict[str, Any]) -> None:
+    """``--local-only-secrets``: a file that only has a ``PS-SECRET`` finding of its *content* is not a blocker but a local-only
+    file of reason ``secret-pattern``. A file with a secret *name* (``.env``, ``*.pem``, ...) keeps blocking, and so does a
+    finding whose path cannot be told from the real file (a name that is not UTF-8)."""
+    base = f"{_kind_dir(unit['class'])}/{unit['stored_as']}"
+    sizes = {f"{base}/{entry['path'][len(unit['prefix']):]}": entry["bytes"] for entry in unit["files"]}
+    named = {item["path"] for item in unit["block"] if item["rule"] == "PS-SECRET"
+             and safety.is_secret_name(item["path"].rsplit("/", 1)[-1])}
+    moved = {item["path"] for item in unit["block"] if item["rule"] == "PS-SECRET" and item["path"] not in named
+             and item["path"] in sizes}
+    if not moved:
+        return
+    unit["block"] = [item for item in unit["block"] if not (item["rule"] == "PS-SECRET" and item["path"] in moved)]
+    unit["warn"] = [item for item in unit["warn"] if item["path"] not in moved]  # the file stays on this machine
+    unit["local_only"] = sorted(unit["local_only"] + [{"path": path, "bytes": sizes[path], "reason": SECRET_REASON}
+                                                      for path in moved], key=lambda entry: entry["path"])
+
+
+def _scan_units(plans: Path, units: List[Dict[str, Any]], limits: safety.Settings, local_only_secrets: bool = False) -> None:
     """Judge every file of every unit by the publish-safety rules as if it stood at its place in the workspace: sets
-    ``block``, ``warn`` and ``local_only`` (paths relative to the project folder) on each unit."""
+    ``block``, ``warn`` and ``local_only`` (paths relative to the project folder) on each unit. With ``local_only_secrets``
+    the files with a secret-pattern finding become local-only files (see :func:`_keep_secrets_local`)."""
     for unit in units:
         report = safety.Report()
         base = f"{VIRTUAL}{_kind_dir(unit['class'])}/{unit['stored_as']}"
@@ -403,6 +424,8 @@ def _scan_units(plans: Path, units: List[Dict[str, Any]], limits: safety.Setting
         unit["warn"] = [dict(item, path=item["path"][len(VIRTUAL):]) for item in report.warn]
         unit["local_only"] = [{"path": item["path"][len(VIRTUAL):], "bytes": item["bytes"], "reason": item["reason"]}
                               for item in sorted(report.local_only, key=lambda entry: entry["path"])]
+        if local_only_secrets:
+            _keep_secrets_local(unit)
 
 
 def _warnings(units: Sequence[Dict[str, Any]], allow_in_progress: bool) -> List[Dict[str, Any]]:
@@ -411,15 +434,23 @@ def _warnings(units: Sequence[Dict[str, Any]], allow_in_progress: bool) -> List[
         if unit["action"] in COPY:
             for item in unit["warn"]:
                 grouped.setdefault(item["rule"].replace("-", "_"), []).append(item["path"])
+        if unit["action"] in COPY + ("skipped-equal",):
+            secret_paths = [item["path"] for item in unit["local_only"] if item["reason"] == SECRET_REASON]
+            if secret_paths:
+                grouped.setdefault(SECRET_WARNING, []).extend(secret_paths)
         if allow_in_progress and unit["in_progress"]:
             grouped.setdefault("MIGRATION_IN_PROGRESS", []).extend(unit["in_progress"])
     return [{"code": code, "count": len(paths), "paths": sorted(paths)[:MAX_LISTED]} for code, paths in sorted(grouped.items())]
 
 
 def build_plan(project: PathLike, on_conflict: Optional[str] = None, allow_in_progress: bool = False, yes: bool = False,
-               env: Env = None, home: Optional[PathLike] = None) -> Plan:
+               env: Env = None, home: Optional[PathLike] = None, local_only_secrets: bool = False) -> Plan:
     """The dry run for the checkout ``project``: classes, digests, publish-safety, the comparison with the workspace and
-    the blockers. Writes nothing (not even a device file or an id)."""
+    the blockers. Writes nothing (not even a device file or an id).
+
+    ``local_only_secrets``: a file whose content matches a secret pattern is no blocker; it is migrated like a big file
+    (local-only, reason ``secret-pattern``) and counted in the warning ``PS_SECRET_LOCAL_ONLY``. Secret file names and
+    symlinks keep blocking."""
     if on_conflict not in (None, *ON_CONFLICT):
         raise ValueError(f"--on-conflict is {' or '.join(ON_CONFLICT)}")
     plan = Plan()
@@ -440,7 +471,7 @@ def build_plan(project: PathLike, on_conflict: Optional[str] = None, allow_in_pr
     limits = safety.load_settings(env, home)
     if not migrated:
         conflicts = _decide(units, pdir, on_conflict, short)
-        _scan_units(plan.root / "plans", units, limits)
+        _scan_units(plan.root / "plans", units, limits, local_only_secrets)
         if manifest["symlinks"]:
             plan.blockers.append({"code": "MIGRATION_BLOCKED_SYMLINK", "message": "the source holds symlinks or special "
                                   "files, which are never copied", "paths": manifest["symlinks"]})
@@ -448,7 +479,8 @@ def build_plan(project: PathLike, on_conflict: Optional[str] = None, allow_in_pr
                    for item in unit["block"] if item["rule"] == "PS-SECRET"]
         if secrets:
             plan.blockers.append({"code": "MIGRATION_BLOCKED_SECRET", "message": f"{len(secrets)} file(s) look like "
-                                  "secrets; remove them from the plans or from the folder before migrating",
+                                  "secrets; remove them from the plans or from the folder before migrating, or repeat "
+                                  "with --local-only-secrets to keep the files with a secret pattern on this machine",
                                   "findings": [{key: item[key] for key in ("rule", "path", "detail")}
                                            for item in {entry["path"]: entry for entry in reversed(secrets)}.values()]})
         running = sorted(item for unit in units for item in unit["in_progress"])
@@ -543,17 +575,26 @@ def _report_document(op_id: str, project_id: str, device_id: str, started: str, 
 
 
 def _record_local_only(ws: Path, project_id: str, device_id: str, plan: Plan, answer: Mapping[str, Any]) -> int:
-    """Index the big files this migration brought in and rebuild the exclude block; returns how many it added."""
+    """Index the local-only files (big ones, and secret-pattern ones) this migration brought in and rebuild the exclude block;
+    returns how many it added."""
     by_name = {unit["name"]: unit for unit in plan.units}
+    pdir = project_dir(ws, project_id)
     added: Dict[str, str] = {}
     for row in answer["plans"]:
         unit = by_name.get(row["name"])
-        if unit is None or row["action"] not in COPY:
+        if unit is None or row["action"] not in COPY + ("skipped-equal",):
             continue
         stored = row.get("stored_as", row["name"])
         for item in unit["local_only"]:
+            # a repeat after a stop between the rename and the index finds the folder equal (``skipped-equal``): the secret-pattern
+            # files, which no later scan repairs, are indexed now; big files are found again by the next ``sync``
+            if row["action"] == "skipped-equal" and item["reason"] != SECRET_REASON:
+                continue
             inner = item["path"][len(f"{_kind_dir(unit['class'])}/{unit['stored_as']}/"):]
-            added[f"{_kind_dir(unit['class'])}/{stored}/{inner}"] = item["reason"]
+            path = f"{_kind_dir(unit['class'])}/{stored}/{inner}"
+            if row["action"] == "skipped-equal" and not (pdir / path).is_file():
+                continue
+            added[path] = item["reason"]
     if not added:
         return 0
     mine = [{"path": item["path"], "reason": item["reason"]} for item in localonly.read(ws, project_id)["files"]
@@ -616,14 +657,15 @@ def _read_intent(project_id: str, device_id: str, ws: Path, answer: Mapping[str,
 
 def apply(project: PathLike, on_conflict: Optional[str] = None, lock_timeout: int = 30,
           allow_in_progress: bool = False, yes: bool = False, env: Env = None,
-          home: Optional[PathLike] = None) -> Dict[str, Any]:
+          home: Optional[PathLike] = None, local_only_secrets: bool = False) -> Dict[str, Any]:
     """Migrate the plans of a checkout into the workspace; returns the result for the command.
 
     The checks of ``plan`` run first: a blocker or an unresolved conflict is refused before the port is called. The port
     runs the critical section; afterwards the local-only index, the report, the binding are written (the caller emits the
-    event and prints ``next``). A repeat after a full migration is ``noop`` and writes no report.
+    event and prints ``next``). A repeat after a full migration is ``noop`` and writes no report. ``local_only_secrets``
+    is the flag of :func:`build_plan`; the port copies the files as it copies every other file.
     """
-    plan = build_plan(project, on_conflict, allow_in_progress, yes, env, home)
+    plan = build_plan(project, on_conflict, allow_in_progress, yes, env, home, local_only_secrets)
     if plan.blockers:
         first = plan.blockers[0]
         raise WorkspaceError(first["code"], first["message"])

@@ -3,7 +3,7 @@
   "$id": "urn:swissknifeman:aicore:workspace-local-only:v1",
   "title": "workspace-local-only",
   "type": "object",
-  "description": "Index of files of a project that stay out of git (projects/<project_id>/local-only.json): too large or binary. Portable: paths are relative to the project folder of the workspace.",
+  "description": "Index of files of a project that stay out of git (projects/<project_id>/local-only.json): too large, binary, or holding a secret pattern. Portable: paths are relative to the project folder of the workspace.",
   "properties": {
     "$schema": {
       "const": "urn:swissknifeman:aicore:workspace-local-only:v1",
@@ -40,9 +40,10 @@
           "reason": {
             "enum": [
               "size",
-              "binary"
+              "binary",
+              "secret-pattern"
             ],
-            "description": "Why the file is not in git."
+            "description": "Why the file is not in git: too large, binary and large, or (secret-pattern) its content matches a secret pattern and the migration was run with --local-only-secrets."
           }
         },
         "required": [

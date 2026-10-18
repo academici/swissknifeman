@@ -711,6 +711,187 @@ class RecoveryTests(MigrateCase):
         self.assertIn('"$schema"', staged[0].read_text(encoding="utf-8"))
 
 
+class LocalOnlySecretsTests(MigrateCase):
+    """``--local-only-secrets``: files whose content looks like a secret stay on the machine like big local-only files."""
+
+    LEGACY = "legacy-plans/old-thing/notes.txt"
+    V4 = f"plans/{PLAN}/artifacts/review.diff"
+
+    def secret_checkout(self) -> Path:
+        root = self.build()
+        put(root / "plans" / "old-thing" / "notes.txt", f"password = {SECRET}\n")
+        put(root / "plans" / PLAN / "artifacts" / "review.diff", f"+ api_key = {SECRET}\n")
+        return root
+
+    def test_without_the_flag_the_plan_and_apply_stay_blocked(self):
+        root = self.secret_checkout()
+        code, out, err = self.run_cli("migrate", "plan", "--project", str(root), "--json")
+        self.assertEqual(code, 1)
+        doc = json.loads(out)
+        self.assertEqual(doc["blockers"][0]["code"], "MIGRATION_BLOCKED_SECRET")
+        self.assertEqual(sorted(item["path"] for item in doc["blockers"][0]["findings"]), sorted([self.LEGACY, self.V4]))
+        self.assertFalse(doc["ready"])
+        self.assertNotIn("PS_SECRET_LOCAL_ONLY", [item["code"] for item in doc["warnings"]])
+        err = self.failing("migrate", "apply", "--project", str(root), "--yes")
+        self.assertTrue(err.startswith("MIGRATION_BLOCKED_SECRET: "), err)
+        self.assertEqual(read_marker(root), None)
+
+    def test_with_the_flag_the_plan_is_ready_and_warns_with_the_file_count(self):
+        root = self.secret_checkout()
+        code, out, err = self.run_cli("migrate", "plan", "--project", str(root), "--local-only-secrets", "--json")
+        self.assertEqual((code, err), (0, ""), err)
+        doc = json.loads(out)
+        self.assertEqual((doc["blockers"], doc["ready"]), ([], True))
+        warning = {item["code"]: item for item in doc["warnings"]}["PS_SECRET_LOCAL_ONLY"]
+        self.assertEqual(warning["count"], 2)
+        self.assertEqual(warning["paths"], sorted([self.LEGACY, self.V4]))
+        reasons = {item["path"]: item["reason"] for item in doc["local_only"]}
+        self.assertEqual(reasons[self.LEGACY], "secret-pattern")
+        self.assertEqual(reasons[self.V4], "secret-pattern")
+        self.assertEqual(reasons[f"legacy-plans/{BIG}"], "size")
+        self.assertNotIn(SECRET, out + err)
+        text = self.run_cli("migrate", "plan", "--project", str(root), "--local-only-secrets")[1]
+        self.assertIn("warn PS_SECRET_LOCAL_ONLY: 2", text)
+
+    def test_apply_copies_the_files_and_keeps_them_out_of_git_and_publish_safety(self):
+        root = self.secret_checkout()
+        doc = self.apply(root, "--local-only-secrets")
+        project_id = doc["project_id"]
+        folder = self.project_dir(project_id)
+        self.assertEqual(doc["local_only"], 3)
+        for relative in (self.LEGACY, self.V4):
+            self.assertEqual((folder / relative).read_text(encoding="utf-8").count(SECRET), 1, relative)
+        report = json.loads(self.reports(project_id)[0].read_text(encoding="utf-8"))
+        self.assertEqual(validate_document("workspace-migration", report), [])
+        self.assertEqual(report["local_only"], 3)
+        self.assertIn("PS_SECRET_LOCAL_ONLY", report["warnings"])
+        index = json.loads((folder / "local-only.json").read_text(encoding="utf-8"))
+        self.assertEqual(validate_document("workspace-local-only", index), [])
+        self.assertEqual({item["path"]: item["reason"] for item in index["files"]},
+                         {self.LEGACY: "secret-pattern", self.V4: "secret-pattern", f"legacy-plans/{BIG}": "size"})
+        exclude = (self.ws / ".git" / "info" / "exclude").read_text(encoding="utf-8")
+        self.assertIn(f"/projects/{project_id}/{self.LEGACY}", exclude)
+        self.assertIn(f"/projects/{project_id}/{self.V4}", exclude)
+        status = git(self.ws, "status", "--porcelain", "--untracked-files=all")
+        self.assertNotIn("old-thing/notes.txt", status)
+        self.assertNotIn("review.diff", status)
+        self.assertIn("plan.json", status)  # the rest of the plan is there to be published
+        for flags in ((), ("--all",)):
+            code, out, err = self.run_cli("doctor", "--publish-safety", "--json", *flags)
+            self.assertEqual(code, 0, out + err)
+            self.assertEqual(json.loads(out)["block"], [])
+            self.assertNotIn(SECRET, out + err)
+        code, out, err = self.run_cli("sync", "--commit", "--json")
+        self.assertEqual(code, 0, out + err)
+        self.assertNotIn(SECRET, out + err)
+        tracked = git(self.ws, "ls-files").splitlines()
+        self.assertFalse([path for path in tracked if path.endswith(("old-thing/notes.txt", "review.diff"))], tracked)
+        self.assertTrue([path for path in tracked if path.endswith("local-only.json")])
+        self.assertEqual(git(self.ws, "status", "--porcelain", "--untracked-files=all"), "")
+        self.assertEqual(self.run_cli("doctor", "--publish-safety", "--all")[0], 0)
+
+    def test_verify_is_green_and_cleanup_treats_them_like_other_files(self):
+        root = self.secret_checkout()
+        project_id = self.apply(root, "--local-only-secrets")["project_id"]
+        states = {row["name"]: row["state"] for row in self.json_cli("migrate", "verify", "--project", str(root))["plans"]}
+        self.assertEqual(set(states.values()), {"equal"})
+        self.assertTrue(self.json_cli("migrate", "verify", "--project", str(root))["all_equal"])
+        put(self.project_dir(project_id) / self.LEGACY, "changed in the workspace\n")
+        states = {row["name"]: row["state"] for row in self.json_cli("migrate", "verify", "--project", str(root))["plans"]}
+        self.assertEqual(states["old-thing"], "changed-in-workspace")
+        put(self.project_dir(project_id) / self.LEGACY, f"password = {SECRET}\n")
+        done = self.json_cli("migrate", "cleanup", "--project", str(root), "--confirm", project_id)
+        self.assertIn("old-thing", done["removed"])
+        self.assertIn(PLAN, done["removed"])
+        self.assertTrue((self.project_dir(project_id) / self.LEGACY).is_file())
+
+    def test_rollback_removes_the_files_the_index_and_the_exclude_lines(self):
+        root = self.secret_checkout()
+        project_id = self.apply(root, "--local-only-secrets")["project_id"]
+        folder = self.project_dir(project_id)
+        self.assertTrue(self.json_cli("migrate", "rollback", "--project", str(root))["rolled_back"])
+        self.assertFalse((folder / self.LEGACY).exists())
+        self.assertFalse((folder / self.V4).exists())
+        self.assertEqual(json.loads((folder / "local-only.json").read_text(encoding="utf-8"))["files"], [])
+        exclude = (self.ws / ".git" / "info" / "exclude").read_text(encoding="utf-8")
+        self.assertNotIn("old-thing/notes.txt", exclude)
+        self.assertNotIn("review.diff", exclude)
+        self.assertEqual((root / "plans" / "old-thing" / "notes.txt").read_text(encoding="utf-8"), f"password = {SECRET}\n")
+        report = json.loads(self.reports(project_id)[0].read_text(encoding="utf-8"))
+        self.assertEqual(migrate.report_issues(report), [])
+        again = self.apply(root, "--local-only-secrets")  # and the migration can be repeated
+        self.assertEqual(again["local_only"], 3)
+
+    def test_a_repeat_after_a_stop_behind_the_rename_indexes_the_files_and_publish_safety_is_clean(self):
+        root = self.secret_checkout()
+        real = migrator_port.call
+        seen = {}
+
+        def call(op, payload, *args, **kwargs):
+            answer = real(op, payload, *args, **kwargs)
+            if op == "apply":  # the folders are in the workspace, the marker is back to legacy, nothing is indexed
+                seen["id"] = payload["project_id"]
+                write_marker(root, payload["project_id"], "legacy")
+                raise OSError("stopped behind the rename")
+            return answer
+        with mock.patch.object(migrator_port, "call", call), self.assertRaises(OSError):
+            migrate.apply(root, yes=True, local_only_secrets=True)
+        project_id = seen["id"]
+        folder = self.project_dir(project_id)
+        self.assertTrue((folder / self.LEGACY).is_file())
+        self.assertFalse((folder / "local-only.json").exists())
+        done = self.apply(root, "--local-only-secrets")
+        self.assertFalse(done["noop"])
+        self.assertEqual({row["action"] for row in done["plans"]}, {"skipped-equal"})
+        index = json.loads((folder / "local-only.json").read_text(encoding="utf-8"))
+        reasons = {item["path"]: item["reason"] for item in index["files"]}
+        self.assertEqual(reasons[self.LEGACY], "secret-pattern")
+        self.assertEqual(reasons[self.V4], "secret-pattern")
+        exclude = (self.ws / ".git" / "info" / "exclude").read_text(encoding="utf-8")
+        self.assertIn(f"/projects/{project_id}/{self.LEGACY}", exclude)
+        self.assertIn(f"/projects/{project_id}/{self.V4}", exclude)
+        report = json.loads(self.reports(project_id)[-1].read_text(encoding="utf-8"))
+        self.assertIn("PS_SECRET_LOCAL_ONLY", report["warnings"])
+        for flags in ((), ("--all",)):
+            code, out, err = self.run_cli("doctor", "--publish-safety", "--json", *flags)
+            self.assertEqual(code, 0, out + err)
+            self.assertEqual(json.loads(out)["block"], [])
+        self.assertEqual(self.run_cli("sync", "--commit", "--json")[0], 0)
+        self.assertFalse([path for path in git(self.ws, "ls-files").splitlines()
+                          if path.endswith(("old-thing/notes.txt", "review.diff"))])
+
+    def test_a_secret_file_name_still_blocks_with_the_flag(self):
+        root = self.secret_checkout()
+        put(root / "plans" / "old-thing" / ".env", f"API_KEY={SECRET}\n")
+        put(root / "plans" / "old-thing" / "server.pem", "-----BEGIN-----\n")
+        code, out, err = self.run_cli("migrate", "plan", "--project", str(root), "--local-only-secrets", "--json")
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("MIGRATION_BLOCKED_SECRET: "), err)
+        doc = json.loads(out)
+        blocker = doc["blockers"][0]
+        self.assertEqual(sorted({item["path"] for item in blocker["findings"]}),
+                         ["legacy-plans/old-thing/.env", "legacy-plans/old-thing/server.pem"])
+        self.assertFalse(doc["ready"])
+        self.assertNotIn(SECRET, out + err)
+        err = self.failing("migrate", "apply", "--project", str(root), "--yes", "--local-only-secrets")
+        self.assertTrue(err.startswith("MIGRATION_BLOCKED_SECRET: "), err)
+        self.assertIsNone(read_marker(root))
+        self.assertFalse((self.ws / "projects").exists() and any(path.is_dir() for path in (self.ws / "projects").iterdir()))
+
+    def test_a_symlink_still_blocks_with_the_flag(self):
+        root = self.secret_checkout()
+        os.symlink("/etc/hostname", root / "plans" / "old-thing" / "link")
+        doc = json.loads(self.run_cli("migrate", "plan", "--project", str(root), "--local-only-secrets", "--json")[1])
+        self.assertEqual([item["code"] for item in doc["blockers"]], ["MIGRATION_BLOCKED_SYMLINK"])
+
+    def test_a_secret_name_with_a_secret_content_is_listed_once_and_the_other_files_are_not(self):
+        root = self.secret_checkout()
+        put(root / "plans" / "old-thing" / "prod.key", f"password = {SECRET}\n")
+        blocker = json.loads(self.run_cli("migrate", "plan", "--project", str(root), "--local-only-secrets",
+                                          "--json")[1])["blockers"][0]
+        self.assertEqual({item["path"] for item in blocker["findings"]}, {"legacy-plans/old-thing/prod.key"})
+
+
 class CleanupTests(MigrateCase):
     def test_the_confirmation_must_be_the_project_id_of_the_marker(self):
         root = self.build()

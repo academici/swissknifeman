@@ -36,10 +36,13 @@ commands:
                                     drop a binding of this machine; the workspace is not changed
   migrate discover [DIR...] [--json]
                                     checkouts with plans: launcher projects under DIR (default ~/projects) and the maind registry
-  migrate plan --project DIR [--on-conflict keep-workspace|import-copy] [--allow-in-progress] [--yes] [--json]
+  migrate plan --project DIR [--on-conflict keep-workspace|import-copy] [--allow-in-progress] [--local-only-secrets]
+               [--yes] [--json]
                                     dry run: classes, digests, publish-safety, comparison with the workspace; writes nothing
-  migrate apply --project DIR [--on-conflict ...] [--lock-timeout S] [--allow-in-progress] [--yes] [--json]
-                                    move the plans into the workspace through the plans-migrator port; prints, never commits
+  migrate apply --project DIR [--on-conflict ...] [--lock-timeout S] [--allow-in-progress] [--local-only-secrets]
+                [--yes] [--json]
+                                    move the plans into the workspace through the plans-migrator port; prints, never commits;
+                                    --local-only-secrets keeps files with a secret pattern on this machine (not in git)
   migrate verify --project DIR [--json]
                                     digests of the workspace copies and of the old folders against the last report
   migrate rollback --project DIR [--json]
@@ -129,6 +132,7 @@ def _build() -> argparse.ArgumentParser:
         p.add_argument("--project", metavar="DIR", default=None)
         p.add_argument("--on-conflict", dest="on_conflict", choices=migrate.ON_CONFLICT, default=None)
         p.add_argument("--allow-in-progress", dest="allow_in_progress", action="store_true")
+        p.add_argument("--local-only-secrets", dest="local_only_secrets", action="store_true")
         p.add_argument("--yes", action="store_true")
         p.add_argument("--json", action="store_true")
         if name == "apply":
@@ -413,7 +417,8 @@ def _cmd_discover(args: argparse.Namespace) -> int:
 
 
 def _cmd_migrate_plan(args: argparse.Namespace) -> int:
-    plan = migrate.build_plan(_project_root(args.project), args.on_conflict, args.allow_in_progress, args.yes)
+    plan = migrate.build_plan(_project_root(args.project), args.on_conflict, args.allow_in_progress, args.yes,
+                              local_only_secrets=args.local_only_secrets)
     doc = plan.document
     if args.json:
         _dump(doc)
@@ -444,7 +449,8 @@ def _print_next(doc: Any) -> None:
 
 
 def _cmd_migrate_apply(args: argparse.Namespace) -> int:
-    doc = migrate.apply(_project_root(args.project), args.on_conflict, args.lock_timeout, args.allow_in_progress, args.yes)
+    doc = migrate.apply(_project_root(args.project), args.on_conflict, args.lock_timeout, args.allow_in_progress, args.yes,
+                        local_only_secrets=args.local_only_secrets)
     attached = doc.pop("attached", None)
     if attached is not None:
         events.emit("workspace.project.attached", {"project_id": attached["project_id"], "created": attached["created"]},

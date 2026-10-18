@@ -136,6 +136,11 @@ def is_manifest(parts: Sequence[str]) -> bool:
     return len(parts) == 4 and parts[0] == "projects" and parts[2] == "migrations" and parts[3].endswith(".json")
 
 
+def is_secret_name(name: str) -> bool:
+    """Whether a file name (not a path) is a secret file name (``.env``, ``*.pem``, ``*.key``, ...)."""
+    return any(fnmatch.fnmatchcase(name.lower(), pattern) for pattern in SECRET_NAMES)
+
+
 def _layout_findings(rel: str, parts: Sequence[str]) -> List[Dict[str, Any]]:
     found = []
     if parts[0] not in TOP_LEVEL:
@@ -267,7 +272,7 @@ def _scan_version(report: Report, limits: Settings, rel: str, parts: Sequence[st
         return
     if version.kind != "file":
         return
-    if any(fnmatch.fnmatchcase(parts[-1].lower(), pattern) for pattern in SECRET_NAMES):
+    if is_secret_name(parts[-1]):
         _add(report.block, [_finding("PS-SECRET", rel, f"the file name is a secret file name: {MASK}")])
     size = version.size
     binary = False

@@ -72,7 +72,7 @@ Projects, Migration, Sync and Conflicts of the workspace. The page Projects of t
 `gui-workspace.projects`: a trusted project shows its workspace `project_id`, its binding on this machine and its plans store, and
 a project that is bound in the workspace but not trusted is listed with a Trust button. Trust stays an explicit act: the button
 calls the existing `POST /v1/projects` and the owner confirms the dialog; nothing is added automatically. Without the bridge (or
-without a workspace) the page is the plain list of trusted projects. The end-to-end scenarios are `frontend/e2e/workspace.spec.ts`.
+without a workspace) the page is the plain list of trusted projects. The bridge also contributes the forms to create a workspace (alone or bound to an empty remote), connect a remote, add a project, bind a checkout and remove an empty project; the host renders them from the command inputs. The end-to-end scenarios are `frontend/e2e/workspace.spec.ts`.
 
 ## Third-party packages
 

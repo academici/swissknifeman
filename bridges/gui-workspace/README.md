@@ -32,8 +32,11 @@ field values, never argv. All values are strings or enums; `run.py` checks them 
 
 | Command | Inputs | Runs | Confirmation |
 | --- | --- | --- | --- |
-| `init` | - | `init` (the configured root) | risk-based |
-| `project-attach` | `project` (absolute folder) | `project attach --project DIR` (no `--yes`: an existing project is never reused silently) | risk-based |
+| `init` | `code` | `init --code CODE` (the configured root) | risk-based |
+| `init-remote` | `code`, `remote` | `init --code CODE --remote URL`: create the workspace and bind it to an empty remote as `origin`; nothing is pushed | always |
+| `project-add` | `path` (absolute folder), `name`?, `project_code`? | `project add --path DIR [--name N] [--code CODE]` (no `--yes`) | risk-based |
+| `project-remove` | `project_id` | `project remove CODE`: only a project without plans; otherwise `PROJECT_NOT_EMPTY` | always |
+| `project-attach` | `project` (absolute folder) | `project attach --project DIR` (no `--yes`: an existing project is never reused silently); the form "Bind a checkout" | risk-based |
 | `project-scan` | `dir` | `project scan DIR` | risk-based |
 | `project-rebind` | `project_id`, `path` | `project rebind ID --path DIR` | risk-based |
 | `migrate-plan` | `project`, `on_conflict`? | `migrate plan` (dry run) | none |
@@ -51,7 +54,13 @@ field values, never argv. All values are strings or enums; `run.py` checks them 
 - `sync-push`: `run.py` prints `pushing to <redacted remote> branch <branch>` (from `status`) before it hands over to
   the CLI, refuses a remote with userinfo and a workspace without a remote. The generic confirmation text of the GUI
   does not name the target; the page Sync shows it in the row `push-target`.
-- `connect`: a URL with a password or token (any scheme), or any userinfo on `http(s)`, is refused.
+- Forms (D4): Overview offers `init`, `init-remote` and `connect` (create a workspace, create it on a remote, connect a
+  remote); Projects offers `project-add`, `project-remove`, `project-attach` (bind a checkout), `project-scan` and
+  `project-rebind`. The host renders each form from the `input` of the command; `code`, `project_code` and `project_id`
+  carry the pattern of a code, so the browser refuses a bad value before the request and `run.py` again before the CLI.
+  `init` and `init-remote` are two commands because binding a remote needs the confirmation `always`.
+  `project-remove` cannot remove a project with plans (no force): such a project is refused with `PROJECT_NOT_EMPTY`.
+- `init-remote` and `connect`: a URL with a password or token (any scheme), or any userinfo on `http(s)`, is refused.
 - `sync-resolve`: `path` is relative, without `..`, `=` or a leading `-`.
 - Commands stream and can be cancelled; `migrate-apply` and `migrate-cleanup` have `timeout_s` ≥ 3600.
 

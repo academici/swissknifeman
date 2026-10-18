@@ -156,6 +156,31 @@ class TestRealCli(AdapterCase):
         self.assertEqual(1, len(rows))
         self.assertEqual("yes", rows[0]["cells"]["bound"])
 
+    def run_py(self, *argv):
+        done = subprocess.run([sys.executable, str(BRIDGE / "run.py"), *argv], cwd=str(self.home), env=self.proc_env,
+                              capture_output=True, text=True, timeout=120)
+        return done.returncode, done.stderr, (json.loads(done.stdout) if done.stdout.strip().startswith("{") else None)
+
+    def test_forms_create_bind_add_remove(self):
+        """The verbs of the forms through run.py and the real CLI: create bound to a remote, add a project, remove it."""
+        remote = self.home / "remote.git"
+        subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(remote)], check=True, env=self.proc_env)
+        project = self.home / "proj"
+        project.mkdir()
+        code, err, doc = self.run_py("init-remote", "axioma", f"file://{remote}")
+        self.assertEqual(0, code, err)
+        self.assertEqual("axioma", doc["code"])
+        self.assertEqual(f"file://{remote}", doc["remote"]["url"])
+        code, err, doc = self.run_py("project-add", str(project), "--name", "Proj", "--code", "pr-one")
+        self.assertEqual(0, code, err)
+        self.assertEqual("pr-one", doc["project_id"])
+        code, err, doc = self.run_py("project-remove", "pr-one")
+        self.assertEqual(0, code, err)
+        self.assertEqual("pr-one", doc["project_id"])
+        code, err, doc = self.run_py("project-remove", "pr-one")
+        self.assertEqual(1, code)
+        self.assertIn("error", doc)
+
 
 if __name__ == "__main__":
     unittest.main()

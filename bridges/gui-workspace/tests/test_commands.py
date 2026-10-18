@@ -14,14 +14,14 @@ BRIDGE = Path(__file__).resolve().parents[1]
 FIXTURES = BRIDGE / "tests" / "fixtures"
 GUI_DOC = json.loads((BRIDGE / "gui.json").read_text(encoding="utf-8"))
 COMMANDS = {command["id"].split(".", 1)[1]: command for command in GUI_DOC["commands"]}
-ALWAYS = {"migrate-apply", "migrate-cleanup", "sync-push", "sync-resolve", "connect"}
+ALWAYS = {"migrate-apply", "migrate-cleanup", "sync-push", "sync-resolve", "connect", "init-remote", "project-remove"}
 
 
 class TestDescriptors(unittest.TestCase):
     def test_confirmation_levels(self):
         self.assertEqual(ALWAYS, {name for name, c in COMMANDS.items() if c["confirmation"] == "always"})
         self.assertEqual({"migrate-plan", "migrate-verify"}, {n for n, c in COMMANDS.items() if c["confirmation"] == "none"})
-        self.assertEqual({"init", "project-attach", "project-scan", "project-rebind", "sync-commit", "sync-pull",
+        self.assertEqual({"init", "project-add", "project-attach", "project-scan", "project-rebind", "sync-commit", "sync-pull",
                           "sync-resolve-reset"}, {n for n, c in COMMANDS.items() if c["confirmation"] == "risk-based"})
 
     def test_every_command_is_a_fixed_argv_of_run_py(self):
@@ -38,6 +38,22 @@ class TestDescriptors(unittest.TestCase):
                     self.assertIn(field["type"], ("string", "enum", "project-path"))
                 self.assertIn("stream", command["supports"])
                 self.assertIn("cancel", command["supports"])
+
+    def test_forms_of_the_workspace_pages(self):
+        """D4: create a workspace (alone and bound to a remote), connect a remote, add a project, bind a checkout."""
+        routes = {r["id"]: r["actions"] for r in GUI_DOC["routes"]}
+        self.assertEqual(["gui-workspace.init", "gui-workspace.init-remote", "gui-workspace.connect"],
+                         routes["gui-workspace.overview"])
+        self.assertEqual(["gui-workspace.project-add", "gui-workspace.project-remove", "gui-workspace.project-attach",
+                          "gui-workspace.project-scan", "gui-workspace.project-rebind"], routes["gui-workspace.projects"])
+        required = lambda name: {f["name"] for f in COMMANDS[name]["input"] if f["required"]}
+        self.assertEqual({"code", "remote"}, required("init-remote"))
+        self.assertEqual({"path"}, required("project-add"))
+        self.assertEqual({"project_id"}, required("project-remove"))
+        self.assertEqual({"high"}, {COMMANDS[n]["risk"] for n in ("init-remote", "project-remove")})
+        for name in ("init-remote", "project-add", "project-remove"):
+            self.assertEqual("gui-workspace:workspace", COMMANDS[name]["concurrency_key"])
+        self.assertIn("network", COMMANDS["init-remote"]["effects"])
 
     def test_long_commands_have_time(self):
         self.assertGreaterEqual(COMMANDS["migrate-apply"]["timeout_s"], 3600)
@@ -88,6 +104,12 @@ class TestRun(RunCase):
         proj = str(self.home / "proj")
         self.assertEqual(["init", "--code", "axioma", "--json"], self.ran("init", "axioma"))
         self.assertEqual(["project", "attach", "--project", proj, "--json"], self.ran("project-attach", proj))
+        self.assertEqual(["init", "--code", "axioma", "--remote", "ssh://git@example.com/team/ws.git", "--json"],
+                         self.ran("init-remote", "axioma", "ssh://git@example.com/team/ws.git"))
+        self.assertEqual(["project", "add", "--path", proj, "--json"], self.ran("project-add", proj))
+        self.assertEqual(["project", "add", "--path", proj, "--name", "Alpha app", "--code", "alpha", "--json"],
+                         self.ran("project-add", proj, "--name", "Alpha app", "--code", "alpha"))
+        self.assertEqual(["project", "remove", "alpha", "--json"], self.ran("project-remove", "alpha"))
         self.assertEqual(["project", "scan", proj, "--json"], self.ran("project-scan", proj))
         self.assertEqual(["project", "rebind", "p-alpha", "--path", proj, "--json"],
                          self.ran("project-rebind", "p-alpha", proj))
@@ -105,6 +127,16 @@ class TestRun(RunCase):
     def test_nothing_else_runs(self):
         proj = str(self.home / "proj")
         bad = [(), ("rm",), ("sync-push", "--force"), ("sync-commit", "x"), ("init", "--root"), ("init", "--root", proj), ("init", "--yes", "x"),
+               ("init-remote", "axioma"), ("init-remote", "Axioma", "git@example.com:t/w.git"),
+               ("init-remote", "axioma", "https://user:token123@example.com/w.git"),
+               ("init-remote", "axioma", "https://token123@example.com/w.git"), ("init-remote", "axioma", "-x"),
+               ("init-remote", "axioma", "git@example.com:t/w.git", "--root", proj),
+               ("project-add",), ("project-add", "relative/dir"), ("project-add", str(self.home / "missing")),
+               ("project-add", proj, "--name", "-x"), ("project-add", proj, "--name", "a\nb"),
+               ("project-add", proj, "--name", ""), ("project-add", proj, "--code", "Bad Code"),
+               ("project-add", proj, "--yes"), ("project-add", proj, "--path", proj),
+               ("project-remove",), ("project-remove", "-x"), ("project-remove", "a b"), ("project-remove", "a", "b"),
+               ("project-remove", "a", "--force"),
                ("project-attach", "relative/dir"), ("project-attach", str(self.home / "missing")),
                ("project-attach", "-rf"), ("project-rebind", "-x", proj), ("project-rebind", "a b", proj),
                ("migrate-plan", proj, "--on-conflict", "overwrite"), ("migrate-apply", proj, "--lock-timeout", "1"),

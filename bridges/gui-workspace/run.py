@@ -2,15 +2,18 @@
 """gui-workspace commands for the GUI broker: a fixed set of verbs, each one `workspace ... --json`, nothing else runs.
 
     run.py init CODE                                     run.py sync-commit | sync-pull | sync-push | sync-resolve-reset
-    run.py project-attach DIR                       run.py sync-resolve PATH local|remote
-    run.py project-scan DIR                         run.py connect URL [--branch B]
+    run.py init-remote CODE URL                          run.py sync-resolve PATH local|remote
+    run.py project-add DIR [--name N] [--code CODE]      run.py connect URL [--branch B]
+    run.py project-remove PROJECT_ID
+    run.py project-attach DIR
+    run.py project-scan DIR
     run.py project-rebind PROJECT_ID DIR
     run.py migrate-plan|migrate-apply DIR [--on-conflict keep-workspace|import-copy]
     run.py migrate-verify DIR                       run.py migrate-cleanup DIR PROJECT_ID
 
 Every value is checked here before the workspace command line starts (exit 2, nothing runs): absolute existing folders,
-a project id, a branch, a relative path without ``..`` or ``=``, a remote URL without a password. The argv is a list
-(no shell). The cleanup runs only when the typed id equals the project_id of the folder; a push first prints the
+a project id, a project name, a branch, a relative path without ``..`` or ``=``, a remote URL without a password. The
+argv is a list (no shell). The cleanup runs only when the typed id equals the project_id of the folder; a push first prints the
 remote and the branch it publishes to.
 """
 from __future__ import annotations
@@ -52,6 +55,14 @@ def project_id(value: str) -> str:
     return value
 
 
+def name(value: str) -> str:
+    """A display name of a project: one line of at most 120 characters that is not an option."""
+    if (not value.strip() or value.startswith("-") or len(value) > 120
+            or re.search(r"[\x00-\x1f\x7f-\x9f]", value)):
+        raise Invalid("INVALID_NAME", "expected a name of one line (up to 120 characters)")
+    return value
+
+
 def branch(value: str) -> str:
     if not BRANCH.match(value) or ".." in value:
         raise Invalid("INVALID_BRANCH", "not a branch name")
@@ -86,6 +97,10 @@ def enum(allowed: Tuple[str, ...]) -> Callable[[str], str]:
 # verb -> (positional checks, allowed flags {flag: check}, builder of workspace args from the checked values)
 SPEC: Dict[str, Tuple[List[Callable[[str], str]], Dict[str, Callable[[str], str]], Callable[[List[str], Dict[str, str]], List[str]]]] = {
     "init": ([project_id], {}, lambda p, f: ["init", "--code", p[0]]),
+    "init-remote": ([project_id, remote_url], {}, lambda p, f: ["init", "--code", p[0], "--remote", p[1]]),
+    "project-add": ([folder], {"--name": name, "--code": project_id},
+                    lambda p, f: ["project", "add", "--path", p[0], *_flags(f)]),
+    "project-remove": ([project_id], {}, lambda p, f: ["project", "remove", p[0]]),
     "project-attach": ([folder], {}, lambda p, f: ["project", "attach", "--project", p[0]]),
     "project-scan": ([folder], {}, lambda p, f: ["project", "scan", p[0]]),
     "project-rebind": ([project_id, folder], {}, lambda p, f: ["project", "rebind", p[0], "--path", p[1]]),

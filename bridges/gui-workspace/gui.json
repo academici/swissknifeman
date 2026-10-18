@@ -39,11 +39,174 @@
         {
           "description": "Code of the new workspace (the folder name under workspaces/), e.g. axioma.",
           "name": "code",
+          "pattern": "[a-z]([a-z0-9]|-[a-z0-9]){0,39}",
           "required": true,
           "title": "Workspace code",
           "type": "string"
         }
       ]
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "always",
+      "description": "workspace init --remote: create a workspace and bind it to an empty git remote as origin in one step; nothing is pushed.",
+      "effects": [
+        "config.write",
+        "process.spawn",
+        "network"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "init-remote",
+          {
+            "input": "code"
+          },
+          {
+            "input": "remote"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.init-remote",
+      "input": [
+        {
+          "description": "Code of the new workspace (the folder name under workspaces/), e.g. axioma.",
+          "name": "code",
+          "pattern": "[a-z]([a-z0-9]|-[a-z0-9]){0,39}",
+          "required": true,
+          "title": "Workspace code",
+          "type": "string"
+        },
+        {
+          "description": "Empty git remote URL without a password or token. A remote that already holds a workspace is refused: clone it instead.",
+          "name": "remote",
+          "required": true,
+          "title": "Remote URL",
+          "type": "string"
+        }
+      ],
+      "risk": "high",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Create the workspace on a remote"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "risk-based",
+      "description": "workspace project add: add a checkout to the workspace as a project (a code is made from the folder name unless given) and bind it here.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "project-add",
+          {
+            "input": "path"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.project-add",
+      "input": [
+        {
+          "description": "Absolute path of the project checkout.",
+          "name": "path",
+          "required": true,
+          "title": "Project folder",
+          "type": "string"
+        },
+        {
+          "description": "Display name; the name of the folder when empty.",
+          "flag": "--name",
+          "name": "name",
+          "required": false,
+          "title": "Name",
+          "type": "string"
+        },
+        {
+          "description": "Code of the project (its folder name in the workspace); made from the folder name when empty.",
+          "flag": "--code",
+          "name": "project_code",
+          "pattern": "[a-z]([a-z0-9]|-[a-z0-9]){0,39}",
+          "required": false,
+          "title": "Project code",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Add a project"
+    },
+    {
+      "concurrency_key": "gui-workspace:workspace",
+      "confirmation": "always",
+      "description": "workspace project remove: remove a project that holds no plans from the workspace and from the bindings of this machine. A project with plans is refused (PROJECT_NOT_EMPTY); `workspace project detach` drops only its binding.",
+      "effects": [
+        "project.write",
+        "process.spawn"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "project-remove",
+          {
+            "input": "project_id"
+          }
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_WORKSPACE_MODULE_ROOT",
+          "SKM_WORKSPACES_ROOT",
+          "SKM_WORKSPACE",
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-workspace.project-remove",
+      "input": [
+        {
+          "description": "Code of the project to remove, as the Projects page lists it.",
+          "name": "project_id",
+          "pattern": "[a-z]([a-z0-9]|-[a-z0-9]){0,39}",
+          "required": true,
+          "title": "Project code",
+          "type": "string"
+        }
+      ],
+      "risk": "high",
+      "scope": "fleet",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 300,
+      "title": "Remove an empty project"
     },
     {
       "concurrency_key": "gui-workspace:workspace",
@@ -87,7 +250,7 @@
         "cancel"
       ],
       "timeout_s": 300,
-      "title": "Attach a project"
+      "title": "Bind a checkout"
     },
     {
       "concurrency_key": "gui-workspace:workspace",
@@ -700,6 +863,7 @@
     {
       "actions": [
         "gui-workspace.init",
+        "gui-workspace.init-remote",
         "gui-workspace.connect"
       ],
       "id": "gui-workspace.overview",
@@ -715,6 +879,8 @@
     },
     {
       "actions": [
+        "gui-workspace.project-add",
+        "gui-workspace.project-remove",
         "gui-workspace.project-attach",
         "gui-workspace.project-scan",
         "gui-workspace.project-rebind"

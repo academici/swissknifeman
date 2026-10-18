@@ -2,7 +2,7 @@
   "$schema": "urn:swissknifeman:task:plan:item:v1",
   "id": "P6.2",
   "title": "Машина A: init workspace, attach и apply 7 проектов (swissknifeman последним), verify, коммиты маркеров, workspace sync --commit",
-  "status": "todo",
+  "status": "in_progress",
   "summary": "Под гейтом MIGRATE-HOST-A: `workspace init`; для каждого проекта attach, apply (с `--allow-in-progress` только при отсутствии живых runs по P6.1), verify; `planner plans` после миграции совпадает со снимком P6.1; маркер `.swissknifeman/project.json` закоммичен в каждом репозитории (без push); `workspace sync --commit` фиксирует состояние в git workspace; publish-safety без block.",
   "why": "Это и есть перенос планов машины A. Жёсткие риски: потеря плана (W4/W5), незамеченный живой run, миграция PLAN6 во время его собственного исполнения (swissknifeman последним: после apply plan.py читает PLAN6 из workspace).",
   "scope": {
@@ -114,6 +114,13 @@
     "need": "none",
     "status": "not_needed"
   },
-  "result": null,
-  "updated_at": "2026-10-18T03:00:41Z"
+  "result": {
+    "started_at": "2026-10-18T04:13:55Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "sonnet",
+      "effort": "high"
+    }
+  },
+  "updated_at": "2026-10-18T04:13:55Z"
 }

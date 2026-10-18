@@ -1,0 +1,43 @@
+{
+  "project_id": "prj_01M56FGHYXN6AM91H8SFWC5783",
+  "op_id": "mig_01M56MHHX5YTD2ARNA20591A2N",
+  "noop": false,
+  "mode": "initial",
+  "plans": [
+    {
+      "name": "2026.10.01-№1-AZGUARD-V1",
+      "class": "legacy",
+      "action": "copied",
+      "files": 1669,
+      "bytes": 66455644,
+      "digest": "sha256:06f7ab40f97288f4a28281e7c115488b9fb78e96dac18792406369c2b6ccbc26"
+    },
+    {
+      "name": "2026.10.10-№1-AZGUARD-CORE-STABILIZATION",
+      "class": "v4",
+      "action": "copied",
+      "files": 914,
+      "bytes": 70177136,
+      "digest": "sha256:9d2601091e40d7ffffa3e27fc47ec15252c8b103c36dcbc0f7082a49569b92a5"
+    },
+    {
+      "name": "2026.10.17-№1-AZGUARD-FINAL-HARDENING",
+      "class": "v4",
+      "action": "copied",
+      "files": 74,
+      "bytes": 287869,
+      "digest": "sha256:917c1bd22848ca366acf64655fa1c45679d908b68603403f922e2cc27eecba4b"
+    }
+  ],
+  "local_only": 77,
+  "warnings": [
+    "PS_HOME_PATH",
+    "PS_SECRET_LOCAL_ONLY"
+  ],
+  "notes": [],
+  "report": "projects/prj_01M56FGHYXN6AM91H8SFWC5783/migrations/mig_01M56MHHX5YTD2ARNA20591A2N.json",
+  "next": [
+    "git -C /home/vostrikov/projects/packages/azguard add .swissknifeman/project.json && git -C /home/vostrikov/projects/packages/azguard commit -m 'chore: plans are stored in the portable workspace'",
+    "swissknifeman workspace sync"
+  ]
+}

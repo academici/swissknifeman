@@ -40,6 +40,22 @@ class BackupTests(unittest.TestCase):
         self.assertEqual(copy.read_text(), "data")
         self.assertEqual(source.read_text(), "data")
 
+    def test_a_project_bound_to_a_workspace_keeps_its_backups_in_the_local_folder(self):
+        self.write(self.project / ".swissknifeman" / "project.json",
+                   '{"workspace": "ws", "project_id": "alpha", "plans_store": "workspace"}')
+        local = self.root / "sb" / "workspaces" / "ws" / "projects" / "alpha" / "local"
+        local.parent.mkdir(parents=True)
+        layer = self.write(local / "config.toml", "layer")
+        inside = self.write(self.project / "sub" / "x.toml", "x")
+        copy = bk.backup(layer, project=self.project, now=T0, env=self.env)
+        self.assertEqual(copy, local / "backups" / "20261008T120000123456Z" / "local" / "config.toml")
+        self.assertEqual(copy.read_text(), "layer")
+        again = bk.backup(inside, project=self.project, now=T0 + timedelta(seconds=1), env=self.env)
+        self.assertEqual(again.relative_to(local / "backups").parts[1:], ("sub", "x.toml"))
+        self.assertEqual([stamp for stamp, _files in bk.list_backups(self.project, env=self.env)],
+                         [again.parent.parent.name, copy.parent.parent.name])
+        self.assertFalse((self.project / ".swissknifeman" / "backups").exists())
+
     def test_machine_file_inside_home_uses_a_home_relative_path(self):
         source = self.write(self.home / ".config" / "x.toml")
         copy = bk.backup(source, now=T0, env=self.env, home=self.home)

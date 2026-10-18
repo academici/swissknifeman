@@ -1045,7 +1045,8 @@ def resolve(module_id: str, *, unit_root: Optional[PathLike] = None, schema: Any
 
     ``schema`` is a :class:`ModuleSchema` or a path to ``config.schema.json``; without it the schema
     is found through ``unit.json`` (``provides.config``) in ``unit_root``. ``project`` is the project
-    root (its ``.swissknifeman/config.toml`` is the project layer; ``None`` means no project layer),
+    root (its project layer is ``local/config.toml`` of the project in its workspace when the project marker names one,
+    else ``.swissknifeman/config.toml``; ``None`` means no project layer),
     ``config_file`` the ``--config FILE`` layer, ``flags`` a mapping of dotted keys to values from
     the command line (``None`` values are skipped, text values are parsed by the key's type). ``env``
     and ``home`` default to the process environment and home directory. ``warn`` receives the
@@ -1065,7 +1066,7 @@ def resolve(module_id: str, *, unit_root: Optional[PathLike] = None, schema: Any
     machine = Path(machine_config_file(env=environment, home=home))
     candidates: List[Tuple[str, Path]] = [("machine", machine)]
     if project is not None:
-        candidates.append(("project", Path(project_config_file(project))))
+        candidates.append(("project", Path(project_config_file(project, env=environment, home=home))))
     for layer, path in candidates:
         override = layer_texts.get(layer) if layer_texts else None
         info, section, index = _load_file(layer, path, module_id, text=override)

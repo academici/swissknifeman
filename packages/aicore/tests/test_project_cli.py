@@ -148,6 +148,43 @@ class ProjectCliTests(unittest.TestCase):
         self.assertEqual(checks["project.config"], "fail")
         self.assertEqual(checks["project.write-boundary"], "fail")
 
+    def test_doctor_follows_the_marker_to_the_local_folder(self):
+        from aicore.workspace import write_marker
+        run(self.root, "init")
+        ws = Path(self._tmp.name).resolve() / "wss" / "axioma"
+        env = {"HOME": "/nonexistent-home", "PATH": "", "SKM_WORKSPACES_ROOT": str(ws.parent)}
+        write_marker(self.root, "axioma", "demo", "workspace")
+        local = ws / "projects" / "demo" / "local"
+        local.mkdir(parents=True)
+        (self.root / ".swissknifeman" / "config.toml").write_text("schema_version = 99\n")
+
+        def checks():
+            _code, out, _ = run(self.root, "doctor", "--json", env=env)
+            return {item["check_id"]: item for item in json.loads(out)}
+
+        found = checks()
+        self.assertEqual(found["project.config"]["status"], "skip")
+        self.assertIn(str(local / "config.toml"), found["project.config"]["observed"])
+        self.assertEqual(found["project.write-boundary"]["status"], "ok")
+        (local / "config.toml").write_text("schema_version = 99\n")
+        self.assertEqual(checks()["project.config"]["status"], "fail")
+        outside = Path(self._tmp.name).resolve() / "outside"
+        outside.mkdir()
+        (local / "state").symlink_to(outside)
+        found = checks()
+        self.assertEqual(found["project.write-boundary"]["status"], "fail")
+        self.assertIn("local/state", found["project.write-boundary"]["observed"])
+
+    def test_context_names_the_project_layer_file(self):
+        from aicore.workspace import write_marker
+        ws = Path(self._tmp.name).resolve() / "wss" / "axioma"
+        env = {"HOME": "/nonexistent-home", "PATH": "", "SKM_WORKSPACES_ROOT": str(ws.parent)}
+        run(self.root, "init")
+        write_marker(self.root, "axioma", "demo", "workspace")
+        (ws / "projects" / "demo" / "plans").mkdir(parents=True)
+        _code, out, _ = run(self.root, "context", "--json", env=env)
+        self.assertEqual(json.loads(out)["config"], str(ws / "projects" / "demo" / "local" / "config.toml"))
+
     def test_doctor_checks_the_plans_store(self):
         from aicore.workspace import write_marker
         run(self.root, "init")

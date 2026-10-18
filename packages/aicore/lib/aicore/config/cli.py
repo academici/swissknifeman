@@ -124,7 +124,7 @@ class _Context:
         return "project" if self.args.project else "machine"
 
     def layer_file(self) -> Path:
-        return project_config_file(self.root) if self.args.project else machine_config_file(env=self.env)
+        return project_config_file(self.root, env=self.env) if self.args.project else machine_config_file(env=self.env)
 
 
 def _toml(value: Any) -> str:
@@ -278,9 +278,10 @@ def _cmd_paths(ctx: _Context) -> int:
         "legacy": list(where.legacy),
         "machine_config_file": str(machine_config_file(env=ctx.env)),
         "machine_revision": _revision_of(Path(machine_config_file(env=ctx.env))),
-        "project": {"root": str(ctx.root), "config_file": str(project_config_file(ctx.root)),
-                    "revision": _revision_of(Path(project_config_file(ctx.root))),
-                    "state": str(project_state_dir(ctx.root)), "backups": str(project_backups_dir(ctx.root))},
+        "project": {"root": str(ctx.root), "config_file": str(project_config_file(ctx.root, env=ctx.env)),
+                    "revision": _revision_of(Path(project_config_file(ctx.root, env=ctx.env))),
+                    "state": str(project_state_dir(ctx.root, env=ctx.env)),
+                    "backups": str(project_backups_dir(ctx.root, env=ctx.env))},
     }
     if ctx.args.json:
         ctx.emit_json(doc)

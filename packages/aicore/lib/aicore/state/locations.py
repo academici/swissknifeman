@@ -8,10 +8,13 @@ it never reads the real home directory. A machine that still has the old XDG fol
 (``~/.config/swissknifeman``, ``~/.local/state/swissknifeman``, ``~/.cache/swissknifeman``, ...)
 keeps using each of them while the new folder of that kind does not exist yet; :mod:`.migrate`
 (``aicore config migrate-home``) moves them. Project locations live in ``.swissknifeman/`` at the
-project root. Nothing here creates anything on disk except :func:`ensure_dir`. stdlib only.
+project root, except for a checkout whose marker names a workspace project present on this machine: its config, state,
+backups and stubs live in ``projects/<code>/local/`` of that workspace (:func:`project_local_dir`). Nothing here
+creates anything on disk except :func:`ensure_dir`. stdlib only.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -256,16 +259,66 @@ def project_dir(root: PathLike) -> Path:
     return Path(root) / PROJECT_DIRNAME
 
 
-def project_config_file(root: PathLike) -> Path:
-    return project_dir(root) / "config.toml"
+PROJECT_MARKER_FILE = "project.json"
+LOCAL_DIRNAME = "local"
 
 
-def project_state_dir(root: PathLike, app: Optional[str] = None) -> Path:
-    return _sub(project_dir(root) / "state", app)
+def _marker_codes(root: PathLike) -> Optional[Tuple[str, str]]:
+    """``(workspace code, project code)`` of the marker ``<root>/.swissknifeman/project.json``. A missing, unreadable or
+    malformed marker names nothing (``None``): the contract check and its refusal belong to ``aicore.workspace``, a path
+    lookup never fails because of it."""
+    try:
+        with open(project_dir(root) / PROJECT_MARKER_FILE, encoding="utf-8") as handle:
+            document = json.load(handle)
+    except (OSError, UnicodeError, ValueError):
+        return None
+    if not isinstance(document, dict):
+        return None
+    workspace, project = document.get("workspace"), document.get("project_id")
+    return (workspace, project) if is_code(workspace) and is_code(project) else None
 
 
-def project_backups_dir(root: PathLike) -> Path:
-    return project_dir(root) / "backups"
+def project_local_dir(root: PathLike, *, env: Optional[Mapping[str, str]] = None,
+                      home: Optional[PathLike] = None) -> Optional[Path]:
+    """``<workspace>/projects/<code>/local``: the machine-local folder of the project (contract ``project-local-config/v1``),
+    found through the marker of the checkout at ``root`` (workspace code and project code). ``None`` (the project keeps its
+    ``.swissknifeman/`` folder, as before) when the checkout has no marker, the marker is unusable, or the workspace it names
+    has no folder for the project on this machine. Nothing is created and ``local/`` itself need not exist yet."""
+    codes = _marker_codes(root)
+    if codes is None:
+        return None
+    try:
+        folder = workspaces_root(env, home) / codes[0] / "projects" / codes[1]
+    except ValueError:
+        return None
+    return folder / LOCAL_DIRNAME if folder.is_dir() else None
+
+
+def project_config_file(root: PathLike, *, env: Optional[Mapping[str, str]] = None,
+                        home: Optional[PathLike] = None) -> Path:
+    """The project layer of the configuration: ``local/config.toml`` of the project in its workspace, else
+    ``<root>/.swissknifeman/config.toml``."""
+    local = project_local_dir(root, env=env, home=home)
+    return (local if local is not None else project_dir(root)) / "config.toml"
+
+
+def project_state_dir(root: PathLike, app: Optional[str] = None, *, env: Optional[Mapping[str, str]] = None,
+                      home: Optional[PathLike] = None) -> Path:
+    local = project_local_dir(root, env=env, home=home)
+    return _sub((local if local is not None else project_dir(root)) / "state", app)
+
+
+def project_backups_dir(root: PathLike, *, env: Optional[Mapping[str, str]] = None,
+                        home: Optional[PathLike] = None) -> Path:
+    local = project_local_dir(root, env=env, home=home)
+    return (local if local is not None else project_dir(root)) / "backups"
+
+
+def project_stubs_dir(root: PathLike, *, env: Optional[Mapping[str, str]] = None,
+                      home: Optional[PathLike] = None) -> Path:
+    """The project stubs: ``local/stubs`` of the project in its workspace, else ``<root>/.swissknifeman/stubs``."""
+    local = project_local_dir(root, env=env, home=home)
+    return (local if local is not None else project_dir(root)) / "stubs"
 
 
 ENV_PROJECT_ROOT = "SKM_PROJECT_ROOT"

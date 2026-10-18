@@ -379,14 +379,28 @@ class WorkspaceProjectTests(ConfigCase):
         self.assertEqual(settings.project_root_of(self.ws_plans), self.project)
         self.assertEqual(settings.project_root_of(self.plans), self.project)  # a legacy folder: as before
 
+    def local_file(self, text: str) -> Path:
+        """The project layer of a project bound to the workspace: ``local/config.toml`` of the workspace project."""
+        return self.write(self.ws / "projects" / self.PID / "local" / "config.toml", text)
+
     def test_new_plan_takes_the_configuration_and_the_name_of_the_bound_checkout(self):
-        self.project_file('[planner.new_plan]\nscout = "auto"\n')
+        self.local_file('[planner.new_plan]\nscout = "auto"\n')
         before = self.new()
         self.assertEqual((before.plan["settings"]["scout"], before.plan["repository"]), ("off", self.PID))
         self.bind()
         after = self.new()
         self.assertEqual((after.plan["settings"]["scout"], after.plan["repository"]), ("auto", self.project.name))
         self.assertEqual(settings.for_plan(store.load_plan(after.root)).get("new_plan.scout"), "auto")
+
+    def test_the_project_layer_of_a_marked_project_is_the_local_folder_not_the_checkout(self):
+        self.project_file('[planner.new_plan]\nscout = "auto"\n')
+        self.bind()
+        self.assertEqual(self.new().plan["settings"]["scout"], "off")
+        self.local_file('[planner.new_plan]\nscout = "auto"\n')
+        self.assertEqual(self.new().plan["settings"]["scout"], "auto")
+        entry = settings.for_root(self.ws_plans).explain("new_plan.scout")[0]
+        self.assertEqual(entry["layer"], "project")
+        self.assertEqual(Path(entry["file"]), self.ws / "projects" / self.PID / "local" / "config.toml")
 
 
 @needs_aicore

@@ -84,6 +84,28 @@ class ResolveTests(StubCase):
         self.assertNotEqual(first["digest"], stubs.snapshot([T], self.project, env=self.env)["digest"])
 
 
+class WorkspaceProjectTests(StubCase):
+    def setUp(self):
+        super().setUp()
+        marker = self.project / ".swissknifeman" / "project.json"
+        marker.parent.mkdir(parents=True)
+        marker.write_text('{"workspace": "ws", "project_id": "alpha", "plans_store": "workspace"}')
+        self.local = Path(self.tmp.name) / "skm" / "workspaces" / "ws" / "projects" / "alpha" / "local"
+        self.local.parent.mkdir(parents=True)
+
+    def test_the_project_stubs_live_in_the_local_folder_of_the_workspace_project(self):
+        self.assertEqual(stubs.roots(self.project, env=self.env)["project"], self.local / "stubs")
+        self.write("machine", "_all.md", "machine\n")
+        self.write("project", "_all.md", "from the checkout\n")
+        (self.local / "stubs").mkdir(parents=True)
+        (self.local / "stubs" / "_all.md").write_text("from the workspace\n", encoding="utf-8")
+        self.assertEqual(self.text(layers=("project",)), "from the workspace\n")
+
+    def test_without_the_workspace_project_the_stubs_stay_in_the_checkout(self):
+        self.local.parent.rmdir()
+        self.assertEqual(stubs.roots(self.project, env=self.env)["project"], self.project_root)
+
+
 class RefusalTests(StubCase):
     def refused(self, code: str) -> None:
         with self.assertRaises(stubs.StubError) as caught:

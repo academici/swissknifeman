@@ -6,7 +6,9 @@ from __future__ import annotations
 from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -17,6 +19,7 @@ from aicore.config import ConfigError
 from orch import contracts, policies, render, settings
 from orch.cli import doctor_checks, main
 from orch.conductor import contract, options, prompts
+from orch.conductor.infrastructure.files import runs_root
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "fixtures" / "conductor" / "v1"
@@ -227,6 +230,20 @@ class DoctorTests(unittest.TestCase):
         rows = {row["check_id"]: row for row in doctor_checks(self.git_project("node_modules/\n"))}
         self.assertEqual(rows["orch.conductor-gitignore"]["status"], "warn")
         self.assertIn(".swissknifeman/state/", rows["orch.conductor-gitignore"]["remediation"])
+
+    def test_a_runtime_folder_in_the_workspace_project_is_outside_the_checkout(self):
+        project = self.git_project("node_modules/\n")
+        workspaces = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, workspaces, True)
+        (workspaces / "ws" / "projects" / "alpha").mkdir(parents=True)
+        (project / ".swissknifeman").mkdir()
+        (project / ".swissknifeman" / "project.json").write_text(
+            '{"workspace": "ws", "project_id": "alpha", "plans_store": "workspace"}', encoding="utf-8")
+        with mock.patch.dict(os.environ, {"SKM_WORKSPACES_ROOT": str(workspaces)}):
+            rows = {row["check_id"]: row for row in doctor_checks(project)}
+            runs = runs_root(project)
+        self.assertEqual(rows["orch.conductor-gitignore"]["status"], "ok")
+        self.assertEqual(runs, workspaces / "ws" / "projects" / "alpha" / "local" / "state" / "orch" / "conductor")
 
     def test_outside_git_the_check_is_skipped(self):
         with tempfile.TemporaryDirectory() as tmp:

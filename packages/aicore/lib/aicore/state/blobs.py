@@ -1,7 +1,7 @@
 """A content-addressed store for the data an ``artifact-ref/v1`` document points at.
 
 A blob is a file named by the SHA-256 of its bytes: ``<project>/.swissknifeman/state/artifacts/sha256/<hex>``
-inside a project, or ``<machine state>/artifacts/sha256/<hex>`` without one. Writing the same bytes again changes
+inside a project (``projects/<code>/local/state/...`` of the workspace when the project marker names one), or ``<machine state>/artifacts/sha256/<hex>`` without one. Writing the same bytes again changes
 nothing; reading checks the digest and the size, so a damaged file is reported and never returned. There is no
 garbage collection: the store only grows, and the project folder is in ``.gitignore``.
 """
@@ -28,7 +28,7 @@ Ref = Union[Mapping[str, Any], str]
 def _store(project: Optional[PathLike], env: Optional[Mapping[str, str]],
            home: Optional[PathLike]) -> "tuple[Path, str]":
     if project is not None:
-        return project_state_dir(project, "artifacts") / "sha256", "project"
+        return project_state_dir(project, "artifacts", env=env, home=home) / "sha256", "project"
     return state_dir("artifacts", env=env, home=home) / "sha256", "machine"
 
 

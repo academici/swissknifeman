@@ -1,7 +1,8 @@
 """The event journal file: append-only writes under a lock, reads of complete lines only.
 
 This module is the only writer of the journal (see the architecture test). A journal lives in a
-*journal directory* ``J``: ``<project>/.swissknifeman/state`` for a project, else the machine state
+*journal directory* ``J``: ``<project>/.swissknifeman/state`` for a project (``projects/<code>/local/state`` of its
+workspace when the project marker names one), else the machine state
 folder ``events``. ``J`` holds the journal itself, ``ext/journal.lock`` and the delivery files.
 
 Rules (the byte offset of a line is its stable address; nothing here rewrites or truncates):
@@ -54,7 +55,7 @@ def journal_dir(project: Optional[PathLike] = None, *, env: Optional[Mapping[str
                 home: Optional[PathLike] = None) -> Path:
     """The journal directory of ``project`` (a project root), or the machine one when ``project`` is None."""
     if project is not None:
-        return project_state_dir(project)
+        return project_state_dir(project, env=env, home=home)
     return state_dir("events", env=env, home=home)
 
 

@@ -8,7 +8,7 @@ orch reads the `[orch]` section of the layered swissknifeman configuration. The 
 ## Layers
 
 From the lowest to the highest: schema defaults, the machine file, the project file
-(`<project>/.swissknifeman/config.toml`), environment variables, the `--config FILE` of the invocation, flags.
+(`projects/<code>/local/config.toml` of the project's workspace when the project marker names one, else `<project>/.swissknifeman/config.toml`), environment variables, the `--config FILE` of the invocation, flags.
 The project is the git repository or the folder with `.swissknifeman` that contains the working directory.
 Environment variables are `SKM_ORCH_<KEY>` with `__` between path segments, for example `SKM_ORCH_ENGINE=cao` or
 `SKM_ORCH_CAPABILITIES__STALE=refuse`.

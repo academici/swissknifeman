@@ -8,7 +8,8 @@ slots, from the general to the specific::
     _all.md   <package>/_all.md   <package>/<kind>s/_all.md   <package>/<kind>s/<name>.md
 
 each looked up in two layers: the machine (``<config dir>/stubs``, ``~/.local/share/swissknifeman/config/stubs``) and the project
-(``<project>/.swissknifeman/stubs``). Within a slot the project file decides by its mode; an empty file (or one with
+(``projects/<code>/local/stubs`` of the project's workspace when the project marker names one, else
+``<project>/.swissknifeman/stubs``). Within a slot the project file decides by its mode; an empty file (or one with
 comments only) inherits the machine one, so publishing every empty file masks nothing:
 
 - ``replace`` (default): a non-empty project body replaces the machine body of the slot;
@@ -29,7 +30,7 @@ import re
 import stat
 from typing import Iterable, Mapping, Optional
 
-from aicore.state.locations import PROJECT_DIRNAME, config_dir
+from aicore.state.locations import config_dir, project_stubs_dir
 from aicore.util.digest import digest_json
 from aicore.util.redact import redact_text
 
@@ -62,7 +63,7 @@ def roots(project: Optional[os.PathLike] = None, *, env: Optional[Mapping[str, s
     if "machine" in layers:
         found["machine"] = config_dir(env=env) / "stubs"
     if "project" in layers and project is not None:
-        found["project"] = Path(project) / PROJECT_DIRNAME / "stubs"
+        found["project"] = project_stubs_dir(project, env=env)
     return found
 
 

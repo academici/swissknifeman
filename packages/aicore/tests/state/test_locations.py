@@ -1,4 +1,5 @@
 """Machine and project locations, SKM_HOME isolation and the legacy lookup."""
+import json
 import os
 import tempfile
 import unittest
@@ -220,6 +221,78 @@ class ProjectLocationsTests(unittest.TestCase):
             work = home / "scratch"
             work.mkdir()
             self.assertEqual(loc.find_project_root(work, home=home), work)
+
+
+class ProjectLocalFolderTests(unittest.TestCase):
+    """A marker that names a workspace project moves config, state, backups and stubs to ``local/`` of that project."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.base = Path(temporary.name).resolve()
+        self.env = {"SKM_HOME": str(self.base / "sb")}
+        self.checkout = self.base / "checkout"
+        self.checkout.mkdir()
+        self.project = self.base / "sb" / "workspaces" / "ws" / "projects" / "alpha"
+
+    def mark(self, document=None):
+        marker = self.checkout / ".swissknifeman" / "project.json"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps(document if document is not None else
+                                     {"workspace": "ws", "project_id": "alpha", "plans_store": "workspace"}))
+
+    def legacy(self):
+        return self.checkout / ".swissknifeman"
+
+    def test_the_marker_leads_to_the_local_folder_of_the_workspace_project(self):
+        self.mark()
+        self.project.mkdir(parents=True)
+        local = self.project / "local"
+        self.assertEqual(loc.project_local_dir(self.checkout, env=self.env), local)
+        self.assertEqual(loc.project_config_file(self.checkout, env=self.env), local / "config.toml")
+        self.assertEqual(loc.project_state_dir(self.checkout, env=self.env), local / "state")
+        self.assertEqual(loc.project_state_dir(self.checkout, "orch", env=self.env), local / "state" / "orch")
+        self.assertEqual(loc.project_backups_dir(self.checkout, env=self.env), local / "backups")
+        self.assertEqual(loc.project_stubs_dir(self.checkout, env=self.env), local / "stubs")
+        self.assertFalse(local.exists(), "a lookup creates nothing")
+        self.assertEqual(loc.project_dir(self.checkout), self.legacy(), "the marker folder stays in the checkout")
+
+    def test_without_a_marker_the_project_keeps_its_own_folder(self):
+        self.project.mkdir(parents=True)
+        self.assertIsNone(loc.project_local_dir(self.checkout, env=self.env))
+        self.assertEqual(loc.project_config_file(self.checkout, env=self.env), self.legacy() / "config.toml")
+        self.assertEqual(loc.project_state_dir(self.checkout, "orch", env=self.env), self.legacy() / "state" / "orch")
+        self.assertEqual(loc.project_backups_dir(self.checkout, env=self.env), self.legacy() / "backups")
+        self.assertEqual(loc.project_stubs_dir(self.checkout, env=self.env), self.legacy() / "stubs")
+
+    def test_a_project_folder_missing_on_this_machine_keeps_the_legacy_folder(self):
+        self.mark()
+        (self.base / "sb" / "workspaces" / "ws").mkdir(parents=True)
+        self.assertIsNone(loc.project_local_dir(self.checkout, env=self.env))
+        self.assertEqual(loc.project_state_dir(self.checkout, env=self.env), self.legacy() / "state")
+
+    def test_an_unusable_marker_names_nothing(self):
+        self.project.mkdir(parents=True)
+        for document in ({"workspace": "ws"}, {"workspace": "../ws", "project_id": "alpha"}, [], "text",
+                         {"workspace": "ws", "project_id": "Alpha"}):
+            self.mark(document)
+            self.assertIsNone(loc.project_local_dir(self.checkout, env=self.env), document)
+        (self.legacy() / "project.json").write_text("{not json")
+        self.assertIsNone(loc.project_local_dir(self.checkout, env=self.env))
+
+    def test_the_workspaces_root_variable_moves_the_lookup(self):
+        self.mark()
+        other = self.base / "elsewhere"
+        (other / "ws" / "projects" / "alpha").mkdir(parents=True)
+        env = dict(self.env, SKM_WORKSPACES_ROOT=str(other))
+        self.assertEqual(loc.project_local_dir(self.checkout, env=env), other / "ws" / "projects" / "alpha" / "local")
+        self.assertIsNone(loc.project_local_dir(self.checkout, env=dict(self.env, SKM_WORKSPACES_ROOT="relative")))
+
+    def test_the_selected_workspace_does_not_matter(self):
+        self.mark()
+        self.project.mkdir(parents=True)
+        env = dict(self.env, SKM_WORKSPACE="other")
+        self.assertEqual(loc.project_local_dir(self.checkout, env=env), self.project / "local")
 
 
 class ResolveProjectTests(unittest.TestCase):

@@ -26,7 +26,8 @@ from aicore.state import (LauncherError, ProjectContextRequired, read_invocation
                           resolve_project)
 from aicore.state.invocation import (LAUNCHER_PROTOCOL, MIN_LAUNCHER_PROTOCOL, launcher_file, lock_file,
                                      read_lock)
-from aicore.state.locations import LAUNCHER_ENV, PROJECT_DIRNAME
+from aicore.state.locations import (LAUNCHER_ENV, LOCAL_DIRNAME, PROJECT_DIRNAME, project_config_file,
+                                    project_local_dir)
 
 CHECK_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
 SYNC_SCHEMA = "urn:swissknifeman:aicore:project-sync:v1"
@@ -167,7 +168,7 @@ def plans_store_of(root: Path, env: Mapping[str, str]):
 def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     """:func:`verify_checks` plus the project configuration and the write boundary of the project folders."""
     checks = verify_checks(root, env)
-    config = root / PROJECT_DIRNAME / "config.toml"
+    config = project_config_file(root, env=env)
     if not config.exists():
         checks.append(_check("project.config", "skip", f"{config} does not exist (defaults apply)", "config"))
     else:
@@ -193,13 +194,20 @@ def doctor_checks(root: Path, env: Mapping[str, str]) -> List[Dict[str, Any]]:
     except (WorkspaceError, ValueError) as exc:
         store_error = exc
     # A workspace store lives outside the project by design; only a legacy store must stay inside it.
-    boundary = [f"{PROJECT_DIRNAME}/state", f"{PROJECT_DIRNAME}/backups"]
+    # The state and the backups stay inside the project folder that holds them: the checkout, or the project folder of the
+    # workspace when the marker names one (``local/``).
+    local = project_local_dir(root, env=env)
+    home = local.parent if local is not None else root
+    boundary = [f"{LOCAL_DIRNAME}/state", f"{LOCAL_DIRNAME}/backups"] if local is not None else \
+        [f"{PROJECT_DIRNAME}/state", f"{PROJECT_DIRNAME}/backups"]
+    checked = [(home, home / relative) for relative in boundary]
     if store is None or store.kind == "legacy":
         boundary.append("plans")
+        checked.append((root, root / "plans"))
     escaped = []
-    for relative in boundary:
+    for base, candidate in checked:
         try:
-            require_project_path(root, root / relative)
+            require_project_path(base, candidate)
         except LauncherError as exc:
             escaped.append(str(exc))
     checks.append(_check("project.write-boundary", "fail" if escaped else "ok",
@@ -302,9 +310,9 @@ def _context(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO
     context = read_invocation_context(cwd, env=env)
     if context.project_root is not None:
         plans_root, plans_store, _error = plans_store_of(context.project_root, env)
-        doc = context.to_json(plans_root, plans_store)
+        doc = context.to_json(plans_root, plans_store, env=env)
     else:
-        doc = context.to_json()
+        doc = context.to_json(env=env)
     if doc["launcher"] is not None and context.project_root is not None:
         try:
             lock = read_lock(context.project_root)

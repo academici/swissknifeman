@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
 
 from aicore.config import ConfigError
-from aicore.state import ProjectContextRequired
+from aicore.state import ProjectContextRequired, project_state_dir
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
 from orch import (adhoc, catalog, conformance, events, journal, launch, policies, project as project_mod, render,
@@ -456,8 +457,14 @@ def _gitignore_checks(project: Path | None) -> list:
     if project is None or not (project / ".git").exists():
         return [_check("orch.conductor-gitignore", "skip", "not inside a git repository")]
     rows = []
-    runtime = _ignored(project, RUNTIME_PROBE)
-    if runtime is None:
+    runtime_dir = Path(os.path.abspath(project_state_dir(project, "orch")))
+    outside = not runtime_dir.is_relative_to(Path(os.path.abspath(project)))
+    runtime = None if outside else _ignored(project, RUNTIME_PROBE)
+    if outside:  # the marker names a workspace project: the runtime folder is its local/ folder, never in this tree
+        rows.append(_check("orch.conductor-gitignore", "ok",
+                           "the conductor runtime folder is in the local folder of the workspace project, outside "
+                           "this checkout", evidence=[str(runtime_dir)]))
+    elif runtime is None:
         rows.append(_check("orch.conductor-gitignore", "skip", "git check-ignore did not answer"))
     elif runtime:
         rows.append(_check("orch.conductor-gitignore", "ok", "the conductor runtime folder is ignored",
@@ -985,7 +992,7 @@ def _main(argv: list[str] | None = None) -> int:
     actions = command.add_subparsers(dest="action", required=True)
     publish = actions.add_parser("publish", help="create the missing stub files (never overwrites one)")
     publish.add_argument("--scope", choices=("project", "machine"), default="project",
-                         help="project: <project>/.swissknifeman/stubs (default); machine: ~/.local/share/swissknifeman/config/stubs")
+                         help="project: local/stubs of the project in its workspace, else <project>/.swissknifeman/stubs (default); machine: ~/.local/share/swissknifeman/config/stubs")
     publish.add_argument("--dry-run", action="store_true", help="say what would be created, write nothing")
     publish.add_argument("--json", action="store_true")
     listing = actions.add_parser("list", help="the effective stubs of every role (read-only)")

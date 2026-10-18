@@ -1,0 +1,100 @@
+{
+  "changed_paths": [
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/README.md",
+    "packages/aicore/lib/aicore/config/cli.py",
+    "packages/aicore/lib/aicore/config/model.py",
+    "packages/aicore/lib/aicore/ext/journal.py",
+    "packages/aicore/lib/aicore/project/cli.py",
+    "packages/aicore/lib/aicore/state/__init__.py",
+    "packages/aicore/lib/aicore/state/backups.py",
+    "packages/aicore/lib/aicore/state/blobs.py",
+    "packages/aicore/lib/aicore/state/invocation.py",
+    "packages/aicore/lib/aicore/state/locations.py",
+    "packages/aicore/lib/aicore/stubs.py",
+    "packages/aicore/lib/aicore/workspace/localconfig.py",
+    "packages/aicore/tests/config/test_project_local.py",
+    "packages/aicore/tests/state/test_backups.py",
+    "packages/aicore/tests/state/test_locations.py",
+    "packages/aicore/tests/test_project_cli.py",
+    "packages/aicore/tests/test_stubs.py",
+    "packages/orch/docs/conductor.md",
+    "packages/orch/docs/configuration.md",
+    "packages/orch/lib/orch/cli.py",
+    "packages/orch/tests/test_conductor_contracts.py",
+    "packages/planner/docs/configuration.md",
+    "packages/planner/tests/engine/test_settings.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "settings in a legacy .swissknifeman/config.toml of a marked project silently stop applying until moved to local/config.toml",
+      "kind": "note",
+      "next": "decide whether a later piece (or workspace project attach) copies the legacy config/state into local/; a read fallback to the legacy file would be a small change in project_config_file",
+      "text": "No migration: for a marked project whose workspace project folder exists, an existing <checkout>/.swissknifeman/config.toml and .swissknifeman/state/ (and backups/stubs) are no longer read; the project layer is local/config.toml. This repo's own tracked .swissknifeman/config.toml stops applying on a machine that has workspace axioma/projects/swissknifeman. I chose a deterministic rule (marker + folder exists) over a file-existence fallback."
+    },
+    {
+      "impact": "repo.path in local/config.toml is still not written or read by anything; bindings.json stays the source of the checkout path",
+      "kind": "pending",
+      "next": "the piece that retires bindings must decide what happens to extra checkouts (bindings has many paths per project, repo.path is one)",
+      "text": "bindings.json is still used: attach, bind, scan, rebind, detach, project_rows, doctor, integration.check_project, projects.remove and aicore source_root_of were not moved to localconfig.repo_path/set_repo_path. They are in packages/workspace (outside scope.include) and are writers, not readers; this piece moved the readers of the project folders only."
+    },
+    {
+      "impact": "observer reports of a marked project still land in the checkout; the orch doctor reports-ignored check is unchanged",
+      "kind": "note",
+      "next": "move reports only together with the scope logic if the owner wants them in local/",
+      "text": "Orch REPORTS (.swissknifeman/orch/reports) and orch-artifacts (.swissknifeman/orch-artifacts) stay in the checkout; the conductor's git-scope logic (scopes.own/dirty) uses these checkout-relative paths. Only conductor/journal state (project_state_dir) moved to local/."
+    },
+    {
+      "impact": "P3.3, P3.4, P3.5",
+      "kind": "note",
+      "next": "use project_local_dir / project_stubs_dir instead of building .swissknifeman paths",
+      "text": "Lookup rule for later pieces: project_local_dir needs only workspace + project_id from the marker (so a launcher-only marker works) and returns None while <workspaces>/<ws>/projects/<code> does not exist (e.g. a fresh clone before workspace clone); local/ itself need not exist, writers must use localconfig.ensure_local. P3.4/P3.5 can read repo path and local dir through aicore.workspace.localconfig or aicore.state.project_local_dir; SKM_WORKSPACES_ROOT is honoured, SKM_WORKSPACE is not (the marker names the workspace)."
+    },
+    {
+      "impact": "a project with a local/ folder cannot be removed",
+      "kind": "pending",
+      "next": "decide in the workspace-side piece",
+      "text": "projects.remove still treats local/ as held (PROJECT_NOT_EMPTY): not touched, since packages/workspace is outside scope.include and the question of whether local/ counts as held is open from P3.1."
+    },
+    {
+      "class": "test_env",
+      "impact": "V1 may be red on subprocess tests while the frozen aicore copy is stale",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "AICORE_ROOT in the conductor environment points to a frozen copy taken before the P3.1/P3.2 changes. Tests that run a subprocess against it (workspace test_the_launcher_runs_the_module; any subprocess importing project_stubs_dir/project_local_dir) can fail under V1 for that reason only. All my runs used AICORE_ROOT=packages/aicore."
+    },
+    {
+      "impact": "V1 may fail in analyst independent of this piece",
+      "kind": "difficulty",
+      "next": "report to the owner / fix in analyst separately",
+      "text": "packages/analyst tests.test_scan has 3 failures (pattern ids 'axioma-cross-project-shared-lesson-...' in the listing). They fail the same on a clean worktree of HEAD, so they are pre-existing and unrelated; V1 may be red on them."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/planner/tests/engine/test_settings.py"
+      ],
+      "impact": "planner test changed to the new contract",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "The existing planner test test_new_plan_takes_the_configuration_and_the_name_of_the_bound_checkout wrote the project layer into the checkout's .swissknifeman/config.toml of a workspace-bound project; with the new rule that file is not read, so the test now writes local/config.toml of the workspace project (and a new test pins that the checkout file is ignored)."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/aicore/lib/aicore/state/locations.py (project_local_dir and the fallback rule)",
+      "packages/aicore/lib/aicore/state/backups.py (_relative for local/ files)",
+      "packages/aicore/lib/aicore/project/cli.py (doctor write-boundary)"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "shared_module_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "aicore.state project_config_file/project_state_dir/project_backups_dir (new env=/home= args) and the new project_stubs_dir/project_local_dir now resolve through the marker .swissknifeman/project.json to <workspace>/projects/<code>/local/{config.toml,state,backups,stubs} when that workspace project folder exists on the machine; otherwise (no marker, unusable marker, folder missing) they keep .swissknifeman/ as before. The config project layer, config CLI (set/paths), backups (local files under <stamp>/local/...), blobs, journal, stubs, project context 'config' and project doctor (config + write-boundary of local/state and local/backups) follow; planner settings, orch conductor state and the other callers follow through the same functions. Orch doctor reports a runtime folder outside the checkout as ok. Tests, docs and the aicore changelog updated. Unit tests run instead of V1 (not run, the conductor runs it): aicore full unittest discover (1765 OK), workspace (328 OK), planner test_settings (35 OK), planner test_launcher_mode/test_workspace/test_commit/test_commits_read/test_refs (115 OK), orch test_conductor_contracts (22 OK), skiller test_provider_config, harness test_run_plan_reader; scripts/ecosystem-units.py check exits 0."
+}

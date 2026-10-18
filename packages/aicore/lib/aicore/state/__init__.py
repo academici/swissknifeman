@@ -10,7 +10,7 @@ from .locations import (Locations, ProjectContext, ProjectContextConflict, Proje
                         machine_locations, project_backups_dir, project_config_file, project_dir, project_state_dir,
                         resolve_project, resolve_with_legacy, same_path, state_dir, workspace_root,
                         workspace_state_dir, WorkspaceSelectionError, device_file, is_code, list_workspaces,
-                        selected_workspace, workspaces_root)
+                        selected_workspace, workspaces_root, project_local_dir, project_stubs_dir)
 from .invocation import (InvocationContext, LauncherError, ProjectWriteError, read_invocation_context,
                          require_project_path, validate_launcher_env)
 from .locations import legacy_machine_dirs, machine_home
@@ -25,5 +25,5 @@ __all__ = [
     "put_json", "read_bytes", "read_invocation_context", "require_project_path", "resolve_project",
     "resolve_with_legacy", "same_path", "state_dir", "validate_launcher_env", "workspace_root",
     "workspace_state_dir", "WorkspaceSelectionError", "device_file", "is_code", "list_workspaces",
-    "selected_workspace", "workspaces_root",
+    "selected_workspace", "workspaces_root", "project_local_dir", "project_stubs_dir",
 ]

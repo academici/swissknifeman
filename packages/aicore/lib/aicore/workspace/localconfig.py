@@ -16,13 +16,12 @@ from typing import Any, Dict, Optional, Union
 
 from aicore.config import ConfigError, toml, toml_edit
 from aicore.config.model import CONFIG_FILE_VERSION, layer_lock
-from aicore.state.locations import ensure_dir
+from aicore.state.locations import LOCAL_DIRNAME, ensure_dir
 from aicore.util.io import atomic_write_text
 
 from . import WorkspaceError
 from .documents import project_dir, validate_document
 
-LOCAL_DIRNAME = "local"
 CONFIG_FILE = "config.toml"
 LOCAL_FOLDERS = ("state", "backups", "stubs")
 KIND = "project-local-config"

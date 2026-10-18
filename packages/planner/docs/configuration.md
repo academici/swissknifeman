@@ -10,7 +10,7 @@ From the lowest to the highest priority:
 
 1. schema defaults;
 2. the machine file (`config.toml` in the swissknifeman configuration folder, `~/.local/share/swissknifeman/config` by default);
-3. the project file (`.swissknifeman/config.toml`);
+3. the project file (`projects/<code>/local/config.toml` of the project's workspace when the project marker `.swissknifeman/project.json` names one that is on this machine, else `.swissknifeman/config.toml`);
 4. `plan.settings` of the plan (only `context_budget_kb`, which sets `context.budget_kb`);
 5. environment variables named `SKM_PLANNER_<TABLE>__<KEY>` in capitals, for example `SKM_PLANNER_CONTEXT__BUDGET_KB=512`;
 6. the file given with `--config`;

@@ -1,8 +1,9 @@
 """Timestamped backups with rotation, replacing ``*.bak`` files next to the original.
 
 A backup lands in ``<backups>/<stamp>/<relative path>`` where ``<backups>`` is the project's
-``.swissknifeman/backups`` for a file inside the project and the machine state directory's
-``backups`` otherwise. Rotation looks only at stamp-named sub-directories of that directory,
+``.swissknifeman/backups`` (``projects/<code>/local/backups`` of the workspace when the project marker names one, see
+:func:`.locations.project_local_dir`) for a file inside the project and the machine state directory's ``backups``
+otherwise. Rotation looks only at stamp-named sub-directories of that directory,
 so anything else stored next to them is never touched. The rotation window counts stamps of
 one backups directory, not files. stdlib only.
 """
@@ -15,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Mapping, Optional, Tuple
 
-from .locations import PathLike, project_backups_dir, state_dir
+from .locations import PathLike, project_backups_dir, project_local_dir, state_dir
 
 DEFAULT_KEEP = 10
 _STAMP_FORMAT = "%Y%m%dT%H%M%S%fZ"
@@ -38,18 +39,25 @@ def _order(name: str):
 def _backups_root(project: Optional[PathLike], env: Optional[Mapping[str, str]],
                   home: Optional[PathLike]) -> Path:
     if project is not None:
-        return project_backups_dir(project)
+        return project_backups_dir(project, env=env, home=home)
     return state_dir(env=env, home=home) / "backups"
 
 
 def _relative(source: Path, project: Optional[PathLike], env: Optional[Mapping[str, str]],
               home: Optional[PathLike]) -> Tuple[bool, Path]:
-    """(inside the project, path of the copy below the stamp directory)."""
+    """(inside the project, path of the copy below the stamp directory). The ``local/`` folder of the project in its
+    workspace (``local/config.toml``) is part of the project: its copies keep the ``local/`` prefix."""
     if project is not None:
         try:
             return True, source.relative_to(Path(os.path.abspath(project)))
         except ValueError:
             pass
+        local = project_local_dir(project, env=env, home=home)
+        if local is not None:
+            try:
+                return True, Path(local.name) / source.relative_to(Path(os.path.abspath(local)))
+            except ValueError:
+                pass
     user = Path(os.path.abspath(home if home is not None else (
         (env if env is not None else os.environ).get("HOME") or Path.home())))
     try:

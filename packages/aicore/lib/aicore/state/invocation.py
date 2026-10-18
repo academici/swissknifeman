@@ -18,7 +18,8 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from .locations import (ENV_INVOCATION_CWD, ENV_LAUNCHER_ACTIVE, ENV_LAUNCHER_PATH, ENV_LAUNCHER_PID,
                         ENV_LAUNCHER_PROTOCOL, ENV_LAUNCHER_ROOT, ENV_PROJECT_ROOT, LAUNCHER_ENV, LAUNCHER_NAME,
-                        PROJECT_DIRNAME, PathLike, ProjectContextRequired, launcher_root, resolve_project, same_path)
+                        PROJECT_DIRNAME, PathLike, ProjectContextRequired, launcher_root, project_config_file,
+                        resolve_project, same_path)
 
 # The launcher protocol changes only with the environment contract, its checks or the managed file set; a hub release
 # that keeps them keeps the protocol, so a project never needs a sync for an ordinary fix.
@@ -62,10 +63,12 @@ class InvocationContext:
     launcher_protocol: Optional[int] = None
 
     def to_json(self, plans_root: Optional[PathLike] = None,
-                plans_store: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+                plans_store: Optional[Mapping[str, Any]] = None,
+                env: Optional[Mapping[str, str]] = None) -> Dict[str, Any]:
         """The ``invocation-context/v1`` document. ``plans_root`` and ``plans_store`` come from the caller that resolved
         the plan store of the project marker (``aicore.workspace`` lies above ``state``); without them ``plans_root`` is
-        ``<root>/plans`` and ``plans_store`` is ``null``."""
+        ``<root>/plans`` and ``plans_store`` is ``null``. ``config`` is the project layer file of the configuration
+        (:func:`project_config_file`: ``local/config.toml`` of the workspace project when the marker names one)."""
         root = self.project_root
         if plans_root is None and root is not None:
             plans_root = root / "plans"
@@ -77,7 +80,7 @@ class InvocationContext:
             "marker": self.marker,
             "launcher": {"path": str(self.launcher_path), "protocol": self.launcher_protocol}
             if self.launcher_path else None,
-            "config": str(root / PROJECT_DIRNAME / "config.toml") if root else None,
+            "config": str(project_config_file(root, env=env)) if root else None,
             "plans_root": str(plans_root) if plans_root else None,
             "plans_store": dict(plans_store) if plans_store else None,
         }

@@ -1062,7 +1062,7 @@ Run policy остаётся сценарием orchestration, а item review я�
 - Добавить material/RAG policy с provenance и citations.
 - Разделить estimate и budget.
 - Добавить review-specific budget.
-- Materialize review в roadmap/templates.
+- Materialize review в шаблоны roadmap.
 - Добавить config registry и `CONFIG_UNREGISTERED` CI check.
 - Сделать local runtime config sparse overlay, а не копию defaults.
 - Добавить config migration/versioning.

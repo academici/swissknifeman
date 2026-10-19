@@ -256,6 +256,16 @@ class OrchestrationTests(Case):
             {"source": "document:orchestration-p1", "options": {"rules": ["phase rule"]}},
             {"source": "document:orchestration-p1-1", "options": {"limits": {"review_rounds": 1}}}])
 
+    def test_a_piece_routed_to_another_executor_starts_under_the_executor_of_its_options(self):
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"route": {"class": "implementation", "effort": "xhigh", "provider": "codex", "model": "gpt-6.1-sol"}}))
+        self.overlay("orchestration-p1-1", ["P1.1"], {"options": {"stages": [
+            {"role": "executor", "provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh"}]}})
+        answer = self.claim(items=["P1.1"])  # the claimed default (ACTOR) is claude-code: the options name codex
+        self.assertEqual(answer["status"], "claimed")
+        self.assertEqual(self.item("P1.1")["result"]["executor"],
+                         {"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh", "session": "run-a"})
+
     def test_an_unknown_plan_is_refused_with_the_planner_message_not_its_json(self):
         answer = self.op(worksource.op_claim, op="claim", plan="no-such-plan", items=["P1.1"], run_id="run-z",
                          submission_id="sub-z", actor=ACTOR)

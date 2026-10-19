@@ -223,6 +223,15 @@ def orchestration_of(context: dict, ref: str) -> tuple:
     return scenario, source, layers
 
 
+def executor_actor(layers: list) -> dict | None:
+    """The executor the options of the piece name (the last ``executor`` stage: the most specific layer), else None."""
+    for layer in reversed(layers or []):
+        for stage in (layer.get("options") or {}).get("stages") or []:
+            if stage.get("role") == "executor" and stage.get("provider") and stage.get("model"):
+                return {key: stage[key] for key in ("provider", "model", "effort") if stage.get(key)}
+    return None
+
+
 def op_claim(fields: dict) -> dict:
     plan, plans_root, run_id = fields["plan"], fields.get("plans_root"), fields["run_id"]
     items = fields.get("items") or []
@@ -257,8 +266,10 @@ def op_claim(fields: dict) -> dict:
         # An item this very attempt already closed stays claimed by the run: its claim is answered again, unchanged.
         if (doc.get("result") or {}).get("attempt_id") != attempt_id:
             # A batch starts its pieces one after another, each under its own run: a dependency that is in progress
-            # (an earlier piece of the batch) counts as met.
-            plan_json(["start", plan, ref, "--actor", actor_text(fields["actor"]), "--session", run_id,
+            # (an earlier piece of the batch) counts as met. The executor is the one the piece's options name (the
+            # route is checked against it), else the claimed default.
+            actor = executor_actor(layers) or fields["actor"]
+            plan_json(["start", plan, ref, "--actor", actor_text(actor), "--session", run_id,
                        "--no-scout", "--json", *(["--in-progress-deps"] if fields.get("batch") else [])],
                       plans_root, code="START_REFUSED")
     except Blocked as blocked:

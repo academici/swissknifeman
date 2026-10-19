@@ -462,6 +462,17 @@ class TestDoctor(unittest.TestCase):
         self.assertIn("timed out", by_id["slow.doctor"]["observed"])
         self.assertEqual("ok", by_id["fast.one"]["status"])
 
+    def test_a_probe_sees_the_roots_of_the_modules_of_the_hub(self):
+        """The doctor starts its probes with the partner roots a routed module gets (the probe of a bridge looks for them)."""
+        folder = probe_unit(self.hub, "aicore", "pass", [])
+        self.hub.env.pop("AICORE_ROOT", None)  # a root the caller set wins, and an earlier in-process test may have left one
+        probe_unit(self.hub, "viewer", "import os\n"
+                   f"print(json.dumps([{{**{check('viewer.one')!r}, 'observed': os.environ.get('AICORE_ROOT', 'unset')}}]))",
+                   ["viewer.one"])
+        rc, doc = self.json()
+        self.assertEqual(0, rc)
+        self.assertEqual(str(folder), {r["check_id"]: r for r in doc["results"]}["viewer.one"]["observed"])
+
     def test_units_without_doctor_are_listed(self):
         make_unit(self.hub.packages, "plain", ["bin/plain"])
         probe_unit(self.hub, "good", f"print(json.dumps([{check('good.one')!r}]))", ["good.one"])

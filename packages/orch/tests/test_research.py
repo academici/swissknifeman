@@ -122,10 +122,10 @@ class ProcessGroupTests(ResearchCase):
         marker = self.root / "child.pid"
         script = self.root / "slow.py"
         script.write_text("import subprocess, sys, time\n"
-                          "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])\n"
+                          "child = subprocess.Popen(['sleep', '60'])\n"
                           f"open({str(marker)!r}, 'w').write(str(child.pid))\n"
                           "time.sleep(60)\n", encoding="utf-8")
-        source = sources.Source(id="slow", kind="command", argv=(PY, str(script)), timeout_s=1)
+        source = sources.Source(id="slow", kind="command", argv=(PY, str(script)), timeout_s=3)  # the script only starts `sleep` (no second interpreter): the marker exists long before
         with self.assertRaises(sources._Busy):
             sources._command(source, "q", cwd=self.root)
         pid = int(marker.read_text())

@@ -251,7 +251,7 @@ There is no search by neighbouring folders. The planner is found the same way (`
 a `planner` command on `PATH`; the dispatcher sets the first two) and the foundation by `AICORE_ROOT`, then
 `_vendor/aicore`, then `packages/aicore` of the hub that holds the bridge. The bridge never imports orch; it calls `python3 <orch>/scripts/orch.py validate <kind> <file>`. When orch
 is required and missing, `require_orch()` prints `BRIDGE_PARTNER_UNAVAILABLE: orch not found (set
-SKM_ORCH_ROOT)` and exits 3. Check-evidence: the Task core checks its own field contract
+SKM_ORCH_ROOT)` and exits 3. `doctor.py` is the same lookup as a doctor row (`planner-orch.partners`, `swissknifeman doctor`). Check-evidence: the Task core checks its own field contract
 (`plan.py schema check-evidence`) with any `$schema`, so exec/v1 check-evidence passes unconverted;
 `test_conformance.py` proves it on orch's fixtures.
 

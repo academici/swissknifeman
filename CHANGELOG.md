@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- doctor: `planner-orch.partners` (`bridges/planner-orch/doctor.py`) says whether the bridge finds the planner and orch; `swissknifeman doctor` exports the roots of the hub modules to its probes first, as a routed module gets them, so the row fails only when a conductor run would stop with `BRIDGE_PARTNER_UNAVAILABLE`.
+
+### Fixed
+
+- orch: the empty read-only files a Claude Code sandbox mounts over forbidden paths (`.bashrc`, `.claude/hooks`, ...) are no longer changed paths of the tree (`scope.dirty`), so a conductor commit cannot take them along. Sixteen of them were committed with an item once and are removed from the index; the test `test_an_untracked_empty_read_only_file_is_not_a_dirty_path_but_a_real_one_is` guards it.
+- orch tests: the time-out test of a command source starts `sleep` instead of a second interpreter and allows 3 s, so it no longer fails under load.
+
 ## [0.31.0] - 2026-10-19
 
 ### Added

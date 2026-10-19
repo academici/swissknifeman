@@ -540,6 +540,7 @@ def doctor_command(args: Sequence[str], units: Optional[Mapping[str, Any]] = Non
     if unknown:
         print(f"UNIT_UNKNOWN: no module {unknown[0]!r}; known: {', '.join(units) or 'none'}", file=sys.stderr)
         return 2
+    export_partner_roots(units, load_config())  # the probes see the partners as a routed module does
     doc = collect_doctor(units, unit_ids, categories, timeout)
     results = doc["results"]
     failed = any(item["status"] == "fail" for item in results)

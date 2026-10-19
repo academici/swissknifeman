@@ -13,13 +13,24 @@ from fnmatch import fnmatchcase
 from functools import lru_cache
 import hashlib
 from pathlib import Path
+import stat
 
 from orch.conductor import checks as checks_mod
 
 
+def sandbox_stub(project: Path, path: str) -> bool:
+    """An empty read-only regular file: the placeholder a Claude Code sandbox (bwrap) mounts over a path it forbids
+    (``.bashrc``, ``.claude/hooks``, ...) while a command runs. It is no work of a role and must never reach a commit."""
+    try:
+        mode = (project / path).lstat()
+    except OSError:
+        return False
+    return stat.S_ISREG(mode.st_mode) and mode.st_size == 0 and not mode.st_mode & 0o222
+
+
 def dirty(project: Path) -> list:
     """Every changed, added, deleted or untracked path of the working tree (both names of a rename); ignored paths
-    are not listed."""
+    and the placeholders of a sandbox (:func:`sandbox_stub`, untracked only) are not listed."""
     listing = checks_mod.git(project, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     entries, found, index = listing.split("\0"), [], 0
     while index < len(entries):
@@ -27,7 +38,8 @@ def dirty(project: Path) -> list:
         index += 1
         if not entry:
             continue
-        found.append(entry[3:])
+        if not (entry[:2] == "??" and sandbox_stub(project, entry[3:])):
+            found.append(entry[3:])
         if entry[0] in "RC" and index < len(entries):  # the original name of a rename or copy follows
             found.append(entries[index])
             index += 1

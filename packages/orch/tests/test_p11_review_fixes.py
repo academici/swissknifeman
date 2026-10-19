@@ -81,3 +81,24 @@ class RepositoryRulesWalk(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SandboxPlaceholdersAreNoWork(unittest.TestCase):
+    """The sandbox of Claude Code mounts empty read-only files over forbidden paths while a command runs; they were
+    committed with an item once (``.bashrc``, ``.claude/hooks``)."""
+
+    def test_an_untracked_empty_read_only_file_is_not_a_dirty_path_but_a_real_one_is(self):
+        import os
+        import subprocess
+        from orch.conductor import scope
+
+        root = Path(tempfile.mkdtemp())
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        (root / ".claude").mkdir()
+        for name in (".bashrc", ".claude/hooks"):
+            (root / name).write_text("", encoding="utf-8")
+            os.chmod(root / name, 0o444)
+        (root / "empty.txt").write_text("", encoding="utf-8")  # writable: a role's own empty file
+        (root / "locked.txt").write_text("x", encoding="utf-8")
+        os.chmod(root / "locked.txt", 0o444)  # read-only but not empty
+        self.assertEqual(scope.dirty(root), ["empty.txt", "locked.txt"])

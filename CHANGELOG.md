@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-10-19
+
 ### Added
 
 - doctor: `planner-orch.partners` (`bridges/planner-orch/doctor.py`) says whether the bridge finds the planner and orch; `swissknifeman doctor` exports the roots of the hub modules to its probes first, as a routed module gets them, so the row fails only when a conductor run would stop with `BRIDGE_PARTNER_UNAVAILABLE`.

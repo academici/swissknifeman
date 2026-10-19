@@ -8,6 +8,16 @@ Run it through the project launcher (`python3 -I .swissknifeman/launcher.py orch
 its bridge documents the exact command and the fields of its answer (for the planner: the section "Agent mode" of
 `bridges/planner-orch/README.md`).
 
+## Terms
+
+"Orchestration" means `orch conduct`: the conductor starts the roles of a run itself, so an agent that is asked to
+orchestrate a plan runs `orch conduct run` and watches it. Driving the pieces by hand (starting, finishing and
+committing them itself, with the Agent tool as the executor) is manual execution; it is a fallback for a conductor that
+cannot start, and each such piece is recorded as a deviation in the journal of the work source. A plan says what to do
+and how it is proved; it does not prescribe the executor, its model or the review loop (those come from the route and
+review of a piece and from the run options). A piece started by hand is owned by that session until
+`orch conduct run --adopt` takes it over.
+
 ## 1. Ask for the lanes
 
 Ask the work source which pieces may start now, for at most `N` parallel lanes. The answer must give, per lane, the pieces

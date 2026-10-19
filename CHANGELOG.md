@@ -4,6 +4,7 @@
 
 ### Changed
 
+- orch docs: `agent-mode.md` gets a "Terms" section (orchestration is `orch conduct`; manual execution is a logged fallback; a plan does not prescribe the executor workflow).
 - audit 2026-10-17, orch: `orch conduct prune --older-than DAYS [--dry-run] [--apply]` removes the state, reports and fallback artifacts of runs that ended long ago (a dry run unless `--apply`; the latest, a running and an unreadable run stay).
 - audit 2026-10-17, Codex/Grok hooks: the hook command no longer runs `lifecycle.py` of whatever repository the current directory is in; from the git root it goes up while the enclosing repository also holds the handler, so a repository cloned or vendored inside the project cannot supply the handler. Compromise: a nested repository outside any project with the handler still runs its own. Re-apply with `harness hooks` to refresh installed `hooks.json`.
 - audit 2026-10-17, size limits: `event`, `plugin-request`, `plugin-response`, gui `run-api`, `stream`, `terminal` and `view-data` use `maxLength`, `maxItems` and `maxProperties` (only limits tied to the code or to an identifier: response `diagnostics` 20 as the host enforces, log frame text 64 KiB, ids and paths; sizes that a configuration already sets stay out of the schemas: event data bytes, plugin stdout `limits.max_stdout_bytes`, gui `runs.chunk_bytes`); `schema compat` reports them as `bound-tightened` warnings; one invalid example per changed contract.

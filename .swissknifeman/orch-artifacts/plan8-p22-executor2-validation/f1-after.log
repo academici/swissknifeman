@@ -1,9 +1,0 @@
-test_unknown_started_key_can_be_settled_then_resumed_without_repeating_work (tests.test_resume_reconcile.ResumeReconcileTests.test_unknown_started_key_can_be_settled_then_resumed_without_repeating_work) ... ok
-test_retry_discards_unknown_unfinished_steps_before_reconciliation (tests.test_resume_reconcile.ResumeReconcileTests.test_retry_discards_unknown_unfinished_steps_before_reconciliation) ... ok
-test_closed_outcomes_discard_only_started_and_stopped_records (tests.test_resume_reconcile.ResumeReconcileTests.test_closed_outcomes_discard_only_started_and_stopped_records) ... ok
-test_retry_still_refuses_an_unblocked_interrupted_item (tests.test_resume_reconcile.ResumeReconcileTests.test_retry_still_refuses_an_unblocked_interrupted_item) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 7.615s
-
-OK

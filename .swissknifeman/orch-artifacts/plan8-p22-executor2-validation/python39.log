@@ -1,3 +1,0 @@
-packages/orch/lib/orch/conductor/application/recovery.py: Python 3.9 syntax OK
-packages/orch/lib/orch/conductor/application/run_service.py: Python 3.9 syntax OK
-packages/orch/tests/test_resume_reconcile.py: Python 3.9 syntax OK

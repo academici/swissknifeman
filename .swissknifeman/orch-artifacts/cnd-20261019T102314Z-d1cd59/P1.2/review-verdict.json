@@ -1,0 +1,51 @@
+{
+  "item": "P1.2",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "medium",
+          "failure_scenario": "The `stage.skip` event hard-codes `stage=\"scout\"`. Only context-scout can reach this branch in a real run today, so nothing is wrong yet. If another role is later added to OPTIONAL_ROLES and routed here, its skip event would be attributed to the scout stage.",
+          "id": "F1",
+          "location": "packages/orch/lib/orch/conductor/policies/routing.py:53",
+          "reproduction": "read routing.py:44-54",
+          "severity": "Nit"
+        },
+        {
+          "basis": "project rule",
+          "confidence": "medium",
+          "failure_scenario": "The report-fixer branch now records any Stop (for example an unresolved model) in `unavailable`. A dry-run therefore shows `available[\"report-fixer\"]: false` where the failure used to be silent. The docs describe this only for LAUNCH_* codes. The output is informative but is an undocumented widening of the preview.",
+          "id": "F2",
+          "location": "packages/orch/lib/orch/conductor/policies/routing.py:58",
+          "reproduction": "dry-run with a catalog or mapping where report-fixer cannot resolve a model",
+          "severity": "Nit"
+        }
+      ],
+      "model": "claude-sonnet-5-5",
+      "provider": "claude-code",
+      "round": 1,
+      "session": "54c178e1-86df-4e69-9b42-fda16f95ac27",
+      "stream": "/home/vostrikov/.local/share/swissknifeman/workspaces/axioma/projects/swissknifeman/local/state/orch/conductor/cnd-20261019T102314Z-d1cd59/P1.2/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [],
+        "rejected": [
+          {
+            "finding": "F1",
+            "reason": "Not a defect today. The `stage.skip` emit runs only when `persist` is true. The only caller with persist=True is loop.py:331, which does not set `preview`. There a Stop is swallowed only for roles in OPTIONAL_ROLES, which is `{context-scout, report-fixer}`. report-fixer is routed in a separate block, so only context-scout can reach the emit, and `stage=\"scout\"` is correct. The preview in cli.py:53 uses persist=False and never emits. The finding itself says it matters only if a role is added to OPTIONAL_ROLES later. That is speculative, a Nit, and outside the contract of this item."
+          },
+          {
+            "finding": "F2",
+            "reason": "Not a defect. Before this change the report-fixer Stop was swallowed silently. Now it is also recorded in the `unavailable` dict that routes() returns, and only the dry-run preview in cli.py:53 uses that dict. Real-run behaviour is unchanged: the route is popped and the run continues. The extra preview entry is the intended, additive purpose of this item, which is to show why a role is unavailable. The docs at conductor.md:158-159 say an optional scout or report-fixer is skipped, so the widening is consistent with them. No acceptance criterion or contract rule is violated."
+          }
+        ],
+        "session": "19b0ff20-b0ca-4bb8-a3c9-a2f6d0d12ff2"
+      },
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261019T102314Z-d1cd59",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "claude-code/sonnet/high"
+}

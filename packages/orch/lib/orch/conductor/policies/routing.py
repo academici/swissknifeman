@@ -27,7 +27,9 @@ def entry(self, role: str, provider: str) -> dict:
         raise Stop(error.code, str(error)) from None
 
 
-def routes(self, item: Item, persist: bool = True) -> None:
+def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dict:
+    """Select routes and return unavailable roles for a preview; required launch errors stop a real run."""
+    unavailable = {}
     roles = ["executor"]
     if self._scout_stage(item) is not None:
         roles.insert(0, "context-scout")
@@ -40,16 +42,28 @@ def routes(self, item: Item, persist: bool = True) -> None:
     if self._advisor_on():
         roles.append("advisor")
     for role in roles:
-        item.routes[role] = self._selected(item, role, persist)
+        try:
+            item.routes[role] = self._selected(item, role, persist)
+        except Stop as stop:
+            if stop.code not in ("LAUNCH_UNKNOWN", "LAUNCH_REFUSED") or (not preview and role not in OPTIONAL_ROLES):
+                raise
+            item.routes.pop(role, None)
+            unavailable[role] = f"{stop.code}: {stop.message}"
+            if persist and self.progress is not None:
+                self.progress.emit("stage.skip", item=item.ref, stage="scout", role=role,
+                                   reason_code=stop.code, message=f"{stop.message}; optional stage skipped")
     if item.options["limits"].get("repairs", 0) > 0:
         try:  # optional: without a launch entry or a model for it, results are only healed and repeated
             item.routes["report-fixer"] = self._selected(item, "report-fixer", persist)
-        except Stop:
-            pass
-    self._route_minimum(item)
+        except Stop as stop:
+            item.routes.pop("report-fixer", None)
+            unavailable["report-fixer"] = f"{stop.code}: {stop.message}"
+    if "executor" in item.routes:
+        self._route_minimum(item)
     if persist:
         self._preflight(item)
         write_json(item.directory / "routes.json", item.routes)
+    return unavailable
 
 
 def route_problem(self, route: dict) -> str | None:

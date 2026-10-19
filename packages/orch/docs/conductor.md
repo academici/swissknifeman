@@ -156,6 +156,7 @@ The conductor stops only on:
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
 | `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` stops with `TRANSPORT_UNSUPPORTED`. Wrapped commands check the provider after `--` as well as the launcher |
+| `LAUNCH_REFUSED` | the role/provider pair is explicitly refused in the launch catalog; the message is `<role>/<provider>: <reason>`. Required roles stop before work; optional scout/report-fixer roles are skipped |
 | `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after healing, repair and `limits.retries` |
 | `PROVIDER_AUTH`, `PROVIDER_AUTHZ` | the provider refused the credentials or the operation (class `authentication`, `authorization`): never repeated, log in or fix the access, then resume |
 | `PROVIDER_QUOTA` | the usage limit is exhausted (class `quota`, `rate_limit`) and the reset is further than `limits.provider_wait_max_s` or unknown, with no admissible `fallback_routes` entry; or the provider of a role is gated on this machine (see Capacity gates). The message names the reset time (UTC) and says `resume after` it |
@@ -725,19 +726,46 @@ a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}`
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.
 
+Every launch role/provider pair has exactly one entry or refusal in `configs/launch-catalog.json`:
+
+| Role | claude-code | codex | grok |
+| --- | --- | --- | --- |
+| scout | ✓ | ✓ | ✓ |
+| executor | ✓ | ✓ | ✓ |
+| bounded-implementer | ✓ | ✓ | ✓ |
+| reviewer | ✓ | ✓ | ✓ |
+| triager | ✓ | ✓ | ✓ |
+| registrar | ✓ | ✓ | refused: plan writes outside checkout |
+| report-fixer | ✓ | ✓ | ✓ |
+| researcher | ✓ | refused: read-only has no network | ✓ |
+| advisor | ✓ | refused: read-only has no network | ✓ |
+
+`refusals: {role: {provider: reason}}` is optional for older catalogs. Each reason is a non-empty string of at most
+300 characters; a pair cannot appear in both `launch` and `refusals`. Lookup of a refused pair returns
+`LAUNCH_REFUSED: <role>/<provider>: <reason>`, while a pair in neither section keeps `LAUNCH_UNKNOWN`.
+Required roles stop before work; optional roles (`context-scout`, `report-fixer`) are skipped. Dry-run marks such
+roles `available: false` with the code and reason in `unavailable`, omitting them from `routes` because no argv
+exists. `route explain` names the refused provider and reason too. The existing registrar.codex `workspace-write`
+entry remains an explicit exception to the read-only sandbox checks.
+
 Grok's `executor` and `bounded-implementer` launch entries use jsonl under `scripts/ro-run.py --rw {cwd}`
-(implementation/high, 3600 s and economy/medium, 1800 s respectively). The `reviewer` and `report-fixer` also use
-jsonl and the same wrapper. All four read stdin through `--prompt-file /dev/stdin`, select `--model` and `--effort`,
+(implementation/high, 3600 s and economy/medium, 1800 s respectively). The `reviewer`, `triager`, `researcher`,
+`advisor` and `report-fixer` also use jsonl and the same wrapper. All read stdin through `--prompt-file /dev/stdin`, select `--model` and `--effort`,
 use `bypassPermissions` and emit `--output-format streaming-messages-json`. A sanitized real stream fixture pins
 the existing parser's text, terminal result, errors and token usage; no live model call is needed by the tests.
 ACP routes are still refused. Preflight checks the provider after `--` without starting it and caches command
 availability for the process: a missing Grok CLI gives `available: false` and `PROVIDER_UNAVAILABLE` in the dry-run,
 and stops a required route before claim.
 
-The Grok `reviewer` uses `--protect {cwd} --rw {cwd}/vendor`; the `report-fixer` uses `--protect {cwd}`.
-Both disallow `search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video`;
+The Grok `scout` uses text transport, `--output-format plain`, `--disable-web-search`, economy/low and 300 s.
+The `triager` and `researcher` use implementation/medium and 1800 s; the `advisor` uses frontier/high and 1800 s.
+The `reviewer` and `triager` use `--protect {cwd} --rw {cwd}/vendor`; the `scout`, `researcher`, `advisor` and
+`report-fixer` use `--protect {cwd}` with no checkout grant. Researcher/advisor keep `run_terminal_command` and
+`web_search` to query research sources. `research query` prints results and passes the project cwd to source
+commands; configured source processes inherit Landlock, and writes outside its writable areas fail.
+All these protected roles disallow `search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video`;
 the report-fixer also disallows `run_terminal_command`. Landlock permits default writes to `/tmp`, `/var/tmp`,
-`/dev` and `~/.grok`; the reviewer also grants the checkout's real `vendor` directory for test caches. Runtime
+`/dev` and `~/.grok`; the reviewer and triager also grant the checkout's real `vendor` directory for test caches. Runtime
 `--rw` grants for authorized `scope.extra_paths` still apply.
 
 `ro-run.py --protect DIR` is repeatable and fails before starting the provider (exit 3) when the real protected path

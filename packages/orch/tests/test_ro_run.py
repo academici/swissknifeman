@@ -56,13 +56,17 @@ class ProtectValidationTests(unittest.TestCase):
 
     def test_rw_equal_to_or_above_the_protected_directory_is_refused(self):
         directory = Path(SCRIPT.parents[3]) / "protect-unit-dir"  # not created: the validation reads paths only
-        for grant in (directory, directory.parent):
-            with self.subTest(grant=str(grant)):
-                self.refusal(["--protect", str(directory), "--rw", str(grant)], "RO_RUN_RW_ESCAPE")
+        # Isolate explicit grants from default-root overlap when a standalone checkout lives under /tmp.
+        with mock.patch.object(self.module, "DEFAULT_WRITABLE", ("/dev",)):
+            for grant in (directory, directory.parent):
+                with self.subTest(grant=str(grant)):
+                    self.refusal(["--protect", str(directory), "--rw", str(grant)], "RO_RUN_RW_ESCAPE")
 
     def test_default_root_under_the_protected_directory_is_refused(self):
         directory = Path(SCRIPT.parents[3]) / "protect-unit-dir"
-        with mock.patch.dict(os.environ, {"HOME": str(directory)}):
+        # Test the nested home root even when /tmp would overlap the checkout first.
+        with mock.patch.object(self.module, "DEFAULT_WRITABLE", ("~/.grok",)), \
+                mock.patch.dict(os.environ, {"HOME": str(directory)}):
             message = self.refusal(["--protect", str(directory)], "RO_RUN_PROTECT_OVERLAP")
         self.assertIn(f"writable {os.path.realpath(directory / '.grok')} is inside", message)
 

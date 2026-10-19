@@ -1,0 +1,26 @@
+{
+  "description": "The claude-only engine has no model selection on codex, so scout, executor and bounded-implementer preparation is refused.",
+  "input": "fixtures/exec/v1/valid/execution-input/plan-bound.json",
+  "provider": "codex",
+  "binding": "claude-only",
+  "expect": {
+    "result": "refused",
+    "error": "CAPABILITY_UNSUPPORTED",
+    "stages": [],
+    "refusals": [
+      {
+        "stage_id": "scout",
+        "capability": "model.set"
+      },
+      {
+        "stage_id": "primary",
+        "capability": "model.set"
+      },
+      {
+        "stage_id": "bounded",
+        "capability": "model.set"
+      }
+    ],
+    "policy_decision": "refuse"
+  }
+}

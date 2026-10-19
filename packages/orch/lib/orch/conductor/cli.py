@@ -50,8 +50,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     item = engine.Item(ref="(preview)", orch_run="-", state={}, directory=Path(), claim=claim)
     conductor.run_doc = {"options_file": str(args.options) if args.options else None}
     conductor._resolve(item, persist=False)
-    conductor._routes(item, persist=False)
-    problems = {role: conductor.route_problem(route) for role, route in item.routes.items()}
+    unavailable = conductor._routes(item, persist=False, preview=True) or {}
+    problems = {**{role: conductor.route_problem(route) for role, route in item.routes.items()}, **unavailable}
     available = {role: problem is None for role, problem in problems.items()}
     unavailable = {role: problem for role, problem in problems.items() if problem}
     isolation = {}

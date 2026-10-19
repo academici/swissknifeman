@@ -282,7 +282,8 @@ class to a model through `mappings.<provider>.class_selectors` in `configs/comma
 overrides the file) and the effort through `effort_selectors`. `--model` pins the exact model of an owner
 selector (`reviewer grok/grok-4.7`) instead of the class mapping. Grok `executor` and `bounded-implementer` resolve
 their models through the mapping too, with `--model` as an explicit override. A synthetic launch entry with
-`model_set: unknown` gets no model argument; `--model` there is `LAUNCH_INVALID`. Refusals: `LAUNCH_UNKNOWN` (no entry),
+`model_set: unknown` gets no model argument; `--model` there is `LAUNCH_INVALID`. Refusals: `LAUNCH_UNKNOWN` (unlisted pair),
+`LAUNCH_REFUSED` (explicit catalog refusal, with `<role>/<provider>: <reason>`),
 `LAUNCH_INVALID` (bad request or catalog), `LAUNCH_MODEL_UNRESOLVED` (mapping has no model for the class),
 `ROUTING_UNREADABLE`.
 
@@ -293,7 +294,13 @@ for test caches, with default writes to temp directories, `/dev` and `~/.grok`. 
 refuses a checkout under a default writable root or an in-checkout symlink/escaping writable grant (exit 3).
 The report-fixer is protected without the vendor grant and also disables shell. Both disable editing, subagents,
 scheduled writes, workflows and image/video generation. Grok writers instead grant `--rw <repository>`.
-All four use jsonl (`streaming-messages-json`), read the brief from stdin (`--prompt-file /dev/stdin`) and run under
+The Grok `triager` has the same protection and vendor grant as the reviewer. `researcher` and `advisor` protect the
+checkout without granting vendor writes, retaining shell and web search to query research sources. These roles use
+jsonl (`streaming-messages-json`), read the brief from stdin (`--prompt-file /dev/stdin`) and run under
 `bypassPermissions`. Conductor preflight checks the provider behind the wrapper, so a missing Grok CLI is unavailable.
+`launch scout grok --cwd <repository>` succeeds with text transport (`--output-format plain`), economy/low, 300 s,
+`--protect <repository>`, no checkout write grant, and web search disabled. `launch registrar grok` exits 1 with
+`LAUNCH_REFUSED:`: the registrar needs plan/state writes outside the checkout. `researcher codex` and `advisor codex`
+are also explicitly refused because read-only Codex has no network. The bridge preserves these catalog codes unchanged.
 The tests also compare the argv of `scout` with Task's own `orchestration.scout`, which
 `start --scout` keeps using unchanged.

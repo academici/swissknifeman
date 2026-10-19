@@ -219,7 +219,11 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(argv[argv.index("--tools") + 1], "Bash,Read,Grep,Glob")
         self.assertEqual(argv[argv.index("--allowedTools") + 1], "Bash(python3 *orch.py research query *)")
         self.assertNotIn("Edit", argv[argv.index("--tools") + 1])
-        self.assertEqual(sorted(catalog["launch"]["researcher"]), ["claude-code"])  # no codex route: no network in its sandbox
+        self.assertEqual(sorted(catalog["launch"]["researcher"]), ["claude-code", "grok"])
+        # Codex remains refused: its read-only sandbox cannot run networked research sources.
+        with self.assertRaises(launch.LaunchError) as raised:
+            launch.entry(catalog, "researcher", "codex")
+        self.assertEqual(raised.exception.code, "LAUNCH_REFUSED")
         self.assertEqual(launch.entry(catalog, "researcher", "claude-code")["model_class"], "implementation")
 
 

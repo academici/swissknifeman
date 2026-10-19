@@ -9,6 +9,7 @@ below the minimum, budget, output outside the contract).
 from __future__ import annotations
 
 import calendar
+import copy
 import contextlib
 from contextlib import redirect_stderr, redirect_stdout
 import io
@@ -504,6 +505,70 @@ class CorrectionTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (2, 2, 2))
         self.assertIn("REVIEW_LIMIT", self.source()["items"]["W1"]["report"]["open_issues"][-1]["text"])
+
+
+class LaunchRefusalTests(ConductorCase):
+    def test_required_refusals_stop_before_any_role_work(self):
+        self.write_config(extra='[orch.research]\npolicy = "required"\n[orch.advisor]\nenabled = true\n')
+        for role, provider in (("registrar", "grok"), ("researcher", "codex"), ("advisor", "codex")):
+            with self.subTest(role=role):
+                self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+                    "stages": [{"role": role, "provider": provider}]}}]}})
+                with mock.patch.object(engine.Conductor, "_prepare", side_effect=AssertionError("prepare must not run")):
+                    code, _, err = self.run_items("W1")
+                self.assertEqual((code, self.outcome(err)), (1, ("stopped", "LAUNCH_REFUSED")), err)
+                self.assertIn(f"{role}/{provider}:", err)
+                self.assertTrue(all(self.calls(name) == 0 for name in ROLES))
+
+    def test_optional_unknown_and_refused_roles_are_skipped(self):
+        original = launch.load_catalog()
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        for code in ("LAUNCH_UNKNOWN", "LAUNCH_REFUSED"):
+            with self.subTest(code=code):
+                catalog = copy.deepcopy(original)
+                for role in ("scout", "report-fixer"):
+                    del catalog["launch"][role]["claude-code"]
+                    if code == "LAUNCH_REFUSED":
+                        catalog["refusals"].setdefault(role, {})["claude-code"] = "synthetic optional refusal"
+                launch.validate_catalog(catalog)
+                self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"limits": {"repairs": 1}}}]}})
+                with mock.patch.object(launch, "load_catalog", return_value=catalog):
+                    status, _, err = self.run_items("W1")
+                self.assertEqual((status, self.outcome(err)), (0, ("finished", None)), err)
+                self.assertEqual(self.calls("context-scout"), 0)
+                skipped = [row for row in self.lines(err) if row["event"] == "stage.skip"
+                           and row.get("role") == "context-scout"]
+                self.assertEqual(skipped[0]["reason_code"], code)
+                routes = json.loads((self.run_dir(err) / "W1/routes.json").read_text())
+                self.assertNotIn("context-scout", routes)
+                self.assertNotIn("report-fixer", routes)
+
+    def test_preview_reports_all_refused_roles_without_claiming_work(self):
+        self.write_config(extra='[orch.research]\npolicy = "required"\n[orch.advisor]\nenabled = true\n')
+        options = self.project.parent / "refused-routes.json"
+        refused = {"registrar": "grok", "researcher": "codex", "advisor": "codex"}
+        options.write_text(json.dumps({"stages": [{"role": role, "provider": provider}
+                                                  for role, provider in refused.items()]}), encoding="utf-8")
+        code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",
+                                      "--options", options)
+        self.assertEqual(code, 0, err)
+        preview = json.loads(out)
+        for role, provider in refused.items():
+            self.assertIs(preview["available"][role], False)
+            self.assertTrue(preview["unavailable"][role].startswith(f"LAUNCH_REFUSED: {role}/{provider}:"))
+            self.assertNotIn(role, preview["routes"])
+        self.assertEqual(self.source()["calls"], [])
+        self.assertFalse(engine.runs_root(self.project).exists())
+
+    def test_preview_keeps_unknown_distinct_from_refused(self):
+        catalog = launch.load_catalog()
+        del catalog["launch"]["executor"]["claude-code"]
+        with mock.patch.object(launch, "load_catalog", return_value=catalog):
+            code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
+        self.assertEqual(code, 0, err)
+        preview = json.loads(out)
+        self.assertIs(preview["available"]["executor"], False)
+        self.assertTrue(preview["unavailable"]["executor"].startswith("LAUNCH_UNKNOWN:"))
 
 
 class StopTests(ConductorCase):
@@ -2125,6 +2190,19 @@ class RouteExplainTests(ConductorCase):
         self.assertTrue(found["candidates"] and all(row["available"] for row in found["candidates"]), found["candidates"])
         self.assertEqual(set(found["selected"]["sources"]), {"provider", "model_class", "effort", "model"})
         self.assertEqual(found["providers"]["claude-code"], {"enabled": True, "layer": "defaults"})
+
+    def test_refused_pairs_name_the_provider_and_reason_in_explain(self):
+        for role, provider in (("registrar", "grok"), ("researcher", "codex"), ("advisor", "codex")):
+            with self.subTest(role=role):
+                self.write_config(extra=f'[orch.conductor]\nprovider = "{provider}"\n')
+                found = self.explain("--role", role)
+                self.assertIsNone(found["selected"])
+                self.assertEqual(found["stop"]["code"], "LAUNCH_REFUSED")
+                self.assertIn(f"{role}/{provider}:", found["stop"]["message"])
+                row = found["candidates"][0]
+                self.assertEqual((row["provider"], row["available"]), (provider, False))
+                self.assertTrue(row["problem"].startswith("LAUNCH_REFUSED:"))
+                self.assertIn(provider, found["providers"])
 
     def test_the_reviewer_names_its_selector_layer_and_its_fallback(self):
         found = self.explain("--role", "reviewer")

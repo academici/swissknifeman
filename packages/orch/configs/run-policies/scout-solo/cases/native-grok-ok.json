@@ -1,0 +1,12 @@
+{
+  "description": "The native engine prepares both the required Grok scout and executor stages.",
+  "input": "fixtures/exec/v1/valid/execution-input/plan-bound.json",
+  "provider": "grok",
+  "binding": "native",
+  "expect": {
+    "result": "ok",
+    "stages": ["scout", "primary"],
+    "refusals": [],
+    "policy_decision": "allow"
+  }
+}

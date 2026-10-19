@@ -33,10 +33,10 @@ class LaunchCatalogTests(unittest.TestCase):
 
     def test_repository_catalog_is_valid_and_complete(self):
         rows = [(role, provider) for role, providers in self.catalog["launch"].items() for provider in providers]
-        self.assertEqual(len(rows), 20)
-        self.assertEqual({provider for role, provider in rows if role == "triager"}, {"claude-code", "codex"})
+        self.assertEqual(len(rows), 24)
+        self.assertEqual({provider for role, provider in rows if role == "triager"}, {"claude-code", "codex", "grok"})
         self.assertEqual({role for role, _ in rows}, set(launch.ROLES))
-        self.assertNotIn(("scout", "grok"), rows)
+        self.assertIn(("scout", "grok"), rows)
 
     def test_scout_argv_matches_previous_lists(self):
         self.assertEqual(launch.build_argv(self.catalog, "scout", "claude-code", model="haiku"), CLAUDE_SCOUT)
@@ -96,6 +96,26 @@ class LaunchCatalogTests(unittest.TestCase):
                          set(READ_ONLY_DENY.split(",")) | {"run_terminal_command"})
         self.assertEqual(argv[argv.index("--output-format") + 1], "streaming-messages-json")
 
+    def test_new_grok_roles_have_the_contracted_limits_and_tools(self):
+        for role, model_class, effort, timeout in (("scout", "economy", "low", 300),
+                                                  ("triager", "implementation", "medium", 1800),
+                                                  ("researcher", "implementation", "medium", 1800),
+                                                  ("advisor", "frontier", "high", 1800)):
+            with self.subTest(role=role):
+                entry = launch.entry(self.catalog, role, "grok")
+                argv = launch.build_argv(self.catalog, role, "grok", model="m", cwd="/w")
+                guard = ["python3", str(ROOT / "scripts/ro-run.py"), "--protect", "/w"]
+                if role == "triager":
+                    guard += ["--rw", "/w/vendor"]
+                self.assertEqual(argv[:argv.index("--")], guard)
+                self.assertEqual((entry["model_class"], entry["effort"], entry["timeout_s"], entry["model_set"]),
+                                 (model_class, effort, timeout, "supported"))
+                denied = argv[argv.index("--disallowed-tools") + 1]
+                self.assertEqual(denied, READ_ONLY_DENY)
+                self.assertNotIn("run_terminal_command", denied.split(","))
+                self.assertNotIn("web_search", denied.split(","))
+                self.assertEqual("--disable-web-search" in argv, role == "scout")
+
     def test_claude_code_roles_list_their_tools(self):
         # --tools cuts the start-up context of an isolated role from ≈14 K to ≈7 K tokens (measured, P12 prep);
         # --allowedTools alone only skips the permission prompt and leaves every tool definition in the context.
@@ -151,7 +171,7 @@ class LaunchCatalogTests(unittest.TestCase):
 
     def test_lookup_and_request_errors(self):
         with self.assertRaises(launch.LaunchError) as raised:
-            launch.build_argv(self.catalog, "scout", "grok", model="m")
+            launch.build_argv(self.catalog, "janitor", "grok", model="m")
         self.assertEqual(raised.exception.code, "LAUNCH_UNKNOWN")
         with self.assertRaises(launch.LaunchError):
             launch.build_argv(self.catalog, "scout", "codex")
@@ -164,10 +184,63 @@ class LaunchCatalogTests(unittest.TestCase):
                               capture_output=True, text=True, check=False)
         self.assertEqual(done.returncode, 0)
         self.assertEqual(json.loads(done.stdout)["argv"], CLAUDE_SCOUT)
-        refused = subprocess.run([sys.executable, script, "launch", "argv", "scout", "grok"],
+        grok = subprocess.run([sys.executable, script, "launch", "argv", "scout", "grok", "--model", "m"],
+                              capture_output=True, text=True, check=False)
+        self.assertEqual(grok.returncode, 0, grok.stderr)
+        self.assertEqual(json.loads(grok.stdout)["transport"], "text")
+        refused = subprocess.run([sys.executable, script, "launch", "argv", "registrar", "grok"],
                                  capture_output=True, text=True, check=False)
         self.assertEqual(refused.returncode, 1)
-        self.assertTrue(refused.stderr.startswith("LAUNCH_UNKNOWN:"))
+        self.assertTrue(refused.stderr.startswith("LAUNCH_REFUSED: registrar/grok:"), refused.stderr)
+
+    def test_catalog_without_refusals_remains_valid_and_missing_pairs_stay_unknown(self):
+        catalog = copy.deepcopy(self.catalog)
+        catalog.pop("refusals", None)
+        launch.validate_catalog(catalog)
+        with self.assertRaises(launch.LaunchError) as raised:
+            launch.entry(catalog, "registrar", "grok")
+        self.assertEqual(raised.exception.code, "LAUNCH_UNKNOWN")
+
+    def test_refused_pairs_preserve_the_exact_reason_in_entry_and_build_argv(self):
+        self.assertEqual({(role, provider) for role, providers in self.catalog["refusals"].items()
+                          for provider in providers},
+                         {("registrar", "grok"), ("researcher", "codex"), ("advisor", "codex")})
+        for role, providers in self.catalog["refusals"].items():
+            for provider, reason in providers.items():
+                for lookup in (launch.entry, launch.build_argv):
+                    with self.subTest(role=role, provider=provider, lookup=lookup.__name__):
+                        with self.assertRaises(launch.LaunchError) as raised:
+                            lookup(self.catalog, role, provider)
+                        self.assertEqual(raised.exception.code, "LAUNCH_REFUSED")
+                        self.assertEqual(str(raised.exception), f"{role}/{provider}: {reason}")
+
+    def test_refusals_reject_unknown_keys_bad_shapes_and_invalid_reasons(self):
+        for refusals in (None, [], {"janitor": {"grok": "no"}}, {"scout": []},
+                         {"scout": {"gemini": "no"}},
+                         *({"registrar": {"grok": reason}} for reason in (None, 1, "", " \n", "x" * 301))):
+            with self.subTest(refusals=refusals):
+                catalog = copy.deepcopy(self.catalog)
+                catalog["refusals"] = refusals
+                with self.assertRaises(launch.LaunchError) as raised:
+                    launch.validate_catalog(catalog)
+                self.assertEqual(raised.exception.code, "LAUNCH_INVALID")
+
+    def test_refusals_reject_a_pair_also_present_in_launch(self):
+        catalog = copy.deepcopy(self.catalog)
+        catalog["refusals"] = {"scout": {"grok": "explicit refusal"}}
+        with self.assertRaises(launch.LaunchError) as raised:
+            launch.validate_catalog(catalog)
+        self.assertEqual(raised.exception.code, "LAUNCH_INVALID")
+        self.assertIn("both launch and refusals", str(raised.exception))
+
+    def test_refusal_reason_length_boundary_and_extra_top_level_key(self):
+        catalog = copy.deepcopy(self.catalog)
+        catalog["refusals"] = {"registrar": {"grok": "x" * 300}}
+        launch.validate_catalog(catalog)
+        catalog["extra"] = {}
+        with self.assertRaises(launch.LaunchError) as raised:
+            launch.validate_catalog(catalog)
+        self.assertEqual(raised.exception.code, "LAUNCH_INVALID")
 
 
 if __name__ == "__main__":

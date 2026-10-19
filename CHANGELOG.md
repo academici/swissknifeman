@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- orch: Grok scout (text), triager, researcher и advisor завершают матрицу role × provider; каталог хранит три явных `refusals` с кодом `LAUNCH_REFUSED`, который сохраняется в routing, dry-run, explain и planner-orch. Семь проверок матрицы фиксируют полноту, read-only ограничения, transport и декодирование потока; таблицы доступны в документации.
+
 ### Changed
 
 - orch: Grok executor и bounded-implementer запускаются conductor через jsonl (`streaming-messages-json`) под Landlock `ro-run.py`; `ro-run.py --protect` делает read-only Grok-роли fail-closed. Preflight проверяет команду за wrapper; capability seed и matrix подтверждены probe флагов и фикстурой реального потока.

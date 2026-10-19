@@ -24,7 +24,9 @@ def scout(self, item: Item) -> str:
     stage = self._scout_stage(item)
     if stage is None:
         return ""
-    route = item.routes["context-scout"]
+    route = item.routes.get("context-scout")
+    if route is None:  # routing already reported the optional role's LAUNCH_UNKNOWN or LAUNCH_REFUSED
+        return ""
     gate = gates.blocked(route["provider"], clock.wall())
     disabled = self.provider_disabled(route["provider"])
     if gate or disabled or not process.available(route["argv"]):

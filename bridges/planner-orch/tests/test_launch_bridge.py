@@ -104,10 +104,23 @@ class LaunchBridge(unittest.TestCase):
             self.assertTrue(str(raised.exception).startswith("LAUNCH_INVALID:"))
 
     def test_refusals(self):
-        done = launch("scout", "grok")
+        done = launch("registrar", "grok")
         self.assertEqual(done.returncode, 1)
-        self.assertTrue(done.stderr.startswith("LAUNCH_UNKNOWN:"), done.stderr)
-        self.assertEqual(launch("janitor", "codex").returncode, 1)
+        self.assertTrue(done.stderr.startswith("LAUNCH_REFUSED: registrar/grok:"), done.stderr)
+        unknown = launch("janitor", "codex")
+        self.assertEqual(unknown.returncode, 1)
+        self.assertTrue(unknown.stderr.startswith("LAUNCH_UNKNOWN:"), unknown.stderr)
+
+    def test_grok_scout_is_plain_text_and_protects_the_checkout(self):
+        done = launch("scout", "grok", "--cwd", "/work")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        out = json.loads(done.stdout)
+        self.assertEqual((out["transport"], out["timeout_s"], out["model_class"]), ("text", 300, "economy"))
+        argv = out["argv"]
+        self.assertEqual(argv[:argv.index("--")], ["python3", str(ORCH / "scripts/ro-run.py"), "--protect", "/work"])
+        self.assertEqual(argv[argv.index("--output-format") + 1], "plain")
+        self.assertEqual(argv[argv.index("--model") + 1], out["model"])
+        self.assertIn("--disable-web-search", argv)
 
     def test_provider_without_model_for_class_is_refused(self):
         routing = json.loads(ROUTING.read_text(encoding="utf-8"))

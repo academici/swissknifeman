@@ -68,6 +68,7 @@ from another directory the same plan names the same files with other relative pa
 | `READ_ONLY_UNENFORCEABLE` | a read-only role cannot be enforced |
 | `CATALOG_UNKNOWN` | the model catalog has no class or effort entry |
 | `LAUNCH_UNKNOWN`, `LAUNCH_INVALID`, `LAUNCH_MODEL_UNSETTABLE` | the launch catalog cannot start the role with a model |
+| `LAUNCH_REFUSED` | the catalog explicitly refuses the role/provider pair: `<role>/<provider>: <reason>`; a pair absent from both launch and refusals keeps `LAUNCH_UNKNOWN` |
 
 An unmet requirement of a `required` stage raises `CAPABILITY_UNSUPPORTED` with the plan as `data.launch_plan`; an
 optional stage becomes a refusal. Provider and model are never replaced silently.

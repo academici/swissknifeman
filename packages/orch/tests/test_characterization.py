@@ -383,6 +383,7 @@ COVERAGE = {
     "ROUTE_UNDERSHOOT": f"test:{T}", "SANDBOX_UNAVAILABLE": f"test:{T}",
     "PROVIDER_UNAVAILABLE": "snapshot:resume-after-stop", "TRANSPORT_UNSUPPORTED": f"test:{T}",
     "LAUNCH_UNKNOWN": "test:test_launch.py", "ROLE_FAILED": f"test:{T}", "ROLE_OUTPUT_EMPTY": f"test:{C}",
+    "LAUNCH_REFUSED": f"test:{T}",
     "ROLE_OUTPUT_INVALID": f"test:{T}", "PROVIDER_AUTH": f"test:{T}", "PROVIDER_AUTHZ": f"test:{C}",
     "PROVIDER_QUOTA": "snapshot:quota-wait", "PROVIDER_REFUSED": f"test:{T}", "PROVIDER_CONTEXT": f"test:{T}",
     "MODEL_UNAVAILABLE": f"test:{T}", "TIMEOUT": f"test:{T}", "WORKTREE_DIRTY": f"test:{T}",

@@ -80,7 +80,11 @@ def _row(conductor: engine.Conductor, item: engine.Item, role: str, origin: str,
     try:
         route = conductor._route(item, role, override)
     except engine.Stop as stop:
-        return {**row, **{key: (override or {}).get(key) for key in ("provider", "model_class", "effort")},
+        wanted = {**opts.stage_route(item.options, role), **(override or {})}
+        if role == "reviewer" and not override:
+            wanted.update(opts.parse_selector(item.options["reviewer"]))
+        wanted["provider"] = wanted.get("provider") or conductor.conductor.get("provider") or "claude-code"
+        return {**row, **{key: wanted.get(key) for key in ("provider", "model_class", "effort")},
                 "available": False, "problem": f"{stop.code}: {stop.message}"}
     problem = conductor._admit(item, role, route)  # the rules of a run: start, gate, sandbox, and the minimum of the work
     return {**row, "provider": route["provider"], "model": route["model"], "model_class": route["model_class"],

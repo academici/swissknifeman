@@ -72,13 +72,17 @@ packages/orch/
 
 `configs/launch-catalog.json` states how each role starts on each provider CLI by model class; `orch.py launch argv`
 fills `{model}`, `{effort}`, `{cwd}` and `{orch}` (this package root) and starts nothing. The Grok `executor`,
-`bounded-implementer`, `reviewer` and `report-fixer` all run headless through `scripts/ro-run.py` with jsonl transport:
+`bounded-implementer`, `reviewer`, `triager`, `researcher`, `advisor` and `report-fixer` all run headless through
+`scripts/ro-run.py` with jsonl transport:
 `--prompt-file /dev/stdin`, `--model`, `--effort`, `--permission-mode bypassPermissions` and
 `--output-format streaming-messages-json`. The sanitized real stream fixture pins text, error and usage parsing.
+The Grok scout uses the same wrapper with text transport (`--output-format plain`) and disables web search.
+The complete role/provider matrix and explicit catalog refusals (`LAUNCH_REFUSED`) are documented in
+[conductor.md](conductor.md); an unlisted pair retains `LAUNCH_UNKNOWN`.
 
 The wrapper applies Linux Landlock before `exec` (no root or user namespaces); every child inherits it. Writers
-grant `--rw {cwd}`. The reviewer uses `--protect {cwd} --rw {cwd}/vendor` for test caches; the report-fixer uses
-`--protect {cwd}` without a checkout grant. Both disallow editing, subagent creation, scheduled writes, workflows
+grant `--rw {cwd}`. The reviewer and triager use `--protect {cwd} --rw {cwd}/vendor` for test caches; the scout,
+researcher, advisor and report-fixer use `--protect {cwd}` without a checkout grant. Protected roles disallow editing, subagent creation, scheduled writes, workflows
 and image/video generation; the report-fixer also disallows shell commands. The filesystem stays readable, with
 default writes to `/tmp`, `/var/tmp`, `/dev` and `~/.grok`.
 

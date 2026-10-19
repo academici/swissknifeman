@@ -22,11 +22,12 @@ with progress lines on stderr, `resume` without repeating closed steps and an ob
 ([docs/conductor.md](docs/conductor.md)). `orch.py doctor` checks that git ignores the conductor's runtime files.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
-Grok's `executor`, `bounded-implementer`, `reviewer` and `report-fixer` launch entries use jsonl
-(`streaming-messages-json`) under `scripts/ro-run.py` (Linux Landlock). Writers grant `--rw {cwd}`; the reviewer
-uses `--protect {cwd} --rw {cwd}/vendor`, and the report-fixer uses `--protect {cwd}`. Protected roles require
+Grok's `executor`, `bounded-implementer`, `reviewer`, `triager`, `researcher`, `advisor` and `report-fixer` entries use jsonl
+(`streaming-messages-json`); `scout` uses text (`--output-format plain`) with web search disabled. All run under
+`scripts/ro-run.py` (Linux Landlock). Writers grant `--rw {cwd}`; the reviewer and triager
+use `--protect {cwd} --rw {cwd}/vendor`, and the scout, researcher, advisor and report-fixer use `--protect {cwd}`. Protected roles require
 Landlock ABI >= 3 and refuse a checkout inside `/tmp`, `/var/tmp`, `/dev` or `~/.grok`, or a symlink/escaping
-in-checkout writable grant. Both restrict Grok's edit and delegation tools; the report-fixer also disables shell.
+in-checkout writable grant. Read-only roles restrict Grok's edit and delegation tools; the report-fixer also disables shell.
 The filesystem stays readable, with default writes to temporary directories, `/dev` and `~/.grok`.
 Preflight checks the provider after the wrapper's `--`, so a missing Grok CLI is unavailable in `--dry-run`.
 ACP routes remain unsupported by the conductor. `{orch}` in an argv is this package root.
@@ -36,6 +37,28 @@ temporary directories), and the `registrar` may run only
 `python3 *orch.py source register *`. Every headless claude-code role starts with `--permission-prompts none` (what would ask
 is denied, nobody answers) and never with `--bare`, which does not read the subscription login.
 Incompatible versions return `CONTRACT_VERSION` before schema validation.
+
+Every role/provider pair has a launch entry or an explicit refusal:
+
+| Role | claude-code | codex | grok |
+| --- | --- | --- | --- |
+| scout | ✓ | ✓ | ✓ |
+| executor | ✓ | ✓ | ✓ |
+| bounded-implementer | ✓ | ✓ | ✓ |
+| reviewer | ✓ | ✓ | ✓ |
+| triager | ✓ | ✓ | ✓ |
+| registrar | ✓ | ✓ | refused: plan writes outside checkout |
+| report-fixer | ✓ | ✓ | ✓ |
+| researcher | ✓ | refused: read-only has no network | ✓ |
+| advisor | ✓ | refused: read-only has no network | ✓ |
+
+The optional catalog key `refusals` holds the reasons. A refused pair returns
+`LAUNCH_REFUSED: <role>/<provider>: <reason>`; an unlisted pair still returns `LAUNCH_UNKNOWN`.
+Required roles stop before work; optional scout/report-fixer roles are skipped. Dry-run lists the reason in
+`unavailable`, and `route explain` and the planner bridge retain the same code. The existing registrar.codex
+`workspace-write` entry is the explicit exception to read-only sandbox checks. Researcher/advisor Grok retain shell
+and network access to research sources; Landlock confines source writes to its writable areas.
+
 The `[orch]` configuration (engine, per-role engine, default profile, work source, capability freshness, pack
 folders, events) is layered through aicore; `orch.py --config FILE` adds the invocation layer. Run-policies ship as
 versioned packs with test cases (`configs/run-policies/<id>/`): `orch.py policy list|show|test`.

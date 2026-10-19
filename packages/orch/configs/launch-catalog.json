@@ -42,6 +42,36 @@
     ],
     "timeout_s": 300,
     "model_set": "supported"
+   },
+   "grok": {
+    "model_class": "economy",
+    "effort": "low",
+    "transport": "text",
+    "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--protect",
+     "{cwd}",
+     "--",
+     "grok",
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+     "--disable-web-search",
+     "--output-format",
+     "plain"
+    ],
+    "timeout_s": 300,
+    "model_set": "supported"
    }
   },
   "executor": {
@@ -340,6 +370,37 @@
     ],
     "timeout_s": 1800,
     "model_set": "supported"
+   },
+   "grok": {
+    "model_class": "implementation",
+    "effort": "medium",
+    "transport": "jsonl",
+    "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--protect",
+     "{cwd}",
+     "--rw",
+     "{cwd}/vendor",
+     "--",
+     "grok",
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+     "--output-format",
+     "streaming-messages-json"
+    ],
+    "timeout_s": 1800,
+    "model_set": "supported"
    }
   },
   "registrar": {
@@ -492,6 +553,35 @@
     ],
     "timeout_s": 1800,
     "model_set": "supported"
+   },
+   "grok": {
+    "model_class": "implementation",
+    "effort": "medium",
+    "transport": "jsonl",
+    "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--protect",
+     "{cwd}",
+     "--",
+     "grok",
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+     "--output-format",
+     "streaming-messages-json"
+    ],
+    "timeout_s": 1800,
+    "model_set": "supported"
    }
   },
   "advisor": {
@@ -520,7 +610,47 @@
     ],
     "timeout_s": 1800,
     "model_set": "supported"
+   },
+   "grok": {
+    "model_class": "frontier",
+    "effort": "high",
+    "transport": "jsonl",
+    "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--protect",
+     "{cwd}",
+     "--",
+     "grok",
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--disallowed-tools",
+     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+     "--output-format",
+     "streaming-messages-json"
+    ],
+    "timeout_s": 1800,
+    "model_set": "supported"
    }
+  }
+ },
+ "refusals": {
+  "advisor": {
+   "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
+  },
+  "registrar": {
+   "grok": "registrar writes the plan workspace and the project state outside {cwd}; the launch placeholders cannot grant that area to Landlock without granting the checkout, and grok shell allow rules (--allow) are not wired into the launch contract"
+  },
+  "researcher": {
+   "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
   }
  }
 }

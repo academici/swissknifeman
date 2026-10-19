@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "476ee443746c",
-  "reason": "release v0.31.1: planner umbrella version bump",
+  "captured_from": "dc5e213060ee",
+  "reason": "PLAN8 P1.2: add Grok scout, triager, researcher and advisor launch entries",
   "generators": [
     {
       "id": "skiller-registry",

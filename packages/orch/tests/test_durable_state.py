@@ -8,7 +8,11 @@ import stat
 import tempfile
 import threading
 import unittest
+from unittest import mock
 
+from orch import settings
+from orch.conductor import checks, engine, progress
+from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import files
 
@@ -62,6 +66,55 @@ class DurableStateTests(unittest.TestCase):
         store.create({"run_id": "cnd-1"})
         for folder in (store.directory, store.directory.parent):
             self.assertEqual(stat.S_IMODE(os.stat(folder).st_mode), 0o700)
+
+    def step_run(self):
+        run = engine.Conductor(project=self.root, settings=settings.load(project=self.root), mode="quiet")
+        state = {"items": {"W1": {"steps": {}}}}
+        run._open("cnd-step", {"items": ["W1"]}, state)
+        item = Item("W1", "work-run", state["items"]["W1"], run.directory / "W1", {"attempt_id": "attempt-1"})
+        return run, item
+
+    def test_started_is_durable_before_event_and_work_and_done_keeps_its_old_shape(self):
+        run, item = self.step_run()
+        seen = []
+        emit = run.progress.emit
+        def started(event, **fields):
+            if event == "stage.start":
+                row = files.read_json(run.directory / "state.json")["items"]["W1"]["steps"]["executor.1"]
+                self.assertEqual(row["status"], "started")
+                seen.append(row)
+            return emit(event, **fields)
+        def work():
+            self.assertEqual(len(seen), 1)
+            return {"report": "ok"}
+        with mock.patch.object(checks, "head", return_value="base"), mock.patch.object(run.progress, "emit", started):
+            run._step(item, "executor.1", work, role="executor", route="fake/model")
+        self.assertEqual(seen[0], {"status": "started", "started_at": seen[0]["started_at"], "role": "executor",
+                                   "route": "fake/model", "base_head": "base", "attempt": "attempt-1", "dirty_before": None})
+        row = item.state["steps"]["executor.1"]
+        self.assertEqual(set(row), {"status", "result", "verdict", "role", "route", "duration_s", "ended"})
+        self.assertEqual(row["status"], "done")
+
+    def test_stop_is_saved_before_propagation_and_resume_repeats_without_interruption(self):
+        run, item = self.step_run()
+        def work():
+            raise Stop("TIMEOUT", "fake stop")
+        with self.assertRaises(Stop):
+            run._step(item, "executor.1", work)
+        row = files.read_json(run.directory / "state.json")["items"]["W1"]["steps"]["executor.1"]
+        self.assertEqual(row, {"status": "stopped", "code": "TIMEOUT", "ended": row["ended"]})
+        run._reconcile_interrupted()
+        self.assertEqual(run._step(item, "executor.1", lambda: "ok"), "ok")
+        self.assertNotIn("STAGE_INTERRUPTED", [line.get("reason_code") for line in progress.read_lines(run.directory)])
+
+    def test_unexpected_failure_cannot_leave_a_done_result(self):
+        run, item = self.step_run()
+        with self.assertRaises(RuntimeError):
+            run._step(item, "prepare", mock.Mock(side_effect=RuntimeError("crash")))
+        row = files.read_json(run.directory / "state.json")["items"]["W1"]["steps"]["prepare"]
+        self.assertEqual(row["status"], "started")
+        self.assertIsNone(row["base_head"])
+        self.assertNotIn("result", row)
 
 
 class PathSafetyTests(unittest.TestCase):

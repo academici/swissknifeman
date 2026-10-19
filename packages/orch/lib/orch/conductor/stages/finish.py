@@ -7,13 +7,13 @@ import re
 from typing import Optional
 
 from orch.conductor import questions as questions_mod
-from orch.conductor.domain.item import Item
+from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.infrastructure.files import write_json
 
 
 def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
     changed = self._changed(item)
-    if changed or any("changed" in (step.get("result") or {}) for key, step in item.state.get("steps", {}).items()
+    if changed or any("changed" in (step.get("result") or {}) for key, step in done_steps(item.state.get("steps", {})).items()
                       if key.startswith("executor.") and isinstance(step.get("result"), dict)):
         report = dict(report, changed_paths=changed)  # git, not the report of the last round
     outside = self._outside(item)

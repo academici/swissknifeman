@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import re
 
+from orch.conductor.domain.item import done_steps
+
 _FENCE_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 _EVIDENCE_CHECK = re.compile(r"^V[0-9]+$")
 
@@ -54,7 +56,7 @@ def continued(steps: dict) -> set:
     """The executor rounds that a later round of the same number continued after a policy answer (``executor.1`` by
     ``executor.1-q1``, that by ``executor.1-q2``): they reported ``blocked`` but are not where the piece stopped."""
     found = set()
-    for key in steps:
+    for key in done_steps(steps):
         match = re.fullmatch(r"(executor\.[0-9]+)(?:-q([0-9]+))?", key)
         if match and match.group(2):
             number = int(match.group(2))

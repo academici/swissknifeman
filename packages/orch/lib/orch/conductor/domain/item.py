@@ -6,6 +6,11 @@ from pathlib import Path
 from typing import Optional
 
 
+def done_steps(steps: dict) -> dict:
+    """Completed results only; an unfinished step is absent to result readers."""
+    return {key: step for key, step in steps.items() if step.get("status") == "done"}
+
+
 @dataclass
 class Item:
     """What the conductor knows about the piece of work it runs now."""

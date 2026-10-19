@@ -4,6 +4,7 @@
 
 ### Added
 
+- orch: durable started/stopped step records and crash reconciliation on resume; interrupted executors continue partial work with a correction note, checks detect changed paths, and result readers accept only done steps. Settled items discard unfinished steps, and blocked-item retries clear them before reconciliation, so unknown step keys do not prevent recovery after an owner action.
 - orch: local run leases and one conductor per checkout; busy run/resume/settle/release commands preserve state, prune removes old runs under ownership, question updates serialize answers, and orphaned runs expose their status and stop unfinished role groups safely on resume.
 - orch: Grok scout (text), triager, researcher и advisor завершают матрицу role × provider; каталог хранит три явных `refusals` с кодом `LAUNCH_REFUSED`, который сохраняется в routing, dry-run, explain и planner-orch. Семь проверок матрицы фиксируют полноту, read-only ограничения, transport и декодирование потока; таблицы доступны в документации.
 

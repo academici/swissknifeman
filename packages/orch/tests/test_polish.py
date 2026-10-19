@@ -48,8 +48,8 @@ class RepeatedRetry(unittest.TestCase):
                                      directory=Path(tempfile.mkdtemp()))
 
     def blocked(self) -> dict:
-        return {"outcome": "blocked", "stop": {}, "steps": {"brief": {"ended": "1"},
-                "executor.1": {"ended": "2", "result": {"report": {"status": "blocked"}}}}}
+        return {"outcome": "blocked", "stop": {}, "steps": {"brief": {"status": "done", "ended": "1"},
+                "executor.1": {"status": "done", "ended": "2", "result": {"report": {"status": "blocked"}}}}}
 
     def test_a_retry_marks_the_piece_and_a_second_retry_after_a_stop_is_not_an_error(self):
         me = self.fake(self.blocked())

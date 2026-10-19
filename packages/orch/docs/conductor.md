@@ -104,9 +104,40 @@ merged run options, written as `digest` in `<item>/options.json`. The events car
 `project_resolution`, the `orch.run.stage.finished` events of the conductor have `options_digest` (event-data/v1, optional fields).
 The same configuration and options give the same digests; a changed override gives another one.
 
+## Recovery after a crash
+
+Before work starts, `state.json` saves a `started` step with `started_at`, `role`, `route`,
+`base_head` (null outside git), and the claim's `attempt_id` as `attempt`. For `checks.N`,
+`dirty_before` is the sorted list of porcelain paths (at most 500); other steps store null.
+Successful work replaces it with the existing `done` result shape. A `Stop` saves only
+`status: stopped`, `code`, and `ended`; resume repeats that step normally. Result readers
+use only `done` records, so an unfinished step never counts as success.
+
+Resume takes ownership, stops orphaned role groups, applies any `--retry` requests, then
+reconciles `started` steps before the loop starts. Closed items (`done`, `done_with_deviations`,
+`blocked`, or `abandoned`) discard their `started` and `stopped` records without repeating work;
+their `done` results stay intact. A retry still requires a blocked item and removes its unfinished
+steps before reconciliation. The rule uses the key's prefix before the first dot:
+
+| Step | Recovery (L10) |
+| --- | --- |
+| `brief`, `prepare` | repeat |
+| `scout`, `research.N`, `review.N`, `triage.N`, `advice.N` | repeat the read-only role without an interruption correction |
+| `executor.N` | repeat with an interruption note naming `base_head` and up to 200 sorted dirty paths; keep partial changes and the retry count |
+| `checks.N` | repeat; compare the current porcelain paths with `dirty_before`, and emit `CHECK_CHANGED_TREE` if they differ |
+| `research-save.N` | repeat the idempotent save for that research number |
+| `close`, `register`, `commit` | repeat as before; receipt recovery is deferred |
+| any other key | stop with `STAGE_RECOVERY_UNKNOWN`; settle the item, or use `--retry` if it is blocked |
+
+Each decision emits `info` with `reason_code: STAGE_INTERRUPTED`, the item and stage,
+and message `repeated`, `repeated with interruption note`, `repeated after tree change`,
+or `no recovery rule`. The executor's note is appended once to that step's correction
+and cleared after its result is done. Recovery never resets, stashes, or rolls back the
+tree. Old state files without started records keep their previous resume behaviour.
+
 ## The cycle of one piece of work
 
-Every step has a key and is recorded in `state.json` once it closes; the work source is reached only through
+Every step has a key and is recorded in `state.json` before it starts and once it closes; the work source is reached only through
 `orch.py source …` and the roles only through the launch catalog.
 
 | Step | Who | What |
@@ -176,6 +207,7 @@ The conductor stops only on:
 | --- | --- |
 | `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
 | `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
+| `STAGE_RECOVERY_UNKNOWN` | a started step has no recovery rule; settle the item or retry it |
 | `REVIEW_LIMIT` | a batch limit refused a round while a confirmed Blocker finding is open | the finding ids and the limit |
 | `DEPENDENCY_BLOCKED` | with `on_blocked: report` the run went on after a blocked piece, and a later piece of the run depends on it (`depends_on` of its claim): it is not started, stays in progress and the run ends here after the others; `resume --retry` the blocked piece, then `resume` |
 | `DISK_LOW` | less than `limits.disk_min_gb` (default 5) GB free under the project or the temporary directory when the run starts or resumes, or before the checks of a round; the run stops (resumable): free the space, then `resume` |

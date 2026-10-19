@@ -34,7 +34,7 @@ class BatchReviewTests(unittest.TestCase):
             shas[ref] = self.git("rev-parse", "HEAD").strip()
         self.run_dir = self.project / ".swissknifeman" / "state" / "orch" / "conductor" / "cnd-test"
         self.run_dir.mkdir(parents=True)
-        items = {ref: {"steps": {"commit": {"result": {"outcome": "committed", "sha": sha}}}} for ref, sha in shas.items()}
+        items = {ref: {"steps": {"commit": {"status": "done", "result": {"outcome": "committed", "sha": sha}}}} for ref, sha in shas.items()}
         (self.run_dir / "state.json").write_text(json.dumps({"items": items}), encoding="utf-8")
 
     def git(self, *args) -> str:

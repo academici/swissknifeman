@@ -1,13 +1,77 @@
-"""Stop the unfinished role groups of a conductor that lost its lease."""
+"""Stop orphaned role groups and reconcile interrupted steps without discarding work."""
 from __future__ import annotations
 
 import os
 import signal
 import time
 
-from orch.conductor import process
+from orch.conductor import checks, process, prompts
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import read_json, safe
+
+
+def dirty_paths(project, limit: int = 500) -> list:
+    """Sorted porcelain paths, including both names of renames and all untracked files."""
+    try:
+        entries = checks.git(project, "status", "--porcelain=v1", "-z", "--untracked-files=all").split("\0")
+    except RuntimeError:
+        try:
+            checks.git(project, "rev-parse", "--git-dir")
+        except RuntimeError:
+            return []  # a step can also be journalled outside a git repository
+        raise
+    found, index = set(), 0
+    while index < len(entries):
+        entry = entries[index]
+        index += 1
+        if not entry:
+            continue
+        found.add(entry[3:])
+        if "R" in entry[:2] or "C" in entry[:2]:
+            if index < len(entries) and entries[index]:
+                found.add(entries[index])
+                index += 1
+    return sorted(found)[:limit]
+
+
+def reconcile_interrupted(run) -> None:
+    """L10 recovery under ownership, after orphaned writers have stopped.
+
+    Removing a started record authorizes a repeat, never a successful result.
+    Notes survive a second crash before the executor reports.
+    """
+    repeated = {"brief", "prepare", "scout", "research", "review", "triage", "advice", "research-save",
+                "close", "register", "commit"}  # closing receipts are introduced separately
+    for ref, item in run.state.get("items", {}).items():
+        steps = item.get("steps", {})
+        if item.get("outcome") in ("done", "done_with_deviations", "blocked", "abandoned"):
+            unfinished = [key for key, step in steps.items() if step.get("status") in ("started", "stopped")]
+            for key in unfinished:
+                del steps[key]
+            if unfinished:
+                run._save()
+            continue  # a closed item has no work to repeat, including unknown steps
+        for key, step in list(steps.items()):
+            if step.get("status") != "started":
+                continue
+            prefix = key.split(".", 1)[0]
+            message = "repeated"
+            if prefix == "executor":
+                paths = dirty_paths(run.project, 200)
+                item.setdefault("interrupted_note", {})[key] = prompts.interrupted_correction(step.get("base_head"), paths)
+                message = "repeated with interruption note"
+            elif prefix == "checks":
+                paths = dirty_paths(run.project)
+                if paths != step.get("dirty_before"):
+                    message = "repeated after tree change"
+                    run.progress.emit("info", item=ref, stage=key, reason_code="CHECK_CHANGED_TREE",
+                                      message="the tree differs from dirty_before; the interrupted checks are repeated")
+            elif prefix not in repeated:
+                run.progress.emit("info", item=ref, stage=key, reason_code="STAGE_INTERRUPTED", message="no recovery rule")
+                raise Stop("STAGE_RECOVERY_UNKNOWN", f"{ref} {key}: no recovery rule; settle the item or retry it")
+            del steps[key]
+            run._save()
+            run.progress.emit("info", item=ref, stage=key, reason_code="STAGE_INTERRUPTED", message=message)
 
 
 def kill_orphaned_roles(run) -> None:

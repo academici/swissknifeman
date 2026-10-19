@@ -34,6 +34,8 @@ def history(root: Path) -> tuple:
             continue
         for item in (state.get("items") or {}).values():
             for key, step in (item.get("steps") or {}).items():
+                if step.get("status") != "done":
+                    continue
                 role = step.get("role") or "deterministic"
                 effort = str(step.get("route") or "").rsplit("/", 1)[-1] if step.get("route") else "-"
                 kind = key.split(".", 1)[0]

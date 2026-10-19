@@ -16,6 +16,7 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
 from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, RUN_FILE, safe, write_json
 from orch.conductor.progress import human_duration
+from orch.conductor.application import recovery
 
 ROLE_ALIASES_ENGINE = {"scout": "context-scout"}  # the stage role names of the options that name a launch role
 
@@ -426,6 +427,19 @@ def conduct(self, item: Item) -> str:
     return self._finish(item, report, rows)
 
 
+def start_step(self, item: Item, key: str, *, role: str = "deterministic", route: Optional[str] = None) -> None:
+    """Persist the boundary before work starts, including checks computed beside a review."""
+    try:
+        base = checks_mod.head(self.project)
+    except RuntimeError:
+        base = None
+    item.state.setdefault("steps", {})[key] = {
+        "status": "started", "started_at": clock.utc_now(), "role": role, "route": route,
+        "base_head": base, "attempt": item.claim.get("attempt_id"),
+        "dirty_before": recovery.dirty_paths(self.project) if key.startswith("checks.") else None}
+    self._save()
+
+
 def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "deterministic",
          route: Optional[str] = None, verdict: Optional[Callable[[Any], str]] = None) -> Any:
     steps = item.state.setdefault("steps", {})
@@ -437,12 +451,16 @@ def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "det
     self._current_step = key
     if item.options:
         self._run_clock(item)
+    if not known or known.get("status") != "started":
+        self._start_step(item, key, role=role, route=route)
     self.progress.emit("stage.start", item=item.ref, stage=key, role=role, route=route)
     begin = time.monotonic()
     self._step_tokens = {"input": 0, "output": 0}
     try:
         result = run()
     except Stop as stop:
+        steps[key] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
+        self._save()
         self.progress.emit("stage.end", item=item.ref, stage=key, role=role, route=route, verdict="stopped",
                            reason_code=stop.code, duration_s=round(time.monotonic() - begin, 1),
                            message=stop.message)

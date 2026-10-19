@@ -8,6 +8,8 @@ import re
 from typing import Optional
 from aicore.util.proc import run as run_with_timeout
 
+from orch.conductor.domain.item import done_steps
+
 PROMPT = """You are an independent code reviewer. READ ONLY: do not run any command and do not edit anything. Work from the diff \
 below; open a file only when a defect cannot be judged without it, and use at most {max_tools} tool calls in total. Keep your \
 reasoning short.
@@ -42,7 +44,7 @@ def commits_of_state(state: dict) -> tuple:
     """``(refs, shas)`` of the pieces of a run state that were committed, in the order of the state."""
     refs, shas = [], []
     for ref, item in (state.get("items") or {}).items():
-        sha = (((item.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+        sha = ((done_steps(item.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
         if sha:
             refs.append(ref)
             shas.append(sha)

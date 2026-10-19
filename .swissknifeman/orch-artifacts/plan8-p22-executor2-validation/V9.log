@@ -1,0 +1,51 @@
+[1/7] python compile
+[2/7] bash syntax
+[3/7] required files
+[4/7] schemas load
+[5/7] fixtures
+enum: /stream: must be one of "supported", "adapted", "unsupported", "unknown"
+CAPABILITY_EVIDENCE: declared supported capabilities require doc or code evidence
+CAPABILITY_FRESHNESS: fresh_until is earlier than observed_at
+EVIDENCE_CARRIER: command evidence requires exit without verdict
+EVIDENCE_CARRIER: manual evidence requires verdict and observation without exit
+additional: /unexpected: unexpected property 'unexpected'
+PRECONDITION_MISMATCH: a precondition that did not match requires outcome failed
+RECEIPT_RECONCILE: unknown effect outcome requires a reconciliation method
+one_of: /provenance: matches 0 of 9 oneOf branches, expected exactly 1; Plan provenance: /provenance/kind: must equal "plan"
+CONDENSED_REQUIRED_DRIFT: required_digest does not match the canonical JSON of the required part
+DIGEST_MISMATCH: digest does not match canonical JSON
+additional: /unexpected: unexpected property 'unexpected'
+LIFECYCLE_LEAK: lifecycle instruction is present in execution input
+required: /: missing required property 'goal'
+INPUT_AUTHORITY: read-only input requires write_authority none
+enum: /research/need: must be one of "none", "optional", "required"
+additional: /research/status: unexpected property 'status'
+enum: /stages/0/transport: must be one of "jsonl", "acp", "tui", "prompt", "none"
+type: environment variable value must be a string
+KEY_REUSED: run_id repeats the value of submission_id
+required: /: missing required property 'refusals'
+additional: /instructions/0/body: unexpected property 'body'
+ROLE_AUTHORITY: write authority conflicts with tool permissions
+ATTEMPT_RANGE: attempt must be at least 1
+enum: /kind: must be one of "started", "model_wait", "output", "tool", "question", "check", "quota_block", "auth_block", "provider_error", "timeout", "cancelled", "unknown_outcome", "completed", "failed"
+EPOCH_INVALID: owner_epoch must be at least 1
+KEY_REUSED: event_id repeats the value of run_id
+COMMIT_POLICY_CONFLICT: commit policy requires git_action commit
+FALLBACK_UNDECLARED: action fallback_route requires a non-empty fallback_routes
+enum: /isolation/mode: must be one of "worktree", "shared"
+ISOLATION_POLICY_CONFLICT: worktree isolation needs git_action commit to integrate
+POLICY_REQUIRED_REFUSE: required stages must refuse when unavailable
+POLICY_REVIEW_LIMIT: max_rounds must not exceed 2
+POLICY_PRIMARY: policy must have exactly one primary stage
+enum: /commits/0/role: must be one of "executor", "reviewer", "fix"
+COMMIT_SHA_DUPLICATE: commit hashes must be unique
+COMPLETED_PARSE_ERROR: completed stage cannot contain a parse error
+COST_FORMAT: cost_usd must be a decimal string
+USAGE_UNKNOWN_NUMERIC: unknown usage must not include token counts or cost
+[6/7] conductor fixtures
+[7/7] tests
+----------------------------------------------------------------------
+Ran 1303 tests in 212.115s
+
+OK (skipped=2)
+validate: OK

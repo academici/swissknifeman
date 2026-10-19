@@ -540,6 +540,13 @@ A previous attempt at this piece of work is already in the working tree (these p
 start over: check it against the input, finish what is missing and fix what is wrong, inside the same scope."""
 
 
+def interrupted_correction(base_head: Optional[str], paths: list) -> str:
+    """The executor continues partial work left by an interrupted invocation."""
+    return ("Your previous attempt was interrupted before it reported. The working tree may hold its partial changes "
+            f"since {base_head}: {', '.join(sorted(paths)[:200])}. "
+            "Continue from them inside the same scope; do not redo finished parts.")
+
+
 def check_correction(failed: list) -> str:
     """Correction package of red acceptance checks: each command, its exit and the tail of its output."""
     lines = []

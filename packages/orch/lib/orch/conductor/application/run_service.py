@@ -10,6 +10,7 @@ from aicore.stubs import StubError
 from orch import settings as settings_mod
 from orch.conductor import debug_mode, progress, stubs as stubs_mod
 from orch.conductor.domain.report import continued
+from orch.conductor.domain.item import done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import RunStore, safe, write_json
@@ -72,6 +73,7 @@ def resume(self, run_id: str, retry=()) -> int:
         stubs_changed(self, run_doc)
         for ref in retry:
             self._retry(ref)
+        self._reconcile_interrupted()
         state["status"] = "running"
         state["resumes"] = state.get("resumes", 0) + 1
         earlier = state.pop("stop", None)  # the stop answered by this resume is history now
@@ -117,15 +119,16 @@ def retry(self, ref: str) -> None:
     if not item or item.get("outcome") != "blocked":
         raise Stop("RETRY_NOT_BLOCKED", f"{ref} is not a blocked piece of this run")
     steps = item.get("steps", {})
+    completed = done_steps(steps)
     # the state file is sorted by key, so the order of the steps is the order of their ``ended`` stamps
-    blocked = min((key for key in steps if key.startswith("executor.") and key not in continued(steps) and
+    blocked = min((key for key in completed if key.startswith("executor.") and key not in continued(completed) and
                    (((steps[key].get("result") or {}).get("report") or {}).get("status") == "blocked")),
                   key=lambda key: steps[key].get("ended", ""), default=None)
     held = any(name.startswith("orch-advice-") for name in (self.state.get("questions") or {}).get(ref, {}))
     if blocked is None and not held:
         # blocked by the conductor itself (red checks past the limit, a review limit, a path outside the scope with
         # ``scope.outside: block``): no round reported ``blocked``, so the last executor round is where the piece goes on
-        rounds = [key for key in steps if key.startswith("executor.") and key not in continued(steps)]
+        rounds = [key for key in completed if key.startswith("executor.") and key not in continued(completed)]
         blocked = max(rounds, key=lambda key: steps[key].get("ended", ""), default=None)
     if blocked is None and not held:
         raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round to go on from")
@@ -134,7 +137,8 @@ def retry(self, ref: str) -> None:
     # rejected finding, the question ``orch-advice-<n>`` waits for the owner) reported no blocked round: its closed rounds,
     # checks, reviews and advice stay and only the opening and closing steps are repeated.
     since = steps[blocked].get("ended", "") if blocked else None
-    dropped = [key for key in steps if key == blocked or key in ("brief", "prepare", "scout", "close", "register", "commit")
+    dropped = [key for key in steps if steps[key].get("status") != "done" or key == blocked
+               or key in ("brief", "prepare", "scout", "close", "register", "commit")
                or (since is not None and steps[key].get("ended", "") > since)]
     archive_attempt(self, ref, item, dropped)  # the repeated steps write the same files again: the first attempt is kept aside
     for key in dropped:
@@ -162,6 +166,8 @@ def archive_attempt(self, ref: str, item: dict, dropped: list) -> None:
     record = {}
     for key in dropped:
         step = steps[key]
+        if step.get("status") != "done":
+            continue  # attempt summaries describe results; unfinished steps have none
         result = step.get("result") if isinstance(step.get("result"), dict) else {}
         report = result.get("report") if isinstance(result.get("report"), dict) else {}
         row = {name: step[name] for name in ("verdict", "role", "route", "ended") if step.get(name)}
@@ -188,7 +194,7 @@ def archive_attempt(self, ref: str, item: dict, dropped: list) -> None:
 def work_began(state: dict) -> bool:
     """An executor round ran: the piece has this run's work in the tree and is no longer free to give back. Changes
     adopted from an earlier attempt do not count: they stay in the tree, and a later ``run --adopt`` takes them again."""
-    return bool(state.get("executor_started")) or any(key.startswith("executor.") for key in state.get("steps", {}))
+    return bool(state.get("executor_started")) or any(key.startswith("executor.") for key in done_steps(state.get("steps", {})))
 
 
 def batch_held(self) -> bool:

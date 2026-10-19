@@ -3,7 +3,7 @@ focus of its prompt, and the review-verdict record of every round."""
 from __future__ import annotations
 
 from orch.conductor import checks as checks_mod, prompts, risk as risk_mod
-from orch.conductor.domain.item import Item
+from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import findings_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
@@ -67,7 +67,7 @@ def dynamic_review(self, item: Item, report: dict) -> None:
 
 def corrected(item: Item, previous: int) -> list:
     """The confirmed findings of review round ``previous`` that the correction after it had to fix."""
-    steps = item.state.get("steps", {})
+    steps = done_steps(item.state.get("steps", {}))
     findings = ((steps.get(f"review.{previous}") or {}).get("result") or {}).get("findings") or {}
     triage = ((steps.get(f"triage.{previous}-a") or steps.get(f"triage.{previous}") or {}).get("result") or {}
               ).get("triage") or {}
@@ -78,7 +78,7 @@ def corrected(item: Item, previous: int) -> list:
 
 def executor_advice(self, item: Item) -> list:
     """The ``review_recommendation`` of every executor round that gave one, in order."""
-    return [advice for key, step in item.state.get("steps", {}).items()
+    return [advice for key, step in done_steps(item.state.get("steps", {})).items()
             if key.startswith("executor.") and isinstance(step.get("result"), dict)
             for advice in [((step["result"].get("report") or {}).get("review_recommendation"))]
             if isinstance(advice, dict)]
@@ -163,7 +163,7 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
 def verdict_file(self, item: Item) -> None:
     """``review-verdict.json`` in the item's artifacts: the short committed record of every review round; the
     streams stay in the ignored runtime folder."""
-    steps = item.state.get("steps", {})
+    steps = done_steps(item.state.get("steps", {}))
     rounds = []
     number = 1
     while f"review.{number}" in steps:

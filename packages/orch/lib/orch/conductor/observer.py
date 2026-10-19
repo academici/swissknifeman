@@ -131,7 +131,7 @@ def build(directory: Path, project: Path) -> dict:
     scout_hits = scout_runs = 0
     items = []
     for ref, item in (state.get("items") or {}).items():
-        steps = item.get("steps", {})
+        steps = {key: step for key, step in item.get("steps", {}).items() if step.get("status") == "done"}
         for key, step in steps.items():
             result = step.get("result") or {}
             if key.startswith("review."):

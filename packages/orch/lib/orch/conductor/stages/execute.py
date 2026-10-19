@@ -6,7 +6,7 @@ import json
 from typing import Optional
 
 from orch.conductor import prompts, questions as questions_mod, scope as scopes
-from orch.conductor.domain.item import Item
+from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import evidence_paths, report_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -20,7 +20,7 @@ def execute(self, item: Item, number: int, scout_text: str, correction: str, fix
     while True:
         key = f"executor.{number}" + (f"-q{again}" if again else "")
         report = self._round(item, key, number, again > 0, scout_text, correction, fix)
-        if report.get("questions") and f"executor.{number}-q{again + 1}" in item.state.get("steps", {}):
+        if report.get("questions") and f"executor.{number}-q{again + 1}" in done_steps(item.state.get("steps", {})):
             again += 1  # a resume walks the closed rounds again
             continue
         report, rerun = self._questioned(item, key, report)
@@ -36,10 +36,12 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
     def run() -> dict:
         if number > 1 or refresh:
             self._refresh_input(item)
-        scouted = ((item.state.get("steps") or {}).get("scout") or {}).get("result") or {}
+        scouted = (done_steps(item.state.get("steps") or {}).get("scout") or {}).get("result") or {}
         researched = self._researched(item)
+        note = (item.state.get("interrupted_note") or {}).get(key, "")
+        corrected = "\n\n".join(text for text in (correction, note) if text)
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
-                                  rules=item.options["rules"], correction=correction, roles_dir=self.roles_dir, stub=self._stub("executor"),
+                                  rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor"),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                   skills=self._skills(item, "executor"),
                                   repo_rules=self._repo_rules(item, "executor"),
@@ -58,6 +60,12 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
 
     found = self._step(item, key, run, role="executor", route=self.label(route),
                        verdict=lambda result: result["report"]["status"])
+    notes = item.state.get("interrupted_note") or {}
+    if key in notes:
+        del notes[key]
+        if not notes:
+            item.state.pop("interrupted_note", None)
+        self._save()
     report = found["report"]
     outside = self._outside(item)
     if outside and report["status"] != "blocked" and item.options["scope"]["outside"] == "block":
@@ -115,7 +123,7 @@ def handoff_of(self, ref: str) -> str:
     """What a later piece of the run must know of the done piece ``ref``: its commit, summary, open issues and changed
     paths, from the report it registered (``register-report.json``), each part bounded."""
     state = self.state["items"].get(ref) or {}
-    sha = (((state.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+    sha = ((done_steps(state.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
     try:
         report = json.loads((self.directory / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -326,7 +334,7 @@ def not_the_role(self, item: Item) -> list:
 
 def changed(self, item: Item) -> list:
     """Every path any executor round of the piece changed (git, not the reports)."""
-    steps = item.state.get("steps", {})
+    steps = done_steps(item.state.get("steps", {}))
     found = set(item.state.get("adopted") or [])
     for key, step in steps.items():
         if key.startswith("executor.") and isinstance(step.get("result"), dict):

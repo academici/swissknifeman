@@ -7,7 +7,7 @@ import shlex
 from typing import Optional
 
 from orch.conductor import contract, prompts
-from orch.conductor.domain.item import Item
+from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
 from orch.settings import ORCH_ROOT
@@ -82,7 +82,7 @@ def researched(item: Item) -> dict:
     """``{result, path}`` of the research stage of the piece for the executor prompt: the closed research-result and the
     file that keeps it (``research-save.1`` says where; the artifacts of the piece when the work source did not take it);
     ``{}`` when the piece had no research stage."""
-    steps = item.state.get("steps") or {}
+    steps = done_steps(item.state.get("steps") or {})
     found = (steps.get("research.1") or {}).get("result") or {}
     if not found.get("result"):
         return {}
@@ -92,6 +92,6 @@ def researched(item: Item) -> dict:
 
 def paths(item: Item) -> set:
     """The files the work source saved research results in (a plan's ``research`` folder): a commit of the piece takes them."""
-    saved = (((item.state.get("steps") or {}).get(key) or {}).get("result") or {}
-             for key in (item.state.get("steps") or {}) if key.startswith("research-save."))
+    saved = (step.get("result") or {} for key, step in done_steps(item.state.get("steps") or {}).items()
+             if key.startswith("research-save."))
     return {found["path"] for found in saved if found.get("outcome") in ("recorded", "no-op") and found.get("path")}

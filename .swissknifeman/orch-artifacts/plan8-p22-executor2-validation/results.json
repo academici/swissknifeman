@@ -1,0 +1,37 @@
+[
+  {
+    "id": "V1",
+    "cmd": "bash packages/orch/scripts/test.sh -p 'test_resume_reconcile.py'",
+    "exit": 0
+  },
+  {
+    "id": "V2",
+    "cmd": "bash packages/orch/scripts/test.sh -p 'test_durable_state.py'",
+    "exit": 0
+  },
+  {
+    "id": "V3",
+    "cmd": "bash packages/orch/scripts/test.sh -p 'test_run*.py'",
+    "exit": 0
+  },
+  {
+    "id": "V4",
+    "cmd": "bash packages/orch/scripts/test.sh -p 'test_characterization.py'",
+    "exit": 0
+  },
+  {
+    "id": "V8",
+    "cmd": "bash packages/orch/scripts/test.sh",
+    "exit": 0
+  },
+  {
+    "id": "V9",
+    "cmd": "bash packages/orch/scripts/validate.sh",
+    "exit": 0
+  },
+  {
+    "id": "V10",
+    "cmd": "python3 scripts/affected-tests.py --run",
+    "exit": 0
+  }
+]

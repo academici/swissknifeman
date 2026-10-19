@@ -21,9 +21,9 @@ class RetryOfAPieceTheConductorBlocked(unittest.TestCase):
         return self_
 
     def test_checks_red_past_the_limit_has_no_blocked_round_and_retry_goes_on_from_the_last_executor_round(self):
-        steps = {"brief": {"ended": "1"}, "executor.1": {"ended": "2", "result": {"report": {"status": "done"}}},
-                 "checks.1": {"ended": "3"}, "executor.2": {"ended": "4", "result": {"report": {"status": "done"}}},
-                 "checks.2": {"ended": "5"}}
+        steps = {"brief": {"status": "done", "ended": "1"}, "executor.1": {"status": "done", "ended": "2", "result": {"report": {"status": "done"}}},
+                 "checks.1": {"status": "done", "ended": "3"}, "executor.2": {"status": "done", "ended": "4", "result": {"report": {"status": "done"}}},
+                 "checks.2": {"status": "done", "ended": "5"}}
         me = self.fake(steps)
         run_service.retry(me, "W1")
         self.assertEqual(sorted(me.state["items"]["W1"]["steps"]), ["checks.1", "executor.1"])

@@ -731,10 +731,10 @@ class StopTests(ConductorCase):
                              ("streams", "review.10.jsonl"), ("streams", "executor.1-q1.jsonl")):
             (directory / "W1" / folder).mkdir(parents=True, exist_ok=True)
             (directory / "W1" / folder / name).write_text(name, encoding="utf-8")
-        steps = {"executor.1": {"verdict": "blocked", "ended": "2026-01-01T00:00:01Z"},
-                 "review.1": {"verdict": "RED 1 finding(s)", "role": "reviewer", "ended": "2026-01-01T00:00:02Z"},
-                 "review.10": {"verdict": "GREEN", "ended": "2026-01-01T00:00:03Z"},
-                 "executor.1-q1": {"verdict": "done", "ended": "2026-01-01T00:00:04Z"}}
+        steps = {"executor.1": {"status": "done", "verdict": "blocked", "ended": "2026-01-01T00:00:01Z"},
+                 "review.1": {"status": "done", "verdict": "RED 1 finding(s)", "role": "reviewer", "ended": "2026-01-01T00:00:02Z"},
+                 "review.10": {"status": "done", "verdict": "GREEN", "ended": "2026-01-01T00:00:03Z"},
+                 "executor.1-q1": {"status": "done", "verdict": "done", "ended": "2026-01-01T00:00:04Z"}}
         item = {"steps": steps}
         service = type("Service", (), {"directory": directory})()
         run_service.archive_attempt(service, "W1", item, ["executor.1", "review.1"])
@@ -1389,7 +1389,7 @@ class DynamicReviewTests(ConductorCase):
         self.assertEqual((found["score"], self.calls("reviewer")), (70, 1))
 
     def test_the_first_check_round_is_the_lowest_one_that_ran(self):
-        steps = {"checks.2": {"result": [{"id": "V1", "green": False}]}, "checks.3": {"result": [{"id": "V1", "green": True}]},
+        steps = {"checks.2": {"status": "done", "result": [{"id": "V1", "green": False}]}, "checks.3": {"status": "done", "result": [{"id": "V1", "green": True}]},
                  "executor.1": {}}  # an auto-fix round took number 1 before any checks
         self.assertEqual(engine.Conductor._first_checks(steps), [{"id": "V1", "green": False}])
         self.assertEqual(engine.Conductor._first_checks({}), [])

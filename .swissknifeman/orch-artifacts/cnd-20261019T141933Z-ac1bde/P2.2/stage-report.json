@@ -1,0 +1,151 @@
+{
+  "changed_paths": [
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V1.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V10.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V2.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V3.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V4.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V8.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V9.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/diff-check.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-after.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-before.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/python39.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/results.json",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/scope-audit.log",
+    "CHANGELOG.md",
+    "packages/orch/docs/conductor.md",
+    "packages/orch/lib/orch/conductor/application/loop.py",
+    "packages/orch/lib/orch/conductor/application/recovery.py",
+    "packages/orch/lib/orch/conductor/application/run_service.py",
+    "packages/orch/lib/orch/conductor/domain/item.py",
+    "packages/orch/lib/orch/conductor/domain/report.py",
+    "packages/orch/lib/orch/conductor/engine.py",
+    "packages/orch/lib/orch/conductor/observer.py",
+    "packages/orch/lib/orch/conductor/policies/risk.py",
+    "packages/orch/lib/orch/conductor/prompts.py",
+    "packages/orch/lib/orch/conductor/review_batch.py",
+    "packages/orch/lib/orch/conductor/stages/checks_stage.py",
+    "packages/orch/lib/orch/conductor/stages/execute.py",
+    "packages/orch/lib/orch/conductor/stages/finish.py",
+    "packages/orch/lib/orch/conductor/stages/research.py",
+    "packages/orch/lib/orch/conductor/stages/review.py",
+    "packages/orch/scripts/estimate.py",
+    "packages/orch/tests/test_batch_review.py",
+    "packages/orch/tests/test_characterization.py",
+    "packages/orch/tests/test_conductor.py",
+    "packages/orch/tests/test_durable_state.py",
+    "packages/orch/tests/test_estimate_script.py",
+    "packages/orch/tests/test_p11_review_fixes.py",
+    "packages/orch/tests/test_polish.py",
+    "packages/orch/tests/test_resume_reconcile.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "bash packages/orch/scripts/test.sh -p 'test_resume_reconcile.py'",
+      "exit": 0,
+      "id": "V1"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/test.sh -p 'test_durable_state.py'",
+      "exit": 0,
+      "id": "V2"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/test.sh -p 'test_run*.py'",
+      "exit": 0,
+      "id": "V3"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/test.sh -p 'test_characterization.py'",
+      "exit": 0,
+      "id": "V4"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/test.sh",
+      "exit": 0,
+      "id": "V8"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "exit": 0,
+      "id": "V9"
+    },
+    {
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "exit": 0,
+      "id": "V10"
+    }
+  ],
+  "evidence": [
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-before.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-after.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V1.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V2.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V3.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V4.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V8.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V9.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V10.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/results.json",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/python39.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/diff-check.log",
+    ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/scope-audit.log"
+  ],
+  "open_issues": [
+    {
+      "evidence": [
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/scope-audit.log:8"
+      ],
+      "impact": "В рабочем дереве присутствует отдельное изменение отчёта, не входящее в исправление F1.",
+      "kind": "note",
+      "next": "Координатору учесть изменение отдельно.",
+      "severity": "low",
+      "text": "Финальная сверка обнаружила изменение существовавшего reports/target-arch-orch-run-log.md; исполнитель напрямую этот файл не редактировал."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V1.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V10.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V2.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V3.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V4.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V8.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V9.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/diff-check.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-after.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-before.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/python39.log",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/results.json",
+        ".swissknifeman/orch-artifacts/plan8-p22-executor2-validation/scope-audit.log",
+        "packages/orch/lib/orch/conductor/domain/item.py",
+        "packages/orch/lib/orch/conductor/domain/report.py",
+        "packages/orch/lib/orch/conductor/review_batch.py",
+        "packages/orch/lib/orch/conductor/stages/finish.py",
+        "packages/orch/lib/orch/conductor/stages/research.py",
+        "packages/orch/scripts/estimate.py",
+        "packages/orch/tests/test_batch_review.py"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V1.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V10.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V2.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V3.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V4.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V8.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/V9.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/diff-check.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-after.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/f1-before.log, .swissknifeman/orch-artifacts/plan8-p22-executor2-validation/python39.log, .swissknifema (expected by the scout: packages/orch/lib/orch/conductor/domain/report.py, packages/orch/lib/orch/conductor/review_batch.py, packages/orch/lib/orch/conductor/stages/finish.py, packages/orch/lib/orch/conductor/stages/research.py)"
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In checks_then_review, when a non-cancel Stop propagates and the checks step was not completed, rewrite checks.N to {status: stopped, code: stop.code, ended} and save before re-raising (reuse the helper loop.step uses for stopped). Test: overlap_review with a failing check and a review that stops with a provider Stop; resume emits no STAGE_INTERRUPTED.",
+      "text": "deferred minor finding packages/orch/lib/orch/conductor/stages/checks_stage.py:144: With checks.overlap_review, `checks.N` is marked started outside `step()`. If the review raises a Stop other than REVIEW_CANCELLED (for example a provider or budget stop) while the background checks have raised (`computed.exception()` is not None), `_run_checks` is skipped and the Stop propagates. `checks.N` stays `started`, not `stopped`. The next resume then emits STAGE_INTERRUPTED 'repeated' (or 'repeated after tree change' plus CHECK_CHANGED_TREE) for a run that ended with an ordinary Stop, not a crash. That breaks item.rules[2], which requires a stop to be recorded as stopped and resumed without STAGE_INTERRUPTED."
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In prompts.interrupted_correction render a null base_head as 'the start of the step' (or 'the last commit') and an empty path list as '(none listed)', keeping the rule-4 template otherwise verbatim. Add a unit test for both the None and the empty-list cases in test_resume_reconcile.py.",
+      "text": "deferred minor finding packages/orch/lib/orch/conductor/application/recovery.py:52: Two problems in the executor note. (a) Outside git, `base_head` is null, so the note says 'since None: ...'. (b) With a clean tree it says 'since <sha>: . Continue ...', an empty list. The executor gets a prompt that names a non-existent base or no paths. Rule 4 fixes the template text, but how null and empty values are rendered is up to the implementation."
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Исправлен F1: закрытые пункты удаляют started/stopped-записи без восстановления; retry применяется до reconcile и удаляет незавершённые шаги. Условия допуска retry сохранены. Добавлены четыре регрессии, уточнены документация и CHANGELOG. Все семь acceptance-проверок прошли. Дополнительно прошли целевые тесты через python3 -I -, проверка синтаксиса Python 3.9 и git diff --check."
+}

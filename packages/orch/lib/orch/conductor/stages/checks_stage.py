@@ -10,7 +10,7 @@ import threading
 from typing import Optional
 
 from orch.conductor import checks as checks_mod, process, prompts
-from orch.conductor.domain.item import Item
+from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import disk
 from orch.conductor.progress import human_duration
@@ -80,7 +80,7 @@ def red_before(item: Item, number: int) -> list:
     """The checks that were red in the latest earlier round, when ``checks.red_first`` asks to run them first."""
     if not item.options["checks"]["red_first"]:
         return []
-    steps = item.state.get("steps", {})
+    steps = done_steps(item.state.get("steps", {}))
     for earlier in range(number - 1, 0, -1):
         rows = (steps.get(f"checks.{earlier}") or {}).get("result")
         if rows:
@@ -141,6 +141,7 @@ def checks_then_review(self, item: Item, report: dict, checks_no: int, review_no
             or steps.get(f"review.{review_no}", {}).get("status") == "done":
         return self._run_checks(item, checks_no, report)
     cancel = threading.Event()  # a red check ends the review at once: it reads a candidate that is about to change
+    self._start_step(item, f"checks.{checks_no}")
     with ThreadPoolExecutor(max_workers=1) as pool:
         computed = pool.submit(self._compute_checks, item, checks_no, report,
                                lambda row: None if row.get("green") else cancel.set())
@@ -167,7 +168,10 @@ def checks_then_review(self, item: Item, report: dict, checks_no: int, review_no
 def carry_review(self, item: Item, review_no: int) -> None:
     """The review finished before the red checks: keep it. Its confirmed findings at the floor go into the same
     correction as the red checks (one executor round, not two), and the next audit is the pre-final one."""
-    findings = item.state["steps"][f"review.{review_no}"]["result"]["findings"]
+    review = done_steps(item.state.get("steps", {})).get(f"review.{review_no}")
+    if review is None:
+        return
+    findings = review["result"]["findings"]
     major = []
     if findings["findings"]:
         triage = self._triage(item, review_no, findings)

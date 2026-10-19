@@ -1,8 +1,8 @@
 """The conductor loop: claim, brief, prepare, then the stages of one piece of work, registration and the commit.
 
 Every step of a piece of work has a key (``brief``, ``prepare``, ``scout``, ``executor.1``, ``checks.1``,
-``review.1``, ``triage.1``, ``register``, ``commit``) and is recorded in ``state.json`` once it closes. ``resume``
-runs the same loop again: a closed step returns its recorded result and is not executed twice, so the loop takes
+``review.1``, ``triage.1``, ``register``, ``commit``) and is recorded in ``state.json`` before work starts and when it closes.
+``resume`` reconciles interrupted steps and runs the same loop again: a closed step returns its recorded result, so the loop takes
 the same path up to the step that did not close. The work source is reached only through ``orch.py source``; the
 roles only through the launch catalog (or ``[orch.conductor.argv]``) and see the execution-input, never the plan.
 
@@ -128,6 +128,7 @@ class Conductor:
     release = run_service.release
     settle = run_service.settle
     _kill_orphaned_roles = recovery.kill_orphaned_roles
+    _reconcile_interrupted = recovery.reconcile_interrupted
 
     _active_s = loop.active_s
     _disk_guard = loop.disk_guard
@@ -147,6 +148,7 @@ class Conductor:
     _piece = loop.piece
     _conduct = loop.conduct
     _step = loop.step
+    _start_step = loop.start_step
     _stage_event = loop.stage_event
     _resolve = loop.resolve
 

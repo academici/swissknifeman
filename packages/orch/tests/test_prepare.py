@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from aicore.provider import models
 
@@ -91,13 +92,30 @@ class NativeTests(PrepareCase):
         self.assertValid(self.prepare("native", "claude-code", input_name="adhoc"))
 
     def test_grok_model_set_unknown_is_unsupported(self):
-        error = self.refusal("native", "grok")
+        caps = load_capabilities()
+        caps[("native", "grok")]["model"]["set"] = "unknown"
+        engine = Native(self.out, catalog=self.catalog, capabilities=caps)
+        with self.assertRaises(PortError) as raised:
+            engine.prepare(fixture("execution-input", "plan-bound"), fixture("run-policy", "solo"), roles(), provider="grok")
+        error = raised.exception
         self.assertEqual(error.code, "CAPABILITY_UNSUPPORTED")
         report = error.data["launch_plan"]
         self.assertValid(report)
         self.assertEqual(report["stages"], [])
         self.assertEqual([(r["stage_id"], r["capability"]) for r in report["refusals"]], [("primary", "model.set")])
         self.assertFalse(self.out.exists(), "a refused preparation writes nothing")
+
+    def test_production_grok_prepares_jsonl_with_model_and_effort_under_landlock(self):
+        plan = self.prepare("native", "grok")
+        self.assertValid(plan)
+        (stage,) = plan["stages"]
+        self.assertEqual(stage["transport"], "jsonl")
+        argv = stage["argv"]
+        self.assertTrue(argv[1].endswith("/scripts/ro-run.py"))
+        self.assertEqual(argv[2], "--rw")
+        self.assertEqual(Path(argv[3]).resolve(), Path.cwd())
+        self.assertEqual(argv[argv.index("--model") + 1], stage["model"])
+        self.assertEqual(argv[argv.index("--effort") + 1], stage["effort"])
 
     def test_missing_mapping_is_a_refusal_not_a_guess(self):
         self.catalog = catalog.Catalog.load(MODEL_CATALOG.with_name("grok-only.json"))
@@ -283,7 +301,7 @@ class CatalogTests(unittest.TestCase):
             self.assertEqual(raised.exception.code, "CATALOG_UNKNOWN")
 
     def test_launch_entry(self):
-        self.assertEqual(catalog.Catalog.load(MODEL_CATALOG).launch_entry("executor", "grok")["model_set"], "unknown")
+        self.assertEqual(catalog.Catalog.load(MODEL_CATALOG).launch_entry("executor", "grok")["model_set"], "supported")
 
     def test_default_catalog_is_the_aicore_one(self):
         found = catalog.Catalog.load()
@@ -350,7 +368,10 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             arguments = self.arguments(directory)
             arguments[arguments.index("--provider") + 1] = "grok"
-            code, out, err = self.run_cli(*arguments, "--dry-run")
+            caps = load_capabilities()
+            caps[("native", "grok")]["model"]["set"] = "unknown"
+            with mock.patch("orch.bindings.load_capabilities", return_value=caps):
+                code, out, err = self.run_cli(*arguments, "--dry-run")
             self.assertEqual(code, 1)
             self.assertTrue(err.startswith("CAPABILITY_UNSUPPORTED:"))
             self.assertEqual(json.loads(out)["refusals"][0]["capability"], "model.set")

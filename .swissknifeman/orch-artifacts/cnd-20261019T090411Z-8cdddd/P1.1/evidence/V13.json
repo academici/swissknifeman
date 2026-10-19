@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261019T090411Z-8cdddd:P1.1:checks.2:V13",
+  "check_id": "V13",
+  "subject": "PLAN8.P1.1",
+  "candidate": {
+    "head": "f561fff2d80fe7ce5e43043600876a92070f7b33",
+    "dirty_digest": "1dc1c3fe0cb4027ae000a4efbeadd351b20b295873df9c614498cadf809bbc01"
+  },
+  "started_at": "2026-10-19T10:13:32Z",
+  "procedure": {
+    "cmd": "python3 -B scripts/test-config-inventory.py",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-19T10:13:32Z"
+}

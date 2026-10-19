@@ -108,9 +108,9 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "unknown"
+          "grok": "supported"
         },
-        "note": "claude --model, codex --model"
+        "note": "claude --model, codex --model, grok --model"
       },
       "cao": {
         "support": "supported",
@@ -147,9 +147,9 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "unknown"
+          "grok": "supported"
         },
-        "note": "claude --effort, codex -c model_reasoning_effort"
+        "note": "claude --effort, codex -c model_reasoning_effort, grok --effort"
       },
       "cao": {
         "support": "adapted",
@@ -191,9 +191,9 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "unknown"
+          "grok": "supported"
         },
-        "note": "claude --tools/--disallowedTools; codex --sandbox"
+        "note": "claude --tools/--disallowedTools; codex --sandbox; grok --disallowed-tools and ro-run Landlock"
       },
       "cao": {
         "support": "adapted",
@@ -224,9 +224,9 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "unknown"
+          "grok": "supported"
         },
-        "note": "claude result, codex turn.completed"
+        "note": "claude result, codex turn.completed, grok streaming-messages-json result"
       },
       "cao": {
         "support": "unknown"

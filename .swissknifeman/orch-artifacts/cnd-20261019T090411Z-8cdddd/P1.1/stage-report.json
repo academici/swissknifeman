@@ -1,0 +1,132 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/planner-orch/README.md",
+    "bridges/planner-orch/tests/test_launch_bridge.py",
+    "configs/config-inventory.json",
+    "packages/orch/README.md",
+    "packages/orch/bindings/capabilities/native--grok.json",
+    "packages/orch/bindings/matrix.json",
+    "packages/orch/configs/launch-catalog.json",
+    "packages/orch/configs/run-policies/frontend-bounded/cases/native-grok-refused.json",
+    "packages/orch/configs/run-policies/full/cases/native-grok-ok.json",
+    "packages/orch/configs/run-policies/full/cases/native-grok-refused.json",
+    "packages/orch/configs/run-policies/review-only/cases/claude-only-codex-refused.json",
+    "packages/orch/configs/run-policies/review-only/cases/native-grok-ok.json",
+    "packages/orch/configs/run-policies/review-only/cases/native-grok-refused.json",
+    "packages/orch/configs/run-policies/scout-solo/cases/native-grok-refused.json",
+    "packages/orch/configs/run-policies/solo/cases/claude-only-codex-refused.json",
+    "packages/orch/configs/run-policies/solo/cases/native-grok-ok.json",
+    "packages/orch/configs/run-policies/solo/cases/native-grok-refused.json",
+    "packages/orch/docs/architecture.md",
+    "packages/orch/docs/conductor.md",
+    "packages/orch/docs/engine-port.md",
+    "packages/orch/lib/orch/conductor/process.py",
+    "packages/orch/scripts/ro-run.py",
+    "packages/orch/tests/fixtures/grok/streaming-messages-json-error.jsonl",
+    "packages/orch/tests/fixtures/grok/streaming-messages-json.jsonl",
+    "packages/orch/tests/test_capability_seeds.py",
+    "packages/orch/tests/test_conductor.py",
+    "packages/orch/tests/test_conductor_process.py",
+    "packages/orch/tests/test_launch.py",
+    "packages/orch/tests/test_matrix.py",
+    "packages/orch/tests/test_policies.py",
+    "packages/orch/tests/test_portability.py",
+    "packages/orch/tests/test_prepare.py",
+    "packages/orch/tests/test_prepare_proof.py",
+    "packages/orch/tests/test_ro_run.py",
+    "reports/skm-changes-run-log.md",
+    "tests/golden/cli/orch-launch-list.txt"
+  ],
+  "checks_run": [],
+  "evidence": [
+    "/tmp/plan8-p1.1-executor.2-tests.py",
+    "/tmp/plan8-p1.1-executor.2-before.log",
+    "/tmp/plan8-p1.1-executor.2-ro-run.log",
+    "/tmp/plan8-p1.1-executor.2-policies.log"
+  ],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/tests/test_policies.py:216",
+        "packages/orch/configs/run-policies/frontend-bounded/cases/native-grok-refused.json:2",
+        "packages/orch/configs/run-policies/full/cases/native-grok-ok.json:2",
+        "packages/orch/configs/run-policies/review-only/cases/native-grok-ok.json:2",
+        "packages/orch/configs/run-policies/review-only/cases/claude-only-codex-refused.json:2",
+        "packages/orch/configs/run-policies/scout-solo/cases/native-grok-refused.json:2",
+        "packages/orch/configs/run-policies/solo/cases/native-grok-ok.json:2",
+        "packages/orch/configs/run-policies/solo/cases/claude-only-codex-refused.json:2"
+      ],
+      "impact": "Дополнительные пути перечислены в changed_paths; три устаревших Grok refusal-кейса переименованы в success-кейсы, добавлены два refusal-кейса claude-only/codex.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Для исправления предоставленных падений изменены test_policies.py и case-fixtures пяти policy-pack вне исходного write_set, согласно разрешению в разделе Write fence."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/configs/run-policies/frontend-bounded/cases/native-grok-refused.json",
+        "packages/orch/configs/run-policies/full/cases/native-grok-ok.json",
+        "packages/orch/configs/run-policies/full/cases/native-grok-refused.json",
+        "packages/orch/configs/run-policies/review-only/cases/claude-only-codex-refused.json",
+        "packages/orch/configs/run-policies/review-only/cases/native-grok-ok.json",
+        "packages/orch/configs/run-policies/review-only/cases/native-grok-refused.json",
+        "packages/orch/configs/run-policies/scout-solo/cases/native-grok-refused.json",
+        "packages/orch/configs/run-policies/solo/cases/claude-only-codex-refused.json",
+        "packages/orch/configs/run-policies/solo/cases/native-grok-ok.json",
+        "packages/orch/configs/run-policies/solo/cases/native-grok-refused.json",
+        "packages/orch/tests/test_policies.py",
+        "reports/skm-changes-run-log.md"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/orch/configs/run-policies/frontend-bounded/cases/native-grok-refused.json, packages/orch/configs/run-policies/full/cases/native-grok-ok.json, packages/orch/configs/run-policies/full/cases/native-grok-refused.json, packages/orch/configs/run-policies/review-only/cases/claude-only-codex-refused.json, packages/orch/configs/run-policies/review-only/cases/native-grok-ok.json, packages/orch/configs/run-policies/review-only/cases/native-grok-refused.json, packages/orch/configs/run-policies/scout-solo/cases/native-grok-refused.json, packages/orch/configs/run-policies/solo/cases/claude-only-codex-refused.json, packages/orch/configs/run-policies/solo/cases/native-grok-ok.json, packages/orch/configs/run-policies/solo/cases/native-grok-refused.json, packages/orch/tests/test_policies.py, report"
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In ro-run.py _protect, refuse with exit 3 RO_RUN_RW_ESCAPE any explicit --rw whose realpath equals the protected DIR or contains it (an ancestor), alongside the existing symlink/outside checks for paths inside DIR. Add tests in test_ro_run.py for --rw equal to DIR and --rw as an ancestor, both expecting exit 3 RO_RUN_RW_ESCAPE.",
+      "text": "deferred minor finding packages/orch/scripts/ro-run.py:53: The RO_RUN_RW_ESCAPE check only looks at --rw paths inside DIR. `ro-run.py --protect /w --rw /w -- cmd` passes, because the path is inside-or-equal and not a symlink. `--protect /w --rw /home/u` (an ancestor) passes unchecked. Either way the whole protected tree becomes writable with exit 0, although --protect is meant to be fail-closed (D11). The shipped catalog entries cannot reach this. The runtime --rw addition in roles.py:381 only targets the executor, which has no --protect. A future caller or hand-written argv can."
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In _protect, also fail with exit 3 RO_RUN_PROTECT_OVERLAP when any resolved default writable root lies inside (or equals) a protected DIR, reporting the root and DIR. Add a test with HOME set inside the checkout expecting exit 3 RO_RUN_PROTECT_OVERLAP.",
+      "text": "deferred minor finding packages/orch/scripts/ro-run.py:47: The overlap check only tests whether DIR is inside a default writable root. It does not test whether a default root resolves inside DIR. With HOME inside the checkout (or ~/.grok a symlink into it), `<checkout>/.grok` stays writable under --protect. A protected role can then write files into the checkout, including Grok's own config directory."
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In test_ro_run.py ProtectedRunTests.setUp, create the checkout with tempfile.mkdtemp(dir=os.path.expanduser('~/.cache')) as the guidance says (makedirs first, remove in cleanup). Also skipTest when the probe stderr contains RO_RUN_PROTECT_OVERLAP. The regression check is bash packages/orch/scripts/test.sh -p 'test_ro_run.py'.",
+      "text": "deferred minor finding packages/orch/tests/test_ro_run.py:112: ProtectedRunTests.setUp creates its checkout in `SCRIPT.parents[3]`, assumed to be the repo root. If the repo sits under /tmp, /var/tmp or ~/.grok, the probe exits 3 with RO_RUN_PROTECT_OVERLAP. setUp only skips on LANDLOCK_UNAVAILABLE and ABI_TOO_OLD, so the next assertEqual fails instead of skipping. In an own-repo layout (module split) parents[3] is no longer the repo root. A killed run also leaves `.ro-run-test-*` in the repo root. The guidance suggested a directory under ~/.cache."
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In restrict(), test abi < 1 (LANDLOCK_UNAVAILABLE with errno) before the protected and abi < 3 test (LANDLOCK_ABI_TOO_OLD). Adjust test_protect_requires_abi_three_before_creating_a_ruleset so abi 0 expects LANDLOCK_UNAVAILABLE and abi 1 and 2 expect LANDLOCK_ABI_TOO_OLD.",
+      "text": "deferred nit finding packages/orch/scripts/ro-run.py:104: On a kernel without Landlock, the syscall returns -1. With --protect the user sees `LANDLOCK_ABI_TOO_OLD: -1` and never gets LANDLOCK_UNAVAILABLE with the errno text. The same Landlock-less kernel without --protect still reports LANDLOCK_UNAVAILABLE. The contract says ABI < 3, so this is defensible. The message is misleading."
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: Move test_no_protect_preserves_default_writes_and_symlink_grants into a class that skips only on LANDLOCK_UNAVAILABLE (e.g. ReadOnlyRunTests) and assert that the default-root write file exists with the expected content.",
+      "text": "deferred nit finding packages/orch/tests/test_ro_run.py:148: test_no_protect_preserves_default_writes_and_symlink_grants sits in ProtectedRunTests, whose setUp skips on ABI < 3. The 'behaviour without --protect is unchanged' check therefore disappears on ABI 1/2 kernels, where it is most relevant. It also never asserts that the default-root write file exists."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "Ожидания Grok в configs/run-policies/*/cases",
+      "Синтетические capabilities в tests/test_policies.py"
+    ],
+    "reason_codes": [
+      "scope_expanded"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Исправлены обе причины падений: тест ro-run допускает любой действительно перекрывающий writable root; policy-кейсы учитывают поддержку Grok, а проверки отказов используют синтетические capabilities. Refusal-кейсы сохранены во всех policy-pack. Прошли команды: python3 -I /tmp/plan8-p1.1-executor.2-tests.py tests.test_ro_run (14 тестов); python3 -I /tmp/plan8-p1.1-executor.2-tests.py tests.test_policies tests.test_cli_policy tests.test_events tests.test_write_confinement (55 тестов). git diff --check — exit 0. Acceptance-команды не запускались. Документация не требуется: correction меняет только тесты и fixtures."
+}

@@ -71,10 +71,19 @@ packages/orch/
 ## Launch catalog
 
 `configs/launch-catalog.json` states how each role starts on each provider CLI by model class; `orch.py launch argv`
-fills `{model}`, `{effort}`, `{cwd}` and `{orch}` (this package root) and starts nothing. The grok `reviewer` is a
-headless read-only run: `scripts/ro-run.py` applies a Linux Landlock ruleset before `exec` (no root, no user
-namespaces, so it works where Ubuntu refuses unprivileged bubblewrap), the whole filesystem stays readable and
-writes go only to temp directories, `~/.grok` and `{cwd}/vendor`; grok reads the brief from stdin
-(`--prompt-file /dev/stdin`), runs under `bypassPermissions` with its edit tools disallowed and streams
-`streaming-messages-json`. Every child inherits the ruleset, so tests and shell commands of the reviewer run but
-cannot change the repository.
+fills `{model}`, `{effort}`, `{cwd}` and `{orch}` (this package root) and starts nothing. The Grok `executor`,
+`bounded-implementer`, `reviewer` and `report-fixer` all run headless through `scripts/ro-run.py` with jsonl transport:
+`--prompt-file /dev/stdin`, `--model`, `--effort`, `--permission-mode bypassPermissions` and
+`--output-format streaming-messages-json`. The sanitized real stream fixture pins text, error and usage parsing.
+
+The wrapper applies Linux Landlock before `exec` (no root or user namespaces); every child inherits it. Writers
+grant `--rw {cwd}`. The reviewer uses `--protect {cwd} --rw {cwd}/vendor` for test caches; the report-fixer uses
+`--protect {cwd}` without a checkout grant. Both disallow editing, subagent creation, scheduled writes, workflows
+and image/video generation; the report-fixer also disallows shell commands. The filesystem stays readable, with
+default writes to `/tmp`, `/var/tmp`, `/dev` and `~/.grok`.
+
+`--protect` requires Landlock ABI >= 3 (including TRUNCATE) and fails closed with exit 3 for a protected checkout
+inside a default writable root (`RO_RUN_PROTECT_OVERLAP`), a symlink or escaping in-checkout `--rw` grant
+(`RO_RUN_RW_ESCAPE`), or an older ABI (`LANDLOCK_ABI_TOO_OLD`). A checkout in `/tmp` therefore cannot serve these
+protected roles. Without `--protect`, the existing writable rules are preserved. Conductor preflight checks both
+the wrapper command and the provider after `--`, caching command availability for its process.

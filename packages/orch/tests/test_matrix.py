@@ -15,12 +15,12 @@ IDS = (
 SUPPORT = {"supported", "adapted", "unsupported", "unknown"}
 # Provider seeds that P4.3 reconciles with capability records.
 SEEDS = {
-    ("native", "model_set", "grok"): "unknown",
+    ("native", "model_set", "grok"): "supported",
     ("native", "model_observe", "grok"): "unknown",
-    ("native", "effort_set", "grok"): "unknown",
+    ("native", "effort_set", "grok"): "supported",
     ("native", "resume", "grok"): "unknown",
-    ("native", "usage", "grok"): "unknown",
-    ("native", "tool_restrictions", "grok"): "unknown",
+    ("native", "usage", "grok"): "supported",
+    ("native", "tool_restrictions", "grok"): "supported",
     ("native", "skill_delivery", "grok"): "unknown",
     ("native", "model_observe", "codex"): "adapted",
     ("native", "skill_delivery", "claude-code"): "native_plugin_dir",

@@ -5,6 +5,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -77,6 +78,59 @@ class RoleProcessTests(unittest.TestCase):
 
 
 FAKE = ROOT / "tests" / "fixtures" / "conductor" / "fake_role.py"
+
+
+class GrokStreamTests(unittest.TestCase):
+    def test_real_stream_fixture_has_text_usage_and_session(self):
+        data = (ROOT / "tests/fixtures/grok/streaming-messages-json.jsonl").read_text(encoding="utf-8")
+        parsed = process.parse_stream("jsonl", data)
+        self.assertEqual(parsed["text"], "checked")
+        self.assertEqual(parsed["session"], "00000000-0000-0000-0000-000000000000")
+        self.assertEqual(parsed["model"], "grok-4.7")
+        self.assertEqual(parsed["usage"], {"input": 180608, "cached": 2912768, "output": 82166})
+        self.assertFalse(parsed["is_error"])
+        self.assertTrue(parsed["signals"]["terminal"])
+
+    def test_result_is_error_wins_even_with_success_subtype(self):
+        data = (ROOT / "tests/fixtures/grok/streaming-messages-json-error.jsonl").read_text(encoding="utf-8")
+        parsed = process.parse_stream("jsonl", data)
+        self.assertTrue(parsed["is_error"])
+        self.assertEqual(parsed["signals"]["fatal_text"], "failed")
+        self.assertTrue(all(value > 0 for value in parsed["usage"].values()))
+
+
+class AvailabilityTests(unittest.TestCase):
+    def setUp(self):
+        process._command_available.cache_clear()
+        self.addCleanup(process._command_available.cache_clear)
+
+    def test_wrapper_does_not_hide_a_missing_provider(self):
+        argv = [sys.executable, "/orch/scripts/ro-run.py", "--rw", "/work", "--", "grok"]
+        with mock.patch.object(process.shutil, "which", return_value=None) as which:
+            self.assertFalse(process.available(argv))
+            which.assert_called_once_with("grok")
+
+    def test_provider_is_checked_once_per_process_even_for_different_roles(self):
+        prefix = [sys.executable, "/orch/scripts/ro-run.py", "--", "grok"]
+        with mock.patch.object(process.shutil, "which", return_value="/bin/grok") as which:
+            self.assertTrue(process.available(prefix + ["--effort", "high"]))
+            self.assertTrue(process.available(prefix + ["--effort", "medium"]))
+            which.assert_called_once_with("grok")
+
+    def test_plain_missing_launcher_and_empty_wrapped_command(self):
+        self.assertFalse(process.available([]))
+        self.assertFalse(process.available([sys.executable, "--"]))
+        self.assertFalse(process.available(["/missing/launcher", "--", sys.executable]))
+        self.assertTrue(process.available([sys.executable, "-V"]))
+
+    def test_absolute_wrapped_command_must_be_executable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            command = Path(tmp) / "grok"
+            command.write_text("#!/bin/sh\nexit 0\n")
+            self.assertFalse(process.available([sys.executable, "--", str(command)]))
+            process._command_available.cache_clear()
+            command.chmod(0o700)
+            self.assertTrue(process.available([sys.executable, "--", str(command)]))
 
 
 class FailureSignalTests(unittest.TestCase):

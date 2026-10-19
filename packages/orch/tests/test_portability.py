@@ -1,7 +1,7 @@
 """Portability (R16): one execution-input prepares on every binding without rewriting goal or checks.
 
 The four conditions of the engine-port conformance section: a valid launch-plan per binding x provider
-(native x grok is the expected ``CAPABILITY_UNSUPPORTED``), one byte-identical task block in every primary-stage
+including native x grok, one byte-identical task block in every primary-stage
 projection, a stage-result bound to the input digest, and no lifecycle phrases in any projection.
 """
 from __future__ import annotations
@@ -12,7 +12,7 @@ import tempfile
 import unittest
 
 from orch import catalog, contracts
-from orch.bindings import BINDINGS
+from orch.bindings import BINDINGS, load_capabilities
 from orch.contracts import LIFECYCLE_PHRASES
 from orch.port import PortError, RunState
 from orch.render import render_task_block
@@ -23,7 +23,6 @@ ROOT = Path(__file__).resolve().parents[1]
 INPUTS = (("plan-bound", "solo"), ("adhoc", "solo"), ("review-only", "review-only"))
 PROVIDERS = {"native": ("claude-code", "codex", "grok"), "cao": ("claude-code", "codex", "grok"),
              "claude-only": ("claude-code",)}
-EXPECTED_REFUSALS = {("native", "grok"): "model.set"}
 PROJECTION_REF = ("prompt_ref", "profile_ref")
 
 
@@ -55,28 +54,32 @@ class PortabilityTests(unittest.TestCase):
         self.assertEqual({fixture("execution-input", name)["provenance"]["kind"] for name, _ in INPUTS},
                          {"plan", "adhoc", "review"})
 
-    def test_launch_plan_is_valid_or_the_expected_refusal(self):
+    def test_launch_plan_is_valid_for_every_binding_and_provider(self):
         for input_name, policy, binding, provider in cases():
             with self.subTest(input=input_name, binding=binding, provider=provider):
                 input_doc = fixture("execution-input", input_name)
-                expected = EXPECTED_REFUSALS.get((binding, provider))
-                if expected:
-                    with self.assertRaises(PortError) as raised:
-                        self.prepare(input_doc, policy, binding, provider)
-                    self.assertEqual(raised.exception.code, "CAPABILITY_UNSUPPORTED")
-                    refusals = raised.exception.data["launch_plan"]["refusals"]
-                    self.assertEqual([item["capability"] for item in refusals], [expected])
-                    continue
                 plan, _ = self.prepare(input_doc, policy, binding, provider)
                 self.assertEqual([i for i in contracts.validate(plan, "launch-plan") if i.level == "error"], [])
                 self.assertEqual((plan["binding"], plan["input_digest"]), (binding, input_doc["digest"]))
                 self.assertTrue(plan["stages"])
 
+    def test_synthetic_unknown_grok_capability_is_refused_for_every_input(self):
+        caps = load_capabilities()
+        caps[("native", "grok")]["model"]["set"] = "unknown"
+        for input_name, policy in INPUTS:
+            with self.subTest(input=input_name):
+                out = Path(self.tmp.name) / input_name
+                engine = BINDINGS["native"](out, catalog=self.catalog, capabilities=caps)
+                with self.assertRaises(PortError) as raised:
+                    engine.prepare(fixture("execution-input", input_name), fixture("run-policy", policy), roles(), provider="grok")
+                self.assertEqual(raised.exception.code, "CAPABILITY_UNSUPPORTED")
+                refusals = raised.exception.data["launch_plan"]["refusals"]
+                self.assertEqual([item["capability"] for item in refusals], ["model.set"])
+                self.assertFalse(out.exists())
+
     def test_every_projection_carries_the_same_task_block_without_lifecycle_phrases(self):
         projections = 0
         for input_name, policy, binding, provider in cases():
-            if (binding, provider) in EXPECTED_REFUSALS:
-                continue
             with self.subTest(input=input_name, binding=binding, provider=provider):
                 input_doc = fixture("execution-input", input_name)
                 block = render_task_block(input_doc)
@@ -88,7 +91,7 @@ class PortabilityTests(unittest.TestCase):
                 for phrase in LIFECYCLE_PHRASES:
                     self.assertNotIn(phrase, text)
                 projections += 1
-        self.assertEqual(projections, len(INPUTS) * 6)
+        self.assertEqual(projections, len(INPUTS) * 7)
 
     def test_stage_result_from_synthetic_trace_is_bound_to_the_input_digest(self):
         state = RunState("synthetic-run")

@@ -1,0 +1,21 @@
+{
+  "description": "The native engine prepares a Grok executor and skips the optional unavailable scout and same-provider review.",
+  "input": "fixtures/exec/v1/valid/execution-input/plan-bound.json",
+  "provider": "grok",
+  "binding": "native",
+  "expect": {
+    "result": "ok",
+    "stages": ["primary"],
+    "refusals": [
+      {
+        "stage_id": "condense",
+        "capability": "launch"
+      },
+      {
+        "stage_id": "review",
+        "capability": "independent_provider"
+      }
+    ],
+    "policy_decision": "allow"
+  }
+}

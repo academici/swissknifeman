@@ -626,6 +626,120 @@
       "released": false
     },
     {
+      "path": "bridges/gui-hub/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-hub/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-hub bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-hub/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-hub/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-hub bridge GUI contribution"
+    },
+    {
+      "path": "bridges/gui-orch/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-orch/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-orch bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-orch/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-orch/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-orch bridge GUI contribution"
+    },
+    {
+      "path": "bridges/gui-planner/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-planner/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-planner bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-planner/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-planner/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-planner bridge GUI contribution"
+    },
+    {
+      "path": "bridges/gui-workspace/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-workspace/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-workspace bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-workspace/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-workspace/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-workspace bridge GUI contribution"
+    },
+    {
+      "path": "bridges/workspace-planner/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/workspace-planner/migrator.py",
+        "packages/workspace/lib/workspace/migrator_port.py"
+      ],
+      "released": false,
+      "note": "workspace-planner bridge migration extension manifest"
+    },
+    {
+      "path": "packages/gui/configs/config.schema.json",
+      "owner": "gui",
+      "consumers": [
+        "packages/gui/lib/gui/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "gui configuration schema and defaults"
+    },
+    {
+      "path": "packages/workspace/configs/config.schema.json",
+      "owner": "workspace",
+      "consumers": [
+        "packages/workspace/lib/workspace/links.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "workspace configuration schema and defaults"
+    },
+    {
       "glob": "bridges/*/unit.json",
       "owner": "root",
       "consumers": [

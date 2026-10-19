@@ -5,8 +5,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from orch import contracts, policies
+from orch.bindings import load_capabilities
 from orch.policies import PolicyError
 from orch.retry import DEFAULT_ACTIONS
 from orch.settings import Settings
@@ -216,11 +218,17 @@ class RunCasesTests(PackCase):
         case["expect"] = {"result": "refused", "error": "CAPABILITY_UNSUPPORTED", "stages": [],
                           "refusals": [{"stage_id": "primary", "capability": "model.set"}],
                           "policy_decision": "refuse"}
-        (row,) = self.run_pack({"refused": case})
+        caps = load_capabilities()
+        caps[("native", "grok")]["model"]["set"] = "unknown"
+        with mock.patch("orch.bindings.load_capabilities", return_value=caps):
+            (row,) = self.run_pack({"refused": case})
         self.assertEqual(row["status"], "pass", row["differences"])
 
     def test_an_unexpected_refusal_fails_the_case(self):
-        (row,) = self.run_pack({"bad": self.ok_case(provider="grok")})
+        caps = load_capabilities()
+        caps[("native", "grok")]["model"]["set"] = "unknown"
+        with mock.patch("orch.bindings.load_capabilities", return_value=caps):
+            (row,) = self.run_pack({"bad": self.ok_case(provider="grok")})
         self.assertEqual(row["status"], "fail")
         self.assertIn("result", {d["field"] for d in row["differences"]})
 

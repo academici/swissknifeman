@@ -202,8 +202,11 @@ no function here reads the clock or the disk.
 
 Data: [`bindings/matrix.json`](../bindings/matrix.json). Values: `supported`, `adapted`, `unsupported`,
 `unknown`; `skill_delivery` uses capability-record `skill_delivery.mode` values. A native value refers to
-the provider's main transport; `by_provider` overrides it per provider. Grok stays `unknown` until a
-Plan 2 probe.
+the provider's main transport; `by_provider` overrides it per provider. Native Grok uses
+`streaming-messages-json` over jsonl. Its model/effort selection, native tool restrictions and usage are supported
+by the grok 1.0.50 help probe and the sanitized real stream fixture (2026-10-19), rather than an end-to-end run.
+The launch wrapper supplies the OS sandbox through Linux Landlock. Grok resume, model observation and skill
+delivery remain `unknown`; the CAO effort value remains `unsupported`.
 
 | Capability | native | cao | claude-only |
 | --- | --- | --- | --- |
@@ -213,13 +216,13 @@ Plan 2 probe.
 | `cancel` | supported for every provider (process group SIGTERM → SIGKILL) | adapted (`cao shutdown`) | unsupported |
 | `resume` | adapted (session resume + hash check); grok unknown | adapted (workflow replay) | unsupported |
 | `results` | supported | adapted (CAO response normalization) | adapted (report → stage-result) |
-| `model_set` | supported (claude, codex `--model`); grok unknown | supported (profile `model`) | unsupported (session model) |
+| `model_set` | supported (claude, codex, grok `--model`) | supported (profile `model`) | unsupported (session model) |
 | `model_observe` | supported (claude `system/init`); codex adapted; grok unknown | adapted | adapted (report) |
-| `effort_set` | supported (claude `--effort`, codex `model_reasoning_effort`); grok unknown | adapted (claude, codex); grok unsupported | unsupported |
+| `effort_set` | supported (claude/grok `--effort`, codex `model_reasoning_effort`) | adapted (claude, codex); grok unsupported | unsupported |
 | `skill_delivery` | claude `native_plugin_dir`; codex `isolated_home` (auth copied); grok unknown | `profile_skills` (advertised, not an ACL) | `project_dir` / `prompt_inline` |
-| `tool_restrictions` | supported (claude `--tools`, codex `--sandbox`); grok unknown | adapted (`allowedTools`/role) | unsupported (prompt-only) |
+| `tool_restrictions` | supported (claude `--tools`, codex `--sandbox`, grok `--disallowed-tools` + Landlock) | adapted (`allowedTools`/role) | unsupported (prompt-only) |
 | `plan_write_prevention` | adapted (tools + sandbox; shell can still write) | adapted | unsupported |
-| `usage` | supported (claude `result`, codex `turn.completed`); grok unknown | unknown | unknown |
+| `usage` | supported (claude/grok `result`, codex `turn.completed`) | unknown | unknown |
 | `effects` | supported (receipts written by orch) | adapted (outside CAO memoization) | unsupported (registrar records) |
 | `stream_live` | supported | adapted | unsupported |
 

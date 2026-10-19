@@ -280,14 +280,20 @@ Prints `{argv, transport, timeout_s, model, model_class}` and starts nothing. Th
 launch catalog (`orch.py launch show|argv`); the catalog holds a `model_class`, never a model. The bridge maps the
 class to a model through `mappings.<provider>.class_selectors` in `configs/command-routing.json` (`--routing`
 overrides the file) and the effort through `effort_selectors`. `--model` pins the exact model of an owner
-selector (`reviewer grok/grok-4.7`) instead of the class mapping. Providers whose CLI takes no model
-(`model_set: unknown`, grok `executor`) get no model argument; `--model` there is `LAUNCH_INVALID`. Refusals: `LAUNCH_UNKNOWN` (no entry),
+selector (`reviewer grok/grok-4.7`) instead of the class mapping. Grok `executor` and `bounded-implementer` resolve
+their models through the mapping too, with `--model` as an explicit override. A synthetic launch entry with
+`model_set: unknown` gets no model argument; `--model` there is `LAUNCH_INVALID`. Refusals: `LAUNCH_UNKNOWN` (no entry),
 `LAUNCH_INVALID` (bad request or catalog), `LAUNCH_MODEL_UNRESOLVED` (mapping has no model for the class),
 `ROUTING_UNREADABLE`.
 
 A reviewer on another provider (`reviewer-selection`): `plan.py bridge planner-orch launch reviewer grok --model grok-4.7
 --effort high --cwd <repository>`. The grok entry runs headless under orch `scripts/ro-run.py` (Linux Landlock, no
-root, no user namespaces): the filesystem stays readable, writes go only to temp directories, `~/.grok` and
-`<repository>/vendor` (test caches); the brief goes on stdin (`--prompt-file /dev/stdin`), the stream is
-`streaming-messages-json` under `bypassPermissions` with the edit tools disallowed. The tests also compare the argv of `scout` with Task's own `orchestration.scout`, which
+root, no user namespaces): `--protect <repository> --rw <repository>/vendor` keeps the checkout read-only except
+for test caches, with default writes to temp directories, `/dev` and `~/.grok`. Protection requires ABI >= 3 and
+refuses a checkout under a default writable root or an in-checkout symlink/escaping writable grant (exit 3).
+The report-fixer is protected without the vendor grant and also disables shell. Both disable editing, subagents,
+scheduled writes, workflows and image/video generation. Grok writers instead grant `--rw <repository>`.
+All four use jsonl (`streaming-messages-json`), read the brief from stdin (`--prompt-file /dev/stdin`) and run under
+`bypassPermissions`. Conductor preflight checks the provider behind the wrapper, so a missing Grok CLI is unavailable.
+The tests also compare the argv of `scout` with Task's own `orchestration.scout`, which
 `start --scout` keeps using unchanged.

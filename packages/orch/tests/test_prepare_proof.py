@@ -258,6 +258,8 @@ class Refusals(ProofCase):
     def test_launch_catalog_refusal_keeps_its_own_code(self):
         caps = copy.deepcopy(self.caps)
         caps[("native", "grok")]["model"]["set"] = "supported"
+        self.catalog.launch["launch"]["executor"]["grok"].update(
+            transport="acp", model_set="unknown", argv=["grok", "agent", "stdio"])
         refused = self.refusal(provider="grok", capabilities=caps, policy=self.primary_on("grok")).data["launch_plan"]
         self.assertEqual([r["reason_code"] for r in refused["refusals"]], ["LAUNCH_MODEL_UNSETTABLE"])
 

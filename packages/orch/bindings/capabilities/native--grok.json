@@ -7,25 +7,25 @@
     "name": "grok"
   },
   "status": "declared",
-  "recorded_at": "2026-10-07T10:20:25Z",
-  "transport": "acp",
+  "recorded_at": "2026-10-19T00:00:00Z",
+  "transport": "jsonl",
   "auth_route": "unknown",
   "model": {
-    "set": "unknown",
+    "set": "supported",
     "observe": "unknown"
   },
   "effort": {
-    "set": "unknown",
+    "set": "supported",
     "observe": "unknown"
   },
   "stream": "supported",
   "attach": "unsupported",
   "cancel": "supported",
   "resume": "unknown",
-  "usage": "unknown",
+  "usage": "supported",
   "restrictions": {
-    "tools_native": "unknown",
-    "sandbox_os": "unknown",
+    "tools_native": "supported",
+    "sandbox_os": "supported",
     "prompt_only": false
   },
   "skill_delivery": {
@@ -33,8 +33,13 @@
     "per_run_isolation": "unknown"
   },
   "plan_write_prevention": "unknown",
-  "terminal_signal": "response to ACP `session/prompt`",
+  "terminal_signal": "result line of streaming-messages-json",
   "evidence": [
+    {
+      "kind": "probe",
+      "ref": "grok 1.0.50 --help and stream fixture",
+      "note": "2026-10-19; flags and stream shape, not an end-to-end run"
+    },
     {
       "kind": "doc",
       "ref": "https://docs.x.ai/build/features/skills-plugins-marketplaces"

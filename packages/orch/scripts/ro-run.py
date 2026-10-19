@@ -5,16 +5,18 @@ Landlock needs neither root nor user namespaces, so it works where bubblewrap sa
 `apparmor_restrict_unprivileged_userns`). The ruleset applies to this process before `exec` and every child
 inherits it; a process can never lift it.
 
-Usage: ro-run.py [--rw DIR]... [--no-default-rw] -- COMMAND [ARGS...]
+Usage: ro-run.py [--rw DIR]... [--protect DIR]... [--no-default-rw] -- COMMAND [ARGS...]
 
 Writable by default: /tmp, /var/tmp, /dev and ~/.grok (the reviewer CLI keeps its session there). A missing
 directory is skipped. Exit 3 with LANDLOCK_UNAVAILABLE when the kernel offers no Landlock.
+--protect requires ABI 3 (TRUNCATE) and refuses default writable overlap or escaping --rw paths.
 """
 from __future__ import annotations
 
 import ctypes
 import os
 import platform
+import stat
 import struct
 import sys
 
@@ -36,34 +38,71 @@ def _die(code: str, message: str, status: int = 1) -> None:
     sys.exit(status)
 
 
-def _parse(argv: list[str]) -> tuple[list[str], list[str]]:
+def _inside(path: str, root: str) -> bool:
+    return os.path.commonpath((path, root)) == root
+
+
+def _protect(writable: list[str], protected: list[str], explicit: list[str]) -> list[str]:
+    """Validate grants before resolving them, so symlinks cannot widen a protected checkout."""
+    roots = [os.path.realpath(os.path.expanduser(path)) for path in DEFAULT_WRITABLE]
+    for directory in protected:
+        resolved = os.path.realpath(directory)
+        for root in roots:
+            if _inside(resolved, root):
+                _die("RO_RUN_PROTECT_OVERLAP", f"{resolved} is inside writable {root}", 3)
+        for path in explicit:
+            absolute, real = os.path.abspath(path), os.path.realpath(path)
+            if _inside(absolute, os.path.abspath(directory)) or _inside(absolute, resolved) or _inside(real, resolved):
+                try:
+                    symlink = stat.S_ISLNK(os.lstat(absolute).st_mode)
+                except FileNotFoundError:
+                    symlink = False  # a missing grant is skipped, as without --protect
+                if symlink or not _inside(real, resolved):
+                    _die("RO_RUN_RW_ESCAPE", path, 3)
+    return [os.path.realpath(path) for path in writable]
+
+
+def _parse(argv: list[str]) -> tuple[list[str], list[str], list[str]]:
     if "--" not in argv:
-        _die("USAGE", "ro-run.py [--rw DIR]... [--no-default-rw] -- COMMAND [ARGS...]", 2)
+        _die("USAGE", "ro-run.py [--rw DIR]... [--protect DIR]... [--no-default-rw] -- COMMAND [ARGS...]", 2)
     split = argv.index("--")
     options, command = argv[:split], argv[split + 1:]
     if not command:
         _die("USAGE", "a command is required after --", 2)
     writable = [] if "--no-default-rw" in options else [os.path.expanduser(path) for path in DEFAULT_WRITABLE]
+    protected, explicit = [], []
     index = 0
     while index < len(options):
         option = options[index]
         if option == "--rw" and index + 1 < len(options):
             writable.append(options[index + 1])
+            explicit.append(options[index + 1])
+            index += 2
+        elif option == "--protect" and index + 1 < len(options):
+            protected.append(options[index + 1])
             index += 2
         elif option == "--no-default-rw":
             index += 1
         else:
             _die("USAGE", f"unknown option {option!r}", 2)
-    return writable, command
+    if protected:
+        writable = _protect(writable, protected, explicit)
+    return writable, command, [os.path.realpath(path) for path in protected]
 
 
-def restrict(writable: list[str]) -> None:
+def _landlock_abi(libc) -> int:
+    return libc.syscall(SYS_CREATE_RULESET, None, 0, CREATE_RULESET_VERSION)
+
+
+def restrict(writable: list[str], protected: list[str] | tuple[str, ...] = ()) -> None:
     """Make every path outside ``writable`` read-only for this process and its children."""
     if platform.system() != "Linux":
         _die("LANDLOCK_UNAVAILABLE", "Landlock is a Linux kernel feature", 3)
     libc = ctypes.CDLL(None, use_errno=True)
     libc.syscall.restype = ctypes.c_long
-    abi = libc.syscall(SYS_CREATE_RULESET, None, 0, CREATE_RULESET_VERSION)
+    abi = _landlock_abi(libc)
+    if protected and abi < 3:
+        _die("LANDLOCK_ABI_TOO_OLD", str(abi), 3)
     if abi < 1:
         _die("LANDLOCK_UNAVAILABLE", f"the kernel offers no Landlock ({os.strerror(ctypes.get_errno())})", 3)
     handled = WRITE_FILE | REMOVE_DIR | REMOVE_FILE | MAKE_ANY
@@ -91,8 +130,8 @@ def restrict(writable: list[str]) -> None:
 
 
 def main(argv: list[str]) -> None:
-    writable, command = _parse(argv)
-    restrict(writable)
+    writable, command, protected = _parse(argv)
+    restrict(writable, protected)
     try:
         os.execvp(command[0], command)
     except OSError as error:

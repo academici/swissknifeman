@@ -23,7 +23,8 @@ import time
 import unittest
 from unittest import mock
 
-from orch.conductor import cli, engine, gates, options as opts, progress
+from orch import launch
+from orch.conductor import cli, engine, gates, options as opts, process, progress
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import clock, roles
 from orch.conductor.policies import sandbox as sandbox_policy
@@ -89,6 +90,15 @@ class ConductorCase(unittest.TestCase):
         self.addCleanup(os.chdir, cwd)
 
     # ---------------------------------------------------------------- helpers
+
+    def use_acp_grok_catalog(self):
+        catalog = launch.load_catalog()
+        catalog["launch"]["executor"]["grok"].update(
+            transport="acp", model_set="unknown", argv=["grok", "agent", "stdio"])
+        launch.validate_catalog(catalog)
+        patcher = mock.patch.object(launch, "load_catalog", return_value=catalog)
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def git(self, *args) -> str:
         return subprocess.run(["git", *args], cwd=self.project, capture_output=True, text=True, check=True).stdout
@@ -534,6 +544,7 @@ class StopTests(ConductorCase):
         self.assertEqual(self.calls("executor"), 1)
 
     def test_an_acp_role_stops_the_run_before_any_work(self):
+        self.use_acp_grok_catalog()
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         options = self.project.parent / "grok-executor.json"
         options.write_text(json.dumps({"stages": [{"role": "executor", "provider": "grok"}]}), encoding="utf-8")
@@ -2028,7 +2039,10 @@ class ProjectContextTests(ConductorCase):
 
     def test_without_a_project_the_run_is_refused_with_the_flag_named(self):
         other = self.elsewhere()
-        code, out, err = self.conduct("run", "--plan", "T", "--items", "W1", "--dry-run")
+        # /tmp can itself be a checkout on a test host; this case needs no ancestor project markers.
+        with mock.patch.dict(os.environ, {"SKM_PROJECT_ROOT": "", "SKM_LAUNCHER_ACTIVE": ""}), \
+                mock.patch("aicore.state.locations._marker_found", return_value=False):
+            code, out, err = self.conduct("run", "--plan", "T", "--items", "W1", "--dry-run")
         self.assertEqual(code, 1)
         self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
         self.assertIn("--project DIR", err)
@@ -2277,6 +2291,7 @@ class PreviewAndStatusTests(ConductorCase):
         self.assertEqual(self.source()["calls"], [])
 
     def test_dry_run_marks_an_acp_route_unavailable_with_the_reason(self):
+        self.use_acp_grok_catalog()
         options = self.project.parent / "grok-executor.json"
         options.write_text(json.dumps({"stages": [{"role": "executor", "provider": "grok"}]}), encoding="utf-8")
         code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",
@@ -2288,6 +2303,31 @@ class PreviewAndStatusTests(ConductorCase):
         self.assertTrue(preview["unavailable"]["executor"].startswith("TRANSPORT_UNSUPPORTED:"), preview["unavailable"])
         self.assertTrue(preview["available"]["reviewer"])  # grok reviewer is jsonl under ro-run
         self.assertNotIn("reviewer", preview["unavailable"])
+
+    def test_grok_executor_dry_run_checks_the_provider_behind_ro_run(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
+                           for role in ROLES if role != "executor"})
+        options = self.project.parent / "grok-executor.json"
+        options.write_text(json.dumps({"stages": [{"role": "executor", "provider": "grok"}]}), encoding="utf-8")
+        self.addCleanup(process._command_available.cache_clear)
+        for installed in (True, False):
+            with self.subTest(grok_installed=installed):
+                process._command_available.cache_clear()
+                def which(command):
+                    return None if command == "grok" and not installed else "/fake/bin/" + command
+                with mock.patch.object(process.shutil, "which", side_effect=which):
+                    code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",
+                                                  "--options", options)
+                self.assertEqual(code, 0, err)
+                preview = json.loads(out)
+                self.assertEqual(preview["routes"]["executor"]["transport"], "jsonl")
+                argv = preview["routes"]["executor"]["argv"]
+                self.assertTrue(argv[1].endswith("/scripts/ro-run.py"))
+                self.assertEqual(argv[argv.index("--") + 1], "grok")
+                self.assertIs(preview["available"]["executor"], installed)
+                if not installed:
+                    self.assertTrue(preview["unavailable"]["executor"].startswith("PROVIDER_UNAVAILABLE:"))
+        self.assertEqual(self.source()["calls"], [])
 
     def test_dry_run_names_a_missing_binary(self):
         missing = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}

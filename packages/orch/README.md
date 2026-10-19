@@ -22,9 +22,14 @@ with progress lines on stderr, `resume` without repeating closed steps and an ob
 ([docs/conductor.md](docs/conductor.md)). `orch.py doctor` checks that git ignores the conductor's runtime files.
 The launch catalog (`configs/launch-catalog.json`, `orch.py launch list|show|argv`) states how each role starts on
 claude-code, codex and grok by model class, never by model; `argv` builds a command line and starts nothing.
-Grok in the conductor is the `reviewer` and the `report-fixer` only (a route with the `acp` transport, today the `executor` and `bounded-implementer`
-entries of its launch catalog, is refused before any work and shown unavailable by `--dry-run` when the conductor builds it). The grok `reviewer` runs headless under `scripts/ro-run.py` (Linux Landlock): the filesystem stays readable,
-writes go only to temp directories, `~/.grok` and `{cwd}/vendor`; `{orch}` in an argv is this package root.
+Grok's `executor`, `bounded-implementer`, `reviewer` and `report-fixer` launch entries use jsonl
+(`streaming-messages-json`) under `scripts/ro-run.py` (Linux Landlock). Writers grant `--rw {cwd}`; the reviewer
+uses `--protect {cwd} --rw {cwd}/vendor`, and the report-fixer uses `--protect {cwd}`. Protected roles require
+Landlock ABI >= 3 and refuse a checkout inside `/tmp`, `/var/tmp`, `/dev` or `~/.grok`, or a symlink/escaping
+in-checkout writable grant. Both restrict Grok's edit and delegation tools; the report-fixer also disables shell.
+The filesystem stays readable, with default writes to temporary directories, `/dev` and `~/.grok`.
+Preflight checks the provider after the wrapper's `--`, so a missing Grok CLI is unavailable in `--dry-run`.
+ACP routes remain unsupported by the conductor. `{orch}` in an argv is this package root.
 The claude-code `executor`, `bounded-implementer` and `triager` run under it too (shell allowed with `--allowedTools Bash`; the
 executor and the bounded-implementer write only to `{cwd}` and the temporary directories, the triager only to the
 temporary directories), and the `registrar` may run only

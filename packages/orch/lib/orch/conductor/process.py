@@ -14,6 +14,7 @@ Text of tools and of model answers never enters a signal. Deciding what to do ab
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import lru_cache
 import json
 import math
 import os
@@ -52,10 +53,19 @@ class RoleRun:
 
 
 def available(argv: list) -> bool:
-    """Whether the command of ``argv`` can be started (an absolute path or a command on PATH)."""
+    """Whether the launcher and the command after its ``--`` are installed; cached for this process."""
     if not argv:
         return False
-    command = argv[0]
+    if not _command_available(argv[0]):
+        return False
+    if "--" in argv:
+        split = argv.index("--")
+        return split + 1 < len(argv) and _command_available(argv[split + 1])
+    return True
+
+
+@lru_cache(maxsize=None)
+def _command_available(command: str) -> bool:
     if os.sep in command:
         return os.path.isfile(command) and os.access(command, os.X_OK)
     return shutil.which(command) is not None

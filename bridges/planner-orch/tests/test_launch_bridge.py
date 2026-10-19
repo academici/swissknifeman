@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 from pathlib import Path
 import re
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import bridge_fixture
 import partners
@@ -54,12 +56,20 @@ class LaunchBridge(unittest.TestCase):
         self.assertEqual(out["argv"][out["argv"].index("--effort") + 1], "xhigh")
         self.assertEqual(json.loads(launch("bounded-implementer", "codex").stdout)["model"], "gpt-5.6-luna")
 
-    def test_unknown_model_set_takes_no_model_argument(self):
-        out = json.loads(launch("executor", "grok").stdout)
-        self.assertEqual(out["argv"], ["grok", "agent", "stdio"])
-        refused = launch("executor", "grok", "--model", "grok-x")
-        self.assertEqual(refused.returncode, 1)
-        self.assertTrue(refused.stderr.startswith("LAUNCH_INVALID:"), refused.stderr)
+    def test_grok_writer_model_is_mapped_or_overridden_and_uses_jsonl(self):
+        for role in ("executor", "bounded-implementer"):
+            with self.subTest(role=role):
+                done = launch(role, "grok", "--cwd", "/work")
+                self.assertEqual(done.returncode, 0, done.stderr)
+                out = json.loads(done.stdout)
+                self.assertEqual(out["transport"], "jsonl")
+                argv = out["argv"]
+                self.assertTrue(argv[1].endswith("/scripts/ro-run.py"))
+                self.assertEqual(argv[2:5], ["--rw", "/work", "--"])
+                self.assertEqual(argv[argv.index("--model") + 1], out["model"])
+                pinned = launch(role, "grok", "--model", "grok-x")
+                self.assertEqual(pinned.returncode, 0, pinned.stderr)
+                self.assertEqual(json.loads(pinned.stdout)["model"], "grok-x")
 
     def test_owner_selector_model_replaces_the_class_mapping(self):
         done = launch("reviewer", "grok", "--model", "grok-4.7", "--effort", "high", "--cwd", "/work")
@@ -71,6 +81,27 @@ class LaunchBridge(unittest.TestCase):
         self.assertEqual(argv[argv.index("--effort") + 1], "high")
         self.assertEqual(argv[argv.index("--") - 2:argv.index("--")], ["--rw", "/work/vendor"])
         self.assertTrue(argv[1].endswith("/scripts/ro-run.py"))
+        self.assertEqual(argv[2:4], ["--protect", "/work"])
+
+    def test_unknown_model_set_takes_no_model_argument_with_synthetic_acp(self):
+        spec = importlib.util.spec_from_file_location("launch_bridge", Path(__file__).resolve().parents[1] / "launch.py")
+        bridge = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bridge)
+        entry = {"model_class": "implementation", "effort": "high", "model_set": "unknown", "transport": "acp",
+                 "argv": ["grok", "agent", "stdio"], "timeout_s": 3600}
+        def orch(*args):
+            if args[0] == "show":
+                return entry
+            self.assertEqual(args[0], "argv")
+            self.assertNotIn("--model", args)
+            return {key: entry[key] for key in ("argv", "transport", "timeout_s")}
+        with mock.patch.object(bridge, "_orch", side_effect=orch):
+            out = bridge.build("executor", "grok", effort=None, cwd="/work", routing=ROUTING)
+            self.assertEqual(out["argv"], ["grok", "agent", "stdio"])
+            self.assertEqual(out["transport"], "acp")
+            with self.assertRaises(bridge.LaunchRefused) as raised:
+                bridge.build("executor", "grok", model="grok-x", effort=None, cwd="/work", routing=ROUTING)
+            self.assertTrue(str(raised.exception).startswith("LAUNCH_INVALID:"))
 
     def test_refusals(self):
         done = launch("scout", "grok")

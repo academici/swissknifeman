@@ -1,5 +1,5 @@
 {
- "catalog_version": "1.4.0",
+ "catalog_version": "1.5.0",
  "launch": {
   "scout": {
    "claude-code": {
@@ -101,14 +101,29 @@
    "grok": {
     "model_class": "implementation",
     "effort": "high",
-    "transport": "acp",
+    "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--rw",
+     "{cwd}",
+     "--",
      "grok",
-     "agent",
-     "stdio"
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--output-format",
+     "streaming-messages-json"
     ],
     "timeout_s": 3600,
-    "model_set": "unknown"
+    "model_set": "supported"
    }
   },
   "bounded-implementer": {
@@ -168,14 +183,29 @@
    "grok": {
     "model_class": "economy",
     "effort": "medium",
-    "transport": "acp",
+    "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--rw",
+     "{cwd}",
+     "--",
      "grok",
-     "agent",
-     "stdio"
+     "--cwd",
+     "{cwd}",
+     "--prompt-file",
+     "/dev/stdin",
+     "--model",
+     "{model}",
+     "--effort",
+     "{effort}",
+     "--permission-mode",
+     "bypassPermissions",
+     "--output-format",
+     "streaming-messages-json"
     ],
     "timeout_s": 1800,
-    "model_set": "unknown"
+    "model_set": "supported"
    }
   },
   "reviewer": {
@@ -232,6 +262,8 @@
     "argv": [
      "python3",
      "{orch}/scripts/ro-run.py",
+     "--protect",
+     "{cwd}",
      "--rw",
      "{cwd}/vendor",
      "--",
@@ -247,7 +279,7 @@
      "--permission-mode",
      "bypassPermissions",
      "--disallowed-tools",
-     "search_replace,write",
+     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
      "--output-format",
      "streaming-messages-json"
     ],
@@ -409,6 +441,11 @@
     "effort": "low",
     "transport": "jsonl",
     "argv": [
+     "python3",
+     "{orch}/scripts/ro-run.py",
+     "--protect",
+     "{cwd}",
+     "--",
      "grok",
      "--cwd",
      "{cwd}",
@@ -421,7 +458,7 @@
      "--permission-mode",
      "bypassPermissions",
      "--disallowed-tools",
-     "search_replace,write,run_terminal_command",
+     "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
      "--output-format",
      "streaming-messages-json"
     ],

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- orch: Grok executor и bounded-implementer запускаются conductor через jsonl (`streaming-messages-json`) под Landlock `ro-run.py`; `ro-run.py --protect` делает read-only Grok-роли fail-closed. Preflight проверяет команду за wrapper; capability seed и matrix подтверждены probe флагов и фикстурой реального потока.
+
 ## [0.31.1] - 2026-10-19
 
 ### Added

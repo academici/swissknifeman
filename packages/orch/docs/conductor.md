@@ -155,7 +155,7 @@ The conductor stops only on:
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
-| `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` (today the grok `executor` entry; the conductor builds no `bounded-implementer` route) stops with `TRANSPORT_UNSUPPORTED` |
+| `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` stops with `TRANSPORT_UNSUPPORTED`. Wrapped commands check the provider after `--` as well as the launcher |
 | `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after healing, repair and `limits.retries` |
 | `PROVIDER_AUTH`, `PROVIDER_AUTHZ` | the provider refused the credentials or the operation (class `authentication`, `authorization`): never repeated, log in or fix the access, then resume |
 | `PROVIDER_QUOTA` | the usage limit is exhausted (class `quota`, `rate_limit`) and the reset is further than `limits.provider_wait_max_s` or unknown, with no admissible `fallback_routes` entry; or the provider of a role is gated on this machine (see Capacity gates). The message names the reset time (UTC) and says `resume after` it |
@@ -725,14 +725,28 @@ a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}`
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.
 
-Grok in the conductor is the `reviewer` and the `report-fixer` only: its `executor` and `bounded-implementer` launch entries use the
-`acp` transport, which the conductor does not drive. `orch conduct run --dry-run` shows such a route as `available: false` with
-the reason in `unavailable` (`TRANSPORT_UNSUPPORTED: …`, or `PROVIDER_UNAVAILABLE: <command> not found`), and a run stops before
-any work.
+Grok's `executor` and `bounded-implementer` launch entries use jsonl under `scripts/ro-run.py --rw {cwd}`
+(implementation/high, 3600 s and economy/medium, 1800 s respectively). The `reviewer` and `report-fixer` also use
+jsonl and the same wrapper. All four read stdin through `--prompt-file /dev/stdin`, select `--model` and `--effort`,
+use `bypassPermissions` and emit `--output-format streaming-messages-json`. A sanitized real stream fixture pins
+the existing parser's text, terminal result, errors and token usage; no live model call is needed by the tests.
+ACP routes are still refused. Preflight checks the provider after `--` without starting it and caches command
+availability for the process: a missing Grok CLI gives `available: false` and `PROVIDER_UNAVAILABLE` in the dry-run,
+and stops a required route before claim.
 
-The grok `reviewer` runs under `scripts/ro-run.py` (Landlock): it may write only to temporary directories, `~/.grok` and
-`{cwd}/vendor`. `{cwd}/vendor` is there because the tests of PHP projects keep their caches in it (commit `5addff330`);
-the argv is not widened for anything else. Claude Code roles never use `--bare` (it does not read the subscription login) and
+The Grok `reviewer` uses `--protect {cwd} --rw {cwd}/vendor`; the `report-fixer` uses `--protect {cwd}`.
+Both disallow `search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video`;
+the report-fixer also disallows `run_terminal_command`. Landlock permits default writes to `/tmp`, `/var/tmp`,
+`/dev` and `~/.grok`; the reviewer also grants the checkout's real `vendor` directory for test caches. Runtime
+`--rw` grants for authorized `scope.extra_paths` still apply.
+
+`ro-run.py --protect DIR` is repeatable and fails before starting the provider (exit 3) when the real protected path
+is inside a default writable root (`RO_RUN_PROTECT_OVERLAP: <DIR> is inside writable <root>`), an in-checkout
+`--rw` path is a symlink or resolves outside it (`RO_RUN_RW_ESCAPE: <path>`), or Landlock ABI is below 3
+(`LANDLOCK_ABI_TOO_OLD: <abi>`). This includes checkouts under `/tmp` and symlinked vendor grants. ABI 3 supplies
+TRUNCATE protection; calls without `--protect` keep their existing writable rules.
+
+Claude Code roles never use `--bare` (it does not read the subscription login) and
 start with `--permission-prompts none`, so a request that would ask for permission is denied instead of waiting.
 
 ## Plan engines without `orchestration.options`

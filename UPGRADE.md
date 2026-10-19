@@ -73,7 +73,7 @@ Added to `plan/v1` (additive): schema `read-followups` (follow-ups and owner dec
    `task@` by `planner@` in `enabledPlugins` by hand (connect adds `planner` but keeps `system`; check there is no duplicate). **[done]**
    `/plugin marketplace update swissknifeman` is global (one `known_marketplaces.json` entry): run it once, in any project, then
    restart the Claude Code session in every project to load the new plugin set. **[done]**
-9. `swissknifeman doctor`: from v0.30.3 expected `0 fail` and `0 warn` on a machine that passes `scripts/check-env.sh --strict`
+9. `swissknifeman doctor`: from v0.31.0 expected `0 fail` and `0 warn` on a machine that passes `scripts/check-env.sh --strict`
    (the `aicore.doctor`/`skiller.doctor` "probe output is not JSON" failures were a defect of the doctor aggregator, which ignored
    `output: text`). Warns that remain are the owner's: memory daemon (`maind start --only memory`), `orch.sandbox` (see
    [requirements](docs/getting-started.md#requirements)).

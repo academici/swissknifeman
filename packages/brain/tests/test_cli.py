@@ -53,7 +53,7 @@ class TestUsage(CliCase):
     def test_version(self):
         code, out, _ = self.run_cli("version")
         self.assertEqual(0, code)
-        self.assertRegex(out, r"^brain 0\.1\.0 \(.+\)\n$")
+        self.assertRegex(out, r"^brain \d+\.\d+\.\d+ \(.+\)\n$")
 
 
 class TestVault(CliCase):

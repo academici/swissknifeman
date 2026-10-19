@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-10-19
+
+### Added
+
+- release: `scripts/release-check.py vX.Y.Z [--fix] [--full]` checks (and with `--fix` writes) every version surface before a tag: CHANGELOG heading and empty `[Unreleased]`, `unit.json` = `package.json` = plugin manifests = `__version__`, planner surfaces and rendered projections, the ownership table, `ecosystem-units`/`golden` checks, `releases/vX.Y.Z.json`, `version-guard`, registry drift; the skill `release-discipline` points to it.
+
 ### Changed
 
 - orch docs: `agent-mode.md` gets a "Terms" section (orchestration is `orch conduct`; manual execution is a logged fallback; a plan does not prescribe the executor workflow).

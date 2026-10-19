@@ -216,16 +216,16 @@
       "provider": "claude",
       "target": ".claude/skills/release-discipline/SKILL.md",
       "canonical": "bootstrap/skills/release-discipline/SKILL.md",
-      "canonical_sha256": "83ec2b229e577122aa05aaa560b40f22254bcbd4bdfba6f3e3495e34ce04872f",
-      "rendered_sha256": "043d77c47f20a870e715971455d023b6208394fa4c0debf1fd0f32489b755cd9"
+      "canonical_sha256": "426d7e609bba2a4e22a8bda7a99a3431371ef3f974a32b5fe40f1da3ad26422d",
+      "rendered_sha256": "0eb760697092208ecf2a64bca9004722a391dd80d34f7b81f2c82d818da791d3"
     },
     {
       "identity": "release-discipline",
       "provider": "codex",
       "target": ".agents/skills/release-discipline/SKILL.md",
       "canonical": "bootstrap/skills/release-discipline/SKILL.md",
-      "canonical_sha256": "83ec2b229e577122aa05aaa560b40f22254bcbd4bdfba6f3e3495e34ce04872f",
-      "rendered_sha256": "043d77c47f20a870e715971455d023b6208394fa4c0debf1fd0f32489b755cd9"
+      "canonical_sha256": "426d7e609bba2a4e22a8bda7a99a3431371ef3f974a32b5fe40f1da3ad26422d",
+      "rendered_sha256": "0eb760697092208ecf2a64bca9004722a391dd80d34f7b81f2c82d818da791d3"
     },
     {
       "identity": "skill-authoring",

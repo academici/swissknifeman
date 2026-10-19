@@ -44,7 +44,11 @@ generated and by what — [package-architecture]; the canonical Releases & Taggi
    Trivial changes (typos, formatting) — no CHANGELOG entry.
 5. PR.
 6. Run the [docs-maintenance] decision (does docs/ need updating).
-7. After the annotated tag exists locally and points at `HEAD`, run
+7. Before tagging run `python3 scripts/release-check.py vX.Y.Z --fix`, then without `--fix` (and `--full` for the
+   whole test pass): it syncs and verifies every version surface (CHANGELOG heading, `unit.json` = `package.json` =
+   plugin manifests = `__version__`, planner surfaces and projections, ownership table, bridge ranges, golden,
+   `releases/vX.Y.Z.json`, registry drift). A new surface that bit a release belongs in that script.
+8. After the annotated tag exists locally and points at `HEAD`, run
    `./bin/swissknifeman release-fleet vX.Y.Z`. This validates the tag and attestation, delivers
    every registered project, updates provider-native caches, prunes only unreferenced
    exact-attested superseded SKM caches, runs `maind sync --all`, and proves the resulting sync is

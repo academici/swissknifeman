@@ -29,7 +29,7 @@
     },
     {
       "description": "Domain: the plan command line (plans, show, list, get, events) the queries read.",
-      "range": "^0.30",
+      "range": "^0.31",
       "unit": "planner"
     }
   ],

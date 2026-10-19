@@ -141,6 +141,11 @@ There is only one workspace, so no `--workspace` is needed. (With several: `--wo
 the snippet of step 2b exports.) Below, `W0` is the workspace folder `$SKM_WORKSPACES/axioma` (default
 `~/.local/share/swissknifeman/workspaces/axioma`). If `SKM_WORKSPACE` was not exported yet, the owner reruns `shell-env install` now.
 
+If the native clone times out (`REMOTE_UNREACHABLE: git clone timed out`), an ordinary Git clone can finish without its
+300-second subprocess limit. Clone into an absent workspace folder, validate `workspace.json` and its code, create the
+ignored `.staging/` folder, then run `skm workspace init --code axioma`: an existing valid workspace is left intact and the
+machine device is registered. Keep the original remote URL; do not initialize a replacement workspace with a new id.
+
 ## 5. Per project: classify B's plans against the workspace (dry run, nothing written to the workspace)
 
 For each checkout `<P>` that exists:
@@ -165,13 +170,21 @@ Read `$B/plan-<code>.json` → `plans[]`, each with `action`:
 | `skipped-equal` | B's plan equals the workspace copy | nothing |
 | `copied` | the plan exists only on B | step 6a |
 | `conflict` | the plan exists in both and differs (B is newer) | step 6b |
+| `imported-copy` | an opaque legacy folder differs; a device-suffixed copy will be kept | compare and merge both copies as in step 6b; preserve differing artifacts |
 
 Blockers (`blockers[]`): `MIGRATION_IN_PROGRESS` (an item is `in_progress` in B's plan: finish or park it with the owner, or
 agree to use `--allow-in-progress` and record why), `MIGRATION_BLOCKED_SECRET` (use `--local-only-secrets`, already given),
 `MIGRATION_BLOCKED_SYMLINK` (report, skip the project), `PROJECT_CODE_TAKEN`/`WORKSPACE_MISMATCH` (report, skip).
-A project with `0` conflicts and `0` copies needs no step 6.
+A project with `0` conflicts, `0` copies and `0` imported copies needs no step 6. Compare logical plan identities as well as
+paths: an older Markdown folder can correspond to a JSON plan already moved to `archive/`. The legacy and JSON stores are
+different destinations; a `copied` action alone does not establish that the plan is new.
 
 Print one table for the owner now: project, number of plans per action. **Wait for the owner's go** before step 6.
+
+For additional projects, assign an explicit workspace/project marker before attaching. Two independent projects can share
+a template/upstream remote; a remote intersection is not sufficient evidence to merge their identities. Multiple worktrees
+of one actual repository are sources of the same project. If a checkout was already pulled before this run, recover its
+pre-pull plans from the recorded local commits into the backup for comparison; do not reset the current checkout.
 
 ## 6. Merge into the workspace
 
@@ -207,6 +220,15 @@ B's version is newer, but the workspace copy may hold work of machine A that B n
 5. Only when the owner agrees the merge is complete, move B's copy out: `mv "$W/<plan>~<device>" $B/merged-<code>-<plan>~<device>`.
    Do not leave `~<device>` copies in the workspace.
 
+`workspace migrate verify` compares the imported path and digest recorded by `apply`, not the manually merged result.
+After the imported copy is moved out, a merged row reports `changed-in-workspace`; do not claim that it is `equal` or
+rewrite the migration report to make it so. Keep a merge ledger in `$B` with the source digests, retained destination,
+file decisions and planner-check results, and use it to verify those rows. Unmerged rows must still compare normally.
+Treat `knowledge/*.json` and unit documents below `phases/` as schema-owned documents too. Keep artifact variants outside
+those parsed namespaces, or the extra filename and the document id can disagree (`id_mismatch`). When moving an imported
+copy out, remap this device's local-only entries to the retained files and rebuild its exclude block. Inspect `stored_as`
+even on a resumed `skipped-equal` row, and check for remaining device-suffixed folders explicitly.
+
 If there are many conflicts, do the project with the fewest first and show the owner the result before the rest.
 
 ## 7. Publish the merged workspace
@@ -233,6 +255,8 @@ git rm -r -q --cached plans 2>/dev/null || true                          # track
 git pull --ff-only <remote> <branch>                      # brings the marker (workspace) and the removal of plans/
 cat .swissknifeman/project.json                           # plans_store: workspace
 skm workspace migrate verify --project <P> --json         # states equal / legacy-removed are fine
+python3 -I .swissknifeman/launcher.py project migrate --dry-run --json
+python3 -I .swissknifeman/launcher.py project migrate --json
 python3 -I .swissknifeman/launcher.py planner plans | head
 ```
 (Nothing is destroyed: B's old `plans/` is in `$B/removed-<code>/`.)
@@ -262,7 +286,7 @@ and a checkout without a marker, or whose workspace has no folder for the projec
 named in the message is `workspace project attach`, which the owner decides). Afterwards `project.checkout-layer` is `ok` (a `warn` lists what is left) and `project.local`
 is `ok`: `local/config.toml` has `[repo] path` of this checkout (an absolute path, valid on B only). A repeat finds nothing.
 
-**Run `project migrate` first in each checkout.** Any other launcher command (even `planner plans`) that runs after the new code is
+**Run `project migrate` first in each checkout, immediately after the pull in step 8.** Any other launcher command (even `planner plans`) that runs after the new code is
 in place writes a fresh `local/state/events.jsonl`, `ext/cursors.json` and `ext/deliveries.jsonl`; then `migrate` reports these three
 as `PROJECT_MIGRATE_CONFLICT` and leaves them in the checkout (this happened to `vaulter` on machine A). The rest of the project is
 moved anyway and nothing is lost. If it happens on B (the project has no running conductor), merge as the owner approves:
@@ -270,6 +294,9 @@ moved anyway and nothing is lost. If it happens on B (the project has no running
 final newline added); in `ext/cursors.json` add the byte size of the old `events.jsonl` to every `offset` and `last_offset`
 (the new offsets pointed into the new file, which now starts after the old bytes); put the three results in `local/state/`, `mv` the
 old files into `$B`, then repeat `project migrate`. The steps must not run while a conductor or planner of the project runs.
+
+Archived provider-link backups may contain symbolic links too. Preserve such archived backup folders in `$B` without
+dereferencing them, record the move, and repeat `project migrate`; never turn that into permission to follow a runtime link.
 
 Optional, only if the owner wants to see `plans/` and `tasks/` next to the code in an IDE:
 ```bash
@@ -288,11 +315,14 @@ swissknifeman workspace doctor
 swissknifeman project doctor | grep -E "env-"                    # env-snippet and env-variables: ok (a new shell after shell-env install)
 for p in <the checkouts>; do (cd ~/projects/packages/$p && python3 -I .swissknifeman/launcher.py project doctor | grep -E "plans-store|workspace|project\.local|checkout-layer"; python3 -I .swissknifeman/launcher.py planner plans | head -3); done
 for p in <the checkouts>; do test -d ~/projects/packages/$p/plans && ! test -L ~/projects/packages/$p/plans && echo "plans/ still in $p"; done
-for p in <the checkouts>; do (cd ~/projects/packages/$p && ls .swissknifeman); done            # launcher.py launcher.lock.json project.json only
+for p in <the checkouts>; do (cd ~/projects/packages/$p && ls .swissknifeman); done            # launcher, lock, marker; managed hook/artifact carriers may also remain
 ```
 Every project: `project.plans-store` is a workspace store, `project.workspace` is `ok` (a `warn` for a folder name that differs from the
 code is acceptable), `project.local` is `ok`, `project.checkout-layer` is `ok`, `planner plans` lists the merged plans, no real
 `plans/` folder in the checkout (a link made in step 8b does not count) and `.swissknifeman/` holds the launcher, its lock and the marker.
+Keep `hooks.env` and `provider-artifacts.lock.json` when present: current harness hooks and the artifact registry still read
+those checkout carriers. `project migrate` owns `config.toml`, `state/`, `backups/` and `stubs/`; do not move another module's
+files just to reduce the directory to three entries.
 
 ## 10. Report to the owner (short)
 

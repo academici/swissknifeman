@@ -33,6 +33,8 @@ state, backups and stubs live in `projects/<code>/local/` of the workspace the m
 not on this machine, keeps them in `.swissknifeman/` as before). `swissknifeman project migrate` moves an older checkout's files
 there; `project doctor` checks `project.local` and `project.checkout-layer`. `local/` is machine state that sits next to the plans
 because it belongs to the project, and it is excluded from git so a second machine builds its own.
+Managed checkout carriers such as `.swissknifeman/hooks.env` and `provider-artifacts.lock.json` also remain where their
+owning modules read them. `project migrate` moves only `config.toml`, `state/`, `backups/` and `stubs/`.
 
 Large run artifacts are a special case handled inside the Plans area: they stay on the machine that made them
 (`local-only.json`, see publish-safety below).
@@ -209,16 +211,22 @@ without user information.
 
 1. Machine A: `migrate apply` per project, commit the marker (`git add -f .swissknifeman/project.json`; most repositories
    ignore `.swissknifeman`), `workspace connect --remote URL`, `workspace sync --commit --push`, push the marker commits.
-2. Machine B: update swissknifeman, `config migrate-home` (old XDG folders into the machine home) and `aicore shell-env install`
-   (the three SKM variables), `git pull` the checkouts (the marker arrives), `workspace clone URL`,
+2. Machine B: run the new swissknifeman from a separate checkout, `config migrate-home` (old XDG folders into the machine home)
+   and `aicore shell-env install` (the three SKM variables), `workspace clone URL`,
    `workspace project scan ~/projects`, `migrate plan` and `apply` in import mode (equal folders are skipped, new ones are
    copied, a conflict needs `--on-conflict keep-workspace|import-copy`), `workspace sync --commit --pull --push`, then
-   `project migrate` in every checkout (its config, state, backups and stubs go to `projects/<code>/local/`, which stays on B).
+   pull each eligible checkout only after the merge, and immediately run `project migrate` before `planner plans` or another
+   launcher command (its config, state, backups and stubs go to `projects/<code>/local/`, which stays on B).
    The step-by-step runbook for an agent on B is `MIGRATION-HOST-B.md` in the repository root (it pulls a checkout only after
    the merge, because the pull removes the local `plans/`).
-3. Only after `migrate verify` is `equal` on both machines: `migrate cleanup --confirm <code>` and
+3. Only after copies have been verified: `migrate cleanup --confirm <code>` and
    `git rm -r --cached plans` per repository. Files with secret-like content (`--local-only-secrets`) stay on the machine
    that held them; they are not in the workspace git.
+
+After a manual merge, `migrate verify` still checks the original imported path and digest. Moving the temporary imported
+copy to the backup therefore gives `changed-in-workspace`; validate the merged plan with the planner and a merge ledger
+instead of rewriting the original migration report. Preserve different artifacts outside the schema-owned `phases/`,
+`decisions/` and `knowledge/` namespaces: JSON sidecars in those folders are parsed as additional plan documents.
 
 ## Sync between machines
 

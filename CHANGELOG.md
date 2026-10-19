@@ -4,6 +4,7 @@
 
 ### Added
 
+- orch: local run leases and one conductor per checkout; busy run/resume/settle/release commands preserve state, prune removes old runs under ownership, question updates serialize answers, and orphaned runs expose their status and stop unfinished role groups safely on resume.
 - orch: Grok scout (text), triager, researcher и advisor завершают матрицу role × provider; каталог хранит три явных `refusals` с кодом `LAUNCH_REFUSED`, который сохраняется в routing, dry-run, explain и planner-orch. Семь проверок матрицы фиксируют полноту, read-only ограничения, transport и декодирование потока; таблицы доступны в документации.
 
 ### Changed

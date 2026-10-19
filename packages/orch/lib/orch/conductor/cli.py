@@ -119,17 +119,12 @@ def _questions(args, project: Path) -> int:
             print("no open questions")
         return 0
     folder = directory / engine.safe(args.item)
-    doc = questions.read(folder)
-    if doc is None:
-        print(f"QUESTION_UNKNOWN: {args.item} has no questions in run {run_id}", file=sys.stderr)
-        return 1
     try:
-        entry = questions.answer(doc, args.question, option=args.option, text=args.text,
-                                 by=args.by or getpass.getuser(), now=engine.utc_now())
-    except questions.QuestionError as error:
+        entry = questions.answer_file(folder, args.question, option=args.option, text=args.text,
+                                      by=args.by or getpass.getuser(), now=engine.utc_now())
+    except (questions.QuestionError, engine.Stop) as error:
         print(f"{error.code}: {error.message}", file=sys.stderr)
         return 1
-    engine.write_json(questions.path(folder), doc)
     print(json.dumps({"run": run_id, "item": args.item, "question": entry["id"], "revision": entry["revision"],
                       "resolution": entry["resolution"],
                       "next": f"orch conduct resume --run {run_id} --retry {args.item}"}, ensure_ascii=False))
@@ -347,7 +342,7 @@ def main(argv: list | None = None) -> int:
             written = observer.write_report(directory, project, project / engine.REPORTS / run_id)
             print(json.dumps(written, ensure_ascii=False))
             return 0
-        found = progress.summarize(progress.read_lines(directory))
+        found = runs.effective_status(directory, progress.summarize(progress.read_lines(directory)))
         found["run"] = run_id
         found["state"] = engine.read_json(directory / engine.STATE_FILE) or {}
         here = (found["current"] or {}).get("item") or (found["items"][-1]["item"] if found["items"] else None)

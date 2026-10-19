@@ -28,6 +28,32 @@ For an agent that picks its own pieces (ask the source for ready lanes → `run 
 Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: message` on stderr), 2 usage,
 130 interrupted (Ctrl-C, SIGTERM or SIGHUP: the role and check processes of the run are killed with their groups; `resume` continues).
 
+## Ownership of a run
+
+`run` and `resume` hold local exclusive `flock` locks for the entire command: first the checkout lock under
+`<runs root>/checkouts/<sha256(realpath(git toplevel))[:16]>.lock`, then `<run>/lease.lock`. Separate worktrees
+have independent checkout locks. Ownership starts before reading `run.json` or `state.json` on resume and before
+the first state save of a new run. A second conductor is refused with `WORKTREE_BUSY` or `RUN_BUSY`.
+`settle` and `release` take the run lease for their updates; a busy run keeps its state unchanged.
+
+`lease.json` shows the owner's pid, host, start time and command; the checkout's adjacent `.json` also names its run.
+These are display metadata: only the kernel lock proves ownership. Metadata is removed before unlocking. Lock
+files are never deleted, and their descriptors cannot survive exec into a role. Locks are local to one host;
+there is no heartbeat or cross-machine ownership protocol.
+
+If the conductor dies while the journal says `running`, `status`, `status --json` and `runs` report
+`orphaned` / `RUN_ORPHANED` when a separate lock probe succeeds. The probe writes nothing. Runs without the
+`run.json.lease` flag keep their legacy status. Resume first stops surviving process groups of unfinished roles,
+using each agent's atomic `process.json` (`pid`, `pgid`, Linux `/proc` `start_ticks`, `started_at`). It checks process
+identity before signalling, sends SIGTERM, allows 10 seconds, then sends SIGKILL if needed. No new role starts
+while that group remains alive. Each stopped group produces an `info` event `ROLE_ORPHAN_KILLED`.
+
+`answer` can update questions while the conductor owns the run. All updates of an item's `questions.json` use
+`questions.lock` for their read-modify-write, including merging answers before a conductor save. A lock held for
+10 seconds gives `QUESTIONS_LOCKED`. `observe`, `status`, `runs` and prompt explanation do not take run ownership.
+`prune --apply` skips busy leases with a reason, rereads eligibility under the lease, then renames an eligible old
+terminal or orphaned run to `<runs root>/.pruning-<id>` before removing it. The latest run is retained.
+
 ## A piece that rewrites the orchestrator: `--frozen`
 
 A piece that refactors `orch` changes the code of the process that conducts it. `run --frozen` (and `resume --frozen`) takes a snapshot of
@@ -148,6 +174,8 @@ The conductor stops only on:
 
 | Code | When |
 | --- | --- |
+| `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
+| `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
 | `REVIEW_LIMIT` | a batch limit refused a round while a confirmed Blocker finding is open | the finding ids and the limit |
 | `DEPENDENCY_BLOCKED` | with `on_blocked: report` the run went on after a blocked piece, and a later piece of the run depends on it (`depends_on` of its claim): it is not started, stays in progress and the run ends here after the others; `resume --retry` the blocked piece, then `resume` |
 | `DISK_LOW` | less than `limits.disk_min_gb` (default 5) GB free under the project or the temporary directory when the run starts or resumes, or before the checks of a round; the run stops (resumable): free the space, then `resume` |
@@ -182,6 +210,7 @@ instead; `orch conduct status` shows the latest one of the running step:
 
 | Code | When | What it says |
 | --- | --- | --- |
+| `RUN_ORPHANED` | status/runs find a journal still running and a free lease for a run marked `lease: true` | the conductor no longer owns the run; resume stops unfinished role groups before continuing |
 | `STAGE_SLOW` | every `limits.stage_warn_s` (default 2700) of one role run | how long it runs, its last command and the processes of its session (a test run, a build) |
 | `STAGE_IDLE` | every `limits.stage_idle_warn_s` (default 600) without output | the same; `no child process` means the model call itself is silent |
 | `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check; the time a check spends stopped (`SIGSTOP`, state `T`) is not counted, for the beacon and for `check_timeout_s` | the check id and its processes |

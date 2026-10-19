@@ -155,7 +155,8 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
                                timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
                                idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
-                               on_tick=self._beacons(item, key, role, raw), provider=route["provider"])
+                               on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
+                               agent_directory=handle["directory"])
         self._tokens(item, run.usage)
         self._keep_session(item, role, route, run)
         trail["api_retries"] += run.api_retries
@@ -249,7 +250,7 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
         try:
             run = process.run_role(self._role_argv(item, "report-fixer", route), prompt, transport=route["transport"],
                                    cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,
-                                   env=self._role_env(item, "report-fixer", route))
+                                   env=self._role_env(item, "report-fixer", route), agent_directory=handle["directory"])
             self._tokens(item, run.usage)
             handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
         except BaseException as error:

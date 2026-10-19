@@ -228,9 +228,9 @@ def questions(self, item: Item) -> dict:
 
 def save_questions(self, item: Item) -> None:
     store = self._questions(item)
-    self._save()
     if store:
-        write_json(questions_mod.path(item.directory), questions_mod.document(self.run_id, item.ref, store))
+        questions_mod.save(item.directory, self.run_id, item.ref, store)
+    self._save()
 
 
 def questioned(self, item: Item, key: str, report: dict) -> tuple:
@@ -290,8 +290,11 @@ def sync_questions(self, item: Item) -> None:
     store = self._questions(item)
     if not store:
         return
-    questions_mod.merge_file(store, questions_mod.read(item.directory))
-    applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), clock.utc_now())
+    with questions_mod.questions_lock(item.directory):
+        questions_mod.merge_file(store, questions_mod.read(item.directory))
+        applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), clock.utc_now())
+        write_json(questions_mod.path(item.directory), questions_mod.document(self.run_id, item.ref, store))
+        self._save()
     for name in applied:
         self.progress.emit("info", item=item.ref, reason_code="QUESTION_ANSWERED",
                            message=f"question {name} answered by {store[name]['resolution']['by']}")
@@ -303,7 +306,6 @@ def sync_questions(self, item: Item) -> None:
     if waiting:
         self.progress.emit("info", item=item.ref, reason_code="QUESTION_OPEN",
                            message=f"no answer yet to {', '.join(waiting)}")
-    self._save_questions(item)
 
 
 def changed_now(self, item: Item) -> list:

@@ -16,8 +16,11 @@ from typing import List, Optional
 
 from orch.conductor import progress
 from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, runs_root
+from orch.conductor.infrastructure.lease import RunLease
+from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS  # <run id>/<piece>: a source without its own folder
 
+PRUNABLE = {"done", "done_with_deviations", "finished", "blocked", "stopped", "orphaned"}
 
 
 def latest_run_id(project: Path) -> Optional[str]:
@@ -28,7 +31,20 @@ def latest_run_id(project: Path) -> Optional[str]:
     return found[-1].name if found else None
 
 
-def _row(directory: Path) -> dict:
+def effective_status(directory: Path, summary: dict, doc=None, *, owned: bool = False) -> dict:
+    """Refine a journal summary using an independent flock probe; summarize stays pure."""
+    if doc is None:
+        try:
+            doc = json.loads((directory / RUN_FILE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            doc = {}
+    if (summary["status"] == "running" and isinstance(doc, dict) and doc.get("lease") is True
+            and (owned or not RunLease.held(directory))):
+        return dict(summary, status="orphaned", reason_code="RUN_ORPHANED")
+    return summary
+
+
+def _row(directory: Path, *, owned: bool = False) -> dict:
     run_id = directory.name
     try:
         doc = json.loads((directory / RUN_FILE).read_text(encoding="utf-8"))
@@ -37,7 +53,7 @@ def _row(directory: Path) -> dict:
     if not isinstance(doc, dict):
         return {"run_id": run_id, "status": "unreadable"}
     lines = progress.read_lines(directory)
-    found = progress.summarize(lines)
+    found = effective_status(directory, progress.summarize(lines), doc, owned=owned)
     items = [row["item"] for row in found["items"]]
     if not items and isinstance(doc.get("items"), list):
         items = [item for item in doc["items"] if isinstance(item, str)]
@@ -118,7 +134,7 @@ def prune(project: Path, older_than_days: int, apply: bool = False, now: Optiona
         if run_id == keep:
             continue
         row = _row(directory)
-        if row["status"] in ("unreadable", "running"):
+        if row["status"] not in PRUNABLE:
             continue
         age = _age_days(directory, clock)
         if age < older_than_days:
@@ -126,12 +142,33 @@ def prune(project: Path, older_than_days: int, apply: bool = False, now: Optiona
         paths = [directory] + [project / base / run_id for base in (REPORTS, FALLBACK_ARTIFACTS)
                                if (project / base / run_id).exists() or (project / base / run_id).is_symlink()]
         removed = False
+        reason = None
         if apply:
-            for path in paths:
-                removed = _remove(path) or removed
+            lease = RunLease(directory)
+            try:
+                lease.acquire("prune")
+            except Stop as error:
+                reason = f"{error.code}: {error.message}"
+            except FileNotFoundError:
+                reason = "run was removed by another prune"
+            else:
+                try:
+                    row = _row(directory, owned=True)
+                    age = _age_days(directory, clock)
+                    if (row["status"] not in PRUNABLE or age < older_than_days
+                            or run_id == latest_run_id(project)):
+                        reason = "run is no longer eligible"
+                    else:
+                        target = root / f".pruning-{run_id}"
+                        directory.rename(target)
+                        removed = _remove(target)
+                        for path in paths[1:]:
+                            removed = _remove(path) or removed
+                finally:
+                    lease.release()
         rows.append({"run_id": run_id, "status": row["status"], "age_days": round(age, 1),
                      "paths": [str(path.relative_to(project)) if project in path.parents else str(path) for path in paths],
-                     "removed": removed})
+                     "removed": removed, **({"reason": reason} if reason else {})})
     return rows
 
 
@@ -139,7 +176,8 @@ def prune_text(rows: List[dict], apply: bool) -> str:
     if not rows:
         return "no runs to prune"
     out = [f"{row['run_id']}: {row['status']}, {row['age_days']} day(s) old, "
-           f"{'removed' if row['removed'] else 'would remove'} {', '.join(row['paths'])}" for row in rows]
+           f"{('skipped: ' + row['reason']) if row.get('reason') else 'removed' if row['removed'] else 'would remove'} "
+           f"{', '.join(row['paths'])}" for row in rows]
     if not apply:
         out.append(f"{len(rows)} run(s) would be removed; repeat with --apply")
     return "\n".join(out)

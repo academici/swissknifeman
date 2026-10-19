@@ -1,0 +1,146 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "packages/orch/docs/conductor.md",
+    "packages/orch/lib/orch/conductor/application/recovery.py",
+    "packages/orch/lib/orch/conductor/application/review_plan.py",
+    "packages/orch/lib/orch/conductor/application/run_service.py",
+    "packages/orch/lib/orch/conductor/cli.py",
+    "packages/orch/lib/orch/conductor/engine.py",
+    "packages/orch/lib/orch/conductor/infrastructure/files.py",
+    "packages/orch/lib/orch/conductor/infrastructure/lease.py",
+    "packages/orch/lib/orch/conductor/infrastructure/roles.py",
+    "packages/orch/lib/orch/conductor/process.py",
+    "packages/orch/lib/orch/conductor/questions.py",
+    "packages/orch/lib/orch/conductor/runs.py",
+    "packages/orch/lib/orch/conductor/stages/execute.py",
+    "packages/orch/tests/test_characterization.py",
+    "packages/orch/tests/test_conduct_runs.py",
+    "packages/orch/tests/test_conductor_questions.py",
+    "packages/orch/tests/test_run_lease.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "bash packages/orch/scripts/test.sh -p 'test_run_lease.py'",
+      "exit": 0,
+      "id": "V1"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/test.sh -p 'test_conduct*.py'",
+      "exit": 0,
+      "id": "V2"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/test.sh -p 'test_characterization.py'",
+      "exit": 0,
+      "id": "V3"
+    },
+    {
+      "cmd": "bash packages/orch/scripts/validate.sh",
+      "exit": 0,
+      "id": "V9"
+    },
+    {
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "exit": 0,
+      "id": "V10"
+    }
+  ],
+  "evidence": [
+    "/tmp/plan8-p2.1-executor.1-V1.log",
+    "/tmp/plan8-p2.1-executor.1-V2.log",
+    "/tmp/plan8-p2.1-executor.1-V3.log",
+    "/tmp/plan8-p2.1-executor.1-V9.log",
+    "/tmp/plan8-p2.1-executor.1-V10.log",
+    "/tmp/plan8-p2.1-executor.1-questions-before.log",
+    "/tmp/plan8-p2.1-executor.1-questions.log",
+    "/tmp/plan8-p2.1-executor.1-python39.log",
+    "/tmp/plan8-p2.1-executor.1-diff-check.log"
+  ],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/lib/orch/conductor/infrastructure/roles.py:159",
+        "packages/orch/lib/orch/conductor/infrastructure/roles.py:253"
+      ],
+      "impact": "process.json создаётся для этих запусков ролей.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Сохранены необходимые изменения infrastructure/roles.py вне исходного write_set: передача agent_directory основным ролям и report-fixer."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/lib/orch/conductor/application/review_plan.py:47"
+      ],
+      "impact": "Эти запуски также получают process.json и доступны recovery.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Сохранены необходимые изменения application/review_plan.py вне исходного write_set: учёт процессов strategist и group review."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/orch/lib/orch/conductor/application/recovery.py:16",
+        "packages/orch/lib/orch/conductor/application/loop.py:429"
+      ],
+      "impact": "Recovery работает с текущим форматом журнала; started и reconcile не добавлялись.",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "L8 описывает started-шаги, но до P2.2 loop сохраняет только завершённые шаги. Согласно scope recovery обрабатывает все не-done шаги, включая отсутствующие записи."
+    },
+    {
+      "evidence": [
+        "packages/orch/lib/orch/conductor/questions.py:136",
+        "packages/orch/tests/test_conductor_questions.py:22",
+        "V2"
+      ],
+      "impact": "Ответ владельца сохраняется; регрессия и полный файл тестов вопросов проходят.",
+      "kind": "difficulty",
+      "next": "Дополнительных исправлений не требуется.",
+      "text": "Дополнительный регрессионный тест воспроизвёл потерю ответа владельца при сохранении denied, вычисленного до questions.lock. Слияние исправлено."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/orch/lib/orch/conductor/application/review_plan.py",
+        "packages/orch/lib/orch/conductor/infrastructure/roles.py"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: packages/orch/lib/orch/conductor/application/review_plan.py, packages/orch/lib/orch/conductor/infrastructure/roles.py (expected by the scout: packages/orch/lib/orch/conductor/application/review_plan.py, packages/orch/lib/orch/conductor/infrastructure/roles.py)"
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In packages/orch/lib/orch/conductor/infrastructure/lease.py, let FileLock open with O_RDONLY when it is used for probing (create=False), because flock works on a read-only descriptor and the samestat check stays valid. Also make probe_free treat an EACCES or EROFS on open as 'cannot prove free' and return False, so status keeps showing 'running' and never traces back. Regression check: add a test to packages/orch/tests/test_run_lease.py that chmods lease.lock to 0o444 (and covers a held lock). It asserts probe_free returns True when the lock is free and False when it is held, and that effective_status does not raise.",
+      "text": "deferred minor finding packages/orch/lib/orch/conductor/infrastructure/lease.py:31: probe_free (used by runs.effective_status for `conduct status`, `status --json`, `runs`) opens lease.lock with O_RDWR outside the try that only wraps flock. In a read-only context (a role running under ro-run/Landlock or a codex read-only sandbox, or a read-only mount) the open fails with EACCES/EROFS, and the PermissionError/OSError escapes probe_free, so `orch conduct status --run <live run>` exits with a traceback instead of printing `running`. This happens exactly when a run is live (journal running + run.json lease:true), so a read-only role that inspects the run it belongs to crashes the command. flock works on an O_RDONLY descriptor, so the probe needs no write access."
+    },
+    {
+      "impact": "none for the acceptance; found by the review of this item",
+      "kind": "note",
+      "next": "fix at the cleanup of the phase; fix idea: In packages/orch/lib/orch/conductor/questions.py (answer_file) and cli.py answer, check that the item directory and its questions.json exist before calling questions_lock, and raise QUESTION_UNKNOWN with the original message '<item> has no questions in run <id>' without creating anything. In questions_lock, add a keyword to skip mkdir (or call mkdir only on writer paths in questions.py and stages/execute.py). Add a sentence to docs/conductor.md saying answer also takes questions.lock. Regression check: a test in test_conductor_questions.py that answers a nonexistent item, expects QUESTION_UNKNOWN, and asserts the run directory listing is unchanged.",
+      "text": "deferred nit finding packages/orch/lib/orch/conductor/infrastructure/lease.py:160: `orch conduct answer --run <id> --item TYPO --question Q1 --text x` now calls questions_lock, which does mkdir(parents=True) and creates `<run>/TYPO/questions.lock` before read() returns None and QUESTION_UNKNOWN is raised. Before this change the command had no side effects. A mistyped item leaves a stray folder in the run. The error text also changed from `<item> has no questions in run <id>` to `no questions in <absolute path>`. docs/conductor.md:380 still says answer writes only questions.json."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "lease.py и RunStore.ownership: порядок блокировок и освобождение при исключениях",
+      "process.py и recovery.py: start_ticks и завершение групп процессов",
+      "questions.py: сохранение конкурентных ответов",
+      "roles.py и review_plan.py: дополнительные пути запуска ролей"
+    ],
+    "reason_codes": [
+      "scope_expanded",
+      "public_api_changed",
+      "security_touched"
+    ],
+    "recommended": true,
+    "suggested_model_class": "frontier"
+  },
+  "status": "done_with_deviations",
+  "summary": "Доведена и проверена реализация P2.1: run lease, checkout-lock, questions.lock, process.json, recovery осиротевших ролей, orphaned-статус и prune под lease. Исправлена дополнительная потеря ответа владельца при сохранении вычисленного denied. Обновлены документация и CHANGELOG. Все acceptance-проверки прошли. Дополнительно запускались tests.test_conductor_questions.ConcurrentQuestionsTests и tests.test_conductor_questions через python3 -I/unittest; итоговые 22 теста прошли. Проверки синтаксиса Python 3.9 и git diff --check прошли."
+}

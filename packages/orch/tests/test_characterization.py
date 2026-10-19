@@ -379,6 +379,8 @@ T = "test_conductor.py"
 # snapshot) or ``test:<file>`` (the file of tests/ that names it). WORK_SOURCE_* stands for the whole family.
 COVERAGE = {
     # Stops
+    "RUN_BUSY": "test:test_run_lease.py", "WORKTREE_BUSY": "test:test_run_lease.py",
+    "QUESTIONS_LOCKED": "test:test_run_lease.py",
     "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": "snapshot:question-answer-resume",
     "ROUTE_UNDERSHOOT": f"test:{T}", "SANDBOX_UNAVAILABLE": f"test:{T}",
     "PROVIDER_UNAVAILABLE": "snapshot:resume-after-stop", "TRANSPORT_UNSUPPORTED": f"test:{T}",
@@ -394,6 +396,7 @@ COVERAGE = {
     "STUBS_INVALID": "test:test_conductor_stubs.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
     # Beacons
+    "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
     "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": "snapshot:green",
     "RESULT_REPAIRED": f"test:{T}", "REPAIR_FAILED": f"test:{C}", "INPUT_REBUILT": "snapshot:input-rebuilt",

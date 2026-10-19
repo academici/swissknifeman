@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261019T124519Z-1a9182:P2.1:checks.1:V3",
+  "check_id": "V3",
+  "subject": "PLAN8.P2.1",
+  "candidate": {
+    "head": "3d42c2993e18d6c815121202bafd1a33d3aab06e",
+    "dirty_digest": "2ec279e85e359b1780425c61c75a442cda92c88e07213bc39cb64e1c26b923e4"
+  },
+  "started_at": "2026-10-19T14:02:38Z",
+  "procedure": {
+    "cmd": "bash packages/orch/scripts/test.sh -p 'test_characterization.py'",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-19T14:03:19Z"
+}

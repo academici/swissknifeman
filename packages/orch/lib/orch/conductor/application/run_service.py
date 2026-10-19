@@ -8,7 +8,7 @@ from typing import Optional
 from aicore.stubs import StubError
 
 from orch import settings as settings_mod
-from orch.conductor import debug_mode, stubs as stubs_mod
+from orch.conductor import debug_mode, progress, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -44,37 +44,43 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
                "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
                "config_layers": settings_mod.config_layers(self.settings),
                "instructions_digest": instructions["digest"], "debug": bool(getattr(self.settings, "debug", False))}
-    self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}})
-    self.store.create(run_doc)
-    write_json(self.directory / stubs_mod.SNAPSHOT_FILE, instructions)
-    self.instructions = instructions
-    if options_file:
-        self.store.keep_options(options_file)
-    self._save()
-    self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
-                                                                 f"batch, at most {max_items or 'all'}"))
-    debug_mode.announce(self.progress, self.directory, run_id, self.settings)
-    return self._loop()
+    store = RunStore(self.project, run_id)
+    with store.ownership("run", checkout=True, create=True):
+        run_doc["lease"] = True
+        self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}}, store)
+        self.store.create(run_doc)
+        write_json(self.directory / stubs_mod.SNAPSHOT_FILE, instructions)
+        self.instructions = instructions
+        if options_file:
+            self.store.keep_options(options_file)
+        self._save()
+        self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
+                                                                     f"batch, at most {max_items or 'all'}"))
+        debug_mode.announce(self.progress, self.directory, run_id, self.settings)
+        return self._loop()
 
 
 def resume(self, run_id: str, retry=()) -> int:
     store = RunStore(self.project, run_id)
-    run_doc, state = store.load()
-    if run_doc.get("config_file") and not self.config_file:
-        self.config_file = Path(run_doc["config_file"])
-    self._open(run_id, run_doc, state, store)
-    stubs_changed(self, run_doc)
-    for ref in retry:
-        self._retry(ref)
-    state["status"] = "running"
-    state["resumes"] = state.get("resumes", 0) + 1
-    earlier = state.pop("stop", None)  # the stop that this resume answers is history now, not the state of the run
-    if earlier:
-        state["last_stop"] = {**earlier, "resume": state["resumes"]}
-    self._save()
-    self.progress.emit("run.resume", message=f"resume {state['resumes']}")
-    debug_mode.announce(self.progress, self.directory, run_id, self.settings)
-    return self._loop()
+    with store.ownership("resume", checkout=True):
+        run_doc, state = store.load()
+        if run_doc.get("config_file") and not self.config_file:
+            self.config_file = Path(run_doc["config_file"])
+        self._open(run_id, run_doc, state, store)
+        if run_doc.get("lease") is True and progress.summarize(progress.read_lines(self.directory))["status"] == "running":
+            self._kill_orphaned_roles()
+        stubs_changed(self, run_doc)
+        for ref in retry:
+            self._retry(ref)
+        state["status"] = "running"
+        state["resumes"] = state.get("resumes", 0) + 1
+        earlier = state.pop("stop", None)  # the stop answered by this resume is history now
+        if earlier:
+            state["last_stop"] = {**earlier, "resume": state["resumes"]}
+        self._save()
+        self.progress.emit("run.resume", message=f"resume {state['resumes']}")
+        debug_mode.announce(self.progress, self.directory, run_id, self.settings)
+        return self._loop()
 
 
 def snapshot_stubs(self) -> dict:
@@ -197,6 +203,11 @@ def release(self, run_id: str, ref, reason: str) -> int:
     ``None`` for every piece of the run that nobody worked on and that is not closed (the pieces with work are named and
     left alone, and the command says so)."""
     store = RunStore(self.project, run_id)
+    with store.ownership("release"):
+        return _release_owned(self, store, run_id, ref, reason)
+
+
+def _release_owned(self, store: RunStore, run_id: str, ref, reason: str) -> int:
     run_doc, state = store.load()
     items = state.setdefault("items", {})
     known = list(dict.fromkeys([*state_claims(state), *(run_doc.get("items") or []), *items]))  # claimed, maybe never started
@@ -239,6 +250,11 @@ def settle(self, run_id: str, ref: str, outcome: str, reason: str) -> int:
     conductor (committed it with the work source's own command, or gave it up). Nothing else changes: the work
     source keeps its own record; a resume then treats the piece as closed."""
     store = RunStore(self.project, run_id)
+    with store.ownership("settle"):
+        return _settle_owned(self, store, run_id, ref, outcome, reason)
+
+
+def _settle_owned(self, store: RunStore, run_id: str, ref: str, outcome: str, reason: str) -> int:
     run_doc, state = store.load()
     if ref not in state.get("items", {}):
         raise Stop("ITEM_UNKNOWN", f"{ref} is not a piece of run {run_id}")

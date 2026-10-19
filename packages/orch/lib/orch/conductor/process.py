@@ -29,6 +29,9 @@ from typing import Callable, Mapping, Optional
 from aicore.provider import errors as provider_errors
 from aicore.util.redact import env_secrets, redact_text
 
+from orch.conductor.infrastructure.clock import utc_now
+from orch.conductor.infrastructure.files import write_json
+
 STDERR_TAIL_CHARS = 4000
 
 
@@ -392,10 +395,20 @@ def _feed(process: subprocess.Popen, data: bytes) -> None:
         pass
 
 
+def start_ticks(pid: int) -> Optional[int]:
+    """Field 22 after the last closing parenthesis of Linux /proc/<pid>/stat."""
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()
+        return int(fields[19])
+    except (OSError, IndexError, ValueError):
+        return None
+
+
 def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: int, raw_path: Path,
              env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0,
              cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
-             result_grace_s: float = RESULT_GRACE_S, provider: Optional[str] = None) -> RoleRun:
+             result_grace_s: float = RESULT_GRACE_S, provider: Optional[str] = None,
+             agent_directory: Optional[Path] = None) -> RoleRun:
     """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child.
 
     ``provider`` (an aicore provider id such as ``claude-code``) lets a failed run be classified into ``error_doc``;
@@ -417,6 +430,9 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
             return RoleRun(exit=None, error="PROVIDER_UNAVAILABLE", detail=redact_text(str(error), secrets=env_secrets(env)),
                            raw=str(raw_path))
         try:
+            if agent_directory is not None:
+                write_json(Path(agent_directory) / "process.json", {"pid": process.pid, "pgid": process.pid,
+                           "start_ticks": start_ticks(process.pid), "started_at": utc_now()})
             stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel,
                             on_tick=on_tick, result_grace_s=result_grace_s if transport != "text" else 0)
         except BaseException:

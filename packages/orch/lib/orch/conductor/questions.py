@@ -23,6 +23,9 @@ from typing import Optional
 
 from aicore.util.redact import redact_text
 
+from orch.conductor.infrastructure.files import write_json
+from orch.conductor.infrastructure.lease import questions_lock
+
 FILE = "questions.json"
 MODES = ("queue", "deny", "defaults")
 DEFAULT_WARN_S = 1800
@@ -128,9 +131,16 @@ def merge_file(store: dict, document: Optional[dict]) -> None:
     """Take the resolutions written into ``questions.json`` (by ``orch conduct answer``) into ``store``."""
     for entry in (document or {}).get("questions", []):
         mine = store.get(entry["id"])
-        if (mine and mine["status"] == "open" and entry.get("resolution") and entry["revision"] == mine["revision"]):
+        # An owner may answer while the conductor computes a policy decision outside the short file lock.
+        # A persisted answer awaiting consumption wins over that still-unpublished decision.
+        pending_answer = entry.get("status") == "open"
+        if (mine and (mine["status"] == "open" or pending_answer) and entry.get("resolution")
+                and entry["revision"] == mine["revision"] and entry.get("binding") == mine.get("binding")):
             mine["resolution"] = entry["resolution"]
             mine["status"] = "answered"
+            if entry["resolution"].get("by") != "policy":
+                # A person's answer must not be reopened as an already-used policy default.
+                mine.pop("auto_answered", None)
 
 
 def answers_text(store: dict) -> list:
@@ -153,6 +163,23 @@ def read(item_directory: Path) -> Optional[dict]:
 
 def document(run: str, item: str, store: dict) -> dict:
     return {"run": run, "item": item, "questions": list(store.values())}
+
+
+def save(item_directory: Path, run: str, item: str, store: dict) -> None:
+    """Merge a concurrent answer before replacing the question document."""
+    with questions_lock(item_directory):
+        merge_file(store, read(item_directory))
+        write_json(path(item_directory), document(run, item, store))
+
+
+def answer_file(item_directory: Path, question: str, **kwargs) -> dict:
+    with questions_lock(item_directory):
+        doc = read(item_directory)
+        if doc is None:
+            raise QuestionError("QUESTION_UNKNOWN", f"no questions in {item_directory}")
+        entry = answer(doc, question, **kwargs)
+        write_json(path(item_directory), doc)
+        return entry
 
 
 def answer(file_doc: dict, question: str, *, option: Optional[str] = None, text: Optional[str] = None, by: str,

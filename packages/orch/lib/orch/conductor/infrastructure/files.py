@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager, ExitStack
 import os
 from pathlib import Path
 import re
@@ -60,8 +61,28 @@ class RunStore:
         if not _RUN_ID.match(run_id or ""):  # ``--run ../x`` must not reach a folder outside the runs
             raise Stop("RUN_UNKNOWN", f"{run_id!r} is not a run id (cnd-<UTC stamp>-<hex>)")
         self.run_id = run_id
+        self.project = Path(project)
         self.directory = runs_root(project) / run_id
         self._agents_lock = threading.Lock()
+
+    @contextmanager
+    def ownership(self, command: str, *, checkout: bool = False, create: bool = False):
+        """Acquire checkout then run, before any run/state read; release both on every exit."""
+        from orch.conductor.infrastructure.lease import CheckoutLock, RunLease, checkout_toplevel
+
+        with ExitStack() as stack:
+            if checkout:
+                stack.enter_context(CheckoutLock(self.directory.parent, checkout_toplevel(self.project)).acquire(
+                    command, self.run_id))
+            if create:
+                self.directory.mkdir(parents=True, mode=0o700)
+            elif not self.directory.is_dir():
+                raise Stop("RUN_UNKNOWN", f"no conductor run {self.run_id} in {self.directory.parent}")
+            try:
+                stack.enter_context(RunLease(self.directory).acquire(command))
+            except FileNotFoundError:
+                raise Stop("RUN_UNKNOWN", f"no conductor run {self.run_id} in {self.directory.parent}") from None
+            yield
 
     def load(self) -> tuple:
         """``(run_doc, state)`` of an earlier run; ``RUN_UNKNOWN`` when either file is missing."""

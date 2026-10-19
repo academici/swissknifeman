@@ -44,16 +44,32 @@ def forced(mode: str, pieces: list, proposal: dict) -> dict:
             "source": "option"}
 
 
+def run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, raw, timeout_s: int):
+    """Batch roles get the same process ownership record as per-piece roles."""
+    prompt_file = item.directory / "prompts" / f"{key}.md"
+    prompt_file.parent.mkdir(parents=True, exist_ok=True)
+    prompt_file.write_text(prompt, encoding="utf-8")
+    handle = self._agent_start(item, key, role, route, prompt_file, 1)
+    try:
+        run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
+                               timeout_s=timeout_s, raw_path=raw, env=self._role_env(item, role, route),
+                               provider=route["provider"], agent_directory=handle["directory"])
+        self._tokens(item, run.usage)
+        handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
+    except BaseException as error:
+        self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})
+        raise
+    self._agent_end(handle, {"code": run.error, "message": run.detail or run.error} if run.error else None)
+    return run
+
+
 def ask_strategist(self, item: Item, pieces: list, proposal: dict) -> Optional[dict]:
     """The model's choice, or ``None`` when it cannot be had or is not sound (the rules' choice stands then)."""
     try:
         route = self._route(item, "triager")
-        argv = self._role_argv(item, "triager", route)
         raw = self.directory / "streams" / "review-strategist.txt"
         raw.parent.mkdir(parents=True, exist_ok=True)
-        run = process.run_role(argv, strategy.prompt(pieces, proposal), transport=route["transport"], cwd=self.project,
-                               timeout_s=300, raw_path=raw, env=self._role_env(item, "triager", route),
-                               provider=route["provider"])
+        run = run_agent(self, item, "review-strategist", "triager", route, strategy.prompt(pieces, proposal), raw, 300)
     except Exception as error:  # noqa: BLE001 — the strategist is advice; the rules decide when it fails
         self.progress.emit("info", reason_code="STRATEGIST_FAILED", message=f"{type(error).__name__}: {error}"[:200])
         return None
@@ -64,7 +80,6 @@ def ask_strategist(self, item: Item, pieces: list, proposal: dict) -> Optional[d
     if chosen is None:
         self.progress.emit("info", reason_code="STRATEGIST_UNSOUND", message="the strategist's answer is not a partition "
                            "of the batch in order; the rules decide")
-    self._tokens(item, run.usage)
     return chosen
 
 
@@ -161,9 +176,7 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     began = time.monotonic()
     self.progress.emit("info", reason_code="GROUP_REVIEW_START",
                        message=f"group {number} ({', '.join(refs)}): {provider}/{model}/{effort}, {len(prompt) // 1000} KB")
-    run = process.run_role(self._role_argv(item, "reviewer", route), prompt, transport=route["transport"], cwd=self.project,
-                           timeout_s=0, raw_path=raw, env=self._role_env(item, "reviewer", route), provider=provider)
-    self._tokens(item, run.usage)
+    run = run_agent(self, item, f"group-review-{number}", "reviewer", route, prompt, raw, 0)
     text = run.text if not run.error else ""
     read = review_batch.verdict(text)
     found = read["counts"]

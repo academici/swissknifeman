@@ -2,13 +2,98 @@
 from __future__ import annotations
 
 import json
+import copy
+from pathlib import Path
+import select
+import subprocess
+import sys
+import tempfile
 import unittest
 
 from orch.conductor import contract, engine, prompts, questions
+from orch.conductor.infrastructure.files import write_json
 from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
 
 ASK = {"id": "Q1", "revision": 1, "kind": "decision", "text": "Keep the old flag name?",
        "options": [{"id": "keep", "label": "keep"}, {"id": "rename", "label": "rename"}], "blocking": True}
+
+
+class ConcurrentQuestionsTests(unittest.TestCase):
+    def test_an_owner_answer_survives_a_denial_computed_before_the_file_lock(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            store = {}
+            questions.record(store, [ASK], {"run": "cnd-one", "item": "W1", "step": "executor.1"}, "t")
+            questions.save(directory, "cnd-one", "W1", store)
+            store["Q1"]["status"] = "denied"
+            questions.answer_file(directory, "Q1", option="rename", by="owner", now="t")
+            questions.save(directory, "cnd-one", "W1", store)
+            saved = questions.read(directory)["questions"][0]
+            self.assertEqual(("answered", "rename", "owner"),
+                             (saved["status"], saved.get("resolution", {}).get("value"),
+                              saved.get("resolution", {}).get("by")))
+
+    def test_an_owner_answer_wins_over_a_default_computed_before_the_file_lock(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            store = {}
+            questions.record(store, [dict(ASK, default="keep")], {"run": "cnd-one", "item": "W1", "step": "executor.1"}, "t")
+            questions.save(directory, "cnd-one", "W1", store)
+            questions.resolve_default(store["Q1"], "t")
+            questions.answer_file(directory, "Q1", option="rename", by="owner", now="t")
+            questions.save(directory, "cnd-one", "W1", store)
+            saved = questions.read(directory)["questions"][0]
+            self.assertEqual(("answered", "rename", "owner"),
+                             (saved["status"], saved["resolution"]["value"], saved["resolution"]["by"]))
+            questions.apply(store, None, "t")
+            questions.record(store, [dict(ASK, default="keep")],
+                             {"run": "cnd-one", "item": "W1", "step": "executor.2"}, "t")
+            self.assertEqual("applied", store["Q1"]["status"])
+            self.assertEqual("rename", questions.answers_text(store)[0]["answer"])
+
+    def test_answer_and_conductor_save_preserve_both_answers(self):
+        root = Path(__file__).resolve().parents[1]
+        bootstrap = "import sys; sys.path[:0]=" + repr([str(root / "lib"), str(root.parent / "aicore/lib")]) + "; "
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            store = {}
+            questions.record(store, [ASK, dict(ASK, id="Q2")], {"run": "cnd-one", "item": "W1", "step": "executor.1"}, "t")
+            stale = copy.deepcopy(store)
+            write_json(questions.path(directory), questions.document("cnd-one", "W1", store))
+            script = '''
+from pathlib import Path
+from orch.conductor import questions
+from orch.conductor.infrastructure.lease import questions_lock
+p=Path(sys.argv[1])
+print('ready',flush=True)
+sys.stdin.readline()
+questions.answer_file(p,sys.argv[2],option='rename',by='owner',now='t')
+print('answered',flush=True)
+'''
+            children = [subprocess.Popen([sys.executable, "-I", "-u", "-c", bootstrap + script, str(directory), name],
+                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        for name in ("Q1", "Q2")]
+            try:
+                with questions.questions_lock(directory):
+                    for child in children:
+                        self.assertTrue(select.select([child.stdout], [], [], 10)[0])
+                        self.assertEqual("ready", child.stdout.readline().strip())
+                        child.stdin.write("go\n")
+                        child.stdin.flush()
+                for child in children:
+                    out, err = child.communicate(timeout=15)
+                    self.assertEqual(0, child.returncode, err)
+                    self.assertEqual("answered", out.strip())
+                # This state was read before either answer: saving it must merge the resolutions under the same lock.
+                questions.save(directory, "cnd-one", "W1", stale)
+                saved = questions.read(directory)["questions"]
+                self.assertEqual(["rename", "rename"], [row["resolution"]["value"] for row in saved])
+                self.assertEqual(["answered", "answered"], [row["status"] for row in saved])
+            finally:
+                for child in children:
+                    if child.poll() is None:
+                        child.kill()
+                    child.communicate(timeout=10)
 
 
 def asking(*asked, status="blocked", **extra) -> dict:

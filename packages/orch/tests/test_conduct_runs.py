@@ -8,9 +8,11 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from orch.conductor import cli, runs
 from orch.conductor.infrastructure.files import RUN_FILE, runs_root
+from orch.conductor.infrastructure.lease import RunLease
 
 
 def line(ts: str, event: str, **fields) -> str:
@@ -117,6 +119,42 @@ class ConductPruneTests(ConductRunsTests):
         self.assertFalse(rows[0]["removed"])
         self.assertTrue(old.is_dir())
         self.assertEqual(3, len(rows[0]["paths"]))
+
+    def test_prune_skips_a_busy_lease_and_checks_status_again_under_ownership(self):
+        old = self.ended("cnd-old", "2026-09-01")
+        self.ended("cnd-new", "2026-10-13")
+        before = (old / RUN_FILE).read_bytes()
+        with RunLease(old).acquire("resume"):
+            rows = runs.prune(self.project, 30, apply=True, now=self.NOW)
+        self.assertEqual([False], [row["removed"] for row in rows])
+        self.assertIn("RUN_BUSY", rows[0]["reason"])
+        self.assertIn("skipped", runs.prune_text(rows, True))
+        self.assertEqual(before, (old / RUN_FILE).read_bytes())
+        acquire = RunLease.acquire
+        def resumed(lease, command):
+            result = acquire(lease, command)
+            with open(old / "progress.jsonl", "a") as handle:
+                handle.write(line("2026-09-01T11:00:00Z", "run.resume") + "\n")
+            return result
+        with mock.patch.object(RunLease, "acquire", resumed):
+            rows = runs.prune(self.project, 30, apply=True, now=self.NOW)
+        self.assertEqual("run is no longer eligible", rows[0]["reason"])
+        self.assertTrue(old.is_dir())
+
+    def test_prune_renames_an_old_orphan_under_lease_before_removing_it(self):
+        old = self.make("cnd-orphan", [line("2026-09-01T09:00:00Z", "run.start")], doc={"lease": True})
+        self.ended("cnd-new", "2026-10-13")
+        remove = runs._remove
+        def guarded(path):
+            if path.name.startswith(".pruning-"):
+                self.assertEqual(".pruning-cnd-orphan", path.name)
+                self.assertFalse(old.exists())
+                self.assertTrue(RunLease.held(path))
+            return remove(path)
+        with mock.patch.object(runs, "_remove", guarded):
+            rows = runs.prune(self.project, 30, apply=True, now=self.NOW)
+        self.assertEqual([("orphaned", True)], [(row["status"], row["removed"]) for row in rows])
+        self.assertFalse((old.parent / ".pruning-cnd-orphan").exists())
 
     def test_apply_removes_the_state_the_reports_and_the_artifacts_of_old_runs_only(self):
         old = self.ended("cnd-old", "2026-09-01")

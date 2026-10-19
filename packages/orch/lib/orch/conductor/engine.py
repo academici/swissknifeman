@@ -27,7 +27,7 @@ from typing import Callable, Optional
 
 from orch import catalog as catalogs, sandbox
 from orch.conductor import process
-from orch.conductor.application import loop, review_plan, run_service
+from orch.conductor.application import loop, recovery, review_plan, run_service
 from orch.conductor.domain import report as report_rules
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import continued, evidence_paths, findings_problems, report_problems
@@ -127,6 +127,7 @@ class Conductor:
     _batch_held = run_service.batch_held
     release = run_service.release
     settle = run_service.settle
+    _kill_orphaned_roles = recovery.kill_orphaned_roles
 
     _active_s = loop.active_s
     _disk_guard = loop.disk_guard

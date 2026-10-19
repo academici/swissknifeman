@@ -124,3 +124,6 @@ packages/gui/sidecar/dist/
 packages/gui/frontend/test-results/
 packages/gui/frontend/playwright-report/
 packages/gui/desktop/src-tauri/permissions/
+
+# orch run artifacts (evidence logs of checks and executors): local, never published
+.swissknifeman/orch-artifacts/

@@ -49,6 +49,9 @@ class ProjectOfOrchTests(unittest.TestCase):
         self.assertIn("RUN_UNKNOWN", err)
 
     def test_a_command_without_state_works_outside_a_project(self):
+        ancestors = (self.base / "loose").resolve().parents
+        if any((folder / marker).exists() for folder in ancestors for marker in (".git", ".swissknifeman")):
+            self.skipTest("an ancestor of the temporary folder holds a project marker (for example a sandbox /tmp/.git)")
         code, out, err = self.main("doctor", "--json")
         self.assertEqual(code, 0, err)
 

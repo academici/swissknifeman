@@ -178,7 +178,16 @@ def content_key(folders: list, command: list) -> str:
 def cache_file() -> Path:
     common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=ROOT,
                             capture_output=True, text=True, check=True).stdout.strip()
-    return Path(common) / "affected-tests" / "green.json"
+    primary = Path(common) / "affected-tests" / "green.json"
+    try:
+        primary.parent.mkdir(parents=True, exist_ok=True)
+        probe = primary.parent / f".probe-{os.getpid()}"
+        probe.write_text("", encoding="utf-8")
+        probe.unlink()
+        return primary
+    except OSError:  # a read-only git directory (a sandboxed check): the cache moves to the temporary folder
+        key = hashlib.sha256(str(ROOT).encode("utf-8")).hexdigest()[:16]
+        return Path(tempfile.gettempdir()) / "skm-affected-tests" / key / "green.json"
 
 
 def read_cache(path: Path) -> dict:

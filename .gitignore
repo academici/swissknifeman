@@ -87,7 +87,6 @@ docs/orch/
 /.swissknife/
 # Dev-clone marker (PLAN3 D13): created by scripts/dev-clone.sh init, never committed.
 /.swissknifeman-dev
-/audits/
 *.bak
 *.last
 

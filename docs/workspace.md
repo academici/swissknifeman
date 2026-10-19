@@ -111,6 +111,10 @@ code repository never tracks them. A real `plans/` or `tasks/` folder, or a link
 the plans stay in the workspace (`plans/` is linked only with `plans_store: workspace`). `migrate` refuses a checkout whose `plans/`
 is such a link (`PLANS_LINKED`): `project unlink` first. `project doctor` checks the links (`project.links`).
 
+These are ordinary symbolic links: they do not make the target read-only. Treat them as an IDE view and change plan state
+through the planner. Legacy vault synchronizers must skip these links; otherwise an older two-way sync can restore its
+historical plans into the workspace. Brain's development sync skips symbolic links at `repo/plans` and `repo/tasks`.
+
 ## Migration
 
 `workspace migrate` moves `<checkout>/plans` into the workspace.

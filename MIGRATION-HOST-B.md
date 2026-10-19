@@ -306,6 +306,10 @@ skm workspace project unlink --project <P>      # removes them
 The links are off by default (setting `workspace.link_folders`). Do them **after** step 8 and the final check of `plans/` below: the
 real `plans/` folder of step 8 is moved away by then, and a real folder is never replaced. They are never tracked by the code
 repository. A link is not a `plans/` folder in the sense of step 9 (it is allowed there).
+Before enabling them, check any running legacy vault synchronizer: it must skip `plans/` and `tasks/` when they are links.
+An old Brain watcher can otherwise restore its historical Markdown plans through the links into the workspace. Preserve
+any restored copies and compare them with `legacy-plans/` before removing duplicates. The links themselves do not enforce
+read-only filesystem access.
 
 ## 9. Final checks on B
 

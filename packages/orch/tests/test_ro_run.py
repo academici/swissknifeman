@@ -54,6 +54,18 @@ class ProtectValidationTests(unittest.TestCase):
                     self.assertIn(reported_root, roots)
                     self.assertEqual(os.path.commonpath((directory, reported_root)), reported_root)
 
+    def test_rw_equal_to_or_above_the_protected_directory_is_refused(self):
+        directory = Path(SCRIPT.parents[3]) / "protect-unit-dir"  # not created: the validation reads paths only
+        for grant in (directory, directory.parent):
+            with self.subTest(grant=str(grant)):
+                self.refusal(["--protect", str(directory), "--rw", str(grant)], "RO_RUN_RW_ESCAPE")
+
+    def test_default_root_under_the_protected_directory_is_refused(self):
+        directory = Path(SCRIPT.parents[3]) / "protect-unit-dir"
+        with mock.patch.dict(os.environ, {"HOME": str(directory)}):
+            message = self.refusal(["--protect", str(directory)], "RO_RUN_PROTECT_OVERLAP")
+        self.assertIn(f"writable {os.path.realpath(directory / '.grok')} is inside", message)
+
     def test_symlinked_protected_directory_is_resolved(self):
         with tempfile.TemporaryDirectory() as tmp:
             link = Path(tmp) / "checkout"
@@ -96,14 +108,15 @@ class ProtectValidationTests(unittest.TestCase):
         self.assertEqual(command, ["true"])
 
     def test_protect_requires_abi_three_before_creating_a_ruleset(self):
-        for abi in (0, 1, 2):
+        for abi, code in ((-1, "LANDLOCK_UNAVAILABLE:"), (0, "LANDLOCK_UNAVAILABLE:"),
+                          (1, "LANDLOCK_ABI_TOO_OLD: 1"), (2, "LANDLOCK_ABI_TOO_OLD: 2")):
             stderr = io.StringIO()
             with mock.patch.object(self.module.platform, "system", return_value="Linux"), \
                     mock.patch.object(self.module, "_landlock_abi", return_value=abi), \
                     contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit) as raised:
                 self.module.restrict([], ["/work"])
             self.assertEqual(raised.exception.code, 3)
-            self.assertEqual(stderr.getvalue().strip(), f"LANDLOCK_ABI_TOO_OLD: {abi}")
+            self.assertTrue(stderr.getvalue().startswith(code), stderr.getvalue())
 
 
 class ProtectedRunTests(unittest.TestCase):
@@ -117,6 +130,9 @@ class ProtectedRunTests(unittest.TestCase):
         self.kept = self.checkout / "kept.txt"
         self.kept.write_text("kept", encoding="utf-8")
         probe = self.python("pass")
+        if probe.returncode == 3 and "RO_RUN_PROTECT_OVERLAP:" in probe.stderr:
+            self.skipTest("the checkout lies inside a default writable root (the repository is under /tmp or HOME): "
+                          + probe.stderr.strip())
         if probe.returncode == 3 and ("LANDLOCK_UNAVAILABLE:" in probe.stderr or "LANDLOCK_ABI_TOO_OLD:" in probe.stderr):
             self.skipTest("LANDLOCK_UNAVAILABLE: needs Linux Landlock ABI >= 3; " + probe.stderr.strip())
         self.assertEqual(probe.returncode, 0, probe.stderr)
@@ -145,16 +161,6 @@ class ProtectedRunTests(unittest.TestCase):
                 self.assertIn("PermissionError", denied.stderr)
                 self.assertEqual(self.kept.read_text(), "kept")
 
-    def test_no_protect_preserves_default_writes_and_symlink_grants(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            link = Path(tmp) / "vendor"
-            link.symlink_to(self.vendor, target_is_directory=True)
-            done = run("--rw", str(link), "--", sys.executable, "-I", "-c",
-                       f"from pathlib import Path; Path({str(link / 'legacy')!r}).write_text('ok'); "
-                       f"Path({str(Path(tmp) / 'default')!r}).write_text('ok')")
-            self.assertEqual(done.returncode, 0, done.stderr)
-            self.assertEqual((self.vendor / "legacy").read_text(), "ok")
-
     def test_vendor_symlink_stops_before_the_command_starts(self):
         with tempfile.TemporaryDirectory() as outside:
             self.vendor.rmdir()
@@ -165,6 +171,28 @@ class ProtectedRunTests(unittest.TestCase):
 
 
 @unittest.skipUnless(sys.platform.startswith("linux") and landlock_available(), "needs Linux Landlock")
+class UnprotectedRunTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory(prefix=".ro-run-test-", dir=SCRIPT.parents[3])
+        self.addCleanup(tmp.cleanup)
+        self.vendor = Path(tmp.name) / "vendor"
+        self.vendor.mkdir()
+        probe = run("--rw", str(self.vendor), "--", sys.executable, "-I", "-c", "pass")
+        if probe.returncode == 3 and "LANDLOCK_UNAVAILABLE:" in probe.stderr:
+            self.skipTest("LANDLOCK_UNAVAILABLE: needs Linux Landlock; " + probe.stderr.strip())
+        self.assertEqual(probe.returncode, 0, probe.stderr)
+
+    def test_no_protect_preserves_default_writes_and_symlink_grants(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            link = Path(tmp) / "vendor"
+            link.symlink_to(self.vendor, target_is_directory=True)
+            done = run("--rw", str(link), "--", sys.executable, "-I", "-c",
+                       f"from pathlib import Path; Path({str(link / 'legacy')!r}).write_text('ok'); "
+                       f"Path({str(Path(tmp) / 'default')!r}).write_text('ok')")
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual((self.vendor / "legacy").read_text(), "ok")
+
+
 class ReadOnlyRunTests(unittest.TestCase):
     def setUp(self):
         self.base = Path(tempfile.mkdtemp())

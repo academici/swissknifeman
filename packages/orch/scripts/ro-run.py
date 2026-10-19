@@ -50,8 +50,12 @@ def _protect(writable: list[str], protected: list[str], explicit: list[str]) -> 
         for root in roots:
             if _inside(resolved, root):
                 _die("RO_RUN_PROTECT_OVERLAP", f"{resolved} is inside writable {root}", 3)
+            if _inside(root, resolved):  # a default root under the protected tree would stay writable
+                _die("RO_RUN_PROTECT_OVERLAP", f"writable {root} is inside {resolved}", 3)
         for path in explicit:
             absolute, real = os.path.abspath(path), os.path.realpath(path)
+            if _inside(resolved, real):  # the grant is the protected directory or one of its ancestors
+                _die("RO_RUN_RW_ESCAPE", path, 3)
             if _inside(absolute, os.path.abspath(directory)) or _inside(absolute, resolved) or _inside(real, resolved):
                 try:
                     symlink = stat.S_ISLNK(os.lstat(absolute).st_mode)
@@ -101,10 +105,10 @@ def restrict(writable: list[str], protected: list[str] | tuple[str, ...] = ()) -
     libc = ctypes.CDLL(None, use_errno=True)
     libc.syscall.restype = ctypes.c_long
     abi = _landlock_abi(libc)
-    if protected and abi < 3:
-        _die("LANDLOCK_ABI_TOO_OLD", str(abi), 3)
     if abi < 1:
         _die("LANDLOCK_UNAVAILABLE", f"the kernel offers no Landlock ({os.strerror(ctypes.get_errno())})", 3)
+    if protected and abi < 3:
+        _die("LANDLOCK_ABI_TOO_OLD", str(abi), 3)
     handled = WRITE_FILE | REMOVE_DIR | REMOVE_FILE | MAKE_ANY
     handled |= REFER if abi >= 2 else 0
     handled |= TRUNCATE if abi >= 3 else 0

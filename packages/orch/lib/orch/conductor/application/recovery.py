@@ -7,6 +7,8 @@ import time
 
 from orch.conductor import checks, process, prompts
 from orch.conductor.domain.stop import Stop
+from orch.conductor.domain.item import Item
+from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.files import read_json, safe
 
 
@@ -40,8 +42,11 @@ def reconcile_interrupted(run) -> None:
     Removing a started record authorizes a repeat, never a successful result.
     Notes survive a second crash before the executor reports.
     """
-    repeated = {"brief", "prepare", "scout", "research", "review", "triage", "advice", "research-save",
-                "close", "register", "commit"}  # closing receipts are introduced separately
+    repeated = {"brief", "prepare", "scout", "research", "review", "triage", "advice", "research-save"}
+    try:
+        state_saved_ns = (run.directory / "state.json").stat().st_mtime_ns
+    except OSError:
+        state_saved_ns = None
     for ref, item in run.state.get("items", {}).items():
         steps = item.get("steps", {})
         if item.get("outcome") in ("done", "done_with_deviations", "blocked", "abandoned"):
@@ -56,7 +61,23 @@ def reconcile_interrupted(run) -> None:
                 continue
             prefix = key.split(".", 1)[0]
             message = "repeated"
-            if prefix == "executor":
+            if key in ("close", "register", "commit"):
+                recovering = Item(ref, item.get("orch_run", ""), item, run.directory / safe(ref),
+                                  {"attempt_id": step.get("attempt")})
+                receipt = work_source.read_receipt(recovering, key, project=run.project)
+                closes, message = work_source.receipt_closes(key, receipt, recovering, state_saved_ns=state_saved_ns)
+                if closes:
+                    result = work_source.receipt_result(key, receipt)
+                    verdict = ("closer ran" if key == "close" else
+                               f"{result['outcome']} gate {result['gate']}" if key == "register" else
+                               " ".join(str(result[k]) for k in ("outcome", "sha", "message") if result.get(k)))
+                    steps[key] = {"status": "done", "result": result, "verdict": verdict,
+                                  "role": step.get("role", "deterministic"), "route": step.get("route"),
+                                  "duration_s": 0, "ended": clock.utc_now()}
+                    run._save()
+                    run.progress.emit("info", item=ref, stage=key, reason_code="STAGE_INTERRUPTED", message=message)
+                    continue
+            elif prefix == "executor":
                 paths = dirty_paths(run.project, 200)
                 item.setdefault("interrupted_note", {})[key] = prompts.interrupted_correction(step.get("base_head"), paths)
                 message = "repeated with interruption note"

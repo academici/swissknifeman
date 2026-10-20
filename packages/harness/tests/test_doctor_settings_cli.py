@@ -122,7 +122,12 @@ class SettingsCase(unittest.TestCase):
         skm = self.tmp / "skm"
         f = self.tmp / "loose" / "x.json"
         run(write_json, f, {"a": 1}, False)
-        with unittest.mock.patch.dict(os.environ, {"SKM_HOME": str(skm)}):
+        from aicore.state import locations
+        marker_found = locations._marker_found
+        # /tmp may be a real checkout; only markers inside this fixture belong to the test.
+        with unittest.mock.patch.dict(os.environ, {"SKM_HOME": str(skm)}), \
+                unittest.mock.patch.object(locations, "_marker_found", side_effect=lambda candidate, marker:
+                                           candidate not in self.tmp.resolve().parents and marker_found(candidate, marker)):
             run(write_json, f, {"a": 2}, False)
         self.assertFalse(Path(f"{f}.bak").exists())
         self.assertEqual(len(list((skm / "state" / "backups").glob("*/**/x.json"))), 1)

@@ -138,7 +138,11 @@ class FindPlansRootTests(WorkspaceCase):
         (self.project / "src" / "deep").mkdir(parents=True)
         self.assertEqual(store.find_plans_root(self.project / "src" / "deep"), self.project / "plans")
         self.assertEqual(store.find_plans_root(self.project / "plans"), self.project / "plans")
-        self.assertEqual(store.find_plans_root(self.tmp / "nowhere"), self.tmp / "nowhere" / "plans")
+        read_marker = workspace.read_marker
+        # Host markers above the synthetic filesystem must not turn its marker-free branch into a workspace.
+        with mock.patch.object(workspace, "read_marker", side_effect=lambda candidate:
+                               None if candidate in self.tmp.parents else read_marker(candidate)):
+            self.assertEqual(store.find_plans_root(self.tmp / "nowhere"), self.tmp / "nowhere" / "plans")
 
     def test_a_legacy_marker_keeps_the_project_plans_folder(self):
         self.mark("legacy")

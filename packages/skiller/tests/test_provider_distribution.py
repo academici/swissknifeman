@@ -36,6 +36,8 @@ def materialize_registry(env):
 
 
 def materialize_codex_marketplace(root):
+    # Native connect must discover this fixture even under an unrelated repository.
+    (root / ".git").mkdir(exist_ok=True)
     plugins = []
     for name in ("php", "quality"):
         source = root / "skills" / name
@@ -150,16 +152,20 @@ class ProviderDistributionCase(unittest.TestCase):
         self.assertEqual(prepared["plugins"], ("core", "example-command"))
 
     def test_native_selection_parse_failure_precedes_connect_mutations(self):
+        (self.tmp / ".git").mkdir()
         self.write_provider_config(providers())
         materialize_codex_marketplace(self.root)
         config = self.project / ".codex/config.toml"
         config.parent.mkdir()
         config.write_text("[broken")
         before = {p.relative_to(self.project): p.read_bytes() for p in self.project.rglob("*") if p.is_file()}
-        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()), \
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr), \
                 self.assertRaises(SystemExit):
             do_connect(self.env, self.project, {"plugins": "php", "no_core": True,
                                                "native_codex": True}, register=False)
+        self.assertIn("CODEX_SELECTION_PREFLIGHT", stderr.getvalue())
+        self.assertIn(str(config), stderr.getvalue())
         self.assertEqual(before, {p.relative_to(self.project): p.read_bytes()
                                   for p in self.project.rglob("*") if p.is_file()})
 

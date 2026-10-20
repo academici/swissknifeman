@@ -156,6 +156,11 @@ def write_doc(directory: str | os.PathLike, name: str, doc: dict) -> Path:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary, target)
+        directory_fd = os.open(target.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | os.O_CLOEXEC)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
     except BaseException:
         try:
             os.unlink(temporary)

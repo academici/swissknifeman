@@ -688,14 +688,14 @@ class DigestTests(unittest.TestCase):
 
 class CoreVerbTests(unittest.TestCase):
     def test_brief_is_no_longer_a_core_verb(self):
-        result = subprocess.run([sys.executable, str(SCRIPT), "brief", "PLAN1", "P1.1"],
-                                capture_output=True, text=True, timeout=30, cwd=tempfile.gettempdir())
+        with tempfile.TemporaryDirectory() as tmp:
+            result = bridge_fixture.plan_py(tmp, "brief", "PLAN1", "P1.1")
         self.assertEqual(result.returncode, 2)
         self.assertIn("invalid choice: 'brief'", result.stderr)
 
     def test_bridge_list_names_the_brief_verb(self):
-        result = subprocess.run([sys.executable, str(SCRIPT), "--output", "json", "bridge", "list"],
-                                capture_output=True, text=True, timeout=30, cwd=tempfile.gettempdir())
+        with tempfile.TemporaryDirectory() as tmp:
+            result = bridge_fixture.plan_py(tmp, "--output", "json", "bridge", "list")
         self.assertEqual(result.returncode, 0, result.stderr)
         row, = [r for r in json.loads(result.stdout)["data"]["bridges"] if r["name"] == "planner-orch"]
         self.assertIn("brief", row["verbs"])

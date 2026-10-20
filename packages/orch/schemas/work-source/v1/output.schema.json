@@ -152,6 +152,7 @@
       "description": "Outcome of a commit: committed, no-op (nothing left to commit, or the attempt already committed) or refused.",
       "type": "object",
       "properties": {
+        "attempt": {"description": "Attempt whose commit request produced this answer.", "type": "string", "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$"},
         "op": {"description": "Operation.", "const": "commit"},
         "outcome": {"description": "committed, no-op or refused.", "type": "string", "enum": ["committed", "no-op", "refused"]},
         "sha": {"description": "Commit revision.", "type": "string", "pattern": "^[0-9a-f]{7,40}$"},

@@ -382,6 +382,28 @@ class RegisterTests(Case):
         again = self.register(evidence={"V1": self.evidence()})
         self.assertEqual(again["outcome"], "no-op")
 
+    def test_lost_register_answer_repeats_without_second_finish_and_conflicts_are_refused(self):
+        self.claim()
+        evidence = {"V1": self.evidence()}
+        self.assertEqual("recorded", self.register(evidence=evidence)["outcome"])
+        folder = self.project / "plans" / self.plan
+        before_item = (folder / "phases/P1/P1.1.json").read_bytes()
+        before_log = (folder / "log.jsonl").read_bytes()
+        self.assertEqual("no-op", self.register(evidence=evidence)["outcome"])
+        self.assertEqual(before_item, (folder / "phases/P1/P1.1.json").read_bytes())
+        self.assertEqual(before_log, (folder / "log.jsonl").read_bytes())
+        conflict = self.register(status="done_with_deviations", evidence=evidence,
+                                 report={"summary": "changed", "open_issues": [{"kind": "deviation", "text": "different"}]})
+        self.assertEqual(("refused", "ATTEMPT_CONFLICT"), (conflict["outcome"], conflict["reason_code"]), conflict)
+        self.assertEqual(before_item, (folder / "phases/P1/P1.1.json").read_bytes())
+        # The bridge logs report issues before finish refuses the conflicting outcome.
+        # The finish effect itself must still occur only once.
+        after_log = (folder / "log.jsonl").read_bytes()
+        before_events = [json.loads(line) for line in before_log.splitlines()]
+        after_events = [json.loads(line) for line in after_log.splitlines()]
+        self.assertEqual([event for event in before_events if event.get("type") != "deviation"],
+                         [event for event in after_events if event.get("type") != "deviation"])
+
     def test_a_claim_repeated_after_the_registration_is_the_same_claim(self):
         first = self.claim(items=["P1.1"])
         self.register(evidence={"V1": self.evidence()})
@@ -501,6 +523,7 @@ class CommitTests(Case):
         subprocess.run(["git", "commit", "-q", "-m", "evidence"], cwd=self.project, check=True)
         answer = self.commit([f"plans/{self.plan}/artifacts/P1.1/"])
         self.assertEqual(answer["outcome"], "committed", answer)
+        self.assertEqual("att-run-a-P1.1", answer["attempt"])
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.project, capture_output=True, text=True).stdout
         self.assertEqual(answer["sha"], head.strip())
         shown = subprocess.run(["git", "-c", "core.quotePath=false", "show", "--name-only", "--format=", "HEAD"],
@@ -508,13 +531,15 @@ class CommitTests(Case):
                                capture_output=True, text=True).stdout.split()
         self.assertIn("lib/A.py", shown)
         self.assertIn(f"plans/{self.plan}/artifacts/P1.1/stage-report.json", shown)
-        self.assertEqual(self.commit()["outcome"], "no-op")
+        repeated = self.commit()
+        self.assertEqual(("no-op", "att-run-a-P1.1"), (repeated["outcome"], repeated["attempt"]))
 
     def test_a_foreign_dirty_path_is_refused(self):
         self.claim()
         (self.project / "elsewhere.txt").write_text("x", encoding="utf-8")
         answer = self.commit()
         self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "OUTSIDE_SCOPE"))
+        self.assertEqual("att-run-a-P1.1", answer["attempt"])
 
 
 class ReleaseTests(Case):

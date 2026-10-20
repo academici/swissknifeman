@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- orch: повтор blocked ad-hoc регистрации допускает done в том же attempt; recovery отвергает квитанцию, предшествующую новому started-шагу, и сохраняет source SHA при дозавершении workspace-коммита для handoff и group review.
+- orch: восстановление close/register/commit после сбоя проверяет квитанции work source, attempt и успешный outcome; незавершённая workspace-часть commit повторяется без второго source-коммита. Durable-запросы связывают старые ответы с attempt по digest, close сохраняет `{by, ...}`, а work-source/v1 commit получает аддитивное необязательное поле `attempt`. Документация отделяет локальную durability conductor от non-goals Engine Port.
+
 ### Added
 
 - orch: durable started/stopped step records and crash reconciliation on resume; interrupted executors continue partial work with a correction note, checks detect changed paths, and result readers accept only done steps. Settled items discard unfinished steps, and blocked-item retries clear them before reconciliation, so unknown step keys do not prevent recovery after an owner action.

@@ -11,6 +11,7 @@ import unittest
 from orch import adhoc
 from orch.cli import main
 from orch.contracts import canonical_digest, validate
+from orch.worksource_file import FileWorkSource
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,6 +27,29 @@ def run(*argv: str) -> tuple[int, str, str]:
 
 
 class AdhocTests(unittest.TestCase):
+    def test_blocked_registration_can_be_retried_but_done_cannot_be_replaced(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            path = project / "input.json"
+            doc = adhoc.build_adhoc_input("Retry blocked input", ["product.txt"], checks=["V1=true"])
+            path.write_text(json.dumps(doc))
+            evidence = project / "V1.json"
+            evidence.write_text(json.dumps({"check_id": "V1", "exit": 0}))
+            source = FileWorkSource(path, project=project)
+            fields = {"plan": "adhoc", "ref": doc["input_id"], "run_id": "run1",
+                      "attempt_id": "att-run1-adhoc-1", "evidence": {"V1": str(evidence)},
+                      "report": {"summary": "retry", "open_issues": []},
+                      "registrar": {"provider": "orch", "model": "test"},
+                      "executed_by": {"provider": "orch", "model": "test"}}
+            self.assertEqual("recorded", source.register(status="blocked", **fields)["outcome"])
+            self.assertEqual("recorded", source.register(status="done", **fields)["outcome"])
+            self.assertEqual("no-op", source.register(status="done", **fields)["outcome"])
+            refused = source.register(status="blocked", **fields)
+            self.assertEqual(("refused", "ATTEMPT_CONFLICT"), (refused["outcome"], refused["reason_code"]))
+            folder = project / ".swissknifeman/orch-artifacts/run1" / doc["input_id"]
+            self.assertEqual("done", json.loads((folder / "register.json").read_text())["status"])
+            self.assertEqual("done", json.loads((folder / "stage-report.json").read_text())["status"])
+
     def test_check_input_is_valid(self):
         doc = adhoc.build_adhoc_input("Fix typo", ["README.md"], checks=["V1=python3 -c 'print(1)'"])
         self.assertEqual([i for i in validate(doc, "execution-input") if i.level == "error"], [])

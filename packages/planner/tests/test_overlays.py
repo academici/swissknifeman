@@ -113,7 +113,12 @@ class OverlayCase(unittest.TestCase):
         outside = self.base / "outside"
         outside.mkdir()
         from planner.integration import overlays
-        self.assertIsNone(overlays.project_root(cwd=outside, project=""))
+        from aicore.state import locations
+        marker_found = locations._marker_found
+        # The synthetic filesystem ends at the fixture; a host checkout above it is not part of this case.
+        with mock.patch.object(locations, "_marker_found", side_effect=lambda candidate, marker:
+                               candidate not in self.base.parents and marker_found(candidate, marker)):
+            self.assertIsNone(overlays.project_root(cwd=outside, project=""))
 
     def machine(self, text):
         from aicore.state import machine_config_file

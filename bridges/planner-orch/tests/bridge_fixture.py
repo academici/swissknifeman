@@ -37,9 +37,13 @@ def demo_plan(tmpdir) -> Path:
 
 
 def plan_py(tmpdir, *args: str) -> subprocess.CompletedProcess:
-    """``plan.py <args>`` run in ``tmpdir``."""
+    """``plan.py <args>`` bound to ``tmpdir``, never a project marker above the sandbox."""
+    # Planner's standalone plan-store discovery uses a plans folder, independently of aicore's project lookup.
+    # Do not add a legacy folder to fixtures that deliberately put their plans in a workspace.
+    if not (Path(tmpdir) / ".swissknifeman/project.json").exists():
+        (Path(tmpdir) / "plans").mkdir(exist_ok=True)
     return subprocess.run([sys.executable, str(PLAN_PY), *args], cwd=tmpdir, capture_output=True, text=True,
-                          encoding="utf-8", check=False)
+                          encoding="utf-8", check=False, env=dict(os.environ, SKM_PROJECT_ROOT=str(tmpdir)))
 
 
 def brief_of_demo_plan(tmpdir, item="P1.2", unit=None) -> dict:

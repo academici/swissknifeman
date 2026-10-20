@@ -46,8 +46,15 @@ partners by an environment variable or a command on `PATH`, never by a neighbour
 - compensation;
 - multi-day execution.
 
-These belong to specialised runtimes; an engine may adapt one, `orch` does not become one. Starting engine processes is not
-implemented yet: `run`, a live `watch`, `cancel`, `resume` and `results` of a binding return `NOT_IMPLEMENTED`.
+These belong to specialised runtimes; an engine may adapt one, `orch` does not become one. The Engine Port bindings
+currently prepare launch plans; their `run`, live `watch`, `cancel`, `resume` and `results` operations return
+`NOT_IMPLEMENTED`. The conductor starts role processes itself.
+
+The conductor provides durable item execution on one host: local leases own the run and checkout, started records
+precede each step, work-source receipts record closing effects, and resume reconciles interrupted work. Successful
+receipts close only the matching attempt; a split commit also needs a completed workspace part. Missing or unsuccessful
+receipts repeat the source's idempotent operation. This local durability does not add the specialised runtime features
+listed above, or recovery across machines, to the Engine Port.
 
 **MCP is a tool surface, not the event bus, not the source of truth about runs.** The journal of a run and the events of
 `aicore` are that source; `tests/test_boundaries.py::test_no_mcp_imports` rejects MCP imports in `orch` and in the `aicore`

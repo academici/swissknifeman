@@ -82,6 +82,8 @@ class FileWorkSource:
             raise WorkSourceError("INPUT_INVALID", f"{op} request outside work-source/v1: {'; '.join(found[:3])}",
                                   {"issues": found})
         answer = getattr(self, f"_{op}")(request)
+        if op == "commit":
+            answer["attempt"] = request["attempt_id"]
         found = problems(answer, "output")
         if found:
             raise WorkSourceError("WORK_SOURCE_FAILED", f"file source {op} answered outside work-source/v1: "
@@ -186,8 +188,14 @@ class FileWorkSource:
         receipt = {"attempt_id": request["attempt_id"], "status": status}
         if receipt_path.is_file():
             try:
-                if json.loads(receipt_path.read_text(encoding="utf-8")) == receipt:
+                prior = json.loads(receipt_path.read_text(encoding="utf-8"))
+                if prior == receipt:
                     return {"op": "register", "outcome": "no-op", "gate": gate}
+                if (isinstance(prior, dict) and prior.get("attempt_id") == request["attempt_id"]
+                        and not (prior.get("status") == "blocked" and status != "blocked")):
+                    return {"op": "register", "outcome": "refused", "gate": gate,
+                            "reason_code": "ATTEMPT_CONFLICT",
+                            "message": "the attempt already registered another outcome"}
             except ValueError:
                 pass
         folder.mkdir(parents=True, exist_ok=True)

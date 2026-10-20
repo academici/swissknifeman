@@ -721,11 +721,10 @@ def _source_register(args, current, project) -> int:
     evidence = dict(args.evidence or [])
     if len(evidence) != len(args.evidence or []):
         raise SourceRefusal("INPUT_INVALID", "--evidence repeats a check id")
-    answer = _call(_source(current, project, args.config, doc), "register", plan=doc["plan"],
+    answer = _source_effect(_source(current, project, args.config, doc), directory, "register", plan=doc["plan"],
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
                    attempt_id=doc["attempt_id"], status=args.status, report=report, evidence=evidence,
                    registrar=args.actor, executed_by=args.executed_by or args.actor)
-    journal.write_doc(directory, REGISTER_RECEIPT, answer)  # the receipt is the answer of the source, as the contract has it
     if answer["outcome"] == "recorded":
         note = _support_note(args, current, project, doc, report)
         if note:
@@ -750,12 +749,51 @@ def _source_register(args, current, project) -> int:
 
 def _source_commit(args, current, project) -> int:
     directory, doc = _run(args.run, project)
-    answer = _call(_source(current, project, args.config, doc), "commit", plan=doc["plan"],
+    answer = _source_effect(_source(current, project, args.config, doc), directory, "commit", plan=doc["plan"],
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
                    attempt_id=doc["attempt_id"], paths=list(args.path or []), actor=args.actor)
-    journal.write_doc(directory, COMMIT_RECEIPT, answer)
     _print(answer)
     return 1 if answer["outcome"] == "refused" else 0
+
+
+def _source_effect(source, directory, kind: str, **fields) -> dict:
+    """Persist intent before the effect; bind legacy answers to that exact request before publishing the receipt.
+
+    Replacing the request clears any previous answer digest. A crash cannot pair an old receipt with a new intent.
+    The receipt itself remains the unmodified work-source/v1 answer.
+    """
+    request = {"attempt_id": fields["attempt_id"], "parameters": fields,
+               "digest": sha256_hex(canonical_json_bytes(fields))}
+    if kind == "commit":
+        # A repeat can finish only the workspace part. Retain the already committed product revision before
+        # replacing either document, including when another crash happens before the repeated answer is published.
+        try:
+            prior = journal.read_doc(directory, "receipts/commit-request.json")
+            receipt = journal.read_doc(directory, "receipts/commit.json")
+        except (OSError, ValueError):
+            prior, receipt = None, None
+        parameters = prior.get("parameters") if isinstance(prior, dict) else None
+        if (isinstance(parameters, dict) and prior.get("attempt_id") == fields["attempt_id"]
+                and all(parameters.get(key) == fields.get(key) for key in ("run_id", "ref", "attempt_id"))
+                and prior.get("digest") == sha256_hex(canonical_json_bytes(parameters))):
+            source_sha = prior.get("source_sha")
+            if (isinstance(receipt, dict) and receipt.get("outcome") in ("committed", "no-op")
+                    and receipt.get("attempt") in (None, fields["attempt_id"])
+                    and receipt.get("repo") != "workspace" and receipt.get("sha")
+                    and prior.get("receipt_digest") == sha256_hex(canonical_json_bytes(receipt))):
+                source_sha = receipt["sha"]
+            if source_sha:
+                request["source_sha"] = source_sha
+    journal.write_doc(directory, f"receipts/{kind}-request.json", request)
+    answer = _call(source, kind, **fields)
+    if kind == "commit" and answer.get("outcome") in ("committed", "no-op") \
+            and answer.get("attempt") in (None, fields["attempt_id"]) \
+            and answer.get("repo") != "workspace" and answer.get("sha"):
+        request["source_sha"] = answer["sha"]
+    request["receipt_digest"] = sha256_hex(canonical_json_bytes(answer))
+    journal.write_doc(directory, f"receipts/{kind}-request.json", request)
+    journal.write_doc(directory, f"receipts/{kind}.json", answer)
+    return answer
 
 
 def _source_release(args, current, project) -> int:

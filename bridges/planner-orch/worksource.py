@@ -461,6 +461,13 @@ def _only_plan_dirt(text: str) -> bool:
 
 
 def op_commit(fields: dict) -> dict:
+    answer = _commit(fields)
+    if fields.get("attempt_id"):
+        answer["attempt"] = fields["attempt_id"]
+    return answer
+
+
+def _commit(fields: dict) -> dict:
     """One scoped commit of the registered item through ``plan.py commit``; nothing left to commit is a no-op."""
     argv = ["commit", fields["plan"], fields["ref"], "--role", "executor"]
     for path in fields.get("paths") or []:

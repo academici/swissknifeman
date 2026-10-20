@@ -19,8 +19,8 @@ ROUTING = bridge_fixture.PLANNER / "configs" / "command-routing.json"
 
 
 def launch(*args: str) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(bridge_fixture.PLAN_PY), "bridge", "planner-orch", "launch", *args],
-                          capture_output=True, text=True, encoding="utf-8", check=False, cwd=tempfile.gettempdir())
+    with tempfile.TemporaryDirectory() as tmp:
+        return bridge_fixture.plan_py(tmp, "bridge", "planner-orch", "launch", *args)
 
 
 @unittest.skipUnless(ORCH, "orch partner not found")
@@ -133,8 +133,8 @@ class LaunchBridge(unittest.TestCase):
         self.assertTrue(done.stderr.startswith("LAUNCH_MODEL_UNRESOLVED:"), done.stderr)
 
     def test_dispatcher_lists_launch(self):
-        done = subprocess.run([sys.executable, str(bridge_fixture.PLAN_PY), "bridge", "list"], capture_output=True,
-                              text=True, encoding="utf-8", check=False, cwd=tempfile.gettempdir())
+        with tempfile.TemporaryDirectory() as tmp:
+            done = bridge_fixture.plan_py(tmp, "bridge", "list")
         self.assertIn("launch", done.stdout)
 
 

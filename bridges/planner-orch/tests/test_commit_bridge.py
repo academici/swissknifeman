@@ -5,8 +5,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import select
 import shutil
+import signal
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -191,6 +194,101 @@ class WorkspaceCommitBridge(unittest.TestCase):
         self.assertEqual(answer["workspace_commit"]["status"], "failed")
         self.assertIsNone(answer["workspace_sha"])
         self.assertIn("workspace commit failed", answer["message"])
+
+    def test_repeat_after_source_commit_finishes_workspace_without_second_source_commit(self):
+        self.change()
+        source_before = int(self.git(self.src, "rev-list", "--count", "HEAD"))
+        workspace_before = int(self.git(self.ws, "rev-list", "--count", "HEAD"))
+        hook = self.ws / ".git/hooks/pre-commit"
+        hook.write_text("#!/bin/sh\nexit 1\n")
+        hook.chmod(0o755)
+        first = self.op(attempt_id="att-split")
+        self.assertEqual((first["outcome"], first["workspace_commit"]["status"]), ("committed", "failed"), first)
+        source_sha = self.git(self.src, "rev-parse", "HEAD").strip()
+        self.assertEqual(source_before + 1, int(self.git(self.src, "rev-list", "--count", "HEAD")))
+        self.assertEqual(workspace_before, int(self.git(self.ws, "rev-list", "--count", "HEAD")))
+        hook.unlink()
+        second = self.op(attempt_id="att-split")
+        self.assertEqual((second["outcome"], second["repo"], second["workspace_commit"]["status"]),
+                         ("committed", "workspace", "committed"), second)
+        self.assertEqual((first["attempt"], second["attempt"]), ("att-split", "att-split"))
+        self.assertEqual(source_sha, self.git(self.src, "rev-parse", "HEAD").strip())
+        self.assertEqual(source_before + 1, int(self.git(self.src, "rev-list", "--count", "HEAD")))
+        self.assertEqual(workspace_before + 1, int(self.git(self.ws, "rev-list", "--count", "HEAD")))
+        third = self.op(attempt_id="att-split")
+        self.assertEqual((third["outcome"], third["attempt"]), ("no-op", "att-split"), third)
+        self.assertEqual(source_before + 1, int(self.git(self.src, "rev-list", "--count", "HEAD")))
+        self.assertEqual(workspace_before + 1, int(self.git(self.ws, "rev-list", "--count", "HEAD")))
+
+    @unittest.skipUnless(ORCH, "orch not found")
+    def test_sigkill_after_source_commit_repeats_only_workspace_part(self):
+        self.assert_split_crash(incomplete=True)
+
+    @unittest.skipUnless(ORCH, "orch not found")
+    def test_sigkill_after_split_receipt_closes_without_call(self):
+        self.assert_split_crash(incomplete=False)
+
+    @unittest.skipUnless(ORCH, "orch not found")
+    def test_second_sigkill_after_workspace_repeat_receipt_retains_source_sha(self):
+        self.assert_split_crash(incomplete=True, repeat_crash=True)
+
+    def assert_split_crash(self, *, incomplete, repeat_crash=False):
+        self.change()
+        source_before = int(self.git(self.src, "rev-list", "--count", "HEAD"))
+        workspace_before = int(self.git(self.ws, "rev-list", "--count", "HEAD"))
+        hook = self.ws / ".git/hooks/pre-commit"
+        if incomplete:
+            hook.write_text("#!/bin/sh\nexit 1\n")
+            hook.chmod(0o755)
+        fields = {"plan": str(self.plan), "ref": "P1.2", "run_id": "run-split-receipts",
+                  "attempt_id": "att-split-receipts", "paths": ["lib/pkg/config.py"]}
+        config = self.src.parent / "crash.json"
+        config.write_text(json.dumps({"project": str(self.src), "fields": fields,
+                                      "source_argv": [sys.executable, str(partners.BRIDGE / "worksource.py")]}))
+        boot = "import sys; sys.path[:0] = " + repr([str(ORCH), str(ORCH / "lib"), str(partners.aicore_lib())])
+        boot += "; from tests.test_resume_receipts import external_commit_worker; external_commit_worker(*sys.argv[1:])"
+        def kill_worker(mode):
+            with open(self.src.parent / (mode + ".log"), "w+") as log:
+                child = subprocess.Popen([sys.executable, "-I", "-u", "-c", boot, str(config), mode], cwd=self.src,
+                                     env={**self.env, "SKM_ORCH_ROOT": str(ORCH)}, stdout=subprocess.PIPE, stderr=log, text=True)
+                try:
+                    self.assertTrue(select.select([child.stdout], [], [], 30)[0], "split receipt barrier not reached")
+                    line = child.stdout.readline().strip()
+                    if line != "ready":
+                        log.seek(0)
+                        self.fail("worker exited before its barrier: " + log.read())
+                    child.kill()
+                    self.assertEqual(-signal.SIGKILL, child.wait(timeout=15))
+                finally:
+                    if child.poll() is None:
+                        child.kill()
+                    child.wait(timeout=15)
+                    child.stdout.close()
+
+        kill_worker("crash")
+        self.assertEqual(source_before + 1, int(self.git(self.src, "rev-list", "--count", "HEAD")))
+        self.assertEqual(workspace_before + (0 if incomplete else 1),
+                         int(self.git(self.ws, "rev-list", "--count", "HEAD")))
+        if incomplete:
+            hook.unlink()
+        if repeat_crash:
+            kill_worker("resume-crash")
+        resumed = subprocess.run([sys.executable, "-I", "-c", boot, str(config), "resume"], cwd=self.src,
+                                 env=self.env, capture_output=True, text=True, timeout=30)
+        self.assertEqual(0, resumed.returncode, resumed.stderr)
+        recovered = json.loads(resumed.stdout)
+        self.assertEqual("repeated: workspace part incomplete" if incomplete and not repeat_crash else "closed from receipt", recovered["message"])
+        self.assertEqual(1 if incomplete and not repeat_crash else 0, recovered["calls"])
+        result = recovered["result"]
+        self.assertEqual("committed", result["outcome"])
+        self.assertEqual({"outcome", "sha"} | ({"message"} if result.get("message") else set()), set(result))
+        source_sha = self.git(self.src, "rev-parse", "HEAD").strip()
+        workspace_sha = self.git(self.ws, "rev-parse", "HEAD").strip()
+        self.assertEqual(source_sha, result["sha"])
+        self.assertNotEqual(workspace_sha, result["sha"])
+        self.assertEqual("commit", self.git(self.src, "cat-file", "-t", result["sha"]).strip())
+        self.assertEqual(source_before + 1, int(self.git(self.src, "rev-list", "--count", "HEAD")))
+        self.assertEqual(workspace_before + 1, int(self.git(self.ws, "rev-list", "--count", "HEAD")))
 
     def test_op_commit_without_a_marker_keeps_the_legacy_answer(self):
         from types import SimpleNamespace

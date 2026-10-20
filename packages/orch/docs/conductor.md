@@ -126,7 +126,8 @@ steps before reconciliation. The rule uses the key's prefix before the first dot
 | `executor.N` | repeat with an interruption note naming `base_head` and up to 200 sorted dirty paths; keep partial changes and the retry count |
 | `checks.N` | repeat; compare the current porcelain paths with `dirty_before`, and emit `CHECK_CHANGED_TREE` if they differ |
 | `research-save.N` | repeat the idempotent save for that research number |
-| `close`, `register`, `commit` | repeat as before; receipt recovery is deferred |
+| `close`, `register` | recover a successful registration receipt of this attempt; otherwise repeat the idempotent call |
+| `commit` | recover a successful commit receipt of this attempt only when its workspace part is complete; otherwise repeat commit |
 | any other key | stop with `STAGE_RECOVERY_UNKNOWN`; settle the item, or use `--retry` if it is blocked |
 
 Each decision emits `info` with `reason_code: STAGE_INTERRUPTED`, the item and stage,
@@ -134,6 +135,42 @@ and message `repeated`, `repeated with interruption note`, `repeated after tree 
 or `no recovery rule`. The executor's note is appended once to that step's correction
 and cleared after its result is done. Recovery never resets, stashes, or rolls back the
 tree. Old state files without started records keep their previous resume behaviour.
+
+Closing receipts live in `journal.run_dir(item.orch_run, project=project)/receipts/`, the work-source run,
+not the conductor's item folder. `register.json` closes `register` (or a model registrar's `close`) only for
+`recorded` or `no-op` with a matching attempt. `register` keeps `{outcome, gate}`; recovered `close` keeps
+`{by: closer, answer: ...}`, as required by the subsequent registration step. `ATTEMPT_CONFLICT` on a repeat
+stops with `REGISTER_REFUSED` and leaves the step unfinished.
+An ad-hoc item retried after `blocked` may register a new outcome under the same attempt; a different outcome
+after `done` remains `ATTEMPT_CONFLICT`.
+Malformed fields used by the recovered result also require a repeat; recovery checks them against the live
+work-source response contract before recording `done`.
+
+Before a closing source call, `register-request.json` or `commit-request.json` durably records `attempt_id`,
+the request parameters and their canonical JSON SHA-256 digest. After the call, the request also records the
+SHA-256 of the unmodified response before the receipt is published. Recovery requires both digests and the
+request's run, reference and attempt to match, including responses with an explicit `attempt`. The request's
+mtime must be at least the step's `started_at` and the saved state's publication time. The latter conservatively
+fences retries within the same second; a later state save can require an idempotent repeat. Thus a crash before
+the new source request is written cannot reuse a prior blocked-registration receipt. A new request also clears
+the old response digest. Commit responses may include the optional
+work-source/v1 `attempt` field.
+
+`commit.json` closes only for `committed` or `no-op` and this attempt. For a plan in the workspace,
+`workspace_commit.status` must be `committed`, `no-op`, `skipped-legacy`, or `skipped-no-git`.
+`nothing`, `failed`, `locked`, or missing workspace completion repeat commit; a live response with an incomplete
+workspace part stops with `COMMIT_REFUSED` for resume. Repeating after the source commit completes the workspace
+part without a second source commit. The durable commit request retains the source SHA for this attempt across
+repeats. If the repeated answer names only a workspace commit, the step still returns the source SHA for
+handoffs and group review. Without a known source SHA, `sha` is null and `message` names the workspace commit.
+The result remains `{outcome, sha[, message]}`. Git history is never proof
+that a step completed.
+
+Each closing recovery emits `info` reason `STAGE_INTERRUPTED` with exactly one of `closed from receipt`,
+`repeated: receipt missing`, `repeated: receipt refused`, `repeated: receipt of another attempt`, or
+`repeated: workspace part incomplete`. These info reasons are not Stops or Beacons. Leases, receipts and
+reconciliation provide local durability on one host; they do not provide Engine Port workflow replay,
+durable timers, signals, compensation, multi-day execution or recovery across machines.
 
 ## The cycle of one piece of work
 

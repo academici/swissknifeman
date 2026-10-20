@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Sequence, Tuple
 from unittest import mock
 
+from aicore.state import locations
+
 MODULE_ROOT = Path(__file__).resolve().parents[1]
 HUB_ROOT = MODULE_ROOT.parents[1]
 BRIDGE_ROOT = HUB_ROOT / "bridges" / "workspace-planner"  # the bridge that fills workspace:plans-migrator (hub layout)
@@ -39,6 +41,13 @@ class TempCase(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.root = Path(os.path.realpath(tmp.name))
+        # Only this fixture's markers exist in its synthetic filesystem; /tmp may itself be a checkout.
+        ancestors = set(self.root.parents)
+        marker_found = locations._marker_found
+        boundary = mock.patch.object(locations, "_marker_found", side_effect=lambda candidate, marker:
+                                     candidate not in ancestors and marker_found(candidate, marker))
+        boundary.start()
+        self.addCleanup(boundary.stop)
         self.home = self.root / "home"
         self.home.mkdir()
         self.ws = self.root / "wss" / "axioma"

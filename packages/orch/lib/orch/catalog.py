@@ -41,8 +41,9 @@ class Catalog:
         self._model_doc = model_doc
 
     @classmethod
-    def load(cls, model_catalog_path: str | Path | None = None) -> "Catalog":
-        """The aicore model catalog (``None`` reads the packaged one) and the launch catalog."""
+    def load(cls, model_catalog_path: str | Path | None = None, launch_settings=None) -> "Catalog":
+        """The aicore model catalog (``None`` reads the packaged one) and the launch catalog (``launch_settings``: the
+        ``[orch.launch]`` of the configuration, ``None`` for the shipped one)."""
         path = models.default_model_catalog_path() if model_catalog_path is None else Path(model_catalog_path)
         try:
             found = models.load_model_catalog(path)
@@ -51,7 +52,10 @@ class Catalog:
             raise CatalogError("MODEL_CATALOG_UNAVAILABLE", str(error)) from error
         except (OSError, ValueError) as error:  # the file went away between validation and the second read
             raise CatalogError("MODEL_CATALOG_UNAVAILABLE", f"{path.name}: {error}") from error
-        return cls(found, model_doc=doc)
+        try:
+            return cls(found, launch_catalog=launch.effective_catalog(launch_settings), model_doc=doc)
+        except launch.LaunchError as error:
+            raise CatalogError(error.code, str(error)) from error
 
     def model_document(self) -> dict:
         """The model catalog as JSON data: the file it was loaded from, else rebuilt from the parsed catalog."""

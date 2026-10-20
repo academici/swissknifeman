@@ -12,7 +12,9 @@ from typing import Optional
 
 from aicore.provider.config import routing_available
 
+from orch import launch
 from orch.conductor import engine, gates, options as opts
+from orch.conductor.policies.routing import LAUNCH_ROLE
 
 ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor")
 DEFAULT_SOURCE = "default"
@@ -44,8 +46,14 @@ def _provider_layer(conductor: engine.Conductor) -> str:
     return f"config:orch.conductor.provider ({layer})"
 
 
-def _field_sources(conductor: engine.Conductor, item: engine.Item, role: str) -> dict:
-    """The layer each of provider, model_class, effort and model of the route comes from."""
+def _launch_layer(conductor: engine.Conductor, key: str) -> str:
+    """The configuration layer that set ``orch.launch...`` ``key`` (``defaults`` when none did)."""
+    resolved = conductor.settings.resolved
+    return resolved.explain(key.replace("orch.", "", 1))[0].layer if resolved is not None else "defaults"
+
+
+def _field_sources(conductor: engine.Conductor, item: engine.Item, role: str, provider: str) -> dict:
+    """The layer each of provider, model_class, effort and model of the route comes from; ``provider`` is the one it runs on."""
     options, sources = item.options, item.sources
     stage = opts.stage_route(options, role)
     stage_source = sources.get(f"stages.{role}")
@@ -69,7 +77,10 @@ def _field_sources(conductor: engine.Conductor, item: engine.Item, role: str) ->
         elif key == "model":
             sources_of[key] = "model-catalog (class)"
         else:
-            sources_of[key] = f"launch-catalog ({DEFAULT_SOURCE})"
+            changed = launch.entry_origin(getattr(conductor.settings, "launch", None),
+                                          LAUNCH_ROLE.get(role, role), provider, key)
+            sources_of[key] = f"config:{changed} ({_launch_layer(conductor, changed)})" if changed \
+                else f"launch-catalog ({DEFAULT_SOURCE})"
     return sources_of
 
 
@@ -136,7 +147,7 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
         try:
             route = conductor._selected(item, role, False)
             selected = {key: route.get(key) for key in ("provider", "model", "model_class", "effort", "transport")}
-            selected["sources"] = _field_sources(conductor, item, role)
+            selected["sources"] = _field_sources(conductor, item, role, route["provider"])
             moved = next((note for note in item.route_notes if note["role"] == role), None)
             selected["moved"] = moved
             problem = conductor._admit(item, role, route)  # what the preflight would refuse before any work

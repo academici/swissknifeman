@@ -34,6 +34,36 @@ schema_version = 1
 # Whether orch emits the orch.run.* events. Boolean.
 # enabled = true
 
+[orch.launch]
+# A launch catalog file used instead of the one shipped with orch (an absolute path or one starting with ~; it must be a complete, valid catalog). Machine-wide: a project file cannot set it, because it chooses the commands orch runs. Empty: the shipped catalog. String.
+# Allowed in layers: defaults, machine, invocation, flags.
+# catalog = ""
+
+[orch.launch.entries]
+# Changes to single entries of the catalog, by ROLE_PROVIDER (role id, an underscore, provider id: executor_codex, bounded-implementer_claude-code): only the fields that differ, the rest stays as the catalog has it. The entry must exist in the catalog. model_class, effort and timeout_s may be set per machine or per project; argv, transport and model_set choose how the CLI starts and is read, so only the machine, the invocation file and flags may set them.
+# [orch.launch.entries.example]
+
+# Model class the role runs on by default. One of: "economy", "implementation", "frontier".
+# model_class = <string>
+
+# Effort the role runs with by default. One of: "low", "medium", "high", "xhigh".
+# effort = <string>
+
+# Ceiling on a text role in seconds (the catalog timeout). Integer >= 1.
+# timeout_s = <integer>
+
+# How the output of the CLI is read. Machine-wide. One of: "text", "jsonl", "acp".
+# Allowed in layers: defaults, machine, invocation, flags.
+# transport = <string>
+
+# Whether the CLI takes a model ({model} in argv). Machine-wide. One of: "supported", "unknown".
+# Allowed in layers: defaults, machine, invocation, flags.
+# model_set = <string>
+
+# Command line of the role on this provider, replacing the catalog's ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands and the sandbox the role runs under. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# argv = <array>
+
 [orch.conductor]
 # Provider of every role whose stage names none. String.
 # provider = "claude-code"

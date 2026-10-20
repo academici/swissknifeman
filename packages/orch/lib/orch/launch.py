@@ -1,6 +1,8 @@
 """Launch catalog: how each orchestration role starts on each provider CLI. Builds argv only; never runs a process."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+import copy
 import json
 from pathlib import Path
 import re
@@ -92,6 +94,45 @@ def load_catalog(path: str | Path | None = None) -> dict:
         raise _invalid(str(target), f"cannot read catalog ({error})") from error
     validate_catalog(catalog)
     return catalog
+
+
+_OVERRIDE_KEY = re.compile(r"^(?P<role>[a-z][a-z0-9-]*)_(?P<provider>[a-z][a-z0-9-]*)$")
+
+
+def apply_entries(catalog: dict, entries: Mapping) -> dict:
+    """A copy of ``catalog`` with the fields of ``entries`` (``{ROLE_PROVIDER: {field: value}}``, the ``[orch.launch.entries]``
+    of the configuration) put over the entries they name; the result is validated like a catalog. A key of a role or
+    provider the catalog has no entry for is ``LAUNCH_UNKNOWN`` (a new entry comes with a whole catalog file)."""
+    merged = copy.deepcopy(catalog)
+    for key, fields in entries.items():
+        named = _OVERRIDE_KEY.match(key)
+        found = merged["launch"].get(named["role"], {}).get(named["provider"]) if named else None
+        if found is None:
+            raise LaunchError("LAUNCH_UNKNOWN", f"[orch.launch.entries.{key}]: the catalog has no entry for it "
+                                                "(the key is ROLE_PROVIDER)")
+        found.update(copy.deepcopy(dict(fields)))
+    try:
+        validate_catalog(merged)
+    except LaunchError as error:
+        raise LaunchError(error.code, f"[orch.launch.entries] {error}") from None
+    return merged
+
+
+def effective_catalog(launch_settings: Mapping | None = None, path: str | Path | None = None) -> dict:
+    """The catalog a run uses: ``path``, else the file ``[orch.launch] catalog`` names, else the one shipped with orch;
+    with ``[orch.launch.entries]`` put over it. Without settings it is :func:`load_catalog`."""
+    found = launch_settings if isinstance(launch_settings, Mapping) else {}
+    catalog = load_catalog(path or found.get("catalog") or None)
+    return apply_entries(catalog, found["entries"]) if found.get("entries") else catalog
+
+
+def entry_origin(launch_settings: Mapping | None, role: str, provider: str, field: str) -> str | None:
+    """Where ``field`` of the entry comes from when the configuration changes it: ``orch.launch.entries.<key>.<field>`` with
+    its layer, else None (the catalog)."""
+    entries = (launch_settings or {}).get("entries") or {}
+    if field in (entries.get(f"{role}_{provider}") or {}):
+        return f"orch.launch.entries.{role}_{provider}.{field}"
+    return None
 
 
 def entry(catalog: dict, role: str, provider: str) -> dict:

@@ -113,7 +113,7 @@ class Conductor:
     def _catalog_get(self):
         if self._catalog is None:
             try:
-                self._catalog = catalogs.Catalog.load(self.model_catalog)
+                self._catalog = catalogs.Catalog.load(self.model_catalog, getattr(self.settings, "launch", None))
             except catalogs.CatalogError as error:
                 raise Stop(error.code, str(error)) from None
         return self._catalog
@@ -218,6 +218,7 @@ class Conductor:
     _piece_count = staticmethod(allowance.piece_count)
 
     _entry = routing.entry
+    _launch_catalog = routing.launch_catalog
     _routes = routing.routes
     route_problem = routing.route_problem
     provider_disabled = routing.provider_disabled

@@ -28,7 +28,8 @@ ENGINE_REASONS = {
 
 
 class SettingsError(ValueError):
-    """``ENGINE_UNKNOWN``: a requested engine is not one of the bindings; ``PROFILES_DIR_RELATIVE``: a relative pack folder."""
+    """``ENGINE_UNKNOWN``: a requested engine is not one of the bindings; ``PROFILES_DIR_RELATIVE``: a relative pack folder;
+    ``LAUNCH_CATALOG_RELATIVE``: a relative launch catalog file."""
 
     def __init__(self, code: str, message: str):
         super().__init__(message)
@@ -52,6 +53,7 @@ class Settings:
     research: Mapping[str, object] = field(default_factory=dict)  # ``[orch.research]``: ``policy`` and ``sources``
     advisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.advisor]``: ``enabled``, ``max_rounds``, ``human_gate``
     stubs: Mapping[str, object] = field(default_factory=dict)  # ``[orch.stubs]``: ``enabled``, ``layers``
+    launch: Mapping[str, object] = field(default_factory=dict)  # ``[orch.launch]``: ``catalog`` (a file) and ``entries``
     debug: bool = False  # ``[orch] debug`` / ``--debug``: the observer protocol and journal of a run (conductor.debug_mode)
 
     def explain_text(self, key: str | None = None) -> str:
@@ -95,6 +97,17 @@ def _conductor(resolved: ResolvedConfig) -> dict:
     }
 
 
+def _launch(resolved: ResolvedConfig) -> dict:
+    """``[orch.launch]`` as plain data: the catalog file (absolute, ``~`` expanded; empty for the shipped one) and the
+    changes to single entries by ``ROLE_PROVIDER``."""
+    named = resolved.get("launch.catalog") or ""
+    path = Path(os.path.expanduser(named)) if named else None
+    if path is not None and not path.is_absolute():
+        raise SettingsError("LAUNCH_CATALOG_RELATIVE", f"launch.catalog {named!r} must be absolute or start with ~")
+    return {"catalog": str(path) if path else "",
+            "entries": {key: dict(fields) for key, fields in (resolved.get("launch.entries") or {}).items()}}
+
+
 def _research(resolved: ResolvedConfig) -> dict:
     """``[orch.research]`` as plain data: the policy and the sources by id (every field of an entry, defaults filled in)."""
     return {"policy": resolved.get("research.policy"),
@@ -129,6 +142,7 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         research=_research(resolved),
         advisor=_advisor(resolved),
         stubs={"enabled": bool(resolved.get("stubs.enabled")), "layers": list(resolved.get("stubs.layers") or [])},
+        launch=_launch(resolved),
         debug=bool(resolved.get("debug")),
     )
 

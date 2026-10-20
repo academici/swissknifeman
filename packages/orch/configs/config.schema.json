@@ -100,6 +100,70 @@
         }
       }
     },
+    "launch": {
+      "type": "object",
+      "description": "How roles start on each provider CLI (the launch catalog). The catalog ships with orch and holds what is specific to a role on a provider; here a machine or a project changes it without editing the package.",
+      "additionalProperties": false,
+      "properties": {
+        "catalog": {
+          "type": "string",
+          "description": "A launch catalog file used instead of the one shipped with orch (an absolute path or one starting with ~; it must be a complete, valid catalog). Machine-wide: a project file cannot set it, because it chooses the commands orch runs. Empty: the shipped catalog.",
+          "default": "",
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "entries": {
+          "type": "object",
+          "description": "Changes to single entries of the catalog, by ROLE_PROVIDER (role id, an underscore, provider id: executor_codex, bounded-implementer_claude-code): only the fields that differ, the rest stays as the catalog has it. The entry must exist in the catalog. model_class, effort and timeout_s may be set per machine or per project; argv, transport and model_set choose how the CLI starts and is read, so only the machine, the invocation file and flags may set them.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*(_[a-z][a-z0-9-]*)?$": {
+              "type": "object",
+              "description": "Fields of one catalog entry that differ.",
+              "additionalProperties": false,
+              "properties": {
+                "model_class": {
+                  "type": "string",
+                  "description": "Model class the role runs on by default.",
+                  "enum": ["economy", "implementation", "frontier"]
+                },
+                "effort": {
+                  "type": "string",
+                  "description": "Effort the role runs with by default.",
+                  "enum": ["low", "medium", "high", "xhigh"]
+                },
+                "timeout_s": {
+                  "type": "integer",
+                  "description": "Ceiling on a text role in seconds (the catalog timeout).",
+                  "minimum": 1
+                },
+                "transport": {
+                  "type": "string",
+                  "description": "How the output of the CLI is read. Machine-wide.",
+                  "enum": ["text", "jsonl", "acp"],
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+                },
+                "model_set": {
+                  "type": "string",
+                  "description": "Whether the CLI takes a model ({model} in argv). Machine-wide.",
+                  "enum": ["supported", "unknown"],
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+                },
+                "argv": {
+                  "type": "array",
+                  "description": "Command line of the role on this provider, replacing the catalog's ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands and the sandbox the role runs under.",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "description": "One argument."
+                  },
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "conductor": {
       "type": "object",
       "description": "The conductor (orch conduct): the global layer of the run options and how roles start.",

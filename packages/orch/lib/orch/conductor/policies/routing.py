@@ -20,9 +20,21 @@ LAUNCH_ROLE = {"context-scout": "scout"}
 OPTIONAL_ROLES = {"context-scout", "report-fixer"}  # skipped, not refused, when they cannot start
 
 
+def launch_catalog(self) -> dict:
+    """The launch catalog of this run: the shipped one, or the file and the entry changes ``[orch.launch]`` names; read
+    and checked once."""
+    found = getattr(self, "_launch_cache", None)
+    if found is None:
+        try:
+            found = self._launch_cache = launch.effective_catalog(getattr(getattr(self, "settings", None), "launch", None))
+        except launch.LaunchError as error:
+            raise Stop(error.code, str(error)) from None
+    return found
+
+
 def entry(self, role: str, provider: str) -> dict:
     try:
-        return launch.entry(launch.load_catalog(), LAUNCH_ROLE.get(role, role), provider)
+        return launch.entry(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider)
     except launch.LaunchError as error:
         raise Stop(error.code, str(error)) from None
 
@@ -246,7 +258,7 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
         elif effort not in launch.EFFORTS:
             raise Stop("ROUTE_UNDERSHOOT", f"{role} needs effort {effort}, which {provider} cannot start")
         else:
-            argv = launch.build_argv(launch.load_catalog(), LAUNCH_ROLE.get(role, role), provider, model=model,
+            argv = launch.build_argv(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider, model=model,
                                      effort=effort, cwd=self.project)
     except launch.LaunchError as error:
         raise Stop(error.code, str(error)) from None

@@ -162,6 +162,43 @@ PENDING = {"text": "V1 needs the container runtime, which the executor sandbox d
            "impact": "V1 is unproven by the executor", "next": "the conductor runs V1"}
 
 
+class LaunchConfigurationTests(ConductorCase):
+    """``[orch.launch.entries]`` reaches the routes of a run, and ``route explain`` says where the value came from."""
+
+    def routes(self, *extra) -> dict:
+        code, out, err = self.conduct("run", "--plan", "T", "--items", "W1", "--dry-run", *extra)
+        self.assertEqual(code, 0, err)
+        return json.loads(out)["routes"]
+
+    def test_an_entry_change_of_the_configuration_sets_the_default_effort_of_the_role(self):
+        self.assertEqual(self.routes()["executor"]["effort"], "high")
+        self.write_config(extra='[orch.launch.entries.executor_claude-code]\neffort = "xhigh"\n')
+        self.assertEqual(self.routes()["executor"]["effort"], "xhigh")
+
+    def test_a_stage_of_the_run_options_still_wins_over_the_entry(self):
+        self.write_config(extra='[orch.launch.entries.executor_claude-code]\neffort = "xhigh"\n')
+        options = self.project.parent / "o.json"
+        options.write_text(json.dumps({"stages": [{"role": "executor", "effort": "low"}]}), encoding="utf-8")
+        self.assertEqual(self.routes("--options", str(options))["executor"]["effort"], "low")
+
+    def test_route_explain_names_the_configuration_layer_of_a_changed_field(self):
+        self.write_config(extra='[orch.launch.entries.executor_claude-code]\neffort = "xhigh"\n')
+        from orch import cli as orch_cli
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            code = orch_cli.main(["--project", str(self.project), "route", "explain", "--role", "executor", "--json"])
+        self.assertEqual(code, 0, err.getvalue())
+        selected = json.loads(out.getvalue())["selected"]
+        self.assertEqual(selected["effort"], "xhigh")
+        self.assertIn("orch.launch.entries.executor_claude-code.effort", selected["sources"]["effort"])
+
+    def test_a_broken_catalog_file_stops_the_run_with_the_launch_code(self):
+        self.write_config(extra='[orch.launch]\ncatalog = "/nonexistent/launch.json"\n')
+        code, _, err = self.conduct("run", "--plan", "T", "--items", "W1", "--dry-run")
+        self.assertEqual(code, 1)
+        self.assertIn("LAUNCH_INVALID", err)
+
+
 class DonePendingChecksTests(ConductorCase):
     """``done_pending_checks``: the executor finished the work but could not run the checks in its sandbox; the checks stage
     runs them and the piece closes on their result, not on an escalation of the executor."""

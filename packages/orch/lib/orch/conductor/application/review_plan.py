@@ -167,7 +167,7 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route; an effort the option names wins
         selector = opts.parse_selector(item.options["reviewer"])
         effort = group_effort(self, item.options["reviewer"], effort)
-        route = dict(route, effort=effort, argv=launch.build_argv(launch.load_catalog(), "reviewer", selector["provider"],
+        route = dict(route, effort=effort, argv=launch.build_argv(self._launch_catalog(), "reviewer", selector["provider"],
                                                                   model=selector["model"], effort=effort, cwd=self.project))
     provider, model = route["provider"], route.get("model")
     prompt = review_batch.PROMPT.format(refs=", ".join(refs), max_tools=12) + diff

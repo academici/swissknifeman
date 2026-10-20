@@ -14,6 +14,7 @@
 
 ### Added
 
+- orch: каталог запуска переопределяется конфигурацией: `[orch.launch] catalog` (файл вместо поставляемого, только machine) и `[orch.launch.entries.<роль>_<провайдер>]` (меняются только отличающиеся поля: `model_class`, `effort`, `timeout_s` — и на машине, и в проекте; `argv`, `transport`, `model_set` — только machine). Источник значения виден в `route explain` и `orch launch show`; `configs/launch-catalog.json` при обычных запусках не меняется.
 - orch: статус отчёта исполнителя `done_pending_checks` (работа готова, проверки не запускались в его среде; нужна `pending`-запись): checks-stage запускает проверки как после `done`, пункт регистрируется `done` с evidence проверок; если ни одна проверка не запускалась — `CHECKS_NOT_RUN`. Не регистрируемый статус: планировщик и work source его не видят.
 - orch: durable started/stopped step records and crash reconciliation on resume; interrupted executors continue partial work with a correction note, checks detect changed paths, and result readers accept only done steps. Settled items discard unfinished steps, and blocked-item retries clear them before reconciliation, so unknown step keys do not prevent recovery after an owner action.
 - orch: local run leases and one conductor per checkout; busy run/resume/settle/release commands preserve state, prune removes old runs under ownership, question updates serialize answers, and orphaned runs expose their status and stop unfinished role groups safely on resume.

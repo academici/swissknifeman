@@ -25,13 +25,17 @@ from aicore.util.proc import run as run_with_timeout
 
 def _launch(args: argparse.Namespace) -> int:
     try:
-        catalog = launch.load_catalog()
+        current = settings.load(project=_project_root(args), config_file=args.config)
+        catalog = launch.effective_catalog(current.launch)
         if args.action == "list":
             rows = [{"role": role, "provider": provider, **{k: v for k, v in item.items() if k != "argv"}}
                     for role, providers in catalog["launch"].items() for provider, item in providers.items()]
             print(json.dumps(rows, ensure_ascii=False))
         elif args.action == "show":
-            print(json.dumps(launch.entry(catalog, args.role, args.provider), ensure_ascii=False))
+            shown = dict(launch.entry(catalog, args.role, args.provider))
+            changed = {key: origin for key in shown
+                       if (origin := launch.entry_origin(current.launch, args.role, args.provider, key))}
+            print(json.dumps({**shown, **({"changed_by": changed} if changed else {})}, ensure_ascii=False))
         else:
             found = launch.entry(catalog, args.role, args.provider)
             result = {"argv": launch.build_argv(catalog, args.role, args.provider, model=args.model,
@@ -40,6 +44,9 @@ def _launch(args: argparse.Namespace) -> int:
             print(json.dumps(result, ensure_ascii=False))
     except launch.LaunchError as error:
         print(f"{error.code}: {error}", file=sys.stderr)
+        return 1
+    except (ConfigError, settings.SettingsError) as error:
+        print(f"{getattr(error, 'code', 'CONFIG_INVALID')}: {error}", file=sys.stderr)
         return 1
     return 0
 
@@ -117,7 +124,7 @@ def _dry_run(input_doc: dict, policy: dict, current: settings.Settings, *, out, 
     """The launch-plan of a dry-run preparation with the configuration read once by the caller."""
     binding, decision = settings.select_engine(current, _primary_role(policy), flag=binding_flag)
     roles = render.load_roles(roles_dir)
-    engine = BINDINGS[binding](out, catalog=catalog.Catalog.load(model_catalog), roles_dir=roles_dir, settings=current,
+    engine = BINDINGS[binding](out, catalog=catalog.Catalog.load(model_catalog, current.launch), roles_dir=roles_dir, settings=current,
                                submission_id=submission_id, skills=skills, engine_decision=decision)
     return engine.prepare(input_doc, policy, roles, provider=provider, dry_run=True)
 

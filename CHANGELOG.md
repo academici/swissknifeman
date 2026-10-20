@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- orch: проверки checks-stage запускаются со `stdin=/dev/null`, а не с унаследованным stdin conductor: команда, читающая stdin (`docker buildx bake --file -`, `cat`), больше не виснет на открытом пайпе (зависание `tools/bin/gate main` в P2.1, см. `reports/target-arch-gate-stdin-hang.md`).
 - planner: `plan.py next` не предлагает батч из пунктов разных шаблонов маршрута как один запуск: готовые пункты `recommended`-батча делятся по шаблону route (первая группа — команда, остальные — `later` и строка батча); цепочки зависимостей остаются в одном запуске, `required` не делится, старт группы не даёт предупреждения о разбиении.
 - planner-orch: brief отклоняет только указание запустить `plan.py start|finish`, `unit return`, `planner:plan-run` (глагол запуска, shell-приглашение, кодовый блок); описание гейта («перед `plan.py finish` проверки зелёные», «не вызывай `plan.py finish`») проходит. `report_api` по-прежнему отклоняется при любом упоминании.
 - orch: при `checks.executor_runs_checks: false` промпт исполнителя называет acceptance-проверки по id и ожиданию, без команд; исполнителю запрещены docker и контейнерные проверки, а недоказуемое в песочнице он оформляет `pending`, а не `blocked`.

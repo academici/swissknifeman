@@ -109,8 +109,10 @@ def check_env(cwd: Path, environ=None) -> dict:
 def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_slow=None, idle_s: int = 0) -> int:
     """Exit code of ``argv``; 124 after ``timeout_s`` or ``idle_s`` seconds without output (0: no ceiling).
     ``on_slow(elapsed, pid)`` every ``warn_s``."""
-    process = subprocess.Popen(argv, cwd=str(cwd), stdout=out, stderr=subprocess.STDOUT, start_new_session=True,
-                               env=check_env(cwd))
+    # stdin is /dev/null: a check never gets the input of the conductor (a pipe that stays open), so a command that reads it
+    # (`docker buildx bake --file -`, `cat`, a prompt) ends at once instead of waiting for ever.
+    process = subprocess.Popen(argv, cwd=str(cwd), stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT,
+                               start_new_session=True, env=check_env(cwd))
     try:
         return _wait_command(process, out=out, timeout_s=timeout_s, warn_s=warn_s, on_slow=on_slow, idle_s=idle_s)
     except BaseException:  # an interrupted run must not leave the check (a test run with workers) running

@@ -236,6 +236,44 @@ class TestObservability(AdapterCase):
         self.assertTrue(all(len(metric["label"]) <= 64 for metric in out["metrics"]))
         self.assertTrue(all("limit unknown" in metric["label"] for metric in out["metrics"]))
 
+    def test_prompt_and_routes_never_show_a_secret_of_the_environment_the_argv_or_a_block(self):
+        """W6: a secret in the environment, in the argv of a route and in the text of a prompt block stays out of the
+        answers of ``prompt`` and ``routes``: the projection takes named fields only and redacts what it shows."""
+        sys.path.insert(0, str(BRIDGE))
+        self.addCleanup(sys.path.remove, str(BRIDGE))
+        adapter = importlib.import_module("adapter")
+        env_secret = "envsecret-" + "Q" * 30
+        argv_secret = "sk-" + "B" * 60
+        block_secret = "ghp_" + "C" * 36
+        route = {"provider": "codex", "model": env_secret, "effort": "high", "class": "frontier",
+                 "argv": ["codex", "--api-key", argv_secret], "env": {"OPENAI_API_KEY": env_secret}}
+        status = {"items": [{"item": "P2.1", "routes": {"executor": route, "reviewer": dict(route, argv=[argv_secret])}}]}
+        explained = {"available_now": {"available": False, "route": route,
+                                       "stop": {"code": "PROVIDER_QUOTA", "message": f"gated {env_secret} {argv_secret}"}}}
+
+        def fake(args, root, timeout_s):
+            return explained if args[:2] == ["route", "explain"] else status
+
+        with mock.patch.dict(os.environ, {"MY_SERVICE_TOKEN": env_secret}), \
+                mock.patch.object(adapter, "orch_json", side_effect=fake):
+            out = adapter.routes(str(self.project), 10, context={}, params={"run_id": RUN, "item": "P2.1"})
+        shown = json.dumps(out)
+        for secret in (env_secret, argv_secret):
+            self.assertNotIn(secret[:16], shown)
+        self.assertEqual([], contracts.validate(out, "view-data"))
+        manifest = {"blocks": [{"kind": "input", "origin": f"file:{env_secret}", "tokens": 10, "sha256": "a" * 64,
+                                "text": f"use {block_secret} and {argv_secret}", "argv": [argv_secret]},
+                               {"kind": "stub", "origin": block_secret, "tokens": 1, "sha256": "b" * 64}],
+                    "excluded": [{"kind": "skill", "reason": f"too big {block_secret}"}],
+                    "budgets": {"core": {"tokens": 11}}}
+        with mock.patch.dict(os.environ, {"MY_SERVICE_TOKEN": env_secret}), \
+                mock.patch.object(adapter, "orch_json", return_value=manifest):
+            out = adapter.prompt(str(self.project), 10, context={}, params={"run_id": RUN, "item": "P2.1", "step": "executor.1"})
+        shown = json.dumps(out)
+        for secret in (env_secret, argv_secret, block_secret):
+            self.assertNotIn(secret[:16], shown)
+        self.assertEqual([], contracts.validate(out, "view-data"))
+
     def test_isolated_plugin_locates_redaction_via_the_hub_registry(self):
         env = {"PATH": os.environ["PATH"], "HOME": str(self.home),
                "SKM_UMBRELLA": str(FIXTURES / "umbrella-ok"), "FAKE_AICORE_ROOT": os.environ["AICORE_ROOT"]}

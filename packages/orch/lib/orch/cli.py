@@ -39,7 +39,8 @@ def _launch(args: argparse.Namespace) -> int:
         else:
             found = launch.entry(catalog, args.role, args.provider)
             result = {"argv": launch.build_argv(catalog, args.role, args.provider, model=args.model,
-                                                effort=args.effort, cwd=args.cwd),
+                                                effort=args.effort, cwd=args.cwd,
+                                                access=current.launch["access"]),
                       "transport": found["transport"], "timeout_s": found["timeout_s"]}
             print(json.dumps(result, ensure_ascii=False))
     except launch.LaunchError as error:

@@ -764,6 +764,12 @@ for.
   start, `prefer` goes on without `--settings` and says `ISOLATION_PARTIAL` once; `require` stops with `SANDBOX_UNAVAILABLE`
   before any work; `off` adds nothing. `strictAllowlist` with no domains also blocks the network of the project's own tests: put
   the domains they need into `sandbox_domains`.
+- **Access.** `[orch.launch] access` (default `open`) decides the sandbox of the Codex roles that write (executor,
+  bounded-implementer, registrar): `open` runs them with `--sandbox danger-full-access` (no provider sandbox: they reach Docker
+  and everything else the user reaches, and the sandbox probe is not needed for them), `confined` with `--sandbox
+  workspace-write`. The catalog states it as `{write_sandbox}`; read-only roles keep `read-only` in both modes. Claude Code and
+  Grok roles are the same in both modes (their write guard `ro-run.py --rw {cwd}` confines writes to the project and does not
+  keep them from Docker). A project file can only tighten the setting.
 - A Codex route with `--sandbox read-only|workspace-write` is unavailable while the sandbox cannot start: `--dry-run` shows
   `available: false` and `SANDBOX_UNAVAILABLE: <reason>` in `unavailable`, a run stops with `SANDBOX_UNAVAILABLE`. Its argv is
   not rewritten.
@@ -862,8 +868,8 @@ A machine or a project changes single fields without editing the file: `[orch.la
 `LAUNCH_REFUSED: <role>/<provider>: <reason>`, while a pair in neither section keeps `LAUNCH_UNKNOWN`.
 Required roles stop before work; optional roles (`context-scout`, `report-fixer`) are skipped. Dry-run marks such
 roles `available: false` with the code and reason in `unavailable`, omitting them from `routes` because no argv
-exists. `route explain` names the refused provider and reason too. The existing registrar.codex `workspace-write`
-entry remains an explicit exception to the read-only sandbox checks.
+exists. `route explain` names the refused provider and reason too. The existing registrar.codex entry (sandbox
+`{write_sandbox}`) remains an explicit exception to the read-only sandbox checks.
 
 Grok's `executor` and `bounded-implementer` launch entries use jsonl under `scripts/ro-run.py --rw {cwd}`
 (implementation/high, 3600 s and economy/medium, 1800 s respectively). The `reviewer`, `triager`, `researcher`,

@@ -76,7 +76,6 @@ class WithheldChecksTests(unittest.TestCase):
             self.assertNotIn(command, text)
         self.assertIn("`V1`: exit 0", text)
         self.assertIn("`V2`: exit 0", text)
-        self.assertIn("do not start containers or call docker", text)
         self.assertIn("kind `pending`", text)
         self.assertIn("withheld; the conductor runs this check itself", text)
 

@@ -47,7 +47,7 @@
           "argv": ["@ro-run.rw", "@claude.stream", "@claude.model", "@claude.write-tools", "@claude.quiet"]
         },
         "codex": {
-          "argv": ["@codex.exec", "--json", "--sandbox", "workspace-write", "@codex.model", "-"]
+          "argv": ["@codex.exec", "--json", "--sandbox", "{write_sandbox}", "@codex.model", "-"]
         },
         "grok": {
           "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"]
@@ -63,7 +63,7 @@
           "argv": ["@ro-run.rw", "@claude.stream", "@claude.model", "@claude.write-tools", "@claude.quiet"]
         },
         "codex": {
-          "argv": ["@codex.exec", "--json", "--sandbox", "workspace-write", "@codex.model", "-"]
+          "argv": ["@codex.exec", "--json", "--sandbox", "{write_sandbox}", "@codex.model", "-"]
         },
         "grok": {
           "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"]
@@ -112,7 +112,7 @@
           "argv": ["@claude.stream", "@claude.model", "--tools", "Bash,Read", "--allowedTools", "Bash(python3 *orch.py source register *)", "@claude.quiet"]
         },
         "codex": {
-          "argv": ["@codex.exec", "--json", "--sandbox", "workspace-write", "@codex.model", "-"]
+          "argv": ["@codex.exec", "--json", "--sandbox", "{write_sandbox}", "@codex.model", "-"]
         }
       }
     },

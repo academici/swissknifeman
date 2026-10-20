@@ -32,6 +32,13 @@ def launch_catalog(self) -> dict:
     return found
 
 
+def launch_access(self) -> str:
+    """``[orch.launch] access`` of this run: ``open`` (default) or ``confined``; it sets the ``{write_sandbox}`` of the
+    roles that write."""
+    found = getattr(getattr(self, "settings", None), "launch", None)
+    return (found or {}).get("access") or "open" if isinstance(found, dict) else "open"
+
+
 def entry(self, role: str, provider: str) -> dict:
     try:
         return launch.entry(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider)
@@ -259,7 +266,7 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
             raise Stop("ROUTE_UNDERSHOOT", f"{role} needs effort {effort}, which {provider} cannot start")
         else:
             argv = launch.build_argv(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider, model=model,
-                                     effort=effort, cwd=self.project)
+                                     effort=effort, cwd=self.project, access=self._launch_access())
     except launch.LaunchError as error:
         raise Stop(error.code, str(error)) from None
     # A role is never stopped for being long: both ceilings (``stage_timeout_s``, ``stage_idle_timeout_s``) are off

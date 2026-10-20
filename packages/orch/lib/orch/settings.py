@@ -53,7 +53,7 @@ class Settings:
     research: Mapping[str, object] = field(default_factory=dict)  # ``[orch.research]``: ``policy`` and ``sources``
     advisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.advisor]``: ``enabled``, ``max_rounds``, ``human_gate``
     stubs: Mapping[str, object] = field(default_factory=dict)  # ``[orch.stubs]``: ``enabled``, ``layers``
-    launch: Mapping[str, object] = field(default_factory=dict)  # ``[orch.launch]``: ``catalog`` (a file) and ``entries``
+    launch: Mapping[str, object] = field(default_factory=dict)  # ``[orch.launch]``: ``catalog`` (a file), ``access`` and ``entries``
     debug: bool = False  # ``[orch] debug`` / ``--debug``: the observer protocol and journal of a run (conductor.debug_mode)
 
     def explain_text(self, key: str | None = None) -> str:
@@ -104,8 +104,17 @@ def _launch(resolved: ResolvedConfig) -> dict:
     path = Path(os.path.expanduser(named)) if named else None
     if path is not None and not path.is_absolute():
         raise SettingsError("LAUNCH_CATALOG_RELATIVE", f"launch.catalog {named!r} must be absolute or start with ~")
-    return {"catalog": str(path) if path else "",
+    return {"catalog": str(path) if path else "", "access": _access(resolved),
             "entries": {key: dict(fields) for key, fields in (resolved.get("launch.entries") or {}).items()}}
+
+
+def _access(resolved: ResolvedConfig) -> str:
+    """``launch.access``. A project file may tighten it but never loosen: when the project layer says ``open`` over a lower layer
+    that did not, the lower layer's value stays."""
+    found = resolved.explain("launch.access")[0]
+    if found.layer == "project" and found.value == "open" and found.overridden:
+        return found.overridden[0].value
+    return found.value
 
 
 def _research(resolved: ResolvedConfig) -> dict:

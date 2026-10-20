@@ -14,7 +14,12 @@ MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")
 TRANSPORTS = ("text", "jsonl", "acp")
 MODEL_SETS = ("supported", "unknown")
-PLACEHOLDERS = frozenset({"model", "effort", "cwd", "orch"})
+PLACEHOLDERS = frozenset({"model", "effort", "cwd", "orch", "write_sandbox"})
+# How far a role that writes may reach (``[orch.launch] access``): ``open`` gives the provider CLI its widest mode, ``confined``
+# keeps it inside the workspace. ``{write_sandbox}`` in an argv is the sandbox mode of a provider CLI for such a role; a role
+# that must not write names its read-only mode itself, whatever the access.
+ACCESS = ("open", "confined")
+WRITE_SANDBOX = {"open": "danger-full-access", "confined": "workspace-write"}
 ENTRY_KEYS = frozenset({"model_class", "effort", "transport", "argv", "timeout_s", "model_set"})
 ORCH_ROOT = Path(__file__).resolve().parents[2]
 CATALOG_PATH = ORCH_ROOT / "configs" / "launch-catalog.json"
@@ -220,8 +225,9 @@ def entry(catalog: dict, role: str, provider: str) -> dict:
 
 
 def build_argv(catalog: dict, role: str, provider: str, *, model: str | None = None,
-               effort: str | None = None, cwd: str | Path = ".") -> list[str]:
-    """Command line for ``role`` on ``provider``. ``model`` is required when the CLI takes one (model_set supported)."""
+               effort: str | None = None, cwd: str | Path = ".", access: str = "open") -> list[str]:
+    """Command line for ``role`` on ``provider``. ``model`` is required when the CLI takes one (model_set supported);
+    ``access`` (``open`` or ``confined``) sets the ``{write_sandbox}`` of an entry."""
     found = entry(catalog, role, provider)
     effort = effort or found["effort"]
     if effort not in EFFORTS:
@@ -229,5 +235,8 @@ def build_argv(catalog: dict, role: str, provider: str, *, model: str | None = N
     if found["model_set"] == "supported" and not model:
         raise _invalid("model", f"role {role!r} on {provider!r} needs a model")
     # `{orch}` is this package root, so an entry can call a launcher shipped under `scripts/`.
-    values = {"model": model or "", "effort": effort, "cwd": str(cwd), "orch": str(ORCH_ROOT)}
+    if access not in ACCESS:
+        raise _invalid("access", f"must be one of {', '.join(ACCESS)}")
+    values = {"model": model or "", "effort": effort, "cwd": str(cwd), "orch": str(ORCH_ROOT),
+              "write_sandbox": WRITE_SANDBOX[access]}
     return [_PLACEHOLDER_RE.sub(lambda m: values[m[1]], arg) for arg in found["argv"]]

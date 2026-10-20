@@ -84,7 +84,11 @@ class LaunchMatrixTests(unittest.TestCase):
             with self.subTest(role=role, provider=provider):
                 if (role, provider) in READ_ONLY_EXCEPTIONS:
                     used_exceptions.add((role, provider))
-                    self.assertEqual(flag_values(argv, "--sandbox"), ["workspace-write"])
+                    # The registrar's mode follows ``[orch.launch] access``: ``{write_sandbox}`` is workspace-write when
+                    # confined and danger-full-access when open (test_launch_access). It is never read-only here.
+                    self.assertEqual(flag_values(argv, "--sandbox"), ["{write_sandbox}"])
+                    self.assertEqual(flag_values(launch.build_argv(self.catalog, role, provider, model="m", effort="high",
+                                                                   access="confined"), "--sandbox"), ["workspace-write"])
                 elif provider == "claude-code":
                     tools = flag_values(argv, "--tools")
                     denied = flag_values(argv, "--disallowedTools")
@@ -121,7 +125,8 @@ class LaunchMatrixTests(unittest.TestCase):
                         self.assertIn("--disable-web-search", entry["argv"])
 
     def test_6_every_entry_renders_with_all_launch_placeholders(self):
-        values = {"model": "fixture-model", "effort": "high", "cwd": "/work", "orch": str(launch.ORCH_ROOT)}
+        values = {"model": "fixture-model", "effort": "high", "cwd": "/work", "orch": str(launch.ORCH_ROOT),
+                  "write_sandbox": launch.WRITE_SANDBOX["open"]}
         for role, provider, entry in self.entries:
             with self.subTest(role=role, provider=provider):
                 argv = launch.build_argv(self.catalog, role, provider, model=values["model"],

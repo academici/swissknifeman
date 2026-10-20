@@ -53,7 +53,8 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   research_origin=researched.get("path") or "",
                                   fence=self._scope_option(item, "fence", "plan"),
                                   extra_paths=self._scope_option(item, "extra_paths", []),
-                                  file_tools=self._file_tools_rule(item))
+                                  file_tools=self._file_tools_rule(item),
+                                  containers=not self._codex_sandboxed(route))
         report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
         write_json(item.directory / "reports" / f"{key}.json", report)
         return {"report": report, "changed": self._changed_now(item), **meta}

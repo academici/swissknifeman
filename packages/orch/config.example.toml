@@ -39,6 +39,9 @@ schema_version = 1
 # Allowed in layers: defaults, machine, invocation, flags.
 # catalog = ""
 
+# How far the roles that write (executor, bounded-implementer, registrar) may reach on a provider CLI that has a sandbox of its own (Codex): open (default) gives it its widest mode, so the role can use Docker and anything else the user can; confined keeps it inside the workspace (Codex workspace-write). Roles that must not write stay read-only in both. A project file can only tighten this (confined), never loosen what the machine set. One of: "open", "confined".
+# access = "open"
+
 [orch.launch.entries]
 # Changes to single entries of the catalog, by ROLE_PROVIDER (role id, an underscore, provider id: executor_codex, bounded-implementer_claude-code): only the fields that differ, the rest stays as the catalog has it. The entry must exist in the catalog. model_class, effort and timeout_s may be set per machine or per project; argv, transport and model_set choose how the CLI starts and is read, so only the machine, the invocation file and flags may set them.
 # [orch.launch.entries.example]

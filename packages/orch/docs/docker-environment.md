@@ -9,9 +9,17 @@ how to build the whole thing from a clean Ubuntu machine, so that it can be rest
 A rootful Docker daemon is root on the host for everyone who can reach its socket: a member of the `docker` group can
 start a container that mounts `/`. Everything the conductor runs in containers (checks, tests, compose files written by the
 work) then has that authority. A rootless daemon runs as an ordinary user: root inside a container is only that user outside,
-so a container cannot touch the system. The executor of a piece of work (the Codex sandbox) cannot reach any Docker socket,
-by design; the conductor runs the container checks after the executor's report, outside its sandbox (the
-`done_pending_checks` status).
+so a container cannot touch the system.
+
+**The executor and Docker.** By default (`[orch.launch] access = "open"`) a Codex executor runs without the provider sandbox
+(`--sandbox danger-full-access`, as Claude Code and Grok executors already can), so it uses Docker itself, runs the
+container-based tests of what it changed and iterates on red ones in its own session. The conductor still runs every
+acceptance check after its report. With a rootless daemon that access is the access of your user, not root of the host. To
+keep the Codex executor inside the workspace (and out of Docker), set `access` to `confined`: for the machine
+`aicore config set --machine orch.launch.access confined`, for one project `aicore config set --project orch.launch.access
+confined` (`aicore config explain orch launch.access` shows the value and its layer); then the executor
+cannot reach any Docker socket, the prompt tells it so, and the container checks run only in the conductor's checks stage
+after its report (the `done_pending_checks` status).
 
 ## Check it
 

@@ -19,8 +19,10 @@ class Native(Binding):
             if entry["model_set"] != "supported":
                 raise Unmet("model.set", f"the launch catalog cannot pass a model to {base['provider']!r}",
                             "LAUNCH_MODEL_UNSETTABLE")
+            access = (getattr(self.settings, "launch", None) or {}).get("access") or "open"
             argv = substitute(entry["argv"], {"model": resolved["model"], "effort": resolved.get("effort", entry["effort"]),
-                                              "cwd": self.cwd, "orch": str(launch.ORCH_ROOT)})
+                                              "cwd": self.cwd, "orch": str(launch.ORCH_ROOT),
+                                              "write_sandbox": launch.WRITE_SANDBOX[access]})
         except launch.LaunchError as error:
             raise Unmet("launch", str(error), error.code) from error
         _, text = render.load_role(manifest["role_id"], self.roles_dir)

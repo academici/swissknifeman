@@ -268,22 +268,26 @@ Run every acceptance check of the input yourself, exactly as written, before you
 """
 
 
-def _conductor_checks(input_doc: dict) -> str:
+def _conductor_checks(input_doc: dict, containers: bool = True) -> str:
     """The acceptance checks the conductor itself runs after the report, by id and expectation and never by command: the
-    executor does not run them (a full run of them by the executor measured 30–50% of its step), and a command it
-    cannot run in its sandbox (a container, a socket, a credential) must not tempt it into stopping for it. What it
-    cannot prove is reported ``done_pending_checks`` for the conductor to run; it is not an escalation."""
+    executor does not run them (a full run of them by the executor measured 30–50% of its step). What it cannot prove in its
+    environment stays ``pending`` for the conductor; it is not an escalation. ``containers`` says whether the executor can
+    use Docker (a provider sandbox that keeps it out of the socket is the only reason it cannot): it may then run the
+    container-based tests of what it changed, otherwise it is told not to try."""
     checks = (input_doc.get("acceptance") or {}).get("checks") or []
     if not checks:
         return ""
-    return ("\nThe conductor runs these acceptance checks itself, outside your sandbox, right after your report:\n"
+    use = ("single test files of what you changed, container-based ones included, a syntax check, `git diff --check`)"
+           if containers else "single test files of what you changed, a syntax check, `git diff --check`)")
+    return ("\nThe conductor runs these acceptance checks itself right after your report:\n"
             + "\n".join(f"- `{check['id']}`: {check.get('expect', '-')}" for check in checks)
-            + "\n\nDo not run them, nor the whole suites they start, and do not start containers or call docker or "
-              "compose: prove your change with what runs without them (single test files of what you changed, a syntax "
-              "check, `git diff --check`). A proof that needs something your sandbox does not give (a container, the "
-              "docker socket, write access to `.git`, the network, a credential) is not a blocker: finish the work, name "
-              "each check you could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` "
-              "and keep `checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n")
+            + "\n\nDo not run them, nor the whole suites they start"
+            + ("" if containers else ", and do not start containers or call docker or compose")
+            + f": prove your change with what is cheap ({use}. A proof that needs something your environment does not give "
+              "(" + ("" if containers else "a container, the docker socket, ")
+            + "write access to `.git`, the network, a credential) is not a blocker: finish the work, name each check you "
+              "could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` and keep "
+              "`checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n")
 
 
 DEVIATION_FIX = "Fix the deviation named in the section above: change only what its evidence names, inside the write set."
@@ -354,7 +358,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              role: str = "executor", roles_dir=None, stub=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
-             file_tools: bool = False) -> list:
+             file_tools: bool = False, containers: bool = True) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
@@ -374,7 +378,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append([Block("research", f"research-result:{research_origin}" if research_origin else "research-result",
                             _research(research))])
     if targeted_tests:
-        checks = _conductor_checks(input_doc)
+        checks = _conductor_checks(input_doc, containers)
         if checks:
             parts.append([Block("verification", CONDUCTOR, "## Verification\n" + checks)])
     else:

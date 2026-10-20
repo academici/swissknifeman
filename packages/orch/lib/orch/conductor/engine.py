@@ -219,6 +219,7 @@ class Conductor:
 
     _entry = routing.entry
     _launch_catalog = routing.launch_catalog
+    _launch_access = routing.launch_access
     _routes = routing.routes
     route_problem = routing.route_problem
     provider_disabled = routing.provider_disabled

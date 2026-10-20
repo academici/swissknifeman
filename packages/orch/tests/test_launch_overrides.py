@@ -99,7 +99,7 @@ class LaunchSettingsTests(SettingsCase):
 
     def test_defaults_change_nothing(self):
         found = self.load()
-        self.assertEqual(found.launch, {"catalog": "", "entries": {}})
+        self.assertEqual(found.launch, {"catalog": "", "access": "open", "entries": {}})
         self.assertEqual(launch.effective_catalog(found.launch), launch.load_catalog())
 
 

@@ -386,7 +386,7 @@ root на машине.
   `[orch.launch.entries.<роль>_<провайдер>]` (отличающиеся поля поверх каталога). `model_class`, `effort`, `timeout_s`
   разрешены и на машине, и в проекте; `argv`, `transport`, `model_set` — только machine, invocation, flags (проект не выбирает
   команду и песочницу роли). Результат проверяется как каталог (`LAUNCH_INVALID`/`LAUNCH_UNKNOWN`). Источник значения виден в
-  `route explain` и `orch launch show` (`changed_by`). `configs/launch-catalog.json` не менялся.
+  `route explain` и `orch launch show` (`changed_by`). `configs/launch-catalog.json` в этом коммите не менялся (его сжатие — отдельный коммит ниже).
 - Тесты: `test_launch_overrides.py` (12), `LaunchConfigurationTests` (4).
 - Дедупликация (`88f8e1781`): файл хранит `defaults`, общие поля роли, части argv и отличия провайдера (13,7 → 7 КБ); разрешённый
   каталог не изменился (снимок `tests/golden/launch-catalog-resolved.json`).

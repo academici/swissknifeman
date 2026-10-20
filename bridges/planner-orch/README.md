@@ -32,7 +32,10 @@ Returns the worker's `exec/v1` execution-input as JSON (`$schema`
 - Required reads are checked at the first claim only, as `plan.py start` does: the brief of an item already in progress
   (a repeated claim, `run --adopt`) does not refuse with `READ_MISSING` for a required file the item itself deleted
   (a workflow it retires); `exists: false` marks such a read.
-- Lifecycle instructions, the report API, the full plan and owner messages are excluded; the full
+- Lifecycle instructions, the report API, the full plan and owner messages are excluded: a text that tells the executor to run
+  `plan.py start|finish`, `unit return` or `planner:plan-run` (a run word before it, a shell prompt, a code fence) refuses the
+  brief with `BRIEF_INCOMPLETE`, while a text that only names them to describe a gate ("before `plan.py finish` the checks are
+  green", "never run `plan.py finish`") passes; the report API is refused wherever it is named; the full
   coordinator pack stays reachable through `context_refs`.
 - `research` carries the research need the designer set on the item: `rag.need` (`none`, `optional`, `required`) and `rag.notes`; `rag.status` and `rag.captures` are plan state and stay out. An item without `rag` gets no `research` field. Under `orch.research.policy = conditional` the conductor adds a research stage only for `required`.
 - `--unit U#` briefs one unit: its goal, files (write set), checks and instructions. A unit without

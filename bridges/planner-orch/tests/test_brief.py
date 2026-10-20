@@ -408,6 +408,29 @@ class CompletenessTests(BriefCase):
         self.assertEqual(ctx.exception.code, "BRIEF_INCOMPLETE")
         self.assertIn("/guidance: lifecycle phrase 'plan.py finish'", str(ctx.exception))
 
+    def test_a_rule_that_describes_a_gate_passes_and_one_that_orders_the_command_does_not(self):
+        described = ["Перед `plan.py finish` пункта: проверки зелёные, evidence записан",
+                     "Run every check before plan.py finish and keep the evidence",
+                     "Never run plan.py finish yourself; the coordinator closes the item",
+                     "Не вызывай plan.py start и plan.py finish: пункт ведёт оркестратор",
+                     "G1: after `plan.py finish` the item is done and committed"]
+        ops.patch(self.root, "P1.1", {"rules": described})
+        self.assertEqual(self.verify(self.brief()), [])
+        for order in ("запусти plan.py finish P1.1", "Then run `plan.py finish P1.1 --status done`",
+                      "Закрой пункт: python3 scripts/plan.py finish P1.1", "Call unit return when done",
+                      "Close it with:\n```bash\nplan.py finish P1.1\n```", "$ plan.py start P1.2"):
+            with self.subTest(order=order):
+                ops.patch(self.root, "P1.1", {"rules": [order]})
+                with self.assertRaises(Exception) as ctx:
+                    self.brief()
+                self.assertEqual(ctx.exception.code, "BRIEF_INCOMPLETE")
+                self.assertIn("lifecycle phrase", str(ctx.exception))
+
+    def test_the_report_api_is_refused_even_when_only_named(self):
+        self.assertEqual(brief.lifecycle_phrase("the report_api is not yours"), "report_api")
+        self.assertEqual(brief.lifecycle_phrase("do not use the report API"), "report API")
+        self.assertIsNone(brief.lifecycle_phrase("before plan.py finish the gates must be green"))
+
     def test_lifecycle_phrase_in_plan_rules_is_data(self):
         ops.set_plan(self.root, {"rules": ["never call plan.py finish by hand"]})
         self.assertEqual(self.verify(self.brief()), [])

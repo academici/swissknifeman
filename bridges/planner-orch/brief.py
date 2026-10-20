@@ -31,9 +31,18 @@ TOOL = "planner-orch brief"
 REPORT = ["summary", "changed_paths", "checks_run", "evidence", "open_issues"]
 ESCALATION = ["A required read is missing or contradicts the goal",
               "An acceptance check cannot pass without leaving scope"]
-LIFECYCLE_PHRASES = (
-    "report_api", "report API", "plan.py start", "plan.py finish", "unit return", "planner:plan-run",
-)
+# Lifecycle commands the executor must never be told to run. The text of a plan may still *describe* them (a rule that
+# says what must hold "before plan.py finish", a gate of the execution model): only an instruction to run one is refused.
+LIFECYCLE_COMMANDS = ("plan.py start", "plan.py finish", "unit return", "planner:plan-run")
+# The report API is a capability the executor does not have; any mention of it is refused.
+LIFECYCLE_NAMES = ("report_api", "report API")
+LIFECYCLE_PHRASES = LIFECYCLE_NAMES + LIFECYCLE_COMMANDS
+_RUN_WORD = re.compile(
+    r"\b(?:run|runs|running|execute|exec|call|calls|invoke|launch|issue|type|enter|apply|use|then|"
+    r"запусти\w*|запуск\w*|вызов\w*|вызыв\w*|выполни\w*|исполни\w*|используй\w*|введи\w*|набери\w*|примени\w*)\b", re.I)
+_NEGATION = re.compile(r"\b(?:never|not|no|don't|dont|mustn't|avoid|without|не|нельзя|никогда|запрещ\w*|без)\b|\bdo not\b", re.I)
+_TEMPORAL = re.compile(r"(?:before|after|prior to|until|once|перед|до|после|пока)[\s`'\"«(]*$", re.I)  # names a moment
+_SHELL_PREFIX = re.compile(r"(?:^|\s)(?:\$\s*|python3?\s+(?:\S*/)?)$")
 _TOKEN = re.compile(r"[a-z][a-z0-9_]*", re.ASCII)  # a denied input of a role manifest is a bare token, not a sentence
 _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")
@@ -221,6 +230,28 @@ def _upstream(pack: dict) -> list[dict]:
     return result
 
 
+def lifecycle_phrase(text: str) -> str | None:
+    """The lifecycle phrase ``text`` uses as an instruction, else None. ``report_api`` is refused wherever it appears. A
+    lifecycle command is refused when the text tells the reader to run it: a run word before it in the same sentence
+    (``run``, ``запусти``, ...) that no negation (``never``, ``не``) turns into a prohibition, a shell prompt or
+    ``python plan.py`` in front of it, or a place inside a fenced code block. A description of a gate that only names it
+    ("before plan.py finish: the checks are green") is no instruction."""
+    name = next((phrase for phrase in LIFECYCLE_NAMES if phrase in text), None)
+    if name:
+        return name
+    for phrase in LIFECYCLE_COMMANDS:
+        for found in re.finditer(re.escape(phrase), text):
+            before = text[:found.start()]
+            clause = re.split(r"[.;!?\n]", before)[-1]
+            if _SHELL_PREFIX.search(clause) or before.count("```") % 2 == 1:
+                return phrase
+            if _TEMPORAL.search(clause):
+                continue  # "run the checks before plan.py finish" names the moment, it does not call the command
+            if _RUN_WORD.search(clause) and not _NEGATION.search(clause):
+                return phrase
+    return None
+
+
 def _strings(value, path=""):
     if isinstance(value, str):
         yield path, value
@@ -280,7 +311,7 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
     for path, text in _strings(doc):
         if path.startswith("/provenance") or path in plan_rules or ("/forbidden_inputs/" in path and _TOKEN.fullmatch(text)):
             continue  # a role manifest read by an item names the lifecycle inputs it is denied; that is data, not instruction
-        phrase = next((p for p in LIFECYCLE_PHRASES if p in text), None)
+        phrase = lifecycle_phrase(text)
         if phrase:
             missing.append(f"{path}: lifecycle phrase {phrase!r}")
     return missing

@@ -34,12 +34,28 @@ class OwnedPieceHint(unittest.TestCase):
     def test_the_blocked_claim_carries_the_hint(self):
         answer = {"status": "blocked", "ref": "W1", "reason_code": "ITEM_OWNED", "message": "held"}
         me = types.SimpleNamespace(
-            _claim_actor=lambda: "p/m", _claim_actor_source=lambda: ("default", None), state={"claims": {}}, run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(),
+            _claim_actor=lambda: "p/m", _claim_actor_source=lambda: ("default", None, None), state={"claims": {}}, run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(),
             _orch=lambda *args: (1, answer, ""), _save=lambda: None)
         with self.assertRaises(Stop) as stop:
             work_source.claim(me, "k", ["W1"])
         self.assertEqual(stop.exception.code, "CLAIM_BLOCKED")
         self.assertIn("orch conduct release", stop.exception.message)
+
+
+class ClaimOverrideRecord(unittest.TestCase):
+    def test_a_repeated_claim_without_an_override_keeps_the_recorded_one(self):
+        """A group review claims its last, closed piece again: the source answers without actor_override."""
+        override = {"reason_code": "ACTOR_OVERRIDE", "ref": "W1", "plan": {"provider": "codex", "model": "m"},
+                    "run": {"provider": "claude-code", "model": "opus"}, "message": "W1: replaced"}
+        answer = {"status": "claimed", "ref": "W1", "run_id": "src-1"}
+        me = types.SimpleNamespace(
+            _claim_actor=lambda: "p/m", _claim_actor_source=lambda: ("options", ["provider", "model"], None),
+            state={"claims": {"k": {"ref": "W1", "submission": "sub-r-k", "actor_override": override}}},
+            run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(), _orch=lambda *args: (0, answer, ""),
+            _save=lambda: None)
+        work_source.claim(me, "k", ["W1"])
+        self.assertEqual(me.state["claims"]["k"]["actor_override"], override)
+        me.progress.emit.assert_not_called()  # said once, at the first claim
 
 
 class RepeatedRetry(unittest.TestCase):

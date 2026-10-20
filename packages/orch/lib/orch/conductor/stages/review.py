@@ -20,17 +20,21 @@ def review_enabled(self, item: Item) -> bool:
 
 
 def requested_off(self, item: Item) -> None:
-    """The plan asks for a review of the piece (``review_mode: requested``) and the run policy reviews nothing: whether a
-    run reviews is the policy's decision, so no review is added, but the gap is said once per piece
+    """The plan asks for a review of the piece (``review_mode: requested``) and the run reviews nothing (its policy has no
+    review, or the review strategy of the batch is ``none``): whether a run reviews is the run's decision, so no review
+    is added, but the gap is said once per piece
     (``REVIEW_REQUESTED_POLICY_OFF``) instead of passing in silence."""
-    if item.input_doc.get("review_mode") != "requested" or self._per_piece_review_off() or self._reviewing(item) \
+    strategy = (self.state.get("review_strategy") or {}).get("mode")
+    if item.input_doc.get("review_mode") != "requested" or strategy in ("groups", "single") or self._reviewing(item) \
             or item.state.get("review_requested_announced"):
-        return
+        return  # reviewed on its own or with its group
     review = item.policy.get("review") or {}
-    why = "has no review" if not review.get("enabled") else "allows 0 review rounds"
+    why = ("the review strategy of the batch is none" if strategy == "none"
+           else f"the run policy {item.policy.get('policy_id', '-')} "
+                + ("has no review" if not review.get("enabled") else "allows 0 review rounds"))
     self.progress.emit("info", item=item.ref, reason_code="REVIEW_REQUESTED_POLICY_OFF",
-                       message=f"{item.ref}: the plan requests a review, but the run policy {item.policy.get('policy_id', '-')} "
-                               f"{why}; the piece is not reviewed (choose a scenario with review to have it)")
+                       message=f"{item.ref}: the plan requests a review, but {why}; the piece is not reviewed "
+                               "(choose a scenario or a review strategy with review to have it)")
     item.state["review_requested_announced"] = True
     self._save()
 

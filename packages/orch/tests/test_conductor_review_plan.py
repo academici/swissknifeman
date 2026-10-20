@@ -148,6 +148,17 @@ class ReviewPlanTests(ConductorCase):
         self.assertIn("claude-code/sonnet/", self.events(err, "GROUP_REVIEW_START")[0]["message"])
         self.assertFalse(self.events(err, "GROUP_REVIEW_ROUTE_CONFLICT"))
 
+    def test_a_requested_review_under_a_none_strategy_is_said(self):
+        self.set_items({ref: {"review_mode": "requested"} for ref in ("W1", "W2")})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")]})
+        path = self.project.parent / "none-options.json"
+        path.write_text(json.dumps({"review": {"strategy": "none"}}), encoding="utf-8")
+        code, _, err = self.run_items("W1", "W2", extra=("--options", path))
+        self.assertEqual((code, self.calls("reviewer")), (0, 0), err)
+        said = self.events(err, "REVIEW_REQUESTED_POLICY_OFF")
+        self.assertEqual(sorted(line["item"] for line in said), ["W1", "W2"])
+        self.assertIn("review strategy of the batch is none", said[0]["message"])
+
     def test_an_effort_named_by_the_reviewer_option_beats_the_strategy(self):
         from orch.conductor import options as opts
         from orch.conductor.application import review_plan

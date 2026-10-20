@@ -210,8 +210,9 @@ def _status_details(directory: Path, found: dict) -> dict:
         for change in raises:
             key = change["key"]
             if key == "tokens_hard_max":
-                for entry in limits.get("items", {}).values():
-                    entry[key] = change["to"]
+                for ref, entry in limits.get("items", {}).items():
+                    if change.get("item") in (None, ref):  # a raise names its piece; an old record holds for all
+                        entry[key] = change["to"]
             elif key == "run_tokens_hard_max":
                 limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
     codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED"}

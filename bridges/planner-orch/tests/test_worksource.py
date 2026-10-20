@@ -319,6 +319,22 @@ class OrchestrationTests(Case):
         self.assertEqual((override["reason_code"], override["ref"], override["plan"]["provider"], override["run"]["provider"]),
                          ("ACTOR_OVERRIDE", "P1.1", "codex", "claude-code"))
 
+    def test_a_provider_alone_keeps_the_model_of_the_plan(self):
+        self.plan_codex()
+        answer = self.claim_as({"provider": "codex", "model": "gpt-6-sol"}, "options", ["provider"])
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"]["model"], "gpt-6.1-sol")
+        self.assertNotIn("actor_override", answer)
+
+    def test_a_class_alone_takes_its_model_on_the_provider_of_the_plan(self):
+        self.plan_codex()
+        answer = self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"], run_id="run-a",
+                         submission_id="sub-run-a", actor=ACTOR, actor_source="options", actor_class="frontier")
+        self.assertEqual(answer["status"], "claimed", answer)
+        executor = self.item("P1.1")["result"]["executor"]
+        self.assertEqual((executor["provider"], executor["model"]), ("codex", worksource.class_model("codex", "frontier")))
+        self.assertEqual(answer["actor_override"]["plan"]["model"], "gpt-6.1-sol")
+
     def test_a_run_executor_below_the_class_of_the_piece_is_refused(self):
         self.plan_codex()
         answer = self.claim_as({"provider": "claude-code", "model": "haiku", "effort": "high"}, "options",

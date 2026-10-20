@@ -232,27 +232,42 @@ def executor_actor(layers: list) -> dict | None:
     return None
 
 
-RUN_ACTOR_FIELDS = ("provider", "model", "effort")
-
-
 def claim_actor(fields: dict, planned: dict | None, ref: str) -> tuple:
     """``(actor, override)``: who the item is started for. A run whose ``--options`` name the executor
     (``actor_source: options``) wins over the plan's ``orchestration`` executor, field by field (``actor_fields``: what
-    the run named), as it does at execution; ``override`` then names every value of the plan it replaced (a warning,
+    the run named; ``actor_class``: a class named without a model, resolved on the merged provider), as it does at
+    execution; ``override`` then names every value of the plan it replaced (a warning,
     never a refusal: the class check of the route stays with the planner). Otherwise the plan's executor, else the
     claimed default."""
     run = fields["actor"]
     if fields.get("actor_source") != "options":
         return planned or run, None
-    named = [key for key in (fields.get("actor_fields") or RUN_ACTOR_FIELDS) if run.get(key)]
-    actor = dict(planned or run)
+    if not planned:
+        return run, None
+    named = [key for key in (fields.get("actor_fields") or ()) if run.get(key)]
+    actor = dict(planned)
     actor.update({key: run[key] for key in named})
-    replaced = [key for key in named if planned and planned.get(key) and planned[key] != actor[key]]
+    if fields.get("actor_class") and "model" not in named:  # a class without a model: its model on the merged provider
+        actor["model"] = class_model(actor["provider"], fields["actor_class"]) or actor["model"]
+        named.append("model")
+    replaced = [key for key in named if planned.get(key) and planned[key] != actor[key]]
     if not replaced:
         return actor, None
     return actor, {"reason_code": "ACTOR_OVERRIDE", "ref": ref, "plan": dict(planned), "run": dict(actor),
                    "message": f"{ref}: the run executor {actor_text(actor)} replaces {actor_text(planned)} of the plan "
                               f"({', '.join(replaced)})"}
+
+
+def class_model(provider: str, model_class: str) -> str | None:
+    """The first model the planner's routing names for ``model_class`` of ``provider`` (``class_selectors`` of
+    ``command-routing.json``), None when it names none."""
+    lifecycle = partners.planner_engine("plan.lifecycle")
+    try:
+        mapping = lifecycle.load_routing_metadata(lifecycle.ROUTING_PATH)["mappings"].get(provider) or {}
+    except ValueError:
+        return None
+    found = (mapping.get("class_selectors") or {}).get(model_class) or []
+    return found[0] if found and isinstance(found[0], str) else None
 
 
 def op_claim(fields: dict) -> dict:

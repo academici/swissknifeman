@@ -286,15 +286,15 @@ def claim_actor(self) -> str:
 
 
 def claim_actor_source(self) -> tuple:
-    """``(source, fields)`` of the claim actor for the work source: ``("options", [fields the run named])`` when the
-    ``executor`` stage of ``--options`` names a provider, a model or an effort (the run's executor wins over the plan's,
-    as it does at execution), else ``("default", None)`` (the source may use the executor of its own plan). A class alone
-    names no field: its model is resolved on the provider the plan chose, which the claim cannot know."""
+    """``(source, fields, model_class)`` of the claim actor for the work source, as the stage merge of execution sees
+    the ``executor`` stage of ``--options``: ``fields`` are the actor fields it names (provider, model, effort; a
+    provider alone keeps the plan's model, as the merge does), ``model_class`` a class it names without a model (the
+    source resolves its model on the provider of the merged actor). ``("default", None, None)`` when it names none of
+    them: the source may use the executor of its own plan."""
     stage = self._invocation_executor()
-    fields = [name for name, named in (("provider", stage.get("provider")),
-                                       ("model", stage.get("model") or stage.get("provider")),
-                                       ("effort", stage.get("effort"))) if named]
-    return ("options", fields) if fields else ("default", None)
+    fields = [name for name in ("provider", "model", "effort") if stage.get(name)]
+    model_class = stage.get("model_class") if not stage.get("model") else None
+    return ("options", fields or None, model_class) if fields or model_class else ("default", None, None)
 
 
 def invocation_executor(self) -> dict:

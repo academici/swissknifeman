@@ -275,15 +275,16 @@ class ClaimActorTests(ConductorCase):
 
     def test_the_claim_says_which_fields_of_the_actor_the_run_named(self):
         for stage, expected in (({"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh"},
-                                 ("options", ["provider", "model", "effort"])),
-                                ({"effort": "low"}, ("options", ["effort"])),
-                                ({"provider": "codex"}, ("options", ["provider", "model"])),
-                                ({"model_class": "frontier"}, ("default", None))):
+                                 ("options", ["provider", "model", "effort"], None)),
+                                ({"effort": "low"}, ("options", ["effort"], None)),
+                                ({"provider": "codex"}, ("options", ["provider"], None)),  # the merge keeps the plan's model
+                                ({"model_class": "frontier"}, ("options", None, "frontier")),
+                                ({"model": "opus", "model_class": "frontier"}, ("options", ["model"], None))):
             with self.subTest(stage):
                 self.assertEqual(self.claimer(stage)._claim_actor_source(), expected)
         eng = self.claimer({})
         eng.run_doc = {"options_file": None}
-        self.assertEqual(eng._claim_actor_source(), ("default", None))
+        self.assertEqual(eng._claim_actor_source(), ("default", None, None))
 
     def test_a_run_executor_that_replaces_the_plan_one_is_said_and_kept(self):
         self.set_items({"W1": {"plan_executor": {"provider": "codex", "model": "gpt-6.1-sol"}}})

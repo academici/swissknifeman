@@ -442,6 +442,7 @@ def _conformance(args: argparse.Namespace) -> int:
 
 RUNTIME_PROBE = ".swissknifeman/state/orch/conductor/cnd-probe/progress.jsonl"
 REPORTS_PROBE = ".swissknifeman/orch/reports/cnd-probe/observer.md"
+ARTIFACTS_PROBE = ".swissknifeman/orch-artifacts/cnd-probe/W1/evidence/V1.json"
 
 
 def _check(check_id: str, status: str, observed: str, *, evidence=(), remediation=None) -> dict:
@@ -517,6 +518,17 @@ def _gitignore_checks(project: Path | None) -> list:
     elif reports:
         rows.append(_check("orch.conductor-reports", "ok", "the conductor reports folder is ignored",
                            evidence=[REPORTS_PROBE]))
+    artifacts = _ignored(project, ARTIFACTS_PROBE)
+    if artifacts is False:
+        rows.append(_check("orch.conductor-artifacts", "warn",
+                           "the local artifact folder of the conductor is not ignored: the records of pieces whose source "
+                           "names no artifact folder (check logs with absolute paths) would reach git",
+                           evidence=[ARTIFACTS_PROBE],
+                           remediation="add `.swissknifeman/orch-artifacts/` to .gitignore (the shared gitignore policy "
+                                       "entry orch-artifacts)"))
+    elif artifacts:
+        rows.append(_check("orch.conductor-artifacts", "ok", "the local artifact folder of the conductor is ignored",
+                           evidence=[ARTIFACTS_PROBE]))
     return rows
 
 

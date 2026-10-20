@@ -143,6 +143,12 @@
           "additionalProperties": false
         },
         "receipt": {"description": "Registration receipt of the source.", "type": "object"},
+        "evidence": {
+          "description": "Where the source keeps the evidence of the work for good, by check id, when not where the request named it (a plan in a workspace keeps it with the plan). Optional.",
+          "type": "object",
+          "patternProperties": {"^V[0-9]+$": {"description": "Path of the kept evidence, as the source refers to it.", "$ref": "#/$defs/text"}},
+          "additionalProperties": false
+        },
         "reason_code": {"description": "Why the registration was refused.", "$ref": "#/$defs/reasonCode"},
         "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
       },

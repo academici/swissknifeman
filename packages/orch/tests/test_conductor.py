@@ -2125,6 +2125,46 @@ class ReviewerFallbackTests(ConductorCase):
         self.assertEqual(routes["reviewer"]["provider"], "claude-code")
 
 
+class LocalRecordsTests(ConductorCase):
+    """W4: the fallback artifact folder (a source without artifacts_dir: a workspace plan, the file source) holds local
+    records that are never committed; the source keeps the evidence for good and the run records where."""
+
+    def test_a_workspace_plan_commits_no_local_records_and_names_the_kept_evidence(self):
+        self.set_items({"W1": {}}, workspace_plan=True)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        local = self.project / engine.FALLBACK_ARTIFACTS / self.run_dir(err).name
+        self.assertTrue(list(local.glob("*/evidence/V1.json")))  # the conductor's own copy stays local
+        paths = self.source()["commits"][0]["paths"]
+        self.assertFalse([path for path in paths if path.startswith(".swissknifeman/orch-artifacts")], paths)
+        register = self.state(err)["items"]["W1"]["steps"]["register"]["result"]
+        orch_run = self.state(err)["items"]["W1"]["orch_run"]
+        self.assertEqual(register["evidence"], {"V1": f"@plan/artifacts/W1/{orch_run}/evidence/V1.json"})
+
+    def test_doctor_warns_when_the_local_artifact_folder_is_not_ignored(self):
+        from orch.cli import doctor_checks
+        rows = {row["check_id"]: row for row in doctor_checks(self.project)}
+        self.assertEqual(rows["orch.conductor-artifacts"]["status"], "warn")
+        self.assertIn(".swissknifeman/orch-artifacts/", rows["orch.conductor-artifacts"]["remediation"])
+        (self.project / ".gitignore").write_text(".swissknifeman/state/\n.swissknifeman/orch-artifacts/\n", encoding="utf-8")
+        rows = {row["check_id"]: row for row in doctor_checks(self.project)}
+        self.assertEqual(rows["orch.conductor-artifacts"]["status"], "ok")
+
+    def test_prune_names_the_local_evidence_it_removes(self):
+        from orch.conductor import runs
+        self.set_items({"W1": {}, "W2": {}}, workspace_plan=True)
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN, GREEN]})
+        code, _, first = self.run_items("W1")
+        self.assertEqual(code, 0, first)
+        code, _, err = self.run_items("W2")  # the latest run is kept: the first one is the one to prune
+        self.assertEqual(code, 0, err)
+        rows = runs.prune(self.project, 0, apply=False, now=time.time() + 86400)
+        row = next(row for row in rows if row["run_id"] == self.run_dir(first).name)
+        self.assertTrue(row["local_evidence"][0].endswith("/evidence/V1.json"), row)
+        self.assertIn("local evidence file(s) of the run go with it", runs.prune_text(rows, False))
+
+
 class PlanReviewRouteTests(ConductorCase):
     """W1: the reviewer and the rounds the plan names for a piece (``review_route``, ``review_rounds_max`` of the
     execution-input) reach the review; a reviewer the run sets explicitly wins over the plan."""

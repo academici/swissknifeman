@@ -84,8 +84,10 @@ class FileSourceRunTests(InputCase):
         self.assertEqual(subject, f"adhoc({self.input_doc['input_id']}): Make out/adhoc.txt")
         self.assertIn("out/adhoc.txt", self.git("show", "--name-only", "--format=", "HEAD"))
         self.assertNotIn("out/", self.git("status", "--porcelain"))
-        self.assertTrue(any("orch-artifacts" in line and line.endswith("stage-report.json")
-                            for line in self.git("show", "--name-only", "--format=", "HEAD").splitlines()))
+        # W4: the artifact folder of the file source holds local records, never committed with the work
+        self.assertFalse([line for line in self.git("show", "--name-only", "--format=", "HEAD").splitlines()
+                          if "orch-artifacts" in line])
+        self.assertTrue(list((self.project / ".swissknifeman/orch-artifacts").glob("*/*/stage-report.json")))
 
     def test_a_repeated_registration_is_a_no_op(self):
         path = self.write_input()

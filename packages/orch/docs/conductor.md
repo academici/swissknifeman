@@ -79,8 +79,8 @@ an unknown scenario blocks the claim (`SCENARIO_UNKNOWN`) before the piece start
 (a file that changed since the claim is `INPUT_CHANGED`: start a new run).
 
 - Artifacts (stage-report, review verdict, check evidence, the registration receipt `register.json`) live in
-  `.swissknifeman/orch-artifacts/<run>/<input_id>/`, never in `plans/`.
-- The changes stay in the tree: `commit` is a no-op unless `--commit`; then it commits the changed paths and the artifact folder
+  `.swissknifeman/orch-artifacts/<run>/<input_id>/`, never in `plans/`: local records, not committed.
+- The changes stay in the tree: `commit` is a no-op unless `--commit`; then it commits the changed paths
   with the message `adhoc(<input_id>): <first line of the goal>` and nothing else.
 - Provenance `plan_support` and `phase_support` also add a note to the plan's journal: after the registration the CLI asks the
   configured work source for the optional op `note` (`{collection, text, refs}`; the bridge of the plan engine writes it into the journal of the plan). A source without `note`, a refusal, or a plan without a phase (`refs` empty) is the
@@ -839,14 +839,15 @@ means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer
 | `.swissknifeman/state/orch/runs/<run>/` | ignored | the orch run journal of `source …` |
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
 | `.swissknifeman/orch/reports/<run>/` | ignored | `observer.json`, `observer.md` (written when the run ends, after its last commit) |
-| `.swissknifeman/orch-artifacts/<run>/<item>/` | committed | the artifact folder of a source without `artifacts_dir` |
+| `.swissknifeman/orch-artifacts/<run>/<item>/` | ignored | local records: the artifact folder of a source without `artifacts_dir` (a workspace plan, the file source); never in a commit of the piece. The planner bridge copies the evidence of a workspace plan item into `<plan>/artifacts/<item>/<run>/evidence/` at register and the item refers to it there; files tracked before the folder was ignored stay in the index |
 | the plan (JSON) | committed | through the work source's own commit |
 
 Role streams never go into the artifact folder; a review verdict there is short and points at the stream in state.
-The shared gitignore policy (`packages/aicore/configs/gitignore-policy.json`, entries `swissknifeman-state` and
-`orch-conductor-reports`) states the same for every connected project, and `orch.py doctor` warns when the runtime
-folder or the reports folder is not ignored (`orch.conductor-gitignore`, `orch.conductor-reports`, `check-result/v1`
-with `--json`).
+The shared gitignore policy (`packages/aicore/configs/gitignore-policy.json`, entries `swissknifeman-state`,
+`orch-conductor-reports` and `orch-artifacts`) states the same for every connected project, and `orch.py doctor` warns
+when the runtime folder, the reports folder or the local artifact folder is not ignored (`orch.conductor-gitignore`,
+`orch.conductor-reports`, `orch.conductor-artifacts`, `check-result/v1` with `--json`). `conduct prune` warns when the
+local artifact folder of a run it removes holds evidence (`local_evidence`): the file source keeps it only there.
 
 ## Sandboxes
 

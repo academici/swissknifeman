@@ -165,6 +165,61 @@ class WorkspaceCommitBridge(unittest.TestCase):
         with mock.patch.dict(os.environ, self.env, clear=True):
             return worksource.op_commit({"plan": str(self.plan), "ref": "P1.2", **fields})
 
+    def local_evidence(self, check="V1") -> str:
+        doc = json.loads((self.plan / "plan.json").read_text(encoding="utf-8"))
+        (self.plan / "plan.json").write_text(json.dumps({**doc, "id": self.plan.name}, ensure_ascii=False, indent=2) + "\n",
+                                            encoding="utf-8")  # a plan API write needs the id of its folder
+        path = self.src / ".swissknifeman/orch-artifacts/cnd-run/P1.2/evidence" / f"{check}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"check_id": check, "exit": 0}), encoding="utf-8")
+        return path.relative_to(self.src).as_posix()
+
+    def test_the_evidence_of_a_workspace_plan_is_kept_with_the_plan(self):
+        """W4: the conductor's copy is a local record; the plan keeps the evidence and the item refers to it there."""
+        import worksource
+        local = self.local_evidence()
+        fields = {"plan": str(self.plan), "ref": "P1.2", "run_id": "orch-run-1", "evidence": {"V1": local}}
+        with mock.patch.dict(os.environ, self.env, clear=True):
+            cwd = Path.cwd()
+            os.chdir(self.src)
+            try:
+                kept = worksource._kept_evidence(fields)
+                again = worksource._kept_evidence(fields)  # a repeated register is a no-op
+            finally:
+                os.chdir(cwd)
+        self.assertEqual(kept, {"V1": "@plan/artifacts/P1.2/orch-run-1/evidence/V1.json"})
+        self.assertEqual(again, kept)
+        target = self.plan / "artifacts/P1.2/orch-run-1/evidence/V1.json"
+        self.assertEqual(target.read_bytes(), (self.src / local).read_bytes())
+        artifacts = json.loads((self.plan / "phases/P1/P1.2.json").read_text(encoding="utf-8"))["artifacts"]
+        self.assertEqual([entry for entry in artifacts if entry["path"] == kept["V1"]],
+                         [{"path": kept["V1"], "role": "output"}])
+
+    def test_register_hands_the_kept_evidence_to_the_planner_and_names_it(self):
+        import worksource
+        local = self.local_evidence()
+        seen = {}
+
+        def bounded(argv, **kwargs):
+            seen["argv"] = argv
+            return subprocess.CompletedProcess(argv, 0, json.dumps({"calls": [{"result": "recorded"}],
+                                                                   "gate": {"verdict": "pass", "checks": {"V1": 0}}}), "")
+
+        fields = {"plan": str(self.plan), "ref": "P1.2", "run_id": "orch-run-1", "attempt_id": "att-orch-run-1-P1.2",
+                  "status": "done", "report": {"summary": "s"}, "evidence": {"V1": local},
+                  "registrar": {"provider": "orch", "model": "conductor"}, "executed_by": {"provider": "codex", "model": "m"}}
+        with mock.patch.dict(os.environ, self.env, clear=True), mock.patch.object(worksource, "_supersede_blocked_attempt"), \
+                mock.patch.object(worksource.partners, "run_bounded", bounded):
+            cwd = Path.cwd()
+            os.chdir(self.src)
+            try:
+                answer = worksource.op_register(fields)
+            finally:
+                os.chdir(cwd)
+        self.assertEqual(answer["evidence"], {"V1": "@plan/artifacts/P1.2/orch-run-1/evidence/V1.json"})
+        self.assertIn("V1=@plan/artifacts/P1.2/orch-run-1/evidence/V1.json", seen["argv"])
+        self.assertNotIn(f"V1={local}", seen["argv"])
+
     def test_op_commit_passes_the_workspace_fields_on(self):
         self.change()
         answer = self.op()

@@ -96,8 +96,9 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
     if status == "blocked" and not records_only:
         item.state["partial"] = bool(report.get("changed_paths"))
     if (status != "blocked" or records_only) and item.policy.get("git_action") == "commit":
-        paths = sorted(set(report.get("changed_paths", [])) | {self._relative(item.artifacts) + "/"}
-                       | self._research_paths(item))
+        # the fallback artifact folder holds local records, never committed (the source keeps what lasts at register)
+        records = set() if self._local_records(item) else {self._relative(item.artifacts) + "/"}
+        paths = sorted(set(report.get("changed_paths", [])) | records | self._research_paths(item))
         self._step(item, "commit", lambda: self._commit(item, paths),
                    verdict=lambda result: " ".join(part for part in (result["outcome"], result.get("sha"),
                                                                      result.get("message")) if part))

@@ -188,6 +188,7 @@ class Conductor:
     _register = work_source.register
     _commit = work_source.commit
     _open_artifacts = work_source.open_artifacts
+    _local_records = work_source.local_records
     _write_artifact = work_source.write_artifact
     _evidence_dir = staticmethod(work_source.evidence_dir)
     _register_args = staticmethod(work_source.register_args)

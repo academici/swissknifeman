@@ -182,6 +182,10 @@ def prune(project: Path, older_than_days: int, apply: bool = False, now: Optiona
             continue
         paths = [directory] + [project / base / run_id for base in (REPORTS, FALLBACK_ARTIFACTS)
                                if (project / base / run_id).exists() or (project / base / run_id).is_symlink()]
+        local = project / FALLBACK_ARTIFACTS / run_id
+        # the local records of a source without its own folder (the file source) are the only copy of its evidence
+        evidence = sorted(str(path.relative_to(project)) for path in local.glob("*/evidence/*.json")) \
+            if local.is_dir() and not local.is_symlink() else []
         removed = False
         reason = None
         if apply:
@@ -209,7 +213,8 @@ def prune(project: Path, older_than_days: int, apply: bool = False, now: Optiona
                     lease.release()
         rows.append({"run_id": run_id, "status": row["status"], "age_days": round(age, 1),
                      "paths": [str(path.relative_to(project)) if project in path.parents else str(path) for path in paths],
-                     "removed": removed, **({"reason": reason} if reason else {})})
+                     "removed": removed, **({"reason": reason} if reason else {}),
+                     **({"local_evidence": evidence} if evidence else {})})
     return rows
 
 
@@ -218,7 +223,9 @@ def prune_text(rows: List[dict], apply: bool) -> str:
         return "no runs to prune"
     out = [f"{row['run_id']}: {row['status']}, {row['age_days']} day(s) old, "
            f"{('skipped: ' + row['reason']) if row.get('reason') else 'removed' if row['removed'] else 'would remove'} "
-           f"{', '.join(row['paths'])}" for row in rows]
+           f"{', '.join(row['paths'])}"
+           + (f"; warning: {len(row['local_evidence'])} local evidence file(s) of the run go with it"
+              if row.get("local_evidence") else "") for row in rows]
     if not apply:
         out.append(f"{len(rows)} run(s) would be removed; repeat with --apply")
     return "\n".join(out)

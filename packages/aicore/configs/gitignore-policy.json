@@ -226,6 +226,15 @@
       "why": "Observer reports of conductor runs (observer.json, observer.md) are written when a run ends, after the commit of its last piece: run output like the state folder. A piece of work keeps its committed record in its own artifact folder (stage-report, review-verdict, evidence)."
     },
     {
+      "id": "orch-artifacts",
+      "policy": "ignore",
+      "paths": [
+        ".swissknifeman/orch-artifacts/"
+      ],
+      "owner": "orch conductor",
+      "why": "Local records of the pieces of a work source without an artifact folder of its own (stage-report, review-verdict, check evidence with absolute paths in their logs). They are run output, not committed: a plan in a workspace keeps the evidence of its items with the plan (the planner-orch bridge copies it at register). Files tracked before the ignore stay in the index (closed items of older plans refer to them). `orch.py doctor` warns when the folder is not ignored."
+    },
+    {
       "id": "plan-role-streams",
       "policy": "ignore",
       "paths": [

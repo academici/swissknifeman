@@ -93,9 +93,12 @@ def brief(state, given, project):
     doc["input_id"] = f"PLAN9.{given['ref']}@{digest[:12]}"
     reused = blobs.blob_path(sha256_tagged(canonical_json_bytes(doc)), project=project).is_file()
     ref = blobs.put_json(doc, name=f"brief-{given['ref']}", project=project)
-    return {"op": "brief", "input_ref": ref, "input_id": doc["input_id"], "digest": digest, "reused": reused,
-            "artifact_id": f"brief-{given['ref'].replace('.', '-')}-{digest[:12]}",
-            "artifacts_dir": f"plans/T/artifacts/{given['ref']}"}
+    answer = {"op": "brief", "input_ref": ref, "input_id": doc["input_id"], "digest": digest, "reused": reused,
+              "artifact_id": f"brief-{given['ref'].replace('.', '-')}-{digest[:12]}",
+              "artifacts_dir": f"plans/T/artifacts/{given['ref']}"}
+    if state.get("workspace_plan"):  # a plan outside the checkout: no artifact folder of its own, evidence kept by the source
+        answer.pop("artifacts_dir")
+    return answer
 
 
 def register(state, given, project):
@@ -126,11 +129,16 @@ def register(state, given, project):
         verdict = "pass"
     if state["registered"].get(attempt) == given["status"]:
         return {"op": "register", "outcome": "no-op", "gate": {"verdict": verdict, "checks": checks}}
+    kept = {key: f"@plan/artifacts/{given['ref']}/{given['run_id']}/evidence/{key}.json"
+            for key in given.get("evidence", {})} if state.get("workspace_plan") else {}
     state["registered"][attempt] = given["status"]
     item["status"] = given["status"]
+    if kept:
+        item["evidence_kept"] = kept
     item["report"] = given["report"]
     item["executed_by"] = given["executed_by"]
-    return {"op": "register", "outcome": "recorded", "gate": {"verdict": verdict, "checks": checks}}
+    return {"op": "register", "outcome": "recorded", "gate": {"verdict": verdict, "checks": checks},
+            **({"evidence": kept} if kept else {})}
 
 
 def commit(state, given, project):

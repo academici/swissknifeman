@@ -28,7 +28,9 @@ from orch.port import PortError
 from orch.worksource import problems as source_problems
 from aicore.util.proc import run as run_with_timeout
 
-FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"  # committed records of a source without artifacts_dir
+# Local records of a source without artifacts_dir (not committed: ignored like the state folder); a plan source keeps the
+# evidence of its items with the plan at register.
+FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
 
 
 def read_receipt(item: Item, kind: str, *, project=None) -> Optional[dict]:
@@ -135,8 +137,9 @@ def receipt_result(kind: str, answer: dict) -> dict:
     """The same result shapes for live calls and recovered steps (finish reads close['by'])."""
     if kind == "close":
         return {"by": "closer", "answer": "registration recovered from receipt"}
-    if kind == "register":
-        return {"outcome": answer["outcome"], "gate": (answer.get("gate") or {}).get("verdict")}
+    if kind == "register":  # ``evidence``: where the source keeps the evidence for good (a workspace plan)
+        return {"outcome": answer["outcome"], "gate": (answer.get("gate") or {}).get("verdict"),
+                **({"evidence": answer["evidence"]} if answer.get("evidence") else {})}
     kept = {"outcome": answer["outcome"], "sha": answer.get("sha")}
     if answer.get("repo") == "workspace":
         kept["sha"] = answer.get("_source_sha")
@@ -349,8 +352,18 @@ def open_artifacts(self, item: Item, brief: dict) -> None:
 
 
 def write_artifact(self, item: Item, name: str, doc) -> Path:
-    """``doc`` as ``<artifacts>/<name>``: a committed record of the piece (stage-report, review-verdict, advice)."""
+    """``doc`` as ``<artifacts>/<name>``: a record of the piece (stage-report, review-verdict, advice), committed with the
+    piece when the source named the folder, local in the fallback folder otherwise."""
     return write_json(item.artifacts / name, doc)
+
+
+def local_records(self, item: Item) -> bool:
+    """The artifact folder of the piece is the local fallback (the source named none): it is not committed."""
+    try:
+        (self.project / item.artifacts).resolve().relative_to((self.project / FALLBACK_ARTIFACTS).resolve())
+    except ValueError:
+        return False
+    return True
 
 
 def evidence_dir(item: Item) -> Path:

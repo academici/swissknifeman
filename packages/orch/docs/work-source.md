@@ -24,7 +24,11 @@ choose a branch by `op`.
 
 A claim may also answer `options`: the run-option layers of the work, general first (`[{source, options}]`, each a
 conductor `run-options` document that orch validates). A brief may answer `artifacts_dir`: the repository folder
-where a run keeps the committed artifacts of the work (stage-report, review verdict, check evidence).
+where a run keeps the committed artifacts of the work (stage-report, review verdict, check evidence). Without it the
+conductor keeps them in `.swissknifeman/orch-artifacts/<run>/<ref>/`: local records, not committed (ignored like the
+state folder). A `register` answer may name `evidence` (`{V#: path}`): where the source keeps the evidence of the work for
+good (the planner bridge copies the evidence of a workspace plan into the plan folder); the conductor then records
+those paths.
 
 `run_id` uses the characters of an attempt id (`[A-Za-z0-9._:-]`, at most 100) because the attempt id
 `att-<run_id>-<ref>` is built from it. A refusal of the source is an answer with a `reason_code`. A plugin that fails, answers an error or answers
@@ -93,7 +97,7 @@ input (the reference is its `input_id`; a different candidate is `INPUT_UNKNOWN`
 `brief` is the document itself in the artifact store (a file that changed since the claim is `INPUT_CHANGED`, a failure of the
 source); `register` applies the same evidence gate as the planner bridge (check-evidence with exit 0 for every acceptance
 check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (the idempotency receipt) into
-`.swissknifeman/orch-artifacts/<run_id>/<input_id>/`; `commit` commits nothing unless `--commit`, then only the given paths with
+`.swissknifeman/orch-artifacts/<run_id>/<input_id>/` (local records, not committed); `commit` commits nothing unless `--commit`, then only the given paths with
 `adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input. For provenance
 `plan_support` and `phase_support` the `register` command forwards the note to the configured plugin source
 (the CLI prints the answer with `note: {outcome: recorded | unsupported | refused, message?}`; `receipts/register.json` keeps the pure answer of the source and the note goes to `receipts/note.json`). The `input_id` of a file input names the artifact folder, so it must be one path component (`INPUT_INVALID` otherwise); `commit` uses literal git pathspecs, and a commit refused by a hook leaves the index as it was. `run.json` of the cycle gets

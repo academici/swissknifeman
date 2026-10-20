@@ -436,13 +436,50 @@ def _supersede_blocked_attempt(fields: dict) -> None:
                   code="START_REFUSED")
 
 
+def _kept_evidence(fields: dict) -> dict:
+    """``{V#: @plan/path}``: the evidence of an item of a plan that lives in a workspace, copied into
+    ``<plan>/artifacts/<item>/<run>/evidence/`` and declared as outputs of the item, so that it lasts with the plan
+    (the conductor keeps its own copy only as local records). ``{}`` for a plan inside the repository: its artifact
+    folder is committed with the item."""
+    evidence = fields.get("evidence") or {}
+    if not evidence:
+        return {}
+    import brief  # the planner engine is located and imported only when evidence is kept
+    plan_ref, plans_root = fields["plan"], fields.get("plans_root")
+    item = fields["ref"].split("/", 1)[0]
+    try:
+        plan = brief.store.load_plan(brief.store.resolve_plan_dir(plan_ref, Path(plans_root) if plans_root else None))
+    except brief.PlanError as error:
+        raise Blocked(error.code, error.message) from None
+    project = Path(plan.repo_root).resolve()
+    if plan.root.resolve().is_relative_to(project):
+        return {}
+    kept = {}
+    for check_id, path in sorted(evidence.items()):
+        source = Path(path) if Path(path).is_absolute() else project / path
+        if not source.is_file():
+            continue  # the evidence gate names what is missing
+        target = plan.root / "artifacts" / item / fields["run_id"] / "evidence" / f"{check_id}.json"
+        body = source.read_bytes()
+        if not (target.is_file() and target.read_bytes() == body):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(body)
+        relative = _declared_path(plan, target, project)
+        plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "output"],
+                  plans_root, code="ARTIFACT_REFUSED")
+        kept[check_id] = relative
+    return kept
+
+
 def op_register(fields: dict) -> dict:
     run_id = fields["run_id"]
     try:
         _supersede_blocked_attempt(fields)
+        kept = _kept_evidence(fields)
     except Blocked as blocked:
         return {"op": "register", "gate": {"verdict": "none", "checks": {}}, "outcome": "refused",
                 "reason_code": blocked.code, "message": blocked.message}
+    fields = dict(fields, evidence={**(fields.get("evidence") or {}), **kept})
     with tempfile.TemporaryDirectory(prefix="planner-orch-register-") as tmp:
         report = Path(tmp) / "report.json"
         report.write_text(json.dumps(fields["report"], ensure_ascii=False), encoding="utf-8")
@@ -465,6 +502,8 @@ def op_register(fields: dict) -> dict:
     answer = {"op": "register", "gate": gate}
     if receipt is not None:
         answer["receipt"] = receipt
+    if kept:
+        answer["evidence"] = kept
     if done.returncode == 0:
         calls = (receipt or {}).get("calls", [])
         answer["outcome"] = "recorded" if any(call.get("result") == "recorded" for call in calls) else "no-op"

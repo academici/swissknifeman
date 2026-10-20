@@ -64,6 +64,35 @@ def cases() -> dict:
     }
 
 
+class WithheldChecksTests(unittest.TestCase):
+    """``checks.executor_runs_checks: false``: the executor prompt names the acceptance checks, never their commands."""
+
+    def test_the_prompt_of_an_executor_that_does_not_run_checks_carries_no_acceptance_command(self):
+        doc = fixture("plan-bound")
+        doc["acceptance"]["checks"].append({"id": "V2", "cmd": "docker compose run --rm tools gate main",
+                                            "cwd": "tools", "expect": "exit 0", "kind": "acceptance"})
+        text = prompts.render(prompts.executor(doc, item="P1.1", step="executor.1"))
+        for command in ("python3 -m unittest tests.test_cli", "docker compose run --rm tools gate main"):
+            self.assertNotIn(command, text)
+        self.assertIn("`V1`: exit 0", text)
+        self.assertIn("`V2`: exit 0", text)
+        self.assertIn("do not start containers or call docker", text)
+        self.assertIn("kind `pending`", text)
+        self.assertIn("withheld; the conductor runs this check itself", text)
+
+    def test_a_procedure_check_is_withheld_too_and_the_input_is_not_changed(self):
+        doc = fixture("adhoc")
+        text = prompts.render(prompts.executor(doc, item="W1", step="executor.1"))
+        self.assertNotIn("README install section reads", text)
+        self.assertIn("procedure", doc["acceptance"]["checks"][0])  # the caller's document keeps its commands
+
+    def test_an_executor_that_runs_checks_still_gets_the_commands(self):
+        doc = fixture("plan-bound")
+        text = prompts.render(prompts.executor(doc, item="P1.1", step="executor.1", targeted_tests=False))
+        self.assertIn("python3 -m unittest tests.test_cli", text)
+        self.assertNotIn("do not start containers", text)
+
+
 class BlockTests(unittest.TestCase):
     def test_every_builder_matches_the_prompt_captured_before_the_split(self):
         for name, blocks in cases().items():

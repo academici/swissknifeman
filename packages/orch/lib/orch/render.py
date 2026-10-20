@@ -157,12 +157,22 @@ def _acceptance(doc: dict) -> str:
         if check.get("cwd"):
             lines.append(f"- cwd: `{check['cwd']}`")
         block = "\n".join(lines)
-        if "cmd" in check:
+        if check.get("withheld"):
+            block += "\n\ncommand: withheld; the conductor runs this check itself after your report"
+        elif "cmd" in check:
             block += "\n\ncommand:\n" + _fence(check["cmd"], "bash")
         else:
             block += "\n\nprocedure:\n" + _fence(check["procedure"], "text")
         blocks.append(block)
     return "\n\n".join(blocks)
+
+
+def withhold_commands(doc: dict) -> dict:
+    """A copy of the input whose acceptance checks keep their id, kind and expectation but not their command or
+    procedure (``withheld``): for a role that must not run them, so its prompt carries no command to try."""
+    checks = [{key: value for key, value in check.items() if key not in ("cmd", "procedure", "cwd")} | {"withheld": True}
+              for check in (doc.get("acceptance") or {}).get("checks") or []]
+    return {**doc, "acceptance": {**(doc.get("acceptance") or {}), "checks": checks}}
 
 
 def _deliverables(doc: dict) -> str:

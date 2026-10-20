@@ -211,8 +211,10 @@ only. A round with no confirmed finding at the floor ends the review.
 
 The executor sees only its prompt: the execution-input, the context map, `rules` and the correction package. It never
 sees the plan or the plan's command line. It runs the tests of what it changed; the conductor runs the acceptance
-checks (their commands are listed in the prompt so the executor does not repeat them) unless
-`checks.executor_runs_checks` asks it to. A gap that needs the owner is `blocked` with one `escalation` issue per
+checks outside the executor's sandbox. With the default `checks.executor_runs_checks: false` the prompt names each check by id
+and expectation but carries no command (`withheld`), tells the executor not to start containers or call docker, and says that
+a proof its sandbox cannot give is an `open_issues` entry of kind `pending`, not a `blocked` escalation. With `true` the
+executor gets the commands and runs them itself. A gap that needs the owner is `blocked` with one `escalation` issue per
 missing thing; `done_with_deviations` needs a `deviation` issue.
 A `deviation` issue carries `class` (`write_set`, `spec_mismatch`, `test_env`, `docs`, `dependency`, `environment`,
 `other`), `impact` and `outcome` (`accepted`, `follow_up`, `owner_decision`); `severity`, `auto_fixable` and `evidence`

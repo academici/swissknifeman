@@ -286,14 +286,16 @@ class CorrectionTests(ConductorCase):
     def test_the_executor_is_told_to_run_only_the_tests_of_its_change_unless_asked_otherwise(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W1")[0], 0)
-        self.assertIn("The conductor runs these commands itself", self.prompt("executor", 1))
+        self.assertIn("The conductor runs these acceptance checks itself", self.prompt("executor", 1))
         self.assertNotIn("Run every acceptance check of the input yourself", self.prompt("executor", 1))
-        self.assertIn("`test -f out/W1.txt`", self.prompt("executor", 1))
+        self.assertIn("`V1`", self.prompt("executor", 1))
+        self.assertNotIn("test -f out/W1.txt", self.prompt("executor", 1))  # the check is named, its command is not
         self.set_items({"W2": {"options": [{"source": "item:W2", "options": {"checks": {"executor_runs_checks": True}}}]}})
         self.script({"executor": [executor_ok("W2")], "reviewer": [GREEN]})
         self.assertEqual(self.run_items("W2")[0], 0)
         self.assertIn("Run every acceptance check of the input yourself", self.prompt("executor", 2))
-        self.assertNotIn("The conductor runs these commands itself", self.prompt("executor", 2))
+        self.assertNotIn("The conductor runs these acceptance checks itself", self.prompt("executor", 2))
+        self.assertIn("test -f out/W2.txt", self.prompt("executor", 2))  # the executor that runs them is shown them
 
     def overlapping(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {

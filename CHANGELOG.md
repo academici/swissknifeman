@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- orch: при `checks.executor_runs_checks: false` промпт исполнителя называет acceptance-проверки по id и ожиданию, без команд; исполнителю запрещены docker и контейнерные проверки, а недоказуемое в песочнице он оформляет `pending`, а не `blocked`.
 - orch: `run --dry-run` показывает `claim_actor` (actor для `source claim --actor`) и предупреждает, если он не совпадает с маршрутом исполнителя, который dry-run показывает зелёным.
 - orch: claim называет исполнителя из `--options` запуска (provider, model, effort), а не только исполнителя по умолчанию; маршрут пункта с другим провайдером проходит claim без дублирующего `orchestration` в плане (`ROUTE_MISMATCH` / `ROUTE_UNDERSHOOT` при зелёном dry-run).
 - orch: повтор blocked ad-hoc регистрации допускает done в том же attempt; recovery отвергает квитанцию, предшествующую новому started-шагу, и сохраняет source SHA при дозавершении workspace-коммита для handoff и group review.

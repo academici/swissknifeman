@@ -164,10 +164,7 @@ Use argparse subparsers like the existing `version` command.
 ### V1 · acceptance
 - expect: exit 0
 
-command:
-```bash
-python3 -m unittest tests.test_cli
-```
+command: withheld; the conductor runs this check itself after your report
 
 ## Deliverables
 
@@ -201,8 +198,10 @@ Unknowns:
 
 ## Verification
 
-The conductor runs these commands itself right after your report; do not run them, nor the whole suites they start (run single test files of what you changed instead):
-- `python3 -m unittest tests.test_cli`
+The conductor runs these acceptance checks itself, outside your sandbox, right after your report:
+- `V1`: exit 0
+
+Do not run them, nor the whole suites they start, and do not start containers or call docker or compose: prove your change with what runs without them (single test files of what you changed, a syntax check, `git diff --check`). A proof that needs something your sandbox does not give (a container, the docker socket, write access to `.git`, the network, a credential) is not a blocker: finish the work, name each check you could not run in an `open_issues` entry of kind `pending` and keep `checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.
 
 ## Progress lines
 

@@ -54,7 +54,7 @@ def advise(self, item: Item, number: int, ref: str, problem: str, evidence: list
             query_file.write_text(problem + "\n", encoding="utf-8")
             command = self._research_command(sources, query_file)
         prompt = prompts.advisor(item.input_doc, item=item.ref, step=key, problem_ref=ref, problem=problem,
-                                 evidence=evidence, sources=sources, command=command, roles_dir=self.roles_dir, stub=self._stub(role),
+                                 evidence=evidence, sources=sources, command=command, roles_dir=self.roles_dir, stub=self._stub(role, route),
                                  skills=self._skills(item, role), repo_rules=self._repo_rules(item, role),
                                  skill_texts=self._skill_texts(item, role))
         doc, meta = self._role(item, key, role, prompt, "advice", extra=lambda found: contract.advice_problems(ref, found),

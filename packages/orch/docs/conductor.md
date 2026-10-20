@@ -712,7 +712,32 @@ and the result parser. A stub that cannot be used (symlink, not a regular file, 
 target, text that looks like a secret, not UTF-8, unknown header field, mode or version, a header that names another target, text in a `disable` file) stops the
 run with `STUBS_INVALID` before any role starts. `[orch.stubs]` (machine, invocation or flags only): `enabled` (true) and
 `layers` (`["machine", "project"]`; leave `project` out on a machine that runs repositories it does not trust).
-`orch stubs list` shows the effective stubs of every role, `orch stubs show ROLE` the block and where each part comes from.
+`orch stubs list` shows the effective stubs of every role and the files of its variants; `orch stubs show ROLE`
+shows the common block and where each part comes from.
+
+Provider and model-family variants are extra parts of the same target, supplied by the owner:
+`orch/roles/<role>@<provider>.md` and `orch/roles/<role>@<provider>--<family>.md` in either allowed layer.
+Provider and family names match `[a-z0-9][a-z0-9.-]*`; a family cannot contain `--`. For example:
+
+```markdown
+<!-- skm-stub:v1 target=orch.role.executor@codex--gpt-6-sol mode=append -->
+Explain the targeted test results in the stage report.
+```
+
+The effective text joins the four common slots once, then the provider parts, then the provider--family parts.
+Each variant slot has its own `replace`, `append` and `disable` resolution across machine and project layers.
+`orch stubs show executor --provider codex --model gpt-6-sol` prints this effective block and the selected origins;
+`--provider codex` alone includes only the common and provider parts. `publish` creates only the four common slots;
+create variant files explicitly. Disabling stubs, excluding a layer and the file safety rules apply to variants too.
+
+The actual route selects the variants. A model's family is its exact inventory id, else the first inventory entry
+whose pattern fully matches the model, else the model name itself. When the snapshot has variant parts, the first resolution of each `provider/model`
+is saved in `instructions.json.variant_resolution` and reused on resume even if the model catalog changes.
+Variant parts keep their `variant` and literal `body` in the frozen snapshot; the target's `text` contains only
+the common text. Resolved families sit outside the snapshot digest; without variant files the snapshot and its digest
+retain their previous format. On provider fallback, including a gate discovered just before launch, the conductor
+rebuilds the same `stub` block for the new route and rewrites the attempt's prompt and manifest before calling it.
+The heading, block position and authority remain the same.
 
 ### Prompt manifest
 

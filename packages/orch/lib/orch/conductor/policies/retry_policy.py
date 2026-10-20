@@ -7,7 +7,7 @@ import time
 from typing import Optional
 
 from orch import retry
-from orch.conductor import gates
+from orch.conductor import gates, options as opts, prompts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -22,6 +22,28 @@ PROVIDER_STOP_CODES = {"authentication": "PROVIDER_AUTH", "authorization": "PROV
                        "model_unavailable": "MODEL_UNAVAILABLE"}
 TRANSIENT_CLASSES = ("provider_internal", "transport", "rate_limit")  # the provider CLI repeats these itself
 JITTER_CAP_S, JITTER_BASE_S = 300, 30
+
+
+def prompt_for_route(self, item: Item, key: str, role: str, route: dict, blocks: list,
+                     first_prompt: str, prompt: str) -> tuple:
+    """Rebuild only the stub for the actual attempt, preserving the other blocks and retry instructions."""
+    origin, text = self._stub(role, route)
+    routed = [block for block in blocks if block.kind != "stub"]
+    if text:
+        routed.insert(1, prompts.Block("stub", origin, text.rstrip() + "\n\n"))
+    suffix = prompt[len(first_prompt):]
+    first_prompt = prompts.render(routed)
+    if suffix:
+        routed.append(prompts.Block("instruction", "conductor:retry", suffix))
+    prompt = prompts.render(routed)
+    path = item.directory / "prompts" / f"{key}.md"
+    path.write_text(prompt, encoding="utf-8")
+    limits = {name: int(item.options.get("limits", {}).get(option, opts.DEFAULT_LIMITS[option]))
+              for name, option in prompts.BUDGET_LIMITS.items()}
+    write_json(path.with_suffix(".manifest.json"),
+               prompts.manifest(routed, step=key, role=role, route=route,
+                                excluded=self._skills_excluded(item, role), limits=limits))
+    return first_prompt, prompt
 
 
 def start_route(self, item: Item, key: str, role: str, route: dict, cancel) -> dict:

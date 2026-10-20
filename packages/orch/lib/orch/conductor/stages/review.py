@@ -145,7 +145,7 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
                                   diff=checks_mod.diff(self.project, base), checks=rows, round_no=number,
                                   pre_final=number > 1 and item.options["review"]["pre_final"],
                                   min_severity=item.options["review"]["correct_min_severity"],
-                                  roles_dir=self.roles_dir, stub=self._stub("reviewer"), skills=self._skills(item, "reviewer"),
+                                  roles_dir=self.roles_dir, stub=self._stub("reviewer", route), skills=self._skills(item, "reviewer"),
                                   checks_pending=pending, outside=self._outside(item), focus=focus,
                                   focus_origin=focus_origin, repo_rules=self._repo_rules(item, "reviewer"),
                                   skill_texts=self._skill_texts(item, "reviewer"))

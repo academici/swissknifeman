@@ -51,7 +51,7 @@ def research(self, item: Item, number: int = 1) -> Optional[dict]:
         query = self._research_query(item)
         query_file.write_text(query + "\n", encoding="utf-8")
         prompt = prompts.researcher(item.input_doc, item=item.ref, step=key, query=query, sources=sources,
-                                    command=self._research_command(sources, query_file), roles_dir=self.roles_dir, stub=self._stub(role), skills=self._skills(item, role),
+                                    command=self._research_command(sources, query_file), roles_dir=self.roles_dir, stub=self._stub(role, route), skills=self._skills(item, role),
                                     repo_rules=self._repo_rules(item, role), skill_texts=self._skill_texts(item, role))
         doc, meta = self._role(item, key, role, prompt, "research-result",
                                extra=lambda found: contract.research_problems(sources, found))

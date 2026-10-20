@@ -106,6 +106,72 @@ class WorkspaceProjectTests(StubCase):
         self.assertEqual(stubs.roots(self.project, env=self.env)["project"], self.project_root)
 
 
+class VariantTests(StubCase):
+    def resolve(self, *variants, **kwargs):
+        return stubs.resolve([T], self.project, env=self.env, variants={T: variants}, **kwargs)[T]
+
+    def test_variant_parts_keep_the_base_target_and_text(self):
+        self.write("machine", "_all.md", "common\n")
+        self.write("machine", "orch/roles/reviewer@codex.md",
+                   "<!-- skm-stub:v1 target=orch.role.reviewer@codex -->\ncodex rule\n")
+        found = self.resolve("codex", "codex")
+        self.assertEqual(found["text"], "common\n")
+        self.assertNotIn("variant", found["parts"][0])
+        self.assertNotIn("body", found["parts"][0])
+        self.assertEqual(found["parts"][1]["variant"], "codex")
+        self.assertEqual(found["parts"][1]["body"], "codex rule\n")
+        self.assertEqual(len(found["parts"]), 2)
+        snap = stubs.snapshot([T], self.project, env=self.env, variants={T: ["codex"]})
+        self.assertEqual(snap["targets"], {T: {key: found[key] for key in ("text", "parts")}})
+        self.assertNotEqual(snap["digest"], stubs.snapshot([T], self.project, env=self.env)["digest"])
+
+    def test_variant_modes_are_independent_of_the_base_and_other_variants(self):
+        self.write("machine", "orch/roles/reviewer.md", "base\n")
+        slot = "orch/roles/reviewer@codex.md"
+        self.write("machine", slot, "machine\n")
+        self.write("machine", "orch/roles/reviewer@codex--gpt-6-sol.md", "family\n")
+        for mode, body, expected in (("replace", "project", ["project\n", "family\n"]),
+                                     ("append", "project", ["machine\n", "project\n", "family\n"]),
+                                     ("disable", "", ["family\n"]),
+                                     ("replace", "", ["machine\n", "family\n"])):
+            with self.subTest(mode=mode, body=body):
+                self.write("project", slot, f"<!-- skm-stub:v1 target={T}@codex mode={mode} -->\n{body}")
+                found = self.resolve("codex", "codex--gpt-6-sol")
+                self.assertEqual(found["text"], "base\n")
+                self.assertEqual([part["body"] for part in found["parts"] if "variant" in part], expected)
+        self.assertEqual([part.get("body") for part in self.resolve("codex", layers=("machine",))["parts"]],
+                         [None, "machine\n"])
+
+    def test_invalid_variants_and_variant_targets_are_refused(self):
+        for variant in ("", "Codex", "../codex", "codex/foo", "codex--", "codex--gpt--sol", "codex--../sol"):
+            with self.subTest(variant=variant), self.assertRaises(stubs.StubError) as caught:
+                self.resolve(variant)
+            self.assertEqual(caught.exception.code, "STUB_TARGET_UNKNOWN")
+            self.assertIn("reviewer@", caught.exception.message)
+        with self.assertRaises(stubs.StubError):
+            stubs.slots(T + "@codex")  # the base target grammar stays unchanged
+        slot = "orch/roles/reviewer@codex--gpt-6.1-sol.md"
+        self.assertEqual(stubs.slot_target(T, slot), T + "@codex--gpt-6.1-sol")
+        self.write("project", slot, f"<!-- skm-stub:v1 target={T}@claude-code -->\nwrong\n")
+        with self.assertRaises(stubs.StubError) as caught:
+            self.resolve("codex--gpt-6.1-sol")
+        self.assertEqual(caught.exception.code, "STUB_TARGET_MISMATCH")
+
+    def test_variant_reads_refuse_symlinks_and_unsafe_text(self):
+        slot = "orch/roles/reviewer@codex.md"
+        path = self.write("project", slot, "safe\n")
+        path.unlink()
+        path.symlink_to("/etc/hostname")
+        with self.assertRaises(stubs.StubError) as caught:
+            self.resolve("codex")
+        self.assertEqual(caught.exception.code, "STUB_SYMLINK_FORBIDDEN")
+        path.unlink()
+        self.write("project", slot, "token=abcdef123456\n")
+        with self.assertRaises(stubs.StubError) as caught:
+            self.resolve("codex")
+        self.assertEqual(caught.exception.code, "STUB_SECRET")
+
+
 class RefusalTests(StubCase):
     def refused(self, code: str) -> None:
         with self.assertRaises(stubs.StubError) as caught:

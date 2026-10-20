@@ -43,6 +43,7 @@ _HEADER = re.compile(r"\A<!--\s*skm-stub:(?P<version>\S+)(?P<fields>(?:\s+[a-z_]
 _FIELD = re.compile(r"([a-z_]+)=(\S+)")
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
 _TARGET = re.compile(r"^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*\.[a-z0-9][a-z0-9-]*$")
+_VARIANT_NAME = re.compile(r"[a-z0-9][a-z0-9.-]*")
 
 
 class StubError(ValueError):
@@ -151,8 +152,23 @@ def parse(data: bytes, *, path: str, target: str, slot: str) -> dict:
 def slot_target(target: str, slot: str) -> str:
     """The id a slot file names in its header: the target for the exact slot, ``<package>.<kind>s._all`` and so on
     for the shared ones (``_all`` for the root)."""
+    exact = slots(target)[-1]
+    if slot.startswith(exact[:-3] + "@") and slot.endswith(".md"):
+        variant = slot[len(exact[:-3]) + 1:-3]
+        variant_slot(target, variant)  # validate before accepting a header with @
+        return f"{target}@{variant}"
     parts = slot[:-len(".md")].split("/")
     return target if slot == slots(target)[-1] else ".".join(parts)
+
+
+def variant_slot(target: str, variant: str) -> str:
+    """The extra slot of the same target; provider and optional family cannot escape its directory."""
+    exact = slots(target)[-1]
+    provider, separator, family = variant.partition("--")
+    if (not _VARIANT_NAME.fullmatch(provider) or
+            (separator and (not _VARIANT_NAME.fullmatch(family) or "--" in family))):
+        raise StubError("STUB_TARGET_UNKNOWN", f"{exact[:-3]}@{variant}.md: invalid stub variant")
+    return f"{exact[:-3]}@{variant}.md"
 
 
 def _sha(text: str) -> str:
@@ -160,9 +176,11 @@ def _sha(text: str) -> str:
 
 
 def resolve(targets: Iterable[str], project: Optional[os.PathLike] = None, *, env: Optional[Mapping[str, str]] = None,
-            layers: Iterable[str] = LAYERS) -> dict:
+            layers: Iterable[str] = LAYERS, variants: Optional[Mapping[str, Iterable[str]]] = None) -> dict:
     """``{target: {"text", "parts": [...], "skipped": [...]}}``: the additional instructions of each target. A part:
-    ``{slot, layer, path, mode, sha256, bytes, reason}``; ``skipped`` names inherited (empty) and disabled files."""
+    ``{slot, layer, path, mode, sha256, bytes, reason}``; variant parts additionally keep ``variant`` and ``body``.
+    Variants are extra slots of the same target, excluded from its common ``text``. ``skipped`` names inherited
+    (empty) and disabled files."""
     found_roots = roots(project, env=env, layers=layers)
     cache: dict = {}
 
@@ -182,7 +200,11 @@ def resolve(targets: Iterable[str], project: Optional[os.PathLike] = None, *, en
     out = {}
     for target in targets:
         parts, skipped = [], []
-        for slot in slots(target):
+        target_slots = [(slot, None) for slot in slots(target)]
+        target_slots += [(variant_slot(target, variant), variant)
+                         for variant in dict.fromkeys((variants or {}).get(target, []))]
+        for slot, variant in target_slots:
+            skipped_start = len(skipped)
             machine, project_file = load("machine", slot, target), load("project", slot, target)
             chosen = []
             if project_file is not None and project_file["mode"] == "disable":
@@ -201,21 +223,25 @@ def resolve(targets: Iterable[str], project: Optional[os.PathLike] = None, *, en
             for layer, doc, reason in chosen:
                 parts.append({"slot": slot, "layer": layer, "path": doc["path"], "mode": doc["mode"],
                               "sha256": _sha(doc["body"]), "bytes": len(doc["body"].encode("utf-8")), "reason": reason,
-                              "body": doc["body"]})
-        text = "\n".join(part["body"] for part in parts)
-        if len(text.encode("utf-8")) > MAX_TARGET_BYTES:
+                              "body": doc["body"], **({"variant": variant} if variant is not None else {})})
+            if variant is not None:
+                for row in skipped[skipped_start:]:
+                    row["variant"] = variant
+        text = "\n".join(part["body"] for part in parts if "variant" not in part)
+        if len("\n".join(part["body"] for part in parts).encode("utf-8")) > MAX_TARGET_BYTES:
             raise StubError("STUB_TOO_LARGE", f"{target}: the joined stubs hold more than {MAX_TARGET_BYTES} bytes")
-        out[target] = {"text": text, "parts": [{key: value for key, value in part.items() if key != "body"}
+        out[target] = {"text": text, "parts": [{key: value for key, value in part.items()
+                                               if key != "body" or "variant" in part}
                                                for part in parts], "skipped": skipped}
     return out
 
 
 def snapshot(targets: Iterable[str], project: Optional[os.PathLike] = None, *, env: Optional[Mapping[str, str]] = None,
-             layers: Iterable[str] = LAYERS) -> dict:
+             layers: Iterable[str] = LAYERS, variants: Optional[Mapping[str, Iterable[str]]] = None) -> dict:
     """The instruction set a run keeps (``instruction-set/v1``): the resolved text of every target with a part, the
     layers read and one digest of it all (the same files give the same digest)."""
     layers = tuple(layer for layer in LAYERS if layer in tuple(layers))
-    resolved = {target: found for target, found in resolve(targets, project, env=env, layers=layers).items()}
+    resolved = resolve(targets, project, env=env, layers=layers, variants=variants)
     body = {target: {"text": found["text"], "parts": found["parts"]}
             for target, found in sorted(resolved.items()) if found["parts"]}
     digest = digest_json({"layers": list(layers), "targets": body})

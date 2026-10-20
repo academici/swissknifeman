@@ -7,10 +7,13 @@ and its digest in ``run.json``; every prompt of the run and of its resumes reads
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import re
 from typing import Mapping, Optional
 
 from aicore import stubs as core
+from aicore.provider import models
 
 SNAPSHOT_FILE = "instructions.json"
 ROLES = ("advisor", "context-scout", "executor", "researcher", "reviewer", "triager")  # the roles the conductor prompts
@@ -39,16 +42,65 @@ def snapshot(project: Path, stubs_settings: Optional[Mapping[str, object]] = Non
     """The instruction set of a run; ``StubError`` for a stub that cannot be used (nothing has run yet)."""
     if (stubs_settings or {}).get("enabled") is False:
         return {"$schema": core.SCHEMA, "layers": [], "digest": None, "targets": {}}
-    return core.snapshot(targets(), project, env=env, layers=layers(stubs_settings))
+    allowed = layers(stubs_settings)
+    roots = core.roots(project, env=env, layers=allowed)
+    variants = {target(role): discover_variants(roots, role) for role in ROLES}
+    return core.snapshot(targets(), project, env=env, layers=allowed, variants=variants)
 
 
-def text(snapshot_doc: Optional[dict], role: str) -> str:
+def discover_variants(roots: Mapping[str, Path], role: str) -> list:
+    """Variant names in allowed layers, without following a symlink to a file or directory."""
+    found = set()
+    for root in roots.values():
+        core._no_link_on_the_way(root, f"orch/roles/{role}.md")
+        try:
+            entries = os.scandir(root / "orch" / "roles")
+        except FileNotFoundError:
+            continue
+        except OSError as error:
+            raise core.StubError("STUB_NOT_REGULAR", f"{root / 'orch' / 'roles'}: {error}") from None
+        with entries:
+            for entry in entries:
+                if not entry.name.startswith(role + "@") or not entry.name.endswith(".md"):
+                    continue
+                if entry.is_symlink():
+                    raise core.StubError("STUB_SYMLINK_FORBIDDEN", f"{entry.path} is a symlink")
+                variant = entry.name[len(role) + 1:-3]
+                core.variant_slot(target(role), variant)
+                found.add(variant)
+    return sorted(found)
+
+
+def model_family(provider: str, model: str, catalog=None) -> str:
+    """Exact inventory id, else the first fullmatching pattern in catalog order, else the model itself."""
+    entries = (models.inventory(catalog or models.load_model_catalog(), provider) or {}).get("entries", [])
+    if any(entry["id"] == model for entry in entries):
+        return model
+    return next((entry["id"] for entry in entries
+                 if any(re.fullmatch(pattern, model) for pattern in entry.get("patterns", []))), model)
+
+
+def parts(snapshot_doc: Optional[dict], role: str, provider: Optional[str] = None,
+          family: Optional[str] = None) -> list:
+    """Selected provenance, with common parts once, then provider and provider--family parts."""
+    found = ((snapshot_doc or {}).get("targets") or {}).get(target(role)) or {}
+    selected = [None] + ([provider] if provider else [])
+    if provider and family:
+        selected.append(f"{provider}--{family}")
+    return [part for variant in selected for part in found.get("parts", []) if part.get("variant") == variant]
+
+
+def text(snapshot_doc: Optional[dict], role: str, provider: Optional[str] = None,
+         family: Optional[str] = None) -> str:
     """The block text of ``role`` (heading and body), "" when the snapshot has none for it."""
     found = ((snapshot_doc or {}).get("targets") or {}).get(target(role))
-    return HEADING + found["text"] if found and found.get("text") else ""
+    bodies = ([found["text"]] if found and found.get("text") else [])
+    bodies += [part["body"] for part in parts(snapshot_doc, role, provider, family) if "variant" in part]
+    return HEADING + "\n".join(bodies) if bodies else ""
 
 
-def origin(snapshot_doc: Optional[dict], role: str) -> str:
+def origin(snapshot_doc: Optional[dict], role: str, provider: Optional[str] = None,
+           family: Optional[str] = None) -> str:
     """The provenance of the block: ``stub:<layer>:<slot>`` of each part, joined."""
-    found = ((snapshot_doc or {}).get("targets") or {}).get(target(role)) or {}
-    return ",".join(f"stub:{part['layer']}:{part['slot']}" for part in found.get("parts", [])) or "stub"
+    return ",".join(f"stub:{part['layer']}:{part['slot']}"
+                    for part in parts(snapshot_doc, role, provider, family)) or "stub"

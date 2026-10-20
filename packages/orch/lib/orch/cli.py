@@ -345,6 +345,7 @@ def _research(args: argparse.Namespace) -> int:
 def _stubs(args: argparse.Namespace) -> int:
     """``stubs publish|list|show``: the additional instructions of the roles (``aicore.stubs``)."""
     from aicore import stubs as core
+    from aicore.provider import models
     from orch.conductor import stubs
     try:
         project = _project_root(args) if args.action != "publish" or args.scope == "project" else None
@@ -367,27 +368,49 @@ def _stubs(args: argparse.Namespace) -> int:
         if unknown:
             print(f"STUB_TARGET_UNKNOWN: {unknown[0]!r} has no stub; roles: {', '.join(stubs.ROLES)}", file=sys.stderr)
             return 1
-        found = core.resolve([stubs.target(role) for role in roles], project, layers=layers) \
+        roots = core.roots(project, layers=layers)
+        variants = {stubs.target(role): stubs.discover_variants(roots, role) for role in roles} \
             if current.stubs.get("enabled", True) else {}
+        found = core.resolve([stubs.target(role) for role in roles], project, layers=layers, variants=variants) \
+            if current.stubs.get("enabled", True) else {}
+        provider, model = getattr(args, "provider", None), getattr(args, "model", None)
+        if model and not provider:
+            print("STUB_TARGET_UNKNOWN: --model requires --provider", file=sys.stderr)
+            return 1
+        family = stubs.model_family(provider, model) if provider and model else None
+        snapshot_doc = {"targets": found}
         doc = {"enabled": current.stubs.get("enabled", True), "layers": list(layers),
-               "roots": {name: str(path) for name, path in core.roots(project, layers=layers).items()},
-               "targets": {target: dict(entry, block=stubs.text({"targets": {target: entry}}, target.rsplit(".", 1)[1]))
-                           for target, entry in found.items()}}
+               "roots": {name: str(path) for name, path in roots.items()},
+               "targets": {target: dict(entry, variants=variants.get(target, []),
+                                        block=stubs.text(snapshot_doc, target.rsplit(".", 1)[1], provider, family),
+                                        origin=stubs.origin(snapshot_doc, target.rsplit(".", 1)[1], provider, family))
+                            for target, entry in found.items()}}
         if args.json:
             print(json.dumps(doc, ensure_ascii=False))
         elif args.action == "list":
             print(f"layers\t{','.join(doc['layers']) or '-'}" + ("" if doc["enabled"] else "\t(disabled)"))
             for target, entry in doc["targets"].items():
-                parts = ", ".join(f"{part['layer']}:{part['slot']}" for part in entry["parts"]) or "-"
+                parts = ", ".join(f"{part['layer']}:{part['slot']}" for part in entry["parts"] if "variant" not in part) or "-"
                 print(f"{target}\t{len(entry['text'].encode('utf-8'))} bytes\t{parts}")
+                for variant in entry["variants"]:
+                    selected = [part for part in entry["parts"] if part.get("variant") == variant]
+                    files = selected + [row for row in entry.get("skipped", []) if row.get("variant") == variant]
+                    origins = ", ".join(dict.fromkeys(f"{row['layer']}:{row['slot']}" for row in files)) or "-"
+                    print(f"{target}@{variant}\t{sum(part['bytes'] for part in selected)} bytes\t{origins}")
         else:
             entry = doc["targets"].get(stubs.target(args.role), {"text": "", "parts": [], "skipped": []})
-            for part in entry["parts"]:
+            selected = stubs.parts(snapshot_doc, args.role, provider, family)
+            for part in selected:
                 print(f"# {part['reason']}: {part['layer']} {part['path']} ({part['bytes']} bytes, {part['sha256'][:12]})")
             for row in entry.get("skipped", []):
+                if "variant" in row and row["variant"] not in (provider, f"{provider}--{family}" if family else None):
+                    continue
                 print(f"# skipped ({row['reason']}): {row['layer']} {row['path']}")
             print(entry.get("block") or "(no additional instructions)")
         return 0
+    except models.ModelCatalogError as error:
+        print(f"MODEL_CATALOG_UNAVAILABLE: {error}", file=sys.stderr)
+        return 1
     except core.StubError as error:
         print(f"{error.code}: {error.message}", file=sys.stderr)
         return 1
@@ -1045,6 +1068,8 @@ def _main(argv: list[str] | None = None) -> int:
     listing.add_argument("--json", action="store_true")
     show = actions.add_parser("show", help="the block one role gets and where each part comes from")
     show.add_argument("role", metavar="ROLE")
+    show.add_argument("--provider", metavar="P", help="include this provider's stub variant")
+    show.add_argument("--model", metavar="M", help="also include the model family's variant (requires --provider)")
     show.add_argument("--json", action="store_true")
     command = verbs.add_parser("doctor", help="diagnose the project: the conductor files git must ignore or keep")
     command.add_argument("--json", action="store_true", help="check-result/v1 documents as a JSON list")

@@ -49,7 +49,7 @@ def scout(self, item: Item) -> str:
     def run() -> dict:
         if cache.is_file():
             return {"text": cache.read_text(encoding="utf-8"), "cache": self._relative(cache), "hit": True}
-        prompt = prompts.scout(item.input_doc, item=item.ref, step="scout", roles_dir=self.roles_dir, stub=self._stub("context-scout"),
+        prompt = prompts.scout(item.input_doc, item=item.ref, step="scout", roles_dir=self.roles_dir, stub=self._stub("context-scout", route),
                                skills=self._skills(item, "context-scout"),
                                skill_texts=self._skill_texts(item, "context-scout"))
         text, meta = self._role(item, "scout", "context-scout", prompt, None)

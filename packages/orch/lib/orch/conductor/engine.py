@@ -86,6 +86,7 @@ class Conductor:
         self.state: dict = {}
         self.progress: Optional[Progress] = None
         self.instructions: dict = {}  # the stubs snapshot of the run (``instructions.json``)
+        self._instructions_lock = threading.Lock()
 
     _current_step: Optional[str] = None  # the step that runs now, for the RUN_SLOW beacon
     _sandbox_noted = False  # ISOLATION_PARTIAL of a sandbox that cannot start is said once per run
@@ -99,9 +100,22 @@ class Conductor:
         self.progress = Progress(run_id, self.directory, self.mode, self.stream, self.clock)
         self.instructions = read_json(self.directory / stubs_mod.SNAPSHOT_FILE) or {}
 
-    def _stub(self, role: str) -> tuple:
+    def _stub(self, role: str, route: Optional[dict] = None) -> tuple:
         """``(origin, text)`` of the additional instructions of ``role`` from the snapshot of the run."""
-        return stubs_mod.origin(self.instructions, role), stubs_mod.text(self.instructions, role)
+        provider, family = None, None
+        has_variants = any("variant" in part for found in self.instructions.get("targets", {}).values()
+                           for part in found.get("parts", []))
+        if route is not None and role in stubs_mod.ROLES and has_variants:
+            provider, model = route["provider"], route["model"]
+            key = f"{provider}/{model}"
+            with self._instructions_lock:
+                resolved = self.instructions.setdefault("variant_resolution", {})
+                if key not in resolved:
+                    resolved[key] = stubs_mod.model_family(provider, model, self._catalog_get().models)
+                    write_json(self.directory / stubs_mod.SNAPSHOT_FILE, self.instructions)
+                family = resolved[key]
+        return (stubs_mod.origin(self.instructions, role, provider, family),
+                stubs_mod.text(self.instructions, role, provider, family))
 
     def _save(self) -> None:
         self.store.save(self.state)
@@ -241,6 +255,7 @@ class Conductor:
     _knows = sandbox_policy.knows
 
     _start_route = retry_policy.start_route
+    _prompt_for_route = retry_policy.prompt_for_route
     _provider_failure = retry_policy.provider_failure
     _provider_stop = retry_policy.provider_stop
     _gate = retry_policy.gate

@@ -112,7 +112,7 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
     handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt, causation,
                                prompt_sha256=sha256_hex(prompt.encode("utf-8")))
     try:
-        doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle)
+        doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle, blocks)
     except Stop as stop:
         self._agent_end(handle, {"code": stop.code, "message": stop.message})
         raise
@@ -133,7 +133,7 @@ def denied(denials: list) -> str:
 
 
 def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
-              extra: Optional[Callable[[dict], list]], cancel, handle: dict) -> tuple:
+              extra: Optional[Callable[[dict], list]], cancel, handle: dict, blocks: list) -> tuple:
     """``(result, meta)`` of a role: its closed document (or text when ``kind`` is None).
 
     A result outside its contract is first healed by rule (``heal``), then repaired by the report-fixer role from
@@ -150,6 +150,7 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
     base = self._tree_mark() if self._writes(role) else None  # the tree this step started from
     route = self._start_route(item, key, role, route, cancel)
     while True:
+        first_prompt, prompt = self._prompt_for_route(item, key, role, route, blocks, first_prompt, prompt)
         attempt += 1
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"

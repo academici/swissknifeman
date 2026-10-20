@@ -41,7 +41,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         note = (item.state.get("interrupted_note") or {}).get(key, "")
         corrected = "\n\n".join(text for text in (correction, note) if text)
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
-                                  rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor"),
+                                  rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                   skills=self._skills(item, "executor"),
                                   repo_rules=self._repo_rules(item, "executor"),

@@ -274,6 +274,17 @@ class TestObservability(AdapterCase):
             self.assertNotIn(secret[:16], shown)
         self.assertEqual([], contracts.validate(out, "view-data"))
 
+    def test_the_timeline_comes_from_the_orch_cli_newest_first(self):
+        out = self.ok("gui-orch.timeline", params={"run_id": RUN})
+        self.assertEqual(["conduct", "timeline", "--run", RUN, "--json"], self.calls()[-1]["argv"][1:])
+        self.assertEqual([entry["kind"] for entry in out["entries"]], ["step.open", "step.done", "step.interrupted"])
+        self.assertEqual([entry["title"] for entry in out["entries"]][1:], ["P2.1 executor.1", "P2.1 executor.1"])
+        self.assertIn("no end", out["entries"][0]["detail"])
+        self.assertIn("299 s", out["entries"][2]["detail"])
+        self.assertNotIn("sk-TTTT", json.dumps(out))  # the detail is redacted
+        self.ok("gui-orch.timeline", params={"run_id": RUN, "item": "P2.1"})
+        self.assertEqual(["--item", "P2.1"], self.calls()[-1]["argv"][5:7])
+
     def test_isolated_plugin_locates_redaction_via_the_hub_registry(self):
         env = {"PATH": os.environ["PATH"], "HOME": str(self.home),
                "SKM_UMBRELLA": str(FIXTURES / "umbrella-ok"), "FAKE_AICORE_ROOT": os.environ["AICORE_ROOT"]}

@@ -314,6 +314,72 @@ class RunManifestTests(ConductorCase):
         self.assertEqual(code, 1)
         self.assertTrue(error.startswith("RUN_UNKNOWN:"), error)
 
+    def test_prompt_diff_compares_a_correction_with_the_attempt_before_it(self):
+        from tests.test_conductor import report
+        self.script({"executor": [{"result": report("W1")}, executor_ok("W1")], "reviewer": [GREEN]})  # V1 red, then green
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        run = self.run_dir(err).name
+        code, out, error = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.2", "--json")
+        self.assertEqual(code, 0, error)
+        doc = json.loads(out)
+        self.assertEqual((doc["base"]["step"], doc["target"]["step"], doc["against"]["step"]),
+                         ("executor.1", "executor.2", "executor.1"))
+        self.assertTrue(doc["counts"]["added"] + doc["counts"]["changed"] >= 1, doc)  # the correction package
+        self.assertEqual(doc["tokens"]["delta"], doc["tokens"]["to"] - doc["tokens"]["from"])
+        self.assertIn("role_text", [row["kind"] for row in doc["blocks"] if row["change"] == "same"])
+        code, out, _ = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.2")
+        self.assertIn("executor.1 -> executor.2:", out)
+        code, out, error = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.2",
+                                        "--against", f"{run}:W1:review.1", "--json")
+        self.assertEqual((code, json.loads(out)["base"]["step"]), (0, "review.1"), error)
+        code, _, error = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.1")
+        self.assertEqual(code, 1)
+        self.assertTrue(error.startswith("PROMPT_BASELINE_MISSING:"), error)
+        code, _, error = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.3")
+        self.assertTrue(error.startswith("PROMPT_MANIFEST_MISSING:"), error)
+        code, _, error = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.2",
+                                      "--against", f"{run}:W1:triage.7")
+        self.assertTrue(error.startswith("PROMPT_MANIFEST_MISSING:"), error)
+
+    def test_blocks_without_an_origin_are_matched_by_kind_and_order(self):
+        base = {"step": "a.1", "estimated_tokens": 5, "blocks": [
+            {"kind": "note", "origin": "", "sha256": "1", "tokens": 2}, {"kind": "note", "origin": "", "sha256": "2", "tokens": 3}]}
+        target = {"step": "a.2", "estimated_tokens": 9, "blocks": [
+            {"kind": "note", "origin": "", "sha256": "1", "tokens": 2}, {"kind": "note", "origin": "", "sha256": "9", "tokens": 4},
+            {"kind": "stub", "origin": "x.md", "sha256": "3", "tokens": 3}]}
+        doc = prompts.diff_manifests(base, target)
+        self.assertEqual([row["change"] for row in doc["blocks"]], ["same", "changed", "added"])
+        self.assertEqual(doc["tokens"], {"from": 5, "to": 9, "delta": 4})
+
+    def test_the_timeline_gives_every_step_as_an_interval(self):
+        err = self.finished()
+        code, out, error = self.conduct("timeline", "--run", self.run_dir(err).name, "--item", "W1", "--json")
+        self.assertEqual(code, 0, error)
+        rows = json.loads(out)["intervals"]
+        stages = [row["stage"] for row in rows]
+        self.assertIn("executor.1", stages)
+        self.assertTrue(all(row["status"] == "done" and row["end"] and row["duration_s"] is not None for row in rows), rows)
+        code, out, _ = self.conduct("timeline", "--run", self.run_dir(err).name)
+        self.assertIn("W1 executor.1: done", out)
+
+    def test_an_interrupted_and_resumed_step_is_two_intervals(self):
+        lines = [{"ts": "2026-10-20T10:00:00Z", "event": "run.start"},
+                 {"ts": "2026-10-20T10:00:01Z", "event": "stage.start", "item": "W1", "stage": "executor.1"},
+                 {"ts": "2026-10-20T10:05:00Z", "event": "run.end", "outcome": "stopped"},
+                 {"ts": "2026-10-20T11:00:00Z", "event": "run.resume"},
+                 {"ts": "2026-10-20T11:00:02Z", "event": "stage.start", "item": "W1", "stage": "executor.1"},
+                 {"ts": "2026-10-20T11:00:12Z", "event": "stage.end", "item": "W1", "stage": "executor.1", "verdict": "done"},
+                 {"ts": "2026-10-20T11:00:13Z", "event": "stage.start", "item": "W1", "stage": "checks.1"}]
+        from orch.conductor import progress
+        rows = progress.timeline(lines)
+        self.assertEqual([(row["stage"], row["status"], row["end"], row["duration_s"]) for row in rows],
+                         [("executor.1", "interrupted", "2026-10-20T10:05:00Z", 299),
+                          ("executor.1", "done", "2026-10-20T11:00:12Z", 10),
+                          ("checks.1", "open", None, None)])
+        killed = progress.timeline(lines[:2] + lines[3:5])  # the run died without run.end: no end is known
+        self.assertEqual((killed[0]["status"], killed[0]["end"]), ("interrupted", None))
+
     def test_the_observer_lists_the_heaviest_blocks_by_role(self):
         err = self.finished()
         directory = self.run_dir(err)

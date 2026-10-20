@@ -151,3 +151,44 @@ def summarize(lines: list) -> dict:
     return {"status": status, "reason_code": reason, "current": current, "beacon": beacon if current else None,
             "items": list(items.values()),
             "lines": len(lines), "last_ts": lines[-1]["ts"] if lines else None}
+
+
+def _seconds(start: str, end: str) -> int:
+    def epoch(text: str) -> float:
+        return datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()
+    return max(0, int(epoch(end) - epoch(start)))
+
+
+def timeline(lines: list, item: str | None = None) -> list:
+    """The step intervals of the pieces of a run from its journal, in order of their start: ``{item, stage, role, route,
+    start, end, duration_s, verdict, status}``. ``status`` is ``done``, ``stopped`` (the step ended with a stop), or
+    ``interrupted`` (the run ended or was resumed while the step was open: its end is the end of the run, or none when the
+    run died without one; the resumed step is an interval of its own), or ``open`` (still running: no end)."""
+    rows, current, run_end = [], {}, None
+
+    def close(key, end, status, verdict=None):
+        row = current.pop(key)
+        row.update(end=end, duration_s=_seconds(row["start"], end) if end else None, status=status,
+                   **({"verdict": verdict} if verdict else {}))
+
+    for line in lines:
+        event, key = line.get("event"), (line.get("item"), line.get("stage"))
+        if event in ("run.start", "run.resume"):
+            for open_key in list(current):
+                close(open_key, run_end if run_end and run_end >= current[open_key]["start"] else None, "interrupted")
+            run_end = None
+        elif event == "run.end":
+            run_end = line["ts"]
+        elif event == "stage.start" and key[0] and (item is None or key[0] == item):
+            if key in current:  # started again without an end: the earlier start was cut off
+                close(key, None, "interrupted")
+            current[key] = row = {"item": key[0], "stage": key[1], "role": line.get("role"), "route": line.get("route"),
+                                  "start": line["ts"], "end": None, "duration_s": None, "status": "open"}
+            rows.append(row)
+        elif event == "stage.end" and key in current:
+            verdict = line.get("verdict")
+            close(key, line["ts"], "stopped" if verdict == "stopped" else "done", verdict)
+    for open_key in list(current):
+        if run_end and run_end >= current[open_key]["start"]:
+            close(open_key, run_end, "interrupted")
+    return rows

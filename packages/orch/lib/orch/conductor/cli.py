@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``swissknifeman orch conduct run|resume|settle|release|status|runs|observe|answer|questions|prompt|gates``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 130 interrupted (resume continues).
@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import sys
 import time
+from typing import Optional
 
 from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
@@ -155,33 +156,99 @@ def _questions(args, project: Path) -> int:
     return 0
 
 
-def _prompt(args, project: Path) -> int:
-    """``prompt explain``: the blocks of the prompt a role step was given (``prompts/<step>.manifest.json``), their
-    origin, size and digest, and what was left out."""
-    if re.fullmatch(r"[a-z][a-z0-9-]*(\.[0-9]+(-q[0-9]+)?)?", args.step) is None:
-        print("PROMPT_PATH_INVALID: step must be a role step such as executor.1", file=sys.stderr)
-        return 1
-    run_id = args.run or _latest(project)
+STEP_PATTERN = r"[a-z][a-z0-9-]*(\.[0-9]+(-q[0-9]+)?)?"
+
+
+class _PromptError(Exception):
+    def __init__(self, code: str, message: str):
+        super().__init__(f"{code}: {message}")
+        self.code, self.message = code, message
+
+
+def _manifest(project: Path, run: Optional[str], item: str, step: str, missing: str = "MANIFEST_UNKNOWN") -> tuple:
+    """``(run_id, manifest)`` of ``prompts/<step>.manifest.json`` of ``item`` in ``run`` (default: the latest run), the
+    paths checked to stay inside the run; ``_PromptError`` otherwise (``missing`` names a manifest that is not there)."""
+    if re.fullmatch(STEP_PATTERN, step) is None:
+        raise _PromptError("PROMPT_PATH_INVALID", "step must be a role step such as executor.1")
+    run_id = run or _latest(project)
     if run_id and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id) is None:
-        print("PROMPT_PATH_INVALID: invalid run id", file=sys.stderr)
-        return 1
+        raise _PromptError("PROMPT_PATH_INVALID", "invalid run id")
     directory = engine.runs_root(project) / (run_id or "-")
     if not run_id or not (directory / engine.RUN_FILE).is_file():
-        print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
-        return 1
-    item_dir = directory / engine.safe(args.item)
-    file = item_dir / "prompts" / f"{args.step}.manifest.json"
+        raise _PromptError("RUN_UNKNOWN", f"no conductor run {run or ''} in {engine.runs_root(project)}")
+    item_dir = directory / engine.safe(item)
+    file = item_dir / "prompts" / f"{step}.manifest.json"
     try:
         item_dir.resolve().relative_to(directory.resolve())
         file.resolve().relative_to(item_dir.resolve())
     except (ValueError, OSError, RuntimeError):
-        print("PROMPT_PATH_INVALID: manifest must resolve inside the item directory", file=sys.stderr)
-        return 1
+        raise _PromptError("PROMPT_PATH_INVALID", "manifest must resolve inside the item directory") from None
     doc = engine.read_json(file) if file.is_file() else None
     if not isinstance(doc, dict):
-        print(f"MANIFEST_UNKNOWN: no prompt manifest for {args.item} {args.step} in run {run_id} ({file})", file=sys.stderr)
+        raise _PromptError(missing, f"no prompt manifest for {item} {step} in run {run_id} ({file})")
+    return run_id, doc
+
+
+def _baseline(step: str) -> Optional[str]:
+    """The previous attempt of the same step (``executor.2`` -> ``executor.1``), None for a first one."""
+    found = re.fullmatch(r"([a-z][a-z0-9-]*)\.([0-9]+)(-q[0-9]+)?", step)
+    if found is None or int(found.group(2)) <= 1:
+        return None
+    return f"{found.group(1)}.{int(found.group(2)) - 1}{found.group(3) or ''}"
+
+
+def _prompt(args, project: Path) -> int:
+    """``prompt explain``: the blocks of the prompt a role step was given (``prompts/<step>.manifest.json``), their
+    origin, size and digest, and what was left out. ``prompt diff``: what changed in it against the previous attempt of
+    the step or a named ``RUN:ITEM:STEP``."""
+    try:
+        if args.prompt_verb == "diff":
+            return _prompt_diff(args, project)
+        _run_id, doc = _manifest(project, args.run, args.item, args.step)
+    except _PromptError as error:
+        print(f"{error.code}: {error.message}", file=sys.stderr)
         return 1
     print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.explain_table(doc))
+    return 0
+
+
+def _prompt_diff(args, project: Path) -> int:
+    run_id, target = _manifest(project, args.run, args.item, args.step, missing="PROMPT_MANIFEST_MISSING")
+    if args.against:
+        parts = args.against.split(":")
+        if len(parts) != 3 or not all(parts):
+            raise _PromptError("PROMPT_PATH_INVALID", "--against takes RUN:ITEM:STEP")
+        against = (parts[0], parts[1], parts[2])
+    else:
+        previous = _baseline(args.step)
+        if previous is None:
+            raise _PromptError("PROMPT_BASELINE_MISSING", f"{args.step} is the first attempt of its step: name the prompt "
+                                                          "to compare with --against RUN:ITEM:STEP")
+        against = (run_id, args.item, previous)
+    _base_run, base = _manifest(project, *against, missing="PROMPT_MANIFEST_MISSING")
+    doc = dict(prompts.diff_manifests(base, target), run=run_id, item=args.item,
+               against={"run": against[0], "item": against[1], "step": against[2]})
+    print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.diff_table(doc))
+    return 0
+
+
+def _timeline(args, project: Path) -> int:
+    """``timeline``: the steps of the pieces of a run as intervals with their durations, from its journal."""
+    run_id = args.run or _latest(project)
+    directory = engine.runs_root(project) / (run_id or "-")
+    if not run_id or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id) is None or not (directory / engine.RUN_FILE).is_file():
+        print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
+        return 1
+    rows = progress.timeline(progress.read_lines(directory), item=args.item)
+    if args.json:
+        print(json.dumps(runs.display({"run": run_id, "item": args.item, "intervals": rows}), ensure_ascii=False, indent=2))
+        return 0
+    for row in rows:
+        took = f"{row['duration_s']} s" if row["duration_s"] is not None else "-"
+        print(f"{row['start']} {row['item']} {row['stage']}: {row['status']}, {took}"
+              + (f" ({row['verdict']})" if row.get("verdict") else ""))
+    if not rows:
+        print("no steps in the journal")
     return 0
 
 
@@ -362,6 +429,18 @@ def main(argv: list | None = None) -> int:
     explain.add_argument("--item", required=True, metavar="REF")
     explain.add_argument("--step", required=True, metavar="STEP", help="such as scout, executor.1, review.1, triage.1, close")
     explain.add_argument("--json", action="store_true")
+    diff = prompt_verbs.add_parser("diff", help="what changed in the prompt of a step against its previous attempt or "
+                                                "--against RUN:ITEM:STEP: blocks added, removed, changed (digest), tokens")
+    diff.add_argument("--run", metavar="RUN")
+    diff.add_argument("--item", required=True, metavar="REF")
+    diff.add_argument("--step", required=True, metavar="STEP", help="such as executor.2 (compared with executor.1)")
+    diff.add_argument("--against", metavar="RUN:ITEM:STEP", help="the prompt to compare with")
+    diff.add_argument("--json", action="store_true")
+    timeline_verb = verbs.add_parser("timeline", help="the steps of the pieces of a run as intervals with durations, "
+                                                      "from its journal (default run: the latest)")
+    timeline_verb.add_argument("--run", metavar="RUN")
+    timeline_verb.add_argument("--item", metavar="REF", help="only the steps of this piece")
+    timeline_verb.add_argument("--json", action="store_true")
     gate_list = verbs.add_parser("gates", help="provider capacity gates of this machine (exhausted account quotas); "
                                                "--clear removes them")
     gate_list.add_argument("--json", action="store_true")
@@ -410,6 +489,8 @@ def main(argv: list | None = None) -> int:
         return _questions(args, project)
     if args.verb == "prompt":
         return _prompt(args, project)
+    if args.verb == "timeline":
+        return _timeline(args, project)
     if args.verb in ("status", "observe"):
         run_id = args.run or _latest(project)
         directory = engine.runs_root(project) / (run_id or "-")

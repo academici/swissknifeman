@@ -121,6 +121,16 @@ def main(scenario):
     if verb == "prompt" and tail[:1] == ["explain"]:
         print(json.dumps(PROMPT))
         return 0
+    if verb == "timeline":
+        print(json.dumps({"run": run, "item": None, "intervals": [
+            {"item": "P2.1", "stage": "executor.1", "role": "executor", "route": "codex/gpt-6-sol/high",
+             "start": "2026-10-20T10:00:01Z", "end": "2026-10-20T10:05:00Z", "duration_s": 299, "status": "interrupted"},
+            {"item": "P2.1", "stage": "executor.1", "role": "executor", "route": "codex/gpt-6-sol/high",
+             "start": "2026-10-20T11:00:02Z", "end": "2026-10-20T11:00:12Z", "duration_s": 10, "status": "done",
+             "verdict": "done sk-" + "T" * 60},
+            {"item": "P2.1", "stage": "checks.1", "role": "deterministic", "route": None,
+             "start": "2026-10-20T11:00:13Z", "end": None, "duration_s": None, "status": "open"}]}))
+        return 0
     if verb == "questions":
         print(json.dumps(QUESTIONS))
         return 0

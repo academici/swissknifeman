@@ -214,6 +214,19 @@
       ]
     },
     {
+      "id": "gui-orch.timeline",
+      "title": "Run timeline",
+      "description": "Step transitions of the pieces of a run with their durations; an interrupted and resumed step is two entries.",
+      "scope": "project",
+      "returns": "timeline",
+      "cache_s": 5,
+      "timeout_s": 30,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"},
+        {"name": "item", "title": "Item", "type": "string", "required": false, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"}
+      ]
+    },
+    {
       "id": "gui-orch.gates",
       "title": "Provider gates",
       "description": "Active machine capacity gates, with a separately confirmed clear command.",
@@ -340,6 +353,10 @@
     {
       "id": "gui-orch.budget", "title": "Run budget", "scope": "project",
       "path": "runs/:run_id/budget", "query": "gui-orch.budget", "view": "metric-group"
+    },
+    {
+      "id": "gui-orch.timeline", "title": "Run timeline", "scope": "project",
+      "path": "runs/:run_id/timeline", "query": "gui-orch.timeline", "view": "timeline"
     },
     {
       "id": "gui-orch.gates", "title": "Provider gates", "scope": "project",

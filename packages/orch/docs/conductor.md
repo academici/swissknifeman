@@ -18,10 +18,21 @@ orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blo
 orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
 orch conduct questions [--run RUN] [--json]
 orch conduct prompt explain [--run RUN] --item REF --step STEP [--json]
+orch conduct prompt diff [--run RUN] --item REF --step STEP [--against RUN:ITEM:STEP] [--json]
+orch conduct timeline [--run RUN] [--item REF] [--json]
 orch conduct status [--run RUN] [--json]
 orch conduct observe [--run RUN] [--follow]
 orch conduct gates [--json] [--clear [PROVIDER]]
 ```
+
+`prompt diff` compares two prompt manifests (`prompt explain`): the step against its previous attempt (`executor.2`
+against `executor.1`; a first attempt is `PROMPT_BASELINE_MISSING`) or against `--against RUN:ITEM:STEP`. Blocks are
+matched by kind and origin (a block without an origin by kind and order); the answer names each block `added`,
+`removed`, `changed` (another digest) or `same` with its tokens on both sides, and the token totals; a missing manifest is
+`PROMPT_MANIFEST_MISSING`. `timeline` reads `progress.jsonl` and gives every step of a piece as an interval (`start`,
+`end`, `duration_s`, `verdict`, `status`: `done`, `stopped`, `interrupted` when the run ended or was resumed while the
+step was open (the resumed step is an interval of its own), `open` while it runs, without an end); gui-orch shows it as
+its `timeline` view.
 
 For an agent that picks its own pieces (ask the source for ready lanes → `run --items` → `status`/`observe` → `resume`/`settle`) see [agent-mode.md](agent-mode.md).
 

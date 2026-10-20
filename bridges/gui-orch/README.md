@@ -23,10 +23,11 @@ orchestrator: the list of runs is `orch conduct runs --json`.
 | `gui-orch.prompt` (`run_id`, `item`, `step`) | `conduct prompt explain --run R --item I --step S --json` | `resource-detail`: kind, origin, tokens, 12-character digest, excluded kind/reason, core/supporting/retrieval totals; no prompt text |
 | `gui-orch.budget` (`run_id`) | `conduct status --run R --json` | `metric-group`: fresh tokens against effective soft/hard item and hard run limits; incomplete usage warns |
 | `gui-orch.gates` | `conduct gates --json` | `status-table`: active capacity gates, with a confirmed clear action |
+| `gui-orch.timeline` (`run_id`, `item` optional) | `conduct timeline --run R [--item I] --json` | `timeline`: the steps as intervals, newest first, with status (`done`, `stopped`, `interrupted`, `open`), duration and end; an interrupted and resumed step is two entries, an open one has no end |
 
 `run_id` must match `cnd-[0-9A-Za-z-]+` before the CLI is called. Routes (`/x/gui-orch/...`): `runs`, `runs/:run_id`,
 `runs/:run_id/items`, `runs/:run_id/items/:item/routes`, `runs/:run_id/items/:item/prompt/:step`,
-`runs/:run_id/budget`, `runs/:run_id/report`, `providers/gates`, `questions`, `sandbox`; dashboard widget `gui-orch.latest`. Counts, ages and
+`runs/:run_id/budget`, `runs/:run_id/timeline`, `runs/:run_id/report`, `providers/gates`, `questions`, `sandbox`; dashboard widget `gui-orch.latest`. Counts, ages and
 tokens are integers (the backend refuses floats).
 
 Used routes come only from that run's recorded routing labels (`provider`, `model`, `effort`, `class`); current

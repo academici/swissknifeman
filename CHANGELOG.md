@@ -22,6 +22,7 @@
 
 ### Added
 
+- orch/gui-orch: `orch conduct prompt diff --run R --item X --step S [--against RUN:ITEM:STEP]` сравнивает manifest-ы промптов (по умолчанию — предыдущая попытка шага; блоки по kind+origin, без origin — по kind и порядку; added/removed/changed/same, токены по блокам и итог; `PROMPT_BASELINE_MISSING`, `PROMPT_MANIFEST_MISSING`); `orch conduct timeline --run R [--item X] --json` даёт шаги пунктов интервалами из `progress.jsonl` (прерванный и возобновлённый шаг — два интервала `interrupted`, открытый — без конца); gui-orch показывает его видом `timeline` (`gui-orch.timeline`, только через orch CLI, с redaction).
 - orch: `run.json` хранит `catalog_digests` {launch, models, capabilities} эффективных каталогов запуска (как в dry-run launch plan), `conduct status --json` их показывает; resume при расхождении даёт info `CATALOG_CHANGED` (без стопа); старые run читаются как прежде.
 - scripts/configs: config inventory охватывает `config.example.toml` модулей, run-policies/bindings/roles orch, presets/profiles skiller и трекаемые `.codex/`, `.cursor/`, `.grok/`; записи несут необязательные `kind`, `format`, `schema`, `generated`, `live_path`, проверяемые `test-config-inventory.py`.
 - orch: README и docs/index orch ссылаются на матрицу ролей, ownership/recovery, токены и лимиты, stubs-варианты и gui-orch.

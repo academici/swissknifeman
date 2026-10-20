@@ -355,6 +355,38 @@ def prompt(root: Optional[str], timeout_s: float, context: Dict[str, Any], param
     return {"$schema": VIEW, "view": "resource-detail", "title": safe_text(f"Prompt {item} {step}", 64), "fields": fields}
 
 
+TIMELINE_STATUS = ("done", "stopped", "interrupted", "open")
+
+
+def timeline(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+    """The steps of a run as intervals, newest first, from ``conduct timeline --json`` (the adapter reads no file of the
+    run): an interrupted and resumed step is two entries, an open step has no end."""
+    run_id = _run_id(context, params)
+    args = ["conduct", "timeline", "--run", run_id, "--json"]
+    item = params.get("item") or context.get("item")
+    if item is not None:
+        if not isinstance(item, str) or ITEM_REF.fullmatch(item) is None:
+            raise OrchError("ORCH_CONTEXT_MISSING", "item must be a plan item reference")
+        args[4:4] = ["--item", item]
+    found = _dict(orch_json(args, _need_root(root), timeout_s))
+    entries = []
+    for row in _list(found.get("intervals")):
+        row = _dict(row)
+        start = row.get("start")
+        if not isinstance(start, str) or re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z", start) is None:
+            continue
+        status = row.get("status") if row.get("status") in TIMELINE_STATUS else "unknown"
+        took = f"{_int(row.get('duration_s'))} s" if isinstance(row.get("duration_s"), int) else "no end"
+        detail = f"{status}, {took}; until {_text(row.get('end'), '-', 32)}; {_text(row.get('route'), '-', 64)}"
+        if row.get("verdict"):
+            detail += f"; {_text(row.get('verdict'), '-', 120)}"
+        entries.append({"at": start, "kind": f"step.{status}",
+                        "title": safe_text(f"{_text(row.get('item'), '-', 64)} {_text(row.get('stage'), '-', 64)}", 128),
+                        "detail": safe_text(detail)})
+    entries.sort(key=lambda entry: entry["at"], reverse=True)
+    return {"$schema": VIEW, "view": "timeline", "entries": entries}
+
+
 def budget(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
     found = _status(_run_id(context, params), _need_root(root), timeout_s)
     limits = _dict(found.get("limits"))
@@ -474,7 +506,8 @@ def sandbox(root: Optional[str], timeout_s: float, **_: Any) -> Dict[str, Any]:
 QUERIES: Dict[str, Callable[..., Dict[str, Any]]] = {
     f"{OWNER}.runs": runs, f"{OWNER}.latest": latest, f"{OWNER}.run": run, f"{OWNER}.items": items,
     f"{OWNER}.report": report, f"{OWNER}.questions": questions, f"{OWNER}.sandbox": sandbox,
-    f"{OWNER}.routes": routes, f"{OWNER}.prompt": prompt, f"{OWNER}.budget": budget, f"{OWNER}.gates": gates}
+    f"{OWNER}.routes": routes, f"{OWNER}.prompt": prompt, f"{OWNER}.budget": budget, f"{OWNER}.gates": gates,
+    f"{OWNER}.timeline": timeline}
 
 
 # --- the plugin protocol ---------------------------------------------------------------------------------------

@@ -95,10 +95,31 @@ class CollectTests(unittest.TestCase):
                 found = docker_env._credential_helpers(Path(home))
         self.assertEqual(found, {"store": "desktop", "helpers": {"desktop": False, "pass": True}})
 
-    def test_the_doctor_carries_the_rows_and_a_machine_without_docker_stays_green(self):
-        with mock.patch("orch.docker_env.collect", return_value={"installed": False}):
-            rows = {row["check_id"]: row for row in doctor_checks(None)}
-        self.assertEqual(rows["orch.docker"]["status"], "skip")
+    def test_orch_doctor_and_the_runs_never_ask_docker(self):
+        with mock.patch("orch.docker_env.collect", side_effect=AssertionError("docker was asked")), \
+                mock.patch("orch.docker_env._run", side_effect=AssertionError("docker was asked")):
+            rows = {row["check_id"] for row in doctor_checks(None)}
+        self.assertFalse({row for row in rows if row.startswith("orch.docker")})
+
+    def test_the_probe_of_the_environment_doctor_is_the_script_apart_from_orch_doctor(self):
+        unit = json.loads((Path(docker_env.__file__).resolve().parents[2] / "unit.json").read_text(encoding="utf-8"))
+        probes = {row["id"]: row["probe"] for row in unit["provides"]["doctor"]}
+        for name in ("orch.docker", "orch.docker-credentials", "orch.docker-compose"):
+            self.assertEqual(probes[name], ["scripts/docker-env-check.py", "--json"])
+        self.assertEqual(probes["orch.sandbox"], ["scripts/orch.py", "doctor", "--json"])
+
+    def test_every_command_it_runs_is_short(self):
+        calls = []
+        with mock.patch("orch.docker_env.shutil.which", return_value="/usr/bin/docker"), \
+                mock.patch("orch.docker_env._run", side_effect=lambda argv, timeout=5: calls.append(timeout) or (1, "", "x")):
+            docker_env.collect({})
+        self.assertTrue(calls and max(calls) <= 5, calls)
+
+    def test_a_row_that_needs_action_points_to_the_instruction_once(self):
+        row = rows_of(ROOTFUL)["orch.docker"]
+        self.assertIn(docker_env.DOC, row["remediation"])
+        self.assertNotIn("remediation", rows_of({**ROOTFUL, "security_options": ["name=rootless"],
+                                                  "socket": {**ROOTFUL["socket"], "owned_by_user": True}})["orch.docker"])
 
 
 if __name__ == "__main__":

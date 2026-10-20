@@ -1,6 +1,9 @@
-"""Optional check of the Docker environment of the machine (``orch.docker*`` rows of ``orch doctor``).
+"""Optional check of the Docker environment of the machine (the ``orch.docker*`` rows of
+``scripts/docker-env-check.py``, a probe of the environment doctor).
 
-Docker is not required by orch. When it is installed, the acceptance checks of a piece of work usually run in containers,
+It is a branch apart from orchestration: no run, claim or conductor step calls it, and ``orch doctor`` does not run it. It
+is meant to be run once, when Docker is in use; a row that needs action points to ``docs/docker-environment.md``, which
+sets the machine up so that it need not be revisited. Docker is not required by orch. When it is installed, the acceptance checks of a piece of work usually run in containers,
 started by the conductor under the user that runs it; this module says how that daemon is reached and how far its
 authority goes. ``collect`` reads the machine (the ``docker`` CLI, the socket, the credential configuration); ``assess``
 turns those facts into ``check-result/v1`` rows and changes nothing.
@@ -20,7 +23,7 @@ ROOTFUL_SOCKETS = ("/var/run/docker.sock", "/run/docker.sock")
 DOC = "packages/orch/docs/docker-environment.md"
 
 
-def _run(argv: list, timeout: int = 15):
+def _run(argv: list, timeout: int = 5):
     """``(exit, stdout, stderr)``; ``(None, "", reason)`` when the command cannot be started or is too slow."""
     try:
         done = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)
@@ -46,7 +49,7 @@ def _socket_facts(path: str, uid: int, gids: set) -> dict:
 def _endpoint(env: dict) -> str | None:
     if env.get("DOCKER_HOST"):
         return env["DOCKER_HOST"]
-    code, out, _ = _run(["docker", "context", "inspect", "--format", "{{.Endpoints.docker.Host}}"], 10)
+    code, out, _ = _run(["docker", "context", "inspect", "--format", "{{.Endpoints.docker.Host}}"])
     return out if code == 0 and out else None
 
 
@@ -84,7 +87,7 @@ def collect(env: dict | None = None, home: Path | None = None) -> dict:
     if endpoint and endpoint.startswith("unix://"):
         facts["socket"] = _socket_facts(endpoint[len("unix://"):], os.getuid(), set(os.getgroups()) | {os.getgid()})
     facts["credentials"] = _credential_helpers(Path(home) if home else Path.home())
-    code, out, _ = _run(["docker", "compose", "version", "--short"], 10)
+    code, out, _ = _run(["docker", "compose", "version", "--short"])
     facts["compose"] = out if code == 0 and out else None
     return facts
 
@@ -140,8 +143,8 @@ def _daemon_row(facts: dict) -> dict:
                     "it controls the host as root (a container may mount `/`). Everything the conductor runs in "
                     "containers (checks, tests, compose files of the work) has that authority",
                     evidence + ["the sandbox of the executor cannot reach this socket (by design)"],
-                    remediation="acceptable on a single-user development machine; the recommended practice is a rootless "
-                                f"daemon, ideally under a dedicated account (see {DOC})")
+                    remediation="set up a rootless daemon once by following " + DOC + " (nothing in orchestration depends on it; "
+                                "acceptable as it is on a single-user development machine)")
     return _row("orch.docker", "ok", "the daemon is reachable and is not shared through a group of this user", evidence)
 
 

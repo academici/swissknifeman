@@ -11,7 +11,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired, project_state_dir
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 
-from orch import (adhoc, catalog, conformance, docker_env, events, journal, launch, policies, project as project_mod, render,
+from orch import (adhoc, catalog, conformance, events, journal, launch, policies, project as project_mod, render,
                   sandbox, settings)
 from orch.bindings import BINDINGS, check_skills
 from orch.conductor import contract as conductor_contract
@@ -457,7 +457,7 @@ def doctor_checks(project: Path | None) -> list:
     """The conductor's runtime folder (streams, scout cache, progress) and its observer reports are run output, not
     artifacts of the work: both must be ignored. A piece of work keeps its record in its own artifact folder. The
     sandbox row says whether the providers' own sandboxes can start on this machine."""
-    return _gitignore_checks(project) + [_sandbox_check()] + docker_env.check()
+    return _gitignore_checks(project) + [_sandbox_check()]
 
 
 def _gitignore_checks(project: Path | None) -> list:

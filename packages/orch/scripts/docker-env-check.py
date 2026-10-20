@@ -4,7 +4,9 @@ helper and compose work. Docker is not required by orch; without it every row is
 
     docker-env-check.py [--json]
 
-Exit 1 only for a `fail` row (a broken credential helper); a `warn` is advice (docs/docker-environment.md)."""
+Exit 1 only for a `fail` row (a broken credential helper); a `warn` is advice (docs/docker-environment.md).
+
+A probe of the environment doctor, apart from orchestration: no run calls it and `orch.py doctor` does not."""
 import json
 from pathlib import Path
 import sys

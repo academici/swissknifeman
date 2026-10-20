@@ -8,6 +8,7 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [exec/v1 contracts](contracts.md) — nine document kinds, conventions, contract changelog.
 - [Engine Port](engine-port.md) — operations, run states, binding capability matrix.
 - [Configuration](configuration.md) — the `[orch]` section, layers, engine choice, digest.
+- [Docker environment](docker-environment.md) — optional check of the Docker daemon (`orch doctor`, `scripts/docker-env-check.py`) and the rootless setup.
 - [Run-policy packs](run-policies.md) — shipped policies, cases, `orch.py policy`.
 - [Events](events.md) — `orch.run.*` types, data contracts, emission rules, fixtures.
 - [Work source](work-source.md) — the `orch:work-source` port, its contract and the `orch.py source` cycle.

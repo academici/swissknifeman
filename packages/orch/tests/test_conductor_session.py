@@ -157,9 +157,11 @@ class ReviewFixesTests(unittest.TestCase):
             self.assertIn(role, options.DEFAULTS["instructions"]["isolate_roles"])
 
     def test_the_catalog_lets_the_researcher_and_the_advisor_query_with_an_invocation_config(self):
-        from pathlib import Path
-        catalog = (Path(__file__).resolve().parents[1] / "configs" / "launch-catalog.json").read_text(encoding="utf-8")
-        self.assertEqual(catalog.count("Bash(python3 *orch.py --config * research query *)"), 2)
+        from orch import launch
+        catalog = launch.load_catalog()["launch"]  # resolved: the file states the command once, as a shared part
+        found = [role for role, providers in catalog.items() for entry in providers.values()
+                 if "Bash(python3 *orch.py --config * research query *)" in entry["argv"]]
+        self.assertEqual(sorted(found), ["advisor", "researcher"])
 
     def test_a_skills_choice_is_dropped_with_the_retry(self):
         import inspect

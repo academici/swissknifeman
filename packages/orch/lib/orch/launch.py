@@ -58,6 +58,77 @@ def _validate_entry(where: str, role: str, entry: object) -> None:
         raise _invalid(f"{where}/argv", "{model} must appear exactly when model_set is supported")
 
 
+# The file may state a catalog compactly: ``defaults`` for every entry, per role the fields its providers share, named argv
+# ``parts`` (an ``@name`` item of an argv stands for the whole part; ``@@`` is a literal ``@``) and per provider only what
+# differs. ``expand_catalog`` gives the resolved form (``launch`` -> role -> provider -> entry) that everything else reads.
+COMPACT_KEYS = frozenset({"catalog_version", "defaults", "parts", "roles", "refusals"})
+FIELD_KEYS = ENTRY_KEYS - {"argv"}
+ENTRY_ORDER = ("model_class", "effort", "transport", "argv", "timeout_s", "model_set")
+_PART_NAME = re.compile(r"^[a-z][a-z0-9.-]*$")
+
+
+def _expand_argv(where: str, argv: object, parts: dict, used: set) -> list:
+    if not isinstance(argv, list) or not argv or not all(isinstance(arg, str) for arg in argv):
+        raise _invalid(where, "must be a non-empty list of strings")
+    out: list = []
+    for arg in argv:
+        if arg.startswith("@@"):
+            out.append(arg[1:])
+        elif arg.startswith("@"):
+            if arg[1:] not in parts:
+                raise _invalid(where, f"unknown part {arg!r}")
+            used.add(arg[1:])
+            out.extend(parts[arg[1:]])
+        else:
+            out.append(arg)
+    return out
+
+
+def expand_catalog(raw: object) -> object:
+    """The resolved catalog of a file in the compact form; a file in the resolved form (it has ``launch``) is returned
+    as it is. Raises ``LaunchError`` for a compact file that is malformed; the result is still to be validated."""
+    if not isinstance(raw, dict) or "roles" not in raw:
+        return raw
+    if "launch" in raw or set(raw) - COMPACT_KEYS or not {"catalog_version", "roles"} <= set(raw):
+        raise _invalid("/", "a compact catalog holds catalog_version, roles and optionally defaults, parts and refusals "
+                            "(and no launch)")
+    defaults, parts, roles = raw.get("defaults", {}), raw.get("parts", {}), raw["roles"]
+    if not isinstance(defaults, dict) or set(defaults) - FIELD_KEYS:
+        raise _invalid("/defaults", f"must be an object over: {', '.join(sorted(FIELD_KEYS))}")
+    if not isinstance(parts, dict):
+        raise _invalid("/parts", "must be an object")
+    for name, part in parts.items():
+        where = f"/parts/{name}"
+        if not _PART_NAME.match(name):
+            raise _invalid(where, "a part name is lowercase words, dots and dashes")
+        if not isinstance(part, list) or not part or not all(isinstance(arg, str) for arg in part):
+            raise _invalid(where, "must be a non-empty list of strings")
+        if any(arg.startswith("@") and not arg.startswith("@@") for arg in part):
+            raise _invalid(where, "a part cannot name another part")
+    if not isinstance(roles, dict):
+        raise _invalid("/roles", "must be an object")
+    launch: dict = {}
+    used: set = set()
+    for role, body in roles.items():
+        where = f"/roles/{role}"
+        if not isinstance(body, dict) or set(body) - FIELD_KEYS - {"providers"} or not isinstance(body.get("providers"), dict):
+            raise _invalid(where, f"must hold providers and optionally: {', '.join(sorted(FIELD_KEYS))}")
+        shared = {**defaults, **{key: value for key, value in body.items() if key != "providers"}}
+        launch[role] = {}
+        for provider, own in body["providers"].items():
+            if not isinstance(own, dict) or set(own) - ENTRY_KEYS or "argv" not in own:
+                raise _invalid(f"{where}/providers/{provider}", "must hold argv and optionally the fields that differ")
+            argv = _expand_argv(f"{where}/providers/{provider}/argv", own["argv"], parts, used)
+            merged = {**shared, **{key: value for key, value in own.items() if key != "argv"}, "argv": argv}
+            launch[role][provider] = {key: merged[key] for key in ENTRY_ORDER if key in merged}  # the order readers print
+    if set(parts) - used:
+        raise _invalid("/parts", f"unused part(s) {sorted(set(parts) - used)}")
+    resolved = {"catalog_version": raw["catalog_version"], "launch": launch}
+    if "refusals" in raw:
+        resolved["refusals"] = raw["refusals"]
+    return resolved
+
+
 def validate_catalog(catalog: object) -> None:
     """Raise ``LaunchError`` unless every role holds known providers with fully specified entries."""
     if not isinstance(catalog, dict) or set(catalog) not in ({"catalog_version", "launch"},
@@ -86,12 +157,14 @@ def validate_catalog(catalog: object) -> None:
 
 
 def load_catalog(path: str | Path | None = None) -> dict:
-    """The validated catalog; ``LaunchError`` when unreadable or malformed."""
+    """The validated catalog in its resolved form (a compact file is expanded first); ``LaunchError`` when unreadable or
+    malformed."""
     target = Path(path) if path else CATALOG_PATH
     try:
         catalog = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise _invalid(str(target), f"cannot read catalog ({error})") from error
+    catalog = expand_catalog(catalog)
     validate_catalog(catalog)
     return catalog
 

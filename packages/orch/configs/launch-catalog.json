@@ -1,656 +1,173 @@
 {
- "catalog_version": "1.5.0",
- "launch": {
-  "scout": {
-   "claude-code": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "text",
-    "argv": [
-     "claude",
-     "-p",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Read,Grep,Glob",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 300,
+  "catalog_version": "1.5.0",
+  "defaults": {
+    "transport": "jsonl",
     "model_set": "supported"
-   },
-   "codex": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "text",
-    "argv": [
-     "codex",
-     "-a",
-     "never",
-     "exec",
-     "--sandbox",
-     "read-only",
-     "--model",
-     "{model}",
-     "-c",
-     "model_reasoning_effort=\"{effort}\"",
-     "--ephemeral",
-     "-"
-    ],
-    "timeout_s": 300,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "text",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--protect",
-     "{cwd}",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--disallowed-tools",
-     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
-     "--disable-web-search",
-     "--output-format",
-     "plain"
-    ],
-    "timeout_s": 300,
-    "model_set": "supported"
-   }
   },
-  "executor": {
-   "claude-code": {
-    "model_class": "implementation",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--rw",
-     "{cwd}",
-     "--",
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Bash,Read,Edit,Write,Grep,Glob",
-     "--permission-mode",
-     "acceptEdits",
-     "--allowedTools",
-     "Bash",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 3600,
-    "model_set": "supported"
-   },
-   "codex": {
-    "model_class": "implementation",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "codex",
-     "-a",
-     "never",
-     "exec",
-     "--json",
-     "--sandbox",
-     "workspace-write",
-     "--model",
-     "{model}",
-     "-c",
-     "model_reasoning_effort=\"{effort}\"",
-     "-"
-    ],
-    "timeout_s": 3600,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "implementation",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--rw",
-     "{cwd}",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--output-format",
-     "streaming-messages-json"
-    ],
-    "timeout_s": 3600,
-    "model_set": "supported"
-   }
+  "parts": {
+    "claude.stream": ["claude", "-p", "--output-format", "stream-json", "--verbose"],
+    "claude.model": ["--model", "{model}", "--effort", "{effort}"],
+    "claude.quiet": ["--permission-prompts", "none", "--no-session-persistence"],
+    "claude.write-tools": ["--tools", "Bash,Read,Edit,Write,Grep,Glob", "--permission-mode", "acceptEdits", "--allowedTools", "Bash"],
+    "claude.read-tools": ["--tools", "Bash,Read,Grep,Glob"],
+    "claude.research-query": ["--allowedTools", "Bash(python3 *orch.py research query *)", "Bash(python3 *orch.py --config * research query *)"],
+    "claude.no-edit": ["--disallowedTools", "Edit,Write,NotebookEdit"],
+    "ro-run.rw": ["python3", "{orch}/scripts/ro-run.py", "--rw", "{cwd}", "--"],
+    "ro-run.protect": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--"],
+    "codex.exec": ["codex", "-a", "never", "exec"],
+    "codex.model": ["--model", "{model}", "-c", "model_reasoning_effort=\"{effort}\""],
+    "grok.run": ["grok", "--cwd", "{cwd}", "--prompt-file", "/dev/stdin", "--model", "{model}", "--effort", "{effort}", "--permission-mode", "bypassPermissions"],
+    "grok.read-only": ["--disallowed-tools", "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video"],
+    "grok.stream": ["--output-format", "streaming-messages-json"]
   },
-  "bounded-implementer": {
-   "claude-code": {
-    "model_class": "economy",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--rw",
-     "{cwd}",
-     "--",
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Bash,Read,Edit,Write,Grep,Glob",
-     "--permission-mode",
-     "acceptEdits",
-     "--allowedTools",
-     "Bash",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "codex": {
-    "model_class": "economy",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "codex",
-     "-a",
-     "never",
-     "exec",
-     "--json",
-     "--sandbox",
-     "workspace-write",
-     "--model",
-     "{model}",
-     "-c",
-     "model_reasoning_effort=\"{effort}\"",
-     "-"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "economy",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--rw",
-     "{cwd}",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--output-format",
-     "streaming-messages-json"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   }
+  "roles": {
+    "scout": {
+      "model_class": "economy",
+      "effort": "low",
+      "transport": "text",
+      "timeout_s": 300,
+      "providers": {
+        "claude-code": {
+          "argv": ["claude", "-p", "@claude.model", "--tools", "Read,Grep,Glob", "@claude.quiet"]
+        },
+        "codex": {
+          "argv": ["@codex.exec", "--sandbox", "read-only", "@codex.model", "--ephemeral", "-"]
+        },
+        "grok": {
+          "argv": ["@ro-run.protect", "@grok.run", "@grok.read-only", "--disable-web-search", "--output-format", "plain"]
+        }
+      }
+    },
+    "executor": {
+      "model_class": "implementation",
+      "effort": "high",
+      "timeout_s": 3600,
+      "providers": {
+        "claude-code": {
+          "argv": ["@ro-run.rw", "@claude.stream", "@claude.model", "@claude.write-tools", "@claude.quiet"]
+        },
+        "codex": {
+          "argv": ["@codex.exec", "--json", "--sandbox", "workspace-write", "@codex.model", "-"]
+        },
+        "grok": {
+          "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"]
+        }
+      }
+    },
+    "bounded-implementer": {
+      "model_class": "economy",
+      "effort": "medium",
+      "timeout_s": 1800,
+      "providers": {
+        "claude-code": {
+          "argv": ["@ro-run.rw", "@claude.stream", "@claude.model", "@claude.write-tools", "@claude.quiet"]
+        },
+        "codex": {
+          "argv": ["@codex.exec", "--json", "--sandbox", "workspace-write", "@codex.model", "-"]
+        },
+        "grok": {
+          "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"]
+        }
+      }
+    },
+    "reviewer": {
+      "model_class": "implementation",
+      "effort": "high",
+      "timeout_s": 1800,
+      "providers": {
+        "claude-code": {
+          "argv": ["@claude.stream", "@claude.model", "@claude.read-tools", "@claude.no-edit", "@claude.quiet"]
+        },
+        "codex": {
+          "argv": ["@codex.exec", "--json", "--sandbox", "read-only", "@codex.model", "-"]
+        },
+        "grok": {
+          "timeout_s": 3600,
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--", "@grok.run", "@grok.read-only", "@grok.stream"]
+        }
+      }
+    },
+    "triager": {
+      "model_class": "implementation",
+      "effort": "medium",
+      "timeout_s": 1800,
+      "providers": {
+        "claude-code": {
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--", "@claude.stream", "@claude.model", "@claude.read-tools", "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "@claude.no-edit", "@claude.quiet"]
+        },
+        "codex": {
+          "argv": ["@codex.exec", "--json", "--sandbox", "read-only", "@codex.model", "-"]
+        },
+        "grok": {
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--", "@grok.run", "@grok.read-only", "@grok.stream"]
+        }
+      }
+    },
+    "registrar": {
+      "model_class": "economy",
+      "effort": "low",
+      "timeout_s": 600,
+      "providers": {
+        "claude-code": {
+          "argv": ["@claude.stream", "@claude.model", "--tools", "Bash,Read", "--allowedTools", "Bash(python3 *orch.py source register *)", "@claude.quiet"]
+        },
+        "codex": {
+          "argv": ["@codex.exec", "--json", "--sandbox", "workspace-write", "@codex.model", "-"]
+        }
+      }
+    },
+    "report-fixer": {
+      "model_class": "economy",
+      "effort": "low",
+      "timeout_s": 600,
+      "providers": {
+        "claude-code": {
+          "argv": ["@claude.stream", "@claude.model", "--tools", "", "@claude.quiet"]
+        },
+        "codex": {
+          "argv": ["@codex.exec", "--json", "--sandbox", "read-only", "@codex.model", "--ephemeral", "-"]
+        },
+        "grok": {
+          "argv": ["@ro-run.protect", "@grok.run", "--disallowed-tools", "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video", "@grok.stream"]
+        }
+      }
+    },
+    "researcher": {
+      "model_class": "implementation",
+      "effort": "medium",
+      "timeout_s": 1800,
+      "providers": {
+        "claude-code": {
+          "argv": ["@claude.stream", "@claude.model", "@claude.read-tools", "@claude.research-query", "@claude.quiet"]
+        },
+        "grok": {
+          "argv": ["@ro-run.protect", "@grok.run", "@grok.read-only", "@grok.stream"]
+        }
+      }
+    },
+    "advisor": {
+      "model_class": "frontier",
+      "effort": "high",
+      "timeout_s": 1800,
+      "providers": {
+        "claude-code": {
+          "argv": ["@claude.stream", "@claude.model", "@claude.read-tools", "@claude.research-query", "@claude.quiet"]
+        },
+        "grok": {
+          "argv": ["@ro-run.protect", "@grok.run", "@grok.read-only", "@grok.stream"]
+        }
+      }
+    }
   },
-  "reviewer": {
-   "claude-code": {
-    "model_class": "implementation",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Bash,Read,Grep,Glob",
-     "--disallowedTools",
-     "Edit,Write,NotebookEdit",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "codex": {
-    "model_class": "implementation",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "codex",
-     "-a",
-     "never",
-     "exec",
-     "--json",
-     "--sandbox",
-     "read-only",
-     "--model",
-     "{model}",
-     "-c",
-     "model_reasoning_effort=\"{effort}\"",
-     "-"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "implementation",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--protect",
-     "{cwd}",
-     "--rw",
-     "{cwd}/vendor",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--disallowed-tools",
-     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
-     "--output-format",
-     "streaming-messages-json"
-    ],
-    "timeout_s": 3600,
-    "model_set": "supported"
-   }
-  },
-  "triager": {
-   "claude-code": {
-    "model_class": "implementation",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--",
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Bash,Read,Grep,Glob",
-     "--permission-mode",
-     "acceptEdits",
-     "--allowedTools",
-     "Bash",
-     "--disallowedTools",
-     "Edit,Write,NotebookEdit",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "codex": {
-    "model_class": "implementation",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "codex",
-     "-a",
-     "never",
-     "exec",
-     "--json",
-     "--sandbox",
-     "read-only",
-     "--model",
-     "{model}",
-     "-c",
-     "model_reasoning_effort=\"{effort}\"",
-     "-"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "implementation",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--protect",
-     "{cwd}",
-     "--rw",
-     "{cwd}/vendor",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--disallowed-tools",
-     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
-     "--output-format",
-     "streaming-messages-json"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   }
-  },
-  "registrar": {
-   "claude-code": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "jsonl",
-    "argv": [
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Bash,Read",
-     "--allowedTools",
-     "Bash(python3 *orch.py source register *)",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 600,
-    "model_set": "supported"
-   },
-   "codex": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "jsonl",
-    "argv": [
-     "codex",
-     "-a",
-     "never",
-     "exec",
-     "--json",
-     "--sandbox",
-     "workspace-write",
-     "--model",
-     "{model}",
-     "-c",
-     "model_reasoning_effort=\"{effort}\"",
-     "-"
-    ],
-    "timeout_s": 600,
-    "model_set": "supported"
-   }
-  },
-  "report-fixer": {
-   "claude-code": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "jsonl",
-    "argv": [
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 600,
-    "model_set": "supported"
-   },
-   "codex": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "jsonl",
-    "argv": [
-     "codex",
-     "-a",
-     "never",
-     "exec",
-     "--json",
-     "--sandbox",
-     "read-only",
-     "--model",
-     "{model}",
-     "-c",
-     "model_reasoning_effort=\"{effort}\"",
-     "--ephemeral",
-     "-"
-    ],
-    "timeout_s": 600,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "economy",
-    "effort": "low",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--protect",
-     "{cwd}",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--disallowed-tools",
-     "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
-     "--output-format",
-     "streaming-messages-json"
-    ],
-    "timeout_s": 600,
-    "model_set": "supported"
-   }
-  },
-  "researcher": {
-   "claude-code": {
-    "model_class": "implementation",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Bash,Read,Grep,Glob",
-     "--allowedTools",
-     "Bash(python3 *orch.py research query *)",
-     "Bash(python3 *orch.py --config * research query *)",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "implementation",
-    "effort": "medium",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--protect",
-     "{cwd}",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--disallowed-tools",
-     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
-     "--output-format",
-     "streaming-messages-json"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   }
-  },
-  "advisor": {
-   "claude-code": {
-    "model_class": "frontier",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "claude",
-     "-p",
-     "--output-format",
-     "stream-json",
-     "--verbose",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--tools",
-     "Bash,Read,Grep,Glob",
-     "--allowedTools",
-     "Bash(python3 *orch.py research query *)",
-     "Bash(python3 *orch.py --config * research query *)",
-     "--permission-prompts",
-     "none",
-     "--no-session-persistence"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   },
-   "grok": {
-    "model_class": "frontier",
-    "effort": "high",
-    "transport": "jsonl",
-    "argv": [
-     "python3",
-     "{orch}/scripts/ro-run.py",
-     "--protect",
-     "{cwd}",
-     "--",
-     "grok",
-     "--cwd",
-     "{cwd}",
-     "--prompt-file",
-     "/dev/stdin",
-     "--model",
-     "{model}",
-     "--effort",
-     "{effort}",
-     "--permission-mode",
-     "bypassPermissions",
-     "--disallowed-tools",
-     "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
-     "--output-format",
-     "streaming-messages-json"
-    ],
-    "timeout_s": 1800,
-    "model_set": "supported"
-   }
+  "refusals": {
+    "advisor": {
+      "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
+    },
+    "registrar": {
+      "grok": "registrar writes the plan workspace and the project state outside {cwd}; the launch placeholders cannot grant that area to Landlock without granting the checkout, and grok shell allow rules (--allow) are not wired into the launch contract"
+    },
+    "researcher": {
+      "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
+    }
   }
- },
- "refusals": {
-  "advisor": {
-   "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
-  },
-  "registrar": {
-   "grok": "registrar writes the plan workspace and the project state outside {cwd}; the launch placeholders cannot grant that area to Landlock without granting the checkout, and grok shell allow rules (--allow) are not wired into the launch contract"
-  },
-  "researcher": {
-   "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
-  }
- }
 }

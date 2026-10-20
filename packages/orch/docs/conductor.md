@@ -845,6 +845,18 @@ Every launch role/provider pair has exactly one entry or refusal in `configs/lau
 | researcher | ✓ | refused: read-only has no network | ✓ |
 | advisor | ✓ | refused: read-only has no network | ✓ |
 
+**File format.** The file states only what is specific. `defaults` hold the fields every entry shares (`transport`, `model_set`);
+each role under `roles` holds the fields its providers share (`model_class`, `effort`, `transport`, `timeout_s`) and a
+`providers` object with, per provider, its `argv` and only the fields that differ from the role (a `timeout_s` of one
+provider, say). An `@name` item of an `argv` stands for the named list under `parts` (`@@` is a literal `@`); a part cannot
+name another part and every part must be used. The sandbox and the tool restrictions of a role stay in its own `argv`, never
+inside a shared part. `launch.expand_catalog` resolves the file into `launch` -> role -> provider -> entry, which is what every
+reader sees (`orch.py launch list|show|argv`); a file already in that resolved form (a `launch` object) is accepted as it is.
+`tests/golden/launch-catalog-resolved.json` pins the resolved catalog: a change to a command line, a sandbox flag, a class, an
+effort or a timeout of any entry fails `test_launch_compact` until the snapshot is updated as the review of that change.
+A machine or a project changes single fields without editing the file: `[orch.launch.entries]` (see
+[configuration](configuration.md)).
+
 `refusals: {role: {provider: reason}}` is optional for older catalogs. Each reason is a non-empty string of at most
 300 characters; a pair cannot appear in both `launch` and `refusals`. Lookup of a refused pair returns
 `LAUNCH_REFUSED: <role>/<provider>: <reason>`, while a pair in neither section keeps `LAUNCH_UNKNOWN`.

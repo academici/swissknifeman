@@ -23,6 +23,7 @@
 
 ### Changed
 
+- orch: `configs/launch-catalog.json` хранит только специфичное: `defaults`, общие поля роли, именованные части argv (`parts`, `@имя`) и у провайдера — лишь отличия (13,7 КБ → 7 КБ). Разрешённый каталог не изменился: он закреплён снимком `tests/golden/launch-catalog-resolved.json`; файл в прежнем (развёрнутом) виде по-прежнему принимается. `catalog_version` не менялся.
 - orch: Grok executor и bounded-implementer запускаются conductor через jsonl (`streaming-messages-json`) под Landlock `ro-run.py`; `ro-run.py --protect` делает read-only Grok-роли fail-closed. Preflight проверяет команду за wrapper; capability seed и matrix подтверждены probe флагов и фикстурой реального потока.
 
 ## [0.31.1] - 2026-10-19

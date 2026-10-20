@@ -291,6 +291,8 @@ root на машине.
 | P6 `planner next` делит батч по шаблону | 6.3.G, 10.4, T15 | `5aeac75a8` |
 | P7 доступ к docker | 6.2.D, 6.2.E | профиль для исполнителя не сделан; проверка окружения и инструкция rootless: `4fbb5146f`, `049817203` |
 | P8 переопределение и дедупликация каталога запуска | 6.3.F | `8923d56ad`, `88f8e1781` |
+| P9 права агента по умолчанию (`access = open`) | 6.2.D, решение владельца | `48a90c33e` |
+| P10 проверки со `stdin=/dev/null` | отчёт о зависании `gate` | `563fe2084` |
 
 ### P1. Claim называет исполнителя из `--options`
 
@@ -390,6 +392,17 @@ root на машине.
 - Тесты: `test_launch_overrides.py` (12), `LaunchConfigurationTests` (4).
 - Дедупликация (`88f8e1781`): файл хранит `defaults`, общие поля роли, части argv и отличия провайдера (13,7 → 7 КБ); разрешённый
   каталог не изменился (снимок `tests/golden/launch-catalog-resolved.json`).
+
+### P9. Права агента по умолчанию — `access = open` (`48a90c33e`)
+
+Решение владельца: по умолчанию максимально широкие права, настраиваемо. Codex-роли, которые пишут (executor, bounded-implementer,
+registrar), запускаются с `--sandbox danger-full-access` (`[orch.launch] access`, `confined` возвращает `workspace-write`; проект
+может только ужесточить); Docker внутри исполнителя работает; промпт его не запрещает. Подробности — `reports/target-arch-skm-fixes-report.md`.
+
+### P10. Проверки со `stdin=/dev/null` (`563fe2084`)
+
+Зависание `gate main` на `docker buildx bake --file -` в P2.1: проверка наследовала stdin conductor. Исправлено в
+`conductor/checks.py`, тест `test_check_stdin`.
 
 ### Критерии готовности (раздел 7)
 

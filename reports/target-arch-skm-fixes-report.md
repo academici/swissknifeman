@@ -13,9 +13,13 @@
    совпадать с шаблоном или быть удалены.
 2. **Перед каждым запуском делайте `run --dry-run`** с теми же `--options`: он печатает `claim_actor` и в `warnings`
    предупреждает, если actor не совпадает с маршрутом исполнителя.
-3. **Ждите от исполнителя `done_pending_checks`, а не `blocked`**, если он не смог запустить проверки (docker, `.git`, сеть).
-   Тогда checks-stage сам выполняет V1–V6, пункт регистрируется `done` с evidence. `blocked` исполнителя теперь означает
-   только «нужен владелец» (решение, путь вне write set, учётные данные).
+3. **Codex-исполнитель теперь по умолчанию работает без песочницы** (`--sandbox danger-full-access`, решение владельца,
+   коммит P9 в таблице ниже): он сам использует Docker, пишет в `.git` (коммитит по-прежнему conductor) и итерирует на красных
+   docker-тестах в своей сессии, без лишнего круга через checks-stage. Промпт исполнителя в этом режиме **не запрещает**
+   docker. Вернуть песочницу: `aicore config set --machine orch.launch.access confined` (или `--project` для одного
+   проекта). Ждите от исполнителя `done_pending_checks`, а не `blocked`, только если он всё же не смог что-то запустить
+   (сеть, учётные данные, `confined`); тогда checks-stage сам выполняет V1–V6. `blocked` исполнителя означает «нужен
+   владелец» (решение, путь вне write set, учётные данные).
 4. **`planner next` теперь делит батч по шаблону маршрута** (`later` в JSON и в строке батча). Запускайте первую группу с её
    `--options`, остальные группы — следующими запусками. Ручное разбиение больше не нужно.
 5. **Формулировку правил плана «финиш пункта» вместо «`plan.py finish`» можно вернуть** (обход T5 больше не нужен): brief
@@ -42,6 +46,8 @@
 | P7a | проверка окружения Docker и первая инструкция | `4fbb5146f` | 6.2.E |
 | P8b | дедупликация `launch-catalog.json` | `88f8e1781` | 6.3.F, пожелание владельца |
 | P7b | зонд Docker отдельно от оркестрации; полная инструкция | `049817203` | 6.2.E |
+| P9 | `access = open` по умолчанию: Codex-исполнитель без песочницы, настраиваемо | `48a90c33e` | 6.2.D (решение владельца) |
+| P10 | проверки checks-stage со `stdin=/dev/null` (зависание `gate main` в P2.1) | `563fe2084` | отчёт сессии плана о зависании `gate` |
 
 Полные хеши: `git log --format='%H %s' b47f8c60c..HEAD`.
 
@@ -106,12 +112,44 @@
 - Файл в классе security: любое изменение команды, флага песочницы, класса, effort, транспорта или таймаута записи роняет
   `test_launch_compact`, пока снимок не обновлён как ревью.
 
+### P9 — права агента по умолчанию (`48a90c33e`), решение владельца
+- Владелец: «по умолчанию агенту предоставляются максимально широкие права, настраиваемо». На другой машине он запускает
+  codex с `danger-full-access` и `-a never`, песочницей не пользуется.
+- Новая настройка `[orch.launch] access = "open" | "confined"`, умолчание **`open`**. Для Codex роли, которые пишут
+  (executor, bounded-implementer, registrar), при `open` получают `--sandbox danger-full-access`, при `confined` —
+  `workspace-write`. В каталоге это плейсхолдер `{write_sandbox}`; read-only роли (reviewer, triager, scout, report-fixer,
+  researcher, advisor) остаются `read-only` в обоих режимах. **Claude Code и Grok не менялись**: их защита записи
+  (`ro-run.py --rw {cwd}`) ограничивает запись проектом и Docker не мешает (владелец подтвердил, что у Claude всё работает).
+- Проект может только ужесточить (`confined`), ослабить значение машины не может (`open` проекта поверх `confined` машины
+  игнорируется); invocation-файл `--config` может открыть.
+- Промпт исполнителя: если провайдерская песочница не отрезает Docker, запрета нет и сказано, что можно гонять
+  контейнерные тесты своих изменений; при `confined` (и в любой песочнице codex) запрет остаётся.
+- Пробы SANDBOX не требуется для открытого Codex-маршрута (`SANDBOX_UNAVAILABLE` на bwrap больше не грозит им).
+- Тесты: `test_launch_access` (9), `test_prompt_containers` (2), `test_launch_matrix` (режим `confined` у регистратора =
+  `workspace-write`, `{write_sandbox}`), снимок каталога обновлён как ревью этого изменения.
+- Риск: исполнитель видит всё, что видит пользователь (в том числе `~/.ssh`, токены). Для Docker это теперь rootless
+  (контейнер не даёт root хоста). Вернуть песочницу: `aicore config set --machine orch.launch.access confined`.
+
+### P10 — stdin проверок (`563fe2084`)
+- Диагноз сессии плана подтверждён кодом: `packages/orch/lib/orch/conductor/checks.py` (`_run_command`) запускал проверку без
+  `stdin`, и она наследовала stdin conductor (открытый пайп). `docker buildx bake --file -` в `tools/bin/gate main` читает
+  Dockerfile из stdin и ждал вечно (17 минут в P2.1).
+- Исправлено: `stdin=subprocess.DEVNULL`. Тесты `test_check_stdin` (3): чтение stdin завершается сразу, `cat` не ждёт,
+  stdin проверки = `/dev/null`; без исправления все три падают.
+- Правка `tools/bin/gate` в edufy (`</dev/null` в `step()`) теперь не обязательна, но безвредна; можно оставить как защиту
+  в глубину.
+- Из рекомендаций того отчёта **не сделано**: тишина дольше порога как «зависла» и показ дочерних процессов проверки в статусе.
+  Уже есть `limits.check_warn_s` (маяк `CHECK_SLOW` с активностью процесса) и `limits.check_idle_timeout_s` (по умолчанию
+  3600 с, останавливает проверку, чей лог не растёт); порог можно снизить в конфиге. Файл отчёта
+  `reports/target-arch-gate-stdin-hang.md` лежит неотслеживаемым в рабочем дереве skm: его коммитит сессия плана.
+
 ### P7 — Docker (`4fbb5146f`, `049817203`)
-- Доступ исполнителя к docker **не дан** и не нужен: после P3/P4 контейнерные проверки делает checks-stage.
+- Профиль «docker для исполнителя» отдельно не делался: вопрос решён умолчанием P9 (исполнитель без песочницы видит Docker).
+  Ниже — что проверялось до этого решения.
 - Проверено на этой машине (codex 0.160.1): песочница `:workspace` не пускает к unix-сокету; список `unix_sockets` в профиле
   прав работает только через прокси сети codex, docker CLI подключается напрямую; единственный рабочий вариант
-  `network.enabled = true` открывает все сокеты пользователя, включая rootful. Поэтому профиль «docker для исполнителя» не
-  лучше текущей схемы. Лучшая практика (Docker, Codex, Perplexity): rootless docker под отдельной учётной записью.
+  `network.enabled = true` открывает все сокеты пользователя, включая rootful. Поэтому «узкий» профиль невозможен. Лучшая
+  практика (Docker, Codex, Perplexity): rootless docker под отдельной учётной записью.
 - Сделано: необязательный зонд окружения `orch.docker`, `orch.docker-credentials`, `orch.docker-compose`
   (`skm doctor --unit orch --category environment`, `packages/orch/scripts/docker-env-check.py`). Он **отдельно от
   оркестрации**: запуски, claim, conductor и `orch doctor` его не вызывают; каждая команда docker ограничена 5 с;
@@ -141,17 +179,23 @@
 
 ## 5. Проверка
 
-- Последний прогон `python3 scripts/affected-tests.py --run` (после всех коммитов): тесты orch, мостов
-  (`gui-orch`, `orch-harness`, `orch-skiller`, `planner-orch`), `ecosystem-units check`, `public-hygiene`, `golden.py check` —
-  все `[ok]`. Тесты planner (938) и `validate.sh` planner зелёные после P6 (planner с тех пор не менялся).
-- Тесты orch после P8b/P7b: 1379+ (новые: `test_launch_compact`, `test_launch_overrides`, `test_docker_env`,
-  `DonePendingChecksTests`, `WithheldChecksTests`, `PreviewClaimActor`, `LaunchConfigurationTests`, `ClaimActorTests`).
-- Боевой прогон на edufy **не выполнялся**: все проверки на фейковых исполнителях и временных данных.
+- После последнего коммита (P10) `python3 scripts/affected-tests.py --base HEAD~1 --run`: тесты orch, мостов (`gui-orch`,
+  `orch-harness`, `orch-skiller`, `planner-orch`), `ecosystem-units check`, `public-hygiene`, `golden.py check` — все `[ok]`.
+  Тот же набор был зелёным после P9. Тесты planner (938) и `validate.sh` planner зелёные после P6 (planner с тех пор не менялся).
+- Тесты orch: около 1400 (новые: `test_launch_compact`, `test_launch_overrides`, `test_launch_access`, `test_docker_env`,
+  `test_prompt_containers`, `test_check_stdin`, `DonePendingChecksTests`, `WithheldChecksTests`, `PreviewClaimActor`,
+  `LaunchConfigurationTests`, `ClaimActorTests`).
+- Боевой прогон на edufy **не выполнялся**: все проверки на фейковых исполнителях и временных данных. Реально проверены
+  на этой машине: rootless-демон и зонд Docker, генерация argv через `orch launch argv` и конфиг.
+- Классификатор безопасности блокировал правки документации про умолчание `open` (`[Create Unsafe Agents]`); владелец добавил
+  правила `Edit` на `packages/orch`, `CHANGELOG.md` и `reports` в `.claude/settings.local.json` (копия `.bak` рядом).
 
 ## 6. Не сделано и риски
 
-- Профиль `sandbox: docker` для исполнителя: не реализован сознательно (см. П.7). Вернуться к нему можно, если владелец
-  создаст отдельную учётную запись с rootless docker и попросит запуск роли под ней.
+- Отдельный профиль `sandbox: docker` в плане на пункт не нужен: вопрос решён умолчанием `access = open` (P9). Запуск роли
+  под отдельной учётной записью (самый строгий вариант) не реализован; делать только по просьбе владельца.
+- `confined` возвращает прежнее поведение; Claude Code и Grok в P9 не менялись (если владелец захочет открыть и их, это
+  отдельная правка `ro-run.py`-защиты).
 - Приоритет `orchestration` плана над `--options` при claim (П.1) — убрать дубли из пунктов edufy.
 - Checks-stage запускает код агента на хосте от пользователя владельца; на rootless контейнер уже не root хоста, и это
   остаточный риск стал заметно меньше, но не исчез (тесты видят файлы пользователя).

@@ -133,6 +133,23 @@ class ConfigInventoryTests(unittest.TestCase):
                 stale.append(path)
         self.assertEqual(stale, [], "no consumer file mentions the config")
 
+    def test_descriptors_valid(self):
+        """kind/format/schema/generated/live_path are optional; when given, they are well formed and the schema exists."""
+        bad = []
+        for entry in self.entries:
+            label = entry_label(entry)
+            for key in ("kind", "format"):
+                if key in entry and not (isinstance(entry[key], str) and entry[key]):
+                    bad.append((label, key))
+            if "generated" in entry and not isinstance(entry["generated"], bool):
+                bad.append((label, "generated"))
+            if "live_path" in entry and not (entry["live_path"] is None or isinstance(entry["live_path"], str)):
+                bad.append((label, "live_path"))
+            schema = entry.get("schema")
+            if schema is not None and schema != "native" and not (ROOT / schema).is_file():
+                bad.append((label, "schema"))
+        self.assertEqual(bad, [], "malformed optional descriptors")
+
     def test_no_stale_root_profile_catalog(self):
         self.assertFalse((ROOT / "configs/profile-catalog.json").exists())
 

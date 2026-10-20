@@ -18,6 +18,7 @@
 
 ### Added
 
+- scripts/configs: config inventory охватывает `config.example.toml` модулей, run-policies/bindings/roles orch, presets/profiles skiller и трекаемые `.codex/`, `.cursor/`, `.grok/`; записи несут необязательные `kind`, `format`, `schema`, `generated`, `live_path`, проверяемые `test-config-inventory.py`.
 - orch: README и docs/index orch ссылаются на матрицу ролей, ownership/recovery, токены и лимиты, stubs-варианты и gui-orch.
 - gui-orch: routes (записанный used отдельно от available now), manifest промпта без текстов, budget и gates; gates-clear — argv-команда с обязательным подтверждением и enum провайдера. `conduct status --json` аддитивно показывает lease, эффективные limits, токены/неполноту usage/whitelist routes пунктов и info beacons; `runs --json` — owner. GUI отмечает orphaned как warn с resume, диагностические строки редактируются до обрезки. `route explain --run RUN --item ITEM` читает историю указанного run, а prompt explain отвергает traversal step и symlink escape (`PROMPT_PATH_INVALID`).
 - orch: stub-варианты `role@provider.md` и `role@provider--family.md` дополняют общие инструкции один раз, выбираются по фактическому маршруту и пересобираются вместе с manifest при fallback. Снимок run хранит варианты и `variant_resolution` для resume; digest без вариантов сохранён. `orch stubs list` показывает варианты, `show --provider P --model M` — эффективный текст и происхождение частей.

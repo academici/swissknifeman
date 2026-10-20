@@ -74,6 +74,8 @@
         "run_id": {"description": "Run that claims the work.", "$ref": "#/$defs/runId"},
         "submission_id": {"description": "Submission of the run.", "$ref": "#/$defs/submissionId"},
         "actor": {"description": "Who runs the work.", "$ref": "#/$defs/actor"},
+        "actor_source": {"description": "Where the actor comes from: options (the executor the run's --options name, which wins over the plan's executor) or default (the default executor; the source may use its own). Optional; without it the source treats the actor as default.", "type": "string", "enum": ["options", "default"]},
+        "actor_fields": {"description": "With actor_source options: the actor fields the run named itself (the others may come from the source's own executor). Optional.", "type": "array", "minItems": 1, "uniqueItems": true, "items": {"description": "Actor field.", "type": "string", "enum": ["provider", "model", "effort"]}},
         "orch_config": {"description": "Invocation configuration file of the orch command that claims; the source passes it back to orch when it asks orch.", "$ref": "#/$defs/text"}
       },
       "required": ["op", "plan", "run_id", "submission_id", "actor"],

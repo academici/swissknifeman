@@ -232,6 +232,29 @@ def executor_actor(layers: list) -> dict | None:
     return None
 
 
+RUN_ACTOR_FIELDS = ("provider", "model", "effort")
+
+
+def claim_actor(fields: dict, planned: dict | None, ref: str) -> tuple:
+    """``(actor, override)``: who the item is started for. A run whose ``--options`` name the executor
+    (``actor_source: options``) wins over the plan's ``orchestration`` executor, field by field (``actor_fields``: what
+    the run named), as it does at execution; ``override`` then names every value of the plan it replaced (a warning,
+    never a refusal: the class check of the route stays with the planner). Otherwise the plan's executor, else the
+    claimed default."""
+    run = fields["actor"]
+    if fields.get("actor_source") != "options":
+        return planned or run, None
+    named = [key for key in (fields.get("actor_fields") or RUN_ACTOR_FIELDS) if run.get(key)]
+    actor = dict(planned or run)
+    actor.update({key: run[key] for key in named})
+    replaced = [key for key in named if planned and planned.get(key) and planned[key] != actor[key]]
+    if not replaced:
+        return actor, None
+    return actor, {"reason_code": "ACTOR_OVERRIDE", "ref": ref, "plan": dict(planned), "run": dict(actor),
+                   "message": f"{ref}: the run executor {actor_text(actor)} replaces {actor_text(planned)} of the plan "
+                              f"({', '.join(replaced)})"}
+
+
 def op_claim(fields: dict) -> dict:
     plan, plans_root, run_id = fields["plan"], fields.get("plans_root"), fields["run_id"]
     items = fields.get("items") or []
@@ -268,7 +291,9 @@ def op_claim(fields: dict) -> dict:
             # A batch starts its pieces one after another, each under its own run: a dependency that is in progress
             # (an earlier piece of the batch) counts as met. The executor is the one the piece's options name (the
             # route is checked against it), else the claimed default.
-            actor = executor_actor(layers) or fields["actor"]
+            actor, override = claim_actor(fields, executor_actor(layers), ref)
+            if override:
+                answer["actor_override"] = override
             plan_json(["start", plan, ref, "--actor", actor_text(actor), "--session", run_id,
                        "--no-scout", "--json", *(["--in-progress-deps"] if fields.get("batch") else [])],
                       plans_root, code="START_REFUSED")

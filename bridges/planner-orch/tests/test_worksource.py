@@ -279,6 +279,52 @@ class OrchestrationTests(Case):
         self.assertNotIn("options", answer)
         self.assertEqual(self.item("P1.1")["result"]["executor"], {**codex, "session": "run-a"})
 
+    def plan_codex(self, ref="P1.1"):
+        """A piece whose plan pins the executor codex/gpt-6.1-sol/xhigh in ``orchestration`` (class implementation)."""
+        run(self.project, "set", self.plan, ref, "--json", json.dumps({"route": {"class": "implementation", "effort": "high"}}))
+        self.overlay("orchestration-p1-1", [ref], {"options": {"stages": [
+            {"role": "executor", "provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh"}]}})
+
+    def claim_as(self, actor, source=None, fields=None, run_id="run-a"):
+        return self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"], run_id=run_id,
+                       submission_id=f"sub-{run_id}", actor=actor, actor_source=source, actor_fields=fields)
+
+    def test_without_options_of_the_run_the_plan_executor_is_claimed(self):
+        self.plan_codex()
+        answer = self.claim_as(ACTOR, "default")
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertNotIn("actor_override", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"]["provider"], "codex")
+
+    def test_options_with_only_a_reviewer_leave_the_plan_executor(self):
+        self.plan_codex()  # the conductor sends actor_source default: its --options name no executor
+        answer = self.claim_as(ACTOR)
+        self.assertEqual((answer["status"], self.item("P1.1")["result"]["executor"]["provider"]), ("claimed", "codex"))
+
+    def test_a_partial_executor_of_the_run_changes_only_what_it_names(self):
+        self.plan_codex()
+        answer = self.claim_as({**ACTOR, "effort": "high"}, "options", ["effort"])
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"],
+                         {"provider": "codex", "model": "gpt-6.1-sol", "effort": "high", "session": "run-a"})
+        self.assertEqual(answer["actor_override"]["plan"]["effort"], "xhigh")
+
+    def test_a_full_executor_of_the_run_wins_over_the_plan_with_a_warning(self):
+        self.plan_codex()
+        run_actor = {"provider": "claude-code", "model": "opus", "effort": "high"}
+        answer = self.claim_as(run_actor, "options", ["provider", "model", "effort"])
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"], {**run_actor, "session": "run-a"})
+        override = answer["actor_override"]
+        self.assertEqual((override["reason_code"], override["ref"], override["plan"]["provider"], override["run"]["provider"]),
+                         ("ACTOR_OVERRIDE", "P1.1", "codex", "claude-code"))
+
+    def test_a_run_executor_below_the_class_of_the_piece_is_refused(self):
+        self.plan_codex()
+        answer = self.claim_as({"provider": "claude-code", "model": "haiku", "effort": "high"}, "options",
+                               ["provider", "model", "effort"])
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "ROUTE_UNDERSHOOT"), answer)
+
     def test_an_unknown_plan_is_refused_with_the_planner_message_not_its_json(self):
         answer = self.op(worksource.op_claim, op="claim", plan="no-such-plan", items=["P1.1"], run_id="run-z",
                          submission_id="sub-z", actor=ACTOR)

@@ -157,6 +157,7 @@ class Conductor:
     _dirty_paths = loop.dirty_paths
     _require_clean_tree = loop.require_clean_tree
     _claim_actor = loop.claim_actor
+    _claim_actor_source = loop.claim_actor_source
     _invocation_executor = loop.invocation_executor
     _invocation_executor_class = loop.invocation_executor_class
     _piece = loop.piece

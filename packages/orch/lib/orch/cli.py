@@ -630,7 +630,8 @@ def _source_claim(args, current, project) -> int:
                        plans_root=args.plans_root,
                        items=asked or None, batch=True if args.batch else None,
                        scenario=getattr(args, "scenario", None), run_id=run_id, submission_id=submission,
-                       actor=actor,
+                       actor=actor, actor_source=getattr(args, "actor_source", None),
+                       actor_fields=getattr(args, "actor_field", None) or None,
                        orch_config=str(Path(args.config).resolve()) if args.config else None)
     except SourceRefusal as refusal:
         _emit("orch.run.refused", {"submission_id": submission, "step": "claim", "reason_codes": [refusal.code],
@@ -642,6 +643,8 @@ def _source_claim(args, current, project) -> int:
         doc = {"run_id": run_id, "submission_id": submission, "plugin": plugin, "plan": args.plan,
                "plans_root": args.plans_root, "ref": answer["ref"], "attempt_id": answer["attempt_id"],
                "scenario": answer.get("scenario"), "session": answer.get("session")}
+        if answer.get("actor_override"):  # the plan's executor the run replaced
+            doc["actor_override"] = answer["actor_override"]
         if file_source:
             doc["source"] = file_source
         if before is not None:  # a repeated claim keeps what later steps recorded (input_ref)
@@ -896,6 +899,11 @@ def _source_parser(verbs) -> None:
     claim.add_argument("--scenario", metavar="S", help="the scenario of the run: wins over the one the source resolves "
                        "for the piece (a plan source; a file source takes it from the document)")
     claim.add_argument("--actor", required=True, type=_actor, metavar="P/M[/E]", help="who runs the work")
+    claim.add_argument("--actor-source", dest="actor_source", choices=("options", "default"),
+                       help="options: the run's --options name the executor (it wins over the plan's); default: the source "
+                            "may use its own executor (the default without this flag)")
+    claim.add_argument("--actor-field", dest="actor_field", action="append", choices=("provider", "model", "effort"),
+                       help="with --actor-source options: a field of the actor the run named (repeatable)")
     claim.add_argument("--submission-id", dest="submission_id", metavar="SUB",
                        help="submission key (default: derived from plan, items and actor)")
     brief = actions.add_parser("brief", help="store the brief of a claimed run as an artifact")

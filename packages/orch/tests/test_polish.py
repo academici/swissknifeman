@@ -34,7 +34,7 @@ class OwnedPieceHint(unittest.TestCase):
     def test_the_blocked_claim_carries_the_hint(self):
         answer = {"status": "blocked", "ref": "W1", "reason_code": "ITEM_OWNED", "message": "held"}
         me = types.SimpleNamespace(
-            _claim_actor=lambda: "p/m", state={"claims": {}}, run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(),
+            _claim_actor=lambda: "p/m", _claim_actor_source=lambda: ("default", None), state={"claims": {}}, run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(),
             _orch=lambda *args: (1, answer, ""), _save=lambda: None)
         with self.assertRaises(Stop) as stop:
             work_source.claim(me, "k", ["W1"])

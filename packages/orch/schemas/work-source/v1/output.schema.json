@@ -52,6 +52,7 @@
           "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
         },
         "scenario_source": {"description": "Where the scenario comes from.", "$ref": "#/$defs/text"},
+        "actor_override": {"description": "The executor the run named replaced the plan's own executor of the piece (a warning, not a refusal). Optional.", "type": "object", "properties": {"reason_code": {"description": "Always ACTOR_OVERRIDE.", "const": "ACTOR_OVERRIDE"}, "ref": {"description": "Reference of the piece.", "$ref": "#/$defs/text"}, "plan": {"description": "Executor of the plan that was replaced.", "type": "object", "properties": {"provider": {"description": "Provider.", "$ref": "#/$defs/text"}, "model": {"description": "Model.", "$ref": "#/$defs/text"}, "effort": {"description": "Reasoning effort.", "$ref": "#/$defs/text"}}, "required": ["provider", "model"], "additionalProperties": false}, "run": {"description": "Executor the piece is started for.", "type": "object", "properties": {"provider": {"description": "Provider.", "$ref": "#/$defs/text"}, "model": {"description": "Model.", "$ref": "#/$defs/text"}, "effort": {"description": "Reasoning effort.", "$ref": "#/$defs/text"}}, "required": ["provider", "model"], "additionalProperties": false}, "message": {"description": "Human-readable warning.", "$ref": "#/$defs/text"}}, "required": ["reason_code", "ref", "plan", "run", "message"], "additionalProperties": false},
         "route": {
           "description": "Minimum model route of the work.",
           "type": "object",

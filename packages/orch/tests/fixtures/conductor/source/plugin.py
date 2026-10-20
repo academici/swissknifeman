@@ -62,6 +62,11 @@ def claim(state, given):
               "attempt_id": f"att-{run_id}-{ref}", "session": run_id}
     if item.get("options"):
         answer["options"] = item["options"]
+    state.setdefault("claim_requests", []).append({key: given[key] for key in ("actor", "actor_source", "actor_fields")
+                                                   if key in given})
+    if item.get("plan_executor") and given.get("actor_source") == "options" and given["actor"] != item["plan_executor"]:
+        answer["actor_override"] = {"reason_code": "ACTOR_OVERRIDE", "ref": ref, "plan": item["plan_executor"],
+                                    "run": given["actor"], "message": f"{ref}: the run executor replaces the plan's"}
     if item.get("depends_on"):
         answer["depends_on"] = item["depends_on"]
     if len(lane) > 1 and lane[0] == ref and state.get("lanes", True):

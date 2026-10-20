@@ -273,6 +273,41 @@ class ClaimActorTests(ConductorCase):
         self.assertEqual(actor.count("/"), 1, actor)
 
 
+    def test_the_claim_says_which_fields_of_the_actor_the_run_named(self):
+        for stage, expected in (({"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh"},
+                                 ("options", ["provider", "model", "effort"])),
+                                ({"effort": "low"}, ("options", ["effort"])),
+                                ({"provider": "codex"}, ("options", ["provider", "model"])),
+                                ({"model_class": "frontier"}, ("default", None))):
+            with self.subTest(stage):
+                self.assertEqual(self.claimer(stage)._claim_actor_source(), expected)
+        eng = self.claimer({})
+        eng.run_doc = {"options_file": None}
+        self.assertEqual(eng._claim_actor_source(), ("default", None))
+
+    def test_a_run_executor_that_replaces_the_plan_one_is_said_and_kept(self):
+        self.set_items({"W1": {"plan_executor": {"provider": "codex", "model": "gpt-6.1-sol"}}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        path = self.project.parent / "exec-options.json"
+        path.write_text(json.dumps({"stages": [{"role": "executor", "provider": "claude-code", "model": "opus"}]}))
+        code, _, err = self.run_items("W1", extra=("--options", path))
+        self.assertEqual(code, 0, err)
+        said = [line for line in self.lines(err) if line.get("reason_code") == "ACTOR_OVERRIDE"]
+        self.assertEqual(len(said), 1, err)
+        claims = self.state(err)["claims"]
+        self.assertEqual([claim["actor_override"]["plan"]["provider"] for claim in claims.values()], ["codex"])
+        request = self.source()["claim_requests"][0]
+        self.assertEqual((request["actor_source"], request["actor_fields"]), ("options", ["provider", "model"]))
+
+    def test_a_run_without_an_executor_of_its_own_claims_as_default(self):
+        self.set_items({"W1": {"plan_executor": {"provider": "codex", "model": "gpt-6.1-sol"}}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.source()["claim_requests"][0]["actor_source"], "default")
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "ACTOR_OVERRIDE"])
+
+
 class TranscriptGuardTests(ConductorCase):
     def test_a_shared_claude_executor_may_write_the_transcripts_of_the_project_and_nothing_else_of_claude(self):
         eng = engine.Conductor.__new__(engine.Conductor)

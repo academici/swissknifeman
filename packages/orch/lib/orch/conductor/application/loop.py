@@ -285,6 +285,18 @@ def claim_actor(self) -> str:
     return "/".join(part for part in (provider, model, stage.get("effort")) if part)
 
 
+def claim_actor_source(self) -> tuple:
+    """``(source, fields)`` of the claim actor for the work source: ``("options", [fields the run named])`` when the
+    ``executor`` stage of ``--options`` names a provider, a model or an effort (the run's executor wins over the plan's,
+    as it does at execution), else ``("default", None)`` (the source may use the executor of its own plan). A class alone
+    names no field: its model is resolved on the provider the plan chose, which the claim cannot know."""
+    stage = self._invocation_executor()
+    fields = [name for name, named in (("provider", stage.get("provider")),
+                                       ("model", stage.get("model") or stage.get("provider")),
+                                       ("effort", stage.get("effort"))) if named]
+    return ("options", fields) if fields else ("default", None)
+
+
 def invocation_executor(self) -> dict:
     """The ``executor`` stage of the run's ``--options`` file (``{}`` without one): provider, model, model class, effort."""
     named = self.run_doc.get("options_file")

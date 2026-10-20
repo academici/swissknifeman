@@ -181,6 +181,8 @@ def claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
     where = ["--input", file_source["path"]] + (["--commit"] if file_source.get("commit") else []) \
         if file_source.get("kind") == "file" else ["--plan", self.run_doc["plan"]]
     args = ["source", "claim", *where, "--actor", actor, "--submission-id", submission]
+    source, named = self._claim_actor_source()
+    args += ["--actor-source", source] + [arg for name in named or [] for arg in ("--actor-field", name)]
     if self.run_doc.get("plans_root"):
         args += ["--plans-root", self.run_doc["plans_root"]]
     for ref in asked:
@@ -201,8 +203,13 @@ def claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
         raise Stop("CLAIM_BLOCKED", f"{answer.get('ref', '-')}: {answer.get('reason_code', '-')}: "
                                     f"{answer.get('message', err)}{owned_hint(answer)}")
     self.state["claims"][key] = {"ref": answer["ref"], "orch_run": answer["run_id"], "submission": submission,
-                                 **({"title": answer["title"]} if answer.get("title") else {})}
+                                 **({"title": answer["title"]} if answer.get("title") else {}),
+                                 # the plan's executor the run replaced: kept in the snapshot of the run
+                                 **({"actor_override": answer["actor_override"]} if answer.get("actor_override") else {})}
     self._save()
+    if answer.get("actor_override"):
+        self.progress.emit("info", item=answer["ref"], reason_code="ACTOR_OVERRIDE",
+                           message=answer["actor_override"]["message"])
     return answer
 
 

@@ -202,6 +202,19 @@ nothing, or the ceiling, registers the piece `blocked` with an escalation (`CHEC
 did not reproduce is never a reason for a correction; a confirmed review finding corrected together with red checks is
 sent to the executor once, in that one round.
 
+The reviewer of a piece comes from, strongest first: an explicit `reviewer` of the run (a layer that sets it: the
+configuration `[orch.conductor] reviewer`, a work-source layer such as the plan's `orchestration.options.reviewer`,
+`--options`); else the `review_route` of the execution-input (the plan item's `review.reviewer`), which completes the
+default reviewer when it is partial (only a class or an effort keeps the default provider; another provider or a class
+lets the model catalog pick the model); else the default `grok/grok-4.7/high`. The shipped default is no explicit choice:
+`run --dry-run` shows its source as `default`. `route explain` and `review-verdict.json` (`reviewer_source`) name
+`plan:review.reviewer` when the plan chose. `review_rounds_max` of the input lowers `limits.review_rounds` of the piece
+(never raises it; `options.json` names the source `plan:review.rounds_max`) and is a wall: no round goes past it on
+progress. `review_mode: requested` does not turn on a review the run policy does not have: the policy decides, and the
+piece gets one info `REVIEW_REQUESTED_POLICY_OFF` instead of silence. A group review (`review.strategy` groups/single)
+runs on the reviewer of the run when one is set; else on the `review_route` the pieces of the group share, and when they
+differ on the one of the strongest class (`CLASS_RANK`), announced by `GROUP_REVIEW_ROUTE_CONFLICT` with every piece's route.
+
 Review rounds are tiered by severity (`review.correct_min_severity`, default `Major`; `review.pre_final`, default
 `true`). Round 1 looks for everything. Only confirmed findings of that severity or higher go to a correction; the
 others are not corrected: they travel as `note` issues ("deferred minor finding…")

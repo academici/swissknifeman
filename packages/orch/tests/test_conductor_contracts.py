@@ -186,8 +186,12 @@ class TriagerRoleTests(unittest.TestCase):
 class SettingsTests(unittest.TestCase):
     def test_defaults_of_the_conductor(self):
         found = settings.defaults().conductor
+        # the shipped reviewer is the default of the run options, not a choice of the configuration: a plan's review route
+        # may still pick the reviewer
         self.assertEqual((found["provider"], found["reviewer"], found["registrar"], found["on_blocked"]),
-                         ("claude-code", "grok/grok-4.7/high", "orch/conductor", "stop"))
+                         ("claude-code", None, "orch/conductor", "stop"))
+        from orch.conductor import options as opts
+        self.assertEqual(opts.DEFAULTS["reviewer"], "grok/grok-4.7/high")
         self.assertEqual((found["argv"], found["limits"]["check_timeout_s"], found["limits"]["stage_idle_timeout_s"],
                           found["limits"]["check_idle_timeout_s"]),
                          ({}, 0, 5400, 3600))  # nothing long is cut by default, only a silent (hung) role or check

@@ -18,6 +18,7 @@ CLASS_RANK = {"economy": 0, "implementation": 1, "frontier": 2}
 EFFORT_RANK = {"low": 0, "medium": 1, "high": 2, "xhigh": 3, "max": 4, "ultra": 5}
 LAUNCH_ROLE = {"context-scout": "scout"}
 OPTIONAL_ROLES = {"context-scout", "report-fixer"}  # skipped, not refused, when they cannot start
+PLAN_REVIEW_SOURCE = "plan:review.reviewer"  # the reviewer route came from the plan item (execution-input review_route)
 
 
 def launch_catalog(self) -> dict:
@@ -237,14 +238,15 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
     if override:
         wanted = {**{key: value for key, value in wanted.items() if key not in ("provider", "model", "model_class")},
                   **{key: override[key] for key in ("provider", "model_class", "effort") if override.get(key)}}
+    review_class = None  # the class the plan's review route asks of the reviewer
     if role == "reviewer" and not override:
-        selector = opts.parse_selector(item.options["reviewer"])
-        provider, model, effort = selector["provider"], selector["model"], selector.get("effort")
+        selector, review_class, _ = self._reviewer_selector(item)
+        provider, model, effort = selector["provider"], selector.get("model"), selector.get("effort")
     else:
         provider = wanted.get("provider") or self.conductor.get("provider") or "claude-code"
         model, effort = wanted.get("model"), wanted.get("effort")
     entry = self._entry(role, provider)
-    model_class = wanted.get("model_class") or entry["model_class"]
+    model_class = review_class or wanted.get("model_class") or entry["model_class"]
     if role == "executor" and not effort:
         effort = (item.claim.get("route") or {}).get("effort")
     effort = effort or entry["effort"]
@@ -252,7 +254,7 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
         planned = next((stage for stage in item.launch_plan.get("stages", [])
                         if LAUNCH_ROLE.get(stage.get("role"), stage.get("role")) == LAUNCH_ROLE.get(role, role)
                         and stage.get("provider") == provider and stage.get("model")
-                        and not wanted.get("model_class")), None)
+                        and not wanted.get("model_class") and not review_class), None)
         try:
             model = planned["model"] if planned else self._catalog_get().resolve_model(provider, model_class)
         except catalogs.CatalogError as error:
@@ -277,6 +279,38 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
     idle = limits.get("stage_idle_timeout_s", 0) if streaming else 0
     return {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
             "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}
+
+
+def planned_reviewer(selector: dict, planned: dict) -> tuple:
+    """``(selector, model_class)``: the plan's review route of a piece (``review_route`` {provider, model, effort, class})
+    over the default reviewer ``selector``. Another provider or a class drops the default model, so the model catalog
+    resolves one for the class; a partial route (only class or effort) completes the default."""
+    provider = planned.get("provider") or selector["provider"]
+    keep = provider == selector["provider"] and not planned.get("class")
+    found = {"provider": provider}
+    model = planned.get("model") or (selector.get("model") if keep else None)
+    if model:
+        found["model"] = model
+    if keep and model == selector.get("model") and selector.get("context"):
+        found["context"] = selector["context"]
+    effort = planned.get("effort") or selector.get("effort")
+    if effort:
+        found["effort"] = effort
+    return found, planned.get("class")
+
+
+def reviewer_selector(self, item: Item) -> tuple:
+    """``(selector, model_class, source)`` of the reviewer of ``item``. A reviewer a layer sets (the configuration, a
+    work-source layer, ``--options``) wins over the plan, as an explicit executor does; without one the plan's
+    ``review_route`` of the piece completes the default reviewer (source ``plan:review.reviewer``); else the default
+    (source ``None``)."""
+    selector = opts.parse_selector(item.options["reviewer"])
+    source = item.sources.get("reviewer")
+    planned = item.input_doc.get("review_route") or {}
+    if source or not planned:
+        return selector, None, source
+    found, model_class = planned_reviewer(selector, planned)
+    return found, model_class, PLAN_REVIEW_SOURCE
 
 
 def route_minimum(self, item: Item, route: Optional[dict] = None) -> None:

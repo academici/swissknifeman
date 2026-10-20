@@ -383,6 +383,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
         "hints": [{"text": text, "source": "scout"} for text in pack.get("scout", {}).get("entries", [])],
         "research": _research(item),
         "review_mode": (item.get("review") or {}).get("mode"),
+        "review_route": _review_route(item), "review_rounds_max": (item.get("review") or {}).get("rounds_max"),
     }
     doc.update({key: value for key, value in optional.items() if value})
     missing = verify(plan, item_id, doc, unit_id=unit_id)
@@ -394,6 +395,13 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     doc["digest"] = canonical_digest(doc)
     doc["input_id"] += f"@{doc['digest'][:12]}"
     return doc
+
+
+def _review_route(item: dict) -> dict:
+    """The reviewer the plan prefers for the item (``review.reviewer`` without its note); the conductor uses it when the run
+    sets no reviewer of its own."""
+    reviewer = (item.get("review") or {}).get("reviewer") or {}
+    return {key: reviewer[key] for key in ("class", "provider", "model", "effort") if reviewer.get(key)}
 
 
 def render(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_reads: bool = False,

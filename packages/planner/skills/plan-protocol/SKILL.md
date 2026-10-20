@@ -131,7 +131,10 @@ Exit codes: 0 ok, 1 refusal or check errors (text mode: `CODE: message` on stder
 ## 7. Review and audit
 
 Review is plan-controlled: `none` disables it, `self` names executor checks, and `requested`
-declares independent review. New items default to `none`; preserve an existing owner-requested review. `--review` or an
+declares independent review. The conductor carries out `review.mode`, `review.reviewer` (when the run sets no reviewer of
+its own) and `review.rounds_max` (an upper bound); `review.covers` declares items a reviewer is expected to read and is
+not executed by the conductor, so it is no reason for `none`/`self`. New items default to `none`; preserve an existing
+owner-requested review. `--review` or an
 explicit owner request adds one read-only review item at the end of the scope. `planner:plan-audit`
 runs only on explicit owner invocation and writes a verdict file plus a `note` event.
 

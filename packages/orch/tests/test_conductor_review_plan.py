@@ -117,6 +117,37 @@ class ReviewPlanTests(ConductorCase):
         message = self.events(err, "GROUP_REVIEW")[0]["message"]
         self.assertIn("orch conduct run --input", message)
 
+    def grouped(self, routes: dict, options=None) -> str:
+        self.set_items({ref: ({"review_route": routes[ref]} if routes.get(ref) else {}) for ref in ("W1", "W2")})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN]})
+        path = self.project.parent / "group-options.json"
+        path.write_text(json.dumps({"review": {"strategy": "single"}, **(options or {})}), encoding="utf-8")
+        code, _, err = self.run_items("W1", "W2", extra=("--options", path))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        return err
+
+    def test_a_group_takes_the_strongest_review_route_of_its_pieces_and_says_so(self):
+        err = self.grouped({"W1": {"provider": "codex", "class": "implementation"},
+                            "W2": {"provider": "claude-code", "class": "frontier"}})
+        start = self.events(err, "GROUP_REVIEW_START")[0]["message"]
+        self.assertIn("claude-code/opus/", start)
+        conflict = self.events(err, "GROUP_REVIEW_ROUTE_CONFLICT")
+        self.assertEqual(len(conflict), 1, err)
+        self.assertIn("W1: codex/implementation", conflict[0]["message"])
+        self.assertIn("W2: claude-code/frontier", conflict[0]["message"])
+
+    def test_a_group_with_one_shared_review_route_takes_it_without_a_beacon(self):
+        route = {"provider": "codex", "model": "gpt-6-sol"}
+        err = self.grouped({"W1": route, "W2": route})
+        self.assertIn("codex/gpt-6-sol/", self.events(err, "GROUP_REVIEW_START")[0]["message"])
+        self.assertFalse(self.events(err, "GROUP_REVIEW_ROUTE_CONFLICT"))
+
+    def test_the_reviewer_of_the_run_reviews_the_group_whatever_the_plan_says(self):
+        err = self.grouped({"W1": {"provider": "codex", "class": "frontier"}}, {"reviewer": "claude-code/sonnet/high"})
+        self.assertIn("claude-code/sonnet/", self.events(err, "GROUP_REVIEW_START")[0]["message"])
+        self.assertFalse(self.events(err, "GROUP_REVIEW_ROUTE_CONFLICT"))
+
     def test_an_effort_named_by_the_reviewer_option_beats_the_strategy(self):
         from orch.conductor import options as opts
         from orch.conductor.application import review_plan

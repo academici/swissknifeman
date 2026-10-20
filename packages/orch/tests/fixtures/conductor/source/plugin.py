@@ -76,8 +76,9 @@ def brief(state, given, project):
     doc["acceptance"]["checks"] = item["checks"]
     doc["scope"]["write_set"] = item.get("write_set", ["out/**"])
     doc["goal"] = item.get("goal", f"Create the output of {given['ref']}.")
-    if "review_mode" in item:  # the review mode of the plan item, as the planner bridge carries it
-        doc["review_mode"] = item["review_mode"]
+    for key in ("review_mode", "review_route", "review_rounds_max"):  # the review of the plan item, as the bridge carries it
+        if key in item:
+            doc[key] = item[key]
     if "research" in item:  # the research need of the plan item, as the planner bridge carries it
         doc["research"] = item["research"]
     doc.pop("digest", None)

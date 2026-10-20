@@ -332,15 +332,24 @@ class BatchTests(CheckCase):
 
 
 class ReviewStrategyTests(CheckCase):
-    def test_none_without_reason_is_a_warning_and_a_reason_or_a_cover_clears_it(self):
+    def test_none_without_reason_is_a_warning_and_a_reason_clears_it(self):
         self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "none"}))
         self.assertFound("review_strategy", "P1.1.json/review", level="warning", count=1)
         self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "none", "reason": "no risk: docs only"}))
         self.assertEqual(self.found("review_strategy", "warning", "P1.1.json"), [])
+
+    def test_a_cover_is_no_reason_for_none(self):
         self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "none"}))
         self.edit(P1 + "P1.2.json", lambda d: d.update(review={"mode": "requested", "covers": ["P1.1"], "rounds_max": 2,
                                                               "reviewer": {"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh"}}))
-        self.assertEqual(self.found("review_strategy", "warning", "P1.1.json"), [])  # P1.2 reviews P1.1 too
+        hit = self.assertFound("review_strategy", "P1.1.json/review", level="warning", count=1)[0]
+        self.assertIn("does not execute covers", hit.message)  # the conductor does not read P1.1 with P1.2's review
+        self.assertEqual(self.found("ref_unknown"), [])
+
+    def test_an_unknown_item_in_covers_is_an_error_whatever_the_design(self):
+        self.edit(P1 + "phase.json", lambda d: d.update(design="skeleton"))
+        self.edit(P1 + "P1.2.json", lambda d: d.update(review={"mode": "requested", "covers": ["P1.1", "P9.9"]}))
+        self.assertFound("ref_unknown", "P1.2.json/review/covers/1")
 
     def test_a_requested_review_without_reviewer_or_rounds_is_a_warning(self):
         self.edit(P1 + "P1.1.json", lambda d: d.update(review={"mode": "requested"}))

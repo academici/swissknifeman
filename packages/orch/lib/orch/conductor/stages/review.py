@@ -7,7 +7,7 @@ from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import findings_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
-from orch.conductor.policies.routing import CLASS_RANK
+from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE
 
 
 def review_enabled(self, item: Item) -> bool:
@@ -17,6 +17,22 @@ def review_enabled(self, item: Item) -> bool:
         return False
     review = item.policy.get("review") or {}
     return bool(review.get("enabled")) and item.options["limits"]["review_rounds"] > 0
+
+
+def requested_off(self, item: Item) -> None:
+    """The plan asks for a review of the piece (``review_mode: requested``) and the run policy reviews nothing: whether a
+    run reviews is the policy's decision, so no review is added, but the gap is said once per piece
+    (``REVIEW_REQUESTED_POLICY_OFF``) instead of passing in silence."""
+    if item.input_doc.get("review_mode") != "requested" or self._per_piece_review_off() or self._reviewing(item) \
+            or item.state.get("review_requested_announced"):
+        return
+    review = item.policy.get("review") or {}
+    why = "has no review" if not review.get("enabled") else "allows 0 review rounds"
+    self.progress.emit("info", item=item.ref, reason_code="REVIEW_REQUESTED_POLICY_OFF",
+                       message=f"{item.ref}: the plan requests a review, but the run policy {item.policy.get('policy_id', '-')} "
+                               f"{why}; the piece is not reviewed (choose a scenario with review to have it)")
+    item.state["review_requested_announced"] = True
+    self._save()
 
 
 def reviewing(self, item: Item) -> bool:
@@ -187,4 +203,6 @@ def verdict_file(self, item: Item) -> None:
         number += 1
     doc = {"schema": "orch-conductor-review-verdict/v1", "item": item.ref, "run": self.run_id,
            "selector": item.options.get("reviewer"), "rounds": rounds}
+    if item.input_doc.get("review_route") and not item.sources.get("reviewer"):
+        doc["reviewer_source"] = PLAN_REVIEW_SOURCE  # the rounds ran on the plan's review route, not on the selector
     self._write_artifact(item, "review-verdict.json", doc)

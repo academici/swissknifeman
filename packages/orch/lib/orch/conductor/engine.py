@@ -243,6 +243,7 @@ class Conductor:
     _preflight = routing.preflight
     _route = routing.route
     _route_minimum = routing.route_minimum
+    _reviewer_selector = routing.reviewer_selector
     label = staticmethod(routing.label)
     _actor = routing.actor
 
@@ -323,6 +324,7 @@ class Conductor:
     _review_enabled = review_stage.review_enabled
     _reviewing = review_stage.reviewing
     _dynamic_review = review_stage.dynamic_review
+    _review_requested_off = review_stage.requested_off
     _corrected = staticmethod(review_stage.corrected)
     _executor_advice = review_stage.executor_advice
     _review_focus = review_stage.review_focus

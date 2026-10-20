@@ -2062,7 +2062,7 @@ class ReviewerFallbackTests(ConductorCase):
         preview = self.dry_run()
         self.assertEqual(preview["fallback_routes"], [{"role": "reviewer", "provider": "claude-code",
                                                        "model_class": "frontier", "effort": "high"}])
-        self.assertEqual(preview["reviewer"], {"selector": "grok/grok-4.7/high", "source": "config:orch.conductor"})
+        self.assertEqual(preview["reviewer"], {"selector": "grok/grok-4.7/high", "source": "default"})
         self.assertEqual((preview["gates"], preview["route_notes"]), ([], []))
 
     def test_a_reviewer_layer_is_named_in_the_preview(self):
@@ -2118,6 +2118,114 @@ class ReviewerFallbackTests(ConductorCase):
         self.assertEqual([line["role"] for line in fallback], ["reviewer"], err)
         routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
         self.assertEqual(routes["reviewer"]["provider"], "claude-code")
+
+
+class PlanReviewRouteTests(ConductorCase):
+    """W1: the reviewer and the rounds the plan names for a piece (``review_route``, ``review_rounds_max`` of the
+    execution-input) reach the review; a reviewer the run sets explicitly wins over the plan."""
+
+    CODEX = {"provider": "codex", "model": "gpt-6-sol", "effort": "high"}
+
+    def started_reviewers(self) -> list:
+        from aicore.ext import events as journal
+        stored, _ = journal.read_events(self.project)
+        return [event.data["route"] for event in stored
+                if event.type == "orch.agent.started" and event.data["role"] == "reviewer"]
+
+    def options(self, layer: dict) -> tuple:
+        path = self.project.parent / "review-options.json"
+        path.write_text(json.dumps(layer), encoding="utf-8")
+        return ("--options", path)
+
+    def test_the_review_route_of_the_plan_picks_the_reviewer_when_the_run_sets_none(self):
+        self.set_items({"W1": {"review_route": self.CODEX}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
+        self.assertEqual((routes["reviewer"]["provider"], routes["reviewer"]["model"]), ("codex", "gpt-6-sol"))
+        self.assertEqual([route["provider"] for route in self.started_reviewers()], ["codex"])
+        verdict = json.loads((self.project / "plans/T/artifacts/W1/review-verdict.json").read_text())
+        self.assertEqual(verdict["reviewer_source"], "plan:review.reviewer")
+
+    def test_an_explicit_reviewer_of_the_run_wins_over_the_plan(self):
+        self.set_items({"W1": {"review_route": self.CODEX}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=self.options({"reviewer": "claude-code/opus/high"}))
+        self.assertEqual(code, 0, err)
+        routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
+        self.assertEqual((routes["reviewer"]["provider"], routes["reviewer"]["model"]), ("claude-code", "opus"))
+        self.assertEqual([route["provider"] for route in self.started_reviewers()], ["claude-code"])
+
+    def test_a_reviewer_of_the_configuration_is_explicit_too(self):
+        self.write_config(extra='[orch.conductor]\nreviewer = "claude-code/sonnet/high"\n')
+        self.set_items({"W1": {"review_route": self.CODEX}})
+        code, out, err = self.conduct("run", "--plan", "T", "--items", "W1", "--dry-run")
+        self.assertEqual(json.loads(out)["reviewer"]["source"], "config:orch.conductor", err)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        routes = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())
+        self.assertEqual(routes["reviewer"]["provider"], "claude-code")
+
+    def test_the_shipped_default_reviewer_is_no_explicit_choice(self):
+        code, out, err = self.conduct("run", "--plan", "T", "--items", "W1", "--dry-run")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(json.loads(out)["reviewer"], {"selector": "grok/grok-4.7/high", "source": "default"})
+
+    def test_a_partial_route_completes_the_default_reviewer(self):
+        self.set_items({"W1": {"review_route": {"class": "frontier", "effort": "xhigh"}}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        reviewer = json.loads((self.run_dir(err) / "W1" / "routes.json").read_text())["reviewer"]
+        self.assertEqual((reviewer["provider"], reviewer["model_class"], reviewer["effort"]), ("grok", "frontier", "xhigh"))
+
+    def test_the_rounds_of_the_plan_bound_the_review_rounds(self):
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}
+        self.set_items({"W1": {"review_rounds_max": 1}})
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [FINDING, GREEN], "triager": [triage]})
+        code, _, err = self.run_items("W1", extra=self.options({"limits": {"review_rounds": 2},
+                                                                 "review": {"final_correction": True}}))
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 1))  # corrected, not reviewed again
+        options = json.loads((self.run_dir(err) / "W1" / "options.json").read_text())
+        self.assertEqual((options["options"]["limits"]["review_rounds"], options["sources"]["limits.review_rounds"]),
+                         (1, "plan:review.rounds_max"))
+
+    def test_the_rounds_of_the_plan_never_raise_the_limit(self):
+        self.set_items({"W1": {"review_rounds_max": 5}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        options = json.loads((self.run_dir(err) / "W1" / "options.json").read_text())
+        self.assertEqual(options["options"]["limits"]["review_rounds"], 2)
+
+    def test_a_requested_review_under_a_policy_without_review_is_said_not_added(self):
+        self.scenario = "scout-solo"
+        self.set_items({"W1": {"review_mode": "requested"}})
+        self.script({"executor": [executor_ok("W1")]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("reviewer")), (0, 0), err)
+        said = [line for line in self.lines(err) if line.get("reason_code") == "REVIEW_REQUESTED_POLICY_OFF"]
+        self.assertEqual(len(said), 1, err)
+        self.assertIn("W1", said[0]["message"])
+
+    def test_route_explain_names_the_plan_as_the_source_of_the_reviewer(self):
+        self.set_items({"W1": {"review_route": self.CODEX}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        from orch import cli as orch_cli
+        out, errs = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(errs):
+            code = orch_cli.main(["--project", str(self.project), "route", "explain", "--role", "reviewer",
+                                  "--run", self.run_dir(err).name, "--item", "W1", "--json"])
+        self.assertEqual(code, 0, errs.getvalue())
+        selected = json.loads(out.getvalue())["selected"]
+        self.assertEqual((selected["provider"], selected["sources"]["provider"]), ("codex", "plan:review.reviewer"))
 
 
 class ProviderAvailabilityTests(ConductorCase):
@@ -2298,7 +2406,7 @@ class RouteExplainTests(ConductorCase):
     def test_the_reviewer_names_its_selector_layer_and_its_fallback(self):
         found = self.explain("--role", "reviewer")
         self.assertEqual([row["origin"] for row in found["candidates"]], ["reviewer", "fallback_routes"])
-        self.assertEqual(found["selected"]["sources"]["provider"], "config:orch.conductor")
+        self.assertEqual(found["selected"]["sources"]["provider"], "default")  # the shipped default, no layer set it
         self.assertEqual(found["candidates"][1]["provider"], "claude-code")
 
     def test_a_disabled_provider_is_unavailable_and_the_role_moves(self):

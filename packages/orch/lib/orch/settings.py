@@ -77,7 +77,9 @@ def _conductor(resolved: ResolvedConfig) -> dict:
     """``[orch.conductor]`` as plain data: the global layer of the run options and the role command lines."""
     return {
         "provider": resolved.get("conductor.provider"),
-        "reviewer": resolved.get("conductor.reviewer"),
+        # only a reviewer a layer sets is an explicit one: the shipped default leaves the plan's review route its say
+        "reviewer": resolved.get("conductor.reviewer")
+        if resolved.explain("conductor.reviewer")[0].layer != "defaults" else None,
         "registrar": resolved.get("conductor.registrar"),
         "rules": list(resolved.get("conductor.rules") or []),
         "on_blocked": resolved.get("conductor.on_blocked"),

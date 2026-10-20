@@ -101,6 +101,19 @@ class MappingTests(BriefCase):
         doc = brief.build(plan, "P1.1")
         self.assertEqual(doc["review_mode"], "none")
         self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+        self.assertNotIn("review_route", doc)  # only what the plan sets reaches the input
+        self.assertNotIn("review_rounds_max", doc)
+
+    def test_the_reviewer_and_rounds_of_the_item_reach_the_input(self):
+        plan = self.load()
+        plan.items["P1.1"]["review"] = {"mode": "requested", "rounds_max": 1, "covers": ["P1.2"],
+                                        "reviewer": {"provider": "grok", "model": "grok-4.7", "effort": "high",
+                                                     "note": "reads the schema"}}
+        doc = brief.build(plan, "P1.1")
+        self.assertEqual(doc["review_route"], {"provider": "grok", "model": "grok-4.7", "effort": "high"})
+        self.assertEqual(doc["review_rounds_max"], 1)
+        self.assertNotIn("covers", json.dumps(doc))  # a declaration for people, not executed
+        self.assertEqual(doc["digest"], brief.canonical_digest(doc))
 
     def test_an_item_without_rag_gets_no_research_field(self):
         plan = self.load()

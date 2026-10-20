@@ -40,6 +40,16 @@ class BriefConformance(unittest.TestCase):
         code, out = self.validate(self.doc)
         self.assertEqual(code, 0, out)
 
+    def test_the_review_route_and_rounds_of_the_plan_are_valid_execution_input(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = store.load_plan(bridge_fixture.demo_plan(tmp))
+            plan.items["P1.2"]["review"] = {"mode": "requested", "rounds_max": 2,
+                                            "reviewer": {"class": "frontier", "provider": "grok", "effort": "high"}}
+            doc = brief.build(plan, "P1.2")
+        self.assertEqual(doc["review_route"], {"class": "frontier", "provider": "grok", "effort": "high"})
+        code, out = self.validate(doc)
+        self.assertEqual(code, 0, out)
+
     def test_digest_is_canonical_and_checked_by_orch(self):
         self.assertEqual(self.doc["digest"], brief.canonical_digest(self.doc))
         self.assertTrue(self.doc["input_id"].endswith("@" + self.doc["digest"][:12]))

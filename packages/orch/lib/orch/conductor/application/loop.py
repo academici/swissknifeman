@@ -365,6 +365,7 @@ def conduct(self, item: Item) -> str:
     if report["status"] == "blocked":
         return self._finish(item, report, rows)
     self._dynamic_review(item, report)
+    self._review_requested_off(item)
     if self._reviewing(item):
         review_round, earlier = 1, None
         while True:
@@ -539,6 +540,10 @@ def resolve(self, item: Item, persist: bool = True) -> None:
         item.options["scope"]["extra_paths"] = opts.checked_extra_paths(item.options["scope"]["extra_paths"], self.project)
     except opts.OptionsError as error:
         raise Stop(error.code, error.message) from None
+    planned = item.input_doc.get("review_rounds_max")  # the plan's bound lowers the target, never raises it
+    if isinstance(planned, int) and 0 < planned < item.options["limits"]["review_rounds"]:
+        item.options["limits"]["review_rounds"] = planned
+        item.sources["limits.review_rounds"] = "plan:review.rounds_max"
     if persist:
         self.state["on_blocked"] = item.options["on_blocked"]
         # Raises are a state overlay, never a rewrite of the piece's recorded options.

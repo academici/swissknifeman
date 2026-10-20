@@ -341,35 +341,39 @@ class _Context:
                               "with other pieces on purpose)")
 
     def review_strategy(self) -> None:
-        """A detailed phase says how each item is reviewed: ``none``/``self`` with a ``reason`` or under a requested review
-        that ``covers`` it, ``requested`` with a reviewer and ``rounds_max``. Warnings: the conductor runs only the review
-        the plan records, so a gap here is a review that will not happen (or an unexplained choice)."""
+        """``review.covers`` names items of this plan in every phase (an error otherwise). A detailed phase says how each
+        item is reviewed: ``none``/``self`` with a ``reason``, ``requested`` with a reviewer and ``rounds_max``. The
+        conductor carries out ``review.mode``, the reviewer route and ``rounds_max``; ``covers`` declares what a reviewer is
+        expected to read and is not executed, so it is no reason for ``none``/``self``. Warnings: a gap is a review that
+        will not happen as the plan expects (or an unexplained choice)."""
         p = self.p
+        for item_id, item in p.items.items():
+            review = item.get("review")
+            covers = review.get("covers") if isinstance(review, dict) else None
+            for index, ref in enumerate(covers if isinstance(covers, list) else []):
+                if isinstance(ref, str) and ref not in p.items:
+                    self.error("ref_unknown", f"{self.file_of('item', item_id)}/review/covers/{index}",
+                               f"item {item_id}: review.covers names unknown item {ref}")
         for phase_id, phase in p.phases.items():
             if phase.get("design") != "detailed":
                 continue
-            ids = self.items_of(phase_id)
-            covered: set = set()
-            for item_id in ids:
-                review = p.items[item_id].get("review")
-                if isinstance(review, dict) and review.get("mode") == "requested" and isinstance(review.get("covers"), list):
-                    covered.update(x for x in review["covers"] if isinstance(x, str))
-            for item_id in ids:
+            for item_id in self.items_of(phase_id):
                 item = p.items[item_id]
                 review, rel = item.get("review"), self.file_of("item", item_id)
                 if not isinstance(review, dict):
                     continue
                 mode = review.get("mode")
-                if mode in ("none", "self") and not review.get("reason") and item_id not in covered:
+                if mode in ("none", "self") and not review.get("reason"):
                     self.warn("review_strategy", f"{rel}/review",
-                              f"item {item_id}: review.mode {mode} has no reason and no requested review that covers it")
+                              f"item {item_id}: review.mode {mode} has no reason (a requested review that covers it does "
+                              "not count: the conductor does not execute covers)")
                 elif mode == "requested":
                     lacking = [name for name, found in (("reviewer", review.get("reviewer")), ("rounds_max", review.get("rounds_max")))
                                if not found]
                     if lacking:
                         self.warn("review_strategy", f"{rel}/review",
                                   f"item {item_id}: requested review has no {' and no '.join(lacking)}; the conductor "
-                                  "runs the review only as the plan records it")
+                                  "then reviews with the reviewer and the round limit of the run")
 
     def completeness(self) -> None:
         p = self.p

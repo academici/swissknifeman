@@ -323,7 +323,7 @@
         },
         "reviewer": {
           "type": "object",
-          "description": "Preferred reviewer.",
+          "description": "Preferred reviewer; the conductor uses it when the run sets no reviewer of its own.",
           "properties": {
             "class": {
               "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/modelClass",
@@ -352,17 +352,17 @@
         },
         "reason": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
-          "description": "Why this review mode: expected for none and self (the risk, or the requested review that covers this item)."
+          "description": "Why this review mode: expected for none and self (the risk that makes no independent review acceptable)."
         },
         "rounds_max": {
           "type": "integer",
-          "description": "Most review rounds the plan allows for this item (requested).",
+          "description": "Most review rounds the plan allows for this item; the conductor never runs more.",
           "minimum": 1,
           "maximum": 5
         },
         "covers": {
           "type": "array",
-          "description": "Item ids this requested review reads together with its own item (a group or phase checkpoint).",
+          "description": "Declares items a reviewer is expected to read; not executed by the conductor.",
           "items": {
             "type": "string",
             "minLength": 1

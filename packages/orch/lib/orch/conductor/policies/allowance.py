@@ -43,6 +43,9 @@ def allowance(self, item: Item, name: str, used: int, progress: bool, emit: bool
     progress, up to ``ceiling_factor`` times the target; every such round prints a LIMIT_OVER beacon and leaves a
     plan note, so a long fight with a piece of work is visible, and a correction that changes nothing ends it."""
     limits = item.options["limits"]
+    cap = item.input_doc.get("review_rounds_max") if name == "review_rounds" else None
+    if isinstance(cap, int) and used >= cap:  # the plan's bound is a wall: no round goes past it on progress
+        return f"the plan allows at most {cap} review round(s) for {item.ref} (review.rounds_max)"
     why, past = over_target(name, limits[name], used, progress, limits["ceiling_factor"])
     self._limit_over(item, past, emit)
     if why or name not in BATCH_LIMITS:

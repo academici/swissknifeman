@@ -1,9 +1,9 @@
 exit: 0
 --- stdout ---
-warning review_strategy: phases/P1/P1.1.json/review: item P1.1: review.mode none has no reason and no requested review that covers it
-warning review_strategy: phases/P1/P1.2.json/review: item P1.2: review.mode none has no reason and no requested review that covers it
-warning review_strategy: phases/P2/P2.1.json/review: item P2.1: review.mode none has no reason and no requested review that covers it
-warning review_strategy: phases/P2/P2.2.json/review: item P2.2: review.mode none has no reason and no requested review that covers it
+warning review_strategy: phases/P1/P1.1.json/review: item P1.1: review.mode none has no reason (a requested review that covers it does not count: the conductor does not execute covers)
+warning review_strategy: phases/P1/P1.2.json/review: item P1.2: review.mode none has no reason (a requested review that covers it does not count: the conductor does not execute covers)
+warning review_strategy: phases/P2/P2.1.json/review: item P2.1: review.mode none has no reason (a requested review that covers it does not count: the conductor does not execute covers)
+warning review_strategy: phases/P2/P2.2.json/review: item P2.2: review.mode none has no reason (a requested review that covers it does not count: the conductor does not execute covers)
 warning validation_id_clash: phases/P1/P1.1.json/validation/0: V1 is also a phase check of P1: one recorded result stands for both, so the item's run can pass for the full pass; give the phase check its own id
 warning validation_id_clash: phases/P1/P1.2.json/validation/0: V1 is also a phase check of P1: one recorded result stands for both, so the item's run can pass for the full pass; give the phase check its own id
 warning validation_id_clash: phases/P2/P2.1.json/validation/0: V1 is also a phase check of P2: one recorded result stands for both, so the item's run can pass for the full pass; give the phase check its own id

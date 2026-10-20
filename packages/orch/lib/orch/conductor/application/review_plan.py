@@ -17,8 +17,9 @@ from orch.conductor import options as opts, process, review_batch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.clock import utc_now
-from orch.conductor.infrastructure.files import safe, write_json
+from orch.conductor.infrastructure.files import read_json, safe, write_json
 from orch.conductor.policies import review_strategy as strategy
+from orch.conductor.policies.routing import CLASS_RANK
 
 PER_PIECE_OFF = ("groups", "single", "none")  # the strategy modes in which a piece is not reviewed on its own
 
@@ -151,6 +152,30 @@ def group_effort(self, reviewer: str, planned: str) -> str:
     return reviewer_effort(opts.parse_selector(reviewer), planned)
 
 
+def group_route(self, number: int, group: list, item: Item) -> None:
+    """The reviewer route of a group review, set on ``item`` (the last piece): the reviewer of the run when a layer sets
+    one; else the ``review_route`` the pieces of the group share, or, when they differ, the one of the strongest class
+    (``CLASS_RANK``, the first in group order on a tie) with a ``GROUP_REVIEW_ROUTE_CONFLICT`` beacon naming them all."""
+    if item.sources.get("reviewer"):
+        return
+    planned = [(ref, doc["review_route"]) for ref in group
+               for doc in [read_json(self.directory / safe(ref) / "input.json") or {}] if doc.get("review_route")]
+    if not planned:
+        item.input_doc = {key: value for key, value in item.input_doc.items() if key != "review_route"}
+        return
+    chosen = max(planned, key=lambda pair: CLASS_RANK.get(pair[1].get("class"), -1))
+    item.input_doc = dict(item.input_doc, review_route=chosen[1])
+    if len({json.dumps(route, sort_keys=True) for _, route in planned}) > 1:
+        named = "; ".join(f"{ref}: {route_text(route)}" for ref, route in planned)
+        self.progress.emit("info", reason_code="GROUP_REVIEW_ROUTE_CONFLICT",
+                           message=f"group {number}: the pieces ask for different review routes ({named}); "
+                                   f"the strongest class is used: {chosen[0]}: {route_text(chosen[1])}")
+
+
+def route_text(route: dict) -> str:
+    return "/".join(str(route[key]) for key in ("provider", "model", "class", "effort") if route.get(key)) or "-"
+
+
 def group_review(self, number: int, group: list, effort: str) -> None:
     refs, shas = review_batch.commits_of_state({"items": {r: self.state["items"][r] for r in group}})
     if not shas:
@@ -168,13 +193,13 @@ def group_review(self, number: int, group: list, effort: str) -> None:
         return
     item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
     self._resolve(item, persist=False)
+    group_route(self, number, group, item)
     self._admit_budget(item)
     route = self._route(item, "reviewer")
     if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route; an effort the option names wins
-        selector = opts.parse_selector(item.options["reviewer"])
-        effort = group_effort(self, item.options["reviewer"], effort)
-        route = dict(route, effort=effort, argv=launch.build_argv(self._launch_catalog(), "reviewer", selector["provider"],
-                                                                  model=selector["model"], effort=effort, cwd=self.project,
+        effort = reviewer_effort(self._reviewer_selector(item)[0], effort)
+        route = dict(route, effort=effort, argv=launch.build_argv(self._launch_catalog(), "reviewer", route["provider"],
+                                                                  model=route["model"], effort=effort, cwd=self.project,
                                                                   access=self._launch_access()))
     provider, model = route["provider"], route.get("model")
     prompt = review_batch.PROMPT.format(refs=", ".join(refs), max_tools=12) + diff

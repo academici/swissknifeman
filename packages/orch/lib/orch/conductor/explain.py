@@ -60,12 +60,12 @@ def _field_sources(conductor: engine.Conductor, item: engine.Item, role: str, pr
     stage_source = sources.get(f"stages.{role}")
     sources_of = {}
     if role == "reviewer":
-        selector = opts.parse_selector(options["reviewer"])
-        reviewer = sources.get("reviewer", DEFAULT_SOURCE)
+        selector, review_class, reviewer = conductor._reviewer_selector(item)
+        reviewer = reviewer or DEFAULT_SOURCE
         sources_of["provider"] = reviewer
-        sources_of["model"] = reviewer
-        if selector.get("effort"):
-            sources_of["effort"] = reviewer
+        for key, value in (("model", selector.get("model")), ("effort", selector.get("effort")), ("model_class", review_class)):
+            if value:
+                sources_of[key] = reviewer
     for key in ("provider", "model_class", "effort", "model"):
         if key in sources_of:
             continue
@@ -94,7 +94,8 @@ def _row(conductor: engine.Conductor, item: engine.Item, role: str, origin: str,
     except engine.Stop as stop:
         wanted = {**opts.stage_route(item.options, role), **(override or {})}
         if role == "reviewer" and not override:
-            wanted.update(opts.parse_selector(item.options["reviewer"]))
+            selector, review_class, _ = conductor._reviewer_selector(item)
+            wanted.update(selector, **({"model_class": review_class} if review_class else {}))
         wanted["provider"] = wanted.get("provider") or conductor.conductor.get("provider") or "claude-code"
         return {**row, **{key: wanted.get(key) for key in ("provider", "model_class", "effort")},
                 "available": False, "problem": f"{stop.code}: {stop.message}"}
@@ -140,6 +141,7 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
                 claim["route"] = doc["claim_route"]  # the class and effort the work requires of its executor
             conductor._resolve(item, persist=False)  # the policy of the scenario; the options are the recorded ones
             item.options, item.sources, origin = doc["options"], doc.get("sources") or {}, f"run {run_id}"
+            item.input_doc = engine.read_json(engine.runs_root(conductor.project) / run_id / engine.safe(ref) / "input.json") or {}
         else:
             conductor._resolve(item, persist=False)
         stages = [stage["role"] for stage in item.policy.get("stages", [])]
@@ -149,7 +151,7 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
         if named:
             rows.append(_row(conductor, item, role, "stages", item.sources.get(f"stages.{role}"), None))
         if role == "reviewer":
-            rows.append(_row(conductor, item, role, "reviewer", item.sources.get("reviewer", DEFAULT_SOURCE), None))
+            rows.append(_row(conductor, item, role, "reviewer", conductor._reviewer_selector(item)[2] or DEFAULT_SOURCE, None))
         elif not named:
             layer = _provider_layer(conductor) if conductor.conductor.get("provider") else f"launch-catalog ({DEFAULT_SOURCE})"
             rows.append(_row(conductor, item, role, "orch.conductor" if conductor.conductor.get("provider")

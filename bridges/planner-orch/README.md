@@ -38,6 +38,11 @@ Returns the worker's `exec/v1` execution-input as JSON (`$schema`
   green", "never run `plan.py finish`") passes; the report API is refused wherever it is named; the full
   coordinator pack stays reachable through `context_refs`.
 - `research` carries the research need the designer set on the item: `rag.need` (`none`, `optional`, `required`) and `rag.notes`; `rag.status` and `rag.captures` are plan state and stay out. An item without `rag` gets no `research` field. Under `orch.research.policy = conditional` the conductor adds a research stage only for `required`.
+- The review of the item: `review_mode` = `review.mode`; `review_route` = `review.reviewer` without its `note`
+  ({class, provider, model, effort}, only the fields set); `review_rounds_max` = `review.rounds_max`. Each is present only
+  when the plan sets it. The conductor reviews on `review_route` when the run sets no reviewer of its own (configuration,
+  `orchestration.options.reviewer`, `--options`) and never runs more than `review_rounds_max` rounds. `review.covers` is a
+  declaration for people and checkpoints and is not carried: the conductor does not execute it.
 - `--unit U#` briefs one unit: its goal, files (write set), checks and instructions. A unit without
   files is read-only with no write authority.
 - `--inline-reads` embeds the full text of existing text reads; binary reads get `error`.

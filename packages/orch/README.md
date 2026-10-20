@@ -38,6 +38,8 @@ temporary directories), and the `registrar` may run only
 is denied, nobody answers) and never with `--bare`, which does not read the subscription login.
 Incompatible versions return `CONTRACT_VERSION` before schema validation.
 
+## Role/provider matrix
+
 Every role/provider pair has a launch entry or an explicit refusal:
 
 | Role | claude-code | codex | grok |
@@ -100,6 +102,13 @@ of aicore (`orch.schema` re-exports it); `tests/test_schema_profile.py` checks t
 - [architecture](docs/architecture.md)
 - [work-source](docs/work-source.md)
 - [conductor](docs/conductor.md)
+- [Role/provider matrix](#roleprovider-matrix) — launch entries and explicit refusals.
+- [Ownership of a run](docs/conductor.md#ownership-of-a-run) — leases, one conductor per checkout and orphaned runs.
+- [Recovery after a crash](docs/conductor.md#recovery-after-a-crash) — interrupted steps, receipts and local durability.
+- [Token usage and limits](docs/conductor.md#hard-token-limits-and-resume) — accounted fresh tokens, incomplete usage, hard limits and limit raises on resume.
+- [Stubs variants](docs/conductor.md#stubs-additional-instructions-of-the-roles) — provider/model-family instructions and frozen snapshots.
+- [gui-orch README](../../bridges/gui-orch/README.md) — used/available routes, prompt metadata, budget, gates and owner/orphaned views.
+- [Deferred audit proposals](../../roadmap/2026-10-19-audit-deferred.md) — measurable triggers, module owners and audit sources.
 - [conformance](docs/conformance.md)
 - [events](docs/events.md)
 - [adding-an-engine](docs/adding-an-engine.md)

@@ -19,7 +19,7 @@ Status: **internal, not published**. The package uses only the Python standard l
 - [Recovery after a crash](conductor.md#recovery-after-a-crash) — interrupted steps, receipts and local durability.
 - [Token usage and limits](conductor.md#hard-token-limits-and-resume) — accounted fresh tokens, incomplete usage, hard limits and limit raises on resume.
 - [gui-orch README](../../../bridges/gui-orch/README.md) — used/available routes, prompt metadata, budget, gates and owner/orphaned views.
-- [Deferred audit proposals](../../../roadmap/2026-10-19-audit-deferred.md) — measurable triggers, module owners and audit sources.
+- [Deferred audit proposals](../../../docs/roadmap.md#deferred-audit-proposals-2026-10-19) — measurable triggers, module owners and audit sources.
 - [Agent mode](agent-mode.md) — the procedure for an agent that picks its own pieces: ready lanes of the work source, `orch conduct run --items`, `status`/`observe`, `resume`/`settle`.
 - [Stubs and provider/model-family variants](conductor.md#stubs-additional-instructions-of-the-roles) — additional instructions of the roles by machine and project: `orch.py stubs publish|list|show`, `[orch.stubs]`, the snapshot of a run and route-specific variants on fallback/resume.
 - [Research sources](research.md) — `[orch.research]`: `command`, `filesystem` and `mcp-stdio` sources, retries on `BROWSER_BUSY`, `orch.py research`, a Perplexity example.

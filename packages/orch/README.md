@@ -61,6 +61,8 @@ Required roles stop before work; optional scout/report-fixer roles are skipped. 
 `workspace-write` entry is the explicit exception to read-only sandbox checks. Researcher/advisor Grok retain shell
 and network access to research sources; Landlock confines source writes to its writable areas.
 
+## Configuration, work source and validation
+
 The `[orch]` configuration (engine, per-role engine, default profile, work source, capability freshness, pack
 folders, events) is layered through aicore; `orch.py --config FILE` adds the invocation layer. Run-policies ship as
 versioned packs with test cases (`configs/run-policies/<id>/`): `orch.py policy list|show|test`.
@@ -108,7 +110,7 @@ of aicore (`orch.schema` re-exports it); `tests/test_schema_profile.py` checks t
 - [Token usage and limits](docs/conductor.md#hard-token-limits-and-resume) — accounted fresh tokens, incomplete usage, hard limits and limit raises on resume.
 - [Stubs variants](docs/conductor.md#stubs-additional-instructions-of-the-roles) — provider/model-family instructions and frozen snapshots.
 - [gui-orch README](../../bridges/gui-orch/README.md) — used/available routes, prompt metadata, budget, gates and owner/orphaned views.
-- [Deferred audit proposals](../../roadmap/2026-10-19-audit-deferred.md) — measurable triggers, module owners and audit sources.
+- [Deferred audit proposals](../../docs/roadmap.md#deferred-audit-proposals-2026-10-19) — measurable triggers, module owners and audit sources.
 - [conformance](docs/conformance.md)
 - [events](docs/events.md)
 - [adding-an-engine](docs/adding-an-engine.md)

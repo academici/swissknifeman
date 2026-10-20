@@ -614,8 +614,11 @@ class ReopenTests(LifeCase):
 
     def test_reopen_refusals(self):
         self.refused("NOT_TERMINAL", lambda root, *a: lifecycle.reopen(root, "P1.1", "why"))
-        self.start("P1.1")
-        self.refused("NOT_TERMINAL", lambda root, *a: lifecycle.reopen(root, "P1.1", "why"))
+        self.start("P1.1", actor={**OPUS, "session": "run-x"})
+        held = self.refused("NOT_TERMINAL", lambda root, *a: lifecycle.reopen(root, "P1.1", "why"))
+        self.assertIn("held by", held.message)  # who holds it and who frees it, not a bare refusal
+        self.assertIn("in session run-x", held.message)
+        self.assertIn("the owner of that session frees it", held.message)
         self.finish("P1.1")
         self.refused("REASON_REQUIRED", lambda root, *a: lifecycle.reopen(root, "P1.1", " "))
         self.refused("REF_UNKNOWN", lambda root, *a: lifecycle.reopen(root, "P1.9", "why"))

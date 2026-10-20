@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 from orch import cli
+from tests.isolation import isolated_project_search
 
 
 class ProjectOfOrchTests(unittest.TestCase):
@@ -25,13 +26,11 @@ class ProjectOfOrchTests(unittest.TestCase):
         cwd = Path.cwd()
         os.chdir(self.base / "loose")
         self.addCleanup(os.chdir, cwd)
-
-    def skip_if_an_ancestor_has_a_marker(self):
-        """Without a project the search climbs above the temporary folder: a project marker there (for example a
-        sandbox /tmp/.git) would make it the project, so these tests need a clean ancestry."""
-        ancestors = (self.base / "loose").resolve().parents
-        if any((folder / marker).exists() for folder in ancestors for marker in (".git", ".swissknifeman")):
-            self.skipTest("an ancestor of the temporary folder holds a project marker (for example a sandbox /tmp/.git)")
+        # Without a project the search climbs above the temporary folder: a marker there (a sandbox /tmp/.git) is
+        # outside the fixture and must not make it the project.
+        isolation = isolated_project_search(self.base)
+        isolation.start()
+        self.addCleanup(isolation.stop)
 
     def main(self, *argv):
         out, err = io.StringIO(), io.StringIO()
@@ -40,7 +39,6 @@ class ProjectOfOrchTests(unittest.TestCase):
         return code, out.getvalue(), err.getvalue()
 
     def test_the_run_cycle_needs_a_project_and_names_the_flag(self):
-        self.skip_if_an_ancestor_has_a_marker()
         code, out, err = self.main("source", "brief", "--run", "r1")
         self.assertEqual(code, 1)
         self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
@@ -57,7 +55,6 @@ class ProjectOfOrchTests(unittest.TestCase):
         self.assertIn("RUN_UNKNOWN", err)
 
     def test_a_command_without_state_works_outside_a_project(self):
-        self.skip_if_an_ancestor_has_a_marker()
         code, out, err = self.main("doctor", "--json")
         self.assertEqual(code, 0, err)
 

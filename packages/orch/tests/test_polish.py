@@ -184,7 +184,7 @@ class TerminatedRun(unittest.TestCase):
 
         me = types.SimpleNamespace(_pieces=pieces, _disk_guard=lambda: None, state={"items": {}}, _segment=None,
                                    _active_s=lambda: 0.0, _save=lambda: None, directory=Path("."), project=Path("."),
-                                   reports_dir=lambda: Path("."), progress=mock.Mock(), run_doc={})
+                                   reports_dir=lambda: Path("."), progress=mock.Mock(), run_doc={}, _batch_held=lambda: False)
         with mock.patch.object(loop.observer, "write_report", side_effect=RuntimeError("no report")):
             self.assertEqual(loop.loop(me), 130)
         self.assertEqual(seen["handlers"], {signal.SIGTERM: loop.terminated, signal.SIGHUP: loop.terminated})

@@ -1313,6 +1313,11 @@ class AdoptAndSettleTests(ConductorCase):
         self.assertEqual(code, 1, err)
         held = {ref: doc["status"] for ref, doc in self.source()["items"].items()}
         self.assertEqual(held, {"W1": "in_progress", "W2": "in_progress"})  # a batch stop gives nothing back on its own
+        run_id = self.run_dir(err).name
+        hint = f"held: W1, W2 — release with: orch conduct release --run {run_id} --all"
+        self.assertEqual([line["message"] for line in self.lines(err) if line.get("reason_code") == "BATCH_HELD"], [hint])
+        self.assertIn(hint, self.conduct("status", "--run", run_id)[1])
+        self.assertEqual(json.loads(self.conduct("status", "--run", run_id, "--json")[1])["held"]["items"], ["W1", "W2"])
         code, _, err2 = self.conduct("release", "--run", self.run_dir(err).name, "--all", "--reason", "start over")
         self.assertEqual(code, 0, err2)
         self.assertIn("RELEASED_ALL", err2)

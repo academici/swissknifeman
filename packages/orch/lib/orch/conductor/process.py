@@ -219,26 +219,28 @@ def activity(pid: Optional[int], raw_path: Path) -> str:
         parts.append(f"last command: {last}")
     if pid:
         try:
-            listing = subprocess.run(["ps", "-eo", "pid=,ppid=,etimes=,args="], capture_output=True, text=True,
-                                     timeout=5).stdout
+            # stat and pcpu tell a process asleep on its input (S, 0.0 %) from one at work (R or a share of the CPU)
+            listing = subprocess.run(["ps", "-eo", "pid=,ppid=,etimes=,stat=,pcpu=,args="], capture_output=True,
+                                     text=True, timeout=5).stdout
         except (OSError, subprocess.SubprocessError):
             listing = ""
         table = {}
         for line in listing.splitlines():
-            fields = line.split(None, 3)
-            if len(fields) == 4 and all(field.isdigit() for field in fields[:3]):
-                table[int(fields[0])] = (int(fields[1]), int(fields[2]), fields[3])
+            fields = line.split(None, 5)
+            if len(fields) == 6 and all(field.isdigit() for field in fields[:3]):
+                table[int(fields[0])] = (int(fields[1]), int(fields[2]), fields[5], fields[3], fields[4])
         below, grew = {pid}, True
         while grew:  # the whole tree under the provider CLI: its tool shells may sit in sessions of their own
             grew = False
-            for number, (parent, _seconds, _args) in table.items():
-                if parent in below and number not in below:
+            for number, row in table.items():
+                if row[0] in below and number not in below:
                     below.add(number)
                     grew = True
-        rows = [(table[number][1], table[number][2]) for number in below if number != pid and number in table]
+        rows = [table[number][1:] for number in below if number != pid and number in table]
         rows = [row for row in rows if not row[1].startswith(("ps ", "/bin/sh -c ps"))]
         if rows:
-            shown = ", ".join(f"{args[:120]} ({seconds}s)" for seconds, args in sorted(rows, reverse=True)[:3])
+            shown = ", ".join(f"{args[:120]} ({seconds}s, {stat} {cpu}% cpu)"
+                              for seconds, args, stat, cpu in sorted(rows, reverse=True)[:3])
             parts.append(f"running: {shown}")
         else:
             parts.append("no child process: the model call itself is silent")

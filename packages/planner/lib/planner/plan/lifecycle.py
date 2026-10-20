@@ -1244,7 +1244,14 @@ def reopen(plan, item_id: str, reason: str, actor: Mapping | None = None) -> Non
         item = copy.deepcopy(_need_item(p, item_id))
         current = item.get("status")
         if current not in {s.value for s in TERMINAL}:
-            raise PlanError("NOT_TERMINAL", f"{item_id} is {current}; only a finished item can be reopened")
+            held = ""
+            if current == "in_progress":
+                executor = (item.get("result") or {}).get("executor") or {}
+                who = "/".join(str(executor[k]) for k in ("provider", "model") if executor.get(k)) or "an executor"
+                session = executor.get("session")
+                held = (f"; it is held by {who}" + (f" in session {session}" if session else "")
+                        + ": the owner of that session frees it (it releases or finishes the item), then reopen")
+            raise PlanError("NOT_TERMINAL", f"{item_id} is {current}; only a finished item can be reopened{held}")
         if not reason or not reason.strip():
             raise PlanError("REASON_REQUIRED", "--reason is required")
         phase_id = _item_phase(item_id)

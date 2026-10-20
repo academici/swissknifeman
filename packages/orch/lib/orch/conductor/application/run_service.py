@@ -326,6 +326,26 @@ def _release_owned(self, store: RunStore, run_id: str, ref, reason: str) -> int:
     return 0
 
 
+HELD_CLOSED = ("done", "done_with_deviations", "blocked", "abandoned")
+
+
+def held_pieces(state: dict) -> list:
+    """The pieces a stopped run still holds that nobody worked on: claimed, not closed, not given back. ``release --all``
+    frees exactly these (a piece with work in the tree is settled or retried instead)."""
+    items = state.get("items") or {}
+    found = []
+    for ref in dict.fromkeys(state_claims(state)):
+        item = items.get(ref) or {}
+        released = [entry for entry in item.get("released") or [] if entry.get("ok")]
+        if item.get("outcome") not in HELD_CLOSED and not work_began(item) and not released:
+            found.append(ref)
+    return found
+
+
+def held_hint(run_id: str, refs: list) -> str:
+    return f"held: {', '.join(refs)} — release with: orch conduct release --run {run_id} --all"
+
+
 def state_claims(state: dict) -> list:
     """The references of the pieces a run claimed, in the order of its claims."""
     return [claim["ref"] for claim in (state.get("claims") or {}).values() if claim.get("ref")]

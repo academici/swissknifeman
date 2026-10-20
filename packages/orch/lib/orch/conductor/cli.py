@@ -18,6 +18,7 @@ from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, prompts, questions, runs
+from orch.conductor.application import run_service
 from orch.conductor.infrastructure import roles
 
 
@@ -426,8 +427,13 @@ def main(argv: list | None = None) -> int:
         found["state"] = engine.read_json(directory / engine.STATE_FILE) or {}
         here = (found["current"] or {}).get("item") or (found["items"][-1]["item"] if found["items"] else None)
         listed = agents.read(directory / engine.safe(here)) if here else []
+        doc = engine.read_json(directory / engine.RUN_FILE) or {}
+        batch = doc.get("grouped") is not False and len(doc.get("items") or []) > 1
+        held = run_service.held_pieces(found["state"]) if batch and found["status"] in ("stopped", "orphaned") else []
         if args.json:
             details = _status_details(directory, found)
+            if held:
+                details["held"] = {"items": held, "hint": run_service.held_hint(run_id, held)}
             print(json.dumps(runs.display({key: value for key, value in found.items() if key != "state"} |
                               {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop"),
                                "last_stop": found["state"].get("last_stop"), "agents": listed, **details}),
@@ -447,6 +453,8 @@ def main(argv: list | None = None) -> int:
             print(f"  {row['item']}: {row['outcome'] or 'running'}"
                   + (f" ({row.get('reason_code')})" if row.get("reason_code") else "")
                   + f"; {row['stages']} step(s), last {last.get('stage', '-')} {last.get('verdict') or ''}".rstrip())
+        if held:
+            print("  " + run_service.held_hint(run_id, held))
         tokens = found["state"].get("tokens") or {}
         print(f"  tokens: {tokens.get('input', 0)} in, {tokens.get('output', 0)} out")
         for row in listed:

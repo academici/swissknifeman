@@ -305,6 +305,7 @@ class ActivityAndUsageTests(unittest.TestCase):
             text = process.activity(child.pid, raw)
             self.assertIn("last command: Bash: bash scripts/test.sh", text)
             self.assertIn("sleep 30", text)
+            self.assertRegex(text, r"sleep 30 \([0-9]+s, S\S* [0-9.]+% cpu\)")  # asleep, as a check waiting on its stdin
             self.assertEqual(process.partial_usage(raw.read_text()), {"input": 5, "cached": 7, "output": 2})
         import os
         import signal

@@ -368,7 +368,7 @@ is unknown, goes to a fallback route or stops (`WAIT_TOO_LONG`, `RETRY_AFTER_UNK
 The reviewer has a fallback by default (`fallback_routes`): a review is too dear to lose when grok cannot start (no CLI), is
 gated (its quota is exhausted) or fails and the policy says `fallback_route` (`on_error`). A route that cannot start, or is
 gated, is replaced when the routes of a piece are chosen (`ROUTE_FALLBACK`, `CAPACITY_GATED`); a role that fails at the provider moves
-by the decision of `retry.decide`. `run --dry-run` shows what a run would do (`batch`: whether the pieces are one batch, the default for several; `ready`: whether `--ready` picks them): `fallback_routes`, the `gates` in force, the
+by the decision of `retry.decide`. `run --dry-run` shows what a run would do (`claim_actor`: the actor a real run hands to `source claim --actor`, with a warning when it is not the routed executor, since the source refuses a piece whose route pins another one; `batch`: whether the pieces are one batch, the default for several; `ready`: whether `--ready` picks them): `fallback_routes`, the `gates` in force, the
 `reviewer` selector with the layer that set it, and `route_notes` (a route replaced at selection and why).
 
 A fallback route is admitted by the same rules as a route at the start: not below the class or effort the work requires,

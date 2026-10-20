@@ -349,7 +349,7 @@ class PreviewBatchKeys(unittest.TestCase):
                                      route_notes=[])
         conductor = types.SimpleNamespace(run_id="", run_doc={}, settings=types.SimpleNamespace(default_profile="solo"),
                                           _resolve=lambda *a, **k: None, _routes=lambda *a, **k: None,
-                                          _sandbox_mode=lambda it: "off")
+                                          _sandbox_mode=lambda it: "off", _claim_actor=lambda: "p/m")
         with mock.patch.object(cli.engine, "Item", return_value=item), \
                 mock.patch.object(cli.sandbox, "probe", return_value={"available": False, "reason": "test"}):
             return cli._preview(conductor, args)
@@ -360,6 +360,46 @@ class PreviewBatchKeys(unittest.TestCase):
         self.assertEqual(self.preview(["A"])["batch"], False)
         shown = self.preview(None, ready=True)
         self.assertEqual((shown["batch"], shown["ready"]), (True, True))
+
+
+class PreviewClaimActor(unittest.TestCase):
+    """``--dry-run`` shows the actor a real run claims with, and warns when the claim would not match the routed executor."""
+
+    def preview(self, claim_actor="codex/gpt-6.1-sol/xhigh", executor=None):
+        from orch.conductor import cli
+        args = types.SimpleNamespace(scenario=None, options=None, plan="P", input=None, items=["A"], ready=False, batch=None)
+        routes = {"executor": executor or {"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh",
+                                           "argv": ["codex"]}}
+        item = types.SimpleNamespace(routes=routes, policy={}, options={"reviewer": "x", "fallback_routes": []}, sources={},
+                                     route_notes=[])
+        conductor = types.SimpleNamespace(
+            run_id="", run_doc={}, settings=types.SimpleNamespace(default_profile="solo"), _resolve=lambda *a, **k: None,
+            _routes=lambda *a, **k: None, _sandbox_mode=lambda it: "off", _claim_actor=lambda: claim_actor,
+            route_problem=lambda route: None, _role_argv=lambda it, role, route: route["argv"],
+            declared_network=lambda role: "none", _codex_sandboxed=lambda route: False, _claude_bash=lambda route: False)
+        with mock.patch.object(cli.engine, "Item", return_value=item), \
+                mock.patch.object(cli.sandbox, "probe", return_value={"available": True, "reason": ""}):
+            return cli._preview(conductor, args)
+
+    def test_the_claim_actor_is_shown_and_a_matching_route_has_no_warning(self):
+        shown = self.preview()
+        self.assertEqual(shown["claim_actor"], "codex/gpt-6.1-sol/xhigh")
+        self.assertFalse([w for w in shown["warnings"] if "claim" in w], shown["warnings"])
+
+    def test_a_claim_that_differs_from_the_routed_executor_is_a_warning(self):
+        shown = self.preview(claim_actor="claude-code/claude-opus-5-5")
+        self.assertEqual(shown["claim_actor"], "claude-code/claude-opus-5-5")
+        gap = [w for w in shown["warnings"] if "the claim names" in w]
+        self.assertEqual(len(gap), 1, shown["warnings"])
+        self.assertIn("provider, model differ", gap[0])
+
+    def test_an_effort_the_claim_names_must_match_the_route(self):
+        shown = self.preview(claim_actor="codex/gpt-6.1-sol/high")
+        self.assertTrue(any("effort differ" in w for w in shown["warnings"]), shown["warnings"])
+
+    def test_a_claim_without_effort_does_not_contradict_a_route_with_one(self):
+        shown = self.preview(claim_actor="codex/gpt-6.1-sol")
+        self.assertFalse([w for w in shown["warnings"] if "the claim names" in w], shown["warnings"])
 
 
 class DiffForReview(unittest.TestCase):

@@ -16,7 +16,7 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, frozen, gates, observer, progress, prompts, questions, runs
+from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, prompts, questions, runs
 from orch.conductor.infrastructure import roles
 
 
@@ -71,6 +71,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
             and any(conductor._claude_bash(route) for route in item.routes.values()):
         warnings.append(f"instructions.sandbox is require and the sandbox cannot start ({probed['reason']}): "
                         "a run stops with SANDBOX_UNAVAILABLE")
+    claim_actor, gap = _claim_actor_of(conductor, item.routes.get("executor"))
+    warnings += [gap] if gap else []
     return {"plan": args.plan or str(args.input), "items": args.items or None, "ready": bool(args.ready),
             "batch": args.batch is not False and (len(args.items or []) > 1 or bool(args.ready)),
             "scenario": claim["scenario"], "stages": [stage["id"] for stage in item.policy.get("stages", [])],
@@ -80,8 +82,28 @@ def _preview(conductor: engine.Conductor, args) -> dict:
             "gates": [{"provider": name, **entry} for name, entry in sorted(gates.active(time.time()).items())],
             "routes": item.routes, "available": available, "unavailable": unavailable,
             "isolation_args": isolation, "sandbox": {"available": probed["available"], "reason": probed["reason"]},
-            "network": network, "warnings": warnings,
+            "claim_actor": claim_actor, "network": network, "warnings": warnings,
             "note": "the work source adds the scenario and the options of the plan, phase and item at claim time"}
+
+
+def _claim_actor_of(conductor, route: dict | None) -> tuple:
+    """``(actor, warning)``: the actor a real run hands to ``source claim --actor`` (the source checks the route of the
+    piece against it), and a warning when it is not the executor the preview routes, which the claim would refuse
+    (``ROUTE_MISMATCH``, ``ROUTE_UNDERSHOOT``) while this preview is green."""
+    try:
+        actor = conductor._claim_actor()
+    except engine.Stop as stop:
+        return None, f"claim actor: {stop.code}: {stop.message}"
+    if route is None:
+        return actor, None
+    claimed = opts.parse_actor(actor)
+    differs = [name for name in ("provider", "model", "effort")
+               if claimed.get(name) and claimed[name] != route.get(name)]
+    if not differs:
+        return actor, None
+    routed = "/".join(part for part in (route["provider"], route["model"], route["effort"]) if part)
+    return actor, (f"executor: the claim names {actor}, but the route is {routed} ({', '.join(differs)} differ): "
+                   "a piece whose route pins the executor is refused at the claim")
 
 
 def _network(conductor, role: str, route: dict, isolation: list, probed: dict) -> dict:

@@ -172,7 +172,12 @@ def save(item_directory: Path, run: str, item: str, store: dict) -> None:
         write_json(path(item_directory), document(run, item, store))
 
 
-def answer_file(item_directory: Path, question: str, **kwargs) -> dict:
+def answer_file(item_directory: Path, question: str, *, item: Optional[str] = None, **kwargs) -> dict:
+    """Answer ``question`` in ``questions.json`` of the item under its lock. An item without questions is refused before
+    anything is written: a mistyped ``--item`` leaves no folder and no lock file behind."""
+    if not path(item_directory).is_file():
+        raise QuestionError("QUESTION_UNKNOWN", f"{item or Path(item_directory).name} has no questions in run "
+                                                f"{Path(item_directory).parent.name}")
     with questions_lock(item_directory):
         doc = read(item_directory)
         if doc is None:

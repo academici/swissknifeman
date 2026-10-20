@@ -50,7 +50,9 @@ while that group remains alive. Each stopped group produces an `info` event `ROL
 
 `answer` can update questions while the conductor owns the run. All updates of an item's `questions.json` use
 `questions.lock` for their read-modify-write, including merging answers before a conductor save. A lock held for
-10 seconds gives `QUESTIONS_LOCKED`. `observe`, `status`, `runs` and prompt explanation do not take run ownership.
+10 seconds gives `QUESTIONS_LOCKED`. `observe`, `status`, `runs` and prompt explanation do not take run ownership; their
+probe opens `lease.lock` read-only, and where it cannot open it at all (a read-only context) the run is not called
+orphaned: `status --json` says `lease: {"lock": "unavailable"}`.
 `prune --apply` skips busy leases with a reason, rereads eligibility under the lease, then renames an eligible old
 terminal or orphaned run to `<runs root>/.pruning-<id>` before removing it. The latest run is retained.
 
@@ -473,8 +475,10 @@ nothing is ever answered on a timeout.
   `{run, item, step, input_digest}` (the digest of the input it was asked on), its `status` (`open`, `answered`, `applied`,
   `assumed`, `denied`, `stale`) and, once answered, `resolution {value, by, at}`. Beacons: `QUESTION_QUEUED`,
   `QUESTION_DENIED`, `QUESTION_DEFAULT`, `QUESTION_ANSWERED`, `QUESTION_OPEN` (retry without an answer), `QUESTION_STALE`.
-- `orch conduct answer` writes only the resolution into `questions.json` (`QUESTION_UNKNOWN`, `QUESTION_NOT_OPEN`,
-  `ANSWER_INVALID`: a decision takes one of its options, a clarification may take `--text`); it never touches the run.
+- `orch conduct answer` writes only the resolution into `questions.json`, under `questions.lock` of the item (both in
+  the item folder of the run); `QUESTION_UNKNOWN` (`<item> has no questions in run <id>`, refused before anything is
+  written, so a mistyped `--item` leaves no folder), `QUESTION_NOT_OPEN`, `ANSWER_INVALID` (a decision takes one of its
+  options, a clarification may take `--text`); it never touches the run.
   `orch conduct questions [--run R] [--json]` lists the open ones with their age; one older than `limits.question_warn_s`
   (default 1800, 0 off) is `OVERDUE`, in the observer report too.
 - `resume --run R --retry ITEM` merges the answers into the state. An answer is applied only while the input is the one the
@@ -637,7 +641,9 @@ orch conduct resume --run RUN --raise-limit tokens_hard_max=0
 
 `--raise-limit KEY=N` is repeatable and accepts only these two keys. N must exceed the effective value;
 0 explicitly removes the limit. Raises overlay the options for this run; they do not rewrite the piece's
-`options.json` or repeat its done executor. `state.limit_raises[]` records `{key, from, to, at, by: invocation}`;
+`options.json` or repeat its done executor. `state.limit_raises[]` records `{key, from, to, at, by: invocation}`, and a
+raise of `tokens_hard_max` also names its `item` (the stopped piece) and holds for that piece only, while
+`run_tokens_hard_max` is run-wide (an older record without `item` holds for every piece, as it did);
 each raise emits `info` reason `LIMIT_RAISED`. Without a raise, a still-exhausted run immediately stops again
 before a model call. No `--retry` is needed. `BUDGET_EXHAUSTED` remains a retry code, and a provider context-limit
 failure remains `PROVIDER_CONTEXT`, a signal to replan.
@@ -728,7 +734,7 @@ resumes reads that snapshot; a resume whose files changed says `STUBS_CHANGED`. 
 `supporting`) stands after the role text and before the task, under a heading that says it cannot change tools, write
 authority, scope, checks or the result contract; the real limits stay the launch catalog, the sandbox, the filesystem guard
 and the result parser. A stub that cannot be used (symlink, not a regular file, writable by every user, over 32 KiB, over 64 KiB for one
-target, text that looks like a secret, not UTF-8, unknown header field, mode or version, a header that names another target, text in a `disable` file) stops the
+target counted as its common parts with the largest provider and provider--family variant one route can take, text that looks like a secret, not UTF-8, unknown header field, mode or version, a header that names another target, text in a `disable` file) stops the
 run with `STUBS_INVALID` before any role starts. `[orch.stubs]` (machine, invocation or flags only): `enabled` (true) and
 `layers` (`["machine", "project"]`; leave `project` out on a machine that runs repositories it does not trust).
 `orch stubs list` shows the effective stubs of every role and the files of its variants; `orch stubs show ROLE`

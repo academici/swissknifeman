@@ -14,6 +14,24 @@ from unittest import mock
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ro-run.py"
 
 
+def work_base() -> Path:
+    """A folder for the test checkouts, outside the default writable roots of ro-run (``/tmp``, ``/var/tmp``, ``/dev``,
+    ``~/.grok``) and outside the repository (the module may live in a repository of its own): ``.cache/skm-tests`` of
+    the real home of the user. The tests skip when it is not available."""
+    import pwd
+    base = Path(pwd.getpwuid(os.getuid()).pw_dir) / ".cache" / "skm-tests"
+    real = os.path.realpath(base)
+    for root in ("/tmp", "/var/tmp", "/dev", "~/.grok"):
+        root = os.path.realpath(os.path.expanduser(root))
+        if real == root or real.startswith(root.rstrip(os.sep) + os.sep):
+            raise unittest.SkipTest(f"{base} lies under the writable root {root} of ro-run")
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        raise unittest.SkipTest(f"no folder for test checkouts: {error}")
+    return base
+
+
 def run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, check=False)
 
@@ -55,7 +73,7 @@ class ProtectValidationTests(unittest.TestCase):
                     self.assertEqual(os.path.commonpath((directory, reported_root)), reported_root)
 
     def test_rw_equal_to_or_above_the_protected_directory_is_refused(self):
-        directory = Path(SCRIPT.parents[3]) / "protect-unit-dir"  # not created: the validation reads paths only
+        directory = work_base() / "protect-unit-dir"  # not created: the validation reads paths only
         # Isolate explicit grants from default-root overlap when a standalone checkout lives under /tmp.
         with mock.patch.object(self.module, "DEFAULT_WRITABLE", ("/dev",)):
             for grant in (directory, directory.parent):
@@ -63,7 +81,7 @@ class ProtectValidationTests(unittest.TestCase):
                     self.refusal(["--protect", str(directory), "--rw", str(grant)], "RO_RUN_RW_ESCAPE")
 
     def test_default_root_under_the_protected_directory_is_refused(self):
-        directory = Path(SCRIPT.parents[3]) / "protect-unit-dir"
+        directory = work_base() / "protect-unit-dir"
         # Test the nested home root even when /tmp would overlap the checkout first.
         with mock.patch.object(self.module, "DEFAULT_WRITABLE", ("~/.grok",)), \
                 mock.patch.dict(os.environ, {"HOME": str(directory)}):
@@ -125,8 +143,8 @@ class ProtectValidationTests(unittest.TestCase):
 
 class ProtectedRunTests(unittest.TestCase):
     def setUp(self):
-        # A repository-local checkout avoids both /tmp and HOME (the test runner puts HOME in /tmp).
-        tmp = tempfile.TemporaryDirectory(prefix=".ro-run-test-", dir=SCRIPT.parents[3])
+        # A checkout outside /tmp and the test HOME (the test runner puts HOME in /tmp).
+        tmp = tempfile.TemporaryDirectory(prefix=".ro-run-test-", dir=work_base())
         self.addCleanup(tmp.cleanup)
         self.checkout = Path(tmp.name)
         self.vendor = self.checkout / "vendor"
@@ -177,7 +195,7 @@ class ProtectedRunTests(unittest.TestCase):
 @unittest.skipUnless(sys.platform.startswith("linux") and landlock_available(), "needs Linux Landlock")
 class UnprotectedRunTests(unittest.TestCase):
     def setUp(self):
-        tmp = tempfile.TemporaryDirectory(prefix=".ro-run-test-", dir=SCRIPT.parents[3])
+        tmp = tempfile.TemporaryDirectory(prefix=".ro-run-test-", dir=work_base())
         self.addCleanup(tmp.cleanup)
         self.vendor = Path(tmp.name) / "vendor"
         self.vendor.mkdir()
@@ -195,6 +213,7 @@ class UnprotectedRunTests(unittest.TestCase):
                        f"Path({str(Path(tmp) / 'default')!r}).write_text('ok')")
             self.assertEqual(done.returncode, 0, done.stderr)
             self.assertEqual((self.vendor / "legacy").read_text(), "ok")
+            self.assertEqual((Path(tmp) / "default").read_text(), "ok")  # a default writable root stays writable
 
 
 class ReadOnlyRunTests(unittest.TestCase):

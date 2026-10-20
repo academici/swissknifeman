@@ -14,6 +14,7 @@ from orch.conductor import agents, process
 from orch.conductor.application import review_plan
 from orch.conductor.domain.item import Item
 from orch.conductor.infrastructure import roles
+from orch.conductor.policies import budget
 from tests.test_conductor import ConductorCase, FIXTURES, GREEN, ROLES, executor_ok, report
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -103,6 +104,7 @@ class UsageAccountingTests(unittest.TestCase):
         self.state = {"items": {"W1": self.item.state}}
         self.engine = SimpleNamespace(state=self.state, _local=threading.local(), _step_tokens={},
                                       _save=mock.Mock(), progress=SimpleNamespace(emit=mock.Mock()))
+        self.engine._unmetered = lambda item: budget.unmetered(self.engine, item)  # bound on the Conductor
         self.start_agent("agent-1")
 
     def start_agent(self, agent):

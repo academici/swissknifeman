@@ -17,7 +17,6 @@ from orch.conductor.domain.report import json_block
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import write_json
-from orch.conductor.policies.budget import unmetered
 from orch.conductor.progress import human_duration
 from orch.settings import ORCH_ROOT
 
@@ -109,7 +108,11 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
         self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="BUDGET_OVER",
                            message=f"block {block.kind} {block.origin} {prompts.estimate_tokens(block.text)}")
     attempt = item.state.get("retries_by_stage", {}).get(key, 0) + 1
-    handle = self._agent_start(item, key, role, item.routes[role], prompt_file, attempt, causation,
+    # The route the role starts on (a provider gated since the routes were chosen moves to its fallback) and the prompt
+    # rebuilt for it come first: orch.agent.started names the route and the digest of the prompt really sent.
+    route = self._start_route(item, key, role, item.routes[role], cancel)
+    _first, prompt = self._prompt_for_route(item, key, role, route, blocks, prompt, prompt)
+    handle = self._agent_start(item, key, role, route, prompt_file, attempt, causation,
                                prompt_sha256=sha256_hex(prompt.encode("utf-8")))
     try:
         doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle, blocks)
@@ -319,7 +322,7 @@ def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] 
             bucket[key] = bucket.get(key, 0) + delta[key]
     self._save()
     if usage_complete is False:
-        unmetered(self, item)
+        self._unmetered(item)
 
 
 def relative(self, path: Path) -> str:

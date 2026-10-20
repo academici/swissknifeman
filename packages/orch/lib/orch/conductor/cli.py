@@ -143,7 +143,7 @@ def _questions(args, project: Path) -> int:
         return 0
     folder = directory / engine.safe(args.item)
     try:
-        entry = questions.answer_file(folder, args.question, option=args.option, text=args.text,
+        entry = questions.answer_file(folder, args.question, item=args.item, option=args.option, text=args.text,
                                       by=args.by or getpass.getuser(), now=engine.utc_now())
     except (questions.QuestionError, engine.Stop) as error:
         print(f"{error.code}: {error.message}", file=sys.stderr)

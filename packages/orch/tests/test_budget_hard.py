@@ -102,6 +102,29 @@ class HardBudgetTests(ConductorCase):
         self.assertTrue(change["at"])
         self.assertEqual([line["event"] for line in self.lines(resumed) if line.get("reason_code") == "LIMIT_RAISED"], ["info"])
 
+    def test_a_raise_of_the_piece_limit_holds_for_its_piece_only(self):
+        def piece(ref, limit):
+            item = Item(ref, "r", {}, Path("."), {})
+            item.options = {"limits": {"tokens_hard_max": limit}}
+            return item
+        first, second = piece("W1", 500), piece("W2", 1000)
+        run = SimpleNamespace(state={"limit_raises": [{"key": "tokens_hard_max", "from": 500, "to": 600, "item": "W1"}]},
+                              run_doc={})
+        self.assertEqual((budget.effective_limit(run, first, "tokens_hard_max"),
+                          budget.effective_limit(run, second, "tokens_hard_max")), (600, 1000))
+        run.state["limit_raises"].append({"key": "tokens_hard_max", "from": 600, "to": 0, "item": "W1"})
+        self.assertEqual(budget.effective_limit(run, second, "tokens_hard_max"), 1000)  # not removed for W2 either
+        legacy = SimpleNamespace(state={"limit_raises": [{"key": "tokens_hard_max", "from": 500, "to": 700}]}, run_doc={})
+        self.assertEqual((budget.effective_limit(legacy, first, "tokens_hard_max"),
+                          budget.effective_limit(legacy, second, "tokens_hard_max")), (700, 700))  # read as before
+
+    def test_the_raise_record_names_the_stopped_piece(self):
+        _, _, err = self.capped(tokens_hard_max=110)
+        code, _, resumed = self.resume(err, "--raise-limit", "tokens_hard_max=500")
+        self.assertEqual(code, 0, resumed)
+        change, = self.state(resumed)["limit_raises"]
+        self.assertEqual(change["item"], "W1")
+
     def test_invalid_raises_are_atomic_and_do_not_change_state_or_journal(self):
         _, _, err = self.capped(tokens_hard_max=110)
         directory = self.run_dir(err)

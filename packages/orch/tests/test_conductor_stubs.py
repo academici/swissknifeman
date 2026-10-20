@@ -197,6 +197,13 @@ class VariantRunTests(ConductorCase):
             code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assert_fallback_prompt(err, 1)
+        # W2: the started event names the route and the digest of the prompt really sent, not the codex one
+        from aicore.ext import events as journal
+        stored, _ = journal.read_events(self.project)
+        started = [event.data for event in stored if event.type == "orch.agent.started" and event.data["role"] == "executor"]
+        manifest = json.loads((self.run_dir(err) / "W1" / "prompts" / "executor.1.manifest.json").read_text())
+        self.assertEqual([(data["route"]["provider"], data["prompt_sha256"]) for data in started],
+                         [("claude-code", manifest["prompt_sha256"])])
 
     def test_fallback_to_a_provider_without_variants_removes_the_block(self):
         self.stub("machine", "orch/roles/executor@codex.md", "codex exclusive\n")

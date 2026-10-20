@@ -50,7 +50,10 @@ def public_route(route) -> dict:
 
 def live_owner(directory: Path):
     """Lease metadata is meaningful only while an independent probe finds the lock busy."""
-    if not RunLease.held(directory):
+    held = RunLease.held(directory)
+    if held is None:
+        return {"lock": "unavailable"}  # read-only here: whether a conductor holds the run is unknown
+    if not held:
         return None
     owner = RunLease.owner(directory)
     return display({key: owner.get(key) for key in ("pid", "host", "started_at", "command")}, 64) if owner else None
@@ -71,9 +74,13 @@ def effective_status(directory: Path, summary: dict, doc=None, *, owned: bool = 
             doc = json.loads((directory / RUN_FILE).read_text(encoding="utf-8"))
         except (OSError, ValueError):
             doc = {}
-    if (summary["status"] == "running" and isinstance(doc, dict) and doc.get("lease") is True
-            and (owned or not RunLease.held(directory))):
+    if summary["status"] != "running" or not isinstance(doc, dict) or doc.get("lease") is not True:
+        return summary
+    held = None if owned else RunLease.held(directory)
+    if owned or held is False:
         return dict(summary, status="orphaned", reason_code="RUN_ORPHANED")
+    if held is None:  # read-only context: the lock cannot be probed, so the run is not called orphaned
+        return dict(summary, lease="unknown")
     return summary
 
 

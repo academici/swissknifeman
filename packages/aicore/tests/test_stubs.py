@@ -125,6 +125,20 @@ class VariantTests(StubCase):
         self.assertEqual(snap["targets"], {T: {key: found[key] for key in ("text", "parts")}})
         self.assertNotEqual(snap["digest"], stubs.snapshot([T], self.project, env=self.env)["digest"])
 
+    def test_the_size_limit_counts_the_common_parts_and_the_largest_variant_one_route_takes(self):
+        kb = 1024
+        self.write("machine", "orch/roles/reviewer.md", "c" * (20 * kb))
+        self.write("machine", "orch/roles/reviewer@codex.md", "x" * (25 * kb))
+        self.write("machine", "orch/roles/reviewer@claude-code.md", "y" * (25 * kb))
+        self.write("machine", "orch/roles/reviewer@claude-code--opus.md", "z" * (10 * kb))
+        found = self.resolve("codex", "claude-code", "claude-code--opus")  # 80 KB in all, at most 55 KB for one route
+        self.assertEqual(found["text"].strip(), "c" * (20 * kb))
+        self.write("project", "orch/roles/reviewer.md",
+                   f"<!-- skm-stub:v1 target={T} mode=append -->\n" + "a" * (30 * kb))  # 50 KB common + 25 KB codex
+        with self.assertRaises(stubs.StubError) as caught:
+            self.resolve("codex", "claude-code")
+        self.assertEqual(caught.exception.code, "STUB_TOO_LARGE")
+
     def test_variant_modes_are_independent_of_the_base_and_other_variants(self):
         self.write("machine", "orch/roles/reviewer.md", "base\n")
         slot = "orch/roles/reviewer@codex.md"

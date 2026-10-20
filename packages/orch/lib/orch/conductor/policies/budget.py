@@ -10,9 +10,11 @@ HARD_LIMITS = ("tokens_hard_max", "run_tokens_hard_max")
 
 
 def effective_limit(self, item: Item, key: str) -> int:
-    """An explicit raise (including zero to remove a limit), else the frozen run cap or the piece's options."""
+    """An explicit raise (including zero to remove a limit), else the frozen run cap or the piece's options. A raise of
+    ``tokens_hard_max`` names the piece it was made for and holds for that piece only; an older record without ``item``
+    holds for every piece, as it did when it was written."""
     for change in reversed(self.state.get("limit_raises", [])):
-        if change["key"] == key:
+        if change["key"] == key and (key != "tokens_hard_max" or change.get("item") in (None, item.ref)):
             return change["to"]
     if key == "run_tokens_hard_max" and key in self.run_doc.get("limits_run", {}):
         return self.run_doc["limits_run"][key]["value"]

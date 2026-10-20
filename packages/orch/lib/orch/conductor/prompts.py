@@ -555,8 +555,13 @@ start over: check it against the input, finish what is missing and fix what is w
 
 def interrupted_correction(base_head: Optional[str], paths: list) -> str:
     """The executor continues partial work left by an interrupted invocation."""
-    return ("Your previous attempt was interrupted before it reported. The working tree may hold its partial changes "
-            f"since {base_head}: {', '.join(sorted(paths)[:200])}. "
+    head = "Your previous attempt was interrupted before it reported. "
+    if not paths:
+        since = f" since {base_head}" if base_head else ""
+        return (head + f"The working tree shows no change{since}: start the work inside the same scope; check first "
+                "whether a part of it is already done (committed or outside the tree).")
+    since = f"since {base_head}" if base_head else "(the project is not a git checkout, so no base commit is known)"
+    return (head + f"The working tree may hold its partial changes {since}: {', '.join(sorted(paths)[:200])}. "
             "Continue from them inside the same scope; do not redo finished parts.")
 
 

@@ -175,6 +175,25 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def effective_bytes(parts: list) -> int:
+    """Bytes of the largest text one route can be given: the common parts, then, for the provider whose choice is
+    largest, its ``provider`` variant and its largest ``provider--family`` variant. A route takes at most one variant of
+    each kind, so the variants of other providers never add up; which variant a route takes is the caller's business."""
+    def size(rows: list) -> int:
+        return len("\n".join(row["body"] for row in rows).encode("utf-8"))
+
+    common = [part for part in parts if "variant" not in part]
+    chosen: dict = {}
+    for part in parts:
+        if "variant" in part:
+            chosen.setdefault(part["variant"], []).append(part)
+    worst = size(common)
+    for provider in {variant.partition("--")[0] for variant in chosen}:
+        families = [rows for variant, rows in chosen.items() if variant.startswith(provider + "--")]
+        worst = max(worst, size(common + chosen.get(provider, []) + max(families, key=size, default=[])))
+    return worst
+
+
 def resolve(targets: Iterable[str], project: Optional[os.PathLike] = None, *, env: Optional[Mapping[str, str]] = None,
             layers: Iterable[str] = LAYERS, variants: Optional[Mapping[str, Iterable[str]]] = None) -> dict:
     """``{target: {"text", "parts": [...], "skipped": [...]}}``: the additional instructions of each target. A part:
@@ -228,8 +247,9 @@ def resolve(targets: Iterable[str], project: Optional[os.PathLike] = None, *, en
                 for row in skipped[skipped_start:]:
                     row["variant"] = variant
         text = "\n".join(part["body"] for part in parts if "variant" not in part)
-        if len("\n".join(part["body"] for part in parts).encode("utf-8")) > MAX_TARGET_BYTES:
-            raise StubError("STUB_TOO_LARGE", f"{target}: the joined stubs hold more than {MAX_TARGET_BYTES} bytes")
+        if effective_bytes(parts) > MAX_TARGET_BYTES:
+            raise StubError("STUB_TOO_LARGE", f"{target}: the common stubs and the largest variant hold more than "
+                                              f"{MAX_TARGET_BYTES} bytes")
         out[target] = {"text": text, "parts": [{key: value for key, value in part.items()
                                                if key != "body" or "variant" in part}
                                                for part in parts], "skipped": skipped}

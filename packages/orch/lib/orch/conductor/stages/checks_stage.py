@@ -12,7 +12,7 @@ from typing import Optional
 from orch.conductor import checks as checks_mod, process, prompts
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import disk
+from orch.conductor.infrastructure import clock, disk
 from orch.conductor.progress import human_duration
 
 
@@ -151,6 +151,9 @@ def checks_then_review(self, item: Item, report: dict, checks_no: int, review_no
             if stop.code != "REVIEW_CANCELLED":
                 if computed.exception() is None:  # the checks ran to the end: keep them for the resume
                     self._run_checks(item, checks_no, report, computed=computed)
+                else:  # the checks failed too: the step began outside step(), so it is closed as stopped here
+                    steps[f"checks.{checks_no}"] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
+                    self._save()
                 raise
         finally:
             computed.exception()  # wait for the checks before the pool closes, whatever the review did

@@ -371,5 +371,32 @@ class ResumeReconcileTests(ConductorCase):
         self.assertEqual(1, len(before))
 
 
+    def test_a_stop_of_the_overlapping_review_with_failed_checks_leaves_the_checks_stopped(self):
+        """W2: the checks step began outside step(); a review Stop other than REVIEW_CANCELLED while the checks failed
+        must close it as stopped, or a resume reports a false STAGE_INTERRUPTED."""
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"checks": {"overlap_review": True}}}]}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+
+        def review(run, item, number, rows, pending=False, cancel=None):
+            raise engine.Stop("TOKEN_BUDGET", "spent while reviewing")
+
+        def compute(run, item, number, report, on_result=None):
+            raise engine.Stop("CHECKS_FAILED", "the checks could not run")
+
+        with mock.patch.object(engine.Conductor, "_review", review), \
+                mock.patch.object(engine.Conductor, "_compute_checks", compute):
+            code, _, err = self.run_items("W1")
+        self.assertEqual(1, code, err)
+        steps = read_json(self.run_dir(err) / "state.json")["items"]["W1"]["steps"]
+        self.assertEqual((steps["checks.1"]["status"], steps["checks.1"]["code"]), ("stopped", "TOKEN_BUDGET"))
+
+    def test_the_interruption_note_says_plainly_when_there_is_no_git_or_no_change(self):
+        self.assertNotIn("None", prompts.interrupted_correction(None, ["a.py"]))
+        self.assertIn("not a git checkout", prompts.interrupted_correction(None, ["a.py"]))
+        clean = prompts.interrupted_correction("abc123", [])
+        self.assertIn("shows no change since abc123", clean)
+        self.assertNotIn(": .", clean)
+        self.assertNotIn("None", prompts.interrupted_correction(None, []))
+
 if __name__ == "__main__":
     unittest.main()

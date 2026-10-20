@@ -222,6 +222,31 @@ class RunLeaseTests(unittest.TestCase):
         self.store.create({"items": ["W1"]})
         self.assertEqual("running", json.loads(self.conduct("status", "--run", self.store.run_id, "--json")[1])["status"])
 
+    def test_status_in_a_read_only_context_is_not_a_traceback(self):
+        lock_file = self.directory / "lease.lock"
+        with lease.RunLease(self.directory).acquire("run"):
+            os.chmod(lock_file, 0o444)  # no write access: the probe opens the file read-only and still sees the owner
+            self.addCleanup(os.chmod, lock_file, 0o644)
+            self.assertIs(lease.probe_free(lock_file), False)
+            found = json.loads(self.conduct("status", "--run", self.store.run_id, "--json")[1])
+            self.assertEqual(found["status"], "running")
+        os.chmod(lock_file, 0)  # not even readable: whether a conductor holds the run is unknown
+        self.assertIsNone(lease.probe_free(lock_file))
+        self.assertIsNone(lease.RunLease.held(self.directory))
+        code, out, err = self.conduct("status", "--run", self.store.run_id, "--json")
+        self.assertEqual(code, 0, err)
+        found = json.loads(out)
+        self.assertEqual((found["status"], found.get("lease")), ("running", {"lock": "unavailable"}))
+        self.assertNotIn("Traceback", err)
+
+    def test_an_answer_to_an_item_without_questions_writes_nothing(self):
+        before = sorted(path.name for path in self.directory.iterdir())
+        code, _, err = self.conduct("answer", "--run", self.store.run_id, "--item", "TYPO", "--question", "Q1",
+                                    "--text", "x")
+        self.assertEqual(code, 1)
+        self.assertIn(f"QUESTION_UNKNOWN: TYPO has no questions in run {self.store.run_id}", err)
+        self.assertEqual(before, sorted(path.name for path in self.directory.iterdir()))
+
     def test_questions_lock_timeout_is_a_stop(self):
         lock = lease.FileLock(self.directory / "questions.lock")
         self.assertTrue(lock.acquire())

@@ -11,6 +11,7 @@ from pathlib import Path
 import socket
 import subprocess
 import time
+from typing import Optional
 
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -20,15 +21,16 @@ from orch.conductor.infrastructure.files import write_json
 class FileLock:
     """A flock on the inode currently at ``path``, on a descriptor closed by exec."""
 
-    def __init__(self, path: Path, *, create: bool = True):
-        self.path, self.create, self.fd = Path(path), create, None
+    def __init__(self, path: Path, *, create: bool = True, readonly: bool = False):
+        # ``readonly`` opens the lock file O_RDONLY: flock works on it, so a probe needs no write access
+        self.path, self.create, self.readonly, self.fd = Path(path), create, readonly, None
 
     def acquire(self, blocking: bool = False, timeout=None) -> bool:
         if self.fd is not None:
             raise RuntimeError("lock already acquired")
         deadline = None if timeout is None else time.monotonic() + timeout
         while True:
-            flags = os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW
+            flags = (os.O_RDONLY if self.readonly else os.O_RDWR) | os.O_CLOEXEC | os.O_NOFOLLOW
             fd = os.open(self.path, flags | (os.O_CREAT if self.create else 0), 0o600)
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -61,13 +63,16 @@ class FileLock:
                 os.close(fd)
 
 
-def probe_free(path: Path) -> bool:
-    """Probe on a separate fd without creating a file or changing owner metadata."""
-    lock = FileLock(path, create=False)
+def probe_free(path: Path) -> Optional[bool]:
+    """Probe on a separate read-only fd without creating a file or changing owner metadata: ``True`` free, ``False``
+    held, ``None`` when the lock file cannot be opened (a read-only context that may not even read it)."""
+    lock = FileLock(path, create=False, readonly=True)
     try:
         return lock.acquire()
     except FileNotFoundError:
         return True
+    except OSError:
+        return None
     finally:
         lock.release()
 
@@ -87,8 +92,10 @@ class RunLease:
         self.metadata = self.directory / "lease.json"
 
     @staticmethod
-    def held(directory: Path) -> bool:
-        return not probe_free(Path(directory) / "lease.lock")
+    def held(directory: Path) -> Optional[bool]:
+        """``True`` held, ``False`` free, ``None`` unknown (the lock cannot be opened here)."""
+        free = probe_free(Path(directory) / "lease.lock")
+        return None if free is None else not free
 
     @staticmethod
     def owner(directory: Path) -> dict:

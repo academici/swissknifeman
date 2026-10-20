@@ -172,6 +172,8 @@ def _owner(value: Any) -> str:
     owner = _dict(value)
     if not owner:
         return "-"
+    if owner.get("lock") == "unavailable":  # orch could not probe the lease here (a read-only context)
+        return "unknown (the lease lock is unavailable here)"
     return safe_text(f"pid {owner.get('pid') or 'unknown'} on {owner.get('host') or 'unknown'} "
                      f"since {owner.get('started_at') or 'unknown'} ({owner.get('command') or 'unknown'})")
 

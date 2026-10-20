@@ -84,7 +84,8 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
             self._save()
             for change in changes:
                 self.progress.emit("info", reason_code="LIMIT_RAISED",
-                                   message=f"{change['key']}: {change['from']} -> {change['to']} by invocation")
+                                   message=f"{change['key']}: {change['from']} -> {change['to']} by invocation"
+                                           + (f" for {change['item']}" if change.get("item") else ""))
         state["status"] = "running"
         state["resumes"] = state.get("resumes", 0) + 1
         earlier = state.pop("stop", None)  # the stop answered by this resume is history now
@@ -154,7 +155,8 @@ def limit_raises(self, values) -> list:
         previous = current[key]
         if value != 0 and value <= previous:
             raise Stop("OPTIONS_INVALID", f"--raise-limit {key}={value} must exceed the effective value {previous}, or be 0")
-        changes.append({"key": key, "from": previous, "to": value, "at": clock.utc_now(), "by": "invocation"})
+        changes.append({"key": key, "from": previous, "to": value, "at": clock.utc_now(), "by": "invocation",
+                        **({"item": ref} if key == "tokens_hard_max" else {})})  # a piece limit is raised for its piece
         current[key] = value
     try:
         opts.validate_limits({**item.options["limits"], **current})

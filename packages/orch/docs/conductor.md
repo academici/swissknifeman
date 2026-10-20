@@ -74,8 +74,10 @@ the committed state (`git archive HEAD`) of the orchestrator checkout the comman
 and `bridges`) under `~/.cache/skm-frozen-runs/run-<time>-<pid>`, starts the same command from it with `--project` naming the project, and
 removes the snapshot when the command ends. The install roots (`SKM_ORCH_ROOT`, `AICORE_ROOT`, `PLANNER_ROOT`, `PLANNER_PLAN_PY`) point
 into the snapshot, `PYTHONPATH` is dropped, and the check commands of the pieces do not inherit roots outside the project, so they test the
-project's own code. The work-source plugin stays the one the configuration registers. `resume --frozen` takes a new snapshot: that is how
-a mechanism fix reaches a run stopped on purpose. Outside a checkout that holds the sources the flag is `FROZEN_UNAVAILABLE`.
+project's own code. The snapshot freezes only the code of the conductor: the options and instructions of the run are its
+own records (`options.json`, `instructions.json`) either way, and the work source stays live (the work-source plugin is the
+one the configuration registers, and every claim, brief and register asks the plan as it is now). `resume --frozen` takes a
+new snapshot of the orchestrator from the current commit: that is how a mechanism fix reaches a run stopped on purpose. Outside a checkout that holds the sources the flag is `FROZEN_UNAVAILABLE`.
 
 ## Work outside a plan: `run --input FILE`
 
@@ -625,12 +627,41 @@ committed in the work source).
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and added as `--rw` to its `ro-run.py` guard). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
 | `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs every check in every round), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
 | `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`model` default, `rules`: who chooses it) |
-| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); wall-clock ceilings, off by default: `stage_timeout_s`, `check_timeout_s`; silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
+| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); hard token limits `tokens_hard_max` (of the piece) and `run_tokens_hard_max` (of the run), 0 off (see Hard token limits and resume); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); wall-clock ceilings, off by default: `stage_timeout_s`, `check_timeout_s`; silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
 | `on_blocked` | `stop` or `report` |
 
 `limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
+`limits.skill_tokens_max` (default 5000; 0 off) is the largest text of one skill that an isolated role gets in its prompt (see Skill checks).
+`limits.prompt_core_tokens` (12000), `limits.prompt_supporting_tokens` (30000) and `limits.prompt_retrieval_tokens` (50000) are the
+measures of the classes of prompt blocks (see Prompt manifest); 0 switches the beacon off. They only measure: nothing is cut.
+
+Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its
+model stages, `review.triage`, `max_rounds`, `max_corrections`, `retries_budget`) → the layers of the work source (the
+plan, the phase, the item) → `--options FILE`. A value of a more specific layer wins; `rules` append without repeats;
+`limits` merge by key; `skills` replace the list of each named role; `stages` merge by role, and a layer that names a
+model or a model class replaces both. Every source layer is validated (`OPTIONS_INVALID` names the layer); the numeric
+bounds are `minimum`/`maximum` of the schema itself, so the schema is the one statement of them.
+`<run>/<item>/options.json` records the merged options and, per key, the layer that set it.
+
+**Isolation floor.** A layer of the work source is text a model may have written (an overlay document, an input file),
+so it may tighten the isolation of a run but never loosen it: `instructions.sandbox` only moves along
+`off < prefer < require`, `scope.fence` along `project < plan`, `scope.outside` along `deviation < block`;
+`instructions.sandbox_domains` and `scope.extra_paths` may only repeat or shrink what the layers below allow;
+`instructions.isolate_roles` may only grow. A layer that loosens one of them stops the run with `OPTIONS_UNTRUSTED` (the
+key, the value and the layer below that set it). Only the configuration, the run-policy pack and the invocation
+(`--options`, `--allow-path`, `--fence`) may loosen them; trust is a mark the conductor sets on its own invocation layers,
+never the `source` label a layer carries. Limits, review and checks keys stay free for the plan (it raises
+`check_timeout_s` or picks a scenario without review legitimately). Every `extra_paths` entry is resolved (`~`,
+symlinks) and refused with `OPTIONS_UNSAFE_PATH` when it is the root, a system folder, HOME or an ancestor, the project
+or an ancestor, a secrets folder under HOME (`.ssh`, `.gnupg`, `.aws`, …) or inside `.git`; the canonical path is the one
+the filesystem guard gets and `options.json` records.
+
+The work source hands the layers over in its claim answer (`options`). The planner bridge reads them from
+`orchestration.options` of the plan, the phase and the item, and from orchestration overlay documents (see the
+bridge README) for plan engines that do not know the field yet.
+
 ### Hard token limits and resume
 
 `limits.tokens_hard_max` limits accounted fresh input and output tokens of one piece;
@@ -664,35 +695,6 @@ raise of `tokens_hard_max` also names its `item` (the stopped piece) and holds f
 each raise emits `info` reason `LIMIT_RAISED`. Without a raise, a still-exhausted run immediately stops again
 before a model call. No `--retry` is needed. `BUDGET_EXHAUSTED` remains a retry code, and a provider context-limit
 failure remains `PROVIDER_CONTEXT`, a signal to replan.
-
-`limits.skill_tokens_max` (default 5000; 0 off) is the largest text of one skill that an isolated role gets in its prompt (see Skill checks).
-`limits.prompt_core_tokens` (12000), `limits.prompt_supporting_tokens` (30000) and `limits.prompt_retrieval_tokens` (50000) are the
-measures of the classes of prompt blocks (see Prompt manifest); 0 switches the beacon off. They only measure: nothing is cut.
-
-Layers merge from the general to the specific: defaults → `[orch.conductor]` → the run-policy pack (the routes of its
-model stages, `review.triage`, `max_rounds`, `max_corrections`, `retries_budget`) → the layers of the work source (the
-plan, the phase, the item) → `--options FILE`. A value of a more specific layer wins; `rules` append without repeats;
-`limits` merge by key; `skills` replace the list of each named role; `stages` merge by role, and a layer that names a
-model or a model class replaces both. Every source layer is validated (`OPTIONS_INVALID` names the layer); the numeric
-bounds are `minimum`/`maximum` of the schema itself, so the schema is the one statement of them.
-`<run>/<item>/options.json` records the merged options and, per key, the layer that set it.
-
-**Isolation floor.** A layer of the work source is text a model may have written (an overlay document, an input file),
-so it may tighten the isolation of a run but never loosen it: `instructions.sandbox` only moves along
-`off < prefer < require`, `scope.fence` along `project < plan`, `scope.outside` along `deviation < block`;
-`instructions.sandbox_domains` and `scope.extra_paths` may only repeat or shrink what the layers below allow;
-`instructions.isolate_roles` may only grow. A layer that loosens one of them stops the run with `OPTIONS_UNTRUSTED` (the
-key, the value and the layer below that set it). Only the configuration, the run-policy pack and the invocation
-(`--options`, `--allow-path`, `--fence`) may loosen them; trust is a mark the conductor sets on its own invocation layers,
-never the `source` label a layer carries. Limits, review and checks keys stay free for the plan (it raises
-`check_timeout_s` or picks a scenario without review legitimately). Every `extra_paths` entry is resolved (`~`,
-symlinks) and refused with `OPTIONS_UNSAFE_PATH` when it is the root, a system folder, HOME or an ancestor, the project
-or an ancestor, a secrets folder under HOME (`.ssh`, `.gnupg`, `.aws`, …) or inside `.git`; the canonical path is the one
-the filesystem guard gets and `options.json` records.
-
-The work source hands the layers over in its claim answer (`options`). The planner bridge reads them from
-`orchestration.options` of the plan, the phase and the item, and from orchestration overlay documents (see the
-bridge README) for plan engines that do not know the field yet.
 
 ## Visibility
 

@@ -179,5 +179,29 @@ sudo systemctl enable --now docker.service docker.socket   # only if you disable
 
 A rootless daemon has the authority of its user. If that user is you, a container can still read your files. For an autonomous
 agent that is to run containers itself, the stronger setup is a **dedicated account** that owns the rootless daemon and a
-checkout of its own, with no access to your home. orch does not need this today (the conductor, not the executor, runs the
-container checks), and it does not set it up.
+checkout of its own, with no access to your home. With `access = "open"` (the default) the executor uses the Docker of
+the host with your authority, and the checks stage of the conductor does too; a dedicated account is how to narrow that.
+orch does not set it up.
+
+## Why there is no narrow Docker profile for the executor
+
+A profile that lets a sandboxed executor reach Docker and nothing else was tried and dropped. What follows are
+**observations on codex 0.160.1** (the edufy runs of 2026-10-18…20) with their sources, not guarantees of later versions:
+
+- `workspace-write` keeps `<root>/.git` read-only, recursively and through a gitdir pointer, so a sandboxed executor cannot
+  commit (developers.openai.com/codex/agent-approvals-security).
+- Without network the sandbox refuses `connect()` to unix sockets as well, `/var/run/docker.sock` included
+  (github.com/openai/codex issue 10797).
+- `features.network_proxy.unix_sockets` allows a socket through the network proxy of codex; a direct client such as the
+  docker CLI may still get `EPERM` on `socket(AF_UNIX)` (issue 39140, seen on 0.147.0); on 0.160.1 the docker CLI did not
+  connect.
+- `network_access = true` without the proxy is the direct network: every socket of the user is open, a rootful daemon's
+  included (developers.openai.com/codex/config-reference).
+- The Tecnativa docker-socket-proxy filters only the method and the path of the API, not the body of
+  `POST /containers/create`: `CONTAINERS=1` with `POST=1` lets a container bind-mount `/` of the host, which is root on a
+  rootful daemon (github.com/Tecnativa/docker-socket-proxy, `haproxy.cfg` and README; docs.docker.com/engine/security).
+- Rootless: tools containers that write into a bind mount needed uid 0 inside the container (in edufy
+  `EDUFY_TOOLS_UID=0`). That was a workaround in one environment, not a general rule.
+
+So the choice stays between `open` (the executor works with Docker as your user; rootless keeps that off root) and
+`confined` (no Docker for the executor; the conductor runs the container checks after its report).

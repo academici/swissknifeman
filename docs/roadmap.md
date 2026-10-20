@@ -7,27 +7,13 @@ unexplained without those client/server events.
 
 Directions only; order within a block is rough priority. Work starts on measured need, not in anticipation of it.
 
-## JSON v3 reconciliation with main (2026-10-05)
-
-The feature branch incorporates compatible main changes at `b0f63fd4` while keeping the JSON v3
-state API and lifecycle. Optional `--reviewer` selection is independent of storage; risk does not
-admit review. Executor/reviewer roles, bounded correction and systemic invariant checks are retained.
-The v2 check runner, review packet/ACP jobs, candidate receipts and whole-plan close facade were
-removed with v2 and are not v3 capabilities. Prior v2 field qualification is historical evidence,
-not qualification of the replacement engine. The existing roadmap records remain useful failure
-examples; adapt their behavior only when measured or explicitly prioritized.
-
-Future work: smart orchestration, machine-run checks with stored proof, native reviewer job recovery
-and candidate-bound provenance. Design these against JSON objects and the simple `plan.py` API;
-do not resurrect Markdown state reducers. No implementation of that future orchestrator is included.
-
 ## Near term
 
 - **Session efficiency.** Accumulated tool results, not the resident skill set, dominate Codex session growth; duplicate skill names exist in the umbrella and in Vaulter. Next: safe pilots that trim tool-result carry-over and remove the duplicates.
 - **Provider parity.** Plugin/skill reconcile plus Cursor/Grok field residue after the provider-aware `budget`/`doctor` work. Grok is a managed provider (Codex-shaped hooks/MCP TOML, Cursor-shaped skill discovery); fleet health still requires only Claude/Codex/Cursor.
 - **Own skills migration.** Analyze local projects listed in `.skills-scanner.json`, move the universal part into the registry (via the [scanner](/skiller/guide/scanner) or by hand), connect it back with `skiller connect` / `skiller vendor`, delete local copies.
 - **Vendor skills in packages.** Apply the [publication mechanism](/skiller/guide/vendor-skills) in own open-source packages: `resources/skills/` + ServiceProvider publication + a full-cycle test (`composer install → vendor:publish → agent sees the skill`).
-- **`configs/` content.** Preconfigured subagents (`.claude/agents/`), hooks (auto-format, pre-commit validation), other IDE configs — see the [configs overview](/harness/configs/). Verified `.mcp.json` presets already ship (`context7` + a curated subset), see [Integrations](/harness/integrations/).
+- **`configs/` content.** Hooks (auto-format, pre-commit validation) and other IDE configs — see the [configs overview](/harness/configs/). Verified `.mcp.json` presets (`context7` + a curated subset, see [Integrations](/harness/integrations/)) and versioned subagent packs ([agent-packs](/harness/configs/agent-packs)) already ship.
 
 ## Strategic
 

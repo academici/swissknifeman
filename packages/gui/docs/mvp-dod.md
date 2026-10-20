@@ -1,6 +1,6 @@
 # MVP Definition of Done
 
-Each item of the DoD of the owner's source (`ideas/gui`, "MVP DoD") and each hardening item of the last phase points to
+Each item of the DoD of the owner's source (the GUI notes of the owner, "MVP DoD"; no longer kept as a file) and each hardening item of the last phase points to
 the check that proves it: a test file (path from the repository root) and the name of the test or scenario in it.
 `packages/gui/tests/test_mvp_dod.py` reads this table, checks that every file exists and that its text contains the name.
 

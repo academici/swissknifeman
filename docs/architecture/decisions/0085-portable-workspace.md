@@ -45,7 +45,7 @@ GUI) would compute a second location on its own (audit finding A10).
 
 - One rule tells every reader where plans live; the vectors fail a copy that drifts from it.
 - A plan without a bound checkout (`source_root` is `None`) can be read and edited but not run (`PLAN_SOURCE_UNBOUND`).
-- Deferred: background sync, per-device journal, merge UI, cross-machine run claims, selective sync (`ideas/workspace-audit-deferred.md`).
+- Deferred: background sync, per-device journal, merge UI, cross-machine run claims, selective sync (recorded in the workspace audit of 2026-10, no longer kept as a file).
 
 ## Amendment 2026-10-18: workspaces and codes
 

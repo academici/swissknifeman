@@ -9,6 +9,7 @@ from typing import Optional
 from orch.conductor import questions as questions_mod
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.infrastructure.files import write_json
+from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
 
 
 def settle_pending(self, report: dict, rows: Optional[list]) -> dict:
@@ -96,10 +97,18 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
     if status == "blocked" and not records_only:
         item.state["partial"] = bool(report.get("changed_paths"))
     if (status != "blocked" or records_only) and item.policy.get("git_action") == "commit":
-        # the fallback artifact folder holds local records, never committed (the source keeps what lasts at register)
-        records = set() if self._local_records(item) else {self._relative(item.artifacts) + "/"}
-        paths = sorted(set(report.get("changed_paths", [])) | records | self._research_paths(item))
+        paths = commit_paths(self, item, report)
         self._step(item, "commit", lambda: self._commit(item, paths),
                    verdict=lambda result: " ".join(part for part in (result["outcome"], result.get("sha"),
                                                                      result.get("message")) if part))
     return status
+
+
+def commit_paths(self, item: Item, report: dict) -> list:
+    """The paths a commit of the piece takes: its changes, its artifact folder when the source named one, the research
+    results the source saved. The fallback artifact folder holds local records and is never committed (the source keeps
+    what lasts at register): neither the folder nor a file in it, such as a research result the file source kept there."""
+    records = set() if self._local_records(item) else {self._relative(item.artifacts) + "/"}
+    local = FALLBACK_ARTIFACTS.as_posix() + "/"
+    return sorted(path for path in set(report.get("changed_paths", [])) | records | self._research_paths(item)
+                  if not path.startswith(local))

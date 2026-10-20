@@ -436,16 +436,24 @@ def _supersede_blocked_attempt(fields: dict) -> None:
                   code="START_REFUSED")
 
 
+_PATH_PART = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")  # one folder name: no slash, no leading dot
+_CHECK_ID = re.compile(r"^V[0-9]+$")
+
+
 def _kept_evidence(fields: dict) -> dict:
     """``{V#: @plan/path}``: the evidence of an item of a plan that lives in a workspace, copied into
     ``<plan>/artifacts/<item>/<run>/evidence/`` and declared as outputs of the item, so that it lasts with the plan
-    (the conductor keeps its own copy only as local records). ``{}`` for a plan inside the repository: its artifact
-    folder is committed with the item."""
+    (the conductor keeps its own copy only as local records). ``{}`` for a plan inside the repository (its artifact
+    folder is committed with the item) and whenever registration would refuse what is kept: a run that does not own the
+    item, a result that is not ``done``, or a proof that is not green leave the plan untouched, and the local paths reach
+    the guards of ``register.py``. A repeat of the attempt that already closed the item writes nothing and answers the
+    proof it kept. A folder on the way that is a symlink is refused (``EVIDENCE_PATH_INVALID``) before anything is
+    written."""
     evidence = fields.get("evidence") or {}
-    if not evidence:
+    if not evidence or fields.get("status") != "done":
         return {}
     import brief  # the planner engine is located and imported only when evidence is kept
-    plan_ref, plans_root = fields["plan"], fields.get("plans_root")
+    plan_ref, plans_root, run_id = fields["plan"], fields.get("plans_root"), fields["run_id"]
     item = fields["ref"].split("/", 1)[0]
     try:
         plan = brief.store.load_plan(brief.store.resolve_plan_dir(plan_ref, Path(plans_root) if plans_root else None))
@@ -454,16 +462,47 @@ def _kept_evidence(fields: dict) -> dict:
     project = Path(plan.repo_root).resolve()
     if plan.root.resolve().is_relative_to(project):
         return {}
-    kept = {}
+    if not (_PATH_PART.fullmatch(item) and _PATH_PART.fullmatch(run_id)) or ".." in (item, run_id):
+        raise Blocked("EVIDENCE_PATH_INVALID", f"{item}/{run_id} does not name a folder of the plan")
+    doc = plan.items.get(item) or {}
+    result = doc.get("result") or {}
+    folder = plan.root / "artifacts" / item / run_id / "evidence"
+    if doc.get("status") not in ("todo", "in_progress") and result.get("attempt_id") == fields.get("attempt_id"):
+        return {check_id: _declared_path(plan, folder / f"{check_id}.json", project) for check_id in sorted(evidence)
+                if _CHECK_ID.fullmatch(check_id) and (folder / f"{check_id}.json").is_file()}
+    if doc.get("status") != "in_progress" or (result.get("executor") or {}).get("session") != run_id:
+        return {}  # another session owns the item: register.py refuses the run, and the plan stays as it was
+    proofs = {}
     for check_id, path in sorted(evidence.items()):
         source = Path(path) if Path(path).is_absolute() else project / path
-        if not source.is_file():
-            continue  # the evidence gate names what is missing
-        target = plan.root / "artifacts" / item / fields["run_id"] / "evidence" / f"{check_id}.json"
+        if not _CHECK_ID.fullmatch(check_id) or not source.is_file():
+            return {}  # the evidence gate names what is missing
         body = source.read_bytes()
-        if not (target.is_file() and target.read_bytes() == body):
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(body)
+        try:
+            green = json.loads(body).get("exit") == 0
+        except (ValueError, AttributeError):
+            green = False
+        if not green:
+            return {}  # a red or unreadable proof is refused by the gate: nothing of it is kept
+        proofs[check_id] = body
+    current = plan.root
+    for part in ("artifacts", item, run_id, "evidence"):
+        current = current / part
+        if current.is_symlink():
+            raise Blocked("EVIDENCE_PATH_INVALID", f"{current} is a symlink; evidence is kept only inside the plan")
+    folder.mkdir(parents=True, exist_ok=True)
+    if not folder.resolve().is_relative_to(plan.root.resolve()):
+        raise Blocked("EVIDENCE_PATH_INVALID", f"{folder} leads outside the plan")
+    kept = {}
+    for check_id, body in proofs.items():
+        target = folder / f"{check_id}.json"
+        if not (target.is_file() and not target.is_symlink() and target.read_bytes() == body):
+            try:
+                handle = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o644)
+            except OSError as error:
+                raise Blocked("EVIDENCE_PATH_INVALID", f"{target}: {error.strerror}") from None
+            with os.fdopen(handle, "wb") as out:
+                out.write(body)
         relative = _declared_path(plan, target, project)
         plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "output"],
                   plans_root, code="ARTIFACT_REFUSED")

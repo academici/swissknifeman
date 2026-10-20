@@ -223,7 +223,7 @@ Untrusted, the plugin finds the planner and orch through `planner` and `orch` on
 | register `refused` | `REGISTER_STALE_OWNER`, `REGISTER_EVIDENCE_MISSING`, `REGISTER_EVIDENCE_RED`, the other register codes above, or a refusal of `log`/`finish` (`CHECKS_RED`, `EVIDENCE_INVALID`, …) |
 | protocol error | `INPUT_INVALID` (not the point or an unknown op), a brief refusal of the planner (`PHASE_NOT_DETAILED`, `READ_MISSING`, …), `BRIDGE_PARTNER_UNAVAILABLE`, `AICORE_NOT_FOUND` |
 
-The `brief` answer also names `artifacts_dir` = `<plan dir>/artifacts/<ref>`: the orch conductor keeps the committed
+For a plan in a workspace (no repository folder for its artifacts) `register` keeps the evidence of a `done` result with the plan: it copies each green proof into `<plan>/artifacts/<item>/<run>/evidence/<V#>.json`, declares it as an output of the item and hands the planner `@plan/` paths, and answers them as `evidence`. It writes nothing when the run does not own the item, the result is not `done`, a proof is not green, or the attempt already closed the item (that repeat answers the kept paths); a symlink on the way is `EVIDENCE_PATH_INVALID` before any write. The `brief` answer also names `artifacts_dir` = `<plan dir>/artifacts/<ref>`: the orch conductor keeps the committed
 artifacts of the item there (stage-report, `review-verdict.json`, check evidence); the planner's scoped commit owns
 `artifacts/<item>/**`.
 

@@ -2142,6 +2142,15 @@ class LocalRecordsTests(ConductorCase):
         orch_run = self.state(err)["items"]["W1"]["orch_run"]
         self.assertEqual(register["evidence"], {"V1": f"@plan/artifacts/W1/{orch_run}/evidence/V1.json"})
 
+    def test_no_file_of_the_local_folder_reaches_a_commit(self):
+        from types import SimpleNamespace
+        from orch.conductor.stages import finish
+        local = f"{engine.FALLBACK_ARTIFACTS.as_posix()}/cnd-x/W1"
+        me = SimpleNamespace(_local_records=lambda item: True, _relative=lambda path: str(path),
+                             _research_paths=lambda item: {f"{local}/research-1.json", "plans/T/research/W1-1.json"})
+        paths = finish.commit_paths(me, SimpleNamespace(artifacts=Path(local)), {"changed_paths": ["out/W1.txt"]})
+        self.assertEqual(paths, ["out/W1.txt", "plans/T/research/W1-1.json"])
+
     def test_doctor_warns_when_the_local_artifact_folder_is_not_ignored(self):
         from orch.cli import doctor_checks
         rows = {row["check_id"]: row for row in doctor_checks(self.project)}

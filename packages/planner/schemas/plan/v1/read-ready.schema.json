@@ -360,6 +360,41 @@
             "null"
           ],
           "description": "Batch id, mode, split rule and ready command of a run-items step, else null."
+        },
+        "later": {
+          "type": "array",
+          "description": "Present when the ready items of a recommended batch carry different route templates: the runs that follow this one, one per template.",
+          "items": {
+            "type": "object",
+            "description": "One later run.",
+            "properties": {
+              "items": {
+                "type": "array",
+                "description": "Items of the run.",
+                "items": {
+                  "type": "string",
+                  "description": "Item id."
+                }
+              },
+              "route": {
+                "description": "Minimum route of the run, or null when no item declares one.",
+                "oneOf": [
+                  {
+                    "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route"
+                  },
+                  {
+                    "type": "null",
+                    "description": "No route declared."
+                  }
+                ]
+              }
+            },
+            "required": [
+              "items",
+              "route"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [

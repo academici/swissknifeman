@@ -244,6 +244,51 @@ class BatchHintTests(LifeCase):
                                             f"-> {action.command}")
         self.assertEqual(action.as_dict()["mode"], "recommended")
 
+    def three_templates(self, mode="recommended", depends=()):
+        """P1.1 and P1.3 on one route template (economy/high), P1.2 on another (implementation/xhigh), all ready."""
+        plan = self.load()
+        ops.add_item(plan, "P1", "Third")
+        ops.patch(plan, "P1.3", {**copy.deepcopy(DETAIL), **({"depends_on": list(depends)} if depends else {})})
+        ops.patch(plan, "P1.2", {"depends_on": []})
+        for item, route in (("P1.1", ("economy", "high")), ("P1.2", ("implementation", "xhigh")),
+                            ("P1.3", ("economy", "high"))):
+            ops.patch(plan, item, {"route": {"class": route[0], "effort": route[1]}})
+        ops.set_batches(plan, "P1", [{"id": "B1", "items": ["P1.1", "P1.2", "P1.3"], "mode": mode}])
+
+    def test_a_recommended_batch_of_two_route_templates_is_offered_template_by_template(self):
+        self.three_templates()
+        action = lifecycle.next(self.load())
+        self.assertEqual((action.kind, action.items, action.route), ("run-items", ("P1.1", "P1.3"),
+                                                                       {"class": "economy", "effort": "high"}))
+        self.assertEqual(action.later, (("P1.2",),))
+        self.assertEqual(action.command, f"planner:plan-run {self.load().plan['id']} P1.1 P1.3")
+        self.assertIn("split by route template", action.batch_line)
+        self.assertIn("then P1.2 (implementation/xhigh)", action.batch_line)
+        self.assertEqual(action.as_dict()["later"], [{"items": ["P1.2"],
+                                                      "route": {"class": "implementation", "effort": "xhigh"}}])
+
+    def test_the_split_by_template_starts_without_the_warning_of_a_split_batch(self):
+        self.three_templates()
+        self.assertEqual(self.start("P1.1", "P1.3").warnings, ())
+
+    def test_items_that_depend_on_each_other_stay_in_one_run_under_the_maximum_route(self):
+        self.three_templates(depends=["P1.2"])  # P1.3 (economy/high) waits for P1.2 (implementation/xhigh)
+        action = lifecycle.next(self.load())
+        self.assertEqual((action.items, action.later), (("P1.1",), (("P1.2", "P1.3"),)))
+        self.assertEqual(action.later_routes, ({"class": "implementation", "effort": "xhigh"},))
+
+    def test_a_required_batch_of_two_templates_stays_one_run(self):
+        self.three_templates(mode="required")
+        action = lifecycle.next(self.load())
+        self.assertEqual((action.items, action.later), (("P1.1", "P1.2", "P1.3"), ()))
+        self.assertIn("required: run as one", action.batch_line)
+        self.assertNotIn("later", action.as_dict())
+
+    def test_one_template_stays_one_run_and_names_no_split(self):
+        action = lifecycle.next(self.load())
+        self.assertEqual(action.later, ())
+        self.assertNotIn("later", action.as_dict())
+
     def test_a_required_batch_says_run_as_one(self):
         ops.set_batches(self.load(), "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "required"}])
         self.assertIn("required: run as one", lifecycle.next(self.load()).batch_line)

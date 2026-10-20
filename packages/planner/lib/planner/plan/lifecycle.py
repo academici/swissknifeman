@@ -86,6 +86,40 @@ def route_of(plan: store.Plan, items: Iterable[str]) -> dict | None:
     return value
 
 
+def route_groups(plan: store.Plan, items: Iterable[str]) -> list[list[str]]:
+    """``items`` (in phase order) split into the runs one route template allows. Items that depend on one another stay
+    in one run (a chain runs under the maximum route of its members, as ``route_of`` computes it); runs whose route is
+    the same template (class, effort, provider, model, settings) are one group; items with no route join the first group.
+    A group keeps phase order and every dependency among ``items`` lies inside its group."""
+    items = list(items)
+    parent = {i: i for i in items}
+
+    def find(i: str) -> str:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i in items:
+        for dep in plan.items[i].get("depends_on") or []:
+            if dep in parent:
+                parent[find(i)] = find(dep)
+    chains: dict[str, list[str]] = {}
+    for i in items:
+        chains.setdefault(find(i), []).append(i)
+    keyed: dict[str, list[str]] = {}
+    free: list[str] = []  # chains that declare no route ask nothing of the executor: they ride with the first run
+    for chain in chains.values():  # insertion order: the chain of the first item first
+        route = route_of(plan, chain)
+        if route is None:
+            free += chain
+        else:
+            keyed.setdefault(json.dumps(route, sort_keys=True, ensure_ascii=False), []).extend(chain)
+    groups = list(keyed.values()) or [[]]
+    groups[0] = groups[0] + free
+    return [[i for i in items if i in group] for group in groups]
+
+
 def granted_gates(plan: store.Plan) -> set[str]:
     """Gates with a ``gate_granted`` event whose ``data.gate`` names them."""
     return {event["data"]["gate"] for _, event, _ in store.log_lines(plan.root)
@@ -159,14 +193,21 @@ class Next:
     route: dict | None = None
     command: str | None = None
     mode: str | None = None  # batch mode of a run-items step
+    later: tuple[tuple[str, ...], ...] = ()  # ready items of other route templates: the runs that follow this one
+    later_routes: tuple[dict | None, ...] = ()
 
     @property
     def batch_line(self) -> str | None:
         """What the batch asks for (``run-items`` only): its mode, the rule of a split and the ready command."""
         if self.kind != "run-items" or not self.batch or not self.command:
             return None
-        rule = ("required: run as one" if self.mode == "required"
-                else "recommended: run together, a split needs log --type deviation")
+        if self.later:
+            rest = "; ".join(" ".join(group) + (f" ({route['class']}/{route['effort']})" if route else "")
+                             for group, route in zip(self.later, self.later_routes))
+            rule = f"recommended: split by route template, one run per template; this run first, then {rest}"
+        else:
+            rule = ("required: run as one" if self.mode == "required"
+                    else "recommended: run together, a split needs log --type deviation")
         return f"batch {self.batch} ({rule}) -> {self.command}"
 
     @property
@@ -182,7 +223,9 @@ class Next:
     def as_dict(self) -> dict:
         return {"kind": self.kind, "exact": self.exact, "phase": self.phase, "batch": self.batch,
                 "items": list(self.items), "route": self.route, "launch": self.launch,
-                "command": self.command, "reason": self.reason, "mode": self.mode, "batch_line": self.batch_line}
+                "command": self.command, "reason": self.reason, "mode": self.mode, "batch_line": self.batch_line,
+                **({"later": [{"items": list(group), "route": route}
+                              for group, route in zip(self.later, self.later_routes)]} if self.later else {})}
 
 
 def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa: A001 — dossier §6.1 name
@@ -215,9 +258,14 @@ def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa:
             ready, reason = ready_members(plan, phase_id, batch, granted)
             if not ready:
                 return Next("waiting", reason or f"batch {batch.get('id')}", phase=phase_id, batch=batch.get("id"))
+            # One run is one route template: a recommended batch whose ready items carry different templates is offered
+            # template by template (the first now, the rest as `later`); a required batch stays whole.
+            groups = route_groups(plan, ready) if batch.get("mode") != "required" else [ready]
+            ready, later = groups[0], groups[1:]
             return Next("run-items", phase=phase_id, batch=batch.get("id"), items=tuple(ready),
                         route=route_of(plan, ready), command=f"{COMMAND_NAMESPACE}:plan-run {plan_id} {' '.join(ready)}",
-                        mode=batch.get("mode"))
+                        mode=batch.get("mode"), later=tuple(tuple(group) for group in later),
+                        later_routes=tuple(route_of(plan, group) for group in later))
         if all(status_of(plan, i) in TERMINAL for i in phase_items(plan, phase_id)):  # finished in other trees
             return Next("waiting", f"{phase_id} closure: plan.py reconcile {plan_id}", phase=phase_id)
         return Next("waiting", f"{phase_id} closure (finish the last item)", phase=phase_id)
@@ -589,6 +637,10 @@ def batch_split_warnings(p: store.Plan, phase_id: str, requested: Iterable[str])
         members = batch_members(p, phase_id, batch)
         started = [i for i in members if i in requested]
         left = [i for i in members if i not in requested and status_of(p, i) == "todo"]
+        if started and left and batch.get("mode") != "required":
+            whole = {i for group in route_groups(p, started + left) if set(group) <= set(started) for i in group}
+            if whole == set(started):
+                continue  # a split by route template is the rule of a run, not a deviation
         if started and left:
             rule = "must run as one" if batch.get("mode") == "required" else "is recommended as one run"
             lines.append(f"warn: {', '.join(started)} is in batch {batch.get('id')} [{', '.join(members)}] "

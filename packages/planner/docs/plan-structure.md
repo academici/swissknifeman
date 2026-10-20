@@ -186,6 +186,11 @@ phases close without blockers. `reopen` clears the affected item/phase closure.
 
 Batches cover every phase item exactly once and preserve execution order. Recommended batches
 can be split; required batches are atomic. Explicit phase dependencies express parallel branches.
+A run is made for one route template, so `plan.py next` offers the ready items of a recommended batch template by template:
+the items that share a route (class, effort, provider, model, settings) are the command of this run, and the rest are listed
+as `later` (and in the batch line) for the runs that follow. Items that depend on each other stay in one run under their
+maximum route, items without a route ride with the first run, and a required batch is never split. Starting one such group
+prints no split warning.
 An item may depend on a concrete item of another phase instead of the whole phase, and a phase may declare
 `depends_on: []` and rely on item dependencies; `check` reports a cycle that crosses an item and a phase
 dependency as `dependency_deadlock`. `next --parallel N [--json]` is a read-only ready set across the whole

@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
 
-from orch.conductor import contract, heal, scope  # noqa: E402
+from orch.conductor import contract, engine, heal, scope  # noqa: E402
 
 
 def report(**extra):
@@ -30,6 +30,17 @@ class StageReportTests(unittest.TestCase):
         self.assertEqual(fixed["status"], "blocked")
         self.assertIn("needs the owner's key", fixed["open_issues"][-1]["text"])
         self.assertEqual(problems, [])
+
+    def test_done_pending_checks_is_a_status_and_needs_a_pending_issue(self):
+        pending = {"text": "V1 needs docker", "kind": "pending", "impact": "unproven", "next": "the conductor runs it"}
+        fixed, notes, problems = self.healed(report(status="Done pending checks", open_issues=[pending]))
+        self.assertEqual((fixed["status"], problems, notes), ("done_pending_checks", [], []))
+        self.assertEqual(engine.report_problems(fixed), [])
+        fixed, notes, problems = self.healed(report(status="done_pending_checks"))
+        self.assertEqual((fixed["status"], problems), ("done", []))
+        self.assertTrue(any("done_pending_checks named no pending issue" in note for note in notes), notes)
+        self.assertEqual(engine.report_problems(report(status="done_pending_checks")),
+                         ["/status: done_pending_checks needs a pending issue naming the checks that could not run"])
 
     def test_forms_of_checks_and_issues_are_mended(self):
         fixed, _, problems = self.healed(report(

@@ -6,11 +6,12 @@
   "type": "object",
   "properties": {
     "status": {
-      "description": "done, done with recorded deviations, or blocked.",
+      "description": "done, done with recorded deviations, done but with acceptance checks the executor could not run in its environment (the conductor runs them and the piece closes on their result), or blocked.",
       "type": "string",
       "enum": [
         "done",
         "done_with_deviations",
+        "done_pending_checks",
         "blocked"
       ]
     },

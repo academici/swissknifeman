@@ -215,7 +215,12 @@ checks outside the executor's sandbox. With the default `checks.executor_runs_ch
 and expectation but carries no command (`withheld`), tells the executor not to start containers or call docker, and says that
 a proof its sandbox cannot give is an `open_issues` entry of kind `pending`, not a `blocked` escalation. With `true` the
 executor gets the commands and runs them itself. A gap that needs the owner is `blocked` with one `escalation` issue per
-missing thing; `done_with_deviations` needs a `deviation` issue.
+missing thing; `done_with_deviations` needs a `deviation` issue. `done_pending_checks` is for work that is complete while
+acceptance checks could not run in the executor's environment (a container, the docker socket, `.git`, the network): it needs a
+`pending` issue naming them. It is not an escalation and never a registered status: the checks stage runs the checks as after
+any `done`, red ones are corrected or block the piece as usual, and when they are green the piece is registered `done` with
+the evidence of the checks and one `note` issue instead of the `pending` ones. When the conductor ran no check at all
+(every one skipped by `checks.cadence` or `checks.kinds`) nothing proves the work, and the piece is blocked with `CHECKS_NOT_RUN`.
 A `deviation` issue carries `class` (`write_set`, `spec_mismatch`, `test_env`, `docs`, `dependency`, `environment`,
 `other`), `impact` and `outcome` (`accepted`, `follow_up`, `owner_decision`); `severity`, `auto_fixable` and `evidence`
 are optional and `next` stays free text. Healing fills a missing `class` with `other`, `outcome` with `accepted` and

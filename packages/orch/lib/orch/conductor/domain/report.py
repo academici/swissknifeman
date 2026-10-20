@@ -71,6 +71,8 @@ def report_problems(report: dict) -> list:
     issues = []
     if report["status"] == "done_with_deviations" and "deviation" not in kinds:
         issues.append("/status: done_with_deviations needs a deviation issue")
+    if report["status"] == "done_pending_checks" and "pending" not in kinds:
+        issues.append("/status: done_pending_checks needs a pending issue naming the checks that could not run")
     if report["status"] == "blocked" and "escalation" not in kinds:
         issues.append("/status: blocked needs an escalation issue naming what is missing")
     if report["status"] != "blocked" and "escalation" in kinds:

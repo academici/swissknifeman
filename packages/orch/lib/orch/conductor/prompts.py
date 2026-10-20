@@ -35,7 +35,7 @@ _STAGE_REPORT = """\
 End your answer with exactly one fenced block tagged `stage-report` holding one JSON object and nothing else:
 
 ```stage-report
-{"status": "done | done_with_deviations | blocked",
+{"status": "done | done_with_deviations | done_pending_checks | blocked",
  "summary": "what changed and why",
  "changed_paths": ["repository-relative path"],
  "checks_run": [{"id": "V1", "cmd": "the command as written", "exit": 0}],
@@ -62,7 +62,8 @@ frontier"}`. It is advice only: the conductor decides about a review itself; omi
 `scope.write_set`, credentials, an external resource) or an `escalation` condition occurs; then list each missing
 thing as an `escalation` issue; find all of them before you stop (a changed file's tests, generated files, registries, docs), so one
 escalation names every missing path and the plan is widened once. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`
-issue. Every `checks_run` entry has exactly the keys shown (`id`, `cmd`, `exit`) or, for a manual procedure,
+issue. `done_pending_checks` means the work is complete but acceptance checks could not run in your environment: it needs a `pending`
+issue naming them, and the conductor runs the checks and closes the piece on their result. Every `checks_run` entry has exactly the keys shown (`id`, `cmd`, `exit`) or, for a manual procedure,
 `id`, `procedure`, `verdict` (`pass | fail`); no other keys, no entry for a check that did not run, put notes in
 `open_issues`. List in `checks_run` only checks that really ran; the conductor runs every acceptance check again itself.
 """
@@ -271,7 +272,7 @@ def _conductor_checks(input_doc: dict) -> str:
     """The acceptance checks the conductor itself runs after the report, by id and expectation and never by command: the
     executor does not run them (a full run of them by the executor measured 30–50% of its step), and a command it
     cannot run in its sandbox (a container, a socket, a credential) must not tempt it into stopping for it. What it
-    cannot prove stays ``pending`` for the conductor; it is not an escalation."""
+    cannot prove is reported ``done_pending_checks`` for the conductor to run; it is not an escalation."""
     checks = (input_doc.get("acceptance") or {}).get("checks") or []
     if not checks:
         return ""
@@ -281,8 +282,8 @@ def _conductor_checks(input_doc: dict) -> str:
               "compose: prove your change with what runs without them (single test files of what you changed, a syntax "
               "check, `git diff --check`). A proof that needs something your sandbox does not give (a container, the "
               "docker socket, write access to `.git`, the network, a credential) is not a blocker: finish the work, name "
-              "each check you could not run in an `open_issues` entry of kind `pending` and keep `checks_run` to what "
-              "really ran. Report `blocked` only for a gap that needs the owner.\n")
+              "each check you could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` "
+              "and keep `checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n")
 
 
 DEVIATION_FIX = "Fix the deviation named in the section above: change only what its evidence names, inside the write set."

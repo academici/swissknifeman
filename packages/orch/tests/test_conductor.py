@@ -158,6 +158,58 @@ class ConductorCase(unittest.TestCase):
         return end["outcome"], end.get("reason_code")
 
 
+PENDING = {"text": "V1 needs the container runtime, which the executor sandbox does not give", "kind": "pending",
+           "impact": "V1 is unproven by the executor", "next": "the conductor runs V1"}
+
+
+class DonePendingChecksTests(ConductorCase):
+    """``done_pending_checks``: the executor finished the work but could not run the checks in its sandbox; the checks stage
+    runs them and the piece closes on their result, not on an escalation of the executor."""
+
+    def pending(self, ref="W1", **extra) -> dict:
+        return report(ref, status="done_pending_checks", checks_run=[], open_issues=[PENDING], **extra)
+
+    def test_the_conductor_runs_the_checks_and_the_piece_is_registered_done(self):
+        self.script({"executor": [{"write": {"out/W1.txt": "ok\n"}, "result": self.pending()}], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        stages = [line["stage"] for line in self.lines(err) if line["event"] == "stage.end"]
+        self.assertIn("checks.1", stages)
+        self.assertEqual(self.calls("executor"), 1)  # no correction, no escalation
+        registered = self.source()["items"]["W1"]
+        self.assertEqual(registered["status"], "done")  # the gate of the source demanded the evidence of V1
+        issues = registered["report"]["open_issues"]
+        self.assertFalse([issue for issue in issues if issue["kind"] == "pending"], issues)
+        self.assertEqual([issue["text"] for issue in issues if issue["kind"] == "note"],
+                         ["checks the executor could not run were run by the conductor: V1 green"])
+        self.assertEqual(len(self.source()["commits"]), 1)
+
+    def test_red_checks_after_it_are_corrected_like_any_red_checks(self):
+        self.script({"executor": [{"result": self.pending()},
+                                  {"write": {"out/W1.txt": "ok\n"}, "result": report("W1")}], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+    def test_checks_that_stay_red_block_the_piece_with_the_checks_not_the_executor_report(self):
+        self.script({"executor": [{"result": self.pending()}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        item = self.source()["items"]["W1"]
+        self.assertEqual(item["status"], "blocked")
+        self.assertIn("CHECKS_RED", item["report"]["open_issues"][-1]["text"])
+
+    def test_a_piece_whose_checks_were_all_skipped_is_not_closed_on_the_word_of_the_executor(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"checks": {"cadence": ["phase"]}}}]}})
+        self.script({"executor": [{"write": {"out/W1.txt": "ok\n"}, "result": self.pending()}], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        item = self.source()["items"]["W1"]
+        self.assertEqual(item["status"], "blocked")
+        self.assertIn("CHECKS_NOT_RUN", item["report"]["open_issues"][-1]["text"])
+
+
 class HappyPathTests(ConductorCase):
     def test_the_executor_recommendation_stays_in_the_stage_report_and_out_of_the_register_body(self):
         advice = {"recommended": True, "reason_codes": ["schema_changed"], "focus": ["readers of stage-report"]}

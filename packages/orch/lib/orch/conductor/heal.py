@@ -6,7 +6,7 @@ mismatch that has exactly one honest reading is mended here, and every mend is s
 stage-report carries them as a ``note`` issue.
 
 What is never healed: a status is never raised (``blocked`` stays blocked; only an impossible ``done_with_deviations``
-without a deviation drops to ``done``), ``changed_paths`` are not touched (the conductor reads them from git), no check,
+without a deviation, or an impossible ``done_pending_checks`` without a pending issue, drops to ``done``), ``changed_paths`` are not touched (the conductor reads them from git), no check,
 verdict or finding is invented, and a triage that leaves a finding out is not completed — those go to the repair and,
 failing that, to a repeat of the role.
 """
@@ -22,7 +22,7 @@ DEVIATION_OUTCOMES = ("accepted", "follow_up", "owner_decision")
 ISSUE_SEVERITIES = ("low", "medium", "high", "critical")
 ISSUE_FIELDS = ("text", "kind", "impact", "next", "class", "severity", "outcome", "auto_fixable", "evidence")
 NO_IMPACT = "not stated by the executor"
-STATUSES = ("done", "done_with_deviations", "blocked")
+STATUSES = ("done", "done_with_deviations", "done_pending_checks", "blocked")
 VERDICTS = ("GREEN", "ATTENTION", "RED")
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")
 CONFIDENCES = ("high", "medium", "low")
@@ -189,6 +189,9 @@ def _stage_report(doc: dict, notes: list) -> dict:
     if doc.get("status") == "done_with_deviations" and "deviation" not in kinds:
         doc["status"] = "done"
         notes.append("status done_with_deviations named no deviation issue; it is done")
+    if doc.get("status") == "done_pending_checks" and "pending" not in kinds:
+        doc["status"] = "done"
+        notes.append("status done_pending_checks named no pending issue; it is done")
     if doc.get("status") != "blocked" and "escalation" in kinds:
         for issue in issues:
             if isinstance(issue, dict) and issue.get("kind") == "escalation":

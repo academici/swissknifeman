@@ -72,7 +72,7 @@ sequenceDiagram
   loop executor rounds
     C->>E: input, context map, rules, correction package
     E->>G: edit files
-    E-->>C: stage-report (done | done_with_deviations | blocked)
+    E-->>C: stage-report (done | done_with_deviations | done_pending_checks | blocked)
     C->>G: changed paths (git, not the report)
     C->>K: acceptance and impact checks
     K-->>C: exit codes + evidence files

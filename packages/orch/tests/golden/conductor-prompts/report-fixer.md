@@ -20,7 +20,7 @@ A role finished its work and ended its answer with a result block that does not 
 End your answer with exactly one fenced block tagged `stage-report` holding one JSON object and nothing else:
 
 ```stage-report
-{"status": "done | done_with_deviations | blocked",
+{"status": "done | done_with_deviations | done_pending_checks | blocked",
  "summary": "what changed and why",
  "changed_paths": ["repository-relative path"],
  "checks_run": [{"id": "V1", "cmd": "the command as written", "exit": 0}],
@@ -47,7 +47,8 @@ frontier"}`. It is advice only: the conductor decides about a review itself; omi
 `scope.write_set`, credentials, an external resource) or an `escalation` condition occurs; then list each missing
 thing as an `escalation` issue; find all of them before you stop (a changed file's tests, generated files, registries, docs), so one
 escalation names every missing path and the plan is widened once. Never guess past such a gap. `done_with_deviations` needs at least one `deviation`
-issue. Every `checks_run` entry has exactly the keys shown (`id`, `cmd`, `exit`) or, for a manual procedure,
+issue. `done_pending_checks` means the work is complete but acceptance checks could not run in your environment: it needs a `pending`
+issue naming them, and the conductor runs the checks and closes the piece on their result. Every `checks_run` entry has exactly the keys shown (`id`, `cmd`, `exit`) or, for a manual procedure,
 `id`, `procedure`, `verdict` (`pass | fail`); no other keys, no entry for a check that did not run, put notes in
 `open_issues`. List in `checks_run` only checks that really ran; the conductor runs every acceptance check again itself.
 

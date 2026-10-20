@@ -336,3 +336,4 @@ class Conductor:
     _close = close.close
     _closer_named = staticmethod(close.closer_named)
     _finish = finish.finish
+    _settle_pending = finish.settle_pending

@@ -11,7 +11,28 @@ from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.infrastructure.files import write_json
 
 
+def settle_pending(self, report: dict, rows: Optional[list]) -> dict:
+    """``done_pending_checks`` is what the executor says while the checks it could not run still wait for the conductor;
+    it is never registered. The piece closes on the result of the checks: they are green here (red ones were corrected
+    or blocked the piece before), so the report becomes ``done`` and its ``pending`` issues are replaced by one note that
+    names who proved what. When the conductor ran no check at all (every one skipped or none declared) nothing proves
+    the work the executor could not prove: the piece is blocked, not closed on the executor's word."""
+    if report["status"] != "done_pending_checks":
+        return report
+    ran = [row["id"] for row in rows or [] if not row.get("skipped")]
+    skipped = [row["id"] for row in rows or [] if row.get("skipped")]
+    if not ran:
+        return self._blocked(report, "CHECKS_NOT_RUN", "the executor reported done_pending_checks, but the conductor ran no "
+                             "acceptance check, so nothing proves the work; run the checks, or close the piece by hand "
+                             "with its evidence")
+    text = (f"checks the executor could not run were run by the conductor: {', '.join(ran)} green"
+            + (f"; not run for this piece (skipped by cadence or kind): {', '.join(skipped)}" if skipped else ""))
+    issues = [issue for issue in report.get("open_issues", []) if issue["kind"] != "pending"]
+    return dict(report, status="done", open_issues=issues + [{"text": text, "kind": "note", "impact": "none", "next": "none"}])
+
+
 def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
+    report = self._settle_pending(report, rows)
     changed = self._changed(item)
     if changed or any("changed" in (step.get("result") or {}) for key, step in done_steps(item.state.get("steps", {})).items()
                       if key.startswith("executor.") and isinstance(step.get("result"), dict)):

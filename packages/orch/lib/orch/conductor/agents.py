@@ -10,7 +10,7 @@ an id ``agent-<run suffix>-<n>`` and the folder ``<run>/<item>/agents/<agent_run
 - ``result.json`` is written when it ends, however it ends: ``exit``, ``error`` (an ``error/v1`` document when the failure was
   classified, else ``{code, message}`` of the stop), ``decisions`` (of ``retry.decide``), ``duration_s``, ``stream`` (relative
   path) and ``lingered``;
-- ``usage.json``: ``input``, ``cached``, ``output`` tokens of all the attempts of the agent run.
+- ``usage.json``: ``input``, ``cached``, ``output`` tokens of all the attempts and ``usage_complete`` (true/false/null).
 
 The prompts and the streams stay where they were (``prompts/``, ``streams/``); the catalog only points at them.
 A folder without ``result.json`` is a role still running, or one that died with the process.
@@ -63,7 +63,7 @@ def finish(handle: dict, *, exit_code: Optional[int], error: Optional[dict], dec
     if error:
         result["error"] = error
     _write(handle["directory"] / "result.json", result)
-    _write(handle["directory"] / "usage.json", handle["usage"])
+    _write(handle["directory"] / "usage.json", {**handle["usage"], "usage_complete": handle.get("usage_complete")})
 
 
 def read(item_directory: Path) -> list:

@@ -636,10 +636,26 @@ run with the id `agent-<run suffix>-<n>` (`n` from `state.agents`, kept across a
 `<run>/<item>/agents/<agent_run_id>/`: `request.json` (`role`, `route`, `step`, `attempt`, `prompt` and `causation`, `started_at`;
 `parent_agent_run_id` for the report-fixer, which names the role it mended), `result.json` (`exit`, `error` — an `error/v1`
 document when the failure was classified, else the code of the stop —, `decisions` of `retry.decide`, `duration_s`, `stream`,
-`lingered`; written however the run ends) and `usage.json` (`input`, `cached`, `output` of all its attempts, the report-fixer
-apart from the role it mended). The prompts and the streams stay in `prompts/` and `streams/`; the folder points at them. A
+`lingered`; written however the run ends) and `usage.json` (`input`, `cached`, `output` of all its attempts and
+`usage_complete`, the report-fixer apart from the role it mended). The prompts and the streams stay in `prompts/` and `streams/`; the folder points at them. A
 folder without `result.json` is a role still running or one that died with the process. The `stage.end` lines and the
 `STAGE_SLOW`/`STAGE_IDLE` beacons carry the optional field `agent`; the observer report lists the tokens by agent run.
+
+Usage is normalized by the provider's payload shape. With an integer `cached_input_tokens` (Codex),
+`input = max(0, input_tokens - cached_input_tokens)` and `cached = cached_input_tokens`: Codex's input already includes
+cache reads. Otherwise (Claude/Grok), `input = input_tokens + cache_creation_input_tokens` and
+`cached = cache_read_input_tokens`. `output = output_tokens` in both forms; booleans, negative values and non-integers
+are ignored. Fresh tokens are `input + output`; cache reads stay separate. Item and run totals use receipts keyed by
+agent id and attempt stream (`state.items[ref].usage_by_agent`), so reading the same receipt again does not add tokens.
+
+Each attempt records `usage_complete`: `true` when its JSONL stream supplied terminal `result`/`turn.completed` usage
+with nonzero fresh input or output, `false` when a running JSONL attempt has no terminal usage or reports 0/0, and
+`null` for text transport (scout) or a process that never started. Partial assistant-message usage is still counted
+after a timeout, cancellation or an exit without a result, but it does not make the attempt complete. An agent's
+`usage.json` is `false` if any of its attempts was incomplete, otherwise `true` if measured and `null` if none was
+metered. The first incomplete attempt sets `state.items[ref].usage_incomplete = true` and emits one `info` event with
+reason code `BUDGET_UNMETERED`: `<ref>: a model attempt reported no usage; token limits cannot see it`.
+This flag survives later measured attempts and resume. Text transport alone does not mark the item incomplete.
 
 ### Stubs: additional instructions of the roles
 

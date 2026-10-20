@@ -17,6 +17,7 @@ from orch.conductor.domain.report import json_block
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import write_json
+from orch.conductor.policies.budget import unmetered
 from orch.conductor.progress import human_duration
 from orch.settings import ORCH_ROOT
 
@@ -157,7 +158,7 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
                                idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
                                on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
                                agent_directory=handle["directory"])
-        self._tokens(item, run.usage)
+        self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
         self._keep_session(item, role, route, run)
         trail["api_retries"] += run.api_retries
         handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=handle["lingered"] or run.lingered)
@@ -251,7 +252,7 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
             run = process.run_role(self._role_argv(item, "report-fixer", route), prompt, transport=route["transport"],
                                    cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,
                                    env=self._role_env(item, "report-fixer", route), agent_directory=handle["directory"])
-            self._tokens(item, run.usage)
+            self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
             handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
         except BaseException as error:
             self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})
@@ -297,14 +298,27 @@ def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
     return tick
 
 
-def add_tokens(self, item: Item, usage: dict) -> None:
+def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] = None,
+               attempt: Optional[str] = None) -> None:
+    """Count each agent's attempts once, including retries; replaying a receipt replaces its contribution."""
     handle = getattr(self._local, "agent", None)
+    delta = {key: int(usage.get(key, 0)) for key in agents.USAGE_KEYS}
     if handle is not None:
-        agents.add_usage(handle, usage)
+        attempts = item.state.setdefault("usage_by_agent", {}).setdefault(handle["id"], {})
+        receipt = {**delta, "usage_complete": usage_complete}
+        previous = attempts.get(attempt or handle["id"], {})
+        delta = {key: receipt[key] - previous.get(key, 0) for key in agents.USAGE_KEYS}
+        attempts[attempt or handle["id"]] = receipt
+        handle["usage"] = {key: sum(row[key] for row in attempts.values()) for key in agents.USAGE_KEYS}
+        completeness = [row["usage_complete"] for row in attempts.values()]
+        handle["usage_complete"] = (False if False in completeness else True if True in completeness else None)
     for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
                    item.state.setdefault("tokens", {"input": 0, "output": 0}), self._step_tokens):
-        for key in ("input", "cached", "output"):
-            bucket[key] = bucket.get(key, 0) + int(usage.get(key, 0))
+        for key in agents.USAGE_KEYS:
+            bucket[key] = bucket.get(key, 0) + delta[key]
+    self._save()
+    if usage_complete is False:
+        unmetered(self, item)
 
 
 def relative(self, path: Path) -> str:

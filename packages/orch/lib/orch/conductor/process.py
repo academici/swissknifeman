@@ -53,6 +53,7 @@ class RoleRun:
     api_retries: int = 0  # how many times the provider CLI itself repeated the request (claude ``api_retry`` events)
     denials: list = field(default_factory=list)  # ``[{tool_name}]``: tool calls refused without a prompt (never their input)
     reset_at: Optional[int] = None  # unix time the provider itself gave for the end of a limit (claude ``resetsAt``), as seen
+    usage_complete: Optional[bool] = None  # text or not started: None; jsonl: terminal usage with fresh tokens
 
 
 def available(argv: list) -> bool:
@@ -78,14 +79,18 @@ def _usage(found: object) -> dict:
     if not isinstance(found, dict):
         return {"input": 0, "cached": 0, "output": 0}
     def count(*keys: str) -> int:
-        return sum(found[key] for key in keys if isinstance(found.get(key), int))
+        return sum(found[key] for key in keys if _is_int(found.get(key)) and found[key] >= 0)
     # ``cached`` (cache reads) is reported apart: it re-counts the whole context each turn and is not spend
+    cached = found.get("cached_input_tokens")
+    if _is_int(cached):  # Codex/OpenAI includes cache reads in input_tokens; invalid counts are ignored
+        cached = count("cached_input_tokens")
+        return {"input": max(0, count("input_tokens") - cached), "cached": cached, "output": count("output_tokens")}
     return {"input": count("input_tokens", "cache_creation_input_tokens"),
-            "cached": count("cache_read_input_tokens", "cached_input_tokens"), "output": count("output_tokens")}
+            "cached": count("cache_read_input_tokens"), "output": count("output_tokens")}
 
 
 def parse_stream(transport: str, data: str) -> dict:
-    """``{text, session, model, usage, is_error, signals, denials}`` of a captured stdout.
+    """``{text, session, model, usage, usage_complete, is_error, signals, denials}`` of a captured stdout.
 
     ``is_error`` rests on ``result.is_error`` whatever its ``subtype`` (``success`` can come with ``is_error: true``)
     or on a codex ``turn.failed``; codex ``error`` events are notifications, not a failure. ``signals`` holds only the
@@ -95,9 +100,9 @@ def parse_stream(transport: str, data: str) -> dict:
     """
     if transport == "text":
         return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
-                "is_error": False, "signals": {}, "denials": []}
+                "usage_complete": None, "is_error": False, "signals": {}, "denials": []}
     found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False,
-             "signals": {}, "denials": []}
+             "usage_complete": False, "signals": {}, "denials": []}
     denied: dict = {}  # tool_use_id -> tool name, in order of first sight
     signals, retry_status, retries, last = found["signals"], None, 0, {}  # last: the final terminal event only
     messages = []
@@ -120,6 +125,7 @@ def parse_stream(transport: str, data: str) -> dict:
             found["text"] = doc.get("result") if isinstance(doc.get("result"), str) else found["text"]
             found["session"] = doc.get("session_id") or found["session"]
             found["usage"] = _usage(doc.get("usage"))
+            found["usage_complete"] = bool(found["usage"]["input"] or found["usage"]["output"])
             found["is_error"] = bool(doc.get("is_error"))
             last = {"terminal": True}
             if found["is_error"]:
@@ -142,6 +148,7 @@ def parse_stream(transport: str, data: str) -> dict:
                 signals["limit_resets_at"] = int(reset)
         elif kind == "turn.failed":  # codex: the only fatal outcome; there is no structured code, only the text
             found["is_error"] = True
+            found["usage_complete"] = False
             last = {"terminal": True}
             error = doc.get("error")
             if isinstance(error, dict) and isinstance(error.get("message"), str):
@@ -157,6 +164,7 @@ def parse_stream(transport: str, data: str) -> dict:
             last = {"terminal": True}
             usage = _usage(doc.get("usage"))
             found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
+            found["usage_complete"] = bool(usage["input"] or usage["output"])
     found["denials"] = [{"tool_name": name} for name in denied.values()]
     if not found["text"] and messages:
         found["text"] = messages[-1]
@@ -445,14 +453,19 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
             _reap_group(process.pid)  # the role ended; what it started in the background must not outlive it
         elif stopped:
             _kill(process)
-            usage = partial_usage(raw_path.read_text(encoding="utf-8", errors="replace")) if transport == "jsonl" else None
+            data = raw_path.read_text(encoding="utf-8", errors="replace")
+            parsed = parse_stream(transport, data)
+            usage = partial_usage(data) if transport == "jsonl" else parsed["usage"]
             return RoleRun(exit=process.returncode, error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
                            duration_s=time.monotonic() - started, raw=str(raw_path),
-                           **({"usage": usage} if usage else {}))
+                           usage=usage, usage_complete=parsed["usage_complete"])
     duration = time.monotonic() - started
-    parsed = parse_stream(transport, raw_path.read_text(encoding="utf-8", errors="replace"))
+    data = raw_path.read_text(encoding="utf-8", errors="replace")
+    parsed = parse_stream(transport, data)
+    usage = partial_usage(data) if transport == "jsonl" and not parsed["usage_complete"] else parsed["usage"]
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
-                  usage=parsed["usage"], duration_s=duration, raw=str(raw_path), lingered=lingered,
+                  usage=usage, duration_s=duration, raw=str(raw_path), lingered=lingered,
+                  usage_complete=parsed["usage_complete"],
                   api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"],
                   reset_at=parsed["signals"].get("limit_resets_at"))
     if lingered:

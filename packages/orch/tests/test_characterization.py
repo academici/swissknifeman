@@ -89,7 +89,10 @@ class CharacterizationCase(ConductorCase):
         paths.update(resolved)
         journal = [normalize(line, paths) for line in json.loads("[" + ",".join(
             (run / "progress.jsonl").read_text(encoding="utf-8").splitlines()) + "]")]
-        state = normalize(json.loads((run / engine.STATE_FILE).read_text(encoding="utf-8")), paths)
+        state_doc = json.loads((run / engine.STATE_FILE).read_text(encoding="utf-8"))
+        for item in state_doc.get("items", {}).values():
+            item.pop("usage_by_agent", None)  # replay bookkeeping; totals are covered here, receipts in test_usage_normalization
+        state = normalize(state_doc, paths)
         compare(self, name, {"progress": journal, "state": state})
 
 

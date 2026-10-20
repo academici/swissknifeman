@@ -327,3 +327,70 @@ class ActivityAndUsageTests(unittest.TestCase):
     def test_a_role_without_children_is_said_to_wait_on_its_model(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertIn("no child process", process.activity(999999, Path(tmp) / "none"))
+
+
+class UsageCompletenessProcessTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.directory = Path(tmp.name)
+        patcher = mock.patch.object(process, "POLL_S", 0.05)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def run_stream(self, stream, *, transport="jsonl", sleep=False, **kwargs):
+        code = "import sys,time; sys.stdin.read(); print(" + repr(stream) + ", flush=True)"
+        if sleep:
+            code += "; time.sleep(30)"
+        return process.run_role([sys.executable, "-c", code], "prompt", transport=transport,
+                                cwd=self.directory, raw_path=self.directory / "stream.jsonl",
+                                timeout_s=0.3 if sleep else 0, **kwargs)
+
+    def test_completed_codex_and_claude_streams_report_complete_usage(self):
+        for provider in ("codex", "claude", "grok"):
+            with self.subTest(provider=provider):
+                stream = (ROOT / "tests/fixtures/usage" / (provider + ".jsonl")).read_text(encoding="utf-8")
+                run = self.run_stream(stream)
+                self.assertGreater(run.duration_s, 0)
+                self.assertIs(run.usage_complete, True)
+                self.assertEqual(run.usage, process.parse_stream("jsonl", stream)["usage"])
+
+    def test_no_result_or_zero_terminal_usage_is_incomplete(self):
+        for stream in ('{"type":"thread.started"}', '{"type":"result","result":"done"}',
+                       '{"type":"result","result":"done","usage":{"input_tokens":0,"output_tokens":0}}'):
+            with self.subTest(stream=stream):
+                run = self.run_stream(stream)
+                self.assertGreater(run.duration_s, 0)
+                self.assertIs(run.usage_complete, False)
+
+    def test_text_and_a_process_that_never_started_have_unknown_usage(self):
+        self.assertIsNone(self.run_stream("scout map", transport="text").usage_complete)
+        run = process.run_role([str(self.directory / "missing")], "prompt", transport="jsonl",
+                               cwd=self.directory, timeout_s=0, raw_path=self.directory / "missing.jsonl")
+        self.assertEqual((run.error, run.duration_s, run.usage_complete), ("PROVIDER_UNAVAILABLE", 0, None))
+
+    def test_partial_message_usage_survives_timeout_or_exit_but_is_incomplete(self):
+        message = json.dumps({"type": "assistant", "message": {"id": "m1", "usage": {
+            "input_tokens": 10, "cache_creation_input_tokens": 2, "cache_read_input_tokens": 90, "output_tokens": 3}}})
+        # Repeated assistant events for the same message do not add the message twice.
+        for sleep in (True, False):
+            with self.subTest(sleep=sleep):
+                run = self.run_stream(message + "\n" + message, sleep=sleep)
+                self.assertEqual(run.error, "TIMEOUT" if sleep else "ROLE_OUTPUT_EMPTY")
+                self.assertEqual(run.usage, {"input": 12, "cached": 90, "output": 3})
+                self.assertIs(run.usage_complete, False)
+
+    def test_cancellation_without_usage_is_incomplete(self):
+        import threading
+        cancel = threading.Event()
+        run = self.run_stream('{"type":"thread.started"}', sleep=True, cancel=cancel,
+                              on_tick=lambda *args: cancel.set())
+        self.assertEqual(run.error, "CANCELLED")
+        self.assertIs(run.usage_complete, False)
+
+    def test_terminal_usage_is_complete_even_if_timeout_prevents_process_exit(self):
+        stream = '{"type":"result","result":"done","usage":{"input_tokens":10,"output_tokens":2}}'
+        run = self.run_stream(stream, sleep=True, result_grace_s=0)
+        self.assertEqual(run.error, "TIMEOUT")
+        self.assertEqual(run.usage, {"input": 10, "cached": 0, "output": 2})
+        self.assertIs(run.usage_complete, True)

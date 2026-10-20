@@ -54,7 +54,7 @@ def run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, r
         run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
                                timeout_s=timeout_s, raw_path=raw, env=self._role_env(item, role, route),
                                provider=route["provider"], agent_directory=handle["directory"])
-        self._tokens(item, run.usage)
+        self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
         handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
     except BaseException as error:
         self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})

@@ -1,5 +1,5 @@
-"""The token budgets of a run: the classes of the prompt blocks against their limits, and ``tokens_max`` of a piece.
-Both are beacons: nothing is cut or stopped."""
+"""Token accounting and budgets: incomplete usage, prompt blocks against their limits and ``tokens_max`` of a piece.
+All are informational: nothing is cut or stopped."""
 from __future__ import annotations
 
 from aicore.content.budget import estimate_tokens
@@ -42,6 +42,15 @@ def over_budget(blocks, limits: dict) -> list:
             members = [block for block in blocks if budget_class(block.kind) == name]
             found.append((name, max(members, key=lambda block: estimate_tokens(block.text)), row["tokens"], row["limit"]))
     return found
+
+
+def unmetered(self, item: Item) -> None:
+    """Remember an unmetered model attempt and announce it once, even when that attempt stops the run."""
+    if not item.state.get("usage_incomplete"):
+        item.state["usage_incomplete"] = True
+        self._save()
+        self.progress.emit("info", item=item.ref, reason_code="BUDGET_UNMETERED",
+                           message=f"{item.ref}: a model attempt reported no usage; token limits cannot see it")
 
 
 def budget(self, item: Item) -> None:

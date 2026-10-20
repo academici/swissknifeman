@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- orch: claim называет исполнителя из `--options` запуска (provider, model, effort), а не только исполнителя по умолчанию; маршрут пункта с другим провайдером проходит claim без дублирующего `orchestration` в плане (`ROUTE_MISMATCH` / `ROUTE_UNDERSHOOT` при зелёном dry-run).
 - orch: повтор blocked ad-hoc регистрации допускает done в том же attempt; recovery отвергает квитанцию, предшествующую новому started-шагу, и сохраняет source SHA при дозавершении workspace-коммита для handoff и group review.
 - orch: восстановление close/register/commit после сбоя проверяет квитанции work source, attempt и успешный outcome; незавершённая workspace-часть commit повторяется без второго source-коммита. Durable-запросы связывают старые ответы с attempt по digest, close сохраняет `{by, ...}`, а work-source/v1 commit получает аддитивное необязательное поле `attempt`. Документация отделяет локальную durability conductor от non-goals Engine Port.
 

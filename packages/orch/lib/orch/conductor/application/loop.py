@@ -266,19 +266,25 @@ def require_clean_tree(self) -> None:
 
 
 def claim_actor(self) -> str:
-    """Who runs the work, as claimed: the default executor (provider and model, no effort; the route of the
-    work is checked by the source at registration against the executor that really ran)."""
-    provider = self.conductor.get("provider") or "claude-code"
+    """Who runs the work, as claimed: the executor the run was started with (the ``executor`` stage of ``--options``:
+    its provider, its model or the model of its class, and its effort), else the default executor (provider and model,
+    no effort). The source checks the route of the work against this actor at the claim; an executor the options name
+    but the claim does not carry is refused as ``ROUTE_MISMATCH`` / ``ROUTE_UNDERSHOOT`` before any work began, while
+    the dry run, which builds the route from the same options, shows it green. Registration still checks the route
+    against the executor that really ran."""
+    stage = self._invocation_executor()
+    provider = stage.get("provider") or self.conductor.get("provider") or "claude-code"
     entry = self._entry("executor", provider)
-    model_class = self._invocation_executor_class() or entry["model_class"]
-    model = self._catalog_get().resolve_model(provider, model_class) \
-        if entry["model_set"] == "supported" else "default"
-    return f"{provider}/{model}"
+    model = stage.get("model")
+    if not model:
+        model_class = stage.get("model_class") or entry["model_class"]
+        model = self._catalog_get().resolve_model(provider, model_class) if entry["model_set"] == "supported" \
+            else "default"
+    return "/".join(part for part in (provider, model, stage.get("effort")) if part)
 
 
-def invocation_executor_class(self) -> Optional[str]:
-    """The executor class the run was started with (``stages`` of ``--options``): the claim names that executor, so a piece
-    whose route minimum is higher than the default class (a ``frontier`` refactor) is not refused at the claim."""
+def invocation_executor(self) -> dict:
+    """The ``executor`` stage of the run's ``--options`` file (``{}`` without one): provider, model, model class, effort."""
     named = self.run_doc.get("options_file")
     for path in (Path(named) if named else None, self.directory / OPTIONS_COPY):
         try:
@@ -286,9 +292,14 @@ def invocation_executor_class(self) -> Optional[str]:
         except (OSError, ValueError):
             found = None
         for stage in (found or {}).get("stages") or []:
-            if ROLE_ALIASES_ENGINE.get(stage.get("role"), stage.get("role")) == "executor" and stage.get("model_class"):
-                return stage["model_class"]
-    return None
+            if ROLE_ALIASES_ENGINE.get(stage.get("role"), stage.get("role")) == "executor":
+                return {key: stage[key] for key in ("provider", "model", "model_class", "effort") if stage.get(key)}
+    return {}
+
+
+def invocation_executor_class(self) -> Optional[str]:
+    """The executor class the run was started with (``stages`` of ``--options``), None without one."""
+    return self._invocation_executor().get("model_class")
 
 
 def piece(self, answer: dict) -> str:

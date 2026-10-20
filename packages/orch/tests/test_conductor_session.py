@@ -243,6 +243,33 @@ class ClaimActorTests(ConductorCase):
         eng.run_doc = {"options_file": str(self.project.parent / "gone.json")}
         self.assertIsNone(eng._invocation_executor_class())
 
+    def claimer(self, stage):
+        options_file = self.project.parent / "o.json"
+        options_file.write_text(json.dumps({"stages": [dict(role="executor", **stage)]}), encoding="utf-8")
+        eng = engine.Conductor.__new__(engine.Conductor)
+        eng.run_doc, eng.directory, eng.conductor = {"options_file": str(options_file)}, self.project, {}
+        eng._catalog_get = mock.Mock()
+        return eng
+
+    def test_the_claim_carries_the_provider_model_and_effort_of_the_options_executor(self):
+        eng = self.claimer({"provider": "codex", "model": "gpt-6.1-sol", "model_class": "implementation",
+                            "effort": "xhigh"})
+        self.assertEqual(eng._claim_actor(), "codex/gpt-6.1-sol/xhigh")
+        eng._catalog_get.assert_not_called()  # an explicit model is not resolved from its class
+
+    def test_the_claim_resolves_the_model_of_the_class_and_names_no_effort_the_options_do_not_set(self):
+        eng = self.claimer({"provider": "codex", "model_class": "economy"})
+        eng._catalog_get.return_value.resolve_model.return_value = "gpt-6.1-sol"
+        self.assertEqual(eng._claim_actor(), "codex/gpt-6.1-sol")
+        eng._catalog_get.return_value.resolve_model.assert_called_once_with("codex", "economy")
+
+    def test_without_options_the_claim_is_the_default_executor_without_effort(self):
+        eng = self.claimer({})
+        eng.run_doc = {"options_file": None}
+        eng._catalog_get.return_value.resolve_model.return_value = "m"
+        actor = eng._claim_actor()
+        self.assertEqual(actor.count("/"), 1, actor)
+
 
 class TranscriptGuardTests(ConductorCase):
     def test_a_shared_claude_executor_may_write_the_transcripts_of_the_project_and_nothing_else_of_claude(self):

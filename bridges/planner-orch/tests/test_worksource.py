@@ -266,6 +266,19 @@ class OrchestrationTests(Case):
         self.assertEqual(self.item("P1.1")["result"]["executor"],
                          {"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh", "session": "run-a"})
 
+    def test_a_piece_routed_to_another_executor_starts_under_the_claimed_actor_without_orchestration(self):
+        """The conductor claims the executor of ``--options`` (provider, model, effort): the plan needs no copy of it."""
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"route": {"class": "implementation", "effort": "xhigh", "provider": "codex", "model": "gpt-6.1-sol"}}))
+        refused = self.claim(run_id="run-d", items=["P1.1"])  # the default actor (claude-code) is not the route
+        self.assertEqual((refused["status"], refused["reason_code"]), ("blocked", "ROUTE_UNDERSHOOT"), refused)
+        codex = {"provider": "codex", "model": "gpt-6.1-sol", "effort": "xhigh"}
+        answer = self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"], run_id="run-a",
+                         submission_id="sub-run-a", actor=codex)
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertNotIn("options", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"], {**codex, "session": "run-a"})
+
     def test_an_unknown_plan_is_refused_with_the_planner_message_not_its_json(self):
         answer = self.op(worksource.op_claim, op="claim", plan="no-such-plan", items=["P1.1"], run_id="run-z",
                          submission_id="sub-z", actor=ACTOR)

@@ -398,6 +398,7 @@ COVERAGE = {
     "OPTIONS_INVALID": f"test:{T}", "POLICY_UNKNOWN": "test:test_policies.py",
     "OPTIONS_UNTRUSTED": f"test:{T}", "OPTIONS_UNSAFE_PATH": f"test:{T}", "STATE_CORRUPT": "test:test_durable_state.py",
     "STUBS_INVALID": "test:test_conductor_stubs.py",
+    "TOKEN_BUDGET": "test:test_budget_hard.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
     # Beacons
     "RUN_ORPHANED": "test:test_run_lease.py",

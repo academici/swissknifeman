@@ -36,7 +36,9 @@ format as the other layers: `schema_version = 1` and an `[orch]` table.
 | `conductor.foreign_untracked` | `refuse`, `keep` | `refuse` | all | untracked files already in the tree at the start of new work: stop with `WORKTREE_DIRTY`, or keep them out of every piece (a tree shared with another session); tracked changes always stop |
 | `conductor.session_executor` | `handoff`, `shared`, `per-item` | `handoff` | all | a fresh executor session per piece with the handoff of the earlier pieces (`handoff`), one session for all pieces of a run (`shared`, Claude Code `--resume`) or a fresh one per step; the first run-options layer, so a plan, `--options` and `--batch` / `--no-batch` override it |
 | `conductor.questions` | `queue`, `deny`, `defaults`, `advisor` | `queue` | all | what a blocking question of the executor does: blocked `QUESTION` and wait for `orch conduct answer`, blocked `QUESTION_DENIED`, a `default` answered once by policy, or the advisor's advice (needs `advisor.enabled`; advice that needs the owner is queued) |
-| `conductor.limits.*` | integers | `tokens_max` 0, `stage_timeout_s` 0, `stage_idle_timeout_s` 5400, `check_timeout_s` 0, `check_idle_timeout_s` 3600 | all | default limits of a run: `tokens_max` is a beacon, the wall-clock ceilings are off (nothing long is cut), the silence ceilings stop a hung role or check (see `conductor.md`) |
+| `conductor.limits.*` | integers | `tokens_max` 0, `stage_timeout_s` 0, `stage_idle_timeout_s` 5400, `check_timeout_s` 0, `check_idle_timeout_s` 3600 | all, except the run cap below | default limits of a run: `tokens_max` is a beacon, the wall-clock ceilings are off (nothing long is cut), the silence ceilings stop a hung role or check (see `conductor.md`) |
+| `conductor.limits.tokens_hard_max` | integer ≥ 0 | 0 (unlimited) | all | hard admission limit on accounted fresh tokens of a piece; `TOKEN_BUDGET` preserves done steps |
+| `conductor.limits.run_tokens_hard_max` | integer ≥ 0 | 0 (unlimited) | defaults, machine, project, invocation | hard admission limit on fresh tokens of the whole run; environment and work-source options cannot set it |
 | `conductor.argv.<role>` | array of strings | empty | defaults, machine, invocation, flags | command line of a role instead of the launch catalog entry |
 | `launch.catalog` | absolute path or `~` | empty (the shipped catalog) | defaults, machine, invocation, flags | a complete launch catalog file used instead of `configs/launch-catalog.json`; a relative path is refused (`LAUNCH_CATALOG_RELATIVE`) |
 | `launch.access` | `open`, `confined` | `open` | all (a project file can only tighten) | how far the roles that write (executor, bounded-implementer, registrar) reach on a provider CLI with a sandbox of its own (Codex): `open` is its widest mode (`danger-full-access`, so the role can use Docker and whatever the user can), `confined` keeps it in the workspace (`workspace-write`); roles that must not write stay read-only in both. A project value `open` over a machine value `confined` is ignored |
@@ -51,6 +53,14 @@ is expanded; a relative entry is refused (`PROFILES_DIR_RELATIVE`), because the 
 cannot be told once a higher layer appends to the array. `conductor.argv` chooses the commands the conductor runs,
 so a project file cannot set it either ([conductor](conductor.md#configuration)); the same holds for
 `research.sources.<id>.argv` ([research](research.md)).
+
+Hard token limits count fresh input plus output, excluding cache reads. With positive `tokens_max` and
+`tokens_hard_max`, the informational target must fit inside the hard limit (`OPTIONS_INVALID`). A run's `--options`
+can override `run_tokens_hard_max`; `run.json.limits_run` freezes its value and source at start. Later config changes
+do not change that run cap. Continue an exhausted run with `conduct resume --run RUN --raise-limit KEY=N` (repeatable;
+only the two hard token keys, a larger value or explicit 0 to remove it). Raises have provenance in state and leave
+the recorded item options unchanged. See [hard token limits](conductor.md#hard-token-limits-and-resume) for guarantees
+and incomplete usage.
 
 ## Engine choice
 

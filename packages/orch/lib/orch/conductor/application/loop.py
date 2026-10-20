@@ -135,6 +135,8 @@ def pieces(self) -> None:
         known = self.state["claims"].get(key)
         outcome = self.state["items"].get(known["ref"], {}).get("outcome") if known else None
         if outcome in ("done", "done_with_deviations", "blocked"):
+            if outcome in ("done", "done_with_deviations"):
+                self._group_review_due(known["ref"])
             count += 1
             continue
         adopted, first_adopted = first_adopted, []  # the paths of ``--adopt`` belong to the first piece that really runs
@@ -336,6 +338,7 @@ def conduct(self, item: Item) -> str:
         item.state["source_paths"] = sorted(set(self._dirty_paths()) - set(item.state.get("adopted") or []))
         self._save()
     self._resolve(item)
+    self._admit_budget(item)
     self._sync_questions(item)
     self._routes(item, persist=False)
     self._refuse_acp(item)  # before prepare: the binding would refuse an acp route with a less telling code
@@ -462,6 +465,8 @@ def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "det
     self._current_step = key
     if item.options:
         self._run_clock(item)
+        if role != "deterministic":
+            self._admit_budget(item)
     if not known or known.get("status") != "started":
         self._start_step(item, key, role=role, route=route)
     self.progress.emit("stage.start", item=item.ref, stage=key, role=role, route=route)
@@ -489,6 +494,7 @@ def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "det
     self._stage_event(item, key, "completed")
     if item.options:
         self._budget(item)
+        self._admit_budget(item)
     return result
 
 
@@ -535,6 +541,9 @@ def resolve(self, item: Item, persist: bool = True) -> None:
         raise Stop(error.code, error.message) from None
     if persist:
         self.state["on_blocked"] = item.options["on_blocked"]
+        # Raises are a state overlay, never a rewrite of the piece's recorded options.
+        if self.state.get("limit_raises") and (item.directory / "options.json").is_file():
+            return
         write_json(item.directory / "options.json", {"scenario": scenario, "options": item.options,
                                                      "sources": item.sources, "digest": opts.digest(item.options),
                                                      "claim_route": item.claim.get("route")})

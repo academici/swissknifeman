@@ -8,10 +8,9 @@ roles only through the launch catalog (or ``[orch.conductor.argv]``) and see the
 
 The conductor stops only on: a blocked piece of work (``on_blocked = "stop"``), red checks or confirmed findings
 whose corrections stopped making progress (or reached the ceiling of their limit), a route below the minimum of the
-work, an unavailable provider or role, a refusal of the work source, or a dirty working tree before new work. Nothing
-is stopped for being long or costly: limits of time and tokens print beacons (``info`` lines with ``STAGE_SLOW``,
-``STAGE_IDLE``, ``CHECK_SLOW``, ``BUDGET_OVER``, ``LIMIT_OVER``) that say what runs now, and the owner or an
-observer decides.
+work, an unavailable provider or role, a refusal of the work source, or a dirty working tree before new work.
+Most time and token limits print beacons; explicit hard token limits stop new model calls at the boundary of
+accounted usage, preserving closed steps for resume.
 
 The code lives by layer (knowledge/p11-refactor#extract): ``domain`` (the piece, the stop, the rules of a report),
 ``infrastructure`` (run files and clocks, role processes, the work source), ``policies`` (routes, limits, retries,
@@ -253,6 +252,7 @@ class Conductor:
     _risk_facts = risk_policy.risk_facts
 
     _budget = budget.budget
+    _admit_budget = budget.admit
 
     # ------------------------------------------------------------------ stages
 

@@ -13,7 +13,7 @@ orch conduct [--config FILE] [--project DIR] run --plan P (--items REF… | --re
            [--quiet | --json-lines] [--model-catalog FILE]
 orch conduct [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
            [--quiet | --json-lines] [--model-catalog FILE]
-orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--frozen] [--quiet | --json-lines]
+orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--raise-limit KEY=N ...] [--frozen] [--quiet | --json-lines]
 orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
 orch conduct questions [--run RUN] [--json]
@@ -256,6 +256,7 @@ The conductor stops only on:
 | `DEPENDENCY_BLOCKED` | with `on_blocked: report` the run went on after a blocked piece, and a later piece of the run depends on it (`depends_on` of its claim): it is not started, stays in progress and the run ends here after the others; `resume --retry` the blocked piece, then `resume` |
 | `DISK_LOW` | less than `limits.disk_min_gb` (default 5) GB free under the project or the temporary directory when the run starts or resumes, or before the checks of a round; the run stops (resumable): free the space, then `resume` |
 | `RUN_TIMEOUT` | the active time of the run passed `limits.run_timeout_s` (default 0: off); the current role is cancelled; raise the limit, then resume |
+| `TOKEN_BUDGET` | accounted fresh tokens reached `tokens_hard_max` of the piece or `run_tokens_hard_max` of the run; no new model call starts, done steps stay saved; resume with `--raise-limit KEY=N` |
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
@@ -265,7 +266,7 @@ The conductor stops only on:
 | `PROVIDER_AUTH`, `PROVIDER_AUTHZ` | the provider refused the credentials or the operation (class `authentication`, `authorization`): never repeated, log in or fix the access, then resume |
 | `PROVIDER_QUOTA` | the usage limit is exhausted (class `quota`, `rate_limit`) and the reset is further than `limits.provider_wait_max_s` or unknown, with no admissible `fallback_routes` entry; or the provider of a role is gated on this machine (see Capacity gates). The message names the reset time (UTC) and says `resume after` it |
 | `PROVIDER_REFUSED` | the provider refused the request (class `invalid_request`, `content_policy`): a repeat would be refused again |
-| `PROVIDER_CONTEXT` | the request does not fit the context window (class `context_limit`); the prompt is not rebuilt yet |
+| `PROVIDER_CONTEXT` | the request does not fit the context window (class `context_limit`); a signal to replan or split the item; the prompt is not rebuilt automatically |
 | `MODEL_UNAVAILABLE` | the model is not available to the account (class `model_unavailable`), repeated within `limits.retries` first |
 | `TIMEOUT` | a role was silent for `stage_idle_timeout_s` (default 5400: a hang, not a long run), or a wall-clock `stage_timeout_s` was asked for (none by default) |
 | `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece; `[orch.conductor] foreign_untracked = "keep"` lets untracked files of someone else stay: they are fingerprinted in `state.foreign`, announced as `FOREIGN_KEPT`, and never counted as a piece's work while their content stays the same) |
@@ -281,8 +282,8 @@ run goes on; a blocked piece with changes stops the run, because its partial wor
 
 ### Beacons: long and costly runs are reported, not cut
 
-Nothing is stopped for being long or for its tokens. The conductor prints `info` lines with a stable `reason_code`
-instead; `orch conduct status` shows the latest one of the running step:
+The informational limits report long or costly work through `info` lines with a stable `reason_code`;
+`orch conduct status` shows the latest one of the running step. Explicit hard limits are listed under Stops:
 
 | Code | When | What it says |
 | --- | --- | --- |
@@ -590,6 +591,38 @@ committed in the work source).
 | `on_blocked` | `stop` or `report` |
 
 `limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
+### Hard token limits and resume
+
+`limits.tokens_hard_max` limits accounted fresh input and output tokens of one piece;
+`limits.run_tokens_hard_max` limits their total across the whole run, including the strategist and group reviews.
+Both are integers ≥ 0, default 0 (unlimited). `tokens_max` remains an informational `BUDGET_OVER` target;
+when both it and `tokens_hard_max` are positive, `tokens_max` must not exceed the hard limit (`OPTIONS_INVALID`).
+
+The run cap accepts only machine/project configuration, invocation `--config` and the run's `--options`.
+A work-source layer (plan, phase, item or input) that names it, including 0, gets `OPTIONS_INVALID`:
+`run_tokens_hard_max is a run limit; set it in the configuration or --options`.
+`run.json.limits_run.run_tokens_hard_max` freezes `{value, source, file?}` at start, so later configuration or options
+edits cannot replace the run cap. Cache reads do not count toward either limit.
+
+Admission checks run before each model step, before the strategist and group reviewer, and after saving each done
+step. At `used >= limit` the run stops with `TOKEN_BUDGET`, the piece is stopped, and done steps stay saved; it is
+not registered as blocked. Once the boundary of accounted usage is reached, no new model call starts. One long
+stage can exceed the limit, and missing usage (`usage_incomplete`) cannot be caught by it. Retries and report repairs
+inside the same step are not separate admission boundaries.
+
+```bash
+orch conduct resume --run RUN --raise-limit tokens_hard_max=500000
+orch conduct resume --run RUN --raise-limit tokens_hard_max=800000 --raise-limit run_tokens_hard_max=2000000
+orch conduct resume --run RUN --raise-limit tokens_hard_max=0
+```
+
+`--raise-limit KEY=N` is repeatable and accepts only these two keys. N must exceed the effective value;
+0 explicitly removes the limit. Raises overlay the options for this run; they do not rewrite the piece's
+`options.json` or repeat its done executor. `state.limit_raises[]` records `{key, from, to, at, by: invocation}`;
+each raise emits `info` reason `LIMIT_RAISED`. Without a raise, a still-exhausted run immediately stops again
+before a model call. No `--retry` is needed. `BUDGET_EXHAUSTED` remains a retry code, and a provider context-limit
+failure remains `PROVIDER_CONTEXT`, a signal to replan.
+
 `limits.skill_tokens_max` (default 5000; 0 off) is the largest text of one skill that an isolated role gets in its prompt (see Skill checks).
 `limits.prompt_core_tokens` (12000), `limits.prompt_supporting_tokens` (30000) and `limits.prompt_retrieval_tokens` (50000) are the
 measures of the classes of prompt blocks (see Prompt manifest); 0 switches the beacon off. They only measure: nothing is cut.

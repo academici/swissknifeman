@@ -15,6 +15,7 @@ from typing import Optional
 from orch import adhoc, launch
 from orch.conductor import options as opts, process, review_batch
 from orch.conductor.domain.item import Item
+from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.clock import utc_now
 from orch.conductor.infrastructure.files import safe, write_json
 from orch.conductor.policies import review_strategy as strategy
@@ -46,6 +47,8 @@ def forced(mode: str, pieces: list, proposal: dict) -> dict:
 
 def run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, raw, timeout_s: int):
     """Batch roles get the same process ownership record as per-piece roles."""
+    if item.options:
+        self._admit_budget(item)
     prompt_file = item.directory / "prompts" / f"{key}.md"
     prompt_file.parent.mkdir(parents=True, exist_ok=True)
     prompt_file.write_text(prompt, encoding="utf-8")
@@ -71,6 +74,8 @@ def ask_strategist(self, item: Item, pieces: list, proposal: dict) -> Optional[d
         raw.parent.mkdir(parents=True, exist_ok=True)
         run = run_agent(self, item, "review-strategist", "triager", route, strategy.prompt(pieces, proposal), raw, 300)
     except Exception as error:  # noqa: BLE001 — the strategist is advice; the rules decide when it fails
+        if isinstance(error, Stop) and error.code == "TOKEN_BUDGET":
+            raise
         self.progress.emit("info", reason_code="STRATEGIST_FAILED", message=f"{type(error).__name__}: {error}"[:200])
         return None
     if run.error:
@@ -163,6 +168,7 @@ def group_review(self, number: int, group: list, effort: str) -> None:
         return
     item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
     self._resolve(item, persist=False)
+    self._admit_budget(item)
     route = self._route(item, "reviewer")
     if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route; an effort the option names wins
         selector = opts.parse_selector(item.options["reviewer"])

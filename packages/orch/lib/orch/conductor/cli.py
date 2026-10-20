@@ -241,6 +241,8 @@ def main(argv: list | None = None) -> int:
                           "its write set): the executor checks and finishes them instead of starting over")
     resume = verbs.add_parser("resume", help="continue a stopped run; closed steps are not repeated")
     resume.add_argument("--run", required=True, metavar="RUN")
+    resume.add_argument("--raise-limit", action="append", default=[], metavar="KEY=N",
+                        help="raise tokens_hard_max or run_tokens_hard_max (repeatable); 0 explicitly removes the limit")
     resume.add_argument("--retry", nargs="+", default=[], metavar="ITEM",
                         help="also continue these blocked pieces: their steps from the blocked executor round on are "
                              "repeated (the source must have reopened them); finished steps are kept")
@@ -421,7 +423,7 @@ def main(argv: list | None = None) -> int:
             return conductor.release(args.run, None if args.all else args.item, args.reason)
         if args.verb == "settle":
             return conductor.settle(args.run, args.item, args.outcome, args.reason)
-        return conductor.resume(args.run, retry=args.retry)
+        return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit)
     except engine.Stop as stop:
         print(f"{stop.code}: {stop.message}", file=sys.stderr)
         return 1

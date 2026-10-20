@@ -19,12 +19,14 @@ from aicore.util.digest import digest_json
 
 from orch.conductor import contract
 
-# Limits are targets and beacons, not walls: no role and no check is stopped for being long (the owner or an observer
+# Most limits are targets and beacons: no role and no check is stopped for being long (the owner or an observer
 # reads the STAGE_SLOW / STAGE_IDLE / CHECK_SLOW beacons and decides); rounds go past their target while they make
 # progress, up to ``ceiling_factor`` times it. The wall-clock ceilings stage_timeout_s, check_timeout_s and run_timeout_s
 # stay available, off by default. Only silence is a wall: a role whose stream has not grown for 90 minutes, or a check
-# whose log has not grown for an hour, is hung, and an unattended run must not wait for it forever.
+# whose log has not grown for an hour, is hung, and an unattended run must not wait for it forever. Explicit hard token
+# limits stop admission at the boundary of accounted usage; they do not interrupt a running model call.
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
+                  "tokens_hard_max": 0, "run_tokens_hard_max": 0,
                   "stage_timeout_s": 0, "stage_idle_timeout_s": 5400, "check_timeout_s": 0,
                   "check_idle_timeout_s": 3600, "ceiling_factor": 2,
                   "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900,
@@ -222,13 +224,23 @@ def effective(conductor: dict, policy: dict, layers: list) -> tuple:
         if issues:
             raise OptionsError("OPTIONS_INVALID", f"{name}: {'; '.join(issues[:3])}")
         if layer.get("trusted") is not True:
+            if "run_tokens_hard_max" in (found.get("limits") or {}):
+                raise OptionsError("OPTIONS_INVALID", "run_tokens_hard_max is a run limit; set it in the configuration or --options")
             loosened = floor_problems(current, found, sources)
             if loosened:
                 raise OptionsError("OPTIONS_UNTRUSTED", f"{name}: {'; '.join(loosened)} (only the configuration, the "
                                    "run-policy pack or the invocation (--options, flags) may loosen the isolation)")
         apply(name, found)
+    validate_limits(current["limits"])
     parse_selector(current["reviewer"])
     return current, sources
+
+
+def validate_limits(limits: dict) -> None:
+    """The informational target must fit inside an enabled hard limit."""
+    soft, hard = limits.get("tokens_max", 0), limits.get("tokens_hard_max", 0)
+    if soft > 0 and hard > 0 and soft > hard:
+        raise OptionsError("OPTIONS_INVALID", "tokens_max must not exceed tokens_hard_max")
 
 
 def floor_problems(current: dict, layer: dict, sources: dict) -> list:

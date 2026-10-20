@@ -17,7 +17,7 @@ MIRROR = Path(__file__).resolve().parents[3] / "bridges" / "planner-orch" / "sch
 
 def refused(layer: dict) -> bool:
     try:
-        options.effective({}, {}, [{"source": "item:X", "options": layer}])
+        options.effective({}, {}, [{"source": "invocation:--options", "options": layer, "trusted": True}])
     except options.OptionsError as error:
         return error.code == "OPTIONS_INVALID"
     return False
@@ -67,6 +67,17 @@ class SchemaBoundsTests(unittest.TestCase):
             if stated and int(stated.group(1)) != defaults[group][key]:
                 wrong.append(f"{group}.{key}: description {stated.group(1)}, code {defaults[group][key]}")
         self.assertEqual(wrong, [])
+
+    def test_hard_token_limits_have_the_same_optional_zero_default_in_all_three_places(self):
+        config = json.loads((Path(__file__).resolve().parents[1] / "configs/config.schema.json").read_text())
+        configured = config["properties"]["conductor"]["properties"]["limits"]["properties"]
+        for key in ("tokens_hard_max", "run_tokens_hard_max"):
+            self.assertNotIn(key, SCHEMA["$defs"]["limits"]["required"])
+            self.assertEqual(options.DEFAULT_LIMITS[key], 0)
+            for node in (LIMITS[key], configured[key]):
+                self.assertEqual((node["type"], node["minimum"], node["default"]), ("integer", 0, 0))
+            for invalid in (True, 1.5, "1", -1):
+                self.assertTrue(refused({"limits": {key: invalid}}))
 
     @unittest.skipUnless(MIRROR.is_file(), "planner-orch bridge not in this tree")
     def test_the_bridge_mirror_is_the_schema(self):

@@ -27,6 +27,15 @@ registrar and git. Its `on_error` table holds the default action of each failure
 `review.triage` (`{"role": "triager", "model_class": "implementation"}`) makes the [conductor](conductor.md) reproduce
 every review finding before a correction; only confirmed findings get one.
 
+`budgets.stage_tokens_max` belongs to the run-policy contract and is independent of conductor hard token limits;
+its shipped value remains 0. Conductor options `limits.tokens_hard_max` (piece) and `limits.run_tokens_hard_max`
+(whole run) default to 0 (unlimited), count accounted fresh input plus output, and stop admission with `TOKEN_BUDGET`.
+The run cap comes only from machine/project config, invocation `--config` or the run's `--options`; an item cannot
+set or disable it. Done steps survive, so `conduct resume --run RUN --raise-limit KEY=N` continues without `--retry`
+(repeatable, a larger value or 0 to remove the limit). `tokens_max` still only prints `BUDGET_OVER`.
+An `on_error.context_limit` action `replan` still stops with `PROVIDER_CONTEXT`: it signals that the work needs
+replanning, without automatic sharding or prompt condensing. See [hard token limits](conductor.md#hard-token-limits-and-resume).
+
 The files in `fixtures/exec/v1/valid/run-policy/` stay as examples of the contract; the packs are the ones that run.
 
 ## Discovery

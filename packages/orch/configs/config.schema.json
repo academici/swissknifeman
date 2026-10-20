@@ -253,6 +253,19 @@
               "default": 0,
               "minimum": 0
             },
+            "tokens_hard_max": {
+              "type": "integer",
+              "description": "Hard limit on accounted fresh input and output tokens of a piece; TOKEN_BUDGET stops new model calls at the boundary; default 0 means no limit.",
+              "default": 0,
+              "minimum": 0
+            },
+            "run_tokens_hard_max": {
+              "type": "integer",
+              "description": "Hard limit on accounted fresh input and output tokens of the whole run, fixed with its source at run start; default 0 means no limit.",
+              "default": 0,
+              "minimum": 0,
+              "x-skm-layers": ["defaults", "machine", "project", "invocation"]
+            },
             "stage_timeout_s": {
               "type": "integer",
               "description": "Ceiling on the whole run of one role in seconds; 0 has none for a streaming role (STAGE_SLOW beacons report a long run) and keeps the launch catalog timeout for a text role.",

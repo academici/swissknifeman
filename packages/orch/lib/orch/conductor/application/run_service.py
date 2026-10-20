@@ -1,19 +1,22 @@
 """The verbs of a conductor run: ``run``, ``resume`` (with ``--retry`` of a blocked piece), ``release`` and ``settle``."""
 from __future__ import annotations
 
+import json
 import os
+import re
 from pathlib import Path
 from typing import Optional
 
 from aicore.stubs import StubError
 
 from orch import settings as settings_mod
-from orch.conductor import debug_mode, progress, stubs as stubs_mod
+from orch.conductor import debug_mode, options as opts, progress, stubs as stubs_mod
 from orch.conductor.domain.report import continued
-from orch.conductor.domain.item import done_steps
+from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import RunStore, safe, write_json
+from orch.conductor.policies.budget import HARD_LIMITS, effective_limit
 from orch.worksource import WorkSourceError
 from orch.worksource_file import read_input
 
@@ -44,7 +47,8 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
                "project": str(self.project), "project_resolution": self.project_resolution,
                "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
                "config_layers": settings_mod.config_layers(self.settings),
-               "instructions_digest": instructions["digest"], "debug": bool(getattr(self.settings, "debug", False))}
+               "instructions_digest": instructions["digest"], "debug": bool(getattr(self.settings, "debug", False)),
+               "limits_run": limits_run(self, options_file)}
     store = RunStore(self.project, run_id)
     with store.ownership("run", checkout=True, create=True):
         run_doc["lease"] = True
@@ -61,19 +65,26 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
         return self._loop()
 
 
-def resume(self, run_id: str, retry=()) -> int:
+def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
     store = RunStore(self.project, run_id)
     with store.ownership("resume", checkout=True):
         run_doc, state = store.load()
         if run_doc.get("config_file") and not self.config_file:
             self.config_file = Path(run_doc["config_file"])
         self._open(run_id, run_doc, state, store)
+        changes = limit_raises(self, raise_limits)
         if run_doc.get("lease") is True and progress.summarize(progress.read_lines(self.directory))["status"] == "running":
             self._kill_orphaned_roles()
         stubs_changed(self, run_doc)
         for ref in retry:
             self._retry(ref)
         self._reconcile_interrupted()
+        if changes:
+            state.setdefault("limit_raises", []).extend(changes)
+            self._save()
+            for change in changes:
+                self.progress.emit("info", reason_code="LIMIT_RAISED",
+                                   message=f"{change['key']}: {change['from']} -> {change['to']} by invocation")
         state["status"] = "running"
         state["resumes"] = state.get("resumes", 0) + 1
         earlier = state.pop("stop", None)  # the stop answered by this resume is history now
@@ -83,6 +94,73 @@ def resume(self, run_id: str, retry=()) -> int:
         self.progress.emit("run.resume", message=f"resume {state['resumes']}")
         debug_mode.announce(self.progress, self.directory, run_id, self.settings)
         return self._loop()
+
+
+def limits_run(self, options_file: Optional[Path]) -> dict:
+    """Freeze the run cap and its trusted origin before claiming work or making a model call."""
+    key = "run_tokens_hard_max"
+    layers = []
+    if options_file:
+        try:
+            found = json.loads(Path(options_file).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise Stop("OPTIONS_INVALID", f"{options_file}: {error}") from None
+        issues = opts.layer_problems(found)
+        if issues:
+            raise Stop("OPTIONS_INVALID", f"{options_file}: {'; '.join(issues[:3])}")
+        # Piece limits are validated after all source layers merge, not while snapshotting the run cap.
+        only_run = {key: found["limits"][key]} if key in found.get("limits", {}) else {}
+        layers.append({"source": "invocation:--options", "options": {"limits": only_run}, "trusted": True})
+    try:
+        configured = {key: value for key, value in (self.conductor.get("limits") or {}).items()
+                      if key == "run_tokens_hard_max"}
+        options, sources = opts.effective({"limits": configured}, {}, layers)
+    except opts.OptionsError as error:
+        raise Stop(error.code, error.message) from None
+    source = sources.get(f"limits.{key}", "defaults")
+    origin = {"source": source}
+    resolved = self.settings.resolved
+    if source == "invocation:--options":
+        origin["file"] = str(Path(options_file).resolve())
+    elif resolved is not None:
+        entry = resolved.explain(f"conductor.limits.{key}")[0]
+        origin = {"source": f"config:{entry.layer}", "file": entry.file}
+    return {key: {"value": options["limits"][key], **origin}}
+
+
+def limit_raises(self, values) -> list:
+    """Validate every requested raise before changing state; the history is the effective overlay on resume."""
+    if not values:
+        return []
+    parsed = []
+    for value in values:
+        match = re.fullmatch(r"(tokens_hard_max|run_tokens_hard_max)=([0-9]+)", value)
+        if match is None:
+            raise Stop("OPTIONS_INVALID", "--raise-limit must be tokens_hard_max=N or run_tokens_hard_max=N (integer >= 0)")
+        parsed.append((match[1], int(match[2])))
+    items = self.state.get("items", {})
+    refs = list(dict.fromkeys([*(self.run_doc.get("items") or []), *items]))
+    ref = next((ref for ref in refs if items.get(ref, {}).get("outcome") == "stopped"), None)
+    ref = ref or next((ref for ref in refs if items.get(ref, {}).get("outcome") not in
+                      ("done", "done_with_deviations", "blocked", "abandoned")), None)
+    ref = ref or (refs[-1] if refs else "run")
+    claim = next((claim for claim in (self.state.get("claims") or {}).values() if claim.get("ref") == ref), {})
+    item = Item(ref=ref, orch_run=claim.get("run_id", ""), state=items.get(ref, {}),
+                directory=self.directory / safe(ref), claim=claim)
+    self._resolve(item, persist=False)
+    current = {key: effective_limit(self, item, key) for key in HARD_LIMITS}
+    changes = []
+    for key, value in parsed:
+        previous = current[key]
+        if value != 0 and value <= previous:
+            raise Stop("OPTIONS_INVALID", f"--raise-limit {key}={value} must exceed the effective value {previous}, or be 0")
+        changes.append({"key": key, "from": previous, "to": value, "at": clock.utc_now(), "by": "invocation"})
+        current[key] = value
+    try:
+        opts.validate_limits({**item.options["limits"], **current})
+    except opts.OptionsError as error:
+        raise Stop(error.code, error.message) from None
+    return changes
 
 
 def snapshot_stubs(self) -> dict:

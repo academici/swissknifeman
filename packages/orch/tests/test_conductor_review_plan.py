@@ -16,6 +16,54 @@ def answer(mode, groups, effort="medium"):
 
 
 class ReviewPlanTests(ConductorCase):
+    def test_strategist_budget_stop_is_not_swallowed_as_failed_advice(self):
+        from unittest import mock
+        from orch.conductor import engine
+        from orch.conductor.application import review_plan
+        from orch.conductor.domain.item import Item
+        from orch.conductor.domain.stop import Stop
+        from orch import settings
+        owner = engine.Conductor(project=self.project, settings=settings.load(project=self.project))
+        owner.run_id = "R"
+        owner.state = {"tokens": {"input": 10}}
+        item = Item("W1", "source-run", {}, self.project, {})
+        item.options = {"limits": {"run_tokens_hard_max": 10}}
+        with mock.patch.object(owner, "_route", return_value={}), mock.patch.object(owner, "_agent_start") as start, \
+                mock.patch.object(engine.process, "run_role") as process:
+            with self.assertRaises(Stop) as caught:
+                review_plan.ask_strategist(owner, item, [], {"mode": "none", "groups": [], "reviewer": {}})
+            self.assertEqual(caught.exception.code, "TOKEN_BUDGET")
+            start.assert_not_called()
+            process.assert_not_called()
+
+    def test_group_review_waits_for_a_raise_and_resume_does_not_repeat_closed_items(self):
+        from unittest import mock
+        from orch.conductor import engine
+        # Spend the remaining run budget exactly when the completed group is about to be reviewed. This isolates
+        # the call outside _step from the post-done checks, which have their own integration coverage.
+        original = engine.Conductor._group_review_due
+
+        def due(owner, ref):
+            if ref == "W2":
+                owner.state["tokens"] = {"input": 500, "output": 0}
+                owner._save()
+            return original(owner, ref)
+
+        self.set_items({ref: {} for ref in ("W1", "W2")})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [{"text": REVIEW}]})
+        path = self.project.parent / "group-options.json"
+        path.write_text(json.dumps({"limits": {"run_tokens_hard_max": 500}, "review": {"strategy": "single"}}))
+        with mock.patch.object(engine.Conductor, "_group_review_due", due):
+            code, _, err = self.run_items("W1", "W2", extra=("--options", path))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 0))
+        self.assertNotIn("group_reviews", self.state(err))
+        code, _, resumed = self.conduct("resume", "--run", self.run_dir(err).name,
+                                       "--raise-limit", "run_tokens_hard_max=1000", "--json-lines")
+        self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 1))
+        self.assertIn("1", self.state(resumed)["group_reviews"])
+
     def batch(self, *, triager=None, options=None, items=("W1", "W2", "W3")):
         self.set_items({ref: {} for ref in items})
         self.script({"executor": [executor_ok(ref) for ref in items], "reviewer": [GREEN] * 3 if not triager else [{"text": REVIEW}],

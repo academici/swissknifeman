@@ -1,10 +1,41 @@
-"""Token accounting and budgets: incomplete usage, prompt blocks against their limits and ``tokens_max`` of a piece.
-All are informational: nothing is cut or stopped."""
+"""Token accounting, informational budgets and hard admission limits on accounted fresh tokens."""
 from __future__ import annotations
 
 from aicore.content.budget import estimate_tokens
 
 from orch.conductor.domain.item import Item
+from orch.conductor.domain.stop import Stop
+
+HARD_LIMITS = ("tokens_hard_max", "run_tokens_hard_max")
+
+
+def effective_limit(self, item: Item, key: str) -> int:
+    """An explicit raise (including zero to remove a limit), else the frozen run cap or the piece's options."""
+    for change in reversed(self.state.get("limit_raises", [])):
+        if change["key"] == key:
+            return change["to"]
+    if key == "run_tokens_hard_max" and key in self.run_doc.get("limits_run", {}):
+        return self.run_doc["limits_run"][key]["value"]
+    return ((item.options or {}).get("limits") or {}).get(key, 0) or 0
+
+
+def admit(self, item: Item, scope: str = "all") -> None:
+    """Stop admission once accounted fresh usage reaches a hard limit; cache reads and missing usage do not count.
+
+    ``scope`` selects ``item``, ``run`` or both (``all``). A single model call can cross the boundary: this check never
+    interrupts one, and does not guess at unmetered usage.
+    """
+    for name, key, state, label in (
+            ("item", "tokens_hard_max", item.state, item.ref),
+            ("run", "run_tokens_hard_max", self.state, f"run {self.run_id}")):
+        if scope not in ("all", name):
+            continue
+        limit = effective_limit(self, item, key)
+        tokens = state.get("tokens", {})
+        used = int(tokens.get("input", 0)) + int(tokens.get("output", 0))
+        if limit and used >= limit:
+            raise Stop("TOKEN_BUDGET", f"{label} used {used} fresh tokens >= {key} {limit}; needs_replan: split the item "
+                       f"or raise the limit (conduct resume --run {self.run_id} --raise-limit {key}=<value>)")
 
 # Budget classes of the blocks (knowledge/p9-prompt#budgets). Only the measure and a beacon: nothing is cut. The kinds the
 # design does not list belong to the frame or the task material of their role (progress, candidate, review_scope, diff,

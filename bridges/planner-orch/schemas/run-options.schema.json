@@ -375,7 +375,19 @@
           "type": "integer",
           "minimum": 0
         },
-        "stage_timeout_s": {
+    "tokens_hard_max": {
+      "description": "Hard limit on accounted fresh input and output tokens of a piece: at or above it new model calls stop with TOKEN_BUDGET; default 0 means no limit.",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "run_tokens_hard_max": {
+      "description": "Hard limit on accounted fresh input and output tokens of the whole run; only configuration and invocation --options may set it, fixed at run start; default 0 means no limit.",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "stage_timeout_s": {
           "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role (stage_warn_s beacons report a long run instead) and keeps the launch catalog timeout for a text role; 0 or more.",
           "type": "integer",
           "minimum": 0

@@ -125,6 +125,33 @@ class HardBudgetTests(ConductorCase):
         change, = self.state(resumed)["limit_raises"]
         self.assertEqual(change["item"], "W1")
 
+    def test_the_run_records_its_catalogs_and_a_resume_names_the_changed_ones(self):
+        """W5: provenance of the catalogs, not a stop: --frozen does not freeze them."""
+        _, _, err = self.capped(tokens_hard_max=110)
+        recorded = json.loads((self.run_dir(err) / "run.json").read_text())["catalog_digests"]
+        self.assertEqual(set(recorded), {"launch", "models", "capabilities"})
+        self.assertTrue(all(value.startswith("sha256:") or len(value) == 64 for value in recorded.values()), recorded)
+        status = json.loads(self.conduct("status", "--run", self.run_dir(err).name, "--json")[1])
+        self.assertEqual(status["catalog_digests"], recorded)
+        code, _, same = self.resume(err)  # nothing changed: no beacon
+        self.assertFalse([line for line in self.lines(same) if line.get("reason_code") == "CATALOG_CHANGED"])
+        self.write_config(extra='[orch.launch.entries.executor_claude-code]\neffort = "xhigh"\n')
+        code, _, resumed = self.resume(err, "--raise-limit", "tokens_hard_max=500")
+        said = [line for line in self.lines(resumed) if line.get("reason_code") == "CATALOG_CHANGED"]
+        self.assertEqual(len(said), 1, resumed)
+        self.assertIn("launch", said[0]["message"])
+        self.assertNotIn("models", said[0]["message"])
+
+    def test_a_run_without_catalog_digests_resumes_as_before(self):
+        _, _, err = self.capped(tokens_hard_max=110)
+        path = self.run_dir(err) / "run.json"
+        doc = json.loads(path.read_text())
+        doc.pop("catalog_digests")
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        code, _, resumed = self.resume(err, "--raise-limit", "tokens_hard_max=500")
+        self.assertEqual(code, 0, resumed)
+        self.assertFalse([line for line in self.lines(resumed) if line.get("reason_code") == "CATALOG_CHANGED"])
+
     def test_invalid_raises_are_atomic_and_do_not_change_state_or_journal(self):
         _, _, err = self.capped(tokens_hard_max=110)
         directory = self.run_dir(err)

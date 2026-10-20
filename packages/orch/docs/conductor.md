@@ -105,6 +105,12 @@ and `config_layers`, `[{layer, file, present}]` of the layers behind it. Each pi
 merged run options, written as `digest` in `<item>/options.json`. The events carry them: `orch.run.started` has `config_digest` and
 `project_resolution`, the `orch.run.stage.finished` events of the conductor have `options_digest` (event-data/v1, optional fields).
 The same configuration and options give the same digests; a changed override gives another one.
+`run.json` also holds `catalog_digests` `{launch, models, capabilities}`: the digests of the effective launch catalog
+(with the `[orch.launch]` overlays), the model catalog and the capability records the run started with, computed as the
+dry run of a launch plan computes them (`orch.bindings.catalog_digests`); `conduct status --json` shows them. A resume
+runs on the catalogs of now and names those that changed with one info `CATALOG_CHANGED` (no stop; `--frozen` keeps the
+options and instructions of the run, not its catalogs); a run recorded before the field resumes as before. This records
+provenance; it is not full reproducibility (the environment of the roles is not recorded).
 
 ## Recovery after a crash
 

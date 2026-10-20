@@ -9,7 +9,7 @@ from typing import Optional
 
 from aicore.stubs import StubError
 
-from orch import settings as settings_mod
+from orch import bindings, settings as settings_mod
 from orch.conductor import debug_mode, options as opts, progress, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
@@ -48,7 +48,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
                "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
                "config_layers": settings_mod.config_layers(self.settings),
                "instructions_digest": instructions["digest"], "debug": bool(getattr(self.settings, "debug", False)),
-               "limits_run": limits_run(self, options_file)}
+               "limits_run": limits_run(self, options_file), **catalog_record(self)}
     store = RunStore(self.project, run_id)
     with store.ownership("run", checkout=True, create=True):
         run_doc["lease"] = True
@@ -76,6 +76,7 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
         if run_doc.get("lease") is True and progress.summarize(progress.read_lines(self.directory))["status"] == "running":
             self._kill_orphaned_roles()
         stubs_changed(self, run_doc)
+        catalogs_changed(self, run_doc)
         for ref in retry:
             self._retry(ref)
         self._reconcile_interrupted()
@@ -163,6 +164,30 @@ def limit_raises(self, values) -> list:
     except opts.OptionsError as error:
         raise Stop(error.code, error.message) from None
     return changes
+
+
+def catalog_record(self) -> dict:
+    """``{"catalog_digests": {launch, models, capabilities}}`` of the catalogs the run starts with; ``{}`` when they
+    cannot be read now (the route selection then stops with its own code)."""
+    try:
+        return {"catalog_digests": bindings.catalog_digests(self._catalog_get())}
+    except (Stop, OSError, ValueError):
+        return {}
+
+
+def catalogs_changed(self, run_doc: dict) -> None:
+    """A resume runs on the catalogs of now; when they differ from those the run started with, the info
+    ``CATALOG_CHANGED`` names them (no stop: ``--frozen`` keeps the options and instructions, not the catalogs).
+    A run without the record (older than it) is read as before."""
+    recorded = run_doc.get("catalog_digests")
+    if not isinstance(recorded, dict):
+        return
+    current = catalog_record(self).get("catalog_digests") or {}
+    changed = [name for name in ("launch", "models", "capabilities") if recorded.get(name) != current.get(name)]
+    if changed:
+        self.progress.emit("info", reason_code="CATALOG_CHANGED",
+                           message=f"{', '.join(changed)} catalog(s) changed since the run started; the resume runs on "
+                                   "the current ones")
 
 
 def snapshot_stubs(self) -> dict:

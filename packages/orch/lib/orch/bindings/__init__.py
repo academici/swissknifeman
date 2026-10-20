@@ -165,6 +165,17 @@ def _digests(input_doc: dict, policy: dict, roles: Mapping[str, dict], binding: 
             "capabilities": _digest_of(records), "config": config}
 
 
+def catalog_digests(catalog: Catalog, capabilities: Mapping[tuple[str, str], dict] | None = None) -> dict:
+    """``{launch, models, capabilities}``: digests of the effective launch catalog (with the ``[orch.launch]``
+    overlays), the model catalog and every capability record, as the dry run of a launch plan digests them; the
+    provenance of the catalogs a conductor run started with."""
+    records = {f"{name}--{provider}": {key: value for key, value in record.items() if key != "_path"}
+               for (name, provider), record in sorted((capabilities if capabilities is not None
+                                                       else load_capabilities()).items())}
+    return {"launch": _digest_of(catalog.launch), "models": _digest_of(catalog.model_document()),
+            "capabilities": _digest_of(records)}
+
+
 def _proof_entry(binding: str, provider: str, cap: Mapping, stale: bool) -> dict:
     entry = {"binding": binding, "provider": provider, "source": cap.get("source", "declared"), "stale": stale}
     observed = cap.get("observed_at", cap.get("recorded_at"))

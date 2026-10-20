@@ -216,14 +216,15 @@ def _status_details(directory: Path, found: dict) -> dict:
                         entry[key] = change["to"]
             elif key == "run_tokens_hard_max":
                 limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
-    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED"}
+    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED"}
     beacons = {}
     for line in progress.read_lines(directory):
         if line.get("event") == "info" and line.get("reason_code") in codes:
             code = line["reason_code"]
             beacons.pop(code, None)
             beacons[code] = line
-    return {"lease": runs.live_owner(directory), "limits": limits, "beacons": list(beacons.values())}
+    return {"lease": runs.live_owner(directory), "limits": limits, "beacons": list(beacons.values()),
+            **({"catalog_digests": doc["catalog_digests"]} if isinstance(doc.get("catalog_digests"), dict) else {})}
 
 
 def _gates(args) -> int:

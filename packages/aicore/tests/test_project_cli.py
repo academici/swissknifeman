@@ -10,6 +10,7 @@ from unittest import mock
 
 from aicore.project import artifacts, cli
 from aicore.util.io import durable_replace
+from tests.isolation import isolated_project_search
 
 LOCK = ".swissknifeman/launcher.lock.json"
 LAUNCHER = ".swissknifeman/launcher.py"
@@ -25,12 +26,13 @@ def run(cwd, *argv, env=None):
 class ProjectCliTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        patcher = isolated_project_search(self._tmp.name)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.root = Path(self._tmp.name).resolve() / "proj"
         (self.root / ".git").mkdir(parents=True)
         (self.root / "src").mkdir()
-
-    def tearDown(self):
-        self._tmp.cleanup()
 
     def actions(self, output):
         return {item["path"]: item["action"] for item in json.loads(output)["actions"]}

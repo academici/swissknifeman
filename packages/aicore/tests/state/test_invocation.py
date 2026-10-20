@@ -9,6 +9,7 @@ from aicore.state import (LauncherError, ProjectContextConflict, ProjectContextR
                           find_project_root, read_invocation_context, require_project_path, resolve_project,
                           validate_launcher_env)
 from aicore.state.invocation import LOCK_SCHEMA, LAUNCHER_PROTOCOL
+from tests.isolation import isolated_project_search
 
 
 def make_project(base: Path, name: str = "proj", lock: bool = True) -> Path:
@@ -35,12 +36,13 @@ def launcher_env(root: Path, cwd: Path = None, **extra) -> dict:
 class Base(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
         self.base = Path(self._tmp.name).resolve()
+        patcher = isolated_project_search(self.base)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.a = make_project(self.base, "A")
         self.b = make_project(self.base, "B")
-
-    def tearDown(self):
-        self._tmp.cleanup()
 
 
 class ResolverAuthorityTests(Base):

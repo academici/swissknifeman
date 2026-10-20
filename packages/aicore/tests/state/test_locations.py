@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from aicore.state import locations as loc
+from tests.isolation import isolated_project_search
 
 
 class MachineLocationsTests(unittest.TestCase):
@@ -192,7 +193,7 @@ class ProjectLocationsTests(unittest.TestCase):
         self.assertEqual(loc.project_backups_dir(root), Path("/p/.swissknifeman/backups"))
 
     def test_find_project_root(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory() as tmp, isolated_project_search(tmp):
             base = Path(tmp).resolve()
             git_project = base / "a"
             (git_project / ".git").mkdir(parents=True)
@@ -215,7 +216,7 @@ class ProjectLocationsTests(unittest.TestCase):
             self.assertEqual(loc.find_project_root(base / "w", home=base / "nohome"), base / "w")
 
     def test_machine_state_directory_in_home_is_not_a_project(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory() as tmp, isolated_project_search(tmp):
             home = Path(tmp).resolve()
             (home / ".swissknifeman").mkdir()
             work = home / "scratch"
@@ -300,6 +301,9 @@ class ResolveProjectTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.base = Path(temporary.name).resolve()
+        patcher = isolated_project_search(self.base)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.home = self.base / "home"
         self.home.mkdir()
         self.project = self.base / "proj"

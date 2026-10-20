@@ -4,10 +4,12 @@ import importlib
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from aicore.ext.plugins import Registration, invoke_one, load_manifest
 
@@ -45,7 +47,8 @@ class AdapterCase(unittest.TestCase):
                                    timeout_seconds=30, enabled=True, manifest=manifest, problem=None)
 
     def query(self, query_id, *, umbrella="umbrella-ok", params=None, context=None, project=True):
-        env = {"PATH": os.environ["PATH"], "HOME": str(self.home), "SKM_UMBRELLA": str(FIXTURES / umbrella)}
+        env = {"PATH": os.environ["PATH"], "HOME": str(self.home), "SKM_UMBRELLA": str(FIXTURES / umbrella),
+               "AICORE_ROOT": os.environ["AICORE_ROOT"]}
         return invoke_one(self.plugin, "gui:query", {"id": query_id, "context": context or {}, "params": params or {}},
                           env=env, project=str(self.project) if project else None)
 
@@ -70,13 +73,16 @@ class AdapterCase(unittest.TestCase):
 class TestRuns(AdapterCase):
     def test_runs_table(self):
         out = self.ok("gui-orch.runs")
-        self.assertEqual(["cnd-new", "cnd-old", "cnd-bad"], [row["id"] for row in out["rows"]])
+        self.assertEqual(["cnd-new", "cnd-old", "cnd-bad", "cnd-orphaned"], [row["id"] for row in out["rows"]])
         new = out["rows"][0]
-        self.assertEqual({"run": "cnd-new", "status": "running", "reason": "-", "created": "2026-10-17T09:00:00Z",
-                          "items": "P2.1, P2.2", "resumes": 1}, new["cells"])
+        self.assertEqual({"run": "cnd-new", "status": "warn", "reason": "-", "created": "2026-10-17T09:00:00Z",
+                          "items": "P2.1, P2.2", "resumes": 1,
+                          "owner": "pid 123 on test-host since 2026-10-17T09:00:00Z (run)"}, new["cells"])
         self.assertEqual({"route": "gui-orch.run", "params": {"run_id": "cnd-new"}}, new["link"])
-        self.assertEqual("unreadable", out["rows"][2]["cells"]["status"])
-        self.assertEqual(3, out["total"])
+        self.assertEqual("unknown", out["rows"][2]["cells"]["status"])
+        self.assertEqual("warn", out["rows"][3]["cells"]["status"])
+        self.assertIn("RUN_ORPHANED: no live conductor", out["rows"][3]["cells"]["reason"])
+        self.assertEqual(4, out["total"])
         call = self.calls()[0]
         self.assertEqual(["orch", "conduct", "runs", "--json"], call["argv"])
         self.assertEqual(str(self.project), call["cwd"])
@@ -104,9 +110,11 @@ class TestRun(AdapterCase):
     def test_detail_of_a_run(self):
         out = self.ok("gui-orch.run", params={"run_id": RUN})
         fields = {field["label"]: field["value"] for field in out["fields"]}
-        self.assertEqual(("running", "1200 in, 340 out"), (fields["Status"], fields["Tokens"]))
+        self.assertEqual(("warn", "1200 in, 340 out"), (fields["Status"], fields["Tokens"]))
+        self.assertEqual("running", fields["State"])
+        self.assertIn("pid 123 on test-host", fields["Owner"])
         self.assertIn("P2.2 executor.1 executor", fields["Now"])
-        self.assertEqual([{"command": "gui-orch.resume", "input": {"run_id": RUN}}], out["actions"])
+        self.assertNotIn("actions", out)
         self.assertEqual({"Items", "Agents"}, {section["title"] for section in out["sections"]})
         self.assertEqual(["orch", "conduct", "status", "--run", RUN, "--json"], self.calls()[0]["argv"])
 
@@ -130,6 +138,116 @@ class TestRun(AdapterCase):
         blocked = next(row for row in out["rows"] if row["id"] == "P2.3")
         self.assertIn("REVIEW_FAILED", blocked["detail"])
         self.assertIn("review.1", blocked["detail"])
+
+
+class TestObservability(AdapterCase):
+    def test_orphaned_and_stopped_runs_offer_resume_and_no_stale_owner(self):
+        for state in ("orphaned", "stopped"):
+            run_id = f"cnd-{state}"
+            out = self.ok("gui-orch.run", params={"run_id": run_id})
+            fields = {field["label"]: field["value"] for field in out["fields"]}
+            self.assertEqual(("warn", "-"), (fields["Status"], fields["Owner"]))
+            self.assertEqual([{"command": "gui-orch.resume", "input": {"run_id": run_id}}], out["actions"])
+            if state == "orphaned":
+                self.assertEqual("RUN_ORPHANED: no live conductor holds the run; resume continues it", fields["Detail"])
+
+    def test_routes_keep_used_and_available_now_separate_and_whitelisted(self):
+        out = self.ok("gui-orch.routes", params={"run_id": RUN, "item": "P2.1"})
+        self.assertEqual("ok", out["rows"][0]["status"])
+        self.assertIn("used: codex/recorded-model", out["rows"][0]["detail"])
+        self.assertIn("available now: claude-code/current-model", out["rows"][0]["detail"])
+        self.assertNotIn("PRIVATE_", json.dumps(out))
+        self.assertEqual(["orch", "route", "explain", "--role", "executor", "--run", RUN, "--item", "P2.1", "--json"],
+                         self.calls()[-1]["argv"])
+        unknown = self.ok("gui-orch.routes", params={"run_id": RUN, "item": "P2.2"})
+        self.assertIn("used: unknown", unknown["rows"][0]["detail"])
+
+    def test_prompt_is_only_metadata_with_short_digests_and_budget_totals(self):
+        out = self.ok("gui-orch.prompt", params={"run_id": RUN, "item": "P2.1", "step": "executor.1-q2"})
+        fields = {field["label"]: field["value"] for field in out["fields"]}
+        self.assertEqual("origin: claim; tokens: 42; sha256: " + "a" * 12, fields["input"])
+        self.assertEqual("not applicable", fields["Excluded skill"])
+        self.assertEqual((42, 0, 0), tuple(fields[name] for name in ("core", "supporting", "retrieval")))
+        self.assertNotIn("PRIVATE_", json.dumps(out))
+        self.assertNotIn("a" * 13, json.dumps(out))
+        self.assertEqual(["orch", "conduct", "prompt", "explain", "--run", RUN, "--item", "P2.1",
+                          "--step", "executor.1-q2", "--json"], self.calls()[-1]["argv"])
+
+    def test_traversal_params_are_refused_by_host_and_adapter_before_cli(self):
+        inputs = importlib.import_module("gui.core.inputs")
+        errors = importlib.import_module("gui.errors")
+        query = next(query for query in GUI_DOC["queries"] if query["id"] == "gui-orch.prompt")
+        for step in ("../x", "a/b", "executor.1/../../x", "executor.1\n", "A"):
+            params = {"run_id": RUN, "item": "P2.1", "step": step}
+            with self.subTest(step=step), self.assertRaises(errors.GuiError):
+                inputs.validate(query["params"], params, str(self.project), pointer="/params")
+            self.refused(query["id"], "ORCH_CONTEXT_MISSING", params=params)
+        self.refused(query["id"], "ORCH_CONTEXT_MISSING", params={"run_id": RUN, "item": "../x", "step": "scout"})
+        self.assertEqual([], self.calls())
+
+    def test_budget_has_ids_numeric_values_valid_statuses_and_incomplete_warning(self):
+        out = self.ok("gui-orch.budget", params={"run_id": RUN})
+        metrics = {metric["id"]: metric for metric in out["metrics"]}
+        self.assertEqual(1540, metrics["run"]["value"])
+        self.assertIn("no limit", metrics["run"]["label"])
+        self.assertEqual("warn", metrics["item.0.tokens_max"]["status"])
+        self.assertEqual("ok", metrics["item.0.tokens_hard_max"]["status"])
+        self.assertEqual("warn", metrics["item.1.tokens_hard_max"]["status"])
+        self.assertEqual("warn", metrics["usage_incomplete"]["status"])
+        self.assertIn("totals may be understated", metrics["usage_incomplete"]["label"])
+        self.assertEqual(len(metrics), len(out["metrics"]))
+
+    def test_gates_are_cli_data_with_only_known_provider_repair(self):
+        out = self.ok("gui-orch.gates")
+        row = out["rows"][0]
+        self.assertEqual(("codex", "warn"), (row["id"], row["status"]))
+        self.assertEqual({"command": "gui-orch.gates-clear", "input": {"provider": "codex"}}, row["repair"])
+        self.assertEqual(["orch", "conduct", "gates", "--json"], self.calls()[0]["argv"])
+        result = self.query("gui-orch.gates-clear")
+        self.assertEqual("ORCH_UNKNOWN_QUERY", result.code)
+
+    def test_display_redacts_before_cutting_and_removes_ansi(self):
+        sys.path.insert(0, str(BRIDGE))
+        self.addCleanup(sys.path.remove, str(BRIDGE))
+        adapter = importlib.import_module("adapter")
+        token = "sk-" + "A" * 70
+        self.assertEqual("‹redacted›", adapter.safe_text(token, 64))
+        self.assertEqual("‹redacted›", adapter.safe_text("\x1b[31m" + token + "\x1b[0m", 64))
+        long = adapter.safe_text(token + " " + "x" * 800, 64)
+        self.assertEqual(64, len(long))
+        self.assertNotIn("sk-", long)
+        self.assertEqual("‹redacted›", adapter.md_text(token))
+        with mock.patch.object(adapter, "orch_json", return_value={"gates": [{"provider": token, "code": token}]}):
+            out = adapter.gates(str(self.project), 10)
+        self.assertNotIn(token[:20], json.dumps(out))
+        self.assertNotIn("repair", out["rows"][0])
+        with mock.patch.object(adapter, "orch_json", return_value={}):
+            out = adapter.budget(str(self.project), 10, context={}, params={"run_id": RUN})
+        self.assertEqual("unknown", out["metrics"][0]["status"])
+        self.assertEqual([], contracts.validate(out, "view-data"))
+        with mock.patch.object(adapter, "orch_json", return_value={"blocks": [
+                {"kind": "input", "origin": {"text": "PRIVATE"}, "sha256": {"text": "PRIVATE"}}]}):
+            out = adapter.prompt(str(self.project), 10, context={}, params={"run_id": RUN, "item": "P2.1", "step": "scout"})
+        self.assertNotIn("PRIVATE", json.dumps(out))
+        with mock.patch.object(adapter, "orch_json", return_value={"items": [
+                {"item": "A" * 64, "tokens": {"input": 1}}, {"item": "A" * 63 + "B", "tokens": {"input": 2}}]}):
+            out = adapter.budget(str(self.project), 10, context={}, params={"run_id": RUN})
+        self.assertEqual(len(out["metrics"]), len({metric["id"] for metric in out["metrics"]}))
+        self.assertTrue(all(len(metric["label"]) <= 64 for metric in out["metrics"]))
+        self.assertTrue(all("limit unknown" in metric["label"] for metric in out["metrics"]))
+
+    def test_isolated_plugin_locates_redaction_via_the_hub_registry(self):
+        env = {"PATH": os.environ["PATH"], "HOME": str(self.home),
+               "SKM_UMBRELLA": str(FIXTURES / "umbrella-ok"), "FAKE_AICORE_ROOT": os.environ["AICORE_ROOT"]}
+        request = {"protocol": "1", "op": "invoke", "point": "gui:query", "context": {"project_root": str(self.project)},
+                   "input": {"id": "gui-orch.runs", "params": {}}}
+        result = subprocess.run([sys.executable, "-I", str(BRIDGE / "adapter.py")], input=json.dumps(request),
+                                text=True, capture_output=True, env=env, cwd=str(self.project), timeout=30)
+        self.assertEqual(0, result.returncode, result.stderr)
+        doc = json.loads(result.stdout)
+        self.assertEqual("ok", doc["status"])
+        self.assertEqual([], contracts.validate(doc["output"], "view-data"))
+        self.assertIn(["units", "list", "--json"], [call["argv"] for call in self.calls()])
 
 
 class TestReport(AdapterCase):
@@ -191,14 +309,16 @@ class TestQuestionsAndSandbox(AdapterCase):
 
     def test_unknown_query_and_command_points(self):
         self.refused("gui-orch.nope", "ORCH_UNKNOWN_QUERY")
-        env = {"PATH": os.environ["PATH"], "HOME": str(self.home), "SKM_UMBRELLA": str(FIXTURES / "umbrella-ok")}
+        env = {"PATH": os.environ["PATH"], "HOME": str(self.home), "SKM_UMBRELLA": str(FIXTURES / "umbrella-ok"),
+               "AICORE_ROOT": os.environ["AICORE_ROOT"]}
         result = invoke_one(self.plugin, "gui:command", {"id": "gui-orch.resume", "context": {}, "input": {}}, env=env,
                             project=str(self.project))
         self.assertEqual("error", result.status)
 
     def test_every_declared_query_is_answered(self):
         for query in GUI_DOC["queries"]:
-            params = {"run_id": RUN} if any(p["name"] == "run_id" and p["required"] for p in query.get("params", [])) else {}
+            values = {"run_id": RUN, "item": "P2.1", "step": "executor.1"}
+            params = {p["name"]: values[p["name"]] for p in query.get("params", []) if p["required"]}
             with self.subTest(query=query["id"]):
                 self.ok(query["id"], params=params)
 

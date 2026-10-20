@@ -328,7 +328,7 @@ is routable when the provider is enabled, its CLI is found, the transport and sa
 
 ### Route explain
 
-`orch.py route explain --role R [--plan P --item I] [--scenario S] [--json]` shows why a role runs where it does, without
+`orch.py route explain --role R [--plan P --item I | --run RUN --item I] [--scenario S] [--json]` shows why a role runs where it does, without
 starting anything: the `candidates` (the `stages` of the options, the reviewer selector, `[orch.conductor]` or the launch
 catalog, and the `fallback_routes` of the role) each with `available` and the `problem` that rules it out
 (`PROVIDER_DISABLED`, `TRANSPORT_UNSUPPORTED`, `SANDBOX_UNAVAILABLE`, `PROVIDER_UNAVAILABLE`, `PROVIDER_QUOTA`), the `selected`
@@ -339,6 +339,12 @@ scenario and the pack; with them they are the recorded options of the newest con
 (`ITEM_UNKNOWN` when there is none), including the minimum class and effort the work required. A candidate or the selected
 route that a run would refuse before any work (the minimum of the work, `instructions.sandbox = require`) is reported with its
 code, and `stop` names it.
+
+`--run RUN --item I` selects exactly that run; an unknown run or item never falls back to the newest run.
+The additive `used` object comes only from its `routes.json`, whitelisted to `provider`, `model`, `effort`, `class`
+(`null` when no route was recorded). `available_now` holds the current candidate's whitelisted `route`, `available`
+and `stop`; current configuration and gates can change it without changing history. Existing `selected` and
+`candidates` still describe availability now. Without `--run`, `--plan`/`--item` retains the newest-run lookup.
 
 ### Capacity gates
 
@@ -741,6 +747,10 @@ The heading, block position and authority remain the same.
 
 ### Prompt manifest
 
+`conduct prompt explain --step STEP` accepts only `^[a-z][a-z0-9-]*(\.[0-9]+(-q[0-9]+)?)?$`.
+The resolved manifest must stay inside the item's directory (and the item inside the run); traversal and symlink
+escapes return exit 1 with `PROMPT_PATH_INVALID`. This read-only command never starts a provider.
+
 A prompt is built from blocks `Block(kind, origin, text)` (`conductor/prompts.py`); `render(blocks)` joins their texts into
 the prompt byte for byte (a separator belongs to the block it follows). Every model role step writes
 `<item>/prompts/<step>.manifest.json` (`prompt-manifest/v1`) beside `<step>.md`: `step`, `role`, `route` (`provider`,
@@ -860,14 +870,24 @@ command and no contract changes. `--json` prints one object:
 
 ```json
 {"runs": [{"run_id": "cnd-...", "status": "running|finished|blocked|...", "reason_code": null,
-           "created": "2026-10-17T09:00:00Z", "items": ["P1.1"], "resumes": 0}]}
+           "created": "2026-10-17T09:00:00Z", "items": ["P1.1"], "resumes": 0, "owner": null}]}
 ```
 
 `status` and `reason_code` are those of `conduct status` (from the journal), `created` is the time of the first journal
 line (`null` before any line), `items` are the pieces of work seen in the journal (else those of `run.json`), `resumes`
 counts the `run.resume` lines. A project without runs gives `{"runs": []}`; a run whose `run.json` cannot be read is
-`{"run_id": "cnd-...", "status": "unreadable"}` and never an error. `--limit` is at least 1. Without `--json` one line
+`{"run_id": "cnd-...", "status": "unreadable", "owner": null}` and never an error. `--limit` is at least 1. Without `--json` one line
 per run is printed. Exit 0; the project is required as for every other `conduct` verb.
+
+`owner` is `{pid, host, started_at, command}` only while the run lease is held, otherwise `null`; stale metadata
+alone never implies ownership. `status --json` adds the same metadata as `lease`, plus `limits`, `beacons` and
+per-item `tokens`, `usage_incomplete`, `routes`. Existing journal fields retain their meaning. Missing item usage
+is `null`, routes are `{}`, and missing limits are `{}`. Routes expose only `provider`, `model`, `effort`, `class`.
+`limits.items` maps item refs to `tokens_max` and effective `tokens_hard_max`; `run_tokens_hard_max` retains
+`{value, source, file?}` provenance, with an invocation source when raised. `limit_raises` preserves the raise history,
+including an explicit zero removing a hard limit. `beacons` contains the last info event per code, in journal order,
+for `BUDGET_OVER`, `BUDGET_UNMETERED`, `STAGE_INTERRUPTED`, `ROLE_ORPHAN_KILLED`, `LIMIT_RAISED`.
+JSON display values are redacted before safe shortening; argv and environment from route snapshots are excluded.
 
 ### Removing old runs: `conduct prune`
 

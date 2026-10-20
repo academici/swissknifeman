@@ -8,12 +8,13 @@ route choice would take, with the layer each of its fields came from. Nothing is
 from __future__ import annotations
 
 from pathlib import Path
+import re
 from typing import Optional
 
 from aicore.provider.config import routing_available
 
 from orch import launch
-from orch.conductor import engine, gates, options as opts
+from orch.conductor import engine, gates, options as opts, runs
 from orch.conductor.policies.routing import LAUNCH_ROLE
 
 ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor")
@@ -104,7 +105,7 @@ def _row(conductor: engine.Conductor, item: engine.Item, role: str, origin: str,
 
 
 def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] = None, plan: Optional[str] = None,
-            ref: Optional[str] = None) -> dict:
+            ref: Optional[str] = None, run: Optional[str] = None) -> dict:
     """The explanation of the route of ``role``; raises ``ExplainError``."""
     if role not in ROLES:
         raise ExplainError("ROLE_UNKNOWN", f"{role!r} is not a role of the conductor: {', '.join(ROLES)}")
@@ -112,15 +113,28 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
     item = engine.Item(ref=ref or "(configuration)", orch_run="-", state={}, directory=Path(), claim=claim)
     conductor.run_id, conductor.run_doc = "cnd-explain", {"options_file": None}
     origin = "configuration"
+    used = None
     try:
-        if plan or ref:
-            if not (plan and ref):
-                raise ExplainError("ARGUMENTS_INVALID", "--plan and --item go together")
-            recorded = _latest_item_run(conductor.project, plan, ref)
+        if run or plan or ref:
+            if not ref or not (run or plan):
+                raise ExplainError("ARGUMENTS_INVALID", "--item requires --run or --plan; --run and --plan require --item")
+            if run:
+                if re.fullmatch(r"cnd-[0-9A-Za-z-]+", run) is None:
+                    raise ExplainError("RUN_UNKNOWN", "--run must be a conductor run id (cnd-...)")
+                directory = engine.runs_root(conductor.project) / run
+                run_doc = engine.read_json(directory / engine.RUN_FILE)
+                if not run_doc or (plan and run_doc.get("plan") != plan):
+                    raise ExplainError("RUN_UNKNOWN", f"no conductor run {run} for this project and plan")
+                options = engine.read_json(directory / engine.safe(ref) / "options.json")
+                recorded = (run, options) if options else None
+            else:
+                recorded = _latest_item_run(conductor.project, plan, ref)
             if recorded is None:
                 raise ExplainError("ITEM_UNKNOWN", f"no conductor run of {ref} in plan {plan} in this project; "
                                    "omit --plan and --item to explain the configuration")
             run_id, doc = recorded
+            routes = engine.read_json(engine.runs_root(conductor.project) / run_id / engine.safe(ref) / "routes.json") or {}
+            used = runs.public_route(routes[role]) if isinstance(routes.get(role), dict) else None
             claim["scenario"] = doc.get("scenario") or claim["scenario"]
             if doc.get("claim_route"):
                 claim["route"] = doc["claim_route"]  # the class and effort the work requires of its executor
@@ -164,15 +178,22 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
     for name in providers:
         enabled, layer = routing_available(name, resolved=conductor.settings.aicore) if conductor.settings.aicore else (True, "defaults")
         config[name] = {"enabled": enabled, "layer": layer}
-    return {"role": role, "scenario": claim["scenario"], "source": origin, "stages": stages,
+    return runs.display({"role": role, "scenario": claim["scenario"], "source": origin, "stages": stages,
             "selected": selected, "stop": stop, "candidates": rows,
+            "used": used, "available_now": {"route": runs.public_route(selected) if selected else None,
+                                             "available": selected is not None and stop is None, "stop": stop},
             "providers": config, "gates": [{"provider": name, **entry}
-                                           for name, entry in sorted(gates.active(engine.wall()).items())]}
+                                           for name, entry in sorted(gates.active(engine.wall()).items())]})
 
 
 def text(found: dict) -> str:
     """The explanation as plain text."""
     lines = [f"role {found['role']} (scenario {found['scenario']}, options from {found['source']})"]
+    if found["source"].startswith("run "):
+        used = found.get("used")
+        lines.append("used: " + ("/".join(str(used.get(key) or "-") for key in
+                                        ("provider", "model", "effort", "class")) if used else "unknown"))
+        lines.append("available now:")
     selected = found["selected"]
     if selected:
         route = "/".join(part for part in (selected["provider"], selected["model"], selected["effort"]) if part)

@@ -59,7 +59,7 @@ class ConductRunsTests(unittest.TestCase):
         rows = runs.listing(self.project)
         self.assertEqual(["cnd-new", "cnd-old"], [row["run_id"] for row in rows])
         self.assertEqual({"run_id": "cnd-old", "status": "finished", "reason_code": None, "created": "2026-10-16T10:00:00Z",
-                          "items": ["P1.1"], "resumes": 0}, rows[1])
+                          "items": ["P1.1"], "resumes": 0, "owner": None}, rows[1])
         self.assertEqual(("running", None, 1, ["P2.1"]), (rows[0]["status"], rows[0]["reason_code"], rows[0]["resumes"],
                                                           rows[0]["items"]))
         self.assertEqual([rows[0]], runs.listing(self.project, 1))
@@ -80,8 +80,8 @@ class ConductRunsTests(unittest.TestCase):
         self.make("cnd-list", raw="[1]")
         self.make("cnd-ok", [line("2026-10-17T09:00:00Z", "run.start")])
         rows = {row["run_id"]: row for row in runs.listing(self.project)}
-        self.assertEqual({"run_id": "cnd-broken", "status": "unreadable"}, rows["cnd-broken"])
-        self.assertEqual({"run_id": "cnd-list", "status": "unreadable"}, rows["cnd-list"])
+        self.assertEqual({"run_id": "cnd-broken", "status": "unreadable", "owner": None}, rows["cnd-broken"])
+        self.assertEqual({"run_id": "cnd-list", "status": "unreadable", "owner": None}, rows["cnd-list"])
         self.assertEqual("running", rows["cnd-ok"]["status"])
         self.assertEqual(0, self.conduct("runs")[0])
 
@@ -99,6 +99,126 @@ class ConductRunsTests(unittest.TestCase):
         self.assertEqual(2, caught.exception.code)
         self.make("cnd-one", [line("2026-10-17T09:00:00Z", "run.start")])
         self.assertNotRegex(self.conduct("runs", "--json")[1], r"\d\.\d")
+
+
+class ConductObservabilityTests(ConductRunsTests):
+    def test_owner_requires_a_live_lock_and_legacy_status_stays_running(self):
+        directory = self.make("cnd-lease", [line("t", "run.start")], doc={"lease": True})
+        with RunLease(directory).acquire("run"):
+            owner = RunLease.owner(directory)
+            self.assertEqual(owner, runs.listing(self.project)[0]["owner"])
+            code, out, err = self.conduct("status", "--run", directory.name, "--json")
+            self.assertEqual(0, code, err)
+            self.assertEqual(owner, json.loads(out)["lease"])
+            self.assertEqual("running", json.loads(out)["status"])
+        # Stale metadata is not proof of ownership.
+        (directory / "lease.json").write_text(json.dumps(owner))
+        code, out, err = self.conduct("status", "--run", directory.name, "--json")
+        self.assertEqual(0, code, err)
+        self.assertEqual(("orphaned", "RUN_ORPHANED", None),
+                         tuple(json.loads(out)[key] for key in ("status", "reason_code", "lease")))
+        row = runs.listing(self.project)[0]
+        self.assertEqual(("orphaned", None), (row["status"], row["owner"]))
+        legacy = self.make("cnd-legacy", [line("t", "run.start")])
+        self.assertEqual("running", runs._row(legacy)["status"])
+
+    def test_status_additions_use_frozen_files_and_effective_raises(self):
+        codes = ("BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED")
+        lines = [line("t", "run.start"), line("t", "item.start", item="W1")]
+        lines += [line("t", "info", reason_code=code, message="old") for code in codes]
+        lines += [line("u", "info", reason_code="BUDGET_OVER", message="new")]
+        directory = self.make("cnd-status", lines, doc={"limits_run": {
+            "run_tokens_hard_max": {"value": 1000, "source": "config:machine"}}})
+        folder = directory / "W1"
+        folder.mkdir()
+        state = {"items": {"W1": {"tokens": {"input": 15, "output": 6}, "usage_incomplete": True}},
+                 "tokens": {"input": 15, "output": 6}, "stop": None,
+                 "limit_raises": [{"key": "tokens_hard_max", "from": 10, "to": 0}]}
+        (directory / "state.json").write_text(json.dumps(state))
+        (folder / "options.json").write_text(json.dumps({"options": {"limits": {"tokens_max": 5, "tokens_hard_max": 10}}}))
+        (folder / "routes.json").write_text(json.dumps({"executor": {"provider": "codex", "model": "used",
+            "model_class": "implementation", "effort": "high", "argv": ["SECRET_ARGV"], "env": {"X": "SECRET_ENV"}}}))
+        before = {p: p.read_bytes() for p in directory.rglob("*") if p.is_file()}
+        code, out, err = self.conduct("status", "--run", directory.name, "--json")
+        self.assertEqual(0, code, err)
+        found = json.loads(out)
+        from orch.conductor import progress
+        legacy = progress.summarize(progress.read_lines(directory))
+        self.assertEqual(legacy, {**{key: found[key] for key in legacy}, "items": [
+            {key: found["items"][0][key] for key in legacy["items"][0]}]})
+        item = found["items"][0]
+        self.assertEqual(state["items"]["W1"]["tokens"], item["tokens"])
+        self.assertTrue(item["usage_incomplete"])
+        self.assertEqual({"provider", "model", "effort", "class"}, set(item["routes"]["executor"]))
+        self.assertNotIn("SECRET_", out)
+        self.assertEqual(0, found["limits"]["items"]["W1"]["tokens_hard_max"])
+        self.assertEqual("config:machine", found["limits"]["run_tokens_hard_max"]["source"])
+        self.assertEqual(5, len(found["beacons"]))
+        self.assertEqual("new", found["beacons"][-1]["message"])
+        self.assertEqual(before, {p: p.read_bytes() for p in directory.rglob("*") if p.is_file()})
+        state["limit_raises"].append({"key": "run_tokens_hard_max", "from": 1000, "to": 2000})
+        (directory / "state.json").write_text(json.dumps(state))
+        code, out, err = self.conduct("status", "--run", directory.name, "--json")
+        self.assertEqual(0, code, err)
+        self.assertEqual({"value": 2000, "source": "invocation:--raise-limit"},
+                         json.loads(out)["limits"]["run_tokens_hard_max"])
+
+    def test_status_without_new_files_has_all_additive_keys(self):
+        self.make("cnd-empty", [line("t", "run.start"), line("t", "item.start", item="W1")])
+        code, out, err = self.conduct("status", "--json")
+        self.assertEqual(0, code, err)
+        doc = json.loads(out)
+        self.assertEqual((None, {}, []), (doc["lease"], doc["limits"], doc["beacons"]))
+        self.assertEqual((None, None, {}), tuple(doc["items"][0][key] for key in ("tokens", "usage_incomplete", "routes")))
+
+    def test_json_redacts_before_shortening_short_and_long_strings(self):
+        token = "sk-" + "A" * 40
+        directory = self.make("cnd-secret", [line("t", "run.start"), line("t", "item.start", item="W1")])
+        folder = directory / "W1"
+        folder.mkdir()
+        (folder / "routes.json").write_text(json.dumps({"executor": {"model": token}}))
+        (directory / "state.json").write_text(json.dumps({"stop": {"message": token + "x" * 700}}))
+        with RunLease(directory).acquire("run"):
+            (directory / "lease.json").write_text(json.dumps({"pid": 1, "host": token, "command": "run"}))
+            for argv in (("status", "--json"), ("runs", "--json")):
+                code, out, err = self.conduct(*argv)
+                self.assertEqual(0, code, err)
+                self.assertNotIn(token[:20], out)
+                self.assertIn("‹redacted›", out)
+        self.assertEqual({"provider": None, "model": None, "effort": None, "class": None},
+                         runs.public_route({"model": {"argv": "PRIVATE"}, "effort": ["PRIVATE"]}))
+
+    def test_prompt_step_and_resolved_path_reject_traversal_and_symlinks(self):
+        directory = self.make("cnd-prompt")
+        prompts = directory / "W1" / "prompts"
+        prompts.mkdir(parents=True)
+        for step in ("../x", "a/b", "executor.1/../x", "Executor", "executor.1\n"):
+            code, out, err = self.conduct("prompt", "explain", "--run", directory.name, "--item", "W1", "--step", step, "--json")
+            self.assertEqual((1, ""), (code, out))
+            self.assertIn("PROMPT_PATH_INVALID", err)
+        outside = self.project / "outside.json"
+        outside.write_text('{"text": "PRIVATE"}')
+        (prompts / "executor.1.manifest.json").symlink_to(outside)
+        code, out, err = self.conduct("prompt", "explain", "--item", "W1", "--step", "executor.1", "--json")
+        self.assertEqual((1, ""), (code, out))
+        self.assertIn("PROMPT_PATH_INVALID", err)
+        (prompts / "executor.1.manifest.json").unlink()
+        prompts.rmdir()
+        prompts.symlink_to(self.project, target_is_directory=True)
+        code, out, err = self.conduct("prompt", "explain", "--item", "W1", "--step", "executor.1", "--json")
+        self.assertEqual(1, code)
+        self.assertIn("PROMPT_PATH_INVALID", err)
+
+    def test_valid_prompt_steps_still_read_the_manifest(self):
+        directory = self.make("cnd-prompt")
+        folder = directory / "W1" / "prompts"
+        folder.mkdir(parents=True)
+        for step in ("scout", "executor.1", "executor.1-q2", "context-scout"):
+            doc = {"step": step, "blocks": []}
+            (folder / f"{step}.manifest.json").write_text(json.dumps(doc))
+            code, out, err = self.conduct("prompt", "explain", "--item", "W1", "--step", step, "--json")
+            self.assertEqual(0, code, err)
+            self.assertEqual(doc, json.loads(out))
 
 
 class ConductPruneTests(ConductRunsTests):

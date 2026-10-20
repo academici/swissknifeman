@@ -73,10 +73,20 @@ class TestDescriptors(CommandCase):
     def test_resume_and_release_argv_are_exact(self):
         self.assertEqual(["resume", "--run", RUN], self.host_argv("gui-orch.resume", {"run_id": RUN}))
         self.assertEqual(["release", "--run", RUN, "--item", "P2.1"],
-                         self.host_argv("gui-orch.release", {"run_id": RUN, "item": "P2.1"}))
+                          self.host_argv("gui-orch.release", {"run_id": RUN, "item": "P2.1"}))
+
+    def test_gates_clear_is_an_always_confirmed_typed_argv_command(self):
+        command = COMMANDS["gui-orch.gates-clear"]
+        self.assertEqual("always", command["confirmation"])
+        self.assertEqual(["claude-code", "codex", "grok"], command["input"][0]["enum"])
+        for provider in command["input"][0]["enum"]:
+            self.assertEqual(["gates-clear", "--provider", provider],
+                             self.host_argv(command["id"], {"provider": provider}))
 
     def test_bad_values_are_refused_by_the_host_before_any_argv(self):
-        cases = [("gui-orch.run-ready", {"plan": "P1.1", "max_items": 3}),
+        cases = [("gui-orch.gates-clear", {"provider": "unknown"}), ("gui-orch.gates-clear", {}),
+                 ("gui-orch.gates-clear", {"provider": "codex --clear"}),
+                 ("gui-orch.run-ready", {"plan": "P1.1", "max_items": 3}),
                  ("gui-orch.run-ready", {"plan": PLAN, "max_items": 0}),
                  ("gui-orch.run-ready", {"plan": PLAN, "max_items": 21}),
                  ("gui-orch.run-ready", {"plan": PLAN, "max_items": "P1.1 P1.2"}),
@@ -95,6 +105,11 @@ class TestDescriptors(CommandCase):
 
 
 class TestRunPy(CommandCase):
+    def test_gates_clear_runs_only_one_enum_provider(self):
+        result = self.run_py(["gates-clear", "--provider", "codex"])
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([["orch", "conduct", "gates", "--clear", "codex"]], self.logged())
+
     def test_run_ready_runs_orch_with_ready_and_a_count(self):
         result = self.run_py(["run-ready", "--plan", PLAN, "--max-items", "3"])
         self.assertEqual(0, result.returncode, result.stderr)
@@ -109,7 +124,9 @@ class TestRunPy(CommandCase):
                           ["orch", "conduct", "release", "--run", RUN, "--item", "P2.1"]], self.logged())
 
     def test_anything_else_exits_2_without_running_orch(self):
-        for args in ([], ["status"], ["run-ready"], ["run-ready", "--plan", PLAN], ["run-ready", "--plan", PLAN, "--max-items", "0"],
+        for args in ([], ["gates-clear"], ["gates-clear", "--provider", "unknown"], ["gates-clear", "--provider", ""],
+                     ["gates-clear", "--provider", "codex", "--all"],
+                     ["status"], ["run-ready"], ["run-ready", "--plan", PLAN], ["run-ready", "--plan", PLAN, "--max-items", "0"],
                      ["run-ready", "--plan", PLAN, "--max-items", "99"], ["run-ready", "--plan", PLAN, "--max-items", "3x"],
                      ["run-ready", "--plan", PLAN, "--max-items", "3", "--items", "P1.1"],
                      ["run-ready", "--max-items", "3", "--plan", PLAN], ["run-ready", "--plan", "P1.1", "--max-items", "2"],

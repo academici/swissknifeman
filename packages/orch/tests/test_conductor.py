@@ -2328,6 +2328,51 @@ class RouteExplainTests(ConductorCase):
         self.assertTrue(found["source"].startswith("run cnd-"), found["source"])
         self.assertEqual(found["selected"]["provider"], "claude-code")
 
+    def test_explicit_run_keeps_used_separate_from_current_availability(self):
+        from orch.conductor import options
+        root = engine.runs_root(self.project)
+        recorded = {"provider": "codex", "model": "historical-model", "effort": "high", "model_class": "implementation",
+                    "argv": ["PRIVATE_ARGV"], "env": {"TOKEN": "PRIVATE_ENV"}}
+        for run_id, model in (("cnd-old", "historical-model"), ("cnd-new", "newer-model")):
+            folder = root / run_id / "W1"
+            folder.mkdir(parents=True)
+            (folder.parent / "run.json").write_text(json.dumps({"plan": "T"}))
+            (folder / "options.json").write_text(json.dumps({"options": options.DEFAULTS, "scenario": "full"}))
+            (folder / "routes.json").write_text(json.dumps({"executor": dict(recorded, model=model)}))
+        before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+        found = self.explain("--role", "executor", "--run", "cnd-old", "--item", "W1")
+        self.assertEqual("run cnd-old", found["source"])
+        self.assertEqual({"provider": "codex", "model": "historical-model", "effort": "high", "class": "implementation"},
+                         found["used"])
+        self.assertEqual("claude-code", found["available_now"]["route"]["provider"])
+        self.assertTrue(found["available_now"]["available"])
+        self.assertNotIn("PRIVATE_", json.dumps(found))
+        gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
+        gated = self.explain("--role", "executor", "--run", "cnd-old", "--item", "W1")
+        self.assertEqual(found["used"], gated["used"])
+        self.assertFalse(gated["available_now"]["available"])
+        self.assertEqual("PROVIDER_QUOTA", gated["available_now"]["stop"]["code"])
+        self.assertEqual(before, {p: p.read_bytes() for p in root.rglob("*") if p.is_file()})
+
+    def test_explicit_run_missing_routes_are_unknown_and_errors_never_select_newest(self):
+        from orch import cli as orch_cli
+        from orch.conductor import options
+        folder = engine.runs_root(self.project) / "cnd-new" / "W1"
+        folder.mkdir(parents=True)
+        (folder.parent / "run.json").write_text(json.dumps({"plan": "T"}))
+        (folder / "options.json").write_text(json.dumps({"options": options.DEFAULTS}))
+        self.assertIsNone(self.explain("--role", "executor", "--run", "cnd-new", "--item", "W1")["used"])
+        for extra, reason in ((["--run", "cnd-missing", "--item", "W1"], "RUN_UNKNOWN"),
+                              (["--run", "../x", "--item", "W1"], "RUN_UNKNOWN"),
+                              (["--run", "cnd-new"], "ARGUMENTS_INVALID"),
+                              (["--run", "cnd-new", "--item", "W2"], "ITEM_UNKNOWN"),
+                              (["--run", "cnd-new", "--plan", "OTHER", "--item", "W1"], "RUN_UNKNOWN")):
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                code = orch_cli.main(["route", "explain", "--role", "executor", *extra, "--json"])
+            self.assertEqual((1, ""), (code, out.getvalue()))
+            self.assertIn(reason, err.getvalue())
+
     def test_the_recorded_minimum_of_the_work_is_applied(self):
         self.set_items({"W1": {"route": {"class": "frontier", "effort": "high"}}})
         code, _, err = self.run_items("W1")

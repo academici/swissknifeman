@@ -7,7 +7,7 @@ project folder and moves fields of its JSON answers into ``view-data/v1``. It re
 orchestrator and imports no module: the list of runs is ``conduct runs``, the report is the file whose path the CLI
 prints, read only when its real path lies under ``<project>/.swissknifeman/orch/reports/<run>/``. It computes no
 status of its own, only the map from an outcome to a view status. Every string is shown as text (control characters
-removed); markdown goes to the host sanitizer. Counts and tokens are integers. stdlib only.
+removed); markdown goes to the host sanitizer. Counts and tokens are integers. Redaction uses the aicore foundation.
 """
 from __future__ import annotations
 
@@ -29,8 +29,13 @@ OWNER = "gui-orch"
 RUN_ID = re.compile(r"^cnd-[0-9A-Za-z-]+$")
 PLAN_REF = re.compile(r"^(?:[0-9]{4}\.[0-9]{2}\.[0-9]{2}-№[0-9]+-[A-Z][A-Z0-9-]*|PLAN[0-9]+)$")
 ITEM_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+STEP = re.compile(r"^[a-z][a-z0-9-]*(\.[0-9]+(-q[0-9]+)?)?$")
+PROVIDERS = ("claude-code", "codex", "grok")
+ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor")
 STATUSES = ("ok", "warn", "fail", "skip", "unknown")
-OUTCOME_STATUS = {"done": "ok", "finished": "ok", "done_with_deviations": "warn", "blocked": "fail", "failed": "fail"}
+OUTCOME_STATUS = {"done": "ok", "finished": "ok", "done_with_deviations": "warn", "blocked": "fail", "failed": "fail",
+                  "orphaned": "warn", "stopped": "warn", "running": "warn"}
+ORPHANED = "RUN_ORPHANED: no live conductor holds the run; resume continues it"
 REPORT_LIMIT = 200_000
 SANDBOX_NOTE = ("The provider sandbox restricts the commands of orch roles; GUI plugin processes are not sandboxed "
                 "(permissions are advisory).")
@@ -46,13 +51,48 @@ class OrchError(Exception):
         self.message = message
 
 
-def safe_text(value: Any, limit: int = 300) -> str:
-    text = _CONTROL.sub(" ", _ANSI.sub("", str(value))).strip()
+def _foundation():
+    """Load shared redaction via the foundation root or the hub registry, never a neighbour path."""
+    try:
+        from aicore.util.redact import env_secrets, redact_text
+    except ImportError:
+        root = os.environ.get("AICORE_ROOT")
+        if not root:
+            command = os.environ.get("SKM_UMBRELLA") or shutil.which("swissknifeman")
+            if not command:
+                raise RuntimeError("AICORE_UNAVAILABLE: the foundation root or hub registry is required") from None
+            try:
+                result = subprocess.run([command, "units", "list", "--json"], capture_output=True, text=True,
+                                        timeout=10, stdin=subprocess.DEVNULL, check=True)
+                doc = json.loads(result.stdout)
+                unit = next(unit for unit in doc.get("units", []) if unit.get("id") == "aicore")
+                root = os.path.join(doc.get("hub_root", ""), unit["root"])
+            except (OSError, ValueError, KeyError, StopIteration, subprocess.SubprocessError):
+                raise RuntimeError("AICORE_UNAVAILABLE: the hub registry did not locate the foundation") from None
+        sys.path.insert(0, os.path.join(root, "lib"))
+        from aicore.util.redact import env_secrets, redact_text
+    return env_secrets, redact_text
+
+
+_REDACTION = None
+
+
+def _redact(value: Any) -> str:
+    global _REDACTION
+    if _REDACTION is None:
+        _REDACTION = _foundation()
+    env_secrets, redact_text = _REDACTION
+    return redact_text(str(value), secrets=env_secrets())
+
+
+def safe_text(value: Any, limit: int = 500) -> str:
+    redacted = _redact(value)
+    text = _CONTROL.sub(" ", _ANSI.sub("", redacted)).strip()
     return text if len(text) <= limit else text[:limit - 1] + "…"
 
 
 def md_text(value: Any, limit: int = REPORT_LIMIT) -> str:
-    text = _MARKDOWN_CONTROL.sub(" ", _ANSI.sub("", str(value))).strip()
+    text = _MARKDOWN_CONTROL.sub(" ", _ANSI.sub("", _redact(value))).strip()
     return text if len(text) <= limit else text[:limit - 1] + "…"
 
 
@@ -105,15 +145,15 @@ def _int(value: Any) -> int:
     return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
-def _text(value: Any, fallback: str, limit: int = 300) -> str:
-    return (safe_text(value, limit) if value is not None else "") or fallback
+def _text(value: Any, fallback: str, limit: int = 500) -> str:
+    return (safe_text(value, limit) if isinstance(value, (str, int, float, bool)) else "") or fallback
 
 
 def _run_id(context: Dict[str, Any], params: Dict[str, Any], *, required: bool = True) -> Optional[str]:
     run_id = context.get("run_id") or params.get("run_id")
     if run_id is None and not required:
         return None
-    if not isinstance(run_id, str) or not RUN_ID.match(run_id):
+    if not isinstance(run_id, str) or not RUN_ID.fullmatch(run_id):
         raise OrchError("ORCH_CONTEXT_MISSING", "run_id must look like cnd-...")
     return run_id
 
@@ -125,7 +165,15 @@ def _need_root(root: Optional[str]) -> str:
 
 
 def _run_link(run_id: str) -> Dict[str, Any]:
-    return {"route": f"{OWNER}.run", "params": {"run_id": run_id}}
+    return {"route": f"{OWNER}.run", "params": {"run_id": safe_text(run_id, 64)}}
+
+
+def _owner(value: Any) -> str:
+    owner = _dict(value)
+    if not owner:
+        return "-"
+    return safe_text(f"pid {owner.get('pid') or 'unknown'} on {owner.get('host') or 'unknown'} "
+                     f"since {owner.get('started_at') or 'unknown'} ({owner.get('command') or 'unknown'})")
 
 
 def view_status(outcome: Any, running: bool = False) -> str:
@@ -138,19 +186,21 @@ def view_status(outcome: Any, running: bool = False) -> str:
 
 RUN_COLUMNS = [{"id": "run", "title": "Run", "type": "text"}, {"id": "status", "title": "Status", "type": "status"},
                {"id": "reason", "title": "Reason", "type": "text"}, {"id": "created", "title": "Started", "type": "text"},
-               {"id": "items", "title": "Items", "type": "text"}, {"id": "resumes", "title": "Resumes", "type": "number"}]
+               {"id": "items", "title": "Items", "type": "text"}, {"id": "resumes", "title": "Resumes", "type": "number"},
+               {"id": "owner", "title": "Owner", "type": "text"}]
 
 
 def _runs_rows(root: str, timeout_s: float, limit: Optional[int]) -> List[Dict[str, Any]]:
     args = ["conduct", "runs", "--json"] + (["--limit", str(limit)] if limit else [])
     rows = []
     for run in _list(_dict(orch_json(args, root, timeout_s)).get("runs")):
-        if not isinstance(run, dict) or not isinstance(run.get("run_id"), str) or not RUN_ID.match(run["run_id"]):
+        if not isinstance(run, dict) or not isinstance(run.get("run_id"), str) or not RUN_ID.fullmatch(run["run_id"]):
             continue
         items = [safe_text(item, 64) for item in _list(run.get("items")) if isinstance(item, str)]
-        rows.append({"id": run["run_id"], "cells": {
-            "run": run["run_id"], "status": _text(run.get("status"), "unknown", 64),
-            "reason": _text(run.get("reason_code"), "-", 64), "created": _text(run.get("created"), "-", 64),
+        rows.append({"id": safe_text(run["run_id"], 64), "cells": {
+            "run": safe_text(run["run_id"], 64), "status": view_status(run.get("status")),
+            "reason": ORPHANED if run.get("status") == "orphaned" else _text(run.get("reason_code"), "-", 64),
+            "created": _text(run.get("created"), "-", 64), "owner": _owner(run.get("owner")),
             "items": ", ".join(items[:6]) + (f" +{len(items) - 6}" if len(items) > 6 else "") if items else "-",
             "resumes": _int(run.get("resumes"))}, "link": _run_link(run["run_id"])})
     return rows
@@ -176,8 +226,12 @@ def run(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
     found = _status(run_id, _need_root(root), timeout_s)
     current = _dict(found.get("current"))
     tokens = _dict(found.get("tokens"))
-    fields = [{"label": "Run", "type": "text", "value": run_id},
-              {"label": "Status", "type": "text", "value": _text(found.get("status"), "unknown", 64)}]
+    fields = [{"label": "Run", "type": "text", "value": safe_text(run_id, 64)},
+              {"label": "Status", "type": "status", "value": view_status(found.get("status"))},
+              {"label": "State", "type": "text", "value": _text(found.get("status"), "unknown", 64)},
+              {"label": "Owner", "type": "text", "value": _owner(found.get("lease"))}]
+    if found.get("status") == "orphaned":
+        fields.append({"label": "Detail", "type": "text", "value": ORPHANED})
     if found.get("reason_code"):
         fields.append({"label": "Reason code", "type": "text", "value": _text(found["reason_code"], "-", 64)})
     if current:
@@ -203,8 +257,9 @@ def run(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
         sections.append({"title": "Agents", "markdown": "\n".join(
             f"- {md_text(row.get('role'), 64)} {md_text(row.get('step'), 64)}: {md_text(row.get('status'), 64)}"
             for row in agents)})
-    detail: Dict[str, Any] = {"$schema": VIEW, "view": "resource-detail", "title": f"Run {run_id}", "fields": fields,
-                              "actions": [{"command": f"{OWNER}.resume", "input": {"run_id": run_id}}]}
+    detail: Dict[str, Any] = {"$schema": VIEW, "view": "resource-detail", "title": safe_text(f"Run {run_id}", 64), "fields": fields}
+    if found.get("status") in ("orphaned", "stopped", "blocked"):
+        detail["actions"] = [{"command": f"{OWNER}.resume", "input": {"run_id": safe_text(run_id, 64)}}]
     if sections:
         detail["sections"] = sections
     return detail
@@ -227,6 +282,121 @@ def items(root: Optional[str], timeout_s: float, context: Dict[str, Any], params
             detail += f", last {safe_text(last['stage'], 64)} {safe_text(last.get('verdict') or '', 64)}".rstrip()
         rows.append({"id": safe_text(row["item"], 64), "label": safe_text(row["item"], 64),
                      "status": view_status(row.get("outcome"), running), "detail": safe_text(detail, 500)})
+    return {"$schema": VIEW, "view": "status-table", "rows": rows}
+
+
+def _item(context: Dict[str, Any], params: Dict[str, Any]) -> str:
+    value = context.get("item") or params.get("item")
+    if not isinstance(value, str) or ITEM_REF.fullmatch(value) is None:
+        raise OrchError("ORCH_CONTEXT_MISSING", "item must be a single item reference")
+    return value
+
+
+def _route_label(value: Any) -> str:
+    route = _dict(value)
+    if not route:
+        return "unknown"
+    return safe_text("/".join(_text(route.get(key), "unknown", 64)
+                              for key in ("provider", "model", "effort", "class")))
+
+
+def routes(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+    run_id, item = _run_id(context, params), _item(context, params)
+    root = _need_root(root)
+    found = _status(run_id, root, timeout_s)
+    entry = next((row for row in _list(found.get("items")) if _dict(row).get("item") == item), {})
+    recorded = _dict(entry.get("routes"))
+    rows = []
+    for role in sorted(set(recorded).intersection(ROLES)) or ["executor"]:
+        used = _route_label(recorded.get(role))
+        try:
+            explained = _dict(orch_json(["route", "explain", "--role", role, "--run", run_id,
+                                         "--item", item, "--json"], root, timeout_s))
+        except OrchError as error:
+            rows.append({"id": role, "label": role, "status": "unknown",
+                         "detail": safe_text(f"used: {used}; available now: unknown ({error.message})")})
+            continue
+        now = _dict(explained.get("available_now"))
+        available = now.get("available")
+        stop = _dict(now.get("stop"))
+        detail = f"used: {used}; available now: {_route_label(now.get('route'))}"
+        if stop:
+            detail += f" ({_text(stop.get('code'), 'unknown', 64)}: {_text(stop.get('message'), '-')})"
+        rows.append({"id": role, "label": role, "status": "ok" if available is True else
+                     "warn" if available is False else "unknown", "detail": safe_text(detail)})
+    return {"$schema": VIEW, "view": "status-table", "rows": rows}
+
+
+def prompt(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+    run_id, item = _run_id(context, params), _item(context, params)
+    step = params.get("step")
+    if not isinstance(step, str) or STEP.fullmatch(step) is None:
+        raise OrchError("ORCH_CONTEXT_MISSING", "step must be a role step such as executor.1")
+    doc = _dict(orch_json(["conduct", "prompt", "explain", "--run", run_id, "--item", item,
+                           "--step", step, "--json"], _need_root(root), timeout_s))
+    fields = []
+    for block in _list(doc.get("blocks")):
+        block = _dict(block)
+        # The projection is deliberately explicit: even an unexpected text/argv field stays private.
+        fields.append({"label": _text(block.get("kind"), "unknown", 64), "type": "text",
+                       "value": safe_text(f"origin: {_text(block.get('origin'), '-', 64)}; "
+                                          f"tokens: {_int(block.get('tokens'))}; "
+                                          f"sha256: {_text(block.get('sha256'), '-', 64)[:12]}")})
+    for excluded in _list(doc.get("excluded")):
+        excluded = _dict(excluded)
+        fields.append({"label": safe_text(f"Excluded {_text(excluded.get('kind'), 'skill' if excluded.get('id') else 'unknown', 64)}", 64),
+                       "type": "text", "value": _text(excluded.get("reason"), "unknown")})
+    for name in ("core", "supporting", "retrieval"):
+        amount = _dict(_dict(doc.get("budgets")).get(name)).get("tokens")
+        fields.append({"label": name, "type": "number" if isinstance(amount, int) and not isinstance(amount, bool) else "text",
+                       "value": _int(amount) if isinstance(amount, int) and not isinstance(amount, bool) else "unknown"})
+    return {"$schema": VIEW, "view": "resource-detail", "title": safe_text(f"Prompt {item} {step}", 64), "fields": fields}
+
+
+def budget(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+    found = _status(_run_id(context, params), _need_root(root), timeout_s)
+    limits = _dict(found.get("limits"))
+    entries = [row for row in _list(found.get("items")) if isinstance(row, dict)]
+    metrics = []
+
+    def add(metric_id, label, tokens, cap, incomplete):
+        tokens = _dict(tokens)
+        used = _int(tokens.get("input")) + _int(tokens.get("output"))
+        known = isinstance(cap, int) and not isinstance(cap, bool)
+        suffix = f"limit {cap}" if known and cap else "no limit" if known else "limit unknown"
+        if incomplete:
+            suffix += "; usage incomplete"
+        metrics.append({"id": safe_text(metric_id, 64), "label": safe_text(f"{suffix}: {label}", 64),
+                        "value": used, "unit": "fresh tokens", "status": "warn" if incomplete or (known and cap and used >= cap)
+                        else "ok" if known and tokens else "unknown"})
+
+    add("run", "Run", found.get("tokens"), _dict(limits.get("run_tokens_hard_max")).get("value"),
+        any(row.get("usage_incomplete") is True for row in entries))
+    incomplete = sum(row.get("usage_incomplete") is True for row in entries)
+    if incomplete:
+        metrics.append({"id": "usage_incomplete", "label": "Items with incomplete usage: totals may be understated",
+                        "value": incomplete, "status": "warn"})
+    for index, row in enumerate(entries):
+        item = _text(row.get("item"), "unknown", 64)
+        caps = _dict(_dict(limits.get("items")).get(row.get("item")))
+        for key in ("tokens_max", "tokens_hard_max"):
+            add(f"item.{index}.{key}", f"{item} {key}", row.get("tokens"), caps.get(key), row.get("usage_incomplete") is True)
+    return {"$schema": VIEW, "view": "metric-group", "metrics": metrics}
+
+
+def gates(root: Optional[str], timeout_s: float, **_: Any) -> Dict[str, Any]:
+    doc = _dict(orch_json(["conduct", "gates", "--json"], root or os.getcwd(), timeout_s))
+    rows = []
+    for entry in _list(doc.get("gates")):
+        entry = _dict(entry)
+        provider = entry.get("provider")
+        row = {"id": _text(provider, "unknown", 64), "label": _text(provider, "unknown", 64), "status": "warn",
+               "detail": safe_text(f"until {_text(entry.get('until'), 'unknown', 64)}; "
+                                   f"{_text(entry.get('class'), 'unknown', 64)} {_text(entry.get('code'), 'unknown', 64)}; "
+                                   f"set by {_text(entry.get('set_by'), 'unknown', 64)}")}
+        if provider in PROVIDERS:
+            row["repair"] = {"command": f"{OWNER}.gates-clear", "input": {"provider": provider}}
+        rows.append(row)
     return {"$schema": VIEW, "view": "status-table", "rows": rows}
 
 
@@ -301,7 +471,8 @@ def sandbox(root: Optional[str], timeout_s: float, **_: Any) -> Dict[str, Any]:
 
 QUERIES: Dict[str, Callable[..., Dict[str, Any]]] = {
     f"{OWNER}.runs": runs, f"{OWNER}.latest": latest, f"{OWNER}.run": run, f"{OWNER}.items": items,
-    f"{OWNER}.report": report, f"{OWNER}.questions": questions, f"{OWNER}.sandbox": sandbox}
+    f"{OWNER}.report": report, f"{OWNER}.questions": questions, f"{OWNER}.sandbox": sandbox,
+    f"{OWNER}.routes": routes, f"{OWNER}.prompt": prompt, f"{OWNER}.budget": budget, f"{OWNER}.gates": gates}
 
 
 # --- the plugin protocol ---------------------------------------------------------------------------------------

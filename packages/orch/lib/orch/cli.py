@@ -247,7 +247,7 @@ def _route_explain(args: argparse.Namespace) -> int:
         current = settings.load(project=context.root, config_file=args.config)
         found = explain.explain(engine.Conductor(project=context.root, settings=current, config_file=args.config,
                                                  project_resolution=context.resolution),
-                                args.role, scenario=args.scenario, plan=args.plan, ref=args.item)
+                                args.role, scenario=args.scenario, plan=args.plan, ref=args.item, run=args.run)
     except ProjectContextRequired as error:
         print(str(error), file=sys.stderr)
         return 1
@@ -1042,7 +1042,8 @@ def _main(argv: list[str] | None = None) -> int:
                                                  "the selected route and the layer of each of its fields")
     explain.add_argument("--role", required=True, help="context-scout, executor, reviewer, triager, registrar or report-fixer")
     explain.add_argument("--plan", help="with --item: the options of the newest conductor run of this plan and item")
-    explain.add_argument("--item", help="with --plan: the piece of work")
+    explain.add_argument("--run", help="with --item: recorded routes of this run, separately from availability now")
+    explain.add_argument("--item", help="with --plan or --run: the piece of work")
     explain.add_argument("--scenario", help="the scenario to explain (default: default_profile)")
     explain.add_argument("--json", action="store_true")
     command = verbs.add_parser("conformance", help="engine conformance scenarios; covered ones run, declared ones are listed")

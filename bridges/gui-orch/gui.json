@@ -2,6 +2,32 @@
   "$schema": "urn:swissknifeman:gui:contribution:v1",
   "commands": [
     {
+      "id": "gui-orch.gates-clear",
+      "title": "Clear provider gate",
+      "description": "Remove the capacity gate of one provider; subsequent conductor calls may use it again.",
+      "scope": "project",
+      "effects": ["process.spawn", "config.write"],
+      "risk": "medium",
+      "confirmation": "always",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": ["run.py", "gates-clear"],
+        "cwd": "project",
+        "env": ["SKM_UMBRELLA", "AICORE_ROOT"]
+      },
+      "input": [
+        {
+          "name": "provider",
+          "title": "Provider",
+          "type": "enum",
+          "enum": ["claude-code", "codex", "grok"],
+          "flag": "--provider",
+          "required": true
+        }
+      ]
+    },
+    {
       "concurrency_key": "gui-orch:run:{project_id}",
       "confirmation": "always",
       "description": "Conduct the next ready pieces of a plan (orch conduct run --plan P --ready --max-items N). Starts agents that change the project and the plan.",
@@ -149,6 +175,54 @@
   "owner": "gui-orch",
   "queries": [
     {
+      "id": "gui-orch.routes",
+      "title": "Item routes",
+      "description": "Recorded routing labels (used) and current availability, without launch commands or environment.",
+      "scope": "project",
+      "returns": "status-table",
+      "cache_s": 5,
+      "timeout_s": 60,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"},
+        {"name": "item", "title": "Item", "type": "string", "required": true, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"}
+      ]
+    },
+    {
+      "id": "gui-orch.prompt",
+      "title": "Prompt manifest",
+      "description": "Block metadata and budget totals only; prompt text is never displayed.",
+      "scope": "project",
+      "returns": "resource-detail",
+      "cache_s": 5,
+      "timeout_s": 30,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"},
+        {"name": "item", "title": "Item", "type": "string", "required": true, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        {"name": "step", "title": "Step", "type": "string", "required": true, "pattern": "^[a-z][a-z0-9-]*(\\.[0-9]+(-q[0-9]+)?)?$"}
+      ]
+    },
+    {
+      "id": "gui-orch.budget",
+      "title": "Run budget",
+      "description": "Accounted fresh tokens against effective item and run limits; incomplete usage warns.",
+      "scope": "project",
+      "returns": "metric-group",
+      "cache_s": 5,
+      "timeout_s": 30,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"}
+      ]
+    },
+    {
+      "id": "gui-orch.gates",
+      "title": "Provider gates",
+      "description": "Active machine capacity gates, with a separately confirmed clear command.",
+      "scope": "project",
+      "returns": "status-table",
+      "cache_s": 5,
+      "timeout_s": 30
+    },
+    {
       "cache_s": 5,
       "description": "The conductor runs of the project, newest first.",
       "id": "gui-orch.runs",
@@ -255,6 +329,23 @@
     }
   ],
   "routes": [
+    {
+      "id": "gui-orch.routes", "title": "Item routes", "scope": "project",
+      "path": "runs/:run_id/items/:item/routes", "query": "gui-orch.routes", "view": "status-table"
+    },
+    {
+      "id": "gui-orch.prompt", "title": "Prompt manifest", "scope": "project",
+      "path": "runs/:run_id/items/:item/prompt/:step", "query": "gui-orch.prompt", "view": "resource-detail"
+    },
+    {
+      "id": "gui-orch.budget", "title": "Run budget", "scope": "project",
+      "path": "runs/:run_id/budget", "query": "gui-orch.budget", "view": "metric-group"
+    },
+    {
+      "id": "gui-orch.gates", "title": "Provider gates", "scope": "project",
+      "path": "providers/gates", "query": "gui-orch.gates", "view": "status-table",
+      "actions": ["gui-orch.gates-clear"], "nav": {"order": 33, "section": "project"}
+    },
     {
       "id": "gui-orch.runs",
       "nav": {

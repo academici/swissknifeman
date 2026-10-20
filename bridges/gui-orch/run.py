@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""gui-orch commands for the GUI broker: exactly three verbs, nothing else runs.
+"""gui-orch commands for the GUI broker: exactly four verbs, nothing else runs.
 
     run.py run-ready --plan <plan-ref> --max-items <1..20> [--dry-run]  → orch conduct run --plan P --ready --max-items N
     run.py resume --run <run-id>                                        → orch conduct resume --run R
     run.py release --run <run-id> --item <item-ref>                     → orch conduct release --run R --item I
+    run.py gates-clear --provider <provider>                          → orch conduct gates --clear P
 
 Every value is one argv element checked against its pattern; there is no shell, no list of items in one string (the
 pieces of a plan are chosen by ``--ready``), and any other verb, flag, order or extra argument exits 2 without
@@ -14,10 +15,10 @@ from __future__ import annotations
 import os
 import sys
 
-from adapter import ITEM_REF, OrchError, PLAN_REF, RUN_ID, umbrella
+from adapter import ITEM_REF, OrchError, PLAN_REF, PROVIDERS, RUN_ID, umbrella
 
 USAGE = ("usage: run.py run-ready --plan P --max-items N [--dry-run] | run.py resume --run R | "
-         "run.py release --run R --item I")
+         "run.py release --run R --item I | run.py gates-clear --provider P")
 
 
 def fail(code: str, message: str) -> int:
@@ -27,6 +28,10 @@ def fail(code: str, message: str) -> int:
 
 def build(argv):
     """The orch arguments for ``argv`` (after the verb checks), or an error text."""
+    if len(argv) == 3 and argv[:2] == ["gates-clear", "--provider"]:
+        if argv[2] not in PROVIDERS:
+            return None, "BAD_PROVIDER: provider must be claude-code, codex or grok"
+        return ["conduct", "gates", "--clear", argv[2]], None
     if argv[:1] == ["run-ready"] and argv[1:2] == ["--plan"] and argv[3:4] == ["--max-items"] \
             and len(argv) in (5, 6) and argv[5:] in ([], ["--dry-run"]):
         plan, count = argv[2], argv[4]

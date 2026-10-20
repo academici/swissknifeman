@@ -9,6 +9,7 @@ import argparse
 import getpass
 import json
 from pathlib import Path
+import re
 import sys
 import time
 
@@ -156,18 +157,71 @@ def _questions(args, project: Path) -> int:
 def _prompt(args, project: Path) -> int:
     """``prompt explain``: the blocks of the prompt a role step was given (``prompts/<step>.manifest.json``), their
     origin, size and digest, and what was left out."""
+    if re.fullmatch(r"[a-z][a-z0-9-]*(\.[0-9]+(-q[0-9]+)?)?", args.step) is None:
+        print("PROMPT_PATH_INVALID: step must be a role step such as executor.1", file=sys.stderr)
+        return 1
     run_id = args.run or _latest(project)
+    if run_id and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id) is None:
+        print("PROMPT_PATH_INVALID: invalid run id", file=sys.stderr)
+        return 1
     directory = engine.runs_root(project) / (run_id or "-")
     if not run_id or not (directory / engine.RUN_FILE).is_file():
         print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
         return 1
-    file = directory / engine.safe(args.item) / "prompts" / f"{args.step}.manifest.json"
+    item_dir = directory / engine.safe(args.item)
+    file = item_dir / "prompts" / f"{args.step}.manifest.json"
+    try:
+        item_dir.resolve().relative_to(directory.resolve())
+        file.resolve().relative_to(item_dir.resolve())
+    except (ValueError, OSError, RuntimeError):
+        print("PROMPT_PATH_INVALID: manifest must resolve inside the item directory", file=sys.stderr)
+        return 1
     doc = engine.read_json(file) if file.is_file() else None
     if not isinstance(doc, dict):
         print(f"MANIFEST_UNKNOWN: no prompt manifest for {args.item} {args.step} in run {run_id} ({file})", file=sys.stderr)
         return 1
     print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.explain_table(doc))
     return 0
+
+
+def _status_details(directory: Path, found: dict) -> dict:
+    """Add read-only observability to the journal summary without rebuilding routes or options."""
+    state = found["state"]
+    doc = engine.read_json(directory / engine.RUN_FILE) or {}
+    raises = state.get("limit_raises") or []
+    limits = {}
+    if doc.get("limits_run") or raises:
+        limits = {"items": {}, **(doc.get("limits_run") or {}), "limit_raises": raises}
+    for row in found["items"]:
+        ref = row["item"]
+        item_state = (state.get("items") or {}).get(ref) or {}
+        folder = directory / engine.safe(ref)
+        recorded = engine.read_json(folder / "routes.json") or {}
+        row.update(tokens=item_state.get("tokens"), usage_incomplete=item_state.get("usage_incomplete"),
+                   routes={role: runs.public_route(route) for role, route in recorded.items()
+                           if isinstance(route, dict)})
+        options = engine.read_json(folder / "options.json") or {}
+        item_limits = (options.get("options") or {}).get("limits") or {}
+        if item_limits:
+            limits.setdefault("items", {})[ref] = {key: item_limits.get(key, 0)
+                                                   for key in ("tokens_max", "tokens_hard_max")}
+    if limits:
+        limits.setdefault("limit_raises", raises)
+        for change in raises:
+            key = change["key"]
+            if key == "tokens_hard_max":
+                for entry in limits.get("items", {}).values():
+                    entry[key] = change["to"]
+            elif key == "run_tokens_hard_max":
+                limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
+    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED"}
+    beacons = {}
+    for line in progress.read_lines(directory):
+        if line.get("event") == "info" and line.get("reason_code") in codes:
+            code = line["reason_code"]
+            beacons.pop(code, None)
+            beacons[code] = line
+    return {"lease": runs.live_owner(directory), "limits": limits, "beacons": list(beacons.values())}
 
 
 def _gates(args) -> int:
@@ -372,9 +426,11 @@ def main(argv: list | None = None) -> int:
         here = (found["current"] or {}).get("item") or (found["items"][-1]["item"] if found["items"] else None)
         listed = agents.read(directory / engine.safe(here)) if here else []
         if args.json:
-            print(json.dumps({key: value for key, value in found.items() if key != "state"} |
-                             {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop"),
-                              "last_stop": found["state"].get("last_stop"), "agents": listed}, ensure_ascii=False, indent=2))
+            details = _status_details(directory, found)
+            print(json.dumps(runs.display({key: value for key, value in found.items() if key != "state"} |
+                              {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop"),
+                               "last_stop": found["state"].get("last_stop"), "agents": listed, **details}),
+                             ensure_ascii=False, indent=2))
             return 0
         print(f"run {run_id}: {found['status']}" + (f" ({found['reason_code']})" if found["reason_code"] else "")
               + f", last line {found['last_ts']}")

@@ -1,0 +1,23 @@
+orch command: ["/usr/bin/python3", "-I", "-c", "import os, sys, unittest\nfrom pathlib import Path\nroot = Path.cwd()\nfor path in ['packages/aicore/lib', 'packages/orch/lib', 'packages/orch']:\n    sys.path.insert(0, str(root/path))\nos.environ['AICORE_ROOT'] = str(root/'packages/aicore')\nos.environ['SKM_GUI_ROOT'] = str(root/'packages/gui')\nsuite = unittest.defaultTestLoader.loadTestsFromNames(['tests.test_conduct_runs', 'tests.test_conductor.RouteExplainTests', 'tests.test_conductor.LaunchConfigurationTests', 'tests.test_conductor.PreviewAndStatusTests'])\nresult = unittest.TextTestRunner(verbosity=1).run(suite)\nsys.exit(not result.wasSuccessful())\n"]
+....................................................
+----------------------------------------------------------------------
+Ran 52 tests in 17.026s
+
+OK
+orch exit: 0
+gui-orch command: ["/usr/bin/python3", "-I", "-c", "import os, sys, unittest\nfrom pathlib import Path\nroot = Path.cwd()\nfor path in ['packages/aicore/lib', 'packages/gui/lib', 'bridges/gui-orch']:\n    sys.path.insert(0, str(root/path))\nos.environ['AICORE_ROOT'] = str(root/'packages/aicore')\nos.environ['SKM_GUI_ROOT'] = str(root/'packages/gui')\nsuite = unittest.defaultTestLoader.loadTestsFromNames(['tests.test_queries', 'tests.test_commands'])\nresult = unittest.TextTestRunner(verbosity=1).run(suite)\nsys.exit(not result.wasSuccessful())\n"]
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 12.121s
+
+OK
+gui-orch exit: 0
+Contribution, extension manifest and changed Python 3.9 AST: OK
+git diff --check exit: 0
+Final GUI verification after preserving limit labels for long item refs; python3 -I - unittest runner:
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 12.185s
+
+OK
+Final GUI exit: 0

@@ -14,6 +14,9 @@ import time
 from pathlib import Path
 from typing import List, Optional
 
+from aicore.ext.plugins import safe_text
+from aicore.util.redact import env_secrets, redact_text
+
 from orch.conductor import progress
 from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, runs_root
 from orch.conductor.infrastructure.lease import RunLease
@@ -21,6 +24,36 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS  # <run id>/<piece>: a source without its own folder
 
 PRUNABLE = {"done", "done_with_deviations", "finished", "blocked", "stopped", "orphaned"}
+
+
+def display(value, limit: int = 500):
+    """Redact before shortening display data, including keys in diagnostic objects."""
+    if isinstance(value, str):
+        return safe_text(redact_text(value, secrets=env_secrets()), limit)
+    if isinstance(value, dict):
+        labels = {"id", "run", "run_id", "item", "status", "reason_code", "role", "stage", "provider", "model",
+                  "effort", "class", "model_class", "host", "started_at", "command", "label"}
+        return {display(key, 64): display(entry, 64 if key in labels else limit) for key, entry in value.items()}
+    if isinstance(value, list):
+        return [display(entry, limit) for entry in value]
+    return value
+
+
+def public_route(route) -> dict:
+    """Only routing labels, never the executable, environment or other launch data."""
+    if not isinstance(route, dict):
+        return {}
+    labels = {key: route.get(key, route.get("model_class") if key == "class" else None)
+              for key in ("provider", "model", "effort", "class")}
+    return display({key: value if isinstance(value, str) else None for key, value in labels.items()}, 64)
+
+
+def live_owner(directory: Path):
+    """Lease metadata is meaningful only while an independent probe finds the lock busy."""
+    if not RunLease.held(directory):
+        return None
+    owner = RunLease.owner(directory)
+    return display({key: owner.get(key) for key in ("pid", "host", "started_at", "command")}, 64) if owner else None
 
 
 def latest_run_id(project: Path) -> Optional[str]:
@@ -49,17 +82,18 @@ def _row(directory: Path, *, owned: bool = False) -> dict:
     try:
         doc = json.loads((directory / RUN_FILE).read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, ValueError):
-        return {"run_id": run_id, "status": "unreadable"}
+        return {"run_id": display(run_id, 64), "status": "unreadable", "owner": live_owner(directory)}
     if not isinstance(doc, dict):
-        return {"run_id": run_id, "status": "unreadable"}
+        return {"run_id": display(run_id, 64), "status": "unreadable", "owner": live_owner(directory)}
     lines = progress.read_lines(directory)
     found = effective_status(directory, progress.summarize(lines), doc, owned=owned)
     items = [row["item"] for row in found["items"]]
     if not items and isinstance(doc.get("items"), list):
         items = [item for item in doc["items"] if isinstance(item, str)]
-    return {"run_id": run_id, "status": found["status"], "reason_code": found["reason_code"],
-            "created": lines[0]["ts"] if lines else None, "items": items,
-            "resumes": sum(1 for line in lines if line.get("event") == "run.resume")}
+    return display({"run_id": run_id, "status": found["status"], "reason_code": found["reason_code"],
+            "created": lines[0]["ts"] if lines else None, "items": display(items, 64),
+            "resumes": sum(1 for line in lines if line.get("event") == "run.resume"),
+            "owner": None if owned else live_owner(directory)})
 
 
 def listing(project: Path, limit: Optional[int] = None) -> List[dict]:

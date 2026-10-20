@@ -1,6 +1,6 @@
 {
   "$schema": "urn:swissknifeman:aicore:extension:v1",
-  "description": "GUI queries of the orchestrator: conductor runs, one run with its items, the observer report, open questions and the provider sandbox, read from the orch command line as view-data; and the run, resume and release commands of the conductor.",
+  "description": "GUI observability through the orch CLI: runs and live owners, orphaned recovery, items, used routes and availability now, prompt metadata without text, budgets, provider gates, observer reports, questions and sandbox; argv run, resume, release and confirmed gates-clear commands.",
   "entrypoint": [
     "adapter.py"
   ],

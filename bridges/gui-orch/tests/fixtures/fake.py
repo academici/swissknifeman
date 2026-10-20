@@ -14,7 +14,12 @@ RUNS = [
     {"run_id": "cnd-old", "status": "finished", "reason_code": None, "created": "2026-10-16T10:00:00Z",
      "items": ["P1.1"], "resumes": 0},
     {"run_id": "cnd-bad", "status": "unreadable"},
+    {"run_id": "cnd-orphaned", "status": "orphaned", "reason_code": "RUN_ORPHANED", "owner": None},
 ]
+OWNER = {"pid": 123, "host": "test-host", "started_at": "2026-10-17T09:00:00Z", "command": "run"}
+RUNS[0]["owner"] = OWNER
+USED = {"provider": "codex", "model": "recorded-model", "effort": "high", "class": "implementation",
+        "argv": ["PRIVATE_ARGV"], "env": {"TOKEN": "PRIVATE_ENV"}}
 STATUS = {
     "status": "running", "reason_code": None, "run": "cnd-new", "lines": 12, "last_ts": "2026-10-17T09:05:00Z",
     "current": {"item": "P2.2", "stage": "executor.1", "role": "executor", "route": "claude-code", "since": "2026-10-17T09:04:00Z"},
@@ -30,6 +35,17 @@ STATUS = {
     "agents": [{"agent_run_id": "a1", "role": "executor", "step": "executor.1", "status": "running",
                 "tokens": {"input": 10, "output": 5}}],
 }
+STATUS.update(lease=OWNER, limits={"items": {"P2.1": {"tokens_max": 100, "tokens_hard_max": 200},
+                                           "P2.2": {"tokens_max": 0, "tokens_hard_max": 0}},
+                                  "run_tokens_hard_max": {"value": 0, "source": "defaults"}, "limit_raises": []},
+              beacons=[])
+STATUS["items"][0].update(tokens={"input": 80, "output": 30}, usage_incomplete=False, routes={"executor": USED})
+STATUS["items"][1].update(tokens={"input": 0, "output": 0}, usage_incomplete=True, routes={})
+PROMPT = {"blocks": [{"kind": "input", "origin": "claim", "tokens": 42, "sha256": "a" * 64,
+                       "text": "PRIVATE_PROMPT_TEXT", "argv": ["PRIVATE_ARGV"]}],
+          "excluded": [{"kind": "skill", "reason": "not applicable", "id": "PRIVATE_EXCLUDED_ID", "text": "PRIVATE_TEXT"}],
+          "budgets": {name: {"tokens": value} for name, value in (("core", 42), ("supporting", 0), ("retrieval", 0))},
+          "text": "PRIVATE_WHOLE_PROMPT"}
 QUESTIONS = {"run": "cnd-new", "questions": [
     {"item": "P2.3", "id": "Q1", "revision": 1, "kind": "decision", "text": "Which \x1b[31mshell\x1b[0m?", "answered": False,
      "age_s": 120, "overdue": True},
@@ -52,6 +68,9 @@ def main(scenario):
     with open(os.path.join(home, "umbrella.log"), "a", encoding="utf-8") as log:
         log.write(json.dumps({"argv": sys.argv[1:], "cwd": os.getcwd()}) + "\n")
     args = sys.argv[1:]
+    if args == ["units", "list", "--json"]:
+        print(json.dumps({"units": [{"id": "aicore", "root": os.environ["FAKE_AICORE_ROOT"]}]}))
+        return 0
     if scenario == "fail":
         sys.stderr.write("\x1b[31mCONFIG_INVALID: broken \x1b[0mconfiguration\n")
         return 4
@@ -62,6 +81,12 @@ def main(scenario):
         sys.stderr.write("USAGE: only orch is faked\n")
         return 2
     rest = args[1:]
+    if rest[:2] == ["route", "explain"]:
+        print(json.dumps({"used": USED, "available_now": {"route": {"provider": "claude-code", "model": "current-model",
+                                                                   "effort": "high", "class": "implementation",
+                                                                   "argv": ["PRIVATE_ARGV"], "env": "PRIVATE_ENV"},
+                                                          "available": True, "stop": None}}))
+        return 0
     if rest[:1] == ["doctor"]:
         print(json.dumps(DOCTOR))
         return 0
@@ -70,6 +95,11 @@ def main(scenario):
         return 2
     verb, tail = rest[1], rest[2:]
     run = tail[tail.index("--run") + 1] if "--run" in tail else None
+    if verb == "gates":
+        print(json.dumps({"cleared": [tail[-1]]} if "--clear" in tail else
+                         {"gates": [{"provider": "codex", "until": "2026-10-20T20:00:00Z", "class": "quota",
+                                     "code": "PROVIDER_QUOTA", "set_by": "cnd-new"}]}))
+        return 0
     if verb in ("run", "resume", "release"):
         print(json.dumps({"ok": True, "verb": verb}))
         return 0
@@ -79,11 +109,17 @@ def main(scenario):
             rows = rows[:int(tail[tail.index("--limit") + 1])]
         print(json.dumps({"runs": rows}))
         return 0
-    if scenario in ("empty", "missing") or (run and run not in ("cnd-new", "cnd-old")):
+    if scenario in ("empty", "missing") or (run and run not in ("cnd-new", "cnd-old", "cnd-orphaned", "cnd-stopped")):
         sys.stderr.write(f"RUN_UNKNOWN: no conductor run {run or ''} in /x\n")
         return 1
     if verb == "status":
-        print(json.dumps(STATUS))
+        doc = dict(STATUS)
+        if run in ("cnd-orphaned", "cnd-stopped"):
+            doc.update(status=run[4:], lease=None, reason_code="RUN_ORPHANED" if run == "cnd-orphaned" else None)
+        print(json.dumps(doc))
+        return 0
+    if verb == "prompt" and tail[:1] == ["explain"]:
+        print(json.dumps(PROMPT))
         return 0
     if verb == "questions":
         print(json.dumps(QUESTIONS))

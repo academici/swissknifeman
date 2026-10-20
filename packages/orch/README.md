@@ -110,7 +110,6 @@ of aicore (`orch.schema` re-exports it); `tests/test_schema_profile.py` checks t
 - [Token usage and limits](docs/conductor.md#hard-token-limits-and-resume) — accounted fresh tokens, incomplete usage, hard limits and limit raises on resume.
 - [Stubs variants](docs/conductor.md#stubs-additional-instructions-of-the-roles) — provider/model-family instructions and frozen snapshots.
 - [gui-orch README](../../bridges/gui-orch/README.md) — used/available routes, prompt metadata, budget, gates and owner/orphaned views.
-- [Deferred audit proposals](../../docs/roadmap.md#deferred-audit-proposals-2026-10-19) — measurable triggers, module owners and audit sources.
 - [conformance](docs/conformance.md)
 - [events](docs/events.md)
 - [adding-an-engine](docs/adding-an-engine.md)

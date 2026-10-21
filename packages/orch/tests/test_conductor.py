@@ -2661,6 +2661,20 @@ class DigestTests(ConductorCase):
 
 
 class PreviewAndStatusTests(ConductorCase):
+    def test_dry_run_honors_invocation_scope_and_refuses_an_unsafe_extra_path(self):
+        allowed = self.project.parent / "preview-output"
+        allowed.mkdir()
+        argv = ("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
+        code, out, err = self.conduct(*argv, "--fence", "plan", "--allow-path", str(allowed))
+        self.assertEqual(code, 0, err)
+        scope = json.loads(out)["options"]["scope"]
+        self.assertEqual((scope["fence"], scope["extra_paths"]), ("plan", [str(allowed.resolve())]))
+        self.assertFalse(engine.runs_root(self.project).exists())
+        self.assertEqual(self.source()["calls"], [])
+        code, _, err = self.conduct(*argv, "--allow-path", "/")
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("OPTIONS_UNSAFE_PATH:"), err)
+
     def test_dry_run_writes_nothing_and_shows_routes(self):
         code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
         self.assertEqual(code, 0, err)

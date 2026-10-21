@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from orch.conductor import cli, runs
+from orch.conductor import cli, observer, runs
 from orch.conductor.infrastructure.files import RUN_FILE, runs_root
 from orch.conductor.infrastructure.lease import RunLease
 
@@ -102,6 +102,52 @@ class ConductRunsTests(unittest.TestCase):
 
 
 class ConductObservabilityTests(ConductRunsTests):
+    def test_observer_keeps_group_findings_and_distinguishes_clean_from_unavailable_reviews(self):
+        group = {"format": "findings", "error": None, "counts": {"Blocker": 1, "Major": 2, "Minor": 0},
+                 "refs": ["P2.1", "P2.2"], "file": "group-review-1.md", "followup": "fix.json"}
+        legacy = {"steps": {"review.1": {"status": "done", "result": {
+            "findings": {"findings": [{"severity": "Minor"}]}}}}}
+        directory = self.make("cnd-groups", [
+            line("2026-10-21T10:00:00Z", "run.start", run="cnd-groups"),
+            line("2026-10-21T10:00:01Z", "info", run="cnd-groups", reason_code="GROUP_REVIEW"),
+            line("2026-10-21T10:00:02Z", "info", run="cnd-groups", reason_code="GROUP_REVIEW"),
+            line("2026-10-21T10:00:03Z", "run.end", run="cnd-groups")])
+        cases = [
+            (None, True, {"Minor": 1}, False),
+            ({"1": group}, False, {"Blocker": 1, "Major": 2}, False),
+            ({"1": group}, True, {"Blocker": 1, "Major": 2, "Minor": 1}, False),
+            ({"1": group, "2": dict(group, counts={"Blocker": 0, "Major": 0, "Minor": 1})},
+             False, {"Blocker": 1, "Major": 2, "Minor": 1}, False),
+            ({"1": dict(group, format="none", counts={"Blocker": 0, "Major": 0, "Minor": 0})}, False, {}, False),
+            ({"1": dict(group, error="ROLE_FAILED")}, False, {}, True),
+            ({"1": dict(group, format="malformed")}, False, {}, True),
+            ({"1": dict(group, format="empty", error="EMPTY_DIFF")}, False, {}, True),
+            ({"1": dict(group, counts={"Major": "bad"})}, False, {}, True),
+            (None, False, {}, False),
+        ]
+        for number, (groups, item_review, expected, incomplete) in enumerate(cases):
+            with self.subTest(case=number):
+                state = {"status": "finished", "items": {"P1": legacy} if item_review else {}}
+                if groups is not None:
+                    state["group_reviews"] = groups
+                (directory / "state.json").write_text(json.dumps(state), encoding="utf-8")
+                report = observer.build(directory, self.project)
+                self.assertEqual(report["findings_by_severity"], expected)
+                self.assertEqual(report["group_reviews"], groups or {})
+                self.assertEqual(bool(report["incomplete_group_reviews"]), incomplete)
+                text = observer.markdown(report)
+                if incomplete:
+                    self.assertIn("Review findings: unavailable", text)
+                elif not expected:
+                    self.assertIn("Review findings: none", text)
+        # A failed review with missing structured state is still not a clean zero-findings review.
+        with (directory / "progress.jsonl").open("a", encoding="utf-8") as output:
+            output.write("\n" + line("2026-10-21T10:00:04Z", "info", run="cnd-groups",
+                                      reason_code="GROUP_REVIEW_FAILED"))
+        report = observer.build(directory, self.project)
+        self.assertEqual(report["incomplete_group_reviews"], ["GROUP_REVIEW_FAILED"])
+        self.assertIn("Review findings: unavailable", observer.markdown(report))
+
     def test_owner_requires_a_live_lock_and_legacy_status_stays_running(self):
         directory = self.make("cnd-lease", [line("t", "run.start")], doc={"lease": True})
         with RunLease(directory).acquire("run"):

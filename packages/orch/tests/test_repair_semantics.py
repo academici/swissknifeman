@@ -86,6 +86,29 @@ class StageReportDriftTests(unittest.TestCase):
         quiet = stage("done_with_deviations", open_issues=[dict(a, text="  Deviation   A "), accepted(b)])
         self.assertEqual(self.drift(before, quiet), [])  # blanks and case are not identity
 
+    def test_deviations_of_one_text_are_told_apart_by_impact_and_class(self):
+        accepted = lambda issue: dict(issue, outcome="accepted")
+        for text in ("same words", "   "):
+            with self.subTest(text=text):
+                a, b = dict(DEVIATION, text=text, impact="impact A"), dict(DEVIATION, text=text, impact="impact B")
+                before = stage("done_with_deviations", open_issues=[a, accepted(b)])
+                self.assertEqual(len(self.drift(before, stage("done_with_deviations", open_issues=[accepted(a), b]))), 1)
+                self.assertEqual(len(self.drift(before, stage("done_with_deviations", open_issues=[b, accepted(a)]))), 1)
+                self.assertEqual(self.drift(before, stage("done_with_deviations", open_issues=[accepted(b), a])), [])
+                self.assertEqual(self.drift(before, stage("done_with_deviations", open_issues=[a, b])), [])
+        c, d = dict(DEVIATION, text="t", **{"class": "docs"}), dict(DEVIATION, text="t", **{"class": "build"})
+        before = stage("done_with_deviations", open_issues=[c, accepted(d)])
+        self.assertEqual(len(self.drift(before, stage("done_with_deviations", open_issues=[accepted(c), d]))), 1)
+
+    def test_deviations_without_any_content_are_not_a_shared_identity(self):
+        accepted = lambda issue: dict(issue, outcome="accepted")
+        bare = {"text": " ", "kind": "deviation"}
+        before = stage("done_with_deviations", open_issues=[bare, accepted(bare)])
+        self.assertEqual(len(self.drift(before, stage("done_with_deviations", open_issues=[accepted(bare), bare]))), 1)
+        self.assertEqual(self.drift(before, before), [])
+        single = stage("done_with_deviations", open_issues=[accepted(bare)])
+        self.assertEqual(self.drift(single, single), [])
+
     def test_a_lost_question_or_a_blocking_one_made_soft_is_drift(self):
         ask = {"id": "Q1", "revision": 1, "kind": "decision", "text": "t", "blocking": True}
         before = stage("blocked", open_issues=[ESCALATION], questions=[ask])

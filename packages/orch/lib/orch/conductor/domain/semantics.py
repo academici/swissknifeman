@@ -64,7 +64,8 @@ def _check_result(row: dict):
 def outcome_key(kind: str, doc: dict) -> dict:
     """The fields of ``doc`` that carry its meaning, by kind (``stage-report``, ``review-findings``, ``triage-result``);
     an empty dict for any other kind. A stage-report: the rank of its status, the counts of its escalations, blockers,
-    pending issues and deviations (and how many deviations are accepted, per deviation text), the blocking flag of each question by id and
+    pending issues and deviations (and how many deviations are accepted, per deviation text, impact and class; one
+    with none of the three is told apart only by its place among such ones), the blocking flag of each question by id and
     the result of each check row by id. A review: the rank of its verdict and, per finding (its normalized place and
     failure scenario, never its id or severity: the conductor renumbers ids and a repair may move severities), the
     severity ranks of the findings with that content from the highest down.
@@ -74,11 +75,15 @@ def outcome_key(kind: str, doc: dict) -> dict:
     if kind == "stage-report":
         issues = _items(doc, "open_issues")
         counts = {name: sum(1 for issue in issues if _name({name: 0}, issue.get("kind")) == name) for name in ISSUE_COUNTS}
-        deviations: dict = {}  # per deviation text: how many are accepted (a deviation has no id; its text is its identity)
+        deviations: dict = {}  # per deviation content: how many are accepted (a deviation has no id; its content is its identity)
+        bare = 0
         for issue in issues:
             if _name({"deviation": 0}, issue.get("kind")):
                 accepted_here = 1 if _name({"accepted": 0}, issue.get("outcome")) else 0
-                name = _words(issue.get("text"))
+                name = tuple(_words(issue.get(field)) for field in ("text", "impact", "class"))
+                if not any(name):  # no content to tell it from another: only its place among such ones, never a shared identity
+                    bare += 1
+                    name = (f"(no content) #{bare}", "", "")
                 deviations[name] = deviations.get(name, 0) + accepted_here
         questions = {str(row.get("id")): row.get("blocking") is True for row in _items(doc, "questions") if "id" in row}
         checks: dict = {}
@@ -126,10 +131,13 @@ def drift(kind: str, before: dict, after: dict) -> list:
         if new["deviations_accepted"] > old["deviations_accepted"]:
             found.append(f"/open_issues: deviations accepted {old['deviations_accepted']} -> {new['deviations_accepted']}")
         else:  # the total holds, but one deviation may have been accepted while another was turned to a follow-up;
-            # a text the old report does not have (reworded, so not the same deviation) counts as 0 accepted before
+            # a deviation (text, impact, class) the old report does not have counts as 0 accepted before
+            texts = [name[0] for name in new["deviation_accepted"]]
             for name, count in new["deviation_accepted"].items():
                 if count > old["deviation_accepted"].get(name, 0):
-                    found.append(f"/open_issues: deviation accepted: {name or '(no text)'}")
+                    text, impact, kind = name
+                    shared = f" (impact: {impact or '-'}, class: {kind or '-'})" if texts.count(text) > 1 else ""
+                    found.append(f"/open_issues: deviation accepted: {text or impact or kind or '(no text)'}{shared}")
         for name, blocking in old["questions"].items():
             if name not in new["questions"]:
                 found.append(f"/questions: {name} lost")

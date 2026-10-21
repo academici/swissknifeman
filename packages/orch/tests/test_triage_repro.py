@@ -109,7 +109,10 @@ class RerunTests(ConductorCase):
 
     def test_every_trivial_form_is_refused_and_a_real_command_is_not(self):
         from orch.conductor.stages import triage
-        for cmd in ("true", ":", "exit 0", " exit  0 ;", "echo ok", "printf '%s' ok", "true;", "echo 'a; b'"):
+        for cmd in ("true", ":", "exit 0", " exit  0 ;", "echo ok", "printf '%s' ok", "true;", "echo 'a; b'",
+                    "echo '|'", "printf '%s' '>'", "echo \\|", "printf '%s' \\>", 'echo "a && b"', "echo '(x)' ;",
+                    "echo ok # python3 repro.py", "echo ok; # python3 repro.py", "echo '#' x", "echo \\# x", 'echo "#x"',
+                    "echo a#b"):
             self.assertTrue(triage.is_trivial_reproduction(cmd), cmd)
         for cmd in ("test -f out/W1.txt", "exit 1", "false", "grep -q done out/W1.txt", "python3 -c 'print(1)'", "truex"):
             self.assertFalse(triage.is_trivial_reproduction(cmd), cmd)
@@ -119,7 +122,9 @@ class RerunTests(ConductorCase):
         for cmd in ("echo checking; python3 repro.py", "echo checking && python3 repro.py", "echo x | python3 repro.py",
                     "printf x; exit 1", "true; exit 1", "true && false", "echo a & python3 repro.py",
                     "echo $(python3 repro.py)", "echo `python3 repro.py`", "echo ok\npython3 repro.py",
-                    "echo ok > out/W1.txt", "(echo ok)", "echo 'unbalanced"):
+                    "echo ok > out/W1.txt", "(echo ok)", "echo 'unbalanced",
+                    'echo checking#phase; python3 -B -c "raise SystemExit(7)"', "echo a#b | python3 repro.py",
+                    "echo '|' | python3 repro.py", "echo '|'; exit 1", "echo '>' > out/W1.txt", "echo ok;; exit 1"):
             self.assertFalse(triage.is_trivial_reproduction(cmd), repr(cmd))
 
     def test_a_compound_command_with_a_trivial_head_reaches_the_guarded_rerun(self):
@@ -130,6 +135,30 @@ class RerunTests(ConductorCase):
         self.assertEqual(ran.call_args.args[0], "echo checking; python3 repro.py")
         self.assertEqual(self.step(err)["verified"][0]["outcome"], "kept")
         self.assertFalse(self.beacons(err, "TRIAGE_REPRO_TRIVIAL"))
+
+    def assert_trivial_without_a_run(self, cmd: str):
+        with mock.patch.object(checks_mod, "run_reproduction") as ran:
+            err = self.run_rejection(severity("Major"), rejecting(cmd, 0))
+        ran.assert_not_called()
+        self.assert_restored(err, "TRIAGE_REPRO_TRIVIAL")
+
+    def test_a_quoted_pipe_is_a_trivial_command_restoring_without_a_run(self):
+        self.assert_trivial_without_a_run("echo '|'")
+
+    def test_a_quoted_redirection_is_a_trivial_command_restoring_without_a_run(self):
+        self.assert_trivial_without_a_run("printf '%s' '>'")
+
+    def test_an_escaped_operator_is_a_trivial_command_restoring_without_a_run(self):
+        self.assert_trivial_without_a_run("echo \\|")
+
+    def test_an_embedded_hash_is_no_comment_so_the_compound_reaches_the_guarded_rerun(self):
+        cmd = 'echo checking#phase; python3 -B -c "raise SystemExit(7)"'
+        with mock.patch.object(checks_mod, "run_reproduction",
+                               return_value={"exit": 7, "seconds": 0, "log": "-", "guard": "protect"}) as ran:
+            err = self.run_rejection(severity("Major"), rejecting(cmd, 7))
+        ran.assert_called_once()
+        self.assertEqual(ran.call_args.args[0], cmd)
+        self.assertEqual(self.step(err)["verified"][0]["outcome"], "kept")
 
     def test_another_exit_than_the_reported_one_restores_a_blocker(self):  # (b)
         err = self.run_rejection(severity("Blocker"), rejecting("exit 1", 0))

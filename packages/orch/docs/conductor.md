@@ -285,8 +285,10 @@ Blocker or Major finding without a reproduction that ran is outside the contract
 log `<piece folder>/triage/<round>/<finding>.log`), and only after a line with a marker of this very call, printed inside the
 guard before the command starts, is in the log. A trivial command (a standalone `true`, `:`, `exit 0`, `echo …`,
 `printf …`; `is_trivial_reproduction`) is not run: the finding is confirmed again (`TRIAGE_REPRO_TRIVIAL`). A command with
-a shell operator (`;` `&&` `|` `>`), a substitution or a second line (`echo checking; python3 repro.py`) is not trivial and
-goes to the guarded rerun. Another exit than the one the triager reported confirms it again
+an unquoted shell operator (`;` `&&` `|` `>`), a substitution or a second line (`echo checking; python3 repro.py`) is not
+trivial and goes to the guarded rerun; an operator in quotes or escaped is plain text (`echo '|'`, `printf '%s' '>'` stay
+trivial). The line is read as Bash reads it: `#` starts a comment only at the start of a word, so `echo checking#phase;
+python3 repro.py` is compound, while `echo ok # note` and `echo '#'` stay trivial. Another exit than the one the triager reported confirms it again
 (`TRIAGE_REPRO_MISMATCH`). When the guard cannot be had (Landlock missing or too old, the project in a writable root of
 `ro-run.py`, a failed start) or the rerun times out, the rejection cannot be proven and the finding is confirmed again
 whatever the exit (`TRIAGE_REPRO_UNVERIFIED`, fail closed). The restored entry carries the command, the observed exit and
@@ -303,9 +305,10 @@ blocked makes the report `blocked`; a deviation without an outcome is a `follow_
 without findings is not healed into `GREEN` but goes to the repair and, failing that, to a repeat of the reviewer. The
 repair is compared with the heal of the role's own block. A finding is matched by its content, not by its id or severity
 (its normalized place and failure scenario; findings with the same content are compared one by one), so a severity moved
-from one finding to another at the same place is drift. A deviation is matched by its text (blanks and case ignored): a
-deviation accepted that was not accepted before is drift even when the total of accepted deviations stays, and a reworded
-one counts as new, so an unclear identity never authorizes an acceptance. A block that raises the status or the verdict, lowers a severity, loses a finding, question, escalation,
+from one finding to another at the same place is drift. A deviation is matched by its text, impact and class together (blanks and case ignored): a
+deviation accepted that was not accepted before is drift even when the total of accepted deviations stays, also for
+deviations of the same (or blank) text that differ in impact or class, and a reworded one counts as new. A deviation with
+none of the three is matched only by its place among such ones, so an unclear identity never authorizes an acceptance. A block that raises the status or the verdict, lowers a severity, loses a finding, question, escalation,
 pending issue or check row, or turns a confirmed finding of a triage into a rejected one is refused with
 `REPAIR_SEMANTIC_DRIFT`; the next repair, then a repeat of the role, follows, and a role that never gives a faithful
 block ends in `ROLE_OUTPUT_INVALID`. An answer with no block that parses has nothing to compare: the fixer's block is

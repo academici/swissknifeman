@@ -2,8 +2,6 @@
 the others."""
 from __future__ import annotations
 
-import shlex
-
 from orch.conductor import checks as checks_mod, contract, options as opts, prompts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import notes
@@ -40,20 +38,65 @@ def triage(self, item: Item, number: int, findings: dict, advice: str = "") -> d
     return found["triage"]
 
 
+def shell_words(cmd: str):
+    """The words of a one-line simple command as Bash reads them, else None when it is shell syntax or unbalanced. Quotes
+    and a backslash make an operator character a plain letter; ``#`` starts a comment only at the start of a word (so
+    ``a#b`` is one word); one trailing ``;`` is allowed, any other unquoted ``;`` ``&`` ``|`` ``<`` ``>`` ``(`` ``)`` is
+    not a plain command."""
+    words: list = []
+    word, ended, i = None, False, 0  # word: the word being read (None between words); ended: after the trailing ';'
+    while i < len(cmd):
+        c = cmd[i]
+        if c in " \t":
+            if word is not None:
+                words.append(word)
+                word = None
+        elif c == "#" and word is None:
+            break  # a comment to the end of the line
+        elif ended:
+            return None
+        elif c == "'":
+            close = cmd.find("'", i + 1)
+            if close < 0:
+                return None
+            word, i = (word or "") + cmd[i + 1:close], close
+        elif c == '"':
+            word, i = word or "", i + 1
+            while i < len(cmd) and cmd[i] != '"':
+                if cmd[i] == "\\" and cmd[i + 1:i + 2] in ("$", "`", '"', "\\"):
+                    i += 1
+                word, i = word + cmd[i], i + 1
+            if i >= len(cmd):
+                return None
+        elif c == "\\":
+            if i + 1 >= len(cmd):
+                return None
+            word, i = (word or "") + cmd[i + 1], i + 1
+        elif c == ";":
+            if word is not None:
+                words.append(word)
+                word = None
+            ended = True
+        elif c in "&|<>()":
+            return None
+        else:
+            word = (word or "") + c
+        i += 1
+    if word is not None:
+        words.append(word)
+    return words
+
+
 def is_trivial_reproduction(cmd) -> bool:
     """A command that proves nothing: it cannot fail for a defect, so it cannot show that a finding does not hold. Only
     a standalone ``true``, ``:``, ``exit 0``, ``echo …`` or ``printf …`` (one optional trailing ``;``) is trivial. Anything
-    with a shell operator (``;`` ``&`` ``|`` ``<`` ``>`` ``(`` ``)``), a command substitution, a second line or text the
-    shell would not read the same way is not: it reaches the guarded rerun, which is the safe side."""
+    with an unquoted shell operator (``;`` ``&`` ``|`` ``<`` ``>`` ``(`` ``)``; the same characters quoted or escaped are
+    plain text), a command substitution, a second line or text the shell would not read the same way is not: it reaches
+    the guarded rerun, which is the safe side."""
     if not isinstance(cmd, str) or "\n" in cmd or "\r" in cmd or "$(" in cmd or "`" in cmd:
         return False
-    try:
-        words = list(shlex.shlex(cmd, posix=True, punctuation_chars=True))
-    except ValueError:
-        return False
-    if words and words[-1] == ";":
-        words.pop()
-    if not words or any(word and set(word) <= set(";&|<>()") for word in words):
+    words = shell_words(cmd)
+    if not words:
         return False
     return words in (["true"], [":"], ["exit", "0"]) or words[0] in ("echo", "printf")
 

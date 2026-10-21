@@ -602,7 +602,10 @@ will run at (an effort named by `reviewer` wins over the plan's).
 In `groups`, `single` and `none` a piece has no review of its own. After the last piece of a group the conductor reads the
 commits of the group once (`review_batch`: production code only, the same as `batch-review.py`), with the reviewer of the run
 (`reviewer`, grok by default) at the effort of the plan, and keeps the reply in `group-review-<n>.md` of the run folder
-(`state.group_reviews`). The reply must hold a `## Findings` section with `[Blocker|Major|Minor] file:line - defect` lines (a
+(`state.group_reviews`).
+The reserved reviewer of a last piece with `review.mode: none|self` does not override the group's requested review routes;
+an explicit configuration or invocation reviewer still wins.
+The reply must hold a `## Findings` section with `[Blocker|Major|Minor] file:line - defect` lines (a
 list marker, a number, bold or backticks around them are read too) or the word `none`. The beacon `GROUP_REVIEW` gives the
 counts; a reply that is neither is `GROUP_REVIEW_FAILED` (`format: malformed` in `state.group_reviews`), never a clean review, and
 so is a group without a commit. Blocker and Major findings are corrected in a commit of their own: the conductor writes

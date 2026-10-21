@@ -159,6 +159,27 @@ class ReviewPlanTests(ConductorCase):
         self.assertEqual(sorted(line["item"] for line in said), ["W1", "W2"])
         self.assertIn("review strategy of the batch is none", said[0]["message"])
 
+    def disabled_group_reviewer(self, override, expected):
+        self.set_items({ref: {"review_mode": mode,
+                             "review_route": {"provider": provider, "model": model, "effort": "high"},
+                             "options": [{"source": f"item:{ref}", "options": {
+                                 "reviewer": f"{provider}/{model}/high"}}]}
+                        for ref, mode, provider, model in (("W1", "requested", "grok", "grok-4.7"),
+                                                          ("W2", "none", "claude-code", "opus"))})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN]})
+        path = self.project.parent / "group-options.json"
+        path.write_text(json.dumps({"review": {"strategy": "single"}, **override}))
+        code, _, err = self.run_items("W1", "W2", extra=("--options", path))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        self.assertIn(expected, self.events(err, "GROUP_REVIEW_START")[0]["message"])
+
+    def test_disabled_last_piece_does_not_replace_requested_group_reviewer(self):
+        self.disabled_group_reviewer({}, "grok/grok-4.7/")
+
+    def test_explicit_run_reviewer_beats_disabled_last_piece_and_requested_route(self):
+        self.disabled_group_reviewer({"reviewer": "codex/gpt-6-sol/high"}, "codex/gpt-6-sol/")
+
     def test_an_effort_named_by_the_reviewer_option_beats_the_strategy(self):
         from orch.conductor import options as opts
         from orch.conductor.application import review_plan

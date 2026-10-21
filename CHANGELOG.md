@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- planner: `write_set_no_tests` распознаёт файлы `test-*.py`, принятые для hub scripts; похожие имена без префикса тестами не считаются.
 - orch (tests): `ProcessGroupTests.test_a_command_source_that_times_out_takes_its_children_along` читает `/proc/<pid>/stat` без `exists()`: исчезновение дочернего процесса между проверкой и чтением считается завершением, а не `ProcessLookupError`.
 - golden: `orch-launch-list` переснят (P2.4: каталог запуска 1.6.0 добавил `resume_argv` к строке codex executor).
 - orch (tests): `SoftLimitTests.test_a_correction_round_runs_the_red_checks_first_by_default` закрепляет `checks.parallel: 1` — при умолчании 2 обе проверки допускаются сразу, и зелёная V2 успевает выполниться до красной V1; отдельный тест фиксирует параллельный контекст (fail_fast останавливает только последующий допуск).

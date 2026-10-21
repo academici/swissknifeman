@@ -105,9 +105,9 @@ def overlaps(commands: list, phase: bool) -> list:
 
 
 def is_test_path(path: str) -> bool:
-    """A repository path that names tests: a ``tests/`` folder, ``test_*``, ``*.test.*`` or ``*Test.php``."""
+    """A test folder or a ``test_*``, ``test-*``, ``*.test.*`` or ``*Test.php`` file."""
     name = path.rsplit("/", 1)[-1]
-    return "tests" in path.split("/")[:-1] or name.startswith("test_") or ".test." in name or name.endswith("Test.php")
+    return "tests" in path.split("/")[:-1] or name.startswith(("test_", "test-")) or ".test." in name or name.endswith("Test.php")
 
 
 class Issue(NamedTuple):
@@ -741,7 +741,7 @@ class _Context:
         if code:
             self.warn("write_set_no_tests", f"{rel}/task_files",
                       f"task_files change code ({', '.join(code[:3])}{', …' if len(code) > 3 else ''}) "
-                      "but name no test path (tests/, test_*, *.test.*, *Test.php)")
+                      "but name no test path (tests/, test_*, test-*, *.test.*, *Test.php)")
 
     def read_targets(self) -> tuple[set[str], set[str]]:
         """Knowledge ids and decision ids that some item reads or (decisions) names, from plan data only."""

@@ -671,7 +671,7 @@ class WriteSetNoTestsTests(CheckCase):
         self.assertIn("lib/pkg/a.py", hits[0].message)
 
     def test_a_test_path_among_the_task_files_silences_it(self):
-        for test in ("tests/test_a.py", "lib/pkg/test_a.py", "src/a.test.ts", "tests/Feature/AaTest.php", "tests/**"):
+        for test in ("tests/test_a.py", "lib/pkg/test_a.py", "scripts/test-ci-matrix.py", "src/a.test.ts", "tests/Feature/AaTest.php", "tests/**"):
             with self.subTest(test=test):
                 self.assertEqual(self.hits([{"path": "lib/pkg/a.py", "change": "create"},
                                             {"path": test, "change": "any"}]), [])
@@ -682,7 +682,7 @@ class WriteSetNoTestsTests(CheckCase):
         self.assertEqual(self.hits([{"path": "lib/pkg/gone.py", "change": "delete"}]), [])
 
     def test_a_folder_that_only_ends_in_tests_is_not_a_test_path(self):
-        for path in ("notests/a.py", "mytests/a.py", "foo_tests/a.py"):
+        for path in ("notests/a.py", "mytests/a.py", "foo_tests/a.py", "scripts/contest-a.py", "scripts/testimony.py"):
             with self.subTest(path=path):
                 self.assertEqual(len(self.hits([{"path": "lib/a.py", "change": "create"},
                                                 {"path": path, "change": "create"}])), 1)

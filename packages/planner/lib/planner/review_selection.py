@@ -9,7 +9,6 @@ import re
 import shlex
 
 from planner import COMMAND_NAMESPACE
-from planner.commands_compat import normalize_command_id, warn_deprecated
 
 _REVIEW_ONLY_COMMANDS = frozenset(f"{COMMAND_NAMESPACE}:{name}" for name in ("review", "plan-audit"))
 _REVIEW_COMMANDS = _REVIEW_ONLY_COMMANDS | frozenset(
@@ -70,10 +69,6 @@ def invocation_selection(invocation: str) -> dict | None:
         tokens = shlex.split(invocation)
     except ValueError as exc:
         raise ReviewError("REVIEW_INVOCATION_INVALID", "malformed review arguments") from exc
-    if tokens:  # Compatibility alias: remove in the next minor release.
-        tokens[0], deprecated = normalize_command_id(tokens[0])
-        if deprecated:
-            warn_deprecated(invocation.split(None, 1)[0])
     if not tokens or tokens[0] not in _REVIEW_COMMANDS:
         return None
     selections, efforts = [], []

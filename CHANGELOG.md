@@ -48,6 +48,7 @@
 
 ### Removed
 
+- planner/aicore/harness: the `task` compatibility plugin, `task:<id>` and `/task:*` spellings, and `SKM_TASK_ROOT` are removed (PLAN3 D88 window, PLAN9 P1.2). Use `/planner:*` and `PLANNER_ROOT`. Plan URNs `urn:swissknifeman:task:plan:*` are unchanged.
 - The dev-clone guard, its marker and override, `scripts/dev-clone.sh` and `scripts/test-dev-guard.py` (PLAN3 D88); development uses a stable worktree. `dev-sandbox.sh` and golden fixtures remain.
 
 ## [0.31.1] - 2026-10-19

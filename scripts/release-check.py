@@ -7,7 +7,7 @@ Checks (exit 1 on any finding):
   - the top released CHANGELOG heading is X.Y.Z and `[Unreleased]` is empty;
   - `version-guard.py status` reports no unit that changed without a bump;
   - per package: `unit.json` = `package.json` = the plugin manifests (`.claude-plugin`, `.codex-plugin`);
-  - `planner` (follows the umbrella): its unit, manifests, task alias, golden fixtures, grok lock and
+  - `planner` (follows the umbrella): its unit, manifests, golden fixtures, grok lock and
     `configs/command-routing.json` carry X.Y.Z;
   - `lib/<id>/__init__.py` `__version__` = `unit.json`; planner projections are rendered (`render-provider-commands.py`);
   - the version table of `docs/architecture/ownership.md` matches `unit.json`;
@@ -31,9 +31,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
 PLANNER = "packages/planner"
 PLANNER_SURFACES = (
-    "unit.json", ".claude-plugin/plugin.json", ".codex-plugin/plugin.json", "aliases/task/.claude-plugin/plugin.json",
+    "unit.json", ".claude-plugin/plugin.json", ".codex-plugin/plugin.json",
     "tests/fixtures_data/claude-command-golden/plugin.json",
-    "tests/fixtures_data/claude-command-golden/aliases/task/.claude-plugin/plugin.json",
     "adapters/grok/publication-lock.json",
 )
 OWNERSHIP = "docs/architecture/ownership.md"

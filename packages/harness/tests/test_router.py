@@ -92,10 +92,6 @@ class GenerateCatalogCase(unittest.TestCase):
         (claude / "skills" / "planner-dev").mkdir()
         (claude / "skills" / "planner-dev" / "SKILL.md").write_text(
             "---\nname: planner-dev\ndescription: Implement features\n---\n")
-        # Compatibility alias: remove in the next minor release.
-        (claude / "skills" / "task-dev").mkdir()
-        (claude / "skills" / "task-dev" / "SKILL.md").write_text(
-            "---\nname: task-dev\ndescription: Implement features\n---\n")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -161,22 +157,6 @@ class HookBehaviorCase(unittest.TestCase):
                         out, rc = hook(script, {"cwd": str(root), "user_input": "implement feature"})
                         self.assertEqual(rc, 0)
                         self.assertEqual(out, "")
-
-    def test_legacy_task_spellings_cannot_activate_either(self):
-        # Compatibility alias: remove in the next minor release.
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            claude = root / ".claude"
-            claude.mkdir()
-            (claude / "agent-router.config.json").write_text(json.dumps({
-                "commands": [{"name": "/task:dev", "keywords": ["implement", "feature"]},
-                             {"name": "task:fix", "keywords": ["implement", "feature"]}],
-                "skills": [{"name": "skill:task-fix", "keywords": ["implement", "feature"]},
-                           {"name": "skill:task:dev", "keywords": ["implement", "feature"]}],
-            }))
-            (claude / "agent-router.env.ini").write_text("POLICY=propose\n")
-            out, rc = hook(ROUTER_PY, {"cwd": str(root), "user_input": "implement feature"})
-            self.assertEqual((rc, out), (0, ""))
 
     def test_enabled_non_task_hint_still_works(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -69,9 +69,7 @@ def score_entries(text, entries):
         if not name:
             continue
         # planner requires explicit invocation, even in legacy consumer catalogs.
-        # Compatibility alias: remove in the next minor release (the `task` spellings).
-        if name.startswith(("/planner:", "planner:", "skill:planner-", "skill:planner:",
-                            "/task:", "task:", "skill:task-", "skill:task:")):
+        if name.startswith(("/planner:", "planner:", "skill:planner-", "skill:planner:")):
             continue
         weight = e.get("weight", 1)
         s = sum(weight for kw in e.get("keywords", []) if kw and kw.lower() in low)

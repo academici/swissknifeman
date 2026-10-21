@@ -9,8 +9,9 @@ here and reads the JSON the partner prints. Lookup order for ``name`` (``NAME`` 
 3. ``SKM_<NAME>_ROOT/bin/<name>`` (an executable file);
 4. ``name`` on ``PATH``.
 
-``planner`` is the one exception: ``PLANNER_PLAN_PY``, ``PLANNER_ROOT/scripts/plan.py``, the
-deprecated ``SKM_TASK_ROOT/scripts/plan.py`` and then ``planner`` on ``PATH``.
+``planner`` is the one exception: ``PLANNER_PLAN_PY``, ``PLANNER_ROOT/scripts/plan.py``
+and then ``planner`` or ``plan.py`` on ``PATH``. The old root variable was removed in
+PLAN9 P1.2 (window of PLAN3 D88).
 """
 from __future__ import annotations
 
@@ -63,11 +64,6 @@ def _planner_command(env: Mapping[str, str]) -> Optional[list]:
     if env.get("PLANNER_ROOT"):
         found = _file(str(Path(os.path.expanduser(env["PLANNER_ROOT"])) / "scripts" / "plan.py"))
         if found:
-            return [sys.executable, found]
-    if env.get("SKM_TASK_ROOT"):
-        found = _file(str(Path(os.path.expanduser(env["SKM_TASK_ROOT"])) / "scripts" / "plan.py"))
-        if found:
-            _warn_once("SKM_TASK_ROOT", "set PLANNER_ROOT")
             return [sys.executable, found]
     # `install.sh` links the planner as `plan.py`; a `planner` launcher is the other accepted form.
     which = (shutil.which("planner", path=env.get("PATH", ""))

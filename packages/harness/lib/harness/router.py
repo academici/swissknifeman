@@ -58,8 +58,7 @@ def _scan_local_skills(claude_dir):
             continue
         fm = _frontmatter(f)
         name = fm.get("name") or d.name
-        # Compatibility alias: remove in the next minor release (the `task-`/`task:` spellings).
-        if name.startswith(("planner-", "planner:", "task-", "task:")):
+        if name.startswith(("planner-", "planner:")):
             continue
         out.append({"name": f"skill:{name}", "weight": 1,
                     "keywords": _keywords_from_description(fm.get("description", ""))})

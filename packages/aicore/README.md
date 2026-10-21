@@ -212,7 +212,7 @@ that used to live in `core` belong to `analyst` and are read through `analyst ru
 `aicore.util.partners` finds the command of another module and reads its JSON, so no module imports a partner or names its
 folder. `partner_command(name)` returns the argv prefix or `None`: the deprecated variables the caller lists in
 `legacy_env` (one warning), `SKM_<NAME>_BIN`, `SKM_<NAME>_ROOT/bin/<name>`, then `<name>` on `PATH`; for `planner` it is
-`PLANNER_PLAN_PY`, `PLANNER_ROOT/scripts/plan.py`, the deprecated `SKM_TASK_ROOT`, then `planner` on `PATH`.
+`PLANNER_PLAN_PY`, `PLANNER_ROOT/scripts/plan.py`, then `planner` or `plan.py` on `PATH`. The old root variable was removed in PLAN9 P1.2 (window of PLAN3 D88).
 `require_partner` raises `PartnerUnavailable` (`PARTNER_UNAVAILABLE: <name> not found (set SKM_<NAME>_ROOT or put <name> on
 PATH)`) and `run_partner_json(name, args)` returns the decoded stdout or raises `PartnerError`.
 

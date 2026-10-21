@@ -367,9 +367,9 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
   ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)).
 - **Does not own:** model names (`aicore.provider`), launch argv (`orch`), delivery into projects (`aicore.delivery`),
   projection of commands to Codex, Grok and Cursor (`aicore.content`).
-- **Rename:** `/task:*` became `/planner:*` and `SKM_TASK_ROOT` became `PLANNER_ROOT`, with transitional aliases for one
-  minor release: the compatibility plugin `task` (`packages/planner/aliases/task`), the old environment variable with a
-  warning, and `task:<id>` command lines read as `planner:<id>`
+- **Rename:** `/task:*` became `/planner:*` and the old root variable became `PLANNER_ROOT`. The transitional aliases
+  were removed in PLAN9 P1.2 (window of PLAN3 D88): the compatibility plugin, the old environment variable and
+  `task:<id>` spellings are gone. Plan URNs stay `urn:swissknifeman:task:plan:*`
   ([ADR 0009](decisions/0009-task-renamed-to-planner.md), [ADR 0052](decisions/0052-planner-rename-compatibility-alias.md)).
 - **After P9:**
   - *Command line:* `scripts/plan.py` (no `bin/` yet); plugin `planner`. Extra verbs `config show|explain` and
@@ -543,8 +543,8 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
   backup, hook and MCP paths rewritten;
 - everything changed is backed up and can be rolled back.
 
-Compatibility: plan schemas and URNs do not change; aliases of `/task:*` and the old environment variables work for one
-minor release with a warning. The guide `docs/upgrade/<version>.md` lists requirements, backup, dry-run, apply, the
+Compatibility: plan schemas and URNs do not change. The `/task:*` aliases and the old environment variable were removed
+in PLAN9 P1.2 (window of PLAN3 D88). The guide `docs/upgrade/<version>.md` lists requirements, backup, dry-run, apply, the
 `doctor` check, rollback and the steps for the second computer. The upgrade is rehearsed on copies of projects in a
 sandbox and on the second computer; only then is the branch merged and a major version tagged.
 

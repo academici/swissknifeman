@@ -11,13 +11,6 @@
         "grok"
       ]
     },
-    "task": {
-      "_doc": "Compatibility alias: remove in the next minor release.",
-      "version_owner": "umbrella",
-      "required_providers": [
-        "claude-code"
-      ]
-    },
     "maind": {
       "version_owner": "package",
       "package": "maind",
@@ -71,7 +64,6 @@
   "legacy_policy": {
     "schema_version": "release-unit-policy/v1",
     "plugins": {
-      "task": {"version_owner": "umbrella", "grok_native": true, "required_providers": ["claude-code", "codex", "grok"]},
       "maind": {"version_owner": "package", "package": "maind", "path": "packages/maind", "required_providers": ["claude-code"]},
       "analyst": {"version_owner": "package", "package": "analyst", "path": "packages/analyst", "required_providers": ["claude-code"]},
       "harness": {"version_owner": "package", "package": "harness", "path": "packages/harness", "required_providers": ["claude-code"]}

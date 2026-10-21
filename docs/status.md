@@ -37,9 +37,9 @@ Fleet Capability Maturity Matrix - not «is the command», a «proven to work».
 | maind | `onboard`/`sync`/`deploy` — rolling out artifacts for fleet projects | available | `packages/maind/bin/maind status` — «projects: 25 (connected: 22)»; rollout is playing `maind sync --only <artefact> --dry-run` |
 | analyst | `digest`/`review`/`promote` — pipeline continuous learning (human-gate) | available | `packages/analyst/bin/analyst status --project .` — 5 lessons in `ephemeral`, counters by stage |
 | analyst | `scan`/`suggest` — cross-project patterns → skill draft | experimental | P2/P3 by roadmap package (`packages/analyst/CLAUDE.md`): there is a mechanism, cross-project running was not performed with this repo |
-| task | `/planner:plan-*` — executable master plans | available | same document - product `/planner:plan-run`; `packages/planner/scripts/validate.sh` green |
-| task | `plan.py check` — plan integrity (schema, refs, cycles, completeness, fresh views) | available | `python3 packages/planner/scripts/plan.py check <PLAN>`; `packages/planner/tests/engine/` and `packages/planner/scripts/validate.sh --plan <dir>` green |
-| task | `plan.py start`/`finish` — route pool, dependency and acceptance gate | available | `python3 packages/planner/scripts/plan.py start <PLAN> <item> --actor <provider>/<model>` refuses an undershoot route; `finish --status done` needs recorded acceptance checks; `packages/planner/tests/engine/test_lifecycle.py` |
+| planner | `/planner:plan-*` — executable master plans | available | same document - product `/planner:plan-run`; `packages/planner/scripts/validate.sh` green |
+| planner | `plan.py check` — plan integrity (schema, refs, cycles, completeness, fresh views) | available | `python3 packages/planner/scripts/plan.py check <PLAN>`; `packages/planner/tests/engine/` and `packages/planner/scripts/validate.sh --plan <dir>` green |
+| planner | `plan.py start`/`finish` — route pool, dependency and acceptance gate | available | `python3 packages/planner/scripts/plan.py start <PLAN> <item> --actor <provider>/<model>` refuses an undershoot route; `finish --status done` needs recorded acceptance checks; `packages/planner/tests/engine/test_lifecycle.py` |
 | aicore | `aicore.util.io` — atomic record (tmp + `os.replace`) | available | `bash packages/aicore/scripts/test.sh` |
 | aicore | `aicore.util.repo` — unified repo root search/monorepo | available | is used by the launchers and by `harness run` (`find_repo_root`/`find_monorepo_root`, marker `packages/`), covered `packages/aicore/tests/test_util.py` |
 

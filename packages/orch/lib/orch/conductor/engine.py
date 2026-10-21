@@ -172,7 +172,12 @@ class Conductor:
     _severity_of = staticmethod(report_rules.severity_of)
     _place = staticmethod(report_rules.place)
     _notes = staticmethod(report_rules.notes)
-    _plan_note = staticmethod(report_rules.plan_note)
+
+    def _plan_note(self, item: Item, text: str) -> None:
+        """A plan note of the piece; it changes ``item.state``, so it is made under the run-store lock (I2)."""
+        with self.store.mutating():
+            report_rules.plan_note(item, text)
+
     _blocked = staticmethod(report_rules.blocked)
 
     # ------------------------------------------------------------------ infrastructure: the work source and the roles
@@ -318,6 +323,7 @@ class Conductor:
     _red_signature = staticmethod(checks_stage.red_signature)
     _green = checks_stage.green
     _red_before = staticmethod(checks_stage.red_before)
+    _earlier_rows = staticmethod(checks_stage.earlier_rows)
     _compute_checks = checks_stage.compute_checks
     _check_tick = checks_stage.check_tick
     _run_checks = checks_stage.run_checks

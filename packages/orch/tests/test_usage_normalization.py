@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import threading
+import contextlib
 from types import SimpleNamespace
 import unittest
 from unittest import mock
@@ -103,7 +104,8 @@ class UsageAccountingTests(unittest.TestCase):
         self.item = Item("W1", "run-1", {}, Path(tmp.name), {})
         self.state = {"items": {"W1": self.item.state}}
         self.engine = SimpleNamespace(state=self.state, _local=threading.local(), _step_tokens={},
-                                      _save=mock.Mock(), progress=SimpleNamespace(emit=mock.Mock()))
+                                      _save=mock.Mock(), progress=SimpleNamespace(emit=mock.Mock()),
+                                      store=SimpleNamespace(mutating=contextlib.nullcontext))
         self.engine._unmetered = lambda item: budget.unmetered(self.engine, item)  # bound on the Conductor
         self.start_agent("agent-1")
 

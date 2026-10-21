@@ -37,16 +37,19 @@ def run_clock(self, item: Item, stop: bool = True) -> None:
     if not (warn or cap):
         return
     active = self._active_s()
-    if warn and int(active // warn) > self.state.get("run_warned", 0):
-        self.state["run_warned"] = int(active // warn)
-        items = self.state.get("items", {})
-        closed = sum(1 for row in items.values() if row.get("outcome") in ("done", "done_with_deviations", "blocked"))
-        asked = len(self.run_doc.get("items") or [])
-        text = (f"run active {human_duration(active)}; {closed} piece(s) closed"
-                + (f", {max(asked - closed, 0)} left" if asked else "") + f"; now {item.ref} {self._current_step or '-'}")
+    text = None
+    with self.store.mutating():  # a check thread and the main loop both get here (I2)
+        if warn and int(active // warn) > self.state.get("run_warned", 0):
+            self.state["run_warned"] = int(active // warn)
+            items = self.state.get("items", {})
+            closed = sum(1 for row in items.values() if row.get("outcome") in ("done", "done_with_deviations", "blocked"))
+            asked = len(self.run_doc.get("items") or [])
+            text = (f"run active {human_duration(active)}; {closed} piece(s) closed"
+                    + (f", {max(asked - closed, 0)} left" if asked else "") + f"; now {item.ref} {self._current_step or '-'}")
+            self._plan_note(item, text)
+    if text is not None:  # progress and the bus after the lock
         self.progress.emit("info", item=item.ref, reason_code="RUN_SLOW", message=text)
         self._beacon_event("orch.run.warning", item, {"reason_code": "RUN_SLOW", "step": self._current_step})
-        self._plan_note(item, text)
     if stop and cap and active >= cap:
         raise Stop("RUN_TIMEOUT", f"the run was active {human_duration(active)}, past limits.run_timeout_s {cap}; "
                                   "raise it or set 0, then resume")
@@ -86,12 +89,13 @@ def loop(self) -> int:
     finally:
         for number, handler in previous.items():
             signal.signal(number, handler)
-    self.state["active_s"] = round(self._active_s(), 1)
-    self._segment = None
-    self.state["status"] = outcome
-    if reason is not None:
-        self.state["stop"] = {"code": reason.code, "message": reason.message}
-    self._save()
+    with self.store.mutating():
+        self.state["active_s"] = round(self._active_s(), 1)
+        self._segment = None
+        self.state["status"] = outcome
+        if reason is not None:
+            self.state["stop"] = {"code": reason.code, "message": reason.message}
+        self._save()
     held = run_service.held_pieces(self.state) if reason is not None and self._batch_held() else []
     if held:  # a stopped batch keeps its claims (resume continues them); say how to give them back instead
         self.progress.emit("info", reason_code="BATCH_HELD", message=run_service.held_hint(self.run_id, held))
@@ -463,17 +467,19 @@ def start_step(self, item: Item, key: str, *, role: str = "deterministic", route
         base = checks_mod.head(self.project)
     except RuntimeError:
         base = None
-    item.state.setdefault("steps", {})[key] = {
-        "status": "started", "started_at": clock.utc_now(), "role": role, "route": route,
-        "base_head": base, "attempt": item.claim.get("attempt_id"),
-        "dirty_before": recovery.dirty_paths(self.project) if key.startswith("checks.") else None}
-    self._save()
+    dirty = recovery.dirty_paths(self.project) if key.startswith("checks.") else None
+    with self.store.mutating():
+        item.state.setdefault("steps", {})[key] = {
+            "status": "started", "started_at": clock.utc_now(), "role": role, "route": route,
+            "base_head": base, "attempt": item.claim.get("attempt_id"), "dirty_before": dirty}
+        self._save()
 
 
 def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "deterministic",
          route: Optional[str] = None, verdict: Optional[Callable[[Any], str]] = None) -> Any:
-    steps = item.state.setdefault("steps", {})
-    known = steps.get(key)
+    with self.store.mutating():
+        steps = item.state.setdefault("steps", {})
+        known = steps.get(key)
     if known and known.get("status") == "done":
         self.progress.emit("stage.skip", item=item.ref, stage=key, role=role, route=known.get("route"),
                            verdict=known.get("verdict"), message="closed earlier; not repeated")
@@ -491,8 +497,9 @@ def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "det
     try:
         result = run()
     except Stop as stop:
-        steps[key] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
-        self._save()
+        with self.store.mutating():
+            steps[key] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
+            self._save()
         self.progress.emit("stage.end", item=item.ref, stage=key, role=role, route=route, verdict="stopped",
                            reason_code=stop.code, duration_s=round(time.monotonic() - begin, 1),
                            message=stop.message)
@@ -500,10 +507,11 @@ def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "det
         raise
     tokens = self._step_tokens
     said = verdict(result) if verdict else "done"
-    steps[key] = {"status": "done", "result": result, "verdict": said, "role": role, "route": route,
-                  "duration_s": round(time.monotonic() - begin, 1), "ended": clock.utc_now(),
-                  **({"tokens": tokens} if tokens and any(tokens.values()) else {})}
-    self._save()
+    with self.store.mutating():
+        steps[key] = {"status": "done", "result": result, "verdict": said, "role": role, "route": route,
+                      "duration_s": round(time.monotonic() - begin, 1), "ended": clock.utc_now(),
+                      **({"tokens": tokens} if tokens and any(tokens.values()) else {})}
+        self._save()
     self.progress.emit("stage.end", item=item.ref, stage=key, role=role, route=route, verdict=said,
                        duration_s=steps[key]["duration_s"], tokens=steps[key].get("tokens"),
                        agent=result.get("agent") if isinstance(result, dict) else None)

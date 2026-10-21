@@ -116,7 +116,7 @@
       "type": "object",
       "properties": {
         "parallel": {
-          "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
+          "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 2. They share the jobs budget (`SKM_TEST_JOBS` of the owner, else the CPUs): each gets its share in `SKM_TEST_JOBS`.",
           "type": "integer",
           "minimum": 1,
           "maximum": 8
@@ -136,7 +136,15 @@
           "minItems": 1
         },
         "red_first": {
-          "description": "In a correction round the checks that were red run first; when one is still red the others are not run (a half-hour full run is not repeated for a correction that did not mend it). Default true; false runs every check in every round.",
+          "description": "In a correction round the checks that were red run first; with `fail_fast` a check that is still red ends the round before the others start (a half-hour full run is not repeated for a correction that did not mend it). Default true; false runs the checks in their usual order.",
+          "type": "boolean"
+        },
+        "fail_fast": {
+          "description": "After the first red command check no further check is started (those running meanwhile end; the rest are reported `skipped` with `skip_reason` `fail_fast`), and the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`). Checks run cheapest first by their time in earlier rounds. Default true; false runs every check.",
+          "type": "boolean"
+        },
+        "reuse": {
+          "description": "A command check whose green evidence of the same run, candidate (HEAD and the digest of the dirty tree), command, directory and fingerprint (environment, programs, partner roots, Python) exists is not run again: its row is `reused` and the evidence file is kept as it was. A missing, damaged or foreign evidence file runs the check. Default true.",
           "type": "boolean"
         },
         "executor_runs_checks": {

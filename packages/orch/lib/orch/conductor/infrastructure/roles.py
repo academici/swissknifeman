@@ -307,20 +307,21 @@ def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] 
     """Count each agent's attempts once, including retries; replaying a receipt replaces its contribution."""
     handle = getattr(self._local, "agent", None)
     delta = {key: int(usage.get(key, 0)) for key in agents.USAGE_KEYS}
-    if handle is not None:
-        attempts = item.state.setdefault("usage_by_agent", {}).setdefault(handle["id"], {})
-        receipt = {**delta, "usage_complete": usage_complete}
-        previous = attempts.get(attempt or handle["id"], {})
-        delta = {key: receipt[key] - previous.get(key, 0) for key in agents.USAGE_KEYS}
-        attempts[attempt or handle["id"]] = receipt
-        handle["usage"] = {key: sum(row[key] for row in attempts.values()) for key in agents.USAGE_KEYS}
-        completeness = [row["usage_complete"] for row in attempts.values()]
-        handle["usage_complete"] = (False if False in completeness else True if True in completeness else None)
-    for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
-                   item.state.setdefault("tokens", {"input": 0, "output": 0}), self._step_tokens):
-        for key in agents.USAGE_KEYS:
-            bucket[key] = bucket.get(key, 0) + delta[key]
-    self._save()
+    with self.store.mutating():  # a role thread and the main loop share the state (I2)
+        if handle is not None:
+            attempts = item.state.setdefault("usage_by_agent", {}).setdefault(handle["id"], {})
+            receipt = {**delta, "usage_complete": usage_complete}
+            previous = attempts.get(attempt or handle["id"], {})
+            delta = {key: receipt[key] - previous.get(key, 0) for key in agents.USAGE_KEYS}
+            attempts[attempt or handle["id"]] = receipt
+            handle["usage"] = {key: sum(row[key] for row in attempts.values()) for key in agents.USAGE_KEYS}
+            completeness = [row["usage_complete"] for row in attempts.values()]
+            handle["usage_complete"] = (False if False in completeness else True if True in completeness else None)
+        for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
+                       item.state.setdefault("tokens", {"input": 0, "output": 0}), self._step_tokens):
+            for key in agents.USAGE_KEYS:
+                bucket[key] = bucket.get(key, 0) + delta[key]
+        self._save()
     if usage_complete is False:
         self._unmetered(item)
 
@@ -473,15 +474,16 @@ def keep_session(self, item: Item, role: str, route: dict, run) -> None:
     session that failed (a fresh one starts)."""
     if not self._shared_session(item, role, route):
         return
-    if run.error or not run.session:
-        self.state.pop("executor_session", None)
-        self.state.pop("executor_session_route", None)
-        self.state.pop("executor_session_item", None)
-    else:
-        self.state["executor_session"] = run.session
-        self.state["executor_session_route"] = route_label(route)
-        self.state["executor_session_item"] = item.ref
-    self._save()
+    with self.store.mutating():
+        if run.error or not run.session:
+            self.state.pop("executor_session", None)
+            self.state.pop("executor_session_route", None)
+            self.state.pop("executor_session_item", None)
+        else:
+            self.state["executor_session"] = run.session
+            self.state["executor_session_route"] = route_label(route)
+            self.state["executor_session_item"] = item.ref
+        self._save()
 
 
 def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:

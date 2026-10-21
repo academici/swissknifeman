@@ -1093,13 +1093,14 @@ class SoftLimitTests(ConductorCase):
         self.assertEqual(code, 1, err)
         steps = self.state(err)["items"]["W1"]["steps"]
         first, second = (steps[f"checks.{n}"]["result"] for n in (1, 2))
-        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in first],
-                         [("V1", False, False), ("V2", True, False)])
-        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in second],
-                         [("V1", False, False), ("V2", False, True)])  # V1 is still red: V2 is not run again
+        # fail_fast (the default): a red check ends the round, the other check is skipped and not run again while V1 is red
+        for rows in (first, second):
+            self.assertEqual([(row["id"], row["green"], bool(row.get("skipped")), row.get("skip_reason")) for row in rows],
+                             [("V1", False, False, None), ("V2", False, True, "fail_fast")])
+        self.assertEqual(steps["checks.2"]["verdict"], "red V1")  # only the check that ran and failed
 
     def test_red_first_off_runs_every_check_in_every_round(self):
-        self.two_checks(checks={"red_first": False})
+        self.two_checks(checks={"red_first": False, "fail_fast": False})
         self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
@@ -1108,7 +1109,7 @@ class SoftLimitTests(ConductorCase):
         self.assertEqual([(row["id"], bool(row.get("skipped"))) for row in second], [("V1", False), ("V2", False)])
 
     def test_a_correction_that_makes_progress_goes_past_the_target(self):
-        self.two_checks()
+        self.two_checks(checks={"fail_fast": False})  # both checks run, so mending V2 shows as progress
         self.script({"executor": [{"result": report("W1")}, {"write": {"out/two.txt": "2\n"}, "result": report("W1")},
                                   executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")

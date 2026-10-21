@@ -1,6 +1,7 @@
 """Hard token admission and resumable raises on fake providers; no live model calls."""
 from __future__ import annotations
 
+import contextlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -251,6 +252,7 @@ class HardBudgetTests(ConductorCase):
         owner = engine.Conductor(project=self.project, settings=settings.load(project=self.project))
         owner.state = {"tokens": {"input": 110}}
         owner.run_id = "R"
+        owner.store = SimpleNamespace(mutating=contextlib.nullcontext)  # no run folder here: the lock is not under test
         item = Item("W1", "source-run", {"tokens": {"input": 110}}, self.project, {})
         item.options = {"limits": {"tokens_hard_max": 110}}
         call = mock.Mock()

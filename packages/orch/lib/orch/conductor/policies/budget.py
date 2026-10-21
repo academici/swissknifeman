@@ -79,9 +79,12 @@ def over_budget(blocks, limits: dict) -> list:
 
 def unmetered(self, item: Item) -> None:
     """Remember an unmetered model attempt and announce it once, even when that attempt stops the run."""
-    if not item.state.get("usage_incomplete"):
-        item.state["usage_incomplete"] = True
-        self._save()
+    with self.store.mutating():  # a role thread gets here while the main loop saves the state (I2)
+        first = not item.state.get("usage_incomplete")
+        if first:
+            item.state["usage_incomplete"] = True
+            self._save()
+    if first:  # announced after the lock
         self.progress.emit("info", item=item.ref, reason_code="BUDGET_UNMETERED",
                            message=f"{item.ref}: a model attempt reported no usage; token limits cannot see it")
 
@@ -91,8 +94,11 @@ def budget(self, item: Item) -> None:
     limit = item.options["limits"].get("tokens_max") or 0
     tokens = item.state.get("tokens", {})
     used = int(tokens.get("input", 0)) + int(tokens.get("output", 0))  # cache reads are not spend
-    if limit and used > limit and not item.state.get("budget_over"):
-        item.state["budget_over"] = used
-        self._save()
+    with self.store.mutating():
+        first = bool(limit and used > limit and not item.state.get("budget_over"))
+        if first:
+            item.state["budget_over"] = used
+            self._save()
+    if first:
         self.progress.emit("info", item=item.ref, reason_code="BUDGET_OVER",
                            message=f"{item.ref} used {used} fresh tokens, past tokens_max {limit}; the run goes on")

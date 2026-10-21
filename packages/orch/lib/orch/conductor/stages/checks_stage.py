@@ -47,27 +47,28 @@ def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text:
                 names = ", ".join(row["id"] for row in red)
                 return rows, self._blocked(report, "CHECKS_RED", f"acceptance checks {names} stay red after "
                                                                  f"{done_before} correction(s): {why}"), round_no
-        if not replayed:
-            state["check_fixes_at"].append(round_no)
-        if advised:  # kept: a replay of this round (resume --retry) must get the same advice, not only the red text
-            state.setdefault("advice_fix", {})[str(round_no)] = advised["text"]
-        state["check_fixes_used"] = len(state["check_fixes_at"])
-        kept_advice = (state.get("advice_fix") or {}).get(str(round_no)) if replayed else None
-        round_no += 1
-        text, combined = prompts.check_correction(red), state.get("combined")
-        if advised:  # the allowance is spent; the advice makes one more round
-            text = advised["text"]
-        elif kept_advice:
-            text = kept_advice
-        if combined:  # the finished review's confirmed findings are corrected in this one round, and only in it
-            text += "\n\n" + combined["text"]
-            if combined["review"] not in state.setdefault("combined_done", []):
-                state["combined_done"].append(combined["review"])
-            if combined["review"] not in state["corrections_at"]:
-                state["corrections_at"].append(combined["review"])
-            state["corrections_used"] = len(state["corrections_at"])
-            state.pop("combined")
-            self._save()
+        with self.store.mutating():  # the state is shared with the threads of the checks (I2)
+            if not replayed:
+                state["check_fixes_at"].append(round_no)
+            if advised:  # kept: a replay of this round (resume --retry) must get the same advice, not only the red text
+                state.setdefault("advice_fix", {})[str(round_no)] = advised["text"]
+            state["check_fixes_used"] = len(state["check_fixes_at"])
+            kept_advice = (state.get("advice_fix") or {}).get(str(round_no)) if replayed else None
+            round_no += 1
+            text, combined = prompts.check_correction(red), state.get("combined")
+            if advised:  # the allowance is spent; the advice makes one more round
+                text = advised["text"]
+            elif kept_advice:
+                text = kept_advice
+            if combined:  # the finished review's confirmed findings are corrected in this one round, and only in it
+                text += "\n\n" + combined["text"]
+                if combined["review"] not in state.setdefault("combined_done", []):
+                    state["combined_done"].append(combined["review"])
+                if combined["review"] not in state["corrections_at"]:
+                    state["corrections_at"].append(combined["review"])
+                state["corrections_used"] = len(state["corrections_at"])
+                state.pop("combined")
+                self._save()
         report = self._execute(item, round_no, scout_text, text)
         if report["status"] == "blocked":
             return rows, report, round_no
@@ -88,17 +89,46 @@ def red_before(item: Item, number: int) -> list:
     return []
 
 
+def earlier_rows(item: Item, number: int) -> list:
+    """The rows of the checks of the rounds before ``number``, oldest first (the times that order the next round)."""
+    steps = done_steps(item.state.get("steps", {}))
+    rows = []
+    for earlier in range(1, number):
+        rows.extend((steps.get(f"checks.{earlier}") or {}).get("result") or [])
+    return rows
+
+
+def note_budget(folder: Path, budget: dict) -> None:
+    """Keep the jobs budget of a batch of checks (requested, how many run together, the share of each) beside their logs;
+    the journal does not carry it, as it differs from one machine to the next."""
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        with open(folder / "jobs.txt", "a", encoding="utf-8") as handle:
+            handle.write(f"requested={budget['requested']} parallel={budget['parallel']} effective={budget['effective']} "
+                         "(SKM_TEST_JOBS of each check)\n")
+    except OSError:  # a report only: it never stops the checks
+        pass
+
+
 def compute_checks(self, item: Item, number: int, report: dict, on_result=None) -> list:
     """The rows of the checks of one round; touches no run state, so it may run beside a model role."""
     self._disk_guard(item, f"checks.{number}")  # a heavy check that fills the disk dies with a truncated trace
+    options = item.options["checks"]
+    with self.store.mutating():  # the main loop adds steps while this runs beside the review: read the history as a snapshot
+        previous = [dict(row) for row in self._earlier_rows(item, number)]
+        red_first = list(self._red_before(item, number))
     try:
         return checks_mod.run_checks(
             item.input_doc, project=self.project, evidence_dir=self._evidence_dir(item),
             log_dir=item.directory / "checks" / str(number),
             timeout_s=item.options["limits"]["check_timeout_s"],
             evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,
-            executor=self._actor(item.routes["executor"]), parallel=item.options["checks"]["parallel"],
-            on_result=on_result, first=self._red_before(item, number), kinds=tuple(item.options["checks"]["kinds"]),
+            executor=self._actor(item.routes["executor"]), parallel=options["parallel"],
+            previous=previous, fail_fast=options["fail_fast"], reuse=options["reuse"],
+            run_id=self.run_id, run_env={"SKM_CHECK_RUN": self.run_id, "SKM_CHECK_ITEM": item.ref,
+                                         "SKM_CHECK_ROUND": str(number)},
+            on_budget=lambda budget: note_budget(item.directory / "checks" / str(number), budget),
+            on_result=on_result, first=red_first, kinds=tuple(item.options["checks"]["kinds"]),
             cadence=tuple(item.options["checks"]["cadence"]), warn_s=item.options["limits"].get("check_warn_s", 0),
             on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid),
             idle_s=item.options["limits"].get("check_idle_timeout_s", 0),
@@ -127,7 +157,7 @@ def run_checks(self, item: Item, number: int, report: dict, computed=None) -> li
         return computed.result() if computed is not None else self._compute_checks(item, number, report)
 
     def said(rows: list) -> str:
-        red = [row["id"] for row in rows if not row["green"]]
+        red = [row["id"] for row in rows if not row["green"] and not row.get("skipped")]  # ran and failed
         return "green" if not red else "red " + ",".join(red)
 
     return self._step(item, key, run, verdict=said)
@@ -152,8 +182,9 @@ def checks_then_review(self, item: Item, report: dict, checks_no: int, review_no
                 if computed.exception() is None:  # the checks ran to the end: keep them for the resume
                     self._run_checks(item, checks_no, report, computed=computed)
                 else:  # the checks failed too: the step began outside step(), so it is closed as stopped here
-                    steps[f"checks.{checks_no}"] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
-                    self._save()
+                    with self.store.mutating():
+                        steps[f"checks.{checks_no}"] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
+                        self._save()
                 raise
         finally:
             computed.exception()  # wait for the checks before the pool closes, whatever the review did
@@ -162,7 +193,8 @@ def checks_then_review(self, item: Item, report: dict, checks_no: int, review_no
         if steps.get(f"review.{review_no}", {}).get("status") == "done":
             self._carry_review(item, review_no)
         else:
-            steps.pop(f"review.{review_no}", None)
+            with self.store.mutating():
+                steps.pop(f"review.{review_no}", None)
             self.progress.emit("info", item=item.ref, message="the checks are red: the parallel review is dropped "
                                                                "and repeated after the correction")
     return rows

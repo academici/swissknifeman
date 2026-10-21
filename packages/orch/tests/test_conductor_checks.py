@@ -20,6 +20,11 @@ def doc(*commands):
 
 
 class ParallelChecksTests(unittest.TestCase):
+    def setUp(self):  # the checks share the jobs budget: a worker of a test runner (budget 1) would run them one by one
+        patcher = mock.patch.dict("os.environ", {"SKM_TEST_JOBS": "8"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def run_checks(self, parallel, *commands):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -32,7 +37,7 @@ class ParallelChecksTests(unittest.TestCase):
 
     def test_parallel_checks_keep_the_order_and_save_time(self):
         slow = "sleep 1.5"
-        rows, took = self.run_checks(3, slow, "exit 3", slow)
+        rows, took = self.run_checks(3, slow, "exit 3", slow)  # fail_fast: the red one cannot stop checks already running
         self.assertEqual([(row["id"], row["exit"]) for row in rows], [("V1", 0), ("V2", 3), ("V3", 0)])
         self.assertLess(took, 3.0)
 
@@ -72,6 +77,7 @@ class RedFirstTests(unittest.TestCase):
                                      log_dir=root / "log", timeout_s=30, evidence_prefix="r:W1:checks.2", first=["V1"])
             self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in rows],
                              [("V1", False, False), ("V2", False, True)])
+            self.assertEqual(rows[1]["skip_reason"], "fail_fast")
             self.assertFalse(marker.exists())  # the other check did not run
             ok = checks.run_checks(doc("true", f"touch {marker}"), project=root, evidence_dir=root / "ev",
                                    log_dir=root / "log", timeout_s=30, evidence_prefix="r:W1:checks.3", first=["V1"])
@@ -108,7 +114,8 @@ class HangAndTreeTests(unittest.TestCase):
             silent_then_talking = "for i in 1 2 3 4 5 6 7; do echo tick; sleep 1; done"
             with mock.patch.object(checks, "POLL_S", 0.2):
                 rows = checks.run_checks(doc("sleep 30", silent_then_talking), project=root, evidence_dir=root / "ev",
-                                         log_dir=root / "log", timeout_s=0, idle_s=2, evidence_prefix="r:W1:checks.1")
+                                         log_dir=root / "log", timeout_s=0, idle_s=2, evidence_prefix="r:W1:checks.1",
+                                         fail_fast=False)
             self.assertEqual([(row["id"], row["exit"]) for row in rows], [("V1", 124), ("V2", 0)])
             self.assertIn("no output for 2 s", (root / "log" / "V1.log").read_text(encoding="utf-8"))
             self.assertLess(rows[0]["seconds"], 10)

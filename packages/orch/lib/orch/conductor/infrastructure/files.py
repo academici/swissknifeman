@@ -63,7 +63,10 @@ class RunStore:
         self.run_id = run_id
         self.project = Path(project)
         self.directory = runs_root(project) / run_id
-        self._agents_lock = threading.Lock()
+        # Invariant I2: every mutation of the run state and every save of ``state.json`` happens under this one lock
+        # (threads of checks, of roles and the main loop share the state). Re-entrant: a mutation that saves nests.
+        # Order of locks: the questions lock first, this one second, never the other way round.
+        self.lock = threading.RLock()
 
     @contextmanager
     def ownership(self, command: str, *, checkout: bool = False, create: bool = False):
@@ -106,12 +109,18 @@ class RunStore:
         except OSError as error:
             raise Stop("OPTIONS_INVALID", f"{options_file}: cannot keep a copy with the run: {error}") from None
 
+    def mutating(self):
+        """The context of a state mutation (the run-store lock): ``with store.mutating(): state[...] = ...``. Progress
+        lines, bus events and beacons are emitted after leaving it."""
+        return self.lock
+
     def save(self, state: dict) -> None:
-        write_json(self.directory / STATE_FILE, state)
+        with self.lock:  # json.dumps walks the state: a thread that changes it meanwhile must wait
+            write_json(self.directory / STATE_FILE, state)
 
     def next_agent(self, state: dict) -> int:
         """The number of a new agent run, counted in ``state.agents`` and saved at once (roles may start in threads)."""
-        with self._agents_lock:
+        with self.lock:
             number = state["agents"] = state.get("agents", 0) + 1
             self.save(state)
         return number

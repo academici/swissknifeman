@@ -140,24 +140,37 @@ def unbind(project_id: str, path: Optional[PathLike] = None, env: Env = None, ho
 
 
 def set_paths(project_id: str, paths: Sequence[PathLike], env: Env = None, home: Optional[PathLike] = None,
-              timeout_s: float = LOCK_TIMEOUT_S) -> Optional[dict]:
+              timeout_s: float = LOCK_TIMEOUT_S, *, preserve: bool = False,
+              primary: Optional[PathLike] = None) -> Optional[dict]:
     """Replace the paths of the project; the primary stays when it is among them, else the first existing one is used.
-    No paths removes the project. Returns the entry (``None`` when removed)."""
+    No paths removes the project. Returns the entry (``None`` when removed).
+
+    ``preserve=True`` keeps all previous paths in order (including missing directories), appending only new paths.
+    ``primary`` explicitly selects a path in the resulting list; a non-member raises ``ValueError`` without writing.
+    Reading the previous entry, merging paths and selecting primary share one lock and one atomic write; an existing
+    ``bound_at`` is retained in either mode.
+    """
     _check_id(project_id)
     real: List[str] = []
     for item in paths:
         converted = _real(item)
         if converted not in real:
             real.append(converted)
+    requested_primary = _real(primary) if primary is not None else None
     with _locked(env, home, timeout_s):
         document = read_bindings(env, home)
         previous = document["projects"].get(project_id)
+        if preserve and previous:
+            real = previous["paths"] + [path for path in real if path not in previous["paths"]]
+        if requested_primary is not None and requested_primary not in real:
+            raise ValueError("primary must be among the resulting binding paths")
         if not real:
             document["projects"].pop(project_id, None)
             entry = None
         else:
-            primary = previous["primary"] if previous and previous["primary"] in real else _first_existing(real)
-            entry = {"paths": real, "primary": primary, "bound_at": previous["bound_at"] if previous else utc_now()}
+            chosen_primary = requested_primary if requested_primary is not None else (
+                previous["primary"] if previous and previous["primary"] in real else _first_existing(real))
+            entry = {"paths": real, "primary": chosen_primary, "bound_at": previous["bound_at"] if previous else utc_now()}
             document["projects"][project_id] = entry
         _save(document, env, home)
         return entry

@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from unittest import mock
 
+from aicore.workspace import bindings_path, read_bindings, write_marker
+
 from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase
 from workspace import __version__
 
@@ -107,6 +109,47 @@ class CommandTests(TempCase):
         self.assertTrue(err.startswith("BINDING_MARKER_MISMATCH: "), err)
         detached = self.json_cli("project", "detach", project_id)
         self.assertEqual((detached["removed"], detached["binding"]), (True, None))
+
+    def test_preserving_rebind_includes_repeated_paths_and_switches_primary_both_ways(self):
+        self.json_cli("init", "--code", "axioma")
+        first = self.checkout("extra")
+        project_id = self.json_cli("project", "attach", "--project", str(first))["project_id"]
+        target, live, extra = (self.checkout(name) for name in ("target", "live", "included"))
+        for path in (target, live, extra):
+            write_marker(path, "axioma", project_id, "workspace")
+        stamp = read_bindings()["projects"][project_id]["bound_at"]
+        result = self.json_cli("project", "rebind", project_id, "--path", str(target), "--preserve-paths",
+                               "--include-path", str(live), "--include-path", str(extra), "--include-path", str(live))
+        expected = [str(path) for path in (first, target, live, extra)]
+        self.assertEqual(result, {"project_id": project_id, "binding": {"paths": expected, "primary": str(target)}})
+        result = self.json_cli("project", "rebind", project_id, "--path", str(live), "--preserve-paths",
+                               "--include-path", str(target))
+        self.assertEqual(result["binding"], {"paths": expected, "primary": str(live)})
+        self.assertEqual(read_bindings()["projects"][project_id]["bound_at"], stamp)
+        # Legacy rebind still replaces all paths.
+        self.assertEqual(self.json_cli("project", "rebind", project_id, "--path", str(target))["binding"],
+                         {"paths": [str(target)], "primary": str(target)})
+
+    def test_rebind_rejects_invalid_counterpart_and_include_without_preservation_without_writing(self):
+        self.json_cli("init", "--code", "axioma")
+        first = self.checkout("alpha")
+        project_id = self.json_cli("project", "attach", "--project", str(first))["project_id"]
+        counterpart = self.checkout("counterpart")
+        before = bindings_path().read_bytes()
+        code, _, err = self.run_cli("project", "rebind", project_id, "--path", str(first),
+                                    "--include-path", str(counterpart))
+        self.assertEqual(code, 2)
+        self.assertIn("--include-path requires --preserve-paths", err)
+        self.assertEqual(bindings_path().read_bytes(), before)
+        for workspace, project, expected in (("axioma", "other-project", "BINDING_MARKER_MISMATCH"),
+                                              ("other-workspace", project_id, "WORKSPACE_MISMATCH")):
+            write_marker(counterpart, workspace, project, "workspace")
+            code, out, err = self.run_cli("project", "rebind", project_id, "--path", str(first), "--preserve-paths",
+                                          "--include-path", str(counterpart), "--json")
+            self.assertEqual(code, 1)
+            self.assertTrue(err.startswith(expected + ": "), err)
+            self.assertEqual(json.loads(out)["error"]["code"], expected)
+            self.assertEqual(bindings_path().read_bytes(), before)
 
     def test_attach_without_a_project_context_is_refused(self):
         self.run_cli("init", "--code", "axioma")

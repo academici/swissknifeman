@@ -4,7 +4,7 @@ import subprocess
 import threading
 import unittest
 
-from aicore.workspace import (WorkspaceError, bind, read_bindings, read_marker, read_project, write_marker,
+from aicore.workspace import (WorkspaceError, bind, bindings_path, read_bindings, read_marker, read_project, write_marker,
                               write_project)
 
 from tests import TempCase, git, new_code
@@ -307,6 +307,75 @@ class RebindDetachTests(ProjectCase):
         write_marker(second, "axioma", project_id, "workspace")
         result = projects.rebind(project_id, second)
         self.assertEqual(result["binding"], {"paths": [str(second)], "primary": str(second)})
+
+    def test_preserving_rebind_adds_both_checkouts_and_switches_primary_without_losing_paths(self):
+        first = self.checkout("extra")
+        project_id = projects.attach(first)["project_id"]
+        gone = self.root / "missing-old-checkout"
+        bind(project_id, gone)
+        other_id = projects.attach(self.checkout("other-project"))["project_id"]
+        before = read_bindings()["projects"]
+        target, live = self.checkout("target"), self.checkout("live")
+        for path in (target, live):
+            write_marker(path, "axioma", project_id, "workspace")
+        expected = [str(path) for path in (first, gone, target, live)]
+        # LIVE was not bound when preservation began; it must be part of this same union.
+        for primary, counterpart in ((target, live), (live, target), (live, target)):
+            result = projects.rebind(project_id, primary, preserve_paths=True,
+                                     include_paths=[counterpart, primary, counterpart])
+            self.assertEqual(result["binding"], {"paths": expected, "primary": str(primary)})
+            current = read_bindings()["projects"]
+            self.assertEqual(current[project_id]["bound_at"], before[project_id]["bound_at"])
+            self.assertEqual(current[other_id], before[other_id])
+
+    def test_preserving_rebind_creates_missing_binding_but_requires_existing_workspace_project(self):
+        project_id = new_code()
+        write_project(self.ws, project_id, "unbound")
+        target, live = self.checkout("target"), self.checkout("live")
+        for path in (target, live):
+            write_marker(path, "axioma", project_id, "workspace")
+        result = projects.rebind(project_id, target, preserve_paths=True, include_paths=[live])
+        self.assertEqual(result["binding"], {"paths": [str(target), str(live)], "primary": str(target)})
+        # Even a stale machine entry must not create a project in the workspace.
+        unknown = new_code()
+        bind(unknown, target)
+        before = bindings_path().read_bytes()
+        for path in (target, live):
+            write_marker(path, "axioma", unknown, "workspace")
+        with self.assertRaises(WorkspaceError) as caught:
+            projects.rebind(unknown, target, preserve_paths=True, include_paths=[live])
+        self.assertEqual(caught.exception.code, "PROJECT_UNKNOWN")
+        self.assertEqual(bindings_path().read_bytes(), before)
+
+    def test_preserving_rebind_validates_primary_and_every_included_marker_before_writing(self):
+        first = self.checkout("alpha")
+        project_id = projects.attach(first)["project_id"]
+        target = self.checkout("target")
+        write_marker(target, "axioma", project_id, "workspace")
+        stranger, foreign, plain, broken = (self.checkout(name) for name in ("stranger", "foreign", "plain", "broken"))
+        write_marker(stranger, "axioma", new_code(), "workspace")
+        write_marker(foreign, "other-workspace", project_id, "workspace")
+        (broken / ".swissknifeman").mkdir()
+        (broken / ".swissknifeman/project.json").write_text("{broken", encoding="utf-8")
+        before = bindings_path().read_bytes()
+        cases = ((stranger, "BINDING_MARKER_MISMATCH"), (foreign, "WORKSPACE_MISMATCH"),
+                 (plain, "BINDING_MARKER_MISMATCH"), (broken, "PROJECT_MARKER_INVALID"),
+                 (self.root / "gone", "BINDING_PATH_MISSING"))
+        for bad, code in cases:
+            for primary, included in ((target, [first, bad]), (bad, [target])):
+                with self.subTest(bad=bad, primary=primary):
+                    with self.assertRaises(WorkspaceError) as caught:
+                        projects.rebind(project_id, primary, preserve_paths=True, include_paths=included)
+                    self.assertEqual(caught.exception.code, code)
+                    self.assertEqual(bindings_path().read_bytes(), before)
+
+    def test_included_paths_require_opt_in_preservation(self):
+        first = self.checkout("alpha")
+        project_id = projects.attach(first)["project_id"]
+        before = bindings_path().read_bytes()
+        with self.assertRaisesRegex(ValueError, "--include-path requires --preserve-paths"):
+            projects.rebind(project_id, first, include_paths=[first])
+        self.assertEqual(bindings_path().read_bytes(), before)
 
     def test_rebind_refuses_other_markers_missing_paths_and_unknown_projects(self):
         first = self.checkout("alpha")

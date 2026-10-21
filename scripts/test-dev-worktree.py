@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -116,9 +117,65 @@ else:
             result = self.command(verb, "--path", self.directory)
             self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual([json.loads(line) for line in self.log.read_text().splitlines()], [
-            ["project", "rebind", "demo", "--path", str(self.directory), "--json"],
-            ["project", "attach", "--project", str(self.live), "--yes", "--json"],
-            ["project", "rebind", "demo", "--path", str(self.live), "--json"]])
+            ["project", "rebind", "demo", "--path", str(self.directory), "--preserve-paths",
+             "--include-path", str(self.live), "--json"],
+            ["project", "rebind", "demo", "--path", str(self.live), "--preserve-paths",
+             "--include-path", str(self.directory), "--json"]])
+
+    def use_real_workspace(self):
+        repo = SCRIPT.parent.parent
+        self.env.update(SKM_DEV_WORKTREE_WORKSPACE_CLI=str(repo / "packages/workspace/bin/workspace"),
+                        AICORE_ROOT=str(repo / "packages/aicore"), SKM_WORKSPACE="wsx",
+                        SKM_UNITS_PATH=str(repo / "packages/workspace"), SKM_AICORE_EVENTS__DELIVERY="off")
+        self.workspace("init", "--code", "wsx")
+
+    def workspace(self, *args):
+        result = subprocess.run([self.env["SKM_DEV_WORKTREE_WORKSPACE_CLI"], *map(str, args), "--json"],
+                                cwd=self.live, env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def marked_extra(self, name):
+        path = self.tmp / name
+        (path / ".swissknifeman").mkdir(parents=True)
+        (path / ".swissknifeman/project.json").write_text(json.dumps(MARKER), encoding="utf-8")
+        self.workspace("project", "attach", "--project", path)
+        return path
+
+    def test_real_bind_and_unbind_preserve_all_paths_even_when_live_was_not_bound(self):
+        self.create()
+        self.use_real_workspace()
+        first, gone = self.marked_extra("extra"), self.marked_extra("missing extra")
+        shutil.rmtree(gone)
+        other = self.tmp / "other"
+        other.mkdir()
+        other_id = self.workspace("project", "attach", "--project", other)["project_id"]
+        other_before = self.workspace("project", "show", other_id)
+        before = self.workspace("project", "show", "demo")["binding"]
+        self.assertEqual(before["paths"], [str(first), str(gone)])
+        for verb, primary in (("bind", self.directory), ("bind", self.directory), ("unbind", self.live),
+                              ("unbind", self.live)):
+            with self.subTest(verb=verb):
+                result = self.command(verb, "--path", self.directory, cwd=self.directory)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                entry = self.workspace("project", "show", "demo")["binding"]
+                self.assertEqual(entry, {"paths": [str(p) for p in (first, gone, self.directory, self.live)],
+                                         "primary": str(primary), "bound_at": before["bound_at"]})
+                self.assertEqual(self.workspace("project", "show", other_id), other_before)
+        self.assertFalse(self.log.exists())
+
+    def test_real_bind_and_unbind_refuse_a_wrong_counterpart_without_mutation(self):
+        self.create()
+        self.use_real_workspace()
+        self.marked_extra("extra")
+        path = Path(self.env["SKM_HOME"]) / "state/workspaces/wsx/bindings.json"
+        before = path.read_bytes()
+        for change in ({"project_id": "wrong-project"}, {"workspace": "other-workspace"}):
+            (self.live / ".swissknifeman/project.json").write_text(json.dumps({**MARKER, **change}), encoding="utf-8")
+            for verb in ("bind", "unbind"):
+                with self.subTest(change=change, verb=verb):
+                    self.refusal("DEV_WORKTREE_BIND_FAILED", verb, "--path", self.directory)
+                    self.assertEqual(path.read_bytes(), before)
 
     def test_promote_check_prints_commands_without_merging(self):
         self.create()
@@ -250,7 +307,8 @@ else:
         result = self.command("bind", "--path", self.directory)
         self.assertEqual(result.returncode, 0, result.stderr)
         calls = [json.loads(line) for line in self.log.read_text().splitlines()]
-        self.assertEqual([call[:2] for call in calls], [["project", "rebind"], ["project", "attach"]])
+        self.assertEqual(calls, [["project", "rebind", "demo", "--path", str(self.directory), "--preserve-paths",
+                                  "--include-path", str(self.live), "--json"]])
 
     def test_status_handles_an_unavailable_workspace_cli(self):
         self.create()

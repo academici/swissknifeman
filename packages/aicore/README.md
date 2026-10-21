@@ -36,6 +36,14 @@ packages/aicore/
 | `aicore.ext` | events and their journal, delivery to subscribers, external plugins, instruction overlays, plugin conformance (see [Extensions](#extensions-aicoreext)); `aicore.util.schemacompat` and `aicore.util.telemetry` belong to `util` | planner, orch, brain, analyst, harness |
 | `aicore.usage` | one accumulator of tokens parsed from provider logs; self-sufficient, so it can be vendored byte for byte | analyst, harness, skiller |
 
+`aicore.workspace.set_paths(project_id, paths, ..., *, preserve=False, primary=None)` replaces a project's paths by
+default (an empty list removes its binding). With `preserve=True`, it reads the current entry under the existing
+`bindings.json.lock`, keeps all old paths in order, including missing directories, and appends new real paths without
+duplicates. `primary` selects a member of the resulting list; a non-member raises `ValueError` before writing.
+Without an explicit primary the previous selection rule is unchanged. Both modes preserve an existing `bound_at`
+and other project entries and use one atomic write. A missing binding entry is created for nonempty paths. Callers
+validate checkout identity before calling; this primitive manages machine paths and does not read project markers.
+
 ### Layers inside aicore
 
 Managed skill copies require a destination strictly below the skills root. The path gate normalizes a final

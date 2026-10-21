@@ -9,8 +9,8 @@
 #   scripts/dev-worktree.sh promote-check --branch NAME [--path DIR]
 #
 # DIR defaults to swissknifeman-next beside the main worktree; create defaults to
-# branch stable/p1 from main. bind makes DIR primary and reattaches the main checkout;
-# unbind restores the main checkout as primary. SKM_DEV_WORKTREE_WORKSPACE_CLI is for tests.
+# branch stable/p1 from main. bind/unbind atomically include both checkouts, preserving all
+# bound paths, and make DIR/the main checkout primary. SKM_DEV_WORKTREE_WORKSPACE_CLI is for tests.
 # promote-check prints the owner's promotion commands after checking live main, ancestry and cleanliness.
 # This script never merges, pushes, resets, cleans or removes a worktree.
 # Exit: 0 ok, 1 refused (DEV_WORKTREE_*: message), 2 usage.
@@ -172,10 +172,9 @@ case "$CMD" in
     fi
     WORKSPACE_CODE="$(json_tool workspace "$DIR")"
     if [ "$CMD" = bind ]; then
-      workspace_run project rebind "$PROJECT_ID" --path "$DIR" --json
-      workspace_run project attach --project "$LIVE" --yes --json
+      workspace_run project rebind "$PROJECT_ID" --path "$DIR" --preserve-paths --include-path "$LIVE" --json
     else
-      workspace_run project rebind "$PROJECT_ID" --path "$LIVE" --json
+      workspace_run project rebind "$PROJECT_ID" --path "$LIVE" --preserve-paths --include-path "$DIR" --json
     fi
     ;;
   promote-check)

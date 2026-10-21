@@ -489,9 +489,12 @@ schema-valid historical data and is not rewritten by this reconciliation.
    primary binding and whether it points here. JSON marker and status boundaries are validated against schemas;
    the script-owned status schema is embedded in the script. The workspace CLI override
    `SKM_DEV_WORKTREE_WORKSPACE_CLI` exists only for isolated tests.
-   `bind` runs `workspace project rebind <project_id> --path <worktree> --json`, then
-   `workspace project attach --project <live> --yes --json`: the worktree becomes primary and the live checkout
-   stays attached. `unbind` restores the live checkout as primary. These commands change machine bindings;
+   `bind` runs one mutation:
+   `workspace project rebind <project_id> --path <worktree> --preserve-paths --include-path <live> --json`.
+   `unbind` runs the same command with `--path <live> --include-path <worktree>` to restore the live primary.
+   Each command validates both checkout markers and includes both paths in one transaction, even if either path
+   was initially unbound. All previous paths keep their order, including missing directories; `bound_at` and other
+   projects are preserved. Repeating either command adds no duplicates. These commands change machine bindings;
    the owner or operator runs them, never an item executor. CLI failures give `DEV_WORKTREE_BIND_FAILED`.
 
 3. **Execute through the worktree launcher.** Plans stay in the shared workspace. The launcher chooses this

@@ -7,6 +7,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from aicore import workspace as ws
 from aicore.state import locations
@@ -470,6 +471,123 @@ class BindingTests(Sandbox):
         self.assertEqual(entry["primary"], str(second))
         self.assertIsNone(ws.set_paths(PRJ, [], self.env))
         self.assertEqual(ws.read_bindings(self.env)["projects"], {})
+
+    def test_preserve_paths_keeps_order_missing_paths_timestamp_and_other_projects(self):
+        first, gone, target, live = (self.make(name) for name in ("first", "gone", "target", "live"))
+        with mock.patch.object(bindings_module, "utc_now", return_value="2026-10-17T09:30:00Z"):
+            ws.bind(PRJ, first, self.env)
+        ws.bind(PRJ, gone, self.env)
+        other = ws.bind(OTHER, first, self.env)
+        gone.rmdir()
+        link = Path(self.tmp) / "target-link"
+        link.symlink_to(target)
+        expected_paths = [str(p) for p in (first, gone, target, live)]
+        for primary in (link, live, target):
+            with self.subTest(primary=primary):
+                entry = ws.set_paths(PRJ, [link, live, target, first], self.env, preserve=True, primary=primary)
+                self.assertEqual(entry, {"paths": expected_paths, "primary": str(primary.resolve()),
+                                         "bound_at": "2026-10-17T09:30:00Z"})
+                self.assertEqual(ws.read_bindings(self.env)["projects"][OTHER], other)
+        before = ws.bindings_path(self.env).read_bytes()
+        ws.set_paths(PRJ, [live, target, live], self.env, preserve=True, primary=target)
+        self.assertEqual(ws.bindings_path(self.env).read_bytes(), before)
+        self.assertEqual(ws.set_paths(PRJ, [], self.env, preserve=True), entry)
+
+    def test_preserve_paths_creates_a_missing_entry_with_both_checkouts(self):
+        target, live = self.make("target"), self.make("live")
+        other = ws.bind(OTHER, live, self.env)
+        entry = ws.set_paths(PRJ, [target, live, target], self.env, preserve=True, primary=target)
+        self.assertEqual(entry["paths"], [str(target), str(live)])
+        self.assertEqual(entry["primary"], str(target))
+        self.assertEqual(ws.read_bindings(self.env)["projects"], {OTHER: other, PRJ: entry})
+
+    def test_explicit_primary_must_be_in_the_result_and_refusal_preserves_bytes(self):
+        first, target, outside = (self.make(name) for name in ("first", "target", "outside"))
+        ws.bind(PRJ, first, self.env)
+        path = ws.bindings_path(self.env)
+        before = path.read_bytes()
+        for preserve, paths, primary in ((True, [target], outside), (False, [target], first), (False, [], first)):
+            with self.subTest(preserve=preserve, paths=paths):
+                with self.assertRaisesRegex(ValueError, "primary must be among"):
+                    ws.set_paths(PRJ, paths, self.env, preserve=preserve, primary=primary)
+                self.assertEqual(path.read_bytes(), before)
+        # A primary already bound can be chosen without resupplying it.
+        entry = ws.set_paths(PRJ, [target], self.env, preserve=True, primary=first)
+        self.assertEqual(entry["primary"], str(first))
+
+    def test_preserve_paths_reads_the_cooperating_writers_result_after_taking_the_lock(self):
+        first, concurrent, target, live = (self.make(name) for name in ("first", "concurrent", "target", "live"))
+        stamp = ws.bind(PRJ, first, self.env)["bound_at"]
+        writer_has_read, preserve_waiting, release_writer = (threading.Event() for _ in range(3))
+        read = bindings_module.read_bindings
+        flock = bindings_module.fcntl.flock
+        errors = []
+
+        def gated_read(*args, **kwargs):
+            document = read(*args, **kwargs)
+            if threading.current_thread().name == "cooperating-bind":
+                writer_has_read.set()
+                if not release_writer.wait(5):
+                    raise TimeoutError("test did not release the cooperating writer")
+            return document
+
+        def observed_flock(fd, operation):
+            try:
+                return flock(fd, operation)
+            except BlockingIOError:
+                if threading.current_thread().name == "preserving-set-paths":
+                    preserve_waiting.set()
+                raise
+
+        def work(call):
+            try:
+                call()
+            except Exception as exc:
+                errors.append(exc)
+
+        writer = threading.Thread(name="cooperating-bind", target=work,
+                                  args=(lambda: ws.bind(PRJ, concurrent, self.env),))
+        preserver = threading.Thread(name="preserving-set-paths", target=work, args=(
+            lambda: ws.set_paths(PRJ, [target, live], self.env, preserve=True, primary=target),))
+        with mock.patch.object(bindings_module, "read_bindings", side_effect=gated_read), \
+                mock.patch.object(bindings_module.fcntl, "flock", side_effect=observed_flock):
+            writer.start()
+            try:
+                self.assertTrue(writer_has_read.wait(5), "writer never acquired the lock")
+                preserver.start()
+                self.assertTrue(preserve_waiting.wait(5), "preserver never contended on the same lock")
+            finally:
+                release_writer.set()
+                writer.join(5)
+                if preserver.ident is not None:
+                    preserver.join(5)
+        self.assertFalse(writer.is_alive())
+        self.assertFalse(preserver.is_alive())
+        self.assertEqual(errors, [])
+        self.assertEqual(ws.read_bindings(self.env)["projects"][PRJ], {
+            "paths": [str(p) for p in (first, concurrent, target, live)], "primary": str(target), "bound_at": stamp})
+
+    def test_preserve_paths_pre_replace_failure_leaves_old_bytes(self):
+        first, target, live = (self.make(name) for name in ("first", "target", "live"))
+        ws.bind(PRJ, first, self.env)
+        ws.bind(OTHER, live, self.env)
+        path = ws.bindings_path(self.env)
+        before = path.read_bytes()
+
+        def refuse_replace(source, destination):
+            self.assertEqual(Path(destination), path)
+            staged = json.loads(Path(source).read_text())
+            self.assertEqual(staged["projects"][PRJ]["paths"], [str(p) for p in (first, target, live)])
+            self.assertEqual(staged["projects"][PRJ]["primary"], str(target))
+            self.assertEqual(path.read_bytes(), before)
+            raise OSError("injected before replace")
+
+        with mock.patch("aicore.util.io.os.replace", side_effect=refuse_replace) as replace:
+            with self.assertRaisesRegex(OSError, "injected before replace"):
+                ws.set_paths(PRJ, [target, live], self.env, preserve=True, primary=target)
+        replace.assert_called_once()
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(list(path.parent.glob(".bindings.json.*.tmp")), [])
 
     def test_bad_project_ids(self):
         for call in (lambda: ws.bind("Bad_Id", self.tmp, self.env), lambda: ws.unbind("Bad_Id", None, self.env),

@@ -301,24 +301,34 @@ def scan(directories: Sequence[PathLike], env: Env = None, home: Optional[PathLi
     return {"bound": bound, "unknown": unknown, "skipped": skipped}
 
 
-def rebind(project_id: str, path: PathLike, env: Env = None, home: Optional[PathLike] = None) -> Dict[str, Any]:
-    """Replace the paths of a project by one checkout whose marker names the project."""
+def rebind(project_id: str, path: PathLike, env: Env = None, home: Optional[PathLike] = None, *,
+           preserve_paths: bool = False, include_paths: Sequence[PathLike] = ()) -> Dict[str, Any]:
+    """Replace the paths of a project by one checkout whose marker names the project.
+
+    With ``preserve_paths``, keep the previous paths and make ``path`` primary, atomically including ``include_paths``.
+    Every supplied checkout must have the same workspace/project marker; include paths require preservation.
+    """
+    if include_paths and not preserve_paths:
+        raise ValueError("--include-path requires --preserve-paths")
     target = layout.root_of(None, env, home)
-    layout.require_initialized(target)
+    workspace = layout.require_initialized(target)["code"]
     if not _is_project(target, project_id):
         raise WorkspaceError("PROJECT_UNKNOWN", f"no project {project_id} in the workspace")
     root = _real(path)
-    if not root.is_dir():
-        raise WorkspaceError("BINDING_PATH_MISSING", f"{root} is not a directory")
-    marker = read_marker(root)
-    if marker is None:
-        raise WorkspaceError("BINDING_MARKER_MISMATCH", f"{root} has no marker, not the marker of {project_id}")
-    if marker["workspace"] != layout.require_initialized(target)["code"]:
-        raise WorkspaceError("WORKSPACE_MISMATCH", f"{root} belongs to the workspace {marker['workspace']!r}")
-    if marker["project_id"] != project_id:
-        raise WorkspaceError("BINDING_MARKER_MISMATCH",
-                             f"{root} has the marker of {marker['project_id']}, not the marker of {project_id}")
-    entry = set_paths(project_id, [root], env, home)
+    roots = [root, *(_real(item) for item in include_paths)]
+    for checkout in roots:
+        if not checkout.is_dir():
+            raise WorkspaceError("BINDING_PATH_MISSING", f"{checkout} is not a directory")
+        marker = read_marker(checkout)
+        if marker is None:
+            raise WorkspaceError("BINDING_MARKER_MISMATCH", f"{checkout} has no marker, not the marker of {project_id}")
+        if marker["workspace"] != workspace:
+            raise WorkspaceError("WORKSPACE_MISMATCH", f"{checkout} belongs to the workspace {marker['workspace']!r}")
+        if marker["project_id"] != project_id:
+            raise WorkspaceError("BINDING_MARKER_MISMATCH",
+                                 f"{checkout} has the marker of {marker['project_id']}, not the marker of {project_id}")
+    entry = (set_paths(project_id, roots, env, home, preserve=True, primary=root) if preserve_paths
+             else set_paths(project_id, roots, env, home))
     if entry is None:  # set_paths removes a project only for no paths
         raise WorkspaceError("BINDING_PATH_MISSING", f"{root} could not be bound to {project_id}")
     return {"project_id": project_id, "binding": {"paths": entry["paths"], "primary": entry["primary"]}}

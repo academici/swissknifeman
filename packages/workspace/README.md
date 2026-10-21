@@ -29,7 +29,7 @@ argument value, code `INVALID_ARGUMENT`) also prints `{"error": {"code", "messag
 | `project list [--all]` | Projects of the workspace and where they are bound on this machine. `--all` lists the projects of every workspace of the machine (each row has its `workspace`; no workspace needs to be chosen); a workspace whose documents cannot be read is listed in `skipped`. |
 | `project show CODE` | The project record, its binding and the folders it holds in the workspace. |
 | `project scan DIR...` | Find checkouts with a marker (depth 4; `node_modules`, `.git` and `vendor` are skipped) and bind those of known projects. A marker with an unknown id is reported as `unknown`; no project is created. |
-| `project rebind PROJECT_ID --path DIR` | Replace the bound paths by one checkout whose marker names the project (`BINDING_MARKER_MISMATCH` otherwise). |
+| `project rebind PROJECT_ID --path DIR [--preserve-paths [--include-path DIR]...]` | Replace the bound paths by one checkout by default. With `--preserve-paths`, keep prior paths and make `--path` primary; each repeatable `--include-path` adds another checkout in the same atomic write. All supplied markers must name this workspace and project. |
 | `project detach PROJECT_ID [--path DIR]` | Drop a binding of this machine; the workspace is not changed. |
 | `migrate discover [DIR...]` | Checkouts that hold a `plans/` folder: launcher projects (`.swissknifeman/launcher.py`) under DIR (default `~/projects`, depth 4) and `local_path` of `<state>/maind/registry.json`. Reads the structure and the sizes, never a plan file; shows the marker and the number of plan and legacy folders. |
 | `migrate plan --project DIR [--on-conflict keep-workspace\|import-copy] [--allow-in-progress] [--local-only-secrets] [--code CODE] [--yes]` | Dry run, writes nothing: the project, the class, digest and action of each folder, local-only files, warnings and blockers (exit 1 on a blocker). |
@@ -41,6 +41,13 @@ argument value, code `INVALID_ARGUMENT`) also prints `{"error": {"code", "messag
 | `clone URL [--code CODE] [--root DIR]` | Make a workspace of this machine from a remote: cloned beside the workspaces and moved to `workspaces/<code>` (the code is read from the remote's `workspace.json`), and the device file. |
 | `list` | The workspaces of this machine: code, root, remote, number of projects. |
 | `sync [--commit] [--pull] [--push] [--resolve PATH=local\|remote ...] [--resolve-reset]` | Commit (publish-safety first), pull (dry merge with `git merge-tree`, typed conflicts), resolve and push without force (see Sync). No flag: commit and pull; `--push` runs both first. |
+
+`rebind --preserve-paths` retains old path order (even paths whose directories are gone), `bound_at` and other project
+entries. New paths are appended without duplicates in argument order, starting with `--path`. It validates every
+supplied directory and marker before writing (`BINDING_PATH_MISSING`, `BINDING_MARKER_MISMATCH`, `WORKSPACE_MISMATCH`,
+or `PROJECT_MARKER_INVALID` on refusal). `--include-path` requires `--preserve-paths` (exit 2 otherwise). The workspace
+project must already exist (`PROJECT_UNKNOWN`); its machine binding may be absent. The merge and primary selection
+share the existing bindings lock and one atomic replacement.
 
 ## Typed outputs
 

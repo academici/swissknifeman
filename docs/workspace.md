@@ -98,6 +98,15 @@ Exactly one store is in use at any moment; plans are never written to both. The 
 after `git pull` a second machine knows the workspace and the project and only has to bind the checkout (`workspace project scan`).
 A project without a marker behaves as before.
 
+To switch the primary checkout while retaining every bound path, use
+`workspace project rebind <project_id> --path <primary> --preserve-paths --include-path <other>`.
+`--include-path` can be repeated and requires `--preserve-paths`. All supplied directories and their workspace/project
+markers are checked before writing. The existing bindings lock covers reading the latest entry, keeping its paths
+in order (including missing directories), appending new paths without duplicates, selecting the primary and one
+atomic replacement. `bound_at` and other projects stay intact. Both checkouts enter that transaction even when
+previously unbound; a machine binding can be created, but the workspace project must exist. Without
+`--preserve-paths`, rebind still replaces all bound paths with `--path` alone.
+
 ### Optional links `plans/` and `tasks/` in the checkout
 
 To open the code in an IDE and see the plans next to it, a checkout can carry the symbolic links `plans/` and `tasks/` to

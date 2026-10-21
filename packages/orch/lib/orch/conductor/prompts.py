@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 import json
+from pathlib import Path
 import re
 from typing import Optional
 
@@ -673,12 +674,32 @@ def interrupted_correction(base_head: Optional[str], paths: list) -> str:
             "Continue from them inside the same scope; do not redo finished parts.")
 
 
+def _failure_excerpt(log) -> str:
+    """A bounded hint from the start of a check log; its full path remains authoritative."""
+    try:
+        with Path(log).open(encoding="utf-8", errors="replace") as stream:
+            for _ in range(1000):
+                line = stream.readline(2048)
+                if not line:
+                    break
+                if re.match(r"^(?:FAIL(?:ED)?(?:[: \[]|$)|ERROR[: \[]|Traceback|AssertionError|\[fail\])", line, re.I):
+                    return (line + "".join(stream.readline(2048) for _ in range(4)))[:1600]
+    except OSError:
+        pass
+    return ""
+
+
 def check_correction(failed: list) -> str:
-    """Correction package of red acceptance checks: each command, its exit and the tail of its output."""
+    """Red commands with full log paths, bounded earlier failure hints and output tails."""
     lines = []
     for row in failed:
         lines.append(f"{row['id']}: `{row.get('cmd') or row.get('procedure')}` → "
                      f"{row.get('exit', row.get('verdict'))}")
+        if row.get("log"):
+            lines.append(f"Full check log: `{row['log']}`. Read the failing section; the tail may omit it.")
+            excerpt = _failure_excerpt(row["log"])
+            if excerpt:
+                lines.append("Earlier failure excerpt (bounded):\n" + excerpt)
         if row.get("tail"):
             lines.append(row["tail"])
     return "These acceptance checks are red on your candidate:\n\n" + "\n".join(lines)

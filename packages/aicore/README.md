@@ -430,9 +430,16 @@ Timings are elapsed seconds, stored atomically under the git common directory's 
 `SKM_PAR_UNITTEST_TIMES=/path/times.json` overrides that file, including outside git. Missing or invalid timing maps use
 case counts. Atomic replacement and a merge lock protect simultaneous writers. Method measurements also update class totals.
 
-A failed shard retries only its failed case IDs; a failed subtest retries its parent method. Missing failure evidence,
-fixture errors and crashes repeat the whole shard. Passing alone still means `CLASH`: `--clash warn` (default) allows it;
-`--clash fail` or `SKM_TEST_CLASH=fail` fails it. Original outcomes and green cases remain counted when only a subset retries.
+A failed shard first retries its failed case IDs for diagnosis; a failed subtest retries its parent method. If that
+subset passes, the original whole shard must also pass alone, in its original discovery order and worker context,
+before the runner reports `CLASH`. Failures caused by another test in the same worker therefore stay red. Missing
+failure evidence, import/fixture errors and crashes retry the whole shard directly. `--clash warn` (default) allows a
+confirmed clash; `--clash fail` or `SKM_TEST_CLASH=fail` fails it. Every retry has its own attempt record; the inventory
+and summary case counts retain the initial execution, including its original failures and green cases.
+
+Discovery with no cases and no skip evidence exits 5 (`NO TESTS RAN`), including empty directories, empty modules and
+unmatched patterns. Skipped-only suites stay successful and retain their reasons, even when class setup or custom
+discovery records a skip without running a case. Import, setup and custom-suite errors keep their failing verdicts.
 
 `--report FILE` or `SKM_PAR_UNITTEST_REPORT=FILE` writes a schema-validated, atomic inventory and attempt report: normalized
 unit/file/case keys, original unittest IDs, outcomes and skip reasons, retries, worker invocations, requested/effective jobs,
@@ -441,3 +448,8 @@ standalone sets `standalone`). The stderr summary reports discovery/execution/sk
 
 `SKM_TEST_JOBS` supplies the job budget (default `min(8, cpu_count)`); a parent running concurrent suites must divide its
 budget among them. Suites requiring one process may keep `SKM_TEST_JOBS=1` (maind).
+
+The hub's `scripts/affected-tests.py --tier fast` selects `-p` subsets only when the entire diff consists of mapped,
+existing leaf test files in one supported unit (planner or orch). Foundation, runtime, unknown hub or other mixed
+inputs retain full owner and consumer suites; JSON selection reasons identify that coverage obligation. Pure mapped
+leaf changes keep their subset while dependent units retain full consumer contracts.

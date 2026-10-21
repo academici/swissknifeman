@@ -120,7 +120,7 @@ class SchedulingAndEvidenceTests(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stderr)
         self.assertIn(["tests.test_a.T"], [a["units"] for a in report["attempts"]])
 
-    def test_only_failed_parent_method_is_retried_and_clash_keeps_green_count(self):
+    def test_failed_parent_diagnostic_requires_original_shard_confirmation(self):
         log, marker = self.root / "green", self.root / "failed-once"
         body = (f"    def test_green(self):\n        from pathlib import Path\n        p=Path({str(log)!r})\n"
                 "        p.write_text(p.read_text()+'x' if p.exists() else 'x')\n"
@@ -131,9 +131,35 @@ class SchedulingAndEvidenceTests(unittest.TestCase):
         self.assertIn("CLASH", done.stderr)
         self.assertIn("Ran 3 tests", done.stderr)
         retry = [a for a in report["attempts"] if a["retry"]]
+        self.assertEqual(len(retry), 2)
         self.assertEqual(retry[0]["units"], ["tests.test_a.T.test_red"])
-        self.assertEqual(log.read_text(), "x")
+        self.assertEqual(retry[1]["units"], ["tests.test_a.T"])
+        self.assertEqual(log.read_text(), "xx")
         self.assertEqual(retry[0]["outcomes"][0]["outcome"], "passed")
+        self.assertEqual([a["tests_run"] for a in retry], [1, 2])
+        self.assertIn("discovered=3 executed=3 skipped=0 retries=2 invocations=4", done.stderr)
+
+    def test_intra_worker_state_failure_stays_red_after_failed_id_passes_alone(self):
+        self.env["SKM_TEST_CLASH"] = ""  # exercise the default warn policy
+        done, report = self.execute({
+            "a": "    def test_a(self): globals()['state'] = True\n"
+                 "    def test_b(self): self.assertFalse(globals().get('state', False))\n",
+            "b": "    def test_other_worker(self): pass\n"})
+        self.assertEqual(done.returncode, 1, done.stderr)
+        self.assertNotIn("CLASH", done.stderr)
+        self.assertIn("FAILED", done.stderr)
+        self.assertEqual(report["effective_jobs"], 2)
+        self.assertEqual(len(report["inventory"]), 3)
+        initial = next(a for a in report["attempts"] if not a["retry"] and a["exit"])
+        self.assertEqual(initial["started"], ["tests.test_a.T.test_a", "tests.test_a.T.test_b"])
+        self.assertEqual([o["outcome"] for o in initial["outcomes"]], ["passed", "failed"])
+        retry = [a for a in report["attempts"] if a["retry"]]
+        self.assertEqual([a["units"] for a in retry], [["tests.test_a.T.test_b"], initial["units"]])
+        self.assertEqual([a["exit"] for a in retry], [0, 1])
+        self.assertEqual(retry[-1]["started"], initial["started"])
+        self.assertEqual([a["tests_run"] for a in retry], [1, 2])
+        self.assertEqual([a["executed"] for a in retry], [1, 2])
+        self.assertIn("discovered=3 executed=3 skipped=0 retries=2 invocations=4", done.stderr)
 
     def test_unreadable_times_falls_back_to_counts_and_writes_override_atomically(self):
         import json
@@ -162,22 +188,37 @@ class SchedulingAndEvidenceTests(unittest.TestCase):
         self.assertEqual(sum(a["executed"] for a in parallel["attempts"]), 2)
 
     def test_setup_error_and_worker_crash_retry_whole_shard(self):
-        for phase in ("setup", "teardown", "crash"):
+        for phase in ("setup", "teardown", "crash", "crash_without_receipt"):
             with self.subTest(phase=phase), tempfile.TemporaryDirectory() as tmp:
                 import json
                 root = Path(tmp)
+                crash = phase.startswith("crash")
                 fixture = "setUpClass" if phase == "setup" else "tearDownClass"
                 body = (f"    @classmethod\n    def {fixture}(cls): raise RuntimeError('fixture failed')\n"
-                        "    def test_a(self): pass\n") if phase != "crash" else (
+                        "    def test_a(self): pass\n") if not crash else (
                         "    def test_a(self):\n        import os\n        os._exit(9)\n")
+                if phase == "crash_without_receipt":
+                    body = ("    def test_a(self):\n        import os\n        from pathlib import Path\n"
+                            f"        marker = Path({str(root / 'crashed')!r})\n"
+                            "        first = not marker.exists()\n        marker.touch()\n"
+                            "        os._exit(9 if first else 0)\n")
                 suite(root, {"a": body, "b": "    def test_a(self): pass\n"})
                 report_path = root / "report.json"
                 done = run(root / "tests", "-j", "2", "-t", str(root),
                            env={"SKM_PAR_UNITTEST_REPORT": str(report_path)})
                 self.assertEqual(done.returncode, 1, done.stderr)
                 self.assertIn("retry whole shard", done.stderr)
+                self.assertNotIn("CLASH", done.stderr)
                 report = json.loads(report_path.read_text())
-                self.assertEqual([a["units"] for a in report["attempts"] if a["retry"]], [["tests.test_a.T"]])
+                retry = [a for a in report["attempts"] if a["retry"]]
+                self.assertEqual([a["units"] for a in retry], [["tests.test_a.T"]])
+                failed = next(a for a in report["attempts"] if not a["retry"] and a["exit"])
+                self.assertEqual(failed["exit"], 9 if crash else 1)
+                self.assertEqual(retry[0]["exit"], 0 if phase == "crash_without_receipt" else failed["exit"])
+                for attempt in (failed, retry[0]):
+                    self.assertEqual(attempt["tests_run"], None if crash else int(phase == "teardown"))
+                    self.assertEqual(attempt["executed"], None if crash else int(phase == "teardown"))
+                self.assertIn("retries=1 invocations=3 unknown_invocations=" + str(2 if crash else 0), done.stderr)
 
     def test_custom_package_discovery_preserves_suite_run_and_does_not_split(self):
         import json
@@ -196,12 +237,22 @@ class SchedulingAndEvidenceTests(unittest.TestCase):
         self.assertEqual(json.loads(self.report.read_text())["effective_jobs"], 1)
 
     def test_import_failure_is_never_a_successful_empty_retry(self):
+        import json
         suite(self.root, {"a": "    def test_a(self): pass\n", "b": "    def test_b(self): pass\n"})
         (self.root / "tests" / "test_b.py").write_text("raise ImportError('missing fixture')\n")
         done = run(self.root / "tests", "-j", "2", "-t", str(self.root), env=self.env)
         self.assertEqual(done.returncode, 1, done.stderr)
         self.assertIn("missing fixture", done.stderr)
         self.assertNotIn("CLASH", done.stderr)
+        self.assertIn("retry whole shard", done.stderr)
+        report = json.loads(self.report.read_text())
+        initial = next(a for a in report["attempts"] if not a["retry"] and a["exit"])
+        retry = [a for a in report["attempts"] if a["retry"]]
+        self.assertEqual(len(retry), 1)
+        self.assertEqual(retry[0]["units"], initial["units"])
+        self.assertEqual(retry[0]["exit"], 1)
+        self.assertEqual(retry[0]["tests_run"], 1)
+        self.assertEqual(retry[0]["outcomes"][0]["outcome"], "error")
 
     def test_missing_worker_selection_fails_instead_of_running_zero_tests(self):
         suite(self.root, {"a": "    def test_a(self): pass\n"})
@@ -217,6 +268,91 @@ class SchedulingAndEvidenceTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(lambda i: par._merge_times(self.times, {f"case{i}": float(i)}), range(12)))
         self.assertEqual(json.loads(self.times.read_text()), {f"case{i}": float(i) for i in range(12)})
+
+
+class EmptyDiscoveryTests(unittest.TestCase):
+    def test_empty_directory_module_and_unmatched_pattern_exit_five(self):
+        import json
+        for kind in ("directory", "module", "pattern"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                suite(root, {})
+                if kind == "module":
+                    (root / "tests/test_empty.py").write_text("")
+                elif kind == "pattern":
+                    (root / "tests/test_present.py").write_text(
+                        "import unittest\nclass T(unittest.TestCase):\n    def test_one(self): pass\n")
+                report_path = root / "report.json"
+                done = run(root / "tests", "-j", "2", "-t", str(root), "-p",
+                           "test_missing.py" if kind == "pattern" else "test*.py",
+                           env={"SKM_PAR_UNITTEST_REPORT": str(report_path)})
+                self.assertEqual(done.returncode, 5, done.stderr)
+                self.assertIn("NO TESTS RAN", done.stderr)
+                report = json.loads(report_path.read_text())
+                self.assertEqual(report["inventory"], [])
+                self.assertEqual(len(report["attempts"]), 1)
+                self.assertEqual(report["attempts"][0]["exit"], 5)
+                self.assertEqual(report["attempts"][0]["tests_run"], 0)
+                self.assertEqual(report["attempts"][0]["executed"], 0)
+
+    def test_skipped_only_discovery_stays_green_with_skip_evidence(self):
+        import json
+        bodies = {
+            "case": "import unittest\nclass T(unittest.TestCase):\n"
+                    "    @unittest.skip('case unavailable')\n    def test_one(self): pass\n",
+            "module": "import unittest\nraise unittest.SkipTest('module unavailable')\n",
+            "class": "import unittest\nclass T(unittest.TestCase):\n"
+                     "    @classmethod\n    def setUpClass(cls): raise unittest.SkipTest('class unavailable')\n"
+                     "    def test_one(self): pass\n"}
+        for kind, body in bodies.items():
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                suite(root, {})
+                (root / "tests/test_skip.py").write_text(body)
+                report_path = root / "report.json"
+                done = run(root / "tests", "-j", "2", "-t", str(root),
+                           env={"SKM_PAR_UNITTEST_REPORT": str(report_path)})
+                self.assertEqual(done.returncode, 0, done.stderr)
+                self.assertIn("OK (skipped=1)", done.stderr)
+                attempt = json.loads(report_path.read_text())["attempts"][0]
+                self.assertEqual(attempt["exit"], 0)
+                self.assertEqual(attempt["executed"], 0)
+                self.assertEqual(attempt["outcomes"][0]["outcome"], "skipped")
+                self.assertEqual(attempt["outcomes"][0]["reason"], kind + " unavailable")
+
+    def test_empty_custom_discovery_preserves_run_errors_and_skips(self):
+        import json
+        for outcome, expected in (("error", 1), ("skip", 0), ("empty", 5)):
+            with self.subTest(outcome=outcome), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                suite(root, {})
+                action = {"error": "try: raise RuntimeError('custom discovery error')\n"
+                                   "        except RuntimeError: result.addError(test, sys.exc_info())",
+                          "skip": "result.addSkip(test, 'custom discovery skip')",
+                          "empty": "pass"}[outcome]
+                (root / "tests/__init__.py").write_text(
+                    "import sys, unittest\n"
+                    "class Custom(unittest.TestSuite):\n"
+                    "    def run(self, result, debug=False):\n"
+                    "        test = unittest.FunctionTestCase(lambda: None)\n"
+                    "        " + action + "\n        return result\n"
+                    "def load_tests(loader, tests, pattern): return Custom()\n")
+                report_path = root / "report.json"
+                done = run(root / "tests", "-j", "2", "-t", str(root),
+                           env={"SKM_PAR_UNITTEST_REPORT": str(report_path)})
+                self.assertEqual(done.returncode, expected, done.stderr)
+                report = json.loads(report_path.read_text())
+                self.assertEqual(report["inventory"], [])
+                self.assertEqual(report["effective_jobs"], 1)
+                attempt = report["attempts"][0]
+                self.assertEqual(attempt["exit"], expected)
+                self.assertEqual(attempt["tests_run"], 0)
+                if outcome != "empty":
+                    self.assertEqual(attempt["outcomes"][0]["outcome"], "error" if outcome == "error" else "skipped")
+                    if outcome == "error":
+                        self.assertIn("custom discovery error", done.stderr)
+                    else:
+                        self.assertEqual(attempt["outcomes"][0]["reason"], "custom discovery skip")
 
 
 if __name__ == "__main__":

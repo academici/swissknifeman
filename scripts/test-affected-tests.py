@@ -440,13 +440,61 @@ class DispatchTests(RunnerFixture):
         folders, _ = self.module.select(docs, "aicore", set(), paths, "fast", False)
         subsets, explain = self.module.obligations(docs, folders, paths, "aicore", "fast")
         self.assertEqual(set(folders), set(docs))
-        self.assertEqual(subsets, {"packages/planner": [["bash", "scripts/test.sh", "-p", "test_one.py"]]})
+        self.assertEqual(subsets, {})
         self.assertTrue(all(e["reason"] and e["inputs"] and e["context"] for e in explain))
         self.assertEqual(self.module.obligations(docs, folders, paths, "aicore", "full")[0], {})
         paths.append("packages/planner/tests/shared_fixture.py")
         self.assertEqual(self.module.obligations(docs, folders, paths, "aicore", "fast")[0], {})
         test.unlink()  # deleted test cannot justify an empty subset
         self.assertEqual(self.module.obligations(docs, folders, paths[:2], "aicore", "fast")[0], {})
+
+    def test_broad_mixed_diffs_never_narrow_mapped_leaf_consumers(self):
+        docs = {"packages/aicore": {"id": "aicore"},
+                "packages/runtime": {"id": "runtime"},
+                **{f"packages/{name}": {"id": name, "requires": [{"unit": "runtime"}],
+                     "dev": {"test": ["bash", "scripts/test.sh"]}} for name in ("planner", "orch")}}
+        for name in ("planner", "orch"):
+            leaf = f"packages/{name}/tests/test_one.py"
+            test = self.root / leaf
+            test.parent.mkdir(parents=True)
+            test.write_text("")
+            for other, reason in (("packages/aicore/lib/aicore/util/foo.py", "foundation"),
+                                  ("packages/runtime/lib/runtime/foo.py", "mixed"),
+                                  ("mystery/file.txt", "unknown hub"),
+                                  ("scripts/schema-types.py", "unknown hub")):
+                with self.subTest(name=name, other=other):
+                    paths = [other, leaf]
+                    folders, hub = self.module.select(docs, "aicore", set(), paths, "fast", False)
+                    subsets, explain = self.module.obligations(docs, folders, paths, "aicore", "fast")
+                    self.assertEqual(subsets, {})
+                    selected = next(e for e in explain if e["folder"] == f"packages/{name}")
+                    self.assertEqual(selected["obligation"], "full-suite")
+                    self.assertIn(reason, selected["reason"])
+                    commands = self.module.commands(docs, folders, hub, "fast", paths, subsets)
+                    self.assertEqual(next(argv for f, argv in commands if f == f"packages/{name}"),
+                                     [["bash", "scripts/test.sh"]])
+
+    def test_pure_mapped_leaf_diff_keeps_subsets_and_full_consumer_contracts(self):
+        for name in ("planner", "orch"):
+            with self.subTest(name=name):
+                folder = f"packages/{name}"
+                paths = [folder + "/tests/test_one.py", folder + "/tests/test_two.py"]
+                for path in paths:
+                    test = self.root / path
+                    test.parent.mkdir(parents=True, exist_ok=True)
+                    test.write_text("")
+                docs = {folder: {"id": name, "dev": {"test": ["bash", "scripts/test.sh"]}},
+                        "bridges/consumer": {"id": "consumer", "requires": [{"unit": name}],
+                                             "dev": {"test": ["bash", "scripts/test.sh"]}}}
+                folders, hub = self.module.select(docs, "aicore", set(), paths, "fast", False)
+                subsets, explain = self.module.obligations(docs, folders, paths, "aicore", "fast")
+                self.assertEqual(subsets, {folder: [["bash", "scripts/test.sh", "-p", Path(p).name] for p in paths]})
+                self.assertEqual({e["folder"]: e["obligation"] for e in explain},
+                                 {folder: "explicit-subset", "bridges/consumer": "full-suite"})
+                self.assertIn("known test-file subset", next(e for e in explain if e["folder"] == folder)["reason"])
+                commands = self.module.commands(docs, folders, hub, "fast", paths, subsets)
+                self.assertEqual(next(argv for f, argv in commands if f == "bridges/consumer"),
+                                 [["bash", "scripts/test.sh"]])
 
     def test_imported_test_file_is_a_shared_fixture_and_requires_full_suite(self):
         folder = self.root / "packages/planner"

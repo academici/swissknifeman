@@ -217,7 +217,7 @@ def _worker(args):
             outcomes.append({"id": identity, "outcome": outcome, "reason": str(reason)})
             if outcome in ("failed", "error", "unexpected_success"):
                 failed.add(identity)
-                if id(test) not in parent_ids:
+                if id(test) not in parent_ids or isinstance(test, unittest.loader._FailedTest):
                     unsafe_failure = True
 
         def addSuccess(self, test):
@@ -260,7 +260,9 @@ def _worker(args):
     if args.outcomes:
         _write_atomic(args.outcomes, {"outcomes": outcomes, "tests_run": result.testsRun, "started": started,
                                       "executed": len(started) - skipped_started}, "worker")
-    return 0 if result.wasSuccessful() else 1
+    if not result.wasSuccessful():
+        return 1
+    return 5 if result.testsRun == 0 and not result.skipped else 0
 
 
 def worker_env(env: dict, home: Path) -> dict:
@@ -389,22 +391,27 @@ def main(argv=None):
         if result.returncode and not serial:
             ids = result.failed_ids
             retry = [(id_files[identity], identity) for identity in ids] if ids and all(i in id_files for i in ids) else shard
-            print(f"par_unittest: retry {len(ids) if retry != shard else 'whole shard'} failed test(s) alone", file=sys.stderr)
-            alone = _run(retry, args, top, env)
-            attempts.append({"retry": True, "exit": alone.returncode, "units": [name for _, name in retry],
-                             "outcomes": alone.outcomes, "tests_run": alone.tests_run,
-                             "started": alone.started, "executed": alone.executed})
-            if alone.returncode == 0:
+            # Failed IDs are a diagnostic, not proof that the original cohort passes alone.
+            # Re-discovery filters the whole shard in its original order and worker context.
+            sys.stderr.write(result.stderr + result.stdout)
+            for selection in [retry] + ([shard] if retry != shard else []):
+                label = "whole shard" if selection == shard else str(len(ids))
+                print(f"par_unittest: retry {label} failed test(s) alone", file=sys.stderr)
+                alone = _run(selection, args, top, env)
+                attempts.append({"retry": True, "exit": alone.returncode, "units": [name for _, name in selection],
+                                  "outcomes": alone.outcomes, "tests_run": alone.tests_run,
+                                  "started": alone.started, "executed": alone.executed})
+                if alone.returncode or args.verbose:
+                    sys.stderr.write(alone.stderr + alone.stdout)
+                if alone.returncode:
+                    break
+            if alone.returncode == 0 and alone.tests_run is not None:
                 clashes += 1
-                print("par_unittest: CLASH: a shard failed in parallel but its failed tests pass alone: " +
-                      ", ".join(name for _, name in retry), file=sys.stderr)
+                print("par_unittest: CLASH: a shard failed in parallel but the whole shard passes alone: " +
+                      ", ".join(name for _, name in shard), file=sys.stderr)
                 failed |= clash == "fail"
             else:
                 failed = True
-            # Keep the initial execution evidence, including green tests not retried.
-            sys.stderr.write(result.stderr + result.stdout)
-            if alone.returncode or args.verbose:
-                sys.stderr.write(alone.stderr + alone.stdout)
         else:
             failed |= result.returncode != 0
             if result.returncode or args.verbose or serial:
@@ -413,6 +420,7 @@ def main(argv=None):
     count = sum(result.tests_run for result in done if result.tests_run is not None)
     executed = sum(result.executed for result in done if result.executed is not None)
     skipped = sum(o["outcome"] == "skipped" for o in outcomes)
+    empty = count == 0 and skipped == 0 and all(r.returncode == 5 and r.tests_run == 0 for r in done)
     print("-" * 70, file=sys.stderr)
     print(f"Ran {count} tests in {time.monotonic() - began:.3f}s\n", file=sys.stderr)
     counts = [("failures", sum(o["outcome"] == "failed" for o in outcomes)),
@@ -420,7 +428,7 @@ def main(argv=None):
               ("unexpected successes", sum(o["outcome"] == "unexpected_success" for o in outcomes))] if failed else []
     counts.append(("skipped", skipped))
     extra = ", ".join(f"{name}={number}" for name, number in counts if number)
-    print(("FAILED" if failed else "OK") + (f" ({extra})" if extra else ""), file=sys.stderr)
+    print(("NO TESTS RAN" if empty else "FAILED" if failed else "OK") + (f" ({extra})" if extra else ""), file=sys.stderr)
     print(f"par_unittest: context={context} requested_jobs={requested} effective_jobs={len(shards)} "
           f"discovered={len(inventory)} executed={executed} skipped={skipped} retries={len(attempts)-len(done)} "
           f"invocations={len(attempts)} unknown_invocations={sum(a['tests_run'] is None for a in attempts)} "
@@ -429,7 +437,7 @@ def main(argv=None):
         report = {"context": context, "requested_jobs": requested, "effective_jobs": len(shards),
                   "inventory": inventory, "attempts": attempts, "elapsed_s": time.monotonic() - began}
         _write_atomic(args.report, report, "report")
-    return 1 if failed else 0
+    return 5 if empty else 1 if failed else 0
 
 
 if __name__ == "__main__":

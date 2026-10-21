@@ -568,6 +568,119 @@ class QuotedInputTests(Case):
         self.assertEqual(self.count(), 1)
 
 
+class ExpandedInputTests(Case):
+    """Files that a shell expansion reaches (globs, brace lists, computed paths) are inputs too; when the line does not say
+    which files, nothing is reused. The checks run for real: a stale GREEN would show as a reused or green second row."""
+
+    def setUp(self):
+        super().setUp()
+        self.ext = self.out / "ext"
+        self.ext.mkdir()
+        self.good = self.ext / "a.txt"
+        self.good.write_text("good\n", encoding="utf-8")
+
+    def rounds(self, document, change):
+        """Three rounds with ``change`` before the third; the rows of the third."""
+        self.assertTrue(self.run_round(document)[0]["green"])
+        self.assertTrue(self.run_round(document, number=2)[0]["reused"])
+        self.assertEqual(self.count(), 1)
+        change()
+        return self.run_round(document, number=3)[0]
+
+    def assert_fresh_red(self, document, change):
+        """Green, reused, then ``change``: the third round runs the command again and it exits 1."""
+        row = self.rounds(document, change)
+        self.assertFalse(row.get("reused"))
+        self.assertFalse(row["green"])
+        self.assertEqual(row["exit"], 1)
+        self.assertEqual(self.count(), 2)
+
+    def assert_never_reused(self, document):
+        self.assertTrue(self.run_round(document)[0]["green"])
+        self.assertFalse(self.run_round(document, number=2)[0].get("reused"))
+        self.assertEqual(self.count(), 2)
+
+    def test_an_external_glob_follows_the_files_it_matches(self):
+        document = doc(("V1", f'test "$(cat {self.ext}/*.txt)" = good'))
+        self.assert_fresh_red(document, lambda: self.good.write_text("bad\n"))
+
+    def test_a_file_that_joins_an_external_glob_runs_the_check(self):
+        document = doc(("V1", f'test "$(cat {self.ext}/*.txt)" = good'))
+        self.assert_fresh_red(document, lambda: (self.ext / "b.txt").write_text("more\n"))
+
+    def test_a_glob_into_a_git_ignored_folder_is_never_reused(self):
+        local = self.root / "local"
+        local.mkdir()
+        (local / "a.txt").write_text("good\n", encoding="utf-8")
+        self.assert_never_reused(doc(("V1", 'test "$(cat local/*.txt)" = good')))
+
+    def test_a_glob_that_matches_git_ignored_files_of_the_project_follows_them(self):
+        (self.root / "a.local").write_text("good\n", encoding="utf-8")
+        self.assert_fresh_red(doc(("V1", 'test "$(cat *.local)" = good')), lambda: (self.root / "a.local").write_text("bad\n"))
+
+    def test_a_brace_list_follows_its_files(self):
+        (self.ext / "b.txt").write_text("good\n", encoding="utf-8")
+        document = doc(("V1", f'test "$(cat {self.ext}/{{a,b}}.txt | sort -u)" = good'))
+        self.assert_fresh_red(document, lambda: (self.ext / "b.txt").write_text("bad\n"))
+
+    def test_a_brace_range_follows_its_files(self):
+        for number in (1, 2):
+            (self.ext / f"f{number}.dat").write_text("good\n", encoding="utf-8")
+        document = doc(("V1", f'test "$(cat {self.ext}/f{{1..2}}.dat | sort -u)" = good'))
+        self.assert_fresh_red(document, lambda: (self.ext / "f2.dat").write_text("bad\n"))
+
+    def test_a_glob_inside_a_quoted_script_follows_its_files(self):
+        document = doc(("V1", f"bash -c 'test \"$(cat {self.ext}/*.txt)\" = good'"))
+        self.assert_fresh_red(document, lambda: self.good.write_text("bad\n"))
+
+    def test_a_glob_assigned_to_a_variable_follows_its_files(self):
+        document = doc(("V1", f'PATTERN={self.ext}/*.txt; test "$(cat $PATTERN)" = good'))
+        self.assert_fresh_red(document, lambda: self.good.write_text("bad\n"))
+
+    def test_a_glob_in_an_option_value_follows_its_files(self):
+        document = doc(("V1", f"env DATA={self.ext}/*.txt bash -c 'test \"$(cat $DATA)\" = good'"))
+        self.assert_fresh_red(document, lambda: self.good.write_text("bad\n"))
+
+    def test_a_glob_through_a_set_variable_follows_its_files(self):
+        with mock.patch.dict(os.environ, {"SKM_PROBE_DIR": str(self.ext)}):
+            document = doc(("V1", 'test "$(cat $SKM_PROBE_DIR/*.txt)" = good'))
+            self.assert_fresh_red(document, lambda: self.good.write_text("bad\n"))
+
+    def test_a_glob_through_an_unset_variable_is_never_reused(self):
+        self.assert_never_reused(doc(("V1", 'cat $SKM_UNSET_PROBE_DIR/*.txt > /dev/null; true')))
+
+    def test_a_folder_reached_by_a_glob_outside_the_project_is_never_reused(self):
+        (self.ext / "sub").mkdir()
+        self.assert_never_reused(doc(("V1", f"ls {self.ext}/* > /dev/null")))
+
+    def test_a_path_computed_by_a_command_is_never_reused(self):
+        self.assert_never_reused(doc(("V1", f'test "$(cat "$(echo {self.ext})/a.txt")" = good')))
+
+    def test_a_path_computed_by_backticks_is_never_reused(self):
+        self.assert_never_reused(doc(("V1", f'test "$(cat `echo {self.ext}`/a.txt)" = good')))
+
+    def test_an_argument_computed_by_a_command_is_never_reused(self):
+        self.assert_never_reused(doc(("V1", f"cat $(ls {self.ext}/a.txt) > /dev/null")))
+
+    def test_a_line_that_cannot_be_read_has_no_known_inputs(self):
+        for line in (f"cat {self.ext}/a.txt $(echo x", "cat 'open", f"cat {self.ext}/*.txt ${{open"):
+            self.assertIsNone(checks._inputs(line, dict(os.environ), self.root, self.root))
+
+    def test_a_glob_over_the_files_of_the_candidate_keeps_the_reuse(self):
+        document = doc(("V1", 'cat tr*.txt > /dev/null; ls *.txt tests/*.nothing > /dev/null 2>&1; echo "a*" "{x,y}" > /dev/null'))
+        self.run_round(document)
+        self.assertTrue(self.run_round(document, number=2)[0]["reused"])
+        self.assertEqual(self.count(), 1)
+
+    def test_a_glob_that_matches_nothing_keeps_the_reuse_and_a_new_match_runs_the_check(self):
+        document = doc(("V1", f"cat {self.ext}/*.cfg > /dev/null 2>&1; true"))
+        self.run_round(document)
+        self.assertTrue(self.run_round(document, number=2)[0]["reused"])
+        (self.ext / "x.cfg").write_text("new\n", encoding="utf-8")
+        self.assertFalse(self.run_round(document, number=3)[0].get("reused"))
+        self.assertEqual(self.count(), 2)
+
+
 class DispatchTests(unittest.TestCase):
     def test_a_stale_wait_snapshot_cannot_start_a_check_after_one_failed(self):
         from concurrent.futures import ALL_COMPLETED, wait as real_wait

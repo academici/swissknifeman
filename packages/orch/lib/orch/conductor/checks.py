@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+import glob
 import hashlib
 import json
 import os
@@ -142,6 +143,7 @@ _WORD = re.compile(r"(?:[A-Za-z0-9_./+~@%${}-]|\\ )+")  # a word; a backslash-es
 _QUOTED = re.compile(r"'([^']*)'|\"([^\"]*)\"")
 _VARIABLE = re.compile(r"\$(\w+)|\$\{(\w+)\}")
 MAX_WORDS = 256
+MAX_GLOB = 4096  # a glob that matches more files than this is not followed: its inputs are then not known
 
 
 def _digest_file(path: Path, known: Optional[dict]) -> Optional[str]:
@@ -190,6 +192,269 @@ def _ignored(project: Path, path: Path, known: Optional[dict]) -> Optional[bool]
     return value
 
 
+def _close(text: str, start: int) -> int:
+    """Index of the bracket that closes ``text[start]`` (``(`` or ``{``), -1 when there is none."""
+    opener = text[start]
+    closer = ")" if opener == "(" else "}"
+    depth = 0
+    for index in range(start, len(text)):
+        if text[index] == opener:
+            depth += 1
+        elif text[index] == closer:
+            depth -= 1
+            if depth == 0:
+                return index
+    return -1
+
+
+def _lex(text: str, out: list, mode: str = "top", depth: int = 0) -> bool:
+    """Split a shell line into words for ``out``: ``(mode, parts)`` with ``parts`` of ``[kind, value, quoted]``; kind is
+    ``lit`` (text), ``var`` (``$NAME``/``${NAME}``), ``subst`` (``$(...)`` or backticks, the inner text is split too) or
+    ``opaque`` (any other expansion). A quoted string is split again as a line of its own (``bash -c '...'``): ``mode`` is
+    ``top`` for the line itself and its substitutions, ``single`` or ``double`` for the text of such a string. False when
+    the line cannot be read (an open quote or bracket, too deep or too long)."""
+    if depth > 5 or len(out) > 4096:
+        return False
+    word, quote, index, size = [], "", 0, len(text)
+
+    def lit(char: str, quoted: bool) -> None:
+        if word and word[-1][0] == "lit" and word[-1][2] == quoted:
+            word[-1][1] += char
+        else:
+            word.append(["lit", char, quoted])
+
+    def flush() -> None:
+        if word:
+            out.append((mode, [list(part) for part in word]))
+            word.clear()
+
+    inner_mode = mode if mode != "top" else None  # a substitution is read as the line it stands in
+
+    def quoted_mode(quote: str) -> str:
+        return "double" if quote == '"' or mode == "double" else "single"
+
+    while index < size:
+        char = text[index]
+        if quote == "'":
+            if char == "'":
+                if not _lex(text[start:index], out, quoted_mode("'"), depth + 1):
+                    return False
+                quote = ""
+            else:
+                lit(char, True)
+            index += 1
+            continue
+        if char == "\\" and index + 1 < size:
+            if text[index + 1] != "\n":
+                lit(text[index + 1], True)
+            index += 2
+            continue
+        if char == "'" and not quote:
+            quote, start = "'", index + 1
+            index += 1
+            continue
+        if char == '"':
+            if quote:
+                if not _lex(text[start:index], out, quoted_mode('"'), depth + 1):
+                    return False
+                quote = ""
+            else:
+                quote, start = '"', index + 1
+            index += 1
+            continue
+        quoted = bool(quote)
+        if char == "$" and index + 1 < size:
+            following = text[index + 1]
+            if following == "(" and text.startswith("$((", index):
+                end = _close(text, index + 1)
+                if end < 0:
+                    return False
+                word.append(["opaque", text[index:end + 1], quoted])
+                index = end + 1
+                continue
+            if following == "(":
+                end = _close(text, index + 1)
+                if end < 0:
+                    return False
+                word.append(["subst", text[index + 2:end], quoted])
+                if not _lex(text[index + 2:end], out, inner_mode or "top", depth + 1):
+                    return False
+                index = end + 1
+                continue
+            if following == "{":
+                end = _close(text, index + 1)
+                if end < 0:
+                    return False
+                name = text[index + 2:end]
+                if re.fullmatch(r"[A-Za-z_]\w*", name):
+                    word.append(["var", name, quoted])
+                else:
+                    word.append(["opaque", text[index:end + 1], quoted])
+                index = end + 1
+                continue
+            named = re.match(r"[A-Za-z_]\w*", text[index + 1:])
+            if named:
+                word.append(["var", named.group(0), quoted])
+                index += 1 + len(named.group(0))
+                continue
+            if following in "?*@#!$-0123456789":
+                word.append(["opaque", text[index:index + 2], quoted])
+                index += 2
+                continue
+        if char == "`":
+            end = text.find("`", index + 1)
+            if end < 0:
+                return False
+            word.append(["subst", text[index + 1:end], quoted])
+            if not _lex(text[index + 1:end], out, inner_mode or "top", depth + 1):
+                return False
+            index = end + 1
+            continue
+        if not quote and (char.isspace() or char in ";|&()<>"):
+            flush()
+        else:
+            lit(char, quoted)
+        index += 1
+    if quote:
+        return False
+    flush()
+    return True
+
+
+def _braces(chars: list) -> Optional[list]:
+    """Bash brace expansion of the unquoted braces of ``chars`` (``(char, active)`` pairs); None when a list is too large
+    or a range cannot be read. A brace pair with no comma or range stays as it is."""
+    start = None
+    for index, (char, active) in enumerate(chars):
+        if active and char == "{":
+            start = index
+        elif active and char == "}" and start is not None:
+            inner, depth, cuts = chars[start + 1:index], 0, []
+            for place, (letter, live) in enumerate(inner):
+                if live and letter == "{":
+                    depth += 1
+                elif live and letter == "}":
+                    depth -= 1
+                elif live and letter == "," and depth == 0:
+                    cuts.append(place)
+            options = []
+            if cuts:
+                bounds = [-1, *cuts, len(inner)]
+                options = [inner[bounds[n] + 1:bounds[n + 1]] for n in range(len(bounds) - 1)]
+            else:
+                text = "".join(letter for letter, _ in inner)
+                found = re.fullmatch(r"(-?\d+)\.\.(-?\d+)(?:\.\.(-?\d+))?", text) or re.fullmatch(
+                    r"([A-Za-z])\.\.([A-Za-z])(?:\.\.(-?\d+))?", text)
+                if found and all(live for _, live in inner):
+                    first, last, step = found.group(1), found.group(2), int(found.group(3) or 1) or 1
+                    numeric = first.lstrip("-").isdigit()
+                    low, high = (int(first), int(last)) if numeric else (ord(first), ord(last))
+                    values = range(low, high + 1, abs(step)) if low <= high else range(low, high - 1, -abs(step))
+                    if len(values) > MAX_WORDS:
+                        return None
+                    options = [[(c, True) for c in (str(v) if numeric else chr(v))] for v in values]
+                else:
+                    start = None
+                    continue
+            results = []
+            for option in options:
+                rest = _braces(chars[:start] + option + chars[index + 1:])
+                if rest is None:
+                    return None
+                results += rest
+                if len(results) > MAX_WORDS:
+                    return None
+            return results
+    return [chars]
+
+
+def _expansions(cmd: str, env: dict, cwd: Path) -> Optional[tuple]:
+    """The files a line names through shell expansion that its words do not spell: ``(names, matched)``, the paths that
+    unquoted globs (``*`` ``?`` ``[`` and ``**``), brace lists and ``=value`` suffixes of words reach, as bash would
+    expand them in ``cwd`` with the variables of ``env``; ``matched`` is the set of the glob matches. None when a path of
+    the line cannot be established: a word that mixes a command substitution into a path, or an expansion that holds an
+    unset variable or a computed value (in the text of a quoted string: skipped, as it is only guessed to be a command)."""
+    words = []
+    if not _lex(cmd, words):
+        return None
+    names, matched = [], set()
+    for mode, parts in words:
+        relaxed = mode != "top"
+        literal = any(kind == "lit" and "/" in value for kind, value, _ in parts)
+        if any(kind == "subst" for kind, _, _ in parts) and not (mode == "double"):
+            unquoted = any(kind == "subst" and not quoted for kind, _, quoted in parts)
+            assignment = bool(parts[0][0] == "lit" and not parts[0][2] and re.match(r"[A-Za-z_]\w*=", parts[0][1]))
+            if literal or (unquoted and not assignment):
+                return None  # a path built by a command: nothing says which file it is
+        chars, unknown = [], False
+        for kind, value, quoted in parts:
+            if kind == "lit":
+                chars += [(char, not quoted) for char in value]
+            elif kind == "var" and value in env:
+                chars += [(char, not quoted) for char in env[value]]
+            else:
+                unknown = True
+        if not any(active and (char in "*?[" or char in "{") for char, active in chars) and not unknown:
+            continue
+        if unknown:
+            if relaxed or not any(kind == "lit" and not quoted and re.search(r"[*?\[{]", value) for kind, value, quoted in parts):
+                continue
+            return None  # an unset variable or a computed value in a word that globs or expands braces
+        variants = [chars]
+        cut = next((place for place, (char, active) in enumerate(chars) if active and char == "="), None)
+        if cut is not None:
+            variants.append(chars[cut + 1:])  # NAME=pattern and --option=pattern: the program may expand the value
+        for variant in variants:
+            expanded = _braces(variant)
+            if expanded is None:
+                if relaxed:
+                    continue
+                return None
+            for item in expanded:
+                text = "".join(char for char, _ in item)
+                if not any(active and char in "*?[" for char, active in item):
+                    names.append(text)
+                    continue
+                pattern = "".join(char if active else glob.escape(char) for char, active in item)
+                if item and item[0] == ("~", True):
+                    pattern = os.path.expanduser(pattern)
+                try:
+                    found = glob.glob(pattern, root_dir=str(cwd), recursive=True)
+                except (OSError, ValueError, re.error):
+                    return None
+                if len(found) > MAX_GLOB:
+                    return None
+                for match in found:
+                    full = os.path.normpath(os.path.join(str(cwd), match))
+                    names.append(full)
+                    matched.add(full)
+    return names, matched
+
+
+def _ignored_among(project: Path, paths: list, known: Optional[dict]) -> bool:
+    """Fill ``known`` with whether git ignores each of ``paths`` (below the project) in one call; False when git cannot say."""
+    root = project.resolve()
+    pending = []
+    for path in paths:
+        try:
+            relative = Path(path).resolve().relative_to(root).as_posix()
+        except (OSError, RuntimeError, ValueError):
+            continue
+        if relative != "." and (known is None or ("ignored", relative) not in known):
+            pending.append(relative)
+    if not pending:
+        return True
+    done = run_with_timeout(["git", "check-ignore", "-z", "--stdin"], cwd=str(project), input="\0".join(pending) + "\0",
+                            capture_output=True, text=True, timeout=60)
+    if done.returncode not in (0, 1):
+        return False
+    hit = {name for name in done.stdout.split("\0") if name}
+    if known is not None:
+        for relative in pending:
+            known[("ignored", relative)] = relative in hit
+    return True
+
+
 def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict] = None, skip=()) -> Optional[list]:
     """What a command reads that the candidate does not carry, as far as its line and environment show it: the programs
     it names (resolved on the PATH of the check; real path, size and time) and every other existing file it names or that
@@ -210,9 +475,25 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
             if _VARIABLE.search(name):
                 return None  # a path built from a variable that is not set here
             names[index] = name
+    expanded = _expansions(cmd, env, cwd)
+    if expanded is None:
+        return None  # a glob, a brace list or a computed path whose files cannot be established
+    extra, matched = expanded
+    matched = {name: Path(name).resolve() for name in matched}
+    carried = [name for name, path in matched.items() if path == root or root in path.parents]
+    if carried:
+        if not _ignored_among(project, carried, known):
+            return None
+        # a match the candidate carries (tracked or untracked) is not an input of its own
+        extra = [name for name in extra if name not in carried or _ignored(project, matched[name], known)]
+    names += extra
+    names = list(dict.fromkeys(names))
+    if len(names) > MAX_WORDS:
+        return None
     names += [value for key, value in sorted(env.items())
               if key not in VOLATILE_ENV and not key.endswith(("_ROOT", "_PY")) and value.startswith("/")
               and "\n" not in value and ":" not in value][:64]
+    reached = set(matched.values())
     skipped = [Path(folder).resolve() for folder in skip]
     for name in names:
         try:
@@ -238,6 +519,8 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
                     if not ignored:
                         continue  # tracked or untracked: the candidate carries it
                 elif inside or not path.is_file():
+                    if not inside and path.is_dir() and path in reached:
+                        return None  # a folder outside the project that a glob reaches: its content is read, not known
                     continue
                 if not path.is_file():
                     continue

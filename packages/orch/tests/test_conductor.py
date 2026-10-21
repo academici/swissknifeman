@@ -1086,7 +1086,9 @@ class SoftLimitTests(ConductorCase):
                                "options": [{"source": "item:W1", "options": options}] if options else []}})
 
     def test_a_correction_round_runs_the_red_checks_first_by_default(self):
-        self.two_checks()
+        # serial: the order of admission is the order of the round, so a red V1 is known before V2 would start; with
+        # checks.parallel above 1 both are admitted together (the next test)
+        self.two_checks(checks={"parallel": 1})
         self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
@@ -1098,6 +1100,28 @@ class SoftLimitTests(ConductorCase):
             self.assertEqual([(row["id"], row["green"], bool(row.get("skipped")), row.get("skip_reason")) for row in rows],
                              [("V1", False, False, None), ("V2", False, True, "fail_fast")])
         self.assertEqual(steps["checks.2"]["verdict"], "red V1")  # only the check that ran and failed
+
+    def test_parallel_checks_admitted_before_the_red_result_may_finish(self):
+        # the default checks.parallel is 2: V1 and V2 are admitted together at the start of the round, so V2 (green
+        # because the executor wrote out/two.txt) ran before V1 could be seen red; fail_fast only stops later admissions.
+        # Whatever the timing, a skipped row has the reason fail_fast, V1 is the only failure and the second round keeps
+        # the red-first order (V1 ahead of V2) with V2 either skipped, re-run, or reused from the first round.
+        self.two_checks()
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        steps = self.state(err)["items"]["W1"]["steps"]
+        for number in (1, 2):
+            rows = steps[f"checks.{number}"]["result"]
+            self.assertEqual(["V1", "V2"], [row["id"] for row in rows])
+            self.assertEqual((False, False, None), (rows[0]["green"], bool(rows[0].get("skipped")), rows[0].get("skip_reason")))
+            second = rows[1]
+            if second.get("skipped"):
+                self.assertEqual(("fail_fast", False), (second["skip_reason"], second["green"]))
+            else:
+                self.assertTrue(second["green"], second)  # admitted before V1 went red: it ran (or was reused) to green
+            self.assertEqual("red V1", steps[f"checks.{number}"]["verdict"])  # only the check that ran and failed
 
     def test_red_first_off_runs_every_check_in_every_round(self):
         self.two_checks(checks={"red_first": False, "fail_fast": False})

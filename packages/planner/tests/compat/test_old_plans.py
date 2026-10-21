@@ -20,6 +20,7 @@ EXPECTED_WARNINGS_0_28_3 = {
     "context_unbound": 1,
     "validation_id_clash": 4,
     "review_strategy": 4,  # the 0.28.3 items have review none without a reason
+    # check_overlap: 0 — its checks are `bash scripts/test.sh` and `python3 -m unittest ...`, no module script pair
 }
 
 
@@ -75,6 +76,7 @@ class Engine0283Tests(OldPlanCase):
         for issue in issues:
             counts[issue.code] = counts.get(issue.code, 0) + 1
         self.assertEqual(counts, EXPECTED_WARNINGS_0_28_3)
+        self.assertNotIn("check_overlap", counts)
 
     def test_next_returns_a_step(self):
         step = lifecycle.next(self.load())

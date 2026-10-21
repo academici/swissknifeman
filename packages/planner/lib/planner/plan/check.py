@@ -33,6 +33,76 @@ HEAVY_CHECK_MARKS = ("--tier all", "standalone --baseline", "test-integration.sh
 
 CODE_SUFFIXES = (".py", ".php", ".ts", ".js")
 
+_MODULE_SCRIPT = re.compile(r"packages/([A-Za-z0-9_.-]+)/scripts/(validate|test)\.sh\b")
+_SUBSET_FLAG = re.compile(r"(?:^|\s)(?:-p|--pattern)(?:\s|=|$)")
+_OVERLAP_MESSAGE = ("{second} repeats the tests of {first} ({reason}); keep one, "
+                    "or run validate.sh with SKM_VALIDATE_SKIP_TESTS=1")
+
+
+def _check_kinds(cmd: str) -> set:
+    """What one check command runs, as ``(kind, module)`` pairs: ``validate`` (with tests), ``full`` and ``subset``
+    (test.sh without and with ``-p``), ``affected`` (``affected-tests.py --run``, any tier ``--tier`` excluded),
+    ``tier-all`` and ``bridges``."""
+    kinds: set = set()
+    for match in _MODULE_SCRIPT.finditer(cmd):
+        module, script = match.group(1), match.group(2)
+        rest = cmd[match.end():].split("&&")[0].split(";")[0]
+        if script == "validate":
+            if "SKM_VALIDATE_SKIP_TESTS=1" not in cmd:
+                kinds.add(("validate", module))
+        elif _SUBSET_FLAG.search(rest):
+            kinds.add(("subset", module))
+        else:
+            kinds.add(("full", module))
+    if "affected-tests.py" in cmd:
+        if "--tier all" in cmd:
+            kinds.add(("tier-all", ""))
+        elif "--run" in cmd and "--tier" not in cmd:
+            kinds.add(("affected", ""))
+    if "test-bridges.sh" in cmd:
+        kinds.add(("bridges", ""))
+    return kinds
+
+
+def _item_overlap(first: str, module: str, earlier: set, later: set):
+    """Rules (a) and (b) for one module of two checks of an item: ``(first id, reason)`` or ``None``."""
+    validating = [("validate", module) in earlier, ("validate", module) in later]
+    if validating[0] != validating[1]:
+        other = later if validating[0] else earlier
+        if ("full", module) in other or ("affected", "") in other:
+            return first, f"validate.sh of {module} runs its tests, which the other check runs too"
+    if (("full", module) in earlier and ("subset", module) in later) \
+            or (("subset", module) in earlier and ("full", module) in later):
+        return first, f"the full test.sh of {module} includes the -p subset"
+    return None
+
+
+def overlaps(commands: list, phase: bool) -> list:
+    """Pairs of checks of one item (or, with ``phase``, one phase) that repeat each other's tests.
+
+    ``commands`` is ``[(index, id, cmd)]`` in declared order; the result is ``[(index of the second check, id of the
+    first, id of the second, reason)]``, one entry per second check. Rules: (a) validate.sh of a module without
+    ``SKM_VALIDATE_SKIP_TESTS=1`` next to ``affected-tests.py --run`` or the module's full test.sh; (b) the module's
+    full test.sh next to its ``test.sh -p``; (c) in a phase ``--tier all`` next to ``test-bridges.sh``.
+    Rule (d), an item check equal to a check of its phase, needs both documents and is applied by the caller."""
+    found: list = []
+    parsed = [(index, check_id, _check_kinds(cmd)) for index, check_id, cmd in commands]
+    for position, (index, second, kinds) in enumerate(parsed):
+        hit = None
+        for _i, first, earlier in parsed[:position]:
+            both = earlier | kinds
+            if phase:
+                if {("tier-all", ""), ("bridges", "")} <= both and earlier != kinds:
+                    hit = (first, "--tier all already runs the bridge tests of test-bridges.sh")
+            else:
+                for module in sorted({m for _kind, m in both if m}):
+                    hit = hit or _item_overlap(first, module, earlier, kinds)
+            if hit:
+                break
+        if hit:
+            found.append((index, hit[0], second, hit[1]))
+    return found
+
 
 def is_test_path(path: str) -> bool:
     """A repository path that names tests: a ``tests/`` folder, ``test_*``, ``*.test.*`` or ``*Test.php``."""
@@ -435,11 +505,40 @@ class _Context:
                     self.warn("check_cadence", f"{self.file_of('item', key)}/validation/{index}",
                               f"{entry.get('id')} runs {heavy!r}, a repository-wide or branch-wide check: put it into "
                               "phase.validation, which the closing item of the phase runs once")
+        self.check_overlap()
         for key, unit in self.p.units.items():
             command = unit.get("command")
             if isinstance(command, dict) and not command.get("cmd"):
                 self.error("validation_carrier", f"{self.file_of('unit', key)}/command",
                            "a command unit needs an exact cmd")
+
+    def check_overlap(self) -> None:
+        """Warn about checks that run the same tests twice (rules a-d of ``overlaps``); never an error."""
+        def listed(doc, key) -> list:
+            value = doc.get(key) if isinstance(doc, dict) else None
+            return value if isinstance(value, list) else []
+
+        def commands(doc) -> list:
+            return [(index, entry.get("id"), entry["cmd"]) for index, entry in enumerate(listed(doc, "validation"))
+                    if isinstance(entry, dict) and isinstance(entry.get("cmd"), str)]
+
+        for phase_id, phase in self.p.phases.items():
+            phase_commands = commands(phase)
+            for index, first, second, reason in overlaps(phase_commands, phase=True):
+                self.warn("check_overlap", f"{self.file_of('phase', phase_id)}/validation/{index}",
+                          _OVERLAP_MESSAGE.format(second=second, first=first, reason=reason))
+            by_cmd = {cmd.strip(): check_id for _index, check_id, cmd in phase_commands}
+            for item_id in listed(phase, "items"):
+                item = self.p.items.get(item_id) if isinstance(item_id, str) else None
+                item_commands = commands(item)
+                for index, first, second, reason in overlaps(item_commands, phase=False):
+                    self.warn("check_overlap", f"{self.file_of('item', item_id)}/validation/{index}",
+                              _OVERLAP_MESSAGE.format(second=second, first=first, reason=reason))
+                for index, check_id, cmd in item_commands:
+                    if cmd.strip() in by_cmd:
+                        self.warn("check_overlap", f"{self.file_of('item', item_id)}/validation/{index}",
+                                  _OVERLAP_MESSAGE.format(second=check_id, first=by_cmd[cmd.strip()],
+                                                          reason=f"the same command is a check of phase {phase_id}"))
 
     def authority(self) -> None:
         for key, item in self.p.items.items():

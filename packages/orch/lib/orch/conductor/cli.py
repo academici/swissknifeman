@@ -233,6 +233,16 @@ def _prompt_diff(args, project: Path) -> int:
     return 0
 
 
+def _check_outcome(check: dict) -> str:
+    """The text of one check under a ``checks.N`` interval: ``12.4 s green``, ``skipped (fail_fast)``, ``reused (12 s)``."""
+    if check["skipped"]:
+        return "skipped" + (f" ({check['skip_reason']})" if check.get("skip_reason") else "")
+    if check["reused"]:
+        return "reused" + (f" ({check['original_seconds']} s)" if check.get("original_seconds") is not None else "")
+    took = f"{check['seconds']} s " if check.get("seconds") is not None else ""
+    return took + ("green" if check["green"] else "red")
+
+
 def _timeline(args, project: Path) -> int:
     """``timeline``: the steps of the pieces of a run as intervals with their durations, from its journal."""
     run_id = args.run or _latest(project)
@@ -240,7 +250,8 @@ def _timeline(args, project: Path) -> int:
     if not run_id or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id) is None or not (directory / engine.RUN_FILE).is_file():
         print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
         return 1
-    rows = progress.timeline(progress.read_lines(directory), item=args.item)
+    rows = progress.timeline(progress.read_lines(directory), item=args.item,
+                             state=engine.read_json(directory / engine.STATE_FILE) or {})
     if args.json:
         print(json.dumps(runs.display({"run": run_id, "item": args.item, "intervals": rows}), ensure_ascii=False, indent=2))
         return 0
@@ -248,6 +259,8 @@ def _timeline(args, project: Path) -> int:
         took = f"{row['duration_s']} s" if row["duration_s"] is not None else "-"
         print(f"{row['start']} {row['item']} {row['stage']}: {row['status']}, {took}"
               + (f" ({row['verdict']})" if row.get("verdict") else ""))
+        for check in row.get("checks") or []:
+            print(f"  - {check['id']} " + _check_outcome(check))
     if not rows:
         print("no steps in the journal")
     return 0

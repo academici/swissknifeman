@@ -297,8 +297,8 @@ def _run(shard, args, top, env, spent=None, serial=False):
         argv += [item for file, name in shard for item in ("--unit", f"{file}::{name}")]
         path = str(top) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
         child_env = env if serial else worker_env(env, home)
-        done = subprocess.run(argv, env=dict(child_env, PYTHONPATH=path, SKM_TEST_JOBS="1"),
-                              capture_output=True, text=True)  # no-timeout: tests own their timeouts
+        done = subprocess.run(argv, env=dict(child_env, PYTHONPATH=path, SKM_TEST_JOBS="1"),  # no-timeout: tests own their timeouts
+                              capture_output=True, text=True)
         if spent is not None:
             spent.update(_read_times(times))
         done.failed_ids = _read(failed, "failed", [])
@@ -345,7 +345,8 @@ def main(argv=None):
     parser.add_argument("--unit", action="append", default=[], help=argparse.SUPPRESS)
     for flag in ("times", "failed", "outcomes"):
         parser.add_argument("--" + flag, help=argparse.SUPPRESS)
-    parser.add_argument("--report", default=os.environ.get("SKM_PAR_UNITTEST_REPORT"), help="write case inventory and attempts")
+    parser.add_argument("--report", default=os.environ.get("SKM_PAR_UNITTEST_REPORT"), help="write case inventory and attempts; "
+                        "{pid} in the path becomes the process id, so nested runners do not overwrite one file")
     args = parser.parse_args(argv)
     if args.worker:
         return _worker(args)
@@ -436,7 +437,7 @@ def main(argv=None):
     if args.report:
         report = {"context": context, "requested_jobs": requested, "effective_jobs": len(shards),
                   "inventory": inventory, "attempts": attempts, "elapsed_s": time.monotonic() - began}
-        _write_atomic(args.report, report, "report")
+        _write_atomic(args.report.replace("{pid}", str(os.getpid())), report, "report")
     return 5 if empty else 1 if failed else 0
 
 

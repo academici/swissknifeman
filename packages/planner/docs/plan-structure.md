@@ -141,6 +141,29 @@ command on `PATH`. `tests/test_boundary.py` keeps the core clean; its temporary 
 shrink. The tests of a bridge belong to the bridge (`bash scripts/test-bridges.sh` in the hub).
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
 
+## Validation checks
+
+`plan.py check` warns about checks that cost more than they prove. Warnings never fail the command.
+
+| Code | Meaning |
+|:--|:--|
+| `check_cadence` | an item check runs a repository-wide or branch-wide command (`--tier all`, `test-integration.sh`, …): move it to `phase.validation` |
+| `validation_id_clash` | an item check has the id of a check of its phase |
+| `check_overlap` | two checks repeat the same tests |
+
+`check_overlap` points at the later check of a pair, `<id> repeats the tests of <other id> (<reason>); keep one, or run
+validate.sh with SKM_VALIDATE_SKIP_TESTS=1`. The rules:
+
+- (a) one item runs `bash packages/<id>/scripts/validate.sh` without `SKM_VALIDATE_SKIP_TESTS=1` and also
+  `python3 scripts/affected-tests.py --run` (without `--tier`) or the full `bash packages/<id>/scripts/test.sh` of the
+  same module;
+- (b) one item runs the full `bash packages/<id>/scripts/test.sh` and `… test.sh -p …` of the same module;
+- (c) one phase runs `affected-tests.py --tier all` and `scripts/test-bridges.sh` (the tier already runs the bridges);
+- (d) an item check is literally equal to a check of its own phase (the closing item runs both).
+
+Checks of different modules, and `validate.sh` with `SKM_VALIDATE_SKIP_TESTS=1`, do not overlap. The lint is
+deliberately textual: it names proven repeats and does not remove checks that run in different contexts.
+
 ## Attempts and evidence
 
 `plan.py commit PLAN1 P1.1 --role executor` makes one scoped Git commit containing the item's

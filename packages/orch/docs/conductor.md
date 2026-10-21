@@ -32,7 +32,10 @@ matched by kind and origin (a block without an origin by kind and order); the an
 `PROMPT_MANIFEST_MISSING`. `timeline` reads `progress.jsonl` and gives every step of a piece as an interval (`start`,
 `end`, `duration_s`, `verdict`, `status`: `done`, `stopped`, `interrupted` when the run ended or was resumed while the
 step was open (the resumed step is an interval of its own), `open` while it runs, without an end); gui-orch shows it as
-its `timeline` view.
+its `timeline` view. With `state.json` at hand a `checks.N` interval also carries `checks` (`--json`): one entry per result
+row with `id`, `seconds`, `green`, `skipped`, `skip_reason`, `reused` (plus `executed`, `context`, and for a reused row
+`reused_from` and `original_seconds`); the text output prints them under the interval, `  - V3 12.4 s green`,
+`  - V5 skipped (fail_fast)`, `  - V2 reused (40 s)`.
 
 For an agent that picks its own pieces (ask the source for ready lanes → `run --items` → `status`/`observe` → `resume`/`settle`) see [agent-mode.md](agent-mode.md).
 
@@ -1033,6 +1036,23 @@ writes `observer.json` and `observer.md`: repeats and resumes, red checks per ch
 triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the heaviest prompt blocks by role and the prompt budget classes against their limits (`prompt_budgets_by_role`: largest tokens of a step, limit, steps, steps over; from the prompt manifests), the outcome of
 each piece and proposals to improve the run options. `orch conduct observe --follow` prints the notable lines of a run
 that is still going from another terminal; `orch conduct observe` writes the report again.
+
+**Checks by command.** `checks_by_command` (and the table *Checks by command* in `observer.md`) aggregates the command
+rows of `state.items.*.steps.checks.*.result[]` (and of earlier attempts) by command: `runs` (every row), `executed` /
+`invocations` (rows that started a process), `seconds` (elapsed time of those runs, not CPU time), `red` (executed rows that
+failed), `skipped`, `reused` (with `saved_s` and the evidence in `reused_from`), `retried` (an executed check that an
+earlier round of the same item had already executed), `ids`, `contexts` (`local`, `standalone`, `partner`, `installed`, from
+the command text) and `items`. A skipped row (`fail_fast`, `phase_after_red`) and a reused row ran nothing: they are never
+counted in `red` or `red_checks`, even when an older journal names them in a `red …` verdict. The same suite in different
+contexts is not a duplicate. The old fields of the report stay as they were; `check_findings` holds what the proposals use
+(`duplicate_modules`, `phase_after_red`, `executor_runs_checks`).
+
+Proposals about checks: *item X runs the tests of M twice* (validate.sh of a module without `SKM_VALIDATE_SKIP_TESTS=1` and
+the full `test.sh` or `affected-tests.py --run`, or a full `test.sh` and its `-p` subset, in one round and one context),
+*phase checks of X ran after a red item check* (needs the cadence of the checks from the item's `input.json`), and
+*`checks.executor_runs_checks` is true*. A red check never asks the executor to rerun unchanged acceptance or full suites:
+the proposal names concrete new or failing diagnostics or a faster local variant, and the conductor keeps the named
+acceptance checks and the phase gates.
 
 ### Debug mode
 

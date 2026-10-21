@@ -91,6 +91,15 @@ class SchedulingAndEvidenceTests(unittest.TestCase):
         self.assertEqual(len(report["inventory"]), 2)
         self.assertEqual(len([o for a in report["attempts"] for o in a["outcomes"]]), 2)
 
+    def test_report_path_may_name_the_process_so_nested_runners_keep_their_own_file(self):
+        suite(self.root, {"a": "    def test_a(self): pass\n"})
+        env = dict(self.env, SKM_PAR_UNITTEST_REPORT=str(self.root / "report-{pid}.json"))
+        done = run(self.root / "tests", "-j", "2", "-t", str(self.root), env=env)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        written = sorted(path.name for path in self.root.glob("report-*.json"))
+        self.assertEqual(1, len(written), written)
+        self.assertRegex(written[0], r"^report-[0-9]+\.json$")
+
     def test_inherited_class_and_module_fixtures_are_not_split(self):
         import types
         from unittest import mock

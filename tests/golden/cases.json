@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "2cd40e5c75c5",
-  "reason": "PLAN9 P1.3: pinned root.product-philosophy, catalog 1.9.0",
+  "captured_from": "afcb3e1a6c0f",
+  "reason": "P2.4: launch catalog 1.6.0 adds resume_argv to the codex executor row (intentional)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

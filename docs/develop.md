@@ -368,6 +368,51 @@ variable stay full; `--no-cache` disables all reuse. Receipts and duration data 
 directory, and run receipts older than 14 days are pruned when a run cache is written. Planner's `scripts/test.sh`
 discovers the engine once; `-p PATTERN` selects matching test files for a focused check.
 
+**Measuring the runners.** `python3 scripts/bench-checks.py --before REV [--pairs N] [--warm] [--commands-file FILE] [--out FILE]`
+times the same commands on `REV` (a detached `git worktree` in `$TMPDIR/skm-bench-<pid>`, removed in `finally`) and on the
+current tree, in 2 (at most 3) before/after pairs that alternate which side runs first. The default workload is one cold
+`python3 scripts/affected-tests.py --run --tier all --no-cache` per side and pair: it already contains the orch, planner and
+validate suites, so those are not run again. `--warm` adds warm scheduling and warm result reuse (the same tier twice in one
+`SKM_CHECK_RUN`) as results of their own; a `diagnostic: true` command of `--commands-file` is timed but never part of the
+total. Both sides get the same Python, `SKM_TEST_JOBS` and their own partner roots; a non-zero exit is recorded, not raised
+(an error of the bench is exit 2: `BENCH_REV_INVALID`, `BENCH_PAIRS_INVALID`, `BENCH_COMMANDS_INVALID`,
+`BENCH_WORKTREE_FAILED`). The document `urn:swissknifeman:hub:bench-checks:v1`
+(`configs/schemas/bench-checks.schema.json`, default `.swissknifeman/orch/reports/p2-bench.json`) holds per-pair timings,
+`ratio` (after/before by command id), `total.ratio` against the target 2/3, `loadavg` and `cpu_count` (compare ratios, not
+seconds: the machine load moves them), the logical workload of each side (`affected-tests.py --json`) and a case census
+(`SKM_PAR_UNITTEST_REPORT=<dir>/report-{pid}.json`, one file per runner): case ids by context, executed, skipped, retries and
+invocations, equal or not between the sides; a runner that cannot write the report is "not comparable", never guessed.
+The base of P2 is the parent of the first `Plan-Ref: P2.1` commit of the plan.
+
+For the default workload the bench also takes an **execution census** (`--no-census` skips it, `--census` asks for it with a
+commands file): after the timing pairs it runs the workload once more on each side with an observer
+(`usercustomize.py` in an isolated `PYTHONUSERBASE`, so it survives `test.sh` replacing `PYTHONPATH`) that records every test
+that really ran, with outcome, skip reason, subtest failures and context, into per-process ledgers; the timings of these two
+runs never enter a ratio. Before the observed runs the observer is shown to be transparent (same unittest result with and
+without it) and active in the plain and the `par_unittest` driver of both trees. A case that ran on one side only must be
+explained by the source (`added: new method`, `removed: method gone`); a method that merely vanished from the source is an observation, never proof that its assertion is still run, so a removed case keeps the verdict unknown until an explicit mapping (`{"ctx|key": {"replacement": ..., "reason": ...}}`) names a replacement that ran and passed; an unknown primary outcome (the observer could not read the result) is unknown too; a missing start/end marker, a test unit with no observed
+test or an unreadable ledger is *unknown*, never zero or equal. The whole default measurement is at most six workload
+executions (two pairs plus the two observations; `BENCH_BUDGET_EXCEEDED` otherwise). The timing cache of `affected-tests` is put
+back before every cold leg and at the end, and the source identity of the current tree must not move during the run.
+**Recovery** (`--recovery-evidence FILE`, after a producer crash or a census that could not be completed): no timing leg is
+run. The four recorded legs of FILE (found by content: `side`/`seconds`/`exit` rows, or `before`/`after` lists with `exits`) are
+reused only while the base revision, Python, jobs, the workload and the *relevant inputs* (`relevant_inputs: {path: sha256}`,
+or the recorded source identity of the timed candidate) still match; a missing proof is `valid: null`, a mismatch `false`, and
+either leaves `target_met` `null`. Missing load averages stay empty (`loadavg_reason`). At most two new observation workloads
+are taken (before, then after), only after a workload-free **preflight** on tiny fixtures (transparent plain driver, replaced
+`PYTHONPATH`, a `sys.executable` child, skip/subtest/expected-failure/import-failure outcomes, real `par_unittest` `--worker`
+processes over two modules in both trees, a lossless surrogate checkpoint). Paths handed to children are always absolute (the output may be given relative to the project). A failed preflight with no admitted
+observation may run again; the failed receipt is kept in `preflight_history`. Each attempt is written to
+`<out>.recovery/attempts.json` before it starts, so the cap survives corrections; the first incomplete observation stops the
+second; raw ledgers stay under `<out>.recovery/ledger-<side>/`; a later invocation recomputes from them and runs nothing. Two
+activation channels are used together (an isolated `PYTHONUSERBASE` and a `python3` shim around the same absolute interpreter
+with `sitecustomize`); the observer never wraps twice. JSON is written ASCII-escaped, so a path with undecodable bytes is kept.
+
+`result.target_met` is `null` when the timings are not valid and comparable (failed or timed-out runs, a different logical
+workload, a moving source) or when the ratio is within 2/3 but the census is not conserved; `false` for a valid ratio above
+exactly 2/3; `true` only for a valid ratio at or below 2/3 with a conserved census. `python3 scripts/bench-census.py gate
+BENCH.json` re-derives that verdict from the document alone and fails if the document claims more than its own evidence shows.
+
 **Bridges.** A package core stays pure: it never names other repository packages. All knowledge
 about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to
 its partners through their public CLI/JSON and finds them by environment variable or command on `PATH`, never by a

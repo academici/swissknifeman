@@ -340,6 +340,16 @@
       "note": "umbrella-doctor/v1: output of swissknifeman doctor --json"
     },
     {
+      "path": "configs/schemas/bench-checks.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/bench-checks.py",
+        "scripts/test-bench-checks.py"
+      ],
+      "released": false,
+      "note": "bench-checks/v1: output of scripts/bench-checks.py"
+    },
+    {
       "path": "configs/repository-bootstrap-skills.json",
       "owner": "root",
       "consumers": [

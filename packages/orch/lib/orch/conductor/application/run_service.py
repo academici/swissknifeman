@@ -10,7 +10,7 @@ from typing import Optional
 from aicore.stubs import StubError
 
 from orch import bindings, settings as settings_mod
-from orch.conductor import debug_mode, options as opts, progress, stubs as stubs_mod
+from orch.conductor import debug_mode, options as opts, progress, review_batch, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
@@ -398,4 +398,41 @@ def _settle_owned(self, store: RunStore, run_id: str, ref: str, outcome: str, re
     item.setdefault("settled", []).append({"from": before, "to": outcome, "reason": reason, "at": clock.utc_now()})
     self._save()
     self.progress.emit("info", item=ref, reason_code="SETTLED", outcome=outcome, message=f"outcome {before or '-'} → {outcome} by hand: {reason}")
+    return 0
+
+
+def settle_group(self, run_id: str, number: int, followup_run: str, reason: str) -> int:
+    """Lift the ``GROUP_REVIEW_BLOCKER`` stop of group ``number`` of this run, after the follow-up run of its findings
+    finished and committed. Only this run's state changes (under its lease); the follow-up run is read, never written."""
+    store = RunStore(self.project, run_id)
+    with store.ownership("settle"):
+        return _settle_group_owned(self, store, run_id, number, followup_run, reason)
+
+
+def _settle_group_owned(self, store: RunStore, run_id: str, number: int, followup_run: str, reason: str) -> int:
+    run_doc, state = store.load()
+    kept = (state.get("group_reviews") or {}).get(str(number))
+    if not kept or not kept.get("blocking") or kept.get("resolved"):
+        raise Stop("GROUP_UNKNOWN", f"run {run_id} has no group {number} that waits for a follow-up (blocked and not settled)")
+    try:
+        other_doc, other_state = RunStore(self.project, followup_run).load()  # read only: no lease of the follow-up run
+    except Stop:
+        raise Stop("GROUP_FOLLOWUP_MISMATCH", f"{followup_run} is not a conductor run of this project") from None
+    expected = (store.directory / f"group-review-{number}.followup.json").resolve()
+    source = other_doc.get("source") or {}
+    if source.get("kind") != "file" or not source.get("path") or Path(source["path"]).resolve() != expected:
+        raise Stop("GROUP_FOLLOWUP_MISMATCH", f"{followup_run} did not run {expected}: only the follow-up input of group "
+                                              f"{number} of run {run_id} settles it")
+    outcomes = [item.get("outcome") for item in (other_state.get("items") or {}).values()]
+    _, shas = review_batch.commits_of_state(other_state)
+    if other_state.get("status") != "finished" or len(outcomes) != 1 or outcomes[0] not in ("done", "done_with_deviations") \
+            or not shas:
+        raise Stop("GROUP_FOLLOWUP_NOT_DONE", f"{followup_run} is {other_state.get('status')} (piece outcome "
+                                              f"{', '.join(str(o) for o in outcomes) or '-'}, "
+                                              f"{'committed' if shas else 'no commit'}): it must be finished, done and committed")
+    self._open(run_id, run_doc, state, store)
+    kept["resolved"] = {"followup_run": followup_run, "commit": shas[0], "reason": reason, "at": clock.utc_now()}
+    self._save()
+    self.progress.emit("info", reason_code="GROUP_REVIEW_RESOLVED",
+                       message=f"group {number}: settled by the follow-up run {followup_run} (commit {shas[0][:12]}): {reason}")
     return 0

@@ -25,7 +25,7 @@ import unittest
 from unittest import mock
 
 from orch import launch
-from orch.conductor import cli, engine, gates, options as opts, process, progress
+from orch.conductor import checks as checks_mod, cli, engine, gates, options as opts, process, progress
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import clock, roles, work_source
 from orch.conductor.policies import sandbox as sandbox_policy
@@ -50,6 +50,13 @@ def report(ref: str, status: str = "done", **extra) -> dict:
 
 def executor_ok(ref: str) -> dict:
     return {"write": {f"out/{ref}.txt": "ok\n"}, "result": report(ref)}
+
+
+def reproduced(exit_code: int = 0, guard: str = "protect"):
+    """The conductor's rerun of a rejection (``checks.run_reproduction``) as the test environment cannot make it: a project in
+    /tmp lies inside a writable root of ``ro-run.py --protect``. ``test_triage_repro`` runs the real guard."""
+    return mock.patch.object(checks_mod, "run_reproduction",
+                             return_value={"exit": exit_code, "seconds": 0, "log": "-", "guard": guard})
 
 
 GREEN = {"result": {"verdict": "GREEN", "findings": []}}
@@ -571,7 +578,8 @@ class CorrectionTests(ConductorCase):
                                                             "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                              "observed": "ok"}}]}}
         self.script({"executor": [executor_ok("W1")], "reviewer": [FINDING], "triager": [triage]})
-        code, _, err = self.run_items("W1")
+        with reproduced(0):  # the conductor sees the exit the triager reported
+            code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (1, 1, 1))
         verdict = json.loads((self.project / "plans/T/artifacts/W1/review-verdict.json").read_text())

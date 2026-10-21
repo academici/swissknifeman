@@ -584,7 +584,8 @@
         "cached": 0,
         "input": 100,
         "output": 10
-       }
+       },
+       "verified": []
       },
       "role": "triager",
       "route": "claude-code/sonnet/medium",

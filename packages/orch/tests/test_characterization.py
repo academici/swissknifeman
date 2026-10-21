@@ -398,6 +398,9 @@ COVERAGE = {
     "OPTIONS_INVALID": f"test:{T}", "POLICY_UNKNOWN": "test:test_policies.py",
     "OPTIONS_UNTRUSTED": f"test:{T}", "OPTIONS_UNSAFE_PATH": f"test:{T}", "STATE_CORRUPT": "test:test_durable_state.py",
     "STUBS_INVALID": "test:test_conductor_stubs.py",
+    "GROUP_REVIEW_BLOCKER": "test:test_conductor_review_plan.py", "GROUP_REVIEW_FAILED": "test:test_conductor_review_plan.py",
+    "GROUP_UNKNOWN": "test:test_conductor_review_plan.py", "GROUP_FOLLOWUP_MISMATCH": "test:test_conductor_review_plan.py",
+    "GROUP_FOLLOWUP_NOT_DONE": "test:test_conductor_review_plan.py",
     "TOKEN_BUDGET": "test:test_budget_hard.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
     # Beacons
@@ -412,6 +415,9 @@ COVERAGE = {
     "SESSION_ROUTE_CHANGED": "test:test_polish.py", "DEPENDENCY_BLOCKED": "test:test_conductor_session.py",
     "ROLE_LINGERED": f"test:{C}", "ISOLATION_PARTIAL": f"test:{T}", "CHECK_CHANGED_TREE": "test:test_conductor_checks.py",
     "STUBS_CHANGED": "test:test_conductor_stubs.py",
+    "TRIAGE_REPRO_TRIVIAL": "test:test_triage_repro.py", "TRIAGE_REPRO_MISMATCH": "test:test_triage_repro.py",
+    "TRIAGE_REPRO_UNVERIFIED": "test:test_triage_repro.py", "REVIEW_MODE_NONE_SKIPPED": "test:test_conductor_review_plan.py",
+    "GROUP_REVIEW_RESOLVED": "test:test_conductor_review_plan.py",
 }
 
 

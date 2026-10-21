@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import secrets
 import shutil
 import subprocess
 import sys
@@ -29,6 +30,7 @@ from aicore.util.io import durable_replace
 from orch import contracts
 from aicore.util.proc import run as run_with_timeout
 
+ORCH_ROOT = Path(__file__).resolve().parents[3]  # not orch.settings: that module imports this one
 RUN_KINDS = ("acceptance", "impact")
 TAIL_LINES = 40
 
@@ -678,6 +680,39 @@ def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_
             os.killpg(process.pid, 9)
         except OSError:
             pass
+
+
+REPRO_MARK = "SKM_REPRO_STARTED_"
+# Runs inside the Landlock the guard sets up, before the command: the marker proves that the guard held when it ran.
+# The command is its own argv word (``$1``), never part of the wrapper text.
+_REPRO_WRAPPER = 'printf "%s\\n" "$SKM_REPRO_MARK" >&2; exec bash -c "$1"'
+
+
+def run_reproduction(cmd: str, *, project: Path, log: Path, timeout_s: int) -> dict:
+    """Run the reproduction command of a triager's rejection read-only (``ro-run.py --protect``, I12: the command is
+    model text, so nothing it writes may reach the project). ``{exit, seconds, log, guard}``: ``guard`` is ``protect``
+    only when a line with this call's nonce marker is in the log and the run did not time out (the command ran under the
+    guard); ``timeout`` after ``timeout_s`` seconds (exit 124); ``unavailable`` otherwise (the guard refused or failed
+    before the command started: Landlock missing, ABI too old, an overlap with a writable root, a failed exec). Only a
+    ``protect`` result says what the command does."""
+    marker = REPRO_MARK + secrets.token_hex(8)
+    project = Path(project)
+    argv = ["python3", str(ORCH_ROOT / "scripts" / "ro-run.py"), "--protect", str(project), "--", "bash", "-c",
+            _REPRO_WRAPPER, "repro", cmd]
+    env = {**check_env(project), "PYTHONDONTWRITEBYTECODE": "1", "SKM_REPRO_MARK": marker}
+    log = Path(log)
+    log.parent.mkdir(parents=True, exist_ok=True)
+    begin = time.monotonic()
+    with open(log, "wb") as out:
+        code = _run_command(argv, cwd=project, out=out, timeout_s=timeout_s, warn_s=0, env=env)
+    text = log.read_text(encoding="utf-8", errors="replace")
+    if code == 124 and "[orch] check timed out after" in text:
+        guard = "timeout"
+    elif marker in text.splitlines():
+        guard = "protect"
+    else:
+        guard = "unavailable"
+    return {"exit": code, "seconds": round(time.monotonic() - begin, 1), "log": str(log), "guard": guard}
 
 
 def _kill_group(process) -> None:

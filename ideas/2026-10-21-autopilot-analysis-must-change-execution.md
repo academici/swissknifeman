@@ -111,7 +111,7 @@ Standalone и обычный checkout при этом являются разн�
 ## Доказательства и приёмка будущей доработки
 
 План расположен в
-`~/.local/share/swissknifeman/workspaces/axioma/projects/swissknifeman/plans/2026.10.20-№1-STABLE/`.
+`~/.local/share/swissknifeman/workspaces/axioma/projects/swissknifeman/plans/<plan-id>/`.
 В нём основные ссылки:
 
 - `report.md`, `knowledge/operator-report.json`: TEST-DIAGNOSTIC-OVERHEAD-001,

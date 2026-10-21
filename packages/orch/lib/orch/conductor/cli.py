@@ -393,11 +393,17 @@ def main(argv: list | None = None) -> int:
         quiet = sub.add_mutually_exclusive_group()
         quiet.add_argument("--quiet", action="store_true", help="no progress lines on stderr")
         quiet.add_argument("--json-lines", dest="json_lines", action="store_true", help="progress lines as JSON")
-    settle = verbs.add_parser("settle", help="set the outcome of a piece of a run by hand, after it was finished or "
-                                             "given up outside the conductor")
+    settle = verbs.add_parser("settle", help="set the outcome of a piece of a run by hand (--item, --outcome), after it was "
+                                             "finished or given up outside the conductor; or lift the stop of a group review "
+                                             "with Blocker findings (--group, --followup-run), after its follow-up run was "
+                                             "committed")
     settle.add_argument("--run", required=True, metavar="RUN")
-    settle.add_argument("--item", required=True, metavar="REF")
-    settle.add_argument("--outcome", required=True, choices=["done", "done_with_deviations", "blocked"])
+    settle.add_argument("--item", metavar="REF", help="the piece to settle (with --outcome)")
+    settle.add_argument("--outcome", choices=["done", "done_with_deviations", "blocked"])
+    settle.add_argument("--group", type=int, metavar="N", help="the group (number in review-strategy.json) whose "
+                                                              "GROUP_REVIEW_BLOCKER is lifted (with --followup-run)")
+    settle.add_argument("--followup-run", dest="followup_run", metavar="RUN",
+                        help="the finished, committed run of group-review-N.followup.json of this run")
     settle.add_argument("--reason", required=True, help="why, for the journal")
     release = verbs.add_parser("release", help="give a claimed piece of a run back to the work source, when the run stopped "
                                                 "before any work began (so that a later run can claim it)")
@@ -471,6 +477,12 @@ def main(argv: list | None = None) -> int:
             parser.error("one of --items or --ready is required with --plan")
         if args.commit and not args.input:
             parser.error("--commit belongs to --input: a plan source commits as its own policy says")
+    if args.verb == "settle":
+        if args.group is not None:
+            if args.item or args.outcome or not args.followup_run:
+                parser.error("--group settles a group review: it takes --followup-run, and no --item or --outcome")
+        elif args.followup_run or not (args.item and args.outcome):
+            parser.error("settle takes --item and --outcome, or --group and --followup-run")
     if args.verb == "runs" and args.limit is not None and args.limit < 1:
         parser.error("--limit must be at least 1")
     if args.verb == "prune":
@@ -582,6 +594,8 @@ def main(argv: list | None = None) -> int:
                                  fence=args.fence, extra_paths=args.allow_path, grouped=args.batch)
         if args.verb == "release":
             return conductor.release(args.run, None if args.all else args.item, args.reason)
+        if args.verb == "settle" and args.group is not None:
+            return conductor.settle_group(args.run, args.group, args.followup_run, args.reason)
         if args.verb == "settle":
             return conductor.settle(args.run, args.item, args.outcome, args.reason)
         return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit)

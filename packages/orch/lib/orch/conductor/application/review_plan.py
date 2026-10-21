@@ -4,7 +4,9 @@
 small model call, ``review.strategist: model``) (``policies/review_strategy.py``) and keeps the answer in ``state.review_strategy`` and ``review-strategy.json`` of the
 run. ``group_review_due`` runs after every piece: when the piece is the last of its group and the group is done it reads the
 commits of the group once (``review_batch``) and keeps the reply in ``group-review-<n>.md`` of the run folder; Blocker and Major
-findings are announced (``GROUP_REVIEW``) and left to the owner or the observer to correct in a commit of their own."""
+findings are announced (``GROUP_REVIEW``) with a follow-up input to correct them in a commit of their own. A Blocker stops the run
+(``GROUP_REVIEW_BLOCKER``) until ``settle --group`` accepts that follow-up; a failed review of requested pieces stops it
+(``GROUP_REVIEW_FAILED``) and is repeated once on resume."""
 from __future__ import annotations
 
 import json
@@ -22,6 +24,7 @@ from orch.conductor.policies import review_strategy as strategy
 from orch.conductor.policies.routing import CLASS_RANK
 
 PER_PIECE_OFF = ("groups", "single", "none")  # the strategy modes in which a piece is not reviewed on its own
+GROUP_ATTEMPTS = 2  # a group review that failed is repeated once (on resume) before the group stays unreviewed
 
 
 def piece_item(self, answer: dict) -> Item:
@@ -31,8 +34,9 @@ def piece_item(self, answer: dict) -> Item:
 
 
 def forced(mode: str, pieces: list, proposal: dict) -> dict:
-    """``review.strategy`` named a mode: the groups it implies (the rules' groups for ``groups`` when they are some)."""
-    refs = [piece["ref"] for piece in pieces]
+    """``review.strategy`` named a mode: the groups it implies (the rules' groups for ``groups`` when they are some). A piece
+    whose plan says ``review.mode none`` is in no group: the plan gave it no review, a strategy does not add one."""
+    refs = [piece["ref"] for piece in pieces if piece.get("review_mode") != "none"]
     if mode == "none":
         groups = []
     elif mode == "single":
@@ -40,8 +44,9 @@ def forced(mode: str, pieces: list, proposal: dict) -> dict:
     elif mode == "each":
         groups = [[ref] for ref in refs]
     else:
-        groups = proposal["groups"] if proposal["mode"] == "groups" else \
+        groups = [[ref for ref in group if ref in refs] for group in proposal["groups"]] if proposal["mode"] == "groups" else \
             [refs[i:i + strategy.MAX_GROUP] for i in range(0, len(refs), strategy.MAX_GROUP)]
+        groups = [group for group in groups if group]
     return {"mode": mode, "groups": groups, "reviewer": proposal["reviewer"], "reason": f"review.strategy: {mode}",
             "source": "option"}
 
@@ -104,6 +109,7 @@ def decide(self, answers: list) -> None:
     pieces = [strategy.facts(a["ref"], a.get("title") or a["ref"], self._brief_doc(a)) for a in answers]
     proposal = strategy.rules(pieces)
     mode = review.get("strategy", "auto")
+    skipped = [piece["ref"] for piece in pieces if piece.get("review_mode") == "none"] if mode != "auto" else []
     if mode != "auto":
         plan = forced(mode, pieces, proposal)
     elif review.get("strategist", "rules") == "rules" or strategy.unreviewed(pieces):
@@ -118,6 +124,10 @@ def decide(self, answers: list) -> None:
     effort = group_effort(self, first.options["reviewer"], plan["reviewer"]["effort"])
     self.progress.emit("info", reason_code="REVIEW_STRATEGY",
                        message=f"{plan['mode']} ({plan['source']}): {groups} at effort {effort}; {plan['reason']}")
+    if skipped:
+        self.progress.emit("info", reason_code="REVIEW_MODE_NONE_SKIPPED",
+                           message=f"review.strategy {mode} leaves out {', '.join(skipped)}: the plan gives them review.mode none, "
+                                   "so no group reads them")
 
 
 def per_piece_off(self) -> bool:
@@ -134,9 +144,56 @@ def group_review_due(self, ref: str) -> None:
         if ref != group[-1]:
             continue
         done = [self.state["items"].get(r, {}).get("outcome") in ("done", "done_with_deviations") for r in group]
-        if all(done) and str(number) not in (self.state.get("group_reviews") or {}):
-            group_review(self, number, group, plan["reviewer"]["effort"])
+        if not all(done):
+            return
+        kept = (self.state.get("group_reviews") or {}).get(str(number))
+        unread = kept is not None and failed(kept) and requested(self, group)
+        if kept is None or (unread and kept.get("attempts", 1) < GROUP_ATTEMPTS):
+            group_review(self, number, group, plan["reviewer"]["effort"])  # a failed review of requested pieces is repeated
+        elif unread:
+            raise failed_group(number, group, kept)  # past the cap no review is asked again, and a resume is no waiver
+        elif kept.get("blocking") and not kept.get("resolved"):
+            raise blocked_group(self, number, group, kept)  # a resume does not lift a Blocker: only a settled follow-up does
         return
+
+
+def failed_group(number: int, group: list, kept: dict) -> Stop:
+    """``GROUP_REVIEW_FAILED``: the group review failed and a piece of the group has ``review_mode: requested``, which no
+    other review covers. The first failure is repeated once on resume; after that the stop stays until a review reads."""
+    attempts = kept.get("attempts", 1)
+    again = "resume repeats it once" if attempts < GROUP_ATTEMPTS else \
+        f"{attempts} attempts failed: no review is asked again and a resume does not waive it"
+    why = kept.get("error") or "the reply is not in the asked format"
+    return Stop("GROUP_REVIEW_FAILED", f"group {number} ({', '.join(group)}): the review failed ({why}) and the group has "
+                                       f"pieces with a requested review that nobody read; {again}")
+
+
+def failed(kept: dict) -> bool:
+    """The kept group review is a failure (the role failed or its reply is not in the asked format), not a review. An empty
+    production diff is no failure of the review: there is nothing to repeat."""
+    return kept.get("format") == "malformed" or bool(kept.get("error") and kept.get("format") != "empty")
+
+
+def requested(self, group: list) -> bool:
+    """Whether the plan asked for a review of at least one piece of the group (``review_mode: requested``): the group review
+    is then the only review those pieces get (``PER_PIECE_OFF``)."""
+    return any((read_json(self.directory / safe(ref) / "input.json") or {}).get("review_mode") == "requested"
+               for ref in group)
+
+
+def followup_target(self, number: int) -> str:
+    return self._relative(self.directory / f"group-review-{number}.followup.json")
+
+
+def blocked_group(self, number: int, group: list, kept: dict) -> Stop:
+    """``GROUP_REVIEW_BLOCKER``: the group review found Blocker findings. The way out is a follow-up run that corrects
+    them in a commit of its own, then ``settle --group`` (the run itself never lifts the stop)."""
+    target = kept.get("followup") or followup_target(self, number)
+    return Stop("GROUP_REVIEW_BLOCKER",
+                f"group {number} ({', '.join(group)}): {kept['counts']['Blocker']} Blocker finding(s) in {kept['file']}; correct them "
+                f"with `orch conduct run --input {target} --commit` (a follow-up input written by hand at that path when none "
+                f"was built), then `orch conduct settle --run {self.run_id} --group {number} --followup-run <FOLLOWUP_RUN> "
+                "--reason <why>`, then resume")
 
 
 def reviewer_effort(selector: dict, planned: str) -> str:
@@ -189,9 +246,11 @@ def group_review(self, number: int, group: list, effort: str) -> None:
                            message=f"group {number} ({', '.join(group)}): no commit of the group to read; not reviewed")
         return
     diff = review_batch.diff_of(self.project, shas, review_batch.INCLUDE, list(review_batch.EXCLUDED))
+    attempts = ((self.state.get("group_reviews") or {}).get(str(number)) or {}).get("attempts", 0) + 1
     if not review_batch.has_hunks(diff):  # nothing to read: the model is not asked (it would answer "none" to an empty page)
         self.state.setdefault("group_reviews", {})[str(number)] = {"refs": refs, "format": "empty", "error": "EMPTY_DIFF",
-                                                                   "counts": {"Blocker": 0, "Major": 0, "Minor": 0}}
+                                                                   "counts": {"Blocker": 0, "Major": 0, "Minor": 0},
+                                                                   "attempts": attempts}
         self._save()
         self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED",
                            message=f"group {number} ({', '.join(refs)}): the production diff is empty (the commits changed only "
@@ -221,11 +280,13 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     path = self.directory / f"group-review-{number}.md"
     path.write_text(text or f"(no reply: {run.error}: {run.detail})", encoding="utf-8")
     kept = {"refs": refs, "file": self._relative(path), "counts": found, "effort": effort, "format": read["format"],
-            "seconds": round(time.monotonic() - began, 1), "error": run.error}
+            "seconds": round(time.monotonic() - began, 1), "error": run.error, "attempts": attempts}
     loud = found["Blocker"] + found["Major"]
     followup = followup_input(self, number, refs, read, self._route(item, "executor").get("effort")) if loud else None
     if followup:
         kept["followup"] = followup
+    if found["Blocker"]:
+        kept["blocking"] = True
     self.state.setdefault("group_reviews", {})[str(number)] = kept
     self._save()
     seconds = f"in {kept['seconds']} s; {kept['file']}"
@@ -239,6 +300,10 @@ def group_review(self, number: int, group: list, effort: str) -> None:
                            message=f"group {number}: {found['Blocker']} Blocker, {found['Major']} Major, {found['Minor']} Minor "
                                    f"{seconds}" + (f"; to correct them: orch conduct run --input {followup} --commit" if followup
                                                    else ""))
+    if found["Blocker"]:  # a Blocker is not announced and forgotten: the run stops until a follow-up is settled (Major is not a stop)
+        raise blocked_group(self, number, group, kept)
+    if failed(kept) and requested(self, group):  # the pieces of the group were not reviewed on their own: nobody read them
+        raise failed_group(number, group, kept)
 
 
 def piece_checks(self, refs: list) -> list:

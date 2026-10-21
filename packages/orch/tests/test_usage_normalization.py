@@ -262,7 +262,9 @@ class UsageConductorTests(ConductorCase):
         import sys
         self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES + ("report-fixer",)})
         broken = {"write": {"out/W1.txt": "ok\n"},
-                  "result": report("W1", checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "zero"}])}
+                  # a duplicate path is a form error the fixer mends without changing the meaning (a string exit 'zero'
+                  # healed to 0 is a change of a check row: REPAIR_SEMANTIC_DRIFT, P3.1)
+                  "result": report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])}
         self.script({"executor": [broken], "reviewer": [GREEN],
                      "report-fixer": [{"result": report("W1"), "tag": "stage-report", "usage": {}}]})
         code, _, err = self.run_items("W1")

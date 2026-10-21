@@ -140,6 +140,7 @@ class Conductor:
     _batch_held = run_service.batch_held
     release = run_service.release
     settle = run_service.settle
+    settle_group = run_service.settle_group
     _kill_orphaned_roles = recovery.kill_orphaned_roles
     _reconcile_interrupted = recovery.reconcile_interrupted
 

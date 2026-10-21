@@ -2,6 +2,8 @@
 the others."""
 from __future__ import annotations
 
+import re
+
 from orch.conductor import checks as checks_mod, contract, options as opts, prompts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import notes
@@ -27,7 +29,8 @@ def triage(self, item: Item, number: int, findings: dict, advice: str = "") -> d
                                  advice=advice)
         triage, meta = self._role(item, key, role, prompt, "triage-result",
                                   extra=lambda doc: contract.triage_problems(findings, doc))
-        return {"triage": triage, **meta}
+        triage, verified = verify_rejections(self, item, key, findings, triage)
+        return {"triage": triage, "verified": verified, **meta}
 
     found = self._step(item, key, run, role=role, route=self.label(route),
                        verdict=lambda result: f"confirmed {len(result['triage']['confirmed'])}, "
@@ -35,6 +38,57 @@ def triage(self, item: Item, number: int, findings: dict, advice: str = "") -> d
     self._verdict_file(item)
     self._note_rejected(item, findings, found["triage"])
     return found["triage"]
+
+
+# A command that proves nothing: it cannot fail for a defect, so it cannot show that a finding does not hold.
+TRIVIAL_REPRODUCTION = re.compile(r"^\s*(true|:|exit\s+0|echo(\s.*)?|printf(\s.*)?)\s*;?\s*$")
+CHECKED_SEVERITIES = ("Blocker", "Major")
+
+
+def verify_rejections(self, item: Item, key: str, findings: dict, triage: dict) -> tuple:
+    """``(triage, verified)``: a rejected Blocker or Major finding stands rejected only when the conductor itself reran
+    its reproduction read-only (``checks.run_reproduction``, I12) and saw the exit the triager reported. A trivial command,
+    another exit, or a rerun that could not be made (the guard is unavailable, a timeout) restores the finding as
+    confirmed (beacons ``TRIAGE_REPRO_TRIVIAL``, ``TRIAGE_REPRO_MISMATCH``, ``TRIAGE_REPRO_UNVERIFIED``): a cheap triager
+    must not remove a real defect without proof. ``verified`` is ``[{finding, outcome: kept|restored, reason}]``; confirmed
+    and Minor findings are not checked."""
+    by_id = {found.get("id"): found for found in findings["findings"]}
+    kept, restored, verified = [], [], []
+    for entry in triage["rejected"]:
+        found = by_id.get(entry["finding"], {})
+        repro = entry.get("reproduction")
+        if found.get("severity") not in CHECKED_SEVERITIES or not repro:
+            kept.append(entry)
+            continue
+        name, reported = entry["finding"], repro["exit"]
+        code, observed = "", reported
+        if TRIVIAL_REPRODUCTION.match(repro["cmd"]):
+            code, why = "TRIAGE_REPRO_TRIVIAL", f"the command {repro['cmd']!r} proves nothing"
+        else:
+            ran = checks_mod.run_reproduction(
+                repro["cmd"], project=self.project, log=item.directory / "triage" / key.split(".", 1)[1] / f"{name}.log",
+                timeout_s=item.options["limits"].get("triage_repro_timeout_s", opts.DEFAULT_LIMITS["triage_repro_timeout_s"]))
+            if ran["guard"] != "protect":
+                code, why = "TRIAGE_REPRO_UNVERIFIED", f"the rerun was not made read-only ({ran['guard']}; log {ran['log']})"
+            elif ran["exit"] != reported:
+                code, observed = "TRIAGE_REPRO_MISMATCH", ran["exit"]
+                why = f"reported exit {reported}, the conductor observed {ran['exit']}"
+        if not code:
+            kept.append(entry)
+            verified.append({"finding": name, "outcome": "kept", "reason": f"the conductor observed the reported exit {reported}"})
+            continue
+        self.progress.emit("info", item=item.ref, stage=key, reason_code=code, message=f"{name}: {why}")
+        verified.append({"finding": name, "outcome": "restored", "reason": why})
+        restored.append({"finding": name, "reproduction": {"cmd": repro["cmd"], "exit": observed,
+                                                           "observed": f"the conductor reran the rejection: {why}"},
+                         "fix": f"{found.get('failure_scenario') or entry['reason']}; fix as the reviewer described"})
+    if not restored:
+        return triage, verified
+    triage = {"confirmed": [*triage["confirmed"], *restored], "rejected": kept}
+    issues = contract.problems(triage, "triage-result") + contract.triage_problems(findings, triage)
+    if issues:
+        raise ValueError(f"the triage after the reproduction check is outside its contract: {'; '.join(issues[:3])}")
+    return triage, verified
 
 
 def split_confirmed(item: Item, findings: dict, triage: dict) -> tuple:

@@ -33,7 +33,7 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "run_warn_s": 7200, "run_timeout_s": 0, "review_rounds_batch": 0, "corrections_batch": 0,
                   "findings_batch": 0, "question_warn_s": 1800, "skill_tokens_max": 5000,
                   "prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000,
-                  "disk_min_gb": 5}
+                  "disk_min_gb": 5, "triage_repro_timeout_s": 600}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
                   "strategy": "auto", "strategist": "rules"}

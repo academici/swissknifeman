@@ -9,7 +9,7 @@ import unittest
 
 from orch import settings
 from orch.conductor import contract, engine, prompts
-from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
+from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report, reproduced
 from tests.test_conductor_questions import ASK, asking
 
 ENABLED = '[orch.conductor]\nquestions = "advisor"\n\n[orch.advisor]\nenabled = true\n'
@@ -234,6 +234,12 @@ class RedChecksTriggerTests(AdvisorCase):
 
 class RejectedFindingTriggerTests(AdvisorCase):
     REPRO = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+
+    def setUp(self):
+        super().setUp()
+        patcher = reproduced(0)  # the rerun of a rejection sees the exit the triager reported
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def rejecting(self) -> dict:
         return {"result": {"confirmed": [], "rejected": [

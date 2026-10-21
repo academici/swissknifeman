@@ -415,6 +415,11 @@
           "type": "integer",
           "minimum": 0
         },
+        "triage_repro_timeout_s": {
+          "description": "Ceiling in seconds on the rerun of a reproduction by which the triager rejected a Blocker or Major finding (the conductor runs the command read-only under ro-run.py --protect); a rerun that hits it cannot confirm the rejection, so the finding is restored as confirmed (TRIAGE_REPRO_UNVERIFIED); 0 sets no ceiling; default 600.",
+          "type": "integer",
+          "minimum": 0
+        },
         "ceiling_factor": {
           "description": "How far past their target review_rounds, corrections and check_fixes may go while every extra round makes progress: the ceiling is this factor times the target (at least target + 1); 1 to 5, default 2.",
           "type": "integer",

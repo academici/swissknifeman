@@ -621,6 +621,11 @@ schema-valid historical data and is not rewritten by this reconciliation.
 
 ### Module checks
 
+`packages/aicore/scripts/test.sh` and `packages/skiller/scripts/test.sh` accept no arguments
+or a single `-v`. Unsupported arguments exit 2 before Python starts. For a specific test,
+use an explicit unittest module/file selector with the module's isolated environment;
+these two shell entry points do not implement `-p`.
+
 Every `packages/<id>/` folder is a module described by its `unit.json`
 ([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
 

@@ -4,6 +4,10 @@
 # Tests run against a throwaway HOME and never touch the real one. This runner is also
 # the standalone entry point of the module (no monorepo files are needed).
 set -euo pipefail
+if [[ $# -gt 1 || ( $# -eq 1 && "${1:-}" != "-v" ) ]]; then
+  echo "ERROR: unsupported test runner arguments; usage: scripts/test.sh [-v]" >&2
+  exit 2
+fi
 # Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
 # SKM_TEST_JOBS=1 gives the old sequential run.
 _unittest() {

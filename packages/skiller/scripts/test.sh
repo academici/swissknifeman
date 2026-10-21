@@ -4,6 +4,10 @@
 # Tests use the synthetic tmpdir registry from tests/fixtures.py and never alter
 # the real registry. This runner is also called by validate.sh.
 set -euo pipefail
+if [[ $# -gt 1 || ( $# -eq 1 && "${1:-}" != "-v" ) ]]; then
+  echo "ERROR: unsupported test runner arguments; usage: scripts/test.sh [-v]" >&2
+  exit 2
+fi
 # Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
 # SKM_TEST_JOBS=1 gives the old sequential run.
 _unittest() {

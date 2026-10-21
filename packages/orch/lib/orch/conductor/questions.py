@@ -95,11 +95,13 @@ def assumptions(store: dict) -> list:
             for entry in store.values() if entry["status"] == "assumed"]
 
 
-def resolve_default(entry: dict, now: str) -> bool:
-    """Answer ``entry`` with its ``default`` by policy, once; ``False`` when it has none or was answered so before."""
-    if "default" not in entry or entry.get("auto_answered"):
+def resolve_default(entry: dict, now: str, authority: Optional[dict] = None) -> bool:
+    """Answer a non-owner-only question with its default once, recording the caller's authority snapshot."""
+    if entry.get("kind") in ("approval", "credential") or "default" not in entry or entry.get("auto_answered"):
         return False
-    entry["resolution"] = {"value": entry["default"], "by": "policy", "at": now}
+    entry["resolution"] = {"value": entry["default"], "by": "policy", "at": now,
+                           "authority": authority if authority is not None else {
+                               "mode": "defaults", "gate": [], "code_categories": [], "confidence": None}}
     entry["status"] = "applied"
     entry["auto_answered"] = True
     return True

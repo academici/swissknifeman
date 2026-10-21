@@ -419,6 +419,8 @@ The informational limits report long or costly work through `info` lines with a 
 | `STUBS_CHANGED` | on `resume`, the stub files say something else than the snapshot of the run | the run keeps its snapshot; a new run reads the new text |
 | `CHECK_CHANGED_TREE` | the checks of a round changed files of the project (their evidence and logs aside); the first change only: the checks run once more on the changed tree (a second change is the stop `CHECKS_MUTATED`) | the paths; the checks run again, and the evidence of that run proves the candidate |
 | `RUNTIME_ARTIFACT_RELOCATED` | an executor round left new untracked files under `scope.runtime_paths` (logs, evidence); they were moved to `<artifacts of the piece>/stray/` and are not committed | the paths and where each went (the report gets a `note` issue) |
+| `QUESTION_OWNER_ONLY` | a blocking question has kind `approval` or `credential`, in any questions mode | question id and kind; it stays open for the owner even with a default or under `deny` |
+| `ADVICE_HELD` | advice needs the owner, meets an effective gate or falls below the confidence threshold; also a recommendation outside a question's options | source `advisor` (needs_owner, model category or invalid option), `code` (security/public-api/scope-expansion with paths), or `confidence` (actual and minimum); all applicable gate reasons are named |
 | `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag, or `instructions.sandbox` is `prefer` and the provider sandbox cannot start (once per run) | roles are isolated by the environment only; the commands of Claude Code roles run under the filesystem guard only |
 
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
@@ -566,10 +568,14 @@ nothing is ever answered on a timeout.
   `executor.<n>-q<k>`; a question without one, or one the executor asks again, is queued;
   `advisor`: the advisor role reads the question ([The advisor](#the-advisor-p104)); advice that needs no owner answers it
   with `resolution.by = advisor`, any other advice is queued with the question.
+- `approval` and `credential` questions always stay open for the owner in all four modes
+  (`QUESTION_OWNER_ONLY`); neither a default nor advisor advice answers them, and `deny` does not close them.
 - The question is saved in `state.questions[<item>]` and in `<run>/<item>/questions.json` with its binding
   `{run, item, step, input_digest}` (the digest of the input it was asked on), its `status` (`open`, `answered`, `applied`,
   `assumed`, `denied`, `stale`) and, once answered, `resolution {value, by, at}`. Beacons: `QUESTION_QUEUED`,
   `QUESTION_DENIED`, `QUESTION_DEFAULT`, `QUESTION_ANSWERED`, `QUESTION_OPEN` (retry without an answer), `QUESTION_STALE`.
+  Every automatic resolution adds `authority {mode, gate, code_categories, confidence}`: mode `defaults` or `advisor`,
+  the effective gate and code categories at the decision, and the advisor's confidence (`null` for defaults).
 - `orch conduct answer` writes only the resolution into `questions.json`, under `questions.lock` of the item (both in
   the item folder of the run); `QUESTION_UNKNOWN` (`<item> has no questions in run <id>`, refused before anything is
   written, so a mistyped `--item` leaves no folder), `QUESTION_NOT_OPEN`, `ANSWER_INVALID` (a decision takes one of its
@@ -603,8 +609,18 @@ closed `advice` (`schemas/conductor/v1/advice.schema.json`): `problem_ref`, `opt
 that is not one of them is held. The advice is kept as `advice-<n>.json` in the artifacts of the piece, and its agent run in
 `agents/<id>/` has `causation` = the `problem_ref`.
 
-The human gate: advice with `needs_owner: true`, or with a `category` of `[orch.advisor] human_gate` (default `security`,
-`destructive`, `public-api`, `scope-expansion`), is never applied by the conductor. It is handled as `queue`: the piece is
+The human gate: `[orch.advisor] human_gate` (default `security`, `destructive`, `public-api`, `scope-expansion`)
+can be set only by defaults, the machine or the caller (invocation and flags). A project or environment attempt is
+`CONFIG_LAYER_FORBIDDEN`; projects can add categories through `human_gate_extra`. Extra gates accumulate from every
+layer's history: neither `[]` nor `_unset` removes a lower layer's category. `min_confidence` defaults to `medium`;
+the strictest value across all layers wins (`high` > `medium` > `low`), including defaults and values before `_unset`.
+
+Advice is held if `needs_owner: true`, its model category belongs to the effective gate, a category computed by code
+belongs to the gate, or its confidence is below the effective minimum. Code examines changed paths **and** the write set
+using `conductor.risk.patterns`: `security` for `security` patterns, `public-api` for `public_cli` or `schema` patterns,
+and `scope-expansion` for changes outside the write set. Risk weights do not disable these gates. A model's `other`
+category cannot hide a security path. `ADVICE_HELD` names the source (`advisor`, `code` with matching paths, or
+`confidence` with actual and required levels). It is handled as `queue`: the piece is
 `blocked` with `QUESTION: <id> <text>` and the advice (file, recommendation, confidence, why the owner decides); the
 question is saved with the advice (`advice` in `questions.json`). A held question of the executor is that question; for red
 checks and a rejected finding it is a new question `orch-advice-<n>` (kind `decision`, the options of the advice). `orch conduct
@@ -1096,7 +1112,8 @@ for.
   and everything else the user reaches, and the sandbox probe is not needed for them), `confined` with `--sandbox
   workspace-write`. The catalog states it as `{write_sandbox}`; read-only roles keep `read-only` in both modes. Claude Code and
   Grok roles are the same in both modes (their write guard `ro-run.py --rw {cwd}` confines writes to the project and does not
-  keep them from Docker). A project file can only tighten the setting.
+  keep them from Docker). Project and environment layers can only tighten the setting: a project `_unset` or an
+  environment `open` cannot remove earlier confinement. The machine, invocation and flags may reopen it explicitly.
 - A Codex route with `--sandbox read-only|workspace-write` is unavailable while the sandbox cannot start: `--dry-run` shows
   `available: false` and `SANDBOX_UNAVAILABLE: <reason>` in `unavailable`, a run stops with `SANDBOX_UNAVAILABLE`. Its argv is
   not rewritten.

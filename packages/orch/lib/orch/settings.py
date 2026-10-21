@@ -112,12 +112,20 @@ def _launch(resolved: ResolvedConfig) -> dict:
 
 
 def _access(resolved: ResolvedConfig) -> str:
-    """``launch.access``. A project file may tighten it but never loosen: when the project layer says ``open`` over a lower layer
-    that did not, the lower layer's value stays."""
+    """``launch.access``: project and environment settings can only tighten the trusted access floor."""
     found = resolved.explain("launch.access")[0]
-    if found.layer == "project" and found.value == "open" and found.overridden:
-        return found.overridden[0].value
-    return found.value
+    history = list(reversed(found.overridden))
+    if found.layer == "defaults":
+        # After _unset the default is reported as the winner, while the reset stays in overridden.
+        history.insert(0, found)
+    else:
+        history.append(found)
+    access = found.default
+    for setting in history:
+        value = found.default if setting.source == "_unset" else setting.value
+        if setting.layer in ("defaults", "machine", "invocation", "flags") or value == "confined":
+            access = value
+    return access
 
 
 def _research(resolved: ResolvedConfig) -> dict:
@@ -127,9 +135,17 @@ def _research(resolved: ResolvedConfig) -> dict:
 
 
 def _advisor(resolved: ResolvedConfig) -> dict:
-    """``[orch.advisor]`` as plain data."""
+    """Effective advisor authority: extra gates accumulate and confidence can only rise across layers."""
+    def values(key: str) -> list:
+        # explain() includes overwritten settings and _unset records, even after a reset to the default.
+        entry = resolved.explain(key)[0]
+        return [entry.value] + [setting.value for setting in entry.overridden if setting.value is not None]
+
+    extra = {category for value in values("advisor.human_gate_extra") for category in value}
+    ranks = {"low": 0, "medium": 1, "high": 2}
     return {"enabled": bool(resolved.get("advisor.enabled")), "max_rounds": int(resolved.get("advisor.max_rounds")),
-            "human_gate": list(resolved.get("advisor.human_gate") or [])}
+            "human_gate": sorted(set(resolved.get("advisor.human_gate") or []) | extra),
+            "min_confidence": max(values("advisor.min_confidence"), key=ranks.__getitem__)}
 
 
 def load(*, project: str | Path | None = None, config_file: str | Path | None = None,

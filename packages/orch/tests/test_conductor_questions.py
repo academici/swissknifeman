@@ -224,6 +224,48 @@ class QuestionTests(ConductorCase):
         self.assertIn("executor.1-q1", stages)
         entry = self.state(err)["questions"]["W1"]["Q1"]
         self.assertEqual((entry["status"], entry["resolution"]["by"]), ("applied", "policy"))
+        self.assertEqual(entry["resolution"]["authority"], {
+            "mode": "defaults", "gate": ["destructive", "public-api", "scope-expansion", "security"],
+            "code_categories": [], "confidence": None})
+        saved = questions.read(self.run_dir(err) / "W1")["questions"][0]
+        self.assertEqual(saved["resolution"]["authority"], entry["resolution"]["authority"])
+
+    def test_approval_and_credential_are_owner_only_in_every_question_mode(self):
+        for mode in ("queue", "deny", "defaults", "advisor"):
+            for kind in ("approval", "credential"):
+                with self.subTest(mode=mode, kind=kind):
+                    # Each run has its own item: no reopen or reused policy answer can hide a resolution.
+                    self.set_items({"W1": {}})
+                    self.write_config(extra=f'[orch.conductor]\nquestions = "{mode}"\n')
+                    self.script({"executor": [asking(dict(ASK, kind=kind, default="keep"))]})
+                    code, _, err = self.run_items("W1")
+                    self.assertEqual(code, 1, err)
+                    entry = self.state(err)["questions"]["W1"]["Q1"]
+                    self.assertEqual(entry["status"], "open")
+                    self.assertNotIn("resolution", entry)
+                    self.assertTrue(any(line.get("reason_code") == "QUESTION_OWNER_ONLY" for line in self.lines(err)), err)
+                    self.assertEqual(self.calls("advisor"), 0)
+                    # The artifact file is evidence committed by a later successful run; keep this fixture clean.
+                    self.git("add", "-A")
+                    self.git("commit", "-q", "--allow-empty", "-m", "question fixture")
+
+    def test_resolve_default_never_answers_owner_only_kinds(self):
+        for kind in ("approval", "credential"):
+            entry = dict(ASK, kind=kind, default="keep", status="open")
+            before = copy.deepcopy(entry)
+            self.assertFalse(questions.resolve_default(entry, "t"))
+            self.assertEqual(entry, before)
+
+    def test_defaults_record_the_effective_gate_and_code_categories(self):
+        self.write_config(extra='[orch.conductor]\nquestions = "defaults"\n'
+                                '[orch.advisor]\nhuman_gate_extra = ["other"]\n')
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "src/auth/check.py"]}})
+        self.script({"executor": [asking(dict(ASK, default="keep")), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["resolution"]["authority"], {
+            "mode": "defaults", "gate": ["destructive", "other", "public-api", "scope-expansion", "security"],
+            "code_categories": ["security"], "confidence": None})
 
     def test_defaults_answers_a_question_only_once(self):
         self.write_config(extra='[orch.conductor]\nquestions = "defaults"')

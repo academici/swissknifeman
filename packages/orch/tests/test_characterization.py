@@ -422,6 +422,8 @@ COVERAGE = {
     "TRIAGE_REPRO_UNVERIFIED": "test:test_triage_repro.py", "REVIEW_MODE_NONE_SKIPPED": "test:test_conductor_review_plan.py",
     "GROUP_REVIEW_RESOLVED": "test:test_conductor_review_plan.py",
     "RUNTIME_ARTIFACT_RELOCATED": "test:test_write_fence.py",
+    "QUESTION_OWNER_ONLY": "test:test_conductor_questions.py",
+    "ADVICE_HELD": "test:test_conductor_advisor.py",
 }
 
 

@@ -45,11 +45,14 @@ format as the other layers: `schema_version = 1` and an `[orch]` table.
 | `conductor.limits.run_tokens_hard_max` | integer ≥ 0 | 0 (unlimited) | defaults, machine, project, invocation | hard admission limit on fresh tokens of the whole run; environment and work-source options cannot set it |
 | `conductor.argv.<role>` | array of strings | empty | defaults, machine, invocation, flags | command line of a role instead of the launch catalog entry |
 | `launch.catalog` | absolute path or `~` | empty (the shipped catalog) | defaults, machine, invocation, flags | a complete launch catalog file used instead of `configs/launch-catalog.json`; a relative path is refused (`LAUNCH_CATALOG_RELATIVE`) |
-| `launch.access` | `open`, `confined` | `open` | all (a project file can only tighten) | how far the roles that write (executor, bounded-implementer, registrar) reach on a provider CLI with a sandbox of its own (Codex): `open` is its widest mode (`danger-full-access`, so the role can use Docker and whatever the user can), `confined` keeps it in the workspace (`workspace-write`); roles that must not write stay read-only in both. A project value `open` over a machine value `confined` is ignored |
+| `launch.access` | `open`, `confined` | `open` | all (project and environment can only tighten) | how far the roles that write (executor, bounded-implementer, registrar) reach on a provider CLI with a sandbox of its own (Codex): `open` is its widest mode (`danger-full-access`, so the role can use Docker and whatever the user can), `confined` keeps it in the workspace (`workspace-write`); roles that must not write stay read-only in both. History preserves the trusted floor across project `_unset` and project/environment `open`; machine, invocation and flags may explicitly reopen access |
 | `launch.entries.<role>_<provider>.*` | `model_class`, `effort`, `timeout_s`, `transport`, `model_set`, `argv` | empty | `model_class`, `effort`, `timeout_s`: all; `transport`, `model_set`, `argv`: defaults, machine, invocation, flags | the fields of one catalog entry that differ (`executor_codex`, `bounded-implementer_claude-code`); the rest stays as the catalog has it, and the result must still be a valid catalog (`LAUNCH_INVALID`); an entry the catalog lacks is `LAUNCH_UNKNOWN`. `orch.py launch show ROLE PROVIDER` and `route explain` name the key that changed a field |
 | `research.policy`, `research.sources.<id>.*` | see [research](research.md) | `conditional`, no sources | `argv`: defaults, machine, invocation, flags; the rest all | research sources: `command`, `filesystem`, `mcp-stdio` |
 | `stubs.enabled`, `stubs.layers` | boolean, array of `machine`, `project` | `true`, both | defaults, machine, invocation, flags | additional instructions of the roles (`orch stubs publish|list|show`); a machine that runs repositories it does not trust sets `layers = ["machine"]` (see [conductor](conductor.md#stubs-additional-instructions-of-the-roles)) |
-| `advisor.enabled`, `advisor.max_rounds`, `advisor.human_gate` | boolean, integer ≥ 0, array of `security`, `destructive`, `public-api`, `scope-expansion`, `other` | `false`, `2`, the first four | all | the advisor role: asked on a blocking question (`conductor.questions = advisor`), red checks past `check_fixes` and a rejected Major finding, at most `max_rounds` times per piece; advice that needs the owner or has a gated category is queued, never applied (see [conductor](conductor.md#the-advisor-p104)) |
+| `advisor.enabled`, `advisor.max_rounds` | boolean, integer ≥ 0 | `false`, `2` | all | the advisor role: asked on a blocking question (`conductor.questions = advisor`), red checks past `check_fixes` and a rejected Major finding, at most `max_rounds` times per piece (see [conductor](conductor.md#the-advisor-p104)) |
+| `advisor.human_gate` | array of `security`, `destructive`, `public-api`, `scope-expansion`, `other` | the first four | defaults, machine, invocation, flags | base categories held for the owner; a project or environment attempt is `CONFIG_LAYER_FORBIDDEN` |
+| `advisor.human_gate_extra` | array of the same categories | empty | all, additive across history | additional categories held for the owner; effective gate = base gate ∪ every layer's extra categories, even after `[]` or `_unset` |
+| `advisor.min_confidence` | `high`, `medium`, `low` | `medium` | all, strictest across history | advice below the minimum is held; `high` > `medium` > `low`, and a lower value or `_unset` cannot weaken any earlier threshold (including the default) |
 
 `profiles.dirs` makes orch read policy files from the listed paths, so a project file, which lives in a repository
 that somebody else may control, cannot set it (`CONFIG_LAYER_FORBIDDEN`); neither can the environment. A leading `~`
@@ -57,6 +60,13 @@ is expanded; a relative entry is refused (`PROFILES_DIR_RELATIVE`), because the 
 cannot be told once a higher layer appends to the array. `conductor.argv` chooses the commands the conductor runs,
 so a project file cannot set it either ([conductor](conductor.md#configuration)); the same holds for
 `research.sources.<id>.argv` ([research](research.md)).
+
+Advisor gates use both the category proposed by the model and categories computed from changed paths and the write set
+using `conductor.risk.patterns` (`security`, `public_cli`/`schema` → `public-api`), plus changes outside the write set
+(`scope-expansion`). `needs_owner`, any gated category, or confidence below the effective threshold holds advice for
+the owner (`ADVICE_HELD` names the source). `approval` and `credential` questions stay open for the owner under every
+`conductor.questions` mode, including `defaults` and `deny` (`QUESTION_OWNER_ONLY`). Automatic question resolutions
+record `authority {mode, gate, code_categories, confidence}`; defaults use `confidence: null`.
 
 Hard token limits count fresh input plus output, excluding cache reads. With positive `tokens_max` and
 `tokens_hard_max`, the informational target must fit inside the hard limit (`OPTIONS_INVALID`). A run's `--options`

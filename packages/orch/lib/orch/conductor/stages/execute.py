@@ -15,6 +15,7 @@ from orch.conductor.domain.report import evidence_paths, report_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.files import REPORTS, safe, write_json
+from orch.conductor.stages import advice
 
 
 def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
@@ -347,11 +348,12 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         mode = "queue"
     if waiting and mode == "deny":
         for entry in waiting:
-            entry["status"] = "denied"
+            if entry["kind"] not in ("approval", "credential"):
+                entry["status"] = "denied"
     elif waiting and mode == "defaults":
         now = clock.utc_now()
         for entry in list(waiting):
-            if questions_mod.resolve_default(entry, now):
+            if questions_mod.resolve_default(entry, now, advice.authority(self, item, "defaults")):
                 waiting.remove(entry)
                 self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DEFAULT",
                                    message=f"question {entry['id']} answered by policy with its default")
@@ -359,6 +361,10 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         for entry in list(waiting):
             if self._advise_question(item, key, entry, report):
                 waiting.remove(entry)
+    for entry in waiting:
+        if entry["kind"] in ("approval", "credential"):
+            self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_OWNER_ONLY",
+                               message=f"question {entry['id']} ({entry['kind']}) can only be answered by the owner")
     self._save_questions(item)
     if not waiting:
         return report, any(entry["status"] == "applied" and entry["binding"]["step"] == key
@@ -366,7 +372,7 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
     said = "; ".join(f"{entry['id']} {entry['text']}{self._advice_note(entry)}" for entry in waiting)
     self._beacon_event("orch.run.waiting", item, {"reason_code": "QUESTION", "step": key,
                                                   "question_ids": [entry["id"] for entry in waiting]})
-    if mode == "deny":
+    if mode == "deny" and all(entry["status"] == "denied" for entry in waiting):
         self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
         return self._blocked(report, "QUESTION_DENIED", said), False
     self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_QUEUED",

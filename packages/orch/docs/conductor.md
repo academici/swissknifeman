@@ -359,6 +359,7 @@ The conductor stops only on:
 | `TOKEN_BUDGET_UNMETERED` | a model attempt reported no usage while `tokens_hard_max` or `run_tokens_hard_max` is in force and `limits.unmetered` is `stop` (the default): unknown usage is not zero, so no further call starts; set `limits.unmetered` to `charge` in the `--options` file of the run (or the configuration) and resume: each attempt without usage then costs `limits.unmetered_charge_tokens` |
 | `BRIEF_TOO_LARGE` | the execution-input of the piece (the embedded context pack and the files it reads included) is larger than `budgets.brief_max_bytes` of the run policy (the `full` pack: 1048576); checked once the options are resolved, before the first role, and again when the input is rebuilt; split the item or raise the budget in the policy |
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
+| `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with an answer awaiting consumption and no piece starts in this pass; exit 1; use `orch conduct resume --run RUN --retry ITEM` |
 | `OUTSIDE_MODULE` | the executor (an escalation of the blocked piece, `ITEM_BLOCKED`) or the checks (the run stops) changed files of another module than the write set names, `CHANGELOG.md`, `docs/**` and the granted `extra_paths` aside; add the paths to the item's `task_files`, or set them aside and retry; `scope.outside_module: deviation` (invocation only) reports them as a deviation instead |
 | `OUTSIDE_RUNTIME_ARTIFACT` | the executor (blocked piece) or the checks (the run stops) changed a **tracked** file under `scope.runtime_paths` (`.swissknifeman/orch-artifacts/**`, `tests/evidence/**`, …): runtime artifacts are history, not product; restore the file from git |
 | `CHECKS_MUTATED` | the checks changed the tree again when they ran a second time on the tree their first run had changed: they are not idempotent (resumable); make the check change nothing on a tree it has already changed |
@@ -395,6 +396,7 @@ The informational limits report long or costly work through `info` lines with a 
 | Code | When | What it says |
 | --- | --- | --- |
 | `RUN_ORPHANED` | status/runs find a journal still running and a free lease for a run marked `lease: true` | the conductor no longer owns the run; resume stops unfinished role groups before continuing |
+| `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with a saved answer (open with a resolution, or legacy answered); other work may still proceed | `answers of ITEM wait: orch conduct resume --run RUN --retry ITEM`; also a Stop when no piece starts |
 | `STAGE_SLOW` | every `limits.stage_warn_s` (default 2700) of one role run | how long it runs, its last command and the processes of its session (a test run, a build) |
 | `STAGE_IDLE` | every `limits.stage_idle_warn_s` (default 600) without output | the same; `no child process` means the model call itself is silent |
 | `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check; the time a check spends stopped (`SIGSTOP`, state `T`) is not counted, for the beacon and for `check_timeout_s` | the check id and its processes, each with its age, `ps` state and CPU share (`S` at 0 % is asleep, for example on a stdin nobody writes; `R` or a share of the CPU is at work) |
@@ -575,7 +577,8 @@ nothing is ever answered on a timeout.
 - `approval` and `credential` questions always stay open for the owner in all four modes
   (`QUESTION_OWNER_ONLY`); neither a default nor advisor advice answers them, and `deny` does not close them.
 - The question is saved in `state.questions[<item>]` and in `<run>/<item>/questions.json` with its binding
-  `{run, item, step, input_digest}` (the digest of the input it was asked on), its `status` (`open`, `answered`, `applied`,
+  `{run, item, step, input_digest, input_part_digest}` (the full input digest and `contracts.required_digest` of its
+  substantive part), its `status` (`open`, `answered`, `applied`,
   `assumed`, `denied`, `stale`) and, once answered, `resolution {value, by, at}`. Beacons: `QUESTION_QUEUED`,
   `QUESTION_DENIED`, `QUESTION_DEFAULT`, `QUESTION_ANSWERED`, `QUESTION_OPEN` (retry without an answer), `QUESTION_STALE`.
   Every automatic resolution adds `authority {mode, gate, code_categories, confidence}`: mode `defaults` or `advisor`,
@@ -586,8 +589,11 @@ nothing is ever answered on a timeout.
   options, a clarification may take `--text`); it never touches the run.
   `orch conduct questions [--run R] [--json]` lists the open ones with their age; one older than `limits.question_warn_s`
   (default 1800, 0 off) is `OVERDUE`, in the observer report too.
-- `resume --run R --retry ITEM` merges the answers into the state. An answer is applied only while the input is the one the
-  question was asked on; otherwise it is `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
+- `resume --run R --retry ITEM` merges the answers into the state. New bindings compare `input_part_digest` over
+  `goal`, `scope`, `acceptance`, `constraints`, `decisions`, `route`, `result_contract` and `escalation`. Changes to
+  provenance, lessons or other context, including the source's blocked registration, preserve the answer.
+  Legacy records without that field still compare the full `input_digest`. A changed substantive part produces
+  `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
   `revision + 1` and the executor, which is not told that answer, asks it again. The executor of every later round gets the
   section `# Answers` (question, answer, who answered).
 
@@ -622,7 +628,12 @@ the strictest value across all layers wins (`high` > `medium` > `low`), includin
 Advice is held if `needs_owner: true`, its model category belongs to the effective gate, a category computed by code
 belongs to the gate, or its confidence is below the effective minimum. Code examines changed paths **and** the write set
 using `conductor.risk.patterns`: `security` for `security` patterns, `public-api` for `public_cli` or `schema` patterns,
-and `scope-expansion` for changes outside the write set. Risk weights do not disable these gates. A model's `other`
+and `scope-expansion` for changes outside the write set. For code categories, builtin patterns and patterns established
+by trusted machine, invocation or flag history form a retained floor; effective project/environment patterns may add
+matches. Empty arrays, replacement arrays and leaf/parent `_unset` cannot erase that floor. Heuristic risk scoring
+still uses the effective configurable patterns, weights and critical features; the retained floor applies only to
+code categories and their owner hold. Existing human-gate, confidence, needs-owner and scope-expansion gates still apply.
+Risk weights do not disable these gates. A model's `other`
 category cannot hide a security path. `ADVICE_HELD` names the source (`advisor`, `code` with matching paths, or
 `confidence` with actual and required levels). It is handled as `queue`: the piece is
 `blocked` with `QUESTION: <id> <text>` and the advice (file, recommendation, confidence, why the owner decides); the
@@ -636,6 +647,11 @@ only once. A failed advisor (`ADVISOR_FAILED`), a spent `max_rounds` (`ADVISOR_L
 no panel of several models.
 
 ### Resume
+
+Without `--retry`, a blocked piece's saved answer stays pending. The conductor emits
+`QUESTION_ANSWERED_NOT_RETRIED` with the retry command; if no piece starts during that pass it stops with the same
+code and exit 1. If other work starts, the message is only a beacon. `orch conduct answer` leaves the question
+`open` with a `resolution` on disk; resume with retry merges and consumes it (`answered` records are also recognized).
 
 `resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`; a piece held on advice for the owner, whose question `advice-<n>` is answered, needs no executor round that reported `blocked`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
 

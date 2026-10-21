@@ -36,14 +36,25 @@ def demo_plan(tmpdir) -> Path:
     return plan_dir
 
 
-def plan_py(tmpdir, *args: str) -> subprocess.CompletedProcess:
+def plan_py(tmpdir, *args: str, env=None) -> subprocess.CompletedProcess:
     """``plan.py <args>`` bound to ``tmpdir``, never a project marker above the sandbox."""
     # Planner's standalone plan-store discovery uses a plans folder, independently of aicore's project lookup.
     # Do not add a legacy folder to fixtures that deliberately put their plans in a workspace.
     if not (Path(tmpdir) / ".swissknifeman/project.json").exists():
         (Path(tmpdir) / "plans").mkdir(exist_ok=True)
     return subprocess.run([sys.executable, str(PLAN_PY), *args], cwd=tmpdir, capture_output=True, text=True,
-                          encoding="utf-8", check=False, env=dict(os.environ, SKM_PROJECT_ROOT=str(tmpdir)))
+                          encoding="utf-8", check=False,
+                          env=dict(os.environ if env is None else env, SKM_PROJECT_ROOT=str(tmpdir)))
+
+
+def conductor_cli(project, *args: str, env=None) -> subprocess.CompletedProcess:
+    """Run the partner's conductor as a process; bridge tests never import its implementation."""
+    orch = partners.find_orch_root()
+    if orch is None:
+        raise RuntimeError("orch not found (set SKM_ORCH_ROOT); question-cycle coverage cannot be skipped")
+    return subprocess.run([sys.executable, str(orch / "scripts/conduct.py"), "--project", str(project), *args],
+                          cwd=project, capture_output=True, text=True, encoding="utf-8", check=False,
+                          env=dict(os.environ if env is None else env, SKM_PROJECT_ROOT=str(project)))
 
 
 def brief_of_demo_plan(tmpdir, item="P1.2", unit=None) -> dict:

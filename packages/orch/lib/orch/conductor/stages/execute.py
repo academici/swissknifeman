@@ -9,6 +9,7 @@ from typing import Optional
 
 from aicore.util.digest import sha256_hex
 
+from orch.contracts import required_digest
 from orch.conductor import checks as checks_mod, options as opts, prompts, questions as questions_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import evidence_paths, report_problems
@@ -316,6 +317,11 @@ def autofix_issues(self, item: Item, report: dict) -> list:
     return carried
 
 
+def answer_digest(input_doc: dict) -> str:
+    """Bind an answer to the substantive input, independently of source lifecycle and context rendering."""
+    return required_digest(input_doc)
+
+
 def questions(self, item: Item) -> dict:
     return self.state.setdefault("questions", {}).setdefault(item.ref, {})
 
@@ -335,7 +341,8 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
     if not asked:
         return report, False
     store = self._questions(item)
-    binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest")}
+    binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest"),
+               "input_part_digest": answer_digest(item.input_doc)}
     new = questions_mod.record(store, asked, binding, clock.utc_now())
     waiting = questions_mod.blocking_open(store, asked)
     for entry in new:  # a round walked again by a resume adds nothing
@@ -391,7 +398,7 @@ def sync_questions(self, item: Item) -> None:
         return
     with questions_mod.questions_lock(item.directory):
         questions_mod.merge_file(store, questions_mod.read(item.directory))
-        applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), clock.utc_now())
+        applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), answer_digest(item.input_doc), clock.utc_now())
         write_json(questions_mod.path(item.directory), questions_mod.document(self.run_id, item.ref, store))
         self._save()
     for name in applied:

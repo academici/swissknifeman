@@ -3,14 +3,18 @@ from __future__ import annotations
 
 import json
 import copy
+import os
 from pathlib import Path
 import select
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
+from orch.contracts import REQUIRED_PART
 from orch.conductor import contract, engine, prompts, questions
+from orch.conductor.stages.execute import answer_digest
 from orch.conductor.infrastructure.files import write_json
 from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
 
@@ -45,7 +49,7 @@ class ConcurrentQuestionsTests(unittest.TestCase):
             saved = questions.read(directory)["questions"][0]
             self.assertEqual(("answered", "rename", "owner"),
                              (saved["status"], saved["resolution"]["value"], saved["resolution"]["by"]))
-            questions.apply(store, None, "t")
+            questions.apply(store, None, "part", "t")
             questions.record(store, [dict(ASK, default="keep")],
                              {"run": "cnd-one", "item": "W1", "step": "executor.2"}, "t")
             self.assertEqual("applied", store["Q1"]["status"])
@@ -125,9 +129,10 @@ class QuestionTests(ConductorCase):
         entry = saved["questions"][0]
         self.assertEqual((saved["run"], saved["item"], entry["id"], entry["status"], entry["revision"]),
                          (directory.name, "W1", "Q1", "open", 1))
-        digest = json.loads((directory / "W1" / "input.json").read_text())["digest"]
+        input_doc = json.loads((directory / "W1" / "input.json").read_text())
         self.assertEqual(entry["binding"], {"run": directory.name, "item": "W1", "step": "executor.1",
-                                            "input_digest": digest})
+                                             "input_digest": input_doc["digest"],
+                                             "input_part_digest": answer_digest(input_doc)})
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
         self.assertEqual(self.calls("reviewer"), 0)
         self.assertTrue([line for line in self.lines(err) if line.get("reason_code") == "QUESTION_QUEUED"])
@@ -163,8 +168,7 @@ class QuestionTests(ConductorCase):
         self.conduct("answer", "--run", run, "--item", "W1", "--question", "Q1", "--option", "keep")
         doc = self.source()  # the plan was amended: the brief has another digest
         doc["items"]["W1"]["status"] = "todo"
-        doc["items"]["W1"]["title"] = "Work W1, amended"
-        doc["items"]["W1"]["write_set"] = ["out/W1.txt", "docs/W1.md"]
+        doc["items"]["W1"]["checks"][0]["cmd"] = "test -s out/W1.txt"
         self.state_file.write_text(json.dumps(doc), encoding="utf-8")
         self.script({"executor": [asking(dict(ASK)), asking(dict(ASK)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err2 = self.conduct("resume", "--run", run, "--retry", "W1", "--json-lines")
@@ -177,6 +181,84 @@ class QuestionTests(ConductorCase):
         self.assertNotIn("resolution", entry)
         self.assertEqual(entry["stale_resolution"]["value"], "keep")
         self.assertNotIn("\n# Answers\n", self.prompt("executor", 2))
+
+    def test_context_changes_preserve_the_answer_on_retry(self):
+        input_doc = json.loads(Path(os.environ["FAKE_CS_INPUT"]).read_text())
+        source_input = self.project.parent / "source-input.json"
+        source_input.write_text(json.dumps(input_doc))
+        with mock.patch.dict(os.environ, {"FAKE_CS_INPUT": str(source_input)}):
+            err, directory = self.blocked_run()
+            original = json.loads((directory / "W1/input.json").read_text())
+            questions.answer_file(directory / "W1", "Q1", option="rename", by="owner", now="2026-10-22T00:00:00Z")
+            input_doc["provenance"]["source_digest"] = "b" * 64
+            input_doc["lessons"] = [{"type": "note", "summary": "The blocked outcome was registered.",
+                                     "ts": "2026-10-22T00:00:00Z"}]
+            source_input.write_text(json.dumps(input_doc))
+            self.reopen()
+            code, _, resumed = self.conduct("resume", "--run", directory.name, "--retry", "W1", "--json-lines")
+        current = json.loads((directory / "W1/input.json").read_text())
+        self.assertNotEqual(original["digest"], current["digest"])
+        self.assertEqual(answer_digest(original), answer_digest(current))
+        self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
+        codes = [line.get("reason_code") for line in self.lines(resumed)]
+        self.assertIn("QUESTION_ANSWERED", codes)
+        self.assertNotIn("QUESTION_STALE", codes)
+        self.assertIn("Answer: rename (by owner)", self.prompt("executor", 2))
+
+    def test_resume_without_retry_stops_for_a_persisted_owner_answer(self):
+        _, directory = self.blocked_run()
+        questions.answer_file(directory / "W1", "Q1", option="rename", by="owner", now="2026-10-22T00:00:00Z")
+        saved = questions.read(directory / "W1")["questions"][0]
+        self.assertEqual(saved["status"], "open")  # the real answer command leaves consumption to resume --retry
+        code, _, resumed = self.conduct("resume", "--run", directory.name, "--json-lines")
+        self.assertEqual((code, self.outcome(resumed)), (1, ("stopped", "QUESTION_ANSWERED_NOT_RETRIED")), resumed)
+        state = self.state(resumed)
+        self.assertEqual(state["stop"]["code"], "QUESTION_ANSWERED_NOT_RETRIED")
+        beacons = [line for line in self.lines(resumed) if line["event"] == "info"
+                   and line.get("reason_code") == "QUESTION_ANSWERED_NOT_RETRIED"]
+        self.assertEqual(len(beacons), 1)
+        self.assertIn(f"orch conduct resume --run {directory.name} --retry W1", beacons[0]["message"])
+        self.assertEqual(self.calls("executor"), 1)
+        self.assertEqual(questions.read(directory / "W1")["questions"][0], saved)
+        # Older writers may have persisted the intermediate answered status instead.
+        document = questions.read(directory / "W1")
+        document["questions"][0]["status"] = "answered"
+        write_json(questions.path(directory / "W1"), document)
+        code, _, legacy = self.conduct("resume", "--run", directory.name, "--json-lines")
+        self.assertEqual((code, self.outcome(legacy)), (1, ("stopped", "QUESTION_ANSWERED_NOT_RETRIED")), legacy)
+        self.reopen()
+        code, _, retried = self.conduct("resume", "--run", directory.name, "--retry", "W1", "--json-lines")
+        self.assertEqual((code, self.outcome(retried)), (0, ("finished", None)), retried)
+        self.assertIn("Answer: rename (by owner)", self.prompt("executor", 2))
+
+    def test_legacy_binding_survives_save_load_and_resume(self):
+        _, directory = self.blocked_run()
+        state_path = directory / engine.STATE_FILE
+        state = json.loads(state_path.read_text())
+        state["questions"]["W1"]["Q1"]["binding"].pop("input_part_digest")
+        write_json(state_path, state)
+        document = questions.read(directory / "W1")
+        document["questions"][0]["binding"].pop("input_part_digest")
+        write_json(questions.path(directory / "W1"), document)
+        questions.answer_file(directory / "W1", "Q1", option="keep", by="owner", now="2026-10-22T00:00:00Z")
+        self.reopen()
+        code, _, resumed = self.conduct("resume", "--run", directory.name, "--retry", "W1", "--json-lines")
+        self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
+        self.assertIn("Answer: keep (by owner)", self.prompt("executor", 2))
+
+    def test_an_answer_waiting_for_retry_is_only_a_beacon_when_other_work_starts(self):
+        self.set_items({"W1": {}, "W2": {}})
+        self.script({"executor": [asking(dict(ASK)), executor_ok("W2")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", "W2", extra=("--no-batch",))
+        self.assertEqual(code, 1, err)
+        directory = self.run_dir(err)
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "keep blocked fixture records before other work")
+        questions.answer_file(directory / "W1", "Q1", option="rename", by="owner", now="2026-10-22T00:00:00Z")
+        code, _, resumed = self.conduct("resume", "--run", directory.name, "--json-lines")
+        self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
+        self.assertTrue(any(line.get("reason_code") == "QUESTION_ANSWERED_NOT_RETRIED" for line in self.lines(resumed)))
+        self.assertEqual(self.source()["items"]["W2"]["status"], "done")
 
     def test_an_answer_needs_an_open_question_and_a_valid_option(self):
         err, directory = self.blocked_run()
@@ -386,11 +468,30 @@ class PromptAndContractTests(unittest.TestCase):
         self.assertEqual(store["Q1"]["status"], "open")
         store["Q1"]["resolution"] = {"value": "keep", "by": "o", "at": "2026-10-14T10:01:00Z"}
         store["Q1"]["status"] = "answered"
-        self.assertEqual(questions.apply(store, "d2", "2026-10-14T10:02:00Z"), ([], ["Q1"]))
+        self.assertEqual(questions.apply(store, "d2", "part", "2026-10-14T10:02:00Z"), ([], ["Q1"]))
         self.assertEqual((store["Q1"]["status"], store["Q1"]["revision"]), ("stale", 2))
         # asked again on the new input: the revision never goes back
         questions.record(store, [dict(ASK)], dict(binding, step="executor.1", input_digest="d2"), "2026-10-14T10:03:00Z")
         self.assertEqual((store["Q1"]["status"], store["Q1"]["revision"]), ("open", 2))
+
+    def test_legacy_records_apply_only_when_the_full_digest_matches(self):
+        for digest, expected in (("old", (["Q1"], [])), ("new", ([], ["Q1"]))):
+            with self.subTest(digest=digest):
+                store = {}
+                questions.record(store, [ASK], {"step": "executor.1", "input_digest": "old"}, "t")
+                store["Q1"].update(status="answered", resolution={"value": "keep", "by": "owner", "at": "t"})
+                self.assertEqual(questions.apply(store, digest, "part", "t"), expected)
+
+    def test_every_required_part_invalidates_an_answer(self):
+        original = {key: "before" for key in REQUIRED_PART}
+        for key in REQUIRED_PART:
+            with self.subTest(key=key):
+                store = {}
+                questions.record(store, [ASK], {"step": "executor.1", "input_digest": "same",
+                                                "input_part_digest": answer_digest(original)}, "t")
+                store["Q1"].update(status="answered", resolution={"value": "keep", "by": "owner", "at": "t"})
+                amended = dict(original, **{key: "after"})
+                self.assertEqual(questions.apply(store, "same", answer_digest(amended), "t"), ([], ["Q1"]))
 
 
 if __name__ == "__main__":

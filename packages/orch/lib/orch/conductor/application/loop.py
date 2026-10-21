@@ -14,7 +14,8 @@ from typing import Any, Callable, Optional
 from aicore.util.redact import env_secrets, redact_document
 
 from orch import events, policies as run_policies
-from orch.conductor import checks as checks_mod, observer, options as opts, prompts, scope as scopes
+from orch.conductor import checks as checks_mod, observer, options as opts, prompts, questions as questions_mod
+from orch.conductor import scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
@@ -130,6 +131,8 @@ def pieces(self) -> None:
     doc = self.run_doc
     keys = [(f"item-{safe(ref)}", [ref]) for ref in doc["items"]] if doc["items"] else None
     count = index = 0
+    started = 0
+    pending_retries = []
     claimed, first_adopted, held = {}, [], []
     if keys is None and doc.get("grouped") is not False:  # the batch a source names is a batch like --items
         expanded = self._expand_ready()
@@ -142,14 +145,11 @@ def pieces(self) -> None:
     while True:
         if keys is not None:
             if index >= len(keys):
-                if held:
-                    raise Stop("DEPENDENCY_BLOCKED", f"{', '.join(held)} not started: a piece they depend on is blocked; "
-                                                     "retry it (resume --retry), then resume")
-                return
+                break
             key, asked = keys[index]
         else:
             if doc.get("max_items") and count >= doc["max_items"]:
-                return
+                break
             key, asked = f"next-{index + 1}", []
         index += 1
         known = self.state["claims"].get(key)
@@ -157,6 +157,16 @@ def pieces(self) -> None:
         if outcome in ("done", "done_with_deviations", "blocked"):
             if outcome in ("done", "done_with_deviations"):
                 self._group_review_due(known["ref"])
+            else:
+                questions = questions_mod.read(self.directory / safe(known["ref"])) or {}
+                if any(entry.get("status") == "answered" or
+                       (entry.get("status") == "open" and entry.get("resolution"))
+                       for entry in questions.get("questions", [])):
+                    message = (f"answers of {known['ref']} wait: orch conduct resume --run {self.run_id} "
+                               f"--retry {known['ref']}")
+                    pending_retries.append(message)
+                    self.progress.emit("info", item=known["ref"], reason_code="QUESTION_ANSWERED_NOT_RETRIED",
+                                       message=message)
             count += 1
             continue
         adopted, first_adopted = first_adopted, []  # the paths of ``--adopt`` belong to the first piece that really runs
@@ -167,7 +177,7 @@ def pieces(self) -> None:
                 self._require_clean_tree()
         answer = claimed.get(key) or self._claim(key, asked)
         if answer is None:
-            return
+            break
         count += 1
         if adopted:
             self.state["items"].setdefault(answer["ref"], {"steps": {}, "retries_used": 0, "orch_run": answer["run_id"]}) \
@@ -180,6 +190,7 @@ def pieces(self) -> None:
                                message=f"{answer['ref']} waits for {', '.join(waiting)} (blocked in this run): not started, "
                                        "it stays in progress; retry the blocked piece and resume")
             continue
+        started += 1
         outcome = self._piece(answer)
         if outcome in ("done", "done_with_deviations"):
             self._group_review_due(answer["ref"])
@@ -187,6 +198,11 @@ def pieces(self) -> None:
                                      or self.state["items"][answer["ref"]].get("partial")):
             why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""
             raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
+    if pending_retries and not started:
+        raise Stop("QUESTION_ANSWERED_NOT_RETRIED", "; ".join(pending_retries))
+    if held:
+        raise Stop("DEPENDENCY_BLOCKED", f"{', '.join(held)} not started: a piece they depend on is blocked; "
+                                         "retry it (resume --retry), then resume")
 
 
 def blocked_dependencies(self, answer: dict) -> list:

@@ -16,7 +16,7 @@ from aicore.config import ResolvedConfig, resolve
 from aicore.config.units import foundation_root
 from aicore.util import digest as _digest
 
-from orch.conductor import risk
+from orch.conductor import questions, risk
 from orch.port import BINDINGS
 
 ORCH_ROOT = Path(__file__).resolve().parents[2]
@@ -75,6 +75,9 @@ def _dirs(resolved: ResolvedConfig) -> tuple:
 
 def _conductor(resolved: ResolvedConfig) -> dict:
     """``[orch.conductor]`` as plain data: the global layer of the run options and the role command lines."""
+    question_mode = resolved.get("conductor.questions")
+    if question_mode not in questions.MODES:
+        raise SettingsError("QUESTIONS_UNKNOWN", f"conductor.questions must be one of {', '.join(questions.MODES)}")
     return {
         "provider": resolved.get("conductor.provider"),
         # only a reviewer a layer sets is an explicit one: the shipped default leaves the plan's review route its say
@@ -85,7 +88,9 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "on_blocked": resolved.get("conductor.on_blocked"),
         "foreign_untracked": resolved.get("conductor.foreign_untracked"),
         "session_executor": resolved.get("conductor.session_executor"),
-        "questions": resolved.get("conductor.questions"),
+        "questions": question_mode,
+        # Internal authority evidence, separate from the customizable heuristic risk score.
+        "_category_patterns": _category_patterns(resolved),
         "limits": {key: resolved.get(f"conductor.limits.{key}")
                    for key in ("tokens_max", "tokens_hard_max", "run_tokens_hard_max",
                                "stage_timeout_s", "stage_idle_timeout_s", "check_timeout_s",
@@ -98,6 +103,19 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "skills_bridge": list(resolved.get("conductor.skills_bridge") or []),
         "argv": {role: list(argv) for role, argv in (resolved.get("conductor.argv") or {}).items()},
     }
+
+
+def _category_patterns(resolved: ResolvedConfig) -> dict:
+    """Retain builtin and established trusted patterns even across replacement and _unset history."""
+    patterns = {}
+    for feature in ("security", "public_cli", "schema"):
+        entry = resolved.explain(f"conductor.risk.patterns.{feature}")[0]
+        floor = set(risk.DEFAULT_PATTERNS[feature])
+        for setting in [entry, *entry.overridden]:
+            if setting.layer in ("machine", "invocation", "flags") and setting.source != "_unset":
+                floor.update(setting.value or [])
+        patterns[feature] = sorted(floor)
+    return patterns
 
 
 def _launch(resolved: ResolvedConfig) -> dict:

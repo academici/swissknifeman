@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 from aicore.config import ConfigError
 
-from orch.conductor import options
+from orch.conductor import options, risk
+from orch.conductor.stages import advice
 from tests.test_settings import SettingsCase
 
 
@@ -76,6 +79,69 @@ class AuthorityTableTests(unittest.TestCase):
 
 
 class ConfigAuthorityTests(SettingsCase):
+    def reading(self, loaded, path):
+        conductor = SimpleNamespace(settings=loaded, _advisor_cfg=lambda: loaded.advisor,
+                                    _changed=lambda item: [path], _outside=lambda item: [], progress=mock.Mock())
+        item = SimpleNamespace(ref="W1", input_doc={"scope": {"write_set": [path]}})
+        return advice.reading(conductor, {"options": [{"id": "go"}], "recommendation": "go",
+                                          "category": "other", "confidence": "high", "needs_owner": False}, item)[1]
+
+    def test_builtin_categories_survive_empty_replacement_and_reset_patterns(self):
+        for feature, path, category in (("security", "src/auth/check.py", "security"),
+                                         ("public_cli", "src/cli.py", "public-api"),
+                                         ("schema", "api/schemas/request.json", "public-api")):
+            for project in (f'[orch.conductor.risk.patterns]\n{feature} = []\n',
+                            f'[orch.conductor.risk.patterns]\n{feature} = ["unrelated/**"]\n',
+                            f'[orch]\n_unset = ["conductor.risk.patterns.{feature}"]\n',
+                            '[orch]\n_unset = ["conductor.risk.patterns"]\n'):
+                with self.subTest(feature=feature, project=project):
+                    self.project_file(project)
+                    self.assertIn(f"code: {category} ({path})", self.reading(self.load(project=self.project), path))
+
+    def test_trusted_custom_categories_survive_project_and_environment_weakening(self):
+        for feature, category in (("security", "security"), ("public_cli", "public-api"), ("schema", "public-api")):
+            path = f"custom/{feature}/protected.py"
+            self.machine(f'[orch.conductor.risk.patterns]\n{feature} = ["{path}"]\n')
+            attacks = [(f'[orch.conductor.risk.patterns]\n{feature} = []\n', {}),
+                       (f'[orch.conductor.risk.patterns]\n{feature} = ["unrelated/**"]\n', {}),
+                       (f'[orch]\n_unset = ["conductor.risk.patterns.{feature}"]\n', {}),
+                       ('[orch]\n_unset = ["conductor.risk.patterns"]\n', {}),
+                       ('[orch]\n_unset = ["conductor.risk"]\n', {}),
+                       ('', {f"SKM_ORCH_CONDUCTOR__RISK__PATTERNS__{feature.upper()}": "[]"}),
+                       (f'[orch]\n_unset = ["conductor.risk.patterns.{feature}"]\n',
+                        {f"SKM_ORCH_CONDUCTOR__RISK__PATTERNS__{feature.upper()}": '["unrelated/**"]'})]
+            for project, env in attacks:
+                with self.subTest(feature=feature, project=project, env=env):
+                    self.project_file(project)
+                    loaded = self.load(project=self.project, env={**self.env, **env})
+                    self.assertIn(f"code: {category} ({path})", self.reading(loaded, path))
+
+    def test_trusted_invocation_and_flags_retain_established_pattern_history(self):
+        self.machine('[orch.conductor.risk.patterns]\nsecurity = ["custom/machine.py"]\n')
+        self.project_file('[orch.conductor.risk.patterns]\nsecurity = []\n')
+        config = self.config_file('[orch.conductor.risk.patterns]\nsecurity = ["custom/invocation.py"]\n')
+        loaded = self.load(project=self.project, config_file=config,
+                           flags={"conductor.risk.patterns.security": ["custom/flag.py"]})
+        for path in ("custom/machine.py", "custom/invocation.py", "custom/flag.py", "src/auth/check.py"):
+            with self.subTest(path=path):
+                self.assertIn(f"code: security ({path})", self.reading(loaded, path))
+        # A trusted reset also retains established patterns; builtin authority never disappears.
+        config = self.config_file('[orch]\n_unset = ["conductor.risk.patterns.security"]\n')
+        self.assertIn("code: security", self.reading(self.load(config_file=config), "custom/machine.py"))
+
+    def test_project_patterns_can_strengthen_categories_without_freezing_the_risk_score(self):
+        self.project_file('[orch.conductor.risk.patterns]\nsecurity = ["custom/project.py"]\n'
+                          '[orch.conductor.risk.weights]\nsecurity = 7\n')
+        loaded = self.load(project=self.project)
+        self.assertIn("code: security", self.reading(loaded, "custom/project.py"))
+        self.assertIsNone(self.reading(loaded, "src/plain.py"))
+        self.assertEqual(risk.score({"changed": ["custom/project.py"]}, loaded.conductor["risk"])["score"], 7)
+        self.assertEqual(risk.score({"changed": ["src/auth/check.py"]}, loaded.conductor["risk"])["score"], 0)
+        self.project_file('[orch.conductor.risk.patterns]\nsecurity = []\n')
+        loaded = self.load(project=self.project)
+        self.assertIn("code: security", self.reading(loaded, "src/auth/check.py"))
+        self.assertEqual(risk.score({"changed": ["src/auth/check.py"]}, loaded.conductor["risk"])["score"], 0)
+
     def test_access_floor_survives_project_resets_and_environment_overrides(self):
         self.machine('[orch.launch]\naccess = "confined"\n')
         for name, project, env, error in ACCESS_WEAKENINGS:

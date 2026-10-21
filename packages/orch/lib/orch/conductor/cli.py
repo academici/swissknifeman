@@ -359,7 +359,7 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--options", type=Path, metavar="FILE", help="run-options JSON: the most specific layer")
     run.add_argument("--batch", action=argparse.BooleanOptionalAction, default=None,
                      help="the pieces of this run are one batch (default): all are taken in progress at the start and "
-                          "one executor session carries them in order (`session.executor: shared`); --no-batch takes one "
+                          "`session.executor: handoff` gives each piece its own session that its correction rounds resume; --no-batch takes one "
                           "piece at a time, each executor step in a fresh session")
     run.add_argument("--fence", choices=("project", "plan"), default=None,
                      help="what the executor may change: the whole project (default; the plan's write set is reported "

@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
-from orch import settings
+from orch import contracts, settings
 from orch.conductor import contract, engine, prompts
 from orch.conductor.stages import advice as advice_stage
 from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report, reproduced
@@ -237,6 +237,33 @@ class GateTriggerTests(AdvisorCase):
         self.set_items({"W1": {"write_set": ["out/W1.txt", "src/cli.py"]}})
         self.held(advice("question:Q1@1", category="other"), "code: public-api (src/cli.py)")
 
+    def test_project_empty_patterns_cannot_release_builtin_security(self):
+        self.project_advisor('[orch.conductor.risk.patterns]\nsecurity = []\npublic_cli = []\nschema = []\n')
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "src/auth/check.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: security (src/auth/check.py)",
+                  {"src/auth/check.py": "changed\n"})
+
+    def test_project_replacement_cannot_release_trusted_custom_public_api(self):
+        self.configure(ENABLED + '[orch.conductor.risk.patterns]\npublic_cli = ["custom/command.py"]\n')
+        self.project_advisor('[orch.conductor.risk.patterns]\npublic_cli = ["unrelated/**"]\n')
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "custom/command.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: public-api (custom/command.py)")
+
+    def test_project_reset_cannot_release_trusted_custom_schema(self):
+        self.configure(ENABLED + '[orch.conductor.risk.patterns]\nschema = ["custom/contract.py"]\n')
+        self.project_advisor('[orch]\n_unset = ["conductor.risk.patterns"]\n')
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "custom/contract.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: public-api (custom/contract.py)")
+
+    def test_empty_patterns_still_allow_unrelated_automatic_advice(self):
+        self.project_advisor('[orch.conductor.risk.patterns]\nsecurity = []\npublic_cli = []\nschema = []\n')
+        self.script({"executor": [asking(dict(ASK)), executor_ok("W1")],
+                     "advisor": [advice("question:Q1@1", category="other")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        resolution = self.state(err)["questions"]["W1"]["Q1"]["resolution"]
+        self.assertEqual((resolution["by"], resolution["authority"]["code_categories"]), ("advisor", []))
+
     def test_automatic_advice_records_code_categories_even_when_the_gate_is_empty(self):
         self.configure(ENABLED + "human_gate = []\n")
         self.set_items({"W1": {"write_set": ["out/W1.txt", "src/auth/check.py"]}})
@@ -306,6 +333,9 @@ class RedChecksTriggerTests(AdvisorCase):
         self.assertIn("recommends keep", text)
         self.assertEqual(self.calls("executor"), 2)
         run = self.run_dir(err).name
+        binding = self.state(err)["questions"]["W1"]["orch-advice-1"]["binding"]
+        input_doc = json.loads((self.run_dir(err) / "W1/input.json").read_text())
+        self.assertEqual(binding["input_part_digest"], contracts.required_digest(input_doc))
         self.assertIn("orch-advice-1", self.conduct("questions", "--run", run)[1])
         self.conduct("answer", "--run", run, "--item", "W1", "--question", "orch-advice-1", "--option", "rename", "--by", "owner")
         self.reopen()

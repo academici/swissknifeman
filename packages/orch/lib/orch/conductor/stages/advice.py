@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import Optional
 
+from orch.contracts import required_digest
 from orch.conductor import checks as checks_mod, contract, prompts, questions as questions_mod, risk, scope
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
@@ -73,10 +74,13 @@ def advise(self, item: Item, number: int, ref: str, problem: str, evidence: list
 
 
 def category_paths(self, item: Item) -> dict:
-    """Path evidence for the advisor categories, using the same patterns and matcher as risk.score."""
+    """Path evidence for owner categories: effective patterns may add to the builtin/trusted floor."""
     changed = set(self._changed(item)) | set((item.input_doc.get("scope") or {}).get("write_set") or [])
-    patterns = {**risk.DEFAULT_PATTERNS,
-                **((self.settings.conductor.get("risk") or {}).get("patterns") or {})}
+    effective = (self.settings.conductor.get("risk") or {}).get("patterns") or {}
+    floor = self.settings.conductor.get("_category_patterns") or {}
+    patterns = {feature: set(risk.DEFAULT_PATTERNS[feature]) | set(floor.get(feature) or [])
+                         | set(effective.get(feature) or [])
+                for feature in ("security", "public_cli", "schema")}
     categories = {}
     for category, features in (("security", ("security",)), ("public-api", ("public_cli", "schema"))):
         hits = sorted(path for path in changed
@@ -157,7 +161,7 @@ def hold(self, item: Item, number: int, advice: dict, file: str, held: str, prob
     asked = {"id": f"orch-advice-{number}", "revision": 1, "kind": "decision", "text": problem, "blocking": True,
              "options": [{"id": option["id"], "label": option["text"][:200]} for option in advice["options"]]}
     binding = {"run": self.run_id, "item": item.ref, "step": f"advice.{number}",
-               "input_digest": item.input_doc.get("digest")}
+               "input_digest": item.input_doc.get("digest"), "input_part_digest": required_digest(item.input_doc)}
     questions_mod.record(store, [asked], binding, clock.utc_now())
     entry = store[asked["id"]]
     entry["advice"] = self._advice_summary(file, advice, held)

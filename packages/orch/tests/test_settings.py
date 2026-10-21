@@ -9,6 +9,7 @@ import unittest
 from aicore.config import ConfigError
 
 from orch import contracts, settings
+from orch.conductor import questions
 from orch.settings import SettingsError
 
 
@@ -110,6 +111,18 @@ class LoadTests(SettingsCase):
 
 class ConductorLimitsTests(SettingsCase):
     """The keys of ``[orch.conductor.limits]`` reach the run options (a key settings drops is lost silently)."""
+
+    def test_question_modes_match_the_config_schema(self):
+        schema = json.loads((settings.ORCH_ROOT / "configs/config.schema.json").read_text())
+        self.assertEqual(list(questions.MODES), schema["properties"]["conductor"]["properties"]["questions"]["enum"])
+        for mode in questions.MODES:
+            self.machine(f'[orch.conductor]\nquestions = "{mode}"\n')
+            self.assertEqual(self.load().conductor["questions"], mode)
+
+    def test_an_unknown_question_mode_is_refused(self):
+        self.machine('[orch.conductor]\nquestions = "silently-answer"\n')
+        with self.assertRaises(ConfigError):
+            self.load()
 
     def test_the_budget_and_wall_keys_of_the_machine_layer_reach_the_limits(self):
         self.machine('[orch.conductor.limits]\nunmetered = "charge"\nunmetered_charge_tokens = 7\n'

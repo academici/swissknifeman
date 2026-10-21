@@ -4,11 +4,13 @@ the resolution someone gave.
 A blocking question never keeps a process: the piece is ``blocked``, the run ends, and ``questions.json`` of the piece
 holds the question. ``orch conduct answer`` writes a resolution into that file only; ``resume --retry`` merges it into the
 state of the run and gives it to the executor, but only while the input is the one the question was asked on
-(``binding.input_digest``). ``default`` (a proposal) is not ``assumed`` (what the agent went on with) and not what a
+(``binding.input_part_digest``, or the full ``input_digest`` for legacy records). ``default`` (a proposal) is not
+``assumed`` (what the agent went on with) and not what a
 timeout does: the conductor never answers on a timeout.
 
 Entry of a question: ``id, revision, kind, text, [options, answer_schema, default], blocking, [assumed, risk], status,
-binding{run,item,step,input_digest}, asked_at, [resolution{value,by,at}]``. ``status`` is ``open`` (waits for an answer),
+binding{run,item,step,input_digest,[input_part_digest]}, asked_at, [resolution{value,by,at}]``.
+``status`` is ``open`` (waits for an answer),
 ``answered`` (the resolution is not given to the executor yet), ``applied`` (the executor got it), ``assumed`` (not
 blocking: the agent went on), ``denied`` (``questions = deny``) or ``stale`` (the input changed: the answer is not used,
 the revision is one higher).
@@ -27,7 +29,7 @@ from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.lease import questions_lock
 
 FILE = "questions.json"
-MODES = ("queue", "deny", "defaults")
+MODES = ("queue", "deny", "defaults", "advisor")
 DEFAULT_WARN_S = 1800
 _SPEC = ("id", "revision", "kind", "text", "options", "answer_schema", "default", "blocking", "assumed", "risk")
 
@@ -107,17 +109,20 @@ def resolve_default(entry: dict, now: str, authority: Optional[dict] = None) -> 
     return True
 
 
-def apply(store: dict, digest: Optional[str], now: str) -> tuple:
+def apply(store: dict, digest: Optional[str], part_digest: str, now: str) -> tuple:
     """Hand the answers of ``store`` to the executor: ``(applied ids, stale ids)``.
 
-    An ``answered`` entry whose binding digest is the current one becomes ``applied``; any other is ``stale``: its
+    An ``answered`` entry bound to the current required part becomes ``applied`` (legacy records compare the full
+    input digest); any other is ``stale``: its
     resolution moves to ``stale_resolution``, its revision goes up and the question is open again.
     """
     applied, stale = [], []
     for entry in store.values():
         if entry["status"] != "answered":
             continue
-        if entry["binding"].get("input_digest") == digest:
+        key = entry["binding"].get("input_part_digest")
+        fresh = (key == part_digest) if key else (entry["binding"].get("input_digest") == digest)
+        if fresh:
             entry["status"] = "applied"
             entry["applied_at"] = now
             applied.append(entry["id"])

@@ -557,6 +557,7 @@
      "asked_at": "<time>",
      "binding": {
       "input_digest": "<digest>",
+      "input_part_digest": "<digest>",
       "item": "W1",
       "step": "executor.1"
      },

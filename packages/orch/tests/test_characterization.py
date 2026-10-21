@@ -385,6 +385,7 @@ COVERAGE = {
     # Stops
     "RUN_BUSY": "test:test_run_lease.py", "WORKTREE_BUSY": "test:test_run_lease.py",
     "QUESTIONS_LOCKED": "test:test_run_lease.py",
+    "QUESTION_ANSWERED_NOT_RETRIED": "test:test_conductor_questions.py",
     "CONDUCTOR_CRASHED": "test:test_observer.py",
     "STAGE_RECOVERY_UNKNOWN": "test:test_resume_reconcile.py",
     "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": "snapshot:question-answer-resume",

@@ -3,15 +3,17 @@ roles really changed in the tree."""
 from __future__ import annotations
 
 import json
+import os
+import shutil
 from typing import Optional
 
 from aicore.util.digest import sha256_hex
 
-from orch.conductor import prompts, questions as questions_mod, scope as scopes
+from orch.conductor import checks as checks_mod, options as opts, prompts, questions as questions_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import evidence_paths, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.files import REPORTS, safe, write_json
 
 
@@ -77,11 +79,59 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
             item.state.pop("interrupted_note", None)
         self._save()
     report = found["report"]
+    tracked = set_aside_runtime(self, item, key, found)
+    moved = (item.state.get("relocated") or {}).get(key)
+    if moved:
+        report = dict(report, open_issues=list(report.get("open_issues", [])) + [{
+            "text": "runtime artifacts left in the tree were moved to the artifacts of the piece, not committed: "
+                    + ", ".join(f"{path} -> {where}" for path, where in sorted(moved.items()))[:800],
+            "kind": "note", "impact": "none", "next": "none"}])
+    if tracked and report["status"] != "blocked":
+        report = self._blocked(report, "OUTSIDE_RUNTIME_ARTIFACT", "the executor changed tracked runtime artifacts "
+                               "(history, not product files): " + ", ".join(tracked[:20])
+                               + "; restore them from git and keep logs and evidence out of the project, then retry")
     outside = self._outside(item)
+    stranger = scopes.foreign(outside, (item.input_doc.get("scope") or {}).get("write_set"),
+                              self._scope_option(item, "extra_paths", []), self.project)
+    if stranger and report["status"] != "blocked" and item.options["scope"].get("outside_module", "block") == "block":
+        report = self._blocked(report, "OUTSIDE_MODULE", "the executor changed files of other modules: "
+                               + ", ".join(stranger[:20]) + "; add them to the item's task_files or set them aside, then retry")
     if outside and report["status"] != "blocked" and item.options["scope"]["outside"] == "block":
         report = self._blocked(report, "OUTSIDE_WRITE_SET", "the executor changed paths the write set does not own: "
                                + ", ".join(outside[:20]) + "; widen the write set in the plan or set them aside, then retry")
     return report
+
+
+def set_aside_runtime(self, item: Item, key: str, found: dict) -> list:
+    """What the executor round ``key`` left under ``scope.runtime_paths`` (logs, evidence). New untracked files are moved
+    (``os.replace``) to ``<artifacts of the piece>/stray/<path>``, said once as ``RUNTIME_ARTIFACT_RELOCATED`` and kept in
+    ``state.relocated`` so ``changed`` does not count them; the folders of the conductor itself are not touched. The tracked
+    paths under them that changed are returned: they are history and cannot be moved."""
+    patterns = self._scope_option(item, "runtime_paths", opts.DEFAULT_SCOPE["runtime_paths"])
+    listed = scopes.own([path for path in found.get("changed") or [] if scopes.under(path, patterns)],
+                        self._not_the_role(item))
+    if not listed:
+        return []
+    fresh = set(checks_mod.untracked(self.project))
+    moved = {}
+    for path in listed:
+        if path not in fresh:
+            continue
+        target = work_source.stray_dir(item) / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            os.replace(self.project / path, target)
+        except OSError:  # another file system: copy, then remove
+            shutil.move(str(self.project / path), str(target))
+        moved[path] = self._relative(target)
+    if moved:
+        item.state.setdefault("relocated", {}).setdefault(key, {}).update(moved)
+        self._save()
+        self.progress.emit("info", item=item.ref, stage=key, reason_code="RUNTIME_ARTIFACT_RELOCATED",
+                           message=f"{len(moved)} runtime artifact(s) left in the tree were moved to the artifacts of the piece: "
+                                   + ", ".join(f"{path} -> {where}" for path, where in sorted(moved.items())[:5])
+                                   + (" …" if len(moved) > 5 else ""))
+    return scopes.tracked(self.project, [path for path in listed if path not in fresh])
 
 
 def answer_key(row: dict) -> str:
@@ -367,12 +417,17 @@ def not_the_role(self, item: Item) -> list:
 
 
 def changed(self, item: Item) -> list:
-    """Every path any executor round of the piece changed (git, not the reports)."""
+    """Every path any executor round of the piece changed (git, not the reports) and the checks changed (``checks_changed``:
+    a formatter or a generator), without the runtime artifacts that were set aside (``relocated``)."""
     steps = done_steps(item.state.get("steps", {}))
     found = set(item.state.get("adopted") or [])
     for key, step in steps.items():
         if key.startswith("executor.") and isinstance(step.get("result"), dict):
             found.update(step["result"].get("changed") or [])
+    for paths in (item.state.get("checks_changed") or {}).values():
+        found.update(paths)
+    for moved in (item.state.get("relocated") or {}).values():
+        found.difference_update(moved)
     return sorted(found)
 
 

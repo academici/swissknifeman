@@ -631,6 +631,96 @@ class FenceTests(ConductorCase):
         self.assertEqual(eng._extra_write_dirs(item, "reviewer", argv), argv)
         self.assertEqual(eng._extra_write_dirs(item, "executor", ["claude", "-p"]), ["claude", "-p"])
         self.assertEqual(eng._extra_write_dirs(item, "executor", ["claude", "-p"]), ["claude", "-p"])
+        self.assertEqual(eng._extra_write_dirs(item, "bounded-implementer", argv).count("--rw"), 3)  # a writer too
+
+
+class ExtraPathGrantTests(unittest.TestCase):
+    """``scope.extra_paths`` reaches every route that writes (K5-N2): the Landlock guard (``--rw``) while it stays,
+    ``--add-dir`` and a sandbox write grant for Claude Code under the provider sandbox, ``--add-dir`` for Codex."""
+    UP = {"available": True, "reason": None, "checked": []}
+    DOWN = {"available": False, "reason": "no bwrap", "checked": []}
+    PATH = "/data/shared"
+    ROUTES = {
+        "claude-code": {"provider": "claude-code", "argv": [
+            "python3", "/x/ro-run.py", "--rw", "/p", "--", "claude", "-p", "--tools", "Bash,Read,Edit,Write",
+            "--permission-mode", "acceptEdits"]},
+        "codex": {"provider": "codex", "argv": ["codex", "-a", "never", "exec", "--json", "--sandbox", "workspace-write", "-"]},
+        "grok": {"provider": "grok", "argv": ["python3", "/x/ro-run.py", "--rw", "/p", "--", "grok", "--cwd", "/p"]},
+    }
+
+    def argv(self, role: str, provider: str, paths: list, probe: dict) -> list:
+        eng = engine.Conductor.__new__(engine.Conductor)
+        eng.progress = None
+        item = type("I", (), {"ref": "W1", "options": {
+            "instructions": {"isolate_roles": [], "sandbox": "prefer", "sandbox_domains": []},
+            "session": {"executor": "per-item"}, "scope": {"extra_paths": paths}}})()
+        with mock.patch("orch.sandbox.probe", return_value=probe), mock.patch.object(engine.Conductor, "_knows", return_value=True):
+            return eng._role_argv(item, role, self.ROUTES[provider])
+
+    @staticmethod
+    def grant(argv: list) -> dict:
+        """The ways ``PATH`` is granted in ``argv``."""
+        found = {"rw": [argv[i + 1] for i, arg in enumerate(argv) if arg == "--rw"],
+                 "add_dir": [argv[i + 1] for i, arg in enumerate(argv) if arg == "--add-dir"], "allow_write": []}
+        if "--settings" in argv:
+            found["allow_write"] = json.loads(argv[argv.index("--settings") + 1])["sandbox"].get("filesystem", {}).get("allowWrite", [])
+        return found
+
+    def test_every_writing_route_gets_the_grant_with_the_sandbox_up_or_down(self):
+        for role in ("executor", "bounded-implementer"):
+            for provider in ("claude-code", "codex", "grok"):
+                for probe in (self.UP, self.DOWN):
+                    with self.subTest(role=role, provider=provider, sandbox=probe["available"]):
+                        found = self.grant(self.argv(role, provider, [self.PATH], probe))
+                        if provider == "claude-code":
+                            self.assertEqual(found["add_dir"], [self.PATH])
+                            if probe["available"]:  # the Landlock guard is gone: the sandbox block and --add-dir carry it
+                                self.assertEqual((found["rw"], found["allow_write"]), ([], [self.PATH]))
+                            else:
+                                self.assertEqual((found["rw"], found["allow_write"]), (["/p", self.PATH], []))
+                        elif provider == "codex":
+                            self.assertEqual(found["add_dir"], [self.PATH])
+                        else:
+                            self.assertEqual((found["rw"], found["add_dir"]), (["/p", self.PATH], []))
+
+    def test_a_sandboxed_claude_writer_keeps_the_rest_of_the_sandbox_block(self):
+        argv = self.argv("executor", "claude-code", [self.PATH], self.UP)
+        block = json.loads(argv[argv.index("--settings") + 1])["sandbox"]
+        self.assertEqual({key: block[key] for key in ("enabled", "allowUnsandboxedCommands", "failIfUnavailable")},
+                         {"enabled": True, "allowUnsandboxedCommands": False, "failIfUnavailable": True})
+        self.assertEqual(block["network"], {"strictAllowlist": True, "allowedDomains": []})
+        self.assertEqual(block["filesystem"], {"allowWrite": [self.PATH]})
+        self.assertNotIn("ro-run.py", " ".join(argv))
+        self.assertLess(argv.index("--add-dir"), argv.index("--settings"))  # --add-dir takes several values: a flag ends them
+
+    def test_codex_gets_add_dir_right_after_exec(self):
+        argv = self.argv("executor", "codex", ["/data/a", "/data/b"], self.UP)
+        at = argv.index("exec")
+        self.assertEqual(argv[at + 1:at + 5], ["--add-dir", "/data/a", "--add-dir", "/data/b"])
+        self.assertEqual(argv[-1], "-")
+
+    def test_without_extra_paths_the_argv_does_not_change(self):
+        for provider in ("claude-code", "codex", "grok"):
+            for probe in (self.UP, self.DOWN):
+                with self.subTest(provider=provider, sandbox=probe["available"]):
+                    argv = self.argv("executor", provider, [], probe)
+                    self.assertNotIn("--add-dir", argv)
+                    self.assertEqual(self.grant(argv)["allow_write"], [])
+                    guarded = provider == "grok" or (provider == "claude-code" and not probe["available"])
+                    self.assertEqual(argv.count("--rw"), 1 if guarded else 0)  # only the project of the guard
+        self.assertEqual(self.argv("executor", "codex", [], self.UP), self.ROUTES["codex"]["argv"])
+
+    def test_a_role_that_does_not_write_gets_no_grant(self):
+        for provider in ("claude-code", "codex", "grok"):
+            with self.subTest(provider=provider):
+                found = self.grant(self.argv("reviewer", provider, [self.PATH], self.UP))
+                self.assertEqual((found["add_dir"], found["allow_write"]), ([], []))
+                self.assertNotIn(self.PATH, found["rw"])
+
+    def test_a_home_path_is_expanded(self):
+        found = self.grant(self.argv("executor", "claude-code", ["~/shared"], self.UP))
+        self.assertEqual(found["add_dir"], [str(Path("~/shared").expanduser())])
+        self.assertEqual(found["allow_write"], found["add_dir"])
 
 
 if __name__ == "__main__":

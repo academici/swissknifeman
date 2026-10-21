@@ -396,6 +396,11 @@ def write_artifact(self, item: Item, name: str, doc) -> Path:
     return write_json(item.artifacts / name, doc)
 
 
+def stray_dir(item: Item) -> Path:
+    """Where the runtime artifacts an executor left in the tree are set aside: ``<artifacts>/stray/<original path>``."""
+    return (item.artifacts or item.directory) / "stray"
+
+
 def local_records(self, item: Item) -> bool:
     """The artifact folder of the piece is the local fallback (the source named none): it is not committed."""
     try:

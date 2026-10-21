@@ -1,6 +1,7 @@
 """The sandbox probe: it reads the PATH and runs ``bwrap … true``; nothing real is needed (PATH and run are replaced)."""
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import unittest
@@ -10,6 +11,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from orch import sandbox  # noqa: E402
+from orch.conductor import engine  # noqa: E402
 
 
 def done(code: int, stderr: str = "") -> subprocess.CompletedProcess:
@@ -71,6 +73,35 @@ class ProbeTests(unittest.TestCase):
             self.assertEqual(probe.call_count, 1)
             sandbox.probe(refresh=True)
             self.assertEqual(probe.call_count, 2)
+
+
+class ExtraPathGrantTests(unittest.TestCase):
+    """The sandbox block of a Claude Code writer grants ``scope.extra_paths`` as ``sandbox.filesystem.allowWrite`` (absolute
+    or ``~`` paths, merged by the provider with the settings of the user) and nothing else of the block changes."""
+    ROUTE = {"provider": "claude-code", "argv": ["claude", "-p", "--tools", "Bash,Read,Edit"]}
+
+    def block(self, role: str, paths: list) -> dict:
+        eng = engine.Conductor.__new__(engine.Conductor)
+        eng.progress = None
+        item = type("I", (), {"options": {"instructions": {"sandbox": "prefer", "sandbox_domains": ["pypi.org"]},
+                                          "scope": {"extra_paths": paths}}})()
+        up = {"available": True, "reason": None, "checked": []}
+        with mock.patch("orch.sandbox.probe", return_value=up), mock.patch.object(engine.Conductor, "_knows", return_value=True):
+            args = eng._sandbox_args(item, role, self.ROUTE)
+        return json.loads(args[args.index("--settings") + 1])["sandbox"]
+
+    def test_the_writers_get_the_grant(self):
+        for role in ("executor", "bounded-implementer"):
+            with self.subTest(role=role):
+                block = self.block(role, ["/data/a", "/data/b"])
+                self.assertEqual(block["filesystem"], {"allowWrite": ["/data/a", "/data/b"]})
+                self.assertEqual((block["enabled"], block["allowUnsandboxedCommands"], block["failIfUnavailable"]),
+                                 (True, False, True))
+                self.assertEqual(block["network"], {"strictAllowlist": True, "allowedDomains": ["pypi.org"]})
+
+    def test_no_extra_path_or_no_writer_gives_no_filesystem_key(self):
+        self.assertNotIn("filesystem", self.block("executor", []))
+        self.assertNotIn("filesystem", self.block("reviewer", ["/data/a"]))
 
 
 class OtherPlatformTests(unittest.TestCase):

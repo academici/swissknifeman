@@ -9,7 +9,7 @@ import re
 import threading
 from typing import Optional
 
-from orch.conductor import checks as checks_mod, process, prompts
+from orch.conductor import checks as checks_mod, options as opts, process, prompts, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
@@ -111,33 +111,79 @@ def note_budget(folder: Path, budget: dict) -> None:
 
 
 def compute_checks(self, item: Item, number: int, report: dict, on_result=None) -> list:
-    """The rows of the checks of one round; touches no run state, so it may run beside a model role."""
+    """The rows of the checks of one round; touches no run state but ``checks_changed``, so it may run beside a model role.
+
+    A check that changes the tree (a formatter, a generator) makes the evidence prove the tree before it: the checks run
+    once more on the changed tree (``checks/<n>-rerun``, the same evidence files are overwritten), and that run proves the
+    candidate. When the rerun changes files again the checks are not idempotent: ``CHECKS_MUTATED``."""
     self._disk_guard(item, f"checks.{number}")  # a heavy check that fills the disk dies with a truncated trace
     options = item.options["checks"]
     with self.store.mutating():  # the main loop adds steps while this runs beside the review: read the history as a snapshot
         previous = [dict(row) for row in self._earlier_rows(item, number)]
         red_first = list(self._red_before(item, number))
-    try:
+
+    def run(folder: str, on_changed) -> list:
         return checks_mod.run_checks(
             item.input_doc, project=self.project, evidence_dir=self._evidence_dir(item),
-            log_dir=item.directory / "checks" / str(number),
+            log_dir=item.directory / "checks" / folder,
             timeout_s=item.options["limits"]["check_timeout_s"],
             evidence_prefix=f"{self.run_id}:{item.ref}:checks.{number}", report=report,
             executor=self._actor(item.routes["executor"]), parallel=options["parallel"],
             previous=previous, fail_fast=options["fail_fast"], reuse=options["reuse"],
             run_id=self.run_id, run_env={"SKM_CHECK_RUN": self.run_id, "SKM_CHECK_ITEM": item.ref,
                                          "SKM_CHECK_ROUND": str(number)},
-            on_budget=lambda budget: note_budget(item.directory / "checks" / str(number), budget),
+            on_budget=lambda budget: note_budget(item.directory / "checks" / folder, budget),
             on_result=on_result, first=red_first, kinds=tuple(item.options["checks"]["kinds"]),
             cadence=tuple(item.options["checks"]["cadence"]), warn_s=item.options["limits"].get("check_warn_s", 0),
             on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid),
-            idle_s=item.options["limits"].get("check_idle_timeout_s", 0),
-            on_changed=lambda paths: self.progress.emit(
-                "info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_CHANGED_TREE",
-                message=f"the checks changed {len(paths)} file(s) of the project: {', '.join(paths[:5])}"
-                        f"{' …' if len(paths) > 5 else ''}; the evidence proves the candidate before them"))
+            idle_s=item.options["limits"].get("check_idle_timeout_s", 0), on_changed=on_changed)
+
+    changed, again = [], []
+
+    def first_change(paths: list) -> None:
+        changed.extend(paths)
+        self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_CHANGED_TREE",
+                           message=f"the checks changed {len(paths)} file(s) of the project: {', '.join(paths[:5])}"
+                                   f"{' …' if len(paths) > 5 else ''}; the checks run again on the changed tree")
+
+    try:
+        rows = run(str(number), first_change)
+        if changed:
+            rows = run(f"{number}-rerun", again.extend)
     except (RuntimeError, ValueError, OSError) as error:
         raise Stop("CHECKS_FAILED", str(error)) from None
+    if again:
+        raise Stop("CHECKS_MUTATED", "the checks change the tree on every run: " + ", ".join(sorted(set(again))[:20])
+                   + "; make the check idempotent")
+    if changed:
+        keep_check_changes(self, item, number, changed)
+    return rows
+
+
+def keep_check_changes(self, item: Item, number: int, paths: list) -> None:
+    """The files the checks of round ``number`` changed belong to the candidate (``state.checks_changed``: the commit takes
+    them, the finish reports those outside the write set as a deviation), under the rules of the executor's changes: a
+    path of another module than the write set names stops the run (``OUTSIDE_MODULE``, unless ``scope.outside_module`` is
+    ``deviation``), a tracked runtime artifact stops it (``OUTSIDE_RUNTIME_ARTIFACT``), and an untracked one stays in the
+    tree and out of the commit. The folders of the conductor itself and paths the checks changed back to HEAD are no change."""
+    present = set(checks_mod.dirty_files(self.project))
+    mine = [path for path in scopes.own(paths, self._not_the_role(item)) if path in present]
+    patterns = self._scope_option(item, "runtime_paths", opts.DEFAULT_SCOPE["runtime_paths"])
+    runtime = [path for path in mine if scopes.under(path, patterns)]
+    history = scopes.tracked(self.project, runtime)
+    if history:
+        raise Stop("OUTSIDE_RUNTIME_ARTIFACT", "the checks changed tracked runtime artifacts (history, not product files): "
+                   + ", ".join(history[:20]) + "; make the check write them elsewhere")
+    product = [path for path in mine if path not in runtime]
+    write_set = (item.input_doc.get("scope") or {}).get("write_set")
+    stranger = scopes.foreign(scopes.outside(product, write_set), write_set,
+                              self._scope_option(item, "extra_paths", []), self.project)
+    if stranger and item.options["scope"].get("outside_module", "block") == "block":
+        raise Stop("OUTSIDE_MODULE", "the checks changed files of other modules: " + ", ".join(stranger[:20])
+                   + "; add them to the item's task_files or make the check write them elsewhere")
+    with self.store.mutating():
+        item.state.setdefault("checks_changed", {})[str(number)] = product
+        self._save()
 
 
 def check_tick(self, item: Item, number: int, check_id: str, elapsed: float, pid: int) -> None:

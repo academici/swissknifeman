@@ -43,8 +43,13 @@ DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-
                         "sandbox": "prefer", "sandbox_domains": [], "file_tools_rule": True}
 # ``fence``: ``project`` (default) lets the executor change any file of the project and report the paths outside the plan's
 # write set as deviations; ``plan`` keeps the write set a fence (a path outside it blocks the piece). ``extra_paths``:
-# directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``).
-DEFAULT_SCOPE = {"outside": "deviation", "fence": "project", "extra_paths": []}
+# directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``, a sandboxed
+# Claude Code role as ``--add-dir`` and a sandbox write grant, Codex as ``--add-dir``). ``outside_module``: ``block``
+# (default) stops a piece whose executor changed files of another module than the write set names (the changelog and the
+# documentation are always allowed); ``deviation`` reports them as before. ``runtime_paths``: patterns of runtime artifacts
+# (logs, evidence): new untracked files under them are set aside, never committed; a tracked one that changed blocks the piece.
+DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "block", "fence": "project", "extra_paths": [],
+                 "runtime_paths": [".swissknifeman/orch-artifacts/**", ".swissknifeman/orch/**", "**/tests/evidence/**"]}
 # How the executor sessions of a run of several pieces are kept. ``handoff`` (default): each piece starts a fresh session
 # that its correction rounds resume, and its prompt carries the handoff of the earlier pieces (summary, commit, notes), so
 # a later piece does not re-read the whole transcript of the earlier ones on every turn. ``shared``: one session for all
@@ -63,6 +68,7 @@ DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
             "session": DEFAULT_SESSION, "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
 ROLE_ALIASES = {"scout": "context-scout"}
+WRITING_ROLES = ("executor", "bounded-implementer")  # the roles that change the project: they get ``scope.extra_paths``
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
                "researcher", "advisor")
 _SELECTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"
@@ -78,11 +84,13 @@ _ACTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-
 # Ordered keys: a work-source layer may only move them to the right.
 FLOOR_ORDER = {("instructions", "sandbox"): ("off", "prefer", "require"),
                ("scope", "fence"): ("project", "plan"),
-               ("scope", "outside"): ("deviation", "block")}
+               ("scope", "outside"): ("deviation", "block"),
+               ("scope", "outside_module"): ("deviation", "block")}
 # Set keys: a work-source layer may only shrink ``narrow`` ones (a subset of what the layers below allow) and only grow
-# ``widen`` ones; ``extra_paths`` it may only repeat or shrink, so a plan cannot open a directory outside the project.
+# ``widen`` ones; ``extra_paths`` it may only repeat or shrink, so a plan cannot open a directory outside the project;
+# ``runtime_paths`` it may only add to, so a plan cannot make a runtime artifact a product file.
 FLOOR_NARROW = (("instructions", "sandbox_domains"), ("scope", "extra_paths"))
-FLOOR_WIDEN = (("instructions", "isolate_roles"),)
+FLOOR_WIDEN = (("instructions", "isolate_roles"), ("scope", "runtime_paths"))
 # Folders an extra writable path may never be, contain, or lie in (besides the root, HOME and the project's ancestors).
 SYSTEM_DIRS = ("/bin", "/boot", "/dev", "/etc", "/lib", "/lib32", "/lib64", "/proc", "/run", "/sbin", "/sys", "/usr", "/var")
 HOME_SECRETS = (".ssh", ".gnupg", ".aws", ".kube", ".docker", ".netrc", ".password-store")

@@ -432,7 +432,28 @@ def role_argv(self, item: Item, role: str, route: dict) -> list:
     if sandboxed:  # the provider sandbox (bubblewrap) cannot start under the Landlock guard: it replaces the guard
         argv = strip_guard(argv)
     argv = self._extra_write_dirs(item, role, argv)
-    return argv + (extra or []) + ([] if route.get("resume_argv") else resume) + sandboxed
+    granted = granted_paths(self, item, role)
+    if granted and route.get("provider") == "codex":  # a confined Codex writes beside the project only where it is told
+        argv = codex_add_dirs(argv, granted)
+    # a Claude Code role reaches a directory outside the project with its file tools only when it is added; the shell
+    # of a sandboxed one is granted the same paths in the sandbox block (``sandbox_args``)
+    added = [part for path in granted for part in ("--add-dir", path)] if route.get("provider") == "claude-code" else []
+    return argv + (extra or []) + ([] if route.get("resume_argv") else resume) + added + sandboxed
+
+
+def granted_paths(self, item: Item, role: str) -> list:
+    """``scope.extra_paths`` (``~`` expanded) for a role that writes, none for the others."""
+    if role not in opts.WRITING_ROLES:
+        return []
+    return [os.path.expanduser(path) for path in self._scope_option(item, "extra_paths", [])]
+
+
+def codex_add_dirs(argv: list, paths: list) -> list:
+    """``argv`` of a Codex route with ``--add-dir P`` for every path, right after the ``exec`` token."""
+    if "exec" not in argv:
+        return argv
+    at = argv.index("exec") + 1
+    return argv[:at] + [part for path in paths for part in ("--add-dir", path)] + argv[at:]
 
 
 def strip_guard(argv: list) -> list:
@@ -445,11 +466,14 @@ def strip_guard(argv: list) -> list:
 
 
 def extra_write_dirs(self, item: Item, role: str, argv: list) -> list:
-    """``scope.extra_paths`` for an executor started through ``ro-run.py``: one more ``--rw`` each, before the ``--``."""
+    """``scope.extra_paths`` for a writer (executor, bounded-implementer) started through ``ro-run.py``: one more ``--rw``
+    each, before the ``--``. A route that lost the guard to the provider sandbox gets its grants from ``role_argv`` and
+    ``sandbox_args``."""
     paths = list(self._scope_option(item, "extra_paths", []))
-    if role != "executor" or "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
+    if role not in opts.WRITING_ROLES or "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
         return argv
-    if self._shared_session(item, role, {"provider": "claude-code"}) and "claude" in argv[argv.index("--") + 1:][:1]:
+    if role == "executor" and self._shared_session(item, role, {"provider": "claude-code"}) \
+            and "claude" in argv[argv.index("--") + 1:][:1]:
         paths.append(self._claude_transcripts())  # else the guard stops the CLI from saving the session it must resume
     if not paths:
         return argv

@@ -1,4 +1,5 @@
 """Acceptance checks of the conductor: ``parallel`` runs command checks together and keeps the order of the rows."""
+import json
 import subprocess
 import sys
 import tempfile
@@ -133,6 +134,22 @@ class HangAndTreeTests(unittest.TestCase):
             checks.run_checks(doc("true", "true"), project=root, evidence_dir=root / "ev", log_dir=root / "log",
                               timeout_s=30, evidence_prefix="r:W1:checks.2", on_changed=quiet.append)
             self.assertEqual(quiet, [])
+
+    def test_a_repeat_on_the_changed_tree_is_quiet_and_its_evidence_proves_that_tree(self):
+        """The checks stage repeats the checks once when ``on_changed`` fired (the candidate of the evidence is the tree the
+        first run changed); an idempotent check changes nothing in the repeat."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = _repo(tmp)
+            format_once = "grep -q formatted f.txt 2>/dev/null || echo formatted >> f.txt"
+            runs = []
+            for number in (1, 2):
+                seen = []
+                checks.run_checks(doc(format_once, "true"), project=root, evidence_dir=root / "ev", log_dir=root / "log",
+                                  timeout_s=30, evidence_prefix="r:W1:checks.1", on_changed=seen.extend, reuse=False)
+                runs.append((seen, json.loads((root / "ev" / "V1.json").read_text(encoding="utf-8"))))
+            self.assertEqual([seen for seen, _ in runs], [["f.txt"], []])
+            self.assertNotEqual(runs[0][1]["candidate"]["dirty_digest"], runs[1][1]["candidate"]["dirty_digest"])
+            self.assertEqual(runs[1][1]["candidate"]["dirty_digest"], checks.dirty_digest(root, exclude=["ev", "log"]))
 
     def test_a_check_whose_cwd_leads_outside_the_project_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:

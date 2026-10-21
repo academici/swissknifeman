@@ -96,13 +96,24 @@
           "type": "string",
           "enum": ["deviation", "block"]
         },
+        "outside_module": {
+          "description": "`block` (default): the piece is blocked (`OUTSIDE_MODULE`) when the executor changed files of another module than the ones its write set names (`packages/<id>/`, `bridges/<id>/`, else the hub; `CHANGELOG.md` and `docs/` are always allowed, as are the granted `extra_paths`); `deviation`: such paths are reported as a deviation like any other path outside the write set. A layer of the work source can only tighten it.",
+          "type": "string",
+          "enum": ["deviation", "block"]
+        },
+        "runtime_paths": {
+          "description": "Patterns (`*` and `?` inside one segment, `**` any number of segments) of runtime artifacts: logs and evidence of a run. New untracked files of the executor under them are moved to `<artifacts of the piece>/stray/` (`RUNTIME_ARTIFACT_RELOCATED`) and never committed; a changed tracked one blocks the piece (`OUTSIDE_RUNTIME_ARTIFACT`). Default `.swissknifeman/orch-artifacts/**`, `.swissknifeman/orch/**`, `**/tests/evidence/**`; a layer of the work source can only add patterns.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
         "fence": {
           "description": "What the executor may change. `project` (default): any file of the project; `scope.write_set` is the expected change, and a path outside it is reported by the executor as a `deviation` instead of blocking the piece. `plan`: the write set is a fence, a path outside it makes the executor stop with `blocked`.",
           "type": "string",
           "enum": ["project", "plan"]
         },
         "extra_paths": {
-          "description": "Directories outside the project that the executor may also change (absolute, or `~/...`): they are named in its prompt and added to its filesystem guard (`ro-run.py --rw`). Default none.",
+          "description": "Directories outside the project that the executor may also change (absolute, or `~/...`): they are named in its prompt and added to the filesystem guard of every writing role (`ro-run.py --rw`; a Claude Code role also gets `--add-dir` and, under the provider sandbox, `sandbox.filesystem.allowWrite`; a Codex role `--add-dir`). Default none.",
           "type": "array",
           "uniqueItems": true,
           "items": {"type": "string", "maxLength": 4096, "pattern": "^(?!.*(^|/)\\.\\.(/|$))(/|~/)"}

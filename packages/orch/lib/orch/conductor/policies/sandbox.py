@@ -8,6 +8,7 @@ import subprocess
 from typing import Optional
 
 from orch import sandbox
+from orch.conductor import options as opts
 from orch.conductor.domain.item import Item
 from orch.settings import ORCH_ROOT
 
@@ -56,8 +57,9 @@ def declared_network(role: str) -> str:
 
 def sandbox_args(self, item: Item, role: str, route: dict) -> list:
     """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash (the provider merges it with
-    the user's settings). A sandbox that cannot start never leaves the commands unconfined silently: ``prefer``
-    says so once and goes on under the filesystem guard, ``require`` was stopped in the preflight."""
+    the user's settings), with a write grant for ``scope.extra_paths`` when the role writes. A sandbox that cannot start
+    never leaves the commands unconfined silently: ``prefer`` says so once and goes on under the filesystem guard (which
+    gets the paths as ``--rw``), ``require`` was stopped in the preflight."""
     mode = self._sandbox_mode(item)
     if mode == "off" or not self._claude_bash(route):
         return []
@@ -72,6 +74,12 @@ def sandbox_args(self, item: Item, role: str, route: dict) -> list:
     if not self._knows(route["argv"], ["--settings"]):
         return []
     block = {"enabled": True, "allowUnsandboxedCommands": False, "failIfUnavailable": True}
+    if role in opts.WRITING_ROLES:
+        # the shell of a writer may change the directories ``scope.extra_paths`` grants, as its file tools do (``--add-dir``);
+        # ``sandbox.filesystem.allowWrite`` takes absolute or ``~`` paths and merges with the settings of the user
+        granted = [os.path.expanduser(path) for path in self._scope_option(item, "extra_paths", [])]
+        if granted:
+            block["filesystem"] = {"allowWrite": granted}
     if self.declared_network(role) != "allowed":
         block["network"] = {"strictAllowlist": True,
                             "allowedDomains": list(item.options["instructions"].get("sandbox_domains") or [])}

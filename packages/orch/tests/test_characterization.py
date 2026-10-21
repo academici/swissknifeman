@@ -403,6 +403,8 @@ COVERAGE = {
     "GROUP_FOLLOWUP_NOT_DONE": "test:test_conductor_review_plan.py",
     "TOKEN_BUDGET": "test:test_budget_hard.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
+    "OUTSIDE_MODULE": "test:test_write_fence.py", "OUTSIDE_RUNTIME_ARTIFACT": "test:test_write_fence.py",
+    "CHECKS_MUTATED": "test:test_write_fence.py",
     # Beacons
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
@@ -418,6 +420,7 @@ COVERAGE = {
     "TRIAGE_REPRO_TRIVIAL": "test:test_triage_repro.py", "TRIAGE_REPRO_MISMATCH": "test:test_triage_repro.py",
     "TRIAGE_REPRO_UNVERIFIED": "test:test_triage_repro.py", "REVIEW_MODE_NONE_SKIPPED": "test:test_conductor_review_plan.py",
     "GROUP_REVIEW_RESOLVED": "test:test_conductor_review_plan.py",
+    "RUNTIME_ARTIFACT_RELOCATED": "test:test_write_fence.py",
 }
 
 

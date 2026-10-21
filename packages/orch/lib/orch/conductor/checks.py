@@ -144,6 +144,8 @@ _QUOTED = re.compile(r"'([^']*)'|\"([^\"]*)\"")
 _VARIABLE = re.compile(r"\$(\w+)|\$\{(\w+)\}")
 MAX_WORDS = 256
 MAX_GLOB = 4096  # a glob that matches more files than this is not followed: its inputs are then not known
+PATTERN_PROGRAMS = ("find", "fd", "fdfind")  # programs that expand a quoted pattern against the folders they walk
+_CASE = re.compile(r"(?<![\w$./-])case\b(.*?)\bin\b(.*?)\besac\b", re.S)
 
 
 def _digest_file(path: Path, known: Optional[dict]) -> Optional[str]:
@@ -167,15 +169,47 @@ def _digest_file(path: Path, known: Optional[dict]) -> Optional[str]:
     return value
 
 
-def _names(text: str, found: list, depth: int = 0) -> None:
-    """Candidate file names of a command line: its words, and every quoted string as a whole (spaces kept) at any depth."""
-    found.extend(word.replace("\\ ", " ") for word in _WORD.findall(text))
+def _names(text: str, found: list, depth: int = 0, spelled: Optional[set] = None) -> None:
+    """Candidate file names of a command line: its words, and every quoted string as a whole (spaces kept) at any depth.
+    ``spelled`` collects the names the line spells out as such: not the stretch of a word that a glob character cuts
+    (``/dir/`` of ``/dir/*.txt`` is the start of a pattern, not an argument)."""
+    for word in _WORD.finditer(text):
+        name = word.group(0).replace("\\ ", " ")
+        found.append(name)
+        if spelled is not None and not (word.start() and text[word.start() - 1] in "*?[]") \
+                and not (word.end() < len(text) and text[word.end()] in "*?[]"):
+            spelled.add(name)
     if depth < 5:
         for single, double in _QUOTED.findall(text):
             inner = single or double
             if inner:
                 found.append(inner)
-                _names(inner, found, depth + 1)
+                if spelled is not None:
+                    spelled.add(inner)
+                _names(inner, found, depth + 1, spelled)
+
+
+def _case_patterns(cmd: str) -> bool:
+    """Whether the line holds a ``case`` whose branch patterns spell a path, a glob or a variable: the shell matches them as
+    text, so what they stand for is not a file the line names."""
+    for found in _CASE.finditer(cmd):
+        for branch in re.split(r";;&?|;&", found.group(2)):
+            if re.search(r"[*?\[/$~{]", branch.split(")", 1)[0]):
+                return True
+    return False
+
+
+def _pattern_folder(pattern: str, cwd: Path) -> bool:
+    """Whether the folder in front of the first glob character of a quoted pattern exists: the program that expands the
+    pattern reads files of it that the line does not name."""
+    cut = re.search(r"[*?\[]", pattern)
+    folder = os.path.dirname(pattern[:cut.start()]) if cut else ""
+    if not folder:
+        return False
+    try:
+        return (cwd / Path(folder).expanduser()).is_dir()
+    except (OSError, RuntimeError, ValueError):
+        return True
 
 
 def _ignored(project: Path, path: Path, known: Optional[dict]) -> Optional[bool]:
@@ -377,9 +411,19 @@ def _expansions(cmd: str, env: dict, cwd: Path) -> Optional[tuple]:
     words = []
     if not _lex(cmd, words):
         return None
+    if _case_patterns(cmd):
+        return None  # a case branch is matched by the shell as text, a path in it is not a file the line names
+    expander = any(len(parts) == 1 and parts[0][0] == "lit" and os.path.basename(parts[0][1]) in PATTERN_PROGRAMS
+                   for _, parts in words)
     names, matched = [], set()
     for mode, parts in words:
         relaxed = mode != "top"
+        for kind, value, quoted in parts:
+            if kind == "lit" and quoted and re.search(r"[*?\[]", value):
+                if expander:
+                    return None  # find -name '*.txt': the program, not the shell, expands the pattern
+                if not re.search(r"\s", value) and any(_pattern_folder(piece, cwd) for piece in value.split(":")):
+                    return None  # a quoted path pattern (or a list of them) into a folder whose files are not known
         literal = any(kind == "lit" and "/" in value for kind, value, _ in parts)
         if any(kind == "subst" for kind, _, _ in parts) and not (mode == "double"):
             unquoted = any(kind == "subst" and not quoted for kind, _, quoted in parts)
@@ -415,6 +459,8 @@ def _expansions(cmd: str, env: dict, cwd: Path) -> Optional[tuple]:
                 if not any(active and char in "*?[" for char, active in item):
                     names.append(text)
                     continue
+                if ":" in text and "/" in text:
+                    return None  # a PATH-like list of patterns: the program splits it, the shell would glob it as one word
                 pattern = "".join(char if active else glob.escape(char) for char, active in item)
                 if item and item[0] == ("~", True):
                     pattern = os.path.expanduser(pattern)
@@ -463,18 +509,29 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
     logs of the checks) are output. None when an input cannot be established (a file that cannot be read, a path built from
     an unset variable, an ignored folder, a line with too many names): nothing is then reused."""
     found, root = {}, project.resolve()
-    names = ["bash"]
-    _names(cmd, names)
+    names, spelled = ["bash"], set()
+    _names(cmd, names, spelled=spelled)
     names = list(dict.fromkeys(names))
     if len(names) > MAX_WORDS:
         return None
+    arguments = set()  # what the line names as an argument (a folder among them is an unknown input), not an env default
     for index, name in enumerate(names):
+        given = name in spelled
         if "$" in name and "/" in name:
             for _ in range(3):
                 name = _VARIABLE.sub(lambda m: env.get(m.group(1) or m.group(2), m.group(0)), name)
             if _VARIABLE.search(name):
                 return None  # a path built from a variable that is not set here
             names[index] = name
+        if given:
+            arguments.add(name)
+    for found_variable in _VARIABLE.finditer(cmd):  # a variable that holds a path (or a list of them) the line passes on
+        name = found_variable.group(1) or found_variable.group(2)
+        before, after = cmd[:found_variable.start()][-1:], cmd[found_variable.end():][:1]
+        if (before and (before in "/." or before.isalnum())) or (after and (after in "/*?[{." or after.isalnum())):
+            continue  # part of a longer word or path: the file it names is followed on its own
+        if name in env and name not in VOLATILE_ENV and name != "PATH" and not name.endswith(("_ROOT", "_PY")):
+            arguments.update(piece for piece in env[name].split(":") if piece.startswith("/") and "\n" not in piece)
     expanded = _expansions(cmd, env, cwd)
     if expanded is None:
         return None  # a glob, a brace list or a computed path whose files cannot be established
@@ -487,9 +544,19 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
         # a match the candidate carries (tracked or untracked) is not an input of its own
         extra = [name for name in extra if name not in carried or _ignored(project, matched[name], known)]
     names += extra
+    arguments.update(extra)
     names = list(dict.fromkeys(names))
     if len(names) > MAX_WORDS:
         return None
+    arguments.update(piece for name in list(arguments) for piece in name.split(":") if piece.startswith("/"))
+    names += sorted(arguments - set(names))
+    partner_roots = []
+    for key, value in env.items():
+        if key.endswith(("_ROOT", "_PY")) and value:
+            try:
+                partner_roots.append(Path(value).resolve())
+            except (OSError, RuntimeError):
+                pass
     names += [value for key, value in sorted(env.items())
               if key not in VOLATILE_ENV and not key.endswith(("_ROOT", "_PY")) and value.startswith("/")
               and "\n" not in value and ":" not in value][:64]
@@ -519,8 +586,9 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
                     if not ignored:
                         continue  # tracked or untracked: the candidate carries it
                 elif inside or not path.is_file():
-                    if not inside and path.is_dir() and path in reached:
-                        return None  # a folder outside the project that a glob reaches: its content is read, not known
+                    if not inside and path.is_dir() and (path in reached or (
+                            name in arguments and not any(path == one or one in path.parents for one in partner_roots))):
+                        return None  # a folder outside the project the line names or a glob reaches: its content is not known
                     continue
                 if not path.is_file():
                     continue

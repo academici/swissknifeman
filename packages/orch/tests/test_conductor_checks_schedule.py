@@ -600,6 +600,17 @@ class ExpandedInputTests(Case):
         self.assertFalse(self.run_round(document, number=2)[0].get("reused"))
         self.assertEqual(self.count(), 2)
 
+    def assert_unknown_input_runs_again(self, document, change):
+        """The input set is not known: the unchanged second round runs the command (green) and, after ``change``, the real
+        command of the third round exits 1, where a reused green would have said 0."""
+        self.assert_never_reused(document)
+        change()
+        row = self.run_round(document, number=3)[0]
+        self.assertFalse(row.get("reused"))
+        self.assertFalse(row["green"])
+        self.assertEqual(row["exit"], 1)
+        self.assertEqual(self.count(), 3)
+
     def test_an_external_glob_follows_the_files_it_matches(self):
         document = doc(("V1", f'test "$(cat {self.ext}/*.txt)" = good'))
         self.assert_fresh_red(document, lambda: self.good.write_text("bad\n"))
@@ -671,6 +682,70 @@ class ExpandedInputTests(Case):
         self.run_round(document)
         self.assertTrue(self.run_round(document, number=2)[0]["reused"])
         self.assertEqual(self.count(), 1)
+
+    def test_a_folder_named_outside_the_project_is_never_reused(self):
+        """The listing of an external folder is an input nobody fingerprints: the renamed file must run the check again."""
+        document = doc(("V1", f'test "$(ls -1 {self.ext})" = a.txt'))
+        self.assert_unknown_input_runs_again(document, lambda: self.good.rename(self.ext / "b.txt"))
+
+    def test_a_folder_given_through_a_set_variable_is_never_reused(self):
+        with mock.patch.dict(os.environ, {"SKM_PROBE_DIR": str(self.ext)}):
+            document = doc(("V1", 'test "$(ls -1 $SKM_PROBE_DIR)" = a.txt'))
+            self.assert_unknown_input_runs_again(document, lambda: self.good.rename(self.ext / "b.txt"))
+
+    def test_a_folder_inside_a_quoted_script_is_never_reused(self):
+        document = doc(("V1", f"bash -c 'test \"$(ls -1 {self.ext})\" = a.txt'"))
+        self.assert_unknown_input_runs_again(document, lambda: self.good.rename(self.ext / "b.txt"))
+
+    def test_a_folder_in_a_path_like_list_is_never_reused(self):
+        other = self.out / "other"
+        other.mkdir()
+        document = doc(("V1", f'DIRS={other}:{self.ext}; test "$(IFS=:; for d in $DIRS; do ls -1 $d; done)" = a.txt'))
+        self.assert_unknown_input_runs_again(document, lambda: self.good.rename(self.ext / "b.txt"))
+
+    def assert_pattern_list_is_never_reused(self, quote):
+        other = self.out / "other"
+        other.mkdir()
+        document = doc(("V1", f'P={quote}{other}/*.cfg:{self.ext}/*.txt{quote}; '
+                              "IFS=:; cat $P 2>/dev/null | grep -q good"))
+        self.assert_unknown_input_runs_again(document, lambda: self.good.write_text("bad\n"))
+
+    def test_a_list_of_glob_patterns_split_by_the_program_is_never_reused(self):
+        self.assert_pattern_list_is_never_reused("")
+
+    def test_a_quoted_list_of_glob_patterns_split_by_the_program_is_never_reused(self):
+        self.assert_pattern_list_is_never_reused('"')
+
+    def test_a_case_pattern_that_spells_a_path_is_never_reused(self):
+        self.assert_never_reused(doc(("V1", f"case $PWD in {self.ext}/*.txt) false;; esac")))
+
+    def test_a_case_with_plain_patterns_keeps_the_reuse(self):
+        document = doc(("V1", "case x in a|b) false;; x) true;; esac"))
+        self.run_round(document)
+        self.assertTrue(self.run_round(document, number=2)[0]["reused"])
+        self.assertEqual(self.count(), 1)
+
+    def test_a_pattern_a_program_expands_from_a_quote_is_never_reused(self):
+        (self.root / "a.local").write_text("good\n", encoding="utf-8")  # git-ignored: only the program reads it
+        document = doc(("V1", "test \"$(find . -maxdepth 1 -name '*.local' -exec cat {} +)\" = good"))
+        self.assert_unknown_input_runs_again(document, lambda: (self.root / "a.local").write_text("bad\n"))
+
+    def test_a_quoted_path_pattern_into_an_existing_folder_is_never_reused(self):
+        script = "import glob, sys; print(open(glob.glob(sys.argv[1])[0]).read().strip())"
+        document = doc(("V1", f"test \"$(python3 -c '{script}' '{self.ext}/*.txt')\" = good"))
+        self.assert_unknown_input_runs_again(document, lambda: self.good.write_text("bad\n"))
+
+    def test_a_folder_that_only_the_environment_holds_keeps_the_reuse(self):
+        with mock.patch.dict(os.environ, {"SKM_PROBE_DIR": str(self.ext), "SKM_PROBE_LIST": f"{self.ext}:{self.out}"}):
+            document = doc(("V1", "true"))
+            self.run_round(document)
+            self.assertTrue(self.run_round(document, number=2)[0]["reused"])
+            self.assertEqual(self.count(), 1)
+
+    def test_a_file_named_with_a_known_folder_prefix_keeps_the_reuse(self):
+        document = doc(("V1", f'test "$(cat {self.ext}/a.txt)" = good && echo "a*" > /dev/null'))
+        self.run_round(document)
+        self.assertTrue(self.run_round(document, number=2)[0]["reused"])
 
     def test_a_glob_that_matches_nothing_keeps_the_reuse_and_a_new_match_runs_the_check(self):
         document = doc(("V1", f"cat {self.ext}/*.cfg > /dev/null 2>&1; true"))

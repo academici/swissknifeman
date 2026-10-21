@@ -49,11 +49,15 @@ def admit(self, item: Item, scope: str = "all") -> None:
         if limit and used >= limit:
             raise Stop("TOKEN_BUDGET", f"{label} used {used} fresh tokens >= {key} {limit}; needs_replan: split the item "
                        f"or raise the limit (conduct resume --run {self.run_id} --raise-limit {key}=<value>)")
-    if scope in ("all", "attempt") and item.state.get("usage_incomplete") and hard_limited(self, item) \
-            and ((item.options or {}).get("limits") or {}).get("unmetered", "stop") != "charge":
-        raise Stop("TOKEN_BUDGET_UNMETERED", f"{item.ref}: a model attempt reported no usage while a hard token limit is "
-                   "set; resume with an --options file that sets limits.unmetered to \"charge\" (a fixed "
-                   "limits.unmetered_charge_tokens per attempt without usage), or set it in [orch.conductor.limits]")
+    if scope in ("all", "attempt") and ((item.options or {}).get("limits") or {}).get("unmetered", "stop") != "charge":
+        own = bool(item.state.get("usage_incomplete")) and hard_limited(self, item)
+        # unknown usage of any piece of the run escapes a run-wide limit: it is kept at run scope, not only in the piece
+        unknown = sorted(self.state.get("usage_unmetered") or []) if effective_limit(self, item, "run_tokens_hard_max") > 0 else []
+        if own or unknown:
+            named = ", ".join(unknown) if unknown else item.ref
+            raise Stop("TOKEN_BUDGET_UNMETERED", f"{named}: a model attempt reported no usage while a hard token limit is "
+                       "set; resume with an --options file that sets limits.unmetered to \"charge\" (a fixed "
+                       "limits.unmetered_charge_tokens per attempt without usage), or set it in [orch.conductor.limits]")
     stage_max = int(((getattr(item, "policy", None) or {}).get("budgets") or {}).get("stage_tokens_max") or 0)
     if scope == "attempt" and stage_max:
         step = getattr(self, "_step_tokens", None) or {}
@@ -106,8 +110,13 @@ def unmetered(self, item: Item, attempt: Optional[str] = None) -> None:
     stops the run; under ``limits.unmetered`` ``charge`` the attempt is charged a fixed amount."""
     with self.store.mutating():  # a role thread gets here while the main loop saves the state (I2)
         first = not item.state.get("usage_incomplete")
+        known = item.ref in (self.state.get("usage_unmetered") or [])
+        uncharged = not charge_amount(self, item) and not known  # the run keeps what no charge accounts for
         if first:
             item.state["usage_incomplete"] = True
+        if uncharged:
+            self.state.setdefault("usage_unmetered", []).append(item.ref)
+        if first or uncharged:
             self._save()
     charge_unmetered(self, item, attempt)
     if first:  # announced after the lock
@@ -115,13 +124,21 @@ def unmetered(self, item: Item, attempt: Optional[str] = None) -> None:
                            message=f"{item.ref}: a model attempt reported no usage; token limits cannot see it")
 
 
+def charge_amount(self, item: Item) -> int:
+    """What an attempt without usage is charged (``limits.unmetered`` ``charge`` with a hard token limit in force), else 0."""
+    limits = (item.options or {}).get("limits") or {}
+    amount = int(limits.get("unmetered_charge_tokens", DEFAULT_CHARGE) or 0)
+    if limits.get("unmetered", "stop") != "charge" or amount <= 0 or not hard_limited(self, item):
+        return 0
+    return amount
+
+
 def charge_unmetered(self, item: Item, attempt: Optional[str] = None) -> None:
     """``limits.unmetered`` ``charge``: an attempt that reported no usage costs ``limits.unmetered_charge_tokens`` fresh
     input tokens, counted in the piece, the run and the step and kept apart in ``tokens.charged``. Once per attempt: a
     replayed receipt (``attempt``) is not charged again. Without a hard token limit nothing is charged."""
-    limits = (item.options or {}).get("limits") or {}
-    amount = int(limits.get("unmetered_charge_tokens", DEFAULT_CHARGE) or 0)
-    if limits.get("unmetered", "stop") != "charge" or amount <= 0 or not hard_limited(self, item):
+    amount = charge_amount(self, item)
+    if not amount:
         return
     with self.store.mutating():
         charged = item.state.setdefault("usage_charged", [])

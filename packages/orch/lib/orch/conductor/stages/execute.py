@@ -105,7 +105,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
 def set_aside_runtime(self, item: Item, key: str, found: dict) -> list:
     """What the executor round ``key`` left under ``scope.runtime_paths`` (logs, evidence). New untracked files are moved
     (``os.replace``) to ``<artifacts of the piece>/stray/<path>``, said once as ``RUNTIME_ARTIFACT_RELOCATED`` and kept in
-    ``state.relocated`` so ``changed`` does not count them; the folders of the conductor itself are not touched. The tracked
+    ``state.relocated`` so ``changed`` does not count them (the checks of a round use it too, key ``checks.<n>``); the folders of the conductor itself are not touched. The tracked
     paths under them that changed are returned: they are history and cannot be moved."""
     patterns = self._scope_option(item, "runtime_paths", opts.DEFAULT_SCOPE["runtime_paths"])
     listed = scopes.own([path for path in found.get("changed") or [] if scopes.under(path, patterns)],
@@ -125,8 +125,9 @@ def set_aside_runtime(self, item: Item, key: str, found: dict) -> list:
             shutil.move(str(self.project / path), str(target))
         moved[path] = self._relative(target)
     if moved:
-        item.state.setdefault("relocated", {}).setdefault(key, {}).update(moved)
-        self._save()
+        with self.store.mutating():  # the checks of a round run in a thread beside the review (I2)
+            item.state.setdefault("relocated", {}).setdefault(key, {}).update(moved)
+            self._save()
         self.progress.emit("info", item=item.ref, stage=key, reason_code="RUNTIME_ARTIFACT_RELOCATED",
                            message=f"{len(moved)} runtime artifact(s) left in the tree were moved to the artifacts of the piece: "
                                    + ", ".join(f"{path} -> {where}" for path, where in sorted(moved.items())[:5])

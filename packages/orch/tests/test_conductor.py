@@ -278,7 +278,8 @@ class HappyPathTests(ConductorCase):
         self.assertNotIn("status", source["items"]["W1"]["report"])  # the status travels apart from the report
         self.assertEqual(source["items"]["W1"]["executed_by"]["provider"], "claude-code")
         self.assertEqual([commit["ref"] for commit in source["commits"]], ["W1"])
-        self.assertIn("plans/T/artifacts/W1/", source["commits"][0]["paths"])
+        self.assertIn("plans/T/artifacts/W1/stage-report.json", source["commits"][0]["paths"])  # the records, file by file
+        self.assertNotIn("plans/T/artifacts/W1/", source["commits"][0]["paths"])  # not the folder: it holds ``stray/`` too
         self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (1, 1, 0))
         # every stage printed its start and its end; the journal holds the same lines
         stages = [(line["event"], line.get("stage")) for line in self.lines(err) if line["event"].startswith("stage.")]

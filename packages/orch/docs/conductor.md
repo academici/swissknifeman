@@ -287,9 +287,14 @@ directory. A path outside the write set that belongs to another module blocks th
 (`scope.outside_module: block`, default; `deviation` keeps the paths as a deviation as before; `scope.outside: block` still
 stops with the stricter `OUTSIDE_WRITE_SET`). **Checks** that change the tree: the checks run again once on the changed tree
 (`checks/<n>-rerun/`, the evidence files are overwritten, so the evidence proves the candidate that is committed); a second
-change is `CHECKS_MUTATED`. The files they changed (`state.checks_changed`) belong to the candidate and are committed like the
-executor's, under the same module rule (`OUTSIDE_MODULE`); a tracked runtime file they changed stops with
-`OUTSIDE_RUNTIME_ARTIFACT`, an untracked one stays in the tree and out of the commit.
+change is `CHECKS_MUTATED`. The product files they changed (`state.checks_changed`) belong to the candidate and are committed like the
+executor's, under the same module rule (`OUTSIDE_MODULE`); their ownership is recorded (and merged with the earlier record)
+before the rerun starts, so a failed rerun or a retry that finds the formatter idempotent loses none of it. A runtime
+artifact (`scope.runtime_paths`) is no product and no mutation: an untracked one is moved to `<artifacts>/stray/` right
+after each pass (`state.relocated["checks.<n>"]`, `RUNTIME_ARTIFACT_RELOCATED`), so a log rewritten on every run neither
+triggers the rerun nor `CHECKS_MUTATED` and the tree stays clean; a tracked one stops with `OUTSIDE_RUNTIME_ARTIFACT`.
+The commit lists the records of the piece's artifact folder file by file (tracked or not ignored); the `stray/` subfolder is
+never committed, also when the source names a tracked artifacts folder.
 
 **A result outside its contract** goes through three steps: healing by rule (`heal.py`: one honest reading of a form
 mismatch, such as a string exit, a differently spelled status or a GREEN verdict with a Major finding; every mend is
@@ -820,7 +825,9 @@ Missing usage (`usage_incomplete`) is not zero. While a hard limit is in force, 
 without usage does: `stop` (default) stops the piece with `TOKEN_BUDGET_UNMETERED` at the next admission (after the
 attempt that reported none); `charge` charges `limits.unmetered_charge_tokens` (default 50000) per attempt as fresh input
 tokens of the piece, the run and the step, counted apart in `tokens.charged`, once per attempt even when its receipt is
-read again. The `BUDGET_UNMETERED` beacon stays. With both hard limits 0 nothing is stopped or charged: the beacon is
+read again. Under `stop` the unknown usage is kept at run scope (`state.usage_unmetered`: the pieces whose attempt reported
+none and that no charge accounted for): with `run_tokens_hard_max` in force it stops every later admission of the run,
+whatever piece the attempt belonged to; a piece limit alone consults the piece only. The `BUDGET_UNMETERED` beacon stays. With both hard limits 0 nothing is stopped or charged: the beacon is
 all. `unmetered` is not a `--raise-limit` key; to continue a piece stopped with `TOKEN_BUDGET_UNMETERED`, set it to
 `charge` in the `--options` file of the run (a resume reads the file again) or in `[orch.conductor.limits]`, then
 `resume`. Attempts that already ran under `stop` are not charged afterwards.

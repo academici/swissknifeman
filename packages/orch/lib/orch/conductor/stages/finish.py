@@ -6,9 +6,10 @@ import re
 
 from typing import Optional
 
-from orch.conductor import questions as questions_mod
+from orch.conductor import checks as checks_mod, questions as questions_mod
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.infrastructure.files import write_json
+from orch.conductor.infrastructure import work_source
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
 
 
@@ -105,10 +106,21 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
 
 
 def commit_paths(self, item: Item, report: dict) -> list:
-    """The paths a commit of the piece takes: its changes, its artifact folder when the source named one, the research
-    results the source saved. The fallback artifact folder holds local records and is never committed (the source keeps
-    what lasts at register): neither the folder nor a file in it, such as a research result the file source kept there."""
-    records = set() if self._local_records(item) else {self._relative(item.artifacts) + "/"}
+    """The paths a commit of the piece takes: its changes, the records of its artifact folder when the source named one, the
+    research results the source saved. The records are listed file by file (git: tracked and not ignored ones), never as the
+    folder: a commit of the folder would take the runtime artifacts set aside in its ``stray`` subfolder too. The fallback
+    artifact folder holds local records and is never committed (the source keeps what lasts at register): neither the
+    folder nor a file in it, such as a research result the file source kept there."""
     local = FALLBACK_ARTIFACTS.as_posix() + "/"
+    stray = (self._relative(work_source.stray_dir(item)) + "/") if item.artifacts else None
+    records = set() if self._local_records(item) else artifact_records(self, item)
     return sorted(path for path in set(report.get("changed_paths", [])) | records | self._research_paths(item)
-                  if not path.startswith(local))
+                  if not path.startswith(local) and not (stray and path.startswith(stray)))
+
+
+def artifact_records(self, item: Item) -> set:
+    """The files of the artifact folder of the piece a commit may take (not the ``stray`` runtime artifacts set aside)."""
+    folder = self._relative(item.artifacts)
+    stray = self._relative(work_source.stray_dir(item)) + "/"
+    listed = checks_mod.git(self.project, "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", folder)
+    return {path for path in listed.split("\0") if path and not path.startswith(stray)}

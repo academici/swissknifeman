@@ -5,8 +5,9 @@ tree run again once (``CHECKS_MUTATED`` when they change it every time)."""
 from __future__ import annotations
 
 import unittest
+from unittest import mock
 
-from orch.conductor import options, scope
+from orch.conductor import checks, options, scope
 
 from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
 
@@ -218,6 +219,61 @@ class RuntimeArtifactTests(ConductorCase):
         self.assertEqual(self.calls("reviewer"), 0)
 
 
+class CommitPathsTests(unittest.TestCase):
+    """The commit of a piece takes the records of its artifact folder, never the runtime artifacts set aside in ``stray``."""
+
+    def commit_of(self, folder: str, ignore: str = ""):
+        import subprocess
+        import tempfile
+        from pathlib import Path
+        from types import SimpleNamespace
+        from orch.conductor.infrastructure import roles, work_source
+        from orch.conductor.stages import finish
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name).resolve()
+
+        def git(*args):
+            return subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *args], cwd=root, check=True,
+                                  capture_output=True, text=True).stdout
+
+        git("init", "-q")
+        (root / ".gitignore").write_text(ignore, encoding="utf-8")
+        (root / folder).mkdir(parents=True)
+        (root / folder / "stage-report.json").write_text("{}\n", encoding="utf-8")
+        git("add", "-A")
+        git("commit", "-q", "-m", "x")  # the artifact folder is tracked already
+        (root / folder / "stage-report.json").write_text('{"a": 1}\n', encoding="utf-8")  # a record, rewritten
+        (root / folder / "research-1.json").write_text("{}\n", encoding="utf-8")  # a new record
+        if ignore:
+            (root / folder / "scratch.tmp").write_text("x\n", encoding="utf-8")  # an ignored file
+        (root / folder / "stray" / "tests" / "evidence").mkdir(parents=True)
+        (root / folder / "stray" / "log.txt").write_text("runtime\n", encoding="utf-8")
+        (root / folder / "stray" / "tests" / "evidence" / "x.json").write_text("{}\n", encoding="utf-8")
+        me = SimpleNamespace(project=root, _research_paths=lambda item: set())
+        me._relative = lambda path: roles.relative(me, path)
+        me._local_records = lambda item: work_source.local_records(me, item)
+        item = SimpleNamespace(artifacts=root / folder)
+        paths = finish.commit_paths(me, item, {"changed_paths": ["out/W1.txt"]})
+        git("add", "--", *[path for path in paths if path != "out/W1.txt"])  # the product file is not made here
+        return paths, git("diff", "--cached", "--name-only").splitlines()
+
+    def test_a_tracked_artifact_folder_commits_its_records_and_not_the_stray_files(self):
+        paths, staged = self.commit_of("plans/T/artifacts/W1/run-1")
+        self.assertEqual(staged, ["plans/T/artifacts/W1/run-1/research-1.json", "plans/T/artifacts/W1/run-1/stage-report.json"])
+        self.assertFalse([path for path in paths if "stray" in path], paths)
+        self.assertNotIn("plans/T/artifacts/W1/run-1/", paths)
+
+    def test_an_ignored_record_does_not_break_the_commit(self):
+        paths, staged = self.commit_of("plans/T/artifacts/W1/run-1", ignore="*.tmp\n")
+        self.assertFalse([path for path in paths if path.endswith("scratch.tmp")], paths)
+        self.assertEqual(staged, ["plans/T/artifacts/W1/run-1/research-1.json", "plans/T/artifacts/W1/run-1/stage-report.json"])
+
+    def test_the_local_fallback_folder_commits_nothing(self):
+        paths, staged = self.commit_of(".swissknifeman/orch-artifacts/cnd-x/W1")
+        self.assertEqual((paths, staged), (["out/W1.txt"], []))
+
+
 class MutatingChecksTests(ConductorCase):
     FORMAT = "test -f out/W1.txt && (grep -q formatted out/W1.txt || echo formatted >> out/W1.txt)"
 
@@ -286,6 +342,86 @@ class MutatingChecksTests(ConductorCase):
         self.assertIn("out/W1.txt", paths)
         self.assertFalse([path for path in paths if "tests/evidence" in path], paths)
         self.assertEqual(self.git("show", "HEAD:out/W1.txt"), "ok\nformatted\n")
+
+    def test_a_runtime_file_of_a_check_is_set_aside_and_leaves_no_dirty_tree_and_no_ownership(self):
+        cmd = "test -f out/W1.txt && mkdir -p packages/orch/tests/evidence && echo '{}' > packages/orch/tests/evidence/x.json"
+        self.piece(cmd)
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.git("status", "--porcelain", "--", "packages").strip(), "")
+        self.assertFalse((self.project / "packages/orch/tests/evidence/x.json").exists())
+        item = self.state(err)["items"]["W1"]
+        self.assertNotIn("checks_changed", item)
+        self.assertEqual(sorted(item["relocated"]["checks.1"]), ["packages/orch/tests/evidence/x.json"])
+        where = item["relocated"]["checks.1"]["packages/orch/tests/evidence/x.json"]
+        self.assertIn("/stray/", where)
+        self.assertTrue((self.project / where).is_file())
+        self.assertFalse(list((self.run_dir(err) / "W1" / "checks").glob("*-rerun")))  # a runtime file is no mutation
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "CHECK_CHANGED_TREE"])
+
+    def test_a_runtime_log_rewritten_with_a_timestamp_on_every_run_does_not_stop_the_run(self):
+        cmd = "test -f out/W1.txt && mkdir -p packages/orch/tests/evidence && date +%s%N > packages/orch/tests/evidence/run.log"
+        self.piece(cmd)
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.git("status", "--porcelain", "--", "packages").strip(), "")
+        for path in self.source()["commits"][0]["paths"]:
+            self.assertNotIn("tests/evidence", path)
+
+    def test_a_product_change_runs_the_checks_again_once_beside_a_regenerated_runtime_log(self):
+        cmd = ("test -f out/W1.txt && mkdir -p packages/orch/tests/evidence && date +%s%N > packages/orch/tests/evidence/run.log "
+               "&& (grep -q formatted out/W1.txt || echo formatted >> out/W1.txt)")
+        self.piece(cmd)
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(len([line for line in self.lines(err) if line.get("reason_code") == "CHECK_CHANGED_TREE"]), 1)
+        self.assertTrue(list((self.run_dir(err) / "W1" / "checks").glob("*-rerun")))
+        self.assertEqual(self.git("show", "HEAD:out/W1.txt"), "ok\nformatted\n")
+        self.assertEqual(self.git("status", "--porcelain", "--", "packages", "out").strip(), "")
+        self.assertEqual(self.state(err)["items"]["W1"]["checks_changed"], {"1": ["out/W1.txt"]})
+
+    def test_a_product_change_that_repeats_stops_even_beside_a_runtime_log(self):
+        cmd = ("test -f out/W1.txt && mkdir -p packages/orch/tests/evidence && date +%s%N > packages/orch/tests/evidence/run.log "
+               "&& date +%s%N >> out/W1.txt")
+        self.piece(cmd)
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "CHECKS_MUTATED")), err)
+        end = [line for line in self.lines(err) if line["event"] == "run.end"][-1]
+        self.assertIn("out/W1.txt", end["message"])
+        self.assertNotIn("run.log", end["message"])
+        self.assertEqual(self.source()["commits"], [])
+
+    def test_a_check_that_changes_a_tracked_runtime_file_still_blocks(self):
+        tracked = self.project / "packages" / "orch" / "tests" / "evidence" / "x.json"
+        tracked.parent.mkdir(parents=True)
+        tracked.write_text("{}\n", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "history")
+        self.piece("test -f out/W1.txt && date +%s%N > packages/orch/tests/evidence/x.json")
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "OUTSIDE_RUNTIME_ARTIFACT")), err)
+        self.assertEqual(self.source()["commits"], [])
+
+    def test_a_failed_rerun_keeps_the_ownership_of_the_formatted_file_across_the_retry(self):
+        self.piece(self.FORMAT)
+        real = checks.run_checks
+
+        def failing_rerun(*args, **kwargs):
+            if str(kwargs["log_dir"]).endswith("-rerun"):
+                raise OSError("disk went away")
+            return real(*args, **kwargs)
+
+        with mock.patch.object(checks, "run_checks", side_effect=failing_rerun):
+            code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "CHECKS_FAILED")), err)
+        self.assertEqual(self.state(err)["items"]["W1"]["checks_changed"], {"1": ["out/W1.txt"]})
+        self.assertEqual(self.source()["commits"], [])
+        code, _, err = self.conduct("resume", "--run", self.run_dir(err).name, "--json-lines")  # the formatter is idempotent now
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.state(err)["items"]["W1"]["checks_changed"], {"1": ["out/W1.txt"]})
+        self.assertIn("out/W1.txt", self.source()["commits"][0]["paths"])
+        self.assertEqual(self.git("show", "HEAD:out/W1.txt"), "ok\nformatted\n")
+        self.assertEqual(self.calls("executor"), 1)
 
     def test_checks_that_change_nothing_run_once(self):
         self.piece("test -f out/W1.txt")

@@ -62,7 +62,7 @@ class QuestionTriggerTests(AdvisorCase):
         saved = json.loads((self.project / "plans/T/artifacts/W1/advice-1.json").read_text())
         self.assertEqual(contract.problems(saved, "advice"), [])
         self.assertEqual(saved["recommendation"], "keep")
-        self.assertIn("plans/T/artifacts/W1/", self.source()["commits"][0]["paths"])  # the folder that holds advice-1.json
+        self.assertIn("plans/T/artifacts/W1/advice-1.json", self.source()["commits"][0]["paths"])  # the records, file by file
 
     def test_the_prompt_of_the_advisor_names_the_problem_the_evidence_and_the_result_block(self):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "advisor": [advice("question:Q1@1")],

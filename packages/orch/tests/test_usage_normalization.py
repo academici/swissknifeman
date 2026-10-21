@@ -213,6 +213,7 @@ class UsageConductorTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertIs(self.state(err)["items"]["W1"]["usage_incomplete"], True)
+        self.assertEqual(self.state(err)["usage_unmetered"], ["W1"])  # kept at run scope: a later piece sees it too
         self.assertEqual([(line["event"], line["message"]) for line in self.lines(err)
                           if line.get("reason_code") == "BUDGET_UNMETERED"],
                          [("info", "W1: a model attempt reported no usage; token limits cannot see it")])
@@ -246,6 +247,7 @@ class UsageConductorTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertNotIn("usage_incomplete", self.state(err)["items"]["W1"])
+        self.assertNotIn("usage_unmetered", self.state(err))
         self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "BUDGET_UNMETERED"])
 
     def test_codex_cache_does_not_trigger_a_false_budget_beacon(self):

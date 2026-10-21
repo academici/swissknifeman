@@ -254,6 +254,33 @@ class HardBudgetTests(ConductorCase):
         self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
         self.assertEqual(self.calls("reviewer"), 1)
 
+    def two_pieces(self, **limits):
+        """W1's final attempt (its review) reports no usage; W2 follows."""
+        self.set_items({ref: {} for ref in ("W1", "W2")})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [dict(GREEN, usage={}), GREEN]})
+        return self.run_items("W1", "W2", extra=("--options", self.options_file(**limits), "--no-batch"))
+
+    def test_unknown_usage_of_an_earlier_piece_stops_the_next_one_under_a_run_wide_limit(self):
+        code, _, err = self.two_pieces(run_tokens_hard_max=1000000)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET_UNMETERED")), err)
+        self.assertEqual(self.calls("executor"), 1)  # W2 never reached its provider
+        self.assertEqual(self.state(err)["usage_unmetered"], ["W1"])
+        self.assertNotIn("W2", self.state(err)["items"])
+        self.assertIn("W1", self.state(err)["stop"]["message"])
+        code, _, again = self.resume(err)  # the run keeps the unknown usage: a resume stops again before any model call
+        self.assertEqual((code, self.outcome(again)), (1, ("stopped", "TOKEN_BUDGET_UNMETERED")), again)
+        self.assertEqual(self.calls("executor"), 1)
+        self.options_file(run_tokens_hard_max=1000000, unmetered="charge")
+        code, _, resumed = self.resume(err)
+        self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
+        self.assertEqual(self.calls("executor"), 2)
+
+    def test_a_charged_attempt_is_accounted_and_does_not_enter_the_run_wide_unknown(self):
+        code, _, err = self.two_pieces(run_tokens_hard_max=1000000, unmetered="charge")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("usage_unmetered", self.state(err))
+        self.assertGreaterEqual(self.state(err)["tokens"]["charged"], 50000)
+
     def test_charge_counts_a_fixed_amount_per_attempt_without_usage_and_admission_sees_the_sum(self):
         self.script({"executor": [{"exit": 1, "stderr": "boom", "usage": {}}, dict(executor_ok("W1"), usage={})],
                      "reviewer": [GREEN]})
@@ -386,6 +413,56 @@ class AdmissionTests(unittest.TestCase):
             budget.admit(owner, item)
         self.assertEqual(caught.exception.code, "TOKEN_BUDGET")
         self.assertTrue(caught.exception.message.startswith("run R used 100 fresh tokens >= run_tokens_hard_max 100;"))
+
+    def owner(self, **state):
+        import threading
+        saved = []
+        owner = SimpleNamespace(state={"tokens": {"input": 10, "output": 1}, **state}, run_doc={}, run_id="R",
+                                store=SimpleNamespace(mutating=threading.RLock), _save=lambda: saved.append(1),
+                                progress=SimpleNamespace(emit=lambda *args, **kwargs: None), saved=saved)
+        return owner
+
+    def piece(self, ref, **limits):
+        item = Item(ref, "source-run", {}, Path(), {})
+        item.options = {"limits": limits}
+        return item
+
+    def test_an_unmetered_attempt_of_one_piece_stops_every_later_admission_under_a_run_wide_limit(self):
+        owner = self.owner()
+        first, second = self.piece("A", run_tokens_hard_max=1000), self.piece("B", run_tokens_hard_max=1000)
+        budget.unmetered(owner, first, "attempt-1")  # A's final attempt reported no usage
+        self.assertEqual(owner.state["usage_unmetered"], ["A"])
+        self.assertTrue(owner.saved)
+        self.assertNotIn("usage_incomplete", second.state)
+        for scope in ("all", "attempt"):
+            with self.subTest(scope=scope), self.assertRaises(Stop) as caught:
+                budget.admit(owner, second, scope)
+            self.assertEqual(caught.exception.code, "TOKEN_BUDGET_UNMETERED")
+            self.assertIn("A:", caught.exception.message)
+        budget.admit(owner, second, "item")  # the piece and run scopes ask only for the tokens they count
+        budget.admit(owner, second, "run")
+
+    def test_the_run_wide_unknown_is_not_consulted_without_a_run_limit_or_under_charge(self):
+        owner = self.owner(usage_unmetered=["A"])
+        budget.admit(owner, self.piece("B", tokens_hard_max=1000))  # a piece limit alone: B owes nothing to A's attempt
+        budget.admit(owner, self.piece("B"))
+        owner.run_doc = {"limits_run": {"run_tokens_hard_max": {"value": 1000}}}
+        budget.admit(owner, self.piece("B", unmetered="charge"))  # charge: the caller accounts for what it cannot see
+        with self.assertRaises(Stop):
+            budget.admit(owner, self.piece("B"))
+
+    def test_the_unknown_of_the_run_is_recorded_once_and_a_charged_attempt_is_not_unknown(self):
+        owner = self.owner()
+        piece = self.piece("A", run_tokens_hard_max=1000)
+        budget.unmetered(owner, piece, "a1")
+        budget.unmetered(owner, piece, "a2")
+        self.assertEqual(owner.state["usage_unmetered"], ["A"])
+        owner = self.owner()
+        charging = self.piece("C", run_tokens_hard_max=1000, unmetered="charge")
+        charging.state["tokens"] = {"input": 0, "output": 0}
+        budget.unmetered(owner, charging, "c1")
+        self.assertNotIn("usage_unmetered", owner.state)
+        self.assertEqual(owner.state["tokens"]["charged"], budget.DEFAULT_CHARGE)
 
     def test_soft_and_hard_limits_validate_after_layers_merge(self):
         with self.assertRaises(options.OptionsError) as caught:

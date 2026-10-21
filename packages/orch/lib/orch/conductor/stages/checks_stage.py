@@ -14,6 +14,7 @@ from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
 from orch.conductor.progress import human_duration
+from orch.conductor.stages import execute
 
 
 def red_signature(rows: list) -> tuple:
@@ -138,52 +139,58 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
             on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid),
             idle_s=item.options["limits"].get("check_idle_timeout_s", 0), on_changed=on_changed)
 
-    changed, again = [], []
-
-    def first_change(paths: list) -> None:
-        changed.extend(paths)
-        self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_CHANGED_TREE",
-                           message=f"the checks changed {len(paths)} file(s) of the project: {', '.join(paths[:5])}"
-                                   f"{' …' if len(paths) > 5 else ''}; the checks run again on the changed tree")
-
+    first, again = [], []
     try:
-        rows = run(str(number), first_change)
-        if changed:
-            rows = run(f"{number}-rerun", again.extend)
+        rows = run(str(number), first.extend)
     except (RuntimeError, ValueError, OSError) as error:
         raise Stop("CHECKS_FAILED", str(error)) from None
-    if again:
-        raise Stop("CHECKS_MUTATED", "the checks change the tree on every run: " + ", ".join(sorted(set(again))[:20])
-                   + "; make the check idempotent")
-    if changed:
-        keep_check_changes(self, item, number, changed)
+    product = keep_check_changes(self, item, number, first)  # owned and recorded before any rerun can fail
+    if product:
+        self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_CHANGED_TREE",
+                           message=f"the checks changed {len(product)} file(s) of the project: {', '.join(product[:5])}"
+                                   f"{' …' if len(product) > 5 else ''}; the checks run again on the changed tree")
+        try:
+            rows = run(f"{number}-rerun", again.extend)
+        except (RuntimeError, ValueError, OSError) as error:
+            raise Stop("CHECKS_FAILED", str(error)) from None
+        repeated = keep_check_changes(self, item, number, again)
+        if repeated:
+            raise Stop("CHECKS_MUTATED", "the checks change the tree on every run: " + ", ".join(sorted(set(repeated))[:20])
+                       + "; make the check idempotent")
     return rows
 
 
-def keep_check_changes(self, item: Item, number: int, paths: list) -> None:
-    """The files the checks of round ``number`` changed belong to the candidate (``state.checks_changed``: the commit takes
-    them, the finish reports those outside the write set as a deviation), under the rules of the executor's changes: a
-    path of another module than the write set names stops the run (``OUTSIDE_MODULE``, unless ``scope.outside_module`` is
-    ``deviation``), a tracked runtime artifact stops it (``OUTSIDE_RUNTIME_ARTIFACT``), and an untracked one stays in the
-    tree and out of the commit. The folders of the conductor itself and paths the checks changed back to HEAD are no change."""
+def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
+    """The product files the checks of round ``number`` changed belong to the candidate (``state.checks_changed``: the commit
+    takes them, the finish reports those outside the write set as a deviation), under the rules of the executor's changes;
+    returned, they are what makes the checks run again. A path of another module than the write set names stops the run
+    (``OUTSIDE_MODULE``, unless ``scope.outside_module`` is ``deviation``). Runtime artifacts (``scope.runtime_paths``) are
+    no product: untracked ones are set aside at once (``set_aside_runtime``: out of the tree, the commit and the mutation
+    test of the rerun), a tracked one stops the run (``OUTSIDE_RUNTIME_ARTIFACT``). The ownership of the product paths is
+    recorded first, merged with what earlier rounds and attempts recorded, so a failing rerun or a retry that finds the
+    files already changed loses none of it. The folders of the conductor itself and paths the checks changed back to HEAD
+    are no change."""
     present = set(checks_mod.dirty_files(self.project))
     mine = [path for path in scopes.own(paths, self._not_the_role(item)) if path in present]
     patterns = self._scope_option(item, "runtime_paths", opts.DEFAULT_SCOPE["runtime_paths"])
     runtime = [path for path in mine if scopes.under(path, patterns)]
-    history = scopes.tracked(self.project, runtime)
+    product = [path for path in mine if path not in runtime]
+    if product:
+        with self.store.mutating():
+            kept = item.state.setdefault("checks_changed", {})
+            kept[str(number)] = sorted(set(kept.get(str(number)) or []) | set(product))
+            self._save()
+    history = execute.set_aside_runtime(self, item, f"checks.{number}", {"changed": runtime})
     if history:
         raise Stop("OUTSIDE_RUNTIME_ARTIFACT", "the checks changed tracked runtime artifacts (history, not product files): "
                    + ", ".join(history[:20]) + "; make the check write them elsewhere")
-    product = [path for path in mine if path not in runtime]
     write_set = (item.input_doc.get("scope") or {}).get("write_set")
     stranger = scopes.foreign(scopes.outside(product, write_set), write_set,
                               self._scope_option(item, "extra_paths", []), self.project)
     if stranger and item.options["scope"].get("outside_module", "block") == "block":
         raise Stop("OUTSIDE_MODULE", "the checks changed files of other modules: " + ", ".join(stranger[:20])
                    + "; add them to the item's task_files or make the check write them elsewhere")
-    with self.store.mutating():
-        item.state.setdefault("checks_changed", {})[str(number)] = product
-        self._save()
+    return product
 
 
 def check_tick(self, item: Item, number: int, check_id: str, elapsed: float, pid: int) -> None:

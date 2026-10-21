@@ -51,7 +51,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     conductor.run_id = "cnd-dry-run"
     claim = {"scenario": args.scenario or conductor.settings.default_profile, "options": []}
     item = engine.Item(ref="(preview)", orch_run="-", state={}, directory=Path(), claim=claim)
-    conductor.run_doc = {"options_file": str(args.options) if args.options else None}
+    conductor.run_doc = {"options_file": str(args.options) if args.options else None,
+                         "fence": getattr(args, "fence", None), "extra_paths": getattr(args, "allow_path", [])}
     conductor._resolve(item, persist=False)
     unavailable = conductor._routes(item, persist=False, preview=True) or {}
     problems = {**{role: conductor.route_problem(route) for role, route in item.routes.items()}, **unavailable}

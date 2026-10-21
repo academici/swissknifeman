@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- orch: `run --dry-run` учитывает CLI `--fence` и `--allow-path` и проверяет допустимость дополнительных путей тем же валидатором, что настоящий запуск.
 - scripts/workspace/aicore: `dev-worktree.sh bind|unbind` переключает primary одной атомарной мутацией `workspace project rebind --preserve-paths --include-path`: оба checkout входят в транзакцию, даже если live ещё не привязан. Сохраняются все прежние paths, их порядок, `bound_at` и другие проекты; маркеры обоих checkout проверяются до записи. Opt-in параметры `preserve`/`primary` в `aicore.workspace.set_paths` используют существующие lock и atomic writer; обычный rebind по-прежнему заменяет список путей.
 - orch: определение корня checkout (`git rev-parse --show-toplevel`) ограничено 60 с; зависание git больше не держит conductor и считается неуспехом git (блокировка берёт путь проекта).
 - scripts: `dev-worktree.sh promote-check` требует `main` в live checkout; другая ветка или detached HEAD отклоняются даже на том же коммите. Напечатанная команда повторно проверяет `refs/heads/main` и выполняет fast-forward только в проверенном live checkout.

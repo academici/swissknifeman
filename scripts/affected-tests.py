@@ -159,17 +159,18 @@ def requirements(all_units: dict, folder: str, foundation: str) -> list:
 
 
 def content_key(folders: list, command: list) -> str:
-    """The digest of what a command reads: the tracked bytes of ``folders`` (their git index) and the changes of the
-    tree below them (diff against the index and untracked files), with the command and the Python version."""
+    """The working-tree bytes and executable modes a command reads, independent of staging and commits."""
     digest = hashlib.sha256(json.dumps([command, sys.version.split()[0], folders]).encode("utf-8"))
-    for args in (["ls-files", "-s", "-z", "--", *folders], ["diff", "--binary", "--", *folders]):
-        digest.update(subprocess.run(["git", *args], cwd=ROOT, capture_output=True, check=True).stdout)
-    untracked = subprocess.run(["git", "ls-files", "--others", "--exclude-standard", "-z", "--", *folders], cwd=ROOT,
+    names = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", *folders], cwd=ROOT,
                                capture_output=True, check=True).stdout.split(b"\0")
-    for name in sorted(item for item in untracked if item):
+    for name in sorted(set(item for item in names if item)):
+        path = ROOT / os.fsdecode(name)
+        if not path.exists() and not path.is_symlink():
+            continue  # an unstaged deletion and its committed state are the same candidate
         digest.update(b"\0" + name)
         try:
-            digest.update((ROOT / os.fsdecode(name)).read_bytes())
+            digest.update(str(path.lstat().st_mode & 0o170111).encode("ascii"))
+            digest.update(os.fsencode(os.readlink(path)) if path.is_symlink() else path.read_bytes())
         except OSError:
             digest.update(b"?")
     return digest.hexdigest()

@@ -91,6 +91,27 @@ class AffectedTestsTests(unittest.TestCase):
         key = module.content_key(["packages/brain"], ["bash", "scripts/test.sh"])
         self.assertEqual(key, module.content_key(["packages/brain"], ["bash", "scripts/test.sh"]))
         self.assertNotEqual(key, module.content_key(["packages/brain"], ["bash", "scripts/validate.sh"]))
+        import tempfile
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as folder, patch.object(module, "ROOT", Path(folder)):
+            git = ["git", "-C", folder, "-c", "user.name=Test", "-c", "user.email=test@example.invalid"]
+            subprocess.run(git + ["init", "-q"], check=True, capture_output=True)
+            empty = module.content_key(["."], ["test"])
+            keys = []
+            source = Path(folder) / "source.py"
+            for content, mode in (("one", 0o644), ("one", 0o755), ("two", 0o755), (None, None)):
+                if content is None:
+                    source.unlink()
+                else:
+                    source.write_text(content)
+                    source.chmod(mode)
+                expected = module.content_key(["."], ["test"])
+                keys.append(expected)
+                for args in (["add", "-A"], ["commit", "-qm", "snapshot"]):
+                    subprocess.run(git + args, check=True, capture_output=True)
+                    self.assertEqual(expected, module.content_key(["."], ["test"]))
+            self.assertEqual(len(set(keys[:3])), 3)  # content and executable-mode changes invalidate green
+            self.assertEqual(keys[-1], empty)
 
     def test_the_full_tier_adds_validate_and_all_is_every_core_unit(self):
         folders = [(item["folder"], item["argv"][-1]) for item in plan("packages/skiller/x.py", tier="full")["commands"]]

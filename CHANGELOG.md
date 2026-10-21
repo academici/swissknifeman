@@ -5,6 +5,7 @@
 ### Fixed
 
 - scripts: `dev-worktree.sh promote-check` требует `main` в live checkout; другая ветка или detached HEAD отклоняются даже на том же коммите. Напечатанная команда повторно проверяет `refs/heads/main` и выполняет fast-forward только в проверенном live checkout.
+- affected-tests (PLAN9 operator hotfix): ключ кэша вычисляется по содержимому кандидата и executable mode; staging и commit прежних байтов больше не заставляют повторять зелёные модули.
 
 - orch (PLAN9 operator hotfix): резервный reviewer последнего пункта с `review.mode none/self` больше не подменяет назначенное ревью группы; явные настройки запуска сохраняют приоритет.
 

@@ -1043,22 +1043,29 @@ class HealAndRepairTests(ConductorCase):
     def test_a_form_mismatch_is_healed_without_a_repeat(self):
         healed = report("W1", "done_with_deviations",
                         checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "0"}],
-                        open_issues=[{"text": "a gap", "kind": "Escalation"}])
+                        open_issues=[{"text": "a gap", "kind": "Deviation", "impact": "none"}])
         self.script({"executor": [dict(executor_ok("W1"), result=healed)], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("executor")), (0, 1), err)
         item = self.source()["items"]["W1"]
-        self.assertEqual(item["status"], "done")
-        kinds = [issue["kind"] for issue in item["report"]["open_issues"]]
-        self.assertIn("difficulty", kinds)
-        self.assertNotIn("escalation", kinds)
+        self.assertEqual(item["status"], "done_with_deviations")  # the deviation the executor named keeps its status
+        issues = [issue for issue in item["report"]["open_issues"] if issue["kind"] == "deviation"]
+        self.assertEqual([(issue["text"], issue["outcome"]) for issue in issues if issue["text"] == "a gap"],
+                         [("a gap", "follow_up")])  # a deviation without an outcome is not accepted by the mend
+        self.assertTrue(any(line.get("reason_code") == "RESULT_HEALED" for line in self.lines(err)))
+
+    def test_an_escalation_in_a_report_that_is_not_blocked_blocks_the_piece_instead_of_becoming_a_difficulty(self):
+        healed = report("W1", "done", open_issues=[{"text": "needs the owner's key", "kind": "Escalation"}])
+        self.script({"executor": [dict(executor_ok("W1"), result=healed)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("executor")), (1, 1), err)
+        self.assertEqual(self.calls("reviewer"), 0)
         self.assertTrue(any(line.get("reason_code") == "RESULT_HEALED" for line in self.lines(err)))
 
     def test_a_result_outside_the_contract_is_repaired_by_the_report_fixer_before_a_repeat(self):
         self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
                            for role in ROLES + ("report-fixer",)})
-        broken = {"write": {"out/W1.txt": "ok\n"},
-                  "result": report("W1", checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "zero"}])}
+        broken = {"write": {"out/W1.txt": "ok\n"}, "result": report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])}
         self.script({"executor": [broken], "reviewer": [GREEN],
                      "report-fixer": [{"result": report("W1"), "tag": "stage-report"}]})
         code, _, err = self.run_items("W1")
@@ -1066,7 +1073,8 @@ class HealAndRepairTests(ConductorCase):
         self.assertEqual((self.calls("executor"), self.calls("report-fixer")), (1, 1))
         fixer = self.prompt("report-fixer", 1)
         self.assertIn("Never raise a status", fixer)
-        self.assertIn("expected integer, got string", fixer)
+        self.assertIn("is refused", fixer)  # the fixer is told that the conductor compares its block with the role's own
+        self.assertIn("items 0 and 1 are equal", fixer)
         self.assertTrue(any(line.get("reason_code") == "RESULT_REPAIRED" for line in self.lines(err)))
 
     def test_without_a_repair_the_role_is_repeated_as_before(self):

@@ -8,6 +8,7 @@ A role finished its work and ended its answer with a result block that does not 
 - Never invent a check, an exit, a verdict, a path, a finding or a reproduction the answer does not give; when a required fact is missing, use the closest honest statement of the answer (for example an issue that says what is missing).
 - Never raise a status: a blocked answer stays blocked.
 - Change only what the problem below names, plus what the contract needs for the block to be valid.
+- The conductor compares your block with the role's own: a raised status, a lighter verdict, a lowered severity or a lost finding, question, escalation or check row is refused.
 
 ## The problem
 

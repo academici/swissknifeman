@@ -273,12 +273,26 @@ correction round lists only its own paths; the conductor does not lose the first
 (`OUTSIDE_WRITE_SET`).
 
 **A result outside its contract** goes through three steps: healing by rule (`heal.py`: one honest reading of a form
-mismatch, such as a string exit, an escalation in a report that is not blocked, a GREEN verdict with a Major finding;
-every mend is said in a `RESULT_HEALED` line and, for a stage-report, a `note` issue; a status is never raised, nothing
-is invented); a repair by the `report-fixer` role (an economy model that rewrites only the result block from the role's
-own answer, `limits.repairs` times, default 1; `RESULT_REPAIRED`); and only then a repeat of the whole role within
-`limits.retries` per step. A triage that rejects a Blocker or Major finding without a reproduction that ran is outside
-the contract.
+mismatch, such as a string exit, a differently spelled status or a GREEN verdict with a Major finding; every mend is
+said in a `RESULT_HEALED` line and, for a stage-report, a `note` issue); a repair by the `report-fixer` role (an economy
+model that rewrites only the result block from the role's own answer, `limits.repairs` times, default 1;
+`RESULT_REPAIRED`); and only then a repeat of the whole role within `limits.retries` per step. A triage that rejects a
+Blocker or Major finding without a reproduction that ran is outside the contract.
+
+Both the heal and the repair keep the meaning of the result or move it toward caution (`domain/semantics.py`). Statuses
+rank `done` > `done_with_deviations` > `done_pending_checks` > `blocked`, verdicts `GREEN` > `ATTENTION` > `RED`; neither
+step raises one, drops an issue, finding, question or check row, lowers a severity, changes an escalation or a blocker
+into another kind, or sets a deviation outcome to `accepted`. So the heal makes a `done_with_deviations` without a
+deviation carry a `follow_up` deviation, a `done_pending_checks` without a pending issue carry one (the conductor's
+checks then decide: green closes it, none run blocks it with `CHECKS_NOT_RUN`), and an escalation in a report that is not
+blocked makes the report `blocked`; a deviation without an outcome is a `follow_up`; a verdict `ATTENTION` or `RED`
+without findings is not healed into `GREEN` but goes to the repair and, failing that, to a repeat of the reviewer. The
+repair is compared with the heal of the role's own block (per place, the findings of a location are compared one by one,
+not merged): a block that raises the status or the verdict, lowers a severity, loses a finding, question, escalation,
+pending issue or check row, or turns a confirmed finding of a triage into a rejected one is refused with
+`REPAIR_SEMANTIC_DRIFT`; the next repair, then a repeat of the role, follows, and a role that never gives a faithful
+block ends in `ROLE_OUTPUT_INVALID`. An answer with no block that parses has nothing to compare: the fixer's block is
+taken and the step records `repaired_from_text`.
 
 ### Stops
 
@@ -335,6 +349,7 @@ The informational limits report long or costly work through `info` lines with a 
 | `LIMIT_OVER` | a round past a target of `limits.*` | the target, the ceiling and why it goes on |
 | `LIMIT_OVER` (`batch: …`) | a round past `limits.review_rounds_batch`, `corrections_batch` or `findings_batch` (whole run, default 0 = none; same target and ceiling rule, counted from the state of every piece) | the target and why it goes on; when the ceiling refuses more rounds, an open **Blocker** stops the run with `REVIEW_LIMIT`, other confirmed findings become plan notes (no correction) |
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
+| `REPAIR_SEMANTIC_DRIFT` | the report-fixer's block changed the meaning of the role's own block (a raised status or verdict, a lowered severity, a lost finding, question, escalation or check row) and was refused | `kept the role's answer: <violations>`; the next repair or a repeat of the role follows |
 | `INPUT_REBUILT` | the plan changed during the piece | the input of the next executor round |
 | `PROVIDER_WAIT` | a role failed at the provider and waits before its repeat: a usage limit that resets within `limits.provider_wait_max_s`, or a transient failure after the provider CLI had repeated the request itself (`api_retry`) | the failure class, the wait in seconds and the UTC time it ends; the wait looks at the cancel every second |
 | `ROUTE_FALLBACK` | a role moved to a `fallback_routes` entry (its provider failed beyond the wait, or was gated) | role, old route → new route, the class and the reason codes (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`, `CAPACITY_GATED`) |

@@ -69,8 +69,7 @@ class AgentRunTests(ConductorCase):
 
     def test_the_report_fixer_names_the_role_it_mended_as_its_parent(self):
         self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES + ("report-fixer",)})
-        broken = {"write": {"out/W1.txt": "ok\n"},
-                  "result": report("W1", checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "zero"}])}
+        broken = {"write": {"out/W1.txt": "ok\n"}, "result": report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])}
         self.script({"executor": [broken], "reviewer": [GREEN],
                      "report-fixer": [{"result": report("W1"), "tag": "stage-report"}]})
         code, _, err = self.run_items("W1")

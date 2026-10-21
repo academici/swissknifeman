@@ -2,6 +2,7 @@
 import json
 import os
 import subprocess
+import tempfile
 import unittest
 from unittest import mock
 
@@ -163,8 +164,12 @@ class ModuleFilesTests(unittest.TestCase):
         self.assertEqual({"aicore"}, {item["unit"] for item in unit["requires"]})
 
     def test_the_launcher_runs_the_module(self):
-        done = subprocess.run([str(MODULE_ROOT / "bin" / "workspace"), "version"], capture_output=True, text=True,
-                              env={**os.environ, "SKM_DEV_ALLOW_LIVE": "1"})
+        with tempfile.TemporaryDirectory() as home:
+            env = {key: value for key, value in os.environ.items() if not key.startswith(("SKM_", "XDG_"))}
+            env.update(HOME=home, SKM_HOME=home + "/skm", CODEX_HOME=home + "/codex", GROK_HOME=home + "/grok",
+                       GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+            done = subprocess.run([str(MODULE_ROOT / "bin" / "workspace"), "version"], capture_output=True, text=True,
+                                  env=env)
         self.assertEqual((done.returncode, done.stdout.strip()), (0, __version__), done.stderr)
 
 

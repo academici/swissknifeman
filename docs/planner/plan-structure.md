@@ -49,11 +49,47 @@ units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
 The separate `section` key accepts a knowledge section id or exact title; it cannot
 accompany a ref fragment. `check` resolves both ref forms, and `start`
 refuses an unreadable required section in a ref read with `READ_MISSING` before
-writing any state.
+writing any state. A required path that does not exist yet is not missing while an
+open item it depends on (directly or transitively) promises it: an `output` artifact
+with that path, or a `task_files` entry with that path and `change: create`; this
+lets one batch start an item that reads what an earlier item of the batch creates.
 
 An item's optional `skills` is a unique list of skill or capability names, such as
 `skill-creator` or `blender:mcp-blender`. These names declare what the executor must load;
 the plan API does not install or launch them.
+
+## Where the plans live
+
+The plans store of a checkout is decided by its marker `<root>/.swissknifeman/project.json`
+(`{workspace, project_id, plans_store}`, the first two are codes), one rule for aicore (`aicore.workspace.resolve_plans_store`) and
+the planner copy (`planner.plan.workspace`):
+
+| Marker | Plans folder |
+| --- | --- |
+| none, or `plans_store: legacy` | `<root>/plans` |
+| `plans_store: workspace` | `workspaces/<workspace>/projects/<project_id>/plans/` (`SKM_WORKSPACES_ROOT`, else the data directory `workspaces`) |
+
+The folder is the same layout v4 in both stores. A marker that points at a workspace whose project
+folder is missing is `WORKSPACE_PROJECT_MISSING`; a legacy folder of a migrated project refuses
+mutations with `PLANS_MIGRATED`. `swissknifeman project context --json` prints `plans_root` and
+`plans_store {kind, project_id, workspace, reason}`; `project doctor` checks it as `project.plans-store` and the wiring of the checkout (workspace, project, binding, folder name) as `project.workspace`.
+
+A workspace plan is separate from its source checkout (`Plan.source_root`, bound with
+`swissknifeman workspace project attach`). Operations that need the checkout (`context`, `check` of
+repository paths, `scout`, `commit`, `commits`, the executor brief of a bridge) refuse with `PLAN_SOURCE_UNBOUND`
+without one; reading and changing plan documents works without it. Without a launcher, a command started in a different
+checkout with the same `(workspace, project_id)` marker refuses with `CHECKOUT_BINDING_MISMATCH` before using source
+paths. Run it through that checkout's `.swissknifeman/launcher.py`, or make it primary with
+`swissknifeman workspace project rebind <project_id> --path <checkout>`. The launcher binding is process-local;
+conductor subprocesses need the development worktree to be primary as well. `commit` of a workspace plan makes
+two commits: product paths in the checkout (trailers `Plan*`), then plan files in the workspace
+repository under `git.lock` with `Plan-Project` and `Plan-Source-Commit`. The result adds `repo`,
+`workspace_sha` and `workspace_commit.status` (`committed`, `nothing`, `skipped-no-git`, `locked`,
+`failed`; `dry-run` for a preview; `skipped-legacy` for a plan in its checkout). A failure of the
+workspace part after the source commit is `failed` with exit 0 and does not undo the source commit;
+`NOTHING_TO_COMMIT` only when both parts are empty. The workspace is pushed only by
+`swissknifeman workspace sync --push`. The executor brief of a workspace plan embeds the content of every
+`@plan/` read, because the executor cannot read outside its project.
 
 ## API
 
@@ -72,6 +108,19 @@ Knowledge references for show/set are `knowledge/<id>`. `apply` accepts a non-em
 `{ref, patch}` objects and validates their combined graph before writing. Identity and lifecycle
 fields are protected from authoring edits. Refusals write nothing and carry a stable code.
 `--output json` provides an `{ok, data}` or `{ok: false, error}` envelope.
+
+`plans [--json]` (read, no plan argument; schema `read-plans`) lists the live plans of the project by ascending id:
+`{plans: [{id, short_id, title, status, updated_at, progress: {phases, phases_closed, items, items_done}}]}`.
+`items_done` counts `done`, `done_with_deviations` and `skipped`. The `archive` folder and folders without `plan.json`
+are skipped; a plan whose `plan.json` cannot be read is listed as `{id: <folder>, error: "PLAN_INVALID"}` and does not
+fail the list.
+
+`get` adds `revision` (`sha256:` + hex of the canonical JSON of the complete stored document,
+`json.dumps(doc, sort_keys=True, separators=(",", ":"), ensure_ascii=False)`), also for a section or field projection.
+`set` and `push` accept `--expected-revision REV`: under the plan lock, after the reference is resolved and before
+anything is written, the current revision must equal `REV`, else `PLAN_REVISION_CONFLICT` and the files stay
+unchanged. A `REV` that is not `sha256:<64 lowercase hex>` is a `USAGE` error. Without the option nothing changes;
+`apply` takes no revision.
 
 `export` includes every current JSON document and the event log. `import` validates a complete
 snapshot, stages the destination with supporting files, then publishes it with rollback on
@@ -141,6 +190,11 @@ phases close without blockers. `reopen` clears the affected item/phase closure.
 
 Batches cover every phase item exactly once and preserve execution order. Recommended batches
 can be split; required batches are atomic. Explicit phase dependencies express parallel branches.
+A run is made for one route template, so `plan.py next` offers the ready items of a recommended batch template by template:
+the items that share a route (class, effort, provider, model, settings) are the command of this run, and the rest are listed
+as `later` (and in the batch line) for the runs that follow. Items that depend on each other stay in one run under their
+maximum route, items without a route ride with the first run, and a required batch is never split. Starting one such group
+prints no split warning.
 An item may depend on a concrete item of another phase instead of the whole phase, and a phase may declare
 `depends_on: []` and rely on item dependencies; `check` reports a cycle that crosses an item and a phase
 dependency as `dependency_deadlock`. `next --parallel N [--json]` is a read-only ready set across the whole

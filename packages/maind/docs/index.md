@@ -31,17 +31,6 @@ features:
     details: Core on stdlib (like swissknifeman / brain). npm — for memory daemon and documentation only.
 ---
 
-## Development clone guard
-
-In a development clone of the repository (an untracked `.swissknifeman-dev` marker in the root) `bin/maind`
-refuses to run against the real `HOME`: exit code 3 and a `SKM_DEV_GUARD` line in stderr. Use a throwaway
-environment (`scripts/dev-sandbox.sh` in the repository root) or `SKM_DEV_ALLOW_LIVE=1` as a conscious
-exception. Installed copies and checkouts without the marker are unaffected. See `docs/develop.md`
-("Ecosystem split branch").
-
-`bin/maind` finds the `aicore` foundation through the canonical locator fragment: `$AICORE_ROOT`, then
-`_vendor/aicore`, then the sibling `../aicore`; a miss ends with `AICORE_NOT_FOUND` and exit code 2. See
-`packages/aicore/README.md`.
 
 ## Skills
 

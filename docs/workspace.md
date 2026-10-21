@@ -275,7 +275,9 @@ changed after the dry run; run `plan` again), `MIGRATION_COPY_MISMATCH`, `MIGRAT
 `LOCAL_ONLY_NOT_RECORDED`, `MIGRATOR_UNAVAILABLE` (the bridge is not registered or cannot find the planner).
 
 Planner: `PLANS_MIGRATED` (the plans of this project moved to the workspace; rerun the command), `PLAN_SOURCE_UNBOUND` (a
-plan in the workspace needs a bound checkout for repository paths), `WORKSPACE_PROJECT_MISSING`.
+plan in the workspace needs a bound checkout for repository paths), `CHECKOUT_BINDING_MISMATCH` (without a launcher,
+the command ran in a different checkout with the same workspace/project marker than the resolved source checkout;
+use that checkout's launcher or make it primary with `workspace project rebind`), `WORKSPACE_PROJECT_MISSING`.
 
 ## Safety rules for git
 

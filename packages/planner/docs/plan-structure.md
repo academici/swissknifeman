@@ -77,7 +77,11 @@ mutations with `PLANS_MIGRATED`. `swissknifeman project context --json` prints `
 A workspace plan is separate from its source checkout (`Plan.source_root`, bound with
 `swissknifeman workspace project attach`). Operations that need the checkout (`context`, `check` of
 repository paths, `scout`, `commit`, `commits`, the executor brief of a bridge) refuse with `PLAN_SOURCE_UNBOUND`
-without one; reading and changing plan documents works without it. `commit` of a workspace plan makes
+without one; reading and changing plan documents works without it. Without a launcher, a command started in a different
+checkout with the same `(workspace, project_id)` marker refuses with `CHECKOUT_BINDING_MISMATCH` before using source
+paths. Run it through that checkout's `.swissknifeman/launcher.py`, or make it primary with
+`swissknifeman workspace project rebind <project_id> --path <checkout>`. The launcher binding is process-local;
+conductor subprocesses need the development worktree to be primary as well. `commit` of a workspace plan makes
 two commits: product paths in the checkout (trailers `Plan*`), then plan files in the workspace
 repository under `git.lock` with `Plan-Project` and `Plan-Source-Commit`. The result adds `repo`,
 `workspace_sha` and `workspace_commit.status` (`committed`, `nothing`, `skipped-no-git`, `locked`,

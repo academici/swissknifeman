@@ -125,6 +125,7 @@
                 "BRIDGE_UNKNOWN",
                 "BRIDGE_VERB_UNKNOWN",
                 "BY_INVALID",
+                "CHECKOUT_BINDING_MISMATCH",
                 "CHECKS_MISSING",
                 "CHECKS_RED",
                 "CHECK_UNKNOWN",

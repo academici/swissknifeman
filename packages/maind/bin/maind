@@ -27,18 +27,6 @@
 #   topology  machine topology map (init|show --json) — <state>/maind/topology.json
 #   version   version (git SHA) and path to node
 set -euo pipefail
-# --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
-_skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-while [ "$_skm_guard_dir" != "/" ] && [ ! -e "$_skm_guard_dir/.swissknifeman-dev" ]; do _skm_guard_dir="$(dirname "$_skm_guard_dir")"; done
-if [ -e "$_skm_guard_dir/.swissknifeman-dev" ] && [ "${SKM_DEV_ALLOW_LIVE:-}" != "1" ]; then
-  _skm_real_home="$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)' 2>/dev/null || true)"
-  if [ -z "$_skm_real_home" ] || [ "$(readlink -f "${HOME:-/}")" = "$(readlink -f "$_skm_real_home")" ]; then
-    echo "SKM_DEV_GUARD: $_skm_guard_dir is a development clone; run inside scripts/dev-sandbox.sh or set SKM_DEV_ALLOW_LIVE=1" >&2
-    exit 3
-  fi
-fi
-unset _skm_guard_dir _skm_real_home
-# --- end dev-clone guard ---
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"

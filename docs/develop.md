@@ -465,81 +465,109 @@ Verification uses the planner, Harness, mAInd and Skiller validators, registry f
 route/workflow/memory/retirement tests. Archived PLAN1 may warn about old removed reads; it remains
 schema-valid historical data and is not rewritten by this reconciliation.
 
-## Ecosystem split branch (temporary)
+## Stable worktree (development of a big plan)
 
-The ecosystem is being split into isolated modules on the long-lived branch `ecosystem-split`. This section
-describes how that work is isolated from a working machine. It is removed at cutover (the last phase of the plan).
+1. **Why a worktree.** The live checkout `~/projects/packages/swissknifeman` stays on `main`. Links in
+   `~/.local/bin`, project launchers, marketplace paths and mAInd MCP point there: an uncommitted edit changes
+   the tools of every connected project immediately. Develop in `~/projects/packages/swissknifeman-next` on
+   a phase branch `stable/p<N>`. Both worktrees share git objects and branches, so promotion needs no fetch.
+   Keep the live checkout unchanged until phase validation passes.
 
-1. **Why a separate clone.** The live checkout `~/projects/packages/swissknifeman` stays on `main`. The CLIs in
-   `~/.local/bin`, the `swissknifeman` marketplace and the connected projects point to it, so a half-finished
-   branch must never run from there. The work happens in a second clone on the branch.
-2. **Setup on any computer.**
+2. **Prepare and bind.** The owner or operator creates the worktree and makes it the project's primary binding:
+
    ```bash
-   git clone -b ecosystem-split https://github.com/academici/swissknifeman.git ~/projects/packages/swissknifeman-next
-   cd ~/projects/packages/swissknifeman-next && scripts/dev-clone.sh init
+   cd ~/projects/packages/swissknifeman
+   scripts/dev-worktree.sh create --branch stable/p1
+   cd ~/projects/packages/swissknifeman-next
+   scripts/dev-worktree.sh bind
+   scripts/dev-worktree.sh status
    ```
-   `init` creates the untracked marker `.swissknifeman-dev` (never committed) and sets the upstream. It refuses
-   on `main`/`master` (`DEV_CLONE_ON_MAIN`) and is safe to repeat.
-3. **Guard.** While the marker exists, the entry points of the clone (`bin/swissknifeman`, the module CLIs, the
-   installers and `scripts/bootstrap-machine.sh`) refuse to run against the real `HOME`: exit code 3 and a
-   `SKM_DEV_GUARD` line in stderr. Run them inside a sandbox (next item). `SKM_DEV_ALLOW_LIVE=1` lifts the
-   guard and is a conscious exception, for example when deliberately switching the live installation over. The
-   test runners (`packages/*/scripts/test.sh`, `scripts/test-bootstrap-machine.sh`) use a throwaway `HOME`
-   themselves; running `python3 -m unittest` directly from the clone with the real `HOME` is refused by the
-   guard.
-4. **Sandbox.** `scripts/dev-sandbox.sh new [--name N] [--copy <project>]...` creates
-   `${TMPDIR:-/tmp}/skm-sandbox-<N>` with its own `HOME`/XDG directories and copies of the projects (the
-   originals are never modified) and prints its path. Use `run DIR -- <command>` to execute a command with that
-   environment (`packages/skiller/bin/skiller --help` passes the guard there), `source DIR/env.sh` for an
-   interactive shell, `list` to see sandboxes and `remove DIR` to delete one. `remove` deletes only a directory
-   named `skm-sandbox-*` that sits directly in `TMPDIR` and holds the `.skm-sandbox` marker. Provider CLIs
-   (`claude`, `codex`, `grok`) are not logged in inside a sandbox.
-   `scripts/e2e-module-skills.sh` uses a sandbox to check that the skills of the modules reach a project through
-   `skiller connect` and `skiller sync`.
-5. **Plan execution.** The plan lives in `plans/<PLAN-ID>` of the clone; its architecture is in the plan's
-   `knowledge/architecture.json`. It is executed by the stable `plan.py` of the live checkout, not by the
-   `plan.py` in the clone, so the engine keeps working while the layout changes:
-   `python3 ~/projects/packages/swissknifeman/packages/planner/scripts/plan.py <verb> <plan> ... --plans-root ~/projects/packages/swissknifeman-next/plans`.
-   The `/planner:*` commands are installed from the live checkout (`claude plugin install planner@swissknifeman
-   --scope local` in the clone). Do not edit the live checkout while a plan runs.
-6. **Phase rhythm.** At the start of a phase run `scripts/dev-clone.sh sync-main` (clean tree required; a
-   conflict stops with `DEV_CLONE_CONFLICT` and the file list, nothing is resolved automatically). Run the
-   package test runners and the standalone checks of the phase. At the end of the phase `git push origin
-   ecosystem-split` (no force). On another computer `scripts/dev-clone.sh status` shows the branch, whether the
-   marker is present and how far it is ahead of or behind `origin/main` and `origin/ecosystem-split`.
-7. **Module checks.** Every `packages/<id>/` folder is a module described by its `unit.json`
-   ([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
-   - `check [--strict] [--json]` runs the manifest, ownership-map, schema-identifier and boundary checks. Boundary
-     violations that exist today are recorded in `configs/ecosystem-baseline.json`: a new violation (or a larger count)
-     fails with `ECOSYSTEM_BOUNDARY_NEW`, a smaller one is reported as an improvement, and `--strict` fails on any. The baseline is empty and CI runs `check --strict`, so any violation fails; a path or import of
-     another module in code is never allowed, and `path_allow` holds only data with a reason.
-   - `baseline --update` recomputes the baseline and prints the difference. Commit it only together with the reason in
-     the commit message; a baseline update never hides a violation that was just introduced.
-   - `render [--check]` regenerates `docs/architecture/ownership.md` from `configs/ecosystem-units.json` and the
-     manifests; `--check` fails when the file differs.
-   - `standalone <id>... | --all | --baseline [--update-baseline]` runs the tests of a module in a copy of its folder
-     with a stand-in for `aicore` and its own `HOME`. `--baseline` runs the modules recorded as `pass` and fails if any
-     stops passing; it is the CI job `standalone`. Modules recorded as `fail` become autonomous in their own stages.
-   - `list [--json]` prints the modules with kind, version, destination, stability and requirements.
 
-   The tests are `python3 scripts/test-ecosystem-units.py`; CI runs the checks and `render --check` in the hygiene
-   workflow.
-8. **Golden cycle.** `scripts/golden.py` pins the behaviour that must survive the move: the output of 26 CLI cases
-   (`tests/golden/cases.json`, `tests/golden/cli/*.txt`, run in a throwaway sandbox with paths, hashes and timestamps
-   normalised) and sha256 digests of generated files plus the `--check` of each generator
-   (`tests/golden/generation.json`). It is migration scaffolding, not a CI step.
-   - `golden.py list` shows the cases; `golden.py check [--only ID,...]` compares and prints a diff per differing case
-     (exit 1).
-   - A case may set `cwd` using `{REPO}` or `{SANDBOX}`. Project-state readers such as `analyst status` run in
-     `{SANDBOX}/projects`, an empty project, with an absolute launcher path under `{REPO}`. An isolated `HOME`
-     alone does not isolate state stored in the checkout.
-   - Local bootstrap skills outside the generated catalog can make the registry completeness check fail in a
-     configured development checkout. Preserve them and verify the complete golden set in a clean tracked
-     worktree of the candidate; include any uncommitted candidate changes before checking it.
-   - At the start of a stage, after `scripts/dev-clone.sh sync-main`, run `golden.py check`. If `main` changed generated
-     output, run `golden.py capture --reason "sync main <sha>"` in a separate commit before moving any code.
-   - A stage that moves code must pass `golden.py check` byte for byte. An intended change of behaviour is recorded with
-     `golden.py capture --only ID,... --reason "..."` in the same change, with the explanation in the commit message.
-   - The fate of the fixtures after the merge is decided at the cutover.
-9. **Removal.** The guard blocks, the marker, `scripts/dev-clone.sh`, `scripts/dev-sandbox.sh` and this section
-   are removed at cutover. The module checks and `docs/architecture/` stay.
+   `create` defaults to `--from main`, `--branch stable/p1` and a sibling `swissknifeman-next`; `--path DIR`
+   changes the target. It refuses an existing path (`DEV_WORKTREE_EXISTS`) or branch (`DEV_WORKTREE_BRANCH_EXISTS`).
+   `status [--json]` reports branch, HEAD, ahead/behind main, changed and untracked counts, workspace/project,
+   primary binding and whether it points here. JSON marker and status boundaries are validated against schemas;
+   the script-owned status schema is embedded in the script. The workspace CLI override
+   `SKM_DEV_WORKTREE_WORKSPACE_CLI` exists only for isolated tests.
+   `bind` runs `workspace project rebind <project_id> --path <worktree> --json`, then
+   `workspace project attach --project <live> --yes --json`: the worktree becomes primary and the live checkout
+   stays attached. `unbind` restores the live checkout as primary. These commands change machine bindings;
+   the owner or operator runs them, never an item executor. CLI failures give `DEV_WORKTREE_BIND_FAILED`.
+
+3. **Execute through the worktree launcher.** Plans stay in the shared workspace. The launcher chooses this
+   checkout while installed planner, conductor and bridges keep running from the stable live checkout:
+
+   ```bash
+   cd ~/projects/packages/swissknifeman-next
+   python3 -I .swissknifeman/launcher.py orch conduct --project "$PWD" run --plan <PLAN> --items <ITEM>
+   ```
+
+   A launcher binding is PID-bound and does not bind conductor subprocesses. The bridge invokes planner with
+   cwd equal to the project, so the primary binding must point to the worktree **before the first run**.
+   A bare `plan.py` command in another checkout of the same workspace/project refuses with
+   `CHECKOUT_BINDING_MISMATCH` before using source paths. Use that checkout's launcher, or rebind it.
+   Commands through the live checkout's own launcher continue to resolve to that checkout.
+   Test changed tools from the worktree; keep the installed execution tools stable until promotion.
+
+4. **Promote a validated phase.** After phase validation, run:
+
+   ```bash
+   scripts/dev-worktree.sh promote-check --branch stable/p1
+   ```
+
+   It requires an existing branch (`DEV_WORKTREE_NO_BRANCH`), `main` to be its ancestor
+   (`DEV_WORKTREE_NOT_FF`), no tracked changes in the live checkout (`DEV_WORKTREE_LIVE_DIRTY`) and a clean
+   worktree including untracked files (`DEV_WORKTREE_DIRTY`). It prints the owner's commands:
+
+   ```bash
+   git -C ~/projects/packages/swissknifeman merge --ff-only stable/p1
+   swissknifeman doctor
+   ```
+
+   The script never merges, pushes, resets, cleans or removes a worktree. The operator promotes by fast-forward
+   after green phase validation. Start the next phase in the worktree with a new branch from the promoted
+   `main`, for example `git switch -c stable/p2 main`.
+
+5. **Sandbox (permanent tool, PLAN3 D88).** `scripts/dev-sandbox.sh new [--name N] [--copy <project>]...`
+   creates `${TMPDIR:-/tmp}/skm-sandbox-<N>` with its own `HOME`/XDG directories and copies of the projects
+   (the originals are never modified) and prints its path. Use `run DIR -- <command>` to execute a command
+   with that environment, `source DIR/env.sh` for an interactive shell, `list` to see sandboxes and
+   `remove DIR` to delete one. `remove` deletes only a directory named `skm-sandbox-*` directly in `TMPDIR`
+   with the `.skm-sandbox` marker. Provider CLIs (`claude`, `codex`, `grok`) are not logged in inside it.
+   Run `harness instructions apply`, `skiller budget` and other HOME-dependent manual checks there.
+   `scripts/e2e-module-skills.sh` uses a sandbox to check `skiller connect` and `skiller sync`.
+
+6. **Golden cycle (permanent tool, PLAN3 D88).** `scripts/golden.py` pins behaviour across code moves:
+   CLI fixtures (`tests/golden/cases.json`, `tests/golden/cli/*.txt`) run in a throwaway sandbox with paths,
+   hashes and timestamps normalised; generated files have sha256 digests and generator freshness checks
+   (`tests/golden/generation.json`). `golden.py list` shows cases; `golden.py check [--only ID,...]` compares
+   them and prints a diff (exit 1 on differences).
+   A case may set cwd using `{REPO}` or `{SANDBOX}`. Project-state readers such as `analyst status` run in
+   `{SANDBOX}/projects`, an empty project, with an absolute launcher path under `{REPO}`: an isolated HOME
+   alone does not isolate checkout state. Preserve local bootstrap skills if they make completeness checks
+   fail; check the candidate in a clean tracked worktree including any uncommitted candidate changes.
+   At the start of each phase from `main`, check the relevant golden fixtures. A code move preserves them
+   byte for byte. Record intended output changes with `golden.py capture --only ID,... --reason "..."`
+   and an explanation; never recapture the whole set to hide unrelated regressions.
+
+7. **Finish.** The owner or operator runs `scripts/dev-worktree.sh unbind`, changes to the live checkout,
+   then removes the finished worktree with `git worktree remove ~/projects/packages/swissknifeman-next`.
+   The sandbox and golden tools stay available.
+
+### Module checks
+
+Every `packages/<id>/` folder is a module described by its `unit.json`
+([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
+
+- `check [--strict] [--json]` checks manifests, ownership, schema identifiers and module boundaries.
+  The baseline is empty and CI runs `check --strict`, so any violation fails; cross-module imports or
+  code paths are forbidden, and `path_allow` holds only data with a reason.
+- `baseline --update` recomputes the baseline and prints differences. Commit it only with the reason;
+  it never hides a newly introduced violation.
+- `render [--check]` generates `docs/architecture/ownership.md` from `configs/ecosystem-units.json` and
+  manifests; `--check` fails on drift.
+- `standalone <id>... | --all | --baseline [--update-baseline]` tests modules in copies with a stand-in
+  for `aicore` and isolated HOME; the CI `standalone` job runs the recorded passing baseline.
+- `list [--json]` reports module kind, version, destination, stability and requirements.
+
+Tests live in `scripts/test-ecosystem-units.py`; the hygiene workflow checks boundaries and `render --check`.

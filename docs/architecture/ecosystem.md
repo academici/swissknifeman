@@ -509,8 +509,8 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
   unfinished.
 - **Rollback criterion:** until the cutover, revert the commits of the stage on the branch; the cutover has its own
   rollback plan, and the previous release tag is the return point.
-- **Development process:** work happens in a separate clone on the branch `ecosystem-split` with an isolation guard and a
-  sandbox; the live checkout stays on `main`. See the branch section of [development](../develop.md).
+- **Development process:** work happens in a stable worktree on a phase branch; the live checkout stays on `main`.
+  See [Stable worktree](../develop.md#stable-worktree-development-of-a-big-plan).
 
 ### Stages
 
@@ -573,10 +573,10 @@ sandbox and on the second computer; only then is the branch merged and a major v
 
 | Risk | Measure |
 | --- | --- |
-| Live projects break | work only in the clone; a dev-clone marker; transition through `upgrade --dry-run` and rehearsal |
+| Live projects break | work only in the stable worktree; launcher-bound commands; `CHECKOUT_BINDING_MISMATCH`; promotion by fast-forward after phase validation |
 | `aicore` grows "just in case" | principle 7 and the generalisation boundary; every extension has a real consumer |
-| Tests write to the real home directory | `SKM_HOME` or a throwaway `HOME` in tests; the isolation guard covers all modules |
-| `main` moves ahead | merge `main` into the branch at the start of each stage and check golden fixtures |
+| Tests write to the real home directory | `SKM_HOME` and a throwaway `HOME` in tests; use `scripts/dev-sandbox.sh` for manual checks |
+| `main` moves ahead | start each phase from `main`, check golden fixtures, and require `promote-check` before promotion |
 | Hidden absolute paths in projects | inventory in `upgrade --dry-run`; search over the projects in the registry |
 | Size | each stage is detailed only before it runs, and each ends with a complete result |
 

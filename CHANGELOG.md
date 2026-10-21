@@ -23,6 +23,7 @@
 
 ### Added
 
+- scripts: `dev-worktree.sh create|status|bind|unbind|promote-check` creates a phase worktree, reports its state, switches the primary workspace binding and checks fast-forward promotion without merging. Planner refuses `CHECKOUT_BINDING_MISMATCH` when an unlaunched command runs in another checkout of the same workspace project; use its launcher or rebind the project.
 - orch/gui-orch: `orch conduct prompt diff --run R --item X --step S [--against RUN:ITEM:STEP]` сравнивает manifest-ы промптов (по умолчанию — предыдущая попытка шага; блоки по kind+origin, без origin — по kind и порядку; added/removed/changed/same, токены по блокам и итог; `PROMPT_BASELINE_MISSING`, `PROMPT_MANIFEST_MISSING`); `orch conduct timeline --run R [--item X] --json` даёт шаги пунктов интервалами из `progress.jsonl` (прерванный и возобновлённый шаг — два интервала `interrupted`, открытый — без конца); gui-orch показывает его видом `timeline` (`gui-orch.timeline`, только через orch CLI, с redaction).
 - orch: `run.json` хранит `catalog_digests` {launch, models, capabilities} эффективных каталогов запуска (как в dry-run launch plan), `conduct status --json` их показывает; resume при расхождении даёт info `CATALOG_CHANGED` (без стопа); старые run читаются как прежде.
 - scripts/configs: config inventory охватывает `config.example.toml` модулей, run-policies/bindings/roles orch, presets/profiles skiller и трекаемые `.codex/`, `.cursor/`, `.grok/`; записи несут необязательные `kind`, `format`, `schema`, `generated`, `live_path`, проверяемые `test-config-inventory.py`.
@@ -42,6 +43,10 @@
 - orch (**изменение умолчания безопасности, решение владельца**): роли, которые пишут (executor, bounded-implementer, registrar), в Codex по умолчанию запускаются без песочницы провайдера — `--sandbox danger-full-access` вместо `workspace-write`; настройка `[orch.launch] access = "open" | "confined"` (умолчание `open`; проект может только ужесточить; `aicore config set --machine orch.launch.access confined`), плейсхолдер `{write_sandbox}` в каталоге; read-only роли остаются read-only. Промпт исполнителя не запрещает docker, если провайдерская песочница его не отрезает. Claude Code и Grok не менялись. `confined` возвращает прежнее поведение.
 - orch: `configs/launch-catalog.json` хранит только специфичное: `defaults`, общие поля роли, именованные части argv (`parts`, `@имя`) и у провайдера — лишь отличия (13,7 КБ → 7 КБ). Разрешённый каталог не изменился: он закреплён снимком `tests/golden/launch-catalog-resolved.json`; файл в прежнем (развёрнутом) виде по-прежнему принимается. `catalog_version` не менялся.
 - orch: Grok executor и bounded-implementer запускаются conductor через jsonl (`streaming-messages-json`) под Landlock `ro-run.py`; `ro-run.py --protect` делает read-only Grok-роли fail-closed. Preflight проверяет команду за wrapper; capability seed и matrix подтверждены probe флагов и фикстурой реального потока.
+
+### Removed
+
+- The dev-clone guard, its marker and override, `scripts/dev-clone.sh` and `scripts/test-dev-guard.py` (PLAN3 D88); development uses a stable worktree. `dev-sandbox.sh` and golden fixtures remain.
 
 ## [0.31.1] - 2026-10-19
 

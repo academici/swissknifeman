@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dev-sandbox.sh — throwaway HOME and project copies for manual checks from the development clone (PLAN3 D10).
+# dev-sandbox.sh — throwaway HOME and project copies for manual checks from the development worktree.
 #
 # Usage:
 #   scripts/dev-sandbox.sh new [--name NAME] [--copy PATH]...   create a sandbox; the last stdout line is its path
@@ -8,8 +8,7 @@
 #   scripts/dev-sandbox.sh remove DIR                           delete a sandbox (marker, location and name are checked)
 #
 # A sandbox is ${TMPDIR:-/tmp}/skm-sandbox-<name> holding a marker (.skm-sandbox), an isolated home/ (HOME and XDG
-# places), env.sh and copies of the projects given with --copy; the originals are never modified. Entry points of the
-# clone pass their dev-clone guard there because HOME is not the real one.
+# places), env.sh and copies of the projects given with --copy; the originals are never modified.
 # Limits: provider CLIs (claude, codex, grok) are not authenticated in a sandbox; it is meant for the CLIs of the
 # swissknifeman modules. Live projects are never touched, only their copies.
 # This script writes only inside sandboxes, so it carries no guard block.

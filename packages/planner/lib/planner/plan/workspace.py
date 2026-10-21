@@ -262,12 +262,29 @@ def workspace_project_of(plan_dir: "str | os.PathLike[str]", env: Env = None) ->
     return None
 
 
+def checkout_root_of(start: "str | os.PathLike[str]") -> Optional[Path]:
+    """The nearest ancestor with a project marker, resolving symlinks; nothing on an I/O error."""
+    try:
+        base = Path(os.path.realpath(start))
+        for candidate in (base, *base.parents):
+            if (candidate / MARKER_RELPATH).is_file():
+                return candidate
+    except OSError:
+        return None
+    return None
+
+
 def _marker_key(root: "str | os.PathLike[str]") -> Optional[tuple]:
     try:
         marker = read_marker(root)
     except PlanError:
         return None
     return (marker["workspace"], marker["project_id"]) if marker else None
+
+
+def marker_key(root: "str | os.PathLike[str]") -> Optional[tuple]:
+    """The marker's (workspace, project_id), or ``None`` for an absent or invalid marker."""
+    return _marker_key(root)
 
 
 def source_root_of(plan_dir: "str | os.PathLike[str]", env: Env = None,

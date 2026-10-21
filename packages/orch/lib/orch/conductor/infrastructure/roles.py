@@ -168,6 +168,7 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
     base = self._tree_mark() if self._writes(role) else None  # the tree this step started from
     route = self._start_route(item, key, role, route, cancel)
     while True:
+        self._admit_budget(item, "attempt")  # before every provider call: a repeat, a fallback route and a wait included (I10)
         delta, digest, resuming = self._delta_mode(item, role, route, blocks, resumed)
         first_prompt, prompt = self._prompt_for_route(item, key, role, route, blocks, first_prompt, prompt,
                                                       resumed=resumed if delta else None, digest=digest)
@@ -277,6 +278,7 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
         return doc, healed, issues, None, False
     baseline = heal.heal(kind, original)[0] if original is not None else None
     for number in range(1, item.options["limits"]["repairs"] + 1):
+        self._admit_budget(item, "attempt")  # a repair is a provider call too: none starts past a hard limit (I10)
         problem = "; ".join(issues[:5])
         prompt = prompts.render(prompts.report_fixer(kind=kind, problem=problem, answer=answer, item=item.ref, step=key))
         raw = item.directory / "streams" / f"{key}-fix{number}.jsonl"
@@ -367,7 +369,7 @@ def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] 
                 bucket[key] = bucket.get(key, 0) + delta[key]
         self._save()
     if usage_complete is False:
-        self._unmetered(item)
+        self._unmetered(item, attempt)
 
 
 def relative(self, path: Path) -> str:

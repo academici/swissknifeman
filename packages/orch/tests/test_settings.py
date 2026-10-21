@@ -108,6 +108,37 @@ class LoadTests(SettingsCase):
         self.assertEqual(self.load(config_file=path).profiles_dirs, (Path("/opt/a"), Path("/opt/b")))
 
 
+class ConductorLimitsTests(SettingsCase):
+    """The keys of ``[orch.conductor.limits]`` reach the run options (a key settings drops is lost silently)."""
+
+    def test_the_budget_and_wall_keys_of_the_machine_layer_reach_the_limits(self):
+        self.machine('[orch.conductor.limits]\nunmetered = "charge"\nunmetered_charge_tokens = 7\n'
+                     '[orch.conductor.limits.role_timeout_s]\nreviewer = 5\n')
+        limits = self.load(project=self.project).conductor["limits"]
+        self.assertEqual((limits["unmetered"], limits["unmetered_charge_tokens"], limits["role_timeout_s"]),
+                         ("charge", 7, {"reviewer": 5}))
+
+    def test_the_defaults_of_the_new_keys(self):
+        limits = self.load().conductor["limits"]
+        self.assertEqual((limits["unmetered"], limits["unmetered_charge_tokens"], limits["check_timeout_s"]),
+                         ("stop", 50000, 7200))
+        self.assertEqual(limits["role_timeout_s"], {})  # the walls of the roles are those of options.DEFAULT_LIMITS
+
+    def test_an_unknown_unmetered_policy_is_refused(self):
+        self.machine('[orch.conductor.limits]\nunmetered = "ignore"\n')
+        with self.assertRaises(ConfigError):
+            self.load()
+
+    def test_the_layers_reach_the_run_options_and_a_role_wall_merges_by_role(self):
+        from orch.conductor import options
+        self.machine('[orch.conductor.limits]\nunmetered = "charge"\n[orch.conductor.limits.role_timeout_s]\nreviewer = 5\n')
+        merged, sources = options.effective(self.load().conductor, {}, [])
+        self.assertEqual(merged["limits"]["unmetered"], "charge")
+        self.assertEqual(merged["limits"]["role_timeout_s"]["reviewer"], 5)
+        self.assertEqual(merged["limits"]["role_timeout_s"]["triager"], 1800)  # the wall of a role no layer names stays
+        self.assertEqual(sources["limits.unmetered"], "config:orch.conductor")
+
+
 class DigestTests(SettingsCase):
     def test_the_digest_follows_the_values_that_affect_preparation(self):
         base = settings.digest(self.load())

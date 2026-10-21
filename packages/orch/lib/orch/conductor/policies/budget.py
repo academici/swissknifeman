@@ -1,12 +1,15 @@
 """Token accounting, informational budgets and hard admission limits on accounted fresh tokens."""
 from __future__ import annotations
 
+from typing import Optional
+
 from aicore.content.budget import estimate_tokens
 
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 
 HARD_LIMITS = ("tokens_hard_max", "run_tokens_hard_max")
+DEFAULT_CHARGE = 50000  # limits.unmetered_charge_tokens when an item carries no options of its own
 
 
 def effective_limit(self, item: Item, key: str) -> int:
@@ -21,16 +24,24 @@ def effective_limit(self, item: Item, key: str) -> int:
     return ((item.options or {}).get("limits") or {}).get(key, 0) or 0
 
 
-def admit(self, item: Item, scope: str = "all") -> None:
-    """Stop admission once accounted fresh usage reaches a hard limit; cache reads and missing usage do not count.
+def hard_limited(self, item: Item) -> bool:
+    """Whether a hard token limit (of the piece or of the run) is in force for ``item``."""
+    return any(effective_limit(self, item, key) > 0 for key in HARD_LIMITS)
 
-    ``scope`` selects ``item``, ``run`` or both (``all``). A single model call can cross the boundary: this check never
-    interrupts one, and does not guess at unmetered usage.
+
+def admit(self, item: Item, scope: str = "all") -> None:
+    """Stop admission once accounted fresh usage reaches a hard limit; cache reads do not count.
+
+    ``scope`` selects ``item``, ``run`` or both (``all``); ``attempt`` is what runs before every model call (a repeat, a
+    repair, a fallback): both, and the tokens the current step has used against the run policy's
+    ``budgets.stage_tokens_max``. A single model call can cross the boundary: this check never interrupts one. Usage a
+    model attempt did not report is not zero: with a hard limit in force the piece stops (``limits.unmetered`` ``stop``,
+    the default) or has been charged a fixed amount per attempt (``charge``, see :func:`charge_unmetered`).
     """
     for name, key, state, label in (
             ("item", "tokens_hard_max", item.state, item.ref),
             ("run", "run_tokens_hard_max", self.state, f"run {self.run_id}")):
-        if scope not in ("all", name):
+        if scope not in ("all", "attempt", name):
             continue
         limit = effective_limit(self, item, key)
         tokens = state.get("tokens", {})
@@ -38,6 +49,19 @@ def admit(self, item: Item, scope: str = "all") -> None:
         if limit and used >= limit:
             raise Stop("TOKEN_BUDGET", f"{label} used {used} fresh tokens >= {key} {limit}; needs_replan: split the item "
                        f"or raise the limit (conduct resume --run {self.run_id} --raise-limit {key}=<value>)")
+    if scope in ("all", "attempt") and item.state.get("usage_incomplete") and hard_limited(self, item) \
+            and ((item.options or {}).get("limits") or {}).get("unmetered", "stop") != "charge":
+        raise Stop("TOKEN_BUDGET_UNMETERED", f"{item.ref}: a model attempt reported no usage while a hard token limit is "
+                   "set; resume with an --options file that sets limits.unmetered to \"charge\" (a fixed "
+                   "limits.unmetered_charge_tokens per attempt without usage), or set it in [orch.conductor.limits]")
+    stage_max = int(((getattr(item, "policy", None) or {}).get("budgets") or {}).get("stage_tokens_max") or 0)
+    if scope == "attempt" and stage_max:
+        step = getattr(self, "_step_tokens", None) or {}
+        used = int(step.get("input", 0)) + int(step.get("output", 0))
+        if used >= stage_max:
+            raise Stop("TOKEN_BUDGET", f"{item.ref} step {getattr(self, '_current_step', '-')} used {used} fresh tokens >= "
+                       f"budgets.stage_tokens_max {stage_max} of the run policy; needs_replan: split the item or "
+                       "raise stage_tokens_max in the policy")
 
 # Budget classes of the blocks (knowledge/p9-prompt#budgets). Only the measure and a beacon: nothing is cut. The kinds the
 # design does not list belong to the frame or the task material of their role (progress, candidate, review_scope, diff,
@@ -77,16 +101,42 @@ def over_budget(blocks, limits: dict) -> list:
     return found
 
 
-def unmetered(self, item: Item) -> None:
-    """Remember an unmetered model attempt and announce it once, even when that attempt stops the run."""
+def unmetered(self, item: Item, attempt: Optional[str] = None) -> None:
+    """Remember an unmetered model attempt (``attempt`` names its receipt) and announce it once, even when that attempt
+    stops the run; under ``limits.unmetered`` ``charge`` the attempt is charged a fixed amount."""
     with self.store.mutating():  # a role thread gets here while the main loop saves the state (I2)
         first = not item.state.get("usage_incomplete")
         if first:
             item.state["usage_incomplete"] = True
             self._save()
+    charge_unmetered(self, item, attempt)
     if first:  # announced after the lock
         self.progress.emit("info", item=item.ref, reason_code="BUDGET_UNMETERED",
                            message=f"{item.ref}: a model attempt reported no usage; token limits cannot see it")
+
+
+def charge_unmetered(self, item: Item, attempt: Optional[str] = None) -> None:
+    """``limits.unmetered`` ``charge``: an attempt that reported no usage costs ``limits.unmetered_charge_tokens`` fresh
+    input tokens, counted in the piece, the run and the step and kept apart in ``tokens.charged``. Once per attempt: a
+    replayed receipt (``attempt``) is not charged again. Without a hard token limit nothing is charged."""
+    limits = (item.options or {}).get("limits") or {}
+    amount = int(limits.get("unmetered_charge_tokens", DEFAULT_CHARGE) or 0)
+    if limits.get("unmetered", "stop") != "charge" or amount <= 0 or not hard_limited(self, item):
+        return
+    with self.store.mutating():
+        charged = item.state.setdefault("usage_charged", [])
+        if attempt is not None and attempt in charged:
+            return
+        if attempt is not None:
+            charged.append(attempt)
+        step = getattr(self, "_step_tokens", None)
+        for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
+                       item.state.setdefault("tokens", {"input": 0, "output": 0}), step):
+            if bucket is not None:
+                bucket["input"] = bucket.get("input", 0) + amount
+                if bucket is not step:
+                    bucket["charged"] = bucket.get("charged", 0) + amount
+        self._save()
 
 
 def budget(self, item: Item) -> None:

@@ -291,8 +291,20 @@ def brief(self, item: Item) -> dict:
             "base": base}
 
 
+def check_brief_size(item: Item, doc: Optional[dict] = None) -> None:
+    """``budgets.brief_max_bytes`` of the run policy (0 or absent: no limit) against the execution-input of the piece (``doc``
+    when it is a rebuilt one), the embedded context pack and the files it reads included; checked once the options are
+    resolved, before any role runs, and again when the input is rebuilt."""
+    limit = int(((item.policy or {}).get("budgets") or {}).get("brief_max_bytes") or 0)
+    size = len(json.dumps(item.input_doc if doc is None else doc).encode("utf-8")) if limit else 0
+    if limit and size > limit:
+        raise Stop("BRIEF_TOO_LARGE", f"{item.ref}: execution-input is {size} bytes > budgets.brief_max_bytes {limit} of the "
+                   f"run policy {(item.policy or {}).get('policy_id', '-')}; split the item or raise the budget in the policy")
+
+
 def prepare(self, item: Item) -> dict:
-    provider = opts.stage_route(item.options, "executor").get("provider") or self.conductor.get("provider") \
+    check_brief_size(item)  # after the brief and the options, before the first role
+    provider =opts.stage_route(item.options, "executor").get("provider") or self.conductor.get("provider") \
         or "claude-code"
     args = ["source", "prepare", "--run", item.orch_run, "--provider", provider]
     if self.model_catalog:
@@ -323,6 +335,7 @@ def refresh_input(self, item: Item) -> None:
                            message="the re-asked brief cannot be read; the next round keeps the earlier input")
         return
     if doc.get("digest") and doc.get("digest") != item.input_doc.get("digest"):
+        check_brief_size(item, doc)
         write_json(item.directory / "input.json", doc)
         previous, item.input_doc = item.input_doc.get("digest"), doc
         self._beacon_event("orch.input.rebuilt", item, {"previous_digest": previous, "digest": doc["digest"]})

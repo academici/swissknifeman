@@ -273,7 +273,9 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     began = time.monotonic()
     self.progress.emit("info", reason_code="GROUP_REVIEW_START",
                        message=f"group {number} ({', '.join(refs)}): {provider}/{model}/{effort}, {len(prompt) // 1000} KB")
-    run = run_agent(self, item, f"group-review-{number}", "reviewer", route, prompt, raw, 0)
+    limits = item.options["limits"]  # the wall of a reviewer role, as ``route`` gives it a streaming role
+    wall = limits.get("stage_timeout_s") or (limits.get("role_timeout_s") or {}).get("reviewer", 0)
+    run = run_agent(self, item, f"group-review-{number}", "reviewer", route, prompt, raw, wall)
     text = run.text if not run.error else ""
     read = review_batch.verdict(text)
     found = read["counts"]

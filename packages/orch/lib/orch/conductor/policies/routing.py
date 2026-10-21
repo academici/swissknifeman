@@ -275,11 +275,12 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
                                                    access=self._launch_access())
     except launch.LaunchError as error:
         raise Stop(error.code, str(error)) from None
-    # A role is never stopped for being long: both ceilings (``stage_timeout_s``, ``stage_idle_timeout_s``) are off
-    # unless asked for, and beacons report a long or silent run. A ``text`` role writes only at its end, so the
-    # catalog timeout stays its ceiling.
+    # The wall of a role: ``stage_timeout_s`` when set; else, for a streaming role, ``role_timeout_s`` of its role (an
+    # auxiliary role must not hang a run forever; the executor and the bounded-implementer have none, silence is caught
+    # by ``stage_idle_timeout_s``). A ``text`` role writes only at its end, so the catalog timeout stays its ceiling.
     limits, streaming = item.options["limits"], entry["transport"] != "text"
-    timeout = limits.get("stage_timeout_s") or (0 if streaming else entry["timeout_s"])
+    timeout = limits.get("stage_timeout_s") or ((limits.get("role_timeout_s") or {}).get(role, 0) if streaming
+                                                else entry["timeout_s"])
     idle = limits.get("stage_idle_timeout_s", 0) if streaming else 0
     found = {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
              "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}

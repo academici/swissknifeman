@@ -407,7 +407,7 @@
         "packer_input_max_bytes": {
           "type": "integer",
           "minimum": 0,
-          "description": "Maximum size of the input of the brief packer in bytes."
+          "description": "Maximum size of the input of the brief packer in bytes. Not enforced by the conductor: there is no packer."
         },
         "stage_tokens_max": {
           "type": "integer",

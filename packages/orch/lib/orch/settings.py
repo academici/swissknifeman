@@ -89,7 +89,7 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "limits": {key: resolved.get(f"conductor.limits.{key}")
                    for key in ("tokens_max", "tokens_hard_max", "run_tokens_hard_max",
                                "stage_timeout_s", "stage_idle_timeout_s", "check_timeout_s",
-                               "check_idle_timeout_s")},
+                               "check_idle_timeout_s", "unmetered", "unmetered_charge_tokens", "role_timeout_s")},
         "risk": {"weights": {key: resolved.get(f"conductor.risk.weights.{key}") for key in risk.DEFAULT_WEIGHTS},
                  "patterns": {key: list(resolved.get(f"conductor.risk.patterns.{key}") or [])
                               for key in risk.DEFAULT_PATTERNS},

@@ -4,18 +4,20 @@ from __future__ import annotations
 import contextlib
 import json
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 import unittest
 from unittest import mock
 
 from aicore.config import ConfigError
 
-from orch import settings
+from orch import policies, settings
 from orch.conductor import options
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure import work_source
 from orch.conductor.policies import budget
-from tests.test_conductor import ConductorCase, GREEN, executor_ok
+from tests.test_conductor import ConductorCase, FIXTURES, GREEN, ROLES, executor_ok
 
 
 class HardBudgetTests(ConductorCase):
@@ -227,11 +229,109 @@ class HardBudgetTests(ConductorCase):
         self.assertIn("tokens_hard_max 100", self.state(err)["stop"]["message"])
 
     def test_unmetered_usage_does_not_invent_a_budget_stop(self):
+        """Both hard limits 0: an attempt without usage is a BUDGET_UNMETERED beacon only, as before (limits.unmetered
+        acts only while a hard limit is in force)."""
         self.script({"executor": [dict(executor_ok("W1"), usage={})], "reviewer": [dict(GREEN, usage={})]})
-        code, _, err = self.run_items("W1", extra=("--options", self.options_file(tokens_hard_max=1, run_tokens_hard_max=1)))
+        code, _, err = self.run_items("W1", extra=("--options", self.options_file(tokens_max=1)))
         self.assertEqual(code, 0, err)
         self.assertTrue(self.state(err)["items"]["W1"]["usage_incomplete"])
-        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "TOKEN_BUDGET"])
+        self.assertTrue([line for line in self.lines(err) if line.get("reason_code") == "BUDGET_UNMETERED"])
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code", "").startswith("TOKEN_BUDGET")])
+        self.assertNotIn("charged", self.state(err)["items"]["W1"]["tokens"])
+
+    def test_unmetered_usage_under_a_hard_limit_stops_and_a_resume_with_charge_goes_on(self):
+        self.script({"executor": [dict(executor_ok("W1"), usage={})], "reviewer": [dict(GREEN, usage={})]})
+        path = self.options_file(tokens_hard_max=1000000)
+        code, _, err = self.run_items("W1", extra=("--options", path))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET_UNMETERED")), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (1, 0))
+        self.assertIn("limits.unmetered", self.state(err)["stop"]["message"])
+        code, _, again = self.resume(err)  # the policy did not change: it stops again, no model is called
+        self.assertEqual((code, self.outcome(again)), (1, ("stopped", "TOKEN_BUDGET_UNMETERED")), again)
+        self.assertEqual(self.calls("executor"), 1)
+        self.options_file(tokens_hard_max=1000000, unmetered="charge")  # the options file of the run is read again
+        code, _, resumed = self.resume(err)
+        self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
+        self.assertEqual(self.calls("reviewer"), 1)
+
+    def test_charge_counts_a_fixed_amount_per_attempt_without_usage_and_admission_sees_the_sum(self):
+        self.script({"executor": [{"exit": 1, "stderr": "boom", "usage": {}}, dict(executor_ok("W1"), usage={})],
+                     "reviewer": [GREEN]})
+        path = self.options_file(tokens_hard_max=90000, unmetered="charge", unmetered_charge_tokens=50000)
+        code, _, err = self.run_items("W1", extra=("--options", path))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
+        self.assertEqual(self.calls("executor"), 2)  # 50000 < 90000 admitted the second attempt; 100000 stops the next call
+        item = self.state(err)["items"]["W1"]
+        self.assertEqual((item["tokens"]["input"], item["tokens"]["charged"]), (100000, 100000))
+        self.assertEqual(self.state(err)["tokens"]["charged"], 100000)
+        self.assertEqual(self.calls("reviewer"), 0)
+
+    def test_a_replayed_receipt_is_charged_once_and_no_hard_limit_charges_nothing(self):
+        item = Item("W1", "source-run", {}, Path(), {})
+        item.options = {"limits": {"tokens_hard_max": 90000, "unmetered": "charge", "unmetered_charge_tokens": 7}}
+        owner = SimpleNamespace(state={}, run_doc={}, _step_tokens={"input": 0, "output": 0}, _save=mock.Mock(),
+                                store=SimpleNamespace(mutating=contextlib.nullcontext))
+        for _ in range(2):
+            budget.charge_unmetered(owner, item, "streams/executor.jsonl")
+        budget.charge_unmetered(owner, item, "streams/executor-a2.jsonl")
+        self.assertEqual((item.state["tokens"], owner.state["tokens"]["charged"], owner._step_tokens["input"]),
+                         ({"input": 14, "output": 0, "charged": 14}, 14, 14))
+        item.options["limits"]["tokens_hard_max"] = 0
+        budget.charge_unmetered(owner, item, "streams/other.jsonl")
+        self.assertEqual(item.state["tokens"]["input"], 14)
+
+    def test_repair_does_not_start_after_the_limit_is_reached(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES + ("report-fixer",)})
+        self.script({"executor": [{"text": "no block here", "usage": {"input_tokens": 110}}],
+                     "report-fixer": [{"result": executor_ok("W1")["result"], "tag": "stage-report"}]})
+        code, _, err = self.run_items("W1", extra=("--options", self.options_file(tokens_hard_max=110)))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
+        self.assertEqual((self.calls("executor"), self.calls("report-fixer")), (1, 0))
+
+    def run_with_policy(self, **budgets):
+        """A run of W1 under the ``full`` policy with these ``budgets`` (a fixture policy: the pack on disk is not edited)."""
+        real = policies.load
+
+        def load(policy_id, *args, **kwargs):
+            found = real(policy_id, *args, **kwargs)
+            return {**found, "budgets": {**found.get("budgets", {}), **budgets}}
+        with mock.patch.object(policies, "load", load):
+            return self.run_items("W1")
+
+    def test_stage_tokens_max_stops_the_repeat_of_a_step_that_already_spent_it(self):
+        self.script({"executor": [{"exit": 1, "stderr": "boom", "usage": {"input_tokens": 120}}, executor_ok("W1")],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_with_policy(stage_tokens_max=100)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
+        self.assertEqual(self.calls("executor"), 1)
+        self.assertIn("budgets.stage_tokens_max 100", self.state(err)["stop"]["message"])
+        self.assertIn("executor.1", self.state(err)["stop"]["message"])
+
+    def test_stage_tokens_max_not_reached_stops_nothing(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_with_policy(stage_tokens_max=1000)
+        self.assertEqual(code, 0, err)
+
+    def test_a_brief_over_brief_max_bytes_stops_before_the_first_role(self):
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_with_policy(brief_max_bytes=10)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "BRIEF_TOO_LARGE")), err)
+        self.assertEqual((self.calls("context-scout"), self.calls("executor")), (0, 0))
+        self.assertRegex(self.state(err)["stop"]["message"], r"W1: execution-input is \d+ bytes > budgets.brief_max_bytes 10")
+
+    def test_the_full_policy_takes_a_brief_with_a_300_kb_context_pack(self):
+        loaded = policies.load("full", settings.load(project=self.project), warn=lambda message: None)
+        self.assertEqual(loaded["budgets"]["brief_max_bytes"], 1048576)
+        item = Item("W1", "r", {}, Path("."), {})
+        item.policy = loaded
+        item.input_doc = {"digest": "d", "context_pack": {"content": "x" * 300 * 1024}}
+        work_source.check_brief_size(item)  # no Stop
+        item.policy = {**loaded, "budgets": {"brief_max_bytes": 1000}}
+        with self.assertRaises(Stop) as caught:
+            work_source.check_brief_size(item)
+        self.assertEqual(caught.exception.code, "BRIEF_TOO_LARGE")
+        item.policy = {}
+        work_source.check_brief_size(item)  # a policy without budgets has no limit
 
     def test_run_cap_cannot_come_from_the_environment(self):
         with mock.patch.dict("os.environ", {"SKM_ORCH_CONDUCTOR__LIMITS__RUN_TOKENS_HARD_MAX": "110"}):
@@ -239,13 +339,15 @@ class HardBudgetTests(ConductorCase):
                 settings.load(project=self.project)
         self.assertIn("CONFIG_LAYER_FORBIDDEN", str(caught.exception))
 
-    def test_a_failed_attempt_is_not_a_separate_hard_admission_boundary(self):
+    def test_a_failed_attempt_is_a_hard_admission_boundary(self):
+        """I10: admission runs before every provider call, so the repeat of a failed attempt that reached the limit does
+        not start (it did before P3.4, when only the stage boundary was checked)."""
         self.script({"executor": [{"exit": 1, "stderr": "boom", "usage": {"input_tokens": 110}}, executor_ok("W1")],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1", extra=("--options", self.options_file(tokens_hard_max=110)))
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
-        self.assertEqual(self.calls("executor"), 2)
-        self.assertEqual(self.state(err)["items"]["W1"]["steps"]["executor.1"]["status"], "done")
+        self.assertEqual(self.calls("executor"), 1)
+        self.assertEqual(self.state(err)["items"]["W1"]["steps"]["executor.1"]["status"], "stopped")
 
     def test_a_model_step_is_denied_before_the_started_record_or_call(self):
         from orch.conductor import engine

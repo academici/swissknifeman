@@ -23,12 +23,16 @@ the policy id:
 
 `full` runs context (deterministic), condense (optional, `on_unavailable: skip`), primary, checks, review (optional),
 registrar and git. Its `on_error` table holds the default action of each failure class, `budgets` set
-`brief_max_bytes` 65536, `packer_input_max_bytes` 262144 and `stage_tokens_max` 0 (no limit), and `retries_budget.total_max` is 2.
+`brief_max_bytes` 1048576 (1 MiB), `packer_input_max_bytes` 262144 and `stage_tokens_max` 0 (no limit), and `retries_budget.total_max` is 2.
 `review.triage` (`{"role": "triager", "model_class": "implementation"}`) makes the [conductor](conductor.md) reproduce
 every review finding before a correction; only confirmed findings get one.
 
-`budgets.stage_tokens_max` belongs to the run-policy contract and is independent of conductor hard token limits;
-its shipped value remains 0. Conductor options `limits.tokens_hard_max` (piece) and `limits.run_tokens_hard_max`
+The `budgets` of a pack are enforced by the [conductor](conductor.md) as follows. `brief_max_bytes` (> 0): the whole
+execution-input of a piece (the embedded context pack and the files it reads included; the briefs of plans outside the
+repository carry a pack of up to 256 KB, hence 1 MiB for `full`) larger than this stops the piece with `BRIEF_TOO_LARGE`
+before the first role. `stage_tokens_max` (> 0): a model call does not start in a step that has already used this many
+fresh tokens (`TOKEN_BUDGET`), independent of the conductor hard token limits below; its shipped value is 0.
+`packer_input_max_bytes` is **not enforced**: there is no packer; the key stays in the contract. Conductor options `limits.tokens_hard_max` (piece) and `limits.run_tokens_hard_max`
 (whole run) default to 0 (unlimited), count accounted fresh input plus output, and stop admission with `TOKEN_BUDGET`.
 The run cap comes only from machine/project config, invocation `--config` or the run's `--options`; an item cannot
 set or disable it. Done steps survive, so `conduct resume --run RUN --raise-limit KEY=N` continues without `--retry`

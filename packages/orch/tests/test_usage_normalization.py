@@ -106,7 +106,7 @@ class UsageAccountingTests(unittest.TestCase):
         self.engine = SimpleNamespace(state=self.state, _local=threading.local(), _step_tokens={},
                                       _save=mock.Mock(), progress=SimpleNamespace(emit=mock.Mock()),
                                       store=SimpleNamespace(mutating=contextlib.nullcontext))
-        self.engine._unmetered = lambda item: budget.unmetered(self.engine, item)  # bound on the Conductor
+        self.engine._unmetered = lambda item, attempt=None: budget.unmetered(self.engine, item, attempt)  # bound on the Conductor
         self.start_agent("agent-1")
 
     def start_agent(self, agent):

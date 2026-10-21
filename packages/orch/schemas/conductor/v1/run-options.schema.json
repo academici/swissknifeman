@@ -197,7 +197,7 @@
           "enum": ["auto", "each", "groups", "single", "none"]
         },
         "strategist": {
-          "description": "Who chooses the strategy when it is `auto`: `model` (default; a small model call that sees every piece; the rules decide when it fails or answers unsoundly) or `rules` (the deterministic choice only).",
+          "description": "Who chooses the strategy when it is `auto`: `rules` (default; the deterministic choice only) or `model` (a small model call that sees every piece; the rules decide when it fails or answers unsoundly).",
           "type": "string",
           "enum": ["model", "rules"]
         }

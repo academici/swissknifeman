@@ -261,6 +261,7 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
             raise Stop(error.code, str(error)) from None
     values = {"model": model or "", "effort": effort, "cwd": str(self.project), "orch": str(ORCH_ROOT)}
     argv_override = (self.conductor.get("argv") or {}).get(role)
+    resume_argv = None
     try:
         if argv_override:
             argv = catalogs.substitute(list(argv_override), values)
@@ -269,6 +270,9 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
         else:
             argv = launch.build_argv(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider, model=model,
                                      effort=effort, cwd=self.project, access=self._launch_access())
+            resume_argv = launch.build_resume_argv(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider,
+                                                   model=model, effort=effort, cwd=self.project,
+                                                   access=self._launch_access())
     except launch.LaunchError as error:
         raise Stop(error.code, str(error)) from None
     # A role is never stopped for being long: both ceilings (``stage_timeout_s``, ``stage_idle_timeout_s``) are off
@@ -277,8 +281,11 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
     limits, streaming = item.options["limits"], entry["transport"] != "text"
     timeout = limits.get("stage_timeout_s") or (0 if streaming else entry["timeout_s"])
     idle = limits.get("stage_idle_timeout_s", 0) if streaming else 0
-    return {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
-            "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}
+    found = {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
+             "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}
+    if resume_argv:  # the command that continues a session of this provider (``{session}`` is filled at the start)
+        found["resume_argv"] = resume_argv
+    return found
 
 
 def planned_reviewer(selector: dict, planned: dict) -> tuple:

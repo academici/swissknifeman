@@ -197,6 +197,11 @@
      "executor.1": 1
     },
     "retries_used": 1,
+    "review_marks": {
+     "1": {
+      "out/W1.txt": "<digest>"
+     }
+    },
     "route_overrides": {
      "executor": {
       "effort": "high",

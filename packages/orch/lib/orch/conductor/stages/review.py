@@ -2,7 +2,7 @@
 focus of its prompt, and the review-verdict record of every round."""
 from __future__ import annotations
 
-from orch.conductor import checks as checks_mod, prompts, risk as risk_mod
+from orch.conductor import checks as checks_mod, prompts, risk as risk_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import findings_problems
 from orch.conductor.domain.stop import Stop
@@ -96,6 +96,30 @@ def corrected(item: Item, previous: int) -> list:
             for entry in triage.get("confirmed", [])]
 
 
+def unresolved(item: Item, number: int) -> list:
+    """The confirmed findings review round ``number`` has to see fixed: those of the round before it and, still, those of
+    the rounds earlier than that. A later report that does not name an earlier finding is no proof that it was fixed
+    (a review that looks at fewer lines can miss it), so the finding stays an obligation of every later round, at any
+    severity triage confirmed; one found again keeps its latest form."""
+    found: dict = {}
+    for previous in range(1, number):
+        for entry in corrected(item, previous):
+            name = (entry.get("location"), entry.get("failure_scenario"))
+            found.pop(name, None)
+            found[name] = dict(entry, id=entry["id"] if previous == number - 1 else f"{entry['id']} (review {previous})")
+    return list(found.values())
+
+
+def finding_paths(findings: list) -> list:
+    """The files the ``location`` (``path:line``) of the findings name."""
+    paths = []
+    for entry in findings:
+        name = str(entry.get("location") or "").split(":", 1)[0].strip()
+        if name and not name.startswith("/") and ".." not in name.split("/") and name not in paths:
+            paths.append(name)
+    return paths
+
+
 def executor_advice(self, item: Item) -> list:
     """The ``review_recommendation`` of every executor round that gave one, in order."""
     return [advice for key, step in done_steps(item.state.get("steps", {})).items()
@@ -160,9 +184,21 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
 
     def run() -> dict:
         base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
-        corrected = self._corrected(item, number - 1) if number > 1 and item.options["review"]["audit_scope"] == "corrected" else []
+        dirty = checks_mod.dirty_files(self.project)  # without what the conductor writes (reports, artifacts, plan folder)
+        tree = {path: dirty[path] for path in scopes.own(dirty, self._not_the_role(item))}
+        with self.store.mutating():  # the tree this review starts from: the next review reads what changed after it
+            item.state.setdefault("review_marks", {})[str(number)] = tree
+            self._save()
+        audit = number > 1 and item.options["review"]["audit_scope"] == "corrected"
+        corrected = self._unresolved(item, number) if audit else []
+        before = (item.state.get("review_marks") or {}).get(str(number - 1))
+        if audit and isinstance(before, dict):  # round 1 and audit_scope full see the whole diff, and so does a run without marks
+            paths = sorted(set(checks_mod.changed_files(before, tree)) | set(self._finding_paths(corrected)))
+            diff, scope = checks_mod.diff(self.project, base, paths=paths), "changed"
+        else:
+            diff, scope = checks_mod.diff(self.project, base), "full"
         prompt = prompts.reviewer(item.input_doc, item=item.ref, step=key, base=base, corrected=corrected,
-                                  diff=checks_mod.diff(self.project, base), checks=rows, round_no=number,
+                                  diff=diff, diff_scope=scope, checks=rows, round_no=number,
                                   pre_final=number > 1 and item.options["review"]["pre_final"],
                                   min_severity=item.options["review"]["correct_min_severity"],
                                   roles_dir=self.roles_dir, stub=self._stub("reviewer", route), skills=self._skills(item, "reviewer"),

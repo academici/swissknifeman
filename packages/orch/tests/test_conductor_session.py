@@ -8,10 +8,10 @@ from pathlib import Path
 import unittest
 from unittest import mock
 
-from orch.conductor import engine, options, prompts
+from orch.conductor import engine, options, process, prompts
 import sys
 
-from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor_ok
+from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
 from tests.test_conductor_prompts import fixture
 
 
@@ -138,6 +138,220 @@ class HandoffSessionTests(ConductorCase):
         self.assertEqual(roles.resume_args(owner, item, "executor", route), [])
         item.options["session"]["executor"] = "shared"
         self.assertEqual(roles.resume_args(owner, item, "executor", route), ["--resume", "s1"])
+
+
+class ResumedBlocksTests(unittest.TestCase):
+    """``prompts.executor_resumed`` is the delta prompt of a round in a resumed session; ``task_digest`` says whether the
+    session holds the task."""
+
+    def test_the_delta_prompt_has_the_round_and_the_contract_and_not_the_task(self):
+        blocks = prompts.executor_resumed(item="W1", step="executor.2", correction="the checks are red", fix="",
+                                          answers=[{"id": "alpha", "text": "which?", "answer": "this", "by": "owner"}],
+                                          interrupted="it was interrupted", changed_paths=["a.py", "b.py"])
+        self.assertEqual([block.kind for block in blocks],
+                         ["resumed", "answers", "correction", "interrupted", "changed", "progress", "result_contract"])
+        text = prompts.render(blocks)
+        self.assertIn("You continue piece W1 in the same session", text)
+        self.assertIn("the checks are red", text)
+        self.assertIn("alpha", text)
+        self.assertIn("`a.py`, `b.py`", text)
+        self.assertIn("```stage-report", text)
+        self.assertNotIn("Repository rules", text)
+
+    def test_nothing_to_say_leaves_only_the_continuation_progress_and_contract(self):
+        blocks = prompts.executor_resumed(item="W1", step="executor.2")
+        self.assertEqual([block.kind for block in blocks], ["resumed", "progress", "result_contract"])
+
+    def full(self, **extra) -> list:
+        return prompts.executor(fixture("adhoc"), item="W1", step="executor.1", **extra)
+
+    def test_the_task_digest_ignores_the_round_and_changes_with_the_task(self):
+        first = prompts.task_digest(self.full())
+        again = prompts.task_digest(prompts.executor(fixture("adhoc"), item="W1", step="executor.2", correction="red",
+                                                     answers=[{"id": "Q", "text": "t", "answer": "a", "by": "x"}],
+                                                     batch="## Run batch\n\nresuming"))
+        self.assertEqual(first, again)
+        self.assertNotEqual(first, prompts.task_digest(self.full(rules=["another rule"])))
+        self.assertNotEqual(first, prompts.task_digest(self.full(repo_rules="a repository rule")))
+        self.assertNotEqual(first, prompts.task_digest(self.full(skill_texts={"s": "a skill text"})))
+        self.assertNotEqual(first, prompts.task_digest(self.full(stub=("stub:x", "## Extra\n\ntext"))))
+        self.assertNotEqual(first, prompts.task_digest(self.full(scout_text="a map")))
+
+    def test_the_manifest_of_a_delta_prompt_says_so_and_stays_valid(self):
+        from orch.conductor import contract
+        route = {"provider": "claude-code", "model": "m", "effort": "high"}
+        digest = prompts.task_digest(self.full())
+        doc = prompts.manifest(prompts.executor_resumed(item="W1", step="executor.2", correction="red"), step="executor.2",
+                               role="executor", route=route, resumed_session=True, digest=digest)
+        self.assertEqual((doc["resumed_session"], doc["task_digest"]), (True, digest))
+        self.assertEqual(contract.problems(doc, "prompt-manifest"), [])
+        plain = prompts.manifest(self.full(), step="executor.1", role="executor", route=route)
+        self.assertNotIn("resumed_session", plain)
+        self.assertEqual(contract.problems(plain, "prompt-manifest"), [])
+
+
+class ResumedRoundTests(ConductorCase):
+    """A correction round continues the session with the delta prompt; every doubt gives the whole prompt."""
+
+    RED = {"result": report("W1")}  # no file written: the check is red and the round is corrected
+
+    def argv(self, number: int) -> list:
+        return json.loads((self.fake / f"executor-{number}.argv").read_text(encoding="utf-8"))
+
+    def item_dir(self, err: str, ref: str = "W1") -> Path:
+        return self.run_dir(err) / ref
+
+    def manifest(self, err: str, key: str, ref: str = "W1") -> dict:
+        return json.loads((self.item_dir(err, ref) / "prompts" / f"{key}.manifest.json").read_text(encoding="utf-8"))
+
+    def test_a_correction_round_sends_only_the_correction_and_the_contract(self):
+        self.script({"executor": [self.RED, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.argv(2)[self.argv(2).index("--resume") + 1], "executor-session-1")
+        first, second = self.prompt("executor", 1), self.prompt("executor", 2)
+        resumed = (self.item_dir(err) / "prompts" / "executor.2.resumed.md").read_text(encoding="utf-8")
+        self.assertEqual(second, resumed)
+        self.assertIn("These acceptance checks are red", second)
+        self.assertIn("```stage-report", second)
+        self.assertIn("You continue piece W1 in the same session", second)
+        self.assertNotIn(first.splitlines()[0], second)  # not the text of the role
+        self.assertNotIn("Create the output of W1.", second)  # not the execution-input
+        self.assertLess(len(second), len(first) // 2)
+        full = (self.item_dir(err) / "prompts" / "executor.2.md").read_text(encoding="utf-8")  # the full prompt is kept too
+        self.assertIn(first.splitlines()[0], full)
+        self.assertIn("Create the output of W1.", full)
+        manifest = self.manifest(err, "executor.2")
+        self.assertTrue(manifest["resumed_session"])
+        self.assertEqual([row["kind"] for row in manifest["blocks"]],
+                         ["resumed", "correction", "progress", "result_contract"])
+        self.assertEqual(manifest["task_digest"], self.manifest(err, "executor.1")["task_digest"])
+        self.assertNotIn("resumed_session", self.manifest(err, "executor.1"))
+        self.assertFalse((self.item_dir(err) / "prompts" / "executor.1.resumed.md").exists())
+        self.assertEqual(self.state(err)["executor_session_task_digest"], manifest["task_digest"])
+
+    def test_a_lost_session_gives_the_next_attempt_the_whole_prompt_in_a_fresh_session(self):
+        self.script({"executor": [self.RED, {"exit": 3}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 3)
+        self.assertIn("--resume", self.argv(2))
+        failed = [line for line in self.lines(err) if line.get("reason_code") == "SESSION_RESUME_FAILED"]
+        self.assertEqual(len(failed), 1, err)
+        self.assertEqual((failed[0]["item"], failed[0]["stage"]), ("W1", "executor.2"))
+        self.assertIn("claude-code", failed[0]["message"])
+        self.assertNotIn("--resume", self.argv(3))
+        third = self.prompt("executor", 3)
+        self.assertEqual(third, (self.item_dir(err) / "prompts" / "executor.2.md").read_text(encoding="utf-8"))
+        self.assertIn("Create the output of W1.", third)  # the task again: this session has none
+        self.assertIn("These acceptance checks are red", third)
+        self.assertFalse((self.item_dir(err) / "prompts" / "executor.2.resumed.md").exists())
+        self.assertNotIn("resumed_session", self.manifest(err, "executor.2"))
+
+    def test_a_rebuilt_input_gives_the_continued_session_the_whole_prompt(self):
+        state = self.source()
+        state["items"]["W1"].update(status="in_progress", goal="Create the amended output of W1.")
+        amend = {"result": report("W1"), "write": {str(self.state_file): json.dumps(state)}}
+        self.script({"executor": [amend, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertIn("--resume", self.argv(2))  # the session goes on ...
+        second = self.prompt("executor", 2)
+        self.assertIn("Create the amended output of W1.", second)  # ... with the new task, whole
+        self.assertNotIn("You continue piece", second)
+        self.assertNotEqual(self.manifest(err, "executor.2")["task_digest"], self.manifest(err, "executor.1")["task_digest"])
+        self.assertNotIn("resumed_session", self.manifest(err, "executor.2"))
+        self.assertFalse((self.item_dir(err) / "prompts" / "executor.2.resumed.md").exists())
+
+    def test_the_first_round_of_the_next_piece_continues_a_shared_session_with_the_whole_prompt(self):
+        self.set_items({"W1": {}, "W2": {}})
+        self.script({"executor": [executor_ok("W1"), {"result": report("W2")}, executor_ok("W2")], "reviewer": [GREEN, GREEN]})
+        path = self.project.parent / "shared.json"
+        path.write_text(json.dumps({"session": {"executor": "shared"}}), encoding="utf-8")
+        code, _, err = self.run_items("W1", "W2", extra=("--options", path))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertIn("--resume", self.argv(2))  # W2 starts in the session of W1 ...
+        second = self.prompt("executor", 2)
+        self.assertIn("Create the output of W2.", second)  # ... with the execution-input of W2
+        self.assertIn("You are resuming that session", second)
+        self.assertNotIn("resumed_session", self.manifest(err, "executor.1", "W2"))
+        self.assertIn("--resume", self.argv(3))  # its correction round is the delta
+        third = self.prompt("executor", 3)
+        self.assertIn("You continue piece W2 in the same session", third)
+        self.assertNotIn("Create the output of W2.", third)
+        self.assertTrue(self.manifest(err, "executor.2", "W2")["resumed_session"])
+
+    def test_a_per_item_session_is_never_resumed_and_gets_the_whole_prompt(self):
+        self.script({"executor": [self.RED, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--no-batch",))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("--resume", self.argv(2))
+        self.assertIn("Create the output of W1.", self.prompt("executor", 2))
+
+    def test_an_answer_the_session_has_seen_is_not_sent_again(self):
+        from orch.conductor.stages import execute
+        seen = {"id": "alpha", "text": "which?", "answer": "this", "by": "owner"}
+        new = {"id": "beta", "text": "how?", "answer": "so", "by": "owner"}
+        owner = engine.Conductor.__new__(engine.Conductor)
+        owner.state = {"executor_session_answers": [execute.answer_key(seen)]}
+        item = mock.Mock(ref="W1", state={"steps": {}}, options={"checks": {"executor_runs_checks": False}})
+        blocks = owner._resumed_prompt(item, "executor.2", "", "", "", [seen, new])
+        text = prompts.render(blocks)
+        self.assertIn("beta", text)
+        self.assertNotIn("alpha", text)
+        self.assertIsNone(owner._resumed_prompt(item, "executor.2", "", "", "", [seen]))  # nothing new, nothing asked
+
+
+class CodexResumeTests(ConductorCase):
+    """A Codex executor continues its thread in a correction round: ``codex exec resume <thread> ...``, the sandbox mode
+    as a ``-c`` override (the subcommand has no ``--sandbox``)."""
+
+    RED = {"codex": True, "result": report("W1")}
+
+    def setUp(self):
+        super().setUp()
+        bin_dir = self.project.parent / "bin"
+        bin_dir.mkdir()
+        shim = bin_dir / "codex"
+        shim.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{FIXTURES / "fake_role.py"}" executor "$@"\n', encoding="utf-8")
+        shim.chmod(0o755)
+        patcher = mock.patch.dict("os.environ", {"PATH": f"{bin_dir}:{__import__('os').environ['PATH']}"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        process.available.__globals__["_command_available"].cache_clear()
+        self.addCleanup(process.available.__globals__["_command_available"].cache_clear)
+        self.write_config(argv={role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
+                                for role in ROLES if role != "executor"})  # the executor starts from the launch catalog
+        path = self.project.parent / "codex-executor.json"
+        path.write_text(json.dumps({"stages": [{"role": "executor", "provider": "codex", "model": "gpt-6.1-sol",
+                                                "effort": "high"}]}), encoding="utf-8")
+        self.options = ("--options", path)
+
+    def argv(self, number: int) -> list:
+        return json.loads((self.fake / f"executor-{number}.argv").read_text(encoding="utf-8"))
+
+    def test_the_correction_round_resumes_the_thread_with_the_sandbox_as_a_config_override(self):
+        self.script({"executor": [self.RED, dict(executor_ok("W1"), codex=True)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=self.options)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.argv(1), ["-a", "never", "exec", "--json", "--sandbox", "danger-full-access",
+                                        "--model", "gpt-6.1-sol", "-c", 'model_reasoning_effort="high"', "-"])
+        self.assertEqual(self.argv(2), ["-a", "never", "exec", "resume", "executor-session-1", "--json",
+                                        "-c", 'sandbox_mode="danger-full-access"', "--model", "gpt-6.1-sol",
+                                        "-c", 'model_reasoning_effort="high"', "-"])
+        self.assertNotIn("--sandbox", self.argv(2))
+        second = self.prompt("executor", 2)
+        self.assertIn("You continue piece W1 in the same session", second)  # the delta prompt on the thread
+        self.assertNotIn("Create the output of W1.", second)
+        self.assertEqual(self.state(err)["executor_session"], "executor-session-2")
+
+    def test_a_per_item_session_starts_a_new_thread_each_round(self):
+        self.script({"executor": [self.RED, dict(executor_ok("W1"), codex=True)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--no-batch", *self.options))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("resume", self.argv(2))
+        self.assertIn("--sandbox", self.argv(2))
+        self.assertIn("Create the output of W1.", self.prompt("executor", 2))
 
 
 class OptionsCopyTests(ConductorCase):

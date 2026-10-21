@@ -54,6 +54,89 @@ class ShippedFileTests(unittest.TestCase):
             self.assertIn("Bash(python3 *orch.py --config * research query *)", argv)
 
 
+class ResumeArgvTests(unittest.TestCase):
+    """``resume_argv``: the optional command line that continues a session of a provider (``{session}``)."""
+
+    RESUME = ["@codex.exec", "resume", "{session}", "--json", "-c", 'sandbox_mode="{write_sandbox}"', "@codex.model", "-"]
+
+    def with_resume(self, resume=None, shipped: bool = False) -> dict:
+        """A compact catalog whose codex executor has ``resume_argv`` (the shipped file when ``shipped``, which holds every
+        role a valid catalog needs; the small one only expands)."""
+        doc = json.loads(launch.CATALOG_PATH.read_text(encoding="utf-8")) if shipped else compact()
+        doc["roles"]["executor"]["providers"]["codex"]["resume_argv"] = self.RESUME if resume is None else resume
+        return doc
+
+    def test_a_catalog_with_resume_argv_is_valid_and_expands_its_parts(self):
+        found = expanded(self.with_resume())["launch"]["executor"]["codex"]
+        self.assertEqual(found["resume_argv"], ["codex", "-a", "never", "exec", "resume", "{session}", "--json", "-c",
+                                                'sandbox_mode="{write_sandbox}"', "--model", "{model}", "-"])
+        self.assertEqual(list(found).index("resume_argv"), list(found).index("argv") + 1)
+        launch.validate_catalog(expanded(self.with_resume(shipped=True)))
+
+    def test_a_catalog_without_resume_argv_is_valid_and_has_none(self):
+        doc = json.loads(launch.CATALOG_PATH.read_text(encoding="utf-8"))
+        del doc["roles"]["executor"]["providers"]["codex"]["resume_argv"]
+        found = expanded(doc)
+        launch.validate_catalog(found)
+        self.assertNotIn("resume_argv", found["launch"]["executor"]["codex"])
+        self.assertIsNone(launch.build_resume_argv(found, "executor", "codex", model="m"))
+
+    def test_resume_argv_without_the_session_placeholder_is_refused(self):
+        for resume in (["codex", "exec", "resume", "--json", "--model", "{model}"],
+                       ["codex", "exec", "resume", "{model}", "--last"]):
+            with self.subTest(resume=resume), self.assertRaises(launch.LaunchError) as raised:
+                launch.validate_catalog(expanded(self.with_resume(resume, shipped=True)))
+            self.assertEqual(raised.exception.code, "LAUNCH_INVALID")
+            self.assertIn("{session}", str(raised.exception))
+
+    def test_a_malformed_resume_argv_is_refused(self):
+        for resume in ("codex resume {session}", [], [1, "{session}"], ["codex", "{session}", "{nope}", "{model}"],
+                       ["codex", "{session}"]):  # a string, empty, not strings, an unknown placeholder, no {model}
+            with self.subTest(resume=resume), self.assertRaises(launch.LaunchError):
+                launch.validate_catalog(expanded(self.with_resume(resume, shipped=True)))
+
+    def test_the_session_placeholder_is_not_allowed_in_argv(self):
+        doc = json.loads(launch.CATALOG_PATH.read_text(encoding="utf-8"))
+        doc["roles"]["executor"]["providers"]["codex"]["argv"].insert(2, "{session}")
+        with self.assertRaises(launch.LaunchError):
+            launch.validate_catalog(expanded(doc))
+
+    def test_the_required_entry_keys_are_unchanged(self):
+        self.assertEqual(launch.ENTRY_KEYS, {"model_class", "effort", "transport", "argv", "timeout_s", "model_set"})
+        catalog = expanded(self.with_resume(shipped=True))
+        del catalog["launch"]["executor"]["codex"]["timeout_s"]
+        with self.assertRaises(launch.LaunchError):
+            launch.validate_catalog(catalog)
+
+    def test_build_resume_argv_fills_everything_but_the_session(self):
+        catalog = expanded(self.with_resume())
+        self.assertEqual(launch.build_resume_argv(catalog, "executor", "codex", model="gpt-x", effort="high"),
+                         ["codex", "-a", "never", "exec", "resume", "{session}", "--json", "-c",
+                          'sandbox_mode="danger-full-access"', "--model", "gpt-x", "-"])
+        confined = launch.build_resume_argv(catalog, "executor", "codex", model="gpt-x", access="confined")
+        self.assertIn('sandbox_mode="workspace-write"', confined)
+        with self.assertRaises(launch.LaunchError):
+            launch.build_resume_argv(catalog, "executor", "codex")  # a model is needed
+
+    def test_the_shipped_catalog_resumes_a_codex_executor_only(self):
+        catalog = launch.load_catalog()
+        self.assertEqual(catalog["catalog_version"], "1.6.0")
+        found = [(role, provider) for role, providers in catalog["launch"].items() for provider, entry in providers.items()
+                 if "resume_argv" in entry]
+        self.assertEqual(found, [("executor", "codex")])
+        argv = launch.build_resume_argv(catalog, "executor", "codex", model="gpt-6.1-sol", effort="xhigh")
+        self.assertEqual(argv[:6], ["codex", "-a", "never", "exec", "resume", "{session}"])  # -a is before exec
+        self.assertNotIn("--sandbox", argv)  # `codex exec resume` has no such option
+        self.assertEqual(argv[argv.index("-c") + 1], 'sandbox_mode="danger-full-access"')
+
+    def test_the_overrides_of_the_configuration_can_set_and_check_resume_argv(self):
+        merged = launch.apply_entries(launch.load_catalog(), {"executor_codex": {"resume_argv": [
+            "codex", "exec", "resume", "{session}", "--model", "{model}", "-"]}})
+        self.assertEqual(merged["launch"]["executor"]["codex"]["resume_argv"][3], "{session}")
+        with self.assertRaises(launch.LaunchError):
+            launch.apply_entries(launch.load_catalog(), {"executor_codex": {"resume_argv": ["codex", "exec"]}})
+
+
 class ExpandTests(unittest.TestCase):
     def test_defaults_then_role_then_provider_then_parts(self):
         found = expanded(compact())["launch"]

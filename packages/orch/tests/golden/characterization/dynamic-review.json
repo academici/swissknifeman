@@ -172,6 +172,7 @@
   "executor_session": "executor-session-1",
   "executor_session_item": "W1",
   "executor_session_route": "claude-code/sonnet/high",
+  "executor_session_task_digest": "<digest>",
   "items": {
    "W1": {
     "adopted": [],
@@ -194,6 +195,12 @@
      }
     ],
     "retries_used": 0,
+    "review_marks": {
+     "1": {
+      "out/W1.txt": "<digest>",
+      "out/schemas/W1.json": "<digest>"
+     }
+    },
     "risk": {
      "added": true,
      "announced": true,

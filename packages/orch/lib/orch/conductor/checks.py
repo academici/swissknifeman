@@ -74,10 +74,17 @@ def dirty_digest(project: Path, exclude=()) -> str:
     return digest.hexdigest()
 
 
-def diff(project: Path, base: str, limit: int = 200_000) -> str:
-    """The diff of the working tree against ``base``, plus the untracked files; cut at ``limit`` characters."""
-    text = git(project, "diff", base)
-    extra = untracked(project)
+def diff(project: Path, base: str, limit: int = 200_000, paths: Optional[list] = None) -> str:
+    """The diff of the working tree against ``base``, plus the untracked files; cut at ``limit`` characters. ``paths``
+    (names relative to the project) limits both to those paths and what lies under them; no path gives no diff."""
+    if paths is None:
+        text = git(project, "diff", base)
+        extra = untracked(project)
+    elif not paths:
+        return ""
+    else:
+        text = git(project, "diff", base, "--", *[f":(literal){name}" for name in paths])
+        extra = [name for name in untracked(project) if _under(name, paths)]
     if extra:
         text += "\n# untracked files:\n" + "\n".join(f"#   {name}" for name in extra) + "\n"
     if len(text) > limit:

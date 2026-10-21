@@ -77,6 +77,15 @@
         }
       },
       "additionalProperties": false
+    },
+    "resumed_session": {
+      "description": "True when the prompt is the delta prompt of a resumed provider session (only the correction, new answers, interrupted note, changed paths and the result contract); the full prompt of the step is in <step>.md, the delta one in <step>.resumed.md.",
+      "type": "boolean"
+    },
+    "task_digest": {
+      "description": "SHA-256 of the canonical JSON of the task and instruction blocks of the full prompt (every block but the correction, answers, interrupted, changed, progress and batch ones): what a resumed session has to have received before a delta prompt is sent.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     }
   },
   "required": [

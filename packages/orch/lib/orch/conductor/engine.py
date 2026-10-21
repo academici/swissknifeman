@@ -228,6 +228,7 @@ class Conductor:
     _shared_session = roles.shared_session
     _resume_args = roles.resume_args
     _keep_session = roles.keep_session
+    _delta_mode = roles.delta_mode
     _role_env = roles.role_env
 
     # ------------------------------------------------------------------ policies
@@ -264,6 +265,7 @@ class Conductor:
 
     _start_route = retry_policy.start_route
     _prompt_for_route = retry_policy.prompt_for_route
+    _routed_blocks = retry_policy.routed_blocks
     _provider_failure = retry_policy.provider_failure
     _provider_stop = retry_policy.provider_stop
     _gate = retry_policy.gate
@@ -306,6 +308,7 @@ class Conductor:
     _execute = execute.execute
     _round = execute.executor_round
     _batch_note = execute.batch_note
+    _resumed_prompt = execute.resumed_prompt
     _autofixable = execute.autofixable
     _autofix = execute.autofix
     _autofix_issues = execute.autofix_issues
@@ -335,6 +338,8 @@ class Conductor:
     _dynamic_review = review_stage.dynamic_review
     _review_requested_off = review_stage.requested_off
     _corrected = staticmethod(review_stage.corrected)
+    _unresolved = staticmethod(review_stage.unresolved)
+    _finding_paths = staticmethod(review_stage.finding_paths)
     _executor_advice = review_stage.executor_advice
     _review_focus = review_stage.review_focus
     _upgrade_reviewer = review_stage.upgrade_reviewer

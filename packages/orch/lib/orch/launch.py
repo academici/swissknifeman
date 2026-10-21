@@ -15,12 +15,16 @@ EFFORTS = ("low", "medium", "high", "xhigh")
 TRANSPORTS = ("text", "jsonl", "acp")
 MODEL_SETS = ("supported", "unknown")
 PLACEHOLDERS = frozenset({"model", "effort", "cwd", "orch", "write_sandbox"})
+# ``resume_argv`` is the optional command line that continues a provider session (``codex exec resume {session}``): the same
+# placeholders and one more, ``{session}``, which only the conductor knows when it starts the role.
+RESUME_PLACEHOLDERS = PLACEHOLDERS | {"session"}
 # How far a role that writes may reach (``[orch.launch] access``): ``open`` gives the provider CLI its widest mode, ``confined``
 # keeps it inside the workspace. ``{write_sandbox}`` in an argv is the sandbox mode of a provider CLI for such a role; a role
 # that must not write names its read-only mode itself, whatever the access.
 ACCESS = ("open", "confined")
 WRITE_SANDBOX = {"open": "danger-full-access", "confined": "workspace-write"}
 ENTRY_KEYS = frozenset({"model_class", "effort", "transport", "argv", "timeout_s", "model_set"})
+OPTIONAL_ENTRY_KEYS = frozenset({"resume_argv"})
 ORCH_ROOT = Path(__file__).resolve().parents[2]
 CATALOG_PATH = ORCH_ROOT / "configs" / "launch-catalog.json"
 _PLACEHOLDER_RE = re.compile(r"\{(\w+)\}")
@@ -40,8 +44,9 @@ def _invalid(where: str, message: str) -> LaunchError:
 
 
 def _validate_entry(where: str, role: str, entry: object) -> None:
-    if not isinstance(entry, dict) or set(entry) != ENTRY_KEYS:
-        raise _invalid(where, f"entry must hold exactly: {', '.join(sorted(ENTRY_KEYS))}")
+    if not isinstance(entry, dict) or not ENTRY_KEYS <= set(entry) <= ENTRY_KEYS | OPTIONAL_ENTRY_KEYS:
+        raise _invalid(where, f"entry must hold exactly: {', '.join(sorted(ENTRY_KEYS))}"
+                              f" (and optionally {', '.join(sorted(OPTIONAL_ENTRY_KEYS))})")
     for key, allowed in (("model_class", MODEL_CLASSES), ("effort", EFFORTS), ("transport", TRANSPORTS),
                          ("model_set", MODEL_SETS)):
         if entry[key] not in allowed:
@@ -61,6 +66,23 @@ def _validate_entry(where: str, role: str, entry: object) -> None:
         raise _invalid(f"{where}/argv", f"unknown placeholder(s) {sorted(used - PLACEHOLDERS)}; allowed {sorted(PLACEHOLDERS)}")
     if (entry["model_set"] == "supported") != ("model" in used):
         raise _invalid(f"{where}/argv", "{model} must appear exactly when model_set is supported")
+    if "resume_argv" in entry:
+        _validate_resume(f"{where}/resume_argv", entry["resume_argv"], entry["model_set"])
+
+
+def _validate_resume(where: str, argv: object, model_set: str) -> None:
+    if not isinstance(argv, list) or not argv or not all(isinstance(arg, str) for arg in argv) or not argv[0]:
+        raise _invalid(where, "must be a non-empty list of strings starting with the command")
+    if "--bare" in argv:
+        raise _invalid(where, "--bare is forbidden")
+    used = {name for arg in argv for name in _PLACEHOLDER_RE.findall(arg)}
+    if used - RESUME_PLACEHOLDERS:
+        raise _invalid(where, f"unknown placeholder(s) {sorted(used - RESUME_PLACEHOLDERS)}; "
+                              f"allowed {sorted(RESUME_PLACEHOLDERS)}")
+    if "session" not in used:
+        raise _invalid(where, "{session} must appear: it is the session the command continues")
+    if (model_set == "supported") != ("model" in used):
+        raise _invalid(where, "{model} must appear exactly when model_set is supported")
 
 
 # The file may state a catalog compactly: ``defaults`` for every entry, per role the fields its providers share, named argv
@@ -68,7 +90,7 @@ def _validate_entry(where: str, role: str, entry: object) -> None:
 # differs. ``expand_catalog`` gives the resolved form (``launch`` -> role -> provider -> entry) that everything else reads.
 COMPACT_KEYS = frozenset({"catalog_version", "defaults", "parts", "roles", "refusals"})
 FIELD_KEYS = ENTRY_KEYS - {"argv"}
-ENTRY_ORDER = ("model_class", "effort", "transport", "argv", "timeout_s", "model_set")
+ENTRY_ORDER = ("model_class", "effort", "transport", "argv", "resume_argv", "timeout_s", "model_set")
 _PART_NAME = re.compile(r"^[a-z][a-z0-9.-]*$")
 
 
@@ -121,10 +143,15 @@ def expand_catalog(raw: object) -> object:
         shared = {**defaults, **{key: value for key, value in body.items() if key != "providers"}}
         launch[role] = {}
         for provider, own in body["providers"].items():
-            if not isinstance(own, dict) or set(own) - ENTRY_KEYS or "argv" not in own:
-                raise _invalid(f"{where}/providers/{provider}", "must hold argv and optionally the fields that differ")
+            if not isinstance(own, dict) or set(own) - ENTRY_KEYS - OPTIONAL_ENTRY_KEYS or "argv" not in own:
+                raise _invalid(f"{where}/providers/{provider}", "must hold argv and optionally the fields that differ "
+                                                                "and resume_argv")
             argv = _expand_argv(f"{where}/providers/{provider}/argv", own["argv"], parts, used)
-            merged = {**shared, **{key: value for key, value in own.items() if key != "argv"}, "argv": argv}
+            merged = {**shared, **{key: value for key, value in own.items() if key not in ("argv", "resume_argv")},
+                      "argv": argv}
+            if "resume_argv" in own:
+                merged["resume_argv"] = _expand_argv(f"{where}/providers/{provider}/resume_argv", own["resume_argv"],
+                                                     parts, used)
             launch[role][provider] = {key: merged[key] for key in ENTRY_ORDER if key in merged}  # the order readers print
     if set(parts) - used:
         raise _invalid("/parts", f"unused part(s) {sorted(set(parts) - used)}")
@@ -240,3 +267,22 @@ def build_argv(catalog: dict, role: str, provider: str, *, model: str | None = N
     values = {"model": model or "", "effort": effort, "cwd": str(cwd), "orch": str(ORCH_ROOT),
               "write_sandbox": WRITE_SANDBOX[access]}
     return [_PLACEHOLDER_RE.sub(lambda m: values[m[1]], arg) for arg in found["argv"]]
+
+
+def build_resume_argv(catalog: dict, role: str, provider: str, *, model: str | None = None,
+                      effort: str | None = None, cwd: str | Path = ".", access: str = "open") -> list[str] | None:
+    """Command line that continues a session of ``role`` on ``provider``, or ``None`` when the entry has no ``resume_argv``.
+    Every placeholder is filled but ``{session}``, which the conductor fills with the session it resumes."""
+    found = entry(catalog, role, provider)
+    if "resume_argv" not in found:
+        return None
+    effort = effort or found["effort"]
+    if effort not in EFFORTS:
+        raise _invalid("effort", f"must be one of {', '.join(EFFORTS)}")
+    if found["model_set"] == "supported" and not model:
+        raise _invalid("model", f"role {role!r} on {provider!r} needs a model")
+    if access not in ACCESS:
+        raise _invalid("access", f"must be one of {', '.join(ACCESS)}")
+    values = {"model": model or "", "effort": effort, "cwd": str(cwd), "orch": str(ORCH_ROOT),
+              "write_sandbox": WRITE_SANDBOX[access], "session": "{session}"}
+    return [_PLACEHOLDER_RE.sub(lambda m: values[m[1]], arg) for arg in found["resume_argv"]]

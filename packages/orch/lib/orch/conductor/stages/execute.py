@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from typing import Optional
 
+from aicore.util.digest import sha256_hex
+
 from orch.conductor import prompts, questions as questions_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import evidence_paths, report_problems
@@ -40,6 +42,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         researched = self._researched(item)
         note = (item.state.get("interrupted_note") or {}).get(key, "")
         corrected = "\n\n".join(text for text in (correction, note) if text)
+        answers = questions_mod.answers_text(self._questions(item))
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                   rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
@@ -47,7 +50,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   repo_rules=self._repo_rules(item, "executor"),
                                   skill_texts=self._skill_texts(item, "executor"),
                                   expected=item.state.get("expected"),
-                                  answers=questions_mod.answers_text(self._questions(item)), fix=fix,
+                                  answers=answers, fix=fix,
                                   scout_origin=scouted.get("cache") or "",
                                   batch=self._batch_note(item), research=researched.get("result"),
                                   research_origin=researched.get("path") or "",
@@ -55,7 +58,13 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   extra_paths=self._scope_option(item, "extra_paths", []),
                                   file_tools=self._file_tools_rule(item),
                                   containers=not self._codex_sandboxed(route))
-        report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
+        resumed = self._resumed_prompt(item, key, correction, note, fix, answers)
+        report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems, resumed=resumed)
+        if self._shared_session(item, "executor", item.routes["executor"]) \
+                and (answers or "executor_session_answers" in self.state):  # the session has now seen every answer the prompt carried
+            with self.store.mutating():
+                self.state["executor_session_answers"] = [answer_key(row) for row in answers]
+                self._save()
         write_json(item.directory / "reports" / f"{key}.json", report)
         return {"report": report, "changed": self._changed_now(item), **meta}
 
@@ -75,13 +84,37 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
     return report
 
 
+def answer_key(row: dict) -> str:
+    """Names an answer by what it says, so the session that has seen it is not told it again."""
+    return sha256_hex(json.dumps([row["id"], row["text"], row["answer"], row["by"]], ensure_ascii=False,
+                                 sort_keys=True).encode("utf-8"))
+
+
+def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: str, answers: list) -> Optional[list]:
+    """The delta blocks of this round (``prompts.executor_resumed``) for a session that continues: what the round asks
+    (the correction, the deviation to fix, the note of an interrupted round) and the answers the session has not seen,
+    with the paths the earlier round of the piece changed. ``None`` when the round asks nothing the session lacks (the
+    first round of a piece, a repeat of it): it is sent the whole prompt, as before. Whether the delta really goes is
+    decided per attempt (``_delta_mode``)."""
+    seen = set(self.state.get("executor_session_answers") or [])
+    fresh = [row for row in answers if answer_key(row) not in seen]
+    if not (correction or note or fix or fresh):
+        return None
+    steps = done_steps(item.state.get("steps") or {})
+    earlier = [step["result"].get("changed") or [] for name, step in steps.items()
+               if name.startswith("executor.") and name != key and isinstance(step.get("result"), dict)]
+    return prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
+                                    fix=fix, changed_paths=earlier[-1] if earlier else [],
+                                    targeted_tests=not item.options["checks"]["executor_runs_checks"])
+
+
 def batch_note(self, item: Item) -> str:
     """The run block of the executor prompt: every piece of the run with its title and state, so one shared session
     knows the whole batch from the first prompt."""
     refs = self.run_doc.get("items") or []
     mode = self._session_mode(item)
     if len(refs) < 2 or mode not in ("shared", "handoff") \
-            or item.routes["executor"].get("provider") != "claude-code":
+            or not self._shared_session(item, "executor", item.routes["executor"]):
         return ""
     claims = {value["ref"]: value for value in (self.state.get("claims") or {}).values()}
     rows, done_refs = [], []

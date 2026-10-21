@@ -1,7 +1,7 @@
 """The review plan of a batch: chosen once before the first piece runs, carried out after the last piece of each group.
 
-``decide`` asks the strategist (a small model call, ``review.strategist: model``; ``rules`` skips the call) how the batch is
-reviewed (``policies/review_strategy.py``) and keeps the answer in ``state.review_strategy`` and ``review-strategy.json`` of the
+``decide`` chooses how the batch is reviewed by the rules (``review.strategist: rules``, the default) or asks the strategist (a
+small model call, ``review.strategist: model``) (``policies/review_strategy.py``) and keeps the answer in ``state.review_strategy`` and ``review-strategy.json`` of the
 run. ``group_review_due`` runs after every piece: when the piece is the last of its group and the group is done it reads the
 commits of the group once (``review_batch``) and keeps the reply in ``group-review-<n>.md`` of the run folder; Blocker and Major
 findings are announced (``GROUP_REVIEW``) and left to the owner or the observer to correct in a commit of their own."""
@@ -106,7 +106,7 @@ def decide(self, answers: list) -> None:
     mode = review.get("strategy", "auto")
     if mode != "auto":
         plan = forced(mode, pieces, proposal)
-    elif review.get("strategist", "model") == "rules" or strategy.unreviewed(pieces):
+    elif review.get("strategist", "rules") == "rules" or strategy.unreviewed(pieces):
         plan = proposal  # the plan gave no piece a review: nothing for a strategist to weigh
     else:
         plan = ask_strategist(self, first, pieces, proposal) or proposal

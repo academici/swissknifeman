@@ -64,7 +64,15 @@ class ReviewPlanTests(ConductorCase):
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 1))
         self.assertIn("1", self.state(resumed)["group_reviews"])
 
+    def run_model(self, *items):
+        """A run whose strategist is the model (``review.strategist: model``): the default is the rules."""
+        path = self.project.parent / "strategist-model.json"
+        path.write_text(json.dumps({"review": {"strategist": "model"}}), encoding="utf-8")
+        return self.run_items(*items, extra=("--options", path))
+
     def batch(self, *, triager=None, options=None, items=("W1", "W2", "W3")):
+        if triager and not (options or {}).get("review", {}).get("strategist"):  # the strategist is asked only when named
+            options = {**(options or {}), "review": {**(options or {}).get("review", {}), "strategist": "model"}}
         self.set_items({ref: {} for ref in items})
         self.script({"executor": [executor_ok(ref) for ref in items], "reviewer": [GREEN] * 3 if not triager else [{"text": REVIEW}],
                      **({"triager": [triager]} if triager else {})})
@@ -99,7 +107,7 @@ class ReviewPlanTests(ConductorCase):
         self.set_items({r: {} for r in ("W1", "W2", "W3")})
         self.script({"executor": [executor_ok(r) for r in ("W1", "W2", "W3")], "reviewer": [{"text": "Looks fine to me."}],
                      "triager": [answer("single", [["W1", "W2", "W3"]])]})
-        code, _, err = self.run_items("W1", "W2", "W3")
+        code, _, err = self.run_model("W1", "W2", "W3")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertEqual(self.state(err)["group_reviews"]["1"]["format"], "malformed")
         self.assertFalse(self.events(err, "GROUP_REVIEW"))
@@ -249,7 +257,7 @@ class ReviewPlanTests(ConductorCase):
         self.script({"executor": [executor_ok("W1"), executor_ok("W2"), {"result": blocked}, executor_ok("W3")],
                      "reviewer": [{"text": REVIEW}, {"text": REVIEW}],
                      "triager": [answer("groups", [["W1", "W2"], ["W3"]])]})
-        code, _, err = self.run_items("W1", "W2", "W3")
+        code, _, err = self.run_model("W1", "W2", "W3")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         self.assertEqual(sorted(self.state(err)["group_reviews"]), ["1"])  # the first group was read before the stop
         doc = self.source()
@@ -277,7 +285,7 @@ class ReviewPlanTests(ConductorCase):
         self.script({"executor": [executor_ok(r) for r in ("W1", "W2", "W3")], "reviewer": [{"text": REVIEW}],
                      "triager": [{"text": "I would just review everything"}]})
         self.set_items({r: {} for r in ("W1", "W2", "W3")})
-        code, _, err = self.run_items("W1", "W2", "W3")
+        code, _, err = self.run_model("W1", "W2", "W3")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         plan = self.plan_of(err)
         self.assertEqual(plan["source"], "rules")
@@ -287,6 +295,14 @@ class ReviewPlanTests(ConductorCase):
         err = self.batch(options={"review": {"strategist": "rules"}})
         self.assertEqual(self.plan_of(err)["source"], "rules")
         self.assertEqual(self.calls("triager"), 0)
+
+    def test_the_strategist_is_the_rules_by_default_and_a_multi_piece_run_asks_no_model(self):
+        from orch.conductor import options as opts
+        self.assertEqual(opts.DEFAULT_REVIEW["strategist"], "rules")
+        err = self.batch()  # no option names the strategist
+        self.assertEqual(self.plan_of(err)["source"], "rules")
+        self.assertEqual(self.calls("triager"), 0)
+        self.assertFalse((self.run_dir(err) / "streams" / "review-strategist.txt").exists())
 
     def test_none_reviews_nothing_and_each_keeps_the_review_of_every_piece(self):
         err = self.batch(options={"review": {"strategy": "none"}})

@@ -352,7 +352,21 @@ module affects only itself and its bridges: no module requires another one, so t
 (`standalone.tools`, now `analyst` and `maind`) is tested only when its own files change, because it only reads data (and maind writes
 it) and is not part of the core; its tests run when the tool itself is developed (`bash packages/<tool>/scripts/test.sh`). The full pass of every non-tool unit
 (`--tier all --run`, plus `scripts/test-integration.sh`) is for the end of a phase or a release, not for each item; the quick pass runs
-for each item.
+for each item. Hub checks finish before unit jobs; units run in descending order of their last measured duration.
+`--fail-fast` stops submitting jobs after the first failure and marks unstarted commands `[skipped]`; running jobs finish.
+In `full`/`all`, each unit runs test then validate. Validate gets `SKM_VALIDATE_SKIP_TESTS=1` only after that unit's full
+test ran (or was reused as green); a failed test still fails the invocation. Focused tests never permit this skip.
+Fast can select explicit test-file subsets for known planner/orch test-only changes; unknown helpers, runners, product
+inputs and dependency mappings fall back to full suites, retaining the owner and dependent-unit closure. Mixed changes
+combine obligations; renames include both owners, and `--base` also includes untracked files. `--json` explains the
+profiles, inputs, context, per-unit obligation and requested/effective jobs. Nested runners divide `SKM_TEST_JOBS`.
+
+Green receipts are bound to content, Python, tools, configuration and execution environment; changed inputs during a
+command prevent reusable green. `--tier all` never uses the general green cache: reuse requires a safe `SKM_CHECK_RUN`
+(`A-Za-z0-9`, then letters, digits, `_` or `-`) and is confined to that conductor run. Manual/release runs without that
+variable stay full; `--no-cache` disables all reuse. Receipts and duration data are atomically merged in the git
+directory, and run receipts older than 14 days are pruned when a run cache is written. Planner's `scripts/test.sh`
+discovers the engine once; `-p PATTERN` selects matching test files for a focused check.
 
 **Bridges.** A package core stays pure: it never names other repository packages. All knowledge
 about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to

@@ -55,34 +55,10 @@ python3 -c 'from orch.conductor.contract import registry; registry()' \
   || err "conductor schema registry"
 
 echo "[5/7] fixtures"
-shopt -s nullglob
-for category in valid invalid; do
-  directory="fixtures/exec/v1/$category"
-  if [[ ! -d "$directory" ]]; then
-    echo "  skipped (no directory): $directory"
-    continue
-  fi
-  for fixture in "$directory"/*/*.json; do
-    kind="$(basename "$(dirname "$fixture")")"
-    status=0
-    python3 scripts/orch.py validate "$kind" "$fixture" --quiet || status=$?
-    expected=0
-    [[ "$category" == valid ]] || expected=1
-    [[ "$status" -eq "$expected" ]] || err "$fixture: exit $status, expected $expected"
-  done
-done
+python3 scripts/validate-fixtures.py fixtures/exec/v1 || err "fixtures"
 
 echo "[6/7] conductor fixtures"
-for category in valid invalid; do
-  for fixture in fixtures/conductor/v1/"$category"/*/*.json; do
-    kind="$(basename "$(dirname "$fixture")")"
-    status=0
-    python3 scripts/orch.py validate "$kind" "$fixture" --quiet 2>/dev/null || status=$?
-    expected=0
-    [[ "$category" == valid ]] || expected=1
-    [[ "$status" -eq "$expected" ]] || err "$fixture: exit $status, expected $expected"
-  done
-done
+python3 scripts/validate-fixtures.py fixtures/conductor/v1 || err "conductor fixtures"
 
 echo "[7/7] tests"
 if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then

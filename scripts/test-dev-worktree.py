@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import tempfile
 import unittest
@@ -124,12 +125,73 @@ else:
         (self.directory / "tracked.txt").write_text("next\n", encoding="utf-8")
         self.commit(self.directory)
         before = self.git("rev-parse", "main")
-        result = self.command("promote-check", "--branch", "stable/p1", "--path", self.directory)
+        candidate = self.git("rev-parse", "stable/p1")
+        result = self.command("promote-check", "--branch", "stable/p1", "--path", self.directory,
+                              cwd=self.directory)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(result.stdout.splitlines()), 2)
-        self.assertIn("merge --ff-only stable/p1", result.stdout)
-        self.assertIn("swissknifeman doctor", result.stdout)
+        promotion, doctor = result.stdout.splitlines()
+        guard, merge = promotion.split(" && ", 1)
+        guard_args = shlex.split(guard)
+        self.assertEqual(guard_args[:1] + guard_args[2:], ["[", "=", "refs/heads/main", "]"])
+        self.assertTrue(guard_args[1].startswith("$(") and guard_args[1].endswith(")"))
+        self.assertEqual(shlex.split(guard_args[1][2:-1]),
+                         ["git", "-C", str(self.live), "symbolic-ref", "--quiet", "HEAD"])
+        self.assertEqual(shlex.split(merge), ["git", "-C", str(self.live), "merge", "--ff-only", "stable/p1"])
+        self.assertEqual(doctor, "swissknifeman doctor")
         self.assertEqual(self.git("rev-parse", "main"), before)
+        self.assertEqual(self.git("rev-parse", "stable/p1"), candidate)
+        self.assertEqual(self.git("symbolic-ref", "HEAD"), "refs/heads/main")
+        self.assertEqual(self.git("status", "--porcelain"), "")
+        self.assertEqual(self.git("status", "--porcelain", cwd=self.directory), "")
+        self.assertFalse(self.log.exists())
+
+    def test_promote_check_refuses_other_live_branch_at_main(self):
+        self.create()
+        (self.directory / "tracked.txt").write_text("next\n", encoding="utf-8")
+        self.commit(self.directory)
+        self.git("switch", "-c", "hotfix", "main")
+        before = self.git("show-ref", "--heads")
+        self.assertEqual(self.git("rev-parse", "HEAD"), self.git("rev-parse", "main"))
+        self.assertEqual(self.git("status", "--porcelain"), "")
+        result = self.refusal("DEV_WORKTREE_LIVE_NOT_MAIN", "promote-check", "--branch", "stable/p1",
+                              "--path", self.directory)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(self.git("symbolic-ref", "HEAD"), "refs/heads/hotfix")
+        self.assertEqual(self.git("show-ref", "--heads"), before)
+        self.assertFalse(self.log.exists())
+
+    def test_promote_check_refuses_detached_live_head_at_main(self):
+        self.create()
+        (self.directory / "tracked.txt").write_text("next\n", encoding="utf-8")
+        self.commit(self.directory)
+        self.git("switch", "--detach", "main")
+        before = self.git("show-ref", "--heads")
+        self.assertEqual(self.git("rev-parse", "HEAD"), self.git("rev-parse", "main"))
+        self.assertEqual(self.git("status", "--porcelain"), "")
+        result = self.refusal("DEV_WORKTREE_LIVE_NOT_MAIN", "promote-check", "--branch", "stable/p1",
+                              "--path", self.directory)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(self.git("branch", "--show-current"), "")
+        self.assertEqual(self.git("show-ref", "--heads"), before)
+        self.assertFalse(self.log.exists())
+
+    def test_printed_promotion_refuses_if_live_leaves_main(self):
+        self.create()
+        (self.directory / "tracked.txt").write_text("next\n", encoding="utf-8")
+        self.commit(self.directory)
+        result = self.command("promote-check", "--branch", "stable/p1", "--path", self.directory)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        promotion = result.stdout.splitlines()[0]
+        for args in (("switch", "-c", "hotfix", "main"), ("switch", "--detach", "main")):
+            with self.subTest(args=args):
+                self.git(*args)
+                before = self.git("show-ref", "--heads")
+                result = subprocess.run(["bash", "-c", promotion], cwd=self.directory, env=self.env,
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertEqual(self.git("show-ref", "--heads"), before)
+        self.assertFalse(self.log.exists())
 
     def test_promote_check_refuses_divergent_main(self):
         self.create()

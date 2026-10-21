@@ -11,7 +11,7 @@
 # DIR defaults to swissknifeman-next beside the main worktree; create defaults to
 # branch stable/p1 from main. bind makes DIR primary and reattaches the main checkout;
 # unbind restores the main checkout as primary. SKM_DEV_WORKTREE_WORKSPACE_CLI is for tests.
-# promote-check prints the owner's promotion commands after checking ancestry and cleanliness.
+# promote-check prints the owner's promotion commands after checking live main, ancestry and cleanliness.
 # This script never merges, pushes, resets, cleans or removes a worktree.
 # Exit: 0 ok, 1 refused (DEV_WORKTREE_*: message), 2 usage.
 set -euo pipefail
@@ -179,6 +179,8 @@ case "$CMD" in
     fi
     ;;
   promote-check)
+    live_branch="$(git -C "$LIVE" symbolic-ref --quiet HEAD)" || refuse DEV_WORKTREE_LIVE_NOT_MAIN "$LIVE must be on main (detached HEAD)"
+    [ "$live_branch" = refs/heads/main ] || refuse DEV_WORKTREE_LIVE_NOT_MAIN "$LIVE must be on main (on $live_branch)"
     git -C "$LIVE" show-ref --verify --quiet "refs/heads/$BRANCH" || refuse DEV_WORKTREE_NO_BRANCH "$BRANCH"
     git -C "$LIVE" merge-base --is-ancestor main "$BRANCH" || refuse DEV_WORKTREE_NOT_FF "$BRANCH is not a fast-forward of main"
     dirty="$(git -C "$LIVE" status --porcelain --untracked-files=no)"
@@ -187,6 +189,7 @@ case "$CMD" in
       refuse DEV_WORKTREE_DIRTY "$dirty"
     fi
     [ -z "$dirty" ] || refuse DEV_WORKTREE_DIRTY "$dirty"
-    printf 'git -C %q merge --ff-only %q\nswissknifeman doctor\n' "$LIVE" "$BRANCH"
+    # Recheck the branch when the operator runs the printed command.
+    printf '[ "$(git -C %q symbolic-ref --quiet HEAD)" = refs/heads/main ] && git -C %q merge --ff-only %q\nswissknifeman doctor\n' "$LIVE" "$LIVE" "$BRANCH"
     ;;
 esac

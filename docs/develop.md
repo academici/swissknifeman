@@ -515,15 +515,18 @@ schema-valid historical data and is not rewritten by this reconciliation.
    scripts/dev-worktree.sh promote-check --branch stable/p1
    ```
 
-   It requires an existing branch (`DEV_WORKTREE_NO_BRANCH`), `main` to be its ancestor
+   It requires the live checkout to have `main` checked out (`DEV_WORKTREE_LIVE_NOT_MAIN`): another
+   branch or a detached HEAD is refused even at the same commit as `main`. It also requires an existing
+   branch (`DEV_WORKTREE_NO_BRANCH`), `main` to be its ancestor
    (`DEV_WORKTREE_NOT_FF`), no tracked changes in the live checkout (`DEV_WORKTREE_LIVE_DIRTY`) and a clean
    worktree including untracked files (`DEV_WORKTREE_DIRTY`). It prints the owner's commands:
 
    ```bash
-   git -C ~/projects/packages/swissknifeman merge --ff-only stable/p1
+   [ "$(git -C ~/projects/packages/swissknifeman symbolic-ref --quiet HEAD)" = refs/heads/main ] && git -C ~/projects/packages/swissknifeman merge --ff-only stable/p1
    swissknifeman doctor
    ```
 
+   The printed merge explicitly targets the verified live checkout and checks again that it is on `main`.
    The script never merges, pushes, resets, cleans or removes a worktree. The operator promotes by fast-forward
    after green phase validation. Start the next phase in the worktree with a new branch from the promoted
    `main`, for example `git switch -c stable/p2 main`.

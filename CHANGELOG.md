@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- scripts: `dev-worktree.sh promote-check` требует `main` в live checkout; другая ветка или detached HEAD отклоняются даже на том же коммите. Напечатанная команда повторно проверяет `refs/heads/main` и выполняет fast-forward только в проверенном live checkout.
+
 - orch (PLAN9 operator hotfix): резервный reviewer последнего пункта с `review.mode none/self` больше не подменяет назначенное ревью группы; явные настройки запуска сохраняют приоритет.
 
 - planner-orch/orch: находки независимого ревью W4: мост сохраняет evidence workspace-плана только для `done` с зелёными доказательствами и только для run, владеющего пунктом (устаревший run и красный повтор не меняют план; повтор закрывшей попытки ничего не пишет); symlink на пути к папке evidence — `EVIDENCE_PATH_INVALID` до записи, файл пишется с `O_NOFOLLOW`; результаты research из локальной папки `orch-artifacts` больше не попадают в коммит пункта.

@@ -150,12 +150,24 @@ def build(directory: Path, project: Path) -> dict:
                                    for attempt in item.get("attempts", [])],
                       "reviews": sum(1 for key in steps if key.startswith("review.")) + sum(
                           1 for attempt in item.get("attempts", []) for key in attempt.get("steps", {}) if key.startswith("review."))})
+    group_reviews = state.get("group_reviews") or {}
+    incomplete_groups = []
+    for number, review in group_reviews.items():
+        counts = review.get("counts") if isinstance(review, dict) else None
+        if not isinstance(counts, dict) or any(type(counts.get(key)) is not int or counts[key] < 0
+                                               for key in ("Blocker", "Major", "Minor")) \
+                or review.get("error") or review.get("format") not in ("findings", "none"):
+            incomplete_groups.append(str(number))
+            continue
+        severities.update({key: counts[key] for key in ("Blocker", "Major", "Minor") if counts[key]})
     by_agent = []
     for folder in sorted(Path(directory).glob("*/")):
         for row in agents_mod.read(folder):
             by_agent.append({"item": folder.name, **row})
     counts, problems = _events(project, started) if started else ({}, [])
     codes = Counter(line.get("reason_code") for line in lines if line.get("event") == "info" and line.get("reason_code"))
+    if codes.get("GROUP_REVIEW_FAILED") and not incomplete_groups:
+        incomplete_groups.append("GROUP_REVIEW_FAILED")
     wall = (_seconds(lines[-1]["ts"]) - _seconds(lines[0]["ts"])) if len(lines) > 1 else 0.0
     report = {
         "schema": "orch-conductor-observer/v1", "run": run_id, "started": started,
@@ -173,6 +185,7 @@ def build(directory: Path, project: Path) -> dict:
                     for line in repeats],
         "red_checks": dict(sorted(red.items())),
         "findings_by_severity": dict(sorted(severities.items())),
+        "group_reviews": group_reviews, "incomplete_group_reviews": incomplete_groups,
         "triage": {"confirmed": confirmed, "rejected": rejected},
         "idle": {"total_s": round(idle_total, 1), "max_s": round(idle_max, 1), "max_between": idle_where},
         "tokens_by_role": {role: value for role, value in sorted(tokens.items())},
@@ -250,8 +263,10 @@ def markdown(report: dict) -> str:
              f"- Time: {report['started']} → {report['ended']}; resumes {report['resumes']}",
              f"- Repeated role runs: {len(report['repeats'])}",
              f"- Red checks: {', '.join(f'{k}×{v}' for k, v in report['red_checks'].items()) or 'none'}",
-             f"- Review findings: {', '.join(f'{k} {v}' for k, v in report['findings_by_severity'].items()) or 'none'}"
-             f"; triage confirmed {report['triage']['confirmed']}, rejected {report['triage']['rejected']}",
+             f"- Review findings: {', '.join(f'{k} {v}' for k, v in report['findings_by_severity'].items()) or ('unavailable' if report.get('incomplete_group_reviews') else 'none')}"
+             f"; triage confirmed {report['triage']['confirmed']}, rejected {report['triage']['rejected']}"
+             + (f"; incomplete group reviews {', '.join(report['incomplete_group_reviews'])}"
+                if report.get("incomplete_group_reviews") else ""),
              f"- Idle between stages: {report['idle']['total_s']} s (longest {report['idle']['max_s']} s"
              + (f", {report['idle']['max_between']}" if report['idle']['max_between'] else "") + ")",
              f"- Scout cache: {report['scout_cache']['hits']}/{report['scout_cache']['runs']} hits",

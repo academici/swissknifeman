@@ -36,3 +36,13 @@ class CheckCorrectionTests(unittest.TestCase):
     def test_legacy_row_without_log_preserves_the_existing_contract(self):
         text = prompts.check_correction([{"id": "V2", "procedure": "inspect", "verdict": "RED", "tail": "why"}])
         self.assertEqual(text, "These acceptance checks are red on your candidate:\n\nV2: `inspect` → RED\nwhy")
+
+
+class ResumedContractTests(unittest.TestCase):
+    def test_continuation_uses_latest_full_contract_after_an_input_rebuild(self):
+        blocks = prompts.executor_resumed(item="P3.1", step="executor.2", correction="repair V1")
+        continuation = next(block.text for block in blocks if block.kind == "resumed")
+        self.assertIn("latest full prompt", continuation)
+        self.assertNotIn("first prompt", continuation)
+        self.assertTrue(any(block.kind == "result_contract" for block in blocks))
+        self.assertTrue(any(block.kind == "correction" for block in blocks))

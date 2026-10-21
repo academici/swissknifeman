@@ -465,11 +465,11 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
 def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), interrupted: str = "", fix: str = "",
                      changed_paths=(), targeted_tests: bool = True) -> list:
     """The delta prompt of a round in a resumed executor session: the session holds the task, the rules and the result
-    contract of the first prompt of the piece, so it gets only what this round asks: the correction (``fix`` is the
+    contract of the latest full prompt of the piece, so it gets only what this round asks: the correction (``fix`` is the
     deviation to fix), the answers it has not seen, the note of an interrupted round, the paths changed so far and the
     result contract. ``executor`` builds the full prompt of the same round (the fallback when the session is lost)."""
     parts = [[Block("resumed", CONDUCTOR, f"## Continuation\n\nYou continue piece {item} in the same session. The task, the "
-                    "rules and the result contract of your first prompt still apply; do only what this round asks.")]]
+                    "rules and the result contract of your latest full prompt still apply; do only what this round asks.")]]
     if answers:
         parts.append([Block("answers", "questions.json", _answers(answers))])
     if fix:

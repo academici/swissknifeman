@@ -420,9 +420,24 @@ The tests need nothing but `aicore` itself, so the folder can be tested as a sta
 
 ### Parallel test runs
 
-`python3 -m aicore.util.par_unittest discover -s tests [-t TOP] [-p PATTERN] [-v] [-j N]` runs a `unittest discover` suite in
-parallel worker processes: tests are found by `discover` itself, grouped by test class, dealt out heaviest-first, and each worker
-has its own throwaway `HOME`. The output and the exit code are those of `unittest`; a shard that fails is repeated alone, and a
-pass there is reported as a clash between parallel tests. The test runners of the modules use it when `aicore` is importable
-(`SKM_TEST_JOBS` sets the workers, default `min(8, cpu_count)`; `1` is the old sequential run). A suite whose tests depend on
-what other modules did earlier in the same process keeps `SKM_TEST_JOBS=1` as its default (maind).
+`python3 -m aicore.util.par_unittest discover -s tests [-t TOP] [-p PATTERN] [-v] [-j N]` uses unittest discovery,
+then assigns classes to isolated workers, heaviest first. Classes above `max(30s, measured suite time / jobs / 2)`
+split into methods only when no inherited class fixtures, module fixtures or custom discovery require them to stay together.
+Custom discovery and `-j 1` retain serial suite execution. Workers receive one nested job each and separate `HOME`/`TMPDIR`;
+caller state under `SKM_*HOME`/`XDG_*_HOME` is copied into their private homes.
+
+Timings are elapsed seconds, stored atomically under the git common directory's `par-unittest/` folder.
+`SKM_PAR_UNITTEST_TIMES=/path/times.json` overrides that file, including outside git. Missing or invalid timing maps use
+case counts. Atomic replacement and a merge lock protect simultaneous writers. Method measurements also update class totals.
+
+A failed shard retries only its failed case IDs; a failed subtest retries its parent method. Missing failure evidence,
+fixture errors and crashes repeat the whole shard. Passing alone still means `CLASH`: `--clash warn` (default) allows it;
+`--clash fail` or `SKM_TEST_CLASH=fail` fails it. Original outcomes and green cases remain counted when only a subset retries.
+
+`--report FILE` or `SKM_PAR_UNITTEST_REPORT=FILE` writes a schema-validated, atomic inventory and attempt report: normalized
+unit/file/case keys, original unittest IDs, outcomes and skip reasons, retries, worker invocations, requested/effective jobs,
+and elapsed seconds. The same evidence is collected in serial mode. `SKM_TEST_CONTEXT` names the context (`local` by default;
+standalone sets `standalone`). The stderr summary reports discovery/execution/skip/retry counts separately.
+
+`SKM_TEST_JOBS` supplies the job budget (default `min(8, cpu_count)`); a parent running concurrent suites must divide its
+budget among them. Suites requiring one process may keep `SKM_TEST_JOBS=1` (maind).

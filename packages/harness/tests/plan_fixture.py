@@ -3,6 +3,9 @@ import json
 import os
 import subprocess
 import unittest
+import shutil
+import tempfile
+from functools import lru_cache
 from pathlib import Path
 
 from aicore.util.partners import partner_command
@@ -50,7 +53,7 @@ def run_plan(*args, plans_root=None, expect=0):
     return result
 
 
-def write_plan(root, *, codename="FIXTURE", items, design="detailed", phase="P1"):
+def _build_plan(root, *, codename="FIXTURE", items, design="detailed", phase="P1"):
     """Create `<root>/plans/<ID>` with one phase and items, return `(plan_dir, item_ids)`.
 
     `items` is a list of `(status, route)`; status is one of `todo, in_progress, done,
@@ -90,3 +93,35 @@ def write_plan(root, *, codename="FIXTURE", items, design="detailed", phase="P1"
                 run_plan("finish", "PLAN1", item_id, "--status", "blocked",
                          "--escalation", "fixture escalation", plans_root=plans)
     return plan_dir, item_ids
+
+
+@lru_cache(maxsize=32)
+def _seed(codename, items, design, phase, argv, environment):
+    """One private immutable seed per fixture variant and worker, built only by plan.py."""
+    temporary = tempfile.TemporaryDirectory(prefix="harness-plan-seed-")
+    try:
+        plan, ids = _build_plan(temporary.name, codename=codename, items=items, design=design, phase=phase)
+        for path in Path(temporary.name).rglob("*"):
+            path.chmod(path.stat().st_mode & ~0o222)
+        return temporary, plan.name, tuple(ids)
+    except BaseException:
+        temporary.cleanup()
+        raise
+
+
+def write_plan(root, *, codename="FIXTURE", items, design="detailed", phase="P1"):
+    """Give every case an independent writable copy of its worker's CLI-built seed."""
+    require_planner_root()
+    plans = Path(root) / "plans"
+    if plans.exists() or (Path(root) / ".swissknifeman").exists():
+        return _build_plan(root, codename=codename, items=items, design=design, phase=phase)
+    immutable_items = tuple((status, tuple(route) if route is not None else None) for status, route in items)
+    temporary, name, ids = _seed(codename, immutable_items, design, phase, tuple(planner_argv()),
+                                 tuple(sorted(os.environ.items())))
+    seed = Path(temporary.name)
+    shutil.copytree(seed, root, dirs_exist_ok=True)
+    # Include CLI event/journal side effects as well as plans, without touching the case's git repository.
+    for original in seed.rglob("*"):
+        path = Path(root) / original.relative_to(seed)
+        path.chmod(path.stat().st_mode | (0o700 if path.is_dir() else 0o200))
+    return plans / name, list(ids)

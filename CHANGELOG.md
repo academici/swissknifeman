@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Tests: orch source calls can use an isolated in-process test transport while production keeps subprocess execution; heavy unittest classes shard by safe methods, retry failed IDs and atomically merge timings. Serial and parallel runs retain case/context/outcome evidence. Standalone shares hub timings, divides nested jobs, preserves successful summaries and reuses unchanged green results only within a valid `SKM_CHECK_RUN`. Measured planner and harness fixture setup now uses private CLI-built seeds and independent copies.
+
 - scripts/workspace/aicore: `dev-worktree.sh bind|unbind` переключает primary одной атомарной мутацией `workspace project rebind --preserve-paths --include-path`: оба checkout входят в транзакцию, даже если live ещё не привязан. Сохраняются все прежние paths, их порядок, `bound_at` и другие проекты; маркеры обоих checkout проверяются до записи. Opt-in параметры `preserve`/`primary` в `aicore.workspace.set_paths` используют существующие lock и atomic writer; обычный rebind по-прежнему заменяет список путей.
 - orch: определение корня checkout (`git rev-parse --show-toplevel`) ограничено 60 с; зависание git больше не держит conductor и считается неуспехом git (блокировка берёт путь проекта).
 - scripts: `dev-worktree.sh promote-check` требует `main` в live checkout; другая ветка или detached HEAD отклоняются даже на том же коммите. Напечатанная команда повторно проверяет `refs/heads/main` и выполняет fast-forward только в проверенном live checkout.

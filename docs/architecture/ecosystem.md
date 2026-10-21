@@ -156,7 +156,13 @@ automatically by `python3 scripts/ecosystem-units.py check`:
   Violations that exist today sit in a baseline (`configs/ecosystem-baseline.json`); a new violation fails the check,
   and `--strict` fails on any.
 - **Standalone:** the module's tests pass in a copy of its folder with only a stand-in for `aicore`
-  (`ecosystem-units.py standalone`).
+  (`ecosystem-units.py standalone`). The runner gives the copy its own state home and partner roots, passes the hub's
+  `par-unittest` timing file, and divides `SKM_TEST_JOBS` among concurrent modules. Successful command summaries remain
+  visible with `context=standalone`. A valid `SKM_CHECK_RUN` enables atomic receipts under the worktree git directory's
+  `ecosystem-units/standalone-run-<run>.json`: unchanged copied bytes/modes, Python, runner/config, tools and environment
+  may reuse a green result with `(reused)` and its original summary. Staging or committing identical bytes preserves
+  that key. Corrupt receipts, unknown dependencies and changes during execution refuse reuse. Without `SKM_CHECK_RUN`,
+  including manual `--baseline` runs, every selected module executes fully.
 - **Finding `aicore`** by the `bin/` wrapper: `AICORE_ROOT`, then `<module>/_vendor/aicore`, then the neighbouring
   `../aicore` (only inside the hub repository, a development mode). One canonical fragment does the search and a miss
   ends with `AICORE_NOT_FOUND` ([ADR 0029](decisions/0029-aicore-locator-fragment.md)). How `aicore` is delivered after

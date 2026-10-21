@@ -7,11 +7,14 @@ command line (knowledge/p11-refactor#fs; ``tests/test_boundaries.py`` keeps it s
 from __future__ import annotations
 
 import json
+import io
+import os
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
 import shlex
 import sys
-from typing import Optional
+from typing import Callable, Optional
 
 from aicore.state import blobs
 from aicore.util.digest import canonical_json_bytes, sha256_hex
@@ -31,6 +34,43 @@ from aicore.util.proc import run as run_with_timeout
 # Local records of a source without artifacts_dir (not committed: ignored like the state folder); a plan source keeps the
 # evidence of its items with the plan at register.
 FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
+ORCH_TRANSPORT: Optional[Callable] = None
+
+
+def inprocess_transport(argv, cwd, env):
+    """Test transport for the source CLI; restore process state even on an exception.
+
+    This seam is process-global and belongs to sequential tests within a worker only.
+    Production always uses the subprocess transport.
+    """
+    global ORCH_TRANSPORT
+    previous_env, previous_cwd = dict(os.environ), os.getcwd()
+    previous_transport = ORCH_TRANSPORT
+    out, err = io.StringIO(), io.StringIO()
+    try:
+        os.environ.clear()
+        os.environ.update(previous_env if env is None else env)
+        os.chdir(cwd)
+        with redirect_stdout(out), redirect_stderr(err):
+            from orch import cli
+            try:
+                code = cli.main(list(argv[2:]))
+            except SystemExit as exc:
+                code = exc.code
+                if code is not None and not isinstance(code, int):
+                    print(code, file=sys.stderr)
+                    code = 1
+        return code or 0, out.getvalue(), err.getvalue()
+    finally:
+        os.chdir(previous_cwd)
+        os.environ.clear()
+        os.environ.update(previous_env)
+        ORCH_TRANSPORT = previous_transport
+
+
+def _subprocess_transport(argv, cwd, env):
+    done = run_with_timeout(argv, cwd=cwd, capture_output=True, text=True, env=env, timeout=600)
+    return done.returncode, done.stdout, done.stderr
 
 
 def read_receipt(item: Item, kind: str, *, project=None) -> Optional[dict]:
@@ -157,13 +197,12 @@ def run_orch(self, *args: str) -> tuple:
         argv += ["--project-resolution", self.project_resolution]
     if self.config_file:
         argv += ["--config", str(self.config_file)]
-    done = run_with_timeout(argv + list(args), cwd=str(self.project), capture_output=True, text=True,
-                          env=self.env, timeout=600)
+    code, out, err = (ORCH_TRANSPORT or _subprocess_transport)(argv + list(args), str(self.project), self.env)
     try:
-        doc = json.loads(done.stdout) if done.stdout.strip() else None
+        doc = json.loads(out) if out.strip() else None
     except ValueError:
         doc = None
-    return done.returncode, doc, done.stderr.strip()
+    return code, doc, err.strip()
 
 
 OWNED_HINT = ("; the conductor never takes a piece over: free it from the run that holds it (`orch conduct release --run RUN "

@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -14,6 +15,10 @@ if str(_LIB) not in sys.path:
 
 from planner.plan import check, lifecycle, ops, store  # noqa: E402
 from planner.plan.model import PlanError  # noqa: E402
+try:
+    from . import demo
+except ImportError:  # direct discovery from tests/engine
+    import demo
 
 OPUS = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
 SONNET = {"provider": "claude-code", "model": "claude-sonnet-5-5", "effort": "high"}
@@ -32,32 +37,31 @@ class LifeCase(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
+        self.plans = Path(tmp.name) / "plans"
+        commands = [
+            ["new", "--codename", "LIFE", "--title", "Life", "--repository", "r", "--owner", "o",
+             "--actor", "claude-code/claude-opus-5-5/high", "--message", "m", "--date", "2026.10.07"],
+            ["add-phase", "PLAN1", "--title", "One"],
+            ["set", "PLAN1", "P1", "--json", '{"goal":"g"}'],
+            ["add-item", "PLAN1", "P1", "--title", "First"],
+            ["add-item", "PLAN1", "P1", "--title", "Second"],
+            ["set", "PLAN1", "P1.1", "--json", json.dumps(DETAIL)],
+            ["set", "PLAN1", "P1.2", "--json", json.dumps({**DETAIL, "depends_on": ["P1.1"]})],
+            ["batches", "PLAN1", "P1", "--json", '[{"id":"B1","items":["P1.1","P1.2"],"mode":"recommended"}]'],
+            ["add-phase", "PLAN1", "--title", "Two"],
+            ["set", "PLAN1", "P2", "--json", '{"goal":"g"}'],
+            ["add-item", "PLAN1", "P2", "--title", "Third"],
+            ["set", "PLAN1", "P2.1", "--json", json.dumps({**DETAIL, "route": {"class": "frontier", "effort": "high"}})],
+            ["design-done", "PLAN1", "P1", "--actor", "claude-code/claude-opus-5-5/high"],
+        ]
         clock = itertools.count()
-
+        self.root = demo.copy_cli_seed(self.plans, commands, clock=clock)
+        base = datetime(2026, 10, 7, tzinfo=timezone.utc)
         def tick():
-            n = next(clock)
-            return f"2026-10-07T{n // 3600:02d}:{n // 60 % 60:02d}:{n % 60:02d}Z"
-
+            return (base + timedelta(seconds=next(clock))).strftime("%Y-%m-%dT%H:%M:%SZ")
         patcher = mock.patch.object(store, "now", tick)
         patcher.start()
         self.addCleanup(patcher.stop)
-        self.plans = Path(tmp.name) / "plans"
-        self.plans.mkdir()
-        plan = ops.new_plan("LIFE", "Life", plans_root=self.plans, repository="r", owner="o", authoring=OPUS,
-                            message="m", date="2026.10.07")
-        self.root = plan.root
-        ops.add_phase(plan, "One")
-        ops.patch(plan, "P1", {"goal": "g"})
-        ops.add_item(plan, "P1", "First")
-        ops.add_item(plan, "P1", "Second")
-        ops.patch(plan, "P1.1", copy.deepcopy(DETAIL))
-        ops.patch(plan, "P1.2", {**copy.deepcopy(DETAIL), "depends_on": ["P1.1"]})
-        ops.set_batches(plan, "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "recommended"}])
-        ops.add_phase(plan, "Two")
-        ops.patch(plan, "P2", {"goal": "g"})
-        ops.add_item(plan, "P2", "Third")
-        ops.patch(plan, "P2.1", {**copy.deepcopy(DETAIL), "route": {"class": "frontier", "effort": "high"}})
-        lifecycle.design_done(self.root, "P1", actor=OPUS)
 
     # ---- helpers
     def load(self):
@@ -125,6 +129,38 @@ class RoutePoolTests(unittest.TestCase):
         with self.assertRaises(PlanError) as caught:
             lifecycle.admitted_class("claude-code", "claude-opus-5-5", "/nonexistent/routing.json")
         self.assertEqual(caught.exception.code, "ROUTING_UNAVAILABLE")
+
+
+class FixtureSeedTests(unittest.TestCase):
+    def test_cli_seed_resumes_each_cases_deterministic_clock_on_cache_hits(self):
+        first, second = LifeCase(), LifeCase()
+        first.setUp()
+        self.addCleanup(first.doCleanups)
+        first_tick = store.now()
+        self.assertTrue(first_tick.startswith("2026-10-07T"))
+        stamps = [event["ts"] for event in first.events()]
+        stamps.append(first.load().plan["updated_at"])
+        self.assertTrue(all(stamp < first_tick for stamp in stamps))
+        with mock.patch.object(demo.subprocess, "run", side_effect=AssertionError("seed must be cached")):
+            second.setUp()
+        self.addCleanup(second.doCleanups)
+        self.assertEqual(store.now(), first_tick)
+        self.assertEqual(first.tree(), second.tree())
+
+    def test_cli_seed_is_independent_for_each_case_and_retains_negative_inputs(self):
+        first, second = LifeCase(), LifeCase()
+        first.setUp()
+        self.addCleanup(first.doCleanups)
+        second.setUp()
+        self.addCleanup(second.doCleanups)
+        self.assertNotEqual(first.root, second.root)
+        self.assertEqual(first.tree(), second.tree())
+        before = second.tree()
+        ops.patch(store.load_plan(first.root), "P1.1", {"title": "only the first case"})
+        self.assertEqual(second.tree(), before)
+        self.assertEqual(store.load_plan(second.root).items["P1.1"]["title"], "First")
+        self.assertEqual(store.load_plan(second.root).items["P1.2"]["depends_on"], ["P1.1"])
+        self.assertEqual(store.load_plan(second.root).phases["P2"]["design"], "skeleton")
 
 
 class StartTests(LifeCase):

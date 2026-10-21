@@ -27,7 +27,7 @@ from unittest import mock
 from orch import launch
 from orch.conductor import cli, engine, gates, options as opts, process, progress
 from orch.conductor.application import run_service
-from orch.conductor.infrastructure import clock, roles
+from orch.conductor.infrastructure import clock, roles, work_source
 from orch.conductor.policies import sandbox as sandbox_policy
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,6 +62,9 @@ class ConductorCase(unittest.TestCase):
     scenario = "full"
 
     def setUp(self):
+        patcher = mock.patch.object(work_source, "ORCH_TRANSPORT", work_source.inprocess_transport)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         base = Path(tmp.name)

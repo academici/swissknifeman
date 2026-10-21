@@ -1192,7 +1192,7 @@ class StandaloneTests(unittest.TestCase):
 
     def setUp(self):
         self.tree = Tree(self)
-        self.tree.config["standalone"] = {"foundation_paths": ["shared"], "unset_env": ["SKM_LEAK"],
+        self.tree.config["standalone"] = {"foundation_paths": ["shared"], "unset_env": ["SKM_LEAK", "PYTHONPATH"],
                                           "timeout_s": 5}
         self.tree.write("shared/data.txt", "foundation\n")
 
@@ -1207,6 +1207,96 @@ class StandaloneTests(unittest.TestCase):
 
     def baseline(self) -> dict:
         return json.loads((self.tree.root / "configs/ecosystem-baseline.json").read_text(encoding="utf-8"))
+
+    def test_shared_timings_context_and_success_summary_are_visible(self):
+        import hashlib
+        self.dev(test=["python3", "-c", "import os; print('TIMES='+os.environ['SKM_PAR_UNITTEST_TIMES']); "
+                  "print('CONTEXT='+os.environ['SKM_TEST_CONTEXT']); print('Ran 7 tests; OK')"])
+        done = self.standalone("alpha", env={"SKM_CHECK_RUN": ""})
+        self.assertEqual(done.returncode, 0, done.stderr)
+        key = hashlib.sha256(str(self.tree.root / "packages/alpha/tests").encode()).hexdigest()[:16]
+        self.assertIn(str(self.tree.root / ".git/par-unittest" / (key + ".json")), done.stdout)
+        self.assertIn("CONTEXT=standalone", done.stdout)
+        self.assertIn("Ran 7 tests; OK", done.stdout)
+
+    def test_green_reuse_tracks_content_modes_config_environment_and_stage_invariant(self):
+        self.dev(test=["python3", "-c", "print('original standalone summary')"])
+        env = {"SKM_CHECK_RUN": "p22-reuse", "P22_CONTEXT": "first"}
+        first = self.standalone("alpha", env=env)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertNotIn("(reused)", first.stdout)
+        again = self.standalone("alpha", env=env)
+        self.assertIn("standalone alpha: pass (reused)", again.stdout)
+        self.assertIn("original standalone summary", again.stdout)
+        subprocess.run(["git", "add", "-A"], cwd=self.tree.root, check=True)
+        self.assertIn("(reused)", self.standalone("alpha", env=env).stdout)
+        self.tree.write("packages/alpha/new.txt", "changed content")
+        self.assertNotIn("(reused)", self.standalone("alpha", env=env).stdout)
+        self.assertIn("(reused)", self.standalone("alpha", env=env).stdout)
+        (self.tree.root / "packages/alpha/new.txt").chmod(0o755)
+        self.assertNotIn("(reused)", self.standalone("alpha", env=env).stdout)
+        self.assertNotIn("(reused)", self.standalone("alpha", env={**env, "P22_CONTEXT": "second"}).stdout)
+        self.tree.write("shared/data.txt", "foundation changed")
+        self.assertNotIn("(reused)", self.standalone("alpha", env=env).stdout)
+        self.tree.config["standalone"]["timeout_s"] = 6
+        self.assertNotIn("(reused)", self.standalone("alpha", env=env).stdout)
+        receipt = self.tree.root / ".git/ecosystem-units/standalone-run-p22-reuse.json"
+        receipt.write_text("{broken")
+        self.assertNotIn("(reused)", self.standalone("alpha", env=env).stdout)
+
+    def test_unknown_external_symlink_dependency_refuses_reuse(self):
+        self.dev(test=["python3", "-c", "print('not reusable')"])
+        self.tree.write("outside.txt", "external dependency")
+        link = self.tree.root / "packages/alpha/external.txt"
+        link.symlink_to(self.tree.root / "outside.txt")
+        for _ in range(2):
+            done = self.standalone("alpha", env={"SKM_CHECK_RUN": "unknown-input"})
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertNotIn("(reused)", done.stdout)
+
+    def test_no_run_or_invalid_run_always_executes_and_no_baseline_reuse(self):
+        self.dev(test=["python3", "-c", "print('full run')"])
+        self.tree.set_baseline({}, {"alpha": "pass"})
+        for run_id in ("", "../bad", "bad.dot"):
+            for _ in range(2):
+                done = self.standalone("--baseline", env={"SKM_CHECK_RUN": run_id})
+                self.assertEqual(done.returncode, 0, done.stderr)
+                self.assertNotIn("(reused)", done.stdout)
+                self.assertIn("full run", done.stdout)
+
+    def test_candidate_changed_during_run_does_not_publish_green_receipt(self):
+        changed = self.tree.root / "packages/alpha/input.txt"
+        self.tree.write("packages/alpha/input.txt", "before")
+        self.dev(test=["python3", "-c", f"from pathlib import Path; p=Path({str(changed)!r}); "
+                      "p.write_text(p.read_text()+'x')"])
+        env = {"SKM_CHECK_RUN": "changing"}
+        for _ in range(2):
+            done = self.standalone("alpha", env=env)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertNotIn("(reused)", done.stdout)
+        receipt = self.tree.root / ".git/ecosystem-units/standalone-run-changing.json"
+        self.assertNotIn("alpha", json.loads(receipt.read_text()))
+
+    def test_nested_jobs_budget_is_divided_between_simultaneous_modules(self):
+        script = "import os; print('CHILD_JOBS='+os.environ['SKM_TEST_JOBS'])"
+        self.dev(test=["python3", "-c", script])
+        self.tree.add_module("beta")
+        doc = json.loads((self.tree.root / "packages/beta/unit.json").read_text())
+        self.tree.write_json("packages/beta/unit.json", {**doc, "dev": {"test": ["python3", "-c", script]}})
+        done = self.standalone("alpha", "beta", "--jobs", "4", env={"SKM_TEST_JOBS": "3", "SKM_CHECK_RUN": ""})
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(done.stdout.count("CHILD_JOBS=1"), 2)
+        self.assertIn("requested=4 effective=2 child_jobs=1 budget=3", done.stdout)
+
+    def test_changed_then_restored_candidate_does_not_publish_green(self):
+        changed = self.tree.root / "packages/alpha/input.txt"
+        self.tree.write("packages/alpha/input.txt", "same final bytes")
+        self.dev(test=["python3", "-c", f"from pathlib import Path; p=Path({str(changed)!r}); "
+                      "before=p.read_bytes(); p.write_bytes(b'temporary change'); p.write_bytes(before)"])
+        for _ in range(2):
+            done = self.standalone("alpha", env={"SKM_CHECK_RUN": "restored-input"})
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertNotIn("(reused)", done.stdout)
 
     def test_pass(self):
         self.dev(test=["python3", "-c", "import sys; sys.exit(0)"])
@@ -1247,10 +1337,14 @@ class StandaloneTests(unittest.TestCase):
                   "tmp = pathlib.Path.cwd().resolve().parents[1]; "
                   "ok = tmp in home.parents and os.environ['XDG_CONFIG_HOME'].startswith(str(home)) "
                   "and 'SKM_LEAK' not in os.environ and pathlib.Path('../../shared/data.txt').is_file() "
-                  "and pathlib.Path('../aicore/unit.json').is_file() and not pathlib.Path('../../packages').exists(); "
+                  "and pathlib.Path('../aicore/unit.json').is_file() and not pathlib.Path('../../packages').exists() "
+                  "and os.environ['SKM_INVOCATION_CWD'] == str(pathlib.Path.cwd()) "
+                  "and os.environ['SKM_HOME'].startswith(str(home)) "
+                  "and 'SKM_ORCH_ROOT' not in os.environ and 'SKM_LAUNCHER_ACTIVE' not in os.environ; "
                   "open('home.txt','w').write(str(home)); sys.exit(0 if ok else 1)")
         self.dev(test=["python3", "-c", script])
-        result = self.standalone("alpha", env={"SKM_LEAK": "1"})
+        result = self.standalone("alpha", env={"SKM_LEAK": "1", "SKM_ORCH_ROOT": "/live-checkout",
+                                               "SKM_LAUNCHER_ACTIVE": "1", "SKM_INVOCATION_CWD": "/live-checkout"})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_foundation_free_module_gets_no_foundation_paths(self):

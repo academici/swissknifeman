@@ -109,10 +109,27 @@ class RerunTests(ConductorCase):
 
     def test_every_trivial_form_is_refused_and_a_real_command_is_not(self):
         from orch.conductor.stages import triage
-        for cmd in ("true", ":", "exit 0", " exit  0 ;", "echo ok", "printf '%s' ok", "true;"):
-            self.assertTrue(triage.TRIVIAL_REPRODUCTION.match(cmd), cmd)
+        for cmd in ("true", ":", "exit 0", " exit  0 ;", "echo ok", "printf '%s' ok", "true;", "echo 'a; b'"):
+            self.assertTrue(triage.is_trivial_reproduction(cmd), cmd)
         for cmd in ("test -f out/W1.txt", "exit 1", "false", "grep -q done out/W1.txt", "python3 -c 'print(1)'", "truex"):
-            self.assertFalse(triage.TRIVIAL_REPRODUCTION.match(cmd), cmd)
+            self.assertFalse(triage.is_trivial_reproduction(cmd), cmd)
+
+    def test_a_compound_command_or_pipeline_with_a_trivial_head_is_not_trivial(self):
+        from orch.conductor.stages import triage
+        for cmd in ("echo checking; python3 repro.py", "echo checking && python3 repro.py", "echo x | python3 repro.py",
+                    "printf x; exit 1", "true; exit 1", "true && false", "echo a & python3 repro.py",
+                    "echo $(python3 repro.py)", "echo `python3 repro.py`", "echo ok\npython3 repro.py",
+                    "echo ok > out/W1.txt", "(echo ok)", "echo 'unbalanced"):
+            self.assertFalse(triage.is_trivial_reproduction(cmd), repr(cmd))
+
+    def test_a_compound_command_with_a_trivial_head_reaches_the_guarded_rerun(self):
+        with mock.patch.object(checks_mod, "run_reproduction",
+                               return_value={"exit": 1, "seconds": 0, "log": "-", "guard": "protect"}) as ran:
+            err = self.run_rejection(severity("Major"), rejecting("echo checking; python3 repro.py", 1))
+        ran.assert_called_once()
+        self.assertEqual(ran.call_args.args[0], "echo checking; python3 repro.py")
+        self.assertEqual(self.step(err)["verified"][0]["outcome"], "kept")
+        self.assertFalse(self.beacons(err, "TRIAGE_REPRO_TRIVIAL"))
 
     def test_another_exit_than_the_reported_one_restores_a_blocker(self):  # (b)
         err = self.run_rejection(severity("Blocker"), rejecting("exit 1", 0))

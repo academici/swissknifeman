@@ -39,6 +39,11 @@ def place(location) -> str:
     return text or "-"
 
 
+def _words(value) -> str:
+    """The identity text of a free-text field: blanks collapsed, case ignored; empty when it is not a string."""
+    return re.sub(r"\s+", " ", value).strip().casefold() if isinstance(value, str) else ""
+
+
 def _check_result(row: dict):
     """The result of a check row: its exit (a command check) or its verdict (a manual one) as one comparable value.
     ``pass`` and ``fail`` stand for exit 0 and 1; a value that spells nothing is kept as it was written."""
@@ -59,17 +64,22 @@ def _check_result(row: dict):
 def outcome_key(kind: str, doc: dict) -> dict:
     """The fields of ``doc`` that carry its meaning, by kind (``stage-report``, ``review-findings``, ``triage-result``);
     an empty dict for any other kind. A stage-report: the rank of its status, the counts of its escalations, blockers,
-    pending issues and deviations (and how many deviations are accepted), the blocking flag of each question by id and
-    the result of each check row by id. A review: the rank of its verdict and, per normalized place, the severity ranks
-    of the findings there from the highest down (finding ids are not part of it: the conductor renumbers them).
+    pending issues and deviations (and how many deviations are accepted, per deviation text), the blocking flag of each question by id and
+    the result of each check row by id. A review: the rank of its verdict and, per finding (its normalized place and
+    failure scenario, never its id or severity: the conductor renumbers ids and a repair may move severities), the
+    severity ranks of the findings with that content from the highest down.
     A triage: the finding ids it confirmed and the ones it rejected."""
     if not isinstance(doc, dict):
         return {}
     if kind == "stage-report":
         issues = _items(doc, "open_issues")
         counts = {name: sum(1 for issue in issues if _name({name: 0}, issue.get("kind")) == name) for name in ISSUE_COUNTS}
-        accepted = sum(1 for issue in issues if _name({"deviation": 0}, issue.get("kind"))
-                       and _name({"accepted": 0}, issue.get("outcome")))
+        deviations: dict = {}  # per deviation text: how many are accepted (a deviation has no id; its text is its identity)
+        for issue in issues:
+            if _name({"deviation": 0}, issue.get("kind")):
+                accepted_here = 1 if _name({"accepted": 0}, issue.get("outcome")) else 0
+                name = _words(issue.get("text"))
+                deviations[name] = deviations.get(name, 0) + accepted_here
         questions = {str(row.get("id")): row.get("blocking") is True for row in _items(doc, "questions") if "id" in row}
         checks: dict = {}
         for row in _items(doc, "checks_run"):
@@ -77,13 +87,14 @@ def outcome_key(kind: str, doc: dict) -> dict:
                 checks.setdefault(row["id"], []).append(_check_result(row))
         status = _name(STATUS_RANK, doc.get("status"))
         return {"status": status, "status_rank": STATUS_RANK.get(status), "issue_counts": counts,
-                "deviations_accepted": accepted, "questions": questions,
+                "deviations_accepted": sum(deviations.values()), "deviation_accepted": deviations, "questions": questions,
                 "check_rows": {name: sorted(rows, key=str) for name, rows in checks.items()}}
     if kind == "review-findings":
         places: dict = {}
         for row in _items(doc, "findings"):
             severity = _name(SEVERITY_RANK, row.get("severity"))
-            places.setdefault(place(row.get("location")), []).append(SEVERITY_RANK.get(severity, -1))
+            identity = (place(row.get("location")), _words(row.get("failure_scenario")))
+            places.setdefault(identity, []).append(SEVERITY_RANK.get(severity, -1))
         verdict = _name(VERDICT_RANK, doc.get("verdict"))
         return {"verdict": verdict, "verdict_rank": VERDICT_RANK.get(verdict),
                 "findings": {name: sorted(ranks, reverse=True) for name, ranks in places.items()}}
@@ -114,6 +125,11 @@ def drift(kind: str, before: dict, after: dict) -> list:
                 found.append(f"/open_issues: {name} {old['issue_counts'][name]} -> {new['issue_counts'][name]}")
         if new["deviations_accepted"] > old["deviations_accepted"]:
             found.append(f"/open_issues: deviations accepted {old['deviations_accepted']} -> {new['deviations_accepted']}")
+        else:  # the total holds, but one deviation may have been accepted while another was turned to a follow-up;
+            # a text the old report does not have (reworded, so not the same deviation) counts as 0 accepted before
+            for name, count in new["deviation_accepted"].items():
+                if count > old["deviation_accepted"].get(name, 0):
+                    found.append(f"/open_issues: deviation accepted: {name or '(no text)'}")
         for name, blocking in old["questions"].items():
             if name not in new["questions"]:
                 found.append(f"/questions: {name} lost")
@@ -129,8 +145,8 @@ def drift(kind: str, before: dict, after: dict) -> list:
         if old.get("verdict_rank") is not None and (new.get("verdict_rank") is None
                                                     or new["verdict_rank"] < old["verdict_rank"]):
             found.append(f"/verdict: {old['verdict']} -> {new.get('verdict')}")
-        for name, ranks in old["findings"].items():
-            later = new["findings"].get(name, [])
+        for identity, ranks in old["findings"].items():
+            name, later = identity[0], new["findings"].get(identity, [])
             if len(later) < len(ranks):
                 found.append(f"finding lost at {name}")
                 continue

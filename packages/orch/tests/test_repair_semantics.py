@@ -71,6 +71,21 @@ class StageReportDriftTests(unittest.TestCase):
         self.assertEqual(self.drift(stage("done_with_deviations", open_issues=[accepted]),
                                     stage("done_with_deviations", open_issues=[accepted])), [])
 
+    def test_acceptance_moved_to_another_deviation_is_drift_though_the_count_holds(self):
+        a, b = dict(DEVIATION, text="deviation A"), dict(DEVIATION, text="deviation B")
+        accepted = lambda issue: dict(issue, outcome="accepted")
+        before = stage("done_with_deviations", open_issues=[a, accepted(b)])
+        swapped = stage("done_with_deviations", open_issues=[accepted(a), b])
+        self.assertEqual(self.drift(before, swapped), ["/open_issues: deviation accepted: deviation a"])
+        self.assertEqual(self.drift(before, stage("done_with_deviations", open_issues=[b, accepted(a)])),
+                         ["/open_issues: deviation accepted: deviation a"])  # the order of the issues is no identity
+        self.assertEqual(self.drift(before, stage("done_with_deviations", open_issues=[accepted(b), a])), [])
+        self.assertEqual(self.drift(before, stage("done_with_deviations", open_issues=[a, b])), [])  # more cautious
+        reworded = stage("done_with_deviations", open_issues=[a, accepted(dict(b, text="another words"))])
+        self.assertEqual(self.drift(before, reworded), ["/open_issues: deviation accepted: another words"])
+        quiet = stage("done_with_deviations", open_issues=[dict(a, text="  Deviation   A "), accepted(b)])
+        self.assertEqual(self.drift(before, quiet), [])  # blanks and case are not identity
+
     def test_a_lost_question_or_a_blocking_one_made_soft_is_drift(self):
         ask = {"id": "Q1", "revision": 1, "kind": "decision", "text": "t", "blocking": True}
         before = stage("blocked", open_issues=[ESCALATION], questions=[ask])
@@ -161,6 +176,22 @@ class ReviewDriftTests(unittest.TestCase):
         self.assertEqual(self.drift(before, after), ["severity lowered at a.py:1: Major -> Minor"])
         after = review("ATTENTION", finding(1, "Major", "a.py:1"), finding(2, "Nit", "a.py:1"))
         self.assertEqual(self.drift(before, after), ["severity lowered at a.py:1: Minor -> Nit"])
+
+    def test_a_swap_of_severities_between_findings_of_one_place_is_drift(self):
+        before = review("RED", finding(1, "Blocker", "a.py:1", failure_scenario="A breaks"),
+                        finding(2, "Minor", "a.py:1", failure_scenario="B breaks"))
+        swapped = review("RED", finding(1, "Minor", "a.py:1", failure_scenario="A breaks"),
+                         finding(2, "Blocker", "a.py:1", failure_scenario="B breaks"))
+        self.assertEqual(self.drift(before, swapped), ["severity lowered at a.py:1: Blocker -> Minor"])
+        reordered = review("RED", finding(2, "Minor", "./a.py:1", failure_scenario=" b  BREAKS"),
+                           finding(1, "Blocker", "a.py:1", failure_scenario="A breaks"))
+        self.assertEqual(self.drift(before, reordered), [])  # order, ids and blanks are not identity
+        renumbered = review("RED", finding(8, "Blocker", "a.py:1", failure_scenario="A breaks"),
+                            finding(9, "Major", "a.py:1", failure_scenario="B breaks"))
+        self.assertEqual(self.drift(before, renumbered), [])  # a raised severity is cautious
+        lost = review("RED", finding(1, "Blocker", "a.py:1", failure_scenario="A breaks"),
+                      finding(2, "Blocker", "a.py:1", failure_scenario="C breaks"))
+        self.assertEqual(self.drift(before, lost), ["finding lost at a.py:1"])
 
     def test_a_renumbered_finding_id_is_not_drift(self):  # scenario s3
         raw = review("ATTENTION", finding(1, "Major", "a.py:1"), finding(1, "Minor", "b.py:2"))

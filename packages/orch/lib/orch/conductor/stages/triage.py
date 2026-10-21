@@ -2,7 +2,7 @@
 the others."""
 from __future__ import annotations
 
-import re
+import shlex
 
 from orch.conductor import checks as checks_mod, contract, options as opts, prompts
 from orch.conductor.domain.item import Item
@@ -40,8 +40,24 @@ def triage(self, item: Item, number: int, findings: dict, advice: str = "") -> d
     return found["triage"]
 
 
-# A command that proves nothing: it cannot fail for a defect, so it cannot show that a finding does not hold.
-TRIVIAL_REPRODUCTION = re.compile(r"^\s*(true|:|exit\s+0|echo(\s.*)?|printf(\s.*)?)\s*;?\s*$")
+def is_trivial_reproduction(cmd) -> bool:
+    """A command that proves nothing: it cannot fail for a defect, so it cannot show that a finding does not hold. Only
+    a standalone ``true``, ``:``, ``exit 0``, ``echo …`` or ``printf …`` (one optional trailing ``;``) is trivial. Anything
+    with a shell operator (``;`` ``&`` ``|`` ``<`` ``>`` ``(`` ``)``), a command substitution, a second line or text the
+    shell would not read the same way is not: it reaches the guarded rerun, which is the safe side."""
+    if not isinstance(cmd, str) or "\n" in cmd or "\r" in cmd or "$(" in cmd or "`" in cmd:
+        return False
+    try:
+        words = list(shlex.shlex(cmd, posix=True, punctuation_chars=True))
+    except ValueError:
+        return False
+    if words and words[-1] == ";":
+        words.pop()
+    if not words or any(word and set(word) <= set(";&|<>()") for word in words):
+        return False
+    return words in (["true"], [":"], ["exit", "0"]) or words[0] in ("echo", "printf")
+
+
 CHECKED_SEVERITIES = ("Blocker", "Major")
 
 
@@ -62,7 +78,7 @@ def verify_rejections(self, item: Item, key: str, findings: dict, triage: dict) 
             continue
         name, reported = entry["finding"], repro["exit"]
         code, observed = "", reported
-        if TRIVIAL_REPRODUCTION.match(repro["cmd"]):
+        if is_trivial_reproduction(repro["cmd"]):
             code, why = "TRIAGE_REPRO_TRIVIAL", f"the command {repro['cmd']!r} proves nothing"
         else:
             ran = checks_mod.run_reproduction(

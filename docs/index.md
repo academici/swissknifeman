@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: SwissKnifeMan
-  text: Swiss knife for working with AI-agents
-  tagline: One registry of skills, configs and permissions - installation in any project and any IDE per command
+  text: Local, provider-neutral control layer for AI-assisted development
+  tagline: Typed plans, a deterministic conductor for coding-agent CLIs, and a reproducible environment — on one machine
   actions:
     - theme: brand
       text: Start

@@ -377,9 +377,11 @@ class ManifestCheckTests(unittest.TestCase):
         self.assertFails("UNIT_INVALID")
 
     def test_path_escaping_module_is_rejected(self):
+        # A `..` segment fails the relpath schema before the semantic probe runs.
         self.tree.alpha["provides"]["cli"] = ["../aicore/unit.json"]
-        result = self.assertFails("UNIT_PATH")
-        self.assertIn("inside the module", result.stderr)
+        result = self.assertFails("UNIT_INVALID")
+        self.assertIn("pattern", result.stderr)
+        self.assertIn("../aicore/unit.json", result.stderr)
 
     def gui_ready(self, document=None):
         self.tree.add_module("gui", requires_foundation=True)
@@ -401,8 +403,11 @@ class ManifestCheckTests(unittest.TestCase):
 
     def test_gui_contribution_outside_the_unit(self):
         self.gui_ready()
+        # A `..` segment fails the relpath schema; a schema-valid symlink is still UNIT_GUI.
         self.tree.alpha["provides"]["gui"] = "../aicore/unit.json"
-        self.assertIn("must stay inside the unit", self.assertFails("UNIT_GUI").stderr)
+        result = self.assertFails("UNIT_INVALID")
+        self.assertIn("pattern", result.stderr)
+        self.assertIn("../aicore/unit.json", result.stderr)
         (self.tree.root / "packages/alpha/link.json").symlink_to(self.tree.root / "packages/aicore/unit.json")
         self.tree.alpha["provides"]["gui"] = "link.json"
         self.assertIn("must stay inside the unit", self.assertFails("UNIT_GUI").stderr)
@@ -1169,8 +1174,8 @@ class RealRepositoryTests(unittest.TestCase):
         self.assertEqual(sorted(m["id"] for m in data["modules"] if m["kind"] != "bridge"),
                          ["aicore", "analyst", "brain", "gui", "harness", "maind", "orch", "planner", "skiller", "workspace"])
         self.assertEqual(sorted(m["id"] for m in data["modules"] if m["kind"] == "bridge"),
-                         ["gui-hub", "gui-orch", "gui-planner", "orch-harness", "orch-skiller", "planner-orch",
-                          "workspace-planner"])
+                         ["gui-hub", "gui-orch", "gui-planner", "gui-workspace", "orch-harness", "orch-skiller",
+                          "planner-orch", "workspace-planner"])
         self.assertFalse((ROOT / "packages/artifex").exists())
         self.assertFalse((ROOT / "core").exists())
 

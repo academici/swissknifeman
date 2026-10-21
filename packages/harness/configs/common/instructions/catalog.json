@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "catalog_version": "1.8.0",
+  "catalog_version": "1.9.0",
   "capability_requirements": [
     {
       "id": "instructions.project",
@@ -26,7 +26,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 1,
-          "intent": "Apply this source-derived instruction: `swissknifeman` is the umbrella repository and control layer; `skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages. In this repository, names are not roles: the umbrella brand, marketplace, and `~/.swissknifeman/` state are never renamed to match an internal package.",
+          "intent": "Apply this source-derived instruction: `swissknifeman` is the umbrella repository and control layer. Swiss Knife Man is a local, provider-neutral control layer for AI-assisted software development on one developer machine. Its modules are `aicore`, `planner`, `orch`, `skiller`, `harness`, `workspace`, `maind`, `analyst`, `brain`, and `gui`. In this repository, names are not roles: the umbrella brand, marketplace, and CLI names are never renamed to match an internal package.",
           "obligations": [
             {
               "modality": "must",
@@ -40,18 +40,24 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
             "`swissknifeman` is the umbrella repository and control layer",
-            "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages.",
+            "Swiss Knife Man is a local, provider-neutral control layer for AI-assisted software development on one developer machine.",
+            "`aicore`, `planner`, `orch`, `skiller`, `harness`, `workspace`, `maind`, `analyst`, `brain`, and `gui`",
             "`swissknifeman`",
+            "`aicore`",
+            "`planner`",
+            "`orch`",
             "`skiller`",
             "`harness`",
+            "`workspace`",
             "`maind`",
             "`analyst`",
-            "`planner`",
+            "`brain`",
+            "`gui`",
             "names are not roles"
           ]
         },
@@ -75,7 +81,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -92,7 +98,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 3,
-          "intent": "Apply this source-derived instruction: Read the relevant package guide before changing `packages/<name>/`; `planner` remains plugin-only and has no standalone CLI. This is one monorepo: maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`.",
+          "intent": "Apply this source-derived instruction: Read the relevant package guide before changing `packages/<name>/`; `planner` is a module with the plan CLI `scripts/plan.py`, invoked in a project as `python3 -I .swissknifeman/launcher.py planner`. This is one monorepo: maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`.",
           "obligations": [
             {
               "modality": "must",
@@ -106,14 +112,15 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
             "Read the relevant package guide before changing `packages/<name>/`",
-            "`planner` remains plugin-only and has no standalone CLI.",
+            "`planner` is a module with the plan CLI `scripts/plan.py`, invoked in a project as `python3 -I .swissknifeman/launcher.py planner`.",
             "`packages/<name>/`",
             "`planner`",
+            "`scripts/plan.py`",
             "maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`"
           ]
         },
@@ -123,7 +130,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 4,
-          "intent": "Apply this source-derived instruction: Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group. The router stays a thin dispatcher — cross-package onboarding lives once in `maind/onboard.py`. Installation delegates to package installers, and the umbrella owns the `swissknifeman` launcher alias.",
+          "intent": "Apply this source-derived instruction: Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs. Module groups come from `provides.cli` in `unit.json`. The router stays a thin dispatcher — cross-package onboarding lives once in `maind/onboard.py`. Installation delegates to package installers, and the umbrella owns the `swissknifeman` launcher alias.",
           "obligations": [
             {
               "modality": "must",
@@ -137,18 +144,20 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
             "Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router",
-            "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group.",
+            "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs.",
+            "Module groups come from `provides.cli` in `unit.json`.",
             "`swissknifeman skills|env|maind|analyst|setup|doctor`",
             "`skiller`",
             "`harness`",
             "`maind`",
             "`analyst`",
-            "`planner`",
+            "`provides.cli`",
+            "`unit.json`",
             "cross-package onboarding lives once in `maind/onboard.py`",
             "the umbrella owns the `swissknifeman` launcher alias"
           ]
@@ -173,7 +182,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -206,7 +215,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -223,7 +232,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 7,
-          "intent": "Apply this source-derived instruction: Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate. In addition, take external code as a pattern and rewrite it, never as a runtime dependency, and never roll out always-on context without a measured budget verdict.",
+          "intent": "Apply this source-derived instruction: Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or move the machine home `~/.local/share/swissknifeman` (aicore.state.locations) without a migration, break embedded `maind` paths, or roll out always-on context without the budget gate. In addition, take external code as a pattern and rewrite it, never as a runtime dependency, and never roll out always-on context without a measured budget verdict.",
           "obligations": [
             {
               "modality": "must",
@@ -237,12 +246,13 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
-            "Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate.",
-            "`~/.swissknifeman/`",
+            "Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or move the machine home `~/.local/share/swissknifeman` (aicore.state.locations) without a migration, break embedded `maind` paths, or roll out always-on context without the budget gate.",
+            "`~/.local/share/swissknifeman`",
+            "aicore.state.locations",
             "`maind`",
             "take external code as a pattern and rewrite it, never as a runtime dependency",
             "never roll out always-on context without a measured budget verdict"
@@ -268,7 +278,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -295,7 +305,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -322,7 +332,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -354,7 +364,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -381,7 +391,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -408,7 +418,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -435,7 +445,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -462,7 +472,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -489,7 +499,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -516,7 +526,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -543,7 +553,7 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
@@ -570,13 +580,42 @@
             {
               "source_id": "instruction.fragment.root.common",
               "path": "packages/harness/configs/common/instructions/root/common.md",
-              "sha256": "3a1b866d2a103a2f230338a96639c1e7a9aa1ea7d1528f7c686800426c1ae563"
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
             }
           ],
           "compatibility_assertions": [
             "Every `packages/<id>/` folder is an independent module described by its `unit.json`",
             "reaches other modules only through bridges (`bridges/`) or events, never by import or path",
             "Check boundaries with `python3 scripts/ecosystem-units.py check`."
+          ]
+        },
+        {
+          "id": "root.product-philosophy",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 20,
+          "intent": "Apply this source-derived instruction: Swiss Knife Man is a local, provider-neutral control layer: typed JSON plans (planner), a deterministic conductor that runs coding-agent CLIs as bounded roles (orch), and a reproducible developer environment (skiller, harness, aicore, workspace, maind). Follow `docs/philosophy.md`: code owns the lifecycle and models propose; every boundary JSON has a schema and is validated; fail closed on authority and degrade loudly; evidence over claims, repair never changes meaning; proportional assurance; bounded autonomy; neutral core with personal content in overlays.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "maintain",
+              "object": "root.product-philosophy.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "0fd59ebbf3512e3b442ee419a15eca824981ce5a27095f752f9c47aba9442de1"
+            }
+          ],
+          "compatibility_assertions": [
+            "Swiss Knife Man is a local, provider-neutral control layer",
+            "Follow `docs/philosophy.md`",
+            "evidence over claims, repair never changes meaning"
           ]
         },
         {

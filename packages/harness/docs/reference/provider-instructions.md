@@ -4,7 +4,7 @@ Generated from the validated D86 catalog.
 
 | Scope | claude-code target | codex target | cursor target | grok target | Common IDs | claude-code extensions | codex extensions | cursor extensions | grok extensions |
 |:--|:--|:--|:--|:--|--:|--:|--:|--:|--:|
-| `root` | `CLAUDE.md` | `AGENTS.md` | `.cursor/rules/swissknifeman-instructions.mdc` | `.grok/rules/swissknifeman-instructions.md` | 19 | 3 | 4 | 3 | 3 |
+| `root` | `CLAUDE.md` | `AGENTS.md` | `.cursor/rules/swissknifeman-instructions.mdc` | `.grok/rules/swissknifeman-instructions.md` | 20 | 3 | 4 | 3 | 3 |
 | `skiller` | `packages/skiller/CLAUDE.md` | `packages/skiller/AGENTS.md` | `packages/skiller/.cursor-instructions.mdc` | `packages/skiller/.grok-instructions.md` | 8 | 3 | 0 | 0 | 0 |
 | `harness` | `packages/harness/CLAUDE.md` | `packages/harness/AGENTS.md` | `packages/harness/.cursor-instructions.mdc` | `packages/harness/.grok-instructions.md` | 8 | 4 | 0 | 0 | 0 |
 | `maind` | `packages/maind/CLAUDE.md` | `packages/maind/AGENTS.md` | `packages/maind/.cursor-instructions.mdc` | `packages/maind/.grok-instructions.md` | 7 | 2 | 0 | 0 | 0 |
@@ -13,7 +13,7 @@ Generated from the validated D86 catalog.
 | `brain` | `packages/brain/CLAUDE.md` | `packages/brain/AGENTS.md` | `packages/brain/.cursor-instructions.mdc` | `packages/brain/.grok-instructions.md` | 6 | 0 | 0 | 0 | 0 |
 | `orch` | `packages/orch/CLAUDE.md` | `packages/orch/AGENTS.md` | `packages/orch/.cursor-instructions.mdc` | `packages/orch/.grok-instructions.md` | 4 | 0 | 0 | 0 | 0 |
 
-The frozen inventory contains 70 common and 26 provider-extension IDs (96 total) across exactly 32 targets.
+The frozen inventory contains 71 common and 26 provider-extension IDs (97 total) across exactly 32 targets.
 
 ## Public API
 

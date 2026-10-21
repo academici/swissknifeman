@@ -1,8 +1,12 @@
 <!-- swissknifeman:instructions:root:grok:common:begin -->
 <!-- semantic:root.module-folders -->
+<!-- semantic:root.product-philosophy -->
 <!-- instruction:root.module-folders -->
 ## root.module-folders
 Every `packages/<id>/` folder is an independent module described by its `unit.json`. A module imports only its own `lib/<id>/` and the foundation it declares in `requires` (`aicore`), and reaches other modules only through bridges (`bridges/`) or events, never by import or path. Modules with `destination: own-repo` will move to their own repositories. Check boundaries with `python3 scripts/ecosystem-units.py check`.
+<!-- instruction:root.product-philosophy -->
+## root.product-philosophy
+Swiss Knife Man is a local, provider-neutral control layer: typed JSON plans (planner), a deterministic conductor that runs coding-agent CLIs as bounded roles (orch), and a reproducible developer environment (skiller, harness, aicore, workspace, maind). Follow `docs/philosophy.md`: code owns the lifecycle and models propose; every boundary JSON has a schema and is validated; fail closed on authority and degrade loudly; evidence over claims, repair never changes meaning; proportional assurance; bounded autonomy; neutral core with personal content in overlays.
 <!-- swissknifeman:instructions:root:grok:common:end -->
 
 <!-- swissknifeman:instructions:root:grok:extension:begin -->

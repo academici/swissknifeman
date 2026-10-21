@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- orch: определение корня checkout (`git rev-parse --show-toplevel`) ограничено 60 с; зависание git больше не держит conductor и считается неуспехом git (блокировка берёт путь проекта).
 - scripts: `dev-worktree.sh promote-check` требует `main` в live checkout; другая ветка или detached HEAD отклоняются даже на том же коммите. Напечатанная команда повторно проверяет `refs/heads/main` и выполняет fast-forward только в проверенном live checkout.
 - affected-tests (PLAN9 operator hotfix): ключ кэша вычисляется по содержимому кандидата и executable mode; staging и commit прежних байтов больше не заставляют повторять зелёные модули.
 
@@ -28,6 +29,7 @@
 
 ### Added
 
+- docs/harness: `docs/philosophy.md` — нормативное назначение и принципы продукта. Корневые инструкции всех провайдеров закрепляют секцию `root.product-philosophy` (каталог инструкций 1.9.0).
 - scripts: `dev-worktree.sh create|status|bind|unbind|promote-check` creates a phase worktree, reports its state, switches the primary workspace binding and checks fast-forward promotion without merging. Planner refuses `CHECKOUT_BINDING_MISMATCH` when an unlaunched command runs in another checkout of the same workspace project; use its launcher or rebind the project.
 - orch/gui-orch: `orch conduct prompt diff --run R --item X --step S [--against RUN:ITEM:STEP]` сравнивает manifest-ы промптов (по умолчанию — предыдущая попытка шага; блоки по kind+origin, без origin — по kind и порядку; added/removed/changed/same, токены по блокам и итог; `PROMPT_BASELINE_MISSING`, `PROMPT_MANIFEST_MISSING`); `orch conduct timeline --run R [--item X] --json` даёт шаги пунктов интервалами из `progress.jsonl` (прерванный и возобновлённый шаг — два интервала `interrupted`, открытый — без конца); gui-orch показывает его видом `timeline` (`gui-orch.timeline`, только через orch CLI, с redaction).
 - orch: `run.json` хранит `catalog_digests` {launch, models, capabilities} эффективных каталогов запуска (как в dry-run launch plan), `conduct status --json` их показывает; resume при расхождении даёт info `CATALOG_CHANGED` (без стопа); старые run читаются как прежде.
@@ -45,6 +47,7 @@
 
 ### Changed
 
+- harness: устаревшие root-инструкции (`root.ecosystem-identity`, `root.package-boundaries`, `root.cli-routing`, `root.engineering-invariants`) согласованы с текущими модулями, CLI planner (`scripts/plan.py`), группами из `provides.cli` и машинным домом `~/.local/share/swissknifeman`.
 - orch (**изменение умолчания безопасности, решение владельца**): роли, которые пишут (executor, bounded-implementer, registrar), в Codex по умолчанию запускаются без песочницы провайдера — `--sandbox danger-full-access` вместо `workspace-write`; настройка `[orch.launch] access = "open" | "confined"` (умолчание `open`; проект может только ужесточить; `aicore config set --machine orch.launch.access confined`), плейсхолдер `{write_sandbox}` в каталоге; read-only роли остаются read-only. Промпт исполнителя не запрещает docker, если провайдерская песочница его не отрезает. Claude Code и Grok не менялись. `confined` возвращает прежнее поведение.
 - orch: `configs/launch-catalog.json` хранит только специфичное: `defaults`, общие поля роли, именованные части argv (`parts`, `@имя`) и у провайдера — лишь отличия (13,7 КБ → 7 КБ). Разрешённый каталог не изменился: он закреплён снимком `tests/golden/launch-catalog-resolved.json`; файл в прежнем (развёрнутом) виде по-прежнему принимается. `catalog_version` не менялся.
 - orch: Grok executor и bounded-implementer запускаются conductor через jsonl (`streaming-messages-json`) под Landlock `ro-run.py`; `ro-run.py --protect` делает read-only Grok-роли fail-closed. Preflight проверяет команду за wrapper; capability seed и matrix подтверждены probe флагов и фикстурой реального потока.

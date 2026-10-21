@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "445cf4638a617c991293da2cd0b4ee029753d004215eec4679001c7c4d226c16",
+    "source_sha256": "17c44d8100ed10e7881d4937c6f0e265758ceb22b5026c5d86e927112c172e86",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 362
+    "literal_count": 375
   },
   "literals": [
     {
@@ -15,11 +15,27 @@
     },
     {
       "semantic_id": "root.ecosystem-identity",
-      "literal": "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages."
+      "literal": "Swiss Knife Man is a local, provider-neutral control layer for AI-assisted software development on one developer machine."
+    },
+    {
+      "semantic_id": "root.ecosystem-identity",
+      "literal": "`aicore`, `planner`, `orch`, `skiller`, `harness`, `workspace`, `maind`, `analyst`, `brain`, and `gui`"
     },
     {
       "semantic_id": "root.ecosystem-identity",
       "literal": "`swissknifeman`"
+    },
+    {
+      "semantic_id": "root.ecosystem-identity",
+      "literal": "`aicore`"
+    },
+    {
+      "semantic_id": "root.ecosystem-identity",
+      "literal": "`planner`"
+    },
+    {
+      "semantic_id": "root.ecosystem-identity",
+      "literal": "`orch`"
     },
     {
       "semantic_id": "root.ecosystem-identity",
@@ -31,6 +47,10 @@
     },
     {
       "semantic_id": "root.ecosystem-identity",
+      "literal": "`workspace`"
+    },
+    {
+      "semantic_id": "root.ecosystem-identity",
       "literal": "`maind`"
     },
     {
@@ -39,7 +59,11 @@
     },
     {
       "semantic_id": "root.ecosystem-identity",
-      "literal": "`planner`"
+      "literal": "`brain`"
+    },
+    {
+      "semantic_id": "root.ecosystem-identity",
+      "literal": "`gui`"
     },
     {
       "semantic_id": "root.ecosystem-identity",
@@ -71,7 +95,7 @@
     },
     {
       "semantic_id": "root.package-boundaries",
-      "literal": "`planner` remains plugin-only and has no standalone CLI."
+      "literal": "`planner` is a module with the plan CLI `scripts/plan.py`, invoked in a project as `python3 -I .swissknifeman/launcher.py planner`."
     },
     {
       "semantic_id": "root.package-boundaries",
@@ -83,6 +107,10 @@
     },
     {
       "semantic_id": "root.package-boundaries",
+      "literal": "`scripts/plan.py`"
+    },
+    {
+      "semantic_id": "root.package-boundaries",
       "literal": "maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`"
     },
     {
@@ -91,7 +119,11 @@
     },
     {
       "semantic_id": "root.cli-routing",
-      "literal": "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group."
+      "literal": "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs."
+    },
+    {
+      "semantic_id": "root.cli-routing",
+      "literal": "Module groups come from `provides.cli` in `unit.json`."
     },
     {
       "semantic_id": "root.cli-routing",
@@ -115,7 +147,11 @@
     },
     {
       "semantic_id": "root.cli-routing",
-      "literal": "`planner`"
+      "literal": "`provides.cli`"
+    },
+    {
+      "semantic_id": "root.cli-routing",
+      "literal": "`unit.json`"
     },
     {
       "semantic_id": "root.cli-routing",
@@ -175,11 +211,15 @@
     },
     {
       "semantic_id": "root.engineering-invariants",
-      "literal": "Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate."
+      "literal": "Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or move the machine home `~/.local/share/swissknifeman` (aicore.state.locations) without a migration, break embedded `maind` paths, or roll out always-on context without the budget gate."
     },
     {
       "semantic_id": "root.engineering-invariants",
-      "literal": "`~/.swissknifeman/`"
+      "literal": "`~/.local/share/swissknifeman`"
+    },
+    {
+      "semantic_id": "root.engineering-invariants",
+      "literal": "aicore.state.locations"
     },
     {
       "semantic_id": "root.engineering-invariants",
@@ -268,6 +308,18 @@
     {
       "semantic_id": "root.module-folders",
       "literal": "Check boundaries with `python3 scripts/ecosystem-units.py check`."
+    },
+    {
+      "semantic_id": "root.product-philosophy",
+      "literal": "Swiss Knife Man is a local, provider-neutral control layer"
+    },
+    {
+      "semantic_id": "root.product-philosophy",
+      "literal": "Follow `docs/philosophy.md`"
+    },
+    {
+      "semantic_id": "root.product-philosophy",
+      "literal": "evidence over claims, repair never changes meaning"
     },
     {
       "semantic_id": "root.claude-code.native-surfaces",

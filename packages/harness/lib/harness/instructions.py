@@ -52,7 +52,8 @@ COMMON_IDS = {
              "root.development-validation", "root.reference-provenance",
              "root.decision-verification", "root.provider-parity", "root.worktree-safety",
              "root.untrusted-content", "root.evidence-integrity", "root.generated-artifacts",
-             "root.speculative-work", "root.docs-build", "root.module-folders"),
+             "root.speculative-work", "root.docs-build", "root.module-folders",
+             "root.product-philosophy"),
     "skiller": ("skiller.identity", "skiller.distribution-channels",
                 "skiller.configuration-ownership", "skiller.core-policy",
                 "skiller.layout-and-generation", "skiller.module-boundaries",
@@ -79,7 +80,7 @@ COMMON_IDS = {
 }
 # Root common is on demand for every provider except these ids: they are projected to every root
 # target, so the rule reaches any agent that opens the repository (the first-turn budget gates additions).
-ROOT_PINNED_COMMON_IDS = ("root.module-folders",)
+ROOT_PINNED_COMMON_IDS = ("root.module-folders", "root.product-philosophy")
 EXTENSION_IDS = {
     ("root", "claude-code"): ("root.claude-code.native-surfaces",
                               "root.claude-code.context-budget",

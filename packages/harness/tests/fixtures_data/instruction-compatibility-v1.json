@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "fixture_version": "1.8.0",
+  "fixture_version": "1.9.0",
   "provenance": {
     "captured_before_renderer": true
   },
@@ -13,13 +13,19 @@
       ],
       "assertions": [
         "`swissknifeman` is the umbrella repository and control layer",
-        "`skiller`, `harness`, `maind`, `analyst`, and `planner` remain independent capability packages.",
+        "Swiss Knife Man is a local, provider-neutral control layer for AI-assisted software development on one developer machine.",
+        "`aicore`, `planner`, `orch`, `skiller`, `harness`, `workspace`, `maind`, `analyst`, `brain`, and `gui`",
         "`swissknifeman`",
+        "`aicore`",
+        "`planner`",
+        "`orch`",
         "`skiller`",
         "`harness`",
+        "`workspace`",
         "`maind`",
         "`analyst`",
-        "`planner`",
+        "`brain`",
+        "`gui`",
         "names are not roles"
       ]
     },
@@ -45,9 +51,10 @@
       ],
       "assertions": [
         "Read the relevant package guide before changing `packages/<name>/`",
-        "`planner` remains plugin-only and has no standalone CLI.",
+        "`planner` is a module with the plan CLI `scripts/plan.py`, invoked in a project as `python3 -I .swissknifeman/launcher.py planner`.",
         "`packages/<name>/`",
         "`planner`",
+        "`scripts/plan.py`",
         "maind coordinates `skiller` through subprocess, and `skiller` delegates environment work to `harness`"
       ]
     },
@@ -59,13 +66,15 @@
       ],
       "assertions": [
         "Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router",
-        "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `planner` group.",
+        "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs.",
+        "Module groups come from `provides.cli` in `unit.json`.",
         "`swissknifeman skills|env|maind|analyst|setup|doctor`",
         "`skiller`",
         "`harness`",
         "`maind`",
         "`analyst`",
-        "`planner`",
+        "`provides.cli`",
+        "`unit.json`",
         "cross-package onboarding lives once in `maind/onboard.py`",
         "the umbrella owns the `swissknifeman` launcher alias"
       ]
@@ -107,8 +116,9 @@
         "codex"
       ],
       "assertions": [
-        "Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate.",
-        "`~/.swissknifeman/`",
+        "Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or move the machine home `~/.local/share/swissknifeman` (aicore.state.locations) without a migration, break embedded `maind` paths, or roll out always-on context without the budget gate.",
+        "`~/.local/share/swissknifeman`",
+        "aicore.state.locations",
         "`maind`",
         "take external code as a pattern and rewrite it, never as a runtime dependency",
         "never roll out always-on context without a measured budget verdict"
@@ -239,6 +249,18 @@
         "Every `packages/<id>/` folder is an independent module described by its `unit.json`",
         "reaches other modules only through bridges (`bridges/`) or events, never by import or path",
         "Check boundaries with `python3 scripts/ecosystem-units.py check`."
+      ]
+    },
+    {
+      "id": "root.product-philosophy",
+      "provider_ids": [
+        "claude-code",
+        "codex"
+      ],
+      "assertions": [
+        "Swiss Knife Man is a local, provider-neutral control layer",
+        "Follow `docs/philosophy.md`",
+        "evidence over claims, repair never changes meaning"
       ]
     },
     {

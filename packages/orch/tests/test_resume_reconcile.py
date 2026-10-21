@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import select
 import signal
 import subprocess
@@ -165,7 +164,7 @@ class ResumeReconcileTests(ConductorCase):
                 run._reconcile_interrupted()
                 calls = []
                 run._step(Item("W1", "run", run.state["items"]["W1"], run.directory / "W1", {}),
-                          "checks.1", lambda: calls.append("ran") or [])
+                          "checks.1", lambda calls=calls: calls.append("ran") or [])
                 self.assertEqual(["ran"], calls)
                 lines = progress.read_lines(run.directory)
                 latest = [row for row in lines if row.get("reason_code") == "STAGE_INTERRUPTED"][-1]

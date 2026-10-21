@@ -1,10 +1,8 @@
-# academici
+# Swiss Knife Man
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Local development toolset with Claude Code, Codex, Cursor and Grok.
-> Ecosystem umbrella monorepository **academici**: skills, projections for clients,
-> task tools and shared memory/graph - with explicit boundaries of provider support.
+> Swiss Knife Man (SKM) is a local, provider-neutral control layer for AI-assisted software development on one developer machine. [Philosophy](docs/philosophy.md).
 
 **What does this give to the developer:** you can connect the necessary skills and projections of the client to the project;
 Task and long workflow are called only for tasks that benefit from them. Matrix below
@@ -79,13 +77,16 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 
 | Package | Role | CLI |
 |:--|:--|:--|
-| [`packages/skiller`](packages/skiller/) | registry AI-skills - distributes skills to projects (connect/vendor) | `skiller` (alias `swissknifeman`) |
-| [`packages/harness`](packages/harness/) | environment for Claude Code, Codex, Cursor and Grok (permissions, MCP, hooks, agent-packs) | `harness` |
-| [`packages/maind`](packages/maind/) | hub of memory, graph and ecosystem coordination (MCP-bus) | `maind` |
-| [`packages/analyst`](packages/analyst/) | continuous learning: capturing lessons from runs, man-gate, provenance | `analyst` |
-| [`packages/planner`](packages/planner/) | task intent commands (`/planner:*`, `$ planner:*`, Cursor `planner:*`) | plugins Claude Code, Codex and Grok |
-
-General foundation - package [`aicore`](packages/aicore/) (stdlib-only: `util`, `provider`, `artifacts`, `usage`).
+| [`packages/aicore`](packages/aicore/) | the foundation every module imports: layered configuration, state locations, events, provider catalogs, schemas, release attestation | `aicore` |
+| [`packages/planner`](packages/planner/) | plans as JSON (phases, items, decisions, checks) and the `/planner:*` intent commands (dev, fix, review, research, plan-*) | `planner` (`scripts/plan.py`) |
+| [`packages/orch`](packages/orch/) | runs the items of a plan through narrow roles (scout, executor, reviewer, triager) with checks, review and recovery | `orch` |
+| [`packages/skiller`](packages/skiller/) | one registry of provider-neutral skills (`SKILL.md`), delivered to a project by marketplace (`connect`) or as copies (`vendor`) | `skiller` |
+| [`packages/harness`](packages/harness/) | the agent environment: permission presets, auto-approve modes, MCP servers, hooks, agent packs, instructions | `harness` |
+| [`packages/workspace`](packages/workspace/) | the plans of all projects in one git root | `workspace` |
+| [`packages/maind`](packages/maind/) | the hub of the machine: shared memory, the connection graph, the project registry, onboarding and sync of projects, an MCP server | `maind` |
+| [`packages/analyst`](packages/analyst/) | reads what runs did: run reports, metrics, lessons a person may promote to memory or skills | `analyst` |
+| [`packages/brain`](packages/brain/) | the Obsidian vault: where it is, project documents synced into it, notes written on plan events | `brain` |
+| [`packages/gui`](packages/gui/) | desktop and browser control plane | `gui` |
 
 ## Installation
 

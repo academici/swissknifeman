@@ -2689,7 +2689,7 @@ class PreviewAndStatusTests(ConductorCase):
         for installed in (True, False):
             with self.subTest(grok_installed=installed):
                 process._command_available.cache_clear()
-                def which(command):
+                def which(command, installed=installed):
                     return None if command == "grok" and not installed else "/fake/bin/" + command
                 with mock.patch.object(process.shutil, "which", side_effect=which):
                     code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",

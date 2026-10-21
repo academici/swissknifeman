@@ -28,7 +28,7 @@ def work_base() -> Path:
     try:
         base.mkdir(parents=True, exist_ok=True)
     except OSError as error:
-        raise unittest.SkipTest(f"no folder for test checkouts: {error}")
+        raise unittest.SkipTest(f"no folder for test checkouts: {error}") from error
     return base
 
 

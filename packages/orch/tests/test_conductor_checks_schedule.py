@@ -742,6 +742,128 @@ class ExpandedInputTests(Case):
             self.assertTrue(self.run_round(document, number=2)[0]["reused"])
             self.assertEqual(self.count(), 1)
 
+    def ignored_data(self):
+        """``data/a.local``: a git-ignored file below a folder that git does not ignore (the folder is part of the candidate)."""
+        data = self.root / "data"
+        data.mkdir()
+        (data / "a.local").write_text("good\n", encoding="utf-8")
+        return data
+
+    def partner_with_ignored_file(self):
+        """A partner repository whose only content that matters is git-ignored: its HEAD and dirty digest never move."""
+        partner = self.out / "partner"
+        partner.mkdir()
+        git(partner, "init", "-q")
+        (partner / ".gitignore").write_text("*.local\n", encoding="utf-8")
+        git(partner, "add", ".gitignore")
+        git(partner, "commit", "-q", "-m", "p")
+        (partner / "a.local").write_text("good\n", encoding="utf-8")
+        return partner
+
+    def test_a_project_folder_that_is_named_is_never_reused_when_an_ignored_file_below_it_changes(self):
+        data = self.ignored_data()
+        document = doc(("V1", "grep -q -r good data"))
+        self.assert_unknown_input_runs_again(document, lambda: (data / "a.local").write_text("bad\n"))
+
+    def test_a_project_folder_that_is_named_is_never_reused_when_an_ignored_file_below_it_is_renamed(self):
+        data = self.ignored_data()
+        document = doc(("V1", "ls -1 data | grep -qx a.local"))
+        self.assert_unknown_input_runs_again(document, lambda: (data / "a.local").rename(data / "b.local"))
+
+    def test_a_tracked_project_folder_that_is_named_is_never_reused(self):
+        sub = self.root / "sub"
+        sub.mkdir()
+        (sub / "t.txt").write_text("t\n", encoding="utf-8")
+        git(self.root, "add", "sub/t.txt")
+        git(self.root, "commit", "-q", "-m", "sub")
+        (sub / "x.local").write_text("good\n", encoding="utf-8")
+        document = doc(("V1", "grep -q -r good sub"))
+        self.assert_unknown_input_runs_again(document, lambda: (sub / "x.local").write_text("bad\n"))
+
+    def test_a_project_folder_that_is_named_with_a_trailing_slash_or_a_path_is_never_reused(self):
+        self.ignored_data()
+        for line in ("ls data/ > /dev/null", f"ls {self.root}/data > /dev/null", "ls ./data > /dev/null"):
+            with self.subTest(line=line):
+                self.assertIsNone(checks._inputs(line, dict(os.environ), self.root, self.root))
+
+    def test_the_project_root_that_is_named_is_never_reused_when_an_ignored_file_is_searched_below_it(self):
+        ignored = self.root / "a.local"
+        ignored.write_text("good\n", encoding="utf-8")
+        document = doc(("V1", "grep -q -r --include=a.local good ."))
+        self.assert_unknown_input_runs_again(document, lambda: ignored.write_text("bad\n"))
+
+    def test_the_project_root_that_is_named_is_never_reused_when_a_file_below_it_is_found(self):
+        ignored = self.root / "a.local"
+        ignored.write_text("good\n", encoding="utf-8")
+        document = doc(("V1", 'test "$(find . -name a.local | wc -l)" = 1'))
+        self.assert_unknown_input_runs_again(document, ignored.unlink)
+
+    def test_the_project_root_that_is_named_is_never_reused_when_its_listing_changes(self):
+        ignored = self.root / "a.local"
+        ignored.write_text("good\n", encoding="utf-8")
+        document = doc(("V1", "ls -1 . | grep -qx a.local"))
+        self.assert_unknown_input_runs_again(document, lambda: ignored.rename(self.root / "b.local"))
+
+    def test_a_folder_of_the_project_that_a_glob_reaches_is_never_reused(self):
+        self.ignored_data()
+        self.assert_never_reused(doc(("V1", "ls d* > /dev/null")))
+
+    def test_a_folder_of_the_project_given_through_a_set_variable_is_never_reused(self):
+        data = self.ignored_data()
+        with mock.patch.dict(os.environ, {"SKM_PROBE_DIR": str(data)}):
+            document = doc(("V1", 'test "$(ls -1 $SKM_PROBE_DIR)" = a.local'))
+            self.assert_unknown_input_runs_again(document, lambda: (data / "a.local").rename(data / "b.local"))
+
+    def test_a_partner_root_that_is_named_is_never_reused_when_an_ignored_file_below_it_changes(self):
+        partner = self.partner_with_ignored_file()
+        with mock.patch.dict(os.environ, {"SKM_PROBE_ROOT": str(partner)}):
+            document = doc(("V1", f"grep -q -r --include=a.local good {partner}"))
+            self.assert_unknown_input_runs_again(document, lambda: (partner / "a.local").write_text("bad\n"))
+
+    def test_a_partner_folder_that_is_named_below_the_root_is_never_reused(self):
+        partner = self.partner_with_ignored_file()
+        (partner / "sub").mkdir()
+        (partner / "sub" / "b.local").write_text("good\n", encoding="utf-8")
+        with mock.patch.dict(os.environ, {"SKM_PROBE_ROOT": str(partner)}):
+            document = doc(("V1", f"grep -q -r good {partner}/sub"))
+            self.assert_unknown_input_runs_again(document, lambda: (partner / "sub" / "b.local").write_text("bad\n"))
+
+    def test_a_partner_root_given_through_its_variable_is_never_reused(self):
+        partner = self.partner_with_ignored_file()
+        with mock.patch.dict(os.environ, {"SKM_PROBE_ROOT": str(partner)}):
+            document = doc(("V1", 'grep -q -r --include=a.local good "$SKM_PROBE_ROOT"'))
+            self.assert_unknown_input_runs_again(document, lambda: (partner / "a.local").write_text("bad\n"))
+
+    def test_a_partner_root_that_only_the_environment_holds_keeps_the_reuse_and_its_provenance(self):
+        partner = self.partner_with_ignored_file()
+        with mock.patch.dict(os.environ, {"SKM_PROBE_ROOT": str(partner)}):
+            document = doc(("V1", "true"))
+            first = self.run_round(document)[0]
+            second = self.run_round(document, number=2)[0]
+            self.assertTrue(second["reused"] and second["green"])
+            self.assertEqual(second["reused_from"], "cnd-1:T.W1:checks.1:V1")
+            self.assertEqual(second["evidence"], first["evidence"])
+            self.assertEqual(self.count(), 1)
+
+    def test_the_implicit_working_directory_and_a_literal_file_below_it_keep_the_reuse(self):
+        data = self.ignored_data()
+        for cwd in (self.root, data):  # the working directory is context, not a named input: no refusal, nothing listed of it
+            known = checks._inputs("true", dict(os.environ), cwd, self.root)
+            self.assertIsNotNone(known)
+            self.assertFalse([row for row in known if str(self.root.resolve()) in row[0]])
+        document = doc(("V1", "grep -q good data/a.local"))
+        first = self.run_round(document)[0]
+        second = self.run_round(document, number=2)[0]
+        self.assertTrue(second["reused"] and second["green"])
+        self.assertEqual((second["reused_from"], second["evidence"]), ("cnd-1:T.W1:checks.1:V1", first["evidence"]))
+        self.assertEqual(self.count(), 1)
+        (data / "a.local").write_text("bad\n", encoding="utf-8")  # the known file changed: the command runs and fails
+        third = self.run_round(document, number=3)[0]
+        self.assertFalse(third.get("reused"))
+        self.assertFalse(third["green"])
+        self.assertEqual(third["exit"], 1)
+        self.assertEqual(self.count(), 2)
+
     def test_a_file_named_with_a_known_folder_prefix_keeps_the_reuse(self):
         document = doc(("V1", f'test "$(cat {self.ext}/a.txt)" = good && echo "a*" > /dev/null'))
         self.run_round(document)

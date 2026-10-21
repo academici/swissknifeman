@@ -583,17 +583,22 @@ files inside it. The shell expansions of the line are followed as bash would exp
 the environment of the check: unquoted globs (`*`, `?`, `[...]`, `**`, also in the value of `NAME=...`/`--option=...`, in a
 quoted script such as `bash -c '...'` and through a variable that holds one), brace lists and ranges (`{a,b}`, `{1..3}`); every
 file they match is an input, so a file that is added, removed or changed misses. When the inputs cannot be established they are
-an unknown input and nothing is reused (a miss, never a guess): a named git-ignored folder, a folder outside the project
-that the line names (a literal argument, a path in a quoted script, an entry of a `a:b` list, a variable that holds it) or that a
-glob reaches (its listing is not fingerprinted), a glob or brace word with an unset variable, a path or an argument built by a
-command (`$(...)`, backticks), more matches than the limit, a range that cannot be read, a line with unbalanced quotes or
-brackets, a name built from an unset variable or a file that cannot be read. The same holds for the forms the shell does not
-expand itself: a `case` whose branch pattern spells a path, a glob or a variable; a `PATH`-like `a:b` list of patterns; a
-quoted pattern that holds a glob character with an existing folder in front of it (`'/dir/*.txt'`, also a `:` list of them); and
-any quoted glob in a line that runs `find`, `fd` or `fdfind` (`-name '*.txt'`). A folder that only the environment holds (`HOME`,
-`TMPDIR`, a variable the line does not use) is not an argument and does not miss, nor does a folder inside a partner root, whose
-state is fingerprinted. Known gap: a folder of the project that the line names stays part of the candidate, so a recursive read
-of git-ignored files below it (`grep -r x .`) is not seen. The fingerprint also holds the Python of the conductor and the state of the partner roots outside the
+an unknown input and nothing is reused (a miss, never a guess): an existing folder that the line names or that a glob reaches,
+wherever it lies (the project root `.`, a tracked, untracked or git-ignored folder of the project, a partner root or a folder
+below it, any other folder outside the project; a literal argument, a path in a quoted script, an entry of a `a:b` list, a
+variable the line uses, including a `*_ROOT` one), because its listing and the files below it, git-ignored ones included, are
+not fingerprinted (`grep -r x data`, `find .`, `ls dir`); a glob or brace word with an unset variable, a path or an argument
+built by a command (`$(...)`, backticks), more matches than the limit, a range that cannot be read, a line with unbalanced
+quotes or brackets, a name built from an unset variable or a file that cannot be read. The same holds for the forms the shell
+does not expand itself: a `case` whose branch pattern spells a path, a glob or a variable; a `PATH`-like `a:b` list of
+patterns; a quoted pattern that holds a glob character with an existing folder in front of it (`'/dir/*.txt'`, also a `:` list
+of them); and any quoted glob in a line that runs `find`, `fd` or `fdfind` (`-name '*.txt'`). Only the folders of the
+evidence and the logs of the checks (output) are exempt. What stays reusable: the working directory itself (implicit
+context), a folder that only the environment holds (`HOME`, `TMPDIR`, a variable the line does not use) and a partner root
+that only the environment points to (not named by the line), whose state (HEAD and dirty digest) is fingerprinted, and the
+files the line names (a literal file, a glob that matches files), whose content is fingerprinted when it is outside the
+candidate. The fingerprint covers what the line or the environment names; what a program reads without the line naming it is
+opaque to it. The fingerprint also holds the Python of the conductor and the state of the partner roots outside the
 project. A damaged evidence file, another run, another candidate or any difference in the fingerprint runs the check again, as
 does a check that changed files of the project or the files it reads outside it while it ran, an input that cannot be read, and
 every check that starts after an earlier check of the round changed the tree or committed (the candidate, HEAD included, was

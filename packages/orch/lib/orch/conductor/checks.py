@@ -507,7 +507,8 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
     an environment value points to (real path and content: fixtures, configuration), outside the project or git-ignored
     inside it. Tracked and untracked files of the project are part of the candidate; ``skip`` folders (the evidence and
     logs of the checks) are output. None when an input cannot be established (a file that cannot be read, a path built from
-    an unset variable, an ignored folder, a line with too many names): nothing is then reused."""
+    an unset variable, an existing folder that the line names or a glob reaches wherever it lies, a line with too many
+    names): nothing is then reused. A folder that only the environment holds is context, not a named input."""
     found, root = {}, project.resolve()
     names, spelled = ["bash"], set()
     _names(cmd, names, spelled=spelled)
@@ -530,7 +531,7 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
         before, after = cmd[:found_variable.start()][-1:], cmd[found_variable.end():][:1]
         if (before and (before in "/." or before.isalnum())) or (after and (after in "/*?[{." or after.isalnum())):
             continue  # part of a longer word or path: the file it names is followed on its own
-        if name in env and name not in VOLATILE_ENV and name != "PATH" and not name.endswith(("_ROOT", "_PY")):
+        if name in env and name not in VOLATILE_ENV and name != "PATH" and not name.endswith("_PY"):
             arguments.update(piece for piece in env[name].split(":") if piece.startswith("/") and "\n" not in piece)
     expanded = _expansions(cmd, env, cwd)
     if expanded is None:
@@ -550,18 +551,18 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
         return None
     arguments.update(piece for name in list(arguments) for piece in name.split(":") if piece.startswith("/"))
     names += sorted(arguments - set(names))
-    partner_roots = []
-    for key, value in env.items():
-        if key.endswith(("_ROOT", "_PY")) and value:
-            try:
-                partner_roots.append(Path(value).resolve())
-            except (OSError, RuntimeError):
-                pass
     names += [value for key, value in sorted(env.items())
               if key not in VOLATILE_ENV and not key.endswith(("_ROOT", "_PY")) and value.startswith("/")
               and "\n" not in value and ":" not in value][:64]
     reached = set(matched.values())
     skipped = [Path(folder).resolve() for folder in skip]
+
+    def output(path: Path) -> bool:
+        return any(path == folder or folder in path.parents for folder in skipped)
+
+    for path in reached:
+        if path.is_dir() and not output(path):
+            return None  # a folder a glob reaches, in the project or outside: its listing and content are not known
     for name in names:
         try:
             paths = []
@@ -574,8 +575,10 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
                     paths.append(Path(located).resolve())
                 paths.append((cwd / name).resolve())
             for path in dict.fromkeys(paths):
-                if any(path == folder or folder in path.parents for folder in skipped):
+                if output(path):
                     continue
+                if path.is_dir() and name in arguments:
+                    return None  # a folder the line names, wherever it lies: its listing and content are not fingerprinted
                 inside = path == root or root in path.parents
                 if inside and path != root:
                     if not (path.is_file() or path.is_dir()):
@@ -586,9 +589,6 @@ def _inputs(cmd: str, env: dict, cwd: Path, project: Path, known: Optional[dict]
                     if not ignored:
                         continue  # tracked or untracked: the candidate carries it
                 elif inside or not path.is_file():
-                    if not inside and path.is_dir() and (path in reached or (
-                            name in arguments and not any(path == one or one in path.parents for one in partner_roots))):
-                        return None  # a folder outside the project the line names or a glob reaches: its content is not known
                     continue
                 if not path.is_file():
                     continue

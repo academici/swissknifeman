@@ -153,15 +153,15 @@ def group_effort(self, reviewer: str, planned: str) -> str:
 
 
 def group_route(self, number: int, group: list, item: Item) -> None:
-    """The reviewer route of a group review, set on ``item`` (the last piece): the reviewer of the run when a layer sets
+    """The reviewer route of a group review, set on ``item`` (the last piece): the reviewer of the run when a global layer sets
     one; else the ``review_route`` the pieces of the group share, or, when they differ, the one of the strongest class
     (``CLASS_RANK``, the first in group order on a tie) with a ``GROUP_REVIEW_ROUTE_CONFLICT`` beacon naming them all."""
     documents = [(ref, read_json(self.directory / safe(ref) / "input.json") or {}) for ref in group]
     last = next((doc for ref, doc in documents if ref == item.ref), {})
     source = item.sources.get("reviewer") or ""
-    if source and last.get("review_mode") in ("none", "self") \
+    if source and (source.startswith("item:") or last.get("review_mode") in ("none", "self")) \
             and not source.startswith(("config:", "invocation:")):
-        item.sources.pop("reviewer", None)  # a disabled piece's reserved selector is not a group override
+        item.sources.pop("reviewer", None)  # an item-local or disabled piece's selector is not a group override
     if item.sources.get("reviewer"):
         return
     planned = [(ref, doc["review_route"]) for ref, doc in documents

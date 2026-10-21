@@ -90,6 +90,7 @@ class CharacterizationCase(ConductorCase):
         journal = [normalize(line, paths) for line in json.loads("[" + ",".join(
             (run / "progress.jsonl").read_text(encoding="utf-8").splitlines()) + "]")]
         state_doc = json.loads((run / engine.STATE_FILE).read_text(encoding="utf-8"))
+        state_doc.pop("ended", None)  # volatile UTC bound of the run segment, tested in test_observer
         for item in state_doc.get("items", {}).values():
             item.pop("usage_by_agent", None)  # replay bookkeeping; totals are covered here, receipts in test_usage_normalization
         state = normalize(state_doc, paths)
@@ -384,6 +385,7 @@ COVERAGE = {
     # Stops
     "RUN_BUSY": "test:test_run_lease.py", "WORKTREE_BUSY": "test:test_run_lease.py",
     "QUESTIONS_LOCKED": "test:test_run_lease.py",
+    "CONDUCTOR_CRASHED": "test:test_observer.py",
     "STAGE_RECOVERY_UNKNOWN": "test:test_resume_reconcile.py",
     "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": "snapshot:question-answer-resume",
     "ROUTE_UNDERSHOOT": f"test:{T}", "SANDBOX_UNAVAILABLE": f"test:{T}",

@@ -66,6 +66,20 @@ def finish(handle: dict, *, exit_code: Optional[int], error: Optional[dict], dec
     _write(handle["directory"] / "usage.json", {**handle["usage"], "usage_complete": handle.get("usage_complete")})
 
 
+def orphan(directory: Path) -> bool:
+    """Close an unfinished agent on resume, preserving any result and usage already recorded.
+
+    The interrupted process cannot supply an exit, duration or final usage, so none is invented.
+    Return whether a new result was written (also the guard against duplicate failure events).
+    """
+    path = Path(directory) / "result.json"
+    if path.exists():
+        return False
+    _write(path, {"error": {"code": "ORPHANED",
+                           "message": "the conductor died; the role was stopped on resume"}})
+    return True
+
+
 def read(item_directory: Path) -> list:
     """``[{agent_run_id, role, step, status, tokens}]`` of an item, in start order. ``status``: ``running`` (no result),
     ``failed`` (an error or a non-zero exit), else ``ok``."""

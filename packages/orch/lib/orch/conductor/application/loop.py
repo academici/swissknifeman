@@ -2,12 +2,16 @@
 the run clock."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import signal
 import threading
 import time
+import traceback
 from typing import Any, Callable, Optional
+
+from aicore.util.redact import env_secrets, redact_document
 
 from orch import events, policies as run_policies
 from orch.conductor import checks as checks_mod, observer, options as opts, prompts, scope as scopes
@@ -76,6 +80,7 @@ def terminated(_signum, _frame) -> None:
 def loop(self) -> int:
     started = time.monotonic()
     self._segment = clock.mono()
+    self.state.pop("ended", None)
     code, reason, outcome = 0, None, "finished"
     previous = {number: signal.signal(number, terminated) for number in (signal.SIGTERM, signal.SIGHUP)} \
         if threading.current_thread() is threading.main_thread() else {}
@@ -86,6 +91,12 @@ def loop(self) -> int:
         code, reason, outcome = 1, stop, "stopped"
     except KeyboardInterrupt:
         code, reason, outcome = 130, Stop("INTERRUPTED", "interrupted; resume continues"), "stopped"
+    except Exception as error:  # noqa: BLE001 — unexpected failures must close the run too
+        secrets = env_secrets()
+        crash = redact_document(traceback.format_exc(), secrets=secrets)
+        (self.directory / "crash.txt").write_text(crash, encoding="utf-8")
+        message = redact_document(f"{type(error).__name__}: {error}; see crash.txt; resume continues", secrets=secrets)
+        code, reason, outcome = 1, Stop("CONDUCTOR_CRASHED", message), "stopped"
     finally:
         for number, handler in previous.items():
             signal.signal(number, handler)
@@ -93,6 +104,8 @@ def loop(self) -> int:
         self.state["active_s"] = round(self._active_s(), 1)
         self._segment = None
         self.state["status"] = outcome
+        # Progress is second-granular; event timestamps carry fractions of a second.
+        self.state["ended"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         if reason is not None:
             self.state["stop"] = {"code": reason.code, "message": reason.message}
         self._save()

@@ -1,7 +1,7 @@
 """The observer of a conductor run: it only reads.
 
-It reads the progress journal and the state of the run, and the ``orch.run.*`` and ``planner.*`` events of the
-project's aicore event journal since the run started, and writes ``observer.json`` and ``observer.md`` into the
+It reads the progress journal and the state of the run, and the correlated ``orch.*`` and ``planner.*`` events of the
+project's aicore event journal within the run's UTC window, and writes ``observer.json`` and ``observer.md`` into the
 reports folder (``.swissknifeman/orch/reports/<run>/``, ignored run output): repeats and resumes, red checks, review
 findings by class, idle time between stages, tokens and time by role, the beacons and mends of the run (slow or
 silent steps, rounds past a target, healed and repaired results), the share of the wall time spent in checks, stops,
@@ -22,34 +22,35 @@ import time
 from aicore.util.redact import env_secrets, redact_document
 from orch.conductor import agents as agents_mod, progress as progress_mod, prompts as prompts_mod, questions as questions_mod
 from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
+from orch.conductor.infrastructure.lease import RunLease
 
 IDLE_S = 30
 TOP_BLOCKS = 5
-EVENT_TYPES = ("orch.run.*", "planner.*")
+EVENT_TYPES = ("orch.*", "planner.*")
 PROVENANCE_MAX = 5
 _MODULE_SCRIPT = re.compile(r"packages/([A-Za-z0-9_.-]+)/scripts/(validate|test)\.sh\b")
 _SUBSET_FLAG = re.compile(r"(?:^|\s)(?:-p|--pattern)(?:\s|=|$)")
 
 
 def _seconds(ts: str) -> float:
-    return datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").timestamp()
+    return datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
 
 
-def _events(project: Path, since: str) -> tuple:
-    """``(counts by type, problems)`` of the journal events at or after ``since``; an unreadable journal is a problem."""
+def _events(project: Path, since: str, until: str, correlations: set) -> tuple:
+    """Count only events of this run within the inclusive UTC window; report an unreadable journal."""
     try:
         from aicore.ext import events as journal
         found, problems = journal.read_events(project, types=list(EVENT_TYPES))
     except Exception as error:  # noqa: BLE001 — the observer reports what it could not read
         return {}, [f"{type(error).__name__}: {error}"]
-    start = _seconds(since)
+    start, end = _seconds(since), _seconds(until)
     counts: Counter = Counter()
     for event in found:
         try:
-            moment = datetime.fromisoformat(event.time.replace("Z", "+00:00")).timestamp()
+            moment = _seconds(event.time)
         except (AttributeError, ValueError):
             continue
-        if moment >= start:
+        if start <= moment <= end and (event.subject in correlations or event.correlationid in correlations):
             counts[event.type] += 1
     return dict(sorted(counts.items())), [f"{item.get('code')}: {item.get('message')}" for item in problems[:5]]
 
@@ -317,7 +318,10 @@ def build(directory: Path, project: Path) -> dict:
     for folder in sorted(Path(directory).glob("*/")):
         for row in agents_mod.read(folder):
             by_agent.append({"item": folder.name, **row})
-    counts, problems = _events(project, started) if started else ({}, [])
+    correlations = {run_id} | {item.get("orch_run") for item in (state.get("items") or {}).values()
+                               if item.get("orch_run")}
+    until = (state.get("ended") if state.get("status") != "running" else None) or (lines[-1]["ts"] if lines else None)
+    counts, problems = _events(project, started, until, correlations) if started else ({}, [])
     codes = Counter(line.get("reason_code") for line in lines if line.get("event") == "info" and line.get("reason_code"))
     if codes.get("GROUP_REVIEW_FAILED") and not incomplete_groups:
         incomplete_groups.append("GROUP_REVIEW_FAILED")
@@ -505,10 +509,14 @@ def write_report(directory: Path, project: Path, target: Path) -> dict:
     return {"json": str(target / "observer.json"), "markdown": str(target / "observer.md")}
 
 
-def follow(directory: Path, *, stream, poll_s: float = 2.0, idle_exit_s: float = 0.0) -> int:
-    """Print the notable lines of a running run (stops, red checks, repeats, item ends) until ``run.end``."""
+def follow(directory: Path, *, stream, poll_s: float = 2.0, idle_exit_s: float = 0.0, alive=None) -> int:
+    """Follow the latest run segment: 0 at its end, 3 after two probes without a live conductor.
+
+    ``idle_exit_s`` is retained for caller compatibility; silence never proves that a run ended.
+    """
     seen = 0
-    quiet_since = time.monotonic()
+    missing = 0
+    alive = alive if alive is not None else lambda: RunLease.held(directory)
     while True:
         lines = progress_mod.read_lines(directory)
         for line in lines[seen:]:
@@ -518,11 +526,15 @@ def follow(directory: Path, *, stream, poll_s: float = 2.0, idle_exit_s: float =
                        or (event == "stage.end" and str(line.get("verdict", "")).startswith("red")))
             if notable:
                 print("observer: " + progress_mod.text_line(line), file=stream, flush=True)
-            if event == "run.end":
-                return 0
-        if len(lines) > seen:
-            quiet_since = time.monotonic()
-        seen = len(lines)
-        if idle_exit_s and time.monotonic() - quiet_since > idle_exit_s:
+        lifecycle = next((line.get("event") for line in reversed(lines)
+                          if line.get("event") in ("run.start", "run.resume", "run.end")), None)
+        if lifecycle == "run.end":
             return 0
+        seen = len(lines)
+        missing = missing + 1 if alive() is False else 0
+        if missing >= 2:
+            run_id = lines[0].get("run", Path(directory).name) if lines else Path(directory).name
+            print(f"observer: run {run_id} has no live conductor (orphaned); "
+                  f"resume with orch conduct resume --run {run_id}", file=stream, flush=True)
+            return 3
         time.sleep(poll_s)

@@ -61,6 +61,9 @@ If the conductor dies while the journal says `running`, `status`, `status --json
 using each agent's atomic `process.json` (`pid`, `pgid`, Linux `/proc` `start_ticks`, `started_at`). It checks process
 identity before signalling, sends SIGTERM, allows 10 seconds, then sends SIGKILL if needed. No new role starts
 while that group remains alive. Each stopped group produces an `info` event `ROLE_ORPHAN_KILLED`.
+Unfinished agents whose process died or whose group was stopped receive `result.json` with error code `ORPHANED`
+and an `orch.agent.failed` event with class `orphaned`. An existing result is preserved, and resume does not emit
+the failure again. A reused pid is never signalled; the old agent is closed as orphaned.
 
 `answer` can update questions while the conductor owns the run. All updates of an item's `questions.json` use
 `questions.lock` for their read-modify-write, including merging answers before a conductor save. A lock held for
@@ -346,6 +349,7 @@ The conductor stops only on:
 | --- | --- |
 | `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
 | `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
+| `CONDUCTOR_CRASHED` | an unexpected exception in the conductor loop; exit 1, stopped state and `run.end`; the redacted traceback is in `<run>/crash.txt`; fix the cause, then resume |
 | `STAGE_RECOVERY_UNKNOWN` | a started step has no recovery rule; settle the item or retry it |
 | `REVIEW_LIMIT` | a batch limit refused a round while a confirmed Blocker finding is open | the finding ids and the limit |
 | `DEPENDENCY_BLOCKED` | with `on_blocked: report` the run went on after a blocked piece, and a later piece of the run depends on it (`depends_on` of its claim): it is not started, stays in progress and the run ends here after the others; `resume --retry` the blocked piece, then `resume` |
@@ -1162,12 +1166,20 @@ fallback artifacts are committed records: after `--apply` the removal shows in `
 
 ## Observer
 
-The observer only reads: the journal and state of the run and the `orch.run.*` and `planner.*` events of the
-project's aicore event journal since the run started. At the end of every run (also a stopped one) the conductor
+The observer only reads: the journal and state of the run and the `orch.*` and `planner.*` events of the
+project's aicore event journal. Event counts use UTC, from the run start through `state.ended` or the last progress
+line, inclusive. Only events whose subject or correlation id matches the conductor run id or an item's `orch_run`
+are counted, including agent, provider, review and deviation events. At the end of every run (also a stopped one) the conductor
 writes `observer.json` and `observer.md`: repeats and resumes, red checks per check id, review findings by severity,
 triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the heaviest prompt blocks by role and the prompt budget classes against their limits (`prompt_budgets_by_role`: largest tokens of a step, limit, steps, steps over; from the prompt manifests), the outcome of
 each piece and proposals to improve the run options. `orch conduct observe --follow` prints the notable lines of a run
-that is still going from another terminal; `orch conduct observe` writes the report again.
+that is still going from another terminal; `orch conduct observe` writes the report again. Follow exits 0 only after
+the latest start/resume segment has ended. Without that final `run.end`, two consecutive free-lease probes give
+exit 3 and a resume hint; an unavailable probe keeps waiting. The observer never writes run state or progress.
+Silence alone never returns success (`idle_exit_s` remains accepted by the Python helper but no longer ends follow).
+Appending progress after a torn line first restores its newline, so the next event remains readable.
+`state.ended` keeps the precise UTC end of a completed segment, including fractions of a second; it is cleared by
+the next loop. A running segment uses the latest progress line even if an earlier end remains in an older state save.
 
 **Checks by command.** `checks_by_command` (and the table *Checks by command* in `observer.md`) aggregates the command
 rows of `state.items.*.steps.checks.*.result[]` (and of earlier attempts) by command: `runs` (every row), `executed` /

@@ -5,7 +5,8 @@ import os
 import signal
 import time
 
-from orch.conductor import checks, process, prompts
+from orch import events
+from orch.conductor import agents, checks, process, prompts
 from orch.conductor.domain.stop import Stop
 from orch.conductor.domain.item import Item
 from orch.conductor.infrastructure import clock, work_source
@@ -110,16 +111,20 @@ def kill_orphaned_roles(run) -> None:
             continue
         doc = read_json(path) or {}
         pid, pgid, ticks = doc.get("pid"), doc.get("pgid"), doc.get("start_ticks")
-        if (type(pid) is not int or pid <= 1 or pgid != pid or type(ticks) is not int
-                or process.start_ticks(pid) != ticks):
+        if type(pid) is not int or pid <= 1 or pgid != pid or type(ticks) is not int:
+            continue
+        if process.start_ticks(pid) != ticks:
+            _close_orphan(run, path.parent, request, item)
             continue
         try:
             if os.getpgid(pid) != pgid or pgid == os.getpgrp():
                 continue
             if not process._group_alive(pgid):
+                _close_orphan(run, path.parent, request, item)
                 continue
             os.killpg(pgid, signal.SIGTERM)
         except ProcessLookupError:
+            _close_orphan(run, path.parent, request, item)
             continue
         except PermissionError as error:
             raise Stop("ROLE_FAILED", f"cannot stop orphaned role group {pgid}: {error}") from None
@@ -143,3 +148,20 @@ def kill_orphaned_roles(run) -> None:
                 raise Stop("ROLE_FAILED", f"orphaned role group {pgid} is still alive; no new role was started")
         run.progress.emit("info", item=item, stage=step, reason_code="ROLE_ORPHAN_KILLED",
                           message=f"stopped orphaned role group {pgid}")
+        _close_orphan(run, path.parent, request, item)
+
+
+def _close_orphan(run, directory, request, item) -> None:
+    if not agents.orphan(directory):
+        return
+    ref = item or directory.parents[1].name
+    run_id = run.state.get("items", {}).get(ref, {}).get("orch_run") or run.run_id
+    agent = request.get("agent_run_id") or directory.name
+    data = {"run_id": run_id, "work_id": ref, "item": ref, "agent_run_id": agent,
+            "role": request.get("role") or request["step"].split(".", 1)[0],
+            "route": request.get("route") or {"provider": "unknown"}, "step": request["step"],
+            "error": {"class": "orphaned", "code": "ORPHANED"}}
+    if request.get("attempt"):
+        data["attempt"] = request["attempt"]
+    events.emit("orch.agent.failed", data, subject=f"{run_id}/{ref}/{agent}", correlationid=run_id,
+                settings=run.settings, project=run.project, config_file=run.config_file)

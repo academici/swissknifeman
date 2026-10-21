@@ -87,8 +87,12 @@ class Progress:
             line["message"] = " ".join(str(line["message"]).split())[:500] or "-"
         encoded = json.dumps(line, ensure_ascii=False, sort_keys=True)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "a", encoding="utf-8") as handle:
-            handle.write(encoded + "\n")
+        with open(self.path, "a+b") as handle:
+            if handle.seek(0, os.SEEK_END):
+                handle.seek(-1, os.SEEK_END)
+                if handle.read(1) != b"\n":
+                    handle.write(b"\n")
+            handle.write((encoded + "\n").encode("utf-8"))
             handle.flush()
             os.fsync(handle.fileno())
         stream = self.stream if self.stream is not None else sys.stderr

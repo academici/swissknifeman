@@ -330,6 +330,7 @@ class Conductor:
     _resumed_prompt = execute.resumed_prompt
     _autofixable = execute.autofixable
     _autofix = execute.autofix
+    _self_check_return = execute.self_check_return
     _autofix_issues = execute.autofix_issues
     _questions = execute.questions
     _save_questions = execute.save_questions

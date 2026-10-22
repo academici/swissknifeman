@@ -422,6 +422,9 @@ def conduct(self, item: Item) -> str:
     report, round_no = self._autofix(item, report, 1, scout_text)
     if report["status"] == "blocked":
         return self._finish(item, report, None)
+    report, round_no = self._self_check_return(item, report, round_no, scout_text)
+    if report["status"] == "blocked":
+        return self._finish(item, report, None)
     rows = self._checks_then_review(item, report, round_no, 1) if overlap else self._run_checks(item, round_no, report)
     rows, report, round_no = self._green(item, rows, report, round_no, scout_text, 1 if overlap else None)
     if report["status"] == "blocked":

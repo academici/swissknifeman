@@ -1309,6 +1309,58 @@ class RunClockTests(ConductorCase):
         self.assertGreaterEqual(self.state(err)["active_s"], 300)
 
 
+class SelfCheckReturnTests(ConductorCase):
+    """``checks.self_check``: a completion report that does not show the self-check goes back to the executor once,
+    before any acceptance check (``RESULT_INCOMPLETE``); acceptance stays the conductor's."""
+
+    SELF = "python3 scripts/affected-tests.py --run"
+
+    def setUp(self):
+        super().setUp()
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"checks": {"self_check": [self.SELF]}}}]}})
+
+    def checked(self, exit_code: int = 0, **extra) -> dict:
+        return dict(executor_ok("W1"), result=report("W1", self_check=[{"cmd": self.SELF, "exit": exit_code}], **extra))
+
+    def keys(self, err: str) -> list:
+        return sorted((key for key in self.state(err)["items"]["W1"]["steps"] if key.startswith(("executor.", "checks."))),
+                      key=lambda key: (int(key.split(".")[1].split("-")[0]), key.startswith("checks.")))
+
+    def test_a_report_without_the_self_check_goes_back_once_before_the_checks(self):
+        self.script({"executor": [executor_ok("W1"), self.checked()], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.keys(err), ["executor.1", "executor.2", "checks.2"])  # no acceptance before the return
+        self.assertIn("does not show the self-check", self.prompt("executor", 2))
+        self.assertEqual(self.state(err)["items"]["W1"]["self_check_returned"], [1])
+        self.assertEqual(len([line for line in self.lines(err) if line.get("reason_code") == "RESULT_INCOMPLETE"]), 1)
+
+    def test_the_second_report_without_it_reaches_the_checks_as_it_is(self):
+        self.script({"executor": [executor_ok("W1"), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertEqual(self.keys(err), ["executor.1", "executor.2", "checks.2"])
+
+    def test_a_shown_self_check_or_an_honest_red_one_goes_straight_to_the_checks(self):
+        deviation = {"text": "test_x fails: TypeError in y", "kind": "deviation", "impact": "y", "next": "none",
+                     "class": "scope", "outcome": "accepted"}
+        for result in (self.checked(), self.checked(1, status="done_with_deviations", open_issues=[deviation])):
+            with self.subTest(exit=result["result"]["self_check"][0]["exit"]):
+                self.set_items({"W1": {"options": [{"source": "item:W1",
+                                                    "options": {"checks": {"self_check": [self.SELF]}}}]}})
+                self.script({"executor": [result], "reviewer": [GREEN]})
+                code, _, err = self.run_items("W1")
+                self.assertEqual(self.keys(err), ["executor.1", "checks.1"], err)
+                self.assertNotIn("self_check_returned", self.state(err)["items"]["W1"])
+
+    def test_without_a_self_check_nothing_is_asked_again(self):
+        self.set_items({"W1": {}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(self.keys(err), ["executor.1", "checks.1"], err)
+
+
 class BatchLimitTests(ConductorCase):
     """``limits.*_batch``: the target and ceiling rule over the whole run; an open Blocker stops it."""
 

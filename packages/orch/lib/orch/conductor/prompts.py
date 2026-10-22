@@ -379,6 +379,15 @@ def _self_check(commands) -> str:
               "command in `self_check` of the report as `{\"cmd\": \"<command>\", \"exit\": <exit of its last run>}`.\n")
 
 
+def self_check_missing(commands) -> str:
+    """The correction of a completion report that does not show the self-check (``RESULT_INCOMPLETE``)."""
+    return ("Your report does not show the self-check, or shows a red one without a deviation that names the failure: "
+            + ", ".join(f"`{command}`" for command in commands)
+            + ". Run each of them on your final tree, fix what goes red inside the scope, and report again with "
+              "`self_check` filled. A failure you cannot fix inside the scope is a deviation with the failing test and its "
+              "error, not a silent omission.")
+
+
 def _self_check_again(commands) -> str:
     """The sentence of a correction round that asks for the self-check again."""
     return (" and run the self-check commands again (" + ", ".join(f"`{command}`" for command in commands) + ")"

@@ -115,7 +115,7 @@ The command must be in the accepted catalog (`NOT_FOUND`); its scope says which 
 - **Audit.** `audit` rows `run.requested` (command, owner, redacted input, dry run), `run.decided` (decision,
   effects), `run.started` (program path and digest, redacted argv, cwd), `run.finished` (state, exit, duration).
   A run with a project is also journaled there as `gui.run.<verb>` (started, succeeded, failed, cancelled,
-  timed_out, lost, denied) with `{run_id, command, owner, state}`; a journal failure never changes the run.
+  timed-out, lost, denied) with `{run_id, command, owner, state}`; a journal failure never changes the run.
 
 ## Events (`/v1/events`)
 

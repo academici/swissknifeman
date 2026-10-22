@@ -131,6 +131,45 @@ class Emission(unittest.TestCase):
         with mock.patch.object(aicore_events, "emit", side_effect=OSError("disk full")), redirect_stderr(closed):
             events.emit("orch.run.started", STARTED, subject="run-1", settings=self.settings(True))
 
+    def test_data_that_breaks_its_schema_is_not_journaled_and_is_reported(self):
+        import io
+        from contextlib import redirect_stderr
+        err = io.StringIO()
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), redirect_stderr(err):
+            result = events.emit("orch.run.started", {**STARTED, "not_a_field": 1}, subject="run-1",
+                                 settings=self.settings(True))
+        self.assertIsNone(result)
+        self.assertFalse(self.journal().exists())
+        self.assertTrue(err.getvalue().startswith("ORCH_EVENT_NOT_EMITTED: orch.run.started: EVENT_DATA_INVALID: "),
+                        err.getvalue())
+
+    def test_data_missing_a_required_field_is_not_journaled(self):
+        import io
+        from contextlib import redirect_stderr
+        err = io.StringIO()
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), redirect_stderr(err):
+            events.emit("orch.run.started", {"run_id": "run-1"}, subject="run-1", settings=self.settings(True))
+        self.assertFalse(self.journal().exists())
+        self.assertIn("EVENT_DATA_INVALID", err.getvalue())
+
+    def test_strict_mode_raises_for_data_that_breaks_its_schema(self):
+        from aicore.ext.errors import ExtError
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": "1"}):
+            with self.assertRaises(ExtError) as caught:
+                events.emit("orch.run.started", {**STARTED, "not_a_field": 1}, subject="run-1",
+                            settings=self.settings(True))
+        self.assertEqual(caught.exception.code, "EVENT_DATA_INVALID")
+        self.assertFalse(self.journal().exists())
+
+    def test_strict_mode_keeps_valid_events_and_other_failures_best_effort(self):
+        import io
+        from contextlib import redirect_stderr
+        err = io.StringIO()
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": "1"}), redirect_stderr(err), \
+                mock.patch.object(aicore_events, "emit", side_effect=OSError("disk full")):
+            events.emit("orch.run.started", STARTED, subject="run-1", settings=self.settings(True))
+        self.assertIn("OSError: disk full", err.getvalue())
+
     def test_a_secret_in_the_data_is_refused_and_never_printed(self):
         import io
         from contextlib import redirect_stderr

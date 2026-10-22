@@ -13,6 +13,8 @@
     "cli": ["bin/gui"],
     "install": ["install.sh"],
     "config": "configs/config.schema.json",
+    "events": ["gui.run.started", "gui.run.succeeded", "gui.run.failed", "gui.run.cancelled", "gui.run.timed-out",
+               "gui.run.lost", "gui.run.denied", "gui.config.changed"],
     "contracts": [
       {"id": "urn:swissknifeman:gui:contribution", "path": "schemas/contribution/v1", "version": "v1", "stability": "development"},
       {"id": "urn:swissknifeman:gui:view-data", "path": "schemas/view-data/v1", "version": "v1", "stability": "development", "direction": "output"},

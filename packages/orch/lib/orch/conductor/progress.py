@@ -3,6 +3,11 @@
 Every line is a ``conductor/v1`` ``progress-line``. stderr gets a readable line (``text``), the JSON line
 (``json-lines``) or nothing (``quiet``); the journal always gets the JSON line, appended and flushed at once, so
 ``orch conduct status`` and the observer can read a run that is still going.
+
+A line that breaks the contract never stops the run (the journal is the source of the run status): the whole line goes
+to ``progress.invalid.jsonl`` beside the journal and the journal gets an ``info`` line ``PROGRESS_LINE_INVALID`` that
+names the event and the first problem. Under ``SKM_CONTRACTS_STRICT=1`` (the test runners) it is a ``ValueError``.
+Readers keep only the lines that fit the contract and count the rest.
 """
 from __future__ import annotations
 
@@ -15,6 +20,7 @@ from typing import Callable, Optional
 
 from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_document
+from orch.conductor import contract
 
 MODES = ("text", "json-lines", "quiet")
 # ``info`` lines that report a long or costly run without stopping it; the latest one of the running step is the
@@ -22,6 +28,8 @@ MODES = ("text", "json-lines", "quiet")
 BEACONS = ("STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "BUDGET_OVER", "LIMIT_OVER", "PROVIDER_WAIT", "ROUTE_FALLBACK",
            "CAPACITY_GATED", "WORK_SOURCE_NO_NOTE", "RESULT_SILENT_DENIAL", "DISK_LOW")
 PROGRESS_FILE = "progress.jsonl"
+INVALID_FILE = "progress.invalid.jsonl"
+INVALID_CODE = "PROGRESS_LINE_INVALID"
 WORDS = {"run.start": "run start", "run.resume": "run resume", "run.end": "run end", "item.start": "item start",
          "item.end": "item end", "stage.start": "start", "stage.end": "end", "stage.skip": "skip", "info": "info"}
 
@@ -61,6 +69,15 @@ def text_line(line: dict) -> str:
     return "  ".join(parts)
 
 
+def _quarantine_text(line: dict) -> str:
+    """The broken line as one JSON text: keys are not sorted (a broken line may mix key types) and what JSON cannot
+    hold is written as text; a line that still cannot be serialized is kept as its ``repr``."""
+    try:
+        return json.dumps(line, ensure_ascii=False, default=str)
+    except (TypeError, ValueError, RecursionError):
+        return json.dumps({"unserializable": repr(line)[:2000]}, ensure_ascii=False)
+
+
 class Progress:
     """Writes the progress lines of run ``run_id`` into ``directory/progress.jsonl`` and onto ``stream``."""
 
@@ -70,6 +87,7 @@ class Progress:
             raise ValueError(f"progress mode must be one of {', '.join(MODES)}")
         self.run_id = run_id
         self.path = Path(directory) / PROGRESS_FILE
+        self.invalid_path = Path(directory) / INVALID_FILE
         self.mode = mode
         self.stream = stream
         self.clock = clock or utc_now
@@ -79,12 +97,33 @@ class Progress:
         with self._lock:
             return self._emit(event, **fields)
 
+    def _checked(self, line: dict) -> dict:
+        """``line`` when it is a progress-line; otherwise it goes to the sidecar and an ``info`` line takes its place."""
+        found = contract.problems(line, "progress-line")
+        if not found:
+            return line
+        reason = f"{line.get('event')}: {found[0]}"
+        if os.environ.get("SKM_CONTRACTS_STRICT") == "1":
+            raise ValueError(f"{INVALID_CODE}: {reason}")
+        try:
+            self.invalid_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.invalid_path, "ab") as handle:
+                handle.write((_quarantine_text(line) + "\n").encode("utf-8"))
+        except (OSError, ValueError, TypeError):  # the replacement line still says what happened; the run goes on
+            pass
+        notice = {"ts": line.get("ts"), "run": self.run_id, "event": "info", "reason_code": INVALID_CODE,
+                  "message": " ".join(reason.split())[:500]}
+        if not isinstance(notice["ts"], str) or contract.problems({**notice, "run": "cnd-x"}, "progress-line"):
+            notice["ts"] = utc_now()  # the time of the broken line was the problem
+        return notice
+
     def _emit(self, event: str, **fields) -> dict:
         fields = redact_document(fields, secrets=env_secrets())  # before the message is cut: a cut token no longer matches
         line = {"ts": self.clock(), "run": self.run_id, "event": event,
                 **{key: value for key, value in fields.items() if value is not None and value != ""}}
         if "message" in line:
             line["message"] = " ".join(str(line["message"]).split())[:500] or "-"
+        line = self._checked(line)
         encoded = json.dumps(line, ensure_ascii=False, sort_keys=True)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.path, "a+b") as handle:
@@ -106,21 +145,44 @@ class Progress:
         return line
 
 
-def read_lines(directory: Path) -> list:
-    """The complete lines of ``progress.jsonl``; a torn last line is skipped."""
+def read_lines_counted(directory: Path) -> tuple:
+    """``(lines, discarded)`` of ``progress.jsonl``: the complete lines that are ``progress-line`` documents, and how many
+    complete lines were left out (not JSON, not an object, or breaking the contract). A torn last line (no newline yet,
+    it may be on its way) is neither kept nor counted unless it is a valid line."""
     try:
         data = (Path(directory) / PROGRESS_FILE).read_text(encoding="utf-8")
     except FileNotFoundError:
-        return []
-    lines = []
-    for raw in data.splitlines():
+        return [], 0
+    rows = data.split("\n")
+    tail = rows.pop()  # "" when the journal ends with a newline
+    lines, discarded = [], 0
+    for position, raw in enumerate(rows + ([tail] if tail else [])):
+        complete = position < len(rows)
         try:
             doc = json.loads(raw)
         except ValueError:
+            discarded += 1 if complete and raw.strip() else 0
             continue
-        if isinstance(doc, dict):
+        if isinstance(doc, dict) and not contract.problems(doc, "progress-line"):
             lines.append(doc)
-    return lines
+        else:
+            discarded += 1 if complete else 0
+    return lines, discarded
+
+
+def quarantined(directory: Path) -> int:
+    """The lines ``progress.invalid.jsonl`` holds: lines written while the run was going that broke the contract."""
+    try:
+        data = (Path(directory) / INVALID_FILE).read_bytes()
+    except OSError:
+        return 0
+    return sum(1 for row in data.split(b"\n") if row.strip())
+
+
+def read_lines(directory: Path) -> list:
+    """The complete valid lines of ``progress.jsonl``; a torn last line and the lines that break the contract are skipped
+    (``read_lines_counted`` counts them)."""
+    return read_lines_counted(directory)[0]
 
 
 def summarize(lines: list) -> dict:

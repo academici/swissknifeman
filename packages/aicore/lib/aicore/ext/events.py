@@ -104,6 +104,50 @@ def validate_document(doc: object) -> List[str]:
     return [issue.message for issue in _schema.validate(doc, kind, registry)]
 
 
+_data_sets: Dict[Path, Tuple[Any, List[str]]] = {}
+
+
+def contracts_strict(env: Optional[Mapping[str, str]] = None) -> bool:
+    """True when ``SKM_CONTRACTS_STRICT=1`` (in ``env`` or in the process): a contract violation raises instead of
+    being reported. The test runners set it."""
+    return "1" in (os.environ.get("SKM_CONTRACTS_STRICT"), (env or {}).get("SKM_CONTRACTS_STRICT"))
+
+
+def validate_data(data: object, dataschema_id: str, contract_dir: PathLike) -> List[str]:
+    """Messages of every violation of the data schema ``dataschema_id`` by ``data`` (empty when valid).
+
+    ``contract_dir`` is the ``schemas/event-data/v1`` directory of the emitting module; aicore does not know where
+    modules keep it. The directory is loaded once per path. An id that no schema of the directory carries is one
+    problem, ``dataschema <id> is not in <dir>``.
+    """
+    directory = Path(contract_dir).resolve()
+    loaded = _data_sets.get(directory)
+    if loaded is None:
+        loaded = _data_sets[directory] = _schema.load_contract_set(directory)
+    registry, kinds = loaded
+    kind = next((name for name in kinds if f"{registry.urn_prefix}{name}:{registry.version}" == dataschema_id), None)
+    if kind is None:
+        return [f"dataschema {dataschema_id} is not in {contract_dir}"]
+    return [f"{issue.path or '/'}: {issue.message}" if not issue.message.startswith(f"{issue.path or '/'}:")
+            else issue.message for issue in _schema.validate(data, kind, registry)]
+
+
+def check_data(data: object, dataschema_id: str, contract_dir: PathLike, *,
+               env: Optional[Mapping[str, str]] = None) -> Optional[str]:
+    """The emitter's gate before :func:`emit`: ``None`` when ``data`` fits its schema, else the first problem.
+
+    Under ``SKM_CONTRACTS_STRICT=1`` a violation raises ``ExtError('EVENT_DATA_INVALID')`` instead, so a test sees it.
+    """
+    if _contains_secret(data):
+        return None  # build_event refuses it with EVENT_SECRET, which is the more useful answer
+    problems = validate_data(data, dataschema_id, contract_dir)
+    if not problems:
+        return None
+    if contracts_strict(env):
+        raise ExtError("EVENT_DATA_INVALID", problems[0])
+    return problems[0]
+
+
 def _now_text(now: Union[datetime.datetime, str, None]) -> str:
     if isinstance(now, str):
         return now

@@ -33,6 +33,8 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union
 
 from aicore.ext import emit as _emit
+from aicore.ext.errors import ExtError
+from aicore.ext.events import check_data, contracts_strict
 from aicore.state import ensure_dir, state_dir
 
 from . import catalog, errors, events, frontmatter, settings as _settings, vault as _vault
@@ -42,6 +44,8 @@ LOCK_DEADLINE_S = 10.0
 LOCK_POLL_S = 0.05
 MAX_SUFFIX = 1000
 CREATED_EVENT = "brain.note.created"
+CREATED_SCHEMA = "urn:swissknifeman:brain:event-data:brain-note-created:v1"
+DATA_DIR = Path(__file__).resolve().parents[2] / "schemas" / "event-data" / "v1"
 LOCK_FILE = "notes.lock"
 LEDGER_FILE = "notes.jsonl"
 _NO_LINKS = (errno.EPERM, errno.ENOTSUP, errno.ENOSYS, errno.EMLINK)
@@ -342,11 +346,22 @@ def _write_once(lock: LedgerLock, path: Path, text: str, event_id: str, *, vault
 
 def _announce(plan: events.PlanClosed, note: str, project_root: Optional[Path], env: Optional[Mapping[str, str]],
               home: Optional[PathLike], warnings: List[str]) -> None:
-    """Emit ``brain.note.created``; best effort, a failure is a warning and never changes the answer."""
+    """Emit ``brain.note.created``; best effort, a failure is a warning and never changes the answer.
+
+    Data that breaks the schema of the event is not emitted (``BRAIN_EVENT_NOT_EMITTED: ...: EVENT_DATA_INVALID``);
+    under ``SKM_CONTRACTS_STRICT=1`` it raises ``ExtError('EVENT_DATA_INVALID')`` instead.
+    """
+    data = {"note": note, "plan_id": plan.plan_id, "event_id": plan.event_id}
     try:
-        _emit(CREATED_EVENT, {"note": note, "plan_id": plan.plan_id, "event_id": plan.event_id}, source="brain",
-              subject=plan.plan_id, project=project_root, causationid=plan.event_id, env=env, home=home)
+        problem = check_data(data, CREATED_SCHEMA, DATA_DIR, env=env)
+        if problem is not None:
+            warnings.append(f"BRAIN_EVENT_NOT_EMITTED: {CREATED_EVENT}: EVENT_DATA_INVALID: {problem}")
+            return
+        _emit(CREATED_EVENT, data, source="brain", subject=plan.plan_id, project=project_root,
+              dataschema=CREATED_SCHEMA, causationid=plan.event_id, env=env, home=home)
     except Exception as exc:  # the note is written; announcing it must not turn that into a failure
+        if isinstance(exc, ExtError) and exc.code == "EVENT_DATA_INVALID" and contracts_strict(env):
+            raise
         warnings.append(f"{CREATED_EVENT} was not emitted: {exc}")
 
 

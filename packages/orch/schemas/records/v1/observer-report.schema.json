@@ -118,6 +118,7 @@
     "items": {"description": "The pieces of the run.", "type": "array", "items": {"$ref": "#/$defs/item"}},
     "events": {"$ref": "#/$defs/counts"},
     "event_problems": {"description": "What of the event journal could not be read.", "type": "array", "items": {"description": "A problem.", "type": "string"}},
+    "discarded_lines": {"description": "Lines of progress.jsonl the observer left out because they were not progress-line documents, plus the lines quarantined in progress.invalid.jsonl when they were written; absent when there are none.", "type": "integer", "minimum": 0},
     "proposals": {"description": "Changes the numbers point at.", "type": "array", "items": {"description": "One proposal.", "type": "string"}}
   },
   "$defs": {

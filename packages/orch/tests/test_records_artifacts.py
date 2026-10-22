@@ -314,14 +314,14 @@ class ReviewStrategyTests(unittest.TestCase):
 class OutputTests(unittest.TestCase):
     """observer.json, prompt diff and conformance are checked before they leave; their bytes stay as they were."""
 
-    def test_the_observer_report_is_checked_and_keeps_its_serialization(self):
+    def test_the_observer_report_is_checked_and_written_through_records(self):
         tmp = Path(tempfile.mkdtemp())
         self.addCleanup(__import__("shutil").rmtree, tmp, True)
         good = example("observer-report", "slow-run-with-agents.json")
         with mock.patch.object(observer, "build", return_value=good):
             observer.write_report(tmp / "run", tmp, tmp / "out")
         self.assertEqual((tmp / "out/observer.json").read_text(encoding="utf-8"),
-                         json.dumps(good, ensure_ascii=False, indent=2) + "\n")
+                         json.dumps(good, ensure_ascii=False, indent=2, sort_keys=True) + "\n")  # records.write: sorted keys
         bad = dict(good, beacons={"RUN_SLOW": "1"})
         with mock.patch.object(observer, "build", return_value=bad), self.assertRaises(Stop) as caught:
             observer.write_report(tmp / "run", tmp, tmp / "bad")

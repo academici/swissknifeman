@@ -674,7 +674,8 @@ def _source_claim(args, current, project) -> int:
         if before is None or before.get("attempt_id") != doc["attempt_id"]:
             _emit("orch.run.started", {"run_id": run_id, "submission_id": submission, "attempt_id": doc["attempt_id"],
                                        "source": {"plugin": plugin, "ref": doc["ref"]},
-                                       "scenario": doc["scenario"], "config_digest": settings.config_digest(current),
+                                       "scenario": doc["scenario"] or current.default_profile,
+                                       "config_digest": settings.config_digest(current),
                                        "project_resolution": getattr(args, "project_resolution", None)},
                   subject=run_id, **emit)
         return 0

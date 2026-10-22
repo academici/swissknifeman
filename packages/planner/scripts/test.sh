@@ -36,6 +36,7 @@ unset -f _aicore_ok
 # stay undelivered (test_events enables delivery itself).
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
+export SKM_CONTRACTS_STRICT=1  # an event that breaks its schema fails the test instead of being reported
 hermetic() { env -u SKM_WORKSPACES -u SKM_WORKSPACES_ROOT -u SKM_WORKSPACE HOME="$TEST_HOME" SKM_HOME="$TEST_HOME" SKM_AICORE_EVENTS__DELIVERY=off "$@"; }
 # Tests run in parallel worker processes when the foundation (aicore) is importable; plain unittest otherwise.
 # SKM_TEST_JOBS=1 gives the sequential run.

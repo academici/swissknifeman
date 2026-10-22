@@ -59,7 +59,7 @@ class EventCase(test_lifecycle.LifeCase):
     def setUp(self):
         home = Path(tempfile.mkdtemp())
         self.addCleanup(lambda: __import__("shutil").rmtree(home, ignore_errors=True))
-        env = {k: v for k, v in os.environ.items() if not k.startswith("SKM_")}
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SKM_") or k == "SKM_CONTRACTS_STRICT"}
         env.update(HOME=str(home), SKM_HOME=str(home), SKM_AICORE_EVENTS__DELIVERY="off")
         patcher = mock.patch.dict(os.environ, env, clear=True)
         patcher.start()
@@ -239,6 +239,53 @@ class EmissionTests(EventCase):
         self.assertEqual(emit.call_count, 2)  # one per command: a failed batch is abandoned
         self.assertEqual(stderr.getvalue().splitlines(), ["PLANNER_EVENT_NOT_EMITTED: EVENT_INVALID: bad"])
         self.assertEqual(self.load().items["P1.1"]["status"], "done")
+
+
+@needs_aicore
+class DataContractTests(EventCase):
+    """The data of an event is checked against its schema before it is journaled."""
+
+    def batch(self):
+        plan = self.load().plan
+        good = {"plan_id": plan["id"], "short_id": plan["short_id"], "title": plan["title"], "repository": "r"}
+        return plan["id"], [("planner.plan.created", {**good, "not_a_field": 1}),
+                            ("planner.plan.created", good), ("planner.plan.created", {"plan_id": plan["id"]})]
+
+    def test_invalid_data_is_not_journaled_and_is_reported_every_time(self):
+        plan_id, batch = self.batch()
+        before = len(self.journal())
+        stderr = io.StringIO()
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), redirect_stderr(stderr):
+            emission.emit_all(batch, project_root=self.project, plan_id=plan_id)
+        lines = stderr.getvalue().splitlines()
+        self.assertEqual(len(self.journal()), before + 1)  # only the valid one of the batch
+        self.assertEqual(len(lines), 2, lines)  # not once per process: each refusal is reported
+        for line in lines:
+            self.assertTrue(line.startswith("PLANNER_EVENT_NOT_EMITTED: planner.plan.created: EVENT_DATA_INVALID: "), line)
+
+    def test_the_valid_event_after_an_invalid_one_keeps_the_chain(self):
+        plan_id, batch = self.batch()
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), redirect_stderr(io.StringIO()):
+            emission.emit_all(batch, project_root=self.project, plan_id=plan_id)
+        stored = self.journal()[-1]
+        self.assertEqual(stored.data["plan_id"], plan_id)
+        self.assertIsNone(stored.causationid)
+
+    def test_strict_mode_raises(self):
+        from aicore.ext.errors import ExtError
+        plan_id, batch = self.batch()
+        before = len(self.journal())
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": "1"}):
+            with self.assertRaises(ExtError) as caught:
+                emission.emit_all(batch, project_root=self.project, plan_id=plan_id)
+        self.assertEqual(caught.exception.code, "EVENT_DATA_INVALID")
+        self.assertEqual(len(self.journal()), before)
+
+    def test_a_command_still_succeeds_when_its_event_data_is_refused(self):
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), redirect_stderr(io.StringIO()), \
+                mock.patch.object(emission, "data_schema", side_effect=lambda t: "urn:swissknifeman:planner:event-data:nope:v1"):
+            self.start("P1.1")
+        self.assertEqual(self.load().items["P1.1"]["status"], "in_progress")
 
 
 @needs_aicore

@@ -250,7 +250,8 @@ def executor_runs_checks(directory: Path, state: dict) -> list:
 
 def build(directory: Path, project: Path) -> dict:
     """The observer report of the run in ``directory``."""
-    lines = progress_mod.read_lines(directory)
+    lines, discarded = progress_mod.read_lines_counted(directory)
+    discarded += progress_mod.quarantined(directory)
     try:
         state = records.read(Path(directory) / STATE_FILE, "state") or {}
     except OSError:
@@ -379,6 +380,8 @@ def build(directory: Path, project: Path) -> dict:
         "scout_cache": {"runs": scout_runs, "hits": scout_hits},
         "items": items, "events": counts, "event_problems": problems,
     }
+    if discarded:  # lines of progress.jsonl that were left out (not progress-line documents) or quarantined at write
+        report["discarded_lines"] = discarded
     report["proposals"] = proposals(report)
     return redact_document(report, secrets=env_secrets())
 
@@ -460,6 +463,7 @@ def markdown(report: dict) -> str:
                 if report.get("last_stop") else ""),
              f"- Time: {report['started']} → {report['ended']}; resumes {report['resumes']}",
              f"- Repeated role runs: {len(report['repeats'])}",
+             *([f"- Discarded progress lines: {report['discarded_lines']}"] if report.get("discarded_lines") else []),
              f"- Red checks: {', '.join(f'{k}×{v}' for k, v in report['red_checks'].items()) or 'none'}",
              f"- Review findings: {', '.join(f'{k} {v}' for k, v in report['findings_by_severity'].items()) or ('unavailable' if report.get('incomplete_group_reviews') else 'none')}"
              f"; triage confirmed {report['triage']['confirmed']}, rejected {report['triage']['rejected']}"
@@ -530,7 +534,7 @@ def write_report(directory: Path, project: Path, target: Path) -> dict:
     report = records.check(build(directory, project), "observer-report", target / "observer.json",
                            hint=records.WRITER_HINT)
     target.mkdir(parents=True, exist_ok=True)
-    (target / "observer.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    records.write(target / "observer.json", report, "observer-report")
     (target / "observer.md").write_text(markdown(report), encoding="utf-8")
     return {"json": str(target / "observer.json"), "markdown": str(target / "observer.md")}
 

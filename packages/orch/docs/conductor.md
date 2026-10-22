@@ -405,6 +405,7 @@ The informational limits report long or costly work through `info` lines with a 
 
 | Code | When | What it says |
 | --- | --- | --- |
+| `PROGRESS_LINE_INVALID` | a progress line the conductor was about to write breaks the `conductor/v1` `progress-line` contract (an unknown field, a bad time or run id, an unknown event); never stops the run, and under `SKM_CONTRACTS_STRICT=1` (the test runners) it is a `ValueError` instead | `<event>: <first problem>`; the whole broken line is in `progress.invalid.jsonl` beside `progress.jsonl`; the observer report counts it in `discarded_lines` |
 | `RUN_ORPHANED` | status/runs find a journal still running and a free lease for a run marked `lease: true` | the conductor no longer owns the run; resume stops unfinished role groups before continuing |
 | `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with a saved answer (open with a resolution, or legacy answered); other work may still proceed | `answers of ITEM wait: orch conduct resume --run RUN --retry ITEM`; also a Stop when no piece starts |
 | `STAGE_SLOW` | every `limits.stage_warn_s` (default 2700) of one role run | how long it runs, its last command and the processes of its session (a test run, a build) |
@@ -924,7 +925,10 @@ failure remains `PROVIDER_CONTEXT`, a signal to replan.
 Every event is one progress line (`conductor/v1` `progress-line`): `run.start|resume|end`, `item.start|end`,
 `stage.start|end|skip`, `info`. stderr gets a readable line by default (time, item, step, role and route, what
 happened, verdict, duration, tokens, stop code), the JSON line with `--json-lines`, nothing with `--quiet`. The journal
-`progress.jsonl` always gets the JSON line. Every role is told to print the same kind of line
+`progress.jsonl` always gets the JSON line. A line that breaks the `progress-line` contract is not written as it is: the
+whole line goes to `progress.invalid.jsonl` beside the journal and the journal gets the `info` line `PROGRESS_LINE_INVALID`
+(`<event>: <first problem>`); the run goes on. The readers (`status`, `timeline`, `follow`, the observer) keep only the
+lines that fit the contract and the observer report counts the others in `discarded_lines`. Every role is told to print the same kind of line
 (`[orch] <item> <step> <what>`, no time: a role cannot know it; the time of a line is the receive stamp in the `<step>.jsonl.times` file next to the stream) into its own stream. `orch conduct status` summarises the journal: run status,
 the step running now, the last step and outcome of each piece, the tokens and the agent runs of the current piece
 (`status --json` has them as `agents: [{agent_run_id, role, step, status, tokens}]`).
@@ -1182,7 +1186,7 @@ step carries none. `skills_auto` and `skills_checked` hold the choice of each ro
 | `agent-usage` | `<run>/<item>/agents/<id>/usage.json` | `agents.finish`: `input`, `cached`, `output`, `usage_complete` | `RECORD_INVALID` |
 | `review-verdict` | `<artifacts>/review-verdict.json` | `verdict_file`, tag `"schema": "orch-conductor-review-verdict/v1"` (read outside orch as published) | `RECORD_INVALID` |
 | `provider-gates` | `<state>/orch/provider-gates.json` (machine) | `gates.set_gate`, `gates.clear` under `provider-gates.lock`, tag `"schema": "provider-gates/v1"` | `STATE_CORRUPT`, `RECORD_INVALID` |
-| `observer-report` | `.swissknifeman/orch/reports/<run>/observer.json` | `observer.write_report`, tag `"schema": "orch-conductor-observer/v1"`; checked before it is written, bytes as before | `RECORD_INVALID` (nothing written) |
+| `observer-report` | `.swissknifeman/orch/reports/<run>/observer.json` | `observer.write_report`, tag `"schema": "orch-conductor-observer/v1"`; checked, then written with `records.write` (crash-safe, keys sorted); the optional `discarded_lines` counts the progress lines left out | `RECORD_INVALID` (nothing written) |
 | `prompt-diff` | output of `orch conduct prompt diff --json` | `prompts.diff_manifests` and the command (`run`, `item`, `against`), tag `"schema": "prompt-diff/v1"` | `RECORD_INVALID` (exit 1) |
 | `conformance-report` | rows of `orch conformance` | `conformance.run`: the rows are checked as `{"schema": "orch-conformance/v1", "rows": [...]}` (the tag of the catalogue); `--json` prints the rows alone, as before | `CONFORMANCE_INVALID` |
 

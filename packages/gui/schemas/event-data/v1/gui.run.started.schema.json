@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:event-data:gui-run-started:v1",
+  "title": "gui.run.started",
+  "description": "A run of a command started.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^run-[0-9a-f]{32}$",
+      "description": "Id of the run."
+    },
+    "command": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$",
+      "description": "Command id of the contribution."
+    },
+    "owner": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Module that owns the command."
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "running"
+      ],
+      "description": "State of the run when the event was emitted."
+    }
+  },
+  "required": [
+    "run_id",
+    "command",
+    "owner",
+    "state"
+  ],
+  "additionalProperties": false
+}

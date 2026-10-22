@@ -32,6 +32,7 @@ TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 unset SKM_WORKSPACES SKM_WORKSPACES_ROOT SKM_WORKSPACE
 export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_AICORE_EVENTS__DELIVERY=off
+export SKM_CONTRACTS_STRICT=1  # an event or progress line that breaks its schema fails the test instead of being reported
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UMBRELLA
 
 out="$(python3 -m unittest discover -s tests -t . -p "test_*.py" "$@" 2>&1)" || { echo "$out" >&2; echo "ERROR: tests failed" >&2; exit 1; }

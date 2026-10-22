@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:event-data:gui-config-changed:v1",
+  "title": "gui.config.changed",
+  "description": "A configuration file was changed through the GUI.",
+  "type": "object",
+  "properties": {
+    "module": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Module whose configuration changed."
+    },
+    "layer": {
+      "type": "string",
+      "enum": [
+        "project",
+        "machine"
+      ],
+      "description": "Configuration layer that was written."
+    },
+    "keys": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Dotted configuration key."
+      },
+      "description": "Keys the commit wrote."
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Revision of the file after the write."
+    }
+  },
+  "required": [
+    "module",
+    "layer",
+    "keys",
+    "revision"
+  ],
+  "additionalProperties": false
+}

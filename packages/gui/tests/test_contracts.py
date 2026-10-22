@@ -37,8 +37,9 @@ class TestRegistration(unittest.TestCase):
         self.assertTrue({"contribution", "view-data"} <= {name_of(entry) for entry in LISTED})
 
     def test_every_contract_folder_is_listed_and_every_entry_exists(self):
+        # event-data/v1 is a set of data schemas, one per event type of provides.events (tests/test_event_data.py)
         on_disk = {f"schemas/{path.parent.parent.name}/{path.parent.name}"
-                   for path in contracts.SCHEMAS.glob("*/v*/*.schema.json")}
+                   for path in contracts.SCHEMAS.glob("*/v*/*.schema.json") if path.parent.parent.name != "event-data"}
         self.assertEqual(on_disk, {entry["path"] for entry in LISTED})
 
     def test_entries_follow_the_layout(self):

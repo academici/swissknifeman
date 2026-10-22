@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 from aicore.ext.environment import clean_environment
+from aicore.ext.events import contracts_strict
 from aicore.util.redact import redact_document, redact_text
 
 from . import argv as argv_mod, procinfo
@@ -42,7 +43,7 @@ _ESC2 = re.compile(r"\x1b[ -/]*[0-~]")  # other escapes: ESC, intermediates, a f
 _CONTROL = re.compile(r"[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f\x80-\x9f]")
 _MAX_CARRY = 512
 _VERBS = {"running": "started", "succeeded": "succeeded", "failed": "failed", "cancelled": "cancelled",
-          "timed_out": "timed_out", "lost": "lost", "denied": "denied", "failed_to_start": "failed"}
+          "timed_out": "timed-out", "lost": "lost", "denied": "denied", "failed_to_start": "failed"}
 
 
 def sanitize(text: str) -> str:
@@ -262,8 +263,13 @@ class Broker:
             try:
                 self.emit(f"gui.run.{verb}", data, subject=run["run_id"], project=project_root)
             except Exception as exc:  # noqa: BLE001 - a journal problem never changes the run
+                if getattr(exc, "code", None) == "EVENT_DATA_INVALID":
+                    raise  # only the strict mode (SKM_CONTRACTS_STRICT=1, the test runners) raises it: a test must see it
                 log.warning("gui.run.%s of %s was not journaled: %s", verb, run["run_id"], exc)
 
+        if contracts_strict():
+            emit()  # in the caller, so the strict error reaches it; an executor's result is never read
+            return
         loop = asyncio.get_running_loop()
         loop.run_in_executor(None, emit)
 

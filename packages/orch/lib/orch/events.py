@@ -8,9 +8,11 @@ the exit code or the output of the command; it is reported on stderr as ``ORCH_E
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import Any, Mapping, Optional
 
 SOURCE = "orch"
+DATA_DIR = Path(__file__).resolve().parents[2] / "schemas" / "event-data" / "v1"
 DATA_SCHEMA = "urn:swissknifeman:orch:event-data:{name}:v1"
 EVENT_TYPES = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused",
                "orch.agent.started", "orch.agent.finished", "orch.agent.failed", "orch.agent.questioned",
@@ -33,7 +35,8 @@ def emit(event_type: str, data: Mapping[str, Any], *, subject: str, causationid:
     Returns the id of the journaled event, ``None`` when nothing was journaled; ``correlationid`` is the run id.
 
     ``settings`` is the effective ``orch.settings.Settings``; without it ``events.enabled`` is read from the
-    configuration. Never raises.
+    configuration. Data that breaks the schema of the type is not journaled (``EVENT_DATA_INVALID`` on stderr). Never
+    raises, except ``ExtError('EVENT_DATA_INVALID')`` under ``SKM_CONTRACTS_STRICT=1`` (the test runners).
     """
     try:
         if settings is None:
@@ -42,13 +45,19 @@ def emit(event_type: str, data: Mapping[str, Any], *, subject: str, causationid:
         if not settings.events_enabled:
             return None
         from aicore.ext import events as journal
+        from aicore.ext.errors import ExtError
         from aicore.util.redact import env_secrets, redact_document
         data = redact_document(dict(data), secrets=env_secrets())
+        problem = journal.check_data(data, data_schema(event_type), DATA_DIR)
+        if problem is not None:
+            raise ExtError("EVENT_DATA_INVALID", problem)
         stored = journal.emit(event_type, dict(data), source=SOURCE, subject=subject, project=project,
                               dataschema=data_schema(event_type), causationid=causationid,
                               correlationid=correlationid, config_file=config_file, strict=True)
         return stored.id if stored is not None else None
     except Exception as exc:  # noqa: BLE001 — the command that produced the event must not fail
+        if getattr(exc, "code", None) == "EVENT_DATA_INVALID" and _strict():
+            raise
         reason = getattr(exc, "message", None) or exc
         try:
             print(f"ORCH_EVENT_NOT_EMITTED: {event_type}: {getattr(exc, 'code', None) or type(exc).__name__}: {reason}",
@@ -56,3 +65,8 @@ def emit(event_type: str, data: Mapping[str, Any], *, subject: str, causationid:
         except (OSError, ValueError):  # a closed or broken stderr is not a reason to fail either
             pass
     return None
+
+
+def _strict() -> bool:
+    from aicore.ext import events as journal
+    return journal.contracts_strict()

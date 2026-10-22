@@ -13,6 +13,7 @@ cd "$REPO_ROOT"
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 export HOME="$TEST_HOME"
+export SKM_CONTRACTS_STRICT=1  # an event or progress line that breaks its schema fails the test instead of being reported
 
 # --- aicore locator ---
 # Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.

@@ -48,6 +48,8 @@ TOKEN_TTL_S = 300
 COOKIE = "skm_gui_session"
 GUI_PROTOCOL = {"min": resolve.HOST_PROTOCOL[0], "max": resolve.HOST_PROTOCOL[1]}
 FRONTEND_DIR = contracts.SCHEMAS.parent / "frontend" / "dist"
+EVENT_DATA_DIR = contracts.SCHEMAS / "event-data" / "v1"
+EVENT_DATA_SCHEMA = "urn:swissknifeman:gui:event-data:{name}:v1"
 FEATURES = ("queries", "projects", "runs", "events", "config", "plugins")
 
 
@@ -295,10 +297,21 @@ class BackendState:
         return Path(base) / "runs"
 
     def emit(self, type_: str, data: Mapping[str, Any], *, subject: str, project: str) -> None:
-        """Journal a ``gui.*`` event in the project (blocking; the broker calls it in a worker thread)."""
-        from aicore.ext.events import emit
+        """Journal a ``gui.*`` event in the project (blocking; the broker calls it in a worker thread).
 
-        emit(type_, data, source="gui", subject=subject, project=project, env=dict(self.env))
+        Data that breaks the schema of the type in ``schemas/event-data/v1`` is not journaled: it is reported as
+        ``GUI_EVENT_NOT_EMITTED: <type>: EVENT_DATA_INVALID: <issue>`` on stderr, and under ``SKM_CONTRACTS_STRICT=1``
+        it raises ``ExtError('EVENT_DATA_INVALID')`` instead.
+        """
+        from aicore.ext.events import check_data, emit
+
+        dataschema = EVENT_DATA_SCHEMA.format(name=type_.replace(".", "-"))
+        problem = check_data(dict(data), dataschema, EVENT_DATA_DIR, env=self.env)
+        if problem is not None:
+            print(f"GUI_EVENT_NOT_EMITTED: {type_}: EVENT_DATA_INVALID: {problem}", file=sys.stderr)
+            return
+        emit(type_, data, source="gui", subject=subject, project=project, dataschema=dataschema,
+             env=dict(self.env))
 
     def _config_audit(self, action: str, target: str, decision: str, details: Mapping[str, Any]) -> None:
         with self.db_lock:
@@ -335,8 +348,9 @@ class BackendState:
                     await asyncio.to_thread(self.emit, "gui.run.lost", {"run_id": run_id, "command": run["command"],
                                                                         "owner": run["owner"], "state": "lost"},
                                             subject=run_id, project=root)
-                except Exception:  # noqa: BLE001 - journaling never blocks the start
-                    pass
+                except Exception as exc:  # noqa: BLE001 - journaling never blocks the start
+                    if getattr(exc, "code", None) == "EVENT_DATA_INVALID":
+                        raise  # only the strict mode (SKM_CONTRACTS_STRICT=1, the test runners) raises it
         prune_logs(self.runs_dir, max_age_days=self.settings.retention.log_days,
                    max_total_mb=self.settings.retention.log_total_mb)
         self.tasks = [asyncio.create_task(self._heartbeats()), asyncio.create_task(self._journals()),

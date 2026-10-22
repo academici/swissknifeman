@@ -56,7 +56,8 @@ class TempCase(unittest.TestCase):
         self.env = {"HOME": str(self.home), "SKM_HOME": str(self.root / "skm"), "SKM_WORKSPACES_ROOT": str(self.ws.parent),
                     "SKM_WORKSPACE": "axioma",
                     "SKM_UNITS_PATH": units, "SKM_AICORE_EVENTS__DELIVERY": "off",
-                    "PATH": os.environ.get("PATH", ""), "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
+                    "PATH": os.environ.get("PATH", ""), "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
+                    **{name: os.environ[name] for name in ("SKM_CONTRACTS_STRICT",) if name in os.environ}}
         patcher = mock.patch.dict(os.environ, self.env, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)

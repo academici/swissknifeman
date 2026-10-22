@@ -498,5 +498,6 @@ class ConfigService:
                 self._emit_project(EVENT_TYPE, data, module, project_root)
             elif layer == "machine" and self._emit_machine is not None:
                 self._emit_machine(EVENT_TYPE, data, module)
-        except Exception:  # noqa: BLE001 - journaling never undoes a write
-            pass
+        except Exception as exc:  # noqa: BLE001 - journaling never undoes a write
+            if getattr(exc, "code", None) == "EVENT_DATA_INVALID":
+                raise  # only the strict mode (SKM_CONTRACTS_STRICT=1, the test runners) raises it

@@ -260,7 +260,7 @@ class RunLeaseTests(unittest.TestCase):
 
     def test_prune_skips_resume_owner_and_resume_cannot_resurrect_a_pruned_directory(self):
         self.directory.joinpath("progress.jsonl").write_text(
-            json.dumps({"ts": "2020-01-01T00:00:00Z", "event": "run.end", "outcome": "finished"}) + "\n")
+            json.dumps({"ts": "2020-01-01T00:00:00Z", "run": "cnd-old", "event": "run.end", "outcome": "finished"}) + "\n")
         latest = RunStore(self.project, "cnd-new")
         latest.create({"items": []})
         progress.Progress(latest.run_id, latest.directory, "quiet").emit("run.start")

@@ -34,6 +34,7 @@ export PYTHONPATH="$AICORE_ROOT/lib:$SKM_GUI_ROOT/lib:$BRIDGE_ROOT${PYTHONPATH:+
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 export HOME="$TEST_HOME" SKM_HOME="$TEST_HOME/skm" SKM_WORKSPACES_ROOT="$TEST_HOME/workspaces" SKM_WORKSPACE=axioma SKM_AICORE_EVENTS__DELIVERY=off
+export SKM_CONTRACTS_STRICT=1  # an event or progress line that breaks its schema fails the test instead of being reported
 unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME XDG_CACHE_HOME SKM_UMBRELLA
 
 out="$(python3 -m unittest discover -s tests -t . -p "test_*.py" "$@" 2>&1)" || { echo "$out" >&2; echo "ERROR: tests failed" >&2; exit 1; }

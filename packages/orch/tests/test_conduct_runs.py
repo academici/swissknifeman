@@ -16,7 +16,7 @@ from orch.conductor.infrastructure.lease import RunLease
 
 
 def line(ts: str, event: str, **fields) -> str:
-    return json.dumps({"ts": ts, "event": event, **fields})
+    return json.dumps({"ts": ts, "run": "cnd-fixture", "event": event, **fields})
 
 
 class ConductRunsTests(unittest.TestCase):
@@ -151,7 +151,7 @@ class ConductObservabilityTests(ConductRunsTests):
         self.assertIn("Review findings: unavailable", observer.markdown(report))
 
     def test_owner_requires_a_live_lock_and_legacy_status_stays_running(self):
-        directory = self.make("cnd-lease", [line("t", "run.start")], doc={"lease": True})
+        directory = self.make("cnd-lease", [line("2026-10-16T10:00:00Z", "run.start")], doc={"lease": True})
         with RunLease(directory).acquire("run"):
             owner = RunLease.owner(directory)
             self.assertEqual(owner, runs.listing(self.project)[0]["owner"])
@@ -167,14 +167,14 @@ class ConductObservabilityTests(ConductRunsTests):
                          tuple(json.loads(out)[key] for key in ("status", "reason_code", "lease")))
         row = runs.listing(self.project)[0]
         self.assertEqual(("orphaned", None), (row["status"], row["owner"]))
-        legacy = self.make("cnd-legacy", [line("t", "run.start")])
+        legacy = self.make("cnd-legacy", [line("2026-10-16T10:00:00Z", "run.start")])
         self.assertEqual("running", runs._row(legacy)["status"])
 
     def test_status_additions_use_frozen_files_and_effective_raises(self):
         codes = ("BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED")
-        lines = [line("t", "run.start"), line("t", "item.start", item="W1")]
-        lines += [line("t", "info", reason_code=code, message="old") for code in codes]
-        lines += [line("u", "info", reason_code="BUDGET_OVER", message="new")]
+        lines = [line("2026-10-16T10:00:00Z", "run.start"), line("2026-10-16T10:00:00Z", "item.start", item="W1")]
+        lines += [line("2026-10-16T10:00:00Z", "info", reason_code=code, message="old") for code in codes]
+        lines += [line("2026-10-16T10:00:01Z", "info", reason_code="BUDGET_OVER", message="new")]
         directory = self.make("cnd-status", lines, doc={"limits_run": {
             "run_tokens_hard_max": {"value": 1000, "source": "config:machine"}}})
         folder = directory / "W1"
@@ -212,7 +212,7 @@ class ConductObservabilityTests(ConductRunsTests):
                          json.loads(out)["limits"]["run_tokens_hard_max"])
 
     def test_status_without_new_files_has_all_additive_keys(self):
-        self.make("cnd-empty", [line("t", "run.start"), line("t", "item.start", item="W1")])
+        self.make("cnd-empty", [line("2026-10-16T10:00:00Z", "run.start"), line("2026-10-16T10:00:00Z", "item.start", item="W1")])
         code, out, err = self.conduct("status", "--json")
         self.assertEqual(0, code, err)
         doc = json.loads(out)
@@ -221,7 +221,7 @@ class ConductObservabilityTests(ConductRunsTests):
 
     def test_json_redacts_before_shortening_short_and_long_strings(self):
         token = "sk-" + "A" * 40
-        directory = self.make("cnd-secret", [line("t", "run.start"), line("t", "item.start", item="W1")])
+        directory = self.make("cnd-secret", [line("2026-10-16T10:00:00Z", "run.start"), line("2026-10-16T10:00:00Z", "item.start", item="W1")])
         folder = directory / "W1"
         folder.mkdir()
         (folder / "routes.json").write_text(json.dumps({"executor": {"provider": "codex", "argv": ["codex"], "model": token}}))

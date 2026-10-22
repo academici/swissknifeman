@@ -71,7 +71,7 @@ class DurableStateTests(unittest.TestCase):
         run = engine.Conductor(project=self.root, settings=settings.load(project=self.root), mode="quiet")
         state = {"items": {"W1": {"steps": {}}}}
         run._open("cnd-step", {"items": ["W1"]}, state)
-        item = Item("W1", "work-run", state["items"]["W1"], run.directory / "W1", {"attempt_id": "attempt-1"})
+        item = Item("W1", "work-run", state["items"]["W1"], run.directory / "W1", {"attempt_id": "att-1"})
         return run, item
 
     def test_started_is_durable_before_event_and_work_and_done_keeps_its_old_shape(self):
@@ -90,7 +90,7 @@ class DurableStateTests(unittest.TestCase):
         with mock.patch.object(checks, "head", return_value="base"), mock.patch.object(run.progress, "emit", started):
             run._step(item, "executor.1", work, role="executor", route="fake/model")
         self.assertEqual(seen[0], {"status": "started", "started_at": seen[0]["started_at"], "role": "executor",
-                                   "route": "fake/model", "base_head": "base", "attempt": "attempt-1", "dirty_before": None})
+                                   "route": "fake/model", "base_head": "base", "attempt": "att-1", "dirty_before": None})
         row = item.state["steps"]["executor.1"]
         self.assertEqual(set(row), {"status", "result", "verdict", "role", "route", "duration_s", "ended"})
         self.assertEqual(row["status"], "done")

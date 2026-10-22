@@ -191,6 +191,57 @@ class CommandTests(TempCase):
         self.assertIn("WORKSPACE_EVENT_NOT_EMITTED", err)
 
 
+class EventDataTests(TempCase):
+    """The data of an event is checked against ``schemas/event-data/v1`` before it is journaled."""
+
+    def journal(self):
+        path = self.root / "skm" / "state" / "events" / "events.jsonl"
+        return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+    def emit(self, data, event_type="workspace.project.attached"):
+        from workspace import events
+        return events.emit(event_type, data, subject="axioma")
+
+    def test_valid_data_is_journaled_with_its_dataschema(self):
+        self.assertIsNotNone(self.emit({"project_id": "alpha", "created": True}))
+        [line] = self.journal()
+        self.assertEqual(json.loads(line)["dataschema"], "urn:swissknifeman:workspace:event-data:workspace-project-attached:v1")
+
+    def test_invalid_data_is_not_journaled_and_is_reported(self):
+        import io
+        from contextlib import redirect_stderr
+        err = io.StringIO()
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), redirect_stderr(err):
+            self.assertIsNone(self.emit({"project_id": "alpha", "created": "yes", "extra": 1}))
+        self.assertEqual(self.journal(), [])
+        self.assertTrue(err.getvalue().startswith("WORKSPACE_EVENT_NOT_EMITTED: workspace.project.attached: "
+                                                  "EVENT_DATA_INVALID: "), err.getvalue())
+
+    def test_strict_mode_raises(self):
+        from aicore.ext.errors import ExtError
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": "1"}):
+            with self.assertRaises(ExtError) as caught:
+                self.emit({"project_id": "alpha"})
+        self.assertEqual(caught.exception.code, "EVENT_DATA_INVALID")
+        self.assertEqual(self.journal(), [])
+
+    def test_strict_mode_is_read_from_the_env_argument_too(self):
+        from aicore.ext.errors import ExtError
+        from workspace import events
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}):
+            with self.assertRaises(ExtError):
+                events.emit("workspace.project.attached", {"project_id": "alpha"}, subject="axioma",
+                            env={**os.environ, "SKM_CONTRACTS_STRICT": "1"})
+
+    def test_the_command_still_succeeds_when_its_event_data_is_refused(self):
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), \
+                mock.patch("workspace.events.data_schema", return_value="urn:swissknifeman:workspace:event-data:x:v1"):
+            code, out, err = self.run_cli("init", "--code", "axioma", "--json")
+        self.assertEqual(code, 0)
+        self.assertIn("EVENT_DATA_INVALID", err)
+        self.assertEqual(json.loads(out)["created"], True)
+
+
 class ModuleFilesTests(unittest.TestCase):
     def test_the_example_matches_the_schema(self):
         from aicore.config.example import render_unit as render

@@ -70,7 +70,7 @@ class UnitTests(unittest.TestCase):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {"SKM_TEST_API_TOKEN": KNOWN}):
             line = Progress("cnd-1", Path(tmp), mode="quiet").emit(
-                "info", message=f"failed {TOKEN}", detail=f"exit 1: {KNOWN}", item="W1", tokens={"input": 1, "output": 2})
+                "info", message=f"failed {TOKEN}", verdict=f"exit 1: {KNOWN}", item="W1", tokens={"input": 1, "output": 2})
             text = (Path(tmp) / "progress.jsonl").read_text(encoding="utf-8")
         self.assertNotIn(KNOWN, text + json.dumps(line))
         self.assertNotIn(TOKEN, text + json.dumps(line))
@@ -99,7 +99,7 @@ class UnitTests(unittest.TestCase):
             with mock.patch.dict(os.environ, env):
                 base = settings.defaults()
                 enabled = settings.Settings(**{**base.__dict__, "events_enabled": True})
-                orch_events.emit("orch.work.blocked", {"run_id": "r1", "work_id": f"w-{KNOWN}", "code": "X"},
+                orch_events.emit("orch.work.blocked", {"run_id": "r1", "work_id": "w-1", "code": f"X-{KNOWN}"},
                                  subject="r1/W1", settings=enabled)
                 stored, _ = journal.read_events()
         self.assertEqual(len(stored), 1)

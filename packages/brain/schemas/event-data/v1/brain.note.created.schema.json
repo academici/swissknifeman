@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:brain:event-data:brain-note-created:v1",
+  "title": "brain.note.created",
+  "description": "A vault note was written for a closed plan.",
+  "type": "object",
+  "properties": {
+    "note": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path of the note, relative to the vault."
+    },
+    "plan_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Id of the plan the note is about."
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Id of the planner.plan.closed event the note answers."
+    }
+  },
+  "required": [
+    "note",
+    "plan_id",
+    "event_id"
+  ],
+  "additionalProperties": false
+}

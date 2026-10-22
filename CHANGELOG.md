@@ -14,10 +14,18 @@
 - orch: `orch conduct answer` checks an answer against the question's `answer_schema` (`--text` is read as JSON unless the schema asks for a string): a mismatch is `ANSWER_INVALID` and nothing is written; a schema outside the closed profile is not applied, the answer is kept with `answer_schema_ignored` and `ANSWER_SCHEMA_IGNORED` is printed (and emitted when `resume --retry` hands the answer over).
 - aicore: `load_contract_set` resolves a `$ref` from one contract set of a module to a sibling set of the same module (`urn:swissknifeman:<module>:<contract>:<kind>:v<N>` -> `schemas/<contract>/v<N>`).
 
+- aicore, orch, planner, workspace, brain, gui: the `data` of an event is checked against the schema its `dataschema` names before the event is journaled (`aicore.ext.events.validate_data`, `check_data`). Data that breaks it is not written; the emitter prints `<MODULE>_EVENT_NOT_EMITTED: <type>: EVENT_DATA_INVALID: <first problem>` and the exit code of the command does not change; with `SKM_CONTRACTS_STRICT=1` (all `scripts/test.sh`) it raises `ExtError('EVENT_DATA_INVALID')`. brain publishes `schemas/event-data/v1/brain.note.created` and gui declares and publishes its journal events (`gui.run.started|succeeded|failed|cancelled|timed-out|lost|denied`, `gui.config.changed`); the broker used to emit `gui.run.timed_out`, which is not a valid event type, so that event was never journaled. `scripts/test-event-contracts.py` now fails when a module emits a type that is not in its `provides.events` or has no schema.
+- orch: a progress line that breaks the `progress-line` contract is written to `progress.invalid.jsonl` and replaced in `progress.jsonl` by an `info` line `PROGRESS_LINE_INVALID`; the readers of the journal keep only valid lines, and `observer.json` has an optional `discarded_lines` count (also shown in `observer.md`). The observer report is written with `records.write` (crash-safe, mode `0600`, keys sorted).
+
 ### Changed
 
 - orch: `options.json` of a piece keeps `skills` in the run-options form `[{role, names}]`, so its `options` is a run-options document (it was the merged role map; old files are read as before).
 - aicore, orch: the flock locks (orch run lease, journal and gates; aicore bindings, event journal, delivery, config layers, project migrate, provider artifacts), the RFC 3339 parsers and the hand-made temporary-file writes of orch (`journal.write_doc`, agent records, which now also `fsync`) use the shared primitives; each lock keeps its own timeout, poll interval and reason code. The locks now refuse a symbolic link as lock file, and the observer and the launch-plan freshness read a time without a zone as UTC instead of local time. `planner.plan` keeps its own copies (it runs without aicore); workspace, brain, gui, analyst, maind and skiller are migrated later; `aicore.usage` stays stdlib-only (it is copied into a hook).
+
+### Fixed
+
+- orch: `orch.run.started` of a claim that names no scenario (a run of a file input) now carries the default profile as `scenario`, as its schema requires; it used to be journaled without it.
+- gui: the run event of a timed-out run is `gui.run.timed-out` (was `gui.run.timed_out`, which is not a valid event type, so it was never journaled).
 
 ## [0.33.0] - 2026-10-22
 

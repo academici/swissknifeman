@@ -44,6 +44,7 @@ when the fixed deviation is carried as accepted.
 - Emission is best-effort. With `[orch.events] enabled = false` nothing is written. Any failure of the event journal
   prints one line `ORCH_EVENT_NOT_EMITTED: <type>: <reason>` on stderr; the exit code and the output of the command
   do not change.
+- `data` is checked against `schemas/event-data/v1/<type>.schema.json` (the `dataschema` of the event) before it is journaled. Data that breaks it is not written: stderr gets `ORCH_EVENT_NOT_EMITTED: <type>: EVENT_DATA_INVALID: <first problem>`, and the exit code and the output of the command do not change. Under `SKM_CONTRACTS_STRICT=1` (set by every `scripts/test.sh`) the same case raises `ExtError('EVENT_DATA_INVALID')`, so a test sees it. The check runs on the redacted data, the form that would be written.
 - Pure operations (`prepare --dry-run`, `policy test`) never emit.
 - `data` passes `aicore.util.redact.redact_document` first: the values of environment variables named like api key, token, secret or password and the explicit token formats become `‹redacted›`. The same masking covers the progress lines, the `detail` of a failed role (the stderr tail) and the observer report; the raw streams under `streams/` stay as the role printed them and live in the ignored runtime folder (`orch doctor` warns when `.swissknifeman/state/` is not ignored).
 - `data` never carries a secret: aicore refuses a `Secret` value (`EVENT_SECRET`) and the event is not journaled.
@@ -54,3 +55,6 @@ when the fixed deviation is carried as accepted.
 `scripts/test-event-contracts.py` checks every valid fixture against the schema of its producer; `tests/test_events.py`
 also requires every invalid fixture to break it. The test runners set `SKM_AICORE_EVENTS__DELIVERY=off`, so no test
 starts a subscriber.
+
+The same script checks the emitters: every event type a module emits (a literal, a module constant or `gui.run.{verb}`
+in its sources) must be in the `provides.events` of that module and have a data schema.

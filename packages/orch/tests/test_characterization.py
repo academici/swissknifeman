@@ -444,6 +444,7 @@ COVERAGE = {
     "POLICY_STAGE_SKIPPED": "test:test_policy_stages.py",
     "CONCURRENT_RUN": f"test:{T}", "RESULT_INCOMPLETE": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
     "ANSWER_SCHEMA_IGNORED": "test:test_records_contract.py",
+    "PROGRESS_LINE_INVALID": "test:test_progress_lines.py",
 }
 
 

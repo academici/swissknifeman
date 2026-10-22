@@ -9,6 +9,8 @@ import unittest
 from unittest import mock
 
 from aicore.ext import build_event, read_events
+from aicore.ext import events as events_data
+from aicore.ext.errors import ExtError
 from aicore.state import state_dir
 
 from brain import catalog, errors, events, notes, settings
@@ -542,6 +544,33 @@ class TestAnnouncement(NotesCase):
         self.assertEqual("0f1e2d3c4b5a69788796a5b4c3d2e1f0", event.causationid)
         self.assertEqual({"note": result.note, "plan_id": "2026.01.15-DEMO-PLAN",
                           "event_id": "0f1e2d3c4b5a69788796a5b4c3d2e1f0"}, event.data)
+        self.assertEqual(notes.CREATED_SCHEMA, event.dataschema)
+        self.assertEqual([], events_data.validate_data(event.data, notes.CREATED_SCHEMA, notes.DATA_DIR))
+
+    def announce(self, note, strict):
+        plan, _ = events.parse_plan_closed(load_event("valid-full"))
+        warnings = []
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": strict}):
+            notes._announce(plan, note, self.project, self.env, self.home, warnings)
+        return warnings
+
+    def test_data_that_breaks_its_schema_is_not_emitted_and_is_a_warning(self):
+        warnings = self.announce("", "")
+        self.assertEqual([], self.created_events())
+        self.assertEqual(1, len(warnings), warnings)
+        self.assertTrue(warnings[0].startswith("BRAIN_EVENT_NOT_EMITTED: brain.note.created: EVENT_DATA_INVALID: "),
+                        warnings)
+
+    def test_strict_mode_raises_for_data_that_breaks_its_schema(self):
+        with self.assertRaises(ExtError) as caught:
+            self.announce("", "1")
+        self.assertEqual("EVENT_DATA_INVALID", caught.exception.code)
+        self.assertEqual([], self.created_events())
+
+    def test_strict_mode_keeps_a_failing_journal_a_warning(self):
+        with mock.patch.object(notes, "_emit", side_effect=RuntimeError("journal gone")):
+            warnings = self.announce("Projects/demo/note.md", "1")
+        self.assertEqual(["brain.note.created was not emitted: journal gone"], warnings)
 
     def test_nothing_is_emitted_for_a_repeat_a_skip_or_a_dry_run(self):
         self.handle(load_event("valid-full"), root=self.project)

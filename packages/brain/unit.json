@@ -12,6 +12,9 @@
   "provides": {
     "cli": ["bin/brain"],
     "config": "configs/config.schema.json",
+    "contracts": [
+      {"id": "urn:swissknifeman:brain:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha", "direction": "output"}
+    ],
     "plugins": [{"name": "brain", "manifest": ".claude-plugin/plugin.json"}],
     "events": ["brain.note.created"],
     "doctor": [

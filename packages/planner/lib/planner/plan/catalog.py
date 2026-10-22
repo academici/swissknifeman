@@ -92,7 +92,7 @@ VERB_ERRORS = {
     "add-phase": _PLAN | _WRITE | {"FIELD_OWNED"},
     "add-item": _PLAN | _WRITE | {"REF_UNKNOWN", "FIELD_OWNED", "PHASE_DETAILED", "PLAN_INVALID"},
     "add-decision": _PLAN | _WRITE | {"FIELD_OWNED"},
-    "batches": _PLAN | _WRITE | {"REF_UNKNOWN"},
+    "batches": _PLAN | _WRITE | {"REF_UNKNOWN", "PLAN_INVALID"},
     "check": _PLAN | {"VERB_FAILED"},
     "render": _PLAN | {"VERB_FAILED"},
     "next": _PLAN | {"LIMIT_INVALID"},

@@ -122,6 +122,7 @@ class ErrorRegistryTests(unittest.TestCase):
         expected = {
             "start": {"PLAN_INVALID", "ROUTE_MODEL_UNKNOWN"},
             "add-item": {"PHASE_DETAILED", "PLAN_INVALID"},
+            "batches": {"PLAN_INVALID"},
             "finish": {"ROUTE_MODEL_UNKNOWN"},
             "unit": {"ROUTE_MODEL_UNKNOWN"},
         }

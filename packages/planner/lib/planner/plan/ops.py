@@ -356,12 +356,13 @@ def push(plan, ref: str, field: str, value: Any, *, expected_revision: str | Non
 
 
 def set_batches(plan, phase: str, batches: list) -> None:
-    """Replace ``phase.batches``; membership consistency is reported by ``check``."""
+    """Replace ``phase.batches`` without introducing errors in a detailed phase."""
     with _mutation(plan) as p:
         if phase not in p.phases:
             raise PlanError("REF_UNKNOWN", f"unknown phase {phase!r}")
         doc = copy.deepcopy(p.phases[phase])
         doc["batches"] = copy.deepcopy(batches)
+        _refuse_new_errors(p, "phase", phase, doc)
         _commit(p, [("phase", phase, doc)])
 
 

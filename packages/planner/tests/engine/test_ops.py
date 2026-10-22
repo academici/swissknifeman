@@ -202,6 +202,20 @@ class AddTests(DemoCase):
 
 
 class DetailedPhaseTests(DemoCase):
+    def test_batches_refuse_new_detailed_errors_but_allow_repair(self):
+        bad = [{"id": name, "items": ["P1.2"], "mode": "recommended"} for name in ("B1", "B2")]
+        error = self.assertRefused("PLAN_INVALID", ops.set_batches, self.plan, "P1", bad)
+        self.assertTrue(any(issue.code == "batch_coverage" for issue in error.issues))
+        demo.rewrite(self.root, "phases/P1/phase.json", lambda doc: doc.update(batches=bad))
+        ops.set_batches(self.plan, "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "recommended"}])
+        self.assertEqual(errors(store.load_plan(self.root)), [])
+
+    def test_batches_remain_editable_while_the_phase_is_a_skeleton(self):
+        demo.rewrite(self.root, "phases/P1/phase.json", lambda doc: doc.update(design="skeleton"))
+        bad = [{"id": name, "items": ["P1.2"], "mode": "recommended"} for name in ("B1", "B2")]
+        ops.set_batches(self.plan, "P1", bad)
+        self.assertTrue(any(issue.code == "batch_coverage" for issue in errors(store.load_plan(self.root))))
+
     def test_add_placeholder_to_detailed_phase_refuses_atomically(self):
         error = self.assertRefused("PHASE_DETAILED", ops.add_item, self.plan, "P1", "Placeholder")
         self.assertIn("--file", error.message)

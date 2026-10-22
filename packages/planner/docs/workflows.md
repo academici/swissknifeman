@@ -45,7 +45,7 @@ Errors owned by other phases and warnings do not block it. There is no bypass fl
 and retry. `design-done` also recognises errors addressed by item or unit ID, including dependency cycles and
 overlapping unit files, and refuses an incomplete phase with `DESIGN_INCOMPLETE`.
 
-Edits to an item, unit or phase that is already detailed refuse new errors of that phase with `PLAN_INVALID`;
+Edits to an item, unit or phase (including `batches`) that is already detailed refuse new errors of that phase with `PLAN_INVALID`;
 pre-existing errors remain repairable. Adding a placeholder to a detailed phase refuses with `PHASE_DETAILED`.
 Supply a complete item with `add-item --file` (including acceptance validation, scope and deliverables).
 

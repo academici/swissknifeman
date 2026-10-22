@@ -30,6 +30,7 @@
 
 ### Fixed
 
+- aicore: `timefmt.parse_rfc3339` no longer reads a date without a time (`2024-01-01Z`, `2024-01-01`) as a moment: it is `None`, as for any text that is not an RFC 3339 date-time.
 - orch: a check without prior evidence is a first run, not a reuse miss, also when its inputs cannot be established (a standalone copy): `reuse_miss` is no longer set on it. With a prior evidence file the row names the differing components and `inputs-unknown` in place of the fingerprint (was the opaque `unknown inputs; nothing reused`).
 - orch: `orch.run.started` of a claim that names no scenario (a run of a file input) now carries the default profile as `scenario`, as its schema requires; it used to be journaled without it.
 - gui: the run event of a timed-out run is `gui.run.timed-out` (was `gui.run.timed_out`, which is not a valid event type, so it was never journaled).

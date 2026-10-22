@@ -31,6 +31,9 @@ def utc_stamp(moment: Union[datetime, int, float, None] = None) -> str:
     return moment.astimezone(timezone.utc).strftime(STAMP_FORMAT)
 
 
+_DATE_TIME = re.compile(r"^\d{4}-\d{2}-\d{2}[Tt ]\d{2}:\d{2}")
+
+
 def parse_rfc3339(text: object, *, convert: bool = True) -> Optional[datetime]:
     """An aware datetime from an RFC 3339 / ISO 8601 text (``Z`` or an offset, any number of fraction digits,
     truncated to microseconds), in UTC; a naive text is UTC. ``None`` when ``text`` is not a string or does not parse.
@@ -38,7 +41,7 @@ def parse_rfc3339(text: object, *, convert: bool = True) -> Optional[datetime]:
     if not isinstance(text, str):
         return None
     value = text.strip()
-    if not value:
+    if not _DATE_TIME.match(value):  # RFC 3339 date-time: a date alone ("2024-01-01Z") is not a moment
         return None
     value = _FRACTION.sub(lambda match: "." + (match.group(1) + "000000")[:6], value, count=1)
     if value.endswith(("Z", "z")):

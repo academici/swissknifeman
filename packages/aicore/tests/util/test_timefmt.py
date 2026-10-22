@@ -10,6 +10,12 @@ EPOCH_2024 = 1704110400.0  # 2024-01-01T12:00:00Z
 
 
 class TimefmtTests(unittest.TestCase):
+    def test_a_date_without_a_time_is_not_a_moment(self):
+        for text in ("2024-01-01Z", "2024-01-01", "2024-01-01+00:00"):
+            with self.subTest(text=text):
+                self.assertIsNone(timefmt.parse_rfc3339(text))
+        self.assertIsNotNone(timefmt.parse_rfc3339("2024-01-01 12:00:00Z"))
+
     def test_a_time_without_a_utc_moment_is_unreadable_not_a_crash(self):
         for text in ("0001-01-01T00:00:00+01:00", "9999-12-31T23:59:59-01:00"):
             with self.subTest(text=text):

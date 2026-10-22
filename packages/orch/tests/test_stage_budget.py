@@ -104,6 +104,29 @@ class StageSlotTests(unittest.TestCase):
     def add(self, usage, attempt, complete=True):
         roles.add_tokens(self.owner, self.item, usage, usage_complete=complete, attempt=attempt)
 
+    def test_cold_receipt_recovery_and_slot_publication_hold_the_store_lock(self):
+        from tests.test_run_store_lock import CountingLock
+        lock = self.owner.store.lock = CountingLock()
+        case = self
+
+        class Guarded(dict):
+            def values(self):
+                case.assertTrue(lock.owned(), "cold receipt read outside I2")
+                return super().values()
+
+            def __setitem__(self, key, value):
+                case.assertTrue(lock.owned(), "stage publication outside I2")
+                super().__setitem__(key, value)
+
+        self.item.state["usage_by_agent"] = Guarded({
+            "agent-1": {"attempt-1": {"step": "executor.1", "input": 5, "output": 2}}})
+        self.item.state = Guarded(self.item.state)
+        self.owner._stage_slots = Guarded()
+        budget.bind_stage(self.owner, self.item, "executor.1")
+        self.assertEqual(self.item.state["stage_usage"]["executor.1"], {"input": 5, "cached": 0, "output": 2})
+        self.assertIs(self.owner._stage_slots[(self.item.ref, "executor.1")],
+                      self.item.state["stage_usage"]["executor.1"])
+
     def test_rebind_keeps_retry_repair_and_fallback_on_the_same_stage(self):
         budget.bind_stage(self.owner, self.item, "executor.1")
         self.add({"input": 5, "output": 0}, "streams/executor.1.jsonl")

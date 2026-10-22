@@ -108,6 +108,11 @@ def bind_stage(self, item: Item, key: str):
     Re-entering the step (a resume, a retry that comes back through ``step``) keeps that usage. A new key gets
     its own slot, starting at the known amount or zero. Returns the previous binding so a nested call can restore it.
     """
+    with self.store.mutating():
+        return _bind_stage_locked(self, item, key)
+
+
+def _bind_stage_locked(self, item: Item, key: str):
     local = _thread_local(self)
     previous = (getattr(local, "stage_key", None), getattr(local, "stage_item", None),
                 getattr(local, "stage_tokens", None))

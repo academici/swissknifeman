@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- orch: восстановление расхода этапа из квитанций и публикация его счётчика выполняются под общей блокировкой RunStore; параллельная запись usage больше не меняет словарь во время чтения.
+
 ### Security
 
 - orch/orch-skiller: имена skills больше не допускают traversal; файлы skills, selection.json и носители правил проверяются по корням, symlink, размеру и UTF-8. Sidecar проверяется по skill-selection/v1; auto-skill сверяется с новым `skill_md_sha256` ответа bridge (каталожный `digest` сохраняется отдельно). Небезопасный файл исключается с `SKILL_PATH_INVALID`/`RULES_PATH_INVALID`; work-source options больше не отключают и не повышают `limits.skill_tokens_max`.

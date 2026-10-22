@@ -15,7 +15,7 @@ from . import context as _context
 from . import edges as _edges
 from . import schema as _schema
 from . import settings, store
-from .model import ITEM_ID, TERMINAL, parse_ref
+from .model import ITEM_ID, PHASE_ID, TERMINAL, parse_ref
 
 _UNIT_ID = re.compile(r"^U[0-9]+$")
 _DRIVE = re.compile(r"^[A-Za-z]:[\\/]")
@@ -115,6 +115,19 @@ class Issue(NamedTuple):
     code: str
     where: str  # file, optionally followed by a JSON pointer
     message: str
+
+
+def owner_phase(plan: store.Plan, issue: Issue) -> str | None:
+    """Phase owning a file- or id-addressed issue; ``None`` means a plan-level issue."""
+    parts = issue.where.split("/")
+    if len(parts) > 1 and parts[0] == "phases" and PHASE_ID.fullmatch(parts[1]):
+        return parts[1]
+    target = parts[0]
+    if target in plan.items and ITEM_ID.fullmatch(target):
+        return target.split(".", 1)[0]
+    if PHASE_ID.fullmatch(target):
+        return target
+    return None
 
 
 def check(plan: store.Plan) -> list[Issue]:

@@ -379,7 +379,8 @@ def cmd_start(args) -> int:
         actor["session"] = session
     plan_dir = _plan_dir(args)
     result = lifecycle.start(plan_dir, args.items, actor, grants=args.grant, scout=args.scout, registrar=args.registrar,
-                             take_over=args.take_over, in_progress_deps=args.in_progress_deps)
+                             take_over=args.take_over, in_progress_deps=args.in_progress_deps,
+                             strict_route=args.strict_route)
     if args.json:
         _print_json({"items": list(result.items), "phase": result.phase, "batch": result.batch, "route": result.route,
                      "resumed": list(result.resumed), "packs": [str(path) for path in result.packs],
@@ -866,6 +867,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="ask the provider's weak model for a context map (default: plan.settings.scout)")
     p.add_argument("--take-over", action="store_true",
                    help="take an item that another session has in progress (default: refused with ITEM_OWNED)")
+    p.add_argument("--strict-route", action="store_true", help="refuse a model absent from the routing pool")
     p.add_argument("--in-progress-deps", action="store_true",
                    help="a dependency that is in progress counts as met: the items of one batch started one after another "
                         "(default: only done items and the items of this call count)")

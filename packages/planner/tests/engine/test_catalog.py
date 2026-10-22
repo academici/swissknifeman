@@ -118,6 +118,23 @@ class ParserCatalogTests(unittest.TestCase):
 
 
 class ErrorRegistryTests(unittest.TestCase):
+    def test_start_gate_refusals_are_published_for_each_affected_verb(self):
+        expected = {
+            "start": {"PLAN_INVALID", "ROUTE_MODEL_UNKNOWN"},
+            "add-item": {"PHASE_DETAILED", "PLAN_INVALID"},
+            "finish": {"ROUTE_MODEL_UNKNOWN"},
+            "unit": {"ROUTE_MODEL_UNKNOWN"},
+        }
+        code, out, err = test_envelope.run("schema", "--verbs")
+        self.assertEqual(code, 0, err or out)
+        result = json.loads(out)["data"]
+        self.assertEqual(schema.validate(result, "read-catalog"), [])
+        rows = {row["name"]: row for row in result["verbs"]}
+        for verb, codes in expected.items():
+            with self.subTest(verb=verb):
+                self.assertTrue(codes <= catalog.VERB_ERRORS[verb], codes - catalog.VERB_ERRORS[verb])
+                self.assertTrue(codes <= set(rows[verb]["errors"]), codes - set(rows[verb]["errors"]))
+
     def test_registered_codes_match_plan_error_literals_and_cli_refusals(self):
         observed = set()
         for path in [*PLAN_LIB.glob("*.py"), *PLAN_LIB.parent.joinpath("integration").glob("*.py")]:

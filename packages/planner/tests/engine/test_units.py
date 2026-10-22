@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
@@ -14,7 +15,7 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from planner.plan import check, cli, context, lifecycle, ops, store, units  # noqa: E402
+from planner.plan import check, cli, context, lifecycle, ops, settings, store, units  # noqa: E402
 from planner.plan.model import PlanError  # noqa: E402
 
 OPUS = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
@@ -116,6 +117,22 @@ class AddTests(UnitCase):
 
 
 class DispatchTests(UnitCase):
+    def test_unknown_worker_warns_in_delegate_event(self):
+        self.add("Errors", U1)
+        path = units.dispatch(self.root, "P1.1", "U1", "claude-code/mystery-model/high")
+        self.assertTrue(path.is_file())
+        self.assertEqual(self.unit()["status"], "dispatched")
+        self.assertEqual(self.delegate_events()[0]["data"]["route"], "ROUTE_MODEL_UNKNOWN")
+        self.assertEqual(self.delegate_events()[0]["data"]["class"], "unknown")
+
+    def test_unknown_worker_refused_by_configuration_without_writing(self):
+        self.add("Errors", U1)
+        config = settings.for_plan(self.load())
+        strict = replace(config, values={**config.values, "routing.unknown_model": "refuse"})
+        with mock.patch.object(settings, "for_plan", return_value=strict):
+            self.refused("ROUTE_MODEL_UNKNOWN", units.dispatch, "P1.1", "U1", "claude-code/mystery-model/high")
+            self.assertTrue(units.dispatch(self.root, "P1.1", "U1", HAIKU).is_file())
+
     def test_dispatch_writes_the_brief_and_logs_the_event(self):
         self.add("Errors", U1)
         path = units.dispatch(self.root, "P1.1", "U1", HAIKU)

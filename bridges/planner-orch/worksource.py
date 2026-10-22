@@ -310,7 +310,7 @@ def op_claim(fields: dict) -> dict:
             if override:
                 answer["actor_override"] = override
             plan_json(["start", plan, ref, "--actor", actor_text(actor), "--session", run_id,
-                       "--no-scout", "--json", *(["--in-progress-deps"] if fields.get("batch") else [])],
+                       "--no-scout", "--strict-route", "--json", *(["--in-progress-deps"] if fields.get("batch") else [])],
                       plans_root, code="START_REFUSED")
     except Blocked as blocked:
         answer.update(status="blocked", reason_code=blocked.code, message=blocked.message)
@@ -432,7 +432,7 @@ def _supersede_blocked_attempt(fields: dict) -> None:
                   fields.get("plans_root"), code="REOPEN_REFUSED")
         # the reopened piece is held by its run again (the owner fence of the registration), as the claim made it
         plan_json(["start", fields["plan"], fields["ref"], "--actor", actor_text(fields["executed_by"]), "--session",
-                   fields["run_id"], "--no-scout", "--in-progress-deps", "--json"], fields.get("plans_root"),
+                   fields["run_id"], "--no-scout", "--strict-route", "--in-progress-deps", "--json"], fields.get("plans_root"),
                   code="START_REFUSED")
 
 

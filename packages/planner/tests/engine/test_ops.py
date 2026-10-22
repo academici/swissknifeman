@@ -51,6 +51,9 @@ class DemoCase(unittest.TestCase):
         return {str(p.relative_to(self.root)): p.read_bytes() for p in sorted(self.root.rglob("*"))
                 if p.is_file() and p.name != store.LOCK}
 
+    def complete_item_data(self):
+        return {k: v for k, v in self.plan.items["P1.2"].items() if k not in ops.OWNED_FIELDS["item"]}
+
     def assertRefused(self, code, call, *args, **kwargs):
         before = self.snapshot()
         with self.assertRaises(PlanError) as ctx:
@@ -135,6 +138,11 @@ class NewPlanTests(RootCase):
 
 
 class AddTests(DemoCase):
+    def setUp(self):
+        super().setUp()
+        # These tests exercise drafting; adding placeholders to a detailed phase has its own refusal tests.
+        demo.rewrite(self.root, "phases/P1/phase.json", lambda d: d.update(design="skeleton"))
+
     def test_add_phase_numbers_and_registers_the_phase(self):
         self.assertEqual(ops.add_phase(self.plan, "Second"), "P2")
         self.assertEqual(ops.add_phase(self.plan, "Third", data={"goal": "Third goal"}), "P3")
@@ -191,6 +199,53 @@ class AddTests(DemoCase):
         self.assertEqual((doc["status"], doc["actor"]["provider"]), ("accepted", "codex"))
         self.assertNotIn("question", doc)
         self.assertEqual(errors(store.load_plan(self.root)), [])
+
+
+class DetailedPhaseTests(DemoCase):
+    def test_add_placeholder_to_detailed_phase_refuses_atomically(self):
+        error = self.assertRefused("PHASE_DETAILED", ops.add_item, self.plan, "P1", "Placeholder")
+        self.assertIn("--file", error.message)
+        self.assertTrue(any(i.code == "incomplete" for i in error.issues))
+
+    def test_add_complete_item_to_detailed_phase_from_file(self):
+        from planner.plan import cli
+        data = self.complete_item_data()
+        source = self.root.parent / "item.json"
+        source.write_text(json.dumps(data), encoding="utf-8")
+        with mock.patch("sys.stdout"):
+            code = cli.main(["add-item", str(self.root), "P1", "--title", "Complete", "--file", str(source)])
+        self.assertEqual(code, 0)
+        plan = store.load_plan(self.root)
+        self.assertIn("P1.3", plan.items)
+        self.assertEqual(errors(plan), [])
+
+    def test_set_cannot_remove_detailed_item_obligations(self):
+        for patch in ({"validation": []}, {"validation": None}, {"deliverables": []},
+                      {"deliverables": None}, {"scope": {"include": []}}):
+            with self.subTest(patch=patch):
+                error = self.assertRefused("PLAN_INVALID", ops.patch, self.plan, "P1.2", patch)
+                self.assertTrue(any(i.code == "incomplete" for i in error.issues))
+
+    def test_preexisting_errors_do_not_block_unrelated_edit_or_repair(self):
+        demo.rewrite(self.root, "phases/P1/P1.2.json", lambda d: d.update(validation=[]))
+        ops.patch(self.plan, "P1.2", {"title": "Can still repair"})
+        self.assertEqual(self.plan.items["P1.2"]["validation"], [])
+        ops.patch(self.plan, "P1.2", {"validation": [{"id": "V1", "cmd": "true", "expect": "OK", "kind": "acceptance"}]})
+        self.assertEqual(errors(store.load_plan(self.root)), [])
+
+    def test_push_cannot_introduce_missing_unit_in_detailed_phase(self):
+        self.assertRefused("PLAN_INVALID", ops.push, self.plan, "P1.2", "units", "U9")
+
+    def test_set_cannot_add_cycle_with_item_id_location(self):
+        error = self.assertRefused("PLAN_INVALID", ops.patch, self.plan, "P1.1", {"depends_on": ["P1.2"]})
+        self.assertTrue(any(i.code == "cycle" and i.where in {"P1.1", "P1.2"} for i in error.issues))
+
+    def test_unit_edit_cannot_add_semantic_error_in_detailed_phase(self):
+        doc = demo.fixture("unit-e3a-u1")
+        demo.write_doc(self.root / "phases/P1/P1.1/U1.json", doc, "unit")
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(units=["U1"]))
+        error = self.assertRefused("PLAN_INVALID", ops.patch, self.plan, "P1.1/U1", {"kind": "command"})
+        self.assertTrue(any(i.code == "unit_command" and i.where == "P1.1/U1" for i in error.issues))
 
 
 class PatchTests(DemoCase):
@@ -252,6 +307,9 @@ class PatchTests(DemoCase):
         before = len(self.item()["reads"])
         ops.push(self.plan, "P1.2", "reads", {"path": "lib/pkg/more.py", "why": "extra", "required": False})
         ops.push(self.plan, "P1.2", "scope.include", "one more thing")
+        unit = demo.fixture("unit-e3a-u1")
+        unit.update(item="P1.2")
+        demo.write_doc(self.root / "phases/P1/P1.2/U1.json", unit, "unit")
         ops.push(self.plan, "P1.2", "units", "U1")
         item = self.item()
         self.assertEqual(len(item["reads"]), before + 1)
@@ -290,7 +348,7 @@ class PatchTests(DemoCase):
 
 class MutationContractTests(DemoCase):
     def test_plan_snapshot_is_refreshed_in_place(self):
-        ops.add_item(self.plan, "P1", "Fresh")
+        ops.add_item(self.plan, "P1", "Fresh", data=self.complete_item_data())
         self.assertIn("P1.3", self.plan.items)
         self.assertIn("P1.3", self.plan.phases["P1"]["items"])
 
@@ -300,7 +358,7 @@ class MutationContractTests(DemoCase):
 
     def test_views_hook_runs_once_per_successful_mutation_only(self):
         with mock.patch.object(ops, "_after_mutation") as hook:
-            ops.add_item(self.plan, "P1", "Hooked")
+            ops.add_item(self.plan, "P1", "Hooked", data=self.complete_item_data())
             self.assertEqual(hook.call_count, 1)
             with self.assertRaises(PlanError):
                 ops.patch(self.plan, "P1.2", {"bogus": 1})

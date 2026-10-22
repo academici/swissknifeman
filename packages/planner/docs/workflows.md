@@ -37,6 +37,22 @@ A plan item may run a workflow template in its stage (research, authoring, audit
 itself is driven only by `scripts/plan.py` verbs (`next, start, log, finish, check, render`) - see
 [Methodology](./methodology) and [Plan structure](./plan-structure); templates never write plan JSON by hand.
 
+## Start admission
+
+`plan.py start` checks the plan once, inside the plan lock, before starting or resuming items. Errors owned by
+the requested phase or by the plan itself refuse the start with `PLAN_INVALID`, including the error locations.
+Errors owned by other phases and warnings do not block it. There is no bypass flag. Repair the reported fields
+and retry. `design-done` also recognises errors addressed by item or unit ID, including dependency cycles and
+overlapping unit files, and refuses an incomplete phase with `DESIGN_INCOMPLETE`.
+
+Edits to an item, unit or phase that is already detailed refuse new errors of that phase with `PLAN_INVALID`;
+pre-existing errors remain repairable. Adding a placeholder to a detailed phase refuses with `PHASE_DETAILED`.
+Supply a complete item with `add-item --file` (including acceptance validation, scope and deliverables).
+
+An unknown pool model normally starts with the recorded verdict `ROUTE_MODEL_UNKNOWN`. `start --strict-route`
+refuses it; the planner-orch bridge supplies this flag for conductor claims and retry registration. Set
+[`routing.unknown_model = "refuse"`](./configuration) to apply the same refusal to interactive admission.
+
 ## Scoped commits per operation
 
 Every operation of an item ends with its own scoped commit: the executor after `finish`

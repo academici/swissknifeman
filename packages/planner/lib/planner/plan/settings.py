@@ -72,6 +72,11 @@ def for_plan(plan: store.Plan):
                     (str(plan.root), json.dumps(plan_settings, sort_keys=True, default=str)))
 
 
+def refuse_unknown_model(plan: store.Plan, *, strict_route: bool = False) -> bool:
+    """Conductor claims are strict; interactive admission follows ``routing.unknown_model``."""
+    return strict_route or for_plan(plan).get("routing.unknown_model") == "refuse"
+
+
 def for_root(plans_root: str | Path):
     """Configuration for commands without a plan (``new``): machine, project, environment, ``--config``."""
     return _resolve(project_root_of(Path(plans_root)), None, ("root", str(plans_root)))

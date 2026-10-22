@@ -328,9 +328,14 @@ def admitted_class(provider: str, model: str, routing_path: str | Path | None = 
     return CLASS_ORDER[max(ranks)] if ranks else None
 
 
-def _route_verdict(plan: store.Plan, items: list[str], actor: dict) -> str:
-    """``ok`` or ``ROUTE_MODEL_UNKNOWN``; ``ROUTE_UNDERSHOOT`` when the class or effort is too low."""
+def _route_verdict(plan: store.Plan, items: list[str], actor: dict, *, strict_route: bool = False) -> str:
+    """``ok`` or an unknown-model warning; strict/configured admission refuses unknown models.
+
+    ``ROUTE_UNDERSHOOT`` refuses a class or effort below the items' requirements.
+    """
     admitted = admitted_class(actor["provider"], actor["model"])
+    if admitted is None and settings.refuse_unknown_model(plan, strict_route=strict_route):
+        raise PlanError("ROUTE_MODEL_UNKNOWN", f"{actor['provider']}/{actor['model']} is not in the model pool")
     for item_id in items:
         need = plan.items[item_id].get("route") or {}
         if admitted is not None and _rank(CLASS_ORDER, admitted) < _rank(CLASS_ORDER, need.get("class")):
@@ -650,7 +655,7 @@ def batch_split_warnings(p: store.Plan, phase_id: str, requested: Iterable[str])
 
 def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = (),
           scout: bool | None = None, registrar: Mapping | None = None, take_over: bool = False,
-          in_progress_deps: bool = False) -> StartResult:
+          in_progress_deps: bool = False, strict_route: bool = False) -> StartResult:
     """Move ``items`` (one detailed phase) to ``in_progress``; an ``in_progress`` item is resumed.
 
     ``actor`` is the executor (route-checked, stored as ``result.executor``); ``registrar`` is who called and
@@ -662,6 +667,9 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
 
     ``scout`` asks the provider's weak model for a context map after the start (D3); ``None`` follows
     ``plan.settings.scout``. A scout failure never fails the start.
+
+    Structural errors owned by this phase or the plan refuse with ``PLAN_INVALID``. ``strict_route``
+    refuses unknown pool models even when interactive routing is configured to warn.
     """
     requested = list(items)
     grants = list(grants)
@@ -686,6 +694,11 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         if phase.get("design") != "detailed":
             raise PlanError("PHASE_NOT_DETAILED", f"{phase_id} is a skeleton; design it first "
                                                   f"(plan.py design-done after detailing)")
+        from . import check  # check imports views, views imports this module
+        errors = [i for i in check.check(p) if i.level == "error" and check.owner_phase(p, i) in {phase_id, None}]
+        if errors:
+            shown = "; ".join(f"{i.where}: {i.message}" for i in errors[:3])
+            raise PlanError("PLAN_INVALID", f"{len(errors)} error(s) block {phase_id}: {shown}", errors)
         for item_id in requested:
             if status_of(p, item_id) not in ("todo", "in_progress"):
                 raise PlanError("ITEM_NOT_STARTABLE", f"{item_id} is {status_of(p, item_id)}; use reopen to redo it")
@@ -719,7 +732,7 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
                 if (p.items[item_id].get("authority") or {}).get("kind") == "external_gate":
                     raise PlanError("EXTERNAL_GATE", f"{item_id} needs {wait}; reconcile the external evidence first")
                 raise PlanError("GATE_NOT_GRANTED", f"{item_id} needs {wait} (plan.py grant, or start --grant)")
-        verdict = _route_verdict(p, requested, actor)
+        verdict = _route_verdict(p, requested, actor, strict_route=strict_route)
         split_warnings = batch_split_warnings(p, phase_id, requested)
         for item_id in requested:
             validate_route(p.items[item_id].get("route") or {}, actor, item_id)
@@ -1224,7 +1237,7 @@ def design_done(plan, phase_id: str, actor: Mapping | None = None) -> dict:
         if phase.get("design") != "detailed":
             probe = copy.deepcopy(p)
             probe.phases[phase_id]["design"] = "detailed"
-            errors = [i for i in check.check(probe) if i.level == "error" and i.where.startswith(f"phases/{phase_id}/")]
+            errors = [i for i in check.check(probe) if i.level == "error" and check.owner_phase(probe, i) == phase_id]
             if not phase_items(p, phase_id) and not errors:
                 raise PlanError("DESIGN_INCOMPLETE", f"{phase_id} has no items")
             if errors:

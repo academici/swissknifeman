@@ -44,7 +44,9 @@ conductor, дешёвая самопроверка у исполнителя; н
 - [ ] Отозвать и перевыпустить GitHub-токен, вставленный в чат при прогонах edufy (2026-10-18) — с машины не проверить.
 - [ ] Rootful Docker: пользователь в группе `docker`, сервис `docker` active, контекст `default → /var/run/docker.sock`;
       команды — `packages/orch/docs/docker-environment.md:108,146-151`.
-- [ ] Временные файлы существуют: `~/.sk-sock-test/`, `/tmp/sk-sock/`, `/tmp/claude-1000/chatom-local-backup/`,
+      22 Oct: rootful ещё обслуживает живые базы commerz и azguard (5 контейнеров, тома 11 ГБ), rootless пуст —
+      сначала перенести проекты на rootless, затем `systemctl disable --now`, позже prune и выход из группы.
+- [x] (удалены владельцем 22 Oct) Временные файлы: `~/.sk-sock-test/`, `/tmp/sk-sock/`, `/tmp/claude-1000/chatom-local-backup/`,
       `swissknifeman/.claude/settings.local.json.bak`.
 - [ ] Workspace axioma: 35 незакоммиченных путей — `workspace sync --commit`.
 - [ ] План edufy: обходные `orchestration` P1.1–P2.3; формулировка `plan.py finish`; `depends_on` P1.2–P1.4;

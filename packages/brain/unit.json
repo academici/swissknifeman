@@ -3,7 +3,7 @@
   "id": "brain",
   "title": "Obsidian vault: lookup, document sync and notes from ecosystem events",
   "kind": "capability",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "stability": "alpha",
   "destination": "hub",
   "requires": [

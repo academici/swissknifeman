@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "afcb3e1a6c0f",
-  "reason": "P2.4: launch catalog 1.6.0 adds resume_argv to the codex executor row (intentional)",
+  "captured_from": "52f9f7f67ca9",
+  "reason": "Release v0.32.0: synchronize planner plugin version with umbrella",
   "generators": [
     {
       "id": "skiller-registry",
@@ -254,7 +254,7 @@
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-run.md": "ece4c6c669ccbf6ed20defa38737aa515fe3e37ac2e26915bf0631e4f489b3c5",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/research.md": "6080f825740c10cc28214b86cafadf3ceb3e1fd48079996f8aa6634ceb18e2c8",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/review.md": "ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f",
-    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "6d9b772b35d2ea4336917abd447367c55df71f70453d499d1d5f786998428be9",
+    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "149c0d80f91f7ec6c43d7120aa609a15563c9b35960d34a25042393b26d4f3fd",
     "packages/skiller/.claude-plugin/catalog.json": "112dac245b7ad3e99356cd42ef68cf181273037194a5754a11b92f0c13f85521",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "dd59120751e6a94f72849d690566e0ec04042d653f674f142ee4a459172d2280",
     "packages/skiller/adapters/codex/core/publication-lock.json": "f54d35dc75aeb6ae0781dee2ec864f2f1d2facab7d862f173aacdfdfffb57593",

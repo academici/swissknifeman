@@ -1116,10 +1116,21 @@ class SoftLimitTests(ConductorCase):
         self.set_items({"W1": {"write_set": ["out/**"], "checks": [check("W1"), v2],
                                "options": [{"source": "item:W1", "options": options}] if options else []}})
 
+    def test_by_default_every_item_check_of_a_round_runs_so_one_correction_mends_all(self):
+        self.two_checks(checks={"parallel": 1})
+        self.script({"executor": [{"result": report("W1")}, {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        first = self.state(err)["items"]["W1"]["steps"]["checks.1"]["result"]
+        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in first],
+                         [("V1", False, False), ("V2", False, False)])  # both failures reach the one correction
+        self.assertEqual(self.state(err)["items"]["W1"]["steps"]["checks.1"]["verdict"], "red V1,V2")
+
     def test_a_correction_round_runs_the_red_checks_first_by_default(self):
         # serial: the order of admission is the order of the round, so a red V1 is known before V2 would start; with
-        # checks.parallel above 1 both are admitted together (the next test)
-        self.two_checks(checks={"parallel": 1})
+        # checks.parallel above 1 both are admitted together (the next test). fail_fast is asked for explicitly.
+        self.two_checks(checks={"parallel": 1, "fail_fast": True})
         self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")},
                                   {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
                      "reviewer": [GREEN]})
@@ -1127,7 +1138,7 @@ class SoftLimitTests(ConductorCase):
         self.assertEqual(code, 1, err)
         steps = self.state(err)["items"]["W1"]["steps"]
         first, second = (steps[f"checks.{n}"]["result"] for n in (1, 2))
-        # fail_fast (the default): a red check ends the round, the other check is skipped and not run again while V1 is red
+        # fail_fast: a red check ends the round, the other check is skipped and not run again while V1 is red
         for rows in (first, second):
             self.assertEqual([(row["id"], row["green"], bool(row.get("skipped")), row.get("skip_reason")) for row in rows],
                              [("V1", False, False, None), ("V2", False, True, "fail_fast")])

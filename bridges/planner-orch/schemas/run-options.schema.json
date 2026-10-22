@@ -151,7 +151,7 @@
           "type": "boolean"
         },
         "fail_fast": {
-          "description": "After the first red command check no further check is started (those running meanwhile end; the rest are reported `skipped` with `skip_reason` `fail_fast`), and the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`). Checks run cheapest first by their time in earlier rounds. Default true; false runs every check.",
+          "description": "After the first red command check no further check is started (those running meanwhile end; the rest are reported `skipped` with `skip_reason` `fail_fast`), and the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`). Checks run cheapest first by their time in earlier rounds. Default false: every item check runs, so one round reports every independent failure and one correction mends them together; the phase checks still wait for green item checks.",
           "type": "boolean"
         },
         "reuse": {

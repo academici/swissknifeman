@@ -64,7 +64,7 @@ DEFAULT_SESSION = {"executor": "handoff"}
 # units it touched and their dependents, lint); empty keeps the old "single test files" rule. They are not acceptance:
 # the conductor still runs every acceptance check itself, and the executor's claims about them prove nothing.
 DEFAULT_CHECKS = {"parallel": 2, "overlap_review": False, "executor_runs_checks": False,
-                  "red_first": True, "fail_fast": True, "reuse": True,
+                  "red_first": True, "fail_fast": False, "reuse": True,
                   "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"], "self_check": []}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 # A review is too dear to lose when its provider cannot start, is gated or fails: the default reviewer (grok) has a fallback.

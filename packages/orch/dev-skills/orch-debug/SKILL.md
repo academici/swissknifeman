@@ -82,10 +82,14 @@ journal instead of slowing the work, and the process is tuned from the journals 
 The conductor owns the loop; the operator starts a group, waits for its end, reads a stop and decides. Most of its time
 is waiting, so keep the waiting cheap and the context small.
 
-- **Model:** Claude Code with Sonnet (implementation class), effort medium. The decisions after a stop (resume, hotfix
-  between runs, a plan amendment, a settle) need judgment that Haiku does not give reliably; Haiku fits only a session
-  whose sole job is to start a prepared group and report its end. Long Codex operator sessions compact again and again
-  and lose the protocol; a Grok operator is not measured.
+- **Model:** a Haiku-class model with high effort is enough for the observer: start a group, wait on events, resume and
+  classify a stop by the table of the operator protocol. Everything else goes to a Sonnet or Opus subagent whose
+  conclusion the operator acts on: a hotfix or any code change, a plan or route amendment, a stop the table does not
+  name or that repeats, contradictory signals, the substance of an executor question, the analysis at the end of a
+  phase. Vendor and independent benchmarks put Haiku well below Sonnet on terminal-agent tasks, so it must not improvise
+  recovery; without the escalation rule use Sonnet (effort medium). Long Codex operator sessions compact again and again
+  and lose the protocol; a Grok operator is not measured. The analysis at the end of each phase rates the operator too
+  (protocol errors, missed stops, needless interventions), which decides the model of the next phase.
 - **Event-driven waiting:** start the run in the background and arm one completion monitor filtered to `run.end`,
   `item.end` and the beacons (see *Watch*); no polling, no tail of raw streams in the operator context.
 - **Fresh context per group:** one operator session per group (batch). When the group ends, write the short handoff

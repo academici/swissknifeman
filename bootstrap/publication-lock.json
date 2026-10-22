@@ -152,16 +152,16 @@
       "provider": "claude",
       "target": ".claude/skills/orch-debug/SKILL.md",
       "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
-      "canonical_sha256": "97340a6afafc708e1b4209ef52f2a17bb010fd76316b5295ac088f2e32c8591e",
-      "rendered_sha256": "bf39befea65df1b3ccf54fe14ac2c2ebe179ae6f4688e50635925c1d281d6c88"
+      "canonical_sha256": "fe94f2eedcd6e48d8c9a0b4d9d33a62cdf59676ec1275d6eaefda5fe04a5233c",
+      "rendered_sha256": "3d05e6cf763089192540a5d617bbf042a496cf220505db43d7ceee01803f1267"
     },
     {
       "identity": "orch-debug",
       "provider": "codex",
       "target": ".agents/skills/orch-debug/SKILL.md",
       "canonical": "packages/orch/dev-skills/orch-debug/SKILL.md",
-      "canonical_sha256": "97340a6afafc708e1b4209ef52f2a17bb010fd76316b5295ac088f2e32c8591e",
-      "rendered_sha256": "bf39befea65df1b3ccf54fe14ac2c2ebe179ae6f4688e50635925c1d281d6c88"
+      "canonical_sha256": "fe94f2eedcd6e48d8c9a0b4d9d33a62cdf59676ec1275d6eaefda5fe04a5233c",
+      "rendered_sha256": "3d05e6cf763089192540a5d617bbf042a496cf220505db43d7ceee01803f1267"
     },
     {
       "identity": "package-architecture",

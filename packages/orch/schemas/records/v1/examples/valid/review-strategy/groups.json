@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:review-strategy:v1",
+  "mode": "groups",
+  "groups": [["P4.3", "P4.9"], ["P4.4"]],
+  "reviewer": {"effort": "high"},
+  "reason": "the pieces of one contract are read together",
+  "source": "rules",
+  "decided_at": "2026-10-22T10:00:00Z"
+}

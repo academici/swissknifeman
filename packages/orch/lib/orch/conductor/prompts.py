@@ -20,6 +20,7 @@ from aicore.content.budget import estimate_tokens
 from aicore.util.digest import sha256_hex
 
 from orch import render as role_render
+from orch.conductor import records
 from orch.conductor.domain.report import json_block, write_set_block  # noqa: F401 — the answer parsers, kept here
 from orch.conductor.policies.budget import BUDGET_CLASSES, BUDGET_LIMITS, budget_class, budgets, over_budget  # noqa: F401
 from orch.conductor.policies.skills import EXCLUSIVE_GROUP_LIMITS, EXCLUSIVE_GROUP_MAX, INTERACTIVE_TOOL, check_skills  # noqa: F401
@@ -249,11 +250,12 @@ def diff_manifests(base: dict, target: dict) -> dict:
                      "tokens": dict(tokens, delta=tokens["to"] - tokens["from"]),
                      "sha256": {"from": (old or {}).get("sha256"), "to": (new or {}).get("sha256")}})
     total = {"from": base.get("estimated_tokens", 0), "to": target.get("estimated_tokens", 0)}
-    return {"schema": "prompt-diff/v1", "base": {"step": base.get("step"), "prompt_sha256": base.get("prompt_sha256")},
-            "target": {"step": target.get("step"), "prompt_sha256": target.get("prompt_sha256")},
-            "blocks": rows, "tokens": dict(total, delta=total["to"] - total["from"]),
-            "counts": {change: sum(1 for row in rows if row["change"] == change)
-                       for change in ("added", "removed", "changed", "same")}}
+    doc = {"schema": "prompt-diff/v1", "base": {"step": base.get("step"), "prompt_sha256": base.get("prompt_sha256")},
+           "target": {"step": target.get("step"), "prompt_sha256": target.get("prompt_sha256")},
+           "blocks": rows, "tokens": dict(total, delta=total["to"] - total["from"]),
+           "counts": {change: sum(1 for row in rows if row["change"] == change)
+                      for change in ("added", "removed", "changed", "same")}}
+    return records.check(doc, "prompt-diff", "prompt diff", hint=records.WRITER_HINT)  # records/v1 prompt-diff
 
 
 def diff_table(doc: dict) -> str:

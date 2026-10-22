@@ -29,8 +29,8 @@ from typing import Callable, Mapping, Optional
 from aicore.provider import errors as provider_errors
 from aicore.util.redact import env_secrets, redact_text
 
+from orch.conductor import records
 from orch.conductor.infrastructure.clock import utc_now
-from orch.conductor.infrastructure.files import write_json
 
 STDERR_TAIL_CHARS = 4000
 
@@ -441,8 +441,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
                            raw=str(raw_path))
         try:
             if agent_directory is not None:
-                write_json(Path(agent_directory) / "process.json", {"pid": process.pid, "pgid": process.pid,
-                           "start_ticks": start_ticks(process.pid), "started_at": utc_now()})
+                records.write(Path(agent_directory) / "process.json", {"pid": process.pid, "pgid": process.pid,
+                              "start_ticks": start_ticks(process.pid), "started_at": utc_now()}, "process")
             stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel,
                             on_tick=on_tick, result_grace_s=result_grace_s if transport != "text" else 0)
         except BaseException:

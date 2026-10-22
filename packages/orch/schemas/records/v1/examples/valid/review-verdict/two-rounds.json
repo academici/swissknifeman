@@ -1,0 +1,49 @@
+{
+  "item": "W1",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "a review-verdict with $schema is accepted instead of RECORD_INVALID",
+          "id": "F1",
+          "location": "packages/orch/lib/orch/conductor/records.py:76",
+          "severity": "Major",
+          "triage_reproduction": {"cmd": "python3 -c 'from orch.conductor import records'", "exit": 0,
+                                  "observed": "records.read on a file with both carriers returns the document"}
+        },
+        {
+          "basis": "a project rule",
+          "confidence": "low",
+          "failure_scenario": "an English diagnostic is missing",
+          "id": "F2",
+          "location": "packages/orch/lib/orch/conductor/gates.py:70",
+          "severity": "Nit"
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "s-1",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261022T100000Z-a1b2c3/W1/streams/review.1.jsonl",
+      "triage": {"confirmed": ["F1"], "rejected": [{"finding": "F2", "reason": "the message is English"}], "session": null},
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 2,
+      "session": "s-1",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261022T100000Z-a1b2c3/W1/streams/review.2.jsonl",
+      "triage": null,
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261022T100000Z-a1b2c3",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

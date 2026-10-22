@@ -330,8 +330,13 @@ def build(directory: Path, project: Path) -> dict:
         severities.update({key: counts[key] for key in ("Blocker", "Major", "Minor") if counts[key]})
     by_agent = []
     for folder in sorted(Path(directory).glob("*/")):
-        for row in agents_mod.read(folder):
-            by_agent.append({"item": folder.name, **row})
+        try:
+            listed = agents_mod.read(folder)
+        except Stop as stop:  # the report is still written; the agent runs of this piece are left out and it says why
+            print(f"{stop.code}: {stop.message} (the agent runs of {folder.name} are left out of the observer report)",
+                  file=sys.stderr)
+            listed = []
+        by_agent += [{"item": folder.name, **row} for row in listed]
     correlations = {run_id} | {item.get("orch_run") for item in (state.get("items") or {}).values()
                                if item.get("orch_run")}
     until = (state.get("ended") if state.get("status") != "running" else None) or (lines[-1]["ts"] if lines else None)
@@ -520,7 +525,10 @@ def markdown(report: dict) -> str:
 
 
 def write_report(directory: Path, project: Path, target: Path) -> dict:
-    report = build(directory, project)
+    """``observer.json`` (records/v1 ``observer-report``, checked first: ``RECORD_INVALID`` writes nothing) and
+    ``observer.md`` of the run in ``directory``."""
+    report = records.check(build(directory, project), "observer-report", target / "observer.json",
+                           hint=records.WRITER_HINT)
     target.mkdir(parents=True, exist_ok=True)
     (target / "observer.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (target / "observer.md").write_text(markdown(report), encoding="utf-8")

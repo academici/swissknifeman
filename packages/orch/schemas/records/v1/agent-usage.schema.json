@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:agent-usage:v1",
+  "title": "usage.json of an agent run",
+  "description": "Tokens of all the attempts of an agent run (<item>/agents/<agent_run_id>/usage.json, agents.py finish); cold recovery of stage usage reads it when the state has no labelled receipt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["input", "cached", "output"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:agent-usage:v1"},
+    "input": {"description": "Input tokens.", "type": "integer", "minimum": 0},
+    "cached": {"description": "Cached input tokens.", "type": "integer", "minimum": 0},
+    "output": {"description": "Output tokens.", "type": "integer", "minimum": 0},
+    "usage_complete": {"description": "The provider reported the usage of every attempt (true), of none (null) or not of all (false).", "type": ["boolean", "null"]}
+  },
+  "$defs": {}
+}

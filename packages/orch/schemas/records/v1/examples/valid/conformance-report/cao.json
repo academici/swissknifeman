@@ -1,0 +1,11 @@
+{
+  "schema": "orch-conformance/v1",
+  "rows": [
+    {"scenario": "resubmit-same-submission", "binding": "cao", "kit": "runtime", "status": "pass", "reason": null, "differences": []},
+    {"scenario": "crash-during-effect", "binding": "cao", "kit": "runtime", "status": "pass", "reason": null, "differences": []},
+    {"scenario": "lock-expiry", "binding": "cao", "kit": "runtime", "status": "n/a",
+     "reason": "ownership is local and has no time-to-live; a hand-over is a take-over and fencing is the work-source bridge's concern", "differences": []},
+    {"scenario": "golden-native-claude-code-ok", "binding": "cao", "kit": "agent", "status": "declared",
+     "reason": "the trace is recorded for the native binding; this binding records its own with its engine", "differences": []}
+  ]
+}

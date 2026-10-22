@@ -1,0 +1,8 @@
+{
+  "schema": "orch-conformance/v1",
+  "rows": [
+    {"scenario": "crash-during-effect", "binding": "native", "kit": "runtime", "status": "fail", "reason": null,
+     "differences": [{"field": "stages.primary", "expected": "unknown_outcome", "actual": "failed"},
+                     {"field": "decision", "expected": "reconcile", "actual": {"proceed": true}}]}
+  ]
+}

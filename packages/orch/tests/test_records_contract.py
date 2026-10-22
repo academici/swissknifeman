@@ -50,15 +50,23 @@ def golden_state(path: Path) -> dict:
 
 
 class SchemaTests(unittest.TestCase):
-    def test_the_registry_holds_the_six_kinds_of_this_part(self):
+    def test_the_registry_holds_the_seventeen_kinds_each_with_its_one_carrier(self):
         self.assertEqual(records.registry().kinds, records.KINDS)
-        self.assertEqual(records.KINDS, ("item-options", "item-routes", "lease", "questions", "run", "state"))
+        self.assertEqual(set(records.KINDS) - set(records.SHORT_TAGS),
+                         {"agent-request", "agent-result", "agent-usage", "item-options", "item-routes", "lease", "process",
+                          "questions", "review-strategy", "risk", "run", "state"})
+        self.assertEqual(set(records.SHORT_TAGS), {"conformance-report", "observer-report", "prompt-diff",
+                                                   "provider-gates", "review-verdict"})
         for kind in records.KINDS:
             node, schema_id = records.registry().for_kind(kind)
             self.assertEqual(schema_id, f"urn:swissknifeman:orch:records:{kind}:v1")
             self.assertIs(node.get("additionalProperties"), False, kind)  # a closed root
             self.assertIn("$defs", node, kind)  # where later items add their fields
-            self.assertEqual(node["properties"]["$schema"], {"description": "Tag of the document.", "const": schema_id})
+            carrier, value = records.TAGS[kind]
+            other = "schema" if carrier == "$schema" else "$schema"
+            self.assertEqual(node["properties"][carrier]["const"], value, kind)
+            self.assertNotIn(other, node["properties"], kind)
+            self.assertEqual(value, schema_id if carrier == "$schema" else records.SHORT_TAGS[kind])
 
     def test_item_options_refers_to_run_options_and_does_not_copy_it(self):
         node, _ = records.registry().for_kind("item-options")

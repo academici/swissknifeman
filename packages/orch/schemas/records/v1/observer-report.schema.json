@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:observer-report:v1",
+  "title": "observer.json of a run",
+  "description": "The observer report of a conductor run (.swissknifeman/orch/reports/<run>/observer.json, observer.py build/write_report): repeats and resumes, red checks, checks by command, review findings, idle time, tokens and time by role and agent, prompt blocks and budgets, open questions, events and proposals. Keeps its published tag schema orch-conductor-observer/v1 (no $schema); gui-orch reads it through the CLI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run", "beacons", "red_checks", "items", "proposals"],
+  "properties": {
+    "schema": {"description": "Published tag of the document.", "const": "orch-conductor-observer/v1"},
+    "run": {"description": "Run id.", "type": "string", "minLength": 1},
+    "started": {"description": "UTC time of the first journal line, null without a journal.", "type": ["string", "null"]},
+    "beacons": {"$ref": "#/$defs/counts"},
+    "long_run": {
+      "description": "Where the time of a slow run went (only with RUN_SLOW), else null.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "active_s": {"description": "Active seconds of the run.", "type": "number"},
+        "share": {
+          "description": "Shares of the time.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "retries": {"description": "Retries of all the pieces.", "type": "integer"},
+            "review_s": {"description": "Seconds of the reviewer.", "type": "number"},
+            "checks_s": {"description": "Seconds of the checks.", "type": "number"},
+            "repeats": {"description": "Repeated role runs.", "type": "integer"}
+          }
+        }
+      }
+    },
+    "wall_s": {"description": "Wall time between the first and the last journal line.", "type": "number", "minimum": 0},
+    "checks_share": {"description": "Share of the wall time spent in checks.", "type": "number", "minimum": 0},
+    "ended": {"description": "UTC time of the last journal line.", "type": ["string", "null"]},
+    "status": {"description": "Status of the run state.", "type": ["string", "null"]},
+    "stop": {"description": "Stop of the run state ({code, message}), null when none.", "type": ["object", "null"]},
+    "last_stop": {"description": "The stop answered by the last resume, null when none.", "type": ["object", "null"]},
+    "resumes": {"description": "Number of resumes in the journal.", "type": "integer", "minimum": 0},
+    "repeats": {"description": "Role runs that were repeated.", "type": "array", "items": {"$ref": "#/$defs/repeat"}},
+    "red_checks": {"$ref": "#/$defs/counts"},
+    "checks_by_command": {"description": "Check results by command, the most expensive first.", "type": "array", "items": {"$ref": "#/$defs/command"}},
+    "check_findings": {
+      "description": "What the check rows point at.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "duplicate_modules": {"description": "Two commands of one round that repeat the tests of a module.", "type": "array", "items": {"$ref": "#/$defs/duplicate"}},
+        "phase_after_red": {"description": "Rounds that ran phase checks after a red item check.", "type": "array", "items": {"$ref": "#/$defs/phase-after-red"}},
+        "executor_runs_checks": {"description": "Pieces whose options set checks.executor_runs_checks.", "type": "array", "items": {"description": "A piece reference.", "type": "string"}}
+      }
+    },
+    "findings_by_severity": {"$ref": "#/$defs/counts"},
+    "group_reviews": {"description": "state.group_reviews of the run, by group number.", "type": "object"},
+    "incomplete_group_reviews": {"description": "Group reviews without a complete result (numbers, or GROUP_REVIEW_FAILED).", "type": "array", "items": {"description": "A group number or a reason code.", "type": "string"}},
+    "triage": {
+      "description": "Findings confirmed and rejected by triage.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confirmed", "rejected"],
+      "properties": {
+        "confirmed": {"description": "Confirmed findings.", "type": "integer", "minimum": 0},
+        "rejected": {"description": "Rejected findings.", "type": "integer", "minimum": 0}
+      }
+    },
+    "idle": {
+      "description": "Idle time between stages.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total_s", "max_s", "max_between"],
+      "properties": {
+        "total_s": {"description": "Idle seconds in all.", "type": "number", "minimum": 0},
+        "max_s": {"description": "Longest idle gap.", "type": "number", "minimum": 0},
+        "max_between": {"description": "The stages around the longest gap, null when none.", "type": ["string", "null"]}
+      }
+    },
+    "tokens_by_role": {
+      "description": "Tokens by role.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"$ref": "#/$defs/tokens"}},
+      "additionalProperties": false
+    },
+    "tokens_by_agent": {"description": "Agent runs of every piece.", "type": "array", "items": {"$ref": "#/$defs/agent"}},
+    "prompt_blocks_by_role": {
+      "description": "The prompt blocks with the most estimated tokens, by role.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"description": "Blocks of one role.", "type": "array", "items": {"$ref": "#/$defs/block"}}},
+      "additionalProperties": false
+    },
+    "prompt_budgets_by_role": {
+      "description": "Prompt budget classes against their limits, by role then class.",
+      "type": "object",
+      "patternProperties": {"^.+$": {
+        "description": "Budget classes of one role.",
+        "type": "object",
+        "patternProperties": {"^.+$": {"$ref": "#/$defs/budget"}},
+        "additionalProperties": false
+      }},
+      "additionalProperties": false
+    },
+    "open_questions": {"description": "Open questions of the run.", "type": "array", "items": {"$ref": "#/$defs/question"}},
+    "seconds_by_role": {
+      "description": "Seconds by role.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"description": "Seconds.", "type": "number"}},
+      "additionalProperties": false
+    },
+    "scout_cache": {
+      "description": "Runs and cache hits of the scout.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runs", "hits"],
+      "properties": {
+        "runs": {"description": "Scout runs.", "type": "integer", "minimum": 0},
+        "hits": {"description": "Cache hits.", "type": "integer", "minimum": 0}
+      }
+    },
+    "items": {"description": "The pieces of the run.", "type": "array", "items": {"$ref": "#/$defs/item"}},
+    "events": {"$ref": "#/$defs/counts"},
+    "event_problems": {"description": "What of the event journal could not be read.", "type": "array", "items": {"description": "A problem.", "type": "string"}},
+    "proposals": {"description": "Changes the numbers point at.", "type": "array", "items": {"description": "One proposal.", "type": "string"}}
+  },
+  "$defs": {
+    "counts": {
+      "description": "A count by name (reason code, check id, severity, event type).",
+      "type": "object",
+      "patternProperties": {"^.+$": {"description": "Count.", "type": "integer", "minimum": 0}},
+      "additionalProperties": false
+    },
+    "tokens": {
+      "description": "Input and output tokens.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {"description": "Input tokens.", "type": "integer", "minimum": 0},
+        "cached": {"description": "Cached input tokens.", "type": "integer", "minimum": 0},
+        "output": {"description": "Output tokens.", "type": "integer", "minimum": 0}
+      }
+    },
+    "repeat": {
+      "description": "One repeated role run.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "item": {"description": "Piece.", "type": ["string", "null"]},
+        "stage": {"description": "Step.", "type": ["string", "null"]},
+        "message": {"description": "Journal message.", "type": ["string", "null"]}
+      }
+    },
+    "command": {
+      "description": "The results of one check command.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cmd", "runs", "executed", "seconds", "red", "skipped", "reused"],
+      "properties": {
+        "cmd": {"description": "Command.", "type": "string"},
+        "runs": {"description": "Every row.", "type": "integer", "minimum": 0},
+        "executed": {"description": "Rows that ran a process.", "type": "integer", "minimum": 0},
+        "invocations": {"description": "Processes started.", "type": "integer", "minimum": 0},
+        "seconds": {"description": "Elapsed seconds of the executed rows.", "type": "number", "minimum": 0},
+        "red": {"description": "Executed rows that failed.", "type": "integer", "minimum": 0},
+        "skipped": {"description": "Skipped rows.", "type": "integer", "minimum": 0},
+        "reused": {"description": "Rows reused from earlier evidence.", "type": "integer", "minimum": 0},
+        "retried": {"description": "Executions of a check an earlier round of the piece had executed.", "type": "integer", "minimum": 0},
+        "saved_s": {"description": "Seconds of the runs the reused rows stand for.", "type": "number", "minimum": 0},
+        "ids": {"description": "Check ids.", "type": "array", "items": {"description": "A check id.", "type": "string"}},
+        "contexts": {"description": "Contexts (local, partner, standalone, installed).", "type": "array", "items": {"description": "A context.", "type": "string"}},
+        "items": {"description": "Pieces.", "type": "array", "items": {"description": "A piece reference.", "type": "string"}},
+        "reused_from": {"description": "Evidence the reused rows stand for.", "type": "array", "items": {"description": "One evidence reference."}}
+      }
+    },
+    "duplicate": {
+      "description": "Two commands that repeat the tests of a module.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "module", "cmds"],
+      "properties": {
+        "item": {"description": "Piece.", "type": "string"},
+        "module": {"description": "Module.", "type": "string"},
+        "cmds": {"description": "The two commands.", "type": "array", "items": {"description": "A command.", "type": "string"}}
+      }
+    },
+    "phase-after-red": {
+      "description": "A round that ran phase checks after a red item check.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "step"],
+      "properties": {
+        "item": {"description": "Piece.", "type": "string"},
+        "step": {"description": "Checks step.", "type": "string"}
+      }
+    },
+    "agent": {
+      "description": "One agent run (agents.read) of a piece.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "agent_run_id", "role", "step", "status", "tokens"],
+      "properties": {
+        "item": {"description": "Folder of the piece.", "type": "string"},
+        "agent_run_id": {"description": "Agent run id.", "type": ["string", "null"]},
+        "role": {"description": "Role.", "type": ["string", "null"]},
+        "step": {"description": "Step.", "type": ["string", "null"]},
+        "status": {"description": "running, failed or ok.", "type": "string", "enum": ["running", "failed", "ok"]},
+        "tokens": {"$ref": "#/$defs/tokens"}
+      }
+    },
+    "block": {
+      "description": "Estimated tokens of one prompt block over the steps.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "origin", "tokens", "steps"],
+      "properties": {
+        "kind": {"description": "Block kind.", "type": "string"},
+        "origin": {"description": "Block origin.", "type": "string"},
+        "id": {"description": "Block id.", "type": "string"},
+        "tokens": {"description": "Estimated tokens.", "type": "integer", "minimum": 0},
+        "steps": {"description": "Steps that had the block.", "type": "integer", "minimum": 0}
+      }
+    },
+    "budget": {
+      "description": "One budget class of a role.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_tokens", "limit", "steps", "over"],
+      "properties": {
+        "max_tokens": {"description": "Largest estimated tokens of a step.", "type": "integer", "minimum": 0},
+        "limit": {"description": "Limit; 0 is none.", "type": "integer", "minimum": 0},
+        "steps": {"description": "Steps measured.", "type": "integer", "minimum": 0},
+        "over": {"description": "Steps past the limit.", "type": "integer", "minimum": 0}
+      }
+    },
+    "question": {
+      "description": "One open question (questions.listing).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "text", "age_s", "overdue"],
+      "properties": {
+        "item": {"description": "Piece.", "type": ["string", "null"]},
+        "id": {"description": "Question id.", "type": "string"},
+        "revision": {"description": "Revision.", "type": "integer"},
+        "kind": {"description": "Question kind.", "type": "string"},
+        "text": {"description": "Question.", "type": "string"},
+        "answered": {"description": "Answered, waiting for resume.", "type": "boolean"},
+        "age_s": {"description": "Age in seconds.", "type": "integer", "minimum": 0},
+        "overdue": {"description": "Waiting past limits.question_warn_s.", "type": "boolean"}
+      }
+    },
+    "item": {
+      "description": "One piece of the run.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "outcome"],
+      "properties": {
+        "item": {"description": "Reference.", "type": "string"},
+        "outcome": {"description": "Outcome, null while running.", "type": ["string", "null"]},
+        "stop": {"description": "Stop of the piece, null when none.", "type": ["object", "null"]},
+        "check_fixes": {"description": "Check-fix rounds used.", "type": "integer", "minimum": 0},
+        "corrections": {"description": "Correction rounds used.", "type": "integer", "minimum": 0},
+        "retries": {"description": "Retries used.", "type": "integer", "minimum": 0},
+        "tokens": {"description": "Tokens of the piece (state.items.<ref>.tokens).", "type": "object"},
+        "attempts": {"description": "Earlier attempts of a retried piece.", "type": "array", "items": {"$ref": "#/$defs/attempt"}},
+        "reviews": {"description": "Review rounds in all attempts.", "type": "integer", "minimum": 0}
+      }
+    },
+    "attempt": {
+      "description": "One earlier attempt of a piece.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "steps"],
+      "properties": {
+        "n": {"description": "Number of the attempt.", "type": "integer"},
+        "retried_at": {"description": "UTC time of the retry.", "type": ["string", "null"]},
+        "steps": {
+          "description": "Verdict of each step of the attempt.",
+          "type": "object",
+          "patternProperties": {"^.+$": {"description": "Verdict, null when none.", "type": ["string", "null"]}},
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}

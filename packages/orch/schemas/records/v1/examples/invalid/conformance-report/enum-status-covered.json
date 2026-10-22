@@ -1,0 +1,4 @@
+{
+  "schema": "orch-conformance/v1",
+  "rows": [{"scenario": "crash-during-effect", "binding": "cao", "kit": "runtime", "status": "covered", "reason": null, "differences": []}]
+}

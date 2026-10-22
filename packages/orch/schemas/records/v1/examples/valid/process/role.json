@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:process:v1",
+  "pid": 41231,
+  "pgid": 41231,
+  "start_ticks": 98234512,
+  "started_at": "2026-10-22T10:01:02Z"
+}

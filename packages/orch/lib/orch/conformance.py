@@ -2,7 +2,8 @@
 
 The catalogue (``conformance/scenarios.json``, ``orch-conformance/v1``) names every scenario with a status per
 binding: ``covered`` (a trace or an existing test proves it), ``declared`` (needs the engine, not proven yet) or
-``n/a``; the last two always carry a reason and never fail the command. A trace is folded through ``RunState``
+``n/a``; the last two always carry a reason and never fail the command. The rows of a run are checked against records/v1
+``conformance-report`` (the rows under the catalogue's tag) before they are returned. A trace is folded through ``RunState``
 (and ``retry.decide`` / ``effects.check`` when the expectation asks for a decision); a test is run by name.
 """
 from __future__ import annotations
@@ -16,6 +17,8 @@ import unittest
 
 from orch import effects, retry
 from orch.bindings import BINDINGS
+from orch.conductor import records
+from orch.conductor.domain.stop import Stop
 from orch.port import PortError, RunState
 
 SCHEMA_VERSION = "orch-conformance/v1"
@@ -240,4 +243,15 @@ def run(binding: str | None = None, *, path: Path = CATALOGUE) -> list:
                 row["differences"] = outcomes[item["id"]]
                 row["status"] = "fail" if row["differences"] else "pass"
             rows.append(row)
+    return report_rows(rows)
+
+
+def report_rows(rows: list) -> list:
+    """``rows`` after the check of records/v1 ``conformance-report`` (the rows under the tag of the catalogue); the
+    command prints the rows alone, as before. ``ConformanceError`` when a row does not match."""
+    try:
+        records.check({"schema": SCHEMA_VERSION, "rows": rows}, "conformance-report", "orch conformance",
+                      hint=records.WRITER_HINT)
+    except Stop as stop:
+        raise ConformanceError(f"{stop.code}: {stop.message}") from None
     return rows

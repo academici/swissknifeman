@@ -34,9 +34,11 @@ class AgentRunTests(ConductorCase):
         self.assertNotIn("parent_agent_run_id", executor["request.json"])
         self.assertEqual((executor["result.json"]["exit"], executor["result.json"]["decisions"]), (0, []))
         self.assertTrue((self.project / executor["result.json"]["stream"]).is_file())
-        self.assertEqual(executor["usage.json"], {"input": 700, "cached": 5, "output": 70, "usage_complete": True})
+        usage_tag = {"$schema": "urn:swissknifeman:orch:records:agent-usage:v1"}  # records/v1 agent-usage
+        self.assertEqual(executor["usage.json"], {**usage_tag, "input": 700, "cached": 5, "output": 70,
+                                                  "usage_complete": True})
         self.assertEqual(by_step["review.1"]["usage.json"],
-                         {"input": 300, "cached": 0, "output": 30, "usage_complete": True})
+                         {**usage_tag, "input": 300, "cached": 0, "output": 30, "usage_complete": True})
         # the tokens of the agent runs are the tokens of the piece
         state = self.state(err)["items"]["W1"]["tokens"]
         self.assertEqual((sum(doc["usage.json"]["input"] for doc in found.values()),

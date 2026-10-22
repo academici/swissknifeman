@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:agent-request:v1",
+  "title": "request.json of an agent run",
+  "description": "What started a role (<item>/agents/<agent_run_id>/request.json, agents.py start): written when the role starts. A folder with a request and no result is a role still running, or one that died with the process. agents.py start writes every field but parent_agent_run_id; only step is required, because cold recovery and agents.read take the rest as optional (a missing role comes from the step, a missing route is unknown).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["step"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:agent-request:v1"},
+    "agent_run_id": {"description": "Id of the agent run (agent-<run suffix>-<n>).", "type": "string", "minLength": 1},
+    "role": {"description": "Role started.", "type": "string", "minLength": 1},
+    "route": {"$ref": "#/$defs/route"},
+    "step": {"description": "Step of the role (executor.1, review.2, group-review-1, ...).", "type": "string", "minLength": 1},
+    "attempt": {"description": "Attempt of the step.", "type": "integer", "minimum": 0},
+    "prompt": {"description": "Prompt file, relative to the project.", "type": "string"},
+    "causation": {"description": "The step or problem that caused the start (question:<id>@<revision>, checks:<round>, findings:<round>).", "type": "string"},
+    "started_at": {"description": "UTC time of the start.", "type": "string"},
+    "parent_agent_run_id": {"description": "The agent run whose answer this one mends (report-fixer).", "type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "route": {
+      "description": "The actor of the role.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {"description": "Provider id.", "type": "string", "minLength": 1},
+        "model": {"description": "Model id.", "type": "string"},
+        "effort": {"description": "Effort.", "type": "string"}
+      }
+    }
+  }
+}

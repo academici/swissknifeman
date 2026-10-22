@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:agent-result:v1",
+  "title": "result.json of an agent run",
+  "description": "How a role ended (<item>/agents/<agent_run_id>/result.json, agents.py finish), however it ended. A role closed on resume after the conductor died has only error ORPHANED (agents.py orphan): nothing else is invented. Exactly one of the two variants: an empty or tag-only document is no result.",
+  "type": "object",
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "description": "A finished agent run (agents.finish): every field of its end, error only when it failed.",
+      "required": ["exit", "decisions", "duration_s", "stream", "lingered"]
+    },
+    {
+      "description": "An agent run closed on resume (agents.orphan): only the error ORPHANED.",
+      "required": ["error"],
+      "not": {"description": "No field of a finished run.", "required": ["exit"]},
+      "properties": {
+        "error": {
+          "description": "The orphan error.",
+          "type": "object",
+          "required": ["code"],
+          "properties": {"code": {"description": "Reason code.", "const": "ORPHANED"}}
+        }
+      }
+    }
+  ],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:agent-result:v1"},
+    "exit": {"description": "Exit code of the last process, null when none ended.", "type": ["integer", "null"]},
+    "error": {"$ref": "#/$defs/error"},
+    "decisions": {"description": "Decisions of retry.decide after failures at the provider, in order.", "type": "array", "items": {"$ref": "#/$defs/decision"}},
+    "duration_s": {"description": "Wall time of the agent run.", "type": "number", "minimum": 0},
+    "stream": {"description": "Stream of the last attempt, relative to the project; null when none.", "type": ["string", "null"]},
+    "lingered": {"description": "The process lingered after its result and was stopped.", "type": "boolean"}
+  },
+  "$defs": {
+    "error": {
+      "description": "An error/v1 document when the failure was classified, else {code, message} of the stop.",
+      "type": "object"
+    },
+    "decision": {
+      "description": "One decision of retry.decide.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "reason_codes"],
+      "properties": {
+        "action": {"description": "Action decided (retry, wait, fallback, reconcile, stop).", "type": "string", "minLength": 1},
+        "reason_codes": {"description": "Reason codes of the decision.", "type": "array", "items": {"description": "A reason code.", "type": "string"}},
+        "wait_s": {"description": "Seconds waited before the repeat.", "type": "number"},
+        "route": {"description": "Fallback route taken.", "type": "object"}
+      }
+    }
+  }
+}

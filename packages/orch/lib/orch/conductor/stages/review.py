@@ -6,7 +6,6 @@ from orch.conductor import checks as checks_mod, prompts, records, risk as risk_
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import findings_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure.files import write_json
 from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE
 
 
@@ -63,7 +62,7 @@ def dynamic_review(self, item: Item, report: dict) -> None:
         if found["added"]:
             item.state["dynamic_review"] = True
         self._save()
-    write_json(item.directory / "risk.json", dict(found, item=item.ref, run=self.run_id))
+    records.write(item.directory / "risk.json", dict(found, item=item.ref, run=self.run_id), "risk")
     if not found["added"] or found.get("announced"):
         return
     if not item.routes.get("reviewer"):
@@ -245,4 +244,7 @@ def verdict_file(self, item: Item) -> None:
            "selector": item.options.get("reviewer"), "rounds": rounds}
     if item.input_doc.get("review_route") and not item.sources.get("reviewer"):
         doc["reviewer_source"] = PLAN_REVIEW_SOURCE  # the rounds ran on the plan's review route, not on the selector
-    self._write_artifact(item, "review-verdict.json", doc)
+    # records/v1 review-verdict, checked before the artifact writer (same bytes as records.write) replaces the file
+    self._write_artifact(item, "review-verdict.json",
+                         records.check(doc, "review-verdict", f"review-verdict.json of {item.ref}",
+                                       hint=records.WRITER_HINT))

@@ -68,9 +68,10 @@ class SharedPrimitivesTests(unittest.TestCase):
     def test_agent_records_are_written_durably(self):
         target = self.directory / "agents" / "a" / "request.json"
         with mock.patch.object(aicore_io.os, "fsync", wraps=os.fsync) as synced:
-            agents._write(target, {"b": 1, "a": "é"})
+            agents._write(target, {"step": "é", "attempt": 1}, "agent-request")
         self.assertGreaterEqual(synced.call_count, 1)
-        self.assertEqual('{\n  "a": "é",\n  "b": 1\n}\n', target.read_text(encoding="utf-8"))
+        self.assertEqual('{\n  "$schema": "urn:swissknifeman:orch:records:agent-request:v1",\n  "attempt": 1,\n'
+                         '  "step": "é"\n}\n', target.read_text(encoding="utf-8"))
         self.assertEqual([target.name], [path.name for path in target.parent.iterdir()])
 
     def test_times_do_not_depend_on_the_process_zone(self):

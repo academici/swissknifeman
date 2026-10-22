@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:process:v1",
+  "title": "process.json of an agent run",
+  "description": "The process of a role (<item>/agents/<id>/process.json, process.py run_role), written right after it started; cold recovery (application/recovery.py) stops an orphaned group only when the pid, the group and the start ticks still name the same process.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pid", "pgid"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:process:v1"},
+    "pid": {"description": "Process id of the role.", "type": "integer", "minimum": 1},
+    "pgid": {"description": "Process group of the role (its own session: the pid).", "type": "integer", "minimum": 1},
+    "start_ticks": {"description": "Start time of the process in clock ticks since boot (/proc/<pid>/stat), null when it could not be read.", "type": ["integer", "null"]},
+    "started_at": {"description": "UTC time the process started.", "type": "string"}
+  },
+  "$defs": {}
+}

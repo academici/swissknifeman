@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:conformance-report:v1",
+  "title": "Result of orch conformance",
+  "description": "The rows of an engine conformance run (orch/conformance.py run) with the published tag of the catalogue, schema orch-conformance/v1 (no $schema). run checks the rows in this envelope before it returns them; orch conformance --json prints the rows alone, as before.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rows"],
+  "properties": {
+    "schema": {"description": "Published tag of the conformance catalogue and its result.", "const": "orch-conformance/v1"},
+    "rows": {"description": "One row per scenario and binding, in catalogue order.", "type": "array", "items": {"$ref": "#/$defs/row"}}
+  },
+  "$defs": {
+    "row": {
+      "description": "One scenario of one binding.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario", "binding", "kit", "status", "reason", "differences"],
+      "properties": {
+        "scenario": {"description": "Scenario id.", "type": "string", "minLength": 1},
+        "binding": {"description": "Engine binding.", "type": "string", "minLength": 1},
+        "kit": {"description": "Conformance kit.", "type": "string", "enum": ["agent", "runtime"]},
+        "status": {"description": "pass or fail (a covered scenario that ran), declared or n/a.", "type": "string", "enum": ["pass", "fail", "declared", "n/a"]},
+        "reason": {"description": "Why declared or n/a; null for a covered scenario.", "type": ["string", "null"]},
+        "differences": {"description": "Differences of a failed scenario.", "type": "array", "items": {"$ref": "#/$defs/difference"}}
+      }
+    },
+    "difference": {
+      "description": "One difference between the expectation and the outcome.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "expected", "actual"],
+      "properties": {
+        "field": {"description": "What differs.", "type": "string"},
+        "expected": {"description": "Expected value (any JSON)."},
+        "actual": {"description": "Observed value (any JSON)."}
+      }
+    }
+  }
+}

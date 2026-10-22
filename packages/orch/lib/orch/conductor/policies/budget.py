@@ -1,13 +1,13 @@
 """Token accounting, informational budgets and hard admission limits on accounted fresh tokens."""
 from __future__ import annotations
 
-import json
 import threading
 from pathlib import Path
 from typing import Optional
 
 from aicore.content.budget import estimate_tokens
 
+from orch.conductor import records
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 
@@ -48,12 +48,14 @@ def stage_bucket(self):
     return bucket
 
 
-def _read_object(path: Path) -> Optional[dict]:
+def _read_record(path: Path, kind: str) -> Optional[dict]:
+    """The checked agent record at ``path`` (records/v1 ``kind``); ``None`` when there is none or it cannot be opened.
+    Bytes that are not JSON stop with ``STATE_CORRUPT``, a record that does not match with ``RECORD_INVALID``: a
+    damaged usage file is never read as zero usage."""
     try:
-        found = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        return records.read(path, kind)
+    except OSError:
         return None
-    return found if isinstance(found, dict) else None
 
 
 def _add_usage(total: dict, usage: dict) -> None:
@@ -89,10 +91,10 @@ def known_stage_usage(item: Item, key: str) -> dict:
         from_files = {"input": 0, "output": 0}
         found = False
         for request_path in agents.glob("*/request.json"):
-            request = _read_object(request_path) or {}
+            request = _read_record(request_path, "agent-request") or {}
             if request.get("step") != key:
                 continue
-            usage = _read_object(request_path.with_name("usage.json"))
+            usage = _read_record(request_path.with_name("usage.json"), "agent-usage")
             if not usage:
                 continue
             found = True

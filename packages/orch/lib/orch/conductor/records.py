@@ -2,7 +2,8 @@
 schema when they are written and when they are read.
 
 Each kind has one tag carrier (``TAGS``): ``$schema`` with ``urn:swissknifeman:orch:records:<kind>:v1``, or ``schema``
-with the short tag already published for the five short kinds. A document read back carries the tag of its kind (v1),
+with the short tag already published for the five short kinds (``SHORT_TAGS``: review-verdict, provider-gates,
+observer-report, prompt-diff, conformance-report). A document read back carries the tag of its kind (v1),
 no tag at all (v0: written before records/v1; ``migrate_v0`` adds the carrier in memory, the file is not rewritten), or
 something else (another value, the carrier of another kind, both carriers): ``unknown or conflicting record tag``.
 
@@ -22,19 +23,25 @@ from orch.conductor.domain.stop import Stop
 # orch.settings imports the questions of the conductor, which write through this module: the root is computed here
 CONTRACT_DIR = Path(__file__).resolve().parents[3] / "schemas" / "records" / "v1"
 URN_PREFIX = "urn:swissknifeman:orch:records:"
-KINDS = ("item-options", "item-routes", "lease", "questions", "run", "state")
-# kind -> (carrier, value). The five short kinds keep the tag they already publish (their schemas come with P4.9).
-TAGS = {
-    **{kind: ("$schema", f"{URN_PREFIX}{kind}:v1") for kind in KINDS},
-    "review-verdict": ("schema", "orch-conductor-review-verdict/v1"),
-    "provider-gates": ("schema", "provider-gates/v1"),
-    "observer-report": ("schema", "orch-conductor-observer/v1"),
-    "prompt-diff": ("schema", "prompt-diff/v1"),
-    "conformance-report": ("schema", "orch-conformance/v1"),
+KINDS = ("agent-request", "agent-result", "agent-usage", "conformance-report", "item-options", "item-routes", "lease",
+         "observer-report", "process", "prompt-diff", "provider-gates", "questions", "review-strategy", "review-verdict",
+         "risk", "run", "state")
+# The five short kinds keep the tag they already publish, in the field ``schema``.
+SHORT_TAGS = {
+    "review-verdict": "orch-conductor-review-verdict/v1",
+    "provider-gates": "provider-gates/v1",
+    "observer-report": "orch-conductor-observer/v1",
+    "prompt-diff": "prompt-diff/v1",
+    "conformance-report": "orch-conformance/v1",
 }
+# kind -> (carrier, value)
+TAGS = {kind: ("schema", SHORT_TAGS[kind]) if kind in SHORT_TAGS else ("$schema", f"{URN_PREFIX}{kind}:v1")
+        for kind in KINDS}
 CARRIERS = ("$schema", "schema")
 CODES = {"run": "RUN_INVALID", "state": "STATE_INVALID", "questions": "QUESTIONS_INVALID"}
 HINT = "settle or release the items of this run, or start a new run"
+# A report or command output the conductor builds itself that does not match its schema is a defect, not a run to settle
+WRITER_HINT = "the conductor built a document outside its contract; report this defect"
 TAG_CONFLICT = "unknown or conflicting record tag"
 # Keys renamed since the documents of v0 were written: kind -> {old: new}. Filled only from facts; none so far.
 _V0_RENAMES: dict = {}
@@ -139,8 +146,23 @@ def problems(doc: object, kind: str) -> list[str]:
     return [issue.message for issue in schema.validate(found, kind, registry())]
 
 
-def _invalid(kind: str, path: Path, lines: list) -> Stop:
-    return Stop(code(kind), f"{path}: {'; '.join(lines[:3])}; {HINT}")
+def _invalid(kind: str, path, lines: list, hint: str = HINT) -> Stop:
+    return Stop(code(kind), f"{path}: {'; '.join(lines[:3])}; {hint}")
+
+
+def check(doc: Any, kind: str, where, *, hint: str = HINT) -> Any:
+    """``doc`` of ``kind`` as ``read`` gives it back (a v0 one after ``migrate_v0``, a v1 one itself), for a document
+    the caller parsed or built itself (a file it opens its own way, a report it prints); ``<KIND CODE>`` naming
+    ``where``, the pointers and ``hint`` when it does not match."""
+    _known(kind)
+    try:
+        found = _migrator(kind)(doc)
+    except _TagConflict as conflict:
+        raise _invalid(kind, where, [f"/{conflict.carrier}: {TAG_CONFLICT}"], hint) from None
+    issues = schema.validate(found, kind, registry())
+    if issues:
+        raise _invalid(kind, where, [issue.message for issue in issues], hint)
+    return found
 
 
 def read(path: Path, kind: str) -> Optional[dict]:

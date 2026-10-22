@@ -177,7 +177,8 @@ class UsageAccountingTests(unittest.TestCase):
         handle = self.engine._local.agent
         agents.finish(handle, exit_code=0, error=None, decisions=[], duration_s=1, stream="success.jsonl", lingered=False)
         self.assertEqual(json.loads((handle["directory"] / "usage.json").read_text()),
-                         {"input": 10, "cached": 0, "output": 2, "usage_complete": False})
+                         {"$schema": "urn:swissknifeman:orch:records:agent-usage:v1", "input": 10, "cached": 0,
+                          "output": 2, "usage_complete": False})
         self.assertEqual(self.engine._step_tokens, {"input": 10, "cached": 0, "output": 2})
 
     def test_text_transport_is_unmetered_without_marking_the_item_incomplete(self):

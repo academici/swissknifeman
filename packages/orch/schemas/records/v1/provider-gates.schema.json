@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:provider-gates:v1",
+  "title": "Capacity gates of the providers of a machine",
+  "description": "The machine file <state>/orch/provider-gates.json (gates.py): a provider whose account quota is exhausted is not started again before until. Written under the lock of provider-gates.lock; keeps its published tag schema provider-gates/v1 (no $schema).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["gates"],
+  "properties": {
+    "schema": {"description": "Published tag of the document.", "const": "provider-gates/v1"},
+    "gates": {
+      "description": "The gate of each provider by provider id.",
+      "type": "object",
+      "patternProperties": {"^[a-z][a-z0-9-]*$": {"$ref": "#/$defs/gate"}},
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "gate": {
+      "description": "One gate; an entry whose until is not a UTC time is ignored when read.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["until"],
+      "properties": {
+        "until": {"description": "UTC time (rounded up to the second) before which the provider is not started.", "type": "string"},
+        "class": {"description": "Error class that set the gate (quota).", "type": "string"},
+        "code": {"description": "Reason code that set the gate (PROVIDER_QUOTA).", "type": "string"},
+        "set_by": {"description": "Conductor run that set the gate.", "type": "string"},
+        "set_at": {"description": "UTC time the gate was set.", "type": "string"}
+      }
+    }
+  }
+}

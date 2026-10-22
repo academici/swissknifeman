@@ -1,0 +1,4 @@
+{
+  "schema": "orch-conformance/v1",
+  "rows": {"crash-during-effect": "pass"}
+}

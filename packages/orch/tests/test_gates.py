@@ -28,13 +28,34 @@ class GateTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.file = Path(self.tmp.name) / "orch" / "provider-gates.json"
 
-    def test_a_missing_or_damaged_file_means_no_gates(self):
+    def test_a_missing_file_means_no_gates_and_a_damaged_one_is_an_error_with_its_pointer(self):
         self.assertIsNone(gates.blocked("claude-code", NOW, file=self.file))
         self.file.parent.mkdir(parents=True)
-        for text in ("not json", "[]", '{"schema": "x", "gates": {}}', '{"schema": "provider-gates/v1", "gates": []}'):
+        for text, code, where in (("not json", "STATE_CORRUPT", "is not JSON"), ("[]", "RECORD_INVALID", "/: expected object"),
+                                  ('{"schema": "x", "gates": {}}', "RECORD_INVALID",
+                                   "/schema: unknown or conflicting record tag"),
+                                  ('{"schema": "provider-gates/v1", "gates": []}', "RECORD_INVALID", "/gates: ")):
             self.file.write_text(text, encoding="utf-8")
             with self.subTest(text=text):
-                self.assertEqual(gates.active(NOW, file=self.file), {})
+                with self.assertRaises(gates.GateError) as caught:
+                    gates.active(NOW, file=self.file)
+                self.assertEqual(caught.exception.code, code)
+                self.assertIn(where, caught.exception.message)
+                self.assertIn("remove the file to reset the gates", caught.exception.message)
+                # a writer does not replace a damaged file it cannot read either
+                with self.assertRaises(gates.GateError):
+                    gates.set_gate("codex", until=NOW + 60, code="A", run_id="r", now=NOW, file=self.file)
+                self.assertEqual(self.file.read_text(encoding="utf-8"), text)
+
+    def test_a_gates_file_without_its_tag_is_read_as_v0(self):
+        self.file.parent.mkdir(parents=True)
+        self.file.write_text(json.dumps({"gates": {"codex": {"until": "2099-01-01T00:00:00Z"}}}), encoding="utf-8")
+        self.assertEqual(set(gates.active(NOW, file=self.file)), {"codex"})
+
+    def test_a_gate_error_is_a_stop_of_the_run_with_the_message_alone_as_text(self):
+        error = gates.GateError("RECORD_INVALID", "x: y")
+        self.assertIsInstance(error, gates.Stop)
+        self.assertEqual((error.code, error.message, str(error)), ("RECORD_INVALID", "x: y", "x: y"))
 
     def test_set_then_blocked_until_the_reset_and_not_after(self):
         entry = gates.set_gate("claude-code", until=NOW + 600, code="PROVIDER_QUOTA", run_id="r1", now=NOW, file=self.file)
@@ -69,12 +90,18 @@ class GateTests(unittest.TestCase):
         gates.set_gate("claude-code", until=NOW + 1000, code="B", run_id="r2", now=NOW + 100, file=self.file)
         self.assertEqual(set(json.loads(self.file.read_text(encoding="utf-8"))["gates"]), {"claude-code"})
 
-    def test_an_invalid_entry_is_ignored_not_fatal(self):
+    def test_an_entry_without_a_time_is_ignored_and_a_provider_that_is_no_id_is_record_invalid(self):
         self.file.parent.mkdir(parents=True)
-        doc = {"schema": "provider-gates/v1", "gates": {"codex": {"until": "soon"}, "Bad Name": {"until": "2099-01-01T00:00:00Z"},
+        doc = {"schema": "provider-gates/v1", "gates": {"codex": {"until": "soon"},
                                                         "grok": {"until": "2099-01-01T00:00:00Z"}}}
         self.file.write_text(json.dumps(doc), encoding="utf-8")
         self.assertEqual(set(gates.active(NOW, file=self.file)), {"grok"})
+        doc["gates"]["Bad Name"] = {"until": "2099-01-01T00:00:00Z"}
+        self.file.write_text(json.dumps(doc), encoding="utf-8")
+        with self.assertRaises(gates.GateError) as caught:
+            gates.active(NOW, file=self.file)
+        self.assertEqual(caught.exception.code, "RECORD_INVALID")
+        self.assertIn("/gates", caught.exception.message)
 
     def test_a_sub_second_reset_never_opens_early(self):
         # 1800000000.7 + 0.2: the gate is stored rounded up, so it still holds at `now`
@@ -255,6 +282,12 @@ class GatesCliTests(unittest.TestCase):
         code, _, err = self.run_cli("--clear")
         self.assertEqual(code, 1)
         self.assertIn("GATES_UNSAFE", err)
+        file.unlink()
+        file.write_text(json.dumps({"schema": "provider-gates/v1", "gates": {"codex": {"until": 7}}}), encoding="utf-8")
+        code, _, err = self.run_cli()
+        self.assertEqual(code, 1)
+        self.assertIn("RECORD_INVALID: ", err)
+        self.assertIn("/gates/codex/until", err)
 
     def test_list_and_clear(self):
         import time

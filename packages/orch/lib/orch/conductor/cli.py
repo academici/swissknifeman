@@ -212,7 +212,7 @@ def _prompt(args, project: Path) -> int:
         if args.prompt_verb == "diff":
             return _prompt_diff(args, project)
         _run_id, doc = _manifest(project, args.run, args.item, args.step)
-    except _PromptError as error:
+    except (_PromptError, engine.Stop) as error:
         print(f"{error.code}: {error.message}", file=sys.stderr)
         return 1
     print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.explain_table(doc))
@@ -233,8 +233,9 @@ def _prompt_diff(args, project: Path) -> int:
                                                           "to compare with --against RUN:ITEM:STEP")
         against = (run_id, args.item, previous)
     _base_run, base = _manifest(project, *against, missing="PROMPT_MANIFEST_MISSING")
-    doc = dict(prompts.diff_manifests(base, target), run=run_id, item=args.item,
-               against={"run": against[0], "item": against[1], "step": against[2]})
+    doc = records.check(dict(prompts.diff_manifests(base, target), run=run_id, item=args.item,
+                             against={"run": against[0], "item": against[1], "step": against[2]}),
+                        "prompt-diff", "prompt diff", hint=records.WRITER_HINT)
     print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.diff_table(doc))
     return 0
 

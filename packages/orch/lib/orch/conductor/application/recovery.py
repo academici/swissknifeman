@@ -6,11 +6,11 @@ import signal
 import time
 
 from orch import events
-from orch.conductor import agents, checks, process, prompts
+from orch.conductor import agents, checks, process, prompts, records
 from orch.conductor.domain.stop import Stop
 from orch.conductor.domain.item import Item
 from orch.conductor.infrastructure import clock, work_source
-from orch.conductor.infrastructure.files import read_json, safe
+from orch.conductor.infrastructure.files import safe
 
 
 def dirty_paths(project, limit: int = 500) -> list:
@@ -100,16 +100,17 @@ def kill_orphaned_roles(run) -> None:
     """Called under checkout and run ownership, before retry or any new role can start.
 
     Missing steps count as unfinished too: older journals wrote only completed steps.
-    A pid alone is never authority to signal a process group.
+    A pid alone is never authority to signal a process group. ``process.json`` and ``request.json`` are checked records
+    (``process``, ``agent-request``): one that does not match stops the resume (``RECORD_INVALID``) before any signal.
     """
     for path in sorted(run.directory.glob("*/agents/*/process.json")):
-        request = read_json(path.with_name("request.json")) or {}
+        request = records.read(path.with_name("request.json"), "agent-request") or {}
         item = next((ref for ref in run.state.get("items", {}) if safe(ref) == path.parents[2].name), None)
         step = request.get("step")
         steps = run.state.get("items", {}).get(item, {}).get("steps", {})
         if not step or steps.get(step, {}).get("status") == "done":
             continue
-        doc = read_json(path) or {}
+        doc = records.read(path, "process") or {}
         pid, pgid, ticks = doc.get("pid"), doc.get("pgid"), doc.get("start_ticks")
         if type(pid) is not int or pid <= 1 or pgid != pid or type(ticks) is not int:
             continue

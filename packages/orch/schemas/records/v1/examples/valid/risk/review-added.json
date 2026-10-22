@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:risk:v1",
+  "score": 60,
+  "features": [
+    {"name": "public_cli", "weight": 25, "evidence": "1 changed path(s): packages/orch/lib/orch/conductor/cli.py"},
+    {"name": "schema", "weight": 25, "evidence": "1 changed path(s): packages/orch/schemas/records/v1/risk.schema.json"},
+    {"name": "red_first", "weight": 10, "evidence": "an acceptance check was red in the first round"}
+  ],
+  "critical": [],
+  "facts": {
+    "changed": ["packages/orch/schemas/records/v1/risk.schema.json", "packages/orch/lib/orch/conductor/cli.py"],
+    "outside": [],
+    "diff_lines": 120,
+    "red_first": true,
+    "deviation": false,
+    "recommended": false
+  },
+  "threshold": 60,
+  "added": true,
+  "announced": true,
+  "item": "W1",
+  "run": "cnd-20261022T100000Z-a1b2c3"
+}

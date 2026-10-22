@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:prompt-diff:v1",
+  "title": "Output of orch conduct prompt diff --json",
+  "description": "What changed from the prompt of one role step to another (prompts.py diff_manifests; the command adds run, item and against): every block added, removed, changed or the same, with the tokens of both sides, and the totals. Keeps its published tag schema prompt-diff/v1 (no $schema).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["base", "target", "blocks", "tokens", "counts"],
+  "properties": {
+    "schema": {"description": "Published tag of the document.", "const": "prompt-diff/v1"},
+    "base": {"$ref": "#/$defs/side"},
+    "target": {"$ref": "#/$defs/side"},
+    "blocks": {"description": "Blocks of both prompts, base order first.", "type": "array", "items": {"$ref": "#/$defs/block"}},
+    "tokens": {"$ref": "#/$defs/tokens"},
+    "counts": {
+      "description": "Blocks by change.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["added", "removed", "changed", "same"],
+      "properties": {
+        "added": {"description": "Blocks only in target.", "type": "integer", "minimum": 0},
+        "removed": {"description": "Blocks only in base.", "type": "integer", "minimum": 0},
+        "changed": {"description": "Blocks with another digest.", "type": "integer", "minimum": 0},
+        "same": {"description": "Blocks with the same digest.", "type": "integer", "minimum": 0}
+      }
+    },
+    "run": {"description": "Run of the target prompt.", "type": "string"},
+    "item": {"description": "Piece of the target prompt.", "type": "string"},
+    "against": {
+      "description": "The prompt compared with.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run", "item", "step"],
+      "properties": {
+        "run": {"description": "Run.", "type": "string"},
+        "item": {"description": "Piece.", "type": "string"},
+        "step": {"description": "Step.", "type": "string"}
+      }
+    }
+  },
+  "$defs": {
+    "side": {
+      "description": "One of the two prompts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step", "prompt_sha256"],
+      "properties": {
+        "step": {"description": "Step of the manifest.", "type": ["string", "null"]},
+        "prompt_sha256": {"description": "Digest of the whole prompt.", "type": ["string", "null"]}
+      }
+    },
+    "tokens": {
+      "description": "Estimated tokens of both sides.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "delta"],
+      "properties": {
+        "from": {"description": "Tokens of base.", "type": "integer"},
+        "to": {"description": "Tokens of target.", "type": "integer"},
+        "delta": {"description": "to - from.", "type": "integer"}
+      }
+    },
+    "block": {
+      "description": "One block, matched by kind and origin (a block without an origin by kind and its order).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "origin", "change", "tokens", "sha256"],
+      "properties": {
+        "kind": {"description": "Block kind.", "type": ["string", "null"]},
+        "origin": {"description": "Block origin, null when none.", "type": ["string", "null"]},
+        "change": {"description": "What changed.", "type": "string", "enum": ["added", "removed", "changed", "same"]},
+        "tokens": {"$ref": "#/$defs/tokens"},
+        "sha256": {
+          "description": "Digests of both sides, null on the side without the block.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "to"],
+          "properties": {
+            "from": {"description": "Digest in base.", "type": ["string", "null"]},
+            "to": {"description": "Digest in target.", "type": ["string", "null"]}
+          }
+        }
+      }
+    }
+  }
+}

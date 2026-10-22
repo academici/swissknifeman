@@ -12,16 +12,18 @@ an id ``agent-<run suffix>-<n>`` and the folder ``<run>/<item>/agents/<agent_run
   path) and ``lingered``;
 - ``usage.json``: ``input``, ``cached``, ``output`` tokens of all the attempts and ``usage_complete`` (true/false/null).
 
+The three are ``records/v1`` kinds ``agent-request``, ``agent-result`` and ``agent-usage``: checked and replaced
+crash-safely when written, checked when read (a file that does not match is ``RECORD_INVALID``).
+
 The prompts and the streams stay where they were (``prompts/``, ``streams/``); the catalog only points at them.
 A folder without ``result.json`` is a role still running, or one that died with the process.
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Optional
 
-from orch.conductor.infrastructure.files import write_json
+from orch.conductor import records
 
 AGENTS = "agents"
 USAGE_KEYS = ("input", "cached", "output")
@@ -32,8 +34,8 @@ def agent_id(run_id: str, number: int) -> str:
     return f"agent-{run_id[4:] if run_id.startswith('cnd-') else run_id}-{number}"
 
 
-def _write(path: Path, doc: dict) -> None:
-    write_json(path, doc)
+def _write(path: Path, doc: dict, kind: str) -> None:
+    records.write(path, doc, kind)
 
 
 def start(item_directory: Path, agent: str, *, role: str, route: dict, step: str, attempt: int, prompt: str,
@@ -44,7 +46,7 @@ def start(item_directory: Path, agent: str, *, role: str, route: dict, step: str
                "causation": causation or step, "started_at": started_at}
     if parent:
         request["parent_agent_run_id"] = parent
-    _write(directory / "request.json", request)
+    _write(directory / "request.json", request, "agent-request")
     return {"id": agent, "directory": directory, "role": role, "step": step, "parent": parent,
             "usage": dict.fromkeys(USAGE_KEYS, 0)}
 
@@ -61,8 +63,9 @@ def finish(handle: dict, *, exit_code: Optional[int], error: Optional[dict], dec
               "lingered": bool(lingered)}
     if error:
         result["error"] = error
-    _write(handle["directory"] / "result.json", result)
-    _write(handle["directory"] / "usage.json", {**handle["usage"], "usage_complete": handle.get("usage_complete")})
+    _write(handle["directory"] / "result.json", result, "agent-result")
+    _write(handle["directory"] / "usage.json", {**handle["usage"], "usage_complete": handle.get("usage_complete")},
+           "agent-usage")
 
 
 def orphan(directory: Path) -> bool:
@@ -74,23 +77,23 @@ def orphan(directory: Path) -> bool:
     path = Path(directory) / "result.json"
     if path.exists():
         return False
-    _write(path, {"error": {"code": "ORPHANED",
-                           "message": "the conductor died; the role was stopped on resume"}})
+    _write(path, {"error": {"code": "ORPHANED", "message": "the conductor died; the role was stopped on resume"}},
+           "agent-result")
     return True
 
 
 def read(item_directory: Path) -> list:
     """``[{agent_run_id, role, step, status, tokens}]`` of an item, in start order. ``status``: ``running`` (no result),
-    ``failed`` (an error or a non-zero exit), else ``ok``."""
+    ``failed`` (an error or a non-zero exit), else ``ok``. A request that cannot be read is skipped; a file that is not
+    JSON is ``STATE_CORRUPT``, one that does not match its schema ``RECORD_INVALID``."""
     rows = []
     for request_file in sorted(Path(item_directory, AGENTS).glob("*/request.json"),
                                key=lambda path: _order(path.parent.name)):
-        try:
-            request = json.loads(request_file.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+        request = _load(request_file, "agent-request")
+        if request is None:
             continue
-        result = _load(request_file.parent / "result.json")
-        usage = _load(request_file.parent / "usage.json") or {}
+        result = _load(request_file.parent / "result.json", "agent-result")
+        usage = _load(request_file.parent / "usage.json", "agent-usage") or {}
         status = "running" if result is None else "failed" if result.get("error") or result.get("exit") else "ok"
         rows.append({"agent_run_id": request.get("agent_run_id"), "role": request.get("role"),
                      "step": request.get("step"), "status": status,
@@ -103,9 +106,9 @@ def _order(name: str) -> int:
     return int(tail) if tail.isdigit() else 0
 
 
-def _load(path: Path) -> Optional[dict]:
+def _load(path: Path, kind: str) -> Optional[dict]:
+    """The checked record at ``path``; ``None`` when there is none or it cannot be read (no access, a folder)."""
     try:
-        found = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        return records.read(path, kind)
+    except OSError:
         return None
-    return found if isinstance(found, dict) else None

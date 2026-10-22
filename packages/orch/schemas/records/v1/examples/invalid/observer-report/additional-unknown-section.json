@@ -1,0 +1,9 @@
+{
+  "schema": "orch-conductor-observer/v1",
+  "run": "cnd-20261022T100000Z-a1b2c3",
+  "beacons": {},
+  "red_checks": {},
+  "items": [],
+  "proposals": [],
+  "verdict": "GREEN"
+}

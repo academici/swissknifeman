@@ -188,10 +188,16 @@ class SchemaTagTests(unittest.TestCase):
         code = main(["--root", str(root), "--allow-pending", "orch"])
         self.assertEqual(code, 0)
 
-    def test_repository_tags_resolve_with_orch_pending(self):
-        failures, pending = check(ROOT, {"orch"})
+    def test_repository_tags_resolve_with_none_pending(self):
+        # orch records/v1 (P4.3, P4.9) holds the $ids of the five published short tags: nothing is pending any more
+        failures, pending = check(ROOT, set())
         self.assertEqual(failures, [], "\n".join(failures))
-        self.assertTrue(any("provider-gates/v1" in line for line in pending), pending)
+        self.assertEqual(pending, [])
+        tags = aliases(ROOT)
+        ids = schema_ids(ROOT)
+        for short in ("provider-gates/v1", "orch-conductor-observer/v1", "orch-conductor-review-verdict/v1",
+                      "prompt-diff/v1", "orch-conformance/v1"):
+            self.assertIn(tags[short], ids, short)
 
     def test_a_schema_string_outside_the_tag_pattern_is_reported(self):
         for value, reason in NON_DOCUMENT_TAGS.items():

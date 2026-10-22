@@ -390,7 +390,7 @@ The conductor stops only on:
 | `STATE_CORRUPT` | a JSON file of the run folder is not JSON; it names the file |
 | `RUN_INVALID`, `STATE_INVALID` | `run.json` or `state.json` does not match its records/v1 schema (see *Run records*) when the run is loaded or saved: `CODE: <path>: <JSON pointer>: <message>` for the first three problems, then `settle or release the items of this run, or start a new run`. A file is never rewritten by a read; a state that would not match is not saved |
 | `QUESTIONS_INVALID` | `questions.json` of a piece is not JSON or does not match records/v1 `questions`: the run stops, `orch conduct answer` writes nothing and exits 1, `orch conduct questions` lists the other pieces and exits 1. The file is left as it is, so an answer in it is not lost |
-| `RECORD_INVALID` | another run record (`options.json`, `routes.json` of a piece) does not match its records/v1 schema; same message shape. A lease record that does not match only makes its owner `unknown` in a busy message |
+| `RECORD_INVALID` | another run record (`options.json`, `routes.json`, `risk.json` of a piece, `review-strategy.json`, an agent's `request.json`, `result.json`, `usage.json` or `process.json`, the machine's `provider-gates.json`) does not match its records/v1 schema; same message shape (`provider-gates.json`: `remove the file to reset the gates`). A lease record that does not match only makes its owner `unknown` in a busy message |
 | `STUBS_INVALID` | a stub file cannot be used (a symlink, not a regular file, over 32 KiB, not UTF-8, a bad header or mode); the run stops before any role starts and names the file and the `STUB_*` code |
 
 With `on_blocked = "report"` a blocked piece that changed nothing is registered, its records are committed and the
@@ -487,7 +487,10 @@ the machine file `<state>/orch/provider-gates.json` (`provider-gates/v1`, one en
 whose `until` is in the future forbids the provider; an expired entry is ignored and dropped by the next write; of two writes
 the later `until` wins. A write is a read-modify-write under `flock` on `provider-gates.lock` beside the file and an atomic
 replace, so two conductors never lose each other's entry and a reader sees a whole file. `orch conduct gates [--json]` lists
-the gates in force; `gates --clear [PROVIDER]` removes one or all (so does deleting the file); it needs no project.
+the gates in force; `gates --clear [PROVIDER]` removes one or all (so does deleting the file); it needs no project. The
+file is the records/v1 kind `provider-gates`: a missing file, a symlink or a file that is not regular is no gates, but a
+regular file that is not JSON (`STATE_CORRUPT`) or not `provider-gates/v1` (`RECORD_INVALID`, with the JSON pointer)
+stops the run that reads it and makes `orch conduct gates` exit 1; remove the file to reset the gates.
 
 ### Provider failures
 
@@ -1169,10 +1172,27 @@ step carries none. `skills_auto` and `skills_checked` hold the choice of each ro
 | `item-options` | `<run>/<item>/options.json` | the options of the piece: `scenario`, `options` (a run-options document of `conductor/v1`: `skills` as `[{role, names}]`, a layer that gives the same options again), `sources`, `digest`, `claim_route` | `RECORD_INVALID` |
 | `item-routes` | `<run>/<item>/routes.json` | the route of each role, rewritten by a fallback, a retry or a reviewer upgrade | `RECORD_INVALID` |
 | `lease` | `<run>/lease.json`, `<runs root>/checkouts/<sha16>.json` | the owner of the run lease or the checkout lock (`pid`, `host`, `started_at`, `command`, `run`) | owner `unknown` |
+| `risk` | `<run>/<item>/risk.json` | `dynamic_review`: the risk score, its features and facts, the threshold and whether it added a review | `RECORD_INVALID` |
+| `review-strategy` | `<run>/review-strategy.json` | `review_plan.decide`: mode, groups, reviewer effort, reason, source; a resume whose state lost the plan takes this file | `RECORD_INVALID` |
+| `process` | `<run>/<item>/agents/<id>/process.json` | `process.run_role`: `pid`, `pgid`, `start_ticks`, `started_at`; read by cold recovery before any signal | `RECORD_INVALID` (the resume stops) |
+| `agent-request` | `<run>/<item>/agents/<id>/request.json` | `agents.start` (see *Agent runs*) | `RECORD_INVALID` |
+| `agent-result` | `<run>/<item>/agents/<id>/result.json` | one of two variants: `agents.finish` (`exit`, `decisions`, `duration_s`, `stream`, `lingered`, `error` when it failed) or `agents.orphan` (only `error` `ORPHANED`); an empty or tag-only result is no result | `RECORD_INVALID` |
+| `agent-usage` | `<run>/<item>/agents/<id>/usage.json` | `agents.finish`: `input`, `cached`, `output`, `usage_complete` | `RECORD_INVALID` |
+| `review-verdict` | `<artifacts>/review-verdict.json` | `verdict_file`, tag `"schema": "orch-conductor-review-verdict/v1"` (read outside orch as published) | `RECORD_INVALID` |
+| `provider-gates` | `<state>/orch/provider-gates.json` (machine) | `gates.set_gate`, `gates.clear` under `provider-gates.lock`, tag `"schema": "provider-gates/v1"` | `STATE_CORRUPT`, `RECORD_INVALID` |
+| `observer-report` | `.swissknifeman/orch/reports/<run>/observer.json` | `observer.write_report`, tag `"schema": "orch-conductor-observer/v1"`; checked before it is written, bytes as before | `RECORD_INVALID` (nothing written) |
+| `prompt-diff` | output of `orch conduct prompt diff --json` | `prompts.diff_manifests` and the command (`run`, `item`, `against`), tag `"schema": "prompt-diff/v1"` | `RECORD_INVALID` (exit 1) |
+| `conformance-report` | rows of `orch conformance` | `conformance.run`: the rows are checked as `{"schema": "orch-conformance/v1", "rows": [...]}` (the tag of the catalogue); `--json` prints the rows alone, as before | `CONFORMANCE_INVALID` |
 
-The other runtime documents (risk, review strategy, process, agent records, review verdict, provider gates, observer
-report, prompt diff, conformance report) get their kinds in a later item; the five that already publish a short tag
-(`"schema": "<name>/v1"`) keep it as their carrier.
+The five kinds that already published a short tag keep it as their carrier (`"schema": "<name>/v1"`, never `$schema`):
+one without a tag is read as v0 with `schema` added, and `$schema` on them, another value or both carriers is
+`unknown or conflicting record tag`. A record the conductor builds itself for output (observer report, prompt diff,
+conformance rows, review verdict) that does not match ends with `... ; the conductor built a document outside its
+contract; report this defect`. The agent records of a piece are written crash-safely (`durable_replace`, file and folder
+`fsync`); `agents.read` and the cold recovery of stage usage (`budget.known_stage_usage`, for a run saved before
+`stage_usage`) read them as checked records, so a damaged `usage.json` stops instead of counting as zero tokens;
+`agents.read` skips a request it cannot open, and the observer report leaves out the agent runs of a piece
+whose record does not match and names it on stderr.
 
 Role streams never go into the artifact folder; a review verdict there is short and points at the stream in state.
 The shared gitignore policy (`packages/aicore/configs/gitignore-policy.json`, entries `swissknifeman-state`,

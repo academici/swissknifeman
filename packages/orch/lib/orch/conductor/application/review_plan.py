@@ -15,7 +15,7 @@ import time
 from typing import Optional
 
 from orch import adhoc, launch
-from orch.conductor import options as opts, process, review_batch
+from orch.conductor import options as opts, process, records, review_batch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.clock import utc_now
@@ -26,6 +26,7 @@ from orch.conductor.policies.routing import CLASS_RANK
 
 PER_PIECE_OFF = ("groups", "single", "none")  # the strategy modes in which a piece is not reviewed on its own
 GROUP_ATTEMPTS = 2  # a group review that failed is repeated once (on resume) before the group stays unreviewed
+STRATEGY_FILE = "review-strategy.json"  # records/v1 review-strategy
 
 
 def piece_item(self, answer: dict) -> Item:
@@ -108,8 +109,14 @@ def ask_strategist(self, item: Item, pieces: list, proposal: dict) -> Optional[d
 
 
 def decide(self, answers: list) -> None:
-    """Choose the review plan of this batch once (a resume reads the kept plan)."""
+    """Choose the review plan of this batch once (a resume reads the kept plan: ``state.review_strategy``, else the
+    ``review-strategy.json`` a run that died before its next save had already written)."""
     if self.state.get("review_strategy") is not None:
+        return
+    kept = records.read(self.directory / STRATEGY_FILE, "review-strategy")
+    if kept is not None:
+        self.state["review_strategy"] = {key: value for key, value in kept.items() if key != "$schema"}
+        self._save()
         return
     if len(answers) < 2:
         self.state["review_strategy"] = {"mode": "each", "groups": [[a["ref"] for a in answers]], "source": "single piece",
@@ -131,7 +138,7 @@ def decide(self, answers: list) -> None:
         plan = ask_strategist(self, first, pieces, proposal) or proposal
     plan = dict(plan, decided_at=utc_now())
     self.state["review_strategy"] = plan
-    write_json(self.directory / "review-strategy.json", plan)
+    records.write(self.directory / STRATEGY_FILE, plan, "review-strategy")
     self._save()
     groups = "; ".join(" + ".join(group) for group in plan["groups"]) or "none"
     effort = group_effort(self, first.options["reviewer"], plan["reviewer"]["effort"])

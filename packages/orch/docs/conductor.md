@@ -209,7 +209,7 @@ Every step has a key and is recorded in `state.json` before it starts and once i
 | claim | work source | `source claim` with a submission of this run. `--batch` (default) takes every piece of `--items A B C` in progress at the start (each piece is started under its own run, one after another, and a dependency that is in progress counts as met: `source claim --batch`, for the planner `start --in-progress-deps`) and the first prompt of the shared session lists them; `--no-batch` claims one at a time; The claim names the executor of `--options` (its provider, model or the model of its class, and its effort; the configured default executor without one), so a route of the work that pins another provider needs no copy in the plan's `orchestration`. `--ready` asks the source for its next ready lane (`lane` of the claim answer) and runs that lane as a batch too, or one piece at a time with `--no-batch`. In a batch a stop gives no piece back on its own: all stay in progress and `resume` goes on (`release` frees one by hand; `--no-batch` gives back a piece nobody worked on, as before). A piece whose executor round began counts as worked on, however the round ended |
 | `brief` | work source | `source brief`; the execution-input is read from the artifact store; the base revision is recorded |
 | `prepare` | orch | writes `launch-plan.json` for the scenario. The conductor omits stages it skips; public `source prepare` binds the pack as stored |
-| `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map; its optional closing ```` ```json write-set ```` block (`scout-write-set`: `paths`, `tests`) is taken out of the map into the executor's "Expected paths" section, a missing or invalid block is ignored with a `RESULT_HEALED` beacon, and the hint never widens `scope.write_set` |
+| `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map; its optional closing ```` ```json write-set ```` block (`scout-write-set`: `paths`, `tests`) is taken out of the map into the executor's "Expected paths" section, a missing or invalid block is ignored with a `RESULT_HEALED` beacon, and the hint never widens `scope.write_set`. The cache key ignores `provenance`, `digest`, the `input_id` digest suffix and `lessons[].ts` (a timestamp, not scope, an instruction or a dependency). A change of goal, scope, reads, route, role text or a selected skill misses |
 | `research.N`, `research-save.N` | researcher, work source | with `orch.research.policy = required` (every piece) or `conditional`, the default (a piece whose input says `research.need = required`); `off` never (see [Research](research.md)): the researcher (`implementation`, read-only, network allowed) asks the allowed sources of `[orch.research.sources]` with the one command `python3 …/orch.py research query` and returns a closed `research-result` (`query`, `claims` each with `sources`, `contradictions`, `unknowns`, `sources_used`; a statement without a source belongs to `unknowns`); `research-save.N` then has the work source keep it (`source research`: a plan keeps `research/<item>-<n>.json` and declares it as an input of the item, a file input keeps `research-<n>.json` in its artifacts) and, when the source cannot, the conductor keeps it in the artifacts of the piece and prints `RESEARCH_NOT_SAVED`; no source configured stops the run with `RESEARCH_NO_SOURCES` before any work |
 | `executor.N` | executor | the execution-input, the context map, the run rules, the repository rules of an isolated role and, for a correction, its package; returns a closed `stage-report`; the conductor then reads the changed paths from git |
 | `checks.N` | deterministic | every `acceptance`/`impact` command check of the cadences asked for, with a check-evidence file per check; the item checks run cheapest first (the red ones of the round before ahead, then by their time in earlier rounds), `checks.parallel` at a time, and with `checks.fail_fast` none starts after a red one (`skipped`, `skip_reason` `fail_fast`); the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`); a green check with the same candidate is reused (`reused`, no new run) |
@@ -719,8 +719,22 @@ project. A damaged evidence file, another run, another candidate or any differen
 does a check that changed files of the project or the files it reads outside it while it ran, an input that cannot be read, and
 every check that starts after an earlier check of the round changed the tree or committed (the candidate, HEAD included, was
 taken at the start of the round). A reused row keeps `reused_from` (the evidence it stands for)
-and `original_seconds`; the evidence file is not rewritten. The folder of the evidence and the logs of the checks is not part of
+and `original_seconds`; the evidence file is not rewritten. When a prior evidence file does not prove the check, the row
+carries `reuse_miss`: the component that differs (`candidate.head`, `candidate.dirty_digest`, `command`, `cwd`,
+`fingerprint=<short hash>`, `run`, `subject`, `unknown inputs`), never an environment value. A first run, with no
+evidence file, has no `reuse_miss`. The folder of the evidence and the logs of the checks is not part of
 the candidate.
+
+A correction is built from the latest red acceptance. Both the full executor prompt and the resumed delta say that
+this correction is the only current assignment and that earlier correction instructions are historical. The goal, the
+scope, the authority and the acceptance contract stay in force. The focus includes a bounded sample of failure headers and
+child logs the sampled check log names (`full output:`, `child log:`); the full log path stays the authority. Checks that
+were red earlier and green later are listed as historical, not as work. A completion report that changes no product
+file and no execution input does not start acceptance again (`CORRECTION_INEFFECTIVE`, not fixed), unless the report
+carries evidence of an environment fix (`class` `environment` or `test_env`) or a confirmed nondeterministic failure
+(the issue says nondeterministic and names evidence). That proof is accepted once for the same red command checks.
+The pre-executor baseline and the exceptional no-diff admission are saved before execution and acceptance respectively, so resume preserves them. Journal-only input changes do not count as a correction.
+Conductor runtime paths are not a product change. An unknown git state is not treated as a no-diff.
 
 ## One review for a batch: `scripts/batch-review.py`
 
@@ -1006,8 +1020,9 @@ and the frame of the review, triage and closing roles (`progress`, `candidate`, 
 
 A correction round of an executor whose session goes on does not send the whole prompt (the role text, the execution-input,
 the rules, the skills, the scout map: 56–115 KB) to a session that holds it already. `prompts.executor_resumed` builds the
-**delta prompt** from the blocks `resumed` (`## Continuation`: the task, the rules and the result contract of the first prompt
-still apply), `answers` (only the answers the session has not seen: `executor_session_answers`), `correction` (the red checks,
+**delta prompt** from the blocks `resumed` (`## Continuation`: the task, the rules and the result contract of the latest full prompt
+still apply; earlier correction instructions in the session are historical, and the correction section of this message is the
+only current focus), `answers` (only the answers the session has not seen: `executor_session_answers`), `correction` (the red checks,
 the confirmed findings, the deviation to fix), `interrupted` (the note of an interrupted round), `changed` (the paths the
 earlier round changed), `progress` and `result_contract`. A round that asks nothing the session lacks (the first round of a
 piece, a repeat of it) has no delta prompt and is sent in full.
@@ -1255,7 +1270,7 @@ team-lead observer and where to keep its record.
 
 ## Configuration
 
-The `report-fixer` role runs on the conductor's provider by default (an economy model: Claude Code haiku, codex luna, grok);
+The `report-fixer` role runs on the conductor's provider by default (an economy model: Claude Code haiku, Codex `gpt-6-luna`, grok);
 a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}` moves it, and `limits.repairs: 0` turns it off.
 
 `[orch.conductor]` (`configs/config.schema.json`): `provider` (default `claude-code`), `reviewer`
@@ -1307,6 +1322,9 @@ ACP routes are still refused. Preflight checks the provider after `--` without s
 availability for the process: a missing Grok CLI gives `available: false` and `PROVIDER_UNAVAILABLE` in the dry-run,
 and stops a required route before claim.
 
+Ordinary Codex scout, and every other Codex role whose launch class is `economy` and whose route does not name a model,
+uses `gpt-6-luna` (effort `low` for scout). `gpt-5.6-luna` stays in the inventory and is not the preferred selector.
+An explicit executor, reviewer or owner model is kept. Implementation stays `gpt-6-sol` and frontier stays `gpt-6-astra`.
 The Grok `scout` uses text transport, `--output-format plain`, `--disable-web-search`, economy/low and 300 s.
 The `triager` and `researcher` use implementation/medium and 1800 s; the `advisor` uses frontier/high and 1800 s.
 The `reviewer` and `triager` use `--protect {cwd} --rw {cwd}/vendor`; the `scout`, `researcher`, `advisor` and

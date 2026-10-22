@@ -329,9 +329,11 @@ class FingerprintTests(Case):
         with mock.patch.dict(os.environ, {"SKM_FINGERPRINT_PROBE": "1"}):
             self.run_round(document, number=2)
         self.assertEqual(self.count(), 1)
-        with mock.patch.dict(os.environ, {"SKM_FINGERPRINT_PROBE": "2"}):
-            self.run_round(document, number=3)
+        with mock.patch.dict(os.environ, {"SKM_FINGERPRINT_PROBE": "probe-secret-value"}):
+            rows = self.run_round(document, number=3)
         self.assertEqual(self.count(), 2)
+        self.assertIn("fingerprint=", rows[0].get("reuse_miss", ""))
+        self.assertNotIn("probe-secret-value", rows[0]["reuse_miss"])
 
     def one_check(self, cmd=None):
         return doc(check("V1", cmd or self.counting()))

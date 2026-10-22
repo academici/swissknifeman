@@ -856,6 +856,11 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                 if found is not None and not tree_moved():
                     return dict(row, cmd=check["cmd"], exit=0, evidence=_relative(target, project), green=True, reused=True,
                                 seconds=0, **found)
+                miss = "candidate changed during this round" if found is not None and tree_moved() else \
+                    reuse_miss(target, check, cwd=cwd, root=root, candidate=candidate, subject=subject,
+                               run_id=run_id, print_of=print_of)
+                if miss:
+                    row["reuse_miss"] = miss
             log = Path(log_dir) / f"{check_id}.log"
             log.parent.mkdir(parents=True, exist_ok=True)
             begin = time.monotonic()
@@ -937,6 +942,55 @@ def _reusable(target: Path, check: dict, *, cwd: Path, root: Path, candidate: di
     except (OSError, ValueError, KeyError):
         return None
     return {"reused_from": doc["evidence_id"], "original_seconds": max(0, int(seconds)), "tail": ""}
+
+
+def reuse_miss(target: Path, check: dict, *, cwd: Path, root: Path, candidate: dict, subject: str, run_id: str,
+               print_of: Optional[str]) -> Optional[str]:
+    """Why a prior evidence file does not prove this check again, as safe component names and short hashes.
+
+    None when there is no prior file: that is a first run, not a reuse miss. Environment values are never included."""
+    if print_of is None:
+        return "unknown inputs; nothing reused"
+    try:
+        raw = target.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    try:
+        doc = json.loads(raw)
+    except ValueError:
+        return "evidence unreadable"
+    if not isinstance(doc, dict) or any(issue.level == "error" for issue in contracts.validate(doc, "check-evidence")):
+        return "evidence outside the contract"
+    found, procedure, owner = doc.get("candidate") or {}, doc.get("procedure") or {}, doc.get("producer") or {}
+    changed = []
+    exit_code = doc.get("exit")
+    if not (isinstance(exit_code, int) and not isinstance(exit_code, bool) and exit_code == 0):
+        changed.append("prior-not-green")
+    if owner.get("kind") != "engine":
+        changed.append("producer")
+    if doc.get("check_id") != check["id"]:
+        changed.append("check")
+    if doc.get("subject") != subject:
+        changed.append("subject")
+    if not str(doc.get("evidence_id", "")).startswith(f"{run_id}:"):
+        changed.append("run")
+    if found.get("head") != candidate["head"]:
+        changed.append("candidate.head")
+    if found.get("dirty_digest") != candidate["dirty_digest"]:
+        changed.append("candidate.dirty_digest")
+    if procedure.get("cmd") != check["cmd"]:
+        changed.append("command")
+    stored = (doc.get("environment") or {}).get("env_digest")
+    if stored != print_of:
+        changed.append("fingerprint=" + (print_of or "")[:12])
+    try:
+        if (root / procedure.get("cwd", ".")).resolve() != cwd:
+            changed.append("cwd")
+    except (OSError, ValueError):
+        changed.append("cwd")
+    if not changed:
+        changed.append("fingerprint")
+    return "reuse miss: " + ", ".join(changed)
 
 
 def dirty_files(project: Path) -> dict:

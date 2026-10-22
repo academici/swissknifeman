@@ -330,6 +330,30 @@ class RunnerTests(RunnerFixture):
             doc = json.loads(out.getvalue())
             self.assertEqual(doc["jobs"], {"requested": 20, "effective": 1, "budget": 5, "child": 5})
 
+    def test_a_reuse_miss_names_the_changed_component_and_not_the_secret_value(self):
+        secret = "super-secret-clash-value"
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "explain", "SKM_TEST_CLASH": "one"}):
+            self.assertEqual(self.run_runner("--tier", "all")[0], 0)
+            self.assertIn("[cached] packages/a:", self.run_runner("--tier", "all")[1])
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "explain", "SKM_TEST_CLASH": secret}):
+            code, out, _ = self.run_runner("--tier", "all")
+        self.assertEqual(code, 0)
+        self.assertIn("[miss] packages/a:", out)
+        self.assertIn("env:SKM_TEST_CLASH=", out)
+        self.assertNotIn(secret, out)
+        self.assertIn("[ok] packages/a:", out)
+
+    def test_an_unknown_dependency_says_why_it_cannot_be_reused(self):
+        path = self.root / "packages/a/unit.json"
+        doc = json.loads(path.read_text())
+        doc["requires"] = [{"unit": "not-a-unit"}]
+        path.write_text(json.dumps(doc))
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "unknown"}):
+            code, out, _ = self.run_runner("--tier", "fast", "--paths", "packages/a/x.py")
+        self.assertEqual(code, 0)
+        self.assertIn("unknown dependency; conservative run", out)
+        self.assertNotIn("[cached] packages/a:", out)
+
     def test_env_runner_fixture_dependency_and_tool_changes_invalidate_reuse(self):
         with patch.dict(os.environ, {"SKM_CHECK_RUN": "context"}):
             self.run_runner("--tier", "all")

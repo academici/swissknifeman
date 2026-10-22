@@ -362,7 +362,11 @@ combine obligations; renames include both owners, and `--base` also includes unt
 profiles, inputs, context, per-unit obligation and requested/effective jobs. Nested runners divide `SKM_TEST_JOBS`.
 
 Green receipts are bound to content, Python, tools, configuration and execution environment; changed inputs during a
-command prevent reusable green. `--tier all` never uses the general green cache: reuse requires a safe `SKM_CHECK_RUN`
+command prevent reusable green. A miss against a prior green receipt of the same command prints `[miss]` with the
+changed component names and short hashes (`env:NAME`, `files:<folder>`, `tool:<name>`). Secret-named variables are
+not part of the key and are never printed. An unknown unit dependency prints `unknown dependency; conservative run`
+and is not reused. A first run, with no prior receipt, does not print `[miss]`. The cache is real: an unchanged
+command in the same `SKM_CHECK_RUN` still prints `[cached]`. `--tier all` never uses the general green cache: reuse requires a safe `SKM_CHECK_RUN`
 (`A-Za-z0-9`, then letters, digits, `_` or `-`) and is confined to that conductor run. Manual/release runs without that
 variable stay full; `--no-cache` disables all reuse. Receipts and duration data are atomically merged in the git
 directory, and run receipts older than 14 days are pruned when a run cache is written. Planner's `scripts/test.sh`

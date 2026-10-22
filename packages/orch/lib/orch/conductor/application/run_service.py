@@ -282,7 +282,9 @@ def archive_attempt(self, ref: str, item: dict, dropped: list) -> None:
         for folder in ATTEMPT_DIRS:
             for path in sorted((directory / folder).glob("*")) if (directory / folder).is_dir() else []:
                 name = path.name
-                if not (name == key or name.startswith((key + ".", key + "-"))):
+                # the logs of step ``checks.N`` are the folder ``checks/N`` (one log per check and the jobs line)
+                round_dir = folder == "checks" and key.startswith("checks.") and name == key.split(".", 1)[1]
+                if not (round_dir or name == key or name.startswith((key + ".", key + "-"))):
                     continue
                 if any(name == other or name.startswith((other + ".", other + "-")) for other in kept if len(other) > len(key)):
                     continue  # a file of a longer step key that stays (``executor.1-q1`` beside a dropped ``executor.1``)

@@ -885,6 +885,21 @@ class StopTests(ConductorCase):
         self.assertFalse((directory / "W1" / "streams" / "review.1.jsonl").exists())
         self.assertEqual(sum(1 for attempt in item["attempts"] for key in attempt["steps"] if key.startswith("review.")), 2)
 
+    def test_the_check_logs_of_a_dropped_round_are_kept_with_its_attempt(self):
+        # step checks.N writes the folder checks/N: a retry keeps it aside, not only the files named like the step key
+        directory = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(directory, ignore_errors=True))
+        for name in ("1", "12"):
+            (directory / "W1" / "checks" / name).mkdir(parents=True)
+            (directory / "W1" / "checks" / name / "V20.log").write_text(f"round {name}", encoding="utf-8")
+        steps = {"checks.1": {"status": "done", "verdict": "red V20", "ended": "2026-01-01T00:00:01Z"},
+                 "checks.12": {"status": "done", "verdict": "green", "ended": "2026-01-01T00:00:02Z"}}
+        item = {"steps": steps}
+        run_service.archive_attempt(type("Service", (), {"directory": directory})(), "W1", item, ["checks.1"])
+        self.assertEqual(item["attempts"][0]["steps"]["checks.1"]["files"], ["checks/1"])
+        self.assertEqual((directory / "W1" / "attempts" / "1" / "checks" / "1" / "V20.log").read_text(), "round 1")
+        self.assertTrue((directory / "W1" / "checks" / "12" / "V20.log").is_file())  # a kept round stays in place
+
     def test_a_resume_does_not_count_the_closed_correction_rounds_again(self):
         repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}

@@ -28,20 +28,18 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
-import errno
-import fcntl
 import fnmatch
 import json
 import os
 import subprocess
 import sys
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Set, Tuple, Union
 
 from ..state import ensure_dir
 from ..util.io import atomic_write_json
+from ..util.lock import FileLock
 from . import journal
 from . import plugins as _plugins
 from . import settings as _settings
@@ -235,30 +233,19 @@ def _deliver_lock(jdir: PathLike, *, wait: Union[bool, float]) -> Iterator[Optio
     ensure_dir(root)
     ensure_dir(_ext_dir(root))
     path = _ext_dir(root) / LOCK_FILE
-    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    lock: Optional[DeliverLock] = None
+    guard = FileLock(path)
+    limit = WAIT_S if wait is True else float(wait or 0)
+    if not guard.acquire(blocking=bool(wait), timeout=limit, poll=_POLL_S):
+        if not wait:
+            yield None
+            return
+        raise ExtError("DELIVERY_LOCKED", f"another deliverer holds {path} for more than {limit:g} s")
+    lock = DeliverLock(root, guard.fd)
     try:
-        limit = WAIT_S if wait is True else float(wait or 0)
-        deadline = time.monotonic() + limit
-        while True:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except OSError as exc:
-                if exc.errno not in (errno.EAGAIN, errno.EACCES):
-                    raise
-            if not wait:
-                yield None
-                return
-            if time.monotonic() >= deadline:
-                raise ExtError("DELIVERY_LOCKED", f"another deliverer holds {path} for more than {limit:g} s")
-            time.sleep(_POLL_S)
-        lock = DeliverLock(root, fd)
         yield lock
     finally:
-        if lock is not None:
-            lock._release()
-        os.close(fd)  # closing the descriptor releases the flock
+        lock._release()
+        guard.release()
 
 
 def _valid_cursor(entry: object) -> bool:

@@ -1,9 +1,7 @@
 """Shared terminal output and termination helpers."""
-import re
 import sys
-from datetime import datetime, timezone
 
-_FRAC_RE = re.compile(r"\.(\d+)")
+from . import timefmt
 
 
 def die(msg, code=1):
@@ -16,7 +14,7 @@ def warn(msg):
 
 
 def now_iso():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return timefmt.utc_stamp()
 
 
 def parse_iso(s):
@@ -24,19 +22,7 @@ def parse_iso(s):
 
     Normalize ``Z`` and fractional seconds before ``fromisoformat``.
     """
-    if not isinstance(s, str):
-        return None
-    t = s.strip()
-    if not t:
-        return None
-    t = _FRAC_RE.sub(lambda m: "." + (m.group(1) + "000000")[:6], t, count=1)
-    if t.endswith("Z"):
-        t = t[:-1] + "+00:00"
-    try:
-        dt = datetime.fromisoformat(t)
-    except (ValueError, TypeError):
-        return None
-    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+    return timefmt.parse_rfc3339(s, convert=False)
 
 
 def confirm(prompt):

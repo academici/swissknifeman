@@ -19,16 +19,14 @@ POSIX only (``fcntl.flock``); file systems without ``flock`` are not supported. 
 """
 from __future__ import annotations
 
-import errno
-import fcntl
 import json
 import os
 import threading
-import time
 from pathlib import Path
 from typing import Iterator, Mapping, Optional, Tuple, Union
 
 from ..state import ensure_dir, project_state_dir, state_dir
+from ..util.lock import FileLock
 from .errors import ExtError
 
 JOURNAL_FILE = "events.jsonl"
@@ -75,21 +73,6 @@ def size(jdir: PathLike) -> int:
         return 0
 
 
-def _acquire(fd: int, path: Path, timeout: float) -> None:
-    deadline = time.monotonic() + timeout
-    while True:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            return
-        except OSError as exc:
-            if exc.errno not in (errno.EAGAIN, errno.EACCES):  # held by another process (EWOULDBLOCK == EAGAIN)
-                raise
-        if time.monotonic() >= deadline:
-            raise ExtError("JOURNAL_LOCKED", f"the journal lock {path} is held by another process for "
-                           f"more than {timeout:g} s")
-        time.sleep(LOCK_POLL_S)
-
-
 def append(jdir: PathLike, line: bytes, *, lock_timeout_s: float = LOCK_TIMEOUT_S) -> int:
     """Append one line and return the byte offset where it starts.
 
@@ -108,9 +91,11 @@ def append(jdir: PathLike, line: bytes, *, lock_timeout_s: float = LOCK_TIMEOUT_
     ensure_dir(root)
     ensure_dir(root / EXT_DIRNAME)
     with _fork_lock:
-        lock_fd = os.open(lock_path(root), os.O_RDWR | os.O_CREAT, 0o600)
+        lock = FileLock(lock_path(root))
+        if not lock.acquire(blocking=True, timeout=lock_timeout_s, poll=LOCK_POLL_S):
+            raise ExtError("JOURNAL_LOCKED", f"the journal lock {lock_path(root)} is held by another process for "
+                           f"more than {lock_timeout_s:g} s")
         try:
-            _acquire(lock_fd, lock_path(root), lock_timeout_s)
             fd = os.open(journal_path(root), os.O_RDWR | os.O_APPEND | os.O_CREAT, 0o600)
             try:
                 current = os.fstat(fd).st_size
@@ -125,7 +110,7 @@ def append(jdir: PathLike, line: bytes, *, lock_timeout_s: float = LOCK_TIMEOUT_
             finally:
                 os.close(fd)
         finally:
-            os.close(lock_fd)  # closing the descriptor releases the flock
+            lock.release()
     return offset
 
 

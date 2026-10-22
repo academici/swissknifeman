@@ -1,4 +1,5 @@
 """The workspace package: ids, codes, remotes, documents, bindings and the plan-store resolution (with the shared vectors)."""
+import fcntl
 import json
 import os
 import shutil
@@ -520,7 +521,7 @@ class BindingTests(Sandbox):
         stamp = ws.bind(PRJ, first, self.env)["bound_at"]
         writer_has_read, preserve_waiting, release_writer = (threading.Event() for _ in range(3))
         read = bindings_module.read_bindings
-        flock = bindings_module.fcntl.flock
+        flock = fcntl.flock
         errors = []
 
         def gated_read(*args, **kwargs):
@@ -550,7 +551,7 @@ class BindingTests(Sandbox):
         preserver = threading.Thread(name="preserving-set-paths", target=work, args=(
             lambda: ws.set_paths(PRJ, [target, live], self.env, preserve=True, primary=target),))
         with mock.patch.object(bindings_module, "read_bindings", side_effect=gated_read), \
-                mock.patch.object(bindings_module.fcntl, "flock", side_effect=observed_flock):
+                mock.patch.object(fcntl, "flock", side_effect=observed_flock):
             writer.start()
             try:
                 self.assertTrue(writer_has_read.wait(5), "writer never acquired the lock")

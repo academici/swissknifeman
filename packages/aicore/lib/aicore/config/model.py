@@ -21,7 +21,6 @@ import os
 import re
 import stat
 import sys
-import time
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -32,6 +31,7 @@ from ..state import backup, ensure_dir, machine_config_file, project_config_file
 from ..util import io as _io
 from ..util import schema as _schema
 from ..util.digest import sha256_tagged
+from ..util.lock import FileLock
 from . import ConfigError, toml, toml_edit
 from .secrets import Secret, is_secret_ref, resolve_ref
 
@@ -1305,30 +1305,22 @@ def layer_lock(path: PathLike, *, timeout_s: float = 5.0) -> Iterator[None]:
     The lock is on a neighbour because ``os.replace`` gives the layer file a new inode. Polls every 50 ms and
     raises ``ConfigError('CONFIG_LOCKED')`` after ``timeout_s``.
     """
-    import fcntl
-
     target = Path(os.path.realpath(path))
     lock_file = str(target) + ".lock"
+    lock = FileLock(lock_file)
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(lock_file, os.O_RDWR | os.O_CREAT | getattr(os, "O_CLOEXEC", 0), 0o600)
+        held = lock.acquire(blocking=True, timeout=max(timeout_s, 0.0), poll=_LOCK_POLL_S)
     except OSError as exc:
         raise ConfigError("CONFIG_FILE_INVALID", f"cannot open the lock file: {exc.strerror or 'error'}",
                           file=lock_file) from None
+    if not held:
+        raise ConfigError("CONFIG_LOCKED", f"another writer holds the lock of this file "
+                          f"(waited {timeout_s:g} s); try again", file=str(target))
     try:
-        deadline = time.monotonic() + max(timeout_s, 0.0)
-        while True:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except OSError:
-                if time.monotonic() >= deadline:
-                    raise ConfigError("CONFIG_LOCKED", f"another writer holds the lock of this file "
-                                      f"(waited {timeout_s:g} s); try again", file=str(target)) from None
-                time.sleep(_LOCK_POLL_S)
         yield
     finally:
-        os.close(fd)  # closing the descriptor releases the lock
+        lock.release()
 
 
 def _verify_written(layer: str, target: Path, file: str, module: ModuleSchema, module_id: str,

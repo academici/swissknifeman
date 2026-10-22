@@ -8,10 +8,11 @@ semantics.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 import re
 from typing import Literal
 
+from ..util import timefmt
 from ..util.digest import digest_json
 from .status import StatusDiagnostic
 
@@ -392,10 +393,7 @@ def _require_tuple(value: object, code: str) -> None:
 def _timestamp(value: object) -> datetime:
     if not isinstance(value, str) or not value.endswith("Z"):
         raise ValueError("PH_TIMESTAMP_INVALID")
-    try:
-        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
-    except ValueError as error:
-        raise ValueError("PH_TIMESTAMP_INVALID") from error
-    if parsed.tzinfo != timezone.utc:
+    parsed = timefmt.parse_rfc3339(value)
+    if parsed is None:
         raise ValueError("PH_TIMESTAMP_INVALID")
     return parsed

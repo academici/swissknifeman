@@ -13,13 +13,14 @@ import json
 import os
 from pathlib import Path
 import re
-import tempfile
 from typing import Callable, Iterable, Mapping
 
 from .artifact import (ArtifactProvenance, ArtifactRenderResult,
                        ArtifactSource, canonical_json_bytes, sha256_digest,
                        validate_target_path)
 from ..provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from ..util.io import durable_replace
+from ..util.lock import lock_descriptor
 from ..util.paths import is_within, is_within_lexical
 
 
@@ -482,7 +483,7 @@ def _writer_guard(root: Path):
 
     descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
     try:
-        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        lock_descriptor(descriptor, timeout=None)  # blocking: waits for the other writer for as long as it takes
         yield
     finally:
         fcntl.flock(descriptor, fcntl.LOCK_UN)
@@ -1246,20 +1247,7 @@ def _contained_target(root: Path, relative: str) -> Path:
 
 
 def _atomic_write_bytes(path: Path, value: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
-    try:
-        with os.fdopen(descriptor, "wb") as handle:
-            handle.write(value)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    except BaseException:
-        try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
-        raise
+    durable_replace(path, value)
 
 
 def _provenance_value(record: ArtifactProvenance) -> dict[str, object]:

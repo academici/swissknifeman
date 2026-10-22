@@ -9,9 +9,10 @@ import json
 import math
 import os
 import subprocess
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
 
+from ..util import timefmt
 from ..util.term import die
 from .skill import read_frontmatter, split_frontmatter
 
@@ -409,13 +410,10 @@ def measure_listing_budget(skills, provider=DEFAULT_LISTING_PROVIDER):
 def measurement_timestamp(value):
     if not isinstance(value, str) or not value.endswith("Z"):
         raise ValueError("SKILL_MEASUREMENT_TIMESTAMP_INVALID")
-    try:
-        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
-    except ValueError as exc:
-        raise ValueError("SKILL_MEASUREMENT_TIMESTAMP_INVALID") from exc
-    if parsed.tzinfo is None:
+    parsed = timefmt.parse_rfc3339(value)
+    if parsed is None:
         raise ValueError("SKILL_MEASUREMENT_TIMESTAMP_INVALID")
-    return parsed.astimezone(timezone.utc)
+    return parsed
 
 
 def measurement_number(value, *, nullable=False):
@@ -547,8 +545,7 @@ def aggregate_measurements(rows):
 
 def listing_measurements(skills, *, observed_at=None, evaluated_at=None):
     """Current Claude/Codex listing estimates as typed independent rows."""
-    observed = (measurement_timestamp(observed_at).strftime("%Y-%m-%dT%H:%M:%SZ")
-                if observed_at else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+    observed = timefmt.utc_stamp(measurement_timestamp(observed_at) if observed_at else None)
     expires = (measurement_timestamp(observed) + MEASUREMENT_TTL).strftime(
         "%Y-%m-%dT%H:%M:%SZ")
     rows = []

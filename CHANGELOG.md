@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- aicore: shared primitives. `aicore.util.lock` (`FileLock` with the samestat loop, `hold`, `LockTimeout`, `probe_free`, `lock_descriptor`), `aicore.util.timefmt` (`utc_now`, `utc_stamp`, `parse_rfc3339` giving an aware UTC datetime, `epoch`, `seconds_between`; a naive text is UTC, a bad text is `None`) and `aicore.util.docio` (`read_document` / `write_document`: parse, migrate, validate against the schema, `durable_replace`; `DocumentCorrupt`, `DocumentInvalid`).
+
+### Changed
+
+- aicore, orch: the flock locks (orch run lease, journal and gates; aicore bindings, event journal, delivery, config layers, project migrate, provider artifacts), the RFC 3339 parsers and the hand-made temporary-file writes of orch (`journal.write_doc`, agent records, which now also `fsync`) use the shared primitives; each lock keeps its own timeout, poll interval and reason code. The locks now refuse a symbolic link as lock file, and the observer and the launch-plan freshness read a time without a zone as UTC instead of local time. `planner.plan` keeps its own copies (it runs without aicore); workspace, brain, gui, analyst, maind and skiller are migrated later; `aicore.usage` stays stdlib-only (it is copied into a hook).
+
 ## [0.33.0] - 2026-10-22
 
 ### Fixed

@@ -289,13 +289,14 @@ class ProviderLockTests(unittest.TestCase):
 
     def test_interrupted_atomic_write_removes_only_its_temp_file(self):
         target = self.root / "generated.txt"
-        temporary = self.root / "generated.tmp"
-        descriptor = os.open(temporary, os.O_CREAT | os.O_WRONLY, 0o600)
-        with patch.object(provider_lock.tempfile, "mkstemp", return_value=(descriptor, str(temporary))), \
-             patch.object(provider_lock.os, "replace", side_effect=OSError("interrupted")):
+        bystander = self.root / "generated.tmp"
+        bystander.write_bytes(b"not ours\n")
+        with patch.object(provider_lock.os, "replace", side_effect=OSError("interrupted")):
             with self.assertRaises(OSError):
                 provider_lock._atomic_write_bytes(target, b"new\n")
-        self.assertFalse(temporary.exists())
+        self.assertEqual(["generated.tmp"], sorted(path.name for path in self.root.iterdir()
+                                                  if path.name.startswith("generated")))
+        self.assertEqual(b"not ours\n", bystander.read_bytes())
         self.assertFalse(target.exists())
 
     def test_canonical_lock_round_trip_and_rejects_noncanonical_order(self):

@@ -91,11 +91,11 @@ def hold(path, *, timeout: Optional[float], poll: float = DEFAULT_POLL_S, code: 
         yield lock
 
 
-def lock_descriptor(fd: int, *, timeout: float = 0.0, poll: float = DEFAULT_POLL_S) -> bool:
+def lock_descriptor(fd: int, *, timeout: Optional[float] = 0.0, poll: float = DEFAULT_POLL_S) -> bool:
     """``flock(LOCK_EX)`` on an open descriptor (a directory, say) that the caller owns: ``True`` when taken within
-    ``timeout`` seconds, ``False`` when it stays busy. Closing the descriptor releases the lock. No inode check: the
-    caller opened the object and keeps it open."""
-    deadline = time.monotonic() + max(timeout, 0.0)
+    ``timeout`` seconds (``None``: wait for ever), ``False`` when it stays busy. Closing the descriptor releases the
+    lock. No inode check: the caller opened the object and keeps it open."""
+    deadline = None if timeout is None else time.monotonic() + max(timeout, 0.0)
     while True:
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -103,7 +103,7 @@ def lock_descriptor(fd: int, *, timeout: float = 0.0, poll: float = DEFAULT_POLL
         except OSError as error:
             if error.errno not in _BUSY:
                 raise
-        if time.monotonic() >= deadline:
+        if deadline is not None and time.monotonic() >= deadline:
             return False
         time.sleep(poll)
 

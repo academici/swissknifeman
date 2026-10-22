@@ -4,16 +4,15 @@ lock and always see a whole file. Paths are stored as real paths.
 """
 from __future__ import annotations
 
-import fcntl
 import json
 import os
-import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, List, Mapping, Optional, Sequence, Union
 
 from aicore.state.locations import ensure_dir, workspace_state_dir
 from aicore.util.io import atomic_write_text
+from aicore.util.lock import FileLock
 
 from . import WorkspaceError
 from .documents import SCHEMA_PREFIX, utc_now, validate_document
@@ -56,21 +55,14 @@ def read_bindings(env: Env = None, home: Optional[PathLike] = None) -> dict:
 def _locked(env: Env, home: Optional[PathLike], timeout_s: float) -> Iterator[None]:
     folder = workspace_state_dir(env, home)
     ensure_dir(folder)
-    fd = os.open(str(folder / (BINDINGS_FILE + ".lock")), os.O_RDWR | os.O_CREAT | getattr(os, "O_CLOEXEC", 0), 0o600)
+    lock = FileLock(folder / (BINDINGS_FILE + ".lock"))
+    if not lock.acquire(blocking=True, timeout=max(timeout_s, 0.0), poll=_POLL_S):
+        raise WorkspaceError("WORKSPACE_BINDINGS_LOCKED", f"another process holds the bindings lock "
+                             f"(waited {timeout_s:g} s); try again")
     try:
-        deadline = time.monotonic() + max(timeout_s, 0.0)
-        while True:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break
-            except OSError:
-                if time.monotonic() >= deadline:
-                    raise WorkspaceError("WORKSPACE_BINDINGS_LOCKED", f"another process holds the bindings lock "
-                                         f"(waited {timeout_s:g} s); try again") from None
-                time.sleep(_POLL_S)
         yield
     finally:
-        os.close(fd)  # closing the descriptor releases the lock
+        lock.release()
 
 
 def _real(path: PathLike) -> str:

@@ -10,12 +10,11 @@ from __future__ import annotations
 import json
 import os
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Sequence, Union
 
 from aicore.state.locations import device_file, ensure_dir, is_code
-from aicore.util import schema
+from aicore.util import schema, timefmt
 from aicore.util.io import atomic_write_text
 
 from . import WorkspaceError
@@ -34,7 +33,7 @@ PathLike = Union[str, "os.PathLike[str]"]
 
 def utc_now() -> str:
     """The current time as ``YYYY-MM-DDTHH:MM:SSZ``."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return timefmt.utc_stamp()
 
 
 def _absolute_strings(node: Any, pointer: str = "") -> List[str]:

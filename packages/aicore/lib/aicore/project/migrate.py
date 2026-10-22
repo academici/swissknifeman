@@ -8,15 +8,14 @@ bytes is dropped from the checkout, one with other bytes is a conflict and both 
 from __future__ import annotations
 
 import errno
-import fcntl
 import os
 import shutil
 import stat
-import time
 from pathlib import Path
 from typing import Any, Dict, List, Mapping
 
 from aicore.state import LauncherError
+from aicore.util.lock import lock_descriptor
 from aicore.state.locations import PROJECT_DIRNAME, project_local_dir
 from aicore.workspace import ensure_local
 
@@ -102,16 +101,9 @@ _POLL_S = 0.05
 
 def _lock(fd: int) -> None:
     """Hold ``flock(LOCK_EX)`` on the descriptor of ``local/`` (closing the descriptor releases it)."""
-    deadline = time.monotonic() + LOCK_TIMEOUT_S
-    while True:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            return
-        except OSError:
-            if time.monotonic() >= deadline:
-                raise LauncherError("PROJECT_MIGRATE_LOCKED", f"another process is migrating this project (waited "
-                                    f"{LOCK_TIMEOUT_S:g} s); try again") from None
-            time.sleep(_POLL_S)
+    if not lock_descriptor(fd, timeout=LOCK_TIMEOUT_S, poll=_POLL_S):
+        raise LauncherError("PROJECT_MIGRATE_LOCKED", f"another process is migrating this project (waited "
+                            f"{LOCK_TIMEOUT_S:g} s); try again")
 
 
 def _open_parent(root_fd: int, parts: List[str]) -> int:

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "note": "Python types generated from JSON Schema by `aicore schema codegen`. After a change to a schema under a root below run `python3 scripts/schema-types.py --write`; `--check` (golden generator schema-types) fails on drift.",
+  "targets": [
+    {"root": "packages/orch/schemas/records/v1", "out": "packages/orch/lib/orch/_types/records.py"},
+    {"root": "packages/orch/schemas/conductor/v1", "out": "packages/orch/lib/orch/_types/conductor.py"},
+    {"root": "packages/orch/schemas/exec/v1", "out": "packages/orch/lib/orch/_types/exec.py"},
+    {"root": "packages/orch/schemas/work-source/v1", "out": "packages/orch/lib/orch/_types/work_source.py"},
+    {"root": "packages/planner/schemas/plan/v1", "out": "packages/planner/lib/planner/plan/_types.py"}
+  ]
+}

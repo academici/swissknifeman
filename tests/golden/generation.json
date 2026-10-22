@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "3d811695f405",
-  "reason": "planner 0.33.0 umbrella release: plugin version surfaces; orch-debug: Haiku observer with escalation",
+  "captured_from": "eb1c3e013b0d",
+  "reason": "P4.6 schema types",
   "generators": [
     {
       "id": "skiller-registry",
@@ -192,6 +192,23 @@
         "packages/planner/lib/planner/plan/_jsonschema_core.py"
       ],
       "note": "planner vendors the validator core of aicore byte for byte (planner runs without aicore)"
+    },
+    {
+      "id": "schema-types",
+      "check_argv": [
+        "python3",
+        "scripts/schema-types.py",
+        "--check"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "packages/orch/lib/orch/_types/records.py",
+        "packages/orch/lib/orch/_types/conductor.py",
+        "packages/orch/lib/orch/_types/exec.py",
+        "packages/orch/lib/orch/_types/work_source.py",
+        "packages/planner/lib/planner/plan/_types.py"
+      ],
+      "note": "Python types generated from the contract schemas by aicore schema codegen (configs/schema-types.json)"
     }
   ],
   "digests": {
@@ -241,9 +258,14 @@
     "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
+    "packages/orch/lib/orch/_types/conductor.py": "82bfb31bdde2c1a14e1a7dbbeb786bdc37a07aaf5b9d8c98ac81a30104ac493d",
+    "packages/orch/lib/orch/_types/exec.py": "8d7f1b3e3002b03f062b5cfc70f6a57f2c511d4004cae31ee31870a94f1ed3e8",
+    "packages/orch/lib/orch/_types/records.py": "91fed3f7ec7c362e785fef451f50fcf991ff8620f70d53a0e695b4e4e0acf11f",
+    "packages/orch/lib/orch/_types/work_source.py": "f2304452901752a496ad6dd3843b4b967347a7d8a96f999e36db46cef9ce4572",
     "packages/planner/docs/reference/provider-commands.md": "62ffe979eeff67ca6ac2b461aa531f5f95b0cf68068206582bec5b4ade0d60d2",
     "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
+    "packages/planner/lib/planner/plan/_types.py": "bb4004aebe4a63402242f7bf8ce58159555f46dbffd8845adaa370661bc95762",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "1ea50aa97adbde27580b0c04913c0ed7afd0dba929a8188d3939abba3cac3b6d",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/dev.md": "00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/fix.md": "6e7574d4d67fa5861ca5051f9a97e21c3972d89aac82bd757a7c85cb429dbd5a",

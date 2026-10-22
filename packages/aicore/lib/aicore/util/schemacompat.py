@@ -360,8 +360,9 @@ def _escape(key: str) -> str:
 # ---- command line -----------------------------------------------------------------------------------------------
 
 USAGE = ("usage: aicore schema <command> [args]\n\ncommands:\n"
-         "  compat   compare the contracts with a git reference and report incompatible changes\n\n"
-         "Run `aicore schema compat --help` for the options.\n")
+         "  compat   compare the contracts with a git reference and report incompatible changes\n"
+         "  codegen  generate a stdlib TypedDict module from the schemas of one directory (--root, --out, --check)\n\n"
+         "Run `aicore schema <command> --help` for the options.\n")
 
 
 class _Exit(Exception):

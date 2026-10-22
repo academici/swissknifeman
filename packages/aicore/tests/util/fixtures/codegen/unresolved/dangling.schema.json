@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:dangling:v1",
+  "description": "Fixture: a reference into this directory that names no definition.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "value": {"$ref": "#/$defs/missing"}
+  }
+}

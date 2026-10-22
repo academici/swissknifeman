@@ -470,6 +470,16 @@ Product JSON Schemas are draft 2020-12 and use the closed profile of `aicore.uti
 
 A module validates a document of its own tag with `aicore.util.schema.validate` before it writes the document (and when it reads a config it owns). A failure is an error code of that module.
 
+## Typed contracts
+
+The JSON Schema is the one source of truth; the Python types of a document are generated from it, never written by hand. `aicore schema codegen --root <schema dir> --out <module.py> [--check]` (see `packages/aicore/README.md`) turns the schemas of one directory into `TypedDict` classes: required keys are plain keys, the rest `NotRequired`, `enum`/`const` are `Literal`, `patternProperties` a `Dict`, an open object `Dict[str, Any]`. A shape the generator has no mapping for fails with `SCHEMA_CODEGEN_UNSUPPORTED: <file>:<pointer>`; extend the generator, do not weaken the schema to get past it.
+
+`configs/schema-types.json` lists the targets (`root` → `out`): `packages/orch/schemas/{records,conductor,exec,work-source}/v1` → `packages/orch/lib/orch/_types/{records,conductor,exec,work_source}.py` and `packages/planner/schemas/plan/v1` → `packages/planner/lib/planner/plan/_types.py`. There are no other places for generated types. The generated modules import only `typing` (planner runs without aicore); use them as annotations (`RunStore.load() -> tuple[Run, State]`), never as a validator.
+
+- Changing a schema of a registered root: `python3 scripts/schema-types.py --write`, then `python3 scripts/golden.py capture --only schema-types --reason "<item>: schemas"` and commit the generated modules, `tests/golden/generation.json` and `tests/golden/cases.json` with the schema. A new field of a stored document (a `state` field, an `agent-result` field) also goes into the `records/v1` schema, its examples and the generated types in the same change.
+- `python3 scripts/schema-types.py --check` fails with `SCHEMA_CODEGEN_DRIFT: <out>` when a module differs from its schemas; it is the golden generator `schema-types` (`python3 scripts/golden.py check`). `packages/orch/tests/test_records_types.py` compares `__required_keys__` / `__optional_keys__` of every generated class with `required` and `properties` of its schema.
+- A new root: add a `{root, out}` entry to the registry, add `out` to `outputs` of the `schema-types` generator in `tests/golden/generation.json`, run `--write` and the capture.
+
 ## Scripts-FAQ
 
 **«Phase ended, he proposes `/task` with text - compact or a new session?»**

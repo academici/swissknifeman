@@ -27,6 +27,7 @@ from typing import Optional
 from aicore.util import schema, timefmt
 from aicore.util.redact import redact_text
 
+from orch._types.records import Questions
 from orch.conductor import records
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.lease import questions_lock
@@ -177,7 +178,7 @@ def path(item_directory: Path) -> Path:
     return Path(item_directory) / FILE
 
 
-def read(item_directory: Path) -> Optional[dict]:
+def read(item_directory: Path) -> Optional[Questions]:
     """``questions.json`` of the piece checked against records/v1 (``None`` when there is none); ``QuestionsInvalid``
     when it is not JSON or does not match, never a document read as empty."""
     try:

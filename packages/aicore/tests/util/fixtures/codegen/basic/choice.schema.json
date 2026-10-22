@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:choice:v1",
+  "title": "Choice",
+  "description": "Fixture: one of two key sets of the same object (constraint branches).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "left": {"type": "string"},
+    "right": {"type": "string"}
+  },
+  "oneOf": [
+    {"description": "Left.", "required": ["left"], "not": {"required": ["right"]}},
+    {"description": "Right.", "required": ["right"], "not": {"required": ["left"]}}
+  ]
+}

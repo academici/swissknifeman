@@ -606,8 +606,8 @@ class TestCommand(unittest.TestCase):
         self.assertTrue(err.startswith("SCHEMA_COMPAT_USAGE: "), err)
 
     def test_the_group_is_listed_by_the_dispatcher(self):
-        self.assertIn("\n  schema   contract tools: compat\n", cli.usage())
-        self.assertEqual(("aicore.util.schemacompat", "main"), cli.GROUPS["schema"][:2])
+        self.assertIn("\n  schema   contract tools: compat, codegen\n", cli.usage())
+        self.assertEqual(("aicore.util.schemacli", "main"), cli.GROUPS["schema"][:2])
 
 
 class TestMultiDocument(unittest.TestCase):

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:part:v1",
+  "title": "Part definitions",
+  "description": "Fixture: definitions that another document of the directory refers to; no root type.",
+  "$defs": {
+    "size": {"description": "A size.", "type": "string", "enum": ["s", "m", "l"]}
+  }
+}

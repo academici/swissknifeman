@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:mixed:v1",
+  "description": "Fixture: a oneOf with a typed and a constraint branch has no mapping.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "value": {"oneOf": [{"type": "string"}, {"required": ["x"]}]}
+  }
+}

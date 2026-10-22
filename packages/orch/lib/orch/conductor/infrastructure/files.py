@@ -14,6 +14,7 @@ from typing import Any
 from aicore.state import project_state_dir
 from aicore.util.io import durable_replace
 
+from orch._types.records import Run, State
 from orch.conductor import records
 from orch.conductor.domain.stop import Stop
 
@@ -88,7 +89,7 @@ class RunStore:
                 raise Stop("RUN_UNKNOWN", f"no conductor run {self.run_id} in {self.directory.parent}") from None
             yield
 
-    def load(self) -> tuple:
+    def load(self) -> tuple[Run, State]:
         """``(run_doc, state)`` of an earlier run, both checked against records/v1 (a run written before it is migrated
         in memory, its files stay as they are); ``RUN_UNKNOWN`` when either file is missing, ``RUN_INVALID`` /
         ``STATE_INVALID`` when one does not match its schema."""
@@ -124,7 +125,7 @@ class RunStore:
         lines, bus events and beacons are emitted after leaving it."""
         return self.lock
 
-    def save(self, state: dict) -> None:
+    def save(self, state: State) -> None:
         """Check ``state`` against records/v1 and replace ``state.json``; ``STATE_INVALID`` leaves the file as it was."""
         with self.lock:  # validation and json.dumps walk the state: a thread that changes it meanwhile must wait
             records.write(self.directory / STATE_FILE, state, "state")

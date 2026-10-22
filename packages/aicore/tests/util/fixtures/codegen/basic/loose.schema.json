@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:loose:v1",
+  "title": "Loose",
+  "description": "Fixture: a map with a tag, a catch-all pattern next to a narrower one, and a constraint-only definition.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"description": "Tag.", "const": "urn:swissknifeman:fixture:codegen:loose:v1"}
+  },
+  "patternProperties": {
+    "^x-.+$": {"$ref": "#/$defs/narrow"},
+    "^.+$": {"$ref": "#/$defs/wide"}
+  },
+  "$defs": {
+    "wide": {"description": "Every entry.", "type": "object", "additionalProperties": false, "required": ["id"],
+             "properties": {"id": {"type": "string"}, "extra": {"type": "integer"}}},
+    "narrow": {"description": "Entries named x-*: a stricter reading of wide.", "type": "object",
+               "required": ["extra"]},
+    "gate": {
+      "description": "Needs one of two keys of another schema; no type of its own.",
+      "oneOf": [{"required": ["a"]}, {"required": ["b"]}]
+    }
+  }
+}

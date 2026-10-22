@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "52f9f7f67ca9",
-  "reason": "Release v0.32.0: synchronize planner plugin version with umbrella",
+  "captured_from": "5e2403641d9b",
+  "reason": "P4.1: refresh digests of provider-support.md and instruction-literal-coverage-v1.json after the Python 3.11 floor; characterization cases were not recaptured",
   "generators": [
     {
       "id": "skiller-registry",
@@ -238,9 +238,9 @@
     ".grok/hooks/lifecycle.py": "bc30cfb6b0ad8a4480ac17c1aecd21c8fb6b930458b08e449d0d8a5d7d758f51",
     ".grok/rules/swissknifeman-instructions.md": "f05f5bcb3ad67ce5942780861f2ae6caf5bea80d00a18c900382e985df4acb99",
     "bootstrap/publication-lock.json": "e5d4bfeec97fdefcc83ad903fc65f7cd7aa8db3b24368ab9fa27a61ff8d425ed",
-    "docs/provider-support.md": "2e1d793c251c5b077020617804c67e7143608ac59c7271abdf634ca826724999",
+    "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
-    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f1b8805fc5c4984f117d85b4af6fd89be934c9048551f89a97350d78839f70d1",
+    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
     "packages/planner/docs/reference/provider-commands.md": "62ffe979eeff67ca6ac2b461aa531f5f95b0cf68068206582bec5b4ade0d60d2",
     "packages/planner/docs/reference/provider-model-roles.md": "ec1886f069bad540e2a430ea5160f78473aa434bf8c8853a9642f72b611db266",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",

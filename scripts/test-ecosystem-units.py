@@ -570,7 +570,9 @@ class SchemaCheckTests(unittest.TestCase):
         self.draft = "https://json-schema.org/draft/2020-12/schema"
 
     def schema(self, rel: str, **fields):
-        self.tree.write_json(rel, {"$schema": self.draft, "$id": "urn:x:thing:v1", "type": "object", **fields})
+        owner = rel.split("/")[1] if rel.startswith(("packages/", "bridges/")) else "hub"
+        self.tree.write_json(rel, {"$schema": self.draft, "$id": f"urn:swissknifeman:{owner}:thing:v1",
+                                   "type": "object", **fields})
 
     def assertFails(self, code: str):
         result = self.tree.check()
@@ -580,34 +582,82 @@ class SchemaCheckTests(unittest.TestCase):
 
     def test_valid_schemas_pass(self):
         self.schema("packages/alpha/schemas/thing/v1/thing.schema.json")
-        self.schema("packages/alpha/schema/flat.schema.json", **{"$schema": "http://json-schema.org/draft-07/schema#"})
-        self.assertEqual(self.tree.check().returncode, 0)
+        self.schema("packages/alpha/schema/flat.schema.json")
+        self.schema("configs/schemas/hub-thing.schema.json", **{"$id": "urn:swissknifeman:hub:thing:v1"})
+        self.assertEqual(self.tree.check().returncode, 0, self.tree.check().stderr)
+
+    def test_draft_07_is_schema_draft(self):
+        self.schema("packages/alpha/schemas/a.schema.json",
+                    **{"$schema": "http://json-schema.org/draft-07/schema#"})
+        self.assertIn("$schema", self.assertFails("SCHEMA_DRAFT").stderr)
 
     def test_missing_or_unknown_draft(self):
-        self.tree.write_json("packages/alpha/schemas/a.schema.json", {"$id": "urn:x:a:v1"})
-        self.assertIn("$schema", self.assertFails("SCHEMA_ID").stderr)
+        self.tree.write_json("packages/alpha/schemas/a.schema.json", {"$id": "urn:swissknifeman:alpha:a:v1"})
+        self.assertIn("$schema", self.assertFails("SCHEMA_DRAFT").stderr)
         self.schema("packages/alpha/schemas/a.schema.json", **{"$schema": "http://json-schema.org/draft-04/schema#"})
-        self.assertIn("$schema", self.assertFails("SCHEMA_ID").stderr)
+        self.assertIn("$schema", self.assertFails("SCHEMA_DRAFT").stderr)
 
     def test_missing_or_unversioned_id(self):
         self.tree.write_json("packages/alpha/schemas/a.schema.json", {"$schema": self.draft})
         self.assertIn("$id", self.assertFails("SCHEMA_ID").stderr)
-        for bad in ("urn:x:a", "https://example.com/a.json", "urn:x:a:v", "urn:X:a:v1", "urn:x:a:1"):
+        for bad in ("urn:swissknifeman:alpha:a", "https://example.com/a.json", "urn:x:a:v", "urn:X:a:v1",
+                    "urn:swissknifeman:alpha:a:1"):
             with self.subTest(bad=bad):
                 self.schema("packages/alpha/schemas/a.schema.json", **{"$id": bad})
                 self.assertFails("SCHEMA_ID")
+
+    def test_foreign_namespace_is_schema_owner(self):
+        self.schema("packages/alpha/schemas/a.schema.json", **{"$id": "urn:other:x:v1"})
+        self.assertIn("urn:swissknifeman:alpha:", self.assertFails("SCHEMA_OWNER").stderr)
+
+    def test_open_additional_properties_is_schema_profile(self):
+        self.schema("packages/alpha/schemas/a.schema.json", additionalProperties=True)
+        self.assertIn("additionalProperties", self.assertFails("SCHEMA_PROFILE").stderr)
+
+    def test_alias_lets_the_owners_historical_namespace_pass(self):
+        self.tree.config["schema_id_aliases"] = {"task": {"owner": "alpha", "reason": "fixture alias of task to alpha"}}
+        self.schema("packages/alpha/schemas/thing/v1/thing.schema.json",
+                    **{"$id": "urn:swissknifeman:task:plan:thing:v1"})
+        self.assertEqual(self.tree.check().returncode, 0, self.tree.check().stderr)
+        real = json.loads((ROOT / "configs/ecosystem-units.json").read_text(encoding="utf-8"))
+        self.assertEqual(real["schema_id_aliases"]["task"]["owner"], "planner")
+        self.assertTrue(real["schema_id_aliases"]["task"]["reason"])
+
+    def test_a_changed_mirror_is_schema_mirror_drift(self):
+        self.tree.add_bridge("mirror")
+        source = "packages/alpha/schemas/copied/v1/copied.schema.json"
+        mirror = "bridges/mirror/schemas/copied.schema.json"
+        self.schema(source, **{"$id": "urn:swissknifeman:alpha:copied:v1"})
+        text = (self.tree.root / source).read_text(encoding="utf-8")
+        self.tree.write(mirror, text)
+        self.tree.config["mirrors"] = [{"path": mirror, "source": source, "reason": "byte-identical copy for a test"}]
+        self.assertEqual(self.tree.check().returncode, 0, self.tree.check().stderr)
+        self.tree.write(mirror, text.replace("copied", "changed", 1))
+        self.assertIn(source, self.assertFails("SCHEMA_MIRROR_DRIFT").stderr)
+
+    def test_a_legacy_schema_file_is_skipped_and_named_in_json(self):
+        path = "packages/alpha/schema/old.schema.json"
+        reason = "raw URL consumers; remove in 2.0"
+        self.tree.write(path, '{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "urn:skiller:old:v1" }\n')
+        self.tree.config["legacy_schema_files"] = [{"path": path, "reason": reason}]
+        result = self.tree.check("--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual(data["legacy"], [f"legacy: {path} ({reason})"])
+        self.assertEqual(result.stderr, "")
 
     def test_folder_version_must_match_id(self):
         self.schema("packages/alpha/schemas/thing/v2/thing.schema.json")
         result = self.assertFails("SCHEMA_VERSION")
         self.assertIn("v2", result.stderr)
-        self.schema("packages/alpha/schemas/thing/v2/thing.schema.json", **{"$id": "urn:x:thing:v2"})
-        self.assertEqual(self.tree.check().returncode, 0)
+        self.schema("packages/alpha/schemas/thing/v2/thing.schema.json", **{"$id": "urn:swissknifeman:alpha:thing:v2"})
+        self.assertEqual(self.tree.check().returncode, 0, self.tree.check().stderr)
 
     def test_aicore_schemas_must_be_2020_12(self):
         self.schema("packages/aicore/schemas/extra/v1/extra.schema.json",
-                    **{"$schema": "http://json-schema.org/draft-07/schema#"})
-        self.assertIn("aicore schemas", self.assertFails("SCHEMA_ID").stderr)
+                    **{"$id": "urn:swissknifeman:aicore:extra:v1",
+                       "$schema": "http://json-schema.org/draft-07/schema#"})
+        self.assertIn(self.draft, self.assertFails("SCHEMA_DRAFT").stderr)
 
     def test_unparsable_schema(self):
         self.tree.write("packages/alpha/schemas/a.schema.json", "{nope")

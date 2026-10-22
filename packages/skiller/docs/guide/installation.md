@@ -53,7 +53,8 @@ repository root (or the Skiller package root when no repository is found), regar
 of the override file's location. Discovery never uses the target consumer project.
 
 Only `schema_version: 1` is required. Omitted fields disable their corresponding
-integrations. The schema is `schema/host.schema.json` (`urn:skiller:host:v1`).
+integrations. The schema is `schemas/host/v1/host.schema.json` (`urn:swissknifeman:skiller:host:v1`).
+The file `schema/host.schema.json` stays as a frozen copy for older links.
 The following example uses the host's integration fields with an illustrative
 `plugins/` and `tools/` layout; replace paths and plugin names with your host's data:
 
@@ -346,7 +347,7 @@ The read file lives in the code not as a bare dictionary, but as an object
 `skiller.config.ProjectConfig` — frozen dataclass on stdlib (none `pydantic`
 or `jsonschema`). Object fields are the only carrier of the list of keys: list
 `CONFIG_KEYS`, with whom `skiller doctor` and `tests/test_schema.py` are verified
-`schema/swissknife.schema.json`, **is output** from fields (`metadata["json_type"]`
+`schemas/swissknife/v1/swissknife.schema.json`, **is output** from fields (`metadata["json_type"]`
 of each field carries the same Python-type with which the value is validated). Add
 key = add field and property to schema; third place where you can forget your keys
 update, no.

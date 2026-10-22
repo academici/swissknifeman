@@ -1,0 +1,14 @@
+{
+  "rules": [
+    {
+      "provider": "a",
+      "class": "authentication",
+      "code": "P1",
+      "match": {
+        "text_contains_any": [
+          "a"
+        ]
+      }
+    }
+  ]
+}

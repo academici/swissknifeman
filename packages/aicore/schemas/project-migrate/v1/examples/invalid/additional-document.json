@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:aicore:project-migrate:v1",
+  "root": "a",
+  "dry_run": true,
+  "local": "a",
+  "items": [],
+  "applied": true,
+  "remaining": [],
+  "not-a-field": 1
+}

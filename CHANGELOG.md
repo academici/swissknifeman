@@ -2,8 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- gui: closing a terminal WebSocket ends the shell even when the connection task is cancelled, and unpaid terminal credit stays at most `4 * credit_bytes` while a read is in progress.
+
 ### Changed
 
+- Hub schema check accepts only JSON Schema draft 2020-12, an `$id` of `urn:swissknifeman:<owner>:` (the `task` namespace stays an alias of planner; byte-identical mirrors and the frozen `packages/skiller/schema/*.schema.json` copies are the only other exceptions), and loads every product schema in the closed profile. `scripts/schema-compat-all.py` compares every module contract in one step. Skiller's five legacy schemas now live at `schemas/<kind>/v1` with `$id` `urn:swissknifeman:skiller:<kind>:v1`; the old files remain so existing raw URLs keep working. An upstream document with `strategy` `merge` must include `origins` and `merge`. Documents that were tagged without a schema (instruction set, project sync and migrate, provider errors, release-unit policy, reliability digest, unified trace, skill resolve, effective-source doctor, exclusive groups) are validated when the module writes or reads them. `scripts/test-schema-tags.py` and `scripts/test-contract-examples.py` keep tags and examples honest.
 - Minimum Python is 3.11 (`aicore.MIN_PYTHON`). Python 3.9 and 3.10 are end of life; `install.sh` and `scripts/check-env.sh` refuse an older interpreter before they change the machine (`python3 <ver> (needs >= 3.11)`). CI tests 3.11, 3.13 and 3.14. TOML is read with the standard library only; the vendored `tomli` parser is gone.
 
 ## [0.32.0] - 2026-10-22

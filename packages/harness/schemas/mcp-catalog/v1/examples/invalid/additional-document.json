@@ -1,0 +1,25 @@
+{
+  "$schema": "urn:swissknifeman:harness:mcp-catalog:v1",
+  "catalog": {
+    "catalog_version": "a",
+    "servers": [
+      {
+        "id": "a",
+        "transport": "http",
+        "capability_id": "a",
+        "secret_refs": []
+      }
+    ]
+  },
+  "bindings": {},
+  "sources": {
+    "catalog": {
+      "id": "a",
+      "path": "a",
+      "sha256": "sha256:abababababababababababababababababababababababababababababababab"
+    },
+    "bindings": {}
+  },
+  "adapters": {},
+  "not-a-field": 1
+}

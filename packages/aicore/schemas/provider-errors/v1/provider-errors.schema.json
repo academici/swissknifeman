@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:provider-errors:v1",
+  "title": "provider-errors",
+  "description": "Provider-error rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Format identifier.",
+      "const": "provider-errors/v1"
+    },
+    "rules": {
+      "description": "Rules tried in order; the first match wins.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "rules"
+  ],
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "description": "One classification rule.",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "description": "Provider id.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "class": {
+          "description": "Normalized failure class.",
+          "enum": [
+            "authentication",
+            "authorization",
+            "quota",
+            "rate_limit",
+            "invalid_request",
+            "model_unavailable",
+            "content_policy",
+            "transport",
+            "provider_internal",
+            "timeout",
+            "context_limit",
+            "unknown"
+          ]
+        },
+        "code": {
+          "description": "Stable error code.",
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$"
+        },
+        "scope": {
+          "description": "Who the failure belongs to.",
+          "enum": [
+            "request",
+            "session",
+            "account",
+            "provider"
+          ]
+        },
+        "safe_message": {
+          "description": "Message safe to show; the raw provider text is never copied.",
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "description": "Whether a repeat can help. Absent uses the class default.",
+          "type": "boolean"
+        },
+        "retry_after_from": {
+          "description": "Signal that carries the reset time.",
+          "enum": [
+            "limit_resets_at"
+          ]
+        },
+        "match": {
+          "type": "object",
+          "description": "At least one condition; every present condition must match.",
+          "additionalProperties": false,
+          "properties": {
+            "text_contains_any": {
+              "description": "Markers searched in the text signals.",
+              "type": "array",
+              "items": {
+                "description": "One marker.",
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            },
+            "exit_code_any": {
+              "description": "Exit codes that match.",
+              "type": "array",
+              "items": {
+                "description": "One exit code.",
+                "type": "integer"
+              },
+              "minItems": 1
+            },
+            "signal_any": {
+              "type": "object",
+              "description": "Structured signals compared by name.",
+              "additionalProperties": false,
+              "properties": {
+                "exit_code": {
+                  "description": "Values of exit_code that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One exit_code value.",
+                    "type": "integer"
+                  },
+                  "minItems": 1
+                },
+                "is_error": {
+                  "description": "Values of is_error that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One is_error value.",
+                    "type": "boolean"
+                  },
+                  "minItems": 1
+                },
+                "http_status": {
+                  "description": "Values of http_status that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One http_status value.",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 1
+                },
+                "retry_category": {
+                  "description": "Values of retry_category that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One retry_category value.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "api_retries": {
+                  "description": "Values of api_retries that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One api_retries value.",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 1
+                },
+                "limit_status": {
+                  "description": "Values of limit_status that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One limit_status value.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "limit_window": {
+                  "description": "Values of limit_window that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One limit_window value.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "limit_resets_at": {
+                  "description": "Values of limit_resets_at that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One limit_resets_at value.",
+                    "type": "integer"
+                  },
+                  "minItems": 1
+                },
+                "terminal": {
+                  "description": "Values of terminal that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One terminal value.",
+                    "type": "boolean"
+                  },
+                  "minItems": 1
+                }
+              },
+              "minProperties": 1
+            },
+            "signal_not_in": {
+              "type": "object",
+              "description": "Structured signals compared by name.",
+              "additionalProperties": false,
+              "properties": {
+                "exit_code": {
+                  "description": "Values of exit_code that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One exit_code value.",
+                    "type": "integer"
+                  },
+                  "minItems": 1
+                },
+                "is_error": {
+                  "description": "Values of is_error that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One is_error value.",
+                    "type": "boolean"
+                  },
+                  "minItems": 1
+                },
+                "http_status": {
+                  "description": "Values of http_status that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One http_status value.",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 1
+                },
+                "retry_category": {
+                  "description": "Values of retry_category that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One retry_category value.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "api_retries": {
+                  "description": "Values of api_retries that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One api_retries value.",
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minItems": 1
+                },
+                "limit_status": {
+                  "description": "Values of limit_status that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One limit_status value.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "limit_window": {
+                  "description": "Values of limit_window that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One limit_window value.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "limit_resets_at": {
+                  "description": "Values of limit_resets_at that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One limit_resets_at value.",
+                    "type": "integer"
+                  },
+                  "minItems": 1
+                },
+                "terminal": {
+                  "description": "Values of terminal that match.",
+                  "type": "array",
+                  "items": {
+                    "description": "One terminal value.",
+                    "type": "boolean"
+                  },
+                  "minItems": 1
+                }
+              },
+              "minProperties": 1
+            }
+          },
+          "minProperties": 1
+        }
+      },
+      "required": [
+        "provider",
+        "class",
+        "code",
+        "match"
+      ]
+    }
+  }
+}

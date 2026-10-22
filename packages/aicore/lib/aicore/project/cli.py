@@ -35,6 +35,16 @@ from aicore.state.locations import (LAUNCHER_ENV, LOCAL_DIRNAME, PROJECT_DIRNAME
 
 CHECK_SCHEMA = "urn:swissknifeman:aicore:check-result:v1"
 SYNC_SCHEMA = "urn:swissknifeman:aicore:project-sync:v1"
+
+
+def _require_document(document: dict, contract: str, code: str) -> None:
+    """Refuse a document the module is about to emit when it leaves its schema."""
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[3] / "schemas" / contract / "v1"
+    registry, kind = load_contract(directory)
+    issues = validate(document, kind, registry)
+    if issues:
+        raise LauncherError(code, "; ".join(issue.message for issue in issues[:5]))
 USAGE = __doc__.split("\n\n")[1]
 
 
@@ -337,6 +347,7 @@ def _sync(root: Path, flags: Dict[str, bool], env: Mapping[str, str], out: TextI
     if not flags["--dry-run"] and changes and not blocked:
         result.update(artifacts.apply_sync(root, plan))
         refused = [item for item in result["actions"] if item["action"] == "refused"]
+    _require_document(result, "project-sync", "PROJECT_SYNC_INVALID")
     if flags["--json"]:
         out.write(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     else:
@@ -455,6 +466,7 @@ def _migrate(args: Sequence[str], env: Mapping[str, str], cwd: Path, out: TextIO
         with artifacts._SyncLock(root):
             result = migrate.run(root, env)
     result = {"$schema": MIGRATE_SCHEMA, "root": str(root), "dry_run": flags["--dry-run"], **result}
+    _require_document(result, "project-migrate", "PROJECT_MIGRATE_INVALID")
     blocked = [item for item in result["items"] if item["action"] in ("conflict", "refused")]
     if flags["--json"]:
         out.write(json.dumps(result, indent=2, ensure_ascii=False) + "\n")

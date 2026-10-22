@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "P1",
+    "message": "a"
+  },
+  "not-a-field": 1
+}

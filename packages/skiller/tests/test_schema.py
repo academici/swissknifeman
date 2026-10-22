@@ -1,6 +1,6 @@
 """Divergence gate JSON-config schemes with runtime validators.
 
-Schemes (schema/*.json) — DX/documentation (IntelliSense editor, $schema). Runtime-
+Schemes (schemas/<kind>/v1) — DX/documentation (IntelliSense editor, $schema). Runtime-
 validation remains manual and stdlib-only (CONFIG_KEYS in common.py, SKILLSET_KEYS in
 skillset.py — without pip-dependencies jsonschema). This test holds published schema in
 in sync with the code: if the key is added to Python, but not in the schema (or vice versa) — we fall.
@@ -9,28 +9,33 @@ import json
 import unittest
 from pathlib import Path
 
-from skiller.common import CONFIG_KEYS
+import aicore
 from aicore.delivery.materialize import AGENT_DEFAULTS
+from aicore.util.schema import load_contract, validate
+
+from skiller.common import CONFIG_KEYS
 from skiller.skillset import SKILLSET_KEYS
 
-SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schema"
+SCHEMA_ROOT = Path(__file__).resolve().parents[1] / "schemas"
+FOUNDATION = Path(aicore.__file__).resolve().parents[2] / "schemas"
 JSON_TYPE = {str: "string", list: "array", int: "integer", dict: "object", bool: "boolean"}
 
 
 def _load(name):
-    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
+    kind = name.removesuffix(".schema.json")
+    return json.loads((SCHEMA_ROOT / kind / "v1" / name).read_text(encoding="utf-8"))
 
 
 class TestConfigSchemas(unittest.TestCase):
     def test_swissknife_props_match_config_keys(self):
         props = set(_load("swissknife.schema.json")["properties"])
         self.assertEqual(props, set(CONFIG_KEYS),
-                         "schema/swissknife.schema.json separated from CONFIG_KEYS")
+                         "schemas/swissknife/v1/swissknife.schema.json separated from CONFIG_KEYS")
 
     def test_swissknifeman_props_match_skillset_keys(self):
         props = set(_load("swissknifeman-config.schema.json")["properties"])
         self.assertEqual(props, set(SKILLSET_KEYS),
-                         "schema/swissknifeman-config.schema.json separated from SKILLSET_KEYS")
+                         "schemas/swissknifeman-config/v1/swissknifeman-config.schema.json separated from SKILLSET_KEYS")
 
     def test_agent_enum_matches_agent_defaults(self):
         agent = _load("swissknife.schema.json")["properties"]["agent"]
@@ -65,6 +70,76 @@ class TestConfigSchemas(unittest.TestCase):
             schema = _load(fname)
             self.assertIs(schema["additionalProperties"], False, fname)
             self.assertIn("^[_$]", schema["patternProperties"], fname)
+
+
+def _file_entry():
+    return {"path": "a", "url": "https://example/a", "sha256": "abc", "fetched_at": "2026-01-02"}
+
+
+def _origin(role):
+    return {
+        "repo": "acme/skills",
+        "role": role,
+        "url": "https://example/skill",
+        "sha256": "abc",
+        "fetched_at": "2026-01-02",
+    }
+
+
+def _upstream(**overrides):
+    document = {
+        "schema_version": 1,
+        "source": "github",
+        "strategy": "replace",
+        "files": [_file_entry()],
+    }
+    document.update(overrides)
+    return document
+
+
+def _complete_merge():
+    return _upstream(
+        strategy="merge",
+        origins=[_origin("base"), _origin("supplement")],
+        merge={"review_pending": False, "last_review": "2026-01-02"},
+    )
+
+
+class TestUpstreamMergeConditional(unittest.TestCase):
+    """strategy=merge requires origins and merge; the other strategies do not.
+
+    The frozen draft-07 file states this with if/then. The closed profile has no
+    if/then, so the canonical schema uses oneOf. These cases keep that meaning.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.registry, cls.kind = load_contract(
+            SCHEMA_ROOT / "upstream" / "v1",
+            urn_prefix="urn:swissknifeman:skiller:",
+            foundation=FOUNDATION,
+        )
+
+    def _issues(self, document):
+        return list(validate(document, self.kind, self.registry))
+
+    def test_replace_notify_and_fork_pass_without_origins_or_merge(self):
+        for strategy in ("replace", "notify", "fork"):
+            with self.subTest(strategy=strategy):
+                self.assertEqual(self._issues(_upstream(strategy=strategy)), [])
+
+    def test_complete_merge_passes(self):
+        self.assertEqual(self._issues(_complete_merge()), [])
+
+    def test_merge_missing_origins_fails(self):
+        document = _complete_merge()
+        del document["origins"]
+        self.assertTrue(self._issues(document))
+
+    def test_merge_missing_merge_fails(self):
+        document = _complete_merge()
+        del document["merge"]
+        self.assertTrue(self._issues(document))
 
 
 if __name__ == "__main__":

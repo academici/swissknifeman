@@ -265,7 +265,19 @@ def snapshot(targets: Iterable[str], project: Optional[os.PathLike] = None, *, e
     body = {target: {"text": found["text"], "parts": found["parts"]}
             for target, found in sorted(resolved.items()) if found["parts"]}
     digest = digest_json({"layers": list(layers), "targets": body})
-    return {"$schema": SCHEMA, "layers": list(layers), "digest": digest, "targets": body}
+    document = {"$schema": SCHEMA, "layers": list(layers), "digest": digest, "targets": body}
+    _validate_snapshot(document)
+    return document
+
+
+def _validate_snapshot(document: dict) -> None:
+    """Refuse a snapshot the instruction-set schema does not accept (``INSTRUCTION_SET_INVALID``)."""
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[2] / "schemas" / "instruction-set" / "v1"
+    registry, kind = load_contract(directory)
+    issues = validate(document, kind, registry)
+    if issues:
+        raise StubError("INSTRUCTION_SET_INVALID", "; ".join(issue.message for issue in issues[:5]))
 
 
 def template(target: str, slot: str) -> str:

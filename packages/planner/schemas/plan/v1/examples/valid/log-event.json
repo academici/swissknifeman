@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "ts": "2026-01-02T03:04:05Z",
+  "type": "plan_created",
+  "summary": "a",
+  "actor": {
+    "provider": "a",
+    "model": "a"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": "unified-agent-trace/v1",
+  "trace_id": "abababababababababababababababababababababababababababababababab",
+  "provenance": {
+    "provider_id": "claude-code",
+    "raw_ref": "a",
+    "sha256": "abababababababababababababababababababababababababababababababab",
+    "reader_id": "a",
+    "reader_version": "a"
+  },
+  "occurred_at": "2026-01-02T03:04:05Z",
+  "plan_ref": null,
+  "contract_ref": null,
+  "route": null,
+  "dispatch": null,
+  "finding_refs": [],
+  "public_outcome": null,
+  "quality": {
+    "completeness": 0,
+    "missing": [],
+    "degraded": true
+  },
+  "reasons": {},
+  "privacy": {
+    "excluded": [
+      "raw_transcript",
+      "chain_of_thought",
+      "tool_payload",
+      "secret"
+    ]
+  },
+  "not-a-field": 1
+}

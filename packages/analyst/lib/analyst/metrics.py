@@ -22,6 +22,7 @@ consumer's need. Callers here that want project slices pass `{"project_id": ...,
 record}` entries: this module's own aggregation input, not a change to the frozen schema.
 """
 import json
+from pathlib import Path
 
 from .trace import SCHEMA_VERSION as TRACE_SCHEMA_VERSION
 from .trace import dedup_records
@@ -160,7 +161,7 @@ def build_digest(pairs, *, generated_at, slices=None, regression_tolerance=0.0):
     completeness_values = [pair["baseline"]["completeness"] for pair in pairs]
     overall_completeness = (sum(completeness_values) / len(completeness_values)
                              if completeness_values else 0.0)
-    return {
+    digest = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
         "pairs": pairs,
@@ -168,6 +169,18 @@ def build_digest(pairs, *, generated_at, slices=None, regression_tolerance=0.0):
         "anomalies": find_anomalies(pairs, regression_tolerance=regression_tolerance),
         "overall_completeness": overall_completeness,
     }
+    _validate_digest(digest)
+    return digest
+
+
+def _validate_digest(digest):
+    """Refuse a digest the schema does not accept. Unknown values stay null; they are not rewritten."""
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[2] / "schemas" / "reliability-metrics-digest" / "v1"
+    registry, kind = load_contract(directory, urn_prefix="urn:swissknifeman:analyst:")
+    issues = validate(digest, kind, registry)
+    if issues:
+        raise MetricError("METRIC_DIGEST_INVALID: " + "; ".join(issue.message for issue in issues[:5]))
 
 
 def digest_to_json(digest):

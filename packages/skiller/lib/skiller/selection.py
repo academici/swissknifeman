@@ -19,6 +19,7 @@ GROUPS_FILE = Path("configs") / "exclusive-groups.json"
 SUMMARY_FILE = Path("configs") / "selection-summary.json"
 GROUPS_SCHEMA_ID = "exclusive-groups/v1"
 _CONTRACT_DIR = Path(aicore.__file__).resolve().parents[2] / "schemas" / "skill-selection" / "v1"
+_GROUPS_DIR = Path(__file__).resolve().parents[2] / "schemas" / "exclusive-groups" / "v1"
 
 
 def skill_ids(root):
@@ -48,8 +49,12 @@ def registry_selection(document):
     return {key: value for key, value in document.items() if key != "schema"}
 
 
-def read_groups(root):
-    """The exclusive-group table `{group: {description, members, max | router}}`; `{}` when the file is absent."""
+def read_groups(root, *, validate_schema=True):
+    """The exclusive-group table `{group: {description, members, max | router}}`; `{}` when the file is absent.
+
+    ``validate_schema`` checks the document against exclusive-groups/v1. ``check`` turns that off so its own
+    messages stay available, then records the schema problems beside them.
+    """
     path = Path(root) / GROUPS_FILE
     if not path.is_file():
         return {}
@@ -60,6 +65,11 @@ def read_groups(root):
     groups = document.get("groups") if isinstance(document, dict) else None
     if not isinstance(groups, dict) or document.get("schema") != GROUPS_SCHEMA_ID:
         raise ValueError(f"{GROUPS_FILE}: must be an {GROUPS_SCHEMA_ID} object with `groups`")
+    if validate_schema:
+        registry, kind = load_contract(_GROUPS_DIR, urn_prefix="urn:swissknifeman:skiller:")
+        issues = validate(document, kind, registry)
+        if issues:
+            raise ValueError(f"{GROUPS_FILE}: " + "; ".join(issue.message for issue in issues[:5]))
     return groups
 
 
@@ -74,10 +84,15 @@ def check(root):
     ids = skill_ids(root)
     registry, kind = load_contract(_CONTRACT_DIR)
     try:
-        groups = read_groups(root)
+        groups = read_groups(root, validate_schema=False)
     except ValueError as exc:
         groups = {}
         problems.append(str(exc))
+    else:
+        try:
+            read_groups(root)
+        except ValueError as exc:
+            problems.append(str(exc))
     for name, group in sorted(groups.items()):
         where = f"{GROUPS_FILE}: group {name}"
         members = group.get("members") if isinstance(group, dict) else None

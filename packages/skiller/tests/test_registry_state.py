@@ -348,15 +348,18 @@ class DoctorCase(unittest.TestCase):
                     dict: "object", bool: "boolean"}
         props = {k: _schema_prop(t, json_type) for k, t in CONFIG_KEYS.items()}
         props["project_type"]["type"] = "array"  # intentional discrepancy
-        schema_dir = self.root / "schema"
-        schema_dir.mkdir(parents=True, exist_ok=True)
-        (schema_dir / "swissknife.schema.json").write_text(
-            json.dumps({"properties": props}), encoding="utf-8")
         # second diagram (SKILLSET_KEYS) — the doctor reads it too, put it as valid
         from skiller.skillset import SKILLSET_KEYS
         props2 = {k: _schema_prop(t, json_type) for k, t in SKILLSET_KEYS.items()}
-        (schema_dir / "swissknifeman-config.schema.json").write_text(
-            json.dumps({"properties": props2}), encoding="utf-8")
+        # doctor reads schemas/<kind>/v1, the same place as the canonical contracts
+        for fname, body in (
+                ("swissknife.schema.json", props),
+                ("swissknifeman-config.schema.json", props2)):
+            kind = fname.removesuffix(".schema.json")
+            schema_dir = self.root / "schemas" / kind / "v1"
+            schema_dir.mkdir(parents=True, exist_ok=True)
+            (schema_dir / fname).write_text(
+                json.dumps({"properties": body}), encoding="utf-8")
 
         buf = io.StringIO()
         with contextlib.suppress(SystemExit):

@@ -11,33 +11,43 @@
     "own_links": {
       "type": "array",
       "description": "Glob patterns of resolved symlink targets that the hub replaces silently (its own earlier links).",
-      "items": {"type": "string", "minLength": 1}
+      "items": {"type": "string", "minLength": 1, "description": "One glob of a symlink target the hub may replace."}
     },
     "profiles": {
       "type": "object",
       "description": "Profile name to its definition.",
-      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$"},
       "minProperties": 1,
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "description": {"type": "string", "description": "One line for people."},
-          "units": {
-            "type": "array",
-            "description": "Module ids installed by the profile; every module needs its requires in the list.",
-            "minItems": 1,
-            "uniqueItems": true,
-            "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "description": "One install profile.",
+          "properties": {
+            "description": {"type": "string", "description": "One line for people."},
+            "units": {
+              "type": "array",
+              "description": "Module ids installed by the profile; every module needs its requires in the list.",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "Module id."}
+            },
+            "options": {
+              "type": "object",
+              "description": "Module id to extra arguments passed to that module's install command.",
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "array",
+                  "description": "Extra arguments for that module's install command.",
+                  "items": {"type": "string", "description": "One installer argument."}
+                }
+              },
+              "additionalProperties": false
+            }
           },
-          "options": {
-            "type": "object",
-            "description": "Module id to extra arguments passed to that module's install command.",
-            "additionalProperties": {"type": "array", "items": {"type": "string"}}
-          }
-        },
-        "required": ["description", "units", "options"],
-        "additionalProperties": false
-      }
+          "required": ["description", "units", "options"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": ["schema", "default", "own_links", "profiles"],

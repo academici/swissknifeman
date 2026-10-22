@@ -186,6 +186,40 @@ class TestBackpressure(Base):
         self.assertEqual(list(range(1, 20001)), numbers)  # no byte lost
         self.assertEqual(len(received), session.bytes_out)
 
+    def test_an_idle_read_does_not_let_credit_cross_the_cap(self):
+        session = self.start()
+        session.gate.grant(session.gate.limit)
+        stop = False
+        over = []
+
+        def hammer():
+            while not stop:
+                try:
+                    session.gate.grant(1)
+                except ValueError:
+                    continue
+                # A grant that lands must not push the unpaid balance over the cap.
+                # Spending the shell prompt makes room; crossing the cap does not.
+                if session.gate.available > session.gate.limit:
+                    over.append(session.gate.available)
+
+        thread = threading.Thread(target=hammer)
+        thread.start()
+        try:
+            for _ in range(400):
+                session.take_output()
+                self.assertLessEqual(session.gate.available, session.gate.limit)
+        finally:
+            stop = True
+            thread.join()
+        self.assertEqual([], over)
+        self.assertLessEqual(session.gate.available, session.gate.limit)
+        if session.gate.available < session.gate.limit and not session.readable_now():
+            session.gate.grant(session.gate.limit - session.gate.available)
+        if session.gate.available == session.gate.limit and not session.readable_now():
+            with self.assertRaises(ValueError):
+                session.gate.grant(1)
+
     def test_a_chunk_never_exceeds_the_credit(self):
         session = self.start()
         session.write(b"seq 1 2000\n")

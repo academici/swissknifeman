@@ -375,8 +375,21 @@ def build_effective_source_report(diagnostics):
             raise EffectiveSourceDoctorError(
                 f"diagnostic {d['id']!r} has out-of-vocabulary status {d['status']!r}")
     overall = "ok" if all(d["status"] in ("ok", "n/a") for d in diagnostics) else "degraded"
-    return {"schema_version": EFFECTIVE_SOURCE_SCHEMA_VERSION,
-            "diagnostics": list(diagnostics), "overall": overall}
+    document = {"schema_version": EFFECTIVE_SOURCE_SCHEMA_VERSION,
+                "diagnostics": list(diagnostics), "overall": overall}
+    _validate_effective_source(document)
+    return document
+
+
+def _validate_effective_source(document):
+    """Refuse a report the effective-source-doctor schema does not accept."""
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[2] / "schemas" / "effective-source-doctor" / "v1"
+    registry, kind = load_contract(directory, urn_prefix="urn:swissknifeman:skiller:")
+    issues = validate(document, kind, registry)
+    if issues:
+        raise EffectiveSourceDoctorError(
+            "EFFECTIVE_SOURCE_INVALID: " + "; ".join(issue.message for issue in issues[:5]))
 
 
 def _identity_ownership_diagnostic(env):
@@ -1079,9 +1092,10 @@ def cmd_doctor(env, argv):
             ("swissknife.schema.json", CONFIG_KEYS, ".swissknife.json"),
             ("swissknifeman-config.schema.json", SKILLSET_KEYS,
              ".swissknifeman/config.json")):
-        sf = root / "schema" / fname
+        kind = fname.removesuffix(".schema.json")
+        sf = root / "schemas" / kind / "v1" / fname
         if not sf.is_file():
-            check(False, f"diagram {fname}", "no file in schema/")
+            check(False, f"diagram {fname}", f"no file in schemas/{kind}/v1/")
             continue
         try:
             data = json.loads(sf.read_text(encoding="utf-8"))
@@ -1093,7 +1107,7 @@ def cmd_doctor(env, argv):
             continue
         check(props == set(keys), f"diagram {fname} ⇄ keys {label}",
               f"separated: extra ones in the scheme {sorted(props - set(keys))}, "
-              f"not in the schema {sorted(set(keys) - props)} — update schema/{fname}")
+              f"not in the schema {sorted(set(keys) - props)} — update schemas/{kind}/v1/{fname}")
         # Doc-2: key names aren't the only thing that can diverge. Property TYPE
         # in the schema (string/array/…) — also a contract with CONFIG_KEYS/SKILLSET_KEYS; before
         # doctor checked only names ("⇄ keys OK"), silently overlooking the discrepancy
@@ -1118,7 +1132,7 @@ def cmd_doctor(env, argv):
                 type_mismatches.append(
                     f"{k}: diagram={props_data[k].get('type')} code={json_type.get(t)}")
         check(not type_mismatches, f"diagram {fname} ⇄ types {label}",
-              f"types diverged: {'; '.join(type_mismatches)} — update schema/{fname}")
+              f"types diverged: {'; '.join(type_mismatches)} — update schemas/{kind}/v1/{fname}")
 
     # freshness hubs: stamp <!-- swissknifeman:registry sha=… --> in the project hub
     # check with the current one sha registry (same calculation as in generate-hub.sh). Projects

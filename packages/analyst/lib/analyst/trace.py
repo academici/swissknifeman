@@ -12,6 +12,7 @@ validation, completeness/quality math, privacy fail-closed and resume/fork dedup
 stdlib-only."""
 import hashlib
 import json
+from pathlib import Path
 
 SCHEMA_VERSION = "unified-agent-trace/v1"
 PROVIDER_IDS = frozenset(("claude-code", "codex", "cursor", "grok"))
@@ -185,7 +186,18 @@ def build_trace_record(raw, *, provider_id, project_id, identity, turn_id,
     record["reasons"] = reasons
 
     assert set(record) == _TOP_FIELDS  # closed set — a code defect if this ever trips
+    _validate_record(record)
     return record
+
+
+def _validate_record(record):
+    """Refuse a record the unified-agent-trace schema does not accept."""
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[2] / "schemas" / "unified-agent-trace" / "v1"
+    registry, kind = load_contract(directory, urn_prefix="urn:swissknifeman:analyst:")
+    issues = validate(record, kind, registry)
+    if issues:
+        raise TraceError("TRACE_SCHEMA_INVALID: " + "; ".join(issue.message for issue in issues[:5]))
 
 
 def dedup_records(records):

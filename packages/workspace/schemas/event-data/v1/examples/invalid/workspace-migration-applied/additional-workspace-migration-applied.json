@@ -1,0 +1,8 @@
+{
+  "project_id": "a",
+  "op_id": "mig_0123456789ABCDEFGHJKMNPQRS",
+  "mode": "initial",
+  "plans": 0,
+  "local_only": 0,
+  "not-a-field": 1
+}

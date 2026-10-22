@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:skiller:profiles-list:v1",
+  "profiles": {},
+  "not-a-field": 1
+}

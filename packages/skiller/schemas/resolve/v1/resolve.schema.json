@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:skiller:resolve:v1",
+  "title": "resolve",
+  "description": "Skill resolve document.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "description": "Format identifier.",
+      "const": "skiller.resolve/v1"
+    },
+    "requested": {
+      "description": "Tokens the caller asked for, in request order, canonicalized when unambiguous.",
+      "type": "array",
+      "items": {
+        "description": "One requested id or token.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "provider": {
+      "description": "Provider the selection was filtered for, or null.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "skills": {
+      "description": "Selected skills.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "One selected skill.",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "Skill name.",
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "description": "bucket/name identity.",
+            "type": "string",
+            "minLength": 1
+          },
+          "bucket": {
+            "description": "Bucket the skill lives in.",
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "description": "Path of the skill in the library.",
+            "type": "string",
+            "minLength": 1
+          },
+          "requested": {
+            "description": "True when the caller named this skill.",
+            "type": "boolean"
+          },
+          "required_by": {
+            "description": "Selected skills that require this one.",
+            "type": "array",
+            "items": {
+              "description": "Skill id.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "bucket",
+          "path",
+          "requested",
+          "required_by"
+        ]
+      }
+    },
+    "diagnostics": {
+      "description": "Problems found while resolving. Empty when the selection is clean.",
+      "type": "array",
+      "items": {
+        "description": "One resolve diagnostic.",
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The token names more than one skill.",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Diagnostic code.",
+                "const": "SKILL_AMBIGUOUS"
+              },
+              "severity": {
+                "description": "Severity.",
+                "const": "error"
+              },
+              "skill": {
+                "description": "Token that was ambiguous.",
+                "type": "string",
+                "minLength": 1
+              },
+              "candidates": {
+                "description": "Matching skill ids.",
+                "type": "array",
+                "items": {
+                  "description": "Skill id.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "skill",
+              "candidates"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "The token names no skill.",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Diagnostic code.",
+                "const": "SKILL_UNKNOWN"
+              },
+              "severity": {
+                "description": "Severity.",
+                "const": "error"
+              },
+              "skill": {
+                "description": "Token that was unknown.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "skill"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "The skill has no adapter for the provider.",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Diagnostic code.",
+                "const": "SKILL_PROVIDER_UNSUPPORTED"
+              },
+              "severity": {
+                "description": "Severity.",
+                "const": "warning"
+              },
+              "skill": {
+                "description": "Skill id.",
+                "type": "string",
+                "minLength": 1
+              },
+              "provider": {
+                "description": "Provider that was asked for.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "skill",
+              "provider"
+            ]
+          },
+          {
+            "type": "object",
+            "description": "A required skill is unknown or excluded.",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Diagnostic code.",
+                "enum": [
+                  "SKILL_REQUIRED_UNKNOWN",
+                  "SKILL_REQUIRED_EXCLUDED"
+                ]
+              },
+              "severity": {
+                "description": "Severity.",
+                "const": "warning"
+              },
+              "required_skill": {
+                "description": "Skill that was required.",
+                "type": "string",
+                "minLength": 1
+              },
+              "affected_identities": {
+                "description": "Skills that required it.",
+                "type": "array",
+                "items": {
+                  "description": "Skill id.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "required_skill",
+              "affected_identities"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "requested",
+    "provider",
+    "skills",
+    "diagnostics"
+  ]
+}

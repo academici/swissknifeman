@@ -1,0 +1,8 @@
+{
+  "submission_id": "sub-a",
+  "step": "claim",
+  "reason_codes": [
+    "P1"
+  ],
+  "not-a-field": 1
+}

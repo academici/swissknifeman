@@ -1,0 +1,5 @@
+{
+  "schema": "exclusive-groups/v1",
+  "groups": {},
+  "not-a-field": 1
+}

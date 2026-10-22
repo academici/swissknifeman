@@ -1,0 +1,34 @@
+{
+  "ref": "P1",
+  "edges": [],
+  "nodes": [],
+  "item": {
+    "$schema": "urn:swissknifeman:task:plan:item:v1",
+    "id": "P1.1",
+    "title": "a",
+    "status": "todo",
+    "summary": "a",
+    "why": "a",
+    "scope": {
+      "include": [],
+      "exclude": []
+    },
+    "route": {
+      "class": "economy",
+      "effort": "low"
+    },
+    "review": {
+      "mode": "none"
+    },
+    "authority": {
+      "kind": "routine"
+    },
+    "rag": {
+      "need": "none",
+      "status": "not_needed"
+    },
+    "updated_at": "2026-01-02T03:04:05Z"
+  },
+  "decisions": [],
+  "documents": []
+}

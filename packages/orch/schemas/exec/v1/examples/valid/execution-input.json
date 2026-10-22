@@ -1,0 +1,47 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+  "contract_version": "exec/v1",
+  "input_id": "a",
+  "digest": "abababababababababababababababababababababababababababababababab",
+  "provenance": {
+    "kind": "plan",
+    "plan": "a",
+    "plan_dir": "a",
+    "item": "a",
+    "source_digest": "abababababababababababababababababababababababababababababababab",
+    "generated_by": {
+      "tool": "a",
+      "task_version": "a"
+    }
+  },
+  "goal": "a",
+  "scope": {
+    "include": [
+      "a"
+    ],
+    "exclude": []
+  },
+  "acceptance": {
+    "checks": [
+      {
+        "id": "V1",
+        "expect": "a",
+        "kind": "acceptance"
+      }
+    ]
+  },
+  "route": {
+    "minimum": {
+      "class": "economy",
+      "effort": "low"
+    }
+  },
+  "result_contract": {
+    "report": [
+      "summary"
+    ],
+    "write_authority": "code_scope",
+    "commit_owner": "coordinator",
+    "plan_mutation": "forbidden"
+  }
+}

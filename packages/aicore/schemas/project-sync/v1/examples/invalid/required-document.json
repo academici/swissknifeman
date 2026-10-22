@@ -1,0 +1,11 @@
+{
+  "root": "a",
+  "dry_run": true,
+  "template_sha256": "abababababababababababababababababababababababababababababababab",
+  "actions": [
+    {
+      "path": "a",
+      "action": "create"
+    }
+  ]
+}

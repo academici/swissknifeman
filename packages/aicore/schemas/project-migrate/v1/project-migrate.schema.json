@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:project-migrate:v1",
+  "title": "project-migrate",
+  "description": "Project migrate document.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "Schema identifier.",
+      "const": "urn:swissknifeman:aicore:project-migrate:v1"
+    },
+    "root": {
+      "description": "Absolute path of the checkout.",
+      "type": "string",
+      "minLength": 1
+    },
+    "dry_run": {
+      "description": "True when nothing was moved.",
+      "type": "boolean"
+    },
+    "local": {
+      "description": "Absolute path of the workspace local directory.",
+      "type": "string",
+      "minLength": 1
+    },
+    "items": {
+      "description": "Files the migration considered.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "One file the migration moves, drops, or refuses.",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "description": "Path inside the project layer.",
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "description": "What happens to the file.",
+            "enum": [
+              "move",
+              "drop",
+              "conflict",
+              "refused"
+            ]
+          },
+          "code": {
+            "description": "Stable refusal code.",
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "reason": {
+            "description": "Why the file was not moved.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "action"
+        ]
+      }
+    },
+    "applied": {
+      "description": "True when a move or drop was carried out.",
+      "type": "boolean"
+    },
+    "remaining": {
+      "description": "Movable names still present in the checkout.",
+      "type": "array",
+      "items": {
+        "description": "One leftover name.",
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "root",
+    "dry_run",
+    "local",
+    "items",
+    "applied",
+    "remaining"
+  ]
+}

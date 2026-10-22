@@ -16,6 +16,8 @@ import json
 import re
 from typing import Any, Dict, Optional
 
+import anyio
+
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route, WebSocketRoute
@@ -238,17 +240,35 @@ async def io(websocket: WebSocket) -> None:
     except WebSocketDisconnect:
         disconnected = True
     finally:
-        task.cancel()
-        write_task.cancel()
-        await asyncio.gather(task, write_task, return_exceptions=True)
-        session.detach()
         # The socket is gone (or refused): the session ends now; version 1 has no reconnect.
-        await asyncio.shield(asyncio.to_thread(manager.close, session.id, "closed"))
-        if not closed_socket and not disconnected:
-            try:
-                await websocket.close(code=1000)
-            except (WebSocketDisconnect, RuntimeError, OSError):
-                pass
+        # The peer, and Starlette's test client, cancel this task on the way out. A cancel
+        # delivered at the first await of this finally would skip the teardown and leave
+        # the shell running, so the cleanup runs on its own task inside a shielded scope.
+        runner = asyncio.current_task()
+
+        async def _finish() -> None:
+            task.cancel()
+            write_task.cancel()
+            await asyncio.gather(task, write_task, return_exceptions=True)
+            session.detach()
+            await asyncio.to_thread(manager.close, session.id, "closed")
+            if not closed_socket and not disconnected:
+                try:
+                    await websocket.close(code=1000)
+                except (WebSocketDisconnect, RuntimeError, OSError):
+                    pass
+
+        ending = asyncio.get_running_loop().create_task(_finish())
+        with anyio.CancelScope(shield=True):
+            while not ending.done():
+                if runner is not None:
+                    while runner.cancelling():
+                        runner.uncancel()
+                try:
+                    await asyncio.shield(ending)
+                except asyncio.CancelledError:
+                    continue
+        ending.result()
 
 
 ROUTES = [

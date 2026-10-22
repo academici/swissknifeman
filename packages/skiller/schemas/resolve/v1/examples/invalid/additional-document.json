@@ -1,0 +1,8 @@
+{
+  "schema": "skiller.resolve/v1",
+  "requested": [],
+  "provider": "a",
+  "skills": [],
+  "diagnostics": [],
+  "not-a-field": 1
+}

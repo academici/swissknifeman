@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:plan:v1",
+  "id": "1.0.0",
+  "short_id": "PLAN1",
+  "title": "a",
+  "status": "active",
+  "created": "2026-01-02",
+  "updated_at": "2026-01-02T03:04:05Z",
+  "repository": "a",
+  "owner": "a",
+  "authoring": {
+    "provider": "a",
+    "model": "a"
+  },
+  "goal": "a",
+  "context": "a",
+  "phases": [],
+  "settings": {
+    "design_audit": "none",
+    "scout": "off"
+  },
+  "not-a-field": 1
+}

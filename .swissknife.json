@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknife.schema.json",
+  "$schema": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schemas/swissknife/v1/swissknife.schema.json",
   "providers": {
     "contract_version": "1.0.0",
     "selection": {

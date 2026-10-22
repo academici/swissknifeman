@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "a",
+  "title": "a",
+  "description": "a",
+  "instructions": [
+    {
+      "path": "a",
+      "purpose": "a"
+    }
+  ],
+  "tools": {
+    "filesystem": "none",
+    "shell": "none",
+    "network": "none",
+    "plan_api": "none"
+  },
+  "write_authority": "none",
+  "result_shape": "context-map",
+  "model_class_min": "economy",
+  "forbidden_inputs": [],
+  "not-a-field": 1
+}

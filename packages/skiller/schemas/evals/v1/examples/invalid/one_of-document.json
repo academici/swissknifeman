@@ -1,0 +1,10 @@
+{
+  "skill": "a",
+  "cases": [
+    {
+      "id": "x",
+      "prompt": "a"
+    }
+  ],
+  "not-a-field": 1
+}

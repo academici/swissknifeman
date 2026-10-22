@@ -19,7 +19,7 @@ from skiller.host import (
     HOST_CONFIG_ENV, HOST_CONFIG_INVALID, Host, host_command, host_plugin_dirs, load_host,
 )
 
-SCHEMA = Path(__file__).resolve().parents[1] / "schema" / "host.schema.json"
+SCHEMA = Path(__file__).resolve().parents[1] / "schemas" / "host" / "v1" / "host.schema.json"
 
 FULL = {
     "schema_version": 1,
@@ -223,15 +223,19 @@ class ValidationTests(HostCase):
 
     def test_schema_and_validator_key_sets_match(self):
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
-        self.assertEqual(schema["$id"], "urn:skiller:host:v1")
+        self.assertEqual(schema["$id"], "urn:swissknifeman:skiller:host:v1")
         props = schema["properties"]
+
+        def entry(node):
+            return next(iter(node["patternProperties"].values()))
+
         objects = {
             "": schema,
             "version_files": props["version_files"]["items"],
-            "machine_plugins": props["machine_plugins"]["additionalProperties"]["items"],
+            "machine_plugins": entry(props["machine_plugins"])["items"],
             "legacy_runtime_links": props["legacy_runtime_links"]["items"],
-            "commands": props["commands"]["additionalProperties"],
-            "mcp_servers": props["mcp_servers"]["additionalProperties"],
+            "commands": entry(props["commands"]),
+            "mcp_servers": entry(props["mcp_servers"]),
         }
         self.assertEqual(set(objects), set(host_mod.OBJECT_KEYS))
         for name, node in objects.items():

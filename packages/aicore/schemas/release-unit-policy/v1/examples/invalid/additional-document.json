@@ -1,0 +1,10 @@
+{
+  "schema_version": "release-unit-policy/v1",
+  "plugins": {
+    "a": {
+      "version_owner": "umbrella"
+    }
+  },
+  "default_plugin_version_owner": "a",
+  "not-a-field": 1
+}

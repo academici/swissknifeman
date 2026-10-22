@@ -458,6 +458,14 @@ The documentation site is built from `docs/`: `cd docs && npm ci && npm run docs
 `packages/<module>/docs` into `docs/<module>/`; those copies are ignored by git). `.github/workflows/docs.yml` runs the same
 commands with `working-directory: docs`.
 
+## Schema rules
+
+Product JSON Schemas are draft 2020-12 and use the closed profile of `aicore.util.jsonschema_core`: `additionalProperties` is `false` or absent, and a map of identifiers is `patternProperties` plus `additionalProperties: false`. `$id` is `urn:swissknifeman:<owner>:<contract>[:<kind>]:v<N>`. `<owner>` is the module directory, the id in a bridge's `unit.json`, or `hub` for `configs/`. The one alias is `task` → `planner` (`urn:swissknifeman:task:plan:*` is stored in every plan document). A mirror listed in `configs/ecosystem-units.json` may carry another module's `$id` only while its bytes equal the source. `packages/skiller/schema/*.schema.json` is a frozen copy for external raw URLs; the canon is `packages/skiller/schemas/<kind>/v1`.
+
+`python3 scripts/ecosystem-units.py check` reports `SCHEMA_DRAFT`, `SCHEMA_OWNER`, `SCHEMA_PROFILE` and `SCHEMA_MIRROR_DRIFT`. `python3 scripts/schema-compat-all.py --base REF --json` compares every `schemas/<contract>/v<N>` contract of every unit in process (a path without `v<N>` is legacy and is not compared). `python3 scripts/test-schema-tags.py --allow-pending orch` checks that tag literals in `packages/*/lib` resolve to a `$id`, directly or through `configs/schema-tags.json`. `python3 scripts/test-contract-examples.py` requires `examples/valid` and `examples/invalid/<error-code>-<what>.json` for every document schema; a root that has only metadata and `$defs` is a support schema and needs no examples.
+
+A module validates a document of its own tag with `aicore.util.schema.validate` before it writes the document (and when it reads a config it owns). A failure is an error code of that module.
+
 ## Scripts-FAQ
 
 **«Phase ended, he proposes `/task` with text - compact or a new session?»**

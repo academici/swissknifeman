@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:analyst:reliability-metrics-digest:v1",
+  "title": "reliability-metrics-digest",
+  "description": "Reliability metrics digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Format identifier.",
+      "const": "reliability-metrics-digest/v1"
+    },
+    "generated_at": {
+      "description": "UTC time the digest was built.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "pairs": {
+      "description": "Baseline/candidate pairs.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pair"
+      }
+    },
+    "slices": {
+      "type": "object",
+      "description": "Optional slice index supplied by the caller. An empty object means no slices.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "description": "One slice axis, as the caller built it."
+        }
+      }
+    },
+    "anomalies": {
+      "description": "Paired metrics that regressed past the tolerance.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "One regression.",
+        "additionalProperties": false,
+        "properties": {
+          "metric": {
+            "description": "Metric id.",
+            "type": "string",
+            "minLength": 1
+          },
+          "delta": {
+            "description": "Negative change of the metric.",
+            "type": "number"
+          },
+          "baseline_trace_ids": {
+            "description": "Traces that produced the baseline.",
+            "type": "array",
+            "items": {
+              "description": "One trace id.",
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "candidate_trace_ids": {
+            "description": "Traces that produced the candidate.",
+            "type": "array",
+            "items": {
+              "description": "One trace id.",
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "required": [
+          "metric",
+          "delta",
+          "baseline_trace_ids",
+          "candidate_trace_ids"
+        ]
+      }
+    },
+    "overall_completeness": {
+      "description": "Mean baseline completeness, or 0 when there are no pairs.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "generated_at",
+    "pairs",
+    "slices",
+    "anomalies",
+    "overall_completeness"
+  ],
+  "$defs": {
+    "metric": {
+      "type": "object",
+      "description": "One reliability metric. value is null when the denominator is zero; unknown stays null.",
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "description": "Metric id.",
+          "type": "string",
+          "minLength": 1
+        },
+        "numerator": {
+          "description": "Count that passed.",
+          "type": "number",
+          "minimum": 0
+        },
+        "denominator": {
+          "description": "Count that was eligible.",
+          "type": "number",
+          "minimum": 0
+        },
+        "value": {
+          "description": "numerator/denominator, or null when the denominator is zero.",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "exclusions": {
+          "description": "Samples left out of the metric.",
+          "type": "array",
+          "items": {
+            "description": "One exclusion.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "completeness": {
+          "description": "Mean completeness of the source traces, from 0 to 1.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source_trace_ids": {
+          "description": "Trace ids the metric was derived from.",
+          "type": "array",
+          "items": {
+            "description": "One trace id.",
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "baseline_proof_class": {
+          "description": "How the baseline was established.",
+          "enum": [
+            "recomputed",
+            "cross-checked",
+            "pinned-not-recomputable",
+            "unknown"
+          ]
+        },
+        "note": {
+          "description": "Optional note. Null when there is nothing to say.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "metric",
+        "numerator",
+        "denominator",
+        "value",
+        "exclusions",
+        "completeness",
+        "source_trace_ids",
+        "baseline_proof_class",
+        "note"
+      ]
+    },
+    "pair": {
+      "type": "object",
+      "description": "A baseline metric paired with a candidate, or deferred when the candidate does not exist yet.",
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "description": "Metric id.",
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "description": "paired when both sides exist; deferred when the candidate is still absent.",
+          "enum": [
+            "paired",
+            "deferred"
+          ]
+        },
+        "baseline": {
+          "type": "object",
+          "description": "One reliability metric. value is null when the denominator is zero; unknown stays null.",
+          "additionalProperties": false,
+          "properties": {
+            "metric": {
+              "description": "Metric id.",
+              "type": "string",
+              "minLength": 1
+            },
+            "numerator": {
+              "description": "Count that passed.",
+              "type": "number",
+              "minimum": 0
+            },
+            "denominator": {
+              "description": "Count that was eligible.",
+              "type": "number",
+              "minimum": 0
+            },
+            "value": {
+              "description": "numerator/denominator, or null when the denominator is zero.",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "exclusions": {
+              "description": "Samples left out of the metric.",
+              "type": "array",
+              "items": {
+                "description": "One exclusion.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "completeness": {
+              "description": "Mean completeness of the source traces, from 0 to 1.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "source_trace_ids": {
+              "description": "Trace ids the metric was derived from.",
+              "type": "array",
+              "items": {
+                "description": "One trace id.",
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "baseline_proof_class": {
+              "description": "How the baseline was established.",
+              "enum": [
+                "recomputed",
+                "cross-checked",
+                "pinned-not-recomputable",
+                "unknown"
+              ]
+            },
+            "note": {
+              "description": "Optional note. Null when there is nothing to say.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "metric",
+            "numerator",
+            "denominator",
+            "value",
+            "exclusions",
+            "completeness",
+            "source_trace_ids",
+            "baseline_proof_class",
+            "note"
+          ]
+        },
+        "candidate": {
+          "description": "Candidate metric, or null when the live run has not produced it. Null is not zero.",
+          "oneOf": [
+            {
+              "type": "null",
+              "description": "No candidate yet."
+            },
+            {
+              "$ref": "#/$defs/metric"
+            }
+          ]
+        },
+        "delta": {
+          "description": "candidate.value - baseline.value, or null when either value is unknown.",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "note": {
+          "description": "Why the pair is deferred, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "metric",
+        "status",
+        "baseline",
+        "candidate",
+        "delta",
+        "note"
+      ]
+    }
+  }
+}

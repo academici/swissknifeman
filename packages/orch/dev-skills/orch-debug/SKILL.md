@@ -77,6 +77,24 @@ journal instead of slowing the work, and the process is tuned from the journals 
 8. A piece with `review_debt` or `RESULT_INCOMPLETE` is a finding for the look after the plan, not a reason for a
    third review or a hand-run of the checks.
 
+## Operator model and session
+
+The conductor owns the loop; the operator starts a group, waits for its end, reads a stop and decides. Most of its time
+is waiting, so keep the waiting cheap and the context small.
+
+- **Model:** Claude Code with Sonnet (implementation class), effort medium. The decisions after a stop (resume, hotfix
+  between runs, a plan amendment, a settle) need judgment that Haiku does not give reliably; Haiku fits only a session
+  whose sole job is to start a prepared group and report its end. Long Codex operator sessions compact again and again
+  and lose the protocol; a Grok operator is not measured.
+- **Event-driven waiting:** start the run in the background and arm one completion monitor filtered to `run.end`,
+  `item.end` and the beacons (see *Watch*); no polling, no tail of raw streams in the operator context.
+- **Fresh context per group:** one operator session per group (batch). When the group ends, write the short handoff
+  (memory `active-handoff`, the run id, the outcome, the next group), end the session, and start the next group in a
+  new session from the handoff. A day-long session is the thing to avoid.
+- **Analysis outside the operator:** a deep look at a stop or at a slow item goes to a subagent (Opus or Sonnet) that
+  reads `observer.md`, `step-profile.py`, `run-usage.py` and the logs and returns a short report; the operator keeps
+  only its conclusion. `orch conduct autopilot` (PLAN9 P8.5) is meant to take over the waiting entirely.
+
 ## Per item loop
 
 1. **Preflight.** Decide per item whether review is needed and with which settings (`review.*`, model, effort, rounds), pass them with `--options FILE` and write the choice with its reason into the journal; never take the default by habit. Tree clean (or `--adopt` on purpose), item `todo`, `conduct.py run --dry-run --scenario S --options F`

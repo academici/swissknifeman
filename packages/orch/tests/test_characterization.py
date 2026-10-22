@@ -421,6 +421,7 @@ COVERAGE = {
     "SESSION_ROUTE_CHANGED": "test:test_polish.py", "DEPENDENCY_BLOCKED": "test:test_conductor_session.py",
     "ROLE_LINGERED": f"test:{C}", "ISOLATION_PARTIAL": f"test:{T}", "CHECK_CHANGED_TREE": "test:test_conductor_checks.py",
     "STUBS_CHANGED": "test:test_conductor_stubs.py",
+    "SKILL_PATH_INVALID": "test:test_instruction_paths.py", "RULES_PATH_INVALID": "test:test_instruction_paths.py",
     "TRIAGE_REPRO_TRIVIAL": "test:test_triage_repro.py", "TRIAGE_REPRO_MISMATCH": "test:test_triage_repro.py",
     "TRIAGE_REPRO_UNVERIFIED": "test:test_triage_repro.py", "REVIEW_MODE_NONE_SKIPPED": "test:test_conductor_review_plan.py",
     "GROUP_REVIEW_RESOLVED": "test:test_conductor_review_plan.py",

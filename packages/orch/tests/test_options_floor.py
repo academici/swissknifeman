@@ -83,6 +83,37 @@ class FloorTests(unittest.TestCase):
         found = run(source({"limits": {"check_timeout_s": 3600, "check_fixes": 2}, "review": {"dynamic": False}}))
         self.assertEqual(found["limits"]["check_timeout_s"], 3600)
 
+    def test_work_source_cannot_disable_or_raise_the_skill_ceiling(self):
+        for value in (0, 5001):
+            with self.subTest(value=value):
+                message = self.refused(source({"limits": {"skill_tokens_max": value}}))
+                self.assertIn("limits.skill_tokens_max", message)
+                self.assertIn("defaults", message)
+        for value in (0, 2001):
+            with self.subTest(machine=value):
+                with self.assertRaises(options.OptionsError) as caught:
+                    run(source({"limits": {"skill_tokens_max": value}}),
+                        conductor={"limits": {"skill_tokens_max": 2000}})
+                self.assertEqual(caught.exception.code, "OPTIONS_UNTRUSTED")
+                self.assertIn("config:orch.conductor", caught.exception.message)
+
+    def test_work_source_may_keep_or_lower_but_not_restore_a_previous_skill_ceiling(self):
+        for value in (1, 2000):
+            with self.subTest(value=value):
+                found = run(source({"limits": {"skill_tokens_max": value}}),
+                            conductor={"limits": {"skill_tokens_max": 2000}})
+                self.assertEqual(found["limits"]["skill_tokens_max"], value)
+        self.refused(source({"limits": {"skill_tokens_max": 1000}}),
+                     source({"limits": {"skill_tokens_max": 1001}}, name="item:W2"))
+
+    def test_only_trusted_options_may_disable_or_raise_the_skill_ceiling(self):
+        for value in (0, 9000):
+            with self.subTest(value=value):
+                found = run(trusted({"limits": {"skill_tokens_max": value}}))
+                self.assertEqual(found["limits"]["skill_tokens_max"], value)
+        self.assertEqual(run(source({"limits": {"skill_tokens_max": 8000}}),
+                             conductor={"limits": {"skill_tokens_max": 0}})["limits"]["skill_tokens_max"], 8000)
+
 
 class ExtraPathTests(unittest.TestCase):
     def setUp(self):

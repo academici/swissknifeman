@@ -95,6 +95,8 @@ FLOOR_ORDER = {("instructions", "sandbox"): ("off", "prefer", "require"),
 # ``runtime_paths`` it may only add to, so a plan cannot make a runtime artifact a product file.
 FLOOR_NARROW = (("instructions", "sandbox_domains"), ("scope", "extra_paths"))
 FLOOR_WIDEN = (("instructions", "isolate_roles"), ("scope", "runtime_paths"))
+# Numeric ceilings: a work-source layer may lower them; zero disables a ceiling and is never a tightening.
+FLOOR_CEILING = (("limits", "skill_tokens_max"),)
 # Folders an extra writable path may never be, contain, or lie in (besides the root, HOME and the project's ancestors).
 SYSTEM_DIRS = ("/bin", "/boot", "/dev", "/etc", "/lib", "/lib32", "/lib64", "/proc", "/run", "/sbin", "/sys", "/usr", "/var")
 HOME_SECRETS = (".ssh", ".gnupg", ".aws", ".kube", ".docker", ".netrc", ".password-store")
@@ -279,6 +281,11 @@ def floor_problems(current: dict, layer: dict, sources: dict) -> list:
             dropped = sorted(set(current[group][key]) - set(layer[group][key]))
             if dropped:
                 issues.append(f"{group}.{key} drops {', '.join(dropped)} kept by {below(group, key)}")
+    for group, key in FLOOR_CEILING:
+        if key in (layer.get(group) or {}):
+            old, new = current[group][key], layer[group][key]
+            if new == 0 or (old > 0 and new > old):
+                issues.append(f"{group}.{key} {new} loosens the ceiling {old} of {below(group, key)}")
     return issues
 
 

@@ -423,6 +423,8 @@ The informational limits report long or costly work through `info` lines with a 
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
 | `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
 | `STUBS_CHANGED` | on `resume`, the stub files say something else than the snapshot of the run | the run keeps its snapshot; a new run reads the new text |
+| `SKILL_PATH_INVALID` | a skill file or its selection sidecar fails path, size, UTF-8, schema or auto-digest checks | role, skill name/id and exclusion reason; the skill is left out whole and listed in the prompt manifest |
+| `RULES_PATH_INVALID` | a repository rule carrier fails containment, size or UTF-8 checks | role, carrier and reason; its rules are skipped |
 | `CHECK_CHANGED_TREE` | the checks of a round changed files of the project (their evidence and logs aside); the first change only: the checks run once more on the changed tree (a second change is the stop `CHECKS_MUTATED`) | the paths; the checks run again, and the evidence of that run proves the candidate |
 | `RUNTIME_ARTIFACT_RELOCATED` | an executor round left new untracked files under `scope.runtime_paths` (logs, evidence); they were moved to `<artifacts of the piece>/stray/` and are not committed | the paths and where each went (the report gets a `note` issue) |
 | `QUESTION_OWNER_ONLY` | a blocking question has kind `approval` or `credential`, in any questions mode | question id and kind; it stays open for the owner even with a default or under `deny` |
@@ -1056,6 +1058,24 @@ upgrade is an `info` line once and the review goes on with its route.
 
 ### Skill checks
 
+Skill names in run options match `^[a-z0-9][a-z0-9_:-]*(?:[./][a-z0-9][a-z0-9_:-]*)*$`:
+`bucket:name` and `core/context-economy` are valid; traversal segments and absolute paths are refused as
+`OPTIONS_INVALID`. Named files belong to the project's `.claude/skills` or `.agents/skills` root. Every resolved
+component must stay inside that root, including the root itself; a symlink cannot grant a directory outside it.
+An absent named file is still left to the provider as before. Auto files may be outside the project: the bridge's
+path must be absolute, canonical, have no symlink components, and name `SKILL.md`. Orch does not locate the partner's
+skill library. It compares SHA-256 of the exact file bytes with `skill_md_sha256` of the selected row; the separate
+directory `digest` is not a file checksum. Old rows without `skill_md_sha256` are excluded (`digest_missing`).
+
+Reads are strict UTF-8 and capped before opening: `SKILL.md` at 64 KiB, `selection.json` at 16 KiB, and rule carriers
+(`CLAUDE.md`/`AGENTS.md`) at 256 KiB. A bounded descriptor read also catches a file growing after stat and refuses
+symlink replacement. A present sidecar must validate against aicore `skill-selection/v1`; an absent sidecar retains
+the default policy. A named sidecar belongs to the same skill root; an auto sidecar belongs to the selected skill's
+directory. A rule carrier belongs to the project. Invalid carriers emit `RULES_PATH_INVALID` and contribute no rules.
+Invalid skills emit `SKILL_PATH_INVALID`, with a manifest exclusion reason `outside` (also missing/unreadable or
+nonregular auto files), `symlink`, `too_large`, `not_utf8`, `digest_missing`, `digest_mismatch` or `selection_invalid`.
+These file checks run again on later reads, even when `skills_checked` already holds a verdict.
+
 Before the prompt of a role is built, the skills of the role (`skills` of the run options, or what `["auto"]` chose) are
 checked deterministically, from what each skill declares in the `selection.json` beside its `SKILL.md` and from the tools of
 the route (`--tools` of its argv; a route that names no list is not judged by tools, `--tools ""` is a role with no tools).
@@ -1071,11 +1091,15 @@ left out of the prompt, in this order of checks, as:
 | `persona_duplicate` | a second skill of `kind: persona` |
 | `exclusive_group` | more skills of one `exclusive_group` than the group allows (one; `php-architecture` two) |
 
-Each exclusion is listed in `manifest.excluded` of the step (`id`, `reason`) and is a beacon `SKILL_EXCLUDED` with the detail
+Each policy exclusion is listed in `manifest.excluded` of the step (`id`, `reason`) and is a beacon `SKILL_EXCLUDED` with the detail
 (for example the missing tool or the size). A skill left out is not named in the prompt either. If two kept skills are a pair
 of `conflicts` (by id, by name, or by the folder of a `<bucket>/<folder>` entry), the role does not start: the piece stops
 `PROMPT_CONFLICT` with the pair. The verdict is made once per piece and kept in the state (`skills_checked`). Contradictions
 between the texts of skills ("must" against "never") are not detected: that cannot be done deterministically.
+
+`limits.skill_tokens_max` defaults to 5000 (0 disables the token ceiling only in trusted configuration or invocation
+options). A work-source layer may keep or lower an enabled ceiling, or enable one when the trusted value is 0;
+disabling or raising it is `OPTIONS_UNTRUSTED`. Byte caps apply independently of the token ceiling.
 
 `orch conduct prompt explain --item REF --step STEP [--run RUN] [--json]` prints the blocks of one step as a table (kind,
 origin, tokens, the start of the digest) and what was left out; the default run is the latest. `MANIFEST_UNKNOWN` (exit 1)

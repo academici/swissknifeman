@@ -5,6 +5,7 @@ Design: knowledge ``p9-prompt#dedupe``. ``--tools`` of the route is the launch-c
 (``configs/launch-catalog.json``: ``"--tools", "Read,Grep,Glob"``; ``--tools ""`` is a role with no tools)."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -47,7 +48,8 @@ class SkillChecksTests(unittest.TestCase):
         folder.mkdir(parents=True)
         (folder / "SKILL.md").write_text(f"---\nname: {name}\n---\n\n{body}\n", encoding="utf-8")
         if selection:
-            (folder / "selection.json").write_text(json.dumps({"schema": "skill-selection/v1", **selection}), encoding="utf-8")
+            (folder / "selection.json").write_text(json.dumps({"schema": "skill-selection/v1", "kind": "domain",
+                                                              "decision": "KEEP", **selection}), encoding="utf-8")
         return name
 
     def use(self, *names):
@@ -127,6 +129,8 @@ class SkillChecksTests(unittest.TestCase):
                   {"name": "b", "id": "bucket/b", "path": str(self.dir / ".claude/skills/b/SKILL.md")}]
         self.skill("a", conflicts=["bucket/b"])
         self.skill("b")
+        for row in bridge:
+            row["skill_md_sha256"] = hashlib.sha256(Path(row["path"]).read_bytes()).hexdigest()
         self.item.options["skills"]["executor"] = [opts.AUTO_SKILLS]
         self.item.state["skills_auto"] = {"executor": {"skills": bridge, "excluded": [], "discoverable": [], "tokens": 0}}
         with self.assertRaises(engine.Stop) as raised:

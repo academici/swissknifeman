@@ -4,6 +4,7 @@
 
 ### Security
 
+- orch/orch-skiller: имена skills больше не допускают traversal; файлы skills, selection.json и носители правил проверяются по корням, symlink, размеру и UTF-8. Sidecar проверяется по skill-selection/v1; auto-skill сверяется с новым `skill_md_sha256` ответа bridge (каталожный `digest` сохраняется отдельно). Небезопасный файл исключается с `SKILL_PATH_INVALID`/`RULES_PATH_INVALID`; work-source options больше не отключают и не повышают `limits.skill_tokens_max`.
 - orch: `launch.access` сохраняет доверенный нижний предел из истории конфигурации: проектный `_unset` и environment `open` больше не снимают `confined`; машинный и вызывающий слои сохраняют право явно открыть доступ.
 - orch: проект и environment больше не заменяют `advisor.human_gate` (`CONFIG_LAYER_FORBIDDEN`); `human_gate_extra` накапливается по всем слоям даже после `[]`/`_unset`, а `min_confidence` сохраняет самый строгий порог (по умолчанию `medium`). Совет удерживается также по кодовым категориям чувствительных путей и выхода за write set; `ADVICE_HELD` называет источник. Вопросы `approval`/`credential` остаются открытыми только для владельца во всех режимах, включая `defaults` и `deny` (`QUESTION_OWNER_ONLY`); автоматические ответы записывают `resolution.authority` для аудита.
 

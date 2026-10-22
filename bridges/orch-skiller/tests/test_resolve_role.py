@@ -1,7 +1,9 @@
 """``resolve_role.py``: closure of each role's skills and the delivery mode, offline against the partner's registry."""
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -203,6 +205,87 @@ class PartnerLookup(unittest.TestCase):
                               capture_output=True, text=True, env=env, check=False)
         self.assertEqual(done.returncode, 3)
         self.assertIn("BRIDGE_PARTNER_UNAVAILABLE", done.stderr)
+
+
+class FakeSkillerSelect(unittest.TestCase):
+    """Required --select coverage, with a fake PATH partner and no installed-partner skip."""
+
+    def test_select_preserves_directory_digest_and_hashes_exact_skill_md_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            skill = root / "SKILL.md"
+            data = b"---\r\nname: demo\r\n---\r\nExact skill bytes.\r\n"
+            skill.write_bytes(data)
+            directory_digest = "sha256:" + "c" * 64
+            answer = {"included": [{"name": "demo", "id": "core/demo", "path": str(skill),
+                                    "reason": "explicit", "tokens": 10, "digest": directory_digest}],
+                      "excluded": [], "discoverable": [], "tokens": 10}
+            launcher = root / "skiller"
+            launcher.write_text(f"#!{sys.executable}\nprint({json.dumps(answer)!r})\n", encoding="utf-8")
+            launcher.chmod(0o755)
+            # A minimal role root keeps both partner lookups inside the fixture.
+            orch = root / "orch"
+            (orch / "scripts").mkdir(parents=True)
+            (orch / "scripts/orch.py").touch()
+            (orch / "roles").mkdir()
+            (orch / "roles/executor.json").write_text(json.dumps({"contract_version": "exec/v1",
+                                                                "role_id": "executor", "skills": []}))
+            env = {**os.environ, "PATH": str(root), "SKM_SKILLER_ROOT": "", "SKM_ORCH_ROOT": str(orch),
+                   "HOME": str(root / "home"), "CODEX_HOME": str(root / "codex"), "GROK_HOME": str(root / "grok")}
+            done = subprocess.run([sys.executable, str(SCRIPT), "--select", "--role", "executor", "--provider", "codex"],
+                                  capture_output=True, text=True, env=env, check=False)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            out = json.loads(done.stdout)
+            self.assertEqual(out["skills"], [{**answer["included"][0], "skill_md_sha256": hashlib.sha256(data).hexdigest()}])
+            # The consumer belongs to orch; exercise it as a process across this bridge, never import the bridge
+            # into the neutral core's own tests. Both partner roots come from the explicit worktree environment.
+            orch_root = partners.require_orch_root()
+            foundation = partners.aicore_lib()
+            self.assertIsNotNone(foundation, "AICORE_ROOT must name the worktree foundation")
+            probe_env = {**env, "PYTHONPATH": os.pathsep.join((str(orch_root / "lib"), str(foundation)))}
+            probe = '''\
+import json, sys
+from pathlib import Path
+from types import SimpleNamespace
+from orch.conductor import engine, options
+chosen = json.load(sys.stdin)
+path = Path(chosen["skills"][0]["path"])
+eng = engine.Conductor.__new__(engine.Conductor)
+eng.project = path.parent
+eng.progress = SimpleNamespace(emit=lambda *args, **kwargs: None)
+item = SimpleNamespace(ref="W1", state={"skills_auto": {"executor": chosen}}, routes={}, input_doc={},
+                       options={"skills": {"executor": ["auto"]}, "instructions": {"isolate_roles": ["executor"]},
+                                "limits": dict(options.DEFAULT_LIMITS)})
+names = eng._skills(item, "executor")
+assert names == ["demo"], names
+assert eng._skill_texts(item, "executor") == {"demo": "Exact skill bytes."}
+path.write_bytes(b"Changed after selection.\\n")
+texts = eng._skill_texts(item, "executor")
+assert texts == {}, texts
+assert names == [], names
+excluded = eng._skills_excluded(item, "executor")
+assert excluded == [{"id": "core/demo", "reason": "digest_mismatch"}], excluded
+print(json.dumps({"accepted": True, "excluded_after_change": excluded}))
+'''
+            consumed = subprocess.run([sys.executable, "-c", probe], input=json.dumps(out), capture_output=True,
+                                      text=True, env=probe_env, check=False, cwd=root)
+            self.assertEqual(consumed.returncode, 0, consumed.stdout + consumed.stderr)
+            self.assertTrue(json.loads(consumed.stdout)["accepted"])
+
+    def test_select_hash_does_not_open_oversized_or_symlink_files(self):
+        import resolve_role
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            large = root / "SKILL.md"
+            large.write_bytes(b"x" * (70 * 1024))
+            with mock.patch.object(resolve_role.os, "open") as opened:
+                self.assertIsNone(resolve_role.skill_md_sha256(large))
+            opened.assert_not_called()
+            (root / "alias").symlink_to(root, target_is_directory=True)
+            large.write_text("Small.")
+            with mock.patch.object(resolve_role.os, "open") as opened:
+                self.assertIsNone(resolve_role.skill_md_sha256(root / "alias/SKILL.md"))
+            opened.assert_not_called()
 
 
 if __name__ == "__main__":

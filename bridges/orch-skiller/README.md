@@ -31,9 +31,15 @@ python3 bridges/orch-skiller/resolve_role.py (--role ID | --manifest PATH | --al
 - `--select --role ID --provider P [--paths P…] [--project DIR] [--budget N] [--include ID…] [--exclude ID…]` asks
   `skiller select --policy auto --json`: the role's required skills (manifest or `role-skills.json`, `required: true`) go in as explicit
   includes, path and dependency triggers add the rest. Output `{"role", "provider", "skills": [{"name", "id", "path",
-  "reason", "tokens"}], "excluded": [{"id", "reason"}], "discoverable", "tokens", "diagnostics"}`; `path` is the
+  "reason", "tokens", "digest", "skill_md_sha256"}], "excluded": [{"id", "reason"}], "discoverable", "tokens", "diagnostics"}`; `path` is the
   absolute `SKILL.md` the conductor reads. `SELECT_FAILED` (exit 1) when `skiller select` gives no JSON. The
   transitive `requires` of a selected skill is not added here.
+  `digest` is passed through unchanged from Skiller: it hashes the skill directory, including relative filenames
+  (excluding `evals/` and `__pycache__`). `skill_md_sha256` is a separate lowercase SHA-256 hex string of the exact
+  bytes of `SKILL.md` at selection time. The conductor checks the latter before adding the body to a prompt;
+  a changed file is excluded as `digest_mismatch`, an old bridge row without it as `digest_missing`.
+  Hashing is capped at 64 KiB and requires a canonical, regular `SKILL.md`; an invalid file has no
+  `skill_md_sha256`, leaving the conductor to report its path, size or encoding exclusion.
 - Nothing is installed or delivered to a run; that is the engine's job.
 
 ## Finding the partner

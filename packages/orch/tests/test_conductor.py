@@ -1324,6 +1324,30 @@ class RunClockTests(ConductorCase):
         self.assertGreaterEqual(self.state(err)["active_s"], 300)
 
 
+class ConcurrentRunTests(ConductorCase):
+    """``CONCURRENT_RUN``: a run that starts while another run of the project holds its lease says so; nothing stops."""
+
+    def test_a_live_run_of_the_project_is_announced_and_a_dead_one_is_not(self):
+        from orch.conductor.infrastructure.files import runs_root
+        from orch.conductor.infrastructure.lease import RunLease
+        live, dead = (runs_root(self.project) / name for name in ("cnd-20260101T000000Z-aaaaaa",
+                                                                  "cnd-20260101T000001Z-bbbbbb"))
+        for folder in (live, dead):
+            folder.mkdir(parents=True)
+        (dead / "lease.lock").write_text("", encoding="utf-8")  # a lock file nobody holds: its owner is gone
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        with RunLease(live).acquire("run"):
+            code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        (message,) = [line["message"] for line in self.lines(err) if line.get("reason_code") == "CONCURRENT_RUN"]
+        self.assertIn(live.name, message)
+        self.assertNotIn(dead.name, message)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        self.set_items({"W1": {}})
+        code, _, err = self.run_items("W1")
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "CONCURRENT_RUN"], err)
+
+
 class SelfCheckReturnTests(ConductorCase):
     """``checks.self_check``: a completion report that does not show the self-check goes back to the executor once,
     before any acceptance check (``RESULT_INCOMPLETE``); acceptance stays the conductor's."""

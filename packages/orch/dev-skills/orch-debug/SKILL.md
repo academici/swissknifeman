@@ -60,6 +60,23 @@ conductor's"; copy the finished journal and findings into the plan or `docs/` af
 - **Each role gets only the instructions of its own prompt** (`instructions.isolate_roles`, default every role; the
   module rules arrive as a short Repository rules block). Check in the prompts of the first item that the block is there.
 
+## Operator rules (D24)
+
+The plan moves fast with good-enough quality; the safety nets (acceptance, at most two reviews) leave marks in the
+journal instead of slowing the work, and the process is tuned from the journals after each plan.
+
+1. The latest owner stop comes first; earlier grants and continuation prompts are history.
+2. Do not edit the plan while its run is live: every edit rebuilds the input (`INPUT_REBUILT`), sends the full prompt
+   again and misses the scout cache. Collect plan changes and apply them between runs.
+3. Before interrupting a stage, read its current command, exit and timestamps (`conduct.py status`, the stream, the
+   check log): a stage that already ended or a test run in progress is not stuck.
+4. A hand `settle` names its reason in the journal; never settle a running piece to make a status look right.
+5. One conductor run per machine unless the owner allows more: parallel runs slow each other's checks.
+6. Forecast from the journal of earlier items (the remaining stages and their measured medians), as a range.
+7. Report to the owner in four parts: code changed, checks green, evidence (paths), criterion still open.
+8. A piece with `review_debt` or `RESULT_INCOMPLETE` is a finding for the look after the plan, not a reason for a
+   third review or a hand-run of the checks.
+
 ## Per item loop
 
 1. **Preflight.** Decide per item whether review is needed and with which settings (`review.*`, model, effort, rounds), pass them with `--options FILE` and write the choice with its reason into the journal; never take the default by habit. Tree clean (or `--adopt` on purpose), item `todo`, `conduct.py run --dry-run --scenario S --options F`

@@ -410,6 +410,9 @@ The informational limits report long or costly work through `info` lines with a 
 | `BUDGET_OVER` | once, when the fresh tokens of a piece pass `limits.tokens_max` | the tokens used |
 | `BUDGET_OVER` (`block …`) | a class of the blocks of a role prompt is past its `limits.prompt_*_tokens` (see Prompt manifest) | `block <kind> <origin> <tokens>`: the heaviest block of the class; the prompt is not changed |
 | `LIMIT_OVER` | a round past a target of `limits.*` | the target, the ceiling and why it goes on |
+| `REVIEW_DEBT` | the last review round the wall allows had confirmed findings; they were corrected without a further review | the round and the findings; `review_debt` in the piece state; the observer lists it for the look after the plan |
+| `RESULT_INCOMPLETE` | a completion report without the self-check (`checks.self_check`) goes back to the executor once, before the checks | the commands it did not show |
+| `CONCURRENT_RUN` | at run start or resume, another run of the project holds its lease | the live runs and their pids; parallel runs slow each other's checks, nothing is stopped |
 | `LIMIT_OVER` (`batch: …`) | a round past `limits.review_rounds_batch`, `corrections_batch` or `findings_batch` (whole run, default 0 = none; same target and ceiling rule, counted from the state of every piece) | the target and why it goes on; when the ceiling refuses more rounds, an open **Blocker** stops the run with `REVIEW_LIMIT`, other confirmed findings become plan notes (no correction) |
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
 | `REPAIR_SEMANTIC_DRIFT` | the report-fixer's block changed the meaning of the role's own block (a raised status or verdict, a lowered severity, a lost finding, question, escalation or check row) and was refused | `kept the role's answer: <violations>`; the next repair or a repeat of the role follows |

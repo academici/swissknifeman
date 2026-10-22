@@ -62,7 +62,29 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
         self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
                                                                      f"batch, at most {max_items or 'all'}"))
         debug_mode.announce(self.progress, self.directory, run_id, self.settings)
+        announce_concurrent(self)
         return self._loop()
+
+
+def concurrent_runs(self) -> list:
+    """The other conductor runs of the project whose lease a live process holds (a dead owner frees its lock)."""
+    from orch.conductor.infrastructure.lease import RunLease
+    found = []
+    for folder in sorted(self.directory.parent.glob("cnd-*")):
+        if folder == self.directory or not folder.is_dir() or RunLease.held(folder) is not True:
+            continue
+        found.append(f"{folder.name} (pid {RunLease.owner(folder).get('pid') or 'unknown'})")
+    return found
+
+
+def announce_concurrent(self) -> None:
+    """The ``CONCURRENT_RUN`` beacon: another run of the project is live. Runs in parallel slow each other's checks
+    (measured: one check went from 144 s to 270 s), so the operator decides on purpose; nothing is stopped."""
+    others = concurrent_runs(self)
+    if others:
+        self.progress.emit("info", reason_code="CONCURRENT_RUN",
+                           message="another conductor run of this project is live: " + ", ".join(others)
+                                   + "; parallel runs share the machine and slow each other's checks")
 
 
 def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
@@ -95,6 +117,7 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
         self._save()
         self.progress.emit("run.resume", message=f"resume {state['resumes']}")
         debug_mode.announce(self.progress, self.directory, run_id, self.settings)
+        announce_concurrent(self)
         return self._loop()
 
 

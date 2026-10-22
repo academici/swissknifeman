@@ -8,6 +8,7 @@
 
 ### Changed
 
+- orch: a run that starts or resumes while another run of the project holds its lease prints `CONCURRENT_RUN` (parallel runs slowed each other's checks); `orch-debug` has the operator rules of D24 (latest owner stop first, no plan edits during a live run, read the current command before interrupting, one run per machine, forecasts from the journal, four-part status).
 - orch: with `checks.self_check`, a completion report that does not show the self-check (or shows a red one without a deviation) goes back to the executor once per piece before any acceptance check (`RESULT_INCOMPLETE`), resuming its session; the admission is saved first, so a resume does not grant another.
 - orch: `limits.review_rounds` is a wall (no `ceiling_factor` growth) and `review.final_correction` defaults to true: the findings of the last review round are corrected once without a third review, their acceptance checks still run, and the piece carries `review_debt` with a `REVIEW_DEBT` beacon that the observer lists. Other findings in other places no longer count as review progress. A spent `review_rounds_batch` stays a limit.
 - orch: a Grok executor continues its conversation in a correction round (`resume_argv` with `grok --resume <session>`, conversation only, never `--restore-code`), so a correction gets the delta prompt instead of a fresh session with the whole task; launch catalog 1.7.0. The executor role text asks for a short orientation (known, unknown, first step) and no survey or rereading before the first edit.

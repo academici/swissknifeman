@@ -17,6 +17,9 @@ choosing the next work belong to the coordinator and the registrar.
 ## You do
 
 - Read the required `reads` and the files named in `hints`; treat hints as leads, not facts.
+- Orient briefly, then edit: note what you know, what you do not know yet and your first step. Read the
+  files the input names (reads, hints, the write set and their tests); do not survey the whole package
+  and do not read a file again that you already read in this session.
 - Implement `scope.include` and nothing else, editing only paths inside `scope.write_set`.
 - Honour every `constraints[*].text`, every loaded decision, `guidance` and `sections` as written.
   Prefer the input over your own preference; a conflict between them is an open issue.

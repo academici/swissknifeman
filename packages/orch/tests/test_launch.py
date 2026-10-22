@@ -72,6 +72,7 @@ class LaunchCatalogTests(unittest.TestCase):
         catalog = copy.deepcopy(self.catalog)
         catalog["launch"]["executor"]["grok"].update(
             transport="acp", model_set="unknown", argv=["grok", "agent", "stdio"])
+        catalog["launch"]["executor"]["grok"].pop("resume_argv")  # the shipped one names a model
         launch.validate_catalog(catalog)
         self.assertEqual(launch.build_argv(catalog, "executor", "grok"), ["grok", "agent", "stdio"])
 

@@ -8,6 +8,7 @@
 
 ### Changed
 
+- orch: a Grok executor continues its conversation in a correction round (`resume_argv` with `grok --resume <session>`, conversation only, never `--restore-code`), so a correction gets the delta prompt instead of a fresh session with the whole task; launch catalog 1.7.0. The executor role text asks for a short orientation (known, unknown, first step) and no survey or rereading before the first edit.
 - orch: `checks.fail_fast` defaults to false: every item check of a round runs, so one round reports every independent failure and one correction mends them together (golden, fixtures and consumers no longer surface one round at a time). Phase checks still wait for green item checks; `fail_fast: true` keeps the old behaviour.
 - orch: `checks.self_check` (default empty) names the project's cheap commands the executor runs once on its final tree before it reports; the executor prompt gets a *Ready to hand over* section (narrow tests in the repository's test files, a negative example for every new rule, each self-check command, again after a correction) and the stage-report an optional `self_check` claim. Acceptance stays the conductor's. The executor role text says that review and acceptance are a safety net.
 - scripts: `affected-tests.py` under a safe `SKM_CHECK_RUN` keeps to `run-<id>.json` in every tier, so a green written by a manual run or an executor's self-check is never counted as acceptance evidence.

@@ -4,6 +4,12 @@
 
 ### Changed
 
+- orch: a correction, in the full executor prompt and in the resumed delta, is the only current assignment. It is built from the latest red acceptance (stage, command, full log, bounded failure-header sample, child logs). Earlier causes that a later acceptance showed green are marked historical. The goal, scope, authority and acceptance contract stay in force. The conductor still owns acceptance; the executor still runs only the named new or failed cases.
+- orch: a completion report that changes no product file and no execution input does not start acceptance again (`CORRECTION_INEFFECTIVE`, not fixed). An environment fix (`open_issues` class `environment` or `test_env` with `evidence`) or a confirmed nondeterministic failure (the issue says nondeterministic and names evidence) may run acceptance once for those red checks. Conductor runtime paths are not a product change.
+- orch: the scout cache key already ignored `provenance`, `digest` and the `input_id` suffix; it now also ignores `lessons[].ts`. Goal, scope, route, role text and selected skill text still miss.
+- orch: a check that has prior evidence but cannot reuse it records `reuse_miss` with the differing component (`candidate.head`, `candidate.dirty_digest`, `command`, `cwd`, `fingerprint=<short hash>`, or `unknown inputs`). Values of the environment are not stored.
+- scripts: `affected-tests.py` explains a miss of a prior green receipt with safe component names and short hashes, and says when an unknown dependency forces a conservative run. Unchanged commands in a safe `SKM_CHECK_RUN` still print `[cached]`.
+- aicore: Codex economy prefers verified `gpt-6-luna` (economy/explore, 2026-10-22, official model page and local Codex cache; no launch was run). `gpt-5.6-luna` stays in the inventory. Implementation stays `gpt-6-sol` and frontier stays `gpt-6-astra`. An explicit model route is unchanged. Ordinary Codex scout uses the economy class, so it gets `gpt-6-luna` unless the route names a model.
 - Minimum Python is 3.11 (`aicore.MIN_PYTHON`). Python 3.9 and 3.10 are end of life; `install.sh` and `scripts/check-env.sh` refuse an older interpreter before they change the machine (`python3 <ver> (needs >= 3.11)`). CI tests 3.11, 3.13 and 3.14. TOML is read with the standard library only; the vendored `tomli` parser is gone.
 
 ## [0.32.0] - 2026-10-22

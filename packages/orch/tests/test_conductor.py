@@ -245,7 +245,19 @@ class DonePendingChecksTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         item = self.source()["items"]["W1"]
         self.assertEqual(item["status"], "blocked")
-        self.assertIn("CHECKS_RED", item["report"]["open_issues"][-1]["text"])
+        self.assertIn("CORRECTION_INEFFECTIVE", item["report"]["open_issues"][-1]["text"])
+        stages = [line["stage"] for line in self.lines(err) if line["event"] == "stage.end"]
+        self.assertNotIn("checks.2", stages)
+
+    def test_a_no_diff_environment_fix_with_evidence_still_runs_acceptance_once(self):
+        issue = {"kind": "note", "class": "environment", "text": "runner home",
+                 "impact": "runner repaired", "next": "acceptance", "evidence": ["runs/home.txt"]}
+        self.script({"executor": [{"result": report("W1")}, {"result": report("W1", open_issues=[issue])}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        stages = [line["stage"] for line in self.lines(err) if line["event"] == "stage.end"]
+        self.assertIn("checks.2", stages)
+        self.assertIn("CHECKS_RED", self.source()["items"]["W1"]["report"]["open_issues"][-1]["text"])
 
     def test_a_piece_whose_checks_were_all_skipped_is_not_closed_on_the_word_of_the_executor(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"checks": {"cadence": ["phase"]}}}]}})
@@ -475,7 +487,9 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
     def test_red_after_the_correction_limit_blocks_and_stops(self):
-        self.script({"executor": [{"result": report("W1")}]})
+        self.set_items({"W1": {"write_set": ["out/**"]}})
+        self.script({"executor": [{"result": report("W1")},
+                                  {"write": {"out/attempt.txt": "correction\n"}, "result": report("W1")}]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         self.assertEqual(self.calls("executor"), 2)
@@ -1106,7 +1120,8 @@ class SoftLimitTests(ConductorCase):
         # serial: the order of admission is the order of the round, so a red V1 is known before V2 would start; with
         # checks.parallel above 1 both are admitted together (the next test)
         self.two_checks(checks={"parallel": 1})
-        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
@@ -1124,7 +1139,8 @@ class SoftLimitTests(ConductorCase):
         # Whatever the timing, a skipped row has the reason fail_fast, V1 is the only failure and the second round keeps
         # the red-first order (V1 ahead of V2) with V2 either skipped, re-run, or reused from the first round.
         self.two_checks()
-        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
@@ -1142,7 +1158,8 @@ class SoftLimitTests(ConductorCase):
 
     def test_red_first_off_runs_every_check_in_every_round(self):
         self.two_checks(checks={"red_first": False, "fail_fast": False})
-        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
@@ -1171,9 +1188,11 @@ class SoftLimitTests(ConductorCase):
 
     def test_a_combined_review_correction_is_sent_once(self):
         slow = {"id": "V1", "cmd": "sleep 2; test -f out/W1.txt", "expect": "exit 0", "kind": "acceptance"}
-        self.set_items({"W1": {"checks": [slow], "options": [{"source": "item:W1", "options": {
+        self.set_items({"W1": {"write_set": ["out/**"], "checks": [slow], "options": [{"source": "item:W1", "options": {
             "checks": {"overlap_review": True}, "limits": {"check_fixes": 2}}}]}})
-        self.script({"executor": [{"result": report("W1")}, {"result": report("W1")}, executor_ok("W1")],
+        self.script({"executor": [{"result": report("W1")},
+                                  {"write": {"out/correction.txt": "review fixed\n"}, "result": report("W1")},
+                                  executor_ok("W1")],
                      "reviewer": [FINDING, GREEN], "triager": [TRIAGE_F1]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)

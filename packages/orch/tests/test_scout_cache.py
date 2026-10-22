@@ -44,9 +44,17 @@ class CacheKeyTests(unittest.TestCase):
     def test_what_the_map_depends_on_changes_the_key(self):
         base = self.key()
         self.assertNotEqual(base, self.key(item=item_of(goal="another goal")))
+        self.assertNotEqual(base, self.key(item=item_of(scope={"include": ["other"]})))
         self.assertNotEqual(base, self.key(route=dict(ROUTE, model="other")))
         self.assertNotEqual(base, self.key(route=dict(ROUTE, effort="high")))
         self.assertNotEqual(base, self.key(who=owner(stub=("stub:x", "## Extra\n\nrules"))))
+
+    def test_a_lesson_timestamp_does_not_change_the_key_and_its_text_does(self):
+        lesson = {"type": "friction", "summary": "read the fixture", "ts": "2026-10-22T00:00:00Z"}
+        base = self.key(item=item_of(lessons=[lesson]))
+        moved = dict(lesson, ts="2026-10-22T01:00:00Z")
+        self.assertEqual(base, self.key(item=item_of(lessons=[moved])))
+        self.assertNotEqual(base, self.key(item=item_of(lessons=[dict(lesson, summary="read the other fixture")])))
 
     def test_the_text_of_a_selected_skill_changes_the_key(self):
         with __import__("tempfile").TemporaryDirectory() as tmp:
@@ -168,8 +176,9 @@ class ScoutCacheRunTests(ConductorCase):
         with mock.patch.object(scout, "durable_replace", wraps=scout.durable_replace) as written:
             code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
-        written.assert_called_once()
-        path, data = written.call_args[0]
+        self.assertGreaterEqual(written.call_count, 1)
+        cache_call = next(call for call in written.call_args_list if str(call.args[0]).endswith(".txt"))
+        path, data = cache_call.args
         self.assertEqual(Path(path), self.cache_files()[0])
         self.assertEqual(data, Path(path).read_bytes())
         self.assertEqual([p.name for p in Path(path).parent.iterdir() if p.name.endswith(".tmp")], [])

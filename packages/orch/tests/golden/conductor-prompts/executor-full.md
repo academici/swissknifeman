@@ -23,6 +23,11 @@ choosing the next work belong to the coordinator and the registrar.
 - Prove your change with the tests that cover it: single test files or classes of the code you
   changed. The coordinator runs every `acceptance.checks[*]` after your report; run one yourself
   only to reproduce a red result you were given. Keep long output in a file.
+- When a round brings a correction, that correction section is the only current assignment. Earlier
+  correction instructions are historical. The goal, the scope, the authority and the acceptance
+  contract stay in force. Do not re-diagnose a cause marked historical. A fix that changes no product
+  file is not a fix unless the report gives evidence of an environment fix or a confirmed
+  nondeterministic failure.
 - Repair a failing test or check yourself when the repair stays inside the scope.
 - Read, search and edit files with the file tools (Read, Grep, Glob, Edit, Write); use the shell
   for commands, not for `cat`, `sed` or `grep` of files.
@@ -297,7 +302,7 @@ Fix the deviation named in the section above: change only what its evidence name
 
 ## Correction
 
-Your previous attempt is in the working tree. Make exactly this correction, inside the same scope and re-run the tests of what you touched.
+Your previous attempt is in the working tree. The current correction focus below is the only assignment of this round. Earlier correction instructions are historical and are not a current assignment. The goal, the scope, the authority and the acceptance contract stay in force. Make exactly this correction, inside the same scope and re-run the tests of what you touched. Do not rerun acceptance checks the conductor owns.
 
 ```text
 red V1

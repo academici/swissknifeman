@@ -31,6 +31,17 @@ class TestPackagedCatalog(unittest.TestCase):
         self.assertEqual(models.select_model(self.catalog, "cursor", "frontier"), "claude-opus-5-thinking-high")
         self.assertEqual(models.select_effort(self.catalog, "claude-code", "xhigh"), "xhigh")
 
+    def test_codex_economy_prefers_verified_gpt_6_luna(self):
+        self.assertEqual(models.select_model(self.catalog, "codex", "economy"), "gpt-6-luna")
+        self.assertEqual(models.select_model(self.catalog, "codex", "implementation"), "gpt-6-sol")
+        inventory = models.inventory(self.catalog, "codex")
+        self.assertEqual(inventory["verified_at"], "2026-10-22")
+        luna = next(entry for entry in inventory["entries"] if entry["id"] == "gpt-6-luna")
+        self.assertEqual(luna["roles"], ["economy", "explore"])
+        self.assertEqual(luna["status"], "confirmed")
+        self.assertTrue(any(entry["id"] == "gpt-5.6-luna" for entry in inventory["entries"]))
+        self.assertNotIn("gork", json.dumps(inventory))
+
     def test_unknown_provider_class_or_effort_gives_none(self):
         self.assertIsNone(models.select_model(self.catalog, "nope", "frontier"))
         self.assertIsNone(models.select_model(self.catalog, "codex", "huge"))

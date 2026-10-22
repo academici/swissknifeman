@@ -254,12 +254,8 @@ def _can_match_dot(pattern: str) -> bool:
     The pattern is parsed and its consuming parts are checked (a literal dot, ``.``, a class that holds a dot,
     a negated class or ``\\W``-like category); look-around assertions consume nothing and are skipped.
     """
-    try:
-        from re import _parser as sre_parse  # Python 3.11+
-        from re import _constants as sre_constants
-    except ImportError:  # Python 3.9, 3.10
-        import sre_constants  # type: ignore[no-redef]
-        import sre_parse  # type: ignore[no-redef]
+    from re import _constants as sre_constants
+    from re import _parser as sre_parse
     dot = ord(".")
     repeats = tuple(getattr(sre_constants, name) for name in ("MAX_REPEAT", "MIN_REPEAT", "POSSESSIVE_REPEAT")
                     if hasattr(sre_constants, name))

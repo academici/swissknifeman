@@ -16,7 +16,7 @@ process. Details Claude Code — in [developer's runbook](docs/develop.md).
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Provider support (generated)
 
-Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `484277fb69ea46e280a194b67e9edc0c96ea373d7380a1ee435b381113bf1db7`. Manifest (`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
+Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `0d8193b9020dfbc76fbf42e3714dffe97cb3456275e6580d6da019a00a2ff4c6`. Manifest (`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
 
 | Capability | Claude Code | Codex | Cursor | Grok |
 |:--|:--:|:--:|:--:|:--:|
@@ -90,7 +90,7 @@ Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `AP
 
 ## Installation
 
-Requirements: `python3` 3.9+, `git`, `bash` 4+; recommended `~/.local/bin` on `PATH`, `jq`, `node` 18+, `uvx`, `bubblewrap` + `socat`
+Requirements: `python3` 3.11+, `git`, `bash` 4+; recommended `~/.local/bin` on `PATH`, `jq`, `node` 18+, `uvx`, `bubblewrap` + `socat`
 (sandbox) and one agent client. Check them first with the read-only `scripts/check-env.sh` (full table and the Ubuntu 24.04 sandbox
 setup: [Get started](docs/getting-started.md#requirements)).
 

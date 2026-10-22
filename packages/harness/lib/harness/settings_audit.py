@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 from aicore.config import ConfigError, resolve
+from aicore.config import toml as _toml
 from aicore.util.io import safe_load_json
 from aicore.util.term import warn
 
@@ -1245,14 +1246,8 @@ def _load_codex_toml_layer(name, path):
     except (OSError, UnicodeDecodeError) as error:
         return Layer(name, path, data=None, error=str(error), error_kind="unreadable")
     try:
-        import tomllib
-    except ModuleNotFoundError:
-        return Layer(name, path, data=None,
-                     error="interpreter < 3.11: tomllib is not available, the layer is not readable",
-                     error_kind="unreadable")
-    try:
-        data = tomllib.loads(text)
-    except tomllib.TOMLDecodeError as error:
+        data = _toml.loads(text)
+    except ConfigError as error:
         return Layer(name, path, data=None, error=str(error), error_kind="malformed")
     if not isinstance(data, dict):
         return Layer(name, path, data=None, error="top level TOML not a table",

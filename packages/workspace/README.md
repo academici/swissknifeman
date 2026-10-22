@@ -3,7 +3,7 @@
 The portable workspace module of the ecosystem. The plans of all projects live in one git repository of their own
 (the *workspace*) instead of inside each project's repository, so they can be moved between machines without touching
 product history. This module creates that repository, keeps the record of its projects and ties the checkouts of one
-machine to them. It is a small command-line tool built on the `aicore` foundation (Python 3.9+, standard library only).
+machine to them. It is a small command-line tool built on the `aicore` foundation (Python 3.11+, standard library only).
 
 The places, the seven document contracts, the resolver that tells where the plans of a project live and the shared
 resolution vectors belong to `aicore.workspace` ([ADR 0085](../../docs/architecture/decisions/0085-portable-workspace.md)).

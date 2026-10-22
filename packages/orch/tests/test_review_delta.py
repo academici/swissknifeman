@@ -3,7 +3,6 @@ the files of the findings still to be fixed); round 1, ``audit_scope: full`` and
 diff."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -11,7 +10,7 @@ import unittest
 from unittest import mock
 
 from orch.conductor import checks, engine
-from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
+from tests.test_conductor import GREEN, ConductorCase, report
 
 WRITE_SET = ["out/W1.txt", "out/stable.txt", "out/other.txt"]
 

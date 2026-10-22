@@ -270,7 +270,7 @@ class LockTests(unittest.TestCase):
                 entered, proceed = threading.Event(), threading.Event()
 
                 class Slow(dict):
-                    def items(self):  # the reader is paused half-way through the steps
+                    def items(self, entered=entered, proceed=proceed):  # the reader is paused half-way through the steps
                         for position, pair in enumerate(list(dict.items(self))):
                             if position == 1:
                                 entered.set()
@@ -290,7 +290,7 @@ class LockTests(unittest.TestCase):
                 cond._evidence_dir = lambda found: found.artifacts / "evidence"
                 outcome = {}
 
-                def computing():
+                def computing(outcome=outcome, cond=cond, item=item, number=number):
                     try:
                         with mock.patch.object(checks_stage.checks_mod, "run_checks", return_value=[]) as run:
                             outcome["rows"] = checks_stage.compute_checks(cond, item, number, {})
@@ -302,7 +302,7 @@ class LockTests(unittest.TestCase):
                 reader.start()
                 self.assertTrue(entered.wait(10))
 
-                def adding():
+                def adding(store=store, item=item):
                     with store.mutating():  # what start_step does for the review beside the checks
                         item.state["steps"]["review.1"] = {"status": "started"}
 

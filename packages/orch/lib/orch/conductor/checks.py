@@ -258,7 +258,8 @@ def _lex(text: str, out: list, mode: str = "top", depth: int = 0) -> bool:
     the line cannot be read (an open quote or bracket, too deep or too long)."""
     if depth > 5 or len(out) > 4096:
         return False
-    word, quote, index, size = [], "", 0, len(text)
+    # `start` is assigned with the opening quote. The initial 0 is never read: `quote` begins empty.
+    word, quote, start, index, size = [], "", 0, 0, len(text)
 
     def lit(char: str, quoted: bool) -> None:
         if word and word[-1][0] == "lit" and word[-1][2] == quoted:

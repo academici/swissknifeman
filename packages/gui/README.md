@@ -56,7 +56,7 @@ core check; it is checked by its own `dev.test`.
 
 ## Requirements
 
-- Python 3.11 or newer (the hub itself runs on 3.9; an older interpreter gets `PYTHON_TOO_OLD`).
+- Python 3.11 or newer (the hub floor, `aicore.MIN_PYTHON`; an older interpreter gets `PYTHON_TOO_OLD`).
 - The `aicore` foundation, found by the aicore locator (`$AICORE_ROOT`, `_vendor/aicore` or the sibling folder).
 
 ## Browser mode

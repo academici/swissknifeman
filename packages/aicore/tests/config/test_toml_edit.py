@@ -269,11 +269,5 @@ class VerificationTests(unittest.TestCase):
         self.assertEqual(text, "[a]\nb.c = 1\n")
 
 
-class BackendParityTests(unittest.TestCase):
-    def test_edit_results_parse_the_same_on_the_vendored_backend(self):
-        new = set_value(DOC, ("analyst", "digest", "window"), [1, 2])
-        self.assertEqual(toml.loads(new, backend="vendored"), toml.loads(new))
-
-
 if __name__ == "__main__":
     unittest.main()

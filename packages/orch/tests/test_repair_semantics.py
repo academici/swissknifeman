@@ -6,7 +6,7 @@ import sys
 import types
 import unittest
 
-from orch.conductor import engine, heal
+from orch.conductor import heal
 from orch.conductor.domain import report as report_rules, semantics
 from orch.conductor.stages import finish
 from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report

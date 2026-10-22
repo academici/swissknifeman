@@ -1155,7 +1155,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes",
+        "Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics, `BrainError` codes",
         "exit 65 for invalid event data and 75 for temporary failures.",
         "`BrainError`"
       ]
@@ -1208,7 +1208,7 @@
         "codex"
       ],
       "assertions": [
-        "Keep Python 3.9 compatibility, English diagnostics",
+        "Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics",
         "proven by `aicore schema compat`.",
         "`PortError`",
         "`docs/engine-port.md`",

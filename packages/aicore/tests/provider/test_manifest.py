@@ -13,10 +13,10 @@ from aicore.provider.manifest import (ProviderManifestError, default_manifest_pa
 
 
 MANIFEST_PATH = default_manifest_path()
-# Reviewed against the Grok managed-provider addition: four providers × 37
-# capabilities, not a generator rewrite of the hand-authored manifest.
-APPROVED_CANONICAL_SHA256 = "484277fb69ea46e280a194b67e9edc0c96ea373d7380a1ee435b381113bf1db7"
-APPROVED_CARRIER_SHA256 = "7d9a3bd4af5ec7e8cb3bca9cbd5549e61f9389795d80b9eba2c3f664cd3b1e05"
+# Reviewed when the Python 3.11 floor removed the Codex settings.audit limitation
+# that interpreters before 3.11 could not read the layer. Not a generator rewrite.
+APPROVED_CANONICAL_SHA256 = "0d8193b9020dfbc76fbf42e3714dffe97cb3456275e6580d6da019a00a2ff4c6"
+APPROVED_CARRIER_SHA256 = "f93aae540a71f9e01e215b2dd07625d61724b89ce99b93105699caeadf6f2ab5"
 
 REGENERATION_DIAGNOSTIC = (
     "manifest hash mismatch — packages/aicore/configs/provider-capabilities.json was likely "

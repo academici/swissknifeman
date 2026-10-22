@@ -20,7 +20,7 @@ class SessionContext:
         return asdict(self)
 
 
-Adapter = Callable[[], Optional[SessionContext]]  # runtime expression: no `X | None` on the py39 floor
+Adapter = Callable[[], Optional[SessionContext]]
 
 
 def _codex_adapter() -> SessionContext | None:

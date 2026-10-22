@@ -1,6 +1,6 @@
 """Safe path-containment helpers for traversal and symlink-escape protection.
 
-Both checks fail closed when path resolution fails. stdlib-only; the same answers on Python 3.9–3.14
+Both checks fail closed when path resolution fails. stdlib-only; the same answers on Python 3.11–3.14
 (``Path.resolve()`` raises on a symlink loop up to 3.12 and silently keeps the loop from 3.13).
 """
 import errno

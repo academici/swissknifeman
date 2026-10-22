@@ -78,11 +78,14 @@ class CheckEnvTests(unittest.TestCase):
 
     def test_old_python_is_rejected(self):
         # A fake python3 cannot print the JSON report, so read the table.
-        path = make_path(self.root, {"python3": "echo 3.8.1", "git": "echo git"})
-        env = {"PATH": path, "HOME": str(self.home)}
-        done = subprocess.run([BASH, str(SCRIPT), "--quiet"], capture_output=True, text=True, env=env, timeout=60)
-        self.assertEqual(done.returncode, 1)
-        self.assertIn("python3 3.8.1 (needs >= 3.9)", done.stdout)
+        for version in ("3.8.1", "3.10.14"):
+            with self.subTest(version=version):
+                path = make_path(self.root, {"python3": f"echo {version}", "git": "echo git"})
+                env = {"PATH": path, "HOME": str(self.home)}
+                done = subprocess.run([BASH, str(SCRIPT), "--quiet"], capture_output=True, text=True,
+                                      env=env, timeout=60)
+                self.assertEqual(done.returncode, 1)
+                self.assertIn(f"python3 {version} (needs >= 3.11)", done.stdout)
 
     def test_bin_dir_on_path_is_recognised(self):
         code, report = self.run_script({}, "--bin-dir", str(self.root / "bin"))

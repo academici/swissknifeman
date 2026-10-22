@@ -90,7 +90,7 @@ connected-project registry is `skiller list --json`.
 ## Doctor
 
 `maind doctor --json` prints a list of `check-result/v1` documents: `maind.environment` (the Python floor is
-`aicore.MIN_PYTHON`, 3.9), `maind.config`, `maind.registry`, `maind.memory`, `maind.mcp` (with `tools_digest` and
+`aicore.MIN_PYTHON`, 3.11), `maind.config`, `maind.registry`, `maind.memory`, `maind.mcp` (with `tools_digest` and
 `protocol_versions`) and `maind.health`; the text form prints `<status> <check_id>: <observed>` and exits 1 when a check
 fails. The probe writes nothing and prints no secret. Repair is separate: `maind health --plan-repair` (read-only) and
 `maind health --apply-repair`.

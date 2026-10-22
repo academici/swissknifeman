@@ -36,7 +36,7 @@ from pathlib import Path
 
 HUB = Path(__file__).resolve().parents[1]
 WORKFLOW = ".github/workflows/modules.yml"
-TEST_PYTHONS = "3.9,3.13,3.14"
+TEST_PYTHONS = "3.11,3.13,3.14"
 # validate.sh of a module skips its test run when this is set: the `test` step has just run them (the standalone step
 # does the same inside its copy, see ecosystem-units.py).
 SKIP_TESTS_ENV = "SKM_VALIDATE_SKIP_TESTS"
@@ -567,7 +567,9 @@ def parser() -> argparse.ArgumentParser:
     ls = sub.add_parser("list")
     ls.add_argument("--json", action="store_true")
     ls.add_argument("--step", default="")
-    ls.add_argument("--python", default="")
+    ls.add_argument("--python", nargs="?", const=TEST_PYTHONS, default="",
+                    help="comma-separated versions; the flag alone uses TEST_PYTHONS "
+                         "(3.11,3.13,3.14). Omit the flag for no Python axis")
     st = sub.add_parser("steps")
     st.add_argument("unit")
     st.add_argument("--json", action="store_true")

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Minimum Python is 3.11 (`aicore.MIN_PYTHON`). Python 3.9 and 3.10 are end of life; `install.sh` and `scripts/check-env.sh` refuse an older interpreter before they change the machine (`python3 <ver> (needs >= 3.11)`). CI tests 3.11, 3.13 and 3.14. TOML is read with the standard library only; the vendored `tomli` parser is gone.
+
 ## [0.32.0] - 2026-10-22
 
 - planner: изменение `batches` отказывает с `PLAN_INVALID`, если создаёт новую ошибку подробной фазы; отказ атомарен, исправление прежних ошибок и работа с каркасом фазы сохраняются.

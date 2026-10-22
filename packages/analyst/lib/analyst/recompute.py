@@ -54,7 +54,7 @@ def adaptive_thresholds(project_sessions, thresholds=DEFAULT_THRESHOLDS):
     return cand, cur
 
 
-# ── time (pars timestamp'ov - single core.parse_iso, py39-safe) ─────────────
+# ── time (event age from aicore.util.term.parse_iso) ─────────────
 def day_bucket(ts_event, ts_now):
     """Event age in days (floor, bucket=BUCKET_DAYS), ≥0. Unparsing ts → 0 (protective)."""
     a, b = parse_iso(ts_event), parse_iso(ts_now)

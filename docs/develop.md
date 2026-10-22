@@ -449,7 +449,7 @@ The tests of a module run once per invocation: after a green `test` step the `va
 `standalone` runs the tests in its copy once and then `validate` the same way.
 
 Each step runs with a throwaway `HOME` and `SKM_HOME` and prints `ok|fail|skip <unit> <step> <seconds>`; the exit code is
-1 when a step failed. `modules.yml` builds its matrix from `list --json`, tests on Python 3.9 and 3.13, marks the tools
+1 when a step failed. `modules.yml` builds its matrix from `list --json`, tests on Python 3.11, 3.13 and 3.14, marks the tools
 named by `standalone.tools` (`maind`, `analyst`) as `continue-on-error`, and has a `hub` job: `--check`,
 `ecosystem-units.py check --strict`, golden, `scripts/test-*.py`, `scripts/smoke-installed.sh` and
 `swissknifeman conformance engine`, the last two in a sandbox. `test.yml` and `validate.yml` no longer exist.

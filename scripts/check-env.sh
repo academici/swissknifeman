@@ -69,10 +69,10 @@ fi
 
 if have python3; then
   PYV="$(python3 -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])' 2>/dev/null || echo 0)"
-  if version_ge "$PYV" 3.9; then
+  if version_ge "$PYV" 3.11; then
     add required ok python3 "python3 $PYV" "every module" ""
   else
-    add required miss python3 "python3 $PYV (needs >= 3.9)" "every module" "$(pkg python3)"
+    add required miss python3 "python3 $PYV (needs >= 3.11)" "every module" "$(pkg python3)"
   fi
 else
   add required miss python3 "not found" "every module" "$(pkg python3)"

@@ -1,14 +1,14 @@
 """The single entry to TOML parsing, plus a map from keys to line numbers.
 
-The backend is ``tomllib`` on Python 3.11+ and the vendored ``tomli`` otherwise; both read
-TOML 1.0. Configuration files are TOML 1.0: ``tomllib`` of Python 3.15 also accepts TOML 1.1
-syntax that the older interpreters reject, so do not use it. Nothing else in the ecosystem
-imports ``tomllib`` or ``tomli``; callers use :func:`loads` and :func:`load_file`. stdlib only.
+The reader is ``tomllib`` (the standard library on the Python 3.11 floor). Configuration
+files are TOML 1.0: ``tomllib`` of Python 3.15 also accepts TOML 1.1 syntax that this floor
+rejects, so do not use it. Nothing else in the ecosystem imports ``tomllib`` or ``tomli``;
+callers use :func:`loads` and :func:`load_file`. stdlib only.
 """
 from __future__ import annotations
 
 import re
-import sys
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -23,20 +23,14 @@ _WHITESPACE = " \t"
 _ESCAPES = {"b": "\b", "t": "\t", "n": "\n", "f": "\f", "r": "\r", '"': '"', "\\": "\\"}
 
 
-def default_backend() -> str:
-    return "stdlib" if sys.version_info >= (3, 11) else "vendored"
-
-
 def _parse(text: str, backend: Optional[str] = None) -> Dict[str, Any]:
-    """Parse with one backend and raise its own error (``backend``: ``stdlib`` or ``vendored``)."""
-    backend = backend or default_backend()
-    if backend == "stdlib":
-        import tomllib
-        return tomllib.loads(text)
-    if backend == "vendored":
-        from .._vendor import tomli
-        return tomli.loads(text)
-    raise ValueError(f"unknown TOML backend: {backend!r}")
+    """Parse with ``tomllib`` and raise its own error.
+
+    ``backend`` remains only so a caller can name ``stdlib``; any other value is rejected.
+    """
+    if backend not in (None, "stdlib"):
+        raise ValueError(f"unknown TOML backend: {backend!r}")
+    return tomllib.loads(text)
 
 
 def _error_position(exc: Exception) -> Tuple[str, Optional[int]]:

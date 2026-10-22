@@ -41,7 +41,7 @@ install.sh            # umbrella installer (delegates install.sh packages)
 
 ## Development prerequisites
 
-Runtime needs only `python3` (>= 3.9) and `bash`; nothing is pip-installed. Contributing also needs:
+Runtime needs only `python3` (>= 3.11) and `bash`; nothing is pip-installed. Contributing also needs:
 
 | Tool | Why | Install |
 |:--|:--|:--|
@@ -68,11 +68,11 @@ python3 scripts/ecosystem-units.py check --strict             # module boundarie
 
 `validate.sh` of each packet runs `py_compile`, `bash -n`, checks JSON and unit tests
 (`scripts/test.sh`). CI (`.github/workflows/modules.yml`, steps from `scripts/ci-matrix.py`) runs the same on
-Python 3.9, 3.13 and 3.14; workflow supply-chain rules are in [SECURITY.md](SECURITY.md).
+Python 3.11, 3.13 and 3.14; workflow supply-chain rules are in [SECURITY.md](SECURITY.md).
 
 ## Conventions
 
-- **stdlib-only** in Python (`lib/`; minimum Python 3.9) — none pip-dependencies at runtime.
+- **stdlib-only** in Python (`lib/`; minimum Python 3.11) — none pip-dependencies at runtime.
 - **`Env` is passed explicitly** (frozen dataclass, heir `aicore.util.env.BaseEnv`) — without modular globals,
   everything is tested in tmpdir.
 - **Atomic write** files/JSON — via `aicore.util.io.atomic_write_text` / `atomic_write_json`.

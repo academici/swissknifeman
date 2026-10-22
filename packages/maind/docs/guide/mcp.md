@@ -68,7 +68,7 @@ method/tool → error `-32601`; internal error → `-32603` (cycle continues).
 
 ## Why your own server and not FastMCP
 
-maind — **stdlib-only, Python 3.9+, portable** (like swissknifeman/brain). FastMCP pulls ~25
+maind — **stdlib-only, Python 3.11+, portable** (like swissknifeman/brain). FastMCP pulls ~25
 pip-dependencies (`pydantic`/`uvicorn`/`httpx`/`authlib`/…) and Python ≥3.10 — disproportionate for
 11 stdio-tools and breaks zero-dep package identity. Your server is hardened **conformance-test
 to real spawn** (full NDJSON-handshake), so the bug class is like framing'and will not happen again.

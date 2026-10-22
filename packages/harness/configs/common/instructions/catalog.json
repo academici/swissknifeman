@@ -2702,7 +2702,7 @@
             {
               "source_id": "instruction.fragment.brain.common",
               "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
-              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+              "sha256": "2e107f8318c9d31f7ed11acbe1712b45c789b19c7c3bfc457f903f37c4e9c7f9"
             }
           ],
           "compatibility_assertions": [
@@ -2731,7 +2731,7 @@
             {
               "source_id": "instruction.fragment.brain.common",
               "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
-              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+              "sha256": "2e107f8318c9d31f7ed11acbe1712b45c789b19c7c3bfc457f903f37c4e9c7f9"
             }
           ],
           "compatibility_assertions": [
@@ -2762,7 +2762,7 @@
             {
               "source_id": "instruction.fragment.brain.common",
               "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
-              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+              "sha256": "2e107f8318c9d31f7ed11acbe1712b45c789b19c7c3bfc457f903f37c4e9c7f9"
             }
           ],
           "compatibility_assertions": [
@@ -2791,7 +2791,7 @@
             {
               "source_id": "instruction.fragment.brain.common",
               "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
-              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+              "sha256": "2e107f8318c9d31f7ed11acbe1712b45c789b19c7c3bfc457f903f37c4e9c7f9"
             }
           ],
           "compatibility_assertions": [
@@ -2808,7 +2808,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 5,
-          "intent": "Apply this source-derived instruction: Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes and the subscriber answer contract: one JSON object on stdout, exit 65 for invalid event data and 75 for temporary failures.",
+          "intent": "Apply this source-derived instruction: Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics, `BrainError` codes and the subscriber answer contract: one JSON object on stdout, exit 65 for invalid event data and 75 for temporary failures.",
           "obligations": [
             {
               "modality": "must",
@@ -2822,11 +2822,11 @@
             {
               "source_id": "instruction.fragment.brain.common",
               "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
-              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+              "sha256": "2e107f8318c9d31f7ed11acbe1712b45c789b19c7c3bfc457f903f37c4e9c7f9"
             }
           ],
           "compatibility_assertions": [
-            "Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes",
+            "Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics, `BrainError` codes",
             "exit 65 for invalid event data and 75 for temporary failures.",
             "`BrainError`"
           ]
@@ -2851,7 +2851,7 @@
             {
               "source_id": "instruction.fragment.brain.common",
               "path": "packages/harness/configs/common/instructions/packages/brain/common.md",
-              "sha256": "a6a588469f01304de1076e2c997a8801dd2c6c7d3e9ae3f076b68785593f9ed4"
+              "sha256": "2e107f8318c9d31f7ed11acbe1712b45c789b19c7c3bfc457f903f37c4e9c7f9"
             }
           ],
           "compatibility_assertions": [
@@ -2893,7 +2893,7 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
+              "sha256": "8d818ed2c991b8a2cfdcca3d95c1acc2605470a2fcc4b14516d5c07d54fc469a"
             }
           ],
           "compatibility_assertions": [
@@ -2923,7 +2923,7 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
+              "sha256": "8d818ed2c991b8a2cfdcca3d95c1acc2605470a2fcc4b14516d5c07d54fc469a"
             }
           ],
           "compatibility_assertions": [
@@ -2940,7 +2940,7 @@
           "kind": "common",
           "provider_id": null,
           "order": 3,
-          "intent": "Apply this source-derived instruction: Keep Python 3.9 compatibility, English diagnostics, `PortError` codes in the order of `docs/engine-port.md`, pure `prepare` and reducer functions, and change `exec/v1` only by optional fields proven by `aicore schema compat`.",
+          "intent": "Apply this source-derived instruction: Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics, `PortError` codes in the order of `docs/engine-port.md`, pure `prepare` and reducer functions, and change `exec/v1` only by optional fields proven by `aicore schema compat`.",
           "obligations": [
             {
               "modality": "must",
@@ -2954,11 +2954,11 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
+              "sha256": "8d818ed2c991b8a2cfdcca3d95c1acc2605470a2fcc4b14516d5c07d54fc469a"
             }
           ],
           "compatibility_assertions": [
-            "Keep Python 3.9 compatibility, English diagnostics",
+            "Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics",
             "proven by `aicore schema compat`.",
             "`PortError`",
             "`docs/engine-port.md`",
@@ -2985,7 +2985,7 @@
             {
               "source_id": "instruction.fragment.orch.common",
               "path": "packages/harness/configs/common/instructions/packages/orch/common.md",
-              "sha256": "9edaa0dad045f7e83de0b4c96b13086722ab1f00a3b36e55672d07107c17adc6"
+              "sha256": "8d818ed2c991b8a2cfdcca3d95c1acc2605470a2fcc4b14516d5c07d54fc469a"
             }
           ],
           "compatibility_assertions": [

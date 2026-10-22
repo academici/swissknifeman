@@ -444,12 +444,12 @@ def conduct(self, item: Item) -> str:
             self._defer_minor(item, findings, minor)
             if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
                 break
-            # progress: fewer findings to correct than the round before, or other ones (a first round has
-            # nothing to compare with, so it never goes past a target on its own)
+            # progress: fewer findings to correct than the round before; other findings in other places are not
+            # (a reviewer that finds something new every round would otherwise keep the loop going)
             state["review_rounds_used"] = review_round
             state.setdefault("findings_at", {})[str(review_round)] = len(triage["confirmed"])
             places = sorted(self._place(findings, entry["finding"]) for entry in major)
-            progress = earlier is not None and (len(places) < len(earlier) or places != earlier)
+            progress = earlier is not None and len(places) < len(earlier)
             earlier = places
             replayed = review_round in state["corrections_at"]
             rounds_why = self._allowance(item, "review_rounds", review_round, progress, emit=not replayed)
@@ -459,13 +459,16 @@ def conduct(self, item: Item) -> str:
                 if rounds_why:
                     self._plan_note(item, f"findings of review round {review_round} were corrected together with the "
                                           "red checks; the correction was not reviewed again")
+                    self._review_debt(item, review_round, [entry["finding"] for entry in major])
                     break
                 review_round += 1
                 continue
             triage = dict(triage, confirmed=major)
-            final = bool(rounds_why) and item.options["review"]["final_correction"]  # correct, but audit no more
+            # correct, but audit no more; a spent run-wide budget (``*_batch``) stays the explicit limit it is
+            final = bool(rounds_why) and not rounds_why.startswith("batch:") and item.options["review"]["final_correction"]
             done_before = len([number for number in state["corrections_at"] if number != review_round])
-            fixes_why = None if replayed else self._allowance(item, "corrections", done_before, progress)
+            # the final correction is bounded by the review wall itself: it is never refused by the corrections target
+            fixes_why = None if replayed or final else self._allowance(item, "corrections", done_before, progress)
             batch_why = next((why for why in (rounds_why, fixes_why) if why and why.startswith("batch:")), None)
             if not replayed and batch_why and not final:
                 blockers = [entry["finding"] for entry in major
@@ -499,6 +502,7 @@ def conduct(self, item: Item) -> str:
                 ids = ", ".join(entry["finding"] for entry in major)
                 self._plan_note(item, f"findings {ids} of review round {review_round} were corrected after the last "
                                       "review round the limit allows; the correction was not reviewed again")
+                self._review_debt(item, review_round, [entry["finding"] for entry in major])
                 break
             review_round += 1
     return self._finish(item, report, rows)

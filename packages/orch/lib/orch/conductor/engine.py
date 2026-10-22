@@ -180,6 +180,18 @@ class Conductor:
         with self.store.mutating():
             report_rules.plan_note(item, text)
 
+    def _review_debt(self, item: Item, review_round: int, findings: list) -> None:
+        """The last review round the wall allows found confirmed defects: they were corrected without another review.
+        The piece goes on; ``review_debt`` in its state, the REVIEW_DEBT beacon and the observer report make it a
+        place to look at after the plan (a second review round with findings hints at work handed over unfinished)."""
+        with self.store.mutating():
+            item.state["review_debt"] = {"round": review_round, "findings": list(findings)}
+            self._save()
+        message = (f"review round {review_round} found {', '.join(findings)}; corrected without a further review "
+                   "(the review wall is reached)")
+        self.progress.emit("info", item=item.ref, reason_code="REVIEW_DEBT", message=message)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "REVIEW_DEBT", "step": f"review.{review_round}"})
+
     _blocked = staticmethod(report_rules.blocked)
 
     # ------------------------------------------------------------------ infrastructure: the work source and the roles

@@ -190,7 +190,7 @@
           "enum": ["corrected", "full"]
         },
         "final_correction": {
-          "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan says so) instead of blocking with REVIEW_LIMIT. Default false.",
+          "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan, review_debt in the piece state and a REVIEW_DEBT beacon say so) instead of blocking with REVIEW_LIMIT. A spent run-wide `review_rounds_batch` stays a limit. Default true; false blocks with REVIEW_LIMIT.",
           "type": "boolean"
         },
         "pre_final": {
@@ -371,7 +371,7 @@
       "type": "object",
       "properties": {
         "review_rounds": {
-          "description": "Review rounds planned (the policy pack's max_rounds by default); 0 to 5. A target, not a wall: past it a round still runs while the last correction made progress, up to ceiling_factor times the target, with a LIMIT_OVER beacon and a plan note.",
+          "description": "Review rounds planned (the policy pack's max_rounds by default); 0 to 5. A wall: no round runs past it, whatever the progress (ceiling_factor does not apply). With review.final_correction (default) the findings of the last round are corrected without another review and the piece gets review_debt (REVIEW_DEBT beacon).",
           "type": "integer",
           "minimum": 0,
           "maximum": 5

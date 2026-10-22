@@ -106,6 +106,7 @@ class ConductorCase(unittest.TestCase):
         catalog = launch.load_catalog()
         catalog["launch"]["executor"]["grok"].update(
             transport="acp", model_set="unknown", argv=["grok", "agent", "stdio"])
+        catalog["launch"]["executor"]["grok"].pop("resume_argv")  # the shipped one names a model
         launch.validate_catalog(catalog)
         patcher = mock.patch.object(launch, "load_catalog", return_value=catalog)
         patcher.start()
@@ -602,6 +603,7 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
     def test_a_deviation_survives_a_review_limit_block_and_registers(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"review": {"final_correction": False}}}]}})
         deviation = {"text": "touched a file outside the write set", "kind": "deviation", "impact": "none", "next": "none"}
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                               "observed": "ok"}, "fix": "fix it"}],
@@ -613,7 +615,26 @@ class CorrectionTests(ConductorCase):
         issues = self.source()["items"]["W1"]["report"]["open_issues"]
         self.assertTrue(any(i["text"].startswith("deviation: touched") for i in issues), issues)
 
+    def test_findings_of_the_last_review_round_are_corrected_without_a_third_review(self):
+        # the review wall (D24): round 2 still finds F1; it is corrected, the checks run, no third review follows, and
+        # the piece is registered with review_debt for the look after the plan
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
+                                                                              "observed": "ok"}, "fix": "fix it"}],
+                             "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")},
+                                  {"write": {"out/W1.txt": "done!\n"}, "result": report("W1")}],
+                     "reviewer": [FINDING, FINDING, GREEN], "triager": [triage, triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (3, 2, 2))
+        state = self.state(err)["items"]["W1"]
+        self.assertEqual(state["review_debt"], {"round": 2, "findings": ["F1"]})
+        self.assertEqual([line["reason_code"] for line in self.lines(err) if line.get("reason_code") == "REVIEW_DEBT"],
+                         ["REVIEW_DEBT"])
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
     def test_findings_after_the_review_limit_block(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"review": {"final_correction": False}}}]}})
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                               "observed": "ok"}, "fix": "fix it"}],
                              "rejected": []}}

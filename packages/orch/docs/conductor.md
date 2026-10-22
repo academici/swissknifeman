@@ -388,6 +388,9 @@ The conductor stops only on:
 | `OPTIONS_UNTRUSTED` | a layer of the work source (plan, phase, item, overlay, input file) loosens the isolation set below it: `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence`, `scope.outside`, `scope.outside_module`, `scope.runtime_paths` or `scope.extra_paths` (see "Isolation floor") |
 | `OPTIONS_UNSAFE_PATH` | an `extra_paths` entry (`--allow-path`) is the root, a system folder, HOME or an ancestor of it, the project or an ancestor, a secrets folder under HOME, or lies in `.git` (after `~` and symlinks are resolved) |
 | `STATE_CORRUPT` | a JSON file of the run folder is not JSON; it names the file |
+| `RUN_INVALID`, `STATE_INVALID` | `run.json` or `state.json` does not match its records/v1 schema (see *Run records*) when the run is loaded or saved: `CODE: <path>: <JSON pointer>: <message>` for the first three problems, then `settle or release the items of this run, or start a new run`. A file is never rewritten by a read; a state that would not match is not saved |
+| `QUESTIONS_INVALID` | `questions.json` of a piece is not JSON or does not match records/v1 `questions`: the run stops, `orch conduct answer` writes nothing and exits 1, `orch conduct questions` lists the other pieces and exits 1. The file is left as it is, so an answer in it is not lost |
+| `RECORD_INVALID` | another run record (`options.json`, `routes.json` of a piece) does not match its records/v1 schema; same message shape. A lease record that does not match only makes its owner `unknown` in a busy message |
 | `STUBS_INVALID` | a stub file cannot be used (a symlink, not a regular file, over 32 KiB, not UTF-8, a bad header or mode); the run stops before any role starts and names the file and the `STUB_*` code |
 
 With `on_blocked = "report"` a blocked piece that changed nothing is registered, its records are committed and the
@@ -413,6 +416,7 @@ The informational limits report long or costly work through `info` lines with a 
 | `REVIEW_DEBT` | the last review round the wall allows had confirmed findings; they were corrected without a further review | the round and the findings; `review_debt` in the piece state; the observer lists it for the look after the plan |
 | `RESULT_INCOMPLETE` | a completion report without the self-check (`checks.self_check`) goes back to the executor once, before the checks | the commands it did not show |
 | `CONCURRENT_RUN` | at run start or resume, another run of the project holds its lease | the live runs and their pids; parallel runs slow each other's checks, nothing is stopped |
+| `ANSWER_SCHEMA_IGNORED` | `resume --retry` hands over an answer whose question's `answer_schema` is outside the closed profile of the validator (a keyword such as `format`, or a `$ref` outside the schema), so the answer was not checked | the question and why; `answer_schema_ignored` in its entry; `orch conduct answer` says the same on stderr. An answer an applicable `answer_schema` rejects is `ANSWER_INVALID` and is not written |
 | `LIMIT_OVER` (`batch: …`) | a round past `limits.review_rounds_batch`, `corrections_batch` or `findings_batch` (whole run, default 0 = none; same target and ceiling rule, counted from the state of every piece) | the target and why it goes on; when the ceiling refuses more rounds, an open **Blocker** stops the run with `REVIEW_LIMIT`, other confirmed findings become plan notes (no correction) |
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
 | `REPAIR_SEMANTIC_DRIFT` | the report-fixer's block changed the meaning of the role's own block (a raised status or verdict, a lowered severity, a lost finding, question, escalation or check row) and was refused | `kept the role's answer: <violations>`; the next repair or a repeat of the role follows |
@@ -1142,6 +1146,33 @@ means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer
 | `.swissknifeman/orch/reports/<run>/` | ignored | `observer.json`, `observer.md` (written when the run ends, after its last commit) |
 | `.swissknifeman/orch-artifacts/<run>/<item>/` | ignored | local records: the artifact folder of a source without `artifacts_dir` (a workspace plan, the file source); never in a commit of the piece. The planner bridge copies the evidence of a workspace plan item into `<plan>/artifacts/<item>/<run>/evidence/` at register and the item refers to it there; files tracked before the folder was ignored stay in the index |
 | the plan (JSON) | committed | through the work source's own commit |
+
+### Run records
+
+The documents the conductor keeps in a run folder are closed by `schemas/records/v1` (`urn:swissknifeman:orch:records:<kind>:v1`,
+`orch.conductor.records`): each is checked before it is written (`durable_replace`, `0600`) and after it is read, and
+`orch.py validate <kind> FILE` checks one by hand. A new document carries `"$schema": "<its $id>"`; a document written
+before records/v1 has no tag and is read as v0: the tag is added in memory and the document is checked (its file is not
+rewritten, the next write under the lease writes v1), so runs started earlier resume. A tag of another kind or value is
+`unknown or conflicting record tag`. `state` validation costs about 1 ms on the largest characterization state, so every
+`RunStore.save` checks it. A step marked `done` is replayed by a resume, so it must carry the result its reader takes
+(checks: one row `{id, green, …}` per check; executor: `report`; review: `findings`, a conductor/v1 `review-findings`
+document; triage: `triage`, a conductor/v1 `triage-result` document; brief:
+`input_path`; register: `outcome` and `gate`; commit: `outcome`; any other key: some `result`); a started or stopped
+step carries none. `skills_auto` and `skills_checked` hold the choice of each role, kept once per piece.
+
+| Kind | File | Written by | Error |
+| --- | --- | --- | --- |
+| `run` | `<run>/run.json` | `RunStore.create`, `RunStore.save_run` (the lane of a `--ready` batch) | `RUN_INVALID` |
+| `state` | `<run>/state.json` | `RunStore.save`, `RunStore.next_agent`, under the lock of the run store | `STATE_INVALID` |
+| `questions` | `<run>/<item>/questions.json` | the conductor and `orch conduct answer`, under `questions.lock` (taken before the run-store lock) | `QUESTIONS_INVALID` |
+| `item-options` | `<run>/<item>/options.json` | the options of the piece: `scenario`, `options` (a run-options document of `conductor/v1`: `skills` as `[{role, names}]`, a layer that gives the same options again), `sources`, `digest`, `claim_route` | `RECORD_INVALID` |
+| `item-routes` | `<run>/<item>/routes.json` | the route of each role, rewritten by a fallback, a retry or a reviewer upgrade | `RECORD_INVALID` |
+| `lease` | `<run>/lease.json`, `<runs root>/checkouts/<sha16>.json` | the owner of the run lease or the checkout lock (`pid`, `host`, `started_at`, `command`, `run`) | owner `unknown` |
+
+The other runtime documents (risk, review strategy, process, agent records, review verdict, provider gates, observer
+report, prompt diff, conformance report) get their kinds in a later item; the five that already publish a short tag
+(`"schema": "<name>/v1"`) keep it as their carrier.
 
 Role streams never go into the artifact folder; a review verdict there is short and points at the stream in state.
 The shared gitignore policy (`packages/aicore/configs/gitignore-policy.json`, entries `swissknifeman-state`,

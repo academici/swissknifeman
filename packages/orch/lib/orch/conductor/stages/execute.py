@@ -438,11 +438,14 @@ def sync_questions(self, item: Item) -> None:
     with questions_mod.questions_lock(item.directory):
         questions_mod.merge_file(store, questions_mod.read(item.directory))
         applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), answer_digest(item.input_doc), clock.utc_now())
-        write_json(questions_mod.path(item.directory), questions_mod.document(self.run_id, item.ref, store))
+        questions_mod.write(item.directory, self.run_id, item.ref, store)
         self._save()
     for name in applied:
         self.progress.emit("info", item=item.ref, reason_code="QUESTION_ANSWERED",
                            message=f"question {name} answered by {store[name]['resolution']['by']}")
+        if store[name].get("answer_schema_ignored"):
+            self.progress.emit("info", item=item.ref, reason_code="ANSWER_SCHEMA_IGNORED",
+                               message=f"the answer to {name} was not checked: {store[name]['answer_schema_ignored']}")
     for name in stale:
         self.progress.emit("info", item=item.ref, reason_code="QUESTION_STALE",
                            message=f"the answer to {name} was given for an earlier input and is not used; it is asked "

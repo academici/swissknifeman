@@ -9,12 +9,13 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
+import sys
 from typing import Optional
 
 from aicore.provider.config import routing_available
 
 from orch import launch
-from orch.conductor import engine, gates, options as opts, runs
+from orch.conductor import engine, gates, options as opts, records, runs
 from orch.conductor.policies.routing import LAUNCH_ROLE
 
 ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor")
@@ -33,8 +34,12 @@ def _latest_item_run(project: Path, plan: str, ref: str) -> Optional[tuple]:
     found = []
     root = engine.runs_root(project)
     for directory in root.glob("cnd-*"):
-        doc = engine.read_json(directory / engine.RUN_FILE)
-        options = engine.read_json(directory / engine.safe(ref) / "options.json")
+        try:
+            doc = records.read(directory / engine.RUN_FILE, "run")
+            options = records.read(directory / engine.safe(ref) / "options.json", "item-options")
+        except engine.Stop as stop:  # another run that does not match records/v1 is named, not taken
+            print(f"{stop.code}: {stop.message} (run skipped)", file=sys.stderr)
+            continue
         if doc and options and doc.get("plan") == plan:
             found.append((directory.name, options))
     return max(found, key=lambda pair: pair[0]) if found else None
@@ -123,10 +128,10 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
                 if re.fullmatch(r"cnd-[0-9A-Za-z-]+", run) is None:
                     raise ExplainError("RUN_UNKNOWN", "--run must be a conductor run id (cnd-...)")
                 directory = engine.runs_root(conductor.project) / run
-                run_doc = engine.read_json(directory / engine.RUN_FILE)
+                run_doc = records.read(directory / engine.RUN_FILE, "run")
                 if not run_doc or (plan and run_doc.get("plan") != plan):
                     raise ExplainError("RUN_UNKNOWN", f"no conductor run {run} for this project and plan")
-                options = engine.read_json(directory / engine.safe(ref) / "options.json")
+                options = records.read(directory / engine.safe(ref) / "options.json", "item-options")
                 recorded = (run, options) if options else None
             else:
                 recorded = _latest_item_run(conductor.project, plan, ref)
@@ -134,13 +139,15 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
                 raise ExplainError("ITEM_UNKNOWN", f"no conductor run of {ref} in plan {plan} in this project; "
                                    "omit --plan and --item to explain the configuration")
             run_id, doc = recorded
-            routes = engine.read_json(engine.runs_root(conductor.project) / run_id / engine.safe(ref) / "routes.json") or {}
+            routes = records.read(engine.runs_root(conductor.project) / run_id / engine.safe(ref) / "routes.json",
+                                  "item-routes") or {}
             used = runs.public_route(routes[role]) if isinstance(routes.get(role), dict) else None
             claim["scenario"] = doc.get("scenario") or claim["scenario"]
             if doc.get("claim_route"):
                 claim["route"] = doc["claim_route"]  # the class and effort the work requires of its executor
             conductor._resolve(item, persist=False)  # the policy of the scenario; the options are the recorded ones
-            item.options, item.sources, origin = doc["options"], doc.get("sources") or {}, f"run {run_id}"
+            item.options, item.sources = records.options_effective(doc["options"]), doc.get("sources") or {}
+            origin = f"run {run_id}"
             item.input_doc = engine.read_json(engine.runs_root(conductor.project) / run_id / engine.safe(ref) / "input.json") or {}
         else:
             conductor._resolve(item, persist=False)

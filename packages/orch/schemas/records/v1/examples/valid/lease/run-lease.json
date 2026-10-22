@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:lease:v1",
+  "command": "resume",
+  "host": "workstation",
+  "pid": 4242,
+  "started_at": "2026-10-22T12:00:00Z"
+}

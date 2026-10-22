@@ -1,0 +1,13 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {},
+  "items": {
+    "W1": {
+      "steps": {
+        "review.1": {"ended": "2026-10-22T12:20:00Z", "result": {"findings": {}}, "role": "reviewer", "route": "grok/grok-4.7/high", "status": "done", "verdict": "GREEN 0 finding(s)"}
+      }
+    }
+  },
+  "status": "running",
+  "tokens": {"input": 0, "output": 0}
+}

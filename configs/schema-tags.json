@@ -15,9 +15,9 @@
     "umbrella-units/v1": "urn:swissknifeman:hub:umbrella-units:v1",
     "prompt-manifest/v1": "urn:swissknifeman:orch:conductor:prompt-manifest:v1",
     "provider-gates/v1": "urn:swissknifeman:orch:records:provider-gates:v1",
-    "orch-conductor-observer/v1": "urn:swissknifeman:orch:records:orch-conductor-observer:v1",
-    "orch-conductor-review-verdict/v1": "urn:swissknifeman:orch:records:orch-conductor-review-verdict:v1",
+    "orch-conductor-observer/v1": "urn:swissknifeman:orch:records:observer-report:v1",
+    "orch-conductor-review-verdict/v1": "urn:swissknifeman:orch:records:review-verdict:v1",
     "prompt-diff/v1": "urn:swissknifeman:orch:records:prompt-diff:v1",
-    "orch-conformance/v1": "urn:swissknifeman:orch:records:orch-conformance:v1"
+    "orch-conformance/v1": "urn:swissknifeman:orch:records:conformance-report:v1"
   }
 }

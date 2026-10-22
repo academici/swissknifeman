@@ -7,7 +7,7 @@ from typing import Optional
 from aicore.util import timefmt
 
 from orch import retry
-from orch.conductor import gates, options as opts, prompts
+from orch.conductor import gates, options as opts, prompts, records
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -76,7 +76,7 @@ def start_route(self, item: Item, key: str, role: str, route: dict, cancel) -> d
     until = f"{route['provider']} is gated until {gate['until']} ({gate['class']} {gate['code']}, set by {gate['set_by']})"
     if found is not None:
         item.routes[role] = found
-        write_json(item.directory / "routes.json", item.routes)
+        records.write(item.directory / "routes.json", item.routes, "item-routes")
         self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
                            reason_code="CAPACITY_GATED", message=f"{role}: {until}")
         self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
@@ -143,7 +143,7 @@ def provider_failure(self, item: Item, key: str, role: str, route: dict, run, at
             item.state.setdefault("route_overrides", {})[role] = {
                 key: found[key] for key in ("provider", "model_class", "effort") if found.get(key)}
             self._save()
-            write_json(item.directory / "routes.json", item.routes)
+            records.write(item.directory / "routes.json", item.routes, "item-routes")
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(found),
                                reason_code="ROUTE_FALLBACK",
                                message=f"{role}: {label} -> {self.label(found)} ({error['class']}; "

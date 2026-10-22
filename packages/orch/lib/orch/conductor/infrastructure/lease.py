@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import contextmanager
 import fcntl  # noqa: F401  (tests patch lease.fcntl.flock)
 import hashlib
-import json
 import os
 from pathlib import Path
 import socket
@@ -14,17 +13,19 @@ from typing import Optional
 from aicore.util.lock import FileLock, probe_free  # FileLock is re-exported for the tests
 from aicore.util.proc import GIT_TIMEOUT, run as run_with_timeout
 
+from orch.conductor import records
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import write_json
 
 
 def _owner(path: Path) -> dict:
+    """The owner recorded beside a lock, ``{}`` when it is unknown: none is recorded, or the record cannot be read or
+    does not match records/v1 lease (it only names the owner in a busy message)."""
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-        return value if isinstance(value, dict) else {}
-    except (OSError, ValueError):
+        found = records.read(path, "lease") or {}
+    except (OSError, Stop):
         return {}
+    return {key: value for key, value in found.items() if key != "$schema"}
 
 
 class RunLease:
@@ -52,8 +53,8 @@ class RunLease:
         if not self.lock.acquire():
             raise self.busy()
         try:
-            write_json(self.metadata, {"pid": os.getpid(), "host": socket.gethostname(),
-                                      "started_at": clock.utc_now(), "command": command})
+            records.write(self.metadata, {"pid": os.getpid(), "host": socket.gethostname(),
+                                          "started_at": clock.utc_now(), "command": command}, "lease")
         except BaseException:
             self.release()
             raise
@@ -97,7 +98,7 @@ class CheckoutLock(RunLease):
     def acquire(self, command: str, run_id: str = "unknown"):
         super().acquire(command)
         try:
-            write_json(self.metadata, {**_owner(self.metadata), "run": run_id})
+            records.write(self.metadata, {**_owner(self.metadata), "run": run_id}, "lease")
         except BaseException:
             self.release()
             raise

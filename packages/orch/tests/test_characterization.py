@@ -92,6 +92,7 @@ class CharacterizationCase(ConductorCase):
             (run / "progress.jsonl").read_text(encoding="utf-8").splitlines()) + "]")]
         state_doc = json.loads((run / engine.STATE_FILE).read_text(encoding="utf-8"))
         state_doc.pop("ended", None)  # volatile UTC bound of the run segment, tested in test_observer
+        state_doc.pop("$schema", None)  # the records/v1 tag (P4.3), tested in test_records_contract
         for item in state_doc.get("items", {}).values():
             item.pop("usage_by_agent", None)  # replay bookkeeping; totals are covered here, receipts in test_usage_normalization
         state = normalize(state_doc, paths)
@@ -418,6 +419,8 @@ COVERAGE = {
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
     "OUTSIDE_MODULE": "test:test_write_fence.py", "OUTSIDE_RUNTIME_ARTIFACT": "test:test_write_fence.py",
     "CHECKS_MUTATED": "test:test_write_fence.py",
+    "RUN_INVALID": "test:test_records_migration.py", "STATE_INVALID": "test:test_records_migration.py",
+    "QUESTIONS_INVALID": "test:test_records_contract.py", "RECORD_INVALID": "test:test_records_contract.py",
     # Beacons
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
@@ -439,6 +442,7 @@ COVERAGE = {
     "ADVICE_HELD": "test:test_conductor_advisor.py",
     "POLICY_STAGE_SKIPPED": "test:test_policy_stages.py",
     "CONCURRENT_RUN": f"test:{T}", "RESULT_INCOMPLETE": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
+    "ANSWER_SCHEMA_IGNORED": "test:test_records_contract.py",
 }
 
 

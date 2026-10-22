@@ -14,7 +14,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_hex
 from orch import (adhoc, catalog, conformance, events, journal, launch, policies, project as project_mod, render,
                   sandbox, settings)
 from orch.bindings import BINDINGS, check_skills
-from orch.conductor import contract as conductor_contract
+from orch.conductor import contract as conductor_contract, records as conductor_records
 from orch.contracts import validate
 from orch.port import PortError
 from orch.schema import SchemaProfileError
@@ -1002,7 +1002,7 @@ def _main(argv: list[str] | None = None) -> int:
     verbs = parser.add_subparsers(dest="verb", required=True)
     verbs.add_parser("conduct", help="the conductor: run|resume|settle|release|status|observe|answer|questions|prompt|"
                                      "gates (orch conduct --help)", add_help=False)
-    command = verbs.add_parser("validate", help="validate an exec/v1 or conductor/v1 JSON document")
+    command = verbs.add_parser("validate", help="validate an exec/v1, conductor/v1 or records/v1 JSON document")
     command.add_argument("kind")
     command.add_argument("file", type=Path)
     command.add_argument("--quiet", action="store_true", help="suppress JSON output")
@@ -1136,8 +1136,10 @@ def _main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as exc:
         print(f"INPUT_INVALID: {exc}", file=sys.stderr)
         return 1
-    if args.kind in conductor_contract.KINDS:  # the closed documents of the conductor (schemas/conductor/v1)
-        found = conductor_contract.problems(doc, args.kind)
+    if args.kind in conductor_contract.KINDS or args.kind in conductor_records.KINDS:
+        # the closed documents of the conductor (schemas/conductor/v1) and its run records (schemas/records/v1)
+        found = (conductor_contract.problems(doc, args.kind) if args.kind in conductor_contract.KINDS
+                 else conductor_records.problems(doc, args.kind))
         for line in found:
             print(f"SCHEMA_INVALID: {line}", file=sys.stderr)
         if not args.quiet:

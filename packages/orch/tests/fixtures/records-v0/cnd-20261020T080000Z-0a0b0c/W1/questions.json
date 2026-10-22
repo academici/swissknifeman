@@ -1,0 +1,38 @@
+{
+  "item": "W1",
+  "questions": [
+    {
+      "applied_at": "2026-10-20T08:00:00Z",
+      "asked_at": "2026-10-20T08:00:00Z",
+      "binding": {
+        "input_digest": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "input_part_digest": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+        "item": "W1",
+        "run": "cnd-20261020T080000Z-0a0b0c",
+        "step": "executor.1"
+      },
+      "blocking": true,
+      "id": "Q1",
+      "kind": "decision",
+      "options": [
+        {
+          "id": "keep",
+          "label": "keep"
+        },
+        {
+          "id": "rename",
+          "label": "rename"
+        }
+      ],
+      "resolution": {
+        "at": "2026-10-20T08:10:00Z",
+        "by": "owner",
+        "value": "rename"
+      },
+      "revision": 1,
+      "status": "applied",
+      "text": "Keep the old flag name?"
+    }
+  ],
+  "run": "cnd-20261020T080000Z-0a0b0c"
+}

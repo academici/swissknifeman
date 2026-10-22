@@ -25,7 +25,7 @@ import unittest
 from unittest import mock
 
 from orch import launch
-from orch.conductor import checks as checks_mod, cli, engine, gates, options as opts, process, progress
+from orch.conductor import checks as checks_mod, cli, engine, gates, options as opts, process, progress, records
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import clock, roles, work_source
 from orch.conductor.policies import sandbox as sandbox_policy
@@ -2836,7 +2836,8 @@ class DigestTests(ConductorCase):
         self.assertTrue(layers["machine"]["present"])
         self.assertEqual(layers["machine"]["file"], str(self.home / "skm" / "config" / "config.toml"))
         self.assertFalse(layers["flags"]["present"])
-        self.assertEqual(options["digest"], opts.digest(options["options"]))
+        # the record keeps the options as a run-options layer; the digest is that of the effective options it gives back
+        self.assertEqual(options["digest"], opts.digest(records.options_effective(options["options"])))
 
     def test_the_same_options_give_the_same_digest_and_an_item_override_another(self):
         first = self.run_with()[1]["digest"]

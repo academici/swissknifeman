@@ -7,7 +7,6 @@ Newest first, then by run id; an empty project gives an empty list; a run whose 
 """
 from __future__ import annotations
 
-import json
 import shutil
 import time
 from pathlib import Path
@@ -17,7 +16,7 @@ from aicore.ext.plugins import safe_text
 from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_text
 
-from orch.conductor import progress
+from orch.conductor import progress, records
 from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, runs_root
 from orch.conductor.infrastructure.lease import RunLease
 from orch.conductor.domain.stop import Stop
@@ -70,10 +69,7 @@ def latest_run_id(project: Path) -> Optional[str]:
 def effective_status(directory: Path, summary: dict, doc=None, *, owned: bool = False) -> dict:
     """Refine a journal summary using an independent flock probe; summarize stays pure."""
     if doc is None:
-        try:
-            doc = json.loads((directory / RUN_FILE).read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            doc = {}
+        doc = records.read(directory / RUN_FILE, "run") or {}  # RUN_INVALID / STATE_CORRUPT stop the caller
     if summary["status"] != "running" or not isinstance(doc, dict) or doc.get("lease") is not True:
         return summary
     held = None if owned else RunLease.held(directory)
@@ -87,9 +83,9 @@ def effective_status(directory: Path, summary: dict, doc=None, *, owned: bool = 
 def _row(directory: Path, *, owned: bool = False) -> dict:
     run_id = directory.name
     try:
-        doc = json.loads((directory / RUN_FILE).read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, ValueError):
-        return {"run_id": display(run_id, 64), "status": "unreadable", "owner": live_owner(directory)}
+        doc = records.read(directory / RUN_FILE, "run")
+    except (OSError, Stop):  # not JSON, or not a records/v1 run: listed, never a failure of the listing
+        doc = None
     if not isinstance(doc, dict):
         return {"run_id": display(run_id, 64), "status": "unreadable", "owner": live_owner(directory)}
     lines = progress.read_lines(directory)

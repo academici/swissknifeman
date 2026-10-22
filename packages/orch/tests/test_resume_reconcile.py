@@ -242,7 +242,7 @@ class ResumeReconcileTests(ConductorCase):
         self.assertEqual(2, self.calls("executor"))
 
     def test_closed_outcomes_discard_only_started_and_stopped_records(self):
-        completed = {"status": "done", "result": {"kept": True}}
+        completed = {"status": "done", "result": {"kept": True, "input_path": "input.json"}}  # a brief result (records/v1)
         for outcome in ("done", "done_with_deviations", "blocked", "abandoned"):
             with self.subTest(outcome=outcome):
                 run = self.opened_run({"mystery.1": {"status": "started"},

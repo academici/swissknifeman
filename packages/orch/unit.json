@@ -17,7 +17,8 @@
       {"id": "urn:swissknifeman:orch:exec", "path": "schemas/exec/v1", "version": "v1", "stability": "alpha"},
       {"id": "urn:swissknifeman:orch:event-data", "path": "schemas/event-data/v1", "version": "v1", "stability": "alpha", "direction": "output"},
       {"id": "urn:swissknifeman:orch:work-source", "path": "schemas/work-source/v1", "version": "v1", "stability": "alpha"},
-      {"id": "urn:swissknifeman:orch:conductor", "path": "schemas/conductor/v1", "version": "v1", "stability": "alpha"}
+      {"id": "urn:swissknifeman:orch:conductor", "path": "schemas/conductor/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:orch:records", "path": "schemas/records/v1", "version": "v1", "stability": "development"}
     ],
     "events": ["orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused",
                "orch.agent.started", "orch.agent.finished", "orch.agent.failed", "orch.agent.questioned",

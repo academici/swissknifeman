@@ -1,0 +1,49 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:run:v1",
+  "adopt": false,
+  "batch": false,
+  "catalog_digests": {
+    "capabilities": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+    "launch": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+    "models": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"
+  },
+  "config_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+  "config_file": null,
+  "config_layers": [
+    {
+      "file": null,
+      "layer": "defaults",
+      "present": true
+    }
+  ],
+  "created": "2026-10-22T12:00:00Z",
+  "debug": false,
+  "extra_paths": null,
+  "fence": null,
+  "grouped": null,
+  "instructions_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+  "items": [
+    "PLAN9.W1@3f3f3f3f3f3f"
+  ],
+  "lease": true,
+  "limits_run": {
+    "run_tokens_hard_max": {
+      "source": "defaults",
+      "value": 0
+    }
+  },
+  "max_items": null,
+  "options_file": null,
+  "plan": "/home/owner/project/input.json",
+  "plans_root": null,
+  "project": "/home/owner/project",
+  "project_resolution": "flag",
+  "run_id": "cnd-20261022T120000Z-a1b2c3",
+  "scenario": null,
+  "source": {
+    "commit": true,
+    "kind": "file",
+    "path": "/home/owner/project/input.json"
+  },
+  "working_directory": "/home/owner/project"
+}

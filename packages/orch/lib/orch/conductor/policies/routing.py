@@ -7,11 +7,10 @@ from typing import Optional
 from aicore.provider.config import routing_available
 
 from orch import catalog as catalogs, launch, sandbox
-from orch.conductor import gates, options as opts, process
+from orch.conductor import gates, options as opts, process, records
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
-from orch.conductor.infrastructure.files import write_json
 from orch.settings import ORCH_ROOT
 
 CLASS_RANK = {"economy": 0, "implementation": 1, "frontier": 2}
@@ -153,7 +152,7 @@ def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dic
         self._route_minimum(item)
     if persist:
         self._preflight(item)
-        write_json(item.directory / "routes.json", item.routes)
+        records.write(item.directory / "routes.json", item.routes, "item-routes")
     return unavailable
 
 

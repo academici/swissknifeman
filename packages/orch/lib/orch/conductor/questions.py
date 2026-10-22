@@ -9,7 +9,9 @@ state of the run and gives it to the executor, but only while the input is the o
 timeout does: the conductor never answers on a timeout.
 
 Entry of a question: ``id, revision, kind, text, [options, answer_schema, default], blocking, [assumed, risk], status,
-binding{run,item,step,input_digest,[input_part_digest]}, asked_at, [resolution{value,by,at}]``.
+binding{run,item,step,input_digest,[input_part_digest]}, asked_at, [resolution{value,by,at}, answer_schema_ignored]``
+(records/v1 questions). An answer is checked against ``answer_schema`` when that schema loads in the closed profile; else
+it is taken and ``answer_schema_ignored`` says why.
 ``status`` is ``open`` (waits for an answer),
 ``answered`` (the resolution is not given to the executor yet), ``applied`` (the executor got it), ``assumed`` (not
 blocking: the agent went on), ``denied`` (``questions = deny``) or ``stale`` (the input changed: the answer is not used,
@@ -19,18 +21,28 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
 from typing import Optional
 
-from aicore.util import timefmt
+from aicore.util import schema, timefmt
 from aicore.util.redact import redact_text
 
-from orch.conductor.infrastructure.files import write_json
+from orch.conductor import records
+from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.lease import questions_lock
 
 FILE = "questions.json"
 MODES = ("queue", "deny", "defaults", "advisor")
 DEFAULT_WARN_S = 1800
 _SPEC = ("id", "revision", "kind", "text", "options", "answer_schema", "default", "blocking", "assumed", "risk")
+
+
+class QuestionsInvalid(Stop):
+    """``QUESTIONS_INVALID``: ``questions.json`` of a piece is not JSON or does not match records/v1 questions. Nothing is
+    written over it: an answer it may hold is never lost by a rewrite."""
+
+    def __init__(self, message: str):
+        super().__init__("QUESTIONS_INVALID", message)
 
 
 class QuestionError(Exception):
@@ -147,6 +159,8 @@ def merge_file(store: dict, document: Optional[dict]) -> None:
                 and entry["revision"] == mine["revision"] and entry.get("binding") == mine.get("binding")):
             mine["resolution"] = entry["resolution"]
             mine["status"] = "answered"
+            if entry.get("answer_schema_ignored"):
+                mine["answer_schema_ignored"] = entry["answer_schema_ignored"]
             if entry["resolution"].get("by") != "policy":
                 # A person's answer must not be reopened as an already-used policy default.
                 mine.pop("auto_answered", None)
@@ -164,21 +178,29 @@ def path(item_directory: Path) -> Path:
 
 
 def read(item_directory: Path) -> Optional[dict]:
+    """``questions.json`` of the piece checked against records/v1 (``None`` when there is none); ``QuestionsInvalid``
+    when it is not JSON or does not match, never a document read as empty."""
     try:
-        return json.loads(path(item_directory).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
+        return records.read(path(item_directory), "questions")
+    except Stop as stop:
+        raise QuestionsInvalid(stop.message) from None
 
 
 def document(run: str, item: str, store: dict) -> dict:
     return {"run": run, "item": item, "questions": list(store.values())}
 
 
+def write(item_directory: Path, run: str, item: str, store: dict) -> None:
+    """Replace ``questions.json`` with ``store`` (the caller holds ``questions_lock``)."""
+    records.write(path(item_directory), document(run, item, store), "questions")
+
+
 def save(item_directory: Path, run: str, item: str, store: dict) -> None:
-    """Merge a concurrent answer before replacing the question document."""
+    """Merge a concurrent answer before replacing the question document. Lock order: this lock first, the run-store
+    lock after it (the caller saves the state once this returns)."""
     with questions_lock(item_directory):
         merge_file(store, read(item_directory))
-        write_json(path(item_directory), document(run, item, store))
+        write(item_directory, run, item, store)
 
 
 def answer_file(item_directory: Path, question: str, *, item: Optional[str] = None, **kwargs) -> dict:
@@ -192,7 +214,7 @@ def answer_file(item_directory: Path, question: str, *, item: Optional[str] = No
         if doc is None:
             raise QuestionError("QUESTION_UNKNOWN", f"no questions in {item_directory}")
         entry = answer(doc, question, **kwargs)
-        write_json(path(item_directory), doc)
+        records.write(path(item_directory), doc, "questions")
         return entry
 
 
@@ -221,17 +243,127 @@ def answer(file_doc: dict, question: str, *, option: Optional[str] = None, text:
                                 "into a run: put it where the role reads it (an environment variable, a secret store) "
                                 "and answer with its name")
         value = text
+    if entry.get("answer_schema"):
+        value = _checked_answer(entry, question, value, text=option is None)
     entry["resolution"] = {"value": value, "by": by, "at": now}
     return entry
 
 
-def listing(directory: Path, now: float, default_warn_s: int = DEFAULT_WARN_S) -> list:
-    """Open questions of the run in ``directory``: ``[{item, id, revision, text, age_s, overdue}]``."""
+_ANSWER_ID = "urn:answer"
+
+
+def _answer_registry(answer_schema: dict) -> schema.Registry:
+    return schema.Registry({_ANSWER_ID: answer_schema}, urn_prefix="urn:", kinds=(), version="v1")
+
+
+def _answer_schema_problem(answer_schema: dict) -> Optional[str]:
+    """Why ``answer_schema`` cannot be applied: it leaves the closed profile of the validator, refers outside itself, or
+    a ``$ref`` does not resolve in the registry the answer is checked with (only ``#/$defs/<name>`` fragments do);
+    ``None`` when it can."""
+    try:
+        schema._check_profile(answer_schema, "answer_schema", "", root=True)
+    except schema.SchemaProfileError as error:
+        return str(error)
+    refs = sorted(set(schema._refs(answer_schema)))
+    outside = [ref for ref in refs if not ref.startswith("#")]
+    if outside:
+        return f"answer_schema: $ref outside the schema: {', '.join(outside)}"
+    registry = _answer_registry(answer_schema)
+    for ref in refs:
+        try:
+            registry.resolve(ref, _ANSWER_ID)
+        except schema.RefError as error:
+            return f"answer_schema: $ref {ref!r} does not resolve: {error}"
+    if _same_level_cycle(registry, answer_schema):
+        return "answer_schema: a $ref cycle never reaches a check"
+    return None
+
+
+def _same_level_cycle(registry: schema.Registry, root: dict) -> bool:
+    """Whether some node of the schema reaches itself through ``$ref``, ``oneOf`` and ``not`` alone: those check the same
+    value again, so validation would never end (``{"$ref": "#"}``). Keywords that descend into the value end on their own."""
+    def same_level(node: dict) -> list:
+        found = [registry.resolve(node["$ref"], _ANSWER_ID)[0]] if isinstance(node.get("$ref"), str) else []
+        found += [branch for branch in node.get("oneOf") or () if isinstance(branch, dict)]
+        return found + ([node["not"]] if isinstance(node.get("not"), dict) else [])
+
+    def deeper(node: dict) -> list:
+        found = [child for keyword in ("properties", "patternProperties", "$defs")
+                 for child in (node.get(keyword) or {}).values() if isinstance(child, dict)]
+        return found + [node[keyword] for keyword in ("items", "propertyNames") if isinstance(node.get(keyword), dict)]
+
+    def cycles(start: dict) -> bool:
+        path, stack = set(), [(start, iter(same_level(start)))]
+        path.add(id(start))
+        while stack:
+            node, children = stack[-1]
+            child = next(children, None)
+            if child is None:
+                path.discard(id(node))
+                stack.pop()
+            elif id(child) in path:
+                return True
+            else:
+                path.add(id(child))
+                stack.append((child, iter(same_level(child))))
+        return False
+
+    seen, pending = set(), [root]
+    while pending:
+        node = pending.pop()
+        if id(node) in seen:
+            continue
+        seen.add(id(node))
+        if cycles(node):
+            return True
+        pending += same_level(node) + deeper(node)
+    return False
+
+
+def _checked_answer(entry: dict, question: str, value, *, text: bool):
+    """The value of an answer checked against the ``answer_schema`` of the question. A free text is JSON unless the schema
+    asks for a string (``ANSWER_INVALID`` when it is not); a schema outside the closed profile is not applied: the answer
+    is taken and ``answer_schema_ignored`` says why."""
+    answer_schema = entry["answer_schema"]
+    problem = _answer_schema_problem(answer_schema)
+    if problem:
+        entry["answer_schema_ignored"] = problem
+        return value
+    entry.pop("answer_schema_ignored", None)
+    original = value
+    types = answer_schema.get("type")
+    types = [types] if isinstance(types, str) else types or []
+    if text and value is not None and types != ["string"]:
+        try:
+            value = json.loads(value)
+        except ValueError:
+            if "string" not in types:
+                raise QuestionError("ANSWER_INVALID", f"the answer to {question} must be JSON for its answer_schema "
+                                    f"(type {'/'.join(types) or 'any'}): {value[:60]!r}") from None
+    try:
+        issues = schema.validate_node(_answer_registry(answer_schema), answer_schema, _ANSWER_ID, value)
+    except RecursionError:  # a $ref cycle that consumes no part of the value (``{"$ref": "#"}``)
+        entry["answer_schema_ignored"] = "answer_schema: a $ref cycle never reaches a check"
+        return original
+    if issues:
+        raise QuestionError("ANSWER_INVALID", f"the answer to {question} does not match its answer_schema: "
+                            + "; ".join(issue.message for issue in issues[:3]))
+    return value
+
+
+def listing(directory: Path, now: float, default_warn_s: int = DEFAULT_WARN_S, invalid: Optional[list] = None) -> list:
+    """Open questions of the run in ``directory``: ``[{item, id, revision, text, age_s, overdue}]``. A ``questions.json``
+    that is not valid is skipped with a ``QUESTIONS_INVALID`` line on stderr (and its message added to ``invalid``)."""
     rows = []
     for file in sorted(Path(directory).glob(f"*/{FILE}")):
         try:
-            doc = json.loads(file.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+            doc = read(file.parent)
+        except QuestionsInvalid as error:
+            print(f"QUESTIONS_INVALID: {error.message} (skipped)", file=sys.stderr)
+            if invalid is not None:
+                invalid.append(error.message)
+            continue
+        if doc is None:
             continue
         warn = warn_seconds(file.parent, default_warn_s)
         for entry in doc.get("questions", []):
@@ -246,8 +378,9 @@ def listing(directory: Path, now: float, default_warn_s: int = DEFAULT_WARN_S) -
 
 
 def warn_seconds(item_directory: Path, default: int = DEFAULT_WARN_S) -> int:
+    """``limits.question_warn_s`` of the piece (``options.json``); ``default`` when it is not there or not readable."""
     try:
-        options = json.loads((Path(item_directory) / "options.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        options = records.read(Path(item_directory) / "options.json", "item-options") or {}
+    except (OSError, Stop):
         return default
     return int((((options.get("options") or {}).get("limits") or {}).get("question_warn_s", default)))

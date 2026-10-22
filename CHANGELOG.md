@@ -6,8 +6,13 @@
 
 - aicore: shared primitives. `aicore.util.lock` (`FileLock` with the samestat loop, `hold`, `LockTimeout`, `probe_free`, `lock_descriptor`), `aicore.util.timefmt` (`utc_now`, `utc_stamp`, `parse_rfc3339` giving an aware UTC datetime, `epoch`, `seconds_between`; a naive text is UTC, a bad text is `None`) and `aicore.util.docio` (`read_document` / `write_document`: parse, migrate, validate against the schema, `durable_replace`; `DocumentCorrupt`, `DocumentInvalid`).
 
+- orch: run records contract `schemas/records/v1` (`run`, `state`, `questions`, `item-options`, `item-routes`, `lease`; `orch.conductor.records`). `run.json`, `state.json`, `questions.json` and the `options.json`, `routes.json` and lease files of a run are checked against it when written and when read: a document that does not match stops with `RUN_INVALID`, `STATE_INVALID`, `QUESTIONS_INVALID` or `RECORD_INVALID` and names the file, the JSON pointer and the problem, instead of being read as nothing (a broken `questions.json` used to look like "no questions"). Runs started before have no tag and are migrated in memory, so they resume; their files are not rewritten by a read. `orch.py validate` knows the six kinds.
+- orch: `orch conduct answer` checks an answer against the question's `answer_schema` (`--text` is read as JSON unless the schema asks for a string): a mismatch is `ANSWER_INVALID` and nothing is written; a schema outside the closed profile is not applied, the answer is kept with `answer_schema_ignored` and `ANSWER_SCHEMA_IGNORED` is printed (and emitted when `resume --retry` hands the answer over).
+- aicore: `load_contract_set` resolves a `$ref` from one contract set of a module to a sibling set of the same module (`urn:swissknifeman:<module>:<contract>:<kind>:v<N>` -> `schemas/<contract>/v<N>`).
+
 ### Changed
 
+- orch: `options.json` of a piece keeps `skills` in the run-options form `[{role, names}]`, so its `options` is a run-options document (it was the merged role map; old files are read as before).
 - aicore, orch: the flock locks (orch run lease, journal and gates; aicore bindings, event journal, delivery, config layers, project migrate, provider artifacts), the RFC 3339 parsers and the hand-made temporary-file writes of orch (`journal.write_doc`, agent records, which now also `fsync`) use the shared primitives; each lock keeps its own timeout, poll interval and reason code. The locks now refuse a symbolic link as lock file, and the observer and the launch-plan freshness read a time without a zone as UTC instead of local time. `planner.plan` keeps its own copies (it runs without aicore); workspace, brain, gui, analyst, maind and skiller are migrated later; `aicore.usage` stays stdlib-only (it is copied into a hook).
 
 ## [0.33.0] - 2026-10-22

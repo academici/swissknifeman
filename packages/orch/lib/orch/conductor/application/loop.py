@@ -15,11 +15,11 @@ from aicore.util.redact import env_secrets, redact_document
 
 from orch import events, policies as run_policies
 from orch.conductor import checks as checks_mod, observer, options as opts, prompts, questions as questions_mod
-from orch.conductor import scope as scopes
+from orch.conductor import records, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
-from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, RUN_FILE, safe, write_json
+from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, safe
 from orch.conductor.progress import human_duration
 from orch.conductor.application import recovery, run_service
 from orch.conductor.policies import budget as token_budget
@@ -247,7 +247,7 @@ def expand_ready(self) -> Optional[tuple]:
     first = f"item-{safe(lane[0])}"
     self.state["claims"][first] = self.state["claims"].pop("next-1")
     doc["items"] = lane
-    write_json(self.directory / RUN_FILE, doc)
+    self.store.save_run(doc)
     self._save()
     keys = [(f"item-{safe(ref)}", [ref]) for ref in lane]
     claimed = {first: answer}
@@ -641,6 +641,6 @@ def resolve(self, item: Item, persist: bool = True) -> None:
         # Raises are a state overlay, never a rewrite of the piece's recorded options.
         if self.state.get("limit_raises") and (item.directory / "options.json").is_file():
             return
-        write_json(item.directory / "options.json", {"scenario": scenario, "options": item.options,
-                                                     "sources": item.sources, "digest": opts.digest(item.options),
-                                                     "claim_route": item.claim.get("route")})
+        records.write(item.directory / "options.json", {
+            "scenario": scenario, "options": records.options_layer(item.options), "sources": item.sources,
+            "digest": opts.digest(item.options), "claim_route": item.claim.get("route")}, "item-options")

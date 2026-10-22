@@ -1,0 +1,336 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "agents": 4,
+  "claims": {
+    "item-W1": {
+      "orch_run": "run-3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+      "ref": "W1",
+      "submission": "sub-cnd-20261022T120000Z-a1b2c3-item-W1",
+      "title": "Work W1"
+    }
+  },
+  "executor_session": "executor-session-2",
+  "executor_session_answers": [
+    "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"
+  ],
+  "executor_session_item": "W1",
+  "executor_session_route": "claude-code/sonnet/high",
+  "executor_session_task_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+  "items": {
+    "W1": {
+      "adopted": [],
+      "attempts": [
+        {
+          "n": 1,
+          "retried_at": "2026-10-22T12:00:00Z",
+          "steps": {
+            "brief": {
+              "ended": "2026-10-22T12:00:00Z",
+              "role": "deterministic",
+              "verdict": "done"
+            },
+            "executor.1": {
+              "ended": "2026-10-22T12:00:00Z",
+              "files": [
+                "streams/executor.1.jsonl",
+                "streams/executor.1.stderr",
+                "reports/executor.1.json",
+                "prompts/executor.1.manifest.json",
+                "prompts/executor.1.md"
+              ],
+              "report_status": "blocked",
+              "role": "executor",
+              "route": "claude-code/sonnet/high",
+              "verdict": "blocked"
+            },
+            "prepare": {
+              "ended": "2026-10-22T12:00:00Z",
+              "role": "deterministic",
+              "verdict": "done"
+            },
+            "register": {
+              "ended": "2026-10-22T12:00:00Z",
+              "role": "registrar",
+              "route": "orch/conductor",
+              "verdict": "recorded gate none"
+            },
+            "scout": {
+              "ended": "2026-10-22T12:00:00Z",
+              "files": [
+                "streams/scout.stderr",
+                "streams/scout.txt",
+                "prompts/scout.manifest.json",
+                "prompts/scout.md"
+              ],
+              "role": "context-scout",
+              "route": "claude-code/haiku/low",
+              "verdict": "mapped"
+            }
+          }
+        }
+      ],
+      "autofix_at": [],
+      "check_fixes_at": [],
+      "check_fixes_used": 0,
+      "corrections_at": [],
+      "corrections_used": 0,
+      "executor_started": true,
+      "expected": null,
+      "orch_run": "run-3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+      "outcome": "done",
+      "plan_notes": [],
+      "retried": "2026-10-22T12:00:00Z",
+      "retries_used": 0,
+      "review_marks": {
+        "1": {
+          "out/W1.txt": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"
+        }
+      },
+      "source_paths": [],
+      "stage_usage": {
+        "executor.1": {
+          "cached": 0,
+          "input": 200,
+          "output": 20
+        },
+        "review.1": {
+          "cached": 0,
+          "input": 100,
+          "output": 10
+        },
+        "scout": {
+          "cached": 0,
+          "input": 0,
+          "output": 0
+        }
+      },
+      "steps": {
+        "brief": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": {
+            "artifacts_dir": "plans/T/artifacts/W1",
+            "base": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+            "input_id": "PLAN9.W1@3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+            "input_path": "/home/owner/project/.swissknifeman/state/orch/conductor/cnd-20261022T120000Z-a1b2c3/W1/input.json"
+          },
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "done"
+        },
+        "checks.1": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": [
+            {
+              "cmd": "test -f out/W1.txt",
+              "evidence": "plans/T/artifacts/W1/evidence/V1.json",
+              "exit": 0,
+              "green": true,
+              "id": "V1",
+              "kind": "acceptance",
+              "log": "/home/owner/project/.swissknifeman/state/orch/conductor/cnd-20261022T120000Z-a1b2c3/W1/checks/1/V1.log",
+              "seconds": 0.0,
+              "tail": ""
+            }
+          ],
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "green"
+        },
+        "commit": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": {
+            "outcome": "committed",
+            "sha": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"
+          },
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "committed 3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"
+        },
+        "executor.1": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": {
+            "agent": "agent-cnd-20261022T120000Z-a1b2c3-3",
+            "attempts": 1,
+            "changed": [
+              "out/W1.txt"
+            ],
+            "exit": 0,
+            "model": "fake-model",
+            "report": {
+              "changed_paths": [
+                "out/W1.txt"
+              ],
+              "checks_run": [
+                {
+                  "cmd": "test -f out/W1.txt",
+                  "exit": 0,
+                  "id": "V1"
+                }
+              ],
+              "evidence": [],
+              "open_issues": [],
+              "status": "done",
+              "summary": "made W1"
+            },
+            "session": "executor-session-2",
+            "stream": ".swissknifeman/state/orch/conductor/cnd-20261022T120000Z-a1b2c3/W1/streams/executor.1.jsonl",
+            "usage": {
+              "cached": 0,
+              "input": 100,
+              "output": 10
+            }
+          },
+          "role": "executor",
+          "route": "claude-code/sonnet/high",
+          "status": "done",
+          "tokens": {
+            "cached": 0,
+            "input": 200,
+            "output": 20
+          },
+          "verdict": "done"
+        },
+        "prepare": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": {
+            "refusals": [
+              {
+                "reason_code": "INDEPENDENT_PROVIDER",
+                "stage_id": "review"
+              }
+            ],
+            "stages": [
+              {
+                "effort": "high",
+                "model": "haiku",
+                "provider": "claude-code",
+                "role": "context-scout",
+                "stage_id": "condense"
+              },
+              {
+                "effort": "high",
+                "model": "sonnet",
+                "provider": "claude-code",
+                "role": "executor",
+                "stage_id": "primary"
+              }
+            ]
+          },
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "done"
+        },
+        "register": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": {
+            "gate": "pass",
+            "outcome": "recorded"
+          },
+          "role": "registrar",
+          "route": "orch/conductor",
+          "status": "done",
+          "verdict": "recorded gate pass"
+        },
+        "review.1": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": {
+            "agent": "agent-cnd-20261022T120000Z-a1b2c3-4",
+            "attempts": 1,
+            "exit": 0,
+            "findings": {
+              "findings": [],
+              "verdict": "GREEN"
+            },
+            "model": "fake-model",
+            "session": "reviewer-session-1",
+            "stream": ".swissknifeman/state/orch/conductor/cnd-20261022T120000Z-a1b2c3/W1/streams/review.1.jsonl",
+            "usage": {
+              "cached": 0,
+              "input": 100,
+              "output": 10
+            }
+          },
+          "role": "reviewer",
+          "route": "grok/grok-4.7/high",
+          "status": "done",
+          "tokens": {
+            "cached": 0,
+            "input": 100,
+            "output": 10
+          },
+          "verdict": "GREEN 0 finding(s)"
+        },
+        "scout": {
+          "ended": "2026-10-22T12:00:00Z",
+          "result": {
+            "cache": ".swissknifeman/state/orch/conductor/cache/scout/W1/3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f.txt",
+            "hit": true,
+            "text": "a context map line — why it matters\nUnknowns:\n- none"
+          },
+          "role": "context-scout",
+          "route": "claude-code/haiku/low",
+          "status": "done",
+          "verdict": "cache"
+        }
+      },
+      "tokens": {
+        "cached": 0,
+        "input": 300,
+        "output": 30
+      }
+    }
+  },
+  "last_stop": {
+    "code": "ITEM_BLOCKED",
+    "message": "W1 is blocked; see its escalation",
+    "resume": 1
+  },
+  "on_blocked": "stop",
+  "questions": {
+    "W1": {
+      "Q1": {
+        "applied_at": "2026-10-22T12:00:00Z",
+        "asked_at": "2026-10-22T12:00:00Z",
+        "binding": {
+          "input_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+          "input_part_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+          "item": "W1",
+          "run": "cnd-20261022T120000Z-a1b2c3",
+          "step": "executor.1"
+        },
+        "blocking": true,
+        "id": "Q1",
+        "kind": "decision",
+        "options": [
+          {
+            "id": "keep",
+            "label": "keep"
+          },
+          {
+            "id": "rename",
+            "label": "rename"
+          }
+        ],
+        "resolution": {
+          "at": "2026-10-22T12:10:00Z",
+          "by": "owner",
+          "value": "rename"
+        },
+        "revision": 1,
+        "status": "applied",
+        "text": "Keep the old flag name?"
+      }
+    }
+  },
+  "resumes": 1,
+  "status": "finished",
+  "tokens": {
+    "cached": 0,
+    "input": 300,
+    "output": 30
+  }
+}

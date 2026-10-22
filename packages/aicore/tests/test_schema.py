@@ -347,6 +347,25 @@ class TestLoadContractSet(SchemaCase):
         registry, _ = schema.load_contract_set(directory)
         self.assertIn(f"{schema.CONTRACT_URN_PREFIX}artifact-ref:v1", registry._schemas)
 
+    def test_a_set_refers_to_a_sibling_set_of_the_same_module(self):
+        options = self.directory("conductor")
+        self.write(options, "run-options", "run-options", {"type": "object", "additionalProperties": False,
+                                                           "properties": {"x": {"type": "integer"}}},
+                   prefix="urn:test:conductor:")
+        records = self.directory("records")
+        self.write(records, "item-options", "item-options", {
+            "type": "object", "properties": {"options": {"$ref": "urn:test:conductor:run-options:v1"}}},
+            prefix="urn:test:records:")
+        registry, kinds = schema.load_contract_set(records)
+        self.assertEqual(["item-options"], kinds)
+        self.assertEqual([], schema.validate({"options": {"x": 1}}, "item-options", registry))
+        self.assertEqual(["additional"], [i.code for i in schema.validate({"options": {"y": 1}}, "item-options",
+                                                                            registry)])
+        self.write(records, "broken", "broken", {"properties": {"o": {"$ref": "urn:test:absent:thing:v1"}}},
+                   prefix="urn:test:records:")
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved reference"):
+            schema.load_contract_set(records)
+
 
 if __name__ == "__main__":
     unittest.main()

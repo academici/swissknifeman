@@ -16,12 +16,15 @@ from collections import Counter, defaultdict
 import json
 from pathlib import Path
 import re
+import sys
 import time
 
 from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_document
 from orch.conductor import agents as agents_mod, progress as progress_mod, prompts as prompts_mod, questions as questions_mod
-from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
+from orch.conductor import records
+from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure.files import OPTIONS_COPY, STATE_FILE, safe
 from orch.conductor.infrastructure.lease import RunLease
 
 IDLE_S = 30
@@ -232,7 +235,12 @@ def executor_runs_checks(directory: Path, state: dict) -> list:
     """The pieces whose effective options set ``checks.executor_runs_checks`` true (``<item>/options.json``)."""
     found = []
     for ref in (state.get("items") or {}):
-        doc = _read_json(Path(directory) / safe(str(ref)) / OPTIONS_COPY)
+        try:
+            doc = records.read(Path(directory) / safe(str(ref)) / OPTIONS_COPY, "item-options")
+        except (OSError, Stop) as error:
+            print(f"{getattr(error, 'code', 'RECORD_INVALID')}: {getattr(error, 'message', error)} "
+                  "(executor_runs_checks of the piece unknown)", file=sys.stderr)
+            doc = None
         options = (doc or {}).get("options") if isinstance(doc, dict) else None
         checks = options.get("checks") if isinstance(options, dict) else None
         if isinstance(checks, dict) and checks.get("executor_runs_checks") is True:
@@ -244,8 +252,11 @@ def build(directory: Path, project: Path) -> dict:
     """The observer report of the run in ``directory``."""
     lines = progress_mod.read_lines(directory)
     try:
-        state = json.loads((Path(directory) / "state.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        state = records.read(Path(directory) / STATE_FILE, "state") or {}
+    except OSError:
+        state = {}
+    except Stop as stop:  # the report is still written (also after a crash), from the journal alone, and says why
+        print(f"{stop.code}: {stop.message} (the observer report is built without the state)", file=sys.stderr)
         state = {}
     run_id = lines[0]["run"] if lines else Path(directory).name
     started = lines[0]["ts"] if lines else None

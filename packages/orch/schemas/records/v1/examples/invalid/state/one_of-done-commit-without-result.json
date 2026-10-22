@@ -1,0 +1,13 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {},
+  "items": {
+    "W1": {
+      "steps": {
+        "commit": {"ended": "2026-10-22T12:30:00Z", "role": "deterministic", "route": null, "status": "done", "verdict": "committed"}
+      }
+    }
+  },
+  "status": "running",
+  "tokens": {"input": 0, "output": 0}
+}

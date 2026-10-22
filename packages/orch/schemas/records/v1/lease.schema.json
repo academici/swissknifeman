@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:lease:v1",
+  "title": "Owner of a run lease or a checkout lock",
+  "description": "Who holds a lock: <run>/lease.json (the run lease) or <runs root>/checkouts/<sha16>.json (the checkout lock, which also names the run). Written right after the lock is taken, removed when it is released; read only to name the owner of a busy lock.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pid"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:lease:v1"},
+    "pid": {"description": "Process id of the owner.", "type": "integer", "minimum": 1},
+    "host": {"description": "Host name of the owner.", "type": "string"},
+    "started_at": {"description": "UTC time the lock was taken.", "type": "string"},
+    "command": {"description": "Conductor command that holds it (run, resume, ...).", "type": "string"},
+    "run": {"description": "Run that drives the checkout (checkout lock only).", "type": "string"}
+  },
+  "$defs": {}
+}

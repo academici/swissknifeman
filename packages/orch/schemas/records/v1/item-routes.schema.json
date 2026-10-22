@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:item-routes:v1",
+  "title": "routes.json of a piece",
+  "description": "The route each role of a piece runs on (<run>/<item>/routes.json), by role; rewritten when a fallback or a retry changes a route.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:item-routes:v1"}
+  },
+  "patternProperties": {
+    "^[a-z][a-z0-9-]*$": {"$ref": "#/$defs/route"}
+  },
+  "$defs": {
+    "route": {
+      "description": "The route of one role.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "argv"],
+      "properties": {
+        "role": {"description": "Role.", "type": "string"},
+        "provider": {"description": "Provider id.", "type": "string", "minLength": 1},
+        "model": {"description": "Model id, null when the provider picks.", "type": ["string", "null"]},
+        "effort": {"description": "Effort.", "type": ["string", "null"]},
+        "model_class": {"description": "Model class (economy, implementation, frontier).", "type": ["string", "null"]},
+        "transport": {"description": "Transport of the role (stream-json, text, acp, ...).", "type": "string"},
+        "timeout_s": {"description": "Wall limit of the role; 0 when none.", "type": "number"},
+        "idle_timeout_s": {"description": "Silence limit of the role; 0 when none.", "type": "number"},
+        "argv": {"description": "Command line of the role.", "type": "array", "items": {"type": "string"}},
+        "resume_argv": {"description": "Command line that continues a session of the role.", "type": "array", "items": {"type": "string"}},
+        "env": {"description": "Environment of the role kept by an older run; never shown.", "type": "object"}
+      }
+    }
+  }
+}

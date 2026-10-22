@@ -2,7 +2,7 @@
 focus of its prompt, and the review-verdict record of every round."""
 from __future__ import annotations
 
-from orch.conductor import checks as checks_mod, prompts, risk as risk_mod, scope as scopes
+from orch.conductor import checks as checks_mod, prompts, records, risk as risk_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import findings_problems
 from orch.conductor.domain.stop import Stop
@@ -71,7 +71,7 @@ def dynamic_review(self, item: Item, report: dict) -> None:
             item.routes[role] = self._selected(item, role, True)
         self._route_minimum(item)
         self._preflight(item)
-        write_json(item.directory / "routes.json", item.routes)
+        records.write(item.directory / "routes.json", item.routes, "item-routes")
     names = ", ".join(f"{row['name']}+{row['weight']}" for row in found["features"])
     why = (f"risk score {found['score']} reached {found['threshold']}" if found["score"] >= found["threshold"]
            else f"critical feature {', '.join(found['critical'])} (score {found['score']} below {found['threshold']})")
@@ -170,7 +170,7 @@ def upgrade_reviewer(self, item: Item) -> None:
     item.state.setdefault("route_overrides", {})["reviewer"] = {
         key: higher[key] for key in ("provider", "model_class", "effort") if higher.get(key)}
     self._save()
-    write_json(item.directory / "routes.json", item.routes)
+    records.write(item.directory / "routes.json", item.routes, "item-routes")
     self.progress.emit("info", item=item.ref, role="reviewer", route=self.label(higher), reason_code="ROUTE_UPGRADED",
                        message=f"reviewer: {self.label(route)} -> {self.label(higher)} "
                                f"({route['model_class']} -> {wanted}; the executor suggested it)")

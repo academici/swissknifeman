@@ -1,0 +1,143 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:item-options:v1",
+  "claim_route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "digest": "sha256:0982d014fe5e19b5498ecb6d73ecc1469bca0694228d55573377b55f89e3da4b",
+  "options": {
+    "checks": {
+      "cadence": [
+        "item",
+        "phase"
+      ],
+      "executor_runs_checks": false,
+      "fail_fast": false,
+      "kinds": [
+        "acceptance",
+        "impact"
+      ],
+      "overlap_review": false,
+      "parallel": 2,
+      "red_first": true,
+      "reuse": true,
+      "self_check": []
+    },
+    "fallback_routes": [
+      {
+        "effort": "high",
+        "model_class": "frontier",
+        "provider": "claude-code",
+        "role": "reviewer"
+      }
+    ],
+    "instructions": {
+      "file_tools_rule": true,
+      "isolate_roles": [
+        "context-scout",
+        "executor",
+        "bounded-implementer",
+        "reviewer",
+        "triager",
+        "registrar",
+        "report-fixer",
+        "researcher",
+        "advisor"
+      ],
+      "module_rules": [
+        "module-folders",
+        "module-boundaries",
+        "engineering-invariants"
+      ],
+      "sandbox": "prefer",
+      "sandbox_domains": []
+    },
+    "limits": {
+      "ceiling_factor": 2,
+      "check_fixes": 1,
+      "check_idle_timeout_s": 3600,
+      "check_timeout_s": 7200,
+      "check_warn_s": 900,
+      "corrections": 1,
+      "corrections_batch": 0,
+      "disk_min_gb": 5,
+      "findings_batch": 0,
+      "prompt_core_tokens": 12000,
+      "prompt_retrieval_tokens": 50000,
+      "prompt_supporting_tokens": 30000,
+      "provider_wait_max_s": 900,
+      "question_warn_s": 1800,
+      "repairs": 1,
+      "retries": 1,
+      "review_rounds": 2,
+      "review_rounds_batch": 0,
+      "role_timeout_s": {
+        "advisor": 1800,
+        "context-scout": 900,
+        "registrar": 600,
+        "report-fixer": 600,
+        "researcher": 2700,
+        "reviewer": 3600,
+        "triager": 1800
+      },
+      "run_timeout_s": 0,
+      "run_tokens_hard_max": 0,
+      "run_warn_s": 7200,
+      "skill_tokens_max": 5000,
+      "stage_idle_timeout_s": 5400,
+      "stage_idle_warn_s": 600,
+      "stage_timeout_s": 0,
+      "stage_warn_s": 2700,
+      "tokens_hard_max": 0,
+      "tokens_max": 0,
+      "triage_repro_timeout_s": 600,
+      "unmetered": "stop",
+      "unmetered_charge_tokens": 50000
+    },
+    "on_blocked": "stop",
+    "on_error": {},
+    "review": {
+      "audit_scope": "corrected",
+      "correct_min_severity": "Major",
+      "dynamic": true,
+      "dynamic_threshold": 60,
+      "final_correction": true,
+      "pre_final": true,
+      "strategist": "rules",
+      "strategy": "auto"
+    },
+    "reviewer": "grok/grok-4.7/high",
+    "rules": [],
+    "scope": {
+      "extra_paths": [],
+      "fence": "project",
+      "outside": "deviation",
+      "outside_module": "block",
+      "runtime_paths": [
+        ".swissknifeman/orch-artifacts/**",
+        ".swissknifeman/orch/**",
+        "**/tests/evidence/**"
+      ]
+    },
+    "session": {
+      "executor": "handoff"
+    },
+    "skills": {
+      "executor": [
+        "auto"
+      ]
+    },
+    "stages": [
+      {
+        "role": "executor"
+      }
+    ]
+  },
+  "scenario": "solo",
+  "sources": {
+    "limits.corrections": "policy:solo",
+    "limits.retries": "policy:solo",
+    "limits.review_rounds": "policy:solo",
+    "stages.executor": "policy:solo"
+  }
+}

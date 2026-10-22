@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:item-options:v1",
+  "title": "options.json of a piece",
+  "description": "The effective options a piece ran with (<run>/<item>/options.json) and where each value came from. The options themselves are the conductor run-options document: this schema refers to it and never copies it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["options"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:item-options:v1"},
+    "scenario": {"description": "Scenario of the piece.", "type": ["string", "null"]},
+    "options": {"$ref": "urn:swissknifeman:orch:conductor:run-options:v1"},
+    "sources": {
+      "description": "Layer that set each option, by dotted key.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"type": "string", "description": "Layer name."}},
+      "additionalProperties": false
+    },
+    "digest": {"description": "Digest of the options.", "type": "string"},
+    "claim_route": {"description": "Class and effort the work requires of its executor (route of the claim).", "type": ["object", "null"]}
+  },
+  "$defs": {}
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:questions:v1",
+  "title": "questions.json of a piece",
+  "description": "Questions an agent asked in one piece of a conductor run (<run>/<item>/questions.json) and the resolutions given to them; written by the conductor and by orch conduct answer under questions.lock.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run", "item", "questions"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:questions:v1"},
+    "run": {"description": "Conductor run id.", "type": "string", "minLength": 1},
+    "item": {"description": "Reference of the piece.", "type": "string", "minLength": 1},
+    "questions": {"description": "Questions in the order they were asked.", "type": "array", "items": {"$ref": "#/$defs/entry"}}
+  },
+  "$defs": {
+    "value": {"description": "A JSON value given as an answer, a default or an assumption.", "type": ["string", "number", "boolean", "object", "array", "null"]},
+    "resolution": {
+      "description": "An answer to a question.",
+      "type": "object",
+      "required": ["value", "by"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {"$ref": "#/$defs/value"},
+        "by": {"description": "Who answered: a user name, policy or the advisor.", "type": "string", "minLength": 1},
+        "at": {"description": "UTC time of the answer.", "type": "string", "minLength": 1},
+        "authority": {"description": "Authority snapshot of a policy or advisor answer.", "type": "object"}
+      }
+    },
+    "binding": {
+      "description": "The input the question was asked on.",
+      "type": "object",
+      "required": ["step"],
+      "additionalProperties": false,
+      "properties": {
+        "run": {"description": "Conductor run id.", "type": "string"},
+        "item": {"description": "Reference of the piece.", "type": "string"},
+        "step": {"description": "Step that asked.", "type": "string"},
+        "input_digest": {"description": "Digest of the whole execution-input (legacy binding).", "type": ["string", "null"]},
+        "input_part_digest": {"description": "Digest of the required part of the execution-input (P3.7).", "type": ["string", "null"]}
+      }
+    },
+    "entry": {
+      "description": "One question with its state.",
+      "type": "object",
+      "required": ["id", "revision", "kind", "text", "blocking", "status", "binding", "asked_at"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"description": "Id of the question, stable across rounds.", "type": "string", "minLength": 1},
+        "revision": {"description": "Revision; it goes up when the input it was asked on changed.", "type": "integer", "minimum": 1},
+        "kind": {"description": "What the question asks for.", "type": "string", "enum": ["clarification", "decision", "approval", "credential"]},
+        "text": {"description": "The question.", "type": "string"},
+        "options": {
+          "description": "Answers to choose from.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "One option.",
+            "required": ["id"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {"description": "Id of the option.", "type": "string", "minLength": 1},
+              "label": {"description": "What the option means.", "type": "string"}
+            }
+          }
+        },
+        "answer_schema": {"description": "JSON Schema of a free answer; applied when it loads in the closed profile.", "type": "object"},
+        "answer_schema_ignored": {"description": "Why answer_schema was not applied to the answer (outside the closed profile).", "type": "string"},
+        "default": {"$ref": "#/$defs/value"},
+        "assumed": {"$ref": "#/$defs/value"},
+        "blocking": {"description": "The work cannot go on without the answer.", "type": "boolean"},
+        "risk": {"description": "Risk of a wrong answer.", "type": "string"},
+        "status": {"description": "open, answered, applied, assumed, denied or stale.", "type": "string", "enum": ["open", "answered", "applied", "assumed", "denied", "stale"]},
+        "binding": {"$ref": "#/$defs/binding"},
+        "asked_at": {"description": "UTC time the question was asked.", "type": "string", "minLength": 1},
+        "applied_at": {"description": "UTC time the answer was handed to the executor.", "type": "string"},
+        "resolution": {"$ref": "#/$defs/resolution"},
+        "stale_resolution": {"$ref": "#/$defs/resolution"},
+        "auto_answered": {"description": "The policy or the advisor answered it.", "type": "boolean"},
+        "advice": {"description": "Summary of the advice behind the question or its answer (file, recommendation, confidence, held).", "type": "object"}
+      }
+    }
+  }
+}

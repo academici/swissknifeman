@@ -18,7 +18,8 @@ from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, prompts, questions, runs
+from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, prompts, questions
+from orch.conductor import records, runs
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import roles
 
@@ -133,17 +134,18 @@ def _questions(args, project: Path) -> int:
         print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
         return 1
     if args.verb == "questions":
-        rows = questions.listing(directory, time.time())
+        invalid: list = []  # a questions.json that does not match records/v1 is named on stderr and fails the command
+        rows = questions.listing(directory, time.time(), invalid=invalid)
         if args.json:
             print(json.dumps({"run": run_id, "questions": rows}, ensure_ascii=False, indent=2))
-            return 0
+            return 1 if invalid else 0
         for row in rows:
             print(f"{row['item']} {row['id']} (revision {row['revision']}, {row['kind']}): {row['text']} — "
                   + ("answered, waits for resume; " if row["answered"] else "") + f"{row['age_s']} s"
                   + (" OVERDUE" if row["overdue"] else ""))
-        if not rows:
+        if not rows and not invalid:
             print("no open questions")
-        return 0
+        return 1 if invalid else 0
     folder = directory / engine.safe(args.item)
     try:
         entry = questions.answer_file(folder, args.question, item=args.item, option=args.option, text=args.text,
@@ -151,8 +153,12 @@ def _questions(args, project: Path) -> int:
     except (questions.QuestionError, engine.Stop) as error:
         print(f"{error.code}: {error.message}", file=sys.stderr)
         return 1
+    ignored = entry.get("answer_schema_ignored")
+    if ignored:  # the conductor emits ANSWER_SCHEMA_IGNORED when resume hands the answer over
+        print(f"ANSWER_SCHEMA_IGNORED: {ignored}; the answer is taken unchecked", file=sys.stderr)
     print(json.dumps({"run": run_id, "item": args.item, "question": entry["id"], "revision": entry["revision"],
                       "resolution": entry["resolution"],
+                      **({"answer_schema_ignored": ignored} if ignored else {}),
                       "next": f"orch conduct resume --run {run_id} --retry {args.item}"}, ensure_ascii=False))
     return 0
 
@@ -251,7 +257,7 @@ def _timeline(args, project: Path) -> int:
         print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
         return 1
     rows = progress.timeline(progress.read_lines(directory), item=args.item,
-                             state=engine.read_json(directory / engine.STATE_FILE) or {})
+                             state=records.read(directory / engine.STATE_FILE, "state") or {})
     if args.json:
         print(json.dumps(runs.display({"run": run_id, "item": args.item, "intervals": rows}), ensure_ascii=False, indent=2))
         return 0
@@ -269,7 +275,7 @@ def _timeline(args, project: Path) -> int:
 def _status_details(directory: Path, found: dict) -> dict:
     """Add read-only observability to the journal summary without rebuilding routes or options."""
     state = found["state"]
-    doc = engine.read_json(directory / engine.RUN_FILE) or {}
+    doc = records.read(directory / engine.RUN_FILE, "run") or {}
     raises = state.get("limit_raises") or []
     limits = {}
     if doc.get("limits_run") or raises:
@@ -278,11 +284,11 @@ def _status_details(directory: Path, found: dict) -> dict:
         ref = row["item"]
         item_state = (state.get("items") or {}).get(ref) or {}
         folder = directory / engine.safe(ref)
-        recorded = engine.read_json(folder / "routes.json") or {}
+        recorded = records.read(folder / "routes.json", "item-routes") or {}
         row.update(tokens=item_state.get("tokens"), usage_incomplete=item_state.get("usage_incomplete"),
                    routes={role: runs.public_route(route) for role, route in recorded.items()
                            if isinstance(route, dict)})
-        options = engine.read_json(folder / "options.json") or {}
+        options = records.read(folder / "options.json", "item-options") or {}
         item_limits = (options.get("options") or {}).get("limits") or {}
         if item_limits:
             limits.setdefault("items", {})[ref] = {key: item_limits.get(key, 0)
@@ -331,6 +337,61 @@ def _gates(args) -> int:
     for row in rows:
         if not args.json:
             print(f"{row['provider']}: until {row['until']} ({row['class']} {row['code']}, set by {row['set_by']})")
+    return 0
+
+
+def _status(args, project: Path) -> int:
+    """``status`` and ``observe``: the journal summary of a run with its recorded state, routes and options."""
+    run_id = args.run or _latest(project)
+    directory = engine.runs_root(project) / (run_id or "-")
+    if not run_id or not (directory / engine.RUN_FILE).is_file():
+        print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(),
+              file=sys.stderr)
+        return 1
+    if args.verb == "observe":
+        if args.follow:
+            return observer.follow(directory, stream=sys.stderr)
+        written = observer.write_report(directory, project, project / engine.REPORTS / run_id)
+        print(json.dumps(written, ensure_ascii=False))
+        return 0
+    found = runs.effective_status(directory, progress.summarize(progress.read_lines(directory)))
+    found["run"] = run_id
+    found["state"] = records.read(directory / engine.STATE_FILE, "state") or {}
+    here = (found["current"] or {}).get("item") or (found["items"][-1]["item"] if found["items"] else None)
+    listed = agents.read(directory / engine.safe(here)) if here else []
+    doc = records.read(directory / engine.RUN_FILE, "run") or {}
+    batch = doc.get("grouped") is not False and len(doc.get("items") or []) > 1
+    held = run_service.held_pieces(found["state"]) if batch and found["status"] in ("stopped", "orphaned") else []
+    if args.json:
+        details = _status_details(directory, found)
+        if held:
+            details["held"] = {"items": held, "hint": run_service.held_hint(run_id, held)}
+        print(json.dumps(runs.display({key: value for key, value in found.items() if key != "state"} |
+                          {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop"),
+                           "last_stop": found["state"].get("last_stop"), "agents": listed, **details}),
+                         ensure_ascii=False, indent=2))
+        return 0
+    print(f"run {run_id}: {found['status']}" + (f" ({found['reason_code']})" if found["reason_code"] else "")
+          + f", last line {found['last_ts']}")
+    if found["current"]:
+        current = found["current"]
+        print(f"  now: {current['item']} {current['stage']} {current.get('role') or ''} "
+              f"{current.get('route') or ''} since {current['since']}".rstrip())
+        if found.get("beacon"):
+            beacon = found["beacon"]
+            print(f"  beacon {beacon['ts']} {beacon['reason_code']}: {beacon.get('message', '')}")
+    for row in found["items"]:
+        last = row["last"] or {}
+        print(f"  {row['item']}: {row['outcome'] or 'running'}"
+              + (f" ({row.get('reason_code')})" if row.get("reason_code") else "")
+              + f"; {row['stages']} step(s), last {last.get('stage', '-')} {last.get('verdict') or ''}".rstrip())
+    if held:
+        print("  " + run_service.held_hint(run_id, held))
+    tokens = found["state"].get("tokens") or {}
+    print(f"  tokens: {tokens.get('input', 0)} in, {tokens.get('output', 0)} out")
+    for row in listed:
+        print(f"  agent {row['agent_run_id']}: {row['role']} {row['step']} {row['status']}, "
+              f"{row['tokens']['input']} in, {row['tokens']['output']} out")
     return 0
 
 
@@ -515,60 +576,12 @@ def main(argv: list | None = None) -> int:
         return _questions(args, project)
     if args.verb == "prompt":
         return _prompt(args, project)
-    if args.verb == "timeline":
-        return _timeline(args, project)
-    if args.verb in ("status", "observe"):
-        run_id = args.run or _latest(project)
-        directory = engine.runs_root(project) / (run_id or "-")
-        if not run_id or not (directory / engine.RUN_FILE).is_file():
-            print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(),
-                  file=sys.stderr)
+    if args.verb in ("timeline", "status", "observe"):
+        try:  # read-only: a record that does not match records/v1 is a stop with its code, not a traceback
+            return _timeline(args, project) if args.verb == "timeline" else _status(args, project)
+        except engine.Stop as stop:
+            print(f"{stop.code}: {stop.message}", file=sys.stderr)
             return 1
-        if args.verb == "observe":
-            if args.follow:
-                return observer.follow(directory, stream=sys.stderr)
-            written = observer.write_report(directory, project, project / engine.REPORTS / run_id)
-            print(json.dumps(written, ensure_ascii=False))
-            return 0
-        found = runs.effective_status(directory, progress.summarize(progress.read_lines(directory)))
-        found["run"] = run_id
-        found["state"] = engine.read_json(directory / engine.STATE_FILE) or {}
-        here = (found["current"] or {}).get("item") or (found["items"][-1]["item"] if found["items"] else None)
-        listed = agents.read(directory / engine.safe(here)) if here else []
-        doc = engine.read_json(directory / engine.RUN_FILE) or {}
-        batch = doc.get("grouped") is not False and len(doc.get("items") or []) > 1
-        held = run_service.held_pieces(found["state"]) if batch and found["status"] in ("stopped", "orphaned") else []
-        if args.json:
-            details = _status_details(directory, found)
-            if held:
-                details["held"] = {"items": held, "hint": run_service.held_hint(run_id, held)}
-            print(json.dumps(runs.display({key: value for key, value in found.items() if key != "state"} |
-                              {"tokens": found["state"].get("tokens"), "stop": found["state"].get("stop"),
-                               "last_stop": found["state"].get("last_stop"), "agents": listed, **details}),
-                             ensure_ascii=False, indent=2))
-            return 0
-        print(f"run {run_id}: {found['status']}" + (f" ({found['reason_code']})" if found["reason_code"] else "")
-              + f", last line {found['last_ts']}")
-        if found["current"]:
-            current = found["current"]
-            print(f"  now: {current['item']} {current['stage']} {current.get('role') or ''} "
-                  f"{current.get('route') or ''} since {current['since']}".rstrip())
-            if found.get("beacon"):
-                beacon = found["beacon"]
-                print(f"  beacon {beacon['ts']} {beacon['reason_code']}: {beacon.get('message', '')}")
-        for row in found["items"]:
-            last = row["last"] or {}
-            print(f"  {row['item']}: {row['outcome'] or 'running'}"
-                  + (f" ({row.get('reason_code')})" if row.get("reason_code") else "")
-                  + f"; {row['stages']} step(s), last {last.get('stage', '-')} {last.get('verdict') or ''}".rstrip())
-        if held:
-            print("  " + run_service.held_hint(run_id, held))
-        tokens = found["state"].get("tokens") or {}
-        print(f"  tokens: {tokens.get('input', 0)} in, {tokens.get('output', 0)} out")
-        for row in listed:
-            print(f"  agent {row['agent_run_id']}: {row['role']} {row['step']} {row['status']}, "
-                  f"{row['tokens']['input']} in, {row['tokens']['output']} out")
-        return 0
 
     try:
         debug = getattr(args, "debug", None)

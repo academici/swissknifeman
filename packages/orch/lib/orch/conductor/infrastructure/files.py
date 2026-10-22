@@ -14,6 +14,7 @@ from typing import Any
 from aicore.state import project_state_dir
 from aicore.util.io import durable_replace
 
+from orch.conductor import records
 from orch.conductor.domain.stop import Stop
 
 RUN_FILE, STATE_FILE = "run.json", "state.json"
@@ -88,8 +89,12 @@ class RunStore:
             yield
 
     def load(self) -> tuple:
-        """``(run_doc, state)`` of an earlier run; ``RUN_UNKNOWN`` when either file is missing."""
-        run_doc, state = read_json(self.directory / RUN_FILE), read_json(self.directory / STATE_FILE)
+        """``(run_doc, state)`` of an earlier run, both checked against records/v1 (a run written before it is migrated
+        in memory, its files stay as they are); ``RUN_UNKNOWN`` when either file is missing, ``RUN_INVALID`` /
+        ``STATE_INVALID`` when one does not match its schema."""
+        with self.lock:
+            run_doc = records.read(self.directory / RUN_FILE, "run")
+            state = records.read(self.directory / STATE_FILE, "state")
         if run_doc is None or state is None:
             raise Stop("RUN_UNKNOWN", f"no conductor run {self.run_id} in {self.directory.parent}")
         return run_doc, state
@@ -100,7 +105,12 @@ class RunStore:
         self.directory.mkdir(parents=True, exist_ok=True)
         for folder in (self.directory.parent, self.directory):
             os.chmod(folder, 0o700)
-        write_json(self.directory / RUN_FILE, run_doc)
+        self.save_run(run_doc)
+
+    def save_run(self, run_doc: dict) -> None:
+        """Replace ``run.json`` (a ``--ready`` batch names its lane after the first claim)."""
+        with self.lock:
+            records.write(self.directory / RUN_FILE, run_doc, "run")
 
     def keep_options(self, options_file: Path) -> None:
         """Keep ``--options`` with the run: ``resume`` must not depend on a file that may be gone (a cleaned /tmp)."""
@@ -115,8 +125,9 @@ class RunStore:
         return self.lock
 
     def save(self, state: dict) -> None:
-        with self.lock:  # json.dumps walks the state: a thread that changes it meanwhile must wait
-            write_json(self.directory / STATE_FILE, state)
+        """Check ``state`` against records/v1 and replace ``state.json``; ``STATE_INVALID`` leaves the file as it was."""
+        with self.lock:  # validation and json.dumps walk the state: a thread that changes it meanwhile must wait
+            records.write(self.directory / STATE_FILE, state, "state")
 
     def next_agent(self, state: dict) -> int:
         """The number of a new agent run, counted in ``state.agents`` and saved at once (roles may start in threads)."""

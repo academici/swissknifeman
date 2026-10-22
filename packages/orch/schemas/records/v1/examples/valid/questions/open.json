@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:questions:v1",
+  "item": "W1",
+  "questions": [
+    {
+      "answer_schema": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "asked_at": "2026-10-22T12:05:00Z",
+      "binding": {
+        "input_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+        "input_part_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+        "item": "W1",
+        "run": "cnd-20261022T120000Z-a1b2c3",
+        "step": "executor.1"
+      },
+      "blocking": true,
+      "default": 1,
+      "id": "Q2",
+      "kind": "clarification",
+      "revision": 1,
+      "status": "open",
+      "text": "How many retries?"
+    }
+  ],
+  "run": "cnd-20261022T120000Z-a1b2c3"
+}

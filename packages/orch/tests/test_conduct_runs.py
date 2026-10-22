@@ -105,8 +105,10 @@ class ConductObservabilityTests(ConductRunsTests):
     def test_observer_keeps_group_findings_and_distinguishes_clean_from_unavailable_reviews(self):
         group = {"format": "findings", "error": None, "counts": {"Blocker": 1, "Major": 2, "Minor": 0},
                  "refs": ["P2.1", "P2.2"], "file": "group-review-1.md", "followup": "fix.json"}
+        minor = {"id": "F1", "severity": "Minor", "confidence": "high", "location": "a.py:1",
+                 "failure_scenario": "a typo in a message", "basis": "read"}  # a closed review-findings entry (records/v1)
         legacy = {"steps": {"review.1": {"status": "done", "result": {
-            "findings": {"findings": [{"severity": "Minor"}]}}}}}
+            "findings": {"verdict": "ATTENTION", "findings": [minor]}}}}}
         directory = self.make("cnd-groups", [
             line("2026-10-21T10:00:00Z", "run.start", run="cnd-groups"),
             line("2026-10-21T10:00:01Z", "info", run="cnd-groups", reason_code="GROUP_REVIEW"),
@@ -222,8 +224,8 @@ class ConductObservabilityTests(ConductRunsTests):
         directory = self.make("cnd-secret", [line("t", "run.start"), line("t", "item.start", item="W1")])
         folder = directory / "W1"
         folder.mkdir()
-        (folder / "routes.json").write_text(json.dumps({"executor": {"model": token}}))
-        (directory / "state.json").write_text(json.dumps({"stop": {"message": token + "x" * 700}}))
+        (folder / "routes.json").write_text(json.dumps({"executor": {"provider": "codex", "argv": ["codex"], "model": token}}))
+        (directory / "state.json").write_text(json.dumps({"stop": {"code": "ROLE_FAILED", "message": token + "x" * 700}}))
         with RunLease(directory).acquire("run"):
             (directory / "lease.json").write_text(json.dumps({"pid": 1, "host": token, "command": "run"}))
             for argv in (("status", "--json"), ("runs", "--json")):

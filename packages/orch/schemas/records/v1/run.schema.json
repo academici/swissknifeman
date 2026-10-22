@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:run:v1",
+  "title": "run.json of a conductor run",
+  "description": "What was asked of a conductor run (<run>/run.json): written once by run (RunStore.create) and again when a --ready batch names its lane; read by resume, status, explain and the run listing.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:run:v1"},
+    "run_id": {"description": "Conductor run id.", "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"},
+    "plan": {"description": "Plan id, or the path of the execution-input of a file source.", "type": ["string", "null"]},
+    "plans_root": {"description": "--plans-root of the run.", "type": ["string", "null"]},
+    "items": {"description": "Pieces asked by --items (or the lane a --ready batch named).", "type": "array", "items": {"type": "string"}},
+    "batch": {"description": "The run claims pieces as a batch (--ready).", "type": ["boolean", "null"]},
+    "source": {
+      "description": "Built-in file source of a run --input; null for a plan.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"description": "file", "type": "string"},
+        "path": {"description": "Absolute path of the execution-input.", "type": "string"},
+        "commit": {"description": "The run may commit the paths of the piece.", "type": "boolean"}
+      }
+    },
+    "scenario": {"description": "Scenario asked by --scenario.", "type": ["string", "null"]},
+    "max_items": {"description": "--max-items.", "type": ["integer", "null"]},
+    "options_file": {"description": "Path of --options.", "type": ["string", "null"]},
+    "adopt": {"description": "--adopt.", "type": "boolean"},
+    "grouped": {"description": "--batch (true), --no-batch (false) or neither (null).", "type": ["boolean", "null"]},
+    "fence": {"description": "--fence.", "type": ["string", "null"]},
+    "extra_paths": {"description": "--allow-path values.", "type": ["array", "null"], "items": {"type": "string"}},
+    "config_file": {"description": "Configuration file of the run.", "type": ["string", "null"]},
+    "created": {"description": "UTC creation time.", "type": "string"},
+    "project": {"description": "Project of the run.", "type": "string"},
+    "project_resolution": {"description": "How the project was found.", "type": ["string", "object", "null"]},
+    "working_directory": {"description": "Working directory of the run command.", "type": "string"},
+    "config_digest": {"description": "Digest of the effective configuration.", "type": ["string", "null"]},
+    "config_layers": {
+      "description": "Configuration layers behind the digest, lowest first.",
+      "type": "array",
+      "items": {"type": "object", "description": "One layer (layer, file, present)."}
+    },
+    "instructions_digest": {"description": "Digest of the instruction stubs the run started with.", "type": ["string", "null"]},
+    "debug": {"description": "The run keeps debug output.", "type": "boolean"},
+    "limits_run": {
+      "description": "Frozen run limits with their origin.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"type": "object", "description": "value, source, file."}},
+      "additionalProperties": false
+    },
+    "catalog_digests": {
+      "description": "Digests of the launch, models and capabilities catalogs the run started with.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"type": ["string", "null"], "description": "Digest of one catalog."}},
+      "additionalProperties": false
+    },
+    "lease": {"description": "The run holds a lease (runs before the lease have none).", "type": "boolean"}
+  },
+  "$defs": {}
+}

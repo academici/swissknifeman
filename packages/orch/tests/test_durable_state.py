@@ -61,7 +61,7 @@ class DurableStateTests(unittest.TestCase):
         self.assertEqual(real.read_text(encoding="utf-8"), "{}")
 
     def test_the_run_folders_are_private(self):
-        store = files.RunStore.__new__(files.RunStore)
+        store = files.RunStore(self.root, "cnd-1")
         store.directory = self.root / "conductor" / "cnd-1"
         store.create({"run_id": "cnd-1"})
         for folder in (store.directory, store.directory.parent):
@@ -86,7 +86,7 @@ class DurableStateTests(unittest.TestCase):
             return emit(event, **fields)
         def work():
             self.assertEqual(len(seen), 1)
-            return {"report": "ok"}
+            return {"report": {"status": "done"}}  # records/v1: an executor result carries its stage-report
         with mock.patch.object(checks, "head", return_value="base"), mock.patch.object(run.progress, "emit", started):
             run._step(item, "executor.1", work, role="executor", route="fake/model")
         self.assertEqual(seen[0], {"status": "started", "started_at": seen[0]["started_at"], "role": "executor",
@@ -104,7 +104,8 @@ class DurableStateTests(unittest.TestCase):
         row = files.read_json(run.directory / "state.json")["items"]["W1"]["steps"]["executor.1"]
         self.assertEqual(row, {"status": "stopped", "code": "TIMEOUT", "ended": row["ended"]})
         run._reconcile_interrupted()
-        self.assertEqual(run._step(item, "executor.1", lambda: "ok"), "ok")
+        done = {"report": {"status": "done"}}
+        self.assertEqual(run._step(item, "executor.1", lambda: done), done)
         self.assertNotIn("STAGE_INTERRUPTED", [line.get("reason_code") for line in progress.read_lines(run.directory)])
 
     def test_unexpected_failure_cannot_leave_a_done_result(self):

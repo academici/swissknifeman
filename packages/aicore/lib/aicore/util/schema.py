@@ -33,6 +33,7 @@ _VERSION_DIR = re.compile(r"v[1-9][0-9]*")
 _cache: dict[tuple[Path, str, tuple[str, ...], str, tuple[Path, ...]], "Registry"] = {}
 _CONTRACT_REF = re.compile(r"([a-z][a-z0-9-]*):(v[1-9][0-9]*)")
 _SET_ID = re.compile(r"(.+:)([a-z][a-z0-9-]*):(v[1-9][0-9]*)")
+_MODULE_REF = re.compile(r"([a-z][a-z0-9-]*):(?:[a-z][a-z0-9-]*:)?(v[1-9][0-9]*)")  # <contract>[:<kind>]:v<N>
 _FOUNDATION_SCHEMAS = Path(__file__).resolve().parents[3] / "schemas"
 
 
@@ -180,8 +181,10 @@ def load_contract_set(contract_dir: Path, *, foundation: Path | None = None,
         prefix = match.group(1)
         kinds.append(match.group(2))
     kinds.sort()
+    module = prefix.rstrip(":").rpartition(":")[0] + ":" if prefix else None  # urn:<ns>:<module>: of <module>:<set>:
     registry = load_registry(directory, urn_prefix=prefix or "", kinds=tuple(kinds), version=version,
-                             extra_dirs=_referenced_contract_dirs(directory, CONTRACT_URN_PREFIX, foundation))
+                             extra_dirs=_referenced_contract_dirs(directory, CONTRACT_URN_PREFIX, foundation,
+                                                                  module_prefix=module))
     if open_slots:
         slots = sorted({ref.partition("#")[0] for document in schemas.values() for ref in _refs(document)
                         if ref.startswith(f"{prefix}extension:") and ref.partition("#")[0] not in registry._schemas})
@@ -198,14 +201,17 @@ def load_contract_set(contract_dir: Path, *, foundation: Path | None = None,
 
 
 def _referenced_contract_dirs(directory: Path, urn_prefix: str,
-                              foundation: Path | None = None) -> tuple[Path, ...]:
+                              foundation: Path | None = None, *,
+                              module_prefix: str | None = None) -> tuple[Path, ...]:
     """Sibling contract directories that ``$ref`` values reach from ``directory``, transitively.
 
     A ``$ref`` to ``<urn_prefix><contract>:v<N>`` (with or without a fragment) names the directory
     ``<schemas>/<contract>/v<N>`` next to the one being loaded; for the foundation prefix a directory missing
     there is looked up in ``foundation`` (default: the schemas of aicore itself). A module contract (a prefix
     other than the foundation one) may also reference the foundation contracts: those references are looked up
-    in ``foundation`` only.
+    in ``foundation`` only. ``module_prefix`` (``urn:swissknifeman:<module>:`` of a set of kinds) lets a set refer
+    to a sibling set of the same module, ``<module_prefix><contract>:<kind>:v<N>`` -> ``<schemas>/<contract>/v<N>``;
+    a sibling folder that is not there is left to the reference check.
     """
     schemas_root = directory.parent.parent
     foundation_root = foundation or _FOUNDATION_SCHEMAS
@@ -226,6 +232,11 @@ def _referenced_contract_dirs(directory: Path, urn_prefix: str,
                     target = schemas_root / match.group(1) / match.group(2) if match else None
                     if match and urn_prefix == CONTRACT_URN_PREFIX and not _has_schemas(target):
                         target = foundation_root / match.group(1) / match.group(2)
+                elif module_prefix and document.startswith(module_prefix):
+                    match = _MODULE_REF.fullmatch(document[len(module_prefix):])
+                    target = schemas_root / match.group(1) / match.group(2) if match else None
+                    if target is None or not _has_schemas(target):
+                        continue
                 elif document.startswith(CONTRACT_URN_PREFIX):
                     match = _CONTRACT_REF.fullmatch(document[len(CONTRACT_URN_PREFIX):])
                     target = foundation_root / match.group(1) / match.group(2) if match else None

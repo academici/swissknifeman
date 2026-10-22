@@ -81,14 +81,14 @@ class LockTests(unittest.TestCase):
         store = RunStore(Path(self.tmp.name), "cnd-lock")
         store.directory = Path(self.tmp.name) / "run"
         store.directory.mkdir()
-        state = {"nested": {}}
+        state = {"items": {}, "claims": {}}  # records/v1 state: the threads add pieces, the main thread claims
         failures = []
 
         def worker(number: int) -> None:
             try:
                 for index in range(200):
                     with store.mutating():
-                        state[f"k{number}_{index}"] = index
+                        state["items"][f"k{number}_{index}"] = {"retries_used": index}
                         if index % 10 == 0:  # a durable save is an fsync: not every iteration
                             store.save(state)
             except Exception as error:  # noqa: BLE001 — the test reports any
@@ -99,14 +99,14 @@ class LockTests(unittest.TestCase):
             thread.start()
         for index in range(200):  # the main thread changes a nested dict meanwhile
             with store.mutating():
-                state["nested"][f"m{index}"] = {"v": index}
+                state["claims"][f"m{index}"] = {"v": index}
         for thread in threads:
             thread.join()
         store.save(state)
         self.assertEqual(failures, [])
         saved = json.loads((store.directory / "state.json").read_text(encoding="utf-8"))
-        self.assertEqual(len(saved), 8 * 200 + 1)
-        self.assertEqual(len(saved["nested"]), 200)
+        self.assertEqual(len(saved["items"]), 8 * 200)
+        self.assertEqual(len(saved["claims"]), 200)
 
     def test_every_writer_of_the_state_takes_the_lock_of_the_store(self):
         """The lock is really used (counted acquisitions), not merely absent from a lucky run."""
@@ -122,7 +122,7 @@ class LockTests(unittest.TestCase):
         self.assertGreater(taken(lambda: store.next_agent(cond.state)), 0)
         self.assertGreater(taken(lambda: cond._plan_note(item, "a note")), 0)
         self.assertGreater(taken(lambda: cond._start_step(item, "checks.1")), 0)
-        self.assertGreater(taken(lambda: cond._step(item, "review.1", lambda: {"findings": []})), 0)
+        self.assertGreater(taken(lambda: cond._step(item, "review.1", lambda: {"findings": {"findings": [], "verdict": "GREEN"}})), 0)
         cond._local.agent = {"id": "a1"}
         cond._step_tokens = {"input": 0, "output": 0}
         self.assertGreater(taken(lambda: cond._tokens(item, {"input": 3, "output": 4})), 0)
@@ -140,7 +140,7 @@ class LockTests(unittest.TestCase):
         store.directory.mkdir()
         saved = threading.Event()
         with store.mutating():
-            thread = threading.Thread(target=lambda: (store.save({"a": 1}), saved.set()))
+            thread = threading.Thread(target=lambda: (store.save({"status": "running"}), saved.set()))
             thread.start()
             self.assertFalse(saved.wait(0.3))  # the other thread cannot save while a mutation holds the lock
         self.assertTrue(saved.wait(10))
@@ -212,7 +212,7 @@ class LockTests(unittest.TestCase):
         try:
             for number in range(rounds):
                 barrier.wait(10)
-                cond._step(item, f"review.{number + 1}", lambda: {"findings": []})  # start, close, save (json.dumps)
+                cond._step(item, f"review.{number + 1}", lambda: {"findings": {"findings": [], "verdict": "GREEN"}})  # start, close, save (json.dumps)
         finally:
             thread.join()
         cond._save()

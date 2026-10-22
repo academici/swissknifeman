@@ -2,13 +2,15 @@
 a run (``review.strategy``)."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 import re
 from typing import Optional
 from aicore.util.proc import run as run_with_timeout
 
+from orch.conductor import records
 from orch.conductor.domain.item import done_steps
+from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure.files import STATE_FILE
 
 PROMPT = """You are an independent code reviewer. READ ONLY: do not run any command and do not edit anything. Work from the diff \
 below; open a file only when a defect cannot be judged without it, and use at most {max_tools} tool calls in total. Keep your \
@@ -67,7 +69,12 @@ def diff_of(project: Path, shas: list, include: list, exclude: list) -> str:
 
 
 def commits_of(run_dir: Path) -> tuple:
-    return commits_of_state(json.loads((run_dir / "state.json").read_text(encoding="utf-8")))
+    """The commits of the run in ``run_dir`` from its ``state.json`` (records/v1 state: ``STATE_INVALID`` when it does not
+    match, ``RUN_UNKNOWN`` when there is none)."""
+    state = records.read(Path(run_dir) / STATE_FILE, "state")
+    if state is None:
+        raise Stop("RUN_UNKNOWN", f"no state.json in {run_dir}")
+    return commits_of_state(state)
 
 
 # A finding line of the reply: ``[Major] file:line - defect``, as the prompt asks, also when the model dresses it as a list

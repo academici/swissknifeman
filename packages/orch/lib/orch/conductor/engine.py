@@ -180,15 +180,22 @@ class Conductor:
         with self.store.mutating():
             report_rules.plan_note(item, text)
 
-    def _review_debt(self, item: Item, review_round: int, findings: list) -> None:
+    def _review_debt(self, item: Item, review_round: int, findings: list, corrected: bool = True) -> None:
         """The last review round the wall allows found confirmed defects: they were corrected without another review.
         The piece goes on; ``review_debt`` in its state, the REVIEW_DEBT beacon and the observer report make it a
         place to look at after the plan (a second review round with findings hints at work handed over unfinished)."""
+        debt = {"round": review_round, "findings": list(findings)}
+        if not corrected:
+            debt["corrected"] = False
         with self.store.mutating():
-            item.state["review_debt"] = {"round": review_round, "findings": list(findings)}
+            if item.state.get("review_debt") == debt:  # a resume walks the closed rounds again: said once
+                return
+            item.state["review_debt"] = debt
             self._save()
-        message = (f"review round {review_round} found {', '.join(findings)}; corrected without a further review "
-                   "(the review wall is reached)")
+        message = (f"review round {review_round} found {', '.join(findings)}; "
+                   + ("corrected without a further review" if corrected else
+                      "the final correction changed no product file: they stay open as plan notes")
+                   + " (the review wall is reached)")
         self.progress.emit("info", item=item.ref, reason_code="REVIEW_DEBT", message=message)
         self._beacon_event("orch.run.warning", item, {"reason_code": "REVIEW_DEBT", "step": f"review.{review_round}"})
 
@@ -345,6 +352,7 @@ class Conductor:
 
     _red_signature = staticmethod(checks_stage.red_signature)
     _green = checks_stage.green
+    _product_snapshot = staticmethod(checks_stage.product_snapshot)
     _red_before = staticmethod(checks_stage.red_before)
     _earlier_rows = staticmethod(checks_stage.earlier_rows)
     _compute_checks = checks_stage.compute_checks

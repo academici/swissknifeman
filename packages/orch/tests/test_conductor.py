@@ -633,6 +633,34 @@ class CorrectionTests(ConductorCase):
                          ["REVIEW_DEBT"])
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
+    def test_a_final_correction_that_changes_nothing_leaves_the_findings_open_loudly(self):
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
+                                                                              "observed": "ok"}, "fix": "fix it"}],
+                             "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")},
+                                  {"result": report("W1")}],  # the last one writes nothing
+                     "reviewer": [FINDING, FINDING], "triager": [triage, triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (3, 2))
+        state = self.state(err)["items"]["W1"]
+        self.assertEqual(state["review_debt"], {"round": 2, "findings": ["F1"], "corrected": False})
+        self.assertNotIn("checks.3", state["steps"])  # an unchanged tree is not checked again
+        notes = [issue["text"] for issue in self.source()["items"]["W1"]["report"]["open_issues"]]
+        self.assertTrue(any("changed no product file" in text for text in notes), notes)
+
+    def test_review_debt_is_said_once_when_a_resume_walks_the_closed_rounds(self):
+        import threading
+        from types import SimpleNamespace
+        emitted, saved = [], []
+        owner = SimpleNamespace(store=SimpleNamespace(mutating=threading.RLock), _save=lambda: saved.append(1),
+                                progress=SimpleNamespace(emit=lambda *a, **k: emitted.append(k["reason_code"])),
+                                _beacon_event=lambda *a: emitted.append("beacon"))
+        item = SimpleNamespace(state={}, ref="W1")
+        for _ in range(2):
+            engine.Conductor._review_debt(owner, item, 2, ["F1"])
+        self.assertEqual((emitted, len(saved)), (["REVIEW_DEBT", "beacon"], 1))
+
     def test_findings_after_the_review_limit_block(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"review": {"final_correction": False}}}]}})
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
@@ -1373,6 +1401,9 @@ class SelfCheckReturnTests(ConductorCase):
         self.assertIn("does not show the self-check", self.prompt("executor", 2))
         self.assertEqual(self.state(err)["items"]["W1"]["self_check_returned"], [1])
         self.assertEqual(len([line for line in self.lines(err) if line.get("reason_code") == "RESULT_INCOMPLETE"]), 1)
+        # the claim stays with the stage-report; the planner's register-report keeps to its own fields
+        body = json.loads((self.run_dir(err) / "W1" / "register-report.json").read_text(encoding="utf-8"))
+        self.assertLessEqual(set(body), {"summary", "changed_paths", "checks_run", "evidence", "open_issues"})
 
     def test_the_second_report_without_it_reaches_the_checks_as_it_is(self):
         self.script({"executor": [executor_ok("W1"), executor_ok("W1")], "reviewer": [GREEN]})
@@ -1422,6 +1453,20 @@ class BatchLimitTests(ConductorCase):
         code, _, err = self.batch("Major", review_rounds_batch=1)
         self.assertEqual(self.calls("executor"), 2, err)  # W1 once, W2 once: no correction round
         self.assertTrue(any("batch:" in i["text"] for i in self.source()["items"]["W1"]["report"]["open_issues"]))
+
+    def test_a_spent_run_budget_wins_over_the_final_correction_of_the_review_wall(self):
+        # review_rounds 2 is the piece's wall and review_rounds_batch 2 the run's budget: both are spent at round 2;
+        # the run budget is the explicit limit, so a Blocker stops the run instead of getting a final correction
+        blocker = {"result": {"verdict": "ATTENTION",
+                              "findings": [dict(FINDING["result"]["findings"][0], severity="Blocker")]}}
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "limits": {"ceiling_factor": 1, "review_rounds_batch": 2}, "review": {"strategy": "each"}}}]}})
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [blocker, blocker], "triager": [TRIAGE_F1, TRIAGE_F1]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "REVIEW_LIMIT")), err)
+        self.assertIn("batch:", self.state(err)["stop"]["message"])
+        self.assertEqual(self.calls("executor"), 2)
 
     def test_without_a_batch_limit_the_correction_runs(self):
         code, _, err = self.batch("Major")

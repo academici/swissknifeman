@@ -71,7 +71,9 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         codes = [issue["text"].split(":", 1)[0] for issue in report.get("open_issues", [])
                  if issue["kind"] == "escalation" and re.match(r"^[A-Z][A-Z0-9_]*:", issue["text"])]
         self._beacon_event("orch.work.blocked", item, {"code": codes[0] if codes else "BLOCKED"})
-    body = {key: value for key, value in report.items() if key not in ("status", "questions", "review_recommendation")}
+    # the self-check claim stays with the stage-report of the run; the planner's register-report does not carry it
+    body = {key: value for key, value in report.items()
+            if key not in ("status", "questions", "review_recommendation", "self_check")}
     if status != "blocked":
         body["open_issues"] = [issue for issue in body["open_issues"] if issue["kind"] != "escalation"]
     else:  # a blocked registration takes no deviation issue (the register verb pairs it with done_with_deviations)

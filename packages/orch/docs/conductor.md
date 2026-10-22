@@ -228,7 +228,7 @@ the target (2 by default). Every round past a target prints a `LIMIT_OVER` beaco
 `review_rounds` is a **wall** (D24): a review is the safety net of finished work, not a loop. The findings of the last
 round are corrected once without another review (`review.final_correction`, default true), the acceptance checks of
 that correction still run, and the piece carries `review_debt` with a `REVIEW_DEBT` beacon that the observer report
-lists for the look after the plan. A correction that changed nothing, or a ceiling, registers the piece `blocked` with
+lists for the look after the plan. A final correction that changes no product file leaves the findings open as plan notes (`review_debt.corrected: false`) instead of calling them corrected; a spent run-wide budget (`review_rounds_batch`, `findings_batch`, `corrections_batch`) still wins over the wall. A correction that changed nothing, or a ceiling, registers the piece `blocked` with
 an escalation (`CHECKS_RED`, `REVIEW_LIMIT` when `final_correction` is false). A finding that
 did not reproduce is never a reason for a correction; a confirmed review finding corrected together with red checks is
 sent to the executor once, in that one round.

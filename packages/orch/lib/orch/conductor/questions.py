@@ -17,12 +17,11 @@ the revision is one higher).
 """
 from __future__ import annotations
 
-import calendar
 import json
 from pathlib import Path
-import time
 from typing import Optional
 
+from aicore.util import timefmt
 from aicore.util.redact import redact_text
 
 from orch.conductor.infrastructure.files import write_json
@@ -44,7 +43,10 @@ class QuestionError(Exception):
 
 
 def _epoch(text: str) -> float:
-    return calendar.timegm(time.strptime(text, "%Y-%m-%dT%H:%M:%SZ"))
+    value = timefmt.epoch(text)
+    if value is None:
+        raise ValueError(f"not a timestamp: {text!r}")
+    return int(value)
 
 
 def record(store: dict, asked: list, binding: dict, now: str) -> list:

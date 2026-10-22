@@ -7,6 +7,8 @@ import random
 import secrets
 import time
 
+from aicore.util import timefmt
+
 
 def mono() -> float:
     """The clock of the active run time."""
@@ -27,11 +29,11 @@ def unit_random() -> float:
 
 
 def utc_stamp(epoch: float) -> str:
-    return datetime.fromtimestamp(epoch, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return timefmt.utc_stamp(epoch)
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return timefmt.utc_stamp()
 
 
 def new_run_id() -> str:

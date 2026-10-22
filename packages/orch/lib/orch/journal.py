@@ -7,15 +7,14 @@ on ``events.lock``; a reader sees only complete lines. POSIX only (``fcntl.flock
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-import errno
-import fcntl
 import json
 import os
 from pathlib import Path
 import re
-import time
 
 from aicore.state import ensure_dir, project_state_dir, state_dir
+from aicore.util.io import durable_replace
+from aicore.util.lock import FileLock
 
 from orch import contracts
 from orch.port import PortError
@@ -40,20 +39,6 @@ def run_dir(run_id: str, *, project: str | os.PathLike | None = None,
         raise PortError("INPUT_INVALID", f"run id {run_id!r} is not usable as a directory name")
     base = project_state_dir(project, "orch") if project is not None else state_dir("orch", env=env)
     return base / "runs" / run_id
-
-
-def _acquire(fd: int, path: Path) -> None:
-    deadline = time.monotonic() + LOCK_TIMEOUT_S
-    while True:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            return
-        except OSError as exc:
-            if exc.errno not in (errno.EAGAIN, errno.EACCES):
-                raise
-        if time.monotonic() >= deadline:
-            raise TimeoutError(f"the journal lock {path} stayed busy for {LOCK_TIMEOUT_S:g} s")
-        time.sleep(LOCK_POLL_S)
 
 
 def _complete_lines(path: Path) -> Iterator[bytes]:
@@ -102,9 +87,10 @@ def append_event(directory: str | os.PathLike, event: dict) -> bool:
     if len(body) + 1 > MAX_LINE:
         raise PortError("INPUT_INVALID", f"a journal line is limited to {MAX_LINE} bytes")
     ensure_dir(directory)
-    lock_fd = os.open(directory / LOCK_FILE, os.O_RDWR | os.O_CREAT, 0o600)
+    lock = FileLock(directory / LOCK_FILE)
+    if not lock.acquire(blocking=True, timeout=LOCK_TIMEOUT_S, poll=LOCK_POLL_S):
+        raise TimeoutError(f"the journal lock {directory / LOCK_FILE} stayed busy for {LOCK_TIMEOUT_S:g} s")
     try:
-        _acquire(lock_fd, directory / LOCK_FILE)
         path = directory / EVENTS_FILE
         fd = os.open(path, os.O_RDWR | os.O_APPEND | os.O_CREAT, 0o600)
         try:
@@ -127,7 +113,7 @@ def append_event(directory: str | os.PathLike, event: dict) -> bool:
         finally:
             os.close(fd)
     finally:
-        os.close(lock_fd)  # closing the descriptor releases the flock
+        lock.release()
     return True
 
 
@@ -148,25 +134,8 @@ def write_doc(directory: str | os.PathLike, name: str, doc: dict) -> Path:
     """Write ``run.json``, ``launch-plan.json`` or ``receipts/<n>.json`` atomically (temporary file, then replace)."""
     target = _doc_path(directory, name)
     ensure_dir(target.parent)
-    temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
-    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(json.dumps(doc, sort_keys=True, ensure_ascii=False, indent=2) + "\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, target)
-        directory_fd = os.open(target.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | os.O_CLOEXEC)
-        try:
-            os.fsync(directory_fd)
-        finally:
-            os.close(directory_fd)
-    except BaseException:
-        try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
-        raise
+    text = json.dumps(doc, sort_keys=True, ensure_ascii=False, indent=2) + "\n"
+    durable_replace(target, text.encode("utf-8"), mode=0o600)
     return target
 
 

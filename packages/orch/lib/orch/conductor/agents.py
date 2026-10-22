@@ -21,6 +21,8 @@ import json
 from pathlib import Path
 from typing import Optional
 
+from orch.conductor.infrastructure.files import write_json
+
 AGENTS = "agents"
 USAGE_KEYS = ("input", "cached", "output")
 
@@ -31,10 +33,7 @@ def agent_id(run_id: str, number: int) -> str:
 
 
 def _write(path: Path, doc: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.tmp")
-    temporary.write_text(json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    write_json(path, doc)
 
 
 def start(item_directory: Path, agent: str, *, role: str, route: dict, step: str, attempt: int, prompt: str,

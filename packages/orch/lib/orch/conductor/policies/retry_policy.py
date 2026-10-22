@@ -2,9 +2,10 @@
 route or a stop; a quota with a known reset gates the provider on the machine."""
 from __future__ import annotations
 
-import calendar
 import time
 from typing import Optional
+
+from aicore.util import timefmt
 
 from orch import retry
 from orch.conductor import gates, options as opts, prompts
@@ -85,7 +86,7 @@ def start_route(self, item: Item, key: str, role: str, route: dict, cancel) -> d
         self._provider_limit(item, key, role, route["provider"], gate["class"], "CAPACITY_GATED", until=gate["until"])
         self._route_fallback(item, key, role, route, found, ["CAPACITY_GATED"])
         return found
-    left = max(0, calendar.timegm(time.strptime(gate["until"], "%Y-%m-%dT%H:%M:%SZ")) - clock.wall())
+    left = max(0, timefmt.epoch(gate["until"]) - clock.wall())
     if left <= item.options["limits"].get("provider_wait_max_s", 900):
         self._wait(item, key, role, {"class": gate["class"]}, int(left) + 1, cancel)
         return route

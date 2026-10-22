@@ -8,7 +8,6 @@ reported verdict, produced by the executor. ``live`` checks are not run by the c
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import glob
 import hashlib
@@ -25,6 +24,7 @@ import threading
 import time
 from typing import Optional
 
+from aicore.util import timefmt
 from aicore.util.io import durable_replace
 
 from orch import contracts
@@ -36,7 +36,7 @@ TAIL_LINES = 40
 
 
 def _utc() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return timefmt.utc_stamp()
 
 
 def git(project: Path, *args: str) -> str:
@@ -937,9 +937,10 @@ def _reusable(target: Path, check: dict, *, cwd: Path, root: Path, candidate: di
     try:
         if (root / procedure.get("cwd", ".")).resolve() != cwd:
             return None
-        seconds = (datetime.strptime(doc["finished_at"], "%Y-%m-%dT%H:%M:%SZ")
-                   - datetime.strptime(doc["started_at"], "%Y-%m-%dT%H:%M:%SZ")).total_seconds()
+        seconds = timefmt.seconds_between(doc["started_at"], doc["finished_at"])
     except (OSError, ValueError, KeyError):
+        return None
+    if seconds is None:
         return None
     return {"reused_from": doc["evidence_id"], "original_seconds": max(0, int(seconds)), "tail": ""}
 

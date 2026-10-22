@@ -7,7 +7,7 @@ import re
 from typing import Callable, NamedTuple
 
 import aicore
-from aicore.util import digest as canonical
+from aicore.util import digest as canonical, timefmt
 
 from orch import CONTRACT_VERSION
 from orch import schema
@@ -248,10 +248,10 @@ def _parse_ts(value: object) -> tuple[datetime, str] | None:
     match = _TS.fullmatch(value) if isinstance(value, str) else None
     if match is None:
         return None
-    try:
-        return datetime.strptime(match.group(1), "%Y-%m-%dT%H:%M:%S"), match.group(2) or ""
-    except ValueError:  # a pattern-valid value that is not a calendar time; the schema check cannot tell
+    whole = timefmt.parse_rfc3339(match.group(1))
+    if whole is None:  # a pattern-valid value that is not a calendar time; the schema check cannot tell
         return None
+    return whole, match.group(2) or ""
 
 
 def _ts_before(first: tuple[datetime, str], second: tuple[datetime, str]) -> bool:

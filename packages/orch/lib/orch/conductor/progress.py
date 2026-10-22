@@ -6,7 +6,6 @@ Every line is a ``conductor/v1`` ``progress-line``. stderr gets a readable line 
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -14,6 +13,7 @@ import sys
 import threading
 from typing import Callable, Optional
 
+from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_document
 
 MODES = ("text", "json-lines", "quiet")
@@ -27,7 +27,7 @@ WORDS = {"run.start": "run start", "run.resume": "run resume", "run.end": "run e
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return timefmt.utc_stamp()
 
 
 def human_duration(seconds: float) -> str:
@@ -158,9 +158,10 @@ def summarize(lines: list) -> dict:
 
 
 def _seconds(start: str, end: str) -> int:
-    def epoch(text: str) -> float:
-        return datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()
-    return max(0, int(epoch(end) - epoch(start)))
+    elapsed = timefmt.seconds_between(start, end)
+    if elapsed is None:
+        raise ValueError(f"not a timestamp: {start!r} .. {end!r}")
+    return max(0, int(elapsed))
 
 
 def check_context(cmd) -> str:

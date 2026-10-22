@@ -7,7 +7,6 @@ Newest first, then by run id; an empty project gives an empty list; a run whose 
 """
 from __future__ import annotations
 
-import datetime
 import json
 import shutil
 import time
@@ -15,6 +14,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from aicore.ext.plugins import safe_text
+from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_text
 
 from orch.conductor import progress
@@ -132,12 +132,7 @@ def text(rows: List[dict]) -> str:
 def _age_days(directory: Path, now: float) -> float:
     """Days since the last journal line of the run (its folder time when the journal is empty or unreadable)."""
     last = progress.summarize(progress.read_lines(directory))["last_ts"]
-    stamp = None
-    if isinstance(last, str):
-        try:
-            stamp = datetime.datetime.fromisoformat(last.replace("Z", "+00:00")).timestamp()
-        except ValueError:
-            stamp = None
+    stamp = timefmt.epoch(last) if isinstance(last, str) else None
     if stamp is None:
         try:
             stamp = directory.stat().st_mtime

@@ -6,13 +6,13 @@ model/effort it means. A binding adds only its own projection of a stage: argv, 
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping
-from datetime import datetime, timezone
+from datetime import datetime
 import json
 import os
 from pathlib import Path
 
 import aicore
-from aicore.util import digest as _digest
+from aicore.util import digest as _digest, timefmt
 
 import orch
 from orch import CONTRACT_VERSION, contracts, settings as orch_settings
@@ -80,8 +80,10 @@ def _order(stages: list[dict]) -> list[dict]:
 
 def _moment(text: str) -> datetime:
     """A launch-plan timestamp (UTC, optional fraction) as a datetime; the fraction counts."""
-    whole, _, fraction = text.rstrip("Z").partition(".")
-    return datetime.strptime(whole, "%Y-%m-%dT%H:%M:%S").replace(microsecond=int((fraction + "000000")[:6]))
+    moment = timefmt.parse_rfc3339(text)
+    if moment is None:
+        raise ValueError(f"not a launch-plan timestamp: {text!r}")
+    return moment
 
 
 def is_stale(cap: Mapping, now: str) -> bool:
@@ -215,7 +217,7 @@ def prepare_common(binding: str, input_doc: dict, policy: dict, roles: Mapping[s
             raise PortError("INPUT_INVALID", f"role manifest {role_id!r} does not match exec/v1", {"issues": issues})
     check_skills(skills)
     current = settings if settings is not None else orch_settings.defaults()
-    created = now or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    created = now or timefmt.utc_stamp()
     refuse_stale = current.capabilities_stale == "refuse"
     minimum = input_doc["route"]["minimum"]
     ordered = _order(policy["stages"])

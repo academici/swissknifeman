@@ -13,12 +13,12 @@ options.
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import datetime
 import json
 from pathlib import Path
 import re
 import time
 
+from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_document
 from orch.conductor import agents as agents_mod, progress as progress_mod, prompts as prompts_mod, questions as questions_mod
 from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
@@ -33,7 +33,10 @@ _SUBSET_FLAG = re.compile(r"(?:^|\s)(?:-p|--pattern)(?:\s|=|$)")
 
 
 def _seconds(ts: str) -> float:
-    return datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+    value = timefmt.epoch(ts)
+    if value is None:
+        raise ValueError(f"not a timestamp: {ts!r}")
+    return value
 
 
 def _events(project: Path, since: str, until: str, correlations: set) -> tuple:

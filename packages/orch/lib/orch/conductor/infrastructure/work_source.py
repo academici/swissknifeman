@@ -11,13 +11,13 @@ import json
 import io
 import os
 from contextlib import redirect_stderr, redirect_stdout
-from datetime import datetime, timezone
 from pathlib import Path
 import shlex
 import sys
 from typing import Callable, Optional
 
 from aicore.state import blobs
+from aicore.util import timefmt
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 from aicore.workspace import WorkspaceError, read_marker
 
@@ -131,9 +131,9 @@ def receipt_closes(kind: str, doc: Optional[dict], item: Item, *, state_saved_ns
         # started_at has second precision in existing journals. The publication of state.json also fences a retry
         # within that same second; a later state save can conservatively require an idempotent repeat.
         try:
-            started = datetime.fromisoformat(step["started_at"].replace("Z", "+00:00"))
-            if started.tzinfo is None:
-                started = started.replace(tzinfo=timezone.utc)
+            started = timefmt.parse_rfc3339(step["started_at"])
+            if started is None:
+                raise ValueError("started_at is not a timestamp")
             boundary = max(int(started.timestamp() * 1_000_000_000), state_saved_ns or 0)
         except (KeyError, TypeError, ValueError, AttributeError, OverflowError):
             return False, "repeated: receipt of another attempt"

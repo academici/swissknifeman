@@ -15,20 +15,17 @@ up to the second: a gate never opens early. POSIX only (``fcntl.flock``); stdlib
 """
 from __future__ import annotations
 
-import calendar
-import errno
-import fcntl
 import json
 import math
 import os
 from pathlib import Path
 import re
 import stat
-import time
 from typing import Mapping, Optional
 
 from aicore.state import locations
-from aicore.util import io
+from aicore.util import io, timefmt
+from aicore.util.lock import FileLock
 
 SCHEMA = "provider-gates/v1"
 FILE = "provider-gates.json"
@@ -36,7 +33,6 @@ LOCK_FILE = "provider-gates.lock"
 LOCK_TIMEOUT_S = 10.0
 LOCK_POLL_S = 0.02
 _PROVIDER_RE = re.compile(r"[a-z][a-z0-9-]*")
-_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 _ENTRY_KEYS = ("until", "class", "code", "set_by", "set_at")
 
 
@@ -52,16 +48,11 @@ def path(*, env: Optional[Mapping[str, str]] = None, home=None) -> Path:
 
 
 def _stamp(epoch: float) -> str:
-    return time.strftime(_TIME_FORMAT, time.gmtime(epoch))
+    return timefmt.utc_stamp(epoch)
 
 
 def _epoch(value: object) -> Optional[float]:
-    if not isinstance(value, str):
-        return None
-    try:
-        return float(calendar.timegm(time.strptime(value, _TIME_FORMAT)))
-    except ValueError:
-        return None
+    return timefmt.epoch(value) if isinstance(value, str) else None
 
 
 def _read(file: Path) -> dict:
@@ -106,44 +97,30 @@ def blocked(provider: str, now: float, *, file: Optional[Path] = None) -> Option
 class _Locked:
     """Exclusive ``flock`` on the lock file beside the gates file, held for a read-modify-write.
 
-    The lock is only good while its file is the one at the path: when the file was replaced between ``open`` and
-    ``flock`` (someone removed it), the descriptor guards a dead inode, so the lock is taken again on the new file.
+    The lock is only good while its file is the one at the path (``aicore.util.lock.FileLock`` takes it again on the
+    new file when the old one was replaced between ``open`` and ``flock``).
     """
 
     def __init__(self, file: Path):
         self.file = file
-        self.fd = None
+        self.lock: Optional[FileLock] = None
+
+    @property
+    def fd(self) -> Optional[int]:
+        """The descriptor that holds the lock (``None`` when not held)."""
+        return None if self.lock is None else self.lock.fd
 
     def __enter__(self):
         self.file.parent.mkdir(parents=True, exist_ok=True)
-        lock = self.file.with_name(LOCK_FILE)
-        deadline = time.monotonic() + LOCK_TIMEOUT_S
-        while True:
-            fd = os.open(lock, os.O_RDWR | os.O_CREAT, 0o600)
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except OSError as error:
-                os.close(fd)
-                if error.errno not in (errno.EAGAIN, errno.EACCES):  # anything but "held by another process"
-                    raise
-            else:
-                try:
-                    current = os.path.samestat(os.fstat(fd), os.stat(lock))
-                except FileNotFoundError:
-                    current = False
-                if current:
-                    self.fd = fd
-                    return self
-                os.close(fd)  # the lock file was replaced under us: lock the one that is there now
-            if time.monotonic() >= deadline:
-                raise GateError("GATES_LOCKED", f"{lock} is held by another process for more than {LOCK_TIMEOUT_S:g} s")
-            time.sleep(LOCK_POLL_S)
+        path = self.file.with_name(LOCK_FILE)
+        lock = FileLock(path)
+        if not lock.acquire(blocking=True, timeout=LOCK_TIMEOUT_S, poll=LOCK_POLL_S):
+            raise GateError("GATES_LOCKED", f"{path} is held by another process for more than {LOCK_TIMEOUT_S:g} s")
+        self.lock = lock
+        return self
 
     def __exit__(self, *exc):
-        try:
-            fcntl.flock(self.fd, fcntl.LOCK_UN)  # a forked copy of the descriptor must not keep the lock
-        finally:
-            os.close(self.fd)
+        self.lock.release()  # LOCK_UN first: a forked copy of the descriptor must not keep the lock
 
 
 def _write(file: Path, gates: dict) -> None:

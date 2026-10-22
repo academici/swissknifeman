@@ -334,7 +334,7 @@ Run every acceptance check of the input yourself, exactly as written, before you
 """
 
 
-def _conductor_checks(input_doc: dict, containers: bool = True) -> str:
+def _conductor_checks(input_doc: dict, containers: bool = True, self_check: bool = False) -> str:
     """The acceptance checks the conductor itself runs after the report, by id and expectation and never by command: the
     executor does not run them (a full run of them by the executor measured 30–50% of its step). What it cannot prove in its
     environment stays ``pending`` for the conductor; it is not an escalation. ``containers`` says whether the executor can
@@ -348,12 +348,41 @@ def _conductor_checks(input_doc: dict, containers: bool = True) -> str:
     return ("\nThe conductor runs these acceptance checks itself right after your report:\n"
             + "\n".join(f"- `{check['id']}`: {check.get('expect', '-')}" for check in checks)
             + "\n\nDo not run them, nor the whole suites they start"
+            + (" (the self-check section below names the commands you do run)" if self_check else "")
             + ("" if containers else ", and do not start containers or call docker or compose")
             + f": prove your change with what is cheap ({use}. A proof that needs something your environment does not give "
               "(" + ("" if containers else "a container, the docker socket, ")
             + "write access to `.git`, the network, a credential) is not a blocker: finish the work, name each check you "
               "could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` and keep "
               "`checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n")
+
+
+def _self_check(commands) -> str:
+    """The "Ready to hand over" section (``checks.self_check``): the cheap commands of the project the executor runs once
+    on its final tree, so the expensive acceptance confirms finished work instead of finding the next defect. They are
+    not acceptance checks; the report lists them in ``self_check``, a claim that proves nothing to the conductor."""
+    if not commands:
+        return ""
+    return ("## Ready to hand over\n\n"
+            "Review and acceptance are a safety net, not the way to find your mistakes: report work you would hand over "
+            "as finished.\n\n"
+            "- While you work, run the narrow tests of what you change, kept in the repository's test files rather than "
+            "throwaway scripts.\n"
+            "- A new rule, checker, invariant or migration gets at least one negative example: a test that fails "
+            "without it.\n"
+            "- Before you report, run each self-check command once on your final tree:\n"
+            + "\n".join(f"  - `{command}`" for command in commands)
+            + "\n- A red one: fix it, rerun what failed, then the command again. When the same failure comes back three "
+              "times, or its cause is outside the write set, stop and report it as a deviation with the failing test "
+              "and its error.\n"
+              "- These are not the acceptance checks above, and the conductor still runs those. List each self-check "
+              "command in `self_check` of the report as `{\"cmd\": \"<command>\", \"exit\": <exit of its last run>}`.\n")
+
+
+def _self_check_again(commands) -> str:
+    """The sentence of a correction round that asks for the self-check again."""
+    return (" and run the self-check commands again (" + ", ".join(f"`{command}`" for command in commands) + ")"
+            if commands else "")
 
 
 DEVIATION_FIX = "Fix the deviation named in the section above: change only what its evidence names, inside the write set."
@@ -424,7 +453,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              role: str = "executor", roles_dir=None, stub=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
-             file_tools: bool = False, containers: bool = True) -> list:
+             file_tools: bool = False, containers: bool = True, self_check=()) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
@@ -444,11 +473,14 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append([Block("research", f"research-result:{research_origin}" if research_origin else "research-result",
                             _research(research))])
     if targeted_tests:
-        checks = _conductor_checks(input_doc, containers)
+        checks = _conductor_checks(input_doc, containers, bool(self_check))
         if checks:
             parts.append([Block("verification", CONDUCTOR, "## Verification\n" + checks)])
+        if self_check:
+            parts.append([Block("verification", CONDUCTOR, _self_check(self_check))])
     else:
         parts.append([Block("verification", CONDUCTOR, _RUN_CHECKS)])
+        self_check = ()
     if rules:
         parts.append([Block("run_rules", CONDUCTOR, "## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))])
     if answers:
@@ -456,14 +488,14 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests))])
+        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests, self_check))])
     parts.append([_progress(item, step)])
     parts.append([Block("result_contract", CONDUCTOR, "## Result\n\n" + _STAGE_REPORT)])
     return _join(parts)
 
 
 def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), interrupted: str = "", fix: str = "",
-                     changed_paths=(), targeted_tests: bool = True) -> list:
+                     changed_paths=(), targeted_tests: bool = True, self_check=()) -> list:
     """The delta prompt of a round in a resumed executor session: the session holds the task, the rules and the result
     contract of the latest full prompt of the piece, so it gets only what this round asks: the correction (``fix`` is the
     deviation to fix), the answers it has not seen, the note of an interrupted round, the paths changed so far and the
@@ -478,7 +510,8 @@ def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), 
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests))])
+        parts.append([Block("correction", CONDUCTOR,
+                            _correction(correction, targeted_tests, self_check if targeted_tests else ()))])
     if interrupted:
         parts.append([Block("interrupted", CONDUCTOR, "## Interrupted round\n\n" + interrupted.strip())])
     if changed_paths:
@@ -495,13 +528,14 @@ def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), 
 CHANGED_PATHS = 60  # changed paths named in a delta prompt
 
 
-def _correction(correction: str, targeted_tests: bool) -> str:
+def _correction(correction: str, targeted_tests: bool, self_check=()) -> str:
     """The correction block of a full prompt and of a resumed one. The text below is the only current assignment;
     product requirements and authority are not restated here because the task still holds them."""
     return ("## Correction\n\nYour previous attempt is in the working tree. The current correction focus below is the "
             "only assignment of this round. Earlier correction instructions are historical and are not a current "
             "assignment. The goal, the scope, the authority and the acceptance contract stay in force. Make exactly "
-            "this correction, inside the same scope" + (" and re-run the tests of what you touched" if targeted_tests
+            "this correction, inside the same scope" + (" and re-run the tests of what you touched"
+                                                         + _self_check_again(self_check) if targeted_tests
                        else ", then run the acceptance checks again")
             + (". Do not rerun acceptance checks the conductor owns." if targeted_tests else ".")
             + "\n\n" + _fence(correction, "text"))

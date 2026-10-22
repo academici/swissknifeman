@@ -383,8 +383,8 @@ Docker/DB/vendor/общий ledger получают одного владель�
 
 ## 19. Источники и навигация
 
-Текущий execution worktree: `/home/vostrikov/projects/edufy-plan2-p42`.
-Исходный Edufy worktree: `/home/vostrikov/projects/edufy`.
+Текущий execution worktree: `~/projects/edufy-plan2-p42`.
+Исходный Edufy worktree: `~/projects/edufy`.
 Наблюдаемый item base: `539c1f5609611d72ba13500c64eb90fed8de3fc6`.
 
 В execution worktree runtime-префикс `storage/hybrid/target-arch-operator/p42/` содержит:
@@ -401,7 +401,7 @@ Docker/DB/vendor/общий ledger получают одного владель�
 - `replay-consult/`: отдельные native logs, prompts, launch metadata, мнения и source hashes двух ограниченных консультаций.
 - `current-checkpoint.json`: наблюдавшийся stale checkpoint; его содержимое может быть исправлено после этого разбора, поэтому приведённый факт относится к чтению 2026-10-22.
 
-План доступен через `plans/2026.10.19-№1-TARGET-ARCH` и хранится в workspace plans store. В `artifacts/P4.2/` сохранены:
+План доступен через `план TARGET-ARCH skm (2026-10-19)` и хранится в workspace plans store. В `artifacts/P4.2/` сохранены:
 
 - `U1-source1/`, `U1-routes1/`: результаты и исходные RED;
 - `U2-acceptance/`: реальный V201, runner result, actual receipt и candidate manifest;

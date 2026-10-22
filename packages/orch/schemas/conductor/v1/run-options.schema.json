@@ -162,6 +162,11 @@
           "description": "When false (default) the executor is told to run only the tests that cover the code it changed, because the conductor runs every acceptance check right after its report; true lets it run the checks itself.",
           "type": "boolean"
         },
+        "self_check": {
+          "description": "Cheap commands of the project (the tests of the touched units and their dependents, lint) that the executor runs once on its final tree before it reports, fixing what goes red, and lists in the `self_check` field of its stage-report. They are not acceptance: the conductor still runs every acceptance check. Default empty: the executor proves its change with single test files.",
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
         "overlap_review": {
           "description": "The checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated after the correction. Default false.",
           "type": "boolean"

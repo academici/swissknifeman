@@ -294,15 +294,28 @@ class RunnerTests(RunnerFixture):
             with patch.dict(os.environ, {"SKM_CHECK_RUN": run_id}):
                 self.assertNotIn("[cached]", self.run_runner("--tier", "all")[1])
 
+    def test_conductor_run_never_counts_green_of_a_manual_or_self_check_run(self):
+        self.assertEqual(self.run_runner()[0], 0)  # an executor's self-check: no SKM_CHECK_RUN, writes green.json
+        self.assertTrue(self.module.read_cache(self.module.cache_file()))
+        self.log.unlink()
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "acceptance"}):
+            code, out, _ = self.run_runner()
+            self.assertEqual(code, 0)
+            self.assertNotIn("[cached]", out)
+            self.assertTrue(any(s.startswith("a test") for s in self.lines()))
+            self.log.unlink()
+            self.assertIn("[cached] packages/a:", self.run_runner()[1])  # its own receipts are reused within the run
+
     def test_corrupt_receipts_are_misses_and_replaced_and_old_runs_pruned(self):
         store = self.module.cache_file()
-        for filename, tier in (("green.json", "fast"), ("run-r2.json", "all")):
+        for filename, tier, run_id in (("green.json", "fast", ""), ("run-r2.json", "all", "r2"),
+                                       ("run-r3.json", "fast", "r3")):
             path = store.with_name(filename)
             path.write_text("{broken")
             old = store.with_name("run-old.json")
             old.write_text("{}")
             os.utime(old, (1, 1))
-            with patch.dict(os.environ, {"SKM_CHECK_RUN": "r2"}):
+            with patch.dict(os.environ, {"SKM_CHECK_RUN": run_id}):
                 self.assertEqual(self.run_runner("--tier", tier)[0], 0)
             self.assertTrue(self.module.read_cache(path))
             if tier == "all":

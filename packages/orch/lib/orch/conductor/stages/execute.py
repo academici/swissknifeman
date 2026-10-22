@@ -50,6 +50,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                   rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
+                                  self_check=item.options["checks"].get("self_check") or (),
                                   skills=self._skills(item, "executor"),
                                   repo_rules=self._repo_rules(item, "executor"),
                                   skill_texts=self._skill_texts(item, "executor"),
@@ -158,7 +159,8 @@ def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: 
                if name.startswith("executor.") and name != key and isinstance(step.get("result"), dict)]
     return prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
                                     fix=fix, changed_paths=earlier[-1] if earlier else [],
-                                    targeted_tests=not item.options["checks"]["executor_runs_checks"])
+                                    targeted_tests=not item.options["checks"]["executor_runs_checks"],
+                                    self_check=item.options["checks"].get("self_check") or ())
 
 
 def batch_note(self, item: Item) -> str:

@@ -60,9 +60,12 @@ DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "block", "fence": "pr
 # pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
 SESSION_MODES = ("handoff", "shared", "per-item")
 DEFAULT_SESSION = {"executor": "handoff"}
+# ``self_check``: the project's cheap commands the executor runs once on its final tree before it reports (the tests of the
+# units it touched and their dependents, lint); empty keeps the old "single test files" rule. They are not acceptance:
+# the conductor still runs every acceptance check itself, and the executor's claims about them prove nothing.
 DEFAULT_CHECKS = {"parallel": 2, "overlap_review": False, "executor_runs_checks": False,
                   "red_first": True, "fail_fast": True, "reuse": True,
-                  "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
+                  "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"], "self_check": []}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 # A review is too dear to lose when its provider cannot start, is gated or fails: the default reviewer (grok) has a fallback.
 # A layer with its own ``fallback_routes`` replaces this list, ``fallback_routes: []`` ends it.

@@ -1,0 +1,13 @@
+{
+  "status": "done",
+  "summary": "s",
+  "changed_paths": [],
+  "checks_run": [],
+  "self_check": [
+    {
+      "cmd": "python3 scripts/affected-tests.py --run"
+    }
+  ],
+  "evidence": [],
+  "open_issues": []
+}

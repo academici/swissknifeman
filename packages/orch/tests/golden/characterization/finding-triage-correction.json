@@ -349,6 +349,7 @@
         "id": "V1",
         "kind": "acceptance",
         "log": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/checks/2/V1.log",
+        "reuse_miss": "reuse miss: candidate.dirty_digest, fingerprint=<digest>",
         "seconds": 0.0,
         "tail": ""
        }

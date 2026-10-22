@@ -215,6 +215,12 @@
      1
     ],
     "check_fixes_used": 1,
+    "correction_baselines": {
+     "2": {
+      "input": "<digest>",
+      "product": "<digest>"
+     }
+    },
     "corrections_at": [],
     "corrections_used": 0,
     "executor_started": true,
@@ -296,6 +302,7 @@
         "id": "V1",
         "kind": "acceptance",
         "log": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/checks/2/V1.log",
+        "reuse_miss": "reuse miss: prior-not-green, candidate.dirty_digest, fingerprint=<digest>",
         "seconds": 0.0,
         "tail": ""
        }

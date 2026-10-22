@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "52f9f7f67ca9",
-  "reason": "Release v0.32.0: synchronize planner plugin version with umbrella",
+  "captured_from": "36bbd3d56783",
+  "reason": "ad8301071 changed the Codex economy route (gpt-6-luna); the generated provider-model-roles.md was right, its digest was not recaptured",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

@@ -46,6 +46,7 @@ RUN_ID = re.compile(r"\d{8}T\d{6}Z-[0-9a-f]{6}")
 DIGEST = re.compile(r"(?<![0-9a-f])[0-9a-f]{24,64}(?![0-9a-f])")  # git commits, content digests, orch run ids
 WAITING = re.compile(r"waiting \d+ s")  # the reset of a fake quota is "now + 3 s": the wait is rounded by the clock
 SHORT_DIGEST = re.compile(r"(?<=@)[0-9a-f]{12}\b")  # the digest suffix of an input id
+SHORT_FINGERPRINT = re.compile(r"(?<=fingerprint=)[0-9a-f]{12}\b")  # reuse_miss names the environment hash
 
 
 def normalize(value, paths: dict):
@@ -61,7 +62,7 @@ def normalize(value, paths: dict):
             value = value.replace(text, paths[text])
         value = TIME.sub("<time>", value)
         value = WAITING.sub("waiting <n> s", RUN_ID.sub("<run>", value))
-        return SHORT_DIGEST.sub("<digest>", DIGEST.sub("<digest>", value))
+        return SHORT_FINGERPRINT.sub("<digest>", SHORT_DIGEST.sub("<digest>", DIGEST.sub("<digest>", value)))
     return value
 
 

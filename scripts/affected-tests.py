@@ -28,8 +28,9 @@ surfaces fall back to the full owner/dependent closure. JSON explains each oblig
 Green results use content, Python, runner/config/dependency bytes, tools and execution environment; inputs are checked
 again after execution. The git directory's affected-tests/ holds atomically merged green.json and durations.json.
 Tier all never reads green.json: only a safe SKM_CHECK_RUN enables reuse in run-<id>.json within that conductor run.
-With a safe SKM_CHECK_RUN every tier keeps to run-<id>.json: green.json of manual runs and of the executor's self-check
-is never acceptance evidence (accident prevention, not a trust boundary: an open-access role can write the git directory).
+With a safe SKM_CHECK_RUN the fast and full tiers use conductor.json (reused across conductor runs) and never green.json,
+which manual runs and the executor's self-check write: those are never acceptance evidence (accident prevention, not a
+trust boundary: an open-access role can write the git directory).
 Manual tier-all runs are full; --no-cache disables all reuse. Run receipts older than 14 days are pruned on write.
 """
 from __future__ import annotations
@@ -630,10 +631,11 @@ def main(argv=None) -> int:
     run_id = os.environ.get("SKM_CHECK_RUN", "")
     store = None
     if args.cache:
-        # A conductor check (a safe SKM_CHECK_RUN) keeps to the receipts of its own run in every tier: green.json is
-        # also written by the executor's self-check, and acceptance must not count those as its own evidence.
+        # A conductor check (a safe SKM_CHECK_RUN) never reads green.json: the executor's self-check writes it, and
+        # acceptance must not count that as its own evidence. Its fast and full tiers keep conductor.json across runs
+        # (content-keyed, so an unchanged unit is reused by the next item); tier all keeps to the receipts of its run.
         if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id):
-            store = primary.with_name(f"run-{run_id}.json")
+            store = primary.with_name(f"run-{run_id}.json" if args.tier == "all" else "conductor.json")
         elif args.tier != "all":
             store = primary
     green = read_cache(store) if store else {}

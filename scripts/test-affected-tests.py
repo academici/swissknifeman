@@ -305,11 +305,14 @@ class RunnerTests(RunnerFixture):
             self.assertTrue(any(s.startswith("a test") for s in self.lines()))
             self.log.unlink()
             self.assertIn("[cached] packages/a:", self.run_runner()[1])  # its own receipts are reused within the run
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "next-item"}):
+            self.assertIn("[cached] packages/a:", self.run_runner()[1])  # and by the next conductor run
+        self.assertTrue(self.module.cache_file().with_name("conductor.json").exists())
 
     def test_corrupt_receipts_are_misses_and_replaced_and_old_runs_pruned(self):
         store = self.module.cache_file()
         for filename, tier, run_id in (("green.json", "fast", ""), ("run-r2.json", "all", "r2"),
-                                       ("run-r3.json", "fast", "r3")):
+                                       ("conductor.json", "fast", "r3")):
             path = store.with_name(filename)
             path.write_text("{broken")
             old = store.with_name("run-old.json")

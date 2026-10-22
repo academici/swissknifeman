@@ -119,6 +119,16 @@ class Case(unittest.TestCase):
     def item(self, ref: str) -> dict:
         return json.loads(run(self.project, "--output", "json", "get", self.plan, ref).stdout)["data"]["doc"]
 
+    def trace_planner_cli(self):
+        wrapper, log = Path(self.tmp.name) / "plan-trace.py", Path(self.tmp.name) / "plan-argv.jsonl"
+        wrapper.write_text(
+            "import json, pathlib, subprocess, sys\n"
+            f"with pathlib.Path({str(log)!r}).open('a', encoding='utf-8') as stream:\n"
+            "    stream.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+            f"raise SystemExit(subprocess.run([sys.executable, {str(PLAN_PY)!r}, *sys.argv[1:]]).returncode)\n",
+            encoding="utf-8")
+        return wrapper, log
+
     def evidence(self, check="V1", exit_code=0, subject="P1.1") -> str:
         path = self.project / "ev" / f"{subject}-{check}.json"
         path.parent.mkdir(exist_ok=True)
@@ -137,6 +147,41 @@ class Case(unittest.TestCase):
 
 
 class ClaimTests(Case):
+    def test_claim_start_passes_strict_route_through_cli(self):
+        wrapper, log = self.trace_planner_cli()
+        with mock.patch.dict(os.environ, {"PLANNER_PLAN_PY": str(wrapper)}):
+            answer = self.claim(items=["P1.1"])
+        self.assertEqual(answer["status"], "claimed", answer)
+        starts = [argv for argv in map(json.loads, log.read_text().splitlines()) if argv[0] == "start"]
+        self.assertEqual(len(starts), 1)
+        self.assertIn("--strict-route", starts[0])
+
+    def test_claim_refuses_unknown_pool_model_even_when_interactive_policy_warns(self):
+        with mock.patch.dict(os.environ, {"SKM_PLANNER_ROUTING__UNKNOWN_MODEL": "warn"}):
+            answer = self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"], run_id="unknown",
+                             submission_id="sub-unknown", actor={**ACTOR, "model": "mystery-model"})
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "ROUTE_MODEL_UNKNOWN"), answer)
+        self.assertEqual(self.item("P1.1")["status"], "todo")
+
+    def test_interactive_config_refuses_unknown_model_through_cli(self):
+        with mock.patch.dict(os.environ, {"SKM_PLANNER_ROUTING__UNKNOWN_MODEL": "refuse"}):
+            answer = run(self.project, "start", self.plan, "P1.1", "--actor", "claude-code/mystery-model/high",
+                         "--no-scout", check=False)
+        self.assertEqual(answer.returncode, 1, answer.stdout)
+        self.assertIn("ROUTE_MODEL_UNKNOWN", answer.stderr)
+        self.assertEqual(self.item("P1.1")["status"], "todo")
+
+    def test_claim_refuses_structurally_corrupted_phase(self):
+        # Model an old/external edit: the current set verb refuses this damage before it reaches start.
+        path = self.project / "plans" / self.plan / "phases/P1/P1.2.json"
+        doc = json.loads(path.read_text())
+        doc["validation"] = []
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        answer = self.claim(items=["P1.1"])
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "PLAN_INVALID"), answer)
+        self.assertIn("P1.2.json/validation", answer["message"])
+        self.assertEqual(self.item("P1.1")["status"], "todo")
+
     def test_claim_takes_the_next_ready_item_and_owns_it(self):
         answer = self.claim()
         self.assertEqual((answer["status"], answer["ref"], answer["title"]), ("claimed", "P1.1", "A"))
@@ -555,6 +600,19 @@ class RegisterTests(Case):
 
 
 class RetryRegisterTests(Case):
+    def test_retry_start_passes_strict_route_through_cli(self):
+        self.claim()
+        blocked = self.register(status="blocked", report={"summary": "stuck", "open_issues": [
+            {"text": "needs the plan widened", "kind": "escalation"}]})
+        self.assertEqual(blocked["outcome"], "recorded")
+        wrapper, log = self.trace_planner_cli()
+        with mock.patch.dict(os.environ, {"PLANNER_PLAN_PY": str(wrapper)}):
+            answer = self.register(evidence={"V1": self.evidence()})
+        self.assertEqual(answer["outcome"], "recorded", answer)
+        starts = [argv for argv in map(json.loads, log.read_text().splitlines()) if argv[0] == "start"]
+        self.assertEqual(len(starts), 1)
+        self.assertIn("--strict-route", starts[0])
+
     def test_a_blocked_attempt_retried_by_its_run_registers_done_without_a_conflict(self):
         self.claim()
         blocked = self.register(status="blocked", report={"summary": "stuck", "open_issues": [

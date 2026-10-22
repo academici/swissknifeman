@@ -136,8 +136,11 @@ class ProcessGroupTests(ResearchCase):
                 os.kill(pid, 0)
             except ProcessLookupError:
                 return
-            stat = Path(f"/proc/{pid}/stat")
-            if stat.exists() and stat.read_text().rsplit(")", 1)[1].split()[0] == "Z":
+            try:
+                state = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0]
+            except (FileNotFoundError, ProcessLookupError):
+                return  # the child exited between the kill probe and the read: it is gone
+            if state == "Z":
                 return
             time.sleep(0.1)
         self.fail(f"the child {pid} of the timed-out source is still alive")

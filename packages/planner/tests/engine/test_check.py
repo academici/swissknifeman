@@ -5,6 +5,8 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
@@ -35,8 +37,9 @@ class CheckCase(unittest.TestCase):
         return [i for i in self.run_check() if i.code == code and i.level == level and (where is None or where in i.where)]
 
     def assertFound(self, code, where=None, level="error", count=None):
-        hits = self.found(code, level, where)
-        self.assertTrue(hits, f"no {level} {code} at {where!r}; got {self.run_check()}")
+        issues = self.run_check()
+        hits = [i for i in issues if i.code == code and i.level == level and (where is None or where in i.where)]
+        self.assertTrue(hits, f"no {level} {code} at {where!r}; got {issues}")
         if count is not None:
             self.assertEqual(len(hits), count, hits)
         return hits
@@ -51,6 +54,19 @@ class CheckCase(unittest.TestCase):
 
     def list_units(self, *ids):
         self.edit(P1 + "P1.1.json", lambda d: d.update(units=list(ids)))
+
+
+class AssertionHelperTests(unittest.TestCase):
+    def test_assert_found_reuses_issues_for_filtering_count_and_failure_diagnostics(self):
+        case = CheckCase()
+        issue = SimpleNamespace(code="sample", level="error", where="input/path")
+        case.run_check = Mock(return_value=[issue])
+        self.assertEqual(case.assertFound("sample", where="path", count=1), [issue])
+        case.run_check.assert_called_once_with()
+        case.run_check.reset_mock()
+        with self.assertRaisesRegex(AssertionError, "no error missing.*sample"):
+            case.assertFound("missing", where="path")
+        case.run_check.assert_called_once_with()
 
 
 class BaselineTests(CheckCase):
@@ -655,7 +671,7 @@ class WriteSetNoTestsTests(CheckCase):
         self.assertIn("lib/pkg/a.py", hits[0].message)
 
     def test_a_test_path_among_the_task_files_silences_it(self):
-        for test in ("tests/test_a.py", "lib/pkg/test_a.py", "src/a.test.ts", "tests/Feature/AaTest.php", "tests/**"):
+        for test in ("tests/test_a.py", "lib/pkg/test_a.py", "scripts/test-ci-matrix.py", "src/a.test.ts", "tests/Feature/AaTest.php", "tests/**"):
             with self.subTest(test=test):
                 self.assertEqual(self.hits([{"path": "lib/pkg/a.py", "change": "create"},
                                             {"path": test, "change": "any"}]), [])
@@ -666,7 +682,7 @@ class WriteSetNoTestsTests(CheckCase):
         self.assertEqual(self.hits([{"path": "lib/pkg/gone.py", "change": "delete"}]), [])
 
     def test_a_folder_that_only_ends_in_tests_is_not_a_test_path(self):
-        for path in ("notests/a.py", "mytests/a.py", "foo_tests/a.py"):
+        for path in ("notests/a.py", "mytests/a.py", "foo_tests/a.py", "scripts/contest-a.py", "scripts/testimony.py"):
             with self.subTest(path=path):
                 self.assertEqual(len(self.hits([{"path": "lib/a.py", "change": "create"},
                                                 {"path": path, "change": "create"}])), 1)

@@ -5,6 +5,8 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
@@ -12,8 +14,12 @@ _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from planner.plan import check, lifecycle, ops, store  # noqa: E402
+from planner.plan import check, cli, lifecycle, ops, settings, store  # noqa: E402
 from planner.plan.model import PlanError  # noqa: E402
+try:
+    from . import demo
+except ImportError:  # direct discovery from tests/engine
+    import demo
 
 OPUS = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
 SONNET = {"provider": "claude-code", "model": "claude-sonnet-5-5", "effort": "high"}
@@ -32,32 +38,31 @@ class LifeCase(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
+        self.plans = Path(tmp.name) / "plans"
+        commands = [
+            ["new", "--codename", "LIFE", "--title", "Life", "--repository", "r", "--owner", "o",
+             "--actor", "claude-code/claude-opus-5-5/high", "--message", "m", "--date", "2026.10.07"],
+            ["add-phase", "PLAN1", "--title", "One"],
+            ["set", "PLAN1", "P1", "--json", '{"goal":"g"}'],
+            ["add-item", "PLAN1", "P1", "--title", "First"],
+            ["add-item", "PLAN1", "P1", "--title", "Second"],
+            ["set", "PLAN1", "P1.1", "--json", json.dumps(DETAIL)],
+            ["set", "PLAN1", "P1.2", "--json", json.dumps({**DETAIL, "depends_on": ["P1.1"]})],
+            ["batches", "PLAN1", "P1", "--json", '[{"id":"B1","items":["P1.1","P1.2"],"mode":"recommended"}]'],
+            ["add-phase", "PLAN1", "--title", "Two"],
+            ["set", "PLAN1", "P2", "--json", '{"goal":"g"}'],
+            ["add-item", "PLAN1", "P2", "--title", "Third"],
+            ["set", "PLAN1", "P2.1", "--json", json.dumps({**DETAIL, "route": {"class": "frontier", "effort": "high"}})],
+            ["design-done", "PLAN1", "P1", "--actor", "claude-code/claude-opus-5-5/high"],
+        ]
         clock = itertools.count()
-
+        self.root = demo.copy_cli_seed(self.plans, commands, clock=clock)
+        base = datetime(2026, 10, 7, tzinfo=timezone.utc)
         def tick():
-            n = next(clock)
-            return f"2026-10-07T{n // 3600:02d}:{n // 60 % 60:02d}:{n % 60:02d}Z"
-
+            return (base + timedelta(seconds=next(clock))).strftime("%Y-%m-%dT%H:%M:%SZ")
         patcher = mock.patch.object(store, "now", tick)
         patcher.start()
         self.addCleanup(patcher.stop)
-        self.plans = Path(tmp.name) / "plans"
-        self.plans.mkdir()
-        plan = ops.new_plan("LIFE", "Life", plans_root=self.plans, repository="r", owner="o", authoring=OPUS,
-                            message="m", date="2026.10.07")
-        self.root = plan.root
-        ops.add_phase(plan, "One")
-        ops.patch(plan, "P1", {"goal": "g"})
-        ops.add_item(plan, "P1", "First")
-        ops.add_item(plan, "P1", "Second")
-        ops.patch(plan, "P1.1", copy.deepcopy(DETAIL))
-        ops.patch(plan, "P1.2", {**copy.deepcopy(DETAIL), "depends_on": ["P1.1"]})
-        ops.set_batches(plan, "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "recommended"}])
-        ops.add_phase(plan, "Two")
-        ops.patch(plan, "P2", {"goal": "g"})
-        ops.add_item(plan, "P2", "Third")
-        ops.patch(plan, "P2.1", {**copy.deepcopy(DETAIL), "route": {"class": "frontier", "effort": "high"}})
-        lifecycle.design_done(self.root, "P1", actor=OPUS)
 
     # ---- helpers
     def load(self):
@@ -125,6 +130,38 @@ class RoutePoolTests(unittest.TestCase):
         with self.assertRaises(PlanError) as caught:
             lifecycle.admitted_class("claude-code", "claude-opus-5-5", "/nonexistent/routing.json")
         self.assertEqual(caught.exception.code, "ROUTING_UNAVAILABLE")
+
+
+class FixtureSeedTests(unittest.TestCase):
+    def test_cli_seed_resumes_each_cases_deterministic_clock_on_cache_hits(self):
+        first, second = LifeCase(), LifeCase()
+        first.setUp()
+        self.addCleanup(first.doCleanups)
+        first_tick = store.now()
+        self.assertTrue(first_tick.startswith("2026-10-07T"))
+        stamps = [event["ts"] for event in first.events()]
+        stamps.append(first.load().plan["updated_at"])
+        self.assertTrue(all(stamp < first_tick for stamp in stamps))
+        with mock.patch.object(demo.subprocess, "run", side_effect=AssertionError("seed must be cached")):
+            second.setUp()
+        self.addCleanup(second.doCleanups)
+        self.assertEqual(store.now(), first_tick)
+        self.assertEqual(first.tree(), second.tree())
+
+    def test_cli_seed_is_independent_for_each_case_and_retains_negative_inputs(self):
+        first, second = LifeCase(), LifeCase()
+        first.setUp()
+        self.addCleanup(first.doCleanups)
+        second.setUp()
+        self.addCleanup(second.doCleanups)
+        self.assertNotEqual(first.root, second.root)
+        self.assertEqual(first.tree(), second.tree())
+        before = second.tree()
+        ops.patch(store.load_plan(first.root), "P1.1", {"title": "only the first case"})
+        self.assertEqual(second.tree(), before)
+        self.assertEqual(store.load_plan(second.root).items["P1.1"]["title"], "First")
+        self.assertEqual(store.load_plan(second.root).items["P1.2"]["depends_on"], ["P1.1"])
+        self.assertEqual(store.load_plan(second.root).phases["P2"]["design"], "skeleton")
 
 
 class StartTests(LifeCase):
@@ -210,6 +247,27 @@ class StartTests(LifeCase):
         self.assertEqual(self.events("start")[0]["data"]["route"], "ROUTE_MODEL_UNKNOWN")
         self.assertEqual(self.load().items["P1.1"]["status"], "in_progress")
 
+    def test_strict_route_refuses_unknown_model_without_writing(self):
+        self.refused("ROUTE_MODEL_UNKNOWN", lifecycle.start, ["P1.1"],
+                     {"provider": "claude-code", "model": "mystery-model"}, strict_route=True)
+        self.start("P1.1", strict_route=True)
+
+    def test_configured_refusal_applies_without_strict_route(self):
+        config = settings.for_plan(self.load())
+        strict = replace(config, values={**config.values, "routing.unknown_model": "refuse"})
+        with mock.patch.object(settings, "for_plan", return_value=strict):
+            self.refused("ROUTE_MODEL_UNKNOWN", lifecycle.start, ["P1.1"],
+                         {"provider": "claude-code", "model": "mystery-model"})
+            self.start("P1.1")
+
+    def test_cli_passes_strict_route_to_start(self):
+        with mock.patch.object(lifecycle, "start", side_effect=PlanError("ROUTE_MODEL_UNKNOWN", "unknown")) as start:
+            with mock.patch("sys.stderr"):
+                code = cli.main(["start", str(self.root), "P1.1", "--actor", "claude-code/mystery-model",
+                                 "--strict-route", "--no-scout"])
+        self.assertEqual(code, 1)
+        self.assertTrue(start.call_args.kwargs["strict_route"])
+
     def test_owner_gate_needs_a_grant_event_or_a_grant_now(self):
         ops.patch(self.root, "P1.1", {"authority": {"kind": "owner_gate", "gate": "RELEASE-1", "scope": "tag"}})
         self.refused("GATE_NOT_GRANTED", lambda root, *a: lifecycle.start(root, ["P1.1"], OPUS))
@@ -236,6 +294,58 @@ class StartTests(LifeCase):
         self.refused("GATE_UNKNOWN", lambda root, *a: lifecycle.grant(root, label, "Owner says go."))
 
 
+class StartGateTests(LifeCase):
+    def test_owner_phase_understands_file_item_unit_and_phase_locations(self):
+        plan = self.load()
+        cases = {"phases/P1/P1.1.json/validation": "P1", "phases/P2/phase.json": "P2",
+                 "phases/P2/P2.1/U1.json/files": "P2", "P2.1": "P2", "P2.1/U1": "P2", "P2": "P2",
+                 "plan.json/phases": None, "decisions/D1.json": None, "log.jsonl:1": None,
+                 "P9.1/U1": None}
+        for where, phase in cases.items():
+            with self.subTest(where=where):
+                self.assertEqual(check.owner_phase(plan, check.Issue("error", "probe", where, "bad")), phase)
+
+    def test_start_refuses_corrupted_detail_with_item_location(self):
+        # Authoring now refuses these edits itself. Bypass it to model old or externally damaged plans.
+        original = self.load().items["P1.2"]
+        for patch in ({"validation": []}, {"deliverables": []}, {"scope": {"include": []}}):
+            with self.subTest(patch=patch):
+                demo.rewrite(self.root, "phases/P1/P1.2.json", lambda d: d.update({**original, **patch}))
+                error = self.refused("PLAN_INVALID", lifecycle.start, ["P1.1"], OPUS)
+                field = "scope/include" if "scope" in patch else next(iter(patch))
+                self.assertTrue(any(i.code == "incomplete" and i.where.endswith(f"P1.2.json/{field}")
+                                    for i in error.issues))
+                self.assertIn("block P1:", error.message)
+
+    def test_start_refuses_plan_level_errors(self):
+        decision = ops.add_decision(self.root, "Missing accepted decision fields")
+        demo.rewrite(self.root, f"decisions/{decision}.json", lambda d: d.update(status="accepted"))
+        error = self.refused("PLAN_INVALID", lifecycle.start, ["P1.1"], OPUS)
+        self.assertTrue(any(i.code == "decision_fields" and check.owner_phase(self.load(), i) is None
+                            for i in error.issues))
+
+    def test_start_ignores_other_phase_errors_and_warnings_and_checks_once_for_batch(self):
+        self.design_p2()
+        demo.rewrite(self.root, "phases/P2/P2.1.json", lambda d: d.update(validation=[]))
+        self.assertTrue(any(i.level == "error" and check.owner_phase(self.load(), i) == "P2"
+                            for i in check.check(self.load())))
+        self.assertTrue(any(i.level == "warning" for i in check.check(self.load())))
+        with mock.patch.object(check, "check", wraps=check.check) as checked:
+            result = self.start("P1.1", "P1.2")
+        self.assertEqual(result.items, ("P1.1", "P1.2"))
+        self.assertEqual(checked.call_count, 1)
+
+    def test_resume_also_checks_the_phase(self):
+        self.start("P1.1")
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(validation=[]))
+        self.refused("PLAN_INVALID", lifecycle.start, ["P1.1"], OPUS)
+
+    def test_start_catches_cycle_with_item_id_location(self):
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(depends_on=["P1.2"]))
+        error = self.refused("PLAN_INVALID", lifecycle.start, ["P1.1", "P1.2"], OPUS)
+        self.assertTrue(any(i.code == "cycle" and i.where in {"P1.1", "P1.2"} for i in error.issues))
+
+
 class BatchHintTests(LifeCase):
     def test_next_names_the_batch_its_mode_and_the_ready_command(self):
         action = lifecycle.next(self.load())
@@ -247,8 +357,8 @@ class BatchHintTests(LifeCase):
     def three_templates(self, mode="recommended", depends=()):
         """P1.1 and P1.3 on one route template (economy/high), P1.2 on another (implementation/xhigh), all ready."""
         plan = self.load()
-        ops.add_item(plan, "P1", "Third")
-        ops.patch(plan, "P1.3", {**copy.deepcopy(DETAIL), **({"depends_on": list(depends)} if depends else {})})
+        ops.add_item(plan, "P1", "Third", data={**copy.deepcopy(DETAIL), "scope": {"include": ["x"], "exclude": []},
+                                              **({"depends_on": list(depends)} if depends else {})})
         ops.patch(plan, "P1.2", {"depends_on": []})
         for item, route in (("P1.1", ("economy", "high")), ("P1.2", ("implementation", "xhigh")),
                             ("P1.3", ("economy", "high"))):
@@ -542,6 +652,24 @@ class LogDecideGrantTests(LifeCase):
 
 
 class DesignDoneTests(LifeCase):
+    def test_cycle_with_item_id_location_blocks_design_done(self):
+        ops.add_item(self.root, "P2", "Fourth", data={**DETAIL, "scope": {"include": ["x"], "exclude": []},
+                                                   "depends_on": ["P2.1"]})
+        ops.patch(self.root, "P2.1", {"depends_on": ["P2.2"]})
+        error = self.refused("DESIGN_INCOMPLETE", lifecycle.design_done, "P2")
+        self.assertIn("cycle", error.message)
+        self.assertIn("P2.1", error.message)
+
+    def test_unit_overlap_with_unit_id_location_blocks_design_done(self):
+        for uid in ("U1", "U2"):
+            doc = demo.fixture("unit-e3a-u1")
+            doc.update(id=uid, item="P2.1", files=["lib/shared.py"])
+            demo.write_doc(self.root / "phases/P2/P2.1" / f"{uid}.json", doc, "unit")
+        ops.patch(self.root, "P2.1", {"units": ["U1", "U2"]})
+        error = self.refused("DESIGN_INCOMPLETE", lifecycle.design_done, "P2")
+        self.assertIn("P2.1/U1", error.message)
+        self.assertIn("both own", error.message)
+
     def test_incomplete_phase_is_refused_with_the_check_errors(self):
         ops.patch(self.root, "P2.1", {"deliverables": None})
         error = self.refused("DESIGN_INCOMPLETE", lambda root, *a: lifecycle.design_done(root, "P2"))
@@ -681,8 +809,7 @@ class DeclaredOrderTests(LifeCase):
 
     def declare_reversed_order(self):
         plan = self.load()
-        ops.add_item(plan, "P1", "Third")
-        ops.patch(plan, "P1.3", copy.deepcopy(DETAIL))
+        ops.add_item(plan, "P1", "Third", data={**copy.deepcopy(DETAIL), "scope": {"include": ["x"], "exclude": []}})
         ops.set_batches(plan, "P1", [{"id": "B1", "items": ["P1.3"], "mode": "recommended"},
                                      {"id": "B2", "items": ["P1.1", "P1.2"], "mode": "recommended"}])
 

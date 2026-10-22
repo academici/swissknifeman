@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import threading
+import contextlib
 from types import SimpleNamespace
 import unittest
 from unittest import mock
@@ -103,8 +104,9 @@ class UsageAccountingTests(unittest.TestCase):
         self.item = Item("W1", "run-1", {}, Path(tmp.name), {})
         self.state = {"items": {"W1": self.item.state}}
         self.engine = SimpleNamespace(state=self.state, _local=threading.local(), _step_tokens={},
-                                      _save=mock.Mock(), progress=SimpleNamespace(emit=mock.Mock()))
-        self.engine._unmetered = lambda item: budget.unmetered(self.engine, item)  # bound on the Conductor
+                                      _save=mock.Mock(), progress=SimpleNamespace(emit=mock.Mock()),
+                                      store=SimpleNamespace(mutating=contextlib.nullcontext))
+        self.engine._unmetered = lambda item, attempt=None: budget.unmetered(self.engine, item, attempt)  # bound on the Conductor
         self.start_agent("agent-1")
 
     def start_agent(self, agent):
@@ -211,6 +213,7 @@ class UsageConductorTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertIs(self.state(err)["items"]["W1"]["usage_incomplete"], True)
+        self.assertEqual(self.state(err)["usage_unmetered"], ["W1"])  # kept at run scope: a later piece sees it too
         self.assertEqual([(line["event"], line["message"]) for line in self.lines(err)
                           if line.get("reason_code") == "BUDGET_UNMETERED"],
                          [("info", "W1: a model attempt reported no usage; token limits cannot see it")])
@@ -244,6 +247,7 @@ class UsageConductorTests(ConductorCase):
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertNotIn("usage_incomplete", self.state(err)["items"]["W1"])
+        self.assertNotIn("usage_unmetered", self.state(err))
         self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "BUDGET_UNMETERED"])
 
     def test_codex_cache_does_not_trigger_a_false_budget_beacon(self):
@@ -260,7 +264,9 @@ class UsageConductorTests(ConductorCase):
         import sys
         self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES + ("report-fixer",)})
         broken = {"write": {"out/W1.txt": "ok\n"},
-                  "result": report("W1", checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "zero"}])}
+                  # a duplicate path is a form error the fixer mends without changing the meaning (a string exit 'zero'
+                  # healed to 0 is a change of a check row: REPAIR_SEMANTIC_DRIFT, P3.1)
+                  "result": report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])}
         self.script({"executor": [broken], "reviewer": [GREEN],
                      "report-fixer": [{"result": report("W1"), "tag": "stage-report", "usage": {}}]})
         code, _, err = self.run_items("W1")

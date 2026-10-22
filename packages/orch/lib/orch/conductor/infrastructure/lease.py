@@ -9,9 +9,10 @@ import json
 import os
 from pathlib import Path
 import socket
-import subprocess
 import time
 from typing import Optional
+
+from aicore.util.proc import GIT_TIMEOUT, run as run_with_timeout
 
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -132,8 +133,9 @@ class RunLease:
 
 
 def checkout_toplevel(project: Path) -> Path:
-    result = subprocess.run(["git", "-C", str(project), "rev-parse", "--show-toplevel"],
-                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    """Git toplevel of ``project``, or ``project`` when git fails or exceeds ``GIT_TIMEOUT``."""
+    result = run_with_timeout(["git", "-C", str(project), "rev-parse", "--show-toplevel"],
+                              capture_output=True, text=True, timeout=GIT_TIMEOUT)
     return Path(result.stdout.strip()).resolve() if result.returncode == 0 else Path(project).resolve()
 
 

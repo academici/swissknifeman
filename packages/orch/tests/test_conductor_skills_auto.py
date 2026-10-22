@@ -2,6 +2,7 @@
 from the write set of the piece, keeps the answer in the state and reads the SKILL.md files the bridge names."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -12,7 +13,7 @@ import unittest
 from orch.conductor import engine, options as opts
 
 BRIDGE = '''\
-import json, sys
+import hashlib, json, sys
 from pathlib import Path
 here = Path(__file__).resolve().parent
 (here / "calls.jsonl").open("a").write(json.dumps(sys.argv[1:]) + "\\n")
@@ -22,7 +23,9 @@ if (here / "fail").exists():
 skill = here / "SKILL.md"
 print(json.dumps({"role": "executor", "provider": "claude-code",
                   "skills": [{"name": "database", "id": "php/database", "path": str(skill),
-                              "reason": "trigger_path", "tokens": 12}],
+                              "reason": "trigger_path", "tokens": 12,
+                              "digest": "sha256:" + "a" * 64,
+                              "skill_md_sha256": hashlib.sha256(skill.read_bytes()).hexdigest()}],
                   "excluded": [{"id": "php/laravel", "reason": "kind_not_preloaded"}],
                   "discoverable": ["php/laravel"], "tokens": 12, "diagnostics": []}))
 '''
@@ -102,6 +105,23 @@ class SkillsAutoTests(unittest.TestCase):
         layer = {"skills": [{"role": "executor", "names": ["auto", "docs:notes"]}]}
         self.assertEqual(len(opts.layer_problems(layer)), 1)
         self.assertEqual(opts.layer_problems({"skills": [{"role": "executor", "names": ["auto"]}]}), [])
+
+    def test_auto_digest_is_rechecked_and_removes_the_pending_prompt_skill_name(self):
+        skill = self.dir / "SKILL.md"
+        skill.write_bytes(b"---\r\nname: database\r\n---\r\nSelected bytes.\r\n")
+        names = self.eng._skills(self.item, "executor")
+        self.assertEqual(names, ["database"])
+        row = self.item.state["skills_auto"]["executor"]["skills"][0]
+        self.assertEqual(row["digest"], "sha256:" + "a" * 64)
+        self.assertEqual(row["skill_md_sha256"], hashlib.sha256(skill.read_bytes()).hexdigest())
+        self.assertEqual(self.eng._skill_texts(self.item, "executor"), {"database": "Selected bytes."})
+        skill.write_text("Changed after the bridge selected it.", encoding="utf-8")
+        self.assertEqual(self.eng._skill_texts(self.item, "executor"), {})
+        self.assertEqual(names, [])  # an already-evaluated prompt argument cannot load the rejected skill by name
+        self.assertEqual(self.eng._skills(self.item, "executor"), [])
+        self.assertEqual(self.eng._skills_excluded(self.item, "executor"),
+                         [{"id": "php/database", "reason": "digest_mismatch"}])
+        self.assertIn("SKILL_PATH_INVALID", [row.get("reason_code") for row in self.eng.progress.lines])
 
 
 if __name__ == "__main__":

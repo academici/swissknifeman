@@ -24,25 +24,44 @@ TRANSIENT_CLASSES = ("provider_internal", "transport", "rate_limit")  # the prov
 JITTER_CAP_S, JITTER_BASE_S = 300, 30
 
 
-def prompt_for_route(self, item: Item, key: str, role: str, route: dict, blocks: list,
-                     first_prompt: str, prompt: str) -> tuple:
-    """Rebuild only the stub for the actual attempt, preserving the other blocks and retry instructions."""
+def routed_blocks(self, role: str, route: dict, blocks: list) -> list:
+    """``blocks`` with the stub of the role for the actual route of the attempt (a fallback route has its own stub)."""
     origin, text = self._stub(role, route)
     routed = [block for block in blocks if block.kind != "stub"]
     if text:
         routed.insert(1, prompts.Block("stub", origin, text.rstrip() + "\n\n"))
+    return routed
+
+
+def prompt_for_route(self, item: Item, key: str, role: str, route: dict, blocks: list,
+                     first_prompt: str, prompt: str, resumed: Optional[list] = None,
+                     digest: Optional[str] = None) -> tuple:
+    """Rebuild only the stub for the actual attempt, preserving the other blocks and retry instructions. ``resumed``
+    (the delta blocks of a round in a resumed session, when this attempt sends them) is what the role gets instead of the
+    whole prompt; ``prompts/<key>.md`` keeps the full prompt of the step and ``<key>.resumed.md`` the delta one."""
+    routed = self._routed_blocks(role, route, blocks)
     suffix = prompt[len(first_prompt):]
-    first_prompt = prompts.render(routed)
+    sent = list(resumed) if resumed else routed
+    first_prompt = prompts.render(sent)
+    full = list(routed)
     if suffix:
-        routed.append(prompts.Block("instruction", "conductor:retry", suffix))
-    prompt = prompts.render(routed)
+        retry = prompts.Block("instruction", "conductor:retry", suffix)
+        sent.append(retry)
+        full.append(retry)
+    prompt = prompts.render(sent)
     path = item.directory / "prompts" / f"{key}.md"
-    path.write_text(prompt, encoding="utf-8")
+    path.write_text(prompts.render(full), encoding="utf-8")
+    delta_path = path.with_suffix(".resumed.md")
+    if resumed:
+        delta_path.write_text(prompt, encoding="utf-8")
+    elif delta_path.exists():  # an earlier attempt of the step sent a delta; this one sends the whole prompt
+        delta_path.unlink()
     limits = {name: int(item.options.get("limits", {}).get(option, opts.DEFAULT_LIMITS[option]))
               for name, option in prompts.BUDGET_LIMITS.items()}
     write_json(path.with_suffix(".manifest.json"),
-               prompts.manifest(routed, step=key, role=role, route=route,
-                                excluded=self._skills_excluded(item, role), limits=limits))
+               prompts.manifest(sent, step=key, role=role, route=route,
+                                excluded=self._skills_excluded(item, role), limits=limits,
+                                resumed_session=bool(resumed), digest=digest))
     return first_prompt, prompt
 
 

@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 from typing import Optional
 
-from orch.conductor import checks as checks_mod, contract, prompts, questions as questions_mod
+from orch.contracts import required_digest
+from orch.conductor import checks as checks_mod, contract, prompts, questions as questions_mod, risk, scope
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -72,15 +73,57 @@ def advise(self, item: Item, number: int, ref: str, problem: str, evidence: list
         return None
 
 
-def reading(self, advice: dict) -> tuple:
-    """``(recommended option, why the owner must decide or None)``: ``needs_owner`` or a category of
-    ``orch.advisor.human_gate`` is never applied by the conductor."""
+def category_paths(self, item: Item) -> dict:
+    """Path evidence for owner categories: effective patterns may add to the builtin/trusted floor."""
+    changed = set(self._changed(item)) | set((item.input_doc.get("scope") or {}).get("write_set") or [])
+    effective = (self.settings.conductor.get("risk") or {}).get("patterns") or {}
+    floor = self.settings.conductor.get("_category_patterns") or {}
+    patterns = {feature: set(risk.DEFAULT_PATTERNS[feature]) | set(floor.get(feature) or [])
+                         | set(effective.get(feature) or [])
+                for feature in ("security", "public_cli", "schema")}
+    categories = {}
+    for category, features in (("security", ("security",)), ("public-api", ("public_cli", "schema"))):
+        hits = sorted(path for path in changed
+                      if any(scope.matches(path, pattern) for feature in features for pattern in patterns[feature]))
+        if hits:
+            categories[category] = hits
+    outside = self._outside(item)
+    if outside:
+        categories["scope-expansion"] = sorted(outside)
+    return categories
+
+
+def code_categories(self, item: Item) -> set:
+    """Categories established by code, independently of the model's category."""
+    return set(category_paths(self, item))
+
+
+def authority(self, item: Item, mode: str, confidence: Optional[str] = None) -> dict:
+    """The effective authority behind an automatic question resolution; defaults have no model confidence."""
+    return {"mode": mode, "gate": sorted(self._advisor_cfg().get("human_gate") or []),
+            "code_categories": sorted(code_categories(self, item)), "confidence": confidence}
+
+
+def reading(self, advice: dict, item: Item) -> tuple:
+    """``(recommended option, why the owner must decide or None)``; model output never lowers a gate."""
     option = next(entry for entry in advice["options"] if entry["id"] == advice["recommendation"])
+    gate = set(self._advisor_cfg().get("human_gate") or [])
+    reasons = []
     if advice["needs_owner"]:
-        return option, "the advisor says only the owner can decide"
-    if advice.get("category") in (self._advisor_cfg().get("human_gate") or []):
-        return option, f"category {advice['category']} is held by orch.advisor.human_gate"
-    return option, None
+        reasons.append("advisor: the advisor says only the owner can decide")
+    if advice.get("category") in gate:
+        reasons.append(f"advisor: category {advice['category']} is held by orch.advisor.human_gate")
+    paths = category_paths(self, item)
+    for category in sorted(set(paths) & gate):
+        reasons.append(f"code: {category} ({', '.join(paths[category])}) is held by orch.advisor.human_gate")
+    minimum = self._advisor_cfg().get("min_confidence", "medium")
+    ranks = {"low": 0, "medium": 1, "high": 2}
+    if ranks[advice["confidence"]] < ranks[minimum]:
+        reasons.append(f"confidence {advice['confidence']} is below orch.advisor.min_confidence {minimum}")
+    held = "; ".join(reasons) or None
+    if held:
+        self.progress.emit("info", item=item.ref, reason_code="ADVICE_HELD", message=held)
+    return option, held
 
 
 def advice_summary(file: str, advice: dict, held: Optional[str]) -> dict:
@@ -118,7 +161,7 @@ def hold(self, item: Item, number: int, advice: dict, file: str, held: str, prob
     asked = {"id": f"orch-advice-{number}", "revision": 1, "kind": "decision", "text": problem, "blocking": True,
              "options": [{"id": option["id"], "label": option["text"][:200]} for option in advice["options"]]}
     binding = {"run": self.run_id, "item": item.ref, "step": f"advice.{number}",
-               "input_digest": item.input_doc.get("digest")}
+               "input_digest": item.input_doc.get("digest"), "input_part_digest": required_digest(item.input_doc)}
     questions_mod.record(store, [asked], binding, clock.utc_now())
     entry = store[asked["id"]]
     entry["advice"] = self._advice_summary(file, advice, held)
@@ -156,14 +199,16 @@ def advise_question(self, item: Item, key: str, entry: dict, report: dict) -> bo
     if found is None:
         return False
     advice = found["advice"]
-    option, held = self._reading(advice)
+    option, held = self._reading(advice, item)
     ids = [row["id"] for row in entry.get("options") or []]
     if held is None and ids and option["id"] not in ids:
-        held = f"the recommendation {option['id']} is not one of the options of the question"
+        held = f"advisor: the recommendation {option['id']} is not one of the options of the question"
+        self.progress.emit("info", item=item.ref, stage=key, reason_code="ADVICE_HELD", message=held)
     entry["advice"] = self._advice_summary(found["file"], advice, held)
     if held:
         return False
-    entry["resolution"] = {"value": option["id"] if ids else option["text"], "by": "advisor", "at": clock.utc_now()}
+    entry["resolution"] = {"value": option["id"] if ids else option["text"], "by": "advisor", "at": clock.utc_now(),
+                           "authority": authority(self, item, "advisor", advice["confidence"])}
     entry["status"], entry["auto_answered"] = "applied", True
     self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_ADVISED",
                        message=f"question {entry['id']} answered by the advisor with {option['id']} ({found['file']})")
@@ -189,7 +234,7 @@ def advise_red(self, item: Item, round_no: int, red: list, report: dict) -> Opti
     if found is None:
         return None
     advice = found["advice"]
-    option, held = self._reading(advice)
+    option, held = self._reading(advice, item)
     by = "advisor"
     if held:
         entry = self._hold(item, number, advice, found["file"], held, problem)
@@ -221,7 +266,7 @@ def retriage(self, item: Item, number: int, findings: dict, triage: dict) -> tup
     if found is None:
         return triage, None
     advice = found["advice"]
-    option, held = self._reading(advice)
+    option, held = self._reading(advice, item)
     by = "advisor"
     if held:
         entry = self._hold(item, slot, advice, found["file"], held, problem)

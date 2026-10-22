@@ -128,6 +128,22 @@ class ProfileResolutionCase(unittest.TestCase):
                                 "--trusted", "--disabled")
         self.assertEqual([item["code"] for item in document["diagnostics"]], ["HARNESS_PROVIDER_DISABLED"])
 
+    def test_fixed_resolution_oracle_and_read_only_filesystem_effects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            env = dict(os.environ, HOME=tmp, SKM_HOME=str(root / "skm"),
+                       PYTHONPATH=os.pathsep.join([str(ROOT / "lib"), str(Path(aicore.__file__).resolve().parents[1])]))
+            before = list(root.rglob("*"))
+            done = subprocess.run([sys.executable, "-m", "harness", str(ROOT), "profiles", "resolve", "--json",
+                                   "--provider", "codex", "--profile", "workspace-contained", "--target-scope", "project",
+                                   "--trusted"], cwd=root, env=env, capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout), {
+                "$schema": "urn:swissknifeman:harness:profile-resolution:v1", "provider_id": "codex",
+                "profile": {"id": "workspace-contained", "intent": "Operate autonomously only inside the explicit workspace and managed targets."},
+                "target_scope": "project", "operation_id": None, "target_identity": None, "green": True, "diagnostics": []})
+            self.assertEqual(list(root.rglob("*")), before)
+
     def test_matches_the_in_process_resolver(self):
         catalog = profiles.load_catalog(profiles.default_catalog_path(Env(ROOT, "test")))
         for profile_id in ("observe", "workspace-contained"):
@@ -157,13 +173,19 @@ class CodexLifecycleCase(unittest.TestCase):
         self.assertEqual(fragment["source"]["id"], "harness.d104.observer-fragment")
         self.assertEqual(fragment["source"]["path"], "packages/harness/lib/harness/hooks.py")
         self.assertEqual(fragment["handler_sha256"], sha256_digest(direct.handler_bytes))
+        self.assertEqual((fragment["target_path"], fragment["event"]), (".codex/hooks.json", "SessionStart"))
+        self.assertEqual(fragment["group"]["hooks"][0]["type"], "command")
+        self.assertIn("context.observer", fragment["group"]["hooks"][0]["command"])
 
     def validate_document(self, document, memory_command):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "hooks.json"
             path.write_bytes(document)
-            return run(hooks.cmd_hooks, "codex-lifecycle", "validate", "--document", str(path),
-                       "--memory-command", memory_command, "--json")
+            result = run(hooks.cmd_hooks, "codex-lifecycle", "validate", "--document", str(path),
+                         "--memory-command", memory_command, "--json")
+            self.assertEqual(path.read_bytes(), document)
+            self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()), ["hooks.json"])
+            return result
 
     def test_validate_accepts_the_composition_and_reports_refusals_as_data(self):
         registry, kind = contract("codex-lifecycle")

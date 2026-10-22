@@ -399,7 +399,8 @@ class ResumeReceiptTests(ConductorCase):
                 self.assertEqual("repeated: workspace part incomplete", self.message(run))
                 complete = dict(answer, workspace_commit={"status": "committed"}, message="workspace finished")
                 with mock.patch.object(run, "_orch", return_value=(0, complete, "")) as call:
-                    result = run._step(item, "commit", lambda: work_source.commit(run, item, ["product.txt"]))
+                    result = run._step(item, "commit",
+                                       lambda run=run, item=item: work_source.commit(run, item, ["product.txt"]))
                 call.assert_called_once()
                 self.assertEqual({"outcome": "committed", "sha": "a" * 40, "message": "workspace finished"}, result)
 

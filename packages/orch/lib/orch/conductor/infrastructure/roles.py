@@ -13,6 +13,7 @@ from aicore.util.digest import sha256_hex
 from orch import events, settings as settings_mod
 from orch.conductor import agents, checks as checks_mod, contract, heal, options as opts, process, prompts
 from orch.conductor.domain.item import Item
+from orch.conductor.domain import semantics
 from orch.conductor.domain.report import json_block
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -30,6 +31,10 @@ ISOLATION_ENV = {"claude-code": {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1", "CLAUDE_
 # Arguments that start a role with no customizations at all: no CLAUDE.md, project memory, plugins, MCP servers, user
 # skills or hooks (a measured start-up context of 6 K instead of 16 K tokens, and none of the developer-session rules).
 ISOLATION_ARGS = {"claude-code": ["--safe-mode"]}
+
+# What the run keeps of the executor session; all of it is forgotten with the session.
+SESSION_FIELDS = ("executor_session", "executor_session_route", "executor_session_item", "executor_session_task_digest",
+                  "executor_session_answers")
 
 
 def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int,
@@ -89,10 +94,13 @@ def agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool 
 
 
 def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional[str],
-             extra: Optional[Callable[[dict], list]] = None, cancel=None, causation: Optional[str] = None) -> tuple:
+             extra: Optional[Callable[[dict], list]] = None, cancel=None, causation: Optional[str] = None,
+             resumed: Optional[list] = None) -> tuple:
     """``(result, meta)`` of a role as an agent run: the body is :meth:`_role_body`; the run gets its folder under
     ``agents/`` and its result however the role ends, and ``meta`` names it (``agent``). The prompt is the ``blocks``
-    rendered; ``prompts/<key>.manifest.json`` (``prompt-manifest/v1``) says what each block is and where it came from."""
+    rendered; ``prompts/<key>.manifest.json`` (``prompt-manifest/v1``) says what each block is and where it came from.
+    ``resumed`` is the delta prompt of the same round (blocks): it is sent instead of ``blocks`` when the attempt continues
+    a session that already holds the task (``_delta_mode``); the full prompt is the fallback of every other attempt."""
     prompt = prompts.render(blocks)
     if role == "executor" and not item.state.get("executor_started"):
         item.state["executor_started"] = True  # from here on the piece has work in the tree, whatever the round ends with
@@ -111,11 +119,13 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
     # The route the role starts on (a provider gated since the routes were chosen moves to its fallback) and the prompt
     # rebuilt for it come first: orch.agent.started names the route and the digest of the prompt really sent.
     route = self._start_route(item, key, role, item.routes[role], cancel)
-    _first, prompt = self._prompt_for_route(item, key, role, route, blocks, prompt, prompt)
+    delta, digest, _resuming = self._delta_mode(item, role, route, blocks, resumed)
+    _first, prompt = self._prompt_for_route(item, key, role, route, blocks, prompt, prompt,
+                                            resumed=resumed if delta else None, digest=digest)
     handle = self._agent_start(item, key, role, route, prompt_file, attempt, causation,
                                prompt_sha256=sha256_hex(prompt.encode("utf-8")))
     try:
-        doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle, blocks)
+        doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle, blocks, resumed)
     except Stop as stop:
         self._agent_end(handle, {"code": stop.code, "message": stop.message})
         raise
@@ -136,24 +146,32 @@ def denied(denials: list) -> str:
 
 
 def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
-              extra: Optional[Callable[[dict], list]], cancel, handle: dict, blocks: list) -> tuple:
+              extra: Optional[Callable[[dict], list]], cancel, handle: dict, blocks: list,
+              resumed: Optional[list] = None) -> tuple:
     """``(result, meta)`` of a role: its closed document (or text when ``kind`` is None).
 
     A result outside its contract is first healed by rule (``heal``), then repaired by the report-fixer role from
     the role's own answer (``limits.repairs``), and only then is the whole role repeated (``limits.retries`` per
     step): a repeat costs a whole run of the role, a repair seconds. A role that failed at the provider (it exited
     with an error, or its stream ended in one) is not told its answer was rejected: ``retry.decide`` chooses between
-    a repeat, a wait for the reset, another route and a stop (``_provider_failure``)."""
+    a repeat, a wait for the reset, another route and a stop (``_provider_failure``).
+
+    Each attempt decides again whether it sends the delta prompt (``resumed``) or the whole one (``_delta_mode``): an
+    attempt that continued a session and lost it (an error, no session) leaves the next attempt the whole prompt in a fresh
+    session (``SESSION_RESUME_FAILED``)."""
     route = item.routes[role]
     (item.directory / "prompts").mkdir(parents=True, exist_ok=True)
-    (item.directory / "prompts" / f"{key}.md").write_text(prompt, encoding="utf-8")
+    (item.directory / "prompts" / f"{key}.md").write_text(prompts.render(blocks), encoding="utf-8")  # the full prompt
     attempt = 0
     first_prompt = prompt
     trail = handle["trail"] = {"decisions": [], "error": None, "api_retries": 0, "denials": []}
     base = self._tree_mark() if self._writes(role) else None  # the tree this step started from
     route = self._start_route(item, key, role, route, cancel)
     while True:
-        first_prompt, prompt = self._prompt_for_route(item, key, role, route, blocks, first_prompt, prompt)
+        self._admit_budget(item, "attempt")  # before every provider call: a repeat, a fallback route and a wait included (I10)
+        delta, digest, resuming = self._delta_mode(item, role, route, blocks, resumed)
+        first_prompt, prompt = self._prompt_for_route(item, key, role, route, blocks, first_prompt, prompt,
+                                                      resumed=resumed if delta else None, digest=digest)
         attempt += 1
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
@@ -163,7 +181,13 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
                                on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
                                agent_directory=handle["directory"])
         self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
-        self._keep_session(item, role, route, run)
+        self._keep_session(item, role, route, run, task_digest=digest, delta=delta)
+        if resuming and (run.error or not run.session):  # the next attempt starts a fresh session with the whole prompt
+            self.progress.emit("info", item=item.ref, stage=key, role=role, route=self.label(route),
+                               reason_code="SESSION_RESUME_FAILED",
+                               message=f"the session of {item.ref} could not be continued on {route['provider']} "
+                                       f"({run.error or 'no session returned'}); the next attempt starts a fresh session "
+                                       "with the whole prompt")
         trail["api_retries"] += run.api_retries
         handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=handle["lingered"] or run.lingered)
         if run.denials:  # a tool call refused without a prompt: the role could not do what it meant to
@@ -181,16 +205,18 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         if run.error in ("PROVIDER_UNAVAILABLE", "TRANSPORT_UNSUPPORTED"):
             raise Stop(run.error, f"{role} on {route['provider']}: {run.detail}")
         problem = f"{run.error}: {run.detail}" if run.error else None
-        doc, healed, repaired = None, [], None
+        doc, healed, repaired, from_text = None, [], None, False
         if problem is None and kind:
-            doc, healed, issues = self._closed(run.text, kind, extra)
+            doc, healed, issues, original = self._closed(run.text, kind, extra)
             if issues:
-                doc, healed, issues, repaired = self._repair(item, key, kind, extra, run.text, issues, doc, healed)
+                doc, healed, issues, repaired, from_text = self._repair(item, key, kind, extra, run.text, issues, doc,
+                                                                        healed, original)
             if issues:
                 problem = f"ROLE_OUTPUT_INVALID: {'; '.join(issues[:3])}"
         meta = {"session": run.session, "model": run.model, "stream": self._relative(raw), "attempts": attempt,
                 "exit": run.exit, "usage": run.usage,
                 **({"healed": healed} if healed else {}), **({"repaired_by": repaired} if repaired else {}),
+                **({"repaired_from_text": True} if repaired and from_text else {}),
                 **({"error": trail["error"]} if trail["error"] else {}),
                 **({"api_retries": trail["api_retries"]} if trail["api_retries"] else {}),
                 **({"decisions": trail["decisions"]} if trail["decisions"] else {})}
@@ -222,11 +248,12 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
 
 
 def closed(text: str, kind: str, extra) -> tuple:
-    """``(document, healed, issues)`` of the result block in ``text``."""
-    doc, error = json_block(text, kind)
+    """``(document, healed, issues, original)`` of the result block in ``text``: ``original`` is the block as the role
+    wrote it, before the mend (None when the answer has no block that parses)."""
+    original, error = json_block(text, kind)
     if error:
-        return None, [], [error]
-    doc, healed = heal.heal(kind, doc)
+        return None, [], [error], None
+    doc, healed = heal.heal(kind, original)
     if kind == "stage-report" and healed:
         doc = dict(doc, open_issues=list(doc.get("open_issues") or []) + [
             {"text": ("the conductor mended the form of this report: " + "; ".join(healed))[:900], "kind": "note",
@@ -234,17 +261,24 @@ def closed(text: str, kind: str, extra) -> tuple:
     issues = contract.problems(doc, kind)
     if not issues and extra:
         issues = extra(doc)
-    return doc, healed, issues
+    return doc, healed, issues, original
 
 
-def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: list, doc, healed) -> tuple:
-    """The report-fixer rewrites the result block from the role's own answer; ``(doc, healed, issues, route)``."""
+def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: list, doc, healed, original=None) -> tuple:
+    """The report-fixer rewrites the result block from the role's own answer; ``(doc, healed, issues, route,
+    from_text)``. The repair keeps the meaning of the role's own block (I9): a block of the fixer that raises the status
+    or the verdict, lowers a severity or loses a finding, question, escalation or check row against the mend of
+    ``original`` is refused (``REPAIR_SEMANTIC_DRIFT``) and the next repair, then a repeat of the role, follows. An
+    answer with no block that parses (``original`` None) has nothing to compare: the fixer's block is taken and said
+    (``from_text``)."""
     if item.options["limits"]["repairs"] <= 0 or "report-fixer" not in item.routes:
-        return doc, healed, issues, None
+        return doc, healed, issues, None, False
     route = item.routes["report-fixer"]
     if self.provider_disabled(route["provider"]) or not process.available(route["argv"]):
-        return doc, healed, issues, None
+        return doc, healed, issues, None, False
+    baseline = heal.heal(kind, original)[0] if original is not None else None
     for number in range(1, item.options["limits"]["repairs"] + 1):
+        self._admit_budget(item, "attempt")  # a repair is a provider call too: none starts past a hard limit (I10)
         problem = "; ".join(issues[:5])
         prompt = prompts.render(prompts.report_fixer(kind=kind, problem=problem, answer=answer, item=item.ref, step=key))
         raw = item.directory / "streams" / f"{key}-fix{number}.jsonl"
@@ -265,15 +299,27 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
         if run.error:
             self.progress.emit("info", item=item.ref, stage=key, role="report-fixer", route=self.label(route),
                                reason_code="REPAIR_FAILED", message=f"{run.error}: {run.detail}")
-            return doc, healed, issues, None
-        fixed, fixed_healed, fixed_issues = self._closed(run.text, kind, extra)
+            return doc, healed, issues, None, False
+        fixed, fixed_healed, fixed_issues, _written = self._closed(run.text, kind, extra)
+        if not fixed_issues and baseline is not None:
+            found = semantics.drift(kind, baseline, fixed)
+            if found:
+                self.progress.emit("info", item=item.ref, stage=key, role="report-fixer", route=self.label(route),
+                                   reason_code="REPAIR_SEMANTIC_DRIFT",
+                                   message=f"kept the role's answer: {'; '.join(found[:2])}")
+                issues = [f"REPAIR_SEMANTIC_DRIFT: {'; '.join(found[:3])}"]
+                continue
         self.progress.emit("info", item=item.ref, stage=key, role="report-fixer", route=self.label(route),
                            reason_code="RESULT_REPAIRED" if not fixed_issues else "REPAIR_FAILED",
                            message=f"was: {problem}" + (f"; still: {'; '.join(fixed_issues[:2])}" if fixed_issues else ""))
         if not fixed_issues:
-            return fixed, healed + fixed_healed + [f"repaired by {self.label(route)}: {problem}"[:300]], [], self.label(route)
+            from_text = baseline is None
+            note = [f"repaired by {self.label(route)}: {problem}"[:300]]
+            if from_text:
+                note.append("the answer had no block to compare; the fixer's block is taken as it came")
+            return fixed, healed + fixed_healed + note, [], self.label(route), from_text
         issues = fixed_issues
-    return doc, healed, issues, None
+    return doc, healed, issues, None, False
 
 
 def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
@@ -307,22 +353,29 @@ def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] 
     """Count each agent's attempts once, including retries; replaying a receipt replaces its contribution."""
     handle = getattr(self._local, "agent", None)
     delta = {key: int(usage.get(key, 0)) for key in agents.USAGE_KEYS}
-    if handle is not None:
-        attempts = item.state.setdefault("usage_by_agent", {}).setdefault(handle["id"], {})
-        receipt = {**delta, "usage_complete": usage_complete}
-        previous = attempts.get(attempt or handle["id"], {})
-        delta = {key: receipt[key] - previous.get(key, 0) for key in agents.USAGE_KEYS}
-        attempts[attempt or handle["id"]] = receipt
-        handle["usage"] = {key: sum(row[key] for row in attempts.values()) for key in agents.USAGE_KEYS}
-        completeness = [row["usage_complete"] for row in attempts.values()]
-        handle["usage_complete"] = (False if False in completeness else True if True in completeness else None)
-    for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
-                   item.state.setdefault("tokens", {"input": 0, "output": 0}), self._step_tokens):
-        for key in agents.USAGE_KEYS:
-            bucket[key] = bucket.get(key, 0) + delta[key]
-    self._save()
+    step_name = self._stage_key() if callable(getattr(self, "_stage_key", None)) else None
+    step_bucket = self._stage_bucket() if callable(getattr(self, "_stage_bucket", None)) else self._step_tokens
+    with self.store.mutating():  # a role thread and the main loop share the state (I2)
+        if handle is not None:
+            attempts = item.state.setdefault("usage_by_agent", {}).setdefault(handle["id"], {})
+            receipt = {**delta, "usage_complete": usage_complete}
+            if step_name:  # so a resume can rebuild this step when the stage record is missing
+                receipt["step"] = step_name
+            previous = attempts.get(attempt or handle["id"], {})
+            delta = {key: receipt[key] - previous.get(key, 0) for key in agents.USAGE_KEYS}
+            attempts[attempt or handle["id"]] = receipt
+            handle["usage"] = {key: sum(row[key] for row in attempts.values()) for key in agents.USAGE_KEYS}
+            completeness = [row["usage_complete"] for row in attempts.values()]
+            handle["usage_complete"] = (False if False in completeness else True if True in completeness else None)
+        for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
+                       item.state.setdefault("tokens", {"input": 0, "output": 0}), step_bucket):
+            for key in agents.USAGE_KEYS:
+                bucket[key] = bucket.get(key, 0) + delta[key]
+        if callable(getattr(self, "_remember_stage", None)):
+            self._remember_stage(item, step_bucket)
+        self._save()
     if usage_complete is False:
-        self._unmetered(item)
+        self._unmetered(item, attempt)
 
 
 def relative(self, path: Path) -> str:
@@ -378,14 +431,37 @@ def role_argv(self, item: Item, role: str, route: dict) -> list:
     extra = ISOLATION_ARGS.get(route.get("provider")) if isolated else None
     if extra and not self._knows(route["argv"], extra):
         extra = None
-    argv = list(route["argv"])
+    resume = self._resume_args(item, role, route)
+    argv = [arg.replace("{session}", resume[0]) for arg in route["resume_argv"]] \
+        if resume and route.get("resume_argv") else list(route["argv"])  # a catalog entry that names its own resume command
     if self._shared_session(item, role, route):  # a session that is not saved cannot be resumed by the next executor
         argv = [arg for arg in argv if arg != "--no-session-persistence"]
     sandboxed = self._sandbox_args(item, role, route)
     if sandboxed:  # the provider sandbox (bubblewrap) cannot start under the Landlock guard: it replaces the guard
         argv = strip_guard(argv)
     argv = self._extra_write_dirs(item, role, argv)
-    return argv + (extra or []) + self._resume_args(item, role, route) + sandboxed
+    granted = granted_paths(self, item, role)
+    if granted and route.get("provider") == "codex":  # a confined Codex writes beside the project only where it is told
+        argv = codex_add_dirs(argv, granted)
+    # a Claude Code role reaches a directory outside the project with its file tools only when it is added; the shell
+    # of a sandboxed one is granted the same paths in the sandbox block (``sandbox_args``)
+    added = [part for path in granted for part in ("--add-dir", path)] if route.get("provider") == "claude-code" else []
+    return argv + (extra or []) + ([] if route.get("resume_argv") else resume) + added + sandboxed
+
+
+def granted_paths(self, item: Item, role: str) -> list:
+    """``scope.extra_paths`` (``~`` expanded) for a role that writes, none for the others."""
+    if role not in opts.WRITING_ROLES:
+        return []
+    return [os.path.expanduser(path) for path in self._scope_option(item, "extra_paths", [])]
+
+
+def codex_add_dirs(argv: list, paths: list) -> list:
+    """``argv`` of a Codex route with ``--add-dir P`` for every path, right after the ``exec`` token."""
+    if "exec" not in argv:
+        return argv
+    at = argv.index("exec") + 1
+    return argv[:at] + [part for path in paths for part in ("--add-dir", path)] + argv[at:]
 
 
 def strip_guard(argv: list) -> list:
@@ -398,11 +474,14 @@ def strip_guard(argv: list) -> list:
 
 
 def extra_write_dirs(self, item: Item, role: str, argv: list) -> list:
-    """``scope.extra_paths`` for an executor started through ``ro-run.py``: one more ``--rw`` each, before the ``--``."""
+    """``scope.extra_paths`` for a writer (executor, bounded-implementer) started through ``ro-run.py``: one more ``--rw``
+    each, before the ``--``. A route that lost the guard to the provider sandbox gets its grants from ``role_argv`` and
+    ``sandbox_args``."""
     paths = list(self._scope_option(item, "extra_paths", []))
-    if role != "executor" or "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
+    if role not in opts.WRITING_ROLES or "--" not in argv or not any(a.endswith("ro-run.py") for a in argv[:2]):
         return argv
-    if self._shared_session(item, role, {"provider": "claude-code"}) and "claude" in argv[argv.index("--") + 1:][:1]:
+    if role == "executor" and self._shared_session(item, role, {"provider": "claude-code"}) \
+            and "claude" in argv[argv.index("--") + 1:][:1]:
         paths.append(self._claude_transcripts())  # else the guard stops the CLI from saving the session it must resume
     if not paths:
         return argv
@@ -442,7 +521,7 @@ def session_mode(item: Item) -> str:
 def shared_session(self, item: Item, role: str, route: dict) -> bool:
     """The executor of this run keeps a provider session (``session.executor``): across its pieces (``shared``) or across
     the correction rounds of one piece (``handoff``)."""
-    return role == "executor" and route.get("provider") == "claude-code" \
+    return role == "executor" and (route.get("provider") == "claude-code" or bool(route.get("resume_argv"))) \
         and self._session_mode(item) in ("shared", "handoff")
 
 
@@ -451,7 +530,8 @@ def route_label(route: dict) -> str:
 
 
 def resume_args(self, item: Item, role: str, route: dict) -> list:
-    """``--resume SESSION`` of the shared executor session. A piece whose route names another model or effort than the
+    """``--resume SESSION`` of the shared executor session (``[SESSION]`` for a route whose catalog entry has a
+    ``resume_argv``: that command line is built from the session by ``role_argv``). A piece whose route names another model or effort than the
     one that built the session still resumes it (the provider continues the same transcript under the new model; the
     cache of the old one is lost): the change is announced once per change as ``SESSION_ROUTE_CHANGED``."""
     state = getattr(self, "state", None) or {}
@@ -465,23 +545,47 @@ def resume_args(self, item: Item, role: str, route: dict) -> list:
         state["executor_session_route_said"] = now
         self.progress.emit("info", item=item.ref, reason_code="SESSION_ROUTE_CHANGED",
                            message=f"the shared executor session was built by {before}; {item.ref} resumes it as {now}")
-    return ["--resume", session]
+    return [session] if route.get("resume_argv") else ["--resume", session]
 
 
-def keep_session(self, item: Item, role: str, route: dict, run) -> None:
+def keep_session(self, item: Item, role: str, route: dict, run, task_digest: Optional[str] = None,
+                 delta: bool = False) -> None:
     """Remember the session of an executor that finished, so the next executor of the run resumes it; forget a
-    session that failed (a fresh one starts)."""
+    session that failed (a fresh one starts). ``task_digest`` is that of the full prompt the attempt sent: it is kept
+    with the session, so that a later round sends the delta prompt only to a session that holds the same task; an attempt
+    that sent the delta (``delta``) changes nothing in it."""
     if not self._shared_session(item, role, route):
         return
-    if run.error or not run.session:
-        self.state.pop("executor_session", None)
-        self.state.pop("executor_session_route", None)
-        self.state.pop("executor_session_item", None)
-    else:
-        self.state["executor_session"] = run.session
-        self.state["executor_session_route"] = route_label(route)
-        self.state["executor_session_item"] = item.ref
-    self._save()
+    with self.store.mutating():
+        if run.error or not run.session:
+            for name in SESSION_FIELDS:
+                self.state.pop(name, None)
+        else:
+            self.state["executor_session"] = run.session
+            self.state["executor_session_route"] = route_label(route)
+            self.state["executor_session_item"] = item.ref
+            if not delta:
+                if task_digest:
+                    self.state["executor_session_task_digest"] = task_digest
+                else:
+                    self.state.pop("executor_session_task_digest", None)
+        self._save()
+
+
+def delta_mode(self, item: Item, role: str, route: dict, blocks: list, resumed: Optional[list]) -> tuple:
+    """``(delta, task_digest, resuming)`` of an attempt of ``role`` on ``route``: ``resuming`` when its command line
+    continues a provider session; ``delta`` when the delta prompt (``resumed``) is sent, which is only the case if all
+    three hold: the attempt resumes the session, the session got the full prompt of this very piece
+    (``executor_session_item``), and the task of that prompt is the task of this one (``executor_session_task_digest`` is
+    the ``task_digest`` of the blocks now: a rebuilt input, other skills, stubs or rules make the prompt a full one)."""
+    if role != "executor":
+        return False, None, False
+    digest = prompts.task_digest(self._routed_blocks(role, route, blocks))
+    resuming = bool(self._resume_args(item, role, route))
+    state = getattr(self, "state", None) or {}
+    delta = bool(resumed) and resuming and state.get("executor_session_item") == item.ref \
+        and state.get("executor_session_task_digest") == digest
+    return delta, digest, resuming
 
 
 def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:

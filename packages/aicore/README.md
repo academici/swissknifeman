@@ -36,6 +36,14 @@ packages/aicore/
 | `aicore.ext` | events and their journal, delivery to subscribers, external plugins, instruction overlays, plugin conformance (see [Extensions](#extensions-aicoreext)); `aicore.util.schemacompat` and `aicore.util.telemetry` belong to `util` | planner, orch, brain, analyst, harness |
 | `aicore.usage` | one accumulator of tokens parsed from provider logs; self-sufficient, so it can be vendored byte for byte | analyst, harness, skiller |
 
+`aicore.workspace.set_paths(project_id, paths, ..., *, preserve=False, primary=None)` replaces a project's paths by
+default (an empty list removes its binding). With `preserve=True`, it reads the current entry under the existing
+`bindings.json.lock`, keeps all old paths in order, including missing directories, and appends new real paths without
+duplicates. `primary` selects a member of the resulting list; a non-member raises `ValueError` before writing.
+Without an explicit primary the previous selection rule is unchanged. Both modes preserve an existing `bound_at`
+and other project entries and use one atomic write. A missing binding entry is created for nonempty paths. Callers
+validate checkout identity before calling; this primitive manages machine paths and does not read project markers.
+
 ### Layers inside aicore
 
 Managed skill copies require a destination strictly below the skills root. The path gate normalizes a final
@@ -212,7 +220,7 @@ that used to live in `core` belong to `analyst` and are read through `analyst ru
 `aicore.util.partners` finds the command of another module and reads its JSON, so no module imports a partner or names its
 folder. `partner_command(name)` returns the argv prefix or `None`: the deprecated variables the caller lists in
 `legacy_env` (one warning), `SKM_<NAME>_BIN`, `SKM_<NAME>_ROOT/bin/<name>`, then `<name>` on `PATH`; for `planner` it is
-`PLANNER_PLAN_PY`, `PLANNER_ROOT/scripts/plan.py`, the deprecated `SKM_TASK_ROOT`, then `planner` on `PATH`.
+`PLANNER_PLAN_PY`, `PLANNER_ROOT/scripts/plan.py`, then `planner` or `plan.py` on `PATH`. The old root variable was removed in PLAN9 P1.2 (window of PLAN3 D88).
 `require_partner` raises `PartnerUnavailable` (`PARTNER_UNAVAILABLE: <name> not found (set SKM_<NAME>_ROOT or put <name> on
 PATH)`) and `run_partner_json(name, args)` returns the decoded stdout or raises `PartnerError`.
 
@@ -412,9 +420,36 @@ The tests need nothing but `aicore` itself, so the folder can be tested as a sta
 
 ### Parallel test runs
 
-`python3 -m aicore.util.par_unittest discover -s tests [-t TOP] [-p PATTERN] [-v] [-j N]` runs a `unittest discover` suite in
-parallel worker processes: tests are found by `discover` itself, grouped by test class, dealt out heaviest-first, and each worker
-has its own throwaway `HOME`. The output and the exit code are those of `unittest`; a shard that fails is repeated alone, and a
-pass there is reported as a clash between parallel tests. The test runners of the modules use it when `aicore` is importable
-(`SKM_TEST_JOBS` sets the workers, default `min(8, cpu_count)`; `1` is the old sequential run). A suite whose tests depend on
-what other modules did earlier in the same process keeps `SKM_TEST_JOBS=1` as its default (maind).
+`python3 -m aicore.util.par_unittest discover -s tests [-t TOP] [-p PATTERN] [-v] [-j N]` uses unittest discovery,
+then assigns classes to isolated workers, heaviest first. Classes above `max(30s, measured suite time / jobs / 2)`
+split into methods only when no inherited class fixtures, module fixtures or custom discovery require them to stay together.
+Custom discovery and `-j 1` retain serial suite execution. Workers receive one nested job each and separate `HOME`/`TMPDIR`;
+caller state under `SKM_*HOME`/`XDG_*_HOME` is copied into their private homes.
+
+Timings are elapsed seconds, stored atomically under the git common directory's `par-unittest/` folder.
+`SKM_PAR_UNITTEST_TIMES=/path/times.json` overrides that file, including outside git. Missing or invalid timing maps use
+case counts. Atomic replacement and a merge lock protect simultaneous writers. Method measurements also update class totals.
+
+A failed shard first retries its failed case IDs for diagnosis; a failed subtest retries its parent method. If that
+subset passes, the original whole shard must also pass alone, in its original discovery order and worker context,
+before the runner reports `CLASH`. Failures caused by another test in the same worker therefore stay red. Missing
+failure evidence, import/fixture errors and crashes retry the whole shard directly. `--clash warn` (default) allows a
+confirmed clash; `--clash fail` or `SKM_TEST_CLASH=fail` fails it. Every retry has its own attempt record; the inventory
+and summary case counts retain the initial execution, including its original failures and green cases.
+
+Discovery with no cases and no skip evidence exits 5 (`NO TESTS RAN`), including empty directories, empty modules and
+unmatched patterns. Skipped-only suites stay successful and retain their reasons, even when class setup or custom
+discovery records a skip without running a case. Import, setup and custom-suite errors keep their failing verdicts.
+
+`--report FILE` or `SKM_PAR_UNITTEST_REPORT=FILE` writes a schema-validated, atomic inventory and attempt report: normalized
+unit/file/case keys, original unittest IDs, outcomes and skip reasons, retries, worker invocations, requested/effective jobs,
+and elapsed seconds. The same evidence is collected in serial mode. `SKM_TEST_CONTEXT` names the context (`local` by default;
+standalone sets `standalone`). The stderr summary reports discovery/execution/skip/retry counts separately.
+
+`SKM_TEST_JOBS` supplies the job budget (default `min(8, cpu_count)`); a parent running concurrent suites must divide its
+budget among them. Suites requiring one process may keep `SKM_TEST_JOBS=1` (maind).
+
+The hub's `scripts/affected-tests.py --tier fast` selects `-p` subsets only when the entire diff consists of mapped,
+existing leaf test files in one supported unit (planner or orch). Foundation, runtime, unknown hub or other mixed
+inputs retain full owner and consumer suites; JSON selection reasons identify that coverage obligation. Pure mapped
+leaf changes keep their subset while dependent units retain full consumer contracts.

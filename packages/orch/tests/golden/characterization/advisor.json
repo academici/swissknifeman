@@ -213,8 +213,12 @@
    }
   },
   "executor_session": "executor-session-2",
+  "executor_session_answers": [
+   "<digest>"
+  ],
   "executor_session_item": "W1",
   "executor_session_route": "claude-code/sonnet/high",
+  "executor_session_task_digest": "<digest>",
   "items": {
    "W1": {
     "adopted": [],
@@ -232,7 +236,39 @@
     "outcome": "done",
     "plan_notes": [],
     "retries_used": 0,
+    "review_marks": {
+     "1": {
+      "out/W1.txt": "<digest>"
+     }
+    },
     "source_paths": [],
+    "stage_usage": {
+     "advice.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "executor.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "executor.1-q1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "review.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "scout": {
+      "cached": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
     "steps": {
      "advice.1": {
       "ended": "<time>",
@@ -553,6 +589,7 @@
      "auto_answered": true,
      "binding": {
       "input_digest": "<digest>",
+      "input_part_digest": "<digest>",
       "item": "W1",
       "step": "executor.1"
      },
@@ -570,6 +607,17 @@
       }
      ],
      "resolution": {
+      "authority": {
+       "code_categories": [],
+       "confidence": "high",
+       "gate": [
+        "destructive",
+        "public-api",
+        "scope-expansion",
+        "security"
+       ],
+       "mode": "advisor"
+      },
       "by": "advisor",
       "value": "keep"
      },

@@ -16,7 +16,7 @@ from aicore.config import ResolvedConfig, resolve
 from aicore.config.units import foundation_root
 from aicore.util import digest as _digest
 
-from orch.conductor import risk
+from orch.conductor import questions, risk
 from orch.port import BINDINGS
 
 ORCH_ROOT = Path(__file__).resolve().parents[2]
@@ -75,6 +75,9 @@ def _dirs(resolved: ResolvedConfig) -> tuple:
 
 def _conductor(resolved: ResolvedConfig) -> dict:
     """``[orch.conductor]`` as plain data: the global layer of the run options and the role command lines."""
+    question_mode = resolved.get("conductor.questions")
+    if question_mode not in questions.MODES:
+        raise SettingsError("QUESTIONS_UNKNOWN", f"conductor.questions must be one of {', '.join(questions.MODES)}")
     return {
         "provider": resolved.get("conductor.provider"),
         # only a reviewer a layer sets is an explicit one: the shipped default leaves the plan's review route its say
@@ -85,11 +88,13 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "on_blocked": resolved.get("conductor.on_blocked"),
         "foreign_untracked": resolved.get("conductor.foreign_untracked"),
         "session_executor": resolved.get("conductor.session_executor"),
-        "questions": resolved.get("conductor.questions"),
+        "questions": question_mode,
+        # Internal authority evidence, separate from the customizable heuristic risk score.
+        "_category_patterns": _category_patterns(resolved),
         "limits": {key: resolved.get(f"conductor.limits.{key}")
                    for key in ("tokens_max", "tokens_hard_max", "run_tokens_hard_max",
                                "stage_timeout_s", "stage_idle_timeout_s", "check_timeout_s",
-                               "check_idle_timeout_s")},
+                               "check_idle_timeout_s", "unmetered", "unmetered_charge_tokens", "role_timeout_s")},
         "risk": {"weights": {key: resolved.get(f"conductor.risk.weights.{key}") for key in risk.DEFAULT_WEIGHTS},
                  "patterns": {key: list(resolved.get(f"conductor.risk.patterns.{key}") or [])
                               for key in risk.DEFAULT_PATTERNS},
@@ -98,6 +103,19 @@ def _conductor(resolved: ResolvedConfig) -> dict:
         "skills_bridge": list(resolved.get("conductor.skills_bridge") or []),
         "argv": {role: list(argv) for role, argv in (resolved.get("conductor.argv") or {}).items()},
     }
+
+
+def _category_patterns(resolved: ResolvedConfig) -> dict:
+    """Retain builtin and established trusted patterns even across replacement and _unset history."""
+    patterns = {}
+    for feature in ("security", "public_cli", "schema"):
+        entry = resolved.explain(f"conductor.risk.patterns.{feature}")[0]
+        floor = set(risk.DEFAULT_PATTERNS[feature])
+        for setting in [entry, *entry.overridden]:
+            if setting.layer in ("machine", "invocation", "flags") and setting.source != "_unset":
+                floor.update(setting.value or [])
+        patterns[feature] = sorted(floor)
+    return patterns
 
 
 def _launch(resolved: ResolvedConfig) -> dict:
@@ -112,12 +130,20 @@ def _launch(resolved: ResolvedConfig) -> dict:
 
 
 def _access(resolved: ResolvedConfig) -> str:
-    """``launch.access``. A project file may tighten it but never loosen: when the project layer says ``open`` over a lower layer
-    that did not, the lower layer's value stays."""
+    """``launch.access``: project and environment settings can only tighten the trusted access floor."""
     found = resolved.explain("launch.access")[0]
-    if found.layer == "project" and found.value == "open" and found.overridden:
-        return found.overridden[0].value
-    return found.value
+    history = list(reversed(found.overridden))
+    if found.layer == "defaults":
+        # After _unset the default is reported as the winner, while the reset stays in overridden.
+        history.insert(0, found)
+    else:
+        history.append(found)
+    access = found.default
+    for setting in history:
+        value = found.default if setting.source == "_unset" else setting.value
+        if setting.layer in ("defaults", "machine", "invocation", "flags") or value == "confined":
+            access = value
+    return access
 
 
 def _research(resolved: ResolvedConfig) -> dict:
@@ -127,9 +153,17 @@ def _research(resolved: ResolvedConfig) -> dict:
 
 
 def _advisor(resolved: ResolvedConfig) -> dict:
-    """``[orch.advisor]`` as plain data."""
+    """Effective advisor authority: extra gates accumulate and confidence can only rise across layers."""
+    def values(key: str) -> list:
+        # explain() includes overwritten settings and _unset records, even after a reset to the default.
+        entry = resolved.explain(key)[0]
+        return [entry.value] + [setting.value for setting in entry.overridden if setting.value is not None]
+
+    extra = {category for value in values("advisor.human_gate_extra") for category in value}
+    ranks = {"low": 0, "medium": 1, "high": 2}
     return {"enabled": bool(resolved.get("advisor.enabled")), "max_rounds": int(resolved.get("advisor.max_rounds")),
-            "human_gate": list(resolved.get("advisor.human_gate") or [])}
+            "human_gate": sorted(set(resolved.get("advisor.human_gate") or []) | extra),
+            "min_confidence": max(values("advisor.min_confidence"), key=ranks.__getitem__)}
 
 
 def load(*, project: str | Path | None = None, config_file: str | Path | None = None,

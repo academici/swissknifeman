@@ -193,6 +193,21 @@ class RefusalTests(PrepareCase):
     def test_role_without_manifest(self):
         self.assertEqual(self.refusal("native", "claude-code", "frontend-bounded").code, "ROLE_UNKNOWN")
 
+    def test_an_available_optional_bounded_stage_stays_in_the_plan(self):
+        policy = fixture("run-policy", "solo")
+        policy["stages"].append({"id": "side", "kind": "bounded", "role": "bounded-implementer", "required": False,
+                                 "on_unavailable": "skip", "model_class": "economy"})
+        plan = self.prepare("native", "claude-code", policy)
+        self.assertValid(plan)
+        side = next(stage for stage in plan["stages"] if stage["stage_id"] == "side")
+        self.assertEqual(side["role"], "bounded-implementer")
+
+    def test_an_optional_role_without_a_manifest_is_role_unknown(self):
+        policy = fixture("run-policy", "solo")
+        policy["stages"].append({"id": "side", "kind": "bounded", "role": "plan9-uninstalled-side-role",
+                                 "required": False, "on_unavailable": "skip", "model_class": "economy"})
+        self.assertEqual(self.refusal("native", "claude-code", policy).code, "ROLE_UNKNOWN")
+
     def test_invalid_input_and_policy(self):
         engine = Native(self.out, catalog=self.catalog)
         policy, doc = fixture("run-policy", "solo"), fixture("execution-input", "plan-bound")
@@ -359,6 +374,19 @@ class CliTests(unittest.TestCase):
             self.assertEqual((code, out), (1, ""))
             self.assertTrue(err.startswith("NOT_IMPLEMENTED:"))
             self.assertFalse(Path(directory, "out").exists())
+
+    def test_dry_run_keeps_an_available_optional_bounded_stage(self):
+        policy = fixture("run-policy", "solo")
+        policy["stages"].append({"id": "side", "kind": "bounded", "role": "bounded-implementer", "required": False,
+                                 "on_unavailable": "skip", "model_class": "economy"})
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory, "policy.json")
+            path.write_text(json.dumps(policy), encoding="utf-8")
+            arguments = self.arguments(directory)
+            arguments[arguments.index("--policy") + 1] = str(path)
+            code, out, err = self.run_cli(*arguments, "--dry-run")
+            self.assertEqual(code, 0, err)
+            self.assertIn("bounded-implementer", [stage["role"] for stage in json.loads(out)["stages"]])
 
     def test_refusal_prints_code_and_report(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -143,7 +143,20 @@ class Plan:
     def source_root(self) -> Path | None:
         """The checkout the plan belongs to: the launcher project, a checkout bound to the plan's workspace project, or the
         parent of ``plans/`` (``plans/archive/``) for a plan outside the workspace; ``None`` when no checkout is bound."""
-        return workspace.source_root_of(self.root)
+        root = workspace.source_root_of(self.root)
+        if root is not None and workspace.launcher_root() is None:
+            try:
+                here = workspace.checkout_root_of(Path.cwd())
+            except OSError:
+                here = None
+            if here is not None and os.path.realpath(here) != os.path.realpath(root) \
+                    and workspace.marker_key(here) is not None and workspace.marker_key(here) == workspace.marker_key(root):
+                key = workspace.marker_key(root)
+                raise PlanError("CHECKOUT_BINDING_MISMATCH",
+                                f"this command runs in {here}, but the plans of {key[0]}/{key[1]} belong to {root}, the bound "
+                                f"checkout; run it through {here}/.swissknifeman/launcher.py, or make {here} the bound checkout: "
+                                f"swissknifeman workspace project rebind {key[1]} --path {here}")
+        return root
 
     @property
     def repo_root(self) -> Path:

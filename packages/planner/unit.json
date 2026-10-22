@@ -14,8 +14,7 @@
     "cli": ["scripts/plan.py"],
     "config": "configs/config.schema.json",
     "plugins": [
-      {"name": "planner", "manifest": ".claude-plugin/plugin.json"},
-      {"name": "task", "source": "aliases/task"}
+      {"name": "planner", "manifest": ".claude-plugin/plugin.json"}
     ],
     "contracts": [
       {"id": "urn:swissknifeman:task:plan", "path": "schemas/plan/v1", "version": "v1", "stability": "beta"},

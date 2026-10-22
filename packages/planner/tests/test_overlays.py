@@ -55,8 +55,6 @@ class SlotSetTests(unittest.TestCase):
 
     def test_every_projection_carries_the_line_of_its_slot(self):
         projections = {"claude golden": "tests/fixtures_data/claude-command-golden/commands/{}.md",
-                       "claude alias golden": "tests/fixtures_data/claude-command-golden/aliases/task/commands/{}.md",
-                       "alias": "aliases/task/commands/{}.md",
                        "codex": "adapters/codex/skills/planner-{}/command.md",
                        "cursor": "adapters/cursor/skills/planner-{}/command.md"}
         for label, pattern in projections.items():

@@ -104,8 +104,8 @@ sys.exit(1 if bad else 0)
 PY
 
 echo "[5/6] tests (incl. plan engine) + plan.py check on selected plans"
-# lib/ — package planner; the aicore lib serves the projection renderer and its tests. Both suites (tests/ and the
-# plan engine tests/engine) run side by side in scripts/test.sh.
+# lib/ — package planner; the aicore lib serves the projection renderer and its tests.
+# scripts/test.sh discovers tests/ once, including the plan engine tests/engine.
 if [[ -n "${SKM_VALIDATE_SKIP_TESTS:-}" ]]; then
   echo "  tests skipped (SKM_VALIDATE_SKIP_TESTS: the caller ran them)"
 else

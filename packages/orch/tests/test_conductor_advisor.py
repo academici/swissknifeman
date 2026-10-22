@@ -5,11 +5,14 @@ from __future__ import annotations
 
 import json
 import sys
+from types import SimpleNamespace
 import unittest
+from unittest import mock
 
-from orch import settings
+from orch import contracts, settings
 from orch.conductor import contract, engine, prompts
-from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
+from orch.conductor.stages import advice as advice_stage
+from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report, reproduced
 from tests.test_conductor_questions import ASK, asking
 
 ENABLED = '[orch.conductor]\nquestions = "advisor"\n\n[orch.advisor]\nenabled = true\n'
@@ -57,12 +60,15 @@ class QuestionTriggerTests(AdvisorCase):
         entry = self.state(err)["questions"]["W1"]["Q1"]
         self.assertEqual((entry["status"], entry["resolution"]["value"], entry["resolution"]["by"]),
                          ("applied", "keep", "advisor"))
+        self.assertEqual(entry["resolution"]["authority"], {
+            "mode": "advisor", "gate": ["destructive", "public-api", "scope-expansion", "security"],
+            "code_categories": [], "confidence": "high"})
         self.assertIn("Answer: keep (by advisor)", self.prompt("executor", 2))
         self.assertEqual(len(self.messages(err, "QUESTION_ADVISED")), 1)
         saved = json.loads((self.project / "plans/T/artifacts/W1/advice-1.json").read_text())
         self.assertEqual(contract.problems(saved, "advice"), [])
         self.assertEqual(saved["recommendation"], "keep")
-        self.assertIn("plans/T/artifacts/W1/", self.source()["commits"][0]["paths"])  # the folder that holds advice-1.json
+        self.assertIn("plans/T/artifacts/W1/advice-1.json", self.source()["commits"][0]["paths"])  # the records, file by file
 
     def test_the_prompt_of_the_advisor_names_the_problem_the_evidence_and_the_result_block(self):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "advisor": [advice("question:Q1@1")],
@@ -92,7 +98,7 @@ class QuestionTriggerTests(AdvisorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         (text,) = [text for text in self.escalations() if text.startswith("QUESTION: Q1")]
         self.assertIn("advisor, plans/T/artifacts/W1/advice-1.json: recommends keep, low confidence", text)
-        self.assertIn("for the owner: the advisor says only the owner can decide", text)
+        self.assertIn("for the owner: advisor: the advisor says only the owner can decide", text)
         entry = self.state(err)["questions"]["W1"]["Q1"]
         self.assertEqual(entry["status"], "open")
         self.assertEqual(entry["advice"]["recommendation"], "keep")
@@ -175,6 +181,131 @@ class QuestionTriggerTests(AdvisorCase):
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
 
 
+class GateTriggerTests(AdvisorCase):
+    def project_advisor(self, text: str) -> None:
+        path = self.project / ".swissknifeman" / "config.toml"
+        path.parent.mkdir(exist_ok=True)
+        path.write_text("schema_version = 1\n" + text, encoding="utf-8")
+        self.git("add", ".swissknifeman/config.toml")
+        self.git("commit", "-q", "-m", "project advisor configuration")
+
+    def held(self, recommendation: dict, expected: str, write=None) -> dict:
+        asked = asking(dict(ASK))
+        if write:
+            asked["write"] = write
+        self.script({"executor": [asked], "advisor": [recommendation]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("executor"), self.calls("advisor")), (1, 1, 1), err)
+        entry = self.state(err)["questions"]["W1"]["Q1"]
+        self.assertEqual(entry["status"], "open")
+        self.assertNotIn("resolution", entry)
+        self.assertIn(expected, entry["advice"]["held"])
+        self.assertTrue(any(expected in text for text in self.messages(err, "ADVICE_HELD")), err)
+        return entry
+
+    def test_a_project_can_add_a_gate_for_other(self):
+        self.project_advisor('[orch.advisor]\nhuman_gate_extra = ["other"]\n')
+        self.held(advice("question:Q1@1", category="other"), "advisor: category other")
+
+    def test_a_project_empty_extra_does_not_remove_a_machine_gate(self):
+        self.configure(ENABLED + 'human_gate_extra = ["other"]\n')
+        self.project_advisor('[orch.advisor]\nhuman_gate_extra = []\n')
+        self.held(advice("question:Q1@1", category="other"), "advisor: category other")
+
+    def test_a_project_unset_extra_does_not_remove_a_machine_gate(self):
+        self.configure(ENABLED + 'human_gate_extra = ["other"]\n')
+        self.project_advisor('[orch]\n_unset = ["advisor.human_gate_extra"]\n')
+        self.held(advice("question:Q1@1", category="other"), "advisor: category other")
+
+    def test_low_confidence_is_held_even_with_an_empty_gate(self):
+        self.configure(ENABLED + "human_gate = []\n")
+        self.held(advice("question:Q1@1", confidence="low"),
+                  "confidence low is below orch.advisor.min_confidence medium")
+
+    def test_a_project_low_threshold_cannot_weaken_machine_high(self):
+        self.configure(ENABLED + 'human_gate = []\nmin_confidence = "high"\n')
+        self.project_advisor('[orch.advisor]\nmin_confidence = "low"\n')
+        self.held(advice("question:Q1@1", confidence="medium"),
+                  "confidence medium is below orch.advisor.min_confidence high")
+
+    def test_a_security_path_overrules_the_models_other_category(self):
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "src/auth/check.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: security (src/auth/check.py)",
+                  {"src/auth/check.py": "changed\n"})
+
+    def test_a_public_api_in_the_write_set_is_held_before_it_changes(self):
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "src/cli.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: public-api (src/cli.py)")
+
+    def test_project_empty_patterns_cannot_release_builtin_security(self):
+        self.project_advisor('[orch.conductor.risk.patterns]\nsecurity = []\npublic_cli = []\nschema = []\n')
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "src/auth/check.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: security (src/auth/check.py)",
+                  {"src/auth/check.py": "changed\n"})
+
+    def test_project_replacement_cannot_release_trusted_custom_public_api(self):
+        self.configure(ENABLED + '[orch.conductor.risk.patterns]\npublic_cli = ["custom/command.py"]\n')
+        self.project_advisor('[orch.conductor.risk.patterns]\npublic_cli = ["unrelated/**"]\n')
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "custom/command.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: public-api (custom/command.py)")
+
+    def test_project_reset_cannot_release_trusted_custom_schema(self):
+        self.configure(ENABLED + '[orch.conductor.risk.patterns]\nschema = ["custom/contract.py"]\n')
+        self.project_advisor('[orch]\n_unset = ["conductor.risk.patterns"]\n')
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "custom/contract.py"]}})
+        self.held(advice("question:Q1@1", category="other"), "code: public-api (custom/contract.py)")
+
+    def test_empty_patterns_still_allow_unrelated_automatic_advice(self):
+        self.project_advisor('[orch.conductor.risk.patterns]\nsecurity = []\npublic_cli = []\nschema = []\n')
+        self.script({"executor": [asking(dict(ASK)), executor_ok("W1")],
+                     "advisor": [advice("question:Q1@1", category="other")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        resolution = self.state(err)["questions"]["W1"]["Q1"]["resolution"]
+        self.assertEqual((resolution["by"], resolution["authority"]["code_categories"]), ("advisor", []))
+
+    def test_automatic_advice_records_code_categories_even_when_the_gate_is_empty(self):
+        self.configure(ENABLED + "human_gate = []\n")
+        self.set_items({"W1": {"write_set": ["out/W1.txt", "src/auth/check.py"]}})
+        self.script({"executor": [asking(dict(ASK)), executor_ok("W1")],
+                     "advisor": [advice("question:Q1@1", confidence="medium")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["resolution"]["authority"], {
+            "mode": "advisor", "gate": [], "code_categories": ["security"], "confidence": "medium"})
+
+    def test_a_path_outside_the_write_set_is_held(self):
+        self.held(advice("question:Q1@1", category="other"), "code: scope-expansion (out/extra.txt)",
+                  {"out/extra.txt": "changed\n"})
+
+
+class GateReadingTests(unittest.TestCase):
+    def conductor(self, gate, changed=(), write_set=(), outside=(), patterns=None, minimum="medium"):
+        return SimpleNamespace(settings=SimpleNamespace(conductor={"risk": {"patterns": patterns or {}}}),
+                               _advisor_cfg=lambda: {"human_gate": gate, "min_confidence": minimum},
+                               _changed=lambda item: list(changed), _outside=lambda item: list(outside),
+                               progress=mock.Mock()), SimpleNamespace(ref="W1", input_doc={"scope": {"write_set": list(write_set)}})
+
+    def test_code_categories_use_the_configured_patterns_independently_of_weights(self):
+        conductor, item = self.conductor(["security", "public-api", "scope-expansion"],
+                                        changed=["custom/protected.py", "custom/schema.json", "extra.py"],
+                                        write_set=["custom/command.py"], outside=["extra.py"],
+                                        patterns={"security": ["custom/protected.py"], "schema": ["custom/schema.json"],
+                                                  "public_cli": ["custom/command.py"]})
+        self.assertEqual(advice_stage.code_categories(conductor, item), {"security", "public-api", "scope-expansion"})
+        _, held = advice_stage.reading(conductor, advice("q", category="other")["result"], item)
+        for reason in ("code: security", "code: public-api", "code: scope-expansion"):
+            self.assertIn(reason, held)
+
+    def test_confidence_at_the_threshold_passes_and_below_it_is_held(self):
+        for threshold, confidence, expected in (("medium", "medium", False), ("high", "high", False),
+                                                 ("high", "medium", True), ("medium", "low", True)):
+            with self.subTest(threshold=threshold, confidence=confidence):
+                conductor, item = self.conductor([], minimum=threshold)
+                _, held = advice_stage.reading(conductor, advice("q", confidence=confidence)["result"], item)
+                self.assertEqual(bool(held), expected)
+
+
 class RedChecksTriggerTests(AdvisorCase):
     def red(self):
         return {"result": report("W1")}  # writes nothing: the check stays red
@@ -202,6 +333,9 @@ class RedChecksTriggerTests(AdvisorCase):
         self.assertIn("recommends keep", text)
         self.assertEqual(self.calls("executor"), 2)
         run = self.run_dir(err).name
+        binding = self.state(err)["questions"]["W1"]["orch-advice-1"]["binding"]
+        input_doc = json.loads((self.run_dir(err) / "W1/input.json").read_text())
+        self.assertEqual(binding["input_part_digest"], contracts.required_digest(input_doc))
         self.assertIn("orch-advice-1", self.conduct("questions", "--run", run)[1])
         self.conduct("answer", "--run", run, "--item", "W1", "--question", "orch-advice-1", "--option", "rename", "--by", "owner")
         self.reopen()
@@ -234,6 +368,12 @@ class RedChecksTriggerTests(AdvisorCase):
 
 class RejectedFindingTriggerTests(AdvisorCase):
     REPRO = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+
+    def setUp(self):
+        super().setUp()
+        patcher = reproduced(0)  # the rerun of a rejection sees the exit the triager reported
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def rejecting(self) -> dict:
         return {"result": {"confirmed": [], "rejected": [
@@ -324,7 +464,8 @@ class ContractAndConfigTests(unittest.TestCase):
     def test_the_defaults_of_orch_advisor(self):
         found = settings.defaults().advisor
         self.assertEqual(found, {"enabled": False, "max_rounds": 2,
-                                 "human_gate": ["security", "destructive", "public-api", "scope-expansion"]})
+                                 "human_gate": ["destructive", "public-api", "scope-expansion", "security"],
+                                 "min_confidence": "medium"})
 
     def test_questions_advisor_is_a_value_of_the_config(self):
         schema = json.loads((engine.ORCH_ROOT / "configs" / "config.schema.json").read_text())

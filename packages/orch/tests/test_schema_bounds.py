@@ -25,7 +25,7 @@ def refused(layer: dict) -> bool:
 
 def numeric_fields():
     """``(group, key, node)`` of every integer field of run-options."""
-    yield from (("limits", key, node) for key, node in LIMITS.items())
+    yield from (("limits", key, node) for key, node in LIMITS.items() if node.get("type") == "integer")  # not unmetered, role_timeout_s
     for group in ("checks", "review"):
         yield from ((group, key, node) for key, node in SCHEMA["properties"][group]["properties"].items()
                     if node.get("type") == "integer")

@@ -1,6 +1,6 @@
 # How SwissKnifeMan works
 
-SwissKnifeMan prepares a project for AI agents (Claude Code, Codex, Cursor, Grok) and runs planned work through them.
+SwissKnifeMan prepares a project for AI agents (Claude Code, Codex, Cursor, Grok) and runs planned work through them. The principles behind it: [Philosophy](philosophy.md).
 It is one repository of modules: each does one job, reaches the others only through their commands, bridges or
 events, and shares the foundation `aicore`. This page explains what each part does and how the parts meet; the pages
 it links hold the reference.

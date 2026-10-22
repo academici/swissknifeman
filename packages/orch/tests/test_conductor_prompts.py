@@ -327,7 +327,10 @@ class RunManifestTests(ConductorCase):
                          ("executor.1", "executor.2", "executor.1"))
         self.assertTrue(doc["counts"]["added"] + doc["counts"]["changed"] >= 1, doc)  # the correction package
         self.assertEqual(doc["tokens"]["delta"], doc["tokens"]["to"] - doc["tokens"]["from"])
-        self.assertIn("role_text", [row["kind"] for row in doc["blocks"] if row["change"] == "same"])
+        # executor.2 continued the session: its delta prompt has no role text or input, but the continuation and the contract
+        self.assertIn("role_text", [row["kind"] for row in doc["blocks"] if row["change"] == "removed"])
+        self.assertIn("resumed", [row["kind"] for row in doc["blocks"] if row["change"] == "added"])
+        self.assertIn("result_contract", [row["kind"] for row in doc["blocks"] if row["change"] == "same"])
         code, out, _ = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.2")
         self.assertIn("executor.1 -> executor.2:", out)
         code, out, error = self.conduct("prompt", "diff", "--run", run, "--item", "W1", "--step", "executor.2",

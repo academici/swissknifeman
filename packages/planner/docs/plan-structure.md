@@ -77,7 +77,11 @@ mutations with `PLANS_MIGRATED`. `swissknifeman project context --json` prints `
 A workspace plan is separate from its source checkout (`Plan.source_root`, bound with
 `swissknifeman workspace project attach`). Operations that need the checkout (`context`, `check` of
 repository paths, `scout`, `commit`, `commits`, the executor brief of a bridge) refuse with `PLAN_SOURCE_UNBOUND`
-without one; reading and changing plan documents works without it. `commit` of a workspace plan makes
+without one; reading and changing plan documents works without it. Without a launcher, a command started in a different
+checkout with the same `(workspace, project_id)` marker refuses with `CHECKOUT_BINDING_MISMATCH` before using source
+paths. Run it through that checkout's `.swissknifeman/launcher.py`, or make it primary with
+`swissknifeman workspace project rebind <project_id> --path <checkout>`. The launcher binding is process-local;
+conductor subprocesses need the development worktree to be primary as well. `commit` of a workspace plan makes
 two commits: product paths in the checkout (trailers `Plan*`), then plan files in the workspace
 repository under `git.lock` with `Plan-Project` and `Plan-Source-Commit`. The result adds `repo`,
 `workspace_sha` and `workspace_commit.status` (`committed`, `nothing`, `skipped-no-git`, `locked`,
@@ -136,6 +140,29 @@ reaches the planner and its partner only through their public command lines and 
 command on `PATH`. `tests/test_boundary.py` keeps the core clean; its temporary `tests/boundary_allowlist.json` may only
 shrink. The tests of a bridge belong to the bridge (`bash scripts/test-bridges.sh` in the hub).
 Bridges: `plan.py bridge list`; a bridge projects plan data for an external executor (see the bridge's README).
+
+## Validation checks
+
+`plan.py check` warns about checks that cost more than they prove. Warnings never fail the command.
+
+| Code | Meaning |
+|:--|:--|
+| `check_cadence` | an item check runs a repository-wide or branch-wide command (`--tier all`, `test-integration.sh`, …): move it to `phase.validation` |
+| `validation_id_clash` | an item check has the id of a check of its phase |
+| `check_overlap` | two checks repeat the same tests |
+
+`check_overlap` points at the later check of a pair, `<id> repeats the tests of <other id> (<reason>); keep one, or run
+validate.sh with SKM_VALIDATE_SKIP_TESTS=1`. The rules:
+
+- (a) one item runs `bash packages/<id>/scripts/validate.sh` without `SKM_VALIDATE_SKIP_TESTS=1` and also
+  `python3 scripts/affected-tests.py --run` (without `--tier`) or the full `bash packages/<id>/scripts/test.sh` of the
+  same module;
+- (b) one item runs the full `bash packages/<id>/scripts/test.sh` and `… test.sh -p …` of the same module;
+- (c) one phase runs `affected-tests.py --tier all` and `scripts/test-bridges.sh` (the tier already runs the bridges);
+- (d) an item check is literally equal to a check of its own phase (the closing item runs both).
+
+Checks of different modules, and `validate.sh` with `SKM_VALIDATE_SKIP_TESTS=1`, do not overlap. The lint is
+deliberately textual: it names proven repeats and does not remove checks that run in different contexts.
 
 ## Attempts and evidence
 

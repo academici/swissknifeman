@@ -1041,13 +1041,20 @@ def copy_tracked(ctx: Context, prefix: str, destination: Path, target_prefix: st
 
 
 def standalone_env(home: Path, unset: list) -> dict:
-    env = {k: v for k, v in os.environ.items() if k not in unset}
+    env = {k: v for k, v in os.environ.items() if k not in unset and not standalone_partner_variable(k)}
     for name in ("config", "data", "cache", "state"):
         (home / ".xdg" / name).mkdir(parents=True, exist_ok=True)
         env[f"XDG_{name.upper()}_HOME"] = str(home / ".xdg" / name)
     (home / "tmp").mkdir(parents=True, exist_ok=True)
-    env.update({"HOME": str(home), "TMPDIR": str(home / "tmp"), "USERPROFILE": str(home)})
+    env.update({"HOME": str(home), "TMPDIR": str(home / "tmp"), "USERPROFILE": str(home),
+                "SKM_HOME": str(home / "skm")})
     return env
+
+
+def standalone_partner_variable(name):
+    """Hub partner roots must never escape into the isolated copy."""
+    return bool(re.fullmatch(r"SKM_.*_(ROOT|BIN)", name)) or name.startswith("SKM_LAUNCHER_") or name in (
+        "AICORE_ROOT", "PLANNER_ROOT", "PLANNER_PLAN_PY", "SKM_INVOCATION_CWD")
 
 
 _ACTIVE_GROUPS: set = set()  # process groups of the commands that run now (each command has a session of its own)
@@ -1060,6 +1067,14 @@ def kill_active_groups() -> None:
             os.killpg(group, signal.SIGKILL)
         except OSError:
             pass
+
+
+def keep_failed_output(text: str) -> Path:
+    """Write the full output of a failed standalone command and return the path. Nothing removes the directory."""
+    directory = Path(tempfile.mkdtemp(prefix="skm-failed-job-"))
+    path = directory / "output.txt"
+    path.write_bytes(text.encode("utf-8", "surrogateescape"))
+    return path
 
 
 def run_limited(argv: list, cwd: Path, env: dict, timeout: int):
@@ -1104,10 +1119,181 @@ def standalone_commands(doc: dict) -> list:
            [(name, dev[name]) for name in ("test", "validate") if dev.get(name)]
 
 
-def run_standalone(ctx: Context, folder: str) -> tuple:
+# A private receipt contract: only successful, unchanged executions authorize reuse.
+_STANDALONE_RECEIPT_SCHEMA = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:swissknifeman:hub:standalone-receipts:v1",
+    "type": "object", "additionalProperties": {"type": "object", "additionalProperties": False,
+        "required": ["key", "summary", "context"], "properties": {
+            "key": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+            "summary": {"type": "string"}, "context": {"const": "standalone"}}}}
+_RECEIPT_LOCK = threading.Lock()
+
+
+def git_directory(root, common=False):
+    try:
+        done = subprocess.run(["git", "rev-parse", "--path-format=absolute",
+                               "--git-common-dir" if common else "--git-dir"], cwd=root,
+                              capture_output=True, text=True, timeout=10)
+        return Path(done.stdout.strip()) if done.returncode == 0 and done.stdout.strip() else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def standalone_receipt_file(ctx):
+    run = os.environ.get("SKM_CHECK_RUN", "")
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run):
+        return None
+    directory = git_directory(ctx.root)
+    return directory / "ecosystem-units" / f"standalone-run-{run}.json" if directory else None
+
+
+def read_standalone_receipts(path):
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        schema = _STANDALONE_RECEIPT_SCHEMA
+        return doc if not schema_validator().validate_node(None, schema, schema["$id"], doc) else {}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def save_standalone_receipt(path, folder, receipt):
+    # Threads and independent invocations can publish into the same run file.
+    import fcntl
+    with _RECEIPT_LOCK:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.with_suffix(".lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            doc = read_standalone_receipts(path)
+            if receipt is None:
+                doc.pop(folder, None)
+            else:
+                doc[folder] = receipt
+            schema = _STANDALONE_RECEIPT_SCHEMA
+            if schema_validator().validate_node(None, schema, schema["$id"], doc):
+                raise ValueError("invalid standalone receipt")
+            fd, name = tempfile.mkstemp(prefix=path.name + ".", dir=str(path.parent))
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as stream:
+                    json.dump(doc, stream, sort_keys=True)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.replace(name, path)
+            finally:
+                if os.path.exists(name):
+                    os.unlink(name)
+
+
+def standalone_prefixes(ctx, folder):
+    settings = ctx.config.get("standalone") or {}
+    paths = [f"packages/{folder}"]
+    foundation = (ctx.config.get("foundation") or {}).get("id")
+    if foundation and foundation != folder:
+        paths.append(f"packages/{foundation}")
+    if folder not in (settings.get("foundation_free") or ()):
+        paths += list(settings.get("foundation_paths") or ())
+    return paths
+
+
+def standalone_copy_stamp(ctx, folder):
+    """Detect inputs edited and restored during execution without putting mtimes in reuse keys."""
+    prefixes = standalone_prefixes(ctx, folder)
+    stamp = []
+    for rel in list_files(ctx.root):
+        if "node_modules" not in rel.split("/") and any(rel == p or rel.startswith(p.rstrip("/") + "/") for p in prefixes):
+            info = (ctx.root / rel).lstat()
+            stamp.append((rel, info.st_mode, info.st_size, info.st_mtime_ns, info.st_ctime_ns))
+    return stamp
+
+
+def standalone_key(ctx, folder, commands, child_jobs):
+    """Hash the actual copy, independent of staging/commits; unknown dependencies refuse reuse."""
+    import hashlib
+    import stat
+    digest = hashlib.sha256()
+    def add(value):
+        data = value if isinstance(value, bytes) else str(value).encode("utf-8", "surrogateescape")
+        digest.update(len(data).to_bytes(8, "big"))
+        digest.update(data)
+    try:
+        add(sys.version)
+        add(Path(__file__).read_bytes())
+        add((ctx.root / CONFIG_PATH).read_bytes())
+        add(json.dumps(ctx.config, sort_keys=True))
+        add(json.dumps(commands, sort_keys=True))
+        add(child_jobs)
+        unset = set((ctx.config.get("standalone") or {}).get("unset_env") or ())
+        replaced = {"HOME", "SKM_HOME", "TMPDIR", "USERPROFILE", "PWD", "OLDPWD", "_", "SHLVL", "SKM_CHECK_RUN",
+                    "SKM_PAR_UNITTEST_TIMES", "SKM_TEST_CONTEXT", SKIP_TESTS_ENV}
+        replaced.update("XDG_" + n + "_HOME" for n in ("CONFIG", "DATA", "CACHE", "STATE"))
+        for name, value in sorted(os.environ.items()):
+            if name in unset or name in replaced or standalone_partner_variable(name):
+                continue
+            add(name)
+            add(value)
+            if name in ("PYTHONPATH", "PYTHONHOME", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "BASH_ENV", "ENV") and value:
+                return None  # external import/startup inputs have no measured dependency closure
+            if name.startswith(("SKM_", "PLANNER_")) and Path(value).is_absolute():
+                # Unknown external config/fixture inputs cannot authorize reuse by path alone.
+                try:
+                    relative = Path(value).resolve().relative_to(ctx.root.resolve()).as_posix()
+                except ValueError:
+                    return None
+                if not any(relative == p or relative.startswith(p.rstrip("/") + "/") for p in standalone_prefixes(ctx, folder)):
+                    return None
+            # External partner trees are not part of the copy's dependency closure.
+            if name.endswith("_ROOT") and value:
+                target = Path(value)
+                if target.is_absolute():
+                    try:
+                        target.resolve().relative_to(ctx.root.resolve())
+                    except ValueError:
+                        return None
+        prefixes = standalone_prefixes(ctx, folder)
+        for rel in list_files(ctx.root):
+            if "node_modules" in rel.split("/") or not any(rel == p or rel.startswith(p.rstrip("/") + "/") for p in prefixes):
+                continue
+            source = ctx.root / rel
+            add(rel)
+            add(stat.S_IMODE(source.lstat().st_mode))
+            if source.is_symlink():
+                add(os.readlink(source))
+                # Uncopied link targets would introduce an unmeasured dependency.
+                resolved = source.resolve().relative_to(ctx.root.resolve()).as_posix()
+                if not any(resolved == p or resolved.startswith(p.rstrip("/") + "/") for p in prefixes):
+                    return None
+            add(source.read_bytes())
+        # Track tool identities and PATH directory entries, including tools called from shell scripts.
+        tools = {sys.executable, "python3", "bash", "git", "node", "npm"}
+        tools.update(argv[0] for _, argv in commands if argv)
+        for tool in sorted(tools):
+            found = shutil.which(tool)
+            add((tool, found))
+            if found:
+                target = Path(found).resolve()
+                add(target)
+                add(target.stat().st_mode)
+                add(target.read_bytes())
+        for directory in os.get_exec_path():
+            path = Path(directory)
+            if path.is_dir():
+                for entry in sorted(path.iterdir()):
+                    try:
+                        info = entry.stat()
+                    except FileNotFoundError:
+                        info = entry.lstat()
+                    add((str(entry), info.st_mode, info.st_size, info.st_mtime_ns))
+        return digest.hexdigest()
+    except (OSError, ValueError, EnvironmentProblem):
+        return None
+
+
+def run_standalone(ctx: Context, folder: str, child_jobs=None) -> tuple:
     """(state, tail): the module in a copy of its tracked files plus the foundation stand-in."""
     if _INTERRUPTED.is_set():
         return "fail", "interrupted"
+    # Match discovery to the actual copy, including files created after hub discovery.
+    ctx = Context(ctx.root, load_config(ctx.root), list_files(ctx.root))
     unit = load_units(ctx).get(folder)
     commands = standalone_commands(unit.doc if unit else {})
     if not commands or unit.base.startswith(BRIDGES_DIR + "/"):
@@ -1116,6 +1302,19 @@ def run_standalone(ctx: Context, folder: str) -> tuple:
     timeout = int(settings.get("timeout_s", STANDALONE_TIMEOUT_S))
     unset = list(settings.get("unset_env") or ())
     foundation = (ctx.config.get("foundation") or {}).get("id")
+    receipt_file = standalone_receipt_file(ctx)
+    try:
+        stamp = standalone_copy_stamp(ctx, folder) if receipt_file else None
+    except (OSError, EnvironmentProblem):
+        stamp = None
+    key = standalone_key(ctx, folder, commands, child_jobs) if receipt_file else None
+    if stamp is None:
+        key = None
+    if key:
+        previous = read_standalone_receipts(receipt_file).get(folder, {})
+        if previous.get("key") == key:
+            return "pass", "(reused) context=standalone\n" + previous["summary"]
+        save_standalone_receipt(receipt_file, folder, None)
     tmp = Path(tempfile.mkdtemp(prefix=f"skm-standalone-{folder}."))
     try:
         # A module listed in foundation_free proves it needs nothing of the stand-in paths (the old shared tree).
@@ -1127,17 +1326,47 @@ def run_standalone(ctx: Context, folder: str) -> tuple:
         copy_tracked(ctx, f"packages/{folder}", tmp, f"vendor/{folder}")
         module = tmp / "vendor" / folder
         env = standalone_env(tmp / "home", unset)
+        env["SKM_INVOCATION_CWD"] = str(module)
+        for copied in {folder, foundation} - {None}:
+            root = tmp / "vendor" / copied
+            env[f"SKM_{copied.upper()}_ROOT"] = str(root)
+            if copied == "aicore":
+                env["AICORE_ROOT"] = str(root)
+            if copied == "planner":
+                env["PLANNER_ROOT"] = str(root)
+                env["PLANNER_PLAN_PY"] = str(root / "scripts" / "plan.py")
+            if copied == "workspace":
+                env["SKM_WORKSPACE_MODULE_ROOT"] = str(root)
+        env.pop(SKIP_TESTS_ENV, None)
+        env["SKM_TEST_CONTEXT"] = "standalone"
+        if child_jobs is not None:
+            env["SKM_TEST_JOBS"] = str(child_jobs)
+        common = git_directory(ctx.root, common=True)
+        if common:
+            import hashlib
+            suite_key = hashlib.sha256(str(ctx.root / "packages" / folder / "tests").encode()).hexdigest()[:16]
+            env["SKM_PAR_UNITTEST_TIMES"] = str(common / "par-unittest" / (suite_key + ".json"))
+        summaries = []
         tested = False
         for name, argv in commands:
             if name == "validate" and tested:  # the tests of the copy just passed: validate.sh does not run them again
                 env = {**env, SKIP_TESTS_ENV: "1"}
             code, out = run_limited(argv, module, env, timeout)
+            summaries.append(f"{name}: context=standalone\n" + "\n".join(out.splitlines()[-STANDALONE_TAIL_LINES:]))
             tested = tested or name == "test"
             if code != 0:
                 reason = f"timeout after {timeout}s" if code is None else f"exit {code}"
                 tail = "\n".join(out.splitlines()[-STANDALONE_TAIL_LINES:])
-                return "fail", f"{name} `{' '.join(argv)}`: {reason}\n{tail}"
-        return "pass", ""
+                return "fail", (f"{name} `{' '.join(argv)}`: {reason}\n"
+                                f"full output: {keep_failed_output(out)}\n{tail}")
+        summary = "\n".join(summaries)
+        try:
+            unchanged = key and key == standalone_key(ctx, folder, commands, child_jobs) and stamp == standalone_copy_stamp(ctx, folder)
+        except (OSError, EnvironmentProblem):
+            unchanged = False
+        if unchanged and not _INTERRUPTED.is_set():
+            save_standalone_receipt(receipt_file, folder, {"key": key, "summary": summary, "context": "standalone"})
+        return "pass", summary
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -1180,7 +1409,8 @@ def cmd_standalone(ctx: Context, args) -> int:
         return 2
     results, failed = {}, []
     # The modules are independent (each runs in its own copy with its own HOME), so they run side by side.
-    jobs = max(1, min(args.jobs or int(os.environ.get("SKM_STANDALONE_JOBS") or 4), len(chosen)))
+    budget = max(1, int(os.environ.get("SKM_TEST_JOBS") or min(8, os.cpu_count() or 1)))
+    jobs = max(1, min(args.jobs or int(os.environ.get("SKM_STANDALONE_JOBS") or 4), len(chosen), budget))
     previous = {number: signal.signal(number, interrupted) for number in (signal.SIGTERM, signal.SIGHUP)} \
         if threading.current_thread() is threading.main_thread() else {}
     try:
@@ -1192,11 +1422,17 @@ def cmd_standalone(ctx: Context, args) -> int:
 
 def standalone_run(ctx: Context, args, chosen: list, jobs: int, recorded: dict, results: dict, failed: list) -> int:
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        futures = {folder: pool.submit(run_standalone, ctx, folder) for folder in chosen}
+        budget = max(1, int(os.environ.get("SKM_TEST_JOBS") or min(8, os.cpu_count() or 1)))
+        print(f"standalone jobs: requested={args.jobs or os.environ.get('SKM_STANDALONE_JOBS', '4')} "
+              f"effective={jobs} child_jobs={max(1, budget // jobs)} budget={budget}", flush=True)
+        futures = {folder: pool.submit(run_standalone, ctx, folder, max(1, budget // jobs)) for folder in chosen}
         for folder in chosen:  # reported in the order asked for, as soon as each one is done
             state, tail = futures[folder].result()
             results[folder] = state
-            print(f"standalone {folder}: {state}", flush=True)
+            reused = " (reused)" if tail.startswith("(reused)") else ""
+            print(f"standalone {folder}: {state}{reused}", flush=True)
+            if state == "pass" and tail:
+                print(tail, flush=True)
             if state == "fail":
                 print(f"ECOSYSTEM_STANDALONE_FAIL: {unit_base(ctx, folder)}: {tail}", file=sys.stderr)
                 if args.baseline or recorded.get(folder) == "pass":

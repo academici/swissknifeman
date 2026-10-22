@@ -184,6 +184,22 @@
         }
       }
     },
+    "routing": {
+      "additionalProperties": false,
+      "description": "Model pool admission.",
+      "properties": {
+        "unknown_model": {
+          "default": "warn",
+          "description": "Unknown pool models warn (warn) or are refused (refuse); start --strict-route always refuses them.",
+          "enum": [
+            "refuse",
+            "warn"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "views": {
       "type": "object",
       "description": "Human views of a plan.",

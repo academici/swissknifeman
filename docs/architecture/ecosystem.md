@@ -156,7 +156,13 @@ automatically by `python3 scripts/ecosystem-units.py check`:
   Violations that exist today sit in a baseline (`configs/ecosystem-baseline.json`); a new violation fails the check,
   and `--strict` fails on any.
 - **Standalone:** the module's tests pass in a copy of its folder with only a stand-in for `aicore`
-  (`ecosystem-units.py standalone`).
+  (`ecosystem-units.py standalone`). The runner gives the copy its own state home and partner roots, passes the hub's
+  `par-unittest` timing file, and divides `SKM_TEST_JOBS` among concurrent modules. Successful command summaries remain
+  visible with `context=standalone`. A valid `SKM_CHECK_RUN` enables atomic receipts under the worktree git directory's
+  `ecosystem-units/standalone-run-<run>.json`: unchanged copied bytes/modes, Python, runner/config, tools and environment
+  may reuse a green result with `(reused)` and its original summary. Staging or committing identical bytes preserves
+  that key. Corrupt receipts, unknown dependencies and changes during execution refuse reuse. Without `SKM_CHECK_RUN`,
+  including manual `--baseline` runs, every selected module executes fully.
 - **Finding `aicore`** by the `bin/` wrapper: `AICORE_ROOT`, then `<module>/_vendor/aicore`, then the neighbouring
   `../aicore` (only inside the hub repository, a development mode). One canonical fragment does the search and a miss
   ends with `AICORE_NOT_FOUND` ([ADR 0029](decisions/0029-aicore-locator-fragment.md)). How `aicore` is delivered after
@@ -367,9 +373,9 @@ labels are fixed by [ADR 0045](decisions/0045-telemetry-naming-conventions.md).
   ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)).
 - **Does not own:** model names (`aicore.provider`), launch argv (`orch`), delivery into projects (`aicore.delivery`),
   projection of commands to Codex, Grok and Cursor (`aicore.content`).
-- **Rename:** `/task:*` became `/planner:*` and `SKM_TASK_ROOT` became `PLANNER_ROOT`, with transitional aliases for one
-  minor release: the compatibility plugin `task` (`packages/planner/aliases/task`), the old environment variable with a
-  warning, and `task:<id>` command lines read as `planner:<id>`
+- **Rename:** `/task:*` became `/planner:*` and the old root variable became `PLANNER_ROOT`. The transitional aliases
+  were removed in PLAN9 P1.2 (window of PLAN3 D88): the compatibility plugin, the old environment variable and
+  `task:<id>` spellings are gone. Plan URNs stay `urn:swissknifeman:task:plan:*`
   ([ADR 0009](decisions/0009-task-renamed-to-planner.md), [ADR 0052](decisions/0052-planner-rename-compatibility-alias.md)).
 - **After P9:**
   - *Command line:* `scripts/plan.py` (no `bin/` yet); plugin `planner`. Extra verbs `config show|explain` and
@@ -509,8 +515,8 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
   unfinished.
 - **Rollback criterion:** until the cutover, revert the commits of the stage on the branch; the cutover has its own
   rollback plan, and the previous release tag is the return point.
-- **Development process:** work happens in a separate clone on the branch `ecosystem-split` with an isolation guard and a
-  sandbox; the live checkout stays on `main`. See the branch section of [development](../develop.md).
+- **Development process:** work happens in a stable worktree on a phase branch; the live checkout stays on `main`.
+  See [Stable worktree](../develop.md#stable-worktree-development-of-a-big-plan).
 
 ### Stages
 
@@ -543,8 +549,8 @@ Rules every stage of the move follows ([ADR 0020](decisions/0020-migration-disci
   backup, hook and MCP paths rewritten;
 - everything changed is backed up and can be rolled back.
 
-Compatibility: plan schemas and URNs do not change; aliases of `/task:*` and the old environment variables work for one
-minor release with a warning. The guide `docs/upgrade/<version>.md` lists requirements, backup, dry-run, apply, the
+Compatibility: plan schemas and URNs do not change. The `/task:*` aliases and the old environment variable were removed
+in PLAN9 P1.2 (window of PLAN3 D88). The guide `docs/upgrade/<version>.md` lists requirements, backup, dry-run, apply, the
 `doctor` check, rollback and the steps for the second computer. The upgrade is rehearsed on copies of projects in a
 sandbox and on the second computer; only then is the branch merged and a major version tagged.
 
@@ -573,10 +579,10 @@ sandbox and on the second computer; only then is the branch merged and a major v
 
 | Risk | Measure |
 | --- | --- |
-| Live projects break | work only in the clone; a dev-clone marker; transition through `upgrade --dry-run` and rehearsal |
+| Live projects break | work only in the stable worktree; launcher-bound commands; `CHECKOUT_BINDING_MISMATCH`; promotion by fast-forward after phase validation |
 | `aicore` grows "just in case" | principle 7 and the generalisation boundary; every extension has a real consumer |
-| Tests write to the real home directory | `SKM_HOME` or a throwaway `HOME` in tests; the isolation guard covers all modules |
-| `main` moves ahead | merge `main` into the branch at the start of each stage and check golden fixtures |
+| Tests write to the real home directory | `SKM_HOME` and a throwaway `HOME` in tests; use `scripts/dev-sandbox.sh` for manual checks |
+| `main` moves ahead | start each phase from `main`, check golden fixtures, and require `promote-check` before promotion |
 | Hidden absolute paths in projects | inventory in `upgrade --dry-run`; search over the projects in the registry |
 | Size | each stage is detailed only before it runs, and each ends with a complete result |
 

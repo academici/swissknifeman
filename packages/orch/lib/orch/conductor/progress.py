@@ -87,8 +87,12 @@ class Progress:
             line["message"] = " ".join(str(line["message"]).split())[:500] or "-"
         encoded = json.dumps(line, ensure_ascii=False, sort_keys=True)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "a", encoding="utf-8") as handle:
-            handle.write(encoded + "\n")
+        with open(self.path, "a+b") as handle:
+            if handle.seek(0, os.SEEK_END):
+                handle.seek(-1, os.SEEK_END)
+                if handle.read(1) != b"\n":
+                    handle.write(b"\n")
+            handle.write((encoded + "\n").encode("utf-8"))
             handle.flush()
             os.fsync(handle.fileno())
         stream = self.stream if self.stream is not None else sys.stderr
@@ -159,11 +163,50 @@ def _seconds(start: str, end: str) -> int:
     return max(0, int(epoch(end) - epoch(start)))
 
 
-def timeline(lines: list, item: str | None = None) -> list:
+def check_context(cmd) -> str:
+    """Where a check command runs its tests, from the command text: ``installed`` (the archive smoke), ``standalone``
+    (a module outside the repository), ``partner`` (bridges, several modules) or ``local``. Distinct contexts of one
+    suite are not duplicates."""
+    text = cmd if isinstance(cmd, str) else ""
+    if "smoke-installed" in text:
+        return "installed"
+    if "standalone" in text:
+        return "standalone"
+    if "test-bridges" in text or "bridges/" in text:
+        return "partner"
+    return "local"
+
+
+def check_view(row: dict) -> dict:
+    """One check result row of ``state.json`` as the observer and the timeline show it: ``executed`` is a process that
+    really ran (not ``skipped``, not ``reused`` from an earlier green evidence); ``skip_reason`` is why a skipped check
+    did not start; ``reused_from`` is the evidence a reused result stands for."""
+    skipped, reused = bool(row.get("skipped")), bool(row.get("reused"))
+    view = {"id": row.get("id"), "seconds": row.get("seconds"), "green": bool(row.get("green")),
+            "skipped": skipped, "skip_reason": row.get("skip_reason"), "reused": reused,
+            "executed": not skipped and not reused and bool(row.get("cmd")),
+            "context": check_context(row.get("cmd"))}
+    if reused:
+        view.update(reused_from=row.get("reused_from"), original_seconds=row.get("original_seconds"))
+    return view
+
+
+def check_rows(state: dict, item: str, stage: str) -> list:
+    """The result rows of the ``checks.N`` step of ``item`` in ``state`` (an empty list when there are none)."""
+    items = state.get("items") if isinstance(state, dict) else None
+    found = items.get(item) if isinstance(items, dict) else None
+    steps = found.get("steps") if isinstance(found, dict) else None
+    step = steps.get(stage) if isinstance(steps, dict) else None
+    result = step.get("result") if isinstance(step, dict) else None
+    return [row for row in result if isinstance(row, dict)] if isinstance(result, list) else []
+
+
+def timeline(lines: list, item: str | None = None, state: dict | None = None) -> list:
     """The step intervals of the pieces of a run from its journal, in order of their start: ``{item, stage, role, route,
     start, end, duration_s, verdict, status}``. ``status`` is ``done``, ``stopped`` (the step ended with a stop), or
     ``interrupted`` (the run ended or was resumed while the step was open: its end is the end of the run, or none when the
-    run died without one; the resumed step is an interval of its own), or ``open`` (still running: no end)."""
+    run died without one; the resumed step is an interval of its own), or ``open`` (still running: no end). With the
+    run's ``state`` an interval of a ``checks.N`` step also carries ``checks``: ``check_view`` of each result row."""
     rows, current, run_end = [], {}, None
 
     def close(key, end, status, verdict=None):
@@ -191,4 +234,8 @@ def timeline(lines: list, item: str | None = None) -> list:
     for open_key in list(current):
         if run_end and run_end >= current[open_key]["start"]:
             close(open_key, run_end, "interrupted")
+    if state is not None:
+        for row in rows:
+            if str(row["stage"]).startswith("checks."):
+                row["checks"] = [check_view(entry) for entry in check_rows(state, row["item"], row["stage"])]
     return rows

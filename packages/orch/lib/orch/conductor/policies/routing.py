@@ -18,7 +18,75 @@ CLASS_RANK = {"economy": 0, "implementation": 1, "frontier": 2}
 EFFORT_RANK = {"low": 0, "medium": 1, "high": 2, "xhigh": 3, "max": 4, "ultra": 5}
 LAUNCH_ROLE = {"context-scout": "scout"}
 OPTIONAL_ROLES = {"context-scout", "report-fixer"}  # skipped, not refused, when they cannot start
+# Roles the conductor actually runs. A policy stage whose role is outside this set is not silently dropped:
+# required + on_unavailable refuse stops the run; anything else is skipped once (POLICY_STAGE_SKIPPED).
+CONDUCTOR_ROLES = ("deterministic", "scout", "context-scout", "executor", "reviewer", "triager", "registrar",
+                   "report-fixer", "researcher", "advisor")
 PLAN_REVIEW_SOURCE = "plan:review.reviewer"  # the reviewer route came from the plan item (execution-input review_route)
+
+
+def unsupported_stages(policy) -> tuple:
+    """``(required, optional)`` stages whose role the conductor does not run.
+
+    ``required`` is a stage with ``required`` and ``on_unavailable: refuse`` (the run stops). Every other stage
+    outside :data:`CONDUCTOR_ROLES` is ``optional`` (one beacon per run, the run continues). Rows are ``(id, role)``.
+    """
+    required, optional = [], []
+    for stage in (policy or {}).get("stages") or []:
+        if not isinstance(stage, dict):
+            continue
+        role = stage.get("role")
+        if role in CONDUCTOR_ROLES:
+            continue
+        row = (str(stage.get("id") or "-"), str(role or "-"))
+        if stage.get("required") and stage.get("on_unavailable") == "refuse":
+            required.append(row)
+        else:
+            optional.append(row)
+    return required, optional
+
+
+def _stage_list(rows) -> str:
+    return "; ".join(f"stage {stage_id} (role {role})" for stage_id, role in rows)
+
+
+def _policy_scenario(self, item: Item) -> str:
+    policy = getattr(item, "policy", None) or {}
+    claim = getattr(item, "claim", None) or {}
+    return policy.get("policy_id") or claim.get("scenario") or "-"
+
+
+def policy_stage_unavailable(self, item: Item, preview: bool = False) -> dict:
+    """Refuse a required stage the conductor does not run; beacon an optional one once per run.
+
+    A preview (``run --dry-run``) does not stop: both cases are returned as ``unavailable`` with the same text.
+    The beacon flag lives on the run state so a later piece or a resume does not repeat it.
+    """
+    required, optional = unsupported_stages(getattr(item, "policy", None))
+    unavailable = {}
+    scenario = _policy_scenario(self, item)
+    if optional:
+        message = f"{scenario}: {_stage_list(optional)} is not run by the conductor; skipped"
+        for _stage_id, role in optional:
+            unavailable[role] = f"POLICY_STAGE_SKIPPED: {message}"
+        if not (getattr(self, "state", None) or {}).get("policy_stage_skipped"):
+            self.state["policy_stage_skipped"] = True
+            run_id = getattr(self, "run_id", "") or ""
+            if getattr(self, "store", None) is not None and run_id not in ("", "cnd-dry-run"):
+                self._save()
+            progress = getattr(self, "progress", None)
+            if progress is not None:
+                progress.emit("info", item=getattr(item, "ref", None), reason_code="POLICY_STAGE_SKIPPED",
+                              message=message)
+    if required:
+        message = (f"{scenario}: {_stage_list(required)} is not run by the conductor; "
+                   "choose another scenario or run the plan natively")
+        if preview:
+            for _stage_id, role in required:
+                unavailable[role] = f"POLICY_STAGE_UNSUPPORTED: {message}"
+        else:
+            raise Stop("POLICY_STAGE_UNSUPPORTED", message)
+    return unavailable
 
 
 def launch_catalog(self) -> dict:
@@ -50,6 +118,9 @@ def entry(self, role: str, provider: str) -> dict:
 def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dict:
     """Select routes and return unavailable roles for a preview; required launch errors stop a real run."""
     unavailable = {}
+    # Before any role of the piece: a required stage this conductor does not run stops a real run here
+    # (the first call is persist=False, still before prepare). A dry-run only reports it.
+    unavailable.update(policy_stage_unavailable(self, item, preview=preview))
     roles = ["executor"]
     if self._scout_stage(item) is not None:
         roles.insert(0, "context-scout")
@@ -199,6 +270,7 @@ def refuse_acp(self, item: Item) -> None:
 def preflight(self, item: Item) -> None:
     """Every required role can start before any work is done: an acp route or a missing CLI stops the run now with a
     plain message, not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
+    policy_stage_unavailable(self, item, preview=False)
     self._refuse_acp(item)
     required = {role: route for role, route in item.routes.items() if role not in OPTIONAL_ROLES}
     codex = [(role, route) for role, route in required.items() if self._codex_sandboxed(route)]
@@ -261,6 +333,7 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
             raise Stop(error.code, str(error)) from None
     values = {"model": model or "", "effort": effort, "cwd": str(self.project), "orch": str(ORCH_ROOT)}
     argv_override = (self.conductor.get("argv") or {}).get(role)
+    resume_argv = None
     try:
         if argv_override:
             argv = catalogs.substitute(list(argv_override), values)
@@ -269,16 +342,23 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
         else:
             argv = launch.build_argv(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider, model=model,
                                      effort=effort, cwd=self.project, access=self._launch_access())
+            resume_argv = launch.build_resume_argv(self._launch_catalog(), LAUNCH_ROLE.get(role, role), provider,
+                                                   model=model, effort=effort, cwd=self.project,
+                                                   access=self._launch_access())
     except launch.LaunchError as error:
         raise Stop(error.code, str(error)) from None
-    # A role is never stopped for being long: both ceilings (``stage_timeout_s``, ``stage_idle_timeout_s``) are off
-    # unless asked for, and beacons report a long or silent run. A ``text`` role writes only at its end, so the
-    # catalog timeout stays its ceiling.
+    # The wall of a role: ``stage_timeout_s`` when set; else, for a streaming role, ``role_timeout_s`` of its role (an
+    # auxiliary role must not hang a run forever; the executor and the bounded-implementer have none, silence is caught
+    # by ``stage_idle_timeout_s``). A ``text`` role writes only at its end, so the catalog timeout stays its ceiling.
     limits, streaming = item.options["limits"], entry["transport"] != "text"
-    timeout = limits.get("stage_timeout_s") or (0 if streaming else entry["timeout_s"])
+    timeout = limits.get("stage_timeout_s") or ((limits.get("role_timeout_s") or {}).get(role, 0) if streaming
+                                                else entry["timeout_s"])
     idle = limits.get("stage_idle_timeout_s", 0) if streaming else 0
-    return {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
-            "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}
+    found = {"role": role, "provider": provider, "model": model, "effort": effort, "model_class": model_class,
+             "transport": entry["transport"], "timeout_s": timeout, "idle_timeout_s": idle, "argv": argv}
+    if resume_argv:  # the command that continues a session of this provider (``{session}`` is filled at the start)
+        found["resume_argv"] = resume_argv
+    return found
 
 
 def planned_reviewer(selector: dict, planned: dict) -> tuple:

@@ -96,13 +96,24 @@
           "type": "string",
           "enum": ["deviation", "block"]
         },
+        "outside_module": {
+          "description": "`block` (default): the piece is blocked (`OUTSIDE_MODULE`) when the executor changed files of another module than the ones its write set names (`packages/<id>/`, `bridges/<id>/`, else the hub; `CHANGELOG.md` and `docs/` are always allowed, as are the granted `extra_paths`); `deviation`: such paths are reported as a deviation like any other path outside the write set. A layer of the work source can only tighten it.",
+          "type": "string",
+          "enum": ["deviation", "block"]
+        },
+        "runtime_paths": {
+          "description": "Patterns (`*` and `?` inside one segment, `**` any number of segments) of runtime artifacts: logs and evidence of a run. New untracked files of the executor under them are moved to `<artifacts of the piece>/stray/` (`RUNTIME_ARTIFACT_RELOCATED`) and never committed; a changed tracked one blocks the piece (`OUTSIDE_RUNTIME_ARTIFACT`). Default `.swissknifeman/orch-artifacts/**`, `.swissknifeman/orch/**`, `**/tests/evidence/**`; a layer of the work source can only add patterns.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "maxLength": 4096}
+        },
         "fence": {
           "description": "What the executor may change. `project` (default): any file of the project; `scope.write_set` is the expected change, and a path outside it is reported by the executor as a `deviation` instead of blocking the piece. `plan`: the write set is a fence, a path outside it makes the executor stop with `blocked`.",
           "type": "string",
           "enum": ["project", "plan"]
         },
         "extra_paths": {
-          "description": "Directories outside the project that the executor may also change (absolute, or `~/...`): they are named in its prompt and added to its filesystem guard (`ro-run.py --rw`). Default none.",
+          "description": "Directories outside the project that the executor may also change (absolute, or `~/...`): they are named in its prompt and added to the filesystem guard of every writing role (`ro-run.py --rw`; a Claude Code role also gets `--add-dir` and, under the provider sandbox, `sandbox.filesystem.allowWrite`; a Codex role `--add-dir`). Default none.",
           "type": "array",
           "uniqueItems": true,
           "items": {"type": "string", "maxLength": 4096, "pattern": "^(?!.*(^|/)\\.\\.(/|$))(/|~/)"}
@@ -116,7 +127,7 @@
       "type": "object",
       "properties": {
         "parallel": {
-          "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 1.",
+          "description": "Command checks that run at the same time (they must not share files); 1 to 8, default 2. They share the jobs budget (`SKM_TEST_JOBS` of the owner, else the CPUs): each gets its share in `SKM_TEST_JOBS`.",
           "type": "integer",
           "minimum": 1,
           "maximum": 8
@@ -136,7 +147,15 @@
           "minItems": 1
         },
         "red_first": {
-          "description": "In a correction round the checks that were red run first; when one is still red the others are not run (a half-hour full run is not repeated for a correction that did not mend it). Default true; false runs every check in every round.",
+          "description": "In a correction round the checks that were red run first; with `fail_fast` a check that is still red ends the round before the others start (a half-hour full run is not repeated for a correction that did not mend it). Default true; false runs the checks in their usual order.",
+          "type": "boolean"
+        },
+        "fail_fast": {
+          "description": "After the first red command check no further check is started (those running meanwhile end; the rest are reported `skipped` with `skip_reason` `fail_fast`), and the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`). Checks run cheapest first by their time in earlier rounds. Default true; false runs every check.",
+          "type": "boolean"
+        },
+        "reuse": {
+          "description": "A command check whose green evidence of the same run, candidate (HEAD and the digest of the dirty tree), command, directory and fingerprint (environment, programs, partner roots, Python) exists is not run again: its row is `reused` and the evidence file is kept as it was. A missing, damaged or foreign evidence file runs the check. Default true.",
           "type": "boolean"
         },
         "executor_runs_checks": {
@@ -189,7 +208,7 @@
           "enum": ["auto", "each", "groups", "single", "none"]
         },
         "strategist": {
-          "description": "Who chooses the strategy when it is `auto`: `model` (default; a small model call that sees every piece; the rules decide when it fails or answers unsoundly) or `rules` (the deterministic choice only).",
+          "description": "Who chooses the strategy when it is `auto`: `rules` (default; the deterministic choice only) or `model` (a small model call that sees every piece; the rules decide when it fails or answers unsoundly).",
           "type": "string",
           "enum": ["model", "rules"]
         }
@@ -387,8 +406,34 @@
           "minimum": 0,
           "default": 0
         },
+        "unmetered": {
+          "description": "What a model attempt that reports no usage does while a hard token limit (tokens_hard_max or run_tokens_hard_max) is in force: `stop` (default) stops the piece with TOKEN_BUDGET_UNMETERED at the next admission; `charge` charges unmetered_charge_tokens per attempt. Without a hard limit it is only a BUDGET_UNMETERED beacon.",
+          "type": "string",
+          "enum": ["stop", "charge"]
+        },
+        "unmetered_charge_tokens": {
+          "description": "Fresh input tokens charged for each model attempt that reported no usage when unmetered is `charge` and a hard token limit is in force (counted in tokens.charged); 0 or more, default 50000.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "role_timeout_s": {
+          "description": "Wall in seconds on the whole run of a streaming role, by role id; a layer names only the walls it changes. Default: context-scout 900, triager 1800, report-fixer 600, registrar 600, reviewer 3600, advisor 1800, researcher 2700; the executor and the bounded-implementer have none (silence is stopped by stage_idle_timeout_s); 0 removes a wall. stage_timeout_s, when set, takes precedence. An exceeded wall is TIMEOUT, then the retry rule of the step.",
+          "type": "object",
+          "properties": {
+            "context-scout": {"description": "Wall of the context-scout role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "executor": {"description": "Wall of the executor role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "bounded-implementer": {"description": "Wall of the bounded-implementer role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "reviewer": {"description": "Wall of the reviewer role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "triager": {"description": "Wall of the triager role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "registrar": {"description": "Wall of the registrar role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "report-fixer": {"description": "Wall of the report-fixer role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "researcher": {"description": "Wall of the researcher role in seconds; 0 removes it.", "type": "integer", "minimum": 0},
+            "advisor": {"description": "Wall of the advisor role in seconds; 0 removes it.", "type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        },
         "stage_timeout_s": {
-          "description": "Ceiling on the whole run of one role in seconds. 0 (default) has none for a streaming role (stage_warn_s beacons report a long run instead) and keeps the launch catalog timeout for a text role; 0 or more.",
+          "description": "Ceiling on the whole run of one role in seconds. 0 (default) leaves a streaming role to role_timeout_s (stage_warn_s beacons report a long run instead) and keeps the launch catalog timeout for a text role; when set it takes precedence over role_timeout_s; 0 or more.",
           "type": "integer",
           "minimum": 0
         },
@@ -398,12 +443,17 @@
           "minimum": 0
         },
         "check_timeout_s": {
-          "description": "Ceiling on one acceptance check in seconds; 0 (default) has none: a long check is reported by check_warn_s beacons, not stopped; 0 or more.",
+          "description": "Ceiling on one acceptance check in seconds; default 7200 (the longest check measured took about 4000); 0 has none: a long check is then reported by check_warn_s beacons, not stopped; 0 or more.",
           "type": "integer",
           "minimum": 0
         },
         "check_idle_timeout_s": {
           "description": "An acceptance check is stopped (exit 124, red) when its log has not grown for this many seconds: a hung test runner, not a long one (the check runs with PYTHONUNBUFFERED=1, and the time a check spends stopped is not counted); 0 never stops it; default 3600.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "triage_repro_timeout_s": {
+          "description": "Ceiling in seconds on the rerun of a reproduction by which the triager rejected a Blocker or Major finding (the conductor runs the command read-only under ro-run.py --protect); a rerun that hits it cannot confirm the rejection, so the finding is restored as confirmed (TRIAGE_REPRO_UNVERIFIED); 0 sets no ceiling; default 600.",
           "type": "integer",
           "minimum": 0
         },
@@ -514,7 +564,7 @@
           "items": {
             "description": "Skill name.",
             "type": "string",
-            "pattern": "^[a-z0-9][a-z0-9._:/-]*$"
+            "pattern": "^[a-z0-9][a-z0-9_:-]*(?:[./][a-z0-9][a-z0-9_:-]*)*$"
           }
         }
       },

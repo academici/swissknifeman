@@ -1,20 +1,20 @@
-# Ecosystem: three-pack philosophy
+# maind in the ecosystem
 
-Three academic ecosystem packages - **swissknifeman**, **brain** and **maind** — are arranged according to
-one principle: every **is self-sufficient** and works alone, but they communicate **optional**,
-through paths in configs. Remove the path and the packages are autonomous again. This keeps the system predictable:
-nothing breaks if there is no neighbor.
+maind is the memory, project graph and onboarding module of Swiss Knife Man. The canonical product
+philosophy is [docs/philosophy.md](../../../docs/philosophy.md). Orchestration of plan items belongs to
+`orch`, not to maind. Each module stays self-sufficient and works alone; neighbours meet through optional
+paths in config and through bridges. Remove the path and the packages are autonomous again.
 
 ## Roles
 
 | Package | Layer | What it does |
 |:--|:--|:--|
-| **swissknifeman** | capabilities | synchronizes **skills + hooks** to the project - «pumps up the agent» for the task |
-| **brain** | knowledge/docks | Obsidian-vault + demon `docs-watcher`, keeps documentation in sync with repositories |
-| **maind** | hub + command post | owns the shared **memory** and **graph**, rolls them out to projects, monitors and orchestrates others |
+| **maind** | memory and graph | shared memory, the project graph, and onboarding |
+| **brain** | knowledge | vault sync: the Obsidian vault and project documents |
+| **orch** | orchestration | the deterministic conductor that runs plan items |
 
-swissknifeman gives the project *skills*, maind — *shared memory and graph + coordination*, brain — *knowledge*.
-They complement each other and each is valuable in its own right.
+maind gives a project *shared memory and the project graph*, brain gives *knowledge*, and orch *runs the work*.
+They complement each other and each is valuable on its own.
 
 ```mermaid
 graph TB
@@ -26,17 +26,17 @@ graph TB
     VA["Obsidian vault"]
     DW["docs-watcher daemon"]
   end
-  subgraph md["maind — hub + command post"]
+  subgraph md["maind — memory, graph, onboarding"]
     MEM["agent-memory daemon"]
     GR["connection graph"]
-    CC["provision · monitor · orchestrate"]
+    CC["provision · onboard · sync"]
   end
   proj["project"]
   skm -. "skills + hooks" .-> proj
   md -. "memory + graph" .-> proj
   br -. "docs-sync" .-> proj
-  md -. "orchestrates" .-> skm
-  md -. "orchestrates" .-> br
+  md -. "onboarding" .-> skm
+  md -. "onboarding" .-> br
 ```
 
 ## Principle: connected, but work separately
@@ -172,4 +172,4 @@ contract, and not separate correspondence. Each layer is a separate command main
 | Project skill map | `<project>/skills-lock.json` | `skiller lock` |
 | Project documentation | vault ↔ repo | `brain sync` (docs-watcher) |
 
-This page is the canonical source for ecosystem philosophy. swissknifeman and brain link here.
+The canonical product philosophy is [docs/philosophy.md](../../../docs/philosophy.md). This page places maind in that ecosystem; it is not a second philosophy.

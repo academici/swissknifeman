@@ -60,7 +60,7 @@ from planner.integration.models import routing_snapshot, routing_text  # noqa: E
 from planner.command_render import (  # noqa: E402
     PROVIDER_LOCK_PATH, apply_claude_command_plan, apply_codex_command_plan,
     build_provider_command_parity_report, mapping_from_catalog, parse_next_carrier,
-    plan_claude_alias_render, plan_claude_command_render, plan_codex_command_apply, plan_codex_command_render,
+    plan_claude_command_render, plan_codex_command_apply, plan_codex_command_render,
     plan_cursor_command_render, plan_grok_command_render, render_provider_commands_reference,
     render_provider_model_roles_reference,
 )
@@ -71,7 +71,6 @@ _OPERATOR_REFERENCE = Path("packages/planner/docs/reference/provider-commands.md
 _MODEL_ROLES_REFERENCE = Path("packages/planner/docs/reference/provider-model-roles.md")
 _CLAUDE_GOLDEN_ROOT = Path("packages/planner/tests/fixtures_data/claude-command-golden")
 _ROUTING = Path("packages/planner/configs/command-routing.json")
-_ALIAS_PREFIX = "packages/planner/aliases/task/"  # Compatibility alias: remove in the next minor release.
 
 
 def _routing_snapshot_bytes(root: Path) -> bytes:
@@ -116,20 +115,6 @@ def _build_plans(root: Path, *, allow_managed_drift: bool = False):
     model_roles_bytes = render_provider_model_roles_reference(catalog)
     return (claude_plan, codex_plan, cursor_plan, grok_plan,
             render_provider_commands_reference(report), model_roles_bytes)
-
-
-def _build_alias_plan(root: Path):
-    # Compatibility alias: remove in the next minor release.
-    catalog = build_command_catalog(root / "packages/planner/commands",
-                                    root / "packages/planner/configs/command-routing.json")
-    plugin_bytes = (root / "packages/planner/.claude-plugin/plugin.json").read_bytes()
-    return plan_claude_alias_render(catalog, plugin_bytes=plugin_bytes)
-
-
-def _alias_golden_projection(alias_plan) -> dict[Path, bytes]:
-    """Mirror the compatibility alias plugin into its byte-exact test fixture."""
-    return {_CLAUDE_GOLDEN_ROOT / "aliases" / "task" / artifact.path.removeprefix(_ALIAS_PREFIX):
-            artifact.managed_bytes for artifact in alias_plan.artifacts}
 
 
 def _claude_golden_projection(claude_plan) -> dict[Path, bytes]:
@@ -203,10 +188,9 @@ def _repair_version_transition(root: Path, claude_plan, codex_plan, cursor_plan,
 
 
 def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes: bytes,
-              model_roles_bytes: bytes, alias_plan, routing_bytes: bytes) -> int:
+              model_roles_bytes: bytes, routing_bytes: bytes) -> int:
     routing_drift = (root / _ROUTING).read_bytes() != routing_bytes
-    claude_drift = (apply_claude_command_plan(root, claude_plan, check=True)
-                    + apply_claude_command_plan(root, alias_plan, check=True))
+    claude_drift = apply_claude_command_plan(root, claude_plan, check=True)
     lock_path = root / PROVIDER_LOCK_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     codex_artifact_plan = plan_codex_command_apply(root, codex_plan, lock_bytes=lock_bytes)
@@ -219,8 +203,7 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
     model_roles_drift = (not model_roles_path.is_file()
                          or model_roles_path.read_bytes() != model_roles_bytes)
     golden_drift = tuple(
-        path for path, expected in {**_claude_golden_projection(claude_plan),
-                                    **_alias_golden_projection(alias_plan)}.items()
+        path for path, expected in _claude_golden_projection(claude_plan).items()
         if not (root / path).is_file() or (root / path).read_bytes() != expected
     )
     cursor_drift = _adapter_drift(root, cursor_plan)
@@ -250,9 +233,8 @@ def cmd_check(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
 
 
 def cmd_write(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes: bytes,
-              model_roles_bytes: bytes, alias_plan, *, repair_owned: bool) -> int:
+              model_roles_bytes: bytes, *, repair_owned: bool) -> int:
     apply_claude_command_plan(root, claude_plan, check=False)
-    apply_claude_command_plan(root, alias_plan, check=False)
     lock_path = root / PROVIDER_LOCK_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     repair_ids: tuple[str, ...] = ()
@@ -275,8 +257,7 @@ def cmd_write(root: Path, claude_plan, codex_plan, cursor_plan, grok_plan, refer
     model_roles_path = root / _MODEL_ROLES_REFERENCE
     model_roles_path.parent.mkdir(parents=True, exist_ok=True)
     model_roles_path.write_bytes(model_roles_bytes)
-    for path, contents in {**_claude_golden_projection(claude_plan),
-                           **_alias_golden_projection(alias_plan)}.items():
+    for path, contents in _claude_golden_projection(claude_plan).items():
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(contents)
@@ -333,12 +314,11 @@ def main(argv: list[str] | None = None) -> int:
         _print_diagnostics("grok", grok_plan)
         return 1
 
-    alias_plan = _build_alias_plan(root)
     if args.check:
         return cmd_check(root, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes,
-                          model_roles_bytes, alias_plan, routing_bytes)
+                         model_roles_bytes, routing_bytes)
     return cmd_write(root, claude_plan, codex_plan, cursor_plan, grok_plan, reference_bytes,
-                     model_roles_bytes, alias_plan, repair_owned=args.repair_owned)
+                     model_roles_bytes, repair_owned=args.repair_owned)
 
 
 if __name__ == "__main__":

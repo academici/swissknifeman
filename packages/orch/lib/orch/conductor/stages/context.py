@@ -2,17 +2,35 @@
 skills of its prompt (named, or chosen by the skills bridge, then checked)."""
 from __future__ import annotations
 
+from functools import lru_cache
+import hashlib
 import json
 from pathlib import Path
 import re
 import subprocess
 from typing import Optional
 
+from aicore.util import schema
+
 from orch.conductor import options as opts, prompts, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
+from orch.conductor.policies import paths
 
 RULE_HEADING = re.compile(r"^## ([A-Za-z0-9_.-]+)[ \t]*$", re.M)
+SKILL_NAME = re.compile(r"[a-z0-9][a-z0-9_:-]*(?:[./][a-z0-9][a-z0-9_:-]*)*")
+SKILL_BYTES = 64 * 1024
+SELECTION_BYTES = 16 * 1024
+RULES_BYTES = 256 * 1024
+
+
+def _path_reason(path: Path) -> str:
+    return "symlink" if paths.has_symlink(path) else "outside"
+
+
+@lru_cache(maxsize=1)
+def _selection_contract():
+    return schema.load_contract(Path(schema.__file__).resolve().parents[3] / "schemas" / "skill-selection" / "v1")
 
 
 def repo_rules(self, item: Item, role: str) -> str:
@@ -34,10 +52,19 @@ def repo_rules(self, item: Item, role: str) -> str:
     lines, size = [], 0
     for folder in sorted(folders, key=lambda path: (len(path.parts), str(path))):
         carrier = next((self.project / folder / name for name in ("CLAUDE.md", "AGENTS.md")
-                        if (self.project / folder / name).is_file()), None)
+                        if (self.project / folder / name).exists() or (self.project / folder / name).is_symlink()), None)
         if carrier is None:
             continue
-        text = carrier.read_text(encoding="utf-8", errors="replace")
+        try:
+            resolved = paths.contained(carrier, [self.project])
+            if resolved is None:
+                raise ValueError(_path_reason(carrier))
+            text = paths.read_capped(resolved, RULES_BYTES)
+        except (OSError, ValueError) as error:
+            reason = str(error) if isinstance(error, ValueError) else _path_reason(carrier)
+            self.progress.emit("info", item=item.ref, role=role, reason_code="RULES_PATH_INVALID",
+                               message=f"repository rules {carrier} left out of the {role} prompt: {reason}")
+            continue
         heads = list(RULE_HEADING.finditer(text))
         for index, head in enumerate(heads):
             name = head.group(1)
@@ -55,11 +82,13 @@ def skills(self, item: Item, role: str) -> list:
     """The skill names of a role that its prompt keeps: the list of the run options, or for ``["auto"]`` what the skills
     bridge chose from the write set of the piece (once per piece, kept in ``state.skills_auto``), less what the
     checks of :meth:`_skill_set` left out."""
-    return list(self._skill_set(item, role)["names"])
+    # Prompt arguments are evaluated names first, texts second. Keep the same list so a file rejected on the
+    # second read is removed from the pending prompt's names too, rather than falling back to provider loading.
+    return self._skill_set(item, role)["names"]
 
 
 def auto_skills(self, item: Item, role: str) -> dict:
-    """``{"skills": [{name, id, path, reason, tokens}], "excluded", "discoverable", "tokens"}`` of the skills bridge
+    """``{"skills": [{name, id, path, reason, tokens, digest, skill_md_sha256}], "excluded", "discoverable", "tokens"}`` of the skills bridge
     for ``role``: its command is ``[orch.conductor] skills_bridge``, run as a process (orch imports no other module);
     the answer is kept in the state, so a resume and every later round see the same skills."""
     kept = item.state.setdefault("skills_auto", {})
@@ -110,21 +139,117 @@ def work_paths(self, item: Item) -> list:
 def skill_files(self, item: Item, role: str) -> list:
     """``[(name, id, SKILL.md path or None)]`` of the skills a role is given: the skill folders of the project for a
     list of names, the file the bridge named for ``["auto"]`` (its ``id`` is the bridge id, else the name)."""
-    names = item.options["skills"].get(role, [])
-    if names == [opts.AUTO_SKILLS]:
-        return [(row["name"], row.get("id") or row["name"], Path(row["path"])) for row in self._auto_skills(item, role)["skills"]]
-    return [(name, name, next((path for path in (self.project / folder / name / "SKILL.md"
-                                                for folder in (".claude/skills", ".agents/skills")) if path.is_file()), None))
-            for name in names]
+    result = self._skill_set(item, role)
+    found = []
+    for skill in _checked_candidates(self, item, role, result["names"]):
+        if skill.get("reason"):
+            _exclude_path(self, item, role, result, skill)
+        else:
+            found.append((skill["name"], skill["id"], skill["path"]))
+    return found
 
 
 def skill_body(path: Path) -> str:
     """The text of a ``SKILL.md`` without its front matter; never cut."""
-    body = path.read_text(encoding="utf-8", errors="replace")
+    try:
+        return _body(paths.read_capped(path, SKILL_BYTES))
+    except ValueError as error:
+        # The scout fingerprint's legacy reader treats OSError as unavailable. A file that grows or changes
+        # encoding between its path check and that read must not crash it; prompt assembly checks it again.
+        raise OSError(str(error)) from None
+
+
+def _body(body: str) -> str:
     if body.startswith("---"):
         end = body.find("\n---", 3)
         body = body[end + 4:] if end != -1 else body
     return body.strip()
+
+
+def _candidate_paths(self, item: Item, role: str):
+    """Preserve the three-tuple file API, keeping validation details private to this module."""
+    names = item.options["skills"].get(role, [])
+    if names == [opts.AUTO_SKILLS]:
+        for row in self._auto_skills(item, role)["skills"]:
+            skill = {"name": row["name"], "id": row.get("id") or row["name"], "path": None,
+                     "auto": True, "expected": row.get("skill_md_sha256")}
+            raw = row.get("path")
+            path = Path(raw) if isinstance(raw, str) and raw else None
+            if path is None or not path.is_absolute() or path.name != "SKILL.md":
+                skill["reason"] = "outside"
+            else:
+                try:
+                    if paths.has_symlink(path):
+                        raise ValueError("symlink")
+                    if raw != str(path.resolve(strict=True)):
+                        raise ValueError("outside")
+                    skill.update(path=path, roots=[path.parent])
+                except (OSError, RuntimeError, ValueError) as error:
+                    skill["reason"] = str(error) if isinstance(error, ValueError) else _path_reason(path)
+            yield skill
+        return
+    for name in names:
+        skill = {"name": name, "id": name, "path": None, "auto": False}
+        if not SKILL_NAME.fullmatch(name):  # defence for callers with already-merged options
+            yield dict(skill, reason="outside")
+            continue
+        for folder in (".claude/skills", ".agents/skills"):
+            root = self.project / folder
+            path = root / name / "SKILL.md"
+            if not path.exists() and not paths.has_symlink(path):
+                continue
+            resolved = paths.contained(path, [root])
+            if resolved is None:
+                skill["reason"] = _path_reason(path)
+            else:
+                skill.update(path=resolved, roots=[root])
+            break
+        yield skill
+
+
+def _checked_candidates(self, item: Item, role: str, names=None):
+    """Read a bounded candidate once, verifying exactly the bytes used for its body and auto digest."""
+    for skill in _candidate_paths(self, item, role):
+        if names is not None and skill["name"] not in names:
+            continue
+        skill.update(selection={}, body="")
+        path = skill["path"]
+        if skill.get("reason") or path is None:
+            yield skill
+            continue
+        try:
+            text = paths.read_capped(path, SKILL_BYTES)
+            if skill["auto"] and not skill["expected"]:
+                raise ValueError("digest_missing")
+            if skill["auto"] and hashlib.sha256(text.encode("utf-8")).hexdigest() != skill["expected"]:
+                raise ValueError("digest_mismatch")
+            skill["body"] = _body(text)
+            sidecar = path.parent / "selection.json"
+            if sidecar.exists() or sidecar.is_symlink():
+                resolved = paths.contained(sidecar, skill["roots"])
+                if resolved is None:
+                    raise ValueError(_path_reason(sidecar))
+                text = paths.read_capped(resolved, SELECTION_BYTES)
+                try:
+                    selection = json.loads(text)
+                except (ValueError, RecursionError):
+                    raise ValueError("selection_invalid") from None
+                registry, kind = _selection_contract()
+                if schema.validate(selection, kind, registry):
+                    raise ValueError("selection_invalid")
+                skill["selection"] = selection
+        except (OSError, ValueError) as error:
+            skill["reason"] = str(error) if isinstance(error, ValueError) else _path_reason(path)
+        yield skill
+
+
+def _exclude_path(self, item: Item, role: str, result: dict, skill: dict) -> None:
+    row = {"id": skill["id"], "reason": skill["reason"]}
+    result["names"][:] = [name for name in result["names"] if name != skill["name"]]
+    if row not in result["excluded"]:
+        result["excluded"].append(row)
+        self.progress.emit("info", item=item.ref, role=role, reason_code="SKILL_PATH_INVALID",
+                           message=f"skill {skill['id']} ({skill['name']}) left out of the {role} prompt: {skill['reason']}")
 
 
 def route_tools(route: Optional[dict]) -> Optional[set]:
@@ -153,19 +278,19 @@ def skill_set(self, item: Item, role: str) -> dict:
         return {"names": [], "excluded": []}
     kept = item.state.setdefault("skills_checked", {})
     if role in kept:
+        # Cached semantic verdicts never waive path, size, encoding or auto-integrity checks on a later read.
+        for skill in _checked_candidates(self, item, role, kept[role]["names"]):
+            if skill.get("reason"):
+                _exclude_path(self, item, role, kept[role], skill)
         return kept[role]
     weigh = role in item.options["instructions"]["isolate_roles"]  # only an isolated role gets the text in its prompt
-    candidates = []
-    for name, skill_id, path in self._skill_files(item, role):
-        selection = {}
-        if path is not None:
-            try:
-                loaded = json.loads((path.parent / "selection.json").read_text(encoding="utf-8"))
-                selection = loaded if isinstance(loaded, dict) else {}
-            except (OSError, ValueError):
-                selection = {}
-        tokens = prompts.estimate_tokens(self._skill_body(path)) if weigh and path is not None else None
-        candidates.append({"name": name, "id": skill_id, "selection": selection, "tokens": tokens})
+    candidates, result = [], {"names": [], "excluded": []}
+    for skill in _checked_candidates(self, item, role):
+        if skill.get("reason"):
+            _exclude_path(self, item, role, result, skill)
+            continue
+        tokens = prompts.estimate_tokens(skill["body"]) if weigh and skill["path"] is not None else None
+        candidates.append({"name": skill["name"], "id": skill["id"], "selection": skill["selection"], "tokens": tokens})
     budget = int(item.options.get("limits", {}).get("skill_tokens_max", opts.DEFAULT_LIMITS["skill_tokens_max"]))
     survivors, rows, conflict = prompts.check_skills(candidates, tools=self._route_tools(item.routes.get(role)), budget=budget)
     if conflict:
@@ -176,8 +301,9 @@ def skill_set(self, item: Item, role: str) -> dict:
         self.progress.emit("info", item=item.ref, role=role, reason_code="SKILL_EXCLUDED",
                            message=f"skill {row['id']} left out of the {role} prompt: {row['reason']}"
                            + (f" ({row['detail']})" if row["detail"] else ""))
-    kept[role] = {"names": [skill["name"] for skill in survivors],
-                  "excluded": [{"id": row["id"], "reason": row["reason"]} for row in rows]}
+    result["names"] = [skill["name"] for skill in survivors]
+    result["excluded"] += [{"id": row["id"], "reason": row["reason"]} for row in rows]
+    kept[role] = result
     return kept[role]
 
 
@@ -192,6 +318,11 @@ def skill_texts(self, item: Item, role: str) -> dict:
     matter and whole: a text over its budget was left out by :meth:`_skill_set`, not cut."""
     if not item.options["skills"].get(role) or role not in item.options["instructions"]["isolate_roles"]:
         return {}
-    kept = set(self._skill_set(item, role)["names"])
-    return {name: self._skill_body(path) for name, _id, path in self._skill_files(item, role)
-            if name in kept and path is not None}
+    result = self._skill_set(item, role)
+    texts = {}
+    for skill in _checked_candidates(self, item, role, result["names"]):
+        if skill.get("reason"):
+            _exclude_path(self, item, role, result, skill)
+        elif skill["path"] is not None:
+            texts[skill["name"]] = skill["body"]
+    return texts

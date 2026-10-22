@@ -21,8 +21,7 @@ from aicore.content.commands import (frontmatter_description, runtime_provenance
                                      strict_frontmatter_fields)
 from aicore.content.publication import (capability_requirements, codex_plugin_manifest,
                                         manifest_bytes, publication_lock, render_whole_file)
-from planner import COMMAND_NAMESPACE, LEGACY_NAMESPACE, MODULE_ID
-from planner.commands_compat import normalize_command_id, warn_deprecated
+from planner import COMMAND_NAMESPACE, MODULE_ID
 from planner.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_CLASSES,
                                      metadata_value)
 
@@ -433,9 +432,6 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
             tuple(tuple(item) for item in cold_start_scope),
             tuple(orchestration_capabilities))
     command_id, separator, raw_arguments = payload.partition(" ")
-    command_id, deprecated = normalize_command_id(command_id)  # Compatibility alias: remove in the next minor release.
-    if deprecated:
-        warn_deprecated(payload.partition(" ")[0])
     command_id = _LEGACY_COMMAND_IDS.get(command_id, command_id)
     if not separator:
         raise ValueError("CMD_INVOCATION_INVALID: plan arguments are missing")
@@ -749,60 +745,6 @@ def plan_claude_command_render(
             catalog.content_for(record.command_id), source_hash=record.source.content_hash))
     return ClaudeCommandRenderPlan(
         tuple(sorted(artifacts, key=lambda item: item.path)), tuple(diagnostics))
-
-
-ALIAS_PLUGIN_DIR = f"{_MODULE_DIR}/aliases/{LEGACY_NAMESPACE}"  # Compatibility alias: remove in the next minor release.
-
-
-def plan_claude_alias_render(catalog: CommandCatalog, *, plugin_bytes: bytes
-                             ) -> ClaudeCommandRenderPlan:
-    """Return the no-write projection of the `task` compatibility alias plugin (one minor release).
-
-    # Compatibility alias: remove in the next minor release.
-    Every alias command is the planner command byte-for-byte except the `description` prefix and a
-    deprecation first line in the body; the alias plugin carries commands only (skills stay in planner).
-    """
-    try:
-        planner_plugin = json.loads(plugin_bytes.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ValueError(f"CMD_SOURCE_DRIFT: Claude plugin descriptor is malformed: {error}") from error
-    plugin = {
-        "name": LEGACY_NAMESPACE,
-        "version": catalog.plugin_version,
-        "description": (f"Deprecated compatibility alias of the {MODULE_ID} plugin: "
-                        f"/{LEGACY_NAMESPACE}:* commands for one minor release; use /{COMMAND_NAMESPACE}:*."),
-        "author": planner_plugin.get("author"),
-        "commands": ["./commands"],
-    }
-    plugin_text = json.dumps(plugin, indent=2, ensure_ascii=False) + "\n"
-    artifacts = [_claude_artifact(f"{MODULE_ID}.claude.alias.plugin",
-                                  f"{ALIAS_PLUGIN_DIR}/.claude-plugin/plugin.json",
-                                  plugin_text.encode("utf-8"))]
-    for record in catalog.records:
-        command = record.command_id.removeprefix(_COMMAND_PREFIX)
-        artifacts.append(_claude_artifact(
-            f"{MODULE_ID}.claude.alias.{command.replace('-', '.')}.command",
-            f"{ALIAS_PLUGIN_DIR}/commands/{command}.md",
-            _alias_command_bytes(command, catalog.content_for(record.command_id)),
-            source_hash=record.source.content_hash))
-    return ClaudeCommandRenderPlan(tuple(sorted(artifacts, key=lambda item: item.path)), ())
-
-
-def _alias_command_bytes(command: str, content: bytes) -> bytes:
-    """The planner command with a deprecated `description` and the deprecation line on top of its body."""
-    frontmatter, body = split_command(content)
-    description = frontmatter_description(content)
-    lines = frontmatter.splitlines(keepends=True)
-    index = next(i for i, line in enumerate(lines) if line.startswith("description:"))
-    lines[index] = "description: " + json.dumps(
-        f"Deprecated alias of /{COMMAND_NAMESPACE}:{command}. {description}", ensure_ascii=False) + "\n"
-    notice = (f"> `/{LEGACY_NAMESPACE}:{command}` is deprecated and will be removed in the next minor "
-              f"release: use `/{COMMAND_NAMESPACE}:{command}`. Say this to the user once, then follow "
-              f"the instructions below.")
-    # A relative link points into the planner package, which the alias folder is not part of: name the file of the
-    # enabled planner plugin instead of a path (no command names a package root).
-    body = re.sub(r"\[([^\]]+)\]\(\.\./([^)]+)\)", rf"\1 (`\2` of the enabled {MODULE_ID} plugin)", body)
-    return f"---\n{''.join(lines)}---\n{notice}\n\n{body}".encode("utf-8")
 
 
 def apply_claude_command_plan(root: Path, render_plan: ClaudeCommandRenderPlan, *,

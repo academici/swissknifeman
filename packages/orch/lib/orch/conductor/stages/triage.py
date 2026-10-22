@@ -27,7 +27,8 @@ def triage(self, item: Item, number: int, findings: dict, advice: str = "") -> d
                                  advice=advice)
         triage, meta = self._role(item, key, role, prompt, "triage-result",
                                   extra=lambda doc: contract.triage_problems(findings, doc))
-        return {"triage": triage, **meta}
+        triage, verified = verify_rejections(self, item, key, findings, triage)
+        return {"triage": triage, "verified": verified, **meta}
 
     found = self._step(item, key, run, role=role, route=self.label(route),
                        verdict=lambda result: f"confirmed {len(result['triage']['confirmed'])}, "
@@ -35,6 +36,118 @@ def triage(self, item: Item, number: int, findings: dict, advice: str = "") -> d
     self._verdict_file(item)
     self._note_rejected(item, findings, found["triage"])
     return found["triage"]
+
+
+def shell_words(cmd: str):
+    """The words of a one-line simple command as Bash reads them, else None when it is shell syntax or unbalanced. Quotes
+    and a backslash make an operator character a plain letter; ``#`` starts a comment only at the start of a word (so
+    ``a#b`` is one word); one trailing ``;`` is allowed, any other unquoted ``;`` ``&`` ``|`` ``<`` ``>`` ``(`` ``)`` is
+    not a plain command."""
+    words: list = []
+    word, ended, i = None, False, 0  # word: the word being read (None between words); ended: after the trailing ';'
+    while i < len(cmd):
+        c = cmd[i]
+        if c in " \t":
+            if word is not None:
+                words.append(word)
+                word = None
+        elif c == "#" and word is None:
+            break  # a comment to the end of the line
+        elif ended:
+            return None
+        elif c == "'":
+            close = cmd.find("'", i + 1)
+            if close < 0:
+                return None
+            word, i = (word or "") + cmd[i + 1:close], close
+        elif c == '"':
+            word, i = word or "", i + 1
+            while i < len(cmd) and cmd[i] != '"':
+                if cmd[i] == "\\" and cmd[i + 1:i + 2] in ("$", "`", '"', "\\"):
+                    i += 1
+                word, i = word + cmd[i], i + 1
+            if i >= len(cmd):
+                return None
+        elif c == "\\":
+            if i + 1 >= len(cmd):
+                return None
+            word, i = (word or "") + cmd[i + 1], i + 1
+        elif c == ";":
+            if word is not None:
+                words.append(word)
+                word = None
+            ended = True
+        elif c in "&|<>()":
+            return None
+        else:
+            word = (word or "") + c
+        i += 1
+    if word is not None:
+        words.append(word)
+    return words
+
+
+def is_trivial_reproduction(cmd) -> bool:
+    """A command that proves nothing: it cannot fail for a defect, so it cannot show that a finding does not hold. Only
+    a standalone ``true``, ``:``, ``exit 0``, ``echo …`` or ``printf …`` (one optional trailing ``;``) is trivial. Anything
+    with an unquoted shell operator (``;`` ``&`` ``|`` ``<`` ``>`` ``(`` ``)``; the same characters quoted or escaped are
+    plain text), a command substitution, a second line or text the shell would not read the same way is not: it reaches
+    the guarded rerun, which is the safe side."""
+    if not isinstance(cmd, str) or "\n" in cmd or "\r" in cmd or "$(" in cmd or "`" in cmd:
+        return False
+    words = shell_words(cmd)
+    if not words:
+        return False
+    return words in (["true"], [":"], ["exit", "0"]) or words[0] in ("echo", "printf")
+
+
+CHECKED_SEVERITIES = ("Blocker", "Major")
+
+
+def verify_rejections(self, item: Item, key: str, findings: dict, triage: dict) -> tuple:
+    """``(triage, verified)``: a rejected Blocker or Major finding stands rejected only when the conductor itself reran
+    its reproduction read-only (``checks.run_reproduction``, I12) and saw the exit the triager reported. A trivial command,
+    another exit, or a rerun that could not be made (the guard is unavailable, a timeout) restores the finding as
+    confirmed (beacons ``TRIAGE_REPRO_TRIVIAL``, ``TRIAGE_REPRO_MISMATCH``, ``TRIAGE_REPRO_UNVERIFIED``): a cheap triager
+    must not remove a real defect without proof. ``verified`` is ``[{finding, outcome: kept|restored, reason}]``; confirmed
+    and Minor findings are not checked."""
+    by_id = {found.get("id"): found for found in findings["findings"]}
+    kept, restored, verified = [], [], []
+    for entry in triage["rejected"]:
+        found = by_id.get(entry["finding"], {})
+        repro = entry.get("reproduction")
+        if found.get("severity") not in CHECKED_SEVERITIES or not repro:
+            kept.append(entry)
+            continue
+        name, reported = entry["finding"], repro["exit"]
+        code, observed = "", reported
+        if is_trivial_reproduction(repro["cmd"]):
+            code, why = "TRIAGE_REPRO_TRIVIAL", f"the command {repro['cmd']!r} proves nothing"
+        else:
+            ran = checks_mod.run_reproduction(
+                repro["cmd"], project=self.project, log=item.directory / "triage" / key.split(".", 1)[1] / f"{name}.log",
+                timeout_s=item.options["limits"].get("triage_repro_timeout_s", opts.DEFAULT_LIMITS["triage_repro_timeout_s"]))
+            if ran["guard"] != "protect":
+                code, why = "TRIAGE_REPRO_UNVERIFIED", f"the rerun was not made read-only ({ran['guard']}; log {ran['log']})"
+            elif ran["exit"] != reported:
+                code, observed = "TRIAGE_REPRO_MISMATCH", ran["exit"]
+                why = f"reported exit {reported}, the conductor observed {ran['exit']}"
+        if not code:
+            kept.append(entry)
+            verified.append({"finding": name, "outcome": "kept", "reason": f"the conductor observed the reported exit {reported}"})
+            continue
+        self.progress.emit("info", item=item.ref, stage=key, reason_code=code, message=f"{name}: {why}")
+        verified.append({"finding": name, "outcome": "restored", "reason": why})
+        restored.append({"finding": name, "reproduction": {"cmd": repro["cmd"], "exit": observed,
+                                                           "observed": f"the conductor reran the rejection: {why}"},
+                         "fix": f"{found.get('failure_scenario') or entry['reason']}; fix as the reviewer described"})
+    if not restored:
+        return triage, verified
+    triage = {"confirmed": [*triage["confirmed"], *restored], "rejected": kept}
+    issues = contract.problems(triage, "triage-result") + contract.triage_problems(findings, triage)
+    if issues:
+        raise ValueError(f"the triage after the reproduction check is outside its contract: {'; '.join(issues[:3])}")
+    return triage, verified
 
 
 def split_confirmed(item: Item, findings: dict, triage: dict) -> tuple:

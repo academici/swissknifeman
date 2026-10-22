@@ -92,9 +92,9 @@ class TestPlanner(PartnerTestCase):
         path.write_text("print('x')\n", encoding="utf-8")
         return str(path)
 
-    def test_plan_py_then_root_then_task_root(self):
+    def test_plan_py_then_root_and_retired_root_is_ignored(self):
         a, b, c = (self.tmp / n for n in "abc")
-        pa, pb, pc = self.plan_py(a), self.plan_py(b), self.plan_py(c)
+        pa, pb, _pc = self.plan_py(a), self.plan_py(b), self.plan_py(c)
         env = self.env(PLANNER_PLAN_PY=pa, PLANNER_ROOT=str(b), SKM_TASK_ROOT=str(c))
         self.assertEqual(partner_command("planner", env=env), [sys.executable, pa])
         del env["PLANNER_PLAN_PY"]
@@ -102,9 +102,9 @@ class TestPlanner(PartnerTestCase):
         del env["PLANNER_ROOT"]
         err = io.StringIO()
         with contextlib.redirect_stderr(err):
-            self.assertEqual(partner_command("planner", env=env), [sys.executable, pc])
+            self.assertIsNone(partner_command("planner", env=env))
             partner_command("planner", env=env)
-        self.assertEqual(err.getvalue().count("SKM_TASK_ROOT_DEPRECATED"), 1)
+        self.assertEqual(err.getvalue(), "")
 
     def test_planner_ignores_skm_bin_and_uses_path_last(self):
         on_path = self.tmp / "path"

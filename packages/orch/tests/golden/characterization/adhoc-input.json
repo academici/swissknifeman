@@ -166,6 +166,7 @@
   "executor_session": "executor-session-1",
   "executor_session_item": "adhoc@<digest>",
   "executor_session_route": "claude-code/sonnet/high",
+  "executor_session_task_digest": "<digest>",
   "items": {
    "adhoc@9b97afced891": {
     "adopted": [],
@@ -180,7 +181,29 @@
     "outcome": "done",
     "plan_notes": [],
     "retries_used": 0,
+    "review_marks": {
+     "1": {
+      "out/adhoc.txt": "<digest>"
+     }
+    },
     "source_paths": [],
+    "stage_usage": {
+     "executor.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "review.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "scout": {
+      "cached": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
     "steps": {
      "brief": {
       "ended": "<time>",

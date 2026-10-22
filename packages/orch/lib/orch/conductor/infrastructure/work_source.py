@@ -1,5 +1,6 @@
-"""The work source as the conductor reaches it: the verbs of this package's own ``orch.py source`` (claim, brief, prepare,
-release, research, register, commit), never the plan itself, and the artifact folder of a piece.
+"""The work source as the conductor reaches it: the verbs of this package's own ``orch.py source`` (claim, brief,
+release, research, register, commit), never the plan itself, and the artifact folder of a piece. ``prepare`` is the
+exception: it binds the launch-plan in this process so a public ``source prepare`` stays strict.
 
 The one place of the conductor that writes into the artifact folder (``artifacts_dir`` of the brief, or
 ``.swissknifeman/orch-artifacts/<run>/<work>/`` for a source without one) or builds and runs an ``orch.py source``
@@ -7,11 +8,14 @@ command line (knowledge/p11-refactor#fs; ``tests/test_boundaries.py`` keeps it s
 from __future__ import annotations
 
 import json
+import io
+import os
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
 import shlex
 import sys
-from typing import Optional
+from typing import Callable, Optional
 
 from aicore.state import blobs
 from aicore.util.digest import canonical_json_bytes, sha256_hex
@@ -31,6 +35,43 @@ from aicore.util.proc import run as run_with_timeout
 # Local records of a source without artifacts_dir (not committed: ignored like the state folder); a plan source keeps the
 # evidence of its items with the plan at register.
 FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
+ORCH_TRANSPORT: Optional[Callable] = None
+
+
+def inprocess_transport(argv, cwd, env):
+    """Test transport for the source CLI; restore process state even on an exception.
+
+    This seam is process-global and belongs to sequential tests within a worker only.
+    Production always uses the subprocess transport.
+    """
+    global ORCH_TRANSPORT
+    previous_env, previous_cwd = dict(os.environ), os.getcwd()
+    previous_transport = ORCH_TRANSPORT
+    out, err = io.StringIO(), io.StringIO()
+    try:
+        os.environ.clear()
+        os.environ.update(previous_env if env is None else env)
+        os.chdir(cwd)
+        with redirect_stdout(out), redirect_stderr(err):
+            from orch import cli
+            try:
+                code = cli.main(list(argv[2:]))
+            except SystemExit as exc:
+                code = exc.code
+                if code is not None and not isinstance(code, int):
+                    print(code, file=sys.stderr)
+                    code = 1
+        return code or 0, out.getvalue(), err.getvalue()
+    finally:
+        os.chdir(previous_cwd)
+        os.environ.clear()
+        os.environ.update(previous_env)
+        ORCH_TRANSPORT = previous_transport
+
+
+def _subprocess_transport(argv, cwd, env):
+    done = run_with_timeout(argv, cwd=cwd, capture_output=True, text=True, env=env, timeout=600)
+    return done.returncode, done.stdout, done.stderr
 
 
 def read_receipt(item: Item, kind: str, *, project=None) -> Optional[dict]:
@@ -157,13 +198,12 @@ def run_orch(self, *args: str) -> tuple:
         argv += ["--project-resolution", self.project_resolution]
     if self.config_file:
         argv += ["--config", str(self.config_file)]
-    done = run_with_timeout(argv + list(args), cwd=str(self.project), capture_output=True, text=True,
-                          env=self.env, timeout=600)
+    code, out, err = (ORCH_TRANSPORT or _subprocess_transport)(argv + list(args), str(self.project), self.env)
     try:
-        doc = json.loads(done.stdout) if done.stdout.strip() else None
+        doc = json.loads(out) if out.strip() else None
     except ValueError:
         doc = None
-    return done.returncode, doc, done.stderr.strip()
+    return code, doc, err.strip()
 
 
 OWNED_HINT = ("; the conductor never takes a piece over: free it from the run that holds it (`orch conduct release --run RUN "
@@ -252,15 +292,58 @@ def brief(self, item: Item) -> dict:
             "base": base}
 
 
+def check_brief_size(item: Item, doc: Optional[dict] = None) -> None:
+    """``budgets.brief_max_bytes`` of the run policy (0 or absent: no limit) against the execution-input of the piece (``doc``
+    when it is a rebuilt one), the embedded context pack and the files it reads included; checked once the options are
+    resolved, before any role runs, and again when the input is rebuilt."""
+    limit = int(((item.policy or {}).get("budgets") or {}).get("brief_max_bytes") or 0)
+    size = len(json.dumps(item.input_doc if doc is None else doc).encode("utf-8")) if limit else 0
+    if limit and size > limit:
+        raise Stop("BRIEF_TOO_LARGE", f"{item.ref}: execution-input is {size} bytes > budgets.brief_max_bytes {limit} of the "
+                   f"run policy {(item.policy or {}).get('policy_id', '-')}; split the item or raise the budget in the policy")
+
+
 def prepare(self, item: Item) -> dict:
+    """The launch-plan of the piece, with the stages this conductor skips already omitted.
+
+    Public ``source prepare`` binds the pack as stored, including an optional role it does not
+    run. Calling that verb from here would either drop the role for every client or refuse a
+    skipped stage that has no manifest. This path writes the same ``launch-plan.json`` and
+    refusal events, and it does not add a public flag.
+    """
+    check_brief_size(item)  # after the brief and the options, before the first role
+    from types import SimpleNamespace
     provider = opts.stage_route(item.options, "executor").get("provider") or self.conductor.get("provider") \
         or "claude-code"
-    args = ["source", "prepare", "--run", item.orch_run, "--provider", provider]
-    if self.model_catalog:
-        args += ["--model-catalog", str(self.model_catalog)]
-    code, plan, err = self._orch(*args)
+    args = SimpleNamespace(run=item.orch_run, provider=provider, binding=None, model_catalog=self.model_catalog,
+                           config=self.config_file)
+    out, err = io.StringIO(), io.StringIO()
+    previous = os.getcwd()
+    previous_env = dict(os.environ) if self.env is not None else None
+    try:
+        os.chdir(self.project)
+        if previous_env is not None:
+            os.environ.clear()
+            os.environ.update(self.env)
+        from orch import cli
+        with redirect_stdout(out), redirect_stderr(err):
+            try:
+                code = cli._source_prepare(args, self.settings, self.project, conductor=True)
+            except cli.SourceRefusal as refusal:
+                code, err = refusal.exit_code, io.StringIO(f"{refusal.code}: {refusal.message}")
+    finally:
+        if previous_env is not None:
+            os.environ.clear()
+            os.environ.update(previous_env)
+        os.chdir(previous)
+    text = out.getvalue()
+    try:
+        plan = json.loads(text) if text.strip() else None
+    except ValueError:
+        plan = None
+    message = err.getvalue().strip()
     if code != 0 or not isinstance(plan, dict):
-        first = (err or "prepare refused").splitlines()[0]
+        first = (message or "prepare refused").splitlines()[0]
         raise Stop("PREPARE_REFUSED", first)
     return {"stages": [{key: stage.get(key) for key in ("stage_id", "role", "provider", "model", "effort")}
                        for stage in plan.get("stages", [])],
@@ -284,6 +367,7 @@ def refresh_input(self, item: Item) -> None:
                            message="the re-asked brief cannot be read; the next round keeps the earlier input")
         return
     if doc.get("digest") and doc.get("digest") != item.input_doc.get("digest"):
+        check_brief_size(item, doc)
         write_json(item.directory / "input.json", doc)
         previous, item.input_doc = item.input_doc.get("digest"), doc
         self._beacon_event("orch.input.rebuilt", item, {"previous_digest": previous, "digest": doc["digest"]})
@@ -355,6 +439,11 @@ def write_artifact(self, item: Item, name: str, doc) -> Path:
     """``doc`` as ``<artifacts>/<name>``: a record of the piece (stage-report, review-verdict, advice), committed with the
     piece when the source named the folder, local in the fallback folder otherwise."""
     return write_json(item.artifacts / name, doc)
+
+
+def stray_dir(item: Item) -> Path:
+    """Where the runtime artifacts an executor left in the tree are set aside: ``<artifacts>/stray/<original path>``."""
+    return (item.artifacts or item.directory) / "stray"
 
 
 def local_records(self, item: Item) -> bool:

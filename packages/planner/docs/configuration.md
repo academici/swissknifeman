@@ -50,6 +50,7 @@ Add `--json` for machine-readable output. Code reads settings only through `plan
 | `new_item.review_mode` | `none`, `self`, `requested` | `none` | `review.mode` of a new item |
 | `policy.review_rounds_max` | integer 1–3 | 2 | finished review rounds per item |
 | `policy.corrections_max` | integer 1–2 | 1 | corrections by the owner for review findings |
+| `routing.unknown_model` | `refuse`, `warn` | `warn` | admission of a model absent from the routing pool; `start --strict-route` always refuses it |
 | `views.templates_dir` | string (project file and `--config` only) | empty | folder of view templates that replace the built-in ones by file name; a relative path starts at the file of its layer and `~` is expanded |
 | `orchestration.default_scenario` | name `^[a-z][a-z0-9-]*$` | `solo` | execution scenario when nothing more specific is set |
 | `orchestration.by_class.economy`, `.implementation`, `.frontier` | name or empty | empty | scenario for a route class; empty means `default_scenario` |
@@ -60,6 +61,12 @@ Add `--json` for machine-readable output. Code reads settings only through `plan
 The review and correction limits have a lower bound of 1, so a loop cannot be switched off; command texts refer to
 these values instead of quoting numbers. Format constants (ids, URNs, statuses, file names, error codes, verbs) are not
 configurable. A view template named in `views.templates_dir` that the planner does not know gives a warning.
+
+With `routing.unknown_model = "warn"`, interactive `start` records `ROUTE_MODEL_UNKNOWN` in the start event and
+result; unit dispatch records it in the delegate event. With `"refuse"`, these admissions fail with
+`ROUTE_MODEL_UNKNOWN` before writing. The same configuration applies when a different executor is registered at
+item finish or unit return. The work-source bridge always passes `start --strict-route` for claims and retry
+registration, so conductor work requires a known pool model regardless of the interactive default.
 
 ## Execution scenario
 

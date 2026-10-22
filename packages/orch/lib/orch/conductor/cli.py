@@ -51,7 +51,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     conductor.run_id = "cnd-dry-run"
     claim = {"scenario": args.scenario or conductor.settings.default_profile, "options": []}
     item = engine.Item(ref="(preview)", orch_run="-", state={}, directory=Path(), claim=claim)
-    conductor.run_doc = {"options_file": str(args.options) if args.options else None}
+    conductor.run_doc = {"options_file": str(args.options) if args.options else None,
+                         "fence": getattr(args, "fence", None), "extra_paths": getattr(args, "allow_path", [])}
     conductor._resolve(item, persist=False)
     unavailable = conductor._routes(item, persist=False, preview=True) or {}
     problems = {**{role: conductor.route_problem(route) for role, route in item.routes.items()}, **unavailable}
@@ -232,6 +233,16 @@ def _prompt_diff(args, project: Path) -> int:
     return 0
 
 
+def _check_outcome(check: dict) -> str:
+    """The text of one check under a ``checks.N`` interval: ``12.4 s green``, ``skipped (fail_fast)``, ``reused (12 s)``."""
+    if check["skipped"]:
+        return "skipped" + (f" ({check['skip_reason']})" if check.get("skip_reason") else "")
+    if check["reused"]:
+        return "reused" + (f" ({check['original_seconds']} s)" if check.get("original_seconds") is not None else "")
+    took = f"{check['seconds']} s " if check.get("seconds") is not None else ""
+    return took + ("green" if check["green"] else "red")
+
+
 def _timeline(args, project: Path) -> int:
     """``timeline``: the steps of the pieces of a run as intervals with their durations, from its journal."""
     run_id = args.run or _latest(project)
@@ -239,7 +250,8 @@ def _timeline(args, project: Path) -> int:
     if not run_id or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id) is None or not (directory / engine.RUN_FILE).is_file():
         print(f"RUN_UNKNOWN: no conductor run {args.run or ''} in {engine.runs_root(project)}".rstrip(), file=sys.stderr)
         return 1
-    rows = progress.timeline(progress.read_lines(directory), item=args.item)
+    rows = progress.timeline(progress.read_lines(directory), item=args.item,
+                             state=engine.read_json(directory / engine.STATE_FILE) or {})
     if args.json:
         print(json.dumps(runs.display({"run": run_id, "item": args.item, "intervals": rows}), ensure_ascii=False, indent=2))
         return 0
@@ -247,6 +259,8 @@ def _timeline(args, project: Path) -> int:
         took = f"{row['duration_s']} s" if row["duration_s"] is not None else "-"
         print(f"{row['start']} {row['item']} {row['stage']}: {row['status']}, {took}"
               + (f" ({row['verdict']})" if row.get("verdict") else ""))
+        for check in row.get("checks") or []:
+            print(f"  - {check['id']} " + _check_outcome(check))
     if not rows:
         print("no steps in the journal")
     return 0
@@ -345,7 +359,7 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--options", type=Path, metavar="FILE", help="run-options JSON: the most specific layer")
     run.add_argument("--batch", action=argparse.BooleanOptionalAction, default=None,
                      help="the pieces of this run are one batch (default): all are taken in progress at the start and "
-                          "one executor session carries them in order (`session.executor: shared`); --no-batch takes one "
+                          "`session.executor: handoff` gives each piece its own session that its correction rounds resume; --no-batch takes one "
                           "piece at a time, each executor step in a fresh session")
     run.add_argument("--fence", choices=("project", "plan"), default=None,
                      help="what the executor may change: the whole project (default; the plan's write set is reported "
@@ -379,11 +393,17 @@ def main(argv: list | None = None) -> int:
         quiet = sub.add_mutually_exclusive_group()
         quiet.add_argument("--quiet", action="store_true", help="no progress lines on stderr")
         quiet.add_argument("--json-lines", dest="json_lines", action="store_true", help="progress lines as JSON")
-    settle = verbs.add_parser("settle", help="set the outcome of a piece of a run by hand, after it was finished or "
-                                             "given up outside the conductor")
+    settle = verbs.add_parser("settle", help="set the outcome of a piece of a run by hand (--item, --outcome), after it was "
+                                             "finished or given up outside the conductor; or lift the stop of a group review "
+                                             "with Blocker findings (--group, --followup-run), after its follow-up run was "
+                                             "committed")
     settle.add_argument("--run", required=True, metavar="RUN")
-    settle.add_argument("--item", required=True, metavar="REF")
-    settle.add_argument("--outcome", required=True, choices=["done", "done_with_deviations", "blocked"])
+    settle.add_argument("--item", metavar="REF", help="the piece to settle (with --outcome)")
+    settle.add_argument("--outcome", choices=["done", "done_with_deviations", "blocked"])
+    settle.add_argument("--group", type=int, metavar="N", help="the group (number in review-strategy.json) whose "
+                                                              "GROUP_REVIEW_BLOCKER is lifted (with --followup-run)")
+    settle.add_argument("--followup-run", dest="followup_run", metavar="RUN",
+                        help="the finished, committed run of group-review-N.followup.json of this run")
     settle.add_argument("--reason", required=True, help="why, for the journal")
     release = verbs.add_parser("release", help="give a claimed piece of a run back to the work source, when the run stopped "
                                                 "before any work began (so that a later run can claim it)")
@@ -457,6 +477,12 @@ def main(argv: list | None = None) -> int:
             parser.error("one of --items or --ready is required with --plan")
         if args.commit and not args.input:
             parser.error("--commit belongs to --input: a plan source commits as its own policy says")
+    if args.verb == "settle":
+        if args.group is not None:
+            if args.item or args.outcome or not args.followup_run:
+                parser.error("--group settles a group review: it takes --followup-run, and no --item or --outcome")
+        elif args.followup_run or not (args.item and args.outcome):
+            parser.error("settle takes --item and --outcome, or --group and --followup-run")
     if args.verb == "runs" and args.limit is not None and args.limit < 1:
         parser.error("--limit must be at least 1")
     if args.verb == "prune":
@@ -568,6 +594,8 @@ def main(argv: list | None = None) -> int:
                                  fence=args.fence, extra_paths=args.allow_path, grouped=args.batch)
         if args.verb == "release":
             return conductor.release(args.run, None if args.all else args.item, args.reason)
+        if args.verb == "settle" and args.group is not None:
+            return conductor.settle_group(args.run, args.group, args.followup_run, args.reason)
         if args.verb == "settle":
             return conductor.settle(args.run, args.item, args.outcome, args.reason)
         return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit)

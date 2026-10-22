@@ -50,8 +50,9 @@ commands:
   project list [--all] [--json]     projects of the workspace and their bindings on this machine (--all: of every workspace)
   project show PROJECT_ID [--json]  project (code) record, binding and the plans the workspace holds
   project scan DIR... [--json]      bind the checkouts with a known marker found under DIR (depth 4)
-  project rebind PROJECT_ID --path DIR [--json]
-                                    replace the bound paths of a project by one checkout
+  project rebind PROJECT_ID --path DIR [--preserve-paths [--include-path DIR]...] [--json]
+                                    replace the bound paths by one checkout; --preserve-paths keeps prior paths and
+                                    makes DIR primary, adding each --include-path checkout in the same atomic write
   project detach PROJECT_ID [--path DIR] [--json]
                                     drop a binding of this machine; the workspace is not changed
   migrate discover [DIR...] [--json]
@@ -163,6 +164,8 @@ def _build() -> argparse.ArgumentParser:
     p = commands.add_parser("rebind")
     p.add_argument("project_id")
     p.add_argument("--path", metavar="DIR", required=True)
+    p.add_argument("--preserve-paths", action="store_true")
+    p.add_argument("--include-path", metavar="DIR", action="append", default=[])
     p.add_argument("--json", action="store_true")
     p = commands.add_parser("detach")
     p.add_argument("project_id")
@@ -493,7 +496,7 @@ def _cmd_scan(args: argparse.Namespace) -> int:
 
 
 def _cmd_rebind(args: argparse.Namespace) -> int:
-    doc = projects.rebind(args.project_id, args.path)
+    doc = projects.rebind(args.project_id, args.path, preserve_paths=args.preserve_paths, include_paths=args.include_path)
     if args.json:
         _dump(doc)
     else:

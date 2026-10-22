@@ -60,6 +60,10 @@ schema_version = 1
 # Owning corrections allowed for the findings of a review. Integer >= 1 and <= 2.
 # corrections_max = 1
 
+[planner.routing]
+# Unknown pool models warn (warn) or are refused (refuse); start --strict-route always refuses them. One of: "refuse", "warn".
+# unknown_model = "warn"
+
 [planner.views]
 # Folder with view templates (project file or --config only: the rendered views are committed with the plan) that replace the built-in ones of the same file name; a relative path is taken from the folder of the configuration file, a leading ~ is expanded. An empty string keeps the built-in templates. String.
 # Allowed in layers: defaults, project, invocation.

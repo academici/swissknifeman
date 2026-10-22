@@ -71,9 +71,6 @@ jobs:
           python3 scripts/test-planner-plugin-cache-revision.py -v
           python3 scripts/test-root-install.py -v
 
-      - name: dev-clone guard (entry points, scripts/dev-clone.sh)
-        run: python3 scripts/test-dev-guard.py -v
-
       - name: aicore locator (module wrappers and runners)
         run: python3 scripts/test-aicore-locator.py -v
 

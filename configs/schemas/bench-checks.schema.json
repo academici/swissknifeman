@@ -1,0 +1,612 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:hub:bench-checks:v1",
+  "title": "bench-checks",
+  "description": "Output of scripts/bench-checks.py: the same check commands timed on a base revision and on the current tree in bounded pairs, with the logical workload and case census compared.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:hub:bench-checks:v1",
+      "description": "Format identifier."
+    },
+    "label": {
+      "type": "string",
+      "description": "Free text of the caller."
+    },
+    "at": {
+      "type": "string",
+      "description": "UTC time the document was written."
+    },
+    "cpu_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "jobs": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "SKM_TEST_JOBS given to both sides."
+    },
+    "python": {
+      "type": "string",
+      "description": "python3 version both sides ran with."
+    },
+    "loadavg": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0
+      },
+      "description": "[start, end] 1-minute load average of the whole bench."
+    },
+    "target_ratio": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Wall-time target: after/before at most this."
+    },
+    "pairs_run": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "before": {
+      "type": "object",
+      "properties": {
+        "rev": {
+          "type": "string",
+          "description": "Commit of the base, or 'worktree' for the current tree."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Command id; the key of ratio and of coverage.cases."
+              },
+              "cmd": {
+                "type": "string",
+                "description": "Command run with bash -c in the tree."
+              },
+              "mode": {
+                "enum": [
+                  "cold",
+                  "warm_scheduling",
+                  "warm_reuse"
+                ],
+                "description": "cold: no result reuse; warm_scheduling: warmed timings, everything runs inside one SKM_CHECK_RUN; warm_reuse: greens of the warm_scheduling run are reused."
+              },
+              "diagnostic": {
+                "type": "boolean",
+                "description": "A diagnostic command is timed but never part of total."
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Mean elapsed seconds over the pairs (wall time, not CPU time)."
+              },
+              "exit": {
+                "type": "integer",
+                "description": "Largest exit over the pairs; a non-zero exit is recorded, not an error."
+              },
+              "runs": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "description": "Elapsed seconds of each pair."
+              },
+              "exits": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Exit of each pair."
+              }
+            },
+            "required": [
+              "id",
+              "cmd",
+              "mode",
+              "diagnostic",
+              "seconds",
+              "exit",
+              "runs",
+              "exits"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "rev",
+        "commands"
+      ],
+      "additionalProperties": false
+    },
+    "after": {
+      "type": "object",
+      "properties": {
+        "rev": {
+          "type": "string",
+          "description": "Commit of the base, or 'worktree' for the current tree."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Command id; the key of ratio and of coverage.cases."
+              },
+              "cmd": {
+                "type": "string",
+                "description": "Command run with bash -c in the tree."
+              },
+              "mode": {
+                "enum": [
+                  "cold",
+                  "warm_scheduling",
+                  "warm_reuse"
+                ],
+                "description": "cold: no result reuse; warm_scheduling: warmed timings, everything runs inside one SKM_CHECK_RUN; warm_reuse: greens of the warm_scheduling run are reused."
+              },
+              "diagnostic": {
+                "type": "boolean",
+                "description": "A diagnostic command is timed but never part of total."
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Mean elapsed seconds over the pairs (wall time, not CPU time)."
+              },
+              "exit": {
+                "type": "integer",
+                "description": "Largest exit over the pairs; a non-zero exit is recorded, not an error."
+              },
+              "runs": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "description": "Elapsed seconds of each pair."
+              },
+              "exits": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Exit of each pair."
+              }
+            },
+            "required": [
+              "id",
+              "cmd",
+              "mode",
+              "diagnostic",
+              "seconds",
+              "exit",
+              "runs",
+              "exits"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "rev",
+        "commands"
+      ],
+      "additionalProperties": false
+    },
+    "ratio": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "description": "after/before seconds by command id; null when before took no time."
+    },
+    "total": {
+      "type": "object",
+      "properties": {
+        "before_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "after_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ratio": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "counted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Command ids in the total: cold and not diagnostic."
+        }
+      },
+      "required": [
+        "before_s",
+        "after_s",
+        "ratio",
+        "counted"
+      ],
+      "additionalProperties": false
+    },
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "n": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "order": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "before",
+                "after"
+              ]
+            },
+            "description": "Which side ran first in this pair."
+          },
+          "loadavg": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0
+            },
+            "description": "1-minute load average at the start and at the end of the pair."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "side": {
+                  "enum": [
+                    "before",
+                    "after"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "cmd": {
+                  "type": "string"
+                },
+                "mode": {
+                  "enum": [
+                    "cold",
+                    "warm_scheduling",
+                    "warm_reuse"
+                  ],
+                  "description": "cold: no result reuse; warm_scheduling: warmed timings, everything runs inside one SKM_CHECK_RUN; warm_reuse: greens of the warm_scheduling run are reused."
+                },
+                "seconds": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "exit": {
+                  "type": "integer"
+                },
+                "timed_out": {
+                  "type": "boolean"
+                },
+                "log": {
+                  "type": "string"
+                },
+                "cases": {
+                  "type": "object",
+                  "properties": {
+                    "available": {
+                      "type": "boolean",
+                      "description": "Whether runners wrote case reports that can be compared."
+                    },
+                    "files": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "inventory": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Discovered cases over all runner reports."
+                    },
+                    "unique": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Distinct context|key cases."
+                    },
+                    "digest": {
+                      "type": "string",
+                      "description": "sha256 of the sorted context|key cases; empty when none."
+                    },
+                    "contexts": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "description": "Discovered cases by test context."
+                    },
+                    "executed": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "retries": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "invocations": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Runner process invocations including retries."
+                    },
+                    "reason": {
+                      "type": "string",
+                      "description": "Why the census is not available."
+                    }
+                  },
+                  "required": [
+                    "available",
+                    "files",
+                    "inventory",
+                    "unique",
+                    "digest",
+                    "contexts",
+                    "executed",
+                    "skipped",
+                    "retries",
+                    "invocations"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "side",
+                "id",
+                "cmd",
+                "mode",
+                "seconds",
+                "exit",
+                "timed_out",
+                "log",
+                "cases"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "n",
+          "order",
+          "loadavg",
+          "results"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "workload": {
+          "type": "object",
+          "properties": {
+            "before": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "after": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "equal": {
+              "type": "boolean"
+            },
+            "only_before": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "only_after": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "before",
+            "after",
+            "equal",
+            "only_before",
+            "only_after"
+          ],
+          "additionalProperties": false,
+          "description": "Logical commands each side stands for (affected-tests --json), not timed."
+        },
+        "cases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "comparable": {
+                "type": "boolean"
+              },
+              "equal": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "before_unique": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "after_unique": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "only_before": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "only_after": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sample": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Up to 20 differing cases, '-' only before, '+' only after."
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why the sides are not comparable."
+              }
+            },
+            "required": [
+              "comparable",
+              "equal",
+              "before_unique",
+              "after_unique",
+              "only_before",
+              "only_after",
+              "sample"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Case census of the first pair by command id."
+        }
+      },
+      "required": [
+        "workload",
+        "cases"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "target_met": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failed_runs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_met",
+        "failed_runs",
+        "note"
+      ],
+      "additionalProperties": false
+    },
+    "census": {
+      "type": "object",
+      "description": "Execution census of one observed run per side (timings of those runs are excluded from every ratio): observer provenance, transparency and propagation proofs, execution ledgers summarized per side, one-sided cases with source-backed reasons, conserved true/false/null (null: unknown, never zero)."
+    },
+    "sources": {
+      "type": "object",
+      "description": "Frozen source identity of both sides and whether the current tree stayed unchanged during the measurement."
+    },
+    "timing_cache": {
+      "type": "object",
+      "description": "The affected-tests timing cache restored before every cold leg and at the end."
+    },
+    "budget": {
+      "type": "object",
+      "description": "Predeclared workload executions: timing legs, observations, total and the cap."
+    },
+    "timing_source": {
+      "type": "object",
+      "description": "Recovery mode only: the recorded timing legs that were reused, the evidence hash and the checks (baseline, Python, jobs, workload, relevant inputs) that make reuse valid; valid true/false/null (unknown)."
+    },
+    "loadavg_reason": {
+      "type": "string",
+      "description": "Why loadavg is empty (recovered timing legs recorded no load)."
+    }
+  },
+  "required": [
+    "$schema",
+    "label",
+    "at",
+    "cpu_count",
+    "jobs",
+    "python",
+    "loadavg",
+    "target_ratio",
+    "pairs_run",
+    "before",
+    "after",
+    "ratio",
+    "total",
+    "pairs",
+    "coverage",
+    "result"
+  ],
+  "additionalProperties": false
+}

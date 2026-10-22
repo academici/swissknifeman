@@ -113,7 +113,7 @@
         },
         "access": {
           "type": "string",
-          "description": "How far the roles that write (executor, bounded-implementer, registrar) may reach on a provider CLI that has a sandbox of its own (Codex): open (default) gives it its widest mode, so the role can use Docker and anything else the user can; confined keeps it inside the workspace (Codex workspace-write). Roles that must not write stay read-only in both. A project file can only tighten this (confined), never loosen what the machine set.",
+          "description": "How far the roles that write (executor, bounded-implementer, registrar) may reach on a provider CLI that has a sandbox of its own (Codex): open (default) gives it its widest mode, so the role can use Docker and anything else the user can; confined keeps it inside the workspace (Codex workspace-write). Roles that must not write stay read-only in both. Project and environment layers can only tighten this (confined); project resets and environment overrides cannot loosen the trusted access floor. The machine, invocation and flags may reopen access explicitly.",
           "default": "open",
           "enum": ["open", "confined"]
         },
@@ -233,7 +233,7 @@
         },
         "questions": {
           "type": "string",
-          "description": "What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for orch conduct answer), deny (blocked QUESTION_DENIED, no answer expected), defaults (a question with a default is answered by it once, by policy; without one it is queued) or advisor (the advisor role gives advice; advice that needs no owner answers the question by advisor, any other is queued with the advice; needs orch.advisor.enabled).",
+          "description": "What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for orch conduct answer), deny (blocked QUESTION_DENIED, no answer expected), defaults (a question with a default is answered by it once, by policy; without one it is queued) or advisor (the advisor role gives advice; advice that needs no owner answers the question by advisor, any other is queued with the advice; needs orch.advisor.enabled). Approval and credential questions always stay open for the owner in every mode.",
           "default": "queue",
           "enum": [
             "queue",
@@ -266,9 +266,36 @@
               "minimum": 0,
               "x-skm-layers": ["defaults", "machine", "project", "invocation"]
             },
+            "unmetered": {
+              "type": "string",
+              "description": "What a model attempt that reports no usage does while a hard token limit (tokens_hard_max or run_tokens_hard_max) is set: stop (the piece stops with TOKEN_BUDGET_UNMETERED) or charge (the attempt costs unmetered_charge_tokens). Without a hard limit it is only a BUDGET_UNMETERED beacon.",
+              "default": "stop",
+              "enum": [
+                "stop",
+                "charge"
+              ]
+            },
+            "unmetered_charge_tokens": {
+              "type": "integer",
+              "description": "Fresh input tokens charged for each model attempt that reported no usage when unmetered is charge and a hard token limit is set; counted in tokens.charged.",
+              "default": 50000,
+              "minimum": 0
+            },
+            "role_timeout_s": {
+              "type": "object",
+              "description": "Wall in seconds on the whole run of a streaming role, by role id. A role this table does not name keeps its shipped wall (context-scout 900, triager 1800, report-fixer 600, registrar 600, reviewer 3600, advisor 1800, researcher 2700; the executor and the bounded-implementer have none); 0 removes a wall. stage_timeout_s, when set, takes precedence. An exceeded wall is TIMEOUT and the retry rule of the step applies.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "integer",
+                  "description": "Seconds.",
+                  "minimum": 0
+                }
+              }
+            },
             "stage_timeout_s": {
               "type": "integer",
-              "description": "Ceiling on the whole run of one role in seconds; 0 has none for a streaming role (STAGE_SLOW beacons report a long run) and keeps the launch catalog timeout for a text role.",
+              "description": "Ceiling on the whole run of one role in seconds; 0 has none for a streaming role beyond role_timeout_s (STAGE_SLOW beacons report a long run) and keeps the launch catalog timeout for a text role. When set it takes precedence over role_timeout_s.",
               "default": 0,
               "minimum": 0
             },
@@ -280,8 +307,8 @@
             },
             "check_timeout_s": {
               "type": "integer",
-              "description": "Ceiling on one acceptance check in seconds; 0 (default) has none: CHECK_SLOW beacons report a long check.",
-              "default": 0,
+              "description": "Ceiling on one acceptance check in seconds; default 7200 (the longest check measured took about 4000); 0 has none: CHECK_SLOW beacons report a long check.",
+              "default": 7200,
               "minimum": 0
             },
             "check_idle_timeout_s": {
@@ -615,7 +642,7 @@
         },
         "human_gate": {
           "type": "array",
-          "description": "Advice categories that are never applied without the owner: the problem is queued with the advice instead.",
+          "description": "Advice categories held for the owner. Only the machine or caller may set this base gate; projects add categories through human_gate_extra.",
           "default": [
             "security",
             "destructive",
@@ -632,7 +659,39 @@
               "scope-expansion",
               "other"
             ]
-          }
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        },
+        "human_gate_extra": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "One advice category.",
+            "enum": [
+              "security",
+              "destructive",
+              "public-api",
+              "scope-expansion",
+              "other"
+            ]
+          },
+          "default": [],
+          "description": "Additional advice categories held for the owner. Values from every layer accumulate; an empty array or _unset cannot remove earlier categories."
+        },
+        "min_confidence": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "default": "medium",
+          "description": "Minimum confidence for automatic advice. The strictest value across all layers wins (high > medium > low); lower values and _unset cannot weaken it."
         }
       }
     },

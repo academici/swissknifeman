@@ -3,14 +3,20 @@ roles really changed in the tree."""
 from __future__ import annotations
 
 import json
+import os
+import shutil
 from typing import Optional
 
-from orch.conductor import prompts, questions as questions_mod, scope as scopes
+from aicore.util.digest import sha256_hex
+
+from orch.contracts import required_digest
+from orch.conductor import checks as checks_mod, options as opts, prompts, questions as questions_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import evidence_paths, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.files import REPORTS, safe, write_json
+from orch.conductor.stages import advice
 
 
 def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
@@ -40,6 +46,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         researched = self._researched(item)
         note = (item.state.get("interrupted_note") or {}).get(key, "")
         corrected = "\n\n".join(text for text in (correction, note) if text)
+        answers = questions_mod.answers_text(self._questions(item))
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                   rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
@@ -47,7 +54,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   repo_rules=self._repo_rules(item, "executor"),
                                   skill_texts=self._skill_texts(item, "executor"),
                                   expected=item.state.get("expected"),
-                                  answers=questions_mod.answers_text(self._questions(item)), fix=fix,
+                                  answers=answers, fix=fix,
                                   scout_origin=scouted.get("cache") or "",
                                   batch=self._batch_note(item), research=researched.get("result"),
                                   research_origin=researched.get("path") or "",
@@ -55,7 +62,13 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   extra_paths=self._scope_option(item, "extra_paths", []),
                                   file_tools=self._file_tools_rule(item),
                                   containers=not self._codex_sandboxed(route))
-        report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems)
+        resumed = self._resumed_prompt(item, key, correction, note, fix, answers)
+        report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems, resumed=resumed)
+        if self._shared_session(item, "executor", item.routes["executor"]) \
+                and (answers or "executor_session_answers" in self.state):  # the session has now seen every answer the prompt carried
+            with self.store.mutating():
+                self.state["executor_session_answers"] = [answer_key(row) for row in answers]
+                self._save()
         write_json(item.directory / "reports" / f"{key}.json", report)
         return {"report": report, "changed": self._changed_now(item), **meta}
 
@@ -68,11 +81,84 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
             item.state.pop("interrupted_note", None)
         self._save()
     report = found["report"]
+    tracked = set_aside_runtime(self, item, key, found)
+    moved = (item.state.get("relocated") or {}).get(key)
+    if moved:
+        report = dict(report, open_issues=list(report.get("open_issues", [])) + [{
+            "text": "runtime artifacts left in the tree were moved to the artifacts of the piece, not committed: "
+                    + ", ".join(f"{path} -> {where}" for path, where in sorted(moved.items()))[:800],
+            "kind": "note", "impact": "none", "next": "none"}])
+    if tracked and report["status"] != "blocked":
+        report = self._blocked(report, "OUTSIDE_RUNTIME_ARTIFACT", "the executor changed tracked runtime artifacts "
+                               "(history, not product files): " + ", ".join(tracked[:20])
+                               + "; restore them from git and keep logs and evidence out of the project, then retry")
     outside = self._outside(item)
+    stranger = scopes.foreign(outside, (item.input_doc.get("scope") or {}).get("write_set"),
+                              self._scope_option(item, "extra_paths", []), self.project)
+    if stranger and report["status"] != "blocked" and item.options["scope"].get("outside_module", "block") == "block":
+        report = self._blocked(report, "OUTSIDE_MODULE", "the executor changed files of other modules: "
+                               + ", ".join(stranger[:20]) + "; add them to the item's task_files or set them aside, then retry")
     if outside and report["status"] != "blocked" and item.options["scope"]["outside"] == "block":
         report = self._blocked(report, "OUTSIDE_WRITE_SET", "the executor changed paths the write set does not own: "
                                + ", ".join(outside[:20]) + "; widen the write set in the plan or set them aside, then retry")
     return report
+
+
+def set_aside_runtime(self, item: Item, key: str, found: dict) -> list:
+    """What the executor round ``key`` left under ``scope.runtime_paths`` (logs, evidence). New untracked files are moved
+    (``os.replace``) to ``<artifacts of the piece>/stray/<path>``, said once as ``RUNTIME_ARTIFACT_RELOCATED`` and kept in
+    ``state.relocated`` so ``changed`` does not count them (the checks of a round use it too, key ``checks.<n>``); the folders of the conductor itself are not touched. The tracked
+    paths under them that changed are returned: they are history and cannot be moved."""
+    patterns = self._scope_option(item, "runtime_paths", opts.DEFAULT_SCOPE["runtime_paths"])
+    listed = scopes.own([path for path in found.get("changed") or [] if scopes.under(path, patterns)],
+                        self._not_the_role(item))
+    if not listed:
+        return []
+    fresh = set(checks_mod.untracked(self.project))
+    moved = {}
+    for path in listed:
+        if path not in fresh:
+            continue
+        target = work_source.stray_dir(item) / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            os.replace(self.project / path, target)
+        except OSError:  # another file system: copy, then remove
+            shutil.move(str(self.project / path), str(target))
+        moved[path] = self._relative(target)
+    if moved:
+        with self.store.mutating():  # the checks of a round run in a thread beside the review (I2)
+            item.state.setdefault("relocated", {}).setdefault(key, {}).update(moved)
+            self._save()
+        self.progress.emit("info", item=item.ref, stage=key, reason_code="RUNTIME_ARTIFACT_RELOCATED",
+                           message=f"{len(moved)} runtime artifact(s) left in the tree were moved to the artifacts of the piece: "
+                                   + ", ".join(f"{path} -> {where}" for path, where in sorted(moved.items())[:5])
+                                   + (" …" if len(moved) > 5 else ""))
+    return scopes.tracked(self.project, [path for path in listed if path not in fresh])
+
+
+def answer_key(row: dict) -> str:
+    """Names an answer by what it says, so the session that has seen it is not told it again."""
+    return sha256_hex(json.dumps([row["id"], row["text"], row["answer"], row["by"]], ensure_ascii=False,
+                                 sort_keys=True).encode("utf-8"))
+
+
+def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: str, answers: list) -> Optional[list]:
+    """The delta blocks of this round (``prompts.executor_resumed``) for a session that continues: what the round asks
+    (the correction, the deviation to fix, the note of an interrupted round) and the answers the session has not seen,
+    with the paths the earlier round of the piece changed. ``None`` when the round asks nothing the session lacks (the
+    first round of a piece, a repeat of it): it is sent the whole prompt, as before. Whether the delta really goes is
+    decided per attempt (``_delta_mode``)."""
+    seen = set(self.state.get("executor_session_answers") or [])
+    fresh = [row for row in answers if answer_key(row) not in seen]
+    if not (correction or note or fix or fresh):
+        return None
+    steps = done_steps(item.state.get("steps") or {})
+    earlier = [step["result"].get("changed") or [] for name, step in steps.items()
+               if name.startswith("executor.") and name != key and isinstance(step.get("result"), dict)]
+    return prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
+                                    fix=fix, changed_paths=earlier[-1] if earlier else [],
+                                    targeted_tests=not item.options["checks"]["executor_runs_checks"])
 
 
 def batch_note(self, item: Item) -> str:
@@ -81,7 +167,7 @@ def batch_note(self, item: Item) -> str:
     refs = self.run_doc.get("items") or []
     mode = self._session_mode(item)
     if len(refs) < 2 or mode not in ("shared", "handoff") \
-            or item.routes["executor"].get("provider") != "claude-code":
+            or not self._shared_session(item, "executor", item.routes["executor"]):
         return ""
     claims = {value["ref"]: value for value in (self.state.get("claims") or {}).values()}
     rows, done_refs = [], []
@@ -231,6 +317,11 @@ def autofix_issues(self, item: Item, report: dict) -> list:
     return carried
 
 
+def answer_digest(input_doc: dict) -> str:
+    """Bind an answer to the substantive input, independently of source lifecycle and context rendering."""
+    return required_digest(input_doc)
+
+
 def questions(self, item: Item) -> dict:
     return self.state.setdefault("questions", {}).setdefault(item.ref, {})
 
@@ -250,7 +341,8 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
     if not asked:
         return report, False
     store = self._questions(item)
-    binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest")}
+    binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest"),
+               "input_part_digest": answer_digest(item.input_doc)}
     new = questions_mod.record(store, asked, binding, clock.utc_now())
     waiting = questions_mod.blocking_open(store, asked)
     for entry in new:  # a round walked again by a resume adds nothing
@@ -263,11 +355,12 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         mode = "queue"
     if waiting and mode == "deny":
         for entry in waiting:
-            entry["status"] = "denied"
+            if entry["kind"] not in ("approval", "credential"):
+                entry["status"] = "denied"
     elif waiting and mode == "defaults":
         now = clock.utc_now()
         for entry in list(waiting):
-            if questions_mod.resolve_default(entry, now):
+            if questions_mod.resolve_default(entry, now, advice.authority(self, item, "defaults")):
                 waiting.remove(entry)
                 self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DEFAULT",
                                    message=f"question {entry['id']} answered by policy with its default")
@@ -275,6 +368,10 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         for entry in list(waiting):
             if self._advise_question(item, key, entry, report):
                 waiting.remove(entry)
+    for entry in waiting:
+        if entry["kind"] in ("approval", "credential"):
+            self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_OWNER_ONLY",
+                               message=f"question {entry['id']} ({entry['kind']}) can only be answered by the owner")
     self._save_questions(item)
     if not waiting:
         return report, any(entry["status"] == "applied" and entry["binding"]["step"] == key
@@ -282,7 +379,7 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
     said = "; ".join(f"{entry['id']} {entry['text']}{self._advice_note(entry)}" for entry in waiting)
     self._beacon_event("orch.run.waiting", item, {"reason_code": "QUESTION", "step": key,
                                                   "question_ids": [entry["id"] for entry in waiting]})
-    if mode == "deny":
+    if mode == "deny" and all(entry["status"] == "denied" for entry in waiting):
         self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
         return self._blocked(report, "QUESTION_DENIED", said), False
     self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_QUEUED",
@@ -301,7 +398,7 @@ def sync_questions(self, item: Item) -> None:
         return
     with questions_mod.questions_lock(item.directory):
         questions_mod.merge_file(store, questions_mod.read(item.directory))
-        applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), clock.utc_now())
+        applied, stale = questions_mod.apply(store, item.input_doc.get("digest"), answer_digest(item.input_doc), clock.utc_now())
         write_json(questions_mod.path(item.directory), questions_mod.document(self.run_id, item.ref, store))
         self._save()
     for name in applied:
@@ -334,12 +431,17 @@ def not_the_role(self, item: Item) -> list:
 
 
 def changed(self, item: Item) -> list:
-    """Every path any executor round of the piece changed (git, not the reports)."""
+    """Every path any executor round of the piece changed (git, not the reports) and the checks changed (``checks_changed``:
+    a formatter or a generator), without the runtime artifacts that were set aside (``relocated``)."""
     steps = done_steps(item.state.get("steps", {}))
     found = set(item.state.get("adopted") or [])
     for key, step in steps.items():
         if key.startswith("executor.") and isinstance(step.get("result"), dict):
             found.update(step["result"].get("changed") or [])
+    for paths in (item.state.get("checks_changed") or {}).values():
+        found.update(paths)
+    for moved in (item.state.get("relocated") or {}).values():
+        found.difference_update(moved)
     return sorted(found)
 
 

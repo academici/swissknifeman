@@ -6,7 +6,6 @@ Every sandbox lives under a TMPDIR owned by the test; the real /tmp and the real
 from __future__ import annotations
 
 import os
-import pwd
 import re
 import shutil
 import subprocess
@@ -16,9 +15,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "dev-sandbox.sh"
-START = "# --- swissknifeman dev-clone guard"
-END = "# --- end dev-clone guard ---"
-REAL_HOME = pwd.getpwuid(os.getuid()).pw_dir
 
 
 class SandboxTests(unittest.TestCase):
@@ -27,7 +23,14 @@ class SandboxTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.tmpdir = self.tmp / "tmp"
         self.tmpdir.mkdir()
-        self.env = {k: v for k, v in os.environ.items() if k not in {"SKM_SANDBOX", "SKM_DEV_ALLOW_LIVE"}}
+        self.env = {k: v for k, v in os.environ.items() if k != "SKM_SANDBOX"}
+        home = self.tmp / "home"
+        home.mkdir()
+        self.env.update(HOME=str(home), SKM_HOME=str(home / "skm"),
+                        XDG_CONFIG_HOME=str(home / ".config"), XDG_DATA_HOME=str(home / ".local/share"),
+                        XDG_STATE_HOME=str(home / ".local/state"), XDG_CACHE_HOME=str(home / ".cache"),
+                        CODEX_HOME=str(home / "codex"), GROK_HOME=str(home / "grok"),
+                        GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
         self.env["TMPDIR"] = str(self.tmpdir)
         self.pid = os.getpid()
 
@@ -120,22 +123,6 @@ class SandboxTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("SANDBOX_INVALID", result.stderr)
         self.assertNotIn("SHOULD-NOT-RUN", result.stdout)
-
-    def test_dev_clone_guard_passes_inside_sandbox(self) -> None:
-        block = re.search(re.escape(START) + r".*?" + re.escape(END),
-                          (ROOT / "install.sh").read_text(encoding="utf-8"), re.S).group(0)
-        repo = self.tmp / "devrepo"
-        tool = repo / "pkg" / "bin" / "tool"
-        tool.parent.mkdir(parents=True)
-        (repo / ".swissknifeman-dev").write_text("branch=x\n", encoding="utf-8")
-        tool.write_text("#!/usr/bin/env bash\nset -euo pipefail\n" + block + "\necho PASSED\n", encoding="utf-8")
-        tool.chmod(0o755)
-        outside = subprocess.run([str(tool)], env={**self.env, "HOME": REAL_HOME}, capture_output=True, text=True)
-        self.assertEqual(outside.returncode, 3, "the synthetic tool must be guarded against the real HOME")
-        directory = self.new("--name", f"g{self.pid}")
-        inside = self.sandbox("run", str(directory), "--", str(tool))
-        self.assertEqual(inside.returncode, 0, inside.stderr)
-        self.assertIn("PASSED", inside.stdout)
 
     def test_list_shows_only_marked_sandboxes(self) -> None:
         project = self.make_project()

@@ -849,7 +849,6 @@ class TestSources(unittest.TestCase):
     def test_launcher_is_thin(self):
         text = (ROOT / "bin" / "swissknifeman").read_text(encoding="utf-8")
         self.assertIn('exec python3 "$ROOT/scripts/umbrella.py" "$@"', text)
-        self.assertLess(text.index("dev-clone guard"), text.index("exec python3"))
         self.assertLess(len(text.splitlines()), 30)
 
     def test_launcher_end_to_end_in_a_temporary_home(self):
@@ -859,10 +858,6 @@ class TestSources(unittest.TestCase):
         result = subprocess.run([str(ROOT / "bin" / "swissknifeman"), "help"], env=env, capture_output=True, text=True)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("Built-in:", result.stdout)
-        guarded = subprocess.run([str(ROOT / "bin" / "swissknifeman"), "help"],
-                                 env={**env, "HOME": str(Path(os.path.expanduser("~")))}, capture_output=True, text=True)
-        if (ROOT / ".swissknifeman-dev").exists() and os.environ.get("SKM_DEV_ALLOW_LIVE") != "1":
-            self.assertEqual(3, guarded.returncode)
 
 
 class TestExecutionPolicy(unittest.TestCase):

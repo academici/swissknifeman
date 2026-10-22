@@ -703,7 +703,13 @@ def _brief_doc(doc: dict, project) -> dict:
     return found
 
 
-def _source_prepare(args, current, project) -> int:
+def _source_prepare(args, current, project, *, conductor: bool = False) -> int:
+    """Bind the briefed run and write ``launch-plan.json``.
+
+    Public ``source prepare`` leaves ``conductor`` false and binds the loaded pack unchanged.
+    The conductor passes true and binds a copy that omits the stages it skips. Neither path
+    rewrites the pack on disk.
+    """
     directory, doc = _run(args.run, project)
     emit = dict(current=current, project=project, config_file=args.config)
     refused = {"submission_id": doc["submission_id"], "step": "prepare", "run_id": doc["run_id"], "ref": doc["ref"],
@@ -711,6 +717,9 @@ def _source_prepare(args, current, project) -> int:
     try:
         input_doc = _brief_doc(doc, project)
         policy = policies.load(doc.get("scenario") or current.default_profile, current)
+        if conductor:
+            from orch.preparation import effective_policy
+            policy = effective_policy(policy)
         plan = _dry_run(input_doc, policy, current, out=directory / "prepare", provider=args.provider,
                         binding_flag=args.binding, model_catalog=args.model_catalog,
                         submission_id=doc["submission_id"])

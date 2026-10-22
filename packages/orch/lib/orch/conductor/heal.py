@@ -5,14 +5,23 @@ wrong form. Repeating a role because of a form costs a whole run of it (10 to 30
 mismatch that has exactly one honest reading is mended here, and every mend is said: ``heal`` returns the notes, and a
 stage-report carries them as a ``note`` issue.
 
-What is never healed: a status is never raised (``blocked`` stays blocked; only an impossible ``done_with_deviations``
-without a deviation, or an impossible ``done_pending_checks`` without a pending issue, drops to ``done``), ``changed_paths`` are not touched (the conductor reads them from git), no check,
-verdict or finding is invented, and a triage that leaves a finding out is not completed — those go to the repair and,
-failing that, to a repeat of the role.
+The law of the mend (I9): it keeps the meaning of the result or moves it toward caution, never away from it. The orders
+are ``done`` > ``done_with_deviations`` > ``done_pending_checks`` > ``blocked`` for a status and ``GREEN`` > ``ATTENTION``
+> ``RED`` for a verdict (``domain.semantics``). So a mend never raises a status or a verdict, never drops an issue, a
+finding, a question or a check row, never lowers a severity, never turns an escalation or a blocker into another kind
+and never sets a deviation outcome to ``accepted`` by itself. What a report names impossibly is completed on the
+cautious side: a ``done_with_deviations`` without a deviation gets a follow-up deviation, a ``done_pending_checks``
+without a pending issue gets one (the conductor checks then decide), an escalation in a report that is not ``blocked``
+makes it ``blocked``. ``changed_paths`` are not touched (the conductor reads them from git), no check, verdict or
+finding is invented, a verdict ``ATTENTION`` or ``RED`` without findings is not made ``GREEN``, and a triage that
+leaves a finding out is not completed — those go to the repair and, failing that, to a repeat of the role. The repair
+is held to the same law: ``domain.semantics.drift`` compares its block with this mend of the role's own block.
 """
 from __future__ import annotations
 
 import re
+
+from orch.conductor.domain.semantics import STATUS_RANK, VERDICT_RANK
 
 CHECK_ID = re.compile(r"V[0-9]+")
 FINDING_ID = re.compile(r"F[0-9]+")
@@ -22,8 +31,8 @@ DEVIATION_OUTCOMES = ("accepted", "follow_up", "owner_decision")
 ISSUE_SEVERITIES = ("low", "medium", "high", "critical")
 ISSUE_FIELDS = ("text", "kind", "impact", "next", "class", "severity", "outcome", "auto_fixable", "evidence")
 NO_IMPACT = "not stated by the executor"
-STATUSES = ("done", "done_with_deviations", "done_pending_checks", "blocked")
-VERDICTS = ("GREEN", "ATTENTION", "RED")
+STATUSES = tuple(STATUS_RANK)
+VERDICTS = tuple(VERDICT_RANK)
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")
 CONFIDENCES = ("high", "medium", "low")
 
@@ -98,8 +107,8 @@ def _deviation_fields(issue: dict, notes: list) -> None:
     """The class, severity, outcome, auto_fixable and evidence of an issue mended; a deviation gets what it lacks.
 
     A word that matches no option is not guessed: it is folded into the text and the field takes its default
-    (a deviation) or is dropped (any other kind). The defaults are the plainest honest reading: ``other``,
-    ``accepted`` (it is already in the report), and an impact that says nobody stated it.
+    (a deviation) or is dropped (any other kind). The defaults are the cautious reading: ``other``, ``follow_up``
+    (the conductor never accepts a deviation on the executor's silence), and an impact that says nobody stated it.
     """
     folded = []
     for key, allowed in (("class", DEVIATION_CLASSES), ("severity", ISSUE_SEVERITIES), ("outcome", DEVIATION_OUTCOMES)):
@@ -130,12 +139,12 @@ def _deviation_fields(issue: dict, notes: list) -> None:
     if issue.get("kind") != "deviation":
         return
     filled = []
-    for key, default in (("class", "other"), ("outcome", "accepted"), ("impact", NO_IMPACT)):
+    for key, default in (("class", "other"), ("outcome", "follow_up"), ("impact", NO_IMPACT)):
         if key not in issue:
             issue[key] = default
             filled.append(key)
     if filled:
-        notes.append(f"a deviation lacked {', '.join(filled)}; the defaults are other, accepted and "
+        notes.append(f"a deviation lacked {', '.join(filled)}; the defaults are other, follow_up and "
                      f"'{NO_IMPACT}'")
 
 
@@ -187,21 +196,21 @@ def _stage_report(doc: dict, notes: list) -> dict:
     doc["checks_run"] = rows
     kinds = {issue.get("kind") for issue in issues if isinstance(issue, dict)}
     if doc.get("status") == "done_with_deviations" and "deviation" not in kinds:
-        doc["status"] = "done"
-        notes.append("status done_with_deviations named no deviation issue; it is done")
+        issues.append({"text": "the executor reported done_with_deviations without naming the deviation",
+                       "kind": "deviation", "class": "other", "outcome": "follow_up", "impact": NO_IMPACT})
+        notes.append("status done_with_deviations named no deviation issue; a follow-up deviation says so")
     if doc.get("status") == "done_pending_checks" and "pending" not in kinds:
-        doc["status"] = "done"
-        notes.append("status done_pending_checks named no pending issue; it is done")
+        issues.append({"text": "the executor named no pending check; the conductor checks decide", "kind": "pending"})
+        notes.append("status done_pending_checks named no pending issue; a pending issue says so")
     if doc.get("status") != "blocked" and "escalation" in kinds:
-        for issue in issues:
-            if isinstance(issue, dict) and issue.get("kind") == "escalation":
-                issue["kind"] = "difficulty"
-        notes.append("an escalation in a report that is not blocked is kept as a difficulty")
+        doc["status"] = "blocked"
+        notes.append("an escalation was reported; the report is blocked for the owner")
     if doc.get("status") == "blocked" and "escalation" not in kinds:
         blocker = next((issue for issue in issues if isinstance(issue, dict) and issue.get("kind") == "blocker"), None)
-        if blocker is not None:
-            blocker["kind"] = "escalation"
-            notes.append("a blocked report named its gap as a blocker; it is the escalation")
+        if blocker is not None:  # the blocker stays; the owner is escalated with its words
+            issues.append({**{key: blocker[key] for key in ("impact", "next") if isinstance(blocker.get(key), str)},
+                           "text": str(blocker.get("text") or doc["summary"])[:900], "kind": "escalation"})
+            notes.append("a blocked report named its gap as a blocker; the blocker is kept and escalated to the owner")
         else:
             issues.append({"text": f"the executor reported blocked without naming the gap; its summary: {doc['summary']}"[:900],
                            "kind": "escalation", "next": "the owner reads the summary and the stream of the step"})
@@ -253,10 +262,7 @@ def _review_findings(doc: dict, notes: list) -> dict:
         doc["verdict"] = "RED" if any(isinstance(item, dict) and item.get("severity") == "Blocker" for item in findings) \
             else "ATTENTION"
         notes.append(f"verdict GREEN with a Blocker or Major finding; the findings win: {doc['verdict']}")
-    if doc.get("verdict") in ("ATTENTION", "RED") and not findings:
-        notes.append(f"verdict {doc['verdict']} without findings; with nothing to correct it is GREEN")
-        doc["verdict"] = "GREEN"
-    return doc
+    return doc  # an ATTENTION or RED without findings is not mended into GREEN: the repair or a repeat says why
 
 
 # ------------------------------------------------------------------ triage-result

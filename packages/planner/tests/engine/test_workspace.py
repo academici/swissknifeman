@@ -262,6 +262,113 @@ class SourceRootTests(WorkspaceCase):
         self.mark("workspace")
         self.plan_dir = demo.make_demo_plan(self.ws_plans)
 
+    def enter(self, path):
+        old = Path.cwd()
+        os.chdir(path)
+        self.addCleanup(os.chdir, old)
+
+    def next_checkout(self):
+        path = self.tmp / "next"
+        self.mark("workspace", root=path)
+        return path
+
+    def test_another_checkout_of_the_same_project_refuses(self):
+        self.bind(self.project)
+        other = self.next_checkout()
+        self.enter(other)
+        with self.assertRaises(PlanError) as caught:
+            _ = store.load_plan(self.plan_dir).source_root
+        self.assertEqual(caught.exception.code, "CHECKOUT_BINDING_MISMATCH")
+        self.assertEqual(caught.exception.message,
+                         f"this command runs in {other}, but the plans of axioma/{PID} belong to {self.project}, the bound "
+                         f"checkout; run it through {other}/.swissknifeman/launcher.py, or make {other} the bound checkout: "
+                         f"swissknifeman workspace project rebind {PID} --path {other}")
+
+    def test_the_primary_checkout_is_allowed_without_a_launcher(self):
+        self.bind(self.project)
+        self.enter(self.project)
+        self.assertEqual(store.load_plan(self.plan_dir).source_root, self.project)
+
+    def test_the_launcher_allows_the_other_checkout(self):
+        self.bind(self.project)
+        other = self.next_checkout()
+        self.enter(other)
+        with mock.patch.dict(os.environ, {"SKM_LAUNCHER_ACTIVE": "1", "SKM_LAUNCHER_PROJECT_ROOT": str(other),
+                                          "SKM_LAUNCHER_PID": str(os.getpid())}):
+            self.assertEqual(store.load_plan(self.plan_dir).source_root, other)
+
+    def test_a_directory_without_a_marker_does_not_conflict(self):
+        self.bind(self.project)
+        self.enter(self.tmp)
+        self.assertEqual(store.load_plan(self.plan_dir).source_root, self.project)
+
+    def test_another_project_marker_does_not_conflict(self):
+        self.bind(self.project)
+        other = self.next_checkout()
+        self.mark("workspace", OTHER_PID, root=other)
+        self.enter(other)
+        self.assertEqual(store.load_plan(self.plan_dir).source_root, self.project)
+
+    def test_the_guard_is_symmetric_when_primary_changes(self):
+        other = self.next_checkout()
+        self.bind(other, self.project)
+        self.enter(self.project)
+        with self.assertRaises(PlanError) as caught:
+            _ = store.load_plan(self.plan_dir).source_root
+        self.assertEqual(caught.exception.code, "CHECKOUT_BINDING_MISMATCH")
+
+    def test_context_refuses_in_the_other_checkout(self):
+        self.bind(self.project)
+        self.enter(self.next_checkout())
+        code, out, err = self.run_cli("context", self.plan_dir, "P1.2", "--stdout")
+        self.assertNotEqual(code, 0)
+        self.assertIn("CHECKOUT_BINDING_MISMATCH", out + err)
+
+    def test_inherited_launcher_variables_do_not_bypass_the_guard(self):
+        self.bind(self.project)
+        other = self.next_checkout()
+        self.enter(other)
+        with mock.patch.dict(os.environ, {"SKM_LAUNCHER_ACTIVE": "1", "SKM_LAUNCHER_PROJECT_ROOT": str(other),
+                                          "SKM_LAUNCHER_PID": str(os.getpid() + 1)}):
+            with self.assertRaises(PlanError) as caught:
+                _ = store.load_plan(self.plan_dir).source_root
+        self.assertEqual(caught.exception.code, "CHECKOUT_BINDING_MISMATCH")
+
+    def test_nested_symlinked_directory_uses_the_real_checkout(self):
+        self.bind(self.project)
+        other = self.next_checkout()
+        nested = other / "src" / "deep"
+        nested.mkdir(parents=True)
+        alias = self.tmp / "alias"
+        alias.symlink_to(other, target_is_directory=True)
+        self.assertEqual(workspace.checkout_root_of(alias / "src" / "deep"), other)
+        self.enter(nested)
+        with self.assertRaises(PlanError) as caught:
+            _ = store.load_plan(self.plan_dir).source_root
+        self.assertEqual(caught.exception.code, "CHECKOUT_BINDING_MISMATCH")
+
+    def test_the_same_project_code_in_another_workspace_does_not_conflict(self):
+        self.bind(self.project)
+        other = self.next_checkout()
+        marker = json.loads(marker_text("workspace"))
+        marker["workspace"] = "other"
+        put(other / workspace.MARKER_RELPATH, json.dumps(marker))
+        self.enter(other)
+        self.assertEqual(store.load_plan(self.plan_dir).source_root, self.project)
+
+    def test_checkout_discovery_uses_the_nearest_file_and_handles_io_errors(self):
+        outer = self.next_checkout()
+        inner = outer / "nested"
+        (inner / workspace.MARKER_RELPATH).mkdir(parents=True)  # A directory is not a marker file.
+        self.assertEqual(workspace.checkout_root_of(inner), outer)
+        (inner / workspace.MARKER_RELPATH).rmdir()
+        self.mark("workspace", root=inner)
+        self.assertEqual(workspace.checkout_root_of(inner), inner)
+        with mock.patch.object(workspace.os.path, "realpath", side_effect=OSError("unavailable")):
+            self.assertIsNone(workspace.checkout_root_of(inner))
+        put(inner / workspace.MARKER_RELPATH, "[]")
+        self.assertIsNone(workspace.marker_key(inner))
+
     def test_a_bound_checkout_is_the_source_and_repo_root(self):
         self.bind(self.project)
         plan = store.load_plan(self.plan_dir)

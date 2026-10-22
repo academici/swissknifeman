@@ -32,7 +32,10 @@ matched by kind and origin (a block without an origin by kind and order); the an
 `PROMPT_MANIFEST_MISSING`. `timeline` reads `progress.jsonl` and gives every step of a piece as an interval (`start`,
 `end`, `duration_s`, `verdict`, `status`: `done`, `stopped`, `interrupted` when the run ended or was resumed while the
 step was open (the resumed step is an interval of its own), `open` while it runs, without an end); gui-orch shows it as
-its `timeline` view.
+its `timeline` view. With `state.json` at hand a `checks.N` interval also carries `checks` (`--json`): one entry per result
+row with `id`, `seconds`, `green`, `skipped`, `skip_reason`, `reused` (plus `executed`, `context`, and for a reused row
+`reused_from` and `original_seconds`); the text output prints them under the interval, `  - V3 12.4 s green`,
+`  - V5 skipped (fail_fast)`, `  - V2 reused (40 s)`.
 
 For an agent that picks its own pieces (ask the source for ready lanes → `run --items` → `status`/`observe` → `resume`/`settle`) see [agent-mode.md](agent-mode.md).
 
@@ -58,6 +61,9 @@ If the conductor dies while the journal says `running`, `status`, `status --json
 using each agent's atomic `process.json` (`pid`, `pgid`, Linux `/proc` `start_ticks`, `started_at`). It checks process
 identity before signalling, sends SIGTERM, allows 10 seconds, then sends SIGKILL if needed. No new role starts
 while that group remains alive. Each stopped group produces an `info` event `ROLE_ORPHAN_KILLED`.
+Unfinished agents whose process died or whose group was stopped receive `result.json` with error code `ORPHANED`
+and an `orch.agent.failed` event with class `orphaned`. An existing result is preserved, and resume does not emit
+the failure again. A reused pid is never signalled; the old agent is closed as orphaned.
 
 `answer` can update questions while the conductor owns the run. All updates of an item's `questions.json` use
 `questions.lock` for their read-modify-write, including merging answers before a conductor save. A lock held for
@@ -145,7 +151,7 @@ steps before reconciliation. The rule uses the key's prefix before the first dot
 | `brief`, `prepare` | repeat |
 | `scout`, `research.N`, `review.N`, `triage.N`, `advice.N` | repeat the read-only role without an interruption correction |
 | `executor.N` | repeat with an interruption note naming `base_head` and up to 200 sorted dirty paths; keep partial changes and the retry count |
-| `checks.N` | repeat; compare the current porcelain paths with `dirty_before`, and emit `CHECK_CHANGED_TREE` if they differ |
+| `checks.N` | repeat; compare the current porcelain paths with `dirty_before`, and emit `CHECK_CHANGED_TREE` if they differ; a run that changed the tree is repeated once on it (`checks/<n>-rerun`, `CHECKS_MUTATED` when that changes it again); a command check whose green evidence of this run is there for the same candidate (HEAD and dirty digest), command, directory and fingerprint is not run again (`checks.reuse`) |
 | `research-save.N` | repeat the idempotent save for that research number |
 | `close`, `register` | recover a successful registration receipt of this attempt; otherwise repeat the idempotent call |
 | `commit` | recover a successful commit receipt of this attempt only when its workspace part is complete; otherwise repeat commit |
@@ -202,11 +208,11 @@ Every step has a key and is recorded in `state.json` before it starts and once i
 | --- | --- | --- |
 | claim | work source | `source claim` with a submission of this run. `--batch` (default) takes every piece of `--items A B C` in progress at the start (each piece is started under its own run, one after another, and a dependency that is in progress counts as met: `source claim --batch`, for the planner `start --in-progress-deps`) and the first prompt of the shared session lists them; `--no-batch` claims one at a time; The claim names the executor of `--options` (its provider, model or the model of its class, and its effort; the configured default executor without one), so a route of the work that pins another provider needs no copy in the plan's `orchestration`. `--ready` asks the source for its next ready lane (`lane` of the claim answer) and runs that lane as a batch too, or one piece at a time with `--no-batch`. In a batch a stop gives no piece back on its own: all stay in progress and `resume` goes on (`release` frees one by hand; `--no-batch` gives back a piece nobody worked on, as before). A piece whose executor round began counts as worked on, however the round ended |
 | `brief` | work source | `source brief`; the execution-input is read from the artifact store; the base revision is recorded |
-| `prepare` | orch | `source prepare` writes the launch-plan of the scenario's pack (routes, policy decision) |
+| `prepare` | orch | writes `launch-plan.json` for the scenario. The conductor omits stages it skips; public `source prepare` binds the pack as stored |
 | `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map; its optional closing ```` ```json write-set ```` block (`scout-write-set`: `paths`, `tests`) is taken out of the map into the executor's "Expected paths" section, a missing or invalid block is ignored with a `RESULT_HEALED` beacon, and the hint never widens `scope.write_set` |
 | `research.N`, `research-save.N` | researcher, work source | with `orch.research.policy = required` (every piece) or `conditional`, the default (a piece whose input says `research.need = required`); `off` never (see [Research](research.md)): the researcher (`implementation`, read-only, network allowed) asks the allowed sources of `[orch.research.sources]` with the one command `python3 …/orch.py research query` and returns a closed `research-result` (`query`, `claims` each with `sources`, `contradictions`, `unknowns`, `sources_used`; a statement without a source belongs to `unknowns`); `research-save.N` then has the work source keep it (`source research`: a plan keeps `research/<item>-<n>.json` and declares it as an input of the item, a file input keeps `research-<n>.json` in its artifacts) and, when the source cannot, the conductor keeps it in the artifacts of the piece and prints `RESEARCH_NOT_SAVED`; no source configured stops the run with `RESEARCH_NO_SOURCES` before any work |
 | `executor.N` | executor | the execution-input, the context map, the run rules, the repository rules of an isolated role and, for a correction, its package; returns a closed `stage-report`; the conductor then reads the changed paths from git |
-| `checks.N` | deterministic | every `acceptance`/`impact` command check of the cadences asked for, with a check-evidence file per check |
+| `checks.N` | deterministic | every `acceptance`/`impact` command check of the cadences asked for, with a check-evidence file per check; the item checks run cheapest first (the red ones of the round before ahead, then by their time in earlier rounds), `checks.parallel` at a time, and with `checks.fail_fast` none starts after a red one (`skipped`, `skip_reason` `fail_fast`); the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`); a green check with the same candidate is reused (`reused`, no new run) |
 | `review.N` | reviewer (default `grok/grok-4.7/high`) | read-only, the diff against the base and the check results; returns `review-findings` |
 | `triage.N` | triager | reproduces every finding; returns `triage-result` (confirmed with a correction package, or rejected with a reason) |
 | `advice.N`, `triage.N-a` | advisor (`frontier`), triager | with `orch.advisor.enabled`: one opinion on a problem the work cannot solve alone, returned as `advice` (see [The advisor](#the-advisor-p104)); `triage.N-a` is the triage of review round N repeated with the advice, which then stands for the round |
@@ -269,13 +275,71 @@ correction round lists only its own paths; the conductor does not lose the first
 `deviation` (`class: write_set`, `outcome: accepted`, `evidence`: the paths; the paths the scout expected are named in the text) and committed with the piece; with `block` the piece is blocked right after the executor
 (`OUTSIDE_WRITE_SET`).
 
+**The write set is a fence by module, and runtime artifacts are no product.** Right after an executor round, in this order:
+(1) *runtime artifacts*: the new **untracked** files under `scope.runtime_paths` (default `.swissknifeman/orch-artifacts/**`,
+`.swissknifeman/orch/**`, `**/tests/evidence/**`; logs and evidence of a run) are moved (`os.replace`) to
+`<artifacts of the piece>/stray/<original path>`, said as `RUNTIME_ARTIFACT_RELOCATED` and as a `note` issue, kept in
+`state.relocated`, and never counted in `changed_paths` or the commit; the artifact folder of the piece, the plan folder and
+the conductor reports are not touched. A **tracked** file under them that the round changed is history and cannot be moved:
+the piece is blocked with `OUTSIDE_RUNTIME_ARTIFACT` (restore it from git). (2) *Modules*: the module of a path is
+`packages/<id>`, `bridges/<id>` or `hub` (`scripts/`, `configs/`, the rest of the repository root); the modules of the piece
+are those its `write_set` patterns name up to the first `*`, `?` or `[` (`packages/orch/**` names `packages/orch`; a module
+id that is itself a pattern, `packages/*/x`, names every module of the root; a pattern that starts with a glob names the hub).
+`CHANGELOG.md` and `docs/**` are allowed to every piece and make no module of it, and neither does a granted `extra_paths`
+directory. A path outside the write set that belongs to another module blocks the piece with `OUTSIDE_MODULE`
+(`scope.outside_module: block`, default; `deviation` keeps the paths as a deviation as before; `scope.outside: block` still
+stops with the stricter `OUTSIDE_WRITE_SET`). **Checks** that change the tree: the checks run again once on the changed tree
+(`checks/<n>-rerun/`, the evidence files are overwritten, so the evidence proves the candidate that is committed); a second
+change is `CHECKS_MUTATED`. The product files they changed (`state.checks_changed`) belong to the candidate and are committed like the
+executor's, under the same module rule (`OUTSIDE_MODULE`); their ownership is recorded (and merged with the earlier record)
+before the rerun starts, so a failed rerun or a retry that finds the formatter idempotent loses none of it. A runtime
+artifact (`scope.runtime_paths`) is no product and no mutation: an untracked one is moved to `<artifacts>/stray/` right
+after each pass (`state.relocated["checks.<n>"]`, `RUNTIME_ARTIFACT_RELOCATED`), so a log rewritten on every run neither
+triggers the rerun nor `CHECKS_MUTATED` and the tree stays clean; a tracked one stops with `OUTSIDE_RUNTIME_ARTIFACT`.
+The commit lists the records of the piece's artifact folder file by file (tracked or not ignored); the `stray/` subfolder is
+never committed, also when the source names a tracked artifacts folder.
+
 **A result outside its contract** goes through three steps: healing by rule (`heal.py`: one honest reading of a form
-mismatch, such as a string exit, an escalation in a report that is not blocked, a GREEN verdict with a Major finding;
-every mend is said in a `RESULT_HEALED` line and, for a stage-report, a `note` issue; a status is never raised, nothing
-is invented); a repair by the `report-fixer` role (an economy model that rewrites only the result block from the role's
-own answer, `limits.repairs` times, default 1; `RESULT_REPAIRED`); and only then a repeat of the whole role within
-`limits.retries` per step. A triage that rejects a Blocker or Major finding without a reproduction that ran is outside
-the contract.
+mismatch, such as a string exit, a differently spelled status or a GREEN verdict with a Major finding; every mend is
+said in a `RESULT_HEALED` line and, for a stage-report, a `note` issue); a repair by the `report-fixer` role (an economy
+model that rewrites only the result block from the role's own answer, `limits.repairs` times, default 1;
+`RESULT_REPAIRED`); and only then a repeat of the whole role within `limits.retries` per step. A triage that rejects a
+Blocker or Major finding without a reproduction that ran is outside the contract.
+
+**A rejection of a Blocker or Major finding stands only when the conductor reran it** (`stages/triage.py`,
+`checks.run_reproduction`). The command of the rejection is model text, so it is run read-only
+(`ro-run.py --protect <project>`, Landlock; stdin `/dev/null`, ceiling `limits.triage_repro_timeout_s`, default 600 s,
+log `<piece folder>/triage/<round>/<finding>.log`), and only after a line with a marker of this very call, printed inside the
+guard before the command starts, is in the log. A trivial command (a standalone `true`, `:`, `exit 0`, `echo …`,
+`printf …`; `is_trivial_reproduction`) is not run: the finding is confirmed again (`TRIAGE_REPRO_TRIVIAL`). A command with
+an unquoted shell operator (`;` `&&` `|` `>`), a substitution or a second line (`echo checking; python3 repro.py`) is not
+trivial and goes to the guarded rerun; an operator in quotes or escaped is plain text (`echo '|'`, `printf '%s' '>'` stay
+trivial). The line is read as Bash reads it: `#` starts a comment only at the start of a word, so `echo checking#phase;
+python3 repro.py` is compound, while `echo ok # note` and `echo '#'` stay trivial. Another exit than the one the triager reported confirms it again
+(`TRIAGE_REPRO_MISMATCH`). When the guard cannot be had (Landlock missing or too old, the project in a writable root of
+`ro-run.py`, a failed start) or the rerun times out, the rejection cannot be proven and the finding is confirmed again
+whatever the exit (`TRIAGE_REPRO_UNVERIFIED`, fail closed). The restored entry carries the command, the observed exit and
+`the conductor reran the rejection: <why>`, and the finding goes to the correction as any confirmed one. The result of the step
+keeps `verified: [{finding, outcome: kept|restored, reason}]`. Confirmed and Minor findings are not rerun.
+
+Both the heal and the repair keep the meaning of the result or move it toward caution (`domain/semantics.py`). Statuses
+rank `done` > `done_with_deviations` > `done_pending_checks` > `blocked`, verdicts `GREEN` > `ATTENTION` > `RED`; neither
+step raises one, drops an issue, finding, question or check row, lowers a severity, changes an escalation or a blocker
+into another kind, or sets a deviation outcome to `accepted`. So the heal makes a `done_with_deviations` without a
+deviation carry a `follow_up` deviation, a `done_pending_checks` without a pending issue carry one (the conductor's
+checks then decide: green closes it, none run blocks it with `CHECKS_NOT_RUN`), and an escalation in a report that is not
+blocked makes the report `blocked`; a deviation without an outcome is a `follow_up`; a verdict `ATTENTION` or `RED`
+without findings is not healed into `GREEN` but goes to the repair and, failing that, to a repeat of the reviewer. The
+repair is compared with the heal of the role's own block. A finding is matched by its content, not by its id or severity
+(its normalized place and failure scenario; findings with the same content are compared one by one), so a severity moved
+from one finding to another at the same place is drift. A deviation is matched by its text, impact and class together (blanks and case ignored): a
+deviation accepted that was not accepted before is drift even when the total of accepted deviations stays, also for
+deviations of the same (or blank) text that differ in impact or class, and a reworded one counts as new. A deviation with
+none of the three is matched only by its place among such ones, so an unclear identity never authorizes an acceptance. A block that raises the status or the verdict, lowers a severity, loses a finding, question, escalation,
+pending issue or check row, or turns a confirmed finding of a triage into a rejected one is refused with
+`REPAIR_SEMANTIC_DRIFT`; the next repair, then a repeat of the role, follows, and a role that never gives a faithful
+block ends in `ROLE_OUTPUT_INVALID`. An answer with no block that parses has nothing to compare: the fixer's block is
+taken and the step records `repaired_from_text`.
 
 ### Stops
 
@@ -285,13 +349,23 @@ The conductor stops only on:
 | --- | --- |
 | `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
 | `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
+| `CONDUCTOR_CRASHED` | an unexpected exception in the conductor loop; exit 1, stopped state and `run.end`; the redacted traceback is written to `<run>/crash.txt` when that write succeeds. If the artifact cannot be written, the stop still names `CONDUCTOR_CRASHED` and says `crash.txt unavailable` (it does not claim the file exists); fix the cause, then resume |
 | `STAGE_RECOVERY_UNKNOWN` | a started step has no recovery rule; settle the item or retry it |
 | `REVIEW_LIMIT` | a batch limit refused a round while a confirmed Blocker finding is open | the finding ids and the limit |
 | `DEPENDENCY_BLOCKED` | with `on_blocked: report` the run went on after a blocked piece, and a later piece of the run depends on it (`depends_on` of its claim): it is not started, stays in progress and the run ends here after the others; `resume --retry` the blocked piece, then `resume` |
 | `DISK_LOW` | less than `limits.disk_min_gb` (default 5) GB free under the project or the temporary directory when the run starts or resumes, or before the checks of a round; the run stops (resumable): free the space, then `resume` |
 | `RUN_TIMEOUT` | the active time of the run passed `limits.run_timeout_s` (default 0: off); the current role is cancelled; raise the limit, then resume |
-| `TOKEN_BUDGET` | accounted fresh tokens reached `tokens_hard_max` of the piece or `run_tokens_hard_max` of the run; no new model call starts, done steps stay saved; resume with `--raise-limit KEY=N` |
+| `TOKEN_BUDGET` | accounted fresh tokens reached `tokens_hard_max` of the piece or `run_tokens_hard_max` of the run, or the step reached the run policy's `budgets.stage_tokens_max`; checked before **every** model call (a repeat, a repair, a fallback route, a group review), so no new call starts; done steps stay saved; resume with `--raise-limit KEY=N` (`stage_tokens_max` is raised in the policy) |
+| `TOKEN_BUDGET_UNMETERED` | a model attempt reported no usage while `tokens_hard_max` or `run_tokens_hard_max` is in force and `limits.unmetered` is `stop` (the default): unknown usage is not zero, so no further call starts; set `limits.unmetered` to `charge` in the `--options` file of the run (or the configuration) and resume: each attempt without usage then costs `limits.unmetered_charge_tokens` |
+| `BRIEF_TOO_LARGE` | the execution-input of the piece (the embedded context pack and the files it reads included) is larger than `budgets.brief_max_bytes` of the run policy (the `full` pack: 1048576); checked once the options are resolved, before the first role, and again when the input is rebuilt; split the item or raise the budget in the policy |
 | `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
+| `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with an answer awaiting consumption and no piece starts in this pass; exit 1; use `orch conduct resume --run RUN --retry ITEM` |
+| `OUTSIDE_MODULE` | the executor (an escalation of the blocked piece, `ITEM_BLOCKED`) or the checks (the run stops) changed files of another module than the write set names, `CHANGELOG.md`, `docs/**` and the granted `extra_paths` aside; add the paths to the item's `task_files`, or set them aside and retry; `scope.outside_module: deviation` (invocation only) reports them as a deviation instead |
+| `OUTSIDE_RUNTIME_ARTIFACT` | the executor (blocked piece) or the checks (the run stops) changed a **tracked** file under `scope.runtime_paths` (`.swissknifeman/orch-artifacts/**`, `tests/evidence/**`, …): runtime artifacts are history, not product; restore the file from git |
+| `CHECKS_MUTATED` | the checks changed the tree again when they ran a second time on the tree their first run had changed: they are not idempotent (resumable); make the check change nothing on a tree it has already changed |
+| `GROUP_REVIEW_BLOCKER` | the group review of a batch found a **Blocker**; the run stops (resumable) and a resume stops again at once until the group is settled: run the follow-up (`orch conduct run --input <run folder>/group-review-<n>.followup.json --commit`), then `orch conduct settle --run <R> --group <n> --followup-run <F> --reason …` (see "The review strategy of a batch") |
+| `GROUP_REVIEW_FAILED` | the group review failed (the role failed or its reply has no readable `## Findings` section) and a piece of the group has `review_mode: requested`, which no other review covers; a resume repeats the review once (two attempts in all); a group without a requested piece only gets the beacon |
+| `GROUP_UNKNOWN`, `GROUP_FOLLOWUP_MISMATCH`, `GROUP_FOLLOWUP_NOT_DONE` | refusals of `settle --group`, exit 1, the state of the run is not changed: the run has no such blocked group; the follow-up run did not run `group-review-<n>.followup.json` of this run (or does not exist); it is not finished with its one piece done and committed |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
 | `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` stops with `TRANSPORT_UNSUPPORTED`. Wrapped commands check the provider after `--` as well as the launcher |
@@ -302,11 +376,12 @@ The conductor stops only on:
 | `PROVIDER_REFUSED` | the provider refused the request (class `invalid_request`, `content_policy`): a repeat would be refused again |
 | `PROVIDER_CONTEXT` | the request does not fit the context window (class `context_limit`); a signal to replan or split the item; the prompt is not rebuilt automatically |
 | `MODEL_UNAVAILABLE` | the model is not available to the account (class `model_unavailable`), repeated within `limits.retries` first |
-| `TIMEOUT` | a role was silent for `stage_idle_timeout_s` (default 5400: a hang, not a long run), or a wall-clock `stage_timeout_s` was asked for (none by default) |
+| `TIMEOUT` | a role was silent for `stage_idle_timeout_s` (default 5400: a hang, not a long run), or it ran past its wall: `stage_timeout_s` when set, else `limits.role_timeout_s` of its role (the executor and the bounded-implementer have none by default; see the limits table); then the retry rule of the step applies |
 | `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece; `[orch.conductor] foreign_untracked = "keep"` lets untracked files of someone else stay: they are fingerprinted in `state.foreign`, announced as `FOREIGN_KEPT`, and never counted as a piece's work while their content stays the same) |
 | `CLAIM_BLOCKED`, `BRIEF_REFUSED`, `PREPARE_REFUSED`, `REGISTER_REFUSED`, `COMMIT_REFUSED`, `WORK_SOURCE_*` | the work source refused or is unavailable |
 | `OPTIONS_INVALID`, `POLICY_UNKNOWN`, `MODEL_CATALOG_UNAVAILABLE` | the run options, the pack or the model catalog are unusable |
-| `OPTIONS_UNTRUSTED` | a layer of the work source (plan, phase, item, overlay, input file) loosens the isolation set below it: `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence`, `scope.outside` or `scope.extra_paths` (see "Isolation floor") |
+| `POLICY_STAGE_UNSUPPORTED` | a required stage of the run policy (`required` and `on_unavailable: refuse`) names a role the conductor does not run (`bounded-implementer` in `frontend-bounded`). The run stops before any role of the piece. `run --dry-run` lists the same reason under `unavailable`. Resume after choosing a scenario the conductor runs (`full`, `solo`, `scout-solo`, `review-only`), or run the plan natively |
+| `OPTIONS_UNTRUSTED` | a layer of the work source (plan, phase, item, overlay, input file) loosens the isolation set below it: `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence`, `scope.outside`, `scope.outside_module`, `scope.runtime_paths` or `scope.extra_paths` (see "Isolation floor") |
 | `OPTIONS_UNSAFE_PATH` | an `extra_paths` entry (`--allow-path`) is the root, a system folder, HOME or an ancestor of it, the project or an ancestor, a secrets folder under HOME, or lies in `.git` (after `~` and symlinks are resolved) |
 | `STATE_CORRUPT` | a JSON file of the run folder is not JSON; it names the file |
 | `STUBS_INVALID` | a stub file cannot be used (a symlink, not a regular file, over 32 KiB, not UTF-8, a bad header or mode); the run stops before any role starts and names the file and the `STUB_*` code |
@@ -322,6 +397,7 @@ The informational limits report long or costly work through `info` lines with a 
 | Code | When | What it says |
 | --- | --- | --- |
 | `RUN_ORPHANED` | status/runs find a journal still running and a free lease for a run marked `lease: true` | the conductor no longer owns the run; resume stops unfinished role groups before continuing |
+| `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with a saved answer (open with a resolution, or legacy answered); other work may still proceed | `answers of ITEM wait: orch conduct resume --run RUN --retry ITEM`; also a Stop when no piece starts |
 | `STAGE_SLOW` | every `limits.stage_warn_s` (default 2700) of one role run | how long it runs, its last command and the processes of its session (a test run, a build) |
 | `STAGE_IDLE` | every `limits.stage_idle_warn_s` (default 600) without output | the same; `no child process` means the model call itself is silent |
 | `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check; the time a check spends stopped (`SIGSTOP`, state `T`) is not counted, for the beacon and for `check_timeout_s` | the check id and its processes, each with its age, `ps` state and CPU share (`S` at 0 % is asleep, for example on a stdin nobody writes; `R` or a share of the CPU is at work) |
@@ -332,6 +408,12 @@ The informational limits report long or costly work through `info` lines with a 
 | `LIMIT_OVER` | a round past a target of `limits.*` | the target, the ceiling and why it goes on |
 | `LIMIT_OVER` (`batch: …`) | a round past `limits.review_rounds_batch`, `corrections_batch` or `findings_batch` (whole run, default 0 = none; same target and ceiling rule, counted from the state of every piece) | the target and why it goes on; when the ceiling refuses more rounds, an open **Blocker** stops the run with `REVIEW_LIMIT`, other confirmed findings become plan notes (no correction) |
 | `RESULT_HEALED`, `RESULT_REPAIRED`, `REPAIR_FAILED` | a role result was mended | what was mended |
+| `REPAIR_SEMANTIC_DRIFT` | the report-fixer's block changed the meaning of the role's own block (a raised status or verdict, a lowered severity, a lost finding, question, escalation or check row) and was refused | `kept the role's answer: <violations>`; the next repair or a repeat of the role follows |
+| `TRIAGE_REPRO_TRIVIAL` | the triager rejected a Blocker or Major finding with a reproduction command that proves nothing (`true`, `:`, `exit 0`, `echo …`, `printf …`); the finding is confirmed again | `<finding>: the command … proves nothing` |
+| `TRIAGE_REPRO_MISMATCH` | the conductor reran the reproduction of such a rejection read-only and observed another exit than the one reported; the finding is confirmed again | `<finding>: reported exit <a>, the conductor observed <b>` |
+| `TRIAGE_REPRO_UNVERIFIED` | the rerun could not be made read-only (Landlock missing or too old, `ro-run.py` refused or failed before the command started, the project lies in a writable root) or ran past `limits.triage_repro_timeout_s`; the finding is confirmed again whatever the exit (fail closed) | `<finding>: the rerun was not made read-only (<unavailable\|timeout>; log <path>)` |
+| `REVIEW_MODE_NONE_SKIPPED` | `review.strategy` named a mode and the plan gives some pieces `review_mode: none`; no group reads them | the pieces left out |
+| `GROUP_REVIEW_RESOLVED` | `settle --group` accepted the follow-up run of a group with a Blocker; the next resume goes on | group, follow-up run, its commit and the reason |
 | `INPUT_REBUILT` | the plan changed during the piece | the input of the next executor round |
 | `PROVIDER_WAIT` | a role failed at the provider and waits before its repeat: a usage limit that resets within `limits.provider_wait_max_s`, or a transient failure after the provider CLI had repeated the request itself (`api_retry`) | the failure class, the wait in seconds and the UTC time it ends; the wait looks at the cancel every second |
 | `ROUTE_FALLBACK` | a role moved to a `fallback_routes` entry (its provider failed beyond the wait, or was gated) | role, old route → new route, the class and the reason codes (`WAIT_TOO_LONG`, `RETRY_AFTER_UNKNOWN`, `CAPACITY_GATED`) |
@@ -342,14 +424,20 @@ The informational limits report long or costly work through `info` lines with a 
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
 | `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
 | `STUBS_CHANGED` | on `resume`, the stub files say something else than the snapshot of the run | the run keeps its snapshot; a new run reads the new text |
-| `CHECK_CHANGED_TREE` | the checks of a round changed files of the project (their evidence and logs aside) | the paths; the evidence proves the candidate as it was before the checks |
+| `SKILL_PATH_INVALID` | a skill file or its selection sidecar fails path, size, UTF-8, schema or auto-digest checks | role, skill name/id and exclusion reason; the skill is left out whole and listed in the prompt manifest |
+| `RULES_PATH_INVALID` | a repository rule carrier fails containment, size or UTF-8 checks | role, carrier and reason; its rules are skipped |
+| `CHECK_CHANGED_TREE` | the checks of a round changed files of the project (their evidence and logs aside); the first change only: the checks run once more on the changed tree (a second change is the stop `CHECKS_MUTATED`) | the paths; the checks run again, and the evidence of that run proves the candidate |
+| `RUNTIME_ARTIFACT_RELOCATED` | an executor round left new untracked files under `scope.runtime_paths` (logs, evidence); they were moved to `<artifacts of the piece>/stray/` and are not committed | the paths and where each went (the report gets a `note` issue) |
+| `QUESTION_OWNER_ONLY` | a blocking question has kind `approval` or `credential`, in any questions mode | question id and kind; it stays open for the owner even with a default or under `deny` |
+| `ADVICE_HELD` | advice needs the owner, meets an effective gate or falls below the confidence threshold; also a recommendation outside a question's options | source `advisor` (needs_owner, model category or invalid option), `code` (security/public-api/scope-expansion with paths), or `confidence` (actual and minimum); all applicable gate reasons are named |
 | `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag, or `instructions.sandbox` is `prefer` and the provider sandbox cannot start (once per run) | roles are isolated by the environment only; the commands of Claude Code roles run under the filesystem guard only |
+| `POLICY_STAGE_SKIPPED` | a stage of the run policy names a role the conductor does not run, and the stage is not a refusing required stage (once per run). The conductor's preparation binds a copy without that stage, rewriting a dependency on it, so a missing manifest does not become `ROLE_UNKNOWN`. Public `source prepare` and `orch prepare` of the original policy still check every stage | the scenario and the stage; the run continues |
 
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
-the run is healthy (a long test run is) or needs a look. `stage_timeout_s` and `check_timeout_s` still set wall-clock
-ceilings when asked for (off by default). Only silence stops work by default: a role whose stream has not grown for
-`stage_idle_timeout_s` (5400) or a check whose log has not grown for `check_idle_timeout_s` (3600) is hung; 0 turns
-either off.
+the run is healthy (a long test run is) or needs a look. The executor and the bounded-implementer have no wall by default
+(`stage_timeout_s` sets one for every role); the auxiliary roles have `limits.role_timeout_s` and a check has
+`check_timeout_s` (7200). Silence stops work too: a role whose stream has not grown for `stage_idle_timeout_s` (5400) or a
+check whose log has not grown for `check_idle_timeout_s` (3600) is hung; 0 turns either off.
 
 ### Provider availability
 
@@ -490,18 +578,26 @@ nothing is ever answered on a timeout.
   `executor.<n>-q<k>`; a question without one, or one the executor asks again, is queued;
   `advisor`: the advisor role reads the question ([The advisor](#the-advisor-p104)); advice that needs no owner answers it
   with `resolution.by = advisor`, any other advice is queued with the question.
+- `approval` and `credential` questions always stay open for the owner in all four modes
+  (`QUESTION_OWNER_ONLY`); neither a default nor advisor advice answers them, and `deny` does not close them.
 - The question is saved in `state.questions[<item>]` and in `<run>/<item>/questions.json` with its binding
-  `{run, item, step, input_digest}` (the digest of the input it was asked on), its `status` (`open`, `answered`, `applied`,
+  `{run, item, step, input_digest, input_part_digest}` (the full input digest and `contracts.required_digest` of its
+  substantive part), its `status` (`open`, `answered`, `applied`,
   `assumed`, `denied`, `stale`) and, once answered, `resolution {value, by, at}`. Beacons: `QUESTION_QUEUED`,
   `QUESTION_DENIED`, `QUESTION_DEFAULT`, `QUESTION_ANSWERED`, `QUESTION_OPEN` (retry without an answer), `QUESTION_STALE`.
+  Every automatic resolution adds `authority {mode, gate, code_categories, confidence}`: mode `defaults` or `advisor`,
+  the effective gate and code categories at the decision, and the advisor's confidence (`null` for defaults).
 - `orch conduct answer` writes only the resolution into `questions.json`, under `questions.lock` of the item (both in
   the item folder of the run); `QUESTION_UNKNOWN` (`<item> has no questions in run <id>`, refused before anything is
   written, so a mistyped `--item` leaves no folder), `QUESTION_NOT_OPEN`, `ANSWER_INVALID` (a decision takes one of its
   options, a clarification may take `--text`); it never touches the run.
   `orch conduct questions [--run R] [--json]` lists the open ones with their age; one older than `limits.question_warn_s`
   (default 1800, 0 off) is `OVERDUE`, in the observer report too.
-- `resume --run R --retry ITEM` merges the answers into the state. An answer is applied only while the input is the one the
-  question was asked on; otherwise it is `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
+- `resume --run R --retry ITEM` merges the answers into the state. New bindings compare `input_part_digest` over
+  `goal`, `scope`, `acceptance`, `constraints`, `decisions`, `route`, `result_contract` and `escalation`. Changes to
+  provenance, lessons or other context, including the source's blocked registration, preserve the answer.
+  Legacy records without that field still compare the full `input_digest`. A changed substantive part produces
+  `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
   `revision + 1` and the executor, which is not told that answer, asks it again. The executor of every later round gets the
   section `# Answers` (question, answer, who answered).
 
@@ -527,8 +623,23 @@ closed `advice` (`schemas/conductor/v1/advice.schema.json`): `problem_ref`, `opt
 that is not one of them is held. The advice is kept as `advice-<n>.json` in the artifacts of the piece, and its agent run in
 `agents/<id>/` has `causation` = the `problem_ref`.
 
-The human gate: advice with `needs_owner: true`, or with a `category` of `[orch.advisor] human_gate` (default `security`,
-`destructive`, `public-api`, `scope-expansion`), is never applied by the conductor. It is handled as `queue`: the piece is
+The human gate: `[orch.advisor] human_gate` (default `security`, `destructive`, `public-api`, `scope-expansion`)
+can be set only by defaults, the machine or the caller (invocation and flags). A project or environment attempt is
+`CONFIG_LAYER_FORBIDDEN`; projects can add categories through `human_gate_extra`. Extra gates accumulate from every
+layer's history: neither `[]` nor `_unset` removes a lower layer's category. `min_confidence` defaults to `medium`;
+the strictest value across all layers wins (`high` > `medium` > `low`), including defaults and values before `_unset`.
+
+Advice is held if `needs_owner: true`, its model category belongs to the effective gate, a category computed by code
+belongs to the gate, or its confidence is below the effective minimum. Code examines changed paths **and** the write set
+using `conductor.risk.patterns`: `security` for `security` patterns, `public-api` for `public_cli` or `schema` patterns,
+and `scope-expansion` for changes outside the write set. For code categories, builtin patterns and patterns established
+by trusted machine, invocation or flag history form a retained floor; effective project/environment patterns may add
+matches. Empty arrays, replacement arrays and leaf/parent `_unset` cannot erase that floor. Heuristic risk scoring
+still uses the effective configurable patterns, weights and critical features; the retained floor applies only to
+code categories and their owner hold. Existing human-gate, confidence, needs-owner and scope-expansion gates still apply.
+Risk weights do not disable these gates. A model's `other`
+category cannot hide a security path. `ADVICE_HELD` names the source (`advisor`, `code` with matching paths, or
+`confidence` with actual and required levels). It is handled as `queue`: the piece is
 `blocked` with `QUESTION: <id> <text>` and the advice (file, recommendation, confidence, why the owner decides); the
 question is saved with the advice (`advice` in `questions.json`). A held question of the executor is that question; for red
 checks and a rejected finding it is a new question `orch-advice-<n>` (kind `decision`, the options of the advice). `orch conduct
@@ -540,6 +651,11 @@ only once. A failed advisor (`ADVISOR_FAILED`), a spent `max_rounds` (`ADVISOR_L
 no panel of several models.
 
 ### Resume
+
+Without `--retry`, a blocked piece's saved answer stays pending. The conductor emits
+`QUESTION_ANSWERED_NOT_RETRIED` with the retry command; if no piece starts during that pass it stops with the same
+code and exit 1. If other work starts, the message is only a beacon. `orch conduct answer` leaves the question
+`open` with a `resolution` on disk; resume with retry merges and consumes it (`answered` records are also recognized).
 
 `resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`; a piece held on advice for the owner, whose question `advice-<n>` is answered, needs no executor round that reported `blocked`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
 
@@ -568,6 +684,44 @@ A check command tests the project, so it does not inherit the install roots of t
 project (a frozen or installed copy of the orchestrator would otherwise be tested instead of the project's own code, as a
 piece that adds a module to the foundation found out). Roots inside the project stay.
 
+The run names itself to the check: `SKM_CHECK_RUN` (the run id), `SKM_CHECK_ITEM` (the piece reference) and `SKM_CHECK_ROUND`
+(the number of the round), so a test runner can keep a result only inside one run. `SKM_TEST_JOBS` is the jobs budget the
+check may use: the budget of the owner (its own `SKM_TEST_JOBS`, else the CPUs) divided by the checks that run together
+(`checks.parallel`, never more of them than the budget), never more than the owner gave; `jobs.txt` in the folder of the round's logs
+reports the requested budget, how many checks run together and the share of each. The orchestrator names no script of a
+project: whatever the check runs reads these variables.
+
+A green check is kept for the next round of the same run only when its evidence file carries a fingerprint of everything it
+read: the candidate, the check as written and its directory, the environment (values are hashed, never stored), the programs
+(path, size, time) and the data files (content: fixtures, configuration) that its command line (quoted names with spaces
+included) or an environment value names and the candidate does not carry, that is files outside the project and git-ignored
+files inside it. The shell expansions of the line are followed as bash would expand them in the directory of the check with
+the environment of the check: unquoted globs (`*`, `?`, `[...]`, `**`, also in the value of `NAME=...`/`--option=...`, in a
+quoted script such as `bash -c '...'` and through a variable that holds one), brace lists and ranges (`{a,b}`, `{1..3}`); every
+file they match is an input, so a file that is added, removed or changed misses. When the inputs cannot be established they are
+an unknown input and nothing is reused (a miss, never a guess): an existing folder that the line names or that a glob reaches,
+wherever it lies (the project root `.`, a tracked, untracked or git-ignored folder of the project, a partner root or a folder
+below it, any other folder outside the project; a literal argument, a path in a quoted script, an entry of a `a:b` list, a
+variable the line uses, including a `*_ROOT` one), because its listing and the files below it, git-ignored ones included, are
+not fingerprinted (`grep -r x data`, `find .`, `ls dir`); a glob or brace word with an unset variable, a path or an argument
+built by a command (`$(...)`, backticks), more matches than the limit, a range that cannot be read, a line with unbalanced
+quotes or brackets, a name built from an unset variable or a file that cannot be read. The same holds for the forms the shell
+does not expand itself: a `case` whose branch pattern spells a path, a glob or a variable; a `PATH`-like `a:b` list of
+patterns; a quoted pattern that holds a glob character with an existing folder in front of it (`'/dir/*.txt'`, also a `:` list
+of them); and any quoted glob in a line that runs `find`, `fd` or `fdfind` (`-name '*.txt'`). Only the folders of the
+evidence and the logs of the checks (output) are exempt. What stays reusable: the working directory itself (implicit
+context), a folder that only the environment holds (`HOME`, `TMPDIR`, a variable the line does not use) and a partner root
+that only the environment points to (not named by the line), whose state (HEAD and dirty digest) is fingerprinted, and the
+files the line names (a literal file, a glob that matches files), whose content is fingerprinted when it is outside the
+candidate. The fingerprint covers what the line or the environment names; what a program reads without the line naming it is
+opaque to it. The fingerprint also holds the Python of the conductor and the state of the partner roots outside the
+project. A damaged evidence file, another run, another candidate or any difference in the fingerprint runs the check again, as
+does a check that changed files of the project or the files it reads outside it while it ran, an input that cannot be read, and
+every check that starts after an earlier check of the round changed the tree or committed (the candidate, HEAD included, was
+taken at the start of the round). A reused row keeps `reused_from` (the evidence it stands for)
+and `original_seconds`; the evidence file is not rewritten. The folder of the evidence and the logs of the checks is not part of
+the candidate.
+
 ## One review for a batch: `scripts/batch-review.py`
 
 The conductor reviews piece by piece (`review.*`); a batch is better read once, together: `batch-review.py RUN` takes the
@@ -590,10 +744,10 @@ A batch of several pieces is reviewed in the way chosen **before the first piece
 | `single` | one review of the whole batch after its last piece |
 | `none` | no review |
 
-With `auto` the strategist decides (`review.strategist: model`, the default): one small model call on the economy route of the
-triager sees every piece (title, goal, write set, route) and the choice the rules would make, and answers a mode, the groups
-(in order, at most four pieces each) and the reviewer's effort. An answer that is not a partition of the batch in order, a
-failed call or `review.strategist: rules` falls back to the rules (`policies/review_strategy.py`): neighbours that work on the
+With `auto` the rules decide (`review.strategist: rules`, the default; the strategist is a model call only when `review.strategist: model` names it, one small call on the economy route of the
+triager that sees every piece (title, goal, write set, route) and the choice the rules would make, and answers a mode, the groups
+(in order, at most four pieces each) and the reviewer's effort). An answer that is not a partition of the batch in order or a
+failed call falls back to the rules (`policies/review_strategy.py`), which `rules` uses on its own: neighbours that work on the
 same folders are read together, a piece on the foundation or a `frontier` piece is read alone, security wording raises the
 effort to `high`. Naming a mode in `review.strategy` skips the strategist. The plan is kept in `state.review_strategy` and
 `review-strategy.json` of the run (a resume keeps it) and announced as `REVIEW_STRATEGY` with the effort the group review
@@ -602,7 +756,10 @@ will run at (an effort named by `reviewer` wins over the plan's).
 In `groups`, `single` and `none` a piece has no review of its own. After the last piece of a group the conductor reads the
 commits of the group once (`review_batch`: production code only, the same as `batch-review.py`), with the reviewer of the run
 (`reviewer`, grok by default) at the effort of the plan, and keeps the reply in `group-review-<n>.md` of the run folder
-(`state.group_reviews`). The reply must hold a `## Findings` section with `[Blocker|Major|Minor] file:line - defect` lines (a
+(`state.group_reviews`).
+The reserved reviewer of a last piece with `review.mode: none|self` does not override the group's requested review routes;
+an explicit configuration or invocation reviewer still wins.
+The reply must hold a `## Findings` section with `[Blocker|Major|Minor] file:line - defect` lines (a
 list marker, a number, bold or backticks around them are read too) or the word `none`. The beacon `GROUP_REVIEW` gives the
 counts; a reply that is neither is `GROUP_REVIEW_FAILED` (`format: malformed` in `state.group_reviews`), never a clean review, and
 so is a group without a commit. Blocker and Major findings are corrected in a commit of their own: the conductor writes
@@ -611,6 +768,26 @@ and as acceptance the command checks of the reviewed pieces, once each — `cd D
 `cadence: phase` checks left out — so the correction is tested like the pieces were) and the beacon names the command, `orch conduct run --input <that file> --commit` (the executor corrects them, the conductor
 checks and commits; native correction inside the run is not built, because the pieces of the group are already registered and
 committed in the work source).
+
+A group review with a **Blocker** does not end in `finished`: the run stops with `GROUP_REVIEW_BLOCKER` (resumable;
+`state.group_reviews[n].blocking`), and a resume stops again with the same code until the group is settled. The stop names the way
+out: run the follow-up (`orch conduct run --input <run folder>/group-review-<n>.followup.json --commit`; the file is written by
+hand at that path when the findings named no file to build one from), then
+`orch conduct settle --run <R> --group <n> --followup-run <F> --reason <text>` under the lease of run R. The follow-up run F is
+read without a lease and is accepted only when it ran exactly that file of this run (`source.kind: file` and the same path), is
+`finished`, its one piece is `done` or `done_with_deviations`, and it committed (`GROUP_UNKNOWN`, `GROUP_FOLLOWUP_MISMATCH`,
+`GROUP_FOLLOWUP_NOT_DONE` otherwise, exit 1, nothing changed). `state.group_reviews[n].resolved` then holds
+`{followup_run, commit, reason, at}`, the beacon `GROUP_REVIEW_RESOLVED` is printed and the next resume goes on; no run writes into the state
+of another. Major findings are not a stop: the follow-up is announced as above.
+
+A group review that fails (the role failed, or the reply has no readable `## Findings`) while a piece of the group has
+`review_mode: requested` stops the run with `GROUP_REVIEW_FAILED` (those pieces have no review of their own); a resume repeats the review once
+(`state.group_reviews[n].attempts`, at most 2); after the second failure the stop stays: a resume raises `GROUP_REVIEW_FAILED` again
+without a third reviewer call and is no waiver, and only a review that reads (a repeated review below the cap) ends it. Without a requested piece it stays a
+beacon. An empty production diff or a group without a commit is not repeated and not a stop.
+
+A forced `review.strategy` (`groups`, `single`, `each`) takes no piece whose plan gives it `review_mode: none`: it is in no group,
+and `REVIEW_MODE_NONE_SKIPPED` names it.
 
 ## Run options
 
@@ -623,11 +800,11 @@ committed in the work source).
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]`; `names: ["auto"]` asks the skills bridge (`[orch.conductor] skills_bridge`, a command run as a process with `--select --role R --provider P --project DIR --paths <write set files>`) for the skills of the role from the write set of the piece: the answer (`skills[].name`, `path`, `reason`) is kept in the state of the piece, an isolated role gets the text of the `SKILL.md` at the path the bridge names, beacon `SKILLS_SELECTED`; no bridge stops the piece `SKILLS_BRIDGE_UNAVAILABLE`, a failing one `SKILLS_SELECT_FAILED`; `auto` is not listed with other names |
 | `instructions` | `isolate_roles` (default every role; a listed role starts without the project instructions and customizations of its provider: for Claude Code `--safe-mode` plus no `CLAUDE.md`/project memory, which cuts the start-up context from ≈16 K to ≈6 K tokens and drops the plugins, MCP servers, user skills and hooks; grok was probed and does not read the repository `CLAUDE.md`); `module_rules` (default `["module-folders", "module-boundaries", "engineering-invariants"]`: the instruction sections, by the last part of their `## <scope>.<name>` heading, that a role still gets from the CLAUDE.md or AGENTS.md of the root and of every folder on the way to a write-set path, as a short Repository rules block). An isolated role gets the text of its `skills` in the prompt, because its provider loads none by name; `sandbox` (`off` \| `prefer` default \| `require`: the provider sandbox for shell commands, see Sandboxes) and `sandbox_domains` (default `[]`: the domains a sandboxed Claude Code role may reach); `file_tools_rule` (default `true`: a `## File tools` run-rules block in the executor prompt that says to read and change files with Read/Grep/Edit/Write and not with Bash `cat`/`sed`/heredocs, added only when the route offers Read and Edit; measured before the rule: P10.2 81 Bash calls and 1 Edit, a heredoc edit 55–120 s of model time) |
-| `session` | `executor`: `handoff` (default), `shared` or `per-item`. `handoff`: each piece of the run starts a fresh Claude Code session and its correction rounds resume it; the prompt of every piece carries the `## Run batch` block that names all pieces and, for each piece already done, a bounded `### Handoff of` (commit, summary, open issues, changed paths from its `register-report.json`) — a later piece does not re-read the transcript of the earlier ones on every turn (measured: a shared session carried 229K→372K tokens of context into the second piece, 18.5M cache-read tokens for one step). The piece of the kept session is `executor_session_item` of the run state. `shared`: the executor of every piece of the run, and of every correction round of a piece, resumes the Claude Code session of the previous executor (`claude -p --resume`), so the later pieces start with what the earlier ones learned, and the prompt of the first one carries a `run_rules` block `## Run batch` that names all pieces; the later ones are told that the session is resumed. Checks, review, register and commit stay per piece. `per-item`: a fresh session per executor step. `--batch` / `--no-batch` of `run` set it (`handoff` / `per-item`), and `--no-batch` also claims the pieces one at a time (layer `invocation:--batch`, above `--options`). Shared executors run without `--no-session-persistence` (the launch catalog sets it; a session that is not saved cannot be resumed), so their sessions stay in the provider's own store. A session that failed is forgotten and a fresh one starts; a provider other than Claude Code always starts fresh. The session id is kept in `executor_session` of the run state. |
-| `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and added as `--rw` to its `ro-run.py` guard). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
-| `checks` | `parallel` (1–8, default 1: command checks run together), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs every check in every round), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
-| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the lines their correction touched; `full`), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`model` default, `rules`: who chooses it) |
-| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); hard token limits `tokens_hard_max` (of the piece) and `run_tokens_hard_max` (of the run), 0 off (see Hard token limits and resume); beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); wall-clock ceilings, off by default: `stage_timeout_s`, `check_timeout_s`; silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
+| `session` | `executor`: `handoff` (default), `shared` or `per-item`. `handoff`: each piece of the run starts a fresh Claude Code session and its correction rounds resume it; the prompt of every piece carries the `## Run batch` block that names all pieces and, for each piece already done, a bounded `### Handoff of` (commit, summary, open issues, changed paths from its `register-report.json`) — a later piece does not re-read the transcript of the earlier ones on every turn (measured: a shared session carried 229K→372K tokens of context into the second piece, 18.5M cache-read tokens for one step). The piece of the kept session is `executor_session_item` of the run state. `shared`: the executor of every piece of the run, and of every correction round of a piece, resumes the Claude Code session of the previous executor (`claude -p --resume`), so the later pieces start with what the earlier ones learned, and the prompt of the first one carries a `run_rules` block `## Run batch` that names all pieces; the later ones are told that the session is resumed. Checks, review, register and commit stay per piece. `per-item`: a fresh session per executor step. `--batch` / `--no-batch` of `run` set it (`handoff` / `per-item`), and `--no-batch` also claims the pieces one at a time (layer `invocation:--batch`, above `--options`). Shared executors run without `--no-session-persistence` (the launch catalog sets it; a session that is not saved cannot be resumed), so their sessions stay in the provider's own store. A session that failed is forgotten and a fresh one starts. The session id is kept in `executor_session` of the run state, with `executor_session_item`, `executor_session_task_digest` and `executor_session_answers` (see *Resumed sessions*). Claude Code resumes with `--resume`; a Codex executor resumes its thread through the `resume_argv` of its launch catalog entry (`codex -a never exec resume <thread> --json -c sandbox_mode="…" --model … -`); Grok always starts fresh. |
+| `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and granted to every writing role: `--rw` on its `ro-run.py` guard, for Claude Code also `--add-dir` and, under the provider sandbox, `sandbox.filesystem.allowWrite`, for Codex `--add-dir`); `outside_module`: `block` (default) or `deviation`, for paths of another module than the write set names (`OUTSIDE_MODULE`); `runtime_paths`: patterns of runtime artifacts that are set aside, never committed (see "The write set is a fence by module"). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
+| `checks` | `parallel` (1–8, default 2: command checks run together, sharing the jobs budget `SKM_TEST_JOBS`), `fail_fast` (default true: after a red command check no other check starts, the ones running end and the rest are `skipped` with `skip_reason` `fail_fast`; `phase` checks run only when every item check is green, else `skipped` with `phase_after_red`; the item checks run cheapest first by their time in earlier rounds), `reuse` (default true: a command check with green evidence of this run for the same candidate, command, directory and fingerprint is not run again; its row is `reused`), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs the checks in plan order in every round, with no red-first staging; whether the later checks start after a red one is decided by `fail_fast` alone, independently of `red_first`), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed) |
+| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the diff of the paths changed since the previous review, see *Review of round 2 and later*; `full`: the whole diff every round), `final_correction` (default `false`: when no further round is allowed the findings are corrected without another review, noted in the plan, instead of `REVIEW_LIMIT`), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`rules` default, `model`: who chooses it) |
+| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); hard token limits `tokens_hard_max` (of the piece) and `run_tokens_hard_max` (of the run), 0 off (see Hard token limits and resume), with `unmetered` (`stop` default, or `charge`) and `unmetered_charge_tokens` (50000) for an attempt that reports no usage while one is in force; beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); wall-clock ceilings: `role_timeout_s` (a map role → seconds for a streaming role: `context-scout` 900, `triager` 1800, `report-fixer` 600, `registrar` 600, `reviewer` 3600, `advisor` 1800, `researcher` 2700; the `executor` and the `bounded-implementer` have none; a layer names only the walls it changes, 0 removes one; the group review uses the `reviewer` wall), `stage_timeout_s` (0, off; when set it replaces the wall of every role), `check_timeout_s` (7200, 0 off); silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`), `triage_repro_timeout_s` (600, 0 none: the ceiling in seconds on the read-only rerun of the reproduction of a rejected Blocker or Major finding; past it the finding is confirmed again, `TRIAGE_REPRO_UNVERIFIED`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
 | `on_blocked` | `stop` or `report` |
@@ -647,9 +824,9 @@ bounds are `minimum`/`maximum` of the schema itself, so the schema is the one st
 
 **Isolation floor.** A layer of the work source is text a model may have written (an overlay document, an input file),
 so it may tighten the isolation of a run but never loosen it: `instructions.sandbox` only moves along
-`off < prefer < require`, `scope.fence` along `project < plan`, `scope.outside` along `deviation < block`;
+`off < prefer < require`, `scope.fence` along `project < plan`, `scope.outside` and `scope.outside_module` along `deviation < block`;
 `instructions.sandbox_domains` and `scope.extra_paths` may only repeat or shrink what the layers below allow;
-`instructions.isolate_roles` may only grow. A layer that loosens one of them stops the run with `OPTIONS_UNTRUSTED` (the
+`instructions.isolate_roles` and `scope.runtime_paths` may only grow. A layer that loosens one of them stops the run with `OPTIONS_UNTRUSTED` (the
 key, the value and the layer below that set it). Only the configuration, the run-policy pack and the invocation
 (`--options`, `--allow-path`, `--fence`) may loosen them; trust is a mark the conductor sets on its own invocation layers,
 never the `source` label a layer carries. Limits, review and checks keys stay free for the plan (it raises
@@ -675,11 +852,27 @@ A work-source layer (plan, phase, item or input) that names it, including 0, get
 `run.json.limits_run.run_tokens_hard_max` freezes `{value, source, file?}` at start, so later configuration or options
 edits cannot replace the run cap. Cache reads do not count toward either limit.
 
-Admission checks run before each model step, before the strategist and group reviewer, and after saving each done
-step. At `used >= limit` the run stops with `TOKEN_BUDGET`, the piece is stopped, and done steps stay saved; it is
-not registered as blocked. Once the boundary of accounted usage is reached, no new model call starts. One long
-stage can exceed the limit, and missing usage (`usage_incomplete`) cannot be caught by it. Retries and report repairs
-inside the same step are not separate admission boundaries.
+Admission checks run before **every** model call: each model step, each attempt of a role (a repeat after a failure or
+a rejected answer, a fallback route, a wait for a provider reset), each report-fixer repair, the strategist and the
+group reviewer; and after saving each done step. At `used >= limit` the run stops with `TOKEN_BUDGET`, the piece is
+stopped, and done steps stay saved; it is not registered as blocked. Once the boundary of accounted usage is reached, no
+new model call starts. One call can still cross the limit: admission never interrupts a running one. The run policy's `budgets.stage_tokens_max` (> 0) is that check on the known fresh tokens of one logical step
+(the piece and the step key): every attempt, repair and fallback of that step, kept across an interrupt and a resume,
+and separate when two steps overlap (each with its own amount and step label). A new step key starts at zero. Replaying
+a receipt replaces that attempt and does not count it twice. The shipped value 0 does not apply. A run saved before this
+record resumes a step from the receipts or agent usage that name it, or from zero when they do not. It stops with
+`TOKEN_BUDGET` naming the step. Deterministic steps (checks, register, commit) are not model calls and are not checked.
+
+Missing usage (`usage_incomplete`) is not zero. While a hard limit is in force, `limits.unmetered` says what an attempt
+without usage does: `stop` (default) stops the piece with `TOKEN_BUDGET_UNMETERED` at the next admission (after the
+attempt that reported none); `charge` charges `limits.unmetered_charge_tokens` (default 50000) per attempt as fresh input
+tokens of the piece, the run and the step, counted apart in `tokens.charged`, once per attempt even when its receipt is
+read again. Under `stop` the unknown usage is kept at run scope (`state.usage_unmetered`: the pieces whose attempt reported
+none and that no charge accounted for): with `run_tokens_hard_max` in force it stops every later admission of the run,
+whatever piece the attempt belonged to; a piece limit alone consults the piece only. The `BUDGET_UNMETERED` beacon stays. With both hard limits 0 nothing is stopped or charged: the beacon is
+all. `unmetered` is not a `--raise-limit` key; to continue a piece stopped with `TOKEN_BUDGET_UNMETERED`, set it to
+`charge` in the `--options` file of the run (a resume reads the file again) or in `[orch.conductor.limits]`, then
+`resume`. Attempts that already ran under `stop` are not charged afterwards.
 
 ```bash
 orch conduct resume --run RUN --raise-limit tokens_hard_max=500000
@@ -796,7 +989,7 @@ the prompt byte for byte (a separator belongs to the block it follows). Every mo
 `excluded` (`id`, `reason`: the skills the checks of P9.2 left out, see Skill checks), `estimated_tokens` and `prompt_sha256` of the whole prompt.
 The `tokens` of the blocks add up to `estimated_tokens` within one token per block. Kinds: `role_text`, `input`,
 `repository_rules`, `skill`, `skill_names`, `context_map`, `expected_paths`, `verification`, `run_rules`, `answers`,
-`correction`, `progress`, `result_contract`, `research` (the result of the research stage, see [Research](research.md)), and for the roles that review, triage and close: `candidate`, `review_scope`,
+`correction`, `progress`, `result_contract`, `research` (the result of the research stage, see [Research](research.md)), the blocks of a delta prompt (`resumed`, `interrupted`, `changed`, see *Resumed sessions*), and for the roles that review, triage and close: `candidate`, `review_scope`,
 `diff`, `findings`, `instruction`. `origin` is the role file, `input.json`, `questions.json`, `skill:<id>`,
 `scout-cache:<rel>` or `conductor`.
 
@@ -808,6 +1001,51 @@ and the frame of the review, triage and closing roles (`progress`, `candidate`, 
 `research`. A class past its limit is a beacon `BUDGET_OVER` with `message`
 `block <kind> <origin> <tokens>` for its heaviest block. This is a measure and a beacon only: the prompt is never cut, and the limits are for tuning from the data
 (observer: Prompt budgets).
+
+### Resumed sessions
+
+A correction round of an executor whose session goes on does not send the whole prompt (the role text, the execution-input,
+the rules, the skills, the scout map: 56–115 KB) to a session that holds it already. `prompts.executor_resumed` builds the
+**delta prompt** from the blocks `resumed` (`## Continuation`: the task, the rules and the result contract of the first prompt
+still apply), `answers` (only the answers the session has not seen: `executor_session_answers`), `correction` (the red checks,
+the confirmed findings, the deviation to fix), `interrupted` (the note of an interrupted round), `changed` (the paths the
+earlier round changed), `progress` and `result_contract`. A round that asks nothing the session lacks (the first round of a
+piece, a repeat of it) has no delta prompt and is sent in full.
+
+The delta prompt goes only if all three conditions hold for the attempt: (1) its command line continues the session
+(`--resume`, or the `resume_argv` of the route); (2) the session received the full prompt of this very piece
+(`state.executor_session_item` is the piece: in `shared` mode the first round of the next piece is sent in full into the
+continued session); (3) the `task_digest` of the full prompt now equals `state.executor_session_task_digest`, the digest of
+the last full prompt the session received. `task_digest` is the sha256 of the canonical JSON `[kind, origin, text]` of the
+blocks that carry the task and the instructions — every block but `correction`, `answers`, `interrupted`, `changed`,
+`progress` (it names the round) and the `## Run batch` note (it describes the batch, not the task) — so a rebuilt input
+(`INPUT_REBUILT`: write set, acceptance, rules), other skills, stubs, repository rules or scout map send the whole prompt.
+Any other doubt does the same: the delta prompt is an optimisation, never the only copy of the task.
+
+An attempt that continued a session and ended with an error or without a session (a lost transcript, a provider that
+refused the id) forgets the session (the fields above go with it) and emits the info `SESSION_RESUME_FAILED` (`item`,
+`stage`, the route with its provider). The next attempt of the step starts a fresh session with the **whole** prompt and no
+`--resume`. `prompts/<step>.md` always holds the full prompt of the step, `prompts/<step>.resumed.md` the delta one when it
+was sent; the manifest of the step lists the blocks that were sent, with `resumed_session: true` for a delta prompt and the
+`task_digest` of the full one (both optional fields of `prompt-manifest/v1`).
+
+A Codex executor resumes with `resume_argv` of its entry in the launch catalog (`launch-catalog.json` 1.6.0):
+`codex -a never exec resume {session} --json -c sandbox_mode="{write_sandbox}" --model … -c model_reasoning_effort=… -`.
+`codex exec resume` has no `--sandbox`, so the mode of the first round (`danger-full-access` for `[orch.launch] access =
+open`, `workspace-write` for `confined`) is passed as a `-c` override; the model and the effort are those of the first
+round and `-a never` stays before `exec`. The thread id comes from `thread.started`. A route started from
+`[orch.conductor.argv]` (a command line of the user) has no `resume_argv` and starts fresh.
+
+### Review of round 2 and later
+
+With `review.audit_scope: corrected` (default) the diff block of the reviewer in round N>1 is the diff against the base of
+the paths changed since review N-1 only, headed "Diff against the base of the paths changed since review N-1 (the full
+diff was reviewed in round 1; read other files as needed)", plus the files named by the `location` of the findings still to
+be fixed: a later report that does not name an earlier confirmed finding is no proof that it was fixed, so every confirmed
+finding of every earlier round (at any severity) stays in the scope list of the round (`F1 (review 1)`) and its file in the
+diff. Each review stores the tree it started from in `state.items[ref].review_marks[N]` (`{path: sha256}` of the dirty tree
+without the conductor reports, the artifact folder and the plan folder). Round 1, `audit_scope: full` and a run without
+marks (made before they existed) get the whole diff, as before.
 
 ### Review focus
 
@@ -824,6 +1062,24 @@ upgrade is an `info` line once and the review goes on with its route.
 
 ### Skill checks
 
+Skill names in run options match `^[a-z0-9][a-z0-9_:-]*(?:[./][a-z0-9][a-z0-9_:-]*)*$`:
+`bucket:name` and `core/context-economy` are valid; traversal segments and absolute paths are refused as
+`OPTIONS_INVALID`. Named files belong to the project's `.claude/skills` or `.agents/skills` root. Every resolved
+component must stay inside that root, including the root itself; a symlink cannot grant a directory outside it.
+An absent named file is still left to the provider as before. Auto files may be outside the project: the bridge's
+path must be absolute, canonical, have no symlink components, and name `SKILL.md`. Orch does not locate the partner's
+skill library. It compares SHA-256 of the exact file bytes with `skill_md_sha256` of the selected row; the separate
+directory `digest` is not a file checksum. Old rows without `skill_md_sha256` are excluded (`digest_missing`).
+
+Reads are strict UTF-8 and capped before opening: `SKILL.md` at 64 KiB, `selection.json` at 16 KiB, and rule carriers
+(`CLAUDE.md`/`AGENTS.md`) at 256 KiB. A bounded descriptor read also catches a file growing after stat and refuses
+symlink replacement. A present sidecar must validate against aicore `skill-selection/v1`; an absent sidecar retains
+the default policy. A named sidecar belongs to the same skill root; an auto sidecar belongs to the selected skill's
+directory. A rule carrier belongs to the project. Invalid carriers emit `RULES_PATH_INVALID` and contribute no rules.
+Invalid skills emit `SKILL_PATH_INVALID`, with a manifest exclusion reason `outside` (also missing/unreadable or
+nonregular auto files), `symlink`, `too_large`, `not_utf8`, `digest_missing`, `digest_mismatch` or `selection_invalid`.
+These file checks run again on later reads, even when `skills_checked` already holds a verdict.
+
 Before the prompt of a role is built, the skills of the role (`skills` of the run options, or what `["auto"]` chose) are
 checked deterministically, from what each skill declares in the `selection.json` beside its `SKILL.md` and from the tools of
 the route (`--tools` of its argv; a route that names no list is not judged by tools, `--tools ""` is a role with no tools).
@@ -839,11 +1095,15 @@ left out of the prompt, in this order of checks, as:
 | `persona_duplicate` | a second skill of `kind: persona` |
 | `exclusive_group` | more skills of one `exclusive_group` than the group allows (one; `php-architecture` two) |
 
-Each exclusion is listed in `manifest.excluded` of the step (`id`, `reason`) and is a beacon `SKILL_EXCLUDED` with the detail
+Each policy exclusion is listed in `manifest.excluded` of the step (`id`, `reason`) and is a beacon `SKILL_EXCLUDED` with the detail
 (for example the missing tool or the size). A skill left out is not named in the prompt either. If two kept skills are a pair
 of `conflicts` (by id, by name, or by the folder of a `<bucket>/<folder>` entry), the role does not start: the piece stops
 `PROMPT_CONFLICT` with the pair. The verdict is made once per piece and kept in the state (`skills_checked`). Contradictions
 between the texts of skills ("must" against "never") are not detected: that cannot be done deterministically.
+
+`limits.skill_tokens_max` defaults to 5000 (0 disables the token ceiling only in trusted configuration or invocation
+options). A work-source layer may keep or lower an enabled ceiling, or enable one when the trusted value is 0;
+disabling or raising it is `OPTIONS_UNTRUSTED`. Byte caps apply independently of the token ceiling.
 
 `orch conduct prompt explain --item REF --step STEP [--run RUN] [--json]` prints the blocks of one step as a table (kind,
 origin, tokens, the start of the digest) and what was left out; the default run is the latest. `MANIFEST_UNKNOWN` (exit 1)
@@ -853,8 +1113,8 @@ means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer
 
 | Path | Git | Content |
 | --- | --- | --- |
-| `.swissknifeman/state/orch/conductor/<run>/` (`projects/<code>/local/state/orch/conductor/<run>/` of the workspace when the project marker names one) | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/` (`<step>.md` and `<step>.manifest.json`), `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json`; after a `resume --retry` `attempts/<n>/` holds the streams, reports, prompts and checks of the steps that retry repeated, and `state.json` the record `items.<ref>.attempts[]` (`n`, `retried_at`, per step `verdict`, `role`, `route`, `ended`, `report_status`, `files`); the observer report lists them under "Retried pieces" |
-| `.swissknifeman/state/orch/conductor/cache/scout/` | ignored | context maps keyed by the digest of the brief, the plan version, the route and the role text |
+| `.swissknifeman/state/orch/conductor/<run>/` (`projects/<code>/local/state/orch/conductor/<run>/` of the workspace when the project marker names one) | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/` (`<step>.md`, `<step>.resumed.md` (the delta prompt, when it was sent) and `<step>.manifest.json`), `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json`; after a `resume --retry` `attempts/<n>/` holds the streams, reports, prompts and checks of the steps that retry repeated, and `state.json` the record `items.<ref>.attempts[]` (`n`, `retried_at`, per step `verdict`, `role`, `route`, `ended`, `report_status`, `files`); the observer report lists them under "Retried pieces" |
+| `.swissknifeman/state/orch/conductor/cache/scout/` | ignored | context maps keyed by the content of the brief (without `provenance` and `digest`, which move with every write to the plan journal), the route, the role text, the names and texts of the selected skills and the stub; written whole (`durable_replace`), a hit only for a non-empty UTF-8 file |
 | `.swissknifeman/state/orch/runs/<run>/` | ignored | the orch run journal of `source …` |
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
 | `.swissknifeman/orch/reports/<run>/` | ignored | `observer.json`, `observer.md` (written when the run ends, after its last commit) |
@@ -887,12 +1147,21 @@ for.
   start, `prefer` goes on without `--settings` and says `ISOLATION_PARTIAL` once; `require` stops with `SANDBOX_UNAVAILABLE`
   before any work; `off` adds nothing. `strictAllowlist` with no domains also blocks the network of the project's own tests: put
   the domains they need into `sandbox_domains`.
+- **Extra paths reach every writer.** `scope.extra_paths` (`--allow-path`) is granted to the `executor` and the
+  `bounded-implementer` on every provider: a route under the Landlock guard gets `--rw P` (grok, and Claude Code when the
+  sandbox does not apply); a Claude Code role also gets `--add-dir P` for its file tools (`--add-dir` takes several values, so
+  the conductor puts a flag after the last one), and when the provider sandbox replaces the guard the sandbox block adds
+  `"filesystem": {"allowWrite": [P…]}` (absolute or `~` paths; the provider merges it with the user's settings, and
+  `allowUnsandboxedCommands: false`, `failIfUnavailable` and the network allowlist stay as they are); a Codex role gets `--add-dir P`
+  right after `exec`. Every path passed `OPTIONS_UNSAFE_PATH` first; no role but a writer gets one, and without extra paths the
+  command line does not change.
 - **Access.** `[orch.launch] access` (default `open`) decides the sandbox of the Codex roles that write (executor,
   bounded-implementer, registrar): `open` runs them with `--sandbox danger-full-access` (no provider sandbox: they reach Docker
   and everything else the user reaches, and the sandbox probe is not needed for them), `confined` with `--sandbox
   workspace-write`. The catalog states it as `{write_sandbox}`; read-only roles keep `read-only` in both modes. Claude Code and
   Grok roles are the same in both modes (their write guard `ro-run.py --rw {cwd}` confines writes to the project and does not
-  keep them from Docker). A project file can only tighten the setting.
+  keep them from Docker). Project and environment layers can only tighten the setting: a project `_unset` or an
+  environment `open` cannot remove earlier confinement. The machine, invocation and flags may reopen it explicitly.
 - A Codex route with `--sandbox read-only|workspace-write` is unavailable while the sandbox cannot start: `--dry-run` shows
   `available: false` and `SANDBOX_UNAVAILABLE: <reason>` in `unavailable`, a run stops with `SANDBOX_UNAVAILABLE`. Its argv is
   not rewritten.
@@ -941,12 +1210,37 @@ fallback artifacts are committed records: after `--apply` the removal shows in `
 
 ## Observer
 
-The observer only reads: the journal and state of the run and the `orch.run.*` and `planner.*` events of the
-project's aicore event journal since the run started. At the end of every run (also a stopped one) the conductor
+The observer only reads: the journal and state of the run and the `orch.*` and `planner.*` events of the
+project's aicore event journal. Event counts use UTC, from the run start through `state.ended` or the last progress
+line, inclusive. Only events whose subject or correlation id matches the conductor run id or an item's `orch_run`
+are counted, including agent, provider, review and deviation events. At the end of every run (also a stopped one) the conductor
 writes `observer.json` and `observer.md`: repeats and resumes, red checks per check id, review findings by severity,
 triage confirmed and rejected, idle time between stages, seconds and tokens by role, scout cache hits, the heaviest prompt blocks by role and the prompt budget classes against their limits (`prompt_budgets_by_role`: largest tokens of a step, limit, steps, steps over; from the prompt manifests), the outcome of
 each piece and proposals to improve the run options. `orch conduct observe --follow` prints the notable lines of a run
-that is still going from another terminal; `orch conduct observe` writes the report again.
+that is still going from another terminal; `orch conduct observe` writes the report again. Follow exits 0 only after
+the latest start/resume segment has ended. Without that final `run.end`, two consecutive free-lease probes give
+exit 3 and a resume hint; an unavailable probe keeps waiting. The observer never writes run state or progress.
+Silence alone never returns success (`idle_exit_s` remains accepted by the Python helper but no longer ends follow).
+Appending progress after a torn line first restores its newline, so the next event remains readable.
+`state.ended` keeps the precise UTC end of a completed segment, including fractions of a second; it is cleared by
+the next loop. A running segment uses the latest progress line even if an earlier end remains in an older state save.
+
+**Checks by command.** `checks_by_command` (and the table *Checks by command* in `observer.md`) aggregates the command
+rows of `state.items.*.steps.checks.*.result[]` (and of earlier attempts) by command: `runs` (every row), `executed` /
+`invocations` (rows that started a process), `seconds` (elapsed time of those runs, not CPU time), `red` (executed rows that
+failed), `skipped`, `reused` (with `saved_s` and the evidence in `reused_from`), `retried` (an executed check that an
+earlier round of the same item had already executed), `ids`, `contexts` (`local`, `standalone`, `partner`, `installed`, from
+the command text) and `items`. A skipped row (`fail_fast`, `phase_after_red`) and a reused row ran nothing: they are never
+counted in `red` or `red_checks`, even when an older journal names them in a `red …` verdict. The same suite in different
+contexts is not a duplicate. The old fields of the report stay as they were; `check_findings` holds what the proposals use
+(`duplicate_modules`, `phase_after_red`, `executor_runs_checks`).
+
+Proposals about checks: *item X runs the tests of M twice* (validate.sh of a module without `SKM_VALIDATE_SKIP_TESTS=1` and
+the full `test.sh` or `affected-tests.py --run`, or a full `test.sh` and its `-p` subset, in one round and one context),
+*phase checks of X ran after a red item check* (needs the cadence of the checks from the item's `input.json`), and
+*`checks.executor_runs_checks` is true*. A red check never asks the executor to rerun unchanged acceptance or full suites:
+the proposal names concrete new or failing diagnostics or a faster local variant, and the conductor keeps the named
+acceptance checks and the phase gates.
 
 ### Debug mode
 
@@ -966,7 +1260,7 @@ a `stages` entry `{"role": "report-fixer", "provider": …, "model_class": …}`
 
 `[orch.conductor]` (`configs/config.schema.json`): `provider` (default `claude-code`), `reviewer`
 (`grok/grok-4.7/high`), `registrar` (`orch/conductor`), `rules`, `on_blocked`, `questions` (`queue` default, `deny`, `defaults`, `advisor`), `risk` (weights, patterns and `diff_lines` of the dynamic review), `limits.tokens_max`,
-`limits.stage_timeout_s`, `limits.check_timeout_s`, and `argv.<role>`: the command line of a role instead of the
+`limits.stage_timeout_s`, `limits.check_timeout_s`, `limits.unmetered`, `limits.unmetered_charge_tokens`, `limits.role_timeout_s`, and `argv.<role>`: the command line of a role instead of the
 launch catalog entry (`{model}`, `{effort}`, `{cwd}`, `{orch}` are filled in). `argv` is machine-wide: a project file
 cannot set it. The tests use it to put fake providers in place of the real CLIs.
 

@@ -287,10 +287,11 @@ class ConsumerTests(ConfigCase):
     def test_add_item_takes_route_and_review_from_configuration_but_data_wins(self):
         self.project_file('[planner.new_item]\nroute_class = "economy"\nroute_effort = "low"\n'
                           'review_mode = "requested"\n')
-        item = ops.add_item(self.load(), "P1", "Third")
+        # P1 is already detailed, so a placeholder is refused. P2 is still a skeleton and takes the same defaults.
+        item = ops.add_item(self.load(), "P2", "Third")
         doc = self.load().items[item]
         self.assertEqual((doc["route"], doc["review"]), ({"class": "economy", "effort": "low"}, {"mode": "requested"}))
-        other = ops.add_item(self.load(), "P1", "Fourth", data={"route": {"class": "frontier", "effort": "max"}})
+        other = ops.add_item(self.load(), "P2", "Fourth", data={"route": {"class": "frontier", "effort": "max"}})
         self.assertEqual(self.load().items[other]["route"], {"class": "frontier", "effort": "max"})
 
     def test_budget_report_lists_the_configured_number_of_sources(self):

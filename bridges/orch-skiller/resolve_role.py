@@ -15,7 +15,7 @@ skill and for anything a required skill needs. Exit 1 on an error diagnostic.
 ``--select --role ID --provider P [--paths P…] [--project DIR] [--budget N] [--include ID…] [--exclude ID…] --json``
 asks ``skiller select`` (policy ``auto``) for the skills of a role from the work it is given: the role's required skills (the
 manifest or ``role-skills.json``) go in as explicit includes. Output: ``{"role", "provider", "skills": [{"name", "id",
-"path", "reason", "tokens"}], "excluded": [{"id", "reason"}], "discoverable": [id], "tokens", "diagnostics": []}``; ``path``
+"path", "reason", "tokens", "digest", "skill_md_sha256"}], "excluded": [{"id", "reason"}], "discoverable": [id], "tokens", "diagnostics": []}``; ``path``
 is the absolute path of the ``SKILL.md`` the conductor reads. Exit 1 when ``skiller select`` fails.
 
 ``--all-roles --provider P [--binding B]`` resolves every role manifest of orch and prints ``{role_id: [{"name",
@@ -25,9 +25,12 @@ warning goes to stderr.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
 
@@ -53,6 +56,7 @@ CONTRACT_VERSION = "exec/v1"
 PROVIDERS = ("claude-code", "codex", "grok")
 BINDINGS = ("native", "cao", "claude-only")
 DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
+SKILL_MD_BYTES = 64 * 1024
 
 
 def parser() -> argparse.ArgumentParser:
@@ -138,6 +142,37 @@ def run_describe(skill_id: str) -> str | None:
     return digest if isinstance(digest, str) and DIGEST.match(digest) else None
 
 
+def skill_md_sha256(path: Path):
+    """Hash only a canonical, regular, bounded SKILL.md; orch reports any invalid row as an exclusion."""
+    try:
+        if not path.is_absolute() or path.name != "SKILL.md" or path != path.resolve(strict=True):
+            return None
+        info = path.stat()
+        if not stat.S_ISREG(info.st_mode) or info.st_size > SKILL_MD_BYTES:
+            return None
+        directory = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY)
+        handle = -1
+        try:
+            for part in path.parts[1:-1]:
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
+                os.close(directory)
+                directory = child
+            handle = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+            with os.fdopen(handle, "rb") as stream:
+                handle = -1
+                info = os.fstat(stream.fileno())
+                if not stat.S_ISREG(info.st_mode) or info.st_size > SKILL_MD_BYTES:
+                    return None
+                data = stream.read(SKILL_MD_BYTES + 1)
+        finally:
+            os.close(directory)
+            if handle >= 0:
+                os.close(handle)
+        return hashlib.sha256(data).hexdigest() if len(data) <= SKILL_MD_BYTES else None
+    except (OSError, RuntimeError):
+        return None
+
+
 def select_role(role: str, provider: str, paths: list[str], project: str | None, budget: int | None,
                 include: list[str], exclude: list[str]) -> tuple[dict, bool]:
     """``skiller select`` for a role: its own list as explicit includes, the policy ``auto`` for the triggers."""
@@ -161,7 +196,13 @@ def select_role(role: str, provider: str, paths: list[str], project: str | None,
         chosen = json.loads(done.stdout)
     except ValueError as error:
         raise RoleRefused("SELECT_FAILED", (done.stderr.strip() or f"skiller exit {done.returncode}: {error}")) from error
-    skills = [{key: row[key] for key in ("name", "id", "path", "reason", "tokens")} for row in chosen["included"]]
+    skills = []
+    for row in chosen["included"]:
+        skill = {key: row[key] for key in ("name", "id", "path", "reason", "tokens", "digest") if key in row}
+        checksum = skill_md_sha256(Path(row["path"]))
+        if checksum is not None:
+            skill["skill_md_sha256"] = checksum
+        skills.append(skill)
     out = {"role": role, "provider": provider, "skills": skills, "excluded": chosen["excluded"],
            "discoverable": chosen["discoverable"], "tokens": chosen["tokens"], "diagnostics": []}
     return out, done.returncode != 0

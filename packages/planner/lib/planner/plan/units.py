@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from typing import Iterable, Mapping
 
-from . import check as _check, lifecycle, store
+from . import check as _check, lifecycle, settings, store
 from .model import ITEM_ID, PlanError, id_sort_key
 
 UNIT_STATUSES = ("todo", "dispatched", "returned", "accepted", "reworked", "rejected")
@@ -154,10 +154,12 @@ def _agent(text: str | Mapping) -> dict:
     return agent
 
 
-def _check_worker(need: Mapping, worker: Mapping, target: str) -> None:
-    """``validate_route`` plus the pool class and the effort minimum of the unit route (``ROUTE_UNDERSHOOT``)."""
+def _check_worker(plan: store.Plan, need: Mapping, worker: Mapping, target: str) -> str:
+    """Validate the unit route and pool policy; return ``ok`` or ``ROUTE_MODEL_UNKNOWN`` in warn mode."""
     lifecycle.validate_route(dict(need), worker, target)
     admitted = lifecycle.admitted_class(worker["provider"], worker["model"])
+    if admitted is None and settings.refuse_unknown_model(plan):
+        raise PlanError("ROUTE_MODEL_UNKNOWN", f"{worker['provider']}/{worker['model']} is not in the model pool")
     if admitted is not None and lifecycle._rank(lifecycle.CLASS_ORDER, admitted) < lifecycle._rank(
             lifecycle.CLASS_ORDER, need.get("class")):
         raise PlanError("ROUTE_UNDERSHOOT", f"{target} needs class {need.get('class')}; "
@@ -166,6 +168,7 @@ def _check_worker(need: Mapping, worker: Mapping, target: str) -> None:
             lifecycle.EFFORT_ORDER, need.get("effort")):
         raise PlanError("ROUTE_UNDERSHOOT", f"{target} needs effort {need.get('effort')}; "
                                             f"worker runs {worker['effort']}")
+    return "ok" if admitted is not None else "ROUTE_MODEL_UNKNOWN"
 
 
 def _delegate(p: store.Plan, item_id: str, unit_id: str, status: str, doc: dict, actor: dict, **extra) -> dict:
@@ -231,10 +234,11 @@ def dispatch(plan, item_id: str, unit_id: str, agent, *, actor: Mapping | None =
         if policy_limit is not None and sum(d.get("status") == "dispatched" for k, d in p.units.items()
                                             if k.startswith(f"{item_id}/")) >= policy_limit:
             raise PlanError("PARALLEL_LIMIT", "all configured dispatch slots are occupied")
-        _check_worker(need, worker, f"{item_id}/{unit_id}")
+        verdict = _check_worker(p, need, worker, f"{item_id}/{unit_id}")
         unit["status"], unit["outcome"] = "dispatched", {"agent": worker, "at": store.now()}
         executor = lifecycle._actor_doc(p, actor, item_id)
-        event = _delegate(p, item_id, unit_id, "dispatched", unit, executor)
+        event = _delegate(p, item_id, unit_id, "dispatched", unit, executor,
+                          route=verdict if verdict != "ok" else None)
         lifecycle._commit(p, [("unit", f"{item_id}/{unit_id}", unit)], [event], lock)
         _write_brief(p, item_id, unit_id)
         return brief_path(p.root, item_id, unit_id)
@@ -315,7 +319,7 @@ def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[st
         outcome.setdefault("agent", executor)
         if executed_by is not None and not (executed_by["provider"] == outcome["agent"].get("provider")
                                             and executed_by["model"] == outcome["agent"].get("model")):
-            _check_worker(unit.get("route") or {}, executed_by, f"{item_id}/{unit_id}")
+            _check_worker(p, unit.get("route") or {}, executed_by, f"{item_id}/{unit_id}")
         outcome["at"] = store.now()
         for key in ("registered_by", "attempt_id", "evidence"):  # they describe one transition only
             outcome.pop(key, None)

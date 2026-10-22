@@ -12,8 +12,10 @@ from __future__ import annotations
 from fnmatch import fnmatchcase
 from functools import lru_cache
 import hashlib
+import os
 from pathlib import Path
 import stat
+from typing import Optional
 
 from orch.conductor import checks as checks_mod
 
@@ -44,6 +46,15 @@ def dirty(project: Path) -> list:
             found.append(entries[index])
             index += 1
     return sorted(set(found))
+
+
+def tracked(project: Path, paths) -> list:
+    """The ``paths`` git tracks (a tracked file that was deleted still is)."""
+    paths = sorted(set(paths))
+    if not paths:
+        return []
+    listing = checks_mod.git(project, "ls-files", "-z", "--", *[f":(literal){path}" for path in paths])
+    return sorted(set(listing.split("\0")) - {""})
 
 
 def fingerprint(project: Path, paths) -> dict:
@@ -118,6 +129,78 @@ def outside(paths, write_set) -> list:
     if not patterns:
         return []
     return sorted(path for path in paths if not any(matches(path, pattern) for pattern in patterns))
+
+
+def under(path: str, patterns) -> bool:
+    """Whether a repository-relative ``path`` is owned by one of ``patterns`` (the rules of ``write_set``)."""
+    return any(matches(path, pattern) for pattern in patterns or [] if isinstance(pattern, str))
+
+
+# Paths any piece may change whatever its module: the changelog and the documentation of the repository.
+ALWAYS_ALLOWED = ("CHANGELOG.md", "docs/")
+MODULE_ROOTS = ("packages", "bridges")  # ``<root>/<id>/...`` is the module ``<root>/<id>``; everything else is the hub
+
+
+def module_of(path: str) -> str:
+    """``packages/<id>``, ``bridges/<id>`` or ``hub`` (the scripts, configs and the rest of the repository root)."""
+    parts = [part for part in str(path).split("/") if part and part != "."]
+    if len(parts) > 1 and parts[0] in MODULE_ROOTS:
+        return f"{parts[0]}/{parts[1]}"
+    return "hub"
+
+
+def _pattern_module(pattern: str) -> str:
+    """The module a write-set pattern names, read up to its first ``*``, ``?`` or ``[``: ``packages/<root>/*`` when the
+    id of the module is itself a pattern (``packages/*/lib/x.py``, ``packages/**``), ``hub`` for a pattern that starts
+    with a glob."""
+    parts = [part for part in str(pattern).split("/") if part and part != "."]
+    if not parts or parts[0] not in MODULE_ROOTS:
+        return "hub"
+    if len(parts) == 1:
+        return f"{parts[0]}/*" if str(pattern).endswith("/") else "hub"
+    return f"{parts[0]}/{parts[1]}"
+
+
+def _always_allowed(pattern: str) -> bool:
+    normal = _normal(pattern)
+    return normal == ALWAYS_ALLOWED[0] or normal.startswith(ALWAYS_ALLOWED[1])
+
+
+def item_modules(write_set) -> set:
+    """The modules the patterns of ``write_set`` name (``module_of`` of the pattern up to its first glob character); a
+    pattern of ``ALWAYS_ALLOWED`` names none, so a documentation path does not make the hub a module of the piece. A
+    module that is itself a pattern (``packages/or*``) stays a pattern: :func:`in_modules` matches it."""
+    return {_pattern_module(pattern) for pattern in write_set or []
+            if isinstance(pattern, str) and pattern and not _always_allowed(pattern)}
+
+
+def in_modules(path: str, modules) -> bool:
+    module = module_of(path)
+    return any(fnmatchcase(module, wanted) for wanted in modules)
+
+
+def in_directories(path: str, directories, project: Path) -> bool:
+    """Whether ``path`` (relative to ``project``) lies in one of ``directories`` (``~`` expanded, a relative one read from
+    the project): the granted ``scope.extra_paths`` that happen to be inside the project."""
+    root = os.path.realpath(str(project))
+    target = os.path.join(root, path)
+    for directory in directories or []:
+        base = os.path.realpath(os.path.join(root, os.path.expanduser(str(directory))))
+        if target == base or target.startswith(base.rstrip("/") + "/"):
+            return True
+    return False
+
+
+def foreign(paths, write_set, directories=(), project: Optional[Path] = None) -> list:
+    """The ``paths`` (already outside the write set) that belong to another module than the ones the write set names:
+    not the changelog or the documentation, not a granted extra directory. None when the input names no write set."""
+    patterns = [pattern for pattern in write_set or [] if isinstance(pattern, str) and pattern]
+    if not patterns:
+        return []
+    modules = item_modules(patterns)
+    return sorted(path for path in paths
+                  if not under(path, ALWAYS_ALLOWED) and not in_modules(path, modules)
+                  and not (project is not None and in_directories(path, directories, project)))
 
 
 def own(paths, excluded_prefixes) -> list:

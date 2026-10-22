@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 import json
+from pathlib import Path
 import re
 from typing import Optional
 
@@ -25,8 +26,13 @@ from orch.conductor.policies.skills import EXCLUSIVE_GROUP_LIMITS, EXCLUSIVE_GRO
 
 KINDS = ("role_text", "input", "repository_rules", "skill", "skill_names", "context_map", "verification", "run_rules",
          "correction", "answers", "progress", "result_contract", "expected_paths", "candidate", "review_scope", "diff",
-         "findings", "instruction", "research", "stub")
+         "findings", "instruction", "research", "stub", "resumed", "interrupted", "changed")
 CONDUCTOR = "conductor"
+# The blocks of a full executor prompt that carry no task: what a round asks (correction, answers, interrupted, changed)
+# and what only names the round (``progress``) or the state of the batch (the ``batch`` run rule). The rest is the task
+# and the instructions of the session; their digest says whether a session already holds them (``task_digest``).
+ROUND_KINDS = frozenset({"correction", "answers", "interrupted", "changed", "progress"})
+BATCH_ID = "batch"
 
 RESULT_KINDS = {"executor": "stage-report", "bounded-implementer": "stage-report", "reviewer": "review-findings",
                 "triager": "triage-result", "researcher": "research-result", "advisor": "advice"}
@@ -162,10 +168,22 @@ def _then(blocks: list, block: Block) -> None:
     blocks.append(block)
 
 
-def manifest(blocks, *, step: str, role: str, route: dict, excluded=(), limits=None) -> dict:
+def task_digest(blocks) -> str:
+    """sha256 of the canonical JSON of the task and instruction blocks of a full prompt, ``[kind, origin, text]`` each: every
+    block but those of ``ROUND_KINDS`` and the batch note. A session that received a full prompt with this digest holds the
+    task, the rules and the result contract, so a later round may send the delta prompt (``executor_resumed``); an input
+    rebuilt, other skills, stubs or repository rules change the digest and the next round is sent in full."""
+    rows = [[block.kind, block.origin, block.text] for block in blocks
+            if block.kind not in ROUND_KINDS and block.id != BATCH_ID]
+    return sha256_hex(json.dumps(rows, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+
+
+def manifest(blocks, *, step: str, role: str, route: dict, excluded=(), limits=None, resumed_session: bool = False,
+             digest: Optional[str] = None) -> dict:
     """The ``prompt-manifest/v1`` document of a prompt: its blocks (kind, origin, digest, estimated tokens), what was left
     out and why, the digest and size of the whole prompt, and, when ``limits`` (``{class: tokens}``) is given, the tokens
-    of each budget class against its limit."""
+    of each budget class against its limit. ``resumed_session`` marks the delta prompt of a resumed session; ``digest`` is
+    the ``task_digest`` of the full prompt of the step."""
     text = render(blocks)
     rows = []
     for block in blocks:
@@ -180,6 +198,10 @@ def manifest(blocks, *, step: str, role: str, route: dict, excluded=(), limits=N
            "prompt_sha256": sha256_hex(text.encode("utf-8"))}
     if limits is not None:
         doc["budgets"] = budgets(blocks, limits)
+    if resumed_session:
+        doc["resumed_session"] = True
+    if digest:
+        doc["task_digest"] = digest
     return doc
 
 
@@ -412,7 +434,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
     if file_tools:
         parts.append([Block("run_rules", CONDUCTOR, _FILE_TOOLS_RULE)])
     if batch:
-        parts.append([Block("run_rules", CONDUCTOR, batch)])
+        parts.append([Block("run_rules", CONDUCTOR, batch, id=BATCH_ID)])
     if scout_text:
         parts.append([Block("context_map", scout_from, "## Context map\n\nA read-only scout mapped the context; treat its "
                             "lines as leads, not facts.\n\n" + _fence(scout_text, "text"))])
@@ -434,13 +456,46 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR, "## Correction\n\nYour previous attempt is in the working tree. Make "
-                            "exactly this correction, inside the same scope"
-                            + (" and re-run the tests of what you touched" if targeted_tests
-                               else ", then run the acceptance checks again") + ".\n\n" + _fence(correction, "text"))])
+        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests))])
     parts.append([_progress(item, step)])
     parts.append([Block("result_contract", CONDUCTOR, "## Result\n\n" + _STAGE_REPORT)])
     return _join(parts)
+
+
+def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), interrupted: str = "", fix: str = "",
+                     changed_paths=(), targeted_tests: bool = True) -> list:
+    """The delta prompt of a round in a resumed executor session: the session holds the task, the rules and the result
+    contract of the latest full prompt of the piece, so it gets only what this round asks: the correction (``fix`` is the
+    deviation to fix), the answers it has not seen, the note of an interrupted round, the paths changed so far and the
+    result contract. ``executor`` builds the full prompt of the same round (the fallback when the session is lost)."""
+    parts = [[Block("resumed", CONDUCTOR, f"## Continuation\n\nYou continue piece {item} in the same session. The task, the "
+                    "rules and the result contract of your latest full prompt still apply; do only what this round asks.")]]
+    if answers:
+        parts.append([Block("answers", "questions.json", _answers(answers))])
+    if fix:
+        parts.append([Block("correction", CONDUCTOR, fix)])
+    if correction:
+        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests))])
+    if interrupted:
+        parts.append([Block("interrupted", CONDUCTOR, "## Interrupted round\n\n" + interrupted.strip())])
+    if changed_paths:
+        shown = list(changed_paths)[:CHANGED_PATHS]
+        parts.append([Block("changed", CONDUCTOR, "## Changed paths\n\nPaths you changed since your last report: "
+                            + ", ".join(f"`{path}`" for path in shown)
+                            + (f" and {len(changed_paths) - len(shown)} more" if len(changed_paths) > len(shown) else "")
+                            + ".")])
+    parts.append([_progress(item, step)])
+    parts.append([Block("result_contract", CONDUCTOR, "## Result\n\n" + _STAGE_REPORT)])
+    return _join(parts)
+
+
+CHANGED_PATHS = 60  # changed paths named in a delta prompt
+
+
+def _correction(correction: str, targeted_tests: bool) -> str:
+    return ("## Correction\n\nYour previous attempt is in the working tree. Make exactly this correction, inside the same "
+            "scope" + (" and re-run the tests of what you touched" if targeted_tests
+                       else ", then run the acceptance checks again") + ".\n\n" + _fence(correction, "text"))
 
 
 _PRE_FINAL = """\
@@ -464,7 +519,7 @@ def _corrected_scope(corrected) -> str:
 def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, checks: list, round_no: int,
              roles_dir=None, stub=None, skills=(), pre_final: bool = False, min_severity: str = "Major",
              checks_pending: bool = False, corrected=(), outside=(), repo_rules: str = "", skill_texts=None,
-             focus=(), focus_origin: str = "stage-report") -> list:
+             focus=(), focus_origin: str = "stage-report", diff_scope: str = "full") -> list:
     summary = "\n".join(f"- {row['id']}: {row.get('verdict') or row.get('exit')}" for row in checks) or "- none"
     parts = [_head("reviewer", input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub),
              [Block("candidate", CONDUCTOR, f"## Candidate (review round {round_no})\n\nBase revision `{base}`; the "
@@ -478,11 +533,21 @@ def reviewer(input_doc: dict, *, item: str, step: str, base: str, diff: str, che
                     if not checks_pending else
                     "The conductor runs the acceptance checks on this candidate at the same time; their result is not "
                     "known yet and is not your concern: review the candidate itself.")],
-             [Block("diff", CONDUCTOR, "Diff against the base:\n\n"
-                    + _fence(diff or "(no tracked changes; see the untracked files)", "diff"))],
+             [Block("diff", CONDUCTOR, _diff_title(diff_scope, round_no) + "\n\n"
+                    + _fence(diff or ("(no tracked changes; see the untracked files)" if diff_scope == "full"
+                                      else "(no path changed since the previous review)"), "diff"))],
              [_progress(item, step)],
              [Block("result_contract", CONDUCTOR, "## Result\n\n" + _REVIEW_FINDINGS)]]
     return _join(parts)
+
+
+def _diff_title(diff_scope: str, round_no: int) -> str:
+    """The heading of the diff block: the whole change (``full``) or, in a later round, only the paths changed since the
+    previous review (``changed``): the whole change was in the diff of round 1, the other files are read as needed."""
+    if diff_scope == "changed":
+        return (f"Diff against the base of the paths changed since review {round_no - 1} (the full diff was reviewed in "
+                "round 1; read other files as needed):")
+    return "Diff against the base:"
 
 
 def _focus(lines) -> str:
@@ -582,7 +647,9 @@ def report_fixer(*, kind: str, problem: str, answer: str, item: str, step: str, 
         "- Never invent a check, an exit, a verdict, a path, a finding or a reproduction the answer does not give; when "
         "a required fact is missing, use the closest honest statement of the answer (for example an issue that says "
         "what is missing).\n- Never raise a status: a blocked answer stays blocked.\n"
-        "- Change only what the problem below names, plus what the contract needs for the block to be valid.",
+        "- Change only what the problem below names, plus what the contract needs for the block to be valid.\n"
+        "- The conductor compares your block with the role's own: a raised status, a lighter verdict, a lowered severity "
+        "or a lost finding, question, escalation or check row is refused.",
     ]
     return _join([[Block("instruction", CONDUCTOR, text)] for text in parts]
                  + [[Block("instruction", CONDUCTOR, "## The problem\n\n" + _fence(problem, "text"))],
@@ -609,12 +676,32 @@ def interrupted_correction(base_head: Optional[str], paths: list) -> str:
             "Continue from them inside the same scope; do not redo finished parts.")
 
 
+def _failure_excerpt(log) -> str:
+    """A bounded hint from the start of a check log; its full path remains authoritative."""
+    try:
+        with Path(log).open(encoding="utf-8", errors="replace") as stream:
+            for _ in range(1000):
+                line = stream.readline(2048)
+                if not line:
+                    break
+                if re.match(r"^(?:FAIL(?:ED)?(?:[: \[]|$)|ERROR[: \[]|Traceback|AssertionError|\[fail\])", line, re.I):
+                    return (line + "".join(stream.readline(2048) for _ in range(4)))[:1600]
+    except OSError:
+        pass
+    return ""
+
+
 def check_correction(failed: list) -> str:
-    """Correction package of red acceptance checks: each command, its exit and the tail of its output."""
+    """Red commands with full log paths, bounded earlier failure hints and output tails."""
     lines = []
     for row in failed:
         lines.append(f"{row['id']}: `{row.get('cmd') or row.get('procedure')}` → "
                      f"{row.get('exit', row.get('verdict'))}")
+        if row.get("log"):
+            lines.append(f"Full check log: `{row['log']}`. Read the failing section; the tail may omit it.")
+            excerpt = _failure_excerpt(row["log"])
+            if excerpt:
+                lines.append("Earlier failure excerpt (bounded):\n" + excerpt)
         if row.get("tail"):
             lines.append(row["tail"])
     return "These acceptance checks are red on your candidate:\n\n" + "\n".join(lines)

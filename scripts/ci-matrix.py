@@ -48,6 +48,7 @@ CI_VALIDATE_ARGS = {"planner": ["--fleet"]}
 PARTNER_ENV = {
     "planner": ("PLANNER_ROOT",), "orch": ("SKM_ORCH_ROOT",), "skiller": ("SKM_SKILLER_ROOT",),
     "harness": ("SKM_HARNESS_ROOT",), "aicore": ("AICORE_ROOT",),
+    "gui": ("SKM_GUI_ROOT",), "workspace": ("SKM_WORKSPACE_MODULE_ROOT",),
 }
 # The commands of the workflows test.yml and validate.yml that modules.yml replaced; --check proves each is covered.
 LEGACY_COMMANDS = [

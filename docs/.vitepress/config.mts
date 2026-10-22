@@ -21,6 +21,7 @@ export default withMermaid(defineConfig({
     nav: [
       { text: 'Overview', link: '/' },
       { text: 'How it works', link: '/overview' },
+      { text: 'Philosophy', link: '/philosophy' },
       { text: 'Development', link: '/develop', activeMatch: '/develop' },
       { text: 'Architecture', link: '/architecture/', activeMatch: '/architecture/' },
       { text: 'Status', link: '/status', activeMatch: '/status' },

@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.5.0",
+  "catalog_version": "1.6.0",
   "launch": {
     "scout": {
       "claude-code": {
@@ -119,6 +119,22 @@
           "--json",
           "--sandbox",
           "{write_sandbox}",
+          "--model",
+          "{model}",
+          "-c",
+          "model_reasoning_effort=\"{effort}\"",
+          "-"
+        ],
+        "resume_argv": [
+          "codex",
+          "-a",
+          "never",
+          "exec",
+          "resume",
+          "{session}",
+          "--json",
+          "-c",
+          "sandbox_mode=\"{write_sandbox}\"",
           "--model",
           "{model}",
           "-c",

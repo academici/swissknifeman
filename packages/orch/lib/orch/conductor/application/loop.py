@@ -2,21 +2,27 @@
 the run clock."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import signal
 import threading
 import time
+import traceback
 from typing import Any, Callable, Optional
 
+from aicore.util.redact import env_secrets, redact_document
+
 from orch import events, policies as run_policies
-from orch.conductor import checks as checks_mod, observer, options as opts, prompts, scope as scopes
+from orch.conductor import checks as checks_mod, observer, options as opts, prompts, questions as questions_mod
+from orch.conductor import scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
 from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, RUN_FILE, safe, write_json
 from orch.conductor.progress import human_duration
 from orch.conductor.application import recovery, run_service
+from orch.conductor.policies import budget as token_budget
 
 ROLE_ALIASES_ENGINE = {"scout": "context-scout"}  # the stage role names of the options that name a launch role
 
@@ -37,16 +43,20 @@ def run_clock(self, item: Item, stop: bool = True) -> None:
     if not (warn or cap):
         return
     active = self._active_s()
-    if warn and int(active // warn) > self.state.get("run_warned", 0):
-        self.state["run_warned"] = int(active // warn)
-        items = self.state.get("items", {})
-        closed = sum(1 for row in items.values() if row.get("outcome") in ("done", "done_with_deviations", "blocked"))
-        asked = len(self.run_doc.get("items") or [])
-        text = (f"run active {human_duration(active)}; {closed} piece(s) closed"
-                + (f", {max(asked - closed, 0)} left" if asked else "") + f"; now {item.ref} {self._current_step or '-'}")
+    text = None
+    with self.store.mutating():  # a check thread and the main loop both get here (I2)
+        if warn and int(active // warn) > self.state.get("run_warned", 0):
+            self.state["run_warned"] = int(active // warn)
+            items = self.state.get("items", {})
+            closed = sum(1 for row in items.values() if row.get("outcome") in ("done", "done_with_deviations", "blocked"))
+            asked = len(self.run_doc.get("items") or [])
+            text = (f"run active {human_duration(active)}; {closed} piece(s) closed"
+                    + (f", {max(asked - closed, 0)} left" if asked else "")
+                    + f"; now {item.ref} {token_budget.stage_key(self) or '-'}")
+            self._plan_note(item, text)
+    if text is not None:  # progress and the bus after the lock
         self.progress.emit("info", item=item.ref, reason_code="RUN_SLOW", message=text)
-        self._beacon_event("orch.run.warning", item, {"reason_code": "RUN_SLOW", "step": self._current_step})
-        self._plan_note(item, text)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "RUN_SLOW", "step": token_budget.stage_key(self)})
     if stop and cap and active >= cap:
         raise Stop("RUN_TIMEOUT", f"the run was active {human_duration(active)}, past limits.run_timeout_s {cap}; "
                                   "raise it or set 0, then resume")
@@ -73,6 +83,7 @@ def terminated(_signum, _frame) -> None:
 def loop(self) -> int:
     started = time.monotonic()
     self._segment = clock.mono()
+    self.state.pop("ended", None)
     code, reason, outcome = 0, None, "finished"
     previous = {number: signal.signal(number, terminated) for number in (signal.SIGTERM, signal.SIGHUP)} \
         if threading.current_thread() is threading.main_thread() else {}
@@ -83,15 +94,31 @@ def loop(self) -> int:
         code, reason, outcome = 1, stop, "stopped"
     except KeyboardInterrupt:
         code, reason, outcome = 130, Stop("INTERRUPTED", "interrupted; resume continues"), "stopped"
+    except Exception as error:  # noqa: BLE001 — unexpected failures must close the run too
+        secrets = env_secrets()
+        crash = redact_document(traceback.format_exc(), secrets=secrets)
+        # The artifact is best-effort. Failing to write it must not drop the original redacted stop, and the
+        # message must not claim crash.txt exists. The state save and run.end below still run when they can.
+        try:
+            (self.directory / "crash.txt").write_text(crash, encoding="utf-8")
+            written = True
+        except Exception:  # noqa: BLE001 — a missing artifact never hides the crash of the run
+            written = False
+        detail = "see crash.txt" if written else "crash.txt unavailable"
+        message = redact_document(f"{type(error).__name__}: {error}; {detail}; resume continues", secrets=secrets)
+        code, reason, outcome = 1, Stop("CONDUCTOR_CRASHED", message), "stopped"
     finally:
         for number, handler in previous.items():
             signal.signal(number, handler)
-    self.state["active_s"] = round(self._active_s(), 1)
-    self._segment = None
-    self.state["status"] = outcome
-    if reason is not None:
-        self.state["stop"] = {"code": reason.code, "message": reason.message}
-    self._save()
+    with self.store.mutating():
+        self.state["active_s"] = round(self._active_s(), 1)
+        self._segment = None
+        self.state["status"] = outcome
+        # Progress is second-granular; event timestamps carry fractions of a second.
+        self.state["ended"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        if reason is not None:
+            self.state["stop"] = {"code": reason.code, "message": reason.message}
+        self._save()
     held = run_service.held_pieces(self.state) if reason is not None and self._batch_held() else []
     if held:  # a stopped batch keeps its claims (resume continues them); say how to give them back instead
         self.progress.emit("info", reason_code="BATCH_HELD", message=run_service.held_hint(self.run_id, held))
@@ -113,7 +140,13 @@ def pieces(self) -> None:
     doc = self.run_doc
     keys = [(f"item-{safe(ref)}", [ref]) for ref in doc["items"]] if doc["items"] else None
     count = index = 0
+    started = 0
+    pending_retries = []
     claimed, first_adopted, held = {}, [], []
+    # Ready mode used to return on max_items and on an empty claim, so a held dependency did not become
+    # DEPENDENCY_BLOCKED. Explicit items still fall out of the loop when the list is exhausted, and that is the
+    # only path that stops for a held piece. Pending answers are finalized on every exit (P3.7).
+    exhausted = False
     if keys is None and doc.get("grouped") is not False:  # the batch a source names is a batch like --items
         expanded = self._expand_ready()
         if expanded:
@@ -125,14 +158,12 @@ def pieces(self) -> None:
     while True:
         if keys is not None:
             if index >= len(keys):
-                if held:
-                    raise Stop("DEPENDENCY_BLOCKED", f"{', '.join(held)} not started: a piece they depend on is blocked; "
-                                                     "retry it (resume --retry), then resume")
-                return
+                exhausted = True
+                break
             key, asked = keys[index]
         else:
             if doc.get("max_items") and count >= doc["max_items"]:
-                return
+                break
             key, asked = f"next-{index + 1}", []
         index += 1
         known = self.state["claims"].get(key)
@@ -140,6 +171,16 @@ def pieces(self) -> None:
         if outcome in ("done", "done_with_deviations", "blocked"):
             if outcome in ("done", "done_with_deviations"):
                 self._group_review_due(known["ref"])
+            else:
+                questions = questions_mod.read(self.directory / safe(known["ref"])) or {}
+                if any(entry.get("status") == "answered" or
+                       (entry.get("status") == "open" and entry.get("resolution"))
+                       for entry in questions.get("questions", [])):
+                    message = (f"answers of {known['ref']} wait: orch conduct resume --run {self.run_id} "
+                               f"--retry {known['ref']}")
+                    pending_retries.append(message)
+                    self.progress.emit("info", item=known["ref"], reason_code="QUESTION_ANSWERED_NOT_RETRIED",
+                                       message=message)
             count += 1
             continue
         adopted, first_adopted = first_adopted, []  # the paths of ``--adopt`` belong to the first piece that really runs
@@ -150,7 +191,7 @@ def pieces(self) -> None:
                 self._require_clean_tree()
         answer = claimed.get(key) or self._claim(key, asked)
         if answer is None:
-            return
+            break
         count += 1
         if adopted:
             self.state["items"].setdefault(answer["ref"], {"steps": {}, "retries_used": 0, "orch_run": answer["run_id"]}) \
@@ -163,6 +204,7 @@ def pieces(self) -> None:
                                message=f"{answer['ref']} waits for {', '.join(waiting)} (blocked in this run): not started, "
                                        "it stays in progress; retry the blocked piece and resume")
             continue
+        started += 1
         outcome = self._piece(answer)
         if outcome in ("done", "done_with_deviations"):
             self._group_review_due(answer["ref"])
@@ -170,6 +212,11 @@ def pieces(self) -> None:
                                      or self.state["items"][answer["ref"]].get("partial")):
             why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""
             raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
+    if pending_retries and not started:
+        raise Stop("QUESTION_ANSWERED_NOT_RETRIED", "; ".join(pending_retries))
+    if held and exhausted:
+        raise Stop("DEPENDENCY_BLOCKED", f"{', '.join(held)} not started: a piece they depend on is blocked; "
+                                         "retry it (resume --retry), then resume")
 
 
 def blocked_dependencies(self, answer: dict) -> list:
@@ -463,22 +510,26 @@ def start_step(self, item: Item, key: str, *, role: str = "deterministic", route
         base = checks_mod.head(self.project)
     except RuntimeError:
         base = None
-    item.state.setdefault("steps", {})[key] = {
-        "status": "started", "started_at": clock.utc_now(), "role": role, "route": route,
-        "base_head": base, "attempt": item.claim.get("attempt_id"),
-        "dirty_before": recovery.dirty_paths(self.project) if key.startswith("checks.") else None}
-    self._save()
+    dirty = recovery.dirty_paths(self.project) if key.startswith("checks.") else None
+    with self.store.mutating():
+        item.state.setdefault("steps", {})[key] = {
+            "status": "started", "started_at": clock.utc_now(), "role": role, "route": route,
+            "base_head": base, "attempt": item.claim.get("attempt_id"), "dirty_before": dirty}
+        self._save()
 
 
 def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "deterministic",
          route: Optional[str] = None, verdict: Optional[Callable[[Any], str]] = None) -> Any:
-    steps = item.state.setdefault("steps", {})
-    known = steps.get(key)
+    with self.store.mutating():
+        steps = item.state.setdefault("steps", {})
+        known = steps.get(key)
     if known and known.get("status") == "done":
         self.progress.emit("stage.skip", item=item.ref, stage=key, role=role, route=known.get("route"),
                            verdict=known.get("verdict"), message="closed earlier; not repeated")
         return known["result"]
-    self._current_step = key
+    # Keep the fresh tokens this logical step already counted. Resetting the shared slot here let a resume,
+    # and any overlap, admit a call the step had already spent (P3-STAGE-BUDGET-STATE-001).
+    self._bind_stage(item, key)
     if item.options:
         self._run_clock(item)
         if role != "deterministic":
@@ -487,23 +538,24 @@ def step(self, item: Item, key: str, run: Callable[[], Any], *, role: str = "det
         self._start_step(item, key, role=role, route=route)
     self.progress.emit("stage.start", item=item.ref, stage=key, role=role, route=route)
     begin = time.monotonic()
-    self._step_tokens = {"input": 0, "output": 0}
     try:
         result = run()
     except Stop as stop:
-        steps[key] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
-        self._save()
+        with self.store.mutating():
+            steps[key] = {"status": "stopped", "code": stop.code, "ended": clock.utc_now()}
+            self._save()
         self.progress.emit("stage.end", item=item.ref, stage=key, role=role, route=route, verdict="stopped",
                            reason_code=stop.code, duration_s=round(time.monotonic() - begin, 1),
                            message=stop.message)
         self._stage_event(item, key, "refused" if stop.code != "TIMEOUT" else "timeout")
         raise
-    tokens = self._step_tokens
+    tokens = dict(self._stage_bucket())
     said = verdict(result) if verdict else "done"
-    steps[key] = {"status": "done", "result": result, "verdict": said, "role": role, "route": route,
-                  "duration_s": round(time.monotonic() - begin, 1), "ended": clock.utc_now(),
-                  **({"tokens": tokens} if tokens and any(tokens.values()) else {})}
-    self._save()
+    with self.store.mutating():
+        steps[key] = {"status": "done", "result": result, "verdict": said, "role": role, "route": route,
+                      "duration_s": round(time.monotonic() - begin, 1), "ended": clock.utc_now(),
+                      **({"tokens": tokens} if tokens and any(tokens.values()) else {})}
+        self._save()
     self.progress.emit("stage.end", item=item.ref, stage=key, role=role, route=route, verdict=said,
                        duration_s=steps[key]["duration_s"], tokens=steps[key].get("tokens"),
                        agent=result.get("agent") if isinstance(result, dict) else None)

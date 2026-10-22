@@ -17,7 +17,7 @@ FORBIDDEN = (
     re.compile(rf"packages/({_NAMES})\b"),
     re.compile(rf"^\s*(from|import)\s+({_NAMES})\b"),
     re.compile(r"\b(skiller|harness|maind|analyst)\b"),
-    re.compile(r"plan\.py"),
+    re.compile(r"(?<!\w)plan\.py"),  # the name of the planner script, not the tail of a file such as test_x_plan.py
     re.compile(r"\bplanner:[a-z][a-z-]*"),
     re.compile(r"planner/(lib|plan|scripts|commands|skills)\b"),
     # The native provider event is not a skill identity.
@@ -70,11 +70,12 @@ class BoundaryTests(unittest.TestCase):
 
     def test_boundary_tokens_and_provider_event(self):
         for line in ("packages/" + "planner", "from planner.plan import store", "skiller resolve",
-                     "plan" + ".py finish", "planner:" + "plan-run", "planner/commands/dev.md",
+                     "plan" + ".py finish", "python3 scripts/" + "plan.py check", "$PLANNER_ROOT/scripts/" + "plan.py", "planner:" + "plan-run", "planner/commands/dev.md",
                      "quality/code-review", "system/agent-packs", "system/initial", "system/init-extra", "general/verify-claims"):
             with self.subTest(line=line):
                 self.assertTrue(any(pattern.search(line) for pattern in FORBIDDEN))
-        for line in ("task failures", "plan store", "system/init", "orchestration", "harnessing"):
+        for line in ("task failures", "plan store", "system/init", "orchestration", "harnessing",
+                     "test_conductor_review_plan.py", "test:test_conductor_review_plan.py"):
             with self.subTest(line=line):
                 self.assertFalse(any(pattern.search(line) for pattern in FORBIDDEN))
 

@@ -172,8 +172,11 @@ class NextReasonTests(ReconcileCase):
         self.assertEqual(action.exact, f"waiting: P1 closure: plan.py reconcile {self.plan_id}")
 
     def test_open_item_outside_the_batches_keeps_the_old_reason(self):
-        ops.add_item(self.root, "P1", "Third")
-        ops.patch(self.root, "P1.3", copy.deepcopy(DETAIL))
+        # A detailed phase accepts only a complete item. The placeholder scope has no exclude, which the schema requires.
+        complete = copy.deepcopy(DETAIL)
+        complete["scope"] = {"include": ["x"], "exclude": []}
+        ops.add_item(self.root, "P1", "Third", data=complete)
+        ops.patch(self.root, "P1.3", complete)
         ops.set_batches(self.root, "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": "recommended"}])
         self.merged("P1.1")
         self.merged("P1.2")

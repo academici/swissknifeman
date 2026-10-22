@@ -90,6 +90,7 @@ class CharacterizationCase(ConductorCase):
         journal = [normalize(line, paths) for line in json.loads("[" + ",".join(
             (run / "progress.jsonl").read_text(encoding="utf-8").splitlines()) + "]")]
         state_doc = json.loads((run / engine.STATE_FILE).read_text(encoding="utf-8"))
+        state_doc.pop("ended", None)  # volatile UTC bound of the run segment, tested in test_observer
         for item in state_doc.get("items", {}).values():
             item.pop("usage_by_agent", None)  # replay bookkeeping; totals are covered here, receipts in test_usage_normalization
         state = normalize(state_doc, paths)
@@ -370,9 +371,16 @@ class CodeScenarioTests(CharacterizationCase):
         self.stops(err, "BRIEF_REFUSED")
 
     def test_a_refused_prepare_stops_as_prepare_refused(self):
+        """Prepare is bound in-process, so a refusal is the conductor call, not the public ``source prepare`` verb."""
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
-        with self.refuse("prepare", (1, None)):
+
+        def refuse_prepare(*_args, **_kwargs):
+            print("refused", file=sys.stderr)
+            return 1
+
+        with mock.patch("orch.cli._source_prepare", refuse_prepare):
             code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
         self.stops(err, "PREPARE_REFUSED")
 
 
@@ -384,6 +392,8 @@ COVERAGE = {
     # Stops
     "RUN_BUSY": "test:test_run_lease.py", "WORKTREE_BUSY": "test:test_run_lease.py",
     "QUESTIONS_LOCKED": "test:test_run_lease.py",
+    "QUESTION_ANSWERED_NOT_RETRIED": "test:test_conductor_questions.py",
+    "CONDUCTOR_CRASHED": "test:test_observer.py",
     "STAGE_RECOVERY_UNKNOWN": "test:test_resume_reconcile.py",
     "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": "snapshot:question-answer-resume",
     "ROUTE_UNDERSHOOT": f"test:{T}", "SANDBOX_UNAVAILABLE": f"test:{T}",
@@ -396,21 +406,37 @@ COVERAGE = {
     "CLAIM_BLOCKED": f"test:{C}", "BRIEF_REFUSED": f"test:{C}", "PREPARE_REFUSED": f"test:{C}",
     "REGISTER_REFUSED": f"test:{T}", "COMMIT_REFUSED": f"test:{T}", "WORK_SOURCE_*": "test:test_worksource.py",
     "OPTIONS_INVALID": f"test:{T}", "POLICY_UNKNOWN": "test:test_policies.py",
+    "POLICY_STAGE_UNSUPPORTED": "test:test_policy_stages.py",
     "OPTIONS_UNTRUSTED": f"test:{T}", "OPTIONS_UNSAFE_PATH": f"test:{T}", "STATE_CORRUPT": "test:test_durable_state.py",
     "STUBS_INVALID": "test:test_conductor_stubs.py",
-    "TOKEN_BUDGET": "test:test_budget_hard.py",
+    "GROUP_REVIEW_BLOCKER": "test:test_conductor_review_plan.py", "GROUP_REVIEW_FAILED": "test:test_conductor_review_plan.py",
+    "GROUP_UNKNOWN": "test:test_conductor_review_plan.py", "GROUP_FOLLOWUP_MISMATCH": "test:test_conductor_review_plan.py",
+    "GROUP_FOLLOWUP_NOT_DONE": "test:test_conductor_review_plan.py",
+    "TOKEN_BUDGET": "test:test_budget_hard.py", "TOKEN_BUDGET_UNMETERED": "test:test_budget_hard.py",
+    "BRIEF_TOO_LARGE": "test:test_budget_hard.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
+    "OUTSIDE_MODULE": "test:test_write_fence.py", "OUTSIDE_RUNTIME_ARTIFACT": "test:test_write_fence.py",
+    "CHECKS_MUTATED": "test:test_write_fence.py",
     # Beacons
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
     "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": "snapshot:green",
-    "RESULT_REPAIRED": f"test:{T}", "REPAIR_FAILED": f"test:{C}", "INPUT_REBUILT": "snapshot:input-rebuilt",
+    "RESULT_REPAIRED": f"test:{T}", "REPAIR_FAILED": f"test:{C}", "REPAIR_SEMANTIC_DRIFT": "test:test_repair_semantics.py",
+    "INPUT_REBUILT": "snapshot:input-rebuilt",
     "PROVIDER_WAIT": "snapshot:quota-wait", "ROUTE_FALLBACK": "snapshot:route-fallback",
     "ROUTE_UPGRADED": "test:test_conductor_focus.py", "CAPACITY_GATED": f"test:{T}",
     "RESULT_SILENT_DENIAL": "test:test_conductor_agents.py", "GATE_NOT_WRITTEN": f"test:{C}", "DISK_LOW": "test:test_polish.py",
     "SESSION_ROUTE_CHANGED": "test:test_polish.py", "DEPENDENCY_BLOCKED": "test:test_conductor_session.py",
     "ROLE_LINGERED": f"test:{C}", "ISOLATION_PARTIAL": f"test:{T}", "CHECK_CHANGED_TREE": "test:test_conductor_checks.py",
     "STUBS_CHANGED": "test:test_conductor_stubs.py",
+    "SKILL_PATH_INVALID": "test:test_instruction_paths.py", "RULES_PATH_INVALID": "test:test_instruction_paths.py",
+    "TRIAGE_REPRO_TRIVIAL": "test:test_triage_repro.py", "TRIAGE_REPRO_MISMATCH": "test:test_triage_repro.py",
+    "TRIAGE_REPRO_UNVERIFIED": "test:test_triage_repro.py", "REVIEW_MODE_NONE_SKIPPED": "test:test_conductor_review_plan.py",
+    "GROUP_REVIEW_RESOLVED": "test:test_conductor_review_plan.py",
+    "RUNTIME_ARTIFACT_RELOCATED": "test:test_write_fence.py",
+    "QUESTION_OWNER_ONLY": "test:test_conductor_questions.py",
+    "ADVICE_HELD": "test:test_conductor_advisor.py",
+    "POLICY_STAGE_SKIPPED": "test:test_policy_stages.py",
 }
 
 

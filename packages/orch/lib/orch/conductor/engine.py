@@ -77,7 +77,8 @@ class Conductor:
         self.clock = clock
         self.conductor = dict(settings.conductor or {})
         self._catalog = None
-        self._step_tokens = {"input": 0, "output": 0}
+        self._step_tokens = {"input": 0, "output": 0}  # unbound calls; a logical step uses its own slot
+        self._stage_slots = {}  # (item, step) -> the durable fresh-token bucket of that logical step
         self._local = threading.local()  # the agent run of the role this thread runs: usage and children belong to it
         self.run_id = ""
         self.directory = Path()
@@ -140,6 +141,7 @@ class Conductor:
     _batch_held = run_service.batch_held
     release = run_service.release
     settle = run_service.settle
+    settle_group = run_service.settle_group
     _kill_orphaned_roles = recovery.kill_orphaned_roles
     _reconcile_interrupted = recovery.reconcile_interrupted
 
@@ -172,7 +174,12 @@ class Conductor:
     _severity_of = staticmethod(report_rules.severity_of)
     _place = staticmethod(report_rules.place)
     _notes = staticmethod(report_rules.notes)
-    _plan_note = staticmethod(report_rules.plan_note)
+
+    def _plan_note(self, item: Item, text: str) -> None:
+        """A plan note of the piece; it changes ``item.state``, so it is made under the run-store lock (I2)."""
+        with self.store.mutating():
+            report_rules.plan_note(item, text)
+
     _blocked = staticmethod(report_rules.blocked)
 
     # ------------------------------------------------------------------ infrastructure: the work source and the roles
@@ -223,6 +230,7 @@ class Conductor:
     _shared_session = roles.shared_session
     _resume_args = roles.resume_args
     _keep_session = roles.keep_session
+    _delta_mode = roles.delta_mode
     _role_env = roles.role_env
 
     # ------------------------------------------------------------------ policies
@@ -259,6 +267,7 @@ class Conductor:
 
     _start_route = retry_policy.start_route
     _prompt_for_route = retry_policy.prompt_for_route
+    _routed_blocks = retry_policy.routed_blocks
     _provider_failure = retry_policy.provider_failure
     _provider_stop = retry_policy.provider_stop
     _gate = retry_policy.gate
@@ -272,6 +281,11 @@ class Conductor:
     _budget = budget.budget
     _unmetered = budget.unmetered
     _admit_budget = budget.admit
+    _bind_stage = budget.bind_stage
+    _restore_stage = budget.restore_stage
+    _stage_bucket = budget.stage_bucket
+    _stage_key = budget.stage_key
+    _remember_stage = budget.remember_stage
 
     # ------------------------------------------------------------------ stages
 
@@ -301,6 +315,7 @@ class Conductor:
     _execute = execute.execute
     _round = execute.executor_round
     _batch_note = execute.batch_note
+    _resumed_prompt = execute.resumed_prompt
     _autofixable = execute.autofixable
     _autofix = execute.autofix
     _autofix_issues = execute.autofix_issues
@@ -318,6 +333,7 @@ class Conductor:
     _red_signature = staticmethod(checks_stage.red_signature)
     _green = checks_stage.green
     _red_before = staticmethod(checks_stage.red_before)
+    _earlier_rows = staticmethod(checks_stage.earlier_rows)
     _compute_checks = checks_stage.compute_checks
     _check_tick = checks_stage.check_tick
     _run_checks = checks_stage.run_checks
@@ -329,6 +345,8 @@ class Conductor:
     _dynamic_review = review_stage.dynamic_review
     _review_requested_off = review_stage.requested_off
     _corrected = staticmethod(review_stage.corrected)
+    _unresolved = staticmethod(review_stage.unresolved)
+    _finding_paths = staticmethod(review_stage.finding_paths)
     _executor_advice = review_stage.executor_advice
     _review_focus = review_stage.review_focus
     _upgrade_reviewer = review_stage.upgrade_reviewer

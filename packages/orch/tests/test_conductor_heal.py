@@ -7,6 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
 
 from orch.conductor import contract, engine, heal, scope  # noqa: E402
+from orch.conductor.domain import semantics  # noqa: E402
+from orch.conductor.domain.report import findings_problems  # noqa: E402
 
 
 def report(**extra):
@@ -18,18 +20,37 @@ def report(**extra):
 class StageReportTests(unittest.TestCase):
     def healed(self, doc):
         fixed, notes = heal.heal("stage-report", doc)
+        self.assertEqual(semantics.drift("stage-report", doc, fixed), [], "a mend must not move the meaning toward ease")
         return fixed, notes, contract.problems(fixed, "stage-report")
 
-    def test_a_status_is_never_raised_and_an_impossible_one_drops(self):
+    def test_a_status_is_never_raised_and_an_impossible_one_gets_the_issue_it_lacks(self):
         fixed, notes, problems = self.healed(report(status="done_with_deviations"))
-        self.assertEqual((fixed["status"], problems), ("done", []))
+        self.assertEqual((fixed["status"], problems), ("done_with_deviations", []))
+        self.assertEqual(engine.report_problems(fixed), [])
+        issue = fixed["open_issues"][0]
+        self.assertEqual((issue["kind"], issue["class"], issue["outcome"], issue["impact"]),
+                         ("deviation", "other", "follow_up", "not stated by the executor"))
+        self.assertIn("without naming the deviation", issue["text"])
         self.assertTrue(notes)
         fixed, _, _ = self.healed(report(status="blocked", open_issues=[{"text": "no key", "kind": "blocker"}]))
-        self.assertEqual((fixed["status"], fixed["open_issues"][0]["kind"]), ("blocked", "escalation"))
+        kinds = [(issue["kind"], issue["text"]) for issue in fixed["open_issues"]]
+        self.assertEqual((fixed["status"], kinds), ("blocked", [("blocker", "no key"), ("escalation", "no key")]))
         fixed, _, problems = self.healed(report(status="Blocked", summary="needs the owner's key"))
         self.assertEqual(fixed["status"], "blocked")
         self.assertIn("needs the owner's key", fixed["open_issues"][-1]["text"])
         self.assertEqual(problems, [])
+
+    def test_an_escalation_in_a_report_that_is_not_blocked_blocks_it(self):
+        gap = {"text": "needs the key", "kind": "escalation"}
+        for status in ("done", "done_with_deviations", "done_pending_checks"):
+            with self.subTest(status=status):
+                fixed, notes, problems = self.healed(report(status=status, open_issues=[
+                    gap, {"text": "d", "kind": "deviation", "class": "other", "impact": "x", "outcome": "follow_up"},
+                    {"text": "p", "kind": "pending"}]))
+                self.assertEqual((fixed["status"], problems), ("blocked", []))
+                self.assertEqual([issue["kind"] for issue in fixed["open_issues"]], ["escalation", "deviation", "pending"])
+                self.assertTrue(any("blocked for the owner" in note for note in notes), notes)
+                self.assertEqual(engine.report_problems(fixed), [])
 
     def test_done_pending_checks_is_a_status_and_needs_a_pending_issue(self):
         pending = {"text": "V1 needs docker", "kind": "pending", "impact": "unproven", "next": "the conductor runs it"}
@@ -37,8 +58,10 @@ class StageReportTests(unittest.TestCase):
         self.assertEqual((fixed["status"], problems, notes), ("done_pending_checks", [], []))
         self.assertEqual(engine.report_problems(fixed), [])
         fixed, notes, problems = self.healed(report(status="done_pending_checks"))
-        self.assertEqual((fixed["status"], problems), ("done", []))
-        self.assertTrue(any("done_pending_checks named no pending issue" in note for note in notes), notes)
+        self.assertEqual((fixed["status"], problems), ("done_pending_checks", []))
+        self.assertEqual([issue["kind"] for issue in fixed["open_issues"]], ["pending"])
+        self.assertTrue(any("named no pending issue" in note for note in notes), notes)
+        self.assertEqual(engine.report_problems(fixed), [])
         self.assertEqual(engine.report_problems(report(status="done_pending_checks")),
                          ["/status: done_pending_checks needs a pending issue naming the checks that could not run"])
 
@@ -49,7 +72,8 @@ class StageReportTests(unittest.TestCase):
         self.assertEqual(problems, [])
         self.assertEqual(fixed["checks_run"], [{"id": "V1", "cmd": "x", "exit": 0}])
         kinds = [issue["kind"] for issue in fixed["open_issues"]]
-        self.assertEqual(kinds, ["note", "difficulty", "note"])
+        self.assertEqual(kinds, ["note", "escalation", "note"])
+        self.assertEqual(fixed["status"], "blocked")  # the escalation is kept, so the report is blocked for the owner
         self.assertIn("where: a.py", fixed["open_issues"][1]["text"])
 
     def test_a_deviation_without_class_outcome_or_impact_is_filled_and_said(self):
@@ -58,7 +82,7 @@ class StageReportTests(unittest.TestCase):
         self.assertEqual(problems, [])
         issue = fixed["open_issues"][0]
         self.assertEqual((issue["class"], issue["outcome"], issue["impact"]),
-                         ("other", "accepted", "not stated by the executor"))
+                         ("other", "follow_up", "not stated by the executor"))
         self.assertTrue(any("class" in note and "outcome" in note and "impact" in note for note in notes), notes)
 
     def test_a_deviation_that_names_its_fields_is_kept_and_words_are_matched(self):
@@ -76,7 +100,7 @@ class StageReportTests(unittest.TestCase):
         fixed, notes, problems = self.healed(report(status="done_with_deviations", open_issues=[given]))
         self.assertEqual(problems, [])
         issue = fixed["open_issues"][0]
-        self.assertEqual((issue["class"], issue["outcome"]), ("other", "accepted"))
+        self.assertEqual((issue["class"], issue["outcome"]), ("other", "follow_up"))
         self.assertIn("class: typo", issue["text"])
         self.assertIn("outcome: later", issue["text"])
 
@@ -103,10 +127,28 @@ class ReviewAndTriageTests(unittest.TestCase):
             self.finding(), self.finding(severity="minor", confidence=None)]})
         self.assertEqual(fixed["verdict"], "ATTENTION")
         self.assertEqual([item["id"] for item in fixed["findings"]], ["F1", "F2"])
+        self.assertEqual(semantics.drift("review-findings", {"verdict": "green", "findings": [
+            self.finding(), self.finding(severity="minor", confidence=None)]}, fixed), [])
         self.assertEqual(fixed["findings"][1]["severity"], "Minor")
         self.assertEqual(contract.problems(fixed, "review-findings"), [])
-        fixed, _ = heal.heal("review-findings", {"verdict": "RED", "findings": []})
-        self.assertEqual(fixed["verdict"], "GREEN")
+
+    def test_a_verdict_without_findings_is_not_made_green(self):
+        for verdict in ("RED", "ATTENTION", "red"):
+            for doc in ({"verdict": verdict, "findings": []}, {"verdict": verdict}):
+                fixed, _ = heal.heal("review-findings", doc)
+                self.assertEqual(fixed["verdict"], verdict.upper())
+                self.assertEqual(semantics.drift("review-findings", doc, fixed), [])
+                self.assertEqual(contract.problems(fixed, "review-findings"), [])  # the form is fine; the meaning is not
+                self.assertEqual(findings_problems(fixed), [f"/verdict: {verdict.upper()} without findings"])
+        fixed, _ = heal.heal("review-findings", {"verdict": "GREEN", "findings": []})
+        self.assertEqual((fixed["verdict"], findings_problems(fixed)), ("GREEN", []))
+
+    def test_green_with_a_major_becomes_attention_and_with_a_blocker_red(self):
+        for severity, verdict in (("Major", "ATTENTION"), ("Blocker", "RED")):
+            doc = {"verdict": "GREEN", "findings": [self.finding(severity=severity)]}
+            fixed, _ = heal.heal("review-findings", doc)
+            self.assertEqual(fixed["verdict"], verdict)
+            self.assertEqual(semantics.drift("review-findings", doc, fixed), [])
 
     def test_a_major_is_not_rejected_without_a_reproduction(self):
         findings = {"findings": [self.finding()]}

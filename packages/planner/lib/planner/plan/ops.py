@@ -226,7 +226,7 @@ def add_phase(plan, title: str, *, data: dict | None = None) -> str:
 
 
 def add_item(plan, phase: str, title: str, *, data: dict | None = None, batch: str | None = None) -> str:
-    """Add a skeleton item as the next ``Pn.m`` of ``phase``; it joins ``batch`` or gets a solo batch."""
+    """Add the next ``Pn.m``; detailed phases require complete data. Join ``batch`` or get a solo batch."""
     extra = _reject_owned_data("item", data)
     with _mutation(plan) as p:
         if phase not in p.phases:
@@ -254,6 +254,19 @@ def add_item(plan, phase: str, title: str, *, data: dict | None = None, batch: s
         else:
             batches.append({"id": batch or f"B{phase}-{number}", "items": [item_id],
                             "mode": "recommended"})
+        if phase_doc.get("design") == "detailed":
+            from . import check
+            # save_many supplies the final timestamp; the proposed graph needs a schema-valid one too.
+            candidate = {**doc, "updated_at": p.plan["updated_at"]}
+            store.check_doc(candidate, "item", item_id)
+            proposed = copy.deepcopy(p)
+            proposed.items[item_id], proposed.phases[phase] = candidate, phase_doc
+            incomplete = [i for i in check.check(proposed) if i.level == "error" and i.code == "incomplete"
+                          and i.where.startswith(f"phases/{phase}/{item_id}.json/")]
+            if incomplete:
+                raise PlanError("PHASE_DETAILED", "add the item with complete data via --file, or reopen design",
+                                incomplete)
+            _refuse_new_errors(p, "item", item_id, candidate, proposed=proposed)
         _commit(p, [("item", item_id, doc), ("phase", phase, phase_doc)])
     return item_id
 
@@ -343,12 +356,13 @@ def push(plan, ref: str, field: str, value: Any, *, expected_revision: str | Non
 
 
 def set_batches(plan, phase: str, batches: list) -> None:
-    """Replace ``phase.batches``; membership consistency is reported by ``check``."""
+    """Replace ``phase.batches`` without introducing errors in a detailed phase."""
     with _mutation(plan) as p:
         if phase not in p.phases:
             raise PlanError("REF_UNKNOWN", f"unknown phase {phase!r}")
         doc = copy.deepcopy(p.phases[phase])
         doc["batches"] = copy.deepcopy(batches)
+        _refuse_new_errors(p, "phase", phase, doc)
         _commit(p, [("phase", phase, doc)])
 
 
@@ -410,21 +424,27 @@ def apply(plan, patches: list[dict]) -> None:
         _commit(p, [(kind, key, doc) for (kind, key), doc in changed.items()])
 
 
-def _refuse_new_errors(p: store.Plan, kind: str, key: str | None, doc: dict) -> None:
+def _refuse_new_errors(p: store.Plan, kind: str, key: str | None, doc: dict, *,
+                       proposed: store.Plan | None = None) -> None:
     """Refuse a single-document edit that makes ``check`` report a new error on a link field (D11: no dangling
-    link through set/push); pre-existing errors and non-link errors never block an unrelated edit."""
+    link through set/push), or any new error of the edited detailed phase. Pre-existing errors do not block edits."""
     from . import check, edges
     store.check_doc(doc, kind, f"{kind} {key or ''}".strip())  # a schema violation keeps its own refusal
-    proposed = copy.deepcopy(p)
-    if kind in ("plan", "brief"):
-        setattr(proposed, kind, doc)
-    else:
-        {"phase": proposed.phases, "item": proposed.items, "unit": proposed.units,
-         "decision": proposed.decisions, "document": proposed.documents}[kind][key] = doc
+    if proposed is None:
+        proposed = copy.deepcopy(p)
+        if kind in ("plan", "brief"):
+            setattr(proposed, kind, doc)
+        else:
+            {"phase": proposed.phases, "item": proposed.items, "unit": proposed.units,
+             "decision": proposed.decisions, "document": proposed.documents}[kind][key] = doc
+    phase_id = check.owner_phase(proposed, check.Issue("error", "", key or "", "")) \
+        if kind in ("phase", "item", "unit") else None
+    detailed = phase_id is not None and proposed.phases.get(phase_id, {}).get("design") == "detailed"
     known = {(i.where, i.message) for i in check.check(p) if i.level == "error"}
     link_places = {edge.where for edge in edges.edges(proposed)}
     new = [i for i in check.check(proposed) if i.level == "error" and (i.where, i.message) not in known
-           and any(i.where == place or i.where.startswith(place + "/") for place in link_places)]
+           and ((detailed and check.owner_phase(proposed, i) == phase_id)
+                or any(i.where == place or i.where.startswith(place + "/") for place in link_places))]
     if new:
         raise PlanError("PLAN_INVALID", "; ".join(f"{i.where}: {i.message}" for i in new), new)
 

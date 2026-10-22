@@ -104,7 +104,7 @@ class ShippedTests(PackCase):
                                          "max_corrections": 1,
                                          "triage": {"role": "triager", "model_class": "implementation"}})
         self.assertEqual({k: v["action"] for k, v in doc["on_error"].items()}, DEFAULT_ACTIONS)
-        self.assertEqual(doc["budgets"], {"brief_max_bytes": 65536, "packer_input_max_bytes": 262144,
+        self.assertEqual(doc["budgets"], {"brief_max_bytes": 1048576, "packer_input_max_bytes": 262144,
                                           "stage_tokens_max": 0})
         self.assertEqual(doc["retries_budget"], {"total_max": 2})
 

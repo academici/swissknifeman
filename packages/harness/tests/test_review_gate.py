@@ -61,6 +61,24 @@ def _write_generated_file(repo):
     return f
 
 
+class FixtureSeedIsolationTests(unittest.TestCase):
+    def test_plan_fixture_copies_are_independent_and_the_seed_is_not_mutated(self):
+        from tests.plan_fixture import write_plan
+        with tempfile.TemporaryDirectory() as left, tempfile.TemporaryDirectory() as right, tempfile.TemporaryDirectory() as third:
+            first, ids = write_plan(left, items=[("todo", ("implementation", "medium"))])
+            second, other_ids = write_plan(right, items=[("todo", ("implementation", "medium"))])
+            relative = "phases/P1/P1.1.json"
+            expected = (second / relative).read_bytes()
+            self.assertEqual(ids, other_ids)
+            self.assertNotEqual((first / relative).stat().st_ino, (second / relative).stat().st_ino)
+            (first / relative).write_text("broken on purpose")
+            self.assertEqual((second / relative).read_bytes(), expected)
+            clean, _ = write_plan(third, items=[("todo", ("implementation", "medium"))])
+            self.assertEqual((clean / relative).read_bytes(), expected)
+            self.assertEqual(json.loads(expected)["status"], "todo")
+
+
+
 class TestReviewGate(unittest.TestCase):
     def setUp(self):
         self._td = tempfile.TemporaryDirectory()

@@ -198,8 +198,8 @@
    "stage": "executor.1",
    "tokens": {
     "cached": 0,
-    "input": 100,
-    "output": 10
+    "input": 200,
+    "output": 20
    },
    "verdict": "done"
   },
@@ -287,8 +287,12 @@
    }
   },
   "executor_session": "executor-session-2",
+  "executor_session_answers": [
+   "<digest>"
+  ],
   "executor_session_item": "W1",
   "executor_session_route": "claude-code/sonnet/high",
+  "executor_session_task_digest": "<digest>",
   "items": {
    "W1": {
     "adopted": [],
@@ -354,7 +358,29 @@
     "plan_notes": [],
     "retried": "<time>",
     "retries_used": 0,
+    "review_marks": {
+     "1": {
+      "out/W1.txt": "<digest>"
+     }
+    },
     "source_paths": [],
+    "stage_usage": {
+     "executor.1": {
+      "cached": 0,
+      "input": 200,
+      "output": 20
+     },
+     "review.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "scout": {
+      "cached": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
     "steps": {
      "brief": {
       "ended": "<time>",
@@ -439,8 +465,8 @@
       "status": "done",
       "tokens": {
        "cached": 0,
-       "input": 100,
-       "output": 10
+       "input": 200,
+       "output": 20
       },
       "verdict": "done"
      },
@@ -548,6 +574,7 @@
      "asked_at": "<time>",
      "binding": {
       "input_digest": "<digest>",
+      "input_part_digest": "<digest>",
       "item": "W1",
       "step": "executor.1"
      },

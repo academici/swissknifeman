@@ -87,6 +87,14 @@ The Grok scout uses the same wrapper with text transport (`--output-format plain
 The complete role/provider matrix and explicit catalog refusals (`LAUNCH_REFUSED`) are documented in
 [conductor.md](conductor.md); an unlisted pair retains `LAUNCH_UNKNOWN`.
 
+An entry may also carry `resume_argv` (catalog 1.6.0, optional; the required keys `model_class`, `effort`, `transport`,
+`argv`, `timeout_s`, `model_set` are unchanged and a catalog without it is valid): the whole command line that continues a
+provider session, a list of strings with `@part` items like `argv`, the same placeholders and the required `{session}`
+(filled by the conductor with the session it resumes; `launch.build_resume_argv` fills the others and leaves it). The
+Codex `executor` has one (`codex -a never exec resume {session} --json -c sandbox_mode="{write_sandbox}" --model … -`):
+`codex exec resume` takes no `--sandbox`, so the sandbox mode is a `-c` override. A route carries `resume_argv` when its
+entry has one, and the conductor continues the executor session of that provider with it.
+
 The wrapper applies Linux Landlock before `exec` (no root or user namespaces); every child inherits it. Writers
 grant `--rw {cwd}`. The reviewer and triager use `--protect {cwd} --rw {cwd}/vendor` for test caches; the scout,
 researcher, advisor and report-fixer use `--protect {cwd}` without a checkout grant. Protected roles disallow editing, subagent creation, scheduled writes, workflows

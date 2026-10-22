@@ -148,8 +148,8 @@ fails on its own marketplace. A hub clone is replaced by step 2 of the machine s
   from `config.toml` carried an empty `available`). A second computer needs that commit before step 4.
 - `swissknifeman upgrade` (named by `*_LEGACY_*` warnings and ADR 0010) does not exist; this document and the two scripts replace it.
 - `version-guard` had no path for a line without release snapshots; fixed in the same cleanup that emptied `releases/`.
-- Many `LEGACY_*` read paths remain in the modules (`MAIND_LEGACY_CONFIG`, `MAIND_LEGACY_PROVIDERS`, `SKILLER_LEGACY_CONFIG`, ...) and the
-  dev guard (`.swissknifeman-dev` marker). With both computers migrated they are dead code: remove them in a follow-up (grep `LEGACY_`).
+- Many `LEGACY_*` read paths remain in the modules (`MAIND_LEGACY_CONFIG`, `MAIND_LEGACY_PROVIDERS`, `SKILLER_LEGACY_CONFIG`, ...).
+  With both computers migrated they are dead code: remove them in a follow-up (grep `LEGACY_`).
 
 ## Notes from computer 2 (2026-10-16, no `-next` clone used: `git merge -s ours` straight from `origin/main`)
 

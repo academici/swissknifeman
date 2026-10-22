@@ -25,9 +25,9 @@ import unittest
 from unittest import mock
 
 from orch import launch
-from orch.conductor import cli, engine, gates, options as opts, process, progress
+from orch.conductor import checks as checks_mod, cli, engine, gates, options as opts, process, progress
 from orch.conductor.application import run_service
-from orch.conductor.infrastructure import clock, roles
+from orch.conductor.infrastructure import clock, roles, work_source
 from orch.conductor.policies import sandbox as sandbox_policy
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +52,13 @@ def executor_ok(ref: str) -> dict:
     return {"write": {f"out/{ref}.txt": "ok\n"}, "result": report(ref)}
 
 
+def reproduced(exit_code: int = 0, guard: str = "protect"):
+    """The conductor's rerun of a rejection (``checks.run_reproduction``) as the test environment cannot make it: a project in
+    /tmp lies inside a writable root of ``ro-run.py --protect``. ``test_triage_repro`` runs the real guard."""
+    return mock.patch.object(checks_mod, "run_reproduction",
+                             return_value={"exit": exit_code, "seconds": 0, "log": "-", "guard": guard})
+
+
 GREEN = {"result": {"verdict": "GREEN", "findings": []}}
 FINDING = {"result": {"verdict": "ATTENTION", "findings": [
     {"id": "F1", "severity": "Major", "confidence": "high", "location": "out/W1.txt:1",
@@ -62,6 +69,9 @@ class ConductorCase(unittest.TestCase):
     scenario = "full"
 
     def setUp(self):
+        patcher = mock.patch.object(work_source, "ORCH_TRANSPORT", work_source.inprocess_transport)
+        patcher.start()
+        self.addCleanup(patcher.stop)
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         base = Path(tmp.name)
@@ -268,7 +278,8 @@ class HappyPathTests(ConductorCase):
         self.assertNotIn("status", source["items"]["W1"]["report"])  # the status travels apart from the report
         self.assertEqual(source["items"]["W1"]["executed_by"]["provider"], "claude-code")
         self.assertEqual([commit["ref"] for commit in source["commits"]], ["W1"])
-        self.assertIn("plans/T/artifacts/W1/", source["commits"][0]["paths"])
+        self.assertIn("plans/T/artifacts/W1/stage-report.json", source["commits"][0]["paths"])  # the records, file by file
+        self.assertNotIn("plans/T/artifacts/W1/", source["commits"][0]["paths"])  # not the folder: it holds ``stray/`` too
         self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (1, 1, 0))
         # every stage printed its start and its end; the journal holds the same lines
         stages = [(line["event"], line.get("stage")) for line in self.lines(err) if line["event"].startswith("stage.")]
@@ -568,7 +579,8 @@ class CorrectionTests(ConductorCase):
                                                             "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                              "observed": "ok"}}]}}
         self.script({"executor": [executor_ok("W1")], "reviewer": [FINDING], "triager": [triage]})
-        code, _, err = self.run_items("W1")
+        with reproduced(0):  # the conductor sees the exit the triager reported
+            code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (1, 1, 1))
         verdict = json.loads((self.project / "plans/T/artifacts/W1/review-verdict.json").read_text())
@@ -1040,22 +1052,29 @@ class HealAndRepairTests(ConductorCase):
     def test_a_form_mismatch_is_healed_without_a_repeat(self):
         healed = report("W1", "done_with_deviations",
                         checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "0"}],
-                        open_issues=[{"text": "a gap", "kind": "Escalation"}])
+                        open_issues=[{"text": "a gap", "kind": "Deviation", "impact": "none"}])
         self.script({"executor": [dict(executor_ok("W1"), result=healed)], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("executor")), (0, 1), err)
         item = self.source()["items"]["W1"]
-        self.assertEqual(item["status"], "done")
-        kinds = [issue["kind"] for issue in item["report"]["open_issues"]]
-        self.assertIn("difficulty", kinds)
-        self.assertNotIn("escalation", kinds)
+        self.assertEqual(item["status"], "done_with_deviations")  # the deviation the executor named keeps its status
+        issues = [issue for issue in item["report"]["open_issues"] if issue["kind"] == "deviation"]
+        self.assertEqual([(issue["text"], issue["outcome"]) for issue in issues if issue["text"] == "a gap"],
+                         [("a gap", "follow_up")])  # a deviation without an outcome is not accepted by the mend
+        self.assertTrue(any(line.get("reason_code") == "RESULT_HEALED" for line in self.lines(err)))
+
+    def test_an_escalation_in_a_report_that_is_not_blocked_blocks_the_piece_instead_of_becoming_a_difficulty(self):
+        healed = report("W1", "done", open_issues=[{"text": "needs the owner's key", "kind": "Escalation"}])
+        self.script({"executor": [dict(executor_ok("W1"), result=healed)], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("executor")), (1, 1), err)
+        self.assertEqual(self.calls("reviewer"), 0)
         self.assertTrue(any(line.get("reason_code") == "RESULT_HEALED" for line in self.lines(err)))
 
     def test_a_result_outside_the_contract_is_repaired_by_the_report_fixer_before_a_repeat(self):
         self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
                            for role in ROLES + ("report-fixer",)})
-        broken = {"write": {"out/W1.txt": "ok\n"},
-                  "result": report("W1", checks_run=[{"id": "V1", "cmd": "test -f out/W1.txt", "exit": "zero"}])}
+        broken = {"write": {"out/W1.txt": "ok\n"}, "result": report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])}
         self.script({"executor": [broken], "reviewer": [GREEN],
                      "report-fixer": [{"result": report("W1"), "tag": "stage-report"}]})
         code, _, err = self.run_items("W1")
@@ -1063,7 +1082,8 @@ class HealAndRepairTests(ConductorCase):
         self.assertEqual((self.calls("executor"), self.calls("report-fixer")), (1, 1))
         fixer = self.prompt("report-fixer", 1)
         self.assertIn("Never raise a status", fixer)
-        self.assertIn("expected integer, got string", fixer)
+        self.assertIn("is refused", fixer)  # the fixer is told that the conductor compares its block with the role's own
+        self.assertIn("items 0 and 1 are equal", fixer)
         self.assertTrue(any(line.get("reason_code") == "RESULT_REPAIRED" for line in self.lines(err)))
 
     def test_without_a_repair_the_role_is_repeated_as_before(self):
@@ -1083,20 +1103,45 @@ class SoftLimitTests(ConductorCase):
                                "options": [{"source": "item:W1", "options": options}] if options else []}})
 
     def test_a_correction_round_runs_the_red_checks_first_by_default(self):
-        self.two_checks()
+        # serial: the order of admission is the order of the round, so a red V1 is known before V2 would start; with
+        # checks.parallel above 1 both are admitted together (the next test)
+        self.two_checks(checks={"parallel": 1})
         self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
         steps = self.state(err)["items"]["W1"]["steps"]
         first, second = (steps[f"checks.{n}"]["result"] for n in (1, 2))
-        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in first],
-                         [("V1", False, False), ("V2", True, False)])
-        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in second],
-                         [("V1", False, False), ("V2", False, True)])  # V1 is still red: V2 is not run again
+        # fail_fast (the default): a red check ends the round, the other check is skipped and not run again while V1 is red
+        for rows in (first, second):
+            self.assertEqual([(row["id"], row["green"], bool(row.get("skipped")), row.get("skip_reason")) for row in rows],
+                             [("V1", False, False, None), ("V2", False, True, "fail_fast")])
+        self.assertEqual(steps["checks.2"]["verdict"], "red V1")  # only the check that ran and failed
+
+    def test_parallel_checks_admitted_before_the_red_result_may_finish(self):
+        # the default checks.parallel is 2: V1 and V2 are admitted together at the start of the round, so V2 (green
+        # because the executor wrote out/two.txt) ran before V1 could be seen red; fail_fast only stops later admissions.
+        # Whatever the timing, a skipped row has the reason fail_fast, V1 is the only failure and the second round keeps
+        # the red-first order (V1 ahead of V2) with V2 either skipped, re-run, or reused from the first round.
+        self.two_checks()
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        steps = self.state(err)["items"]["W1"]["steps"]
+        for number in (1, 2):
+            rows = steps[f"checks.{number}"]["result"]
+            self.assertEqual(["V1", "V2"], [row["id"] for row in rows])
+            self.assertEqual((False, False, None), (rows[0]["green"], bool(rows[0].get("skipped")), rows[0].get("skip_reason")))
+            second = rows[1]
+            if second.get("skipped"):
+                self.assertEqual(("fail_fast", False), (second["skip_reason"], second["green"]))
+            else:
+                self.assertTrue(second["green"], second)  # admitted before V1 went red: it ran (or was reused) to green
+            self.assertEqual("red V1", steps[f"checks.{number}"]["verdict"])  # only the check that ran and failed
 
     def test_red_first_off_runs_every_check_in_every_round(self):
-        self.two_checks(checks={"red_first": False})
+        self.two_checks(checks={"red_first": False, "fail_fast": False})
         self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
@@ -1105,7 +1150,7 @@ class SoftLimitTests(ConductorCase):
         self.assertEqual([(row["id"], bool(row.get("skipped"))) for row in second], [("V1", False), ("V2", False)])
 
     def test_a_correction_that_makes_progress_goes_past_the_target(self):
-        self.two_checks()
+        self.two_checks(checks={"fail_fast": False})  # both checks run, so mending V2 shows as progress
         self.script({"executor": [{"result": report("W1")}, {"write": {"out/two.txt": "2\n"}, "result": report("W1")},
                                   executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
@@ -2657,6 +2702,20 @@ class DigestTests(ConductorCase):
 
 
 class PreviewAndStatusTests(ConductorCase):
+    def test_dry_run_honors_invocation_scope_and_refuses_an_unsafe_extra_path(self):
+        allowed = self.project.parent / "preview-output"
+        allowed.mkdir()
+        argv = ("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
+        code, out, err = self.conduct(*argv, "--fence", "plan", "--allow-path", str(allowed))
+        self.assertEqual(code, 0, err)
+        scope = json.loads(out)["options"]["scope"]
+        self.assertEqual((scope["fence"], scope["extra_paths"]), ("plan", [str(allowed.resolve())]))
+        self.assertFalse(engine.runs_root(self.project).exists())
+        self.assertEqual(self.source()["calls"], [])
+        code, _, err = self.conduct(*argv, "--allow-path", "/")
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("OPTIONS_UNSAFE_PATH:"), err)
+
     def test_dry_run_writes_nothing_and_shows_routes(self):
         code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full")
         self.assertEqual(code, 0, err)
@@ -2689,7 +2748,7 @@ class PreviewAndStatusTests(ConductorCase):
         for installed in (True, False):
             with self.subTest(grok_installed=installed):
                 process._command_available.cache_clear()
-                def which(command):
+                def which(command, installed=installed):
                     return None if command == "grok" and not installed else "/fake/bin/" + command
                 with mock.patch.object(process.shutil, "which", side_effect=which):
                     code, out, err = self.conduct("run", "--plan", "T", "--ready", "--dry-run", "--scenario", "full",

@@ -15,18 +15,6 @@
 # Next:
 #   gui open        # the GUI in the browser (starts the backend when none runs)
 set -euo pipefail
-# --- swissknifeman dev-clone guard (PLAN3 D13; removed at cutover) ---
-_skm_guard_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-while [ "$_skm_guard_dir" != "/" ] && [ ! -e "$_skm_guard_dir/.swissknifeman-dev" ]; do _skm_guard_dir="$(dirname "$_skm_guard_dir")"; done
-if [ -e "$_skm_guard_dir/.swissknifeman-dev" ] && [ "${SKM_DEV_ALLOW_LIVE:-}" != "1" ]; then
-  _skm_real_home="$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)' 2>/dev/null || true)"
-  if [ -z "$_skm_real_home" ] || [ "$(readlink -f "${HOME:-/}")" = "$(readlink -f "$_skm_real_home")" ]; then
-    echo "SKM_DEV_GUARD: $_skm_guard_dir is a development clone; run inside scripts/dev-sandbox.sh or set SKM_DEV_ALLOW_LIVE=1" >&2
-    exit 3
-  fi
-fi
-unset _skm_guard_dir _skm_real_home
-# --- end dev-clone guard ---
 
 MODULE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLI="$MODULE_ROOT/bin/gui"

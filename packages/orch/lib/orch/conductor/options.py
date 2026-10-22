@@ -2,7 +2,7 @@
 
 Layers merge from the general to the specific: the defaults, ``[orch.conductor]`` of the configuration, the run-policy
 pack, then the layers the work source hands over (the options of the plan, the phase and the item, in that order). A
-more specific layer overrides a value; ``rules`` append (a repeated rule is kept once), ``limits`` and ``on_error`` merge by
+more specific layer overrides a value; ``rules`` append (a repeated rule is kept once), ``limits`` (``limits.role_timeout_s`` by role) and ``on_error`` merge by
 key (``fallback_routes`` is replaced as a list; ``[]`` switches the routes of the layers below off),
 ``skills`` replace the list of each role a layer names, and ``stages`` merge by role (a layer that names a model or a
 model class replaces both of the role). Every layer of the source is checked against ``conductor/v1``
@@ -19,40 +19,49 @@ from aicore.util.digest import digest_json
 
 from orch.conductor import contract
 
-# Most limits are targets and beacons: no role and no check is stopped for being long (the owner or an observer
-# reads the STAGE_SLOW / STAGE_IDLE / CHECK_SLOW beacons and decides); rounds go past their target while they make
-# progress, up to ``ceiling_factor`` times it. The wall-clock ceilings stage_timeout_s, check_timeout_s and run_timeout_s
-# stay available, off by default. Only silence is a wall: a role whose stream has not grown for 90 minutes, or a check
-# whose log has not grown for an hour, is hung, and an unattended run must not wait for it forever. Explicit hard token
-# limits stop admission at the boundary of accounted usage; they do not interrupt a running model call.
+# Most limits are targets and beacons: the executor is not stopped for being long (the owner or an observer reads the
+# STAGE_SLOW / STAGE_IDLE / CHECK_SLOW beacons and decides); rounds go past their target while they make progress, up to
+# ``ceiling_factor`` times it. The auxiliary roles have a wall (``role_timeout_s`` per role; the executor and the
+# bounded-implementer none), a check has one of two hours (``check_timeout_s``), and ``stage_timeout_s`` and
+# ``run_timeout_s`` stay off by default. Silence is a wall too: a role whose stream has not grown for 90 minutes, or a
+# check whose log has not grown for an hour, is hung, and an unattended run must not wait for it forever. Explicit hard
+# token limits stop admission before every model call; they do not interrupt a running one. A model attempt that reports
+# no usage under a hard limit stops the piece (``unmetered`` ``stop``) or is charged ``unmetered_charge_tokens``.
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
-                  "tokens_hard_max": 0, "run_tokens_hard_max": 0,
-                  "stage_timeout_s": 0, "stage_idle_timeout_s": 5400, "check_timeout_s": 0,
+                  "tokens_hard_max": 0, "run_tokens_hard_max": 0, "unmetered": "stop", "unmetered_charge_tokens": 50000,
+                  "role_timeout_s": {"context-scout": 900, "triager": 1800, "report-fixer": 600, "registrar": 600,
+                                     "reviewer": 3600, "advisor": 1800, "researcher": 2700},
+                  "stage_timeout_s": 0, "stage_idle_timeout_s": 5400, "check_timeout_s": 7200,
                   "check_idle_timeout_s": 3600, "ceiling_factor": 2,
                   "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900,
                   "run_warn_s": 7200, "run_timeout_s": 0, "review_rounds_batch": 0, "corrections_batch": 0,
                   "findings_batch": 0, "question_warn_s": 1800, "skill_tokens_max": 5000,
                   "prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000,
-                  "disk_min_gb": 5}
+                  "disk_min_gb": 5, "triage_repro_timeout_s": 600}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
-                  "strategy": "auto", "strategist": "model"}
+                  "strategy": "auto", "strategist": "rules"}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
                         "sandbox": "prefer", "sandbox_domains": [], "file_tools_rule": True}
 # ``fence``: ``project`` (default) lets the executor change any file of the project and report the paths outside the plan's
 # write set as deviations; ``plan`` keeps the write set a fence (a path outside it blocks the piece). ``extra_paths``:
-# directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``).
-DEFAULT_SCOPE = {"outside": "deviation", "fence": "project", "extra_paths": []}
+# directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``, a sandboxed
+# Claude Code role as ``--add-dir`` and a sandbox write grant, Codex as ``--add-dir``). ``outside_module``: ``block``
+# (default) stops a piece whose executor changed files of another module than the write set names (the changelog and the
+# documentation are always allowed); ``deviation`` reports them as before. ``runtime_paths``: patterns of runtime artifacts
+# (logs, evidence): new untracked files under them are set aside, never committed; a tracked one that changed blocks the piece.
+DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "block", "fence": "project", "extra_paths": [],
+                 "runtime_paths": [".swissknifeman/orch-artifacts/**", ".swissknifeman/orch/**", "**/tests/evidence/**"]}
 # How the executor sessions of a run of several pieces are kept. ``handoff`` (default): each piece starts a fresh session
 # that its correction rounds resume, and its prompt carries the handoff of the earlier pieces (summary, commit, notes), so
 # a later piece does not re-read the whole transcript of the earlier ones on every turn. ``shared``: one session for all
 # pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
 SESSION_MODES = ("handoff", "shared", "per-item")
 DEFAULT_SESSION = {"executor": "handoff"}
-DEFAULT_CHECKS = {"parallel": 1, "overlap_review": False, "executor_runs_checks": False,
-                  "red_first": True,
+DEFAULT_CHECKS = {"parallel": 2, "overlap_review": False, "executor_runs_checks": False,
+                  "red_first": True, "fail_fast": True, "reuse": True,
                   "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 # A review is too dear to lose when its provider cannot start, is gated or fails: the default reviewer (grok) has a fallback.
@@ -63,6 +72,7 @@ DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
             "session": DEFAULT_SESSION, "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
 ROLE_ALIASES = {"scout": "context-scout"}
+WRITING_ROLES = ("executor", "bounded-implementer")  # the roles that change the project: they get ``scope.extra_paths``
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
                "researcher", "advisor")
 _SELECTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-z0-9._:-]*)"
@@ -78,11 +88,15 @@ _ACTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-
 # Ordered keys: a work-source layer may only move them to the right.
 FLOOR_ORDER = {("instructions", "sandbox"): ("off", "prefer", "require"),
                ("scope", "fence"): ("project", "plan"),
-               ("scope", "outside"): ("deviation", "block")}
+               ("scope", "outside"): ("deviation", "block"),
+               ("scope", "outside_module"): ("deviation", "block")}
 # Set keys: a work-source layer may only shrink ``narrow`` ones (a subset of what the layers below allow) and only grow
-# ``widen`` ones; ``extra_paths`` it may only repeat or shrink, so a plan cannot open a directory outside the project.
+# ``widen`` ones; ``extra_paths`` it may only repeat or shrink, so a plan cannot open a directory outside the project;
+# ``runtime_paths`` it may only add to, so a plan cannot make a runtime artifact a product file.
 FLOOR_NARROW = (("instructions", "sandbox_domains"), ("scope", "extra_paths"))
-FLOOR_WIDEN = (("instructions", "isolate_roles"),)
+FLOOR_WIDEN = (("instructions", "isolate_roles"), ("scope", "runtime_paths"))
+# Numeric ceilings: a work-source layer may lower them; zero disables a ceiling and is never a tightening.
+FLOOR_CEILING = (("limits", "skill_tokens_max"),)
 # Folders an extra writable path may never be, contain, or lie in (besides the root, HOME and the project's ancestors).
 SYSTEM_DIRS = ("/bin", "/boot", "/dev", "/etc", "/lib", "/lib32", "/lib64", "/proc", "/run", "/sbin", "/sys", "/usr", "/var")
 HOME_SECRETS = (".ssh", ".gnupg", ".aws", ".kube", ".docker", ".netrc", ".password-store")
@@ -149,6 +163,8 @@ def merge(base: dict, layer: dict) -> dict:
             out["rules"] = _dedupe(list(out.get("rules", [])) + list(value))
         elif key in ("limits", "review", "checks", "instructions", "scope", "session", "on_error"):
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
+            if key == "limits" and "role_timeout_s" in value:  # by role: a layer names the walls it changes
+                out[key]["role_timeout_s"] = {**(base.get(key, {}).get("role_timeout_s") or {}), **value["role_timeout_s"]}
         elif key == "skills":
             out[key] = {**out.get(key, {}), **{entry["role"]: list(entry["names"]) for entry in value}}
         else:
@@ -265,6 +281,11 @@ def floor_problems(current: dict, layer: dict, sources: dict) -> list:
             dropped = sorted(set(current[group][key]) - set(layer[group][key]))
             if dropped:
                 issues.append(f"{group}.{key} drops {', '.join(dropped)} kept by {below(group, key)}")
+    for group, key in FLOOR_CEILING:
+        if key in (layer.get(group) or {}):
+            old, new = current[group][key], layer[group][key]
+            if new == 0 or (old > 0 and new > old):
+                issues.append(f"{group}.{key} {new} loosens the ceiling {old} of {below(group, key)}")
     return issues
 
 

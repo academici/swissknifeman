@@ -352,7 +352,66 @@ module affects only itself and its bridges: no module requires another one, so t
 (`standalone.tools`, now `analyst` and `maind`) is tested only when its own files change, because it only reads data (and maind writes
 it) and is not part of the core; its tests run when the tool itself is developed (`bash packages/<tool>/scripts/test.sh`). The full pass of every non-tool unit
 (`--tier all --run`, plus `scripts/test-integration.sh`) is for the end of a phase or a release, not for each item; the quick pass runs
-for each item.
+for each item. Hub checks finish before unit jobs; units run in descending order of their last measured duration.
+`--fail-fast` stops submitting jobs after the first failure and marks unstarted commands `[skipped]`; running jobs finish.
+In `full`/`all`, each unit runs test then validate. Validate gets `SKM_VALIDATE_SKIP_TESTS=1` only after that unit's full
+test ran (or was reused as green); a failed test still fails the invocation. Focused tests never permit this skip.
+Fast can select explicit test-file subsets for known planner/orch test-only changes; unknown helpers, runners, product
+inputs and dependency mappings fall back to full suites, retaining the owner and dependent-unit closure. Mixed changes
+combine obligations; renames include both owners, and `--base` also includes untracked files. `--json` explains the
+profiles, inputs, context, per-unit obligation and requested/effective jobs. Nested runners divide `SKM_TEST_JOBS`.
+
+Green receipts are bound to content, Python, tools, configuration and execution environment; changed inputs during a
+command prevent reusable green. `--tier all` never uses the general green cache: reuse requires a safe `SKM_CHECK_RUN`
+(`A-Za-z0-9`, then letters, digits, `_` or `-`) and is confined to that conductor run. Manual/release runs without that
+variable stay full; `--no-cache` disables all reuse. Receipts and duration data are atomically merged in the git
+directory, and run receipts older than 14 days are pruned when a run cache is written. Planner's `scripts/test.sh`
+discovers the engine once; `-p PATTERN` selects matching test files for a focused check.
+
+**Measuring the runners.** `python3 scripts/bench-checks.py --before REV [--pairs N] [--warm] [--commands-file FILE] [--out FILE]`
+times the same commands on `REV` (a detached `git worktree` in `$TMPDIR/skm-bench-<pid>`, removed in `finally`) and on the
+current tree, in 2 (at most 3) before/after pairs that alternate which side runs first. The default workload is one cold
+`python3 scripts/affected-tests.py --run --tier all --no-cache` per side and pair: it already contains the orch, planner and
+validate suites, so those are not run again. `--warm` adds warm scheduling and warm result reuse (the same tier twice in one
+`SKM_CHECK_RUN`) as results of their own; a `diagnostic: true` command of `--commands-file` is timed but never part of the
+total. Both sides get the same Python, `SKM_TEST_JOBS` and their own partner roots; a non-zero exit is recorded, not raised
+(an error of the bench is exit 2: `BENCH_REV_INVALID`, `BENCH_PAIRS_INVALID`, `BENCH_COMMANDS_INVALID`,
+`BENCH_WORKTREE_FAILED`). The document `urn:swissknifeman:hub:bench-checks:v1`
+(`configs/schemas/bench-checks.schema.json`, default `.swissknifeman/orch/reports/p2-bench.json`) holds per-pair timings,
+`ratio` (after/before by command id), `total.ratio` against the target 2/3, `loadavg` and `cpu_count` (compare ratios, not
+seconds: the machine load moves them), the logical workload of each side (`affected-tests.py --json`) and a case census
+(`SKM_PAR_UNITTEST_REPORT=<dir>/report-{pid}.json`, one file per runner): case ids by context, executed, skipped, retries and
+invocations, equal or not between the sides; a runner that cannot write the report is "not comparable", never guessed.
+The base of P2 is the parent of the first `Plan-Ref: P2.1` commit of the plan.
+
+For the default workload the bench also takes an **execution census** (`--no-census` skips it, `--census` asks for it with a
+commands file): after the timing pairs it runs the workload once more on each side with an observer
+(`usercustomize.py` in an isolated `PYTHONUSERBASE`, so it survives `test.sh` replacing `PYTHONPATH`) that records every test
+that really ran, with outcome, skip reason, subtest failures and context, into per-process ledgers; the timings of these two
+runs never enter a ratio. Before the observed runs the observer is shown to be transparent (same unittest result with and
+without it) and active in the plain and the `par_unittest` driver of both trees. A case that ran on one side only must be
+explained by the source (`added: new method`, `removed: method gone`); a method that merely vanished from the source is an observation, never proof that its assertion is still run, so a removed case keeps the verdict unknown until an explicit mapping (`{"ctx|key": {"replacement": ..., "reason": ...}}`) names a replacement that ran and passed; an unknown primary outcome (the observer could not read the result) is unknown too; a missing start/end marker, a test unit with no observed
+test or an unreadable ledger is *unknown*, never zero or equal. The whole default measurement is at most six workload
+executions (two pairs plus the two observations; `BENCH_BUDGET_EXCEEDED` otherwise). The timing cache of `affected-tests` is put
+back before every cold leg and at the end, and the source identity of the current tree must not move during the run.
+**Recovery** (`--recovery-evidence FILE`, after a producer crash or a census that could not be completed): no timing leg is
+run. The four recorded legs of FILE (found by content: `side`/`seconds`/`exit` rows, or `before`/`after` lists with `exits`) are
+reused only while the base revision, Python, jobs, the workload and the *relevant inputs* (`relevant_inputs: {path: sha256}`,
+or the recorded source identity of the timed candidate) still match; a missing proof is `valid: null`, a mismatch `false`, and
+either leaves `target_met` `null`. Missing load averages stay empty (`loadavg_reason`). At most two new observation workloads
+are taken (before, then after), only after a workload-free **preflight** on tiny fixtures (transparent plain driver, replaced
+`PYTHONPATH`, a `sys.executable` child, skip/subtest/expected-failure/import-failure outcomes, real `par_unittest` `--worker`
+processes over two modules in both trees, a lossless surrogate checkpoint). Paths handed to children are always absolute (the output may be given relative to the project). A failed preflight with no admitted
+observation may run again; the failed receipt is kept in `preflight_history`. Each attempt is written to
+`<out>.recovery/attempts.json` before it starts, so the cap survives corrections; the first incomplete observation stops the
+second; raw ledgers stay under `<out>.recovery/ledger-<side>/`; a later invocation recomputes from them and runs nothing. Two
+activation channels are used together (an isolated `PYTHONUSERBASE` and a `python3` shim around the same absolute interpreter
+with `sitecustomize`); the observer never wraps twice. JSON is written ASCII-escaped, so a path with undecodable bytes is kept.
+
+`result.target_met` is `null` when the timings are not valid and comparable (failed or timed-out runs, a different logical
+workload, a moving source) or when the ratio is within 2/3 but the census is not conserved; `false` for a valid ratio above
+exactly 2/3; `true` only for a valid ratio at or below 2/3 with a conserved census. `python3 scripts/bench-census.py gate
+BENCH.json` re-derives that verdict from the document alone and fails if the document claims more than its own evidence shows.
 
 **Bridges.** A package core stays pure: it never names other repository packages. All knowledge
 about a partner lives in a bridge, a unit of the hub in `bridges/<id>/` (`unit.json` of kind `bridge`), which talks to
@@ -465,81 +524,120 @@ Verification uses the planner, Harness, mAInd and Skiller validators, registry f
 route/workflow/memory/retirement tests. Archived PLAN1 may warn about old removed reads; it remains
 schema-valid historical data and is not rewritten by this reconciliation.
 
-## Ecosystem split branch (temporary)
+## Stable worktree (development of a big plan)
 
-The ecosystem is being split into isolated modules on the long-lived branch `ecosystem-split`. This section
-describes how that work is isolated from a working machine. It is removed at cutover (the last phase of the plan).
+1. **Why a worktree.** The live checkout `~/projects/packages/swissknifeman` stays on `main`. Links in
+   `~/.local/bin`, project launchers, marketplace paths and mAInd MCP point there: an uncommitted edit changes
+   the tools of every connected project immediately. Develop in `~/projects/packages/swissknifeman-next` on
+   a phase branch `stable/p<N>`. Both worktrees share git objects and branches, so promotion needs no fetch.
+   Keep the live checkout unchanged until phase validation passes.
 
-1. **Why a separate clone.** The live checkout `~/projects/packages/swissknifeman` stays on `main`. The CLIs in
-   `~/.local/bin`, the `swissknifeman` marketplace and the connected projects point to it, so a half-finished
-   branch must never run from there. The work happens in a second clone on the branch.
-2. **Setup on any computer.**
+2. **Prepare and bind.** The owner or operator creates the worktree and makes it the project's primary binding:
+
    ```bash
-   git clone -b ecosystem-split https://github.com/academici/swissknifeman.git ~/projects/packages/swissknifeman-next
-   cd ~/projects/packages/swissknifeman-next && scripts/dev-clone.sh init
+   cd ~/projects/packages/swissknifeman
+   scripts/dev-worktree.sh create --branch stable/p1
+   cd ~/projects/packages/swissknifeman-next
+   scripts/dev-worktree.sh bind
+   scripts/dev-worktree.sh status
    ```
-   `init` creates the untracked marker `.swissknifeman-dev` (never committed) and sets the upstream. It refuses
-   on `main`/`master` (`DEV_CLONE_ON_MAIN`) and is safe to repeat.
-3. **Guard.** While the marker exists, the entry points of the clone (`bin/swissknifeman`, the module CLIs, the
-   installers and `scripts/bootstrap-machine.sh`) refuse to run against the real `HOME`: exit code 3 and a
-   `SKM_DEV_GUARD` line in stderr. Run them inside a sandbox (next item). `SKM_DEV_ALLOW_LIVE=1` lifts the
-   guard and is a conscious exception, for example when deliberately switching the live installation over. The
-   test runners (`packages/*/scripts/test.sh`, `scripts/test-bootstrap-machine.sh`) use a throwaway `HOME`
-   themselves; running `python3 -m unittest` directly from the clone with the real `HOME` is refused by the
-   guard.
-4. **Sandbox.** `scripts/dev-sandbox.sh new [--name N] [--copy <project>]...` creates
-   `${TMPDIR:-/tmp}/skm-sandbox-<N>` with its own `HOME`/XDG directories and copies of the projects (the
-   originals are never modified) and prints its path. Use `run DIR -- <command>` to execute a command with that
-   environment (`packages/skiller/bin/skiller --help` passes the guard there), `source DIR/env.sh` for an
-   interactive shell, `list` to see sandboxes and `remove DIR` to delete one. `remove` deletes only a directory
-   named `skm-sandbox-*` that sits directly in `TMPDIR` and holds the `.skm-sandbox` marker. Provider CLIs
-   (`claude`, `codex`, `grok`) are not logged in inside a sandbox.
-   `scripts/e2e-module-skills.sh` uses a sandbox to check that the skills of the modules reach a project through
-   `skiller connect` and `skiller sync`.
-5. **Plan execution.** The plan lives in `plans/<PLAN-ID>` of the clone; its architecture is in the plan's
-   `knowledge/architecture.json`. It is executed by the stable `plan.py` of the live checkout, not by the
-   `plan.py` in the clone, so the engine keeps working while the layout changes:
-   `python3 ~/projects/packages/swissknifeman/packages/planner/scripts/plan.py <verb> <plan> ... --plans-root ~/projects/packages/swissknifeman-next/plans`.
-   The `/planner:*` commands are installed from the live checkout (`claude plugin install planner@swissknifeman
-   --scope local` in the clone). Do not edit the live checkout while a plan runs.
-6. **Phase rhythm.** At the start of a phase run `scripts/dev-clone.sh sync-main` (clean tree required; a
-   conflict stops with `DEV_CLONE_CONFLICT` and the file list, nothing is resolved automatically). Run the
-   package test runners and the standalone checks of the phase. At the end of the phase `git push origin
-   ecosystem-split` (no force). On another computer `scripts/dev-clone.sh status` shows the branch, whether the
-   marker is present and how far it is ahead of or behind `origin/main` and `origin/ecosystem-split`.
-7. **Module checks.** Every `packages/<id>/` folder is a module described by its `unit.json`
-   ([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
-   - `check [--strict] [--json]` runs the manifest, ownership-map, schema-identifier and boundary checks. Boundary
-     violations that exist today are recorded in `configs/ecosystem-baseline.json`: a new violation (or a larger count)
-     fails with `ECOSYSTEM_BOUNDARY_NEW`, a smaller one is reported as an improvement, and `--strict` fails on any. The baseline is empty and CI runs `check --strict`, so any violation fails; a path or import of
-     another module in code is never allowed, and `path_allow` holds only data with a reason.
-   - `baseline --update` recomputes the baseline and prints the difference. Commit it only together with the reason in
-     the commit message; a baseline update never hides a violation that was just introduced.
-   - `render [--check]` regenerates `docs/architecture/ownership.md` from `configs/ecosystem-units.json` and the
-     manifests; `--check` fails when the file differs.
-   - `standalone <id>... | --all | --baseline [--update-baseline]` runs the tests of a module in a copy of its folder
-     with a stand-in for `aicore` and its own `HOME`. `--baseline` runs the modules recorded as `pass` and fails if any
-     stops passing; it is the CI job `standalone`. Modules recorded as `fail` become autonomous in their own stages.
-   - `list [--json]` prints the modules with kind, version, destination, stability and requirements.
 
-   The tests are `python3 scripts/test-ecosystem-units.py`; CI runs the checks and `render --check` in the hygiene
-   workflow.
-8. **Golden cycle.** `scripts/golden.py` pins the behaviour that must survive the move: the output of 26 CLI cases
-   (`tests/golden/cases.json`, `tests/golden/cli/*.txt`, run in a throwaway sandbox with paths, hashes and timestamps
-   normalised) and sha256 digests of generated files plus the `--check` of each generator
-   (`tests/golden/generation.json`). It is migration scaffolding, not a CI step.
-   - `golden.py list` shows the cases; `golden.py check [--only ID,...]` compares and prints a diff per differing case
-     (exit 1).
-   - A case may set `cwd` using `{REPO}` or `{SANDBOX}`. Project-state readers such as `analyst status` run in
-     `{SANDBOX}/projects`, an empty project, with an absolute launcher path under `{REPO}`. An isolated `HOME`
-     alone does not isolate state stored in the checkout.
-   - Local bootstrap skills outside the generated catalog can make the registry completeness check fail in a
-     configured development checkout. Preserve them and verify the complete golden set in a clean tracked
-     worktree of the candidate; include any uncommitted candidate changes before checking it.
-   - At the start of a stage, after `scripts/dev-clone.sh sync-main`, run `golden.py check`. If `main` changed generated
-     output, run `golden.py capture --reason "sync main <sha>"` in a separate commit before moving any code.
-   - A stage that moves code must pass `golden.py check` byte for byte. An intended change of behaviour is recorded with
-     `golden.py capture --only ID,... --reason "..."` in the same change, with the explanation in the commit message.
-   - The fate of the fixtures after the merge is decided at the cutover.
-9. **Removal.** The guard blocks, the marker, `scripts/dev-clone.sh`, `scripts/dev-sandbox.sh` and this section
-   are removed at cutover. The module checks and `docs/architecture/` stay.
+   `create` defaults to `--from main`, `--branch stable/p1` and a sibling `swissknifeman-next`; `--path DIR`
+   changes the target. It refuses an existing path (`DEV_WORKTREE_EXISTS`) or branch (`DEV_WORKTREE_BRANCH_EXISTS`).
+   `status [--json]` reports branch, HEAD, ahead/behind main, changed and untracked counts, workspace/project,
+   primary binding and whether it points here. JSON marker and status boundaries are validated against schemas;
+   the script-owned status schema is embedded in the script. The workspace CLI override
+   `SKM_DEV_WORKTREE_WORKSPACE_CLI` exists only for isolated tests.
+   `bind` runs one mutation:
+   `workspace project rebind <project_id> --path <worktree> --preserve-paths --include-path <live> --json`.
+   `unbind` runs the same command with `--path <live> --include-path <worktree>` to restore the live primary.
+   Each command validates both checkout markers and includes both paths in one transaction, even if either path
+   was initially unbound. All previous paths keep their order, including missing directories; `bound_at` and other
+   projects are preserved. Repeating either command adds no duplicates. These commands change machine bindings;
+   the owner or operator runs them, never an item executor. CLI failures give `DEV_WORKTREE_BIND_FAILED`.
+
+3. **Execute through the worktree launcher.** Plans stay in the shared workspace. The launcher chooses this
+   checkout while installed planner, conductor and bridges keep running from the stable live checkout:
+
+   ```bash
+   cd ~/projects/packages/swissknifeman-next
+   python3 -I .swissknifeman/launcher.py orch conduct --project "$PWD" run --plan <PLAN> --items <ITEM>
+   ```
+
+   A launcher binding is PID-bound and does not bind conductor subprocesses. The bridge invokes planner with
+   cwd equal to the project, so the primary binding must point to the worktree **before the first run**.
+   A bare `plan.py` command in another checkout of the same workspace/project refuses with
+   `CHECKOUT_BINDING_MISMATCH` before using source paths. Use that checkout's launcher, or rebind it.
+   Commands through the live checkout's own launcher continue to resolve to that checkout.
+   Test changed tools from the worktree; keep the installed execution tools stable until promotion.
+
+4. **Promote a validated phase.** After phase validation, run:
+
+   ```bash
+   scripts/dev-worktree.sh promote-check --branch stable/p1
+   ```
+
+   It requires the live checkout to have `main` checked out (`DEV_WORKTREE_LIVE_NOT_MAIN`): another
+   branch or a detached HEAD is refused even at the same commit as `main`. It also requires an existing
+   branch (`DEV_WORKTREE_NO_BRANCH`), `main` to be its ancestor
+   (`DEV_WORKTREE_NOT_FF`), no tracked changes in the live checkout (`DEV_WORKTREE_LIVE_DIRTY`) and a clean
+   worktree including untracked files (`DEV_WORKTREE_DIRTY`). It prints the owner's commands:
+
+   ```bash
+   [ "$(git -C ~/projects/packages/swissknifeman symbolic-ref --quiet HEAD)" = refs/heads/main ] && git -C ~/projects/packages/swissknifeman merge --ff-only stable/p1
+   swissknifeman doctor
+   ```
+
+   The printed merge explicitly targets the verified live checkout and checks again that it is on `main`.
+   The script never merges, pushes, resets, cleans or removes a worktree. The operator promotes by fast-forward
+   after green phase validation. Start the next phase in the worktree with a new branch from the promoted
+   `main`, for example `git switch -c stable/p2 main`.
+
+5. **Sandbox (permanent tool, PLAN3 D88).** `scripts/dev-sandbox.sh new [--name N] [--copy <project>]...`
+   creates `${TMPDIR:-/tmp}/skm-sandbox-<N>` with its own `HOME`/XDG directories and copies of the projects
+   (the originals are never modified) and prints its path. Use `run DIR -- <command>` to execute a command
+   with that environment, `source DIR/env.sh` for an interactive shell, `list` to see sandboxes and
+   `remove DIR` to delete one. `remove` deletes only a directory named `skm-sandbox-*` directly in `TMPDIR`
+   with the `.skm-sandbox` marker. Provider CLIs (`claude`, `codex`, `grok`) are not logged in inside it.
+   Run `harness instructions apply`, `skiller budget` and other HOME-dependent manual checks there.
+   `scripts/e2e-module-skills.sh` uses a sandbox to check `skiller connect` and `skiller sync`.
+
+6. **Golden cycle (permanent tool, PLAN3 D88).** `scripts/golden.py` pins behaviour across code moves:
+   CLI fixtures (`tests/golden/cases.json`, `tests/golden/cli/*.txt`) run in a throwaway sandbox with paths,
+   hashes and timestamps normalised; generated files have sha256 digests and generator freshness checks
+   (`tests/golden/generation.json`). `golden.py list` shows cases; `golden.py check [--only ID,...]` compares
+   them and prints a diff (exit 1 on differences).
+   A case may set cwd using `{REPO}` or `{SANDBOX}`. Project-state readers such as `analyst status` run in
+   `{SANDBOX}/projects`, an empty project, with an absolute launcher path under `{REPO}`: an isolated HOME
+   alone does not isolate checkout state. Preserve local bootstrap skills if they make completeness checks
+   fail; check the candidate in a clean tracked worktree including any uncommitted candidate changes.
+   At the start of each phase from `main`, check the relevant golden fixtures. A code move preserves them
+   byte for byte. Record intended output changes with `golden.py capture --only ID,... --reason "..."`
+   and an explanation; never recapture the whole set to hide unrelated regressions.
+
+7. **Finish.** The owner or operator runs `scripts/dev-worktree.sh unbind`, changes to the live checkout,
+   then removes the finished worktree with `git worktree remove ~/projects/packages/swissknifeman-next`.
+   The sandbox and golden tools stay available.
+
+### Module checks
+
+`packages/aicore/scripts/test.sh` and `packages/skiller/scripts/test.sh` accept no arguments
+or a single `-v`. Unsupported arguments exit 2 before Python starts. For a specific test,
+use an explicit unittest module/file selector with the module's isolated environment;
+these two shell entry points do not implement `-p`.
+
+Every `packages/<id>/` folder is a module described by its `unit.json`
+([architecture](architecture/index.md)). `scripts/ecosystem-units.py` guards that:
+
+- `check [--strict] [--json]` checks manifests, ownership, schema identifiers and module boundaries.
+  The baseline is empty and CI runs `check --strict`, so any violation fails; cross-module imports or
+  code paths are forbidden, and `path_allow` holds only data with a reason.
+- `baseline --update` recomputes the baseline and prints differences. Commit it only with the reason;
+  it never hides a newly introduced violation.
+- `render [--check]` generates `docs/architecture/ownership.md` from `configs/ecosystem-units.json` and
+  manifests; `--check` fails on drift.
+- `standalone <id>... | --all | --baseline [--update-baseline]` tests modules in copies with a stand-in
+  for `aicore` and isolated HOME; the CI `standalone` job runs the recorded passing baseline.
+- `list [--json]` reports module kind, version, destination, stability and requirements.
+
+Tests live in `scripts/test-ecosystem-units.py`; the hygiene workflow checks boundaries and `render --check`.

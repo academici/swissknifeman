@@ -15,8 +15,9 @@ import tempfile
 import unittest
 from unittest import mock
 
+from aicore.ext import events
 from orch import settings
-from orch.conductor import cli, engine, process, progress, questions, runs
+from orch.conductor import agents, cli, engine, process, progress, questions, runs
 from orch.conductor.application import recovery, review_plan
 from orch.conductor.infrastructure import lease
 from orch.conductor.infrastructure.files import RunStore, read_json, write_json
@@ -334,7 +335,8 @@ class RunLeaseTests(unittest.TestCase):
     def test_sigkill_conductor_leaves_role_then_resume_stops_it_before_loop(self):
         agent = self.directory / "W1/agents/one"
         agent.mkdir(parents=True)
-        write_json(agent / "request.json", {"step": "executor.1"})
+        write_json(agent / "request.json", {"agent_run_id": "one", "step": "executor.1", "role": "executor",
+                                           "route": {"provider": "codex"}, "attempt": 1})
         address = str(self.project / "ready.fifo")
         os.mkfifo(address)
         reader = os.open(address, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
@@ -381,6 +383,47 @@ c.resume(sys.argv[2])
             self.assertEqual(0, conductor.resume(self.store.run_id))
         killed = [row for row in progress.read_lines(self.directory) if row.get("reason_code") == "ROLE_ORPHAN_KILLED"]
         self.assertEqual(1, len(killed))
+        self.assertEqual("failed", agents.read(self.directory / "W1")[0]["status"])
+        self.assertEqual("ORPHANED", read_json(agent / "result.json")["error"]["code"])
+        recovery.kill_orphaned_roles(conductor)  # a second recovery preserves the result and event count
+        failed = [event for event in events.read_events(self.project)[0] if event.type == "orch.agent.failed"]
+        self.assertEqual(1, len(failed))
+        self.assertEqual({"class": "orphaned", "code": "ORPHANED"}, failed[0].data["error"])
+        self.assertEqual(self.store.run_id, failed[0].correlationid)
+
+    def test_dead_or_reused_process_closes_agent_and_preserves_existing_results(self):
+        conductor = self.conductor()
+        conductor._open(self.store.run_id, *self.store.load(), self.store)
+        conductor.state["items"]["W1"]["orch_run"] = "work-first"
+        for number, ticks in enumerate((None, 124), 1):
+            handle = agents.start(self.directory / "W1", f"agent-{number}", role="executor", route={"provider": "codex"},
+                                  step="executor.1", attempt=1, prompt="prompts/executor.1.md", parent=None,
+                                  started_at="2026-10-20T10:00:00Z")
+            directory = handle["directory"]
+            write_json(directory / "process.json", {"pid": 424242, "pgid": 424242, "start_ticks": 123})
+            write_json(directory / "usage.json", {"input": 17, "cached": 0, "output": 0, "usage_complete": False})
+            with mock.patch.object(process, "start_ticks", return_value=ticks), \
+                    mock.patch.object(recovery.os, "killpg") as kill:
+                recovery.kill_orphaned_roles(conductor)
+                result = (directory / "result.json").read_bytes()
+                recovery.kill_orphaned_roles(conductor)
+                kill.assert_not_called()
+            self.assertEqual(result, (directory / "result.json").read_bytes())
+            self.assertEqual("ORPHANED", read_json(directory / "result.json")["error"]["code"])
+            self.assertEqual(17, read_json(directory / "usage.json")["input"])
+        rows = agents.read(self.directory / "W1")
+        self.assertEqual(["failed", "failed"], [row["status"] for row in rows])
+        failed = [event for event in events.read_events(self.project)[0] if event.type == "orch.agent.failed"]
+        self.assertEqual(2, len(failed))
+        self.assertTrue(all(event.correlationid == "work-first" for event in failed))
+        self.assertTrue(all(event.data["role"] == "executor" for event in failed))
+        # A finished role's receipt remains authoritative even if its step was not saved before the crash.
+        directory = self.directory / "W1/agents/agent-1"
+        write_json(directory / "result.json", {"exit": 0})
+        with mock.patch.object(process, "start_ticks", return_value=None):
+            recovery.kill_orphaned_roles(conductor)
+        self.assertEqual({"exit": 0}, read_json(directory / "result.json"))
+        self.assertEqual(2, len([event for event in events.read_events(self.project)[0] if event.type == "orch.agent.failed"]))
 
     def test_reused_pid_and_completed_step_are_not_signalled(self):
         child = subprocess.Popen([sys.executable, "-I", "-u", "-c",
@@ -431,6 +474,53 @@ c.resume(sys.argv[2])
                     self.assertEqual(0, conductor.resume(self.store.run_id))
                 self.assertEqual([mock.call(424242, signal.SIGTERM), mock.call(424242, signal.SIGKILL)], kill.call_args_list)
             self.assertFalse(lease.RunLease.held(self.directory))
+
+    def test_identity_change_after_term_closes_the_original_and_does_not_signal_the_replacement(self):
+        directory = self.directory / "W1/agents/one"
+        directory.mkdir(parents=True)
+        write_json(directory / "request.json", {"agent_run_id": "one", "role": "executor",
+                                                "route": {"provider": "codex"}, "step": "executor.1", "attempt": 1})
+        write_json(directory / "process.json", {"pid": 424242, "pgid": 424242, "start_ticks": 123})
+        write_json(directory / "usage.json", {"input": 17, "cached": 0, "output": 0, "usage_complete": True})
+        conductor = self.conductor()
+        conductor._open(self.store.run_id, *self.store.load(), self.store)
+        conductor.state["items"]["W1"]["orch_run"] = "work-first"
+        ticks = {"n": 0}
+        clock = {"n": 0}
+
+        def start_ticks(_pid):
+            ticks["n"] += 1
+            return 123 if ticks["n"] == 1 else 124
+
+        def monotonic():
+            clock["n"] += 1
+            return 0 if clock["n"] < 3 else 11
+
+        with mock.patch.object(process, "start_ticks", side_effect=start_ticks), \
+                mock.patch.object(recovery.os, "getpgid", return_value=424242), \
+                mock.patch.object(process, "_group_alive", return_value=True), \
+                mock.patch.object(recovery.time, "monotonic", side_effect=monotonic), \
+                mock.patch.object(recovery.time, "sleep"), \
+                mock.patch.object(recovery.os, "killpg") as kill:
+            with self.assertRaises(engine.Stop) as caught:
+                recovery.kill_orphaned_roles(conductor)
+            self.assertEqual("ROLE_FAILED", caught.exception.code)
+            self.assertIn("changed identity", caught.exception.message)
+            self.assertEqual([mock.call(424242, signal.SIGTERM)], kill.call_args_list)
+        self.assertEqual("ORPHANED", read_json(directory / "result.json")["error"]["code"])
+        self.assertEqual(17, read_json(directory / "usage.json")["input"])
+        self.assertEqual("failed", agents.read(self.directory / "W1")[0]["status"])
+        failed = [event for event in events.read_events(self.project)[0] if event.type == "orch.agent.failed"]
+        self.assertEqual(1, len(failed))
+        self.assertEqual({"class": "orphaned", "code": "ORPHANED"}, failed[0].data["error"])
+        with mock.patch.object(process, "start_ticks", return_value=124), \
+                mock.patch.object(recovery.os, "killpg") as kill:
+            recovery.kill_orphaned_roles(conductor)
+            kill.assert_not_called()
+        self.assertEqual(17, read_json(directory / "usage.json")["input"])
+        failed = [event for event in events.read_events(self.project)[0] if event.type == "orch.agent.failed"]
+        self.assertEqual(1, len(failed))
+        self.assertEqual("ORPHANED", read_json(directory / "result.json")["error"]["code"])
 
 
 if __name__ == "__main__":

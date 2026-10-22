@@ -120,7 +120,7 @@
     }
   },
   "budgets": {
-    "brief_max_bytes": 65536,
+    "brief_max_bytes": 1048576,
     "packer_input_max_bytes": 262144,
     "stage_tokens_max": 0
   }

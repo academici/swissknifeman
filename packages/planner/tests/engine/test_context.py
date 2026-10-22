@@ -156,7 +156,8 @@ class JsonContextTests(test_lifecycle.LifeCase):
                                                  {"ref": "artifact/gone", "why": "w", "required": True},
                                                  {"ref": "knowledge/gone", "why": "w", "required": False}]})
         self.assertEqual(context.missing_reads(self.load(), "P1.1"), ["@plan/knowledge/gone.json", "artifact/gone"])
-        self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+        error = self.refused("PLAN_INVALID", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+        self.assertTrue(any(i.code == "ref_unknown" for i in error.issues))
 
     def test_a_ref_to_another_plan_is_not_readable(self):
         force_patch(self.root, "P1.1", {"reads": [{"ref": "PLAN3.D1", "why": "w", "required": False}]})
@@ -177,7 +178,8 @@ class JsonContextTests(test_lifecycle.LifeCase):
             with self.subTest(extra=extra):
                 force_patch(self.root, "P1.1", {"reads": [{**extra, "why": "needed", "required": True}]})
                 self.assertTrue(context.missing_reads(self.load(), "P1.1"))
-                self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+                error = self.refused("PLAN_INVALID", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+                self.assertTrue(any(i.code == "ref_unknown" for i in error.issues))
 
     def test_required_ref_section_titles_remain_readable_via_section_key(self):
         self.add_design()
@@ -188,7 +190,8 @@ class JsonContextTests(test_lifecycle.LifeCase):
 
     def test_views_never_supply_agent_input(self):
         force_patch(self.root, "P1.1", {"reads": [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad", "required": False}]})
-        self.refused("HUMAN_VIEW", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+        error = self.refused("PLAN_INVALID", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+        self.assertTrue(any(i.code == "human_view" for i in error.issues))
         self.assertEqual(self.load().items["P1.1"]["status"], "todo")
 
     def test_an_item_in_progress_may_start_again_after_its_own_work_moved_a_read(self):
@@ -216,7 +219,8 @@ class JsonContextTests(test_lifecycle.LifeCase):
     def test_authored_plan_markdown_is_not_an_execution_source(self):
         (self.root / "notes.md").write_text("Private old plan notes")
         force_patch(self.root, "P1.1", {"reads": [{"path": "@plan/notes.md", "why": "bad", "required": True}]})
-        self.refused("HUMAN_VIEW", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+        error = self.refused("PLAN_INVALID", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))
+        self.assertTrue(any(i.code == "human_view" for i in error.issues))
 
     def test_upstream_results_and_foreign_decisions_remain_structured(self):
         self.start("P1.1")

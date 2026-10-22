@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
-# test.sh — the tests of planner (tests/ and the plan engine tests/engine) in a throwaway home; the quick check of a
-# change. scripts/validate.sh runs them too, with the structural checks and the plan checks.
+# test.sh [-p PATTERN] — discover tests/ once, including tests/engine, in a throwaway home.
+# scripts/validate.sh also runs this suite unless its caller has already run the full set.
 set -euo pipefail
+PATTERN='test_*.py'
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -p)
+      [[ $# -ge 2 && -n "$2" && "$2" != -* ]] || { echo "usage: test.sh [-p PATTERN]" >&2; exit 2; }
+      PATTERN="$2"; shift 2 ;;
+    *) echo "usage: test.sh [-p PATTERN]" >&2; exit 2 ;;
+  esac
+done
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 # --- aicore locator ---
@@ -32,15 +41,10 @@ hermetic() { env -u SKM_WORKSPACES -u SKM_WORKSPACES_ROOT -u SKM_WORKSPACE HOME=
 # SKM_TEST_JOBS=1 gives the sequential run.
 UT=(python3 -m unittest)
 if PYTHONPATH="$AICORE_LIB" python3 -c "import aicore.util.par_unittest" 2>/dev/null; then UT=(python3 -m aicore.util.par_unittest); fi
-# the two suites are independent and run side by side; each prints its own result when it ends
-fail=0
-pids=()
-for start in tests tests/engine; do
-  ( hermetic PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
-      "${UT[@]}" discover -s "$start" -p "test_*.py" >"$TEST_HOME/${start//\//-}.log" 2>&1 && status=0 || status=$?
-    echo "== $start"; tail -n 40 "$TEST_HOME/${start//\//-}.log"; exit "$status" ) &
-  pids+=("$!")
-done
-for pid in "${pids[@]}"; do wait "$pid" || fail=1; done
-[ "$fail" = 0 ] || echo "FAIL: planner unittest" >&2
-exit "$fail"
+# Recursive discovery already includes engine; a second start directory would run it twice.
+hermetic PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
+  "${UT[@]}" discover -s tests -p "$PATTERN" >"$TEST_HOME/tests.log" 2>&1 && status=0 || status=$?
+echo "== tests"
+tail -n 40 "$TEST_HOME/tests.log"
+[[ "$status" = 0 ]] || echo "FAIL: planner unittest" >&2
+exit "$status"

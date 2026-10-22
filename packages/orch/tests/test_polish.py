@@ -1,6 +1,7 @@
 """Observer polish before P13: messages that name verbs that exist, a repeated ``--retry``."""
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 import signal
@@ -184,7 +185,8 @@ class TerminatedRun(unittest.TestCase):
 
         me = types.SimpleNamespace(_pieces=pieces, _disk_guard=lambda: None, state={"items": {}}, _segment=None,
                                    _active_s=lambda: 0.0, _save=lambda: None, directory=Path("."), project=Path("."),
-                                   reports_dir=lambda: Path("."), progress=mock.Mock(), run_doc={}, _batch_held=lambda: False)
+                                   reports_dir=lambda: Path("."), progress=mock.Mock(), run_doc={}, _batch_held=lambda: False,
+                                   store=types.SimpleNamespace(mutating=contextlib.nullcontext))
         with mock.patch.object(loop.observer, "write_report", side_effect=RuntimeError("no report")):
             self.assertEqual(loop.loop(me), 130)
         self.assertEqual(seen["handlers"], {signal.SIGTERM: loop.terminated, signal.SIGHUP: loop.terminated})
@@ -256,7 +258,8 @@ class ReviewVerdict(unittest.TestCase):
 class SessionRoute(unittest.TestCase):
     def me(self, state: dict):
         return types.SimpleNamespace(state=state, _shared_session=lambda item, role, route: True, progress=mock.Mock(),
-                                     _session_mode=lambda item: "shared")  # a later piece resumes only a shared session
+                                     _session_mode=lambda item: "shared",  # a later piece resumes only a shared session
+                                     store=types.SimpleNamespace(mutating=contextlib.nullcontext))
 
     def test_a_piece_on_another_model_resumes_the_session_and_says_so_once(self):
         item = types.SimpleNamespace(ref="W2")

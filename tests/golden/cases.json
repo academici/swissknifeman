@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "dc5e213060ee",
-  "reason": "PLAN8 P1.2: add Grok scout, triager, researcher and advisor launch entries",
+  "captured_from": "afcb3e1a6c0f",
+  "reason": "P2.4: launch catalog 1.6.0 adds resume_argv to the codex executor row (intentional)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

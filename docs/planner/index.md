@@ -11,10 +11,9 @@ injected into every request.
 **When to take.** When an explicit route is useful for development, research, design or review.
 The normal task can be executed directly; teams do not require the creation of a plan.
 
-The previous names keep working for one minor release: the plugin `task` provides `/task:*` copies of the commands
-that print a deprecation line, `SKM_TASK_ROOT` is read with a warning when `PLANNER_ROOT` is not set, and plan URNs
-(`urn:swissknifeman:task:plan:*`) do not change. Codex, Cursor and Grok projections are refreshed by
-`swissknifeman upgrade`.
+The compatibility plugin `task`, the old planner-root variable and `task:<id>` spellings were removed in PLAN9 P1.2
+(window of PLAN3 D88). Plan URNs (`urn:swissknifeman:task:plan:*`) do not change. Codex, Cursor and Grok projections
+are refreshed by `swissknifeman upgrade`.
 
 Native installation of planner includes commands, configuration and the Python plan engine, not only skill
 projections. After the update, open a new session: the files on disk change, but an already running agent

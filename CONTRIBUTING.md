@@ -1,16 +1,24 @@
 # Contributing — swissknifeman (monorepo-umbrella)
 
-Guide for monorepo root contributors. This **ecosystem umbrella academici**: one repository -
-isolated modules in `packages/<id>/` (`aicore`, `skiller`, `planner`, `orch`, `maind`, `analyst`, `harness`, `brain`) + root router
-`swissknifeman`. Detailed map - in [`CLAUDE.md`](CLAUDE.md) (root and each package).
+Guide for monorepo root contributors. Swiss Knife Man is a local, provider-neutral control layer
+([Philosophy](docs/philosophy.md)): one repository of isolated modules in `packages/<id>/`
+(`aicore`, `planner`, `orch`, `skiller`, `harness`, `workspace`, `maind`, `analyst`, `brain`, `gui`)
+and the root router `swissknifeman`. Detailed map is in [`CLAUDE.md`](CLAUDE.md) (root and each package).
 
 ## Layout
 
 ```
 packages/aicore/      # foundation: stdlib-only util/provider/artifacts/usage, schemas, provider data
+packages/planner/     # typed JSON plans (CLI scripts/plan.py)
+packages/orch/        # deterministic conductor (CLI scripts/orch.py)
 packages/skiller/     # skill registry            (CLI skiller)   — see packages/skiller/CONTRIBUTING.md
 packages/harness/     # environment Claude Code      (CLI harness)
-packages/maind/       # memory hub/column/coordination (CLI maind)   — see packages/maind/CONTRIBUTING.md
+packages/workspace/   # portable plan store of every project (CLI workspace)
+packages/maind/       # memory, project graph, onboarding (CLI maind)   — see packages/maind/CONTRIBUTING.md
+packages/analyst/     # run analysis (CLI analyst)
+packages/brain/       # Obsidian vault sync (CLI brain)
+packages/gui/         # control plane (CLI gui)
+bridges/              # the only links between modules
 bin/swissknifeman     # root router (router + setup-facade)
 install.sh            # umbrella installer (delegates install.sh packages)
 ```
@@ -80,7 +88,7 @@ Python 3.9, 3.13 and 3.14; workflow supply-chain rules are in [SECURITY.md](SECU
   Umbrella, package API and installable plugin units have their own versions.
 - Provider caches are keyed by plugin version: changed content under an unchanged version is never
   re-fetched. Check with `python3 scripts/version-guard.py status --installed`, bump with
-  `version-guard.py bump <unit>` (`task` follows the umbrella — `skiller release`); details in the
+  `version-guard.py bump <unit>` (`planner` follows the umbrella — `skiller release`); details in the
   `release-discipline` skill.
 - Before tag: `skiller registry --check`, provider command generator `--check`,
   `skiller attest --release vX.Y.Z --previous vA.B.C`, then

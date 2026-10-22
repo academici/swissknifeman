@@ -21,6 +21,12 @@ except ImportError:  # run as `discover -s tests/engine` (no parent package)
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 GOLD_ID = "2026.10.05-№1-GOLD"
 P1 = "phases/P1/"
+# A detailed phase refuses a placeholder. These fields satisfy completeness without changing the scenario.
+_COMPLETE = {
+    "deliverables": ["d"],
+    "task_files": [{"path": "lib/x.py", "change": "any"}],
+    "validation": [{"id": "V1", "cmd": "true", "expect": "exit 0", "kind": "acceptance"}],
+}
 
 
 class GoldenTests(unittest.TestCase):
@@ -126,7 +132,7 @@ class RenderAllTests(unittest.TestCase):
         self.assertFalse(any(i.code == "stale_view" for i in issues))
 
     def test_mutations_keep_the_views_fresh(self):
-        ops.add_item(self.plan, "P1", "New item")
+        ops.add_item(self.plan, "P1", "New item", data=dict(_COMPLETE))
         self.assertEqual(views.render_all(self.plan, check=True), [])
         self.assertIn("New item", (self.root / "views/status.md").read_text(encoding="utf-8"))
 
@@ -178,13 +184,13 @@ class NextActionTests(unittest.TestCase):
         self.assertEqual(action["launch"]["codex"], f"$ planner:plan-design {demo.PLAN_ID} P1")
 
     def test_unmet_dependency_waits_on_the_first_unmet_item(self):
-        ops.add_item(self.plan, "P1", "Third item")
+        ops.add_item(self.plan, "P1", "Third item", data=dict(_COMPLETE))
         ops.patch(self.plan, "P1.2", {"depends_on": ["P1.3"]})
         action = self.next()
         self.assertEqual((action["kind"], action["exact"]), ("waiting", "waiting: P1.3"))
 
     def test_blocked_dependency_is_reported_with_its_escalation(self):
-        ops.add_item(self.plan, "P1", "Third item")
+        ops.add_item(self.plan, "P1", "Third item", data=dict(_COMPLETE))
         ops.patch(self.plan, "P1.2", {"depends_on": ["P1.3"]})
         self.edit(P1 + "P1.3.json", lambda d: d.update(status="blocked", result={"escalation": "owner must pick"}))
         self.assertEqual(self.next()["exact"], "waiting: blocked P1.3 — owner must pick")
@@ -192,7 +198,7 @@ class NextActionTests(unittest.TestCase):
     def outside_dependency_plan(self, mode):
         """P1.1 waits on P1.3 (another batch); P1.2 is independent."""
         self.edit(P1 + "P1.1.json", lambda d: d.update(status="todo", result=None))
-        ops.add_item(self.plan, "P1", "Outside dependency")
+        ops.add_item(self.plan, "P1", "Outside dependency", data=dict(_COMPLETE))
         ops.patch(self.plan, "P1.1", {"depends_on": ["P1.3"]})
         ops.patch(self.plan, "P1.2", {"depends_on": []})
         ops.set_batches(self.plan, "P1", [{"id": "B1", "items": ["P1.1", "P1.2"], "mode": mode},

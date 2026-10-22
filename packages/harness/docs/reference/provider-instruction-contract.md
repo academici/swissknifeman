@@ -85,7 +85,7 @@ The initial ordered common inventories are frozen as follows:
 
 | Scope | Ordered common semantic IDs |
 |:--|:--|
-| `root` | `root.ecosystem-identity` · `root.repository-layout` · `root.package-boundaries` · `root.cli-routing` · `root.shared-core` · `root.marketplace` · `root.engineering-invariants` · `root.plan-lifecycle` · `root.development-validation` · `root.reference-provenance` · `root.decision-verification` · `root.provider-parity` · `root.worktree-safety` · `root.untrusted-content` · `root.evidence-integrity` · `root.generated-artifacts` · `root.speculative-work` · `root.docs-build` · `root.module-folders` |
+| `root` | `root.ecosystem-identity` · `root.repository-layout` · `root.package-boundaries` · `root.cli-routing` · `root.shared-core` · `root.marketplace` · `root.engineering-invariants` · `root.plan-lifecycle` · `root.development-validation` · `root.reference-provenance` · `root.decision-verification` · `root.provider-parity` · `root.worktree-safety` · `root.untrusted-content` · `root.evidence-integrity` · `root.generated-artifacts` · `root.speculative-work` · `root.docs-build` · `root.module-folders` · `root.product-philosophy` |
 | `skiller` | `skiller.identity` · `skiller.distribution-channels` · `skiller.configuration-ownership` · `skiller.core-policy` · `skiller.layout-and-generation` · `skiller.module-boundaries` · `skiller.engineering-invariants` · `skiller.validation-release` |
 | `harness` | `harness.identity` · `harness.semantic-source` · `harness.layout` · `harness.command-surface` · `harness.agent-pack-lifecycle` · `harness.engineering-invariants` · `harness.cross-package-boundaries` · `harness.validation-release` |
 | `maind` | `maind.identity` · `maind.three-planes` · `maind.layout` · `maind.module-boundaries` · `maind.orchestration` · `maind.engineering-invariants` · `maind.validation-release` |
@@ -114,10 +114,10 @@ extension managed block so ownership and future compatible additions remain expl
 
 Root common sections are on demand: no root target carries them, and the repository guides
 are read when a task needs them. The exception is the closed set `ROOT_PINNED_COMMON_IDS`
-(`harness.instructions`), currently `root.module-folders`. A pinned id is projected to the
+(`harness.instructions`), currently `root.module-folders` and `root.product-philosophy`. A pinned id is projected to the
 common block of every root target, for every provider and independent of the provider
 projection policy, so a rule that every agent in the repository must see (the module-folder
-rule) is always in its first-turn context. The common block of a root target contains all and
+rule and the product philosophy) is always in its first-turn context. The common block of a root target contains all and
 only the pinned ids, in catalog order; package scopes keep the provider projection policy
 unchanged. Pinned ids are a subset of the root common inventory and keep their catalog record,
 obligations and compatibility assertions like any other common section.

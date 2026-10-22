@@ -194,7 +194,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(opts.DEFAULTS["reviewer"], "grok/grok-4.7/high")
         self.assertEqual((found["argv"], found["limits"]["check_timeout_s"], found["limits"]["stage_idle_timeout_s"],
                           found["limits"]["check_idle_timeout_s"]),
-                         ({}, 0, 5400, 3600))  # nothing long is cut by default, only a silent (hung) role or check
+                         ({}, 7200, 5400, 3600))  # a check has a wall of two hours (P3.4), a silent (hung) role or check one of its own
 
     def test_a_project_file_cannot_choose_the_commands(self):
         with tempfile.TemporaryDirectory() as tmp:

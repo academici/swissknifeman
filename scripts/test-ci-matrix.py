@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -76,6 +77,23 @@ class Fixture:
 
 
 class CiMatrixTests(unittest.TestCase):
+    def test_partner_env_pins_all_roots_to_current_hub_and_overrides_live_paths(self):
+        from unittest.mock import patch
+        module = eu_module()
+        root = HUB
+        expected = {"PLANNER_ROOT": str(root / "packages/planner"),
+                    "PLANNER_PLAN_PY": str(root / "packages/planner/scripts/plan.py"),
+                    "SKM_ORCH_ROOT": str(root / "packages/orch"), "SKM_SKILLER_ROOT": str(root / "packages/skiller"),
+                    "SKM_HARNESS_ROOT": str(root / "packages/harness"), "AICORE_ROOT": str(root / "packages/aicore"),
+                    "SKM_GUI_ROOT": str(root / "packages/gui"), "SKM_WORKSPACE_MODULE_ROOT": str(root / "packages/workspace")}
+        with patch.dict(os.environ, {name: "/tmp/live-checkout" for name in expected}):
+            env = {**os.environ, **module.partner_env(root)}
+            self.assertEqual({name: env[name] for name in expected}, expected)
+            for name in ("gui-orch", "gui-workspace", "workspace-planner"):
+                unit = module.discover(root)[name]
+                test = next(s for s in module.build_steps(root, unit) if s["id"] == "test")
+                self.assertEqual({k: test["env"][k] for k in expected}, expected)
+
     def setUp(self):
         self.fx = Fixture()
         self.addCleanup(self.fx.close)

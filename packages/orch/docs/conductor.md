@@ -208,7 +208,7 @@ Every step has a key and is recorded in `state.json` before it starts and once i
 | --- | --- | --- |
 | claim | work source | `source claim` with a submission of this run. `--batch` (default) takes every piece of `--items A B C` in progress at the start (each piece is started under its own run, one after another, and a dependency that is in progress counts as met: `source claim --batch`, for the planner `start --in-progress-deps`) and the first prompt of the shared session lists them; `--no-batch` claims one at a time; The claim names the executor of `--options` (its provider, model or the model of its class, and its effort; the configured default executor without one), so a route of the work that pins another provider needs no copy in the plan's `orchestration`. `--ready` asks the source for its next ready lane (`lane` of the claim answer) and runs that lane as a batch too, or one piece at a time with `--no-batch`. In a batch a stop gives no piece back on its own: all stay in progress and `resume` goes on (`release` frees one by hand; `--no-batch` gives back a piece nobody worked on, as before). A piece whose executor round began counts as worked on, however the round ended |
 | `brief` | work source | `source brief`; the execution-input is read from the artifact store; the base revision is recorded |
-| `prepare` | orch | `source prepare` writes the launch-plan of the scenario's pack (routes, policy decision) |
+| `prepare` | orch | writes `launch-plan.json` for the scenario. The conductor omits stages it skips; public `source prepare` binds the pack as stored |
 | `scout` | context-scout (economy) | when the pack has a scout or condense stage; the result is a cached context map; its optional closing ```` ```json write-set ```` block (`scout-write-set`: `paths`, `tests`) is taken out of the map into the executor's "Expected paths" section, a missing or invalid block is ignored with a `RESULT_HEALED` beacon, and the hint never widens `scope.write_set` |
 | `research.N`, `research-save.N` | researcher, work source | with `orch.research.policy = required` (every piece) or `conditional`, the default (a piece whose input says `research.need = required`); `off` never (see [Research](research.md)): the researcher (`implementation`, read-only, network allowed) asks the allowed sources of `[orch.research.sources]` with the one command `python3 …/orch.py research query` and returns a closed `research-result` (`query`, `claims` each with `sources`, `contradictions`, `unknowns`, `sources_used`; a statement without a source belongs to `unknowns`); `research-save.N` then has the work source keep it (`source research`: a plan keeps `research/<item>-<n>.json` and declares it as an input of the item, a file input keeps `research-<n>.json` in its artifacts) and, when the source cannot, the conductor keeps it in the artifacts of the piece and prints `RESEARCH_NOT_SAVED`; no source configured stops the run with `RESEARCH_NO_SOURCES` before any work |
 | `executor.N` | executor | the execution-input, the context map, the run rules, the repository rules of an isolated role and, for a correction, its package; returns a closed `stage-report`; the conductor then reads the changed paths from git |
@@ -349,7 +349,7 @@ The conductor stops only on:
 | --- | --- |
 | `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
 | `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
-| `CONDUCTOR_CRASHED` | an unexpected exception in the conductor loop; exit 1, stopped state and `run.end`; the redacted traceback is in `<run>/crash.txt`; fix the cause, then resume |
+| `CONDUCTOR_CRASHED` | an unexpected exception in the conductor loop; exit 1, stopped state and `run.end`; the redacted traceback is written to `<run>/crash.txt` when that write succeeds. If the artifact cannot be written, the stop still names `CONDUCTOR_CRASHED` and says `crash.txt unavailable` (it does not claim the file exists); fix the cause, then resume |
 | `STAGE_RECOVERY_UNKNOWN` | a started step has no recovery rule; settle the item or retry it |
 | `REVIEW_LIMIT` | a batch limit refused a round while a confirmed Blocker finding is open | the finding ids and the limit |
 | `DEPENDENCY_BLOCKED` | with `on_blocked: report` the run went on after a blocked piece, and a later piece of the run depends on it (`depends_on` of its claim): it is not started, stays in progress and the run ends here after the others; `resume --retry` the blocked piece, then `resume` |
@@ -380,6 +380,7 @@ The conductor stops only on:
 | `WORKTREE_DIRTY` | changes outside the conductor reports before new work (`run --adopt` takes over changes inside the write set of the first piece; `[orch.conductor] foreign_untracked = "keep"` lets untracked files of someone else stay: they are fingerprinted in `state.foreign`, announced as `FOREIGN_KEPT`, and never counted as a piece's work while their content stays the same) |
 | `CLAIM_BLOCKED`, `BRIEF_REFUSED`, `PREPARE_REFUSED`, `REGISTER_REFUSED`, `COMMIT_REFUSED`, `WORK_SOURCE_*` | the work source refused or is unavailable |
 | `OPTIONS_INVALID`, `POLICY_UNKNOWN`, `MODEL_CATALOG_UNAVAILABLE` | the run options, the pack or the model catalog are unusable |
+| `POLICY_STAGE_UNSUPPORTED` | a required stage of the run policy (`required` and `on_unavailable: refuse`) names a role the conductor does not run (`bounded-implementer` in `frontend-bounded`). The run stops before any role of the piece. `run --dry-run` lists the same reason under `unavailable`. Resume after choosing a scenario the conductor runs (`full`, `solo`, `scout-solo`, `review-only`), or run the plan natively |
 | `OPTIONS_UNTRUSTED` | a layer of the work source (plan, phase, item, overlay, input file) loosens the isolation set below it: `instructions.sandbox`, `sandbox_domains`, `isolate_roles`, `scope.fence`, `scope.outside`, `scope.outside_module`, `scope.runtime_paths` or `scope.extra_paths` (see "Isolation floor") |
 | `OPTIONS_UNSAFE_PATH` | an `extra_paths` entry (`--allow-path`) is the root, a system folder, HOME or an ancestor of it, the project or an ancestor, a secrets folder under HOME, or lies in `.git` (after `~` and symlinks are resolved) |
 | `STATE_CORRUPT` | a JSON file of the run folder is not JSON; it names the file |
@@ -430,6 +431,7 @@ The informational limits report long or costly work through `info` lines with a 
 | `QUESTION_OWNER_ONLY` | a blocking question has kind `approval` or `credential`, in any questions mode | question id and kind; it stays open for the owner even with a default or under `deny` |
 | `ADVICE_HELD` | advice needs the owner, meets an effective gate or falls below the confidence threshold; also a recommendation outside a question's options | source `advisor` (needs_owner, model category or invalid option), `code` (security/public-api/scope-expansion with paths), or `confidence` (actual and minimum); all applicable gate reasons are named |
 | `ISOLATION_PARTIAL` | the provider CLI does not know its isolation flag, or `instructions.sandbox` is `prefer` and the provider sandbox cannot start (once per run) | roles are isolated by the environment only; the commands of Claude Code roles run under the filesystem guard only |
+| `POLICY_STAGE_SKIPPED` | a stage of the run policy names a role the conductor does not run, and the stage is not a refusing required stage (once per run). The conductor's preparation binds a copy without that stage, rewriting a dependency on it, so a missing manifest does not become `ROLE_UNKNOWN`. Public `source prepare` and `orch prepare` of the original policy still check every stage | the scenario and the stage; the run continues |
 
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
 the run is healthy (a long test run is) or needs a look. The executor and the bounded-implementer have no wall by default
@@ -854,10 +856,12 @@ Admission checks run before **every** model call: each model step, each attempt 
 a rejected answer, a fallback route, a wait for a provider reset), each report-fixer repair, the strategist and the
 group reviewer; and after saving each done step. At `used >= limit` the run stops with `TOKEN_BUDGET`, the piece is
 stopped, and done steps stay saved; it is not registered as blocked. Once the boundary of accounted usage is reached, no
-new model call starts. One call can still cross the limit: admission never interrupts a running one. The run policy's
-`budgets.stage_tokens_max` (> 0) is the same check on the tokens the current step has used (all its attempts and
-repairs); it stops with `TOKEN_BUDGET` naming the step. Deterministic steps (checks, register, commit) are not model
-calls and are not checked.
+new model call starts. One call can still cross the limit: admission never interrupts a running one. The run policy's `budgets.stage_tokens_max` (> 0) is that check on the known fresh tokens of one logical step
+(the piece and the step key): every attempt, repair and fallback of that step, kept across an interrupt and a resume,
+and separate when two steps overlap (each with its own amount and step label). A new step key starts at zero. Replaying
+a receipt replaces that attempt and does not count it twice. The shipped value 0 does not apply. A run saved before this
+record resumes a step from the receipts or agent usage that name it, or from zero when they do not. It stops with
+`TOKEN_BUDGET` naming the step. Deterministic steps (checks, register, commit) are not model calls and are not checked.
 
 Missing usage (`usage_incomplete`) is not zero. While a hard limit is in force, `limits.unmetered` says what an attempt
 without usage does: `stop` (default) stops the piece with `TOKEN_BUDGET_UNMETERED` at the next admission (after the

@@ -20,6 +20,7 @@ from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.clock import utc_now
 from orch.conductor.infrastructure.files import read_json, safe, write_json
+from orch.conductor.policies import budget as token_budget
 from orch.conductor.policies import review_strategy as strategy
 from orch.conductor.policies.routing import CLASS_RANK
 
@@ -52,9 +53,21 @@ def forced(mode: str, pieces: list, proposal: dict) -> dict:
 
 
 def run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, raw, timeout_s: int):
-    """Batch roles get the same process ownership record as per-piece roles."""
+    """Batch roles get the same process ownership record as per-piece roles.
+
+    ``key`` is their logical stage (``group-review-<n>``, ``review-strategist``): admission and usage stay on that
+    stage, and the caller's stage is restored when the call returns.
+    """
+    previous = token_budget.bind_stage(self, item, key)
+    try:
+        return _run_agent(self, item, key, role, route, prompt, raw, timeout_s)
+    finally:
+        token_budget.restore_stage(self, previous)
+
+
+def _run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, raw, timeout_s: int):
     if item.options:
-        self._admit_budget(item)
+        self._admit_budget(item, "attempt")
     prompt_file = item.directory / "prompts" / f"{key}.md"
     prompt_file.parent.mkdir(parents=True, exist_ok=True)
     prompt_file.write_text(prompt, encoding="utf-8")
@@ -259,23 +272,28 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
     self._resolve(item, persist=False)
     group_route(self, number, group, item)
-    self._admit_budget(item)
-    route = self._route(item, "reviewer")
-    if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route; an effort the option names wins
-        effort = reviewer_effort(self._reviewer_selector(item)[0], effort)
-        route = dict(route, effort=effort, argv=launch.build_argv(self._launch_catalog(), "reviewer", route["provider"],
-                                                                  model=route["model"], effort=effort, cwd=self.project,
-                                                                  access=self._launch_access()))
-    provider, model = route["provider"], route.get("model")
-    prompt = review_batch.PROMPT.format(refs=", ".join(refs), max_tools=12) + diff
-    raw = self.directory / "streams" / f"group-review-{number}.jsonl"
-    raw.parent.mkdir(parents=True, exist_ok=True)
-    began = time.monotonic()
-    self.progress.emit("info", reason_code="GROUP_REVIEW_START",
-                       message=f"group {number} ({', '.join(refs)}): {provider}/{model}/{effort}, {len(prompt) // 1000} KB")
-    limits = item.options["limits"]  # the wall of a reviewer role, as ``route`` gives it a streaming role
-    wall = limits.get("stage_timeout_s") or (limits.get("role_timeout_s") or {}).get("reviewer", 0)
-    run = run_agent(self, item, f"group-review-{number}", "reviewer", route, prompt, raw, wall)
+    # The group review is its own logical stage: the cap is the stage's, not whichever piece step ran last.
+    previous = self._bind_stage(item, f"group-review-{number}")
+    try:
+        self._admit_budget(item, "attempt")
+        route = self._route(item, "reviewer")
+        if not (self.conductor.get("argv") or {}).get("reviewer"):  # the catalog route; an effort the option names wins
+            effort = reviewer_effort(self._reviewer_selector(item)[0], effort)
+            route = dict(route, effort=effort, argv=launch.build_argv(self._launch_catalog(), "reviewer", route["provider"],
+                                                                      model=route["model"], effort=effort, cwd=self.project,
+                                                                      access=self._launch_access()))
+        provider, model = route["provider"], route.get("model")
+        prompt = review_batch.PROMPT.format(refs=", ".join(refs), max_tools=12) + diff
+        raw = self.directory / "streams" / f"group-review-{number}.jsonl"
+        raw.parent.mkdir(parents=True, exist_ok=True)
+        began = time.monotonic()
+        self.progress.emit("info", reason_code="GROUP_REVIEW_START",
+                           message=f"group {number} ({', '.join(refs)}): {provider}/{model}/{effort}, {len(prompt) // 1000} KB")
+        limits = item.options["limits"]  # the wall of a reviewer role, as ``route`` gives it a streaming role
+        wall = limits.get("stage_timeout_s") or (limits.get("role_timeout_s") or {}).get("reviewer", 0)
+        run = run_agent(self, item, f"group-review-{number}", "reviewer", route, prompt, raw, wall)
+    finally:
+        self._restore_stage(previous)
     text = run.text if not run.error else ""
     read = review_batch.verdict(text)
     found = read["counts"]

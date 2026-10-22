@@ -353,10 +353,14 @@ def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] 
     """Count each agent's attempts once, including retries; replaying a receipt replaces its contribution."""
     handle = getattr(self._local, "agent", None)
     delta = {key: int(usage.get(key, 0)) for key in agents.USAGE_KEYS}
+    step_name = self._stage_key() if callable(getattr(self, "_stage_key", None)) else None
+    step_bucket = self._stage_bucket() if callable(getattr(self, "_stage_bucket", None)) else self._step_tokens
     with self.store.mutating():  # a role thread and the main loop share the state (I2)
         if handle is not None:
             attempts = item.state.setdefault("usage_by_agent", {}).setdefault(handle["id"], {})
             receipt = {**delta, "usage_complete": usage_complete}
+            if step_name:  # so a resume can rebuild this step when the stage record is missing
+                receipt["step"] = step_name
             previous = attempts.get(attempt or handle["id"], {})
             delta = {key: receipt[key] - previous.get(key, 0) for key in agents.USAGE_KEYS}
             attempts[attempt or handle["id"]] = receipt
@@ -364,9 +368,11 @@ def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] 
             completeness = [row["usage_complete"] for row in attempts.values()]
             handle["usage_complete"] = (False if False in completeness else True if True in completeness else None)
         for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
-                       item.state.setdefault("tokens", {"input": 0, "output": 0}), self._step_tokens):
+                       item.state.setdefault("tokens", {"input": 0, "output": 0}), step_bucket):
             for key in agents.USAGE_KEYS:
                 bucket[key] = bucket.get(key, 0) + delta[key]
+        if callable(getattr(self, "_remember_stage", None)):
+            self._remember_stage(item, step_bucket)
         self._save()
     if usage_complete is False:
         self._unmetered(item, attempt)

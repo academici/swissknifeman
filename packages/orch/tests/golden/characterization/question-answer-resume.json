@@ -198,8 +198,8 @@
    "stage": "executor.1",
    "tokens": {
     "cached": 0,
-    "input": 100,
-    "output": 10
+    "input": 200,
+    "output": 20
    },
    "verdict": "done"
   },
@@ -364,6 +364,23 @@
      }
     },
     "source_paths": [],
+    "stage_usage": {
+     "executor.1": {
+      "cached": 0,
+      "input": 200,
+      "output": 20
+     },
+     "review.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "scout": {
+      "cached": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
     "steps": {
      "brief": {
       "ended": "<time>",
@@ -448,8 +465,8 @@
       "status": "done",
       "tokens": {
        "cached": 0,
-       "input": 100,
-       "output": 10
+       "input": 200,
+       "output": 20
       },
       "verdict": "done"
      },

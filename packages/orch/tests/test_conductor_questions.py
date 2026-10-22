@@ -260,6 +260,56 @@ class QuestionTests(ConductorCase):
         self.assertTrue(any(line.get("reason_code") == "QUESTION_ANSWERED_NOT_RETRIED" for line in self.lines(resumed)))
         self.assertEqual(self.source()["items"]["W2"]["status"], "done")
 
+    def _ready(self, *argv, answers):
+        queue = [dict(row) for row in answers]
+
+        def claim(conductor, key, asked, batch=False):
+            if not queue:
+                conductor.progress.emit("info", message="the work source has no ready piece of work")
+                return None
+            answer = dict(queue.pop(0), run_id=conductor.run_id)
+            conductor.state["claims"][key] = {"ref": answer["ref"], "orch_run": conductor.run_id}
+            conductor._save()
+            return answer
+
+        def piece(conductor, answer):
+            ref = answer["ref"]
+            state = conductor.state["items"].setdefault(
+                ref, {"steps": {}, "retries_used": 0, "orch_run": answer["run_id"]})
+            state["outcome"] = "blocked"
+            conductor.state["on_blocked"] = "report"
+            conductor._save()
+            return "blocked"
+
+        self.set_items({"W1": {}, "W2": {"depends_on": ["W1"]}})
+        with mock.patch.object(engine.Conductor, "_claim", claim), \
+                mock.patch.object(engine.Conductor, "_piece", piece):
+            return self.conduct("run", "--plan", "T", "--ready", "--no-batch", "--json-lines", *argv)
+
+    def test_ready_max_items_with_a_held_dependency_exits_0(self):
+        code, _, err = self._ready("--max-items", "2", answers=(
+            {"ref": "W1", "title": "W1"}, {"ref": "W2", "title": "W2", "depends_on": ["W1"]}))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("DEPENDENCY_BLOCKED", self.state(err).get("stop", {}).get("code", ""))
+        self.assertNotIn("W2", self.state(err)["items"])
+
+    def test_ready_empty_claim_with_a_held_dependency_exits_0(self):
+        code, _, err = self._ready(answers=(
+            {"ref": "W1", "title": "W1"}, {"ref": "W2", "title": "W2", "depends_on": ["W1"]}))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("DEPENDENCY_BLOCKED", self.state(err).get("stop", {}).get("code", ""))
+        self.assertTrue(any(line.get("message") == "the work source has no ready piece of work" for line in self.lines(err)))
+
+    def test_explicit_items_still_stop_when_a_held_dependency_exhausts_the_list(self):
+        blocked = {"result": report("W1", "blocked", open_issues=[{"text": "needs a decision", "kind": "escalation"}])}
+        self.set_items({"W1": {}, "W2": {"depends_on": ["W1"]}, "W3": {}})
+        self.script({"executor": [blocked, executor_ok("W3")], "reviewer": [GREEN, GREEN]})
+        options = self.project.parent / "report-ready.json"
+        options.write_text(json.dumps({"on_blocked": "report"}), encoding="utf-8")
+        code, _, err = self.run_items("W1", "W2", "W3", extra=("--options", str(options)))
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "DEPENDENCY_BLOCKED")), err)
+        self.assertIn("W2", self.state(err)["stop"]["message"])
+
     def test_an_answer_needs_an_open_question_and_a_valid_option(self):
         err, directory = self.blocked_run()
         run = directory.name

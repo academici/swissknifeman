@@ -12,7 +12,7 @@ from unittest import mock
 
 from aicore.util import schema
 
-from orch.conductor import options, prompts
+from orch.conductor import contract, options, prompts
 from orch.conductor.policies import paths
 from orch.conductor.stages import scout
 from tests import test_conductor_skills_checks as fixtures
@@ -301,9 +301,13 @@ class InstructionPathsTests(unittest.TestCase):
 
 class SkillNameSchemaTests(unittest.TestCase):
     def test_both_schemas_refuse_traversal_and_keep_bucket_names(self):
-        root = Path(__file__).resolve().parents[3]
-        contracts = (root / "packages/orch/schemas/conductor/v1/run-options.schema.json",
-                     root / "bridges/planner-orch/schemas/run-options.schema.json")
+        # The package schema is addressed from the orch root, which standalone vendors as the package itself.
+        # parents[3] is the hub checkout only; a standalone copy has no packages/orch prefix and no bridge tree.
+        contracts = [contract.CONTRACT_DIR / "run-options.schema.json"]
+        mirror = Path(__file__).resolve().parents[3] / "bridges/planner-orch/schemas/run-options.schema.json"
+        if mirror.is_file():
+            contracts.append(mirror)
+        self.assertTrue(contracts[0].is_file(), contracts[0])
         for path in contracts:
             registry = schema.load_schema_file(path, urn_prefix="urn:swissknifeman:orch:conductor:", kind="run-options")
             for name in ("docs-maintenance/../../x", "x/../../..", "../x", "/x", "x/./y", "x..y", "x//y", "x/", "x\n"):

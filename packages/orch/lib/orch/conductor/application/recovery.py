@@ -134,6 +134,9 @@ def kill_orphaned_roles(run) -> None:
         if process._group_alive(pgid):
             current = process.start_ticks(pid)
             if current is not None and current != ticks:
+                # The pid was reused after SIGTERM. Close the original record first and do not signal whoever
+                # owns the pid now. A later recovery sees the closed result and does not emit a second failure.
+                _close_orphan(run, path.parent, request, item)
                 raise Stop("ROLE_FAILED", f"orphaned role pid {pid} changed identity during recovery")
             try:
                 os.killpg(pgid, signal.SIGKILL)

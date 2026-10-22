@@ -486,10 +486,13 @@ class RefusalTests(BriefCase):
         self.assertFalse(doc["reads"][0]["exists"])
 
     def test_human_views_never_supply_input(self):
-        ops.patch(self.root, "P1.1", {"reads": [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad",
-                                                 "required": False}]})
-        with self.assertRaises(Exception) as ctx:
-            self.brief()
+        # A detailed phase refuses this read at patch time (PLAN_INVALID). The brief still refuses a view that is
+        # already on the item, which is what this case guards: human views never become execution input.
+        plan = self.load()
+        plan.items["P1.1"]["reads"] = [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad",
+                                         "required": False}]
+        with self.assertRaises(PlanError) as ctx:
+            brief.build(plan, "P1.1")
         self.assertEqual(ctx.exception.code, "HUMAN_VIEW")
 
 

@@ -50,6 +50,16 @@ import time
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
+FAILED_EXCERPT = 3000  # what the parent prints; the file keeps the child's full output
+
+
+def keep_failed_output(text: str) -> Path:
+    """Write the full output of a failed child and return the path. The directory stays until an operator archives it."""
+    directory = Path(tempfile.mkdtemp(prefix="skm-failed-job-"))
+    path = directory / "output.txt"
+    path.write_bytes(text.encode("utf-8", "surrogateescape"))
+    return path
+
 ROOT = Path(__file__).resolve().parents[1]
 HUB_CHECKS = [["python3", "scripts/ecosystem-units.py", "check"], ["python3", "scripts/public-hygiene.py"]]
 GOLDEN = ["python3", "scripts/golden.py", "check"]
@@ -602,7 +612,11 @@ def main(argv=None) -> int:
                 spent[folder + " " + " ".join(command)] = seconds
             if done is not None and done.returncode:
                 failed += 1
-                sys.stderr.write((done.stdout + done.stderr)[-3000:])
+                full = (done.stdout or "") + (done.stderr or "")
+                sys.stderr.write(f"full output: {keep_failed_output(full)}\n")
+                sys.stderr.write(full[-FAILED_EXCERPT:])
+                if full and not full.endswith("\n"):
+                    sys.stderr.write("\n")
             elif key:
                 updates[key] = {"folder": folder, "command": command}
 

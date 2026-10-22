@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Optional
 
 from orch.conductor.domain.item import Item
+from orch.conductor.policies import budget as token_budget
 
 # The limits of the whole run (``limits.<name>_batch``) and the field of a piece's state that each one counts.
 BATCH_FIELDS = {"review_rounds": "review_rounds_used", "corrections": "corrections_at", "findings": "findings_at"}
@@ -73,5 +74,5 @@ def limit_over(self, item: Item, past: Optional[str], emit: bool) -> None:
     """The LIMIT_OVER beacon and plan note of a round that goes past its target."""
     if past and emit:
         self.progress.emit("info", item=item.ref, reason_code="LIMIT_OVER", message=past)
-        self._beacon_event("orch.run.warning", item, {"reason_code": "LIMIT_OVER", "step": self._current_step})
+        self._beacon_event("orch.run.warning", item, {"reason_code": "LIMIT_OVER", "step": token_budget.stage_key(self)})
         self._plan_note(item, past)

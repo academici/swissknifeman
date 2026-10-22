@@ -1069,6 +1069,14 @@ def kill_active_groups() -> None:
             pass
 
 
+def keep_failed_output(text: str) -> Path:
+    """Write the full output of a failed standalone command and return the path. Nothing removes the directory."""
+    directory = Path(tempfile.mkdtemp(prefix="skm-failed-job-"))
+    path = directory / "output.txt"
+    path.write_bytes(text.encode("utf-8", "surrogateescape"))
+    return path
+
+
 def run_limited(argv: list, cwd: Path, env: dict, timeout: int):
     """(returncode, output); a timeout kills the whole process group and returns (None, output). After an interrupt
     (SIGTERM/SIGHUP of this script) nothing starts: (130, "")."""
@@ -1349,7 +1357,8 @@ def run_standalone(ctx: Context, folder: str, child_jobs=None) -> tuple:
             if code != 0:
                 reason = f"timeout after {timeout}s" if code is None else f"exit {code}"
                 tail = "\n".join(out.splitlines()[-STANDALONE_TAIL_LINES:])
-                return "fail", f"{name} `{' '.join(argv)}`: {reason}\n{tail}"
+                return "fail", (f"{name} `{' '.join(argv)}`: {reason}\n"
+                                f"full output: {keep_failed_output(out)}\n{tail}")
         summary = "\n".join(summaries)
         try:
             unchanged = key and key == standalone_key(ctx, folder, commands, child_jobs) and stamp == standalone_copy_stamp(ctx, folder)

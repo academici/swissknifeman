@@ -227,6 +227,26 @@ class RunnerTests(RunnerFixture):
         self.assertEqual(self.run_runner("--tier", "all", "--no-cache")[0], 0)
         self.assertEqual(self.lines()[:2], ["hub", "golden"])
 
+    def test_a_green_child_prints_no_failed_output_path(self):
+        code, out, err = self.run_runner("--tier", "fast", "--no-cache", "--paths", "packages/a/x.py")
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("full output:", out + err)
+
+    def test_a_failed_child_keeps_output_outside_the_excerpt(self):
+        marker = "EARLY-FAILURE-MARKER"
+        body = marker + "\n" + ("y" * 8000) + "\nTAIL\n"
+        script = self.root / "packages/a/scripts/test.sh"
+        script.write_text("python3 -c " + json.dumps(
+            "import sys; sys.stdout.write(" + json.dumps(body) + "); sys.exit(1)") + "\n")
+        code, out, err = self.run_runner("--tier", "fast", "--no-cache", "--paths", "packages/a/x.py")
+        self.assertEqual(code, 1)
+        self.assertNotIn(marker, err)
+        self.assertIn("full output:", err)
+        path = Path(err.split("full output:", 1)[1].split()[0])
+        self.assertEqual(path.read_text(encoding="utf-8"), body)
+        self.assertIn("TAIL", err)
+        self.assertNotIn("full output:", out)
+
     def test_fail_fast_skips_unsubmitted_jobs_and_keeps_failed_test_outcome(self):
         script = self.root / "packages/a/scripts/test.sh"
         script.write_text(script.read_text() + "exit 1\n")

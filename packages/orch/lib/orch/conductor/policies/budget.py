@@ -1,6 +1,9 @@
 """Token accounting, informational budgets and hard admission limits on accounted fresh tokens."""
 from __future__ import annotations
 
+import json
+import threading
+from pathlib import Path
 from typing import Optional
 
 from aicore.content.budget import estimate_tokens
@@ -10,6 +13,142 @@ from orch.conductor.domain.stop import Stop
 
 HARD_LIMITS = ("tokens_hard_max", "run_tokens_hard_max")
 DEFAULT_CHARGE = 50000  # limits.unmetered_charge_tokens when an item carries no options of its own
+_USAGE = ("input", "cached", "output")  # the keys of one attempt; fresh spend is input + output
+
+
+def _thread_local(self):
+    """The conductor's thread-local (the agent handle lives there too); created only when a caller has none."""
+    local = getattr(self, "_local", None)
+    if local is None:
+        self._local = local = threading.local()
+    return local
+
+
+def stage_key(self):
+    """The logical step of this thread, else the single-threaded ``_current_step``."""
+    local = getattr(self, "_local", None)
+    found = getattr(local, "stage_key", None) if local is not None else None
+    if found:
+        return found
+    return getattr(self, "_current_step", None)
+
+
+def stage_bucket(self):
+    """Fresh-token bucket of the logical step bound on this thread, else the legacy ``_step_tokens`` slot.
+
+    Callers that never bind a stage (unit fixtures, a charge outside a step) keep writing ``_step_tokens``.
+    """
+    local = getattr(self, "_local", None)
+    slot = getattr(local, "stage_tokens", None) if local is not None else None
+    if isinstance(slot, dict):
+        return slot
+    bucket = getattr(self, "_step_tokens", None)
+    if not isinstance(bucket, dict):
+        self._step_tokens = bucket = {"input": 0, "output": 0}
+    return bucket
+
+
+def _read_object(path: Path) -> Optional[dict]:
+    try:
+        found = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return found if isinstance(found, dict) else None
+
+
+def _add_usage(total: dict, usage: dict) -> None:
+    for name in _USAGE:
+        total[name] = int(total.get(name, 0)) + int(usage.get(name, 0) or 0)
+
+
+def known_stage_usage(item: Item, key: str) -> dict:
+    """Known fresh usage of logical step ``key`` already stored for ``item``.
+
+    The piece's ``stage_usage`` record wins. Without it (a run saved before that record), receipts that name the
+    step are summed, then the usage files of agents whose request names the step. Anything else starts at zero:
+    the old shared counter was not kept across a process.
+    """
+    saved = (item.state.get("stage_usage") or {}).get(key) if isinstance(item.state, dict) else None
+    if isinstance(saved, dict):
+        return saved
+    total = {"input": 0, "output": 0}
+    labelled = False
+    for attempts in (item.state.get("usage_by_agent") or {}).values():
+        if not isinstance(attempts, dict):
+            continue
+        for receipt in attempts.values():
+            if not isinstance(receipt, dict) or receipt.get("step") != key:
+                continue
+            labelled = True
+            _add_usage(total, receipt)
+    if labelled:
+        return total
+    directory = getattr(item, "directory", None)
+    agents = Path(directory) / "agents" if directory else None
+    if agents is not None and agents.is_dir():
+        from_files = {"input": 0, "output": 0}
+        found = False
+        for request_path in agents.glob("*/request.json"):
+            request = _read_object(request_path) or {}
+            if request.get("step") != key:
+                continue
+            usage = _read_object(request_path.with_name("usage.json"))
+            if not usage:
+                continue
+            found = True
+            _add_usage(from_files, usage)
+        if found:
+            return from_files
+    return total
+
+
+def bind_stage(self, item: Item, key: str):
+    """Bind this thread to the durable usage of logical step ``(item, key)``.
+
+    Re-entering the step (a resume, a retry that comes back through ``step``) keeps that usage. A new key gets
+    its own slot, starting at the known amount or zero. Returns the previous binding so a nested call can restore it.
+    """
+    local = _thread_local(self)
+    previous = (getattr(local, "stage_key", None), getattr(local, "stage_item", None),
+                getattr(local, "stage_tokens", None))
+    slots = getattr(self, "_stage_slots", None)
+    if not isinstance(slots, dict):
+        self._stage_slots = slots = {}
+    identity = (item.ref, key)
+    slot = slots.get(identity)
+    if slot is None:
+        slot = known_stage_usage(item, key)
+        slots[identity] = slot
+        saved = (item.state.get("stage_usage") or {}).get(key) if isinstance(item.state, dict) else None
+        if saved is not slot and any(int(slot.get(name, 0) or 0) for name in _USAGE):
+            item.state.setdefault("stage_usage", {})[key] = slot
+    local.stage_key = key
+    local.stage_item = item.ref
+    local.stage_tokens = slot
+    self._current_step = key
+    return previous
+
+
+def restore_stage(self, previous) -> None:
+    """Put back the binding :func:`bind_stage` returned (a nested group review or strategist call)."""
+    key, item_ref, slot = previous
+    local = _thread_local(self)
+    local.stage_key = key
+    local.stage_item = item_ref
+    local.stage_tokens = slot
+    if key:
+        self._current_step = key
+
+
+def remember_stage(self, item: Item, bucket: dict) -> None:
+    """Keep ``bucket`` as the piece's durable usage of the logical step bound on this thread."""
+    local = getattr(self, "_local", None)
+    key = getattr(local, "stage_key", None) if local is not None else None
+    if not key or getattr(local, "stage_item", None) != getattr(item, "ref", None):
+        return
+    if getattr(local, "stage_tokens", None) is not bucket:
+        return
+    item.state.setdefault("stage_usage", {})[key] = bucket
 
 
 def effective_limit(self, item: Item, key: str) -> int:
@@ -33,10 +172,12 @@ def admit(self, item: Item, scope: str = "all") -> None:
     """Stop admission once accounted fresh usage reaches a hard limit; cache reads do not count.
 
     ``scope`` selects ``item``, ``run`` or both (``all``); ``attempt`` is what runs before every model call (a repeat, a
-    repair, a fallback): both, and the tokens the current step has used against the run policy's
-    ``budgets.stage_tokens_max``. A single model call can cross the boundary: this check never interrupts one. Usage a
-    model attempt did not report is not zero: with a hard limit in force the piece stops (``limits.unmetered`` ``stop``,
-    the default) or has been charged a fixed amount per attempt (``charge``, see :func:`charge_unmetered`).
+    repair, a fallback, a group review, the strategist): both, and the fresh tokens the logical step has already used
+    against the run policy's ``budgets.stage_tokens_max``. That amount is per ``(item, step)``, kept across an interrupt
+    and a resume, and separate when two steps overlap; it is not reset when the step function runs again. A single model
+    call can cross the boundary: this check never interrupts one. Usage a model attempt did not report is not zero: with
+    a hard limit in force the piece stops (``limits.unmetered`` ``stop``, the default) or has been charged a fixed amount
+    per attempt (``charge``, see :func:`charge_unmetered`). ``stage_tokens_max`` 0 (the shipped default) does not apply.
     """
     for name, key, state, label in (
             ("item", "tokens_hard_max", item.state, item.ref),
@@ -60,10 +201,10 @@ def admit(self, item: Item, scope: str = "all") -> None:
                        "limits.unmetered_charge_tokens per attempt without usage), or set it in [orch.conductor.limits]")
     stage_max = int(((getattr(item, "policy", None) or {}).get("budgets") or {}).get("stage_tokens_max") or 0)
     if scope == "attempt" and stage_max:
-        step = getattr(self, "_step_tokens", None) or {}
+        step = stage_bucket(self)
         used = int(step.get("input", 0)) + int(step.get("output", 0))
         if used >= stage_max:
-            raise Stop("TOKEN_BUDGET", f"{item.ref} step {getattr(self, '_current_step', '-')} used {used} fresh tokens >= "
+            raise Stop("TOKEN_BUDGET", f"{item.ref} step {stage_key(self) or '-'} used {used} fresh tokens >= "
                        f"budgets.stage_tokens_max {stage_max} of the run policy; needs_replan: split the item or "
                        "raise stage_tokens_max in the policy")
 
@@ -146,13 +287,14 @@ def charge_unmetered(self, item: Item, attempt: Optional[str] = None) -> None:
             return
         if attempt is not None:
             charged.append(attempt)
-        step = getattr(self, "_step_tokens", None)
+        step = stage_bucket(self)
         for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
                        item.state.setdefault("tokens", {"input": 0, "output": 0}), step):
             if bucket is not None:
                 bucket["input"] = bucket.get("input", 0) + amount
                 if bucket is not step:
                     bucket["charged"] = bucket.get("charged", 0) + amount
+        remember_stage(self, item, step)
         self._save()
 
 

@@ -77,7 +77,8 @@ class Conductor:
         self.clock = clock
         self.conductor = dict(settings.conductor or {})
         self._catalog = None
-        self._step_tokens = {"input": 0, "output": 0}
+        self._step_tokens = {"input": 0, "output": 0}  # unbound calls; a logical step uses its own slot
+        self._stage_slots = {}  # (item, step) -> the durable fresh-token bucket of that logical step
         self._local = threading.local()  # the agent run of the role this thread runs: usage and children belong to it
         self.run_id = ""
         self.directory = Path()
@@ -280,6 +281,11 @@ class Conductor:
     _budget = budget.budget
     _unmetered = budget.unmetered
     _admit_budget = budget.admit
+    _bind_stage = budget.bind_stage
+    _restore_stage = budget.restore_stage
+    _stage_bucket = budget.stage_bucket
+    _stage_key = budget.stage_key
+    _remember_stage = budget.remember_stage
 
     # ------------------------------------------------------------------ stages
 

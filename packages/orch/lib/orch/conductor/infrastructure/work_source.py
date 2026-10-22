@@ -1,5 +1,6 @@
-"""The work source as the conductor reaches it: the verbs of this package's own ``orch.py source`` (claim, brief, prepare,
-release, research, register, commit), never the plan itself, and the artifact folder of a piece.
+"""The work source as the conductor reaches it: the verbs of this package's own ``orch.py source`` (claim, brief,
+release, research, register, commit), never the plan itself, and the artifact folder of a piece. ``prepare`` is the
+exception: it binds the launch-plan in this process so a public ``source prepare`` stays strict.
 
 The one place of the conductor that writes into the artifact folder (``artifacts_dir`` of the brief, or
 ``.swissknifeman/orch-artifacts/<run>/<work>/`` for a source without one) or builds and runs an ``orch.py source``
@@ -303,15 +304,46 @@ def check_brief_size(item: Item, doc: Optional[dict] = None) -> None:
 
 
 def prepare(self, item: Item) -> dict:
+    """The launch-plan of the piece, with the stages this conductor skips already omitted.
+
+    Public ``source prepare`` binds the pack as stored, including an optional role it does not
+    run. Calling that verb from here would either drop the role for every client or refuse a
+    skipped stage that has no manifest. This path writes the same ``launch-plan.json`` and
+    refusal events, and it does not add a public flag.
+    """
     check_brief_size(item)  # after the brief and the options, before the first role
-    provider =opts.stage_route(item.options, "executor").get("provider") or self.conductor.get("provider") \
+    from types import SimpleNamespace
+    provider = opts.stage_route(item.options, "executor").get("provider") or self.conductor.get("provider") \
         or "claude-code"
-    args = ["source", "prepare", "--run", item.orch_run, "--provider", provider]
-    if self.model_catalog:
-        args += ["--model-catalog", str(self.model_catalog)]
-    code, plan, err = self._orch(*args)
+    args = SimpleNamespace(run=item.orch_run, provider=provider, binding=None, model_catalog=self.model_catalog,
+                           config=self.config_file)
+    out, err = io.StringIO(), io.StringIO()
+    previous = os.getcwd()
+    previous_env = dict(os.environ) if self.env is not None else None
+    try:
+        os.chdir(self.project)
+        if previous_env is not None:
+            os.environ.clear()
+            os.environ.update(self.env)
+        from orch import cli
+        with redirect_stdout(out), redirect_stderr(err):
+            try:
+                code = cli._source_prepare(args, self.settings, self.project, conductor=True)
+            except cli.SourceRefusal as refusal:
+                code, err = refusal.exit_code, io.StringIO(f"{refusal.code}: {refusal.message}")
+    finally:
+        if previous_env is not None:
+            os.environ.clear()
+            os.environ.update(previous_env)
+        os.chdir(previous)
+    text = out.getvalue()
+    try:
+        plan = json.loads(text) if text.strip() else None
+    except ValueError:
+        plan = None
+    message = err.getvalue().strip()
     if code != 0 or not isinstance(plan, dict):
-        first = (err or "prepare refused").splitlines()[0]
+        first = (message or "prepare refused").splitlines()[0]
         raise Stop("PREPARE_REFUSED", first)
     return {"stages": [{key: stage.get(key) for key in ("stage_id", "role", "provider", "model", "effort")}
                        for stage in plan.get("stages", [])],

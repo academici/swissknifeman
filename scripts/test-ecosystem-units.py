@@ -1310,6 +1310,25 @@ class StandaloneTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("standalone alpha: fail", result.stdout)
         self.assertIn("boom-marker", result.stderr)
+        self.assertIn("full output:", result.stderr)
+
+    def test_a_failed_child_keeps_output_outside_the_tail(self):
+        marker = "EARLY-FAILURE-MARKER"
+        self.tree.write("packages/alpha/fail.py",
+                        "import sys\nprint(%r)\nsys.stdout.write('pad\\n' * 80)\nsys.exit(1)\n" % marker)
+        self.dev(test=["python3", "fail.py"])
+        result = self.standalone("alpha")
+        self.assertEqual(result.returncode, 1)
+        self.assertNotIn(marker, result.stderr)
+        self.assertIn("full output:", result.stderr)
+        path = Path(result.stderr.split("full output:", 1)[1].split()[0])
+        kept = path.read_text(encoding="utf-8")
+        self.assertIn(marker, kept)
+        self.assertGreater(kept.count("pad"), 40)
+        self.dev(test=["python3", "-c", "import sys; sys.exit(0)"])
+        green = self.standalone("alpha")
+        self.assertEqual(green.returncode, 0, green.stderr)
+        self.assertNotIn("full output:", green.stdout + green.stderr)
 
     def test_without_dev_is_not_applicable(self):
         result = self.standalone("alpha")

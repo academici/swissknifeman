@@ -371,9 +371,16 @@ class CodeScenarioTests(CharacterizationCase):
         self.stops(err, "BRIEF_REFUSED")
 
     def test_a_refused_prepare_stops_as_prepare_refused(self):
+        """Prepare is bound in-process, so a refusal is the conductor call, not the public ``source prepare`` verb."""
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
-        with self.refuse("prepare", (1, None)):
+
+        def refuse_prepare(*_args, **_kwargs):
+            print("refused", file=sys.stderr)
+            return 1
+
+        with mock.patch("orch.cli._source_prepare", refuse_prepare):
             code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
         self.stops(err, "PREPARE_REFUSED")
 
 
@@ -399,6 +406,7 @@ COVERAGE = {
     "CLAIM_BLOCKED": f"test:{C}", "BRIEF_REFUSED": f"test:{C}", "PREPARE_REFUSED": f"test:{C}",
     "REGISTER_REFUSED": f"test:{T}", "COMMIT_REFUSED": f"test:{T}", "WORK_SOURCE_*": "test:test_worksource.py",
     "OPTIONS_INVALID": f"test:{T}", "POLICY_UNKNOWN": "test:test_policies.py",
+    "POLICY_STAGE_UNSUPPORTED": "test:test_policy_stages.py",
     "OPTIONS_UNTRUSTED": f"test:{T}", "OPTIONS_UNSAFE_PATH": f"test:{T}", "STATE_CORRUPT": "test:test_durable_state.py",
     "STUBS_INVALID": "test:test_conductor_stubs.py",
     "GROUP_REVIEW_BLOCKER": "test:test_conductor_review_plan.py", "GROUP_REVIEW_FAILED": "test:test_conductor_review_plan.py",
@@ -428,6 +436,7 @@ COVERAGE = {
     "RUNTIME_ARTIFACT_RELOCATED": "test:test_write_fence.py",
     "QUESTION_OWNER_ONLY": "test:test_conductor_questions.py",
     "ADVICE_HELD": "test:test_conductor_advisor.py",
+    "POLICY_STAGE_SKIPPED": "test:test_policy_stages.py",
 }
 
 

@@ -13,13 +13,23 @@ the policy id:
 
 ## Shipped packs
 
-| Id | Stages that use a model | Review |
-| --- | --- | --- |
-| `solo` | primary | off |
-| `scout-solo` | scout (economy), primary | off |
-| `frontend-bounded` | scout (economy), primary (frontier), bounded implementer (economy) | off |
-| `review-only` | reviewer | off |
-| `full` (1.1.0) | optional condense (economy), primary, optional review on an independent provider, triage (implementation) | on, at most 2 rounds and 1 correction, findings triaged |
+| Id | Stages that use a model | Review | Conductor |
+| --- | --- | --- | --- |
+| `solo` | primary | off | runs |
+| `scout-solo` | scout (economy), primary | off | runs |
+| `frontend-bounded` | scout (economy), primary (frontier), bounded implementer (economy) | off | refused (bounded stage; delegates are roadmap R3) |
+| `review-only` | reviewer | off | runs |
+| `full` (1.1.0) | optional condense (economy), primary, optional review on an independent provider, triage (implementation) | on, at most 2 rounds and 1 correction, findings triaged | runs |
+
+The conductor runs `solo`, `scout-solo`, `review-only` and `full`. It refuses `frontend-bounded` before any role
+(`POLICY_STAGE_UNSUPPORTED`): the bounded stage asks for `bounded-implementer`, which the conductor does not run.
+`run --dry-run` reports that refusal under `unavailable`. A stage that is not a refusing required stage, and whose role
+the conductor does not run, is skipped once per run (`POLICY_STAGE_SKIPPED`) and the run continues. The conductor's
+own preparation reloads the pack and binds a copy that omits exactly those skipped stages. A dependency on a skipped
+stage is rewritten to the stages that stage depended on, so the retained order stays valid. A missing manifest for a
+skipped role does not refuse the run. The pack on disk is unchanged. Public `source prepare` and `orch prepare` bind
+every stage of the policy they are given: an available optional role stays in the launch-plan, and a role without a
+manifest is `ROLE_UNKNOWN`.
 
 `full` runs context (deterministic), condense (optional, `on_unavailable: skip`), primary, checks, review (optional),
 registrar and git. Its `on_error` table holds the default action of each failure class, `budgets` set
@@ -30,8 +40,12 @@ every review finding before a correction; only confirmed findings get one.
 The `budgets` of a pack are enforced by the [conductor](conductor.md) as follows. `brief_max_bytes` (> 0): the whole
 execution-input of a piece (the embedded context pack and the files it reads included; the briefs of plans outside the
 repository carry a pack of up to 256 KB, hence 1 MiB for `full`) larger than this stops the piece with `BRIEF_TOO_LARGE`
-before the first role. `stage_tokens_max` (> 0): a model call does not start in a step that has already used this many
-fresh tokens (`TOKEN_BUDGET`), independent of the conductor hard token limits below; its shipped value is 0.
+before the first role. `stage_tokens_max` (> 0): a model call does not start when the logical step (the piece and the step key) has already
+used this many known fresh tokens (`TOKEN_BUDGET`), including after an interrupt, a resume, a retry, a repair or a
+fallback of that same step. Overlapping steps keep separate amounts and labels. A new step key starts at zero, and
+replaying a receipt does not count it twice. The shipped value is 0, which does not apply. A run saved before the
+per-step record resumes from receipts that name the step, or from zero when they name none. The cap is independent of
+the conductor hard token limits below.
 `packer_input_max_bytes` is **not enforced**: there is no packer; the key stays in the contract. Conductor options `limits.tokens_hard_max` (piece) and `limits.run_tokens_hard_max`
 (whole run) default to 0 (unlimited), count accounted fresh input plus output, and stop admission with `TOKEN_BUDGET`.
 The run cap comes only from machine/project config, invocation `--config` or the run's `--options`; an item cannot

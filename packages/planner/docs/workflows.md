@@ -50,7 +50,7 @@ pre-existing errors remain repairable. Adding a placeholder to a detailed phase 
 Supply a complete item with `add-item --file` (including acceptance validation, scope and deliverables).
 
 An unknown pool model normally starts with the recorded verdict `ROUTE_MODEL_UNKNOWN`. `start --strict-route`
-refuses it; the planner-orch bridge supplies this flag for conductor claims and retry registration. Set
+refuses it; the work-source bridge supplies this flag for conductor claims and retry registration. Set
 [`routing.unknown_model = "refuse"`](./configuration) to apply the same refusal to interactive admission.
 
 ## Scoped commits per operation

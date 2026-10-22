@@ -65,7 +65,7 @@ configurable. A view template named in `views.templates_dir` that the planner do
 With `routing.unknown_model = "warn"`, interactive `start` records `ROUTE_MODEL_UNKNOWN` in the start event and
 result; unit dispatch records it in the delegate event. With `"refuse"`, these admissions fail with
 `ROUTE_MODEL_UNKNOWN` before writing. The same configuration applies when a different executor is registered at
-item finish or unit return. The planner-orch bridge always passes `start --strict-route` for claims and retry
+item finish or unit return. The work-source bridge always passes `start --strict-route` for claims and retry
 registration, so conductor work requires a known pool model regardless of the interactive default.
 
 ## Execution scenario

@@ -7,6 +7,7 @@ import io
 import json
 import os
 from pathlib import Path
+import signal
 import tempfile
 import time
 import unittest
@@ -198,6 +199,38 @@ class CrashTests(test_conductor.ConductorCase):
         self.assertIn("RuntimeError", crash)
         self.assertIn("Traceback", crash)
         for text in (crash, err, json.dumps(state), (self.project / engine.REPORTS / directory.name / "observer.json").read_text()):
+            self.assertNotIn(secret, text)
+        with mock.patch.object(engine.Conductor, "_pieces"):
+            self.assertEqual(0, self.conduct("resume", "--run", directory.name)[0])
+
+    def test_crash_artifact_failure_still_stops_with_the_original_error(self):
+        secret = "observer-fake-sensitive-value"
+        before = signal.getsignal(signal.SIGTERM)
+        real = Path.write_text
+
+        def guarded(path, data, *args, **kwargs):
+            if Path(path).name == "crash.txt":
+                raise PermissionError("denied")
+            return real(path, data, *args, **kwargs)
+
+        with mock.patch.dict(os.environ, {"P36_TEST_SECRET": secret}), \
+                mock.patch.object(engine.Conductor, "_pieces", side_effect=RuntimeError(secret)), \
+                mock.patch.object(Path, "write_text", guarded):
+            code, _, err = self.run_items("W1")
+        self.assertEqual(signal.getsignal(signal.SIGTERM), before)
+        self.assertEqual(1, code, err)
+        state = self.state(err)
+        self.assertEqual(("stopped", "CONDUCTOR_CRASHED"), (state["status"], state["stop"]["code"]))
+        self.assertIn("crash.txt unavailable", state["stop"]["message"])
+        self.assertNotIn("see crash.txt", state["stop"]["message"])
+        self.assertIn("RuntimeError", state["stop"]["message"])
+        directory = self.run_dir(err)
+        self.assertFalse((directory / "crash.txt").exists())
+        last = progress.read_lines(directory)[-1]
+        self.assertEqual(("run.end", "stopped", "CONDUCTOR_CRASHED"),
+                         (last["event"], last["outcome"], last["reason_code"]))
+        for text in (err, json.dumps(state), last["message"],
+                     (self.project / engine.REPORTS / directory.name / "observer.json").read_text()):
             self.assertNotIn(secret, text)
         with mock.patch.object(engine.Conductor, "_pieces"):
             self.assertEqual(0, self.conduct("resume", "--run", directory.name)[0])

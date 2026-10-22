@@ -187,6 +187,23 @@
      }
     },
     "source_paths": [],
+    "stage_usage": {
+     "executor.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "review.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "scout": {
+      "cached": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
     "steps": {
      "brief": {
       "ended": "<time>",

@@ -242,6 +242,33 @@
      }
     },
     "source_paths": [],
+    "stage_usage": {
+     "advice.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "executor.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "executor.1-q1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "review.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "scout": {
+      "cached": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
     "steps": {
      "advice.1": {
       "ended": "<time>",

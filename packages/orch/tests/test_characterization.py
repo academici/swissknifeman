@@ -438,6 +438,7 @@ COVERAGE = {
     "QUESTION_OWNER_ONLY": "test:test_conductor_questions.py",
     "ADVICE_HELD": "test:test_conductor_advisor.py",
     "POLICY_STAGE_SKIPPED": "test:test_policy_stages.py",
+    "CONCURRENT_RUN": f"test:{T}", "RESULT_INCOMPLETE": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
 }
 
 

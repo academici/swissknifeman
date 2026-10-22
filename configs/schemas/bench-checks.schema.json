@@ -203,18 +203,18 @@
     },
     "ratio": {
       "type": "object",
-      "additionalProperties": {
-        "anyOf": [
-          {
-            "type": "number",
-            "minimum": 0
-          },
-          {
-            "type": "null"
-          }
-        ]
+      "description": "after/before seconds by command id; null when before took no time.",
+      "patternProperties": {
+        "^.+$": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "A value of one of the allowed types, null when it is unknown."
+        }
       },
-      "description": "after/before seconds by command id; null when before took no time."
+      "additionalProperties": false
     },
     "total": {
       "type": "object",
@@ -228,15 +228,12 @@
           "minimum": 0
         },
         "ratio": {
-          "anyOf": [
-            {
-              "type": "number",
-              "minimum": 0
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "A value of one of the allowed types, null when it is unknown."
         },
         "counted": {
           "type": "array",
@@ -346,11 +343,15 @@
                     },
                     "contexts": {
                       "type": "object",
-                      "additionalProperties": {
-                        "type": "integer",
-                        "minimum": 0
+                      "description": "Discovered cases by test context.",
+                      "patternProperties": {
+                        "^.+$": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "One entry of the map."
+                        }
                       },
-                      "description": "Discovered cases by test context."
+                      "additionalProperties": false
                     },
                     "executed": {
                       "type": "integer",
@@ -459,76 +460,71 @@
         },
         "cases": {
           "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "comparable": {
-                "type": "boolean"
-              },
-              "equal": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "before_unique": {
-                "anyOf": [
-                  {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "after_unique": {
-                "anyOf": [
-                  {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "only_before": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "only_after": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "sample": {
-                "type": "array",
-                "items": {
-                  "type": "string"
+          "description": "Case census of the first pair by command id.",
+          "patternProperties": {
+            "^.+$": {
+              "type": "object",
+              "properties": {
+                "comparable": {
+                  "type": "boolean"
                 },
-                "description": "Up to 20 differing cases, '-' only before, '+' only after."
+                "equal": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "A value of one of the allowed types, null when it is unknown."
+                },
+                "before_unique": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "A value of one of the allowed types, null when it is unknown."
+                },
+                "after_unique": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "A value of one of the allowed types, null when it is unknown."
+                },
+                "only_before": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "only_after": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "sample": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Up to 20 differing cases, '-' only before, '+' only after."
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "Why the sides are not comparable."
+                }
               },
-              "reason": {
-                "type": "string",
-                "description": "Why the sides are not comparable."
-              }
-            },
-            "required": [
-              "comparable",
-              "equal",
-              "before_unique",
-              "after_unique",
-              "only_before",
-              "only_after",
-              "sample"
-            ],
-            "additionalProperties": false
+              "required": [
+                "comparable",
+                "equal",
+                "before_unique",
+                "after_unique",
+                "only_before",
+                "only_after",
+                "sample"
+              ],
+              "additionalProperties": false,
+              "description": "One entry of the map."
+            }
           },
-          "description": "Case census of the first pair by command id."
+          "additionalProperties": false
         }
       },
       "required": [
@@ -541,14 +537,11 @@
       "type": "object",
       "properties": {
         "target_met": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "A value of one of the allowed types, null when it is unknown."
         },
         "failed_runs": {
           "type": "integer",

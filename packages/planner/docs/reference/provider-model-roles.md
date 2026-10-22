@@ -20,7 +20,7 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 | Provider | economy | implementation | frontier |
 |:--|:--|:--|:--|
 | `claude-code` | `haiku` | `sonnet` | `opus` |
-| `codex` | `gpt-5.6-luna` | `gpt-6-sol` | `gpt-6-astra` |
+| `codex` | `gpt-6-luna` | `gpt-6-sol` | `gpt-6-astra` |
 | `cursor` | `composer-2.5-fast` | `composer-2.5` | `claude-opus-5-thinking-high` |
 | `grok` | `grok-4.5` | `grok-4.6` | `grok-4.7` |
 
@@ -41,13 +41,14 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 
 ### `codex`
 
-- `verified_at`: `2026-09-23`
-- `source`: docs/provider-support.md and Codex provider thread state
-- `verification`: frozen mapping; gpt-6-sol observed in provider thread state; no machine-readable catalogue exists; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles)
+- `verified_at`: `2026-10-22`
+- `source`: https://developers.openai.com/api/docs/models/gpt-6-luna and the local Codex model cache on 2026-10-22; earlier docs/provider-support.md and Codex provider thread state
+- `verification`: gpt-6-luna confirmed on the official OpenAI model page and in the local Codex model cache on 2026-10-22 as economy/explore. No launch of the model was run for this record. Earlier frozen mapping remains: gpt-6-sol observed in provider thread state; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles).
 
 | Model id | Roles | Notes |
 |:--|:--|:--|
-| `gpt-5.6-luna` | economy, explore | — |
+| `gpt-6-luna` | economy, explore | status=confirmed; Preferred Codex economy selector, including ordinary context-scout. Explicit executor, reviewer and owner model routes are unchanged. Not a comparative benchmark. |
+| `gpt-5.6-luna` | economy, explore | Previous economy pin. Kept in the inventory; not the preferred selector. |
 | `gpt-5.6-terra` | implementation, review | — |
 | `gpt-5.6-sol` | frontier, implementation, review, design, audit | — |
 | `gpt-6-astra` | frontier, implementation, review, design, audit | patterns=`gpt-6(\.\d+)*-astra` |

@@ -1,0 +1,11 @@
+{
+  "run_id": "a",
+  "submission_id": "sub-a",
+  "attempt_id": "att-1",
+  "source": {
+    "plugin": "a",
+    "ref": "a"
+  },
+  "scenario": "a",
+  "not-a-field": 1
+}

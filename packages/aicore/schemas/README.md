@@ -59,6 +59,11 @@ schemas/<contract>/v<N>/examples/invalid/*.json  # documents it rejects (extra f
 | `workspace-device` | v1 | Machine file `device.json`: device id, host name, creation time; never in git |
 | `workspace-local-only` | v1 | Index of project files kept out of git (`projects/<code>/local-only.json`): path, size, SHA-256, device, reason `size`, `binary` or `secret-pattern`; portable |
 | `workspace-migration` | v1 | Report of one migration of a project's plans into the workspace (`projects/<code>/migrations/<op_id>.json`): per-plan class, action, file count and digest; portable |
+| `instruction-set` | v1 | Snapshot of instruction overlays a run keeps (`aicore.stubs.snapshot`): layers, digest and the resolved text of each target |
+| `project-sync` | v1 | Result of `swissknifeman project init` and `sync`: template digest and the action for each managed file |
+| `project-migrate` | v1 | Result of `swissknifeman project migrate`: files moved into the workspace local directory |
+| `provider-errors` | v1 | Classification rules for provider failures (`configs/provider-errors.json`); read by `aicore.provider.errors` |
+| `release-unit-policy` | v1 | Version ownership of release units (`configs/release-units.json`); read by `aicore.release.attestation` |
 
 ## Module config schemas
 

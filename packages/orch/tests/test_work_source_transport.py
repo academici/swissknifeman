@@ -1,5 +1,4 @@
 """The test transport preserves CLI results and process isolation; real source processes remain covered."""
-import io
 import json
 import os
 import sys
@@ -37,7 +36,7 @@ class WorkSourceTransportTests(ConductorCase):
         before = dict(os.environ), os.getcwd(), sys.stdout, sys.stderr, work_source.ORCH_TRANSPORT
         for outcome in (None, SystemExit(7), RuntimeError("test failure")):
             with self.subTest(outcome=outcome):
-                def main(argv):
+                def main(argv, outcome=outcome):
                     self.assertEqual(argv, ["source", "claim"])
                     self.assertEqual(dict(os.environ), {"TRANSPORT_ONLY": "yes"})
                     self.assertEqual(os.getcwd(), str(self.home))

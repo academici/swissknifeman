@@ -1,0 +1,30 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-policy:v1",
+  "contract_version": "exec/v1",
+  "policy_id": "a",
+  "description": "a",
+  "stages": [
+    {
+      "id": "a",
+      "kind": "context",
+      "role": "a",
+      "required": true,
+      "on_unavailable": "refuse"
+    }
+  ],
+  "review": {
+    "enabled": true,
+    "independent_provider": true,
+    "max_rounds": 0,
+    "max_corrections": 0
+  },
+  "retries_budget": {
+    "total_max": 0
+  },
+  "git_action": "none",
+  "finalize": {
+    "kind": "deterministic",
+    "register": true
+  },
+  "not-a-field": 1
+}

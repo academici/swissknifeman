@@ -354,6 +354,21 @@ class CodexResumeTests(ConductorCase):
         self.assertIn("Create the output of W1.", self.prompt("executor", 2))
 
 
+class GrokResumeTests(unittest.TestCase):
+    """A Grok executor continues its conversation in a correction round (``grok --resume <id>``): the same command line
+    as a fresh one plus the session, conversation only (never ``--restore-code``, which would roll the tree back)."""
+
+    def test_the_grok_executor_resumes_the_conversation_and_keeps_its_command_line(self):
+        from orch import launch
+        catalog = launch.load_catalog()
+        fresh = launch.build_argv(catalog, "executor", "grok", model="grok-4.7", cwd="/w")
+        resumed = launch.build_resume_argv(catalog, "executor", "grok", model="grok-4.7", cwd="/w")
+        self.assertEqual(resumed[resumed.index("--resume") + 1], "{session}")
+        self.assertEqual([arg for arg in resumed if arg not in ("--resume", "{session}")], fresh)
+        for flag in ("--restore-code", "--fork-session", "--continue"):
+            self.assertNotIn(flag, resumed)
+
+
 class OptionsCopyTests(ConductorCase):
     def test_the_options_file_is_kept_with_the_run(self):
         options_file = self.project.parent / "opts.json"

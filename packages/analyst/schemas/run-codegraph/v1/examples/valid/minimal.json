@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:analyst:run-codegraph:v1",
+  "project": "a",
+  "reports": []
+}

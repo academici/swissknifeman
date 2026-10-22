@@ -4,7 +4,7 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "17c44d8100ed10e7881d4937c6f0e265758ceb22b5026c5d86e927112c172e86",
+    "source_sha256": "d356d77abc18890dd4142dc63941e82209df16eda7b72589d9f0c9e567f1b2d0",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
     "literal_count": 375
   },
@@ -1411,7 +1411,7 @@
     },
     {
       "semantic_id": "brain.engineering-invariants",
-      "literal": "Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes"
+      "literal": "Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics, `BrainError` codes"
     },
     {
       "semantic_id": "brain.engineering-invariants",
@@ -1479,7 +1479,7 @@
     },
     {
       "semantic_id": "orch.engineering-invariants",
-      "literal": "Keep Python 3.9 compatibility, English diagnostics"
+      "literal": "Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics"
     },
     {
       "semantic_id": "orch.engineering-invariants",

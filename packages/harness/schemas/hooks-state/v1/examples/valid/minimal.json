@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:harness:hooks-state:v1",
+  "project": "a",
+  "settings": {},
+  "hooks_env": {},
+  "legacy": [],
+  "stale": true
+}

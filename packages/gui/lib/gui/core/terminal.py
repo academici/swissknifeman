@@ -272,23 +272,23 @@ class Session:
         with self._lock:
             if self.closed or self._eof or self._master < 0:
                 return None
-            allowed = self.gate.take(self.limits.output_chunk_bytes)
-            if allowed <= 0:
+            # Debit only bytes actually read. Reserving the chunk first lets a
+            # concurrent grant fit in the hole; give-back then pushes unpaid
+            # credit over the cap.
+            room = min(self.limits.output_chunk_bytes, self.gate.available)
+            if room <= 0:
                 return None
             try:
-                data = os.read(self._master, allowed)
+                data = os.read(self._master, room)
             except BlockingIOError:
-                self.gate.give_back(allowed)
                 return None
             except OSError:  # EIO: every holder of the slave is gone
-                self.gate.give_back(allowed)
                 self._eof = True
                 return None
             if not data:
-                self.gate.give_back(allowed)
                 self._eof = True
                 return None
-            self.gate.give_back(allowed - len(data))
+            self.gate.take(len(data))
             self.bytes_out += len(data)
             self.last_activity = self._clock()
             seq = self._seq

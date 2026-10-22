@@ -38,7 +38,7 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "findings_batch": 0, "question_warn_s": 1800, "skill_tokens_max": 5000,
                   "prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000,
                   "disk_min_gb": 5, "triage_repro_timeout_s": 600}
-DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": False,
+DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": True,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
                   "strategy": "auto", "strategist": "rules"}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
@@ -60,9 +60,12 @@ DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "block", "fence": "pr
 # pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
 SESSION_MODES = ("handoff", "shared", "per-item")
 DEFAULT_SESSION = {"executor": "handoff"}
+# ``self_check``: the project's cheap commands the executor runs once on its final tree before it reports (the tests of the
+# units it touched and their dependents, lint); empty keeps the old "single test files" rule. They are not acceptance:
+# the conductor still runs every acceptance check itself, and the executor's claims about them prove nothing.
 DEFAULT_CHECKS = {"parallel": 2, "overlap_review": False, "executor_runs_checks": False,
-                  "red_first": True, "fail_fast": True, "reuse": True,
-                  "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"]}
+                  "red_first": True, "fail_fast": False, "reuse": True,
+                  "kinds": ["acceptance", "impact"], "cadence": ["item", "phase"], "self_check": []}
 SEVERITIES = ("Blocker", "Major", "Minor", "Nit")  # most severe first
 # A review is too dear to lose when its provider cannot start, is gated or fails: the default reviewer (grok) has a fallback.
 # A layer with its own ``fallback_routes`` replaces this list, ``fallback_routes: []`` ends it.

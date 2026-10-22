@@ -92,6 +92,50 @@ class WithheldChecksTests(unittest.TestCase):
         self.assertNotIn("do not start containers", text)
 
 
+class SelfCheckTests(unittest.TestCase):
+    """``checks.self_check``: the executor hands over work it checked itself; acceptance stays with the conductor."""
+
+    SELF = ["python3 scripts/affected-tests.py --run", "ruff check ."]
+
+    def test_the_self_check_commands_are_given_while_the_acceptance_commands_stay_withheld(self):
+        text = prompts.render(prompts.executor(fixture("plan-bound"), item="P1.1", step="executor.1",
+                                               self_check=self.SELF))
+        self.assertIn("## Ready to hand over", text)
+        for command in self.SELF:
+            self.assertIn(f"  - `{command}`", text)
+        self.assertNotIn("python3 -m unittest tests.test_cli", text)
+        self.assertIn("negative example", text)
+        self.assertIn("the self-check section below names the commands you do run", text)
+        self.assertIn('`self_check` of the report', text)
+
+    def test_without_self_check_the_prompt_has_no_such_section(self):
+        text = prompts.render(prompts.executor(fixture("plan-bound"), item="P1.1", step="executor.1"))
+        self.assertNotIn("## Ready to hand over", text)
+        self.assertNotIn("the self-check section below", text)
+
+    def test_an_executor_that_runs_the_acceptance_checks_gets_no_self_check(self):
+        text = prompts.render(prompts.executor(fixture("plan-bound"), item="P1.1", step="executor.1",
+                                               targeted_tests=False, correction="red V1", self_check=self.SELF))
+        self.assertNotIn("## Ready to hand over", text)
+        self.assertNotIn("self-check commands again", text)
+
+    def test_a_correction_asks_for_the_self_check_again_in_a_full_and_a_resumed_prompt(self):
+        full = prompts.render(prompts.executor(fixture("plan-bound"), item="P1.1", step="executor.2",
+                                               correction="red V1", self_check=self.SELF))
+        resumed = prompts.render(prompts.executor_resumed(item="P1.1", step="executor.2", correction="red V1",
+                                                          self_check=self.SELF))
+        for text in (full, resumed):
+            self.assertIn("run the self-check commands again (`python3 scripts/affected-tests.py --run`, "
+                          "`ruff check .`)", text)
+
+    def test_the_stage_report_schema_takes_a_self_check_claim(self):
+        report = {"status": "done", "summary": "s", "changed_paths": [], "checks_run": [], "evidence": [],
+                  "open_issues": [], "self_check": [{"cmd": self.SELF[0], "exit": 0}]}
+        self.assertEqual(contract.problems(report, "stage-report"), [])
+        report["self_check"] = [{"cmd": self.SELF[0]}]
+        self.assertNotEqual(contract.problems(report, "stage-report"), [])
+
+
 class BlockTests(unittest.TestCase):
     def test_every_builder_matches_the_prompt_captured_before_the_split(self):
         for name, blocks in cases().items():

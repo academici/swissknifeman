@@ -12,7 +12,7 @@ Import only `brain` and `aicore`; reach planner, maind and skiller through event
 Write to the vault only through `brain note` (one new note per event, idempotent by event id, never overwriting a file) and an explicit `brain docs push`; keep notes outside the synced `docs`, `docs-public` and `plans` folders.
 <!-- instruction:brain.engineering-invariants -->
 ## brain.engineering-invariants
-Keep Python 3.9 compatibility, English diagnostics, `BrainError` codes and the subscriber answer contract: one JSON object on stdout, exit 65 for invalid event data and 75 for temporary failures.
+Keep Python 3.11 compatibility (aicore.MIN_PYTHON), English diagnostics, `BrainError` codes and the subscriber answer contract: one JSON object on stdout, exit 65 for invalid event data and 75 for temporary failures.
 <!-- instruction:brain.validation-release -->
 ## brain.validation-release
 Before a commit run `bash scripts/test.sh` and `bash scripts/validate.sh`, then `python3 scripts/ecosystem-units.py check` and `python3 scripts/ecosystem-units.py standalone brain` from the hub root; use Russian Conventional Commit messages.

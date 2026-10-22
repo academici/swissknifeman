@@ -30,7 +30,7 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/grok/config/profile-bindings.json | `sha256:3917201ee56b3b9b8c2ea88c9a42d1560a784510eabd92039092a3c3648a50fd` |
 | source:configs/grok/hooks/lifecycle-context-bindings.json | `sha256:aaeb65d2fc2717c66736e80ca33fa35e2889394d574a6a766e6d08e7f1c948f3` |
 | source:configs/grok/mcp/bindings.json | `sha256:a6d49601aa1729a8aee745a53f8110dd6f59b55851248a607c49da1b32edc89d` |
-| render-manifest:all-provider-qualified-outputs | `sha256:b3074f0ba3ad28417982c0a06bb54016746336a136980d1af9d493f59f8cda99` |
+| render-manifest:all-provider-qualified-outputs | `sha256:949ff13c9807388bb0a7acee61781765f600017b74525b0961f44a73ef9772ec` |
 
 The read-only JSON report retains every individual provider-qualified render hash; this manifest hash covers all of them deterministically.
 

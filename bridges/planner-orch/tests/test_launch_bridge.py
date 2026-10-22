@@ -6,7 +6,6 @@ import importlib.util
 from pathlib import Path
 import re
 import subprocess
-import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -48,13 +47,13 @@ class LaunchBridge(unittest.TestCase):
         self.assertEqual(out["argv"], ["claude", "-p", "--model", "haiku", "--effort", "low", "--tools",
                                        "Read,Grep,Glob", "--permission-prompts", "none",
                                        "--no-session-persistence"])
-        self.assertEqual(json.loads(launch("scout", "codex").stdout)["model"], "gpt-5.6-luna")
+        self.assertEqual(json.loads(launch("scout", "codex").stdout)["model"], "gpt-6-luna")
 
     def test_class_resolves_by_role(self):
         out = json.loads(launch("executor", "claude-code", "--effort", "xhigh").stdout)
         self.assertEqual((out["model"], out["model_class"]), ("sonnet", "implementation"))
         self.assertEqual(out["argv"][out["argv"].index("--effort") + 1], "xhigh")
-        self.assertEqual(json.loads(launch("bounded-implementer", "codex").stdout)["model"], "gpt-5.6-luna")
+        self.assertEqual(json.loads(launch("bounded-implementer", "codex").stdout)["model"], "gpt-6-luna")
 
     def test_grok_writer_model_is_mapped_or_overridden_and_uses_jsonl(self):
         for role in ("executor", "bounded-implementer"):

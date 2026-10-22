@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:workspace:publish-report:v1",
+  "files_checked": 0,
+  "block": [],
+  "warn": [],
+  "local_only": [],
+  "verdict": "ok",
+  "not-a-field": 1
+}

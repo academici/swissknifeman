@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.6.0",
+  "catalog_version": "1.7.0",
   "defaults": {
     "transport": "jsonl",
     "model_set": "supported"
@@ -51,7 +51,8 @@
           "resume_argv": ["@codex.exec", "resume", "{session}", "--json", "-c", "sandbox_mode=\"{write_sandbox}\"", "@codex.model", "-"]
         },
         "grok": {
-          "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"]
+          "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"],
+          "resume_argv": ["@ro-run.rw", "@grok.run", "--resume", "{session}", "@grok.stream"]
         }
       }
     },

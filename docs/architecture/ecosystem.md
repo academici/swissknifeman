@@ -240,8 +240,9 @@ in the repository working copy, so different computers and a development clone d
 edited by hand are TOML; generated state, lock files and module defaults are JSON; every module ships
 `config.example.toml` generated from its schema (defaults are the schema's `default` keywords) ([ADR 0011](decisions/0011-toml-for-human-edited-config.md)).
 Merge, removal, explain, secrets and the invocation layer follow [ADR 0019](decisions/0019-config-semantics.md) as
-made exact in [ADR 0034](decisions/0034-layered-config-semantics.md); config files are TOML 1.0
-([ADR 0036](decisions/0036-toml-vendored-tomli-and-minimal-editor.md)).
+made exact in [ADR 0034](decisions/0034-layered-config-semantics.md); config files are TOML 1.0 and are read
+with `tomllib` ([ADR 0087](decisions/0087-python-311-floor.md); the comment-preserving editor remains from
+[ADR 0036](decisions/0036-toml-vendored-tomli-and-minimal-editor.md)).
 
 ### 5.2 State locations
 
@@ -618,4 +619,4 @@ Recorded in [ADR 0032](decisions/0032-ready-made-or-own-and-non-goals.md):
 - MCP is a tool surface. It is not the event bus `aicore.ext`, not the source of truth about a run and not a
   replacement of contracts.
 - A model gateway, if one appears, does not own the state of a run.
-- Servers and frameworks are not dependencies of the core; the minimum Python version is 3.9.
+- Servers and frameworks are not dependencies of the core; the minimum Python version is 3.11.

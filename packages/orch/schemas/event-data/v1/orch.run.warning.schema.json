@@ -24,7 +24,8 @@
       "type": "string",
       "enum": [
         "RUN_SLOW",
-        "LIMIT_OVER"
+        "LIMIT_OVER",
+        "REVIEW_DEBT"
       ],
       "description": "Beacon of the progress log."
     },

@@ -142,7 +142,9 @@ class TestCheck(unittest.TestCase):
 
 class TestPythonFloor(unittest.TestCase):
     def test_floor_is_3_11(self):
+        import aicore
         self.assertEqual((3, 11), gui.MIN_PYTHON)
+        self.assertGreaterEqual(gui.MIN_PYTHON, tuple(aicore.MIN_PYTHON))
 
     def test_supported_versions_pass(self):
         for version in ((3, 11, 0), (3, 12, 3), (4, 0)):

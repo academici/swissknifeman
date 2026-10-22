@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:snapshot:v1",
+  "plan": {
+    "$schema": "urn:swissknifeman:task:plan:plan:v1",
+    "id": "1.0.0",
+    "short_id": "PLAN1",
+    "title": "a",
+    "status": "active",
+    "created": "2026-01-02",
+    "updated_at": "2026-01-02T03:04:05Z",
+    "repository": "a",
+    "owner": "a",
+    "authoring": {
+      "provider": "a",
+      "model": "a"
+    },
+    "goal": "a",
+    "context": "a",
+    "phases": [],
+    "settings": {
+      "design_audit": "none",
+      "scout": "off"
+    }
+  },
+  "brief": {
+    "$schema": "urn:swissknifeman:task:plan:brief:v1",
+    "messages": [
+      {
+        "id": "M1",
+        "date": "2026-01-02",
+        "text": "a"
+      }
+    ],
+    "requirements": []
+  },
+  "phases": [],
+  "items": [],
+  "units": [],
+  "decisions": [],
+  "documents": [],
+  "events": []
+}

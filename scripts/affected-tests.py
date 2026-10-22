@@ -28,6 +28,9 @@ surfaces fall back to the full owner/dependent closure. JSON explains each oblig
 Green results use content, Python, runner/config/dependency bytes, tools and execution environment; inputs are checked
 again after execution. The git directory's affected-tests/ holds atomically merged green.json and durations.json.
 Tier all never reads green.json: only a safe SKM_CHECK_RUN enables reuse in run-<id>.json within that conductor run.
+With a safe SKM_CHECK_RUN the fast and full tiers use conductor.json (reused across conductor runs) and never green.json,
+which manual runs and the executor's self-check write: those are never acceptance evidence (accident prevention, not a
+trust boundary: an open-access role can write the git directory).
 Manual tier-all runs are full; --no-cache disables all reuse. Run receipts older than 14 days are pruned on write.
 """
 from __future__ import annotations
@@ -311,17 +314,27 @@ def _tool_digest(path: Path, signature: tuple) -> bytes:
     return digest.digest()
 
 
-def content_key(folders: list, command: list, context=None) -> str:
-    """The working-tree bytes and executable modes a command reads, independent of staging and commits."""
-    digest = hashlib.sha256(json.dumps([command, sys.version.split()[0], folders]).encode("utf-8"))
-    env = bridge_env()
-    context_env = {k: env.get(k) for k in CONTEXT_ENV}
+def context_env(env: dict) -> dict:
+    """Names and values that affect discovery or execution. Secret-named variables are left out and never hashed."""
+    found = {name: env.get(name) for name in CONTEXT_ENV}
     for name in env:
         if (name.startswith(("SKM_", "PLANNER_", "AICORE_"))
                 and name not in ("SKM_CHECK_RUN", "SKM_CHECK_ROUND", "SKM_VALIDATE_SKIP_TESTS")
                 and not any(word in name for word in ("TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "API_KEY"))):
-            context_env[name] = env[name]
-    digest.update(json.dumps([str(ROOT), context_env, context], sort_keys=True).encode("utf-8"))
+            found[name] = env[name]
+    return found
+
+
+def _sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def content_key(folders: list, command: list, context=None) -> str:
+    """The working-tree bytes and executable modes a command reads, independent of staging and commits."""
+    digest = hashlib.sha256(json.dumps([command, sys.version.split()[0], folders]).encode("utf-8"))
+    env = bridge_env()
+    context_env_values = context_env(env)
+    digest.update(json.dumps([str(ROOT), context_env_values, context], sort_keys=True).encode("utf-8"))
     # Hub runners/configs can change execution without changing a unit. Keep index/commit representation irrelevant.
     reads = list(dict.fromkeys([*folders, "scripts", "configs", ".swissknifeman/config.toml"]))
     names = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", *reads], cwd=ROOT,
@@ -355,6 +368,71 @@ def content_key(folders: list, command: list, context=None) -> str:
     return digest.hexdigest()
 
 
+def component_hashes(folders: list, command: list, context=None) -> dict:
+    """Safe component name to sha256 for a reuse miss. Values of the environment are hashed, never stored."""
+    env = bridge_env()
+    values = context_env(env)
+    parts = {
+        "command": _sha(json.dumps([command, sys.version.split()[0], folders]).encode("utf-8")),
+        "root": _sha(str(ROOT).encode("utf-8")),
+        "context": _sha(json.dumps(context, sort_keys=True).encode("utf-8")),
+        "runner": _sha(Path(__file__).read_bytes()),
+    }
+    for name in sorted(values):
+        value = values[name]
+        parts[f"env:{name}"] = "unset" if value is None else _sha(str(value).encode("utf-8"))
+    for tool in dict.fromkeys([command[0], "python3", "bash", "git", "node", "npm"]):
+        resolved = shutil.which(tool, path=env.get("PATH"))
+        if resolved is None:
+            parts[f"tool:{tool}"] = "missing"
+            continue
+        path = Path(resolved).resolve()
+        try:
+            stat = path.stat()
+            signature = (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_mode)
+            parts[f"tool:{tool}"] = _sha(_tool_digest(path, signature) + os.fsencode(path))
+        except OSError:
+            parts[f"tool:{tool}"] = "unreadable"
+    reads = list(dict.fromkeys([*folders, "scripts", "configs", ".swissknifeman/config.toml"]))
+    for folder in reads:
+        parts[f"files:{folder}"] = _tree_hash(folder)
+    return parts
+
+
+def _tree_hash(folder: str) -> str:
+    """sha256 of the tracked and untracked bytes under ``folder``. A missing tree is ``absent``."""
+    digest = hashlib.sha256()
+    try:
+        names = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", folder],
+                               cwd=ROOT, capture_output=True, check=True).stdout.split(b"\0")
+    except (OSError, subprocess.CalledProcessError):
+        return "unreadable"
+    seen = False
+    for name in sorted(item for item in names if item):
+        seen = True
+        path = ROOT / os.fsdecode(name)
+        digest.update(b"\0" + name)
+        try:
+            digest.update(os.fsencode(os.readlink(path)) if path.is_symlink() else path.read_bytes())
+        except OSError:
+            digest.update(b"?")
+    return digest.hexdigest() if seen else "absent"
+
+
+def miss_explanation(prior: dict, current: dict) -> str:
+    """Changed component names and short hashes. Never an environment value."""
+    stored = prior.get("components") if isinstance(prior, dict) else None
+    if not isinstance(stored, dict) or not stored:
+        return "content key differs from a prior green receipt; component record absent"
+    changed = [name for name in sorted(set(stored) | set(current)) if stored.get(name) != current.get(name)]
+    if not changed:
+        return "component hashes match; receipt key differs"
+    shown = changed[:8]
+    bits = [f"{name}={(current.get(name) or stored.get(name) or '-')[:12]}" for name in shown]
+    extra = f" (+{len(changed) - len(shown)})" if len(changed) > len(shown) else ""
+    return "changed " + ", ".join(bits) + extra
+
+
 def cache_file() -> Path:
     common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=ROOT,
                             capture_output=True, text=True, check=True).stdout.strip()
@@ -374,7 +452,8 @@ def cache_file() -> Path:
 GREEN_SCHEMA = {"$id": "urn:swissknifeman:hub:affected-tests:green:v1", "type": "object", "additionalProperties": False,
                 "patternProperties": {"^[a-f0-9]{64}$": {"type": "object", "required": ["folder", "command"],
                     "additionalProperties": False, "properties": {"folder": {"type": "string"},
-                    "command": {"type": "array", "items": {"type": "string"}, "minItems": 1}}}}}
+                    "command": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+                    "components": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}}}}}}
 DURATIONS_SCHEMA = {"$id": "urn:swissknifeman:hub:affected-tests:durations:v1", "type": "object",
                     "additionalProperties": {"type": "number", "minimum": 0}}
 EXPLAIN_SCHEMA = {
@@ -552,10 +631,13 @@ def main(argv=None) -> int:
     run_id = os.environ.get("SKM_CHECK_RUN", "")
     store = None
     if args.cache:
-        if args.tier != "all":
+        # A conductor check (a safe SKM_CHECK_RUN) never reads green.json: the executor's self-check writes it, and
+        # acceptance must not count that as its own evidence. Its fast and full tiers keep conductor.json across runs
+        # (content-keyed, so an unchanged unit is reused by the next item); tier all keeps to the receipts of its run.
+        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id):
+            store = primary.with_name(f"run-{run_id}.json" if args.tier == "all" else "conductor.json")
+        elif args.tier != "all":
             store = primary
-        elif re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id):
-            store = primary.with_name(f"run-{run_id}.json")
     green = read_cache(store) if store else {}
     by_id = {doc.get("id", f.split("/")[-1]) for f, doc in all_units.items()}
     stop = threading.Event()
@@ -580,6 +662,19 @@ def main(argv=None) -> int:
             key = key_of(folder, command, skip_tests)
             cached = bool(key and key in green)
             seconds, done, stable, launched = None, None, False, False
+            parts = None
+            if store and folder != "hub" and not cached:
+                if key is None:
+                    print(f"[miss] {folder}: {' '.join(command)} — unknown dependency; conservative run, "
+                          "no reusable receipt", flush=True)
+                else:
+                    parts = component_hashes(requirements(all_units, folder, foundation), command,
+                                             {"child_jobs": share, "skip_tests": skip_tests})
+                    prior = [doc for doc in green.values()
+                             if isinstance(doc, dict) and doc.get("folder") == folder and doc.get("command") == command]
+                    if prior:
+                        print(f"[miss] {folder}: {' '.join(command)} — {miss_explanation(prior[-1], parts)}",
+                              flush=True)
             if not cached:
                 began = time.monotonic()
                 try:
@@ -597,7 +692,7 @@ def main(argv=None) -> int:
                 stable = bool(key and key == key_of(folder, command, skip_tests))
             # A cached full test is green; a freshly failed full test remains in results, even when validate skips it.
             tested = tested or (is_test and (cached or launched))
-            results.append((folder, command, done, key if stable else None, seconds))
+            results.append((folder, command, done, key if stable else None, seconds, parts if stable else None))
         return results
 
     failed = 0
@@ -605,7 +700,7 @@ def main(argv=None) -> int:
 
     def record(results):
         nonlocal failed
-        for folder, command, done, key, seconds in results:
+        for folder, command, done, key, seconds, parts in results:
             state = "cached" if done is None else "ok" if done.returncode == 0 else "FAIL"
             print(f"[{state}] {folder}: {' '.join(command)}", flush=True)
             if seconds is not None:
@@ -618,7 +713,10 @@ def main(argv=None) -> int:
                 if full and not full.endswith("\n"):
                     sys.stderr.write("\n")
             elif key:
-                updates[key] = {"folder": folder, "command": command}
+                receipt = {"folder": folder, "command": command}
+                if parts:
+                    receipt["components"] = parts
+                updates[key] = receipt
 
     def skipped(items):
         for folder, argv in items:

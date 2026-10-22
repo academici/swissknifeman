@@ -30,10 +30,10 @@ class PlannerCiGateTests(unittest.TestCase):
         self.assertIn("scripts/validate.sh", validates[0])
 
     def test_planner_is_in_the_test_matrix_on_the_oldest_and_newest_python(self):
-        done = _matrix("list", "--json", "--step", "test", "--python", "3.9,3.13")
+        done = _matrix("list", "--json", "--step", "test", "--python", "3.11,3.14")
         self.assertEqual(done.returncode, 0, done.stderr)
         versions = sorted(item["python"] for item in json.loads(done.stdout)["include"] if item["unit"] == "planner")
-        self.assertEqual(versions, ["3.13", "3.9"])
+        self.assertEqual(versions, ["3.11", "3.14"])
 
     def test_planner_sources_and_tests_are_in_the_authoritative_ruff_step(self):
         steps = _matrix("steps", "planner").stdout.splitlines()

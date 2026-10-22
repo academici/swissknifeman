@@ -761,7 +761,7 @@ class TestInstallProfiles(unittest.TestCase):
     def test_matches_the_schema(self):
         self.assertLessEqual(set(self.doc), set(self.schema["properties"]))
         self.assertTrue(set(self.schema["required"]) <= set(self.doc))
-        item = self.schema["properties"]["profiles"]["additionalProperties"]
+        item = next(iter(self.schema["properties"]["profiles"]["patternProperties"].values()))
         self.assertEqual({"minimal", "standard", "full"}, set(self.doc["profiles"]))
         self.assertIn(self.doc["default"], self.doc["profiles"])
         for name, profile in self.doc["profiles"].items():
@@ -840,7 +840,8 @@ class TestSources(unittest.TestCase):
         self.assertTrue(set(schema["required"]) <= set(config))
         route = schema["$defs"]["route"]["properties"]
         for name, alias in config["aliases"].items():
-            self.assertLessEqual(set(alias), set(schema["properties"]["aliases"]["additionalProperties"]["properties"]))
+            alias_schema = next(iter(schema["properties"]["aliases"]["patternProperties"].values()))
+            self.assertLessEqual(set(alias), set(alias_schema["properties"]))
             for item in alias["routes"]:
                 with self.subTest(alias=name):
                     self.assertLessEqual(set(item), set(route))

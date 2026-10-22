@@ -278,7 +278,7 @@ Extracting snippets from local projects (paths in `.skills-scanner.json`):
 
 | Workflow | Purpose |
 |----------|------------|
-| `modules.yml` (hub) | `scripts/validate.sh` and `scripts/test.sh` of the skiller unit (Python 3.9, 3.13, 3.14), including `skiller registry --check` |
+| `modules.yml` (hub) | `scripts/validate.sh` and `scripts/test.sh` of the skiller unit (Python 3.11, 3.13, 3.14), including `skiller registry --check` |
 | `upstream-sync.yml` | Weekly check of upstreams → PR with diff |
 | `sha256-update.yml` | `skiller registry --check` on push and PR (read-only) |
 | `scanner-pr.yml` | Weekly scan → PR; on a hosted runner the local scan paths are absent (`SCAN_PATHS_ABSENT`), run `scan-and-pr.sh` locally |

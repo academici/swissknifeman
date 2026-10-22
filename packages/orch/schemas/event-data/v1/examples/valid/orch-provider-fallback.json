@@ -1,0 +1,13 @@
+{
+  "run_id": "a",
+  "role": "a",
+  "from": {
+    "provider": "a"
+  },
+  "to": {
+    "provider": "a"
+  },
+  "reason_codes": [
+    "a"
+  ]
+}

@@ -60,9 +60,11 @@ CARET = re.compile(r"^\^(\d+)\.(\d+)(?:\.(\d+))?$")
 PHASE = re.compile(r"^P([3-9]|1[0-3])$")
 CONFIDENCE = ("fixed", "hypothesis")
 SCHEMA_ID = re.compile(r"^urn:[a-z0-9-]+(?::[a-z0-9-]+)*:v([0-9]+)$")
-SCHEMA_DRAFTS = ("https://json-schema.org/draft/2020-12/schema", "http://json-schema.org/draft-07/schema#")
-SCHEMA_DRAFT_2020 = SCHEMA_DRAFTS[0]
+# Product schemas are draft 2020-12 only. Draft-07 stays out of the hub check (SCHEMA_DRAFT).
+SCHEMA_DRAFT = "https://json-schema.org/draft/2020-12/schema"
+SCHEMA_DRAFTS = (SCHEMA_DRAFT,)
 SCHEMA_SKIP_DIRS = ("tests", "fixtures", "examples")
+_ALIAS_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
 STANDALONE_STATES = ("pass", "fail", "n/a")
 STANDALONE_TIMEOUT_S = 1800
 STANDALONE_TAIL_LINES = 40
@@ -590,6 +592,7 @@ def check_config(ctx: Context) -> list:
                 bad(f"path_allow: {problem}")
     if not isinstance(config.get("ownership"), list):
         bad("ownership must be a list")
+    issues.extend(_schema_rule_issues(config))
     tools = (config.get("standalone") or {}).get("tools", [])
     if not (isinstance(tools, list) and all(isinstance(x, str) for x in tools)):
         bad("standalone.tools must be a list of module folders")
@@ -696,12 +699,105 @@ def check_map(ctx: Context) -> list:
 
 # --------------------------------------------------------------------------------------------- schemas
 
-def check_schemas(ctx: Context) -> list:
-    """Every product JSON Schema declares a known draft and a versioned URN id (E14)."""
+def _schema_rule_issues(config: dict) -> list:
+    """Shape of the schema exceptions (aliases, mirrors, legacy files). Each exception carries a reason."""
     issues = []
+
+    def bad(message):
+        issues.append(Issue("CONFIG", CONFIG_PATH, message))
+
+    aliases = config.get("schema_id_aliases", {})
+    targets = config.get("targets") or []
+    if not isinstance(aliases, dict):
+        bad("schema_id_aliases must be an object")
+    else:
+        for alias, spec in aliases.items():
+            where = f"schema_id_aliases[{alias!r}]"
+            if not (isinstance(alias, str) and _ALIAS_NAME.fullmatch(alias)):
+                bad(f"{where}: alias must match {_ALIAS_NAME.pattern}")
+                continue
+            if not (isinstance(spec, dict) and set(spec) == {"owner", "reason"}
+                    and all(isinstance(spec[key], str) and spec[key] for key in ("owner", "reason"))):
+                bad(f"{where}: must be {{owner, reason}} with non-empty strings")
+                continue
+            if spec["owner"] not in targets:
+                bad(f"{where}: owner {spec['owner']!r} is not in targets")
+    for name, keys in (("mirrors", ("path", "source", "reason")), ("legacy_schema_files", ("path", "reason"))):
+        raw = config.get(name, [])
+        if not isinstance(raw, list):
+            bad(f"{name} must be a list")
+            continue
+        for index, entry in enumerate(raw):
+            if not (isinstance(entry, dict) and set(entry) == set(keys)
+                    and all(isinstance(entry.get(key), str) and entry[key] for key in keys)):
+                bad(f"{name}[{index}]: must be {{{', '.join(keys)}}} with non-empty strings")
+                continue
+            for key in keys:
+                if key == "reason":
+                    continue
+                if not safe_relpath(entry[key]):
+                    bad(f"{name}[{index}]: {key} must be a relative path inside the repository")
+    return issues
+
+
+def schema_owner(path: str, root: Path) -> str:
+    """Owning module of a schema file: ``packages/<id>`` → ``<id>``, ``bridges/<id>`` → the id in that bridge's
+    ``unit.json``, ``configs/`` → ``hub``. An empty string means the path is outside those trees."""
+    parts = path.split("/")
+    if not parts or parts[0] not in ("packages", "bridges", "configs"):
+        return ""
+    if parts[0] == "configs":
+        return "hub"
+    if len(parts) < 2 or not parts[1]:
+        return ""
+    if parts[0] == "packages":
+        return parts[1]
+    unit_path = root / "bridges" / parts[1] / UNIT_FILE
+    try:
+        document = json.loads(unit_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return parts[1]
+    if isinstance(document, dict) and isinstance(document.get("id"), str) and document["id"]:
+        return document["id"]
+    return parts[1]
+
+
+def _alias_prefixes(owner: str, config: dict) -> list:
+    """URN prefixes a file of ``owner`` may use: its own namespace, plus aliases whose owner is ``owner``."""
+    prefixes = [f"urn:swissknifeman:{owner}:"] if owner else []
+    for alias, spec in (config.get("schema_id_aliases") or {}).items():
+        alias_owner = spec.get("owner") if isinstance(spec, dict) else spec
+        if alias_owner == owner and isinstance(alias, str) and alias:
+            prefixes.append(f"urn:swissknifeman:{alias}:")
+    return prefixes
+
+
+def _indexed_rules(config: dict, name: str, key: str) -> dict:
+    found = {}
+    for entry in config.get(name) or ():
+        if isinstance(entry, dict) and isinstance(entry.get(key), str):
+            found[entry[key]] = entry
+    return found
+
+
+def check_schemas(ctx: Context) -> list:
+    """Every product schema is draft 2020-12, owned by its module (or an allowed alias), and loads in the closed profile.
+
+    ``legacy_schema_files`` are frozen copies kept for external URLs: they are skipped and named in ``--json``.
+    A ``mirrors`` entry may carry another module's ``$id`` only while its bytes equal the source (``SCHEMA_MIRROR_DRIFT``
+    otherwise).
+    """
+    issues = []
+    legacy = _indexed_rules(ctx.config, "legacy_schema_files", "path")
+    mirrors = _indexed_rules(ctx.config, "mirrors", "path")
+    notes = []
+    profile = None
     for path in ctx.files:
         parts = path.split("/")
         if not path.endswith(".schema.json") or any(part in SCHEMA_SKIP_DIRS for part in parts[:-1]):
+            continue
+        if path in legacy:
+            notes.append(f"legacy: {path} ({legacy[path].get('reason', '')})")
             continue
         try:
             doc = json.loads(ctx.text(path) or "")
@@ -711,21 +807,57 @@ def check_schemas(ctx: Context) -> list:
         if not isinstance(doc, dict):
             issues.append(Issue("SCHEMA_ID", path, "a schema must be a JSON object"))
             continue
+        mirror = mirrors.get(path)
+        if mirror is not None:
+            source = mirror.get("source", "")
+            try:
+                same = (ctx.root / path).read_bytes() == (ctx.root / source).read_bytes()
+            except OSError as exc:
+                same = False
+                issues.append(Issue("SCHEMA_MIRROR_DRIFT", path, f"cannot compare with {source}: {exc}"))
+            else:
+                if not same:
+                    issues.append(Issue("SCHEMA_MIRROR_DRIFT", path,
+                                        f"mirror differs from {source}; the copy must stay byte-identical"))
         draft = doc.get("$schema")
         if draft not in SCHEMA_DRAFTS:
-            issues.append(Issue("SCHEMA_ID", path, f"$schema {draft!r} must be one of {', '.join(SCHEMA_DRAFTS)}"))
-        elif path.startswith("packages/aicore/schemas/") and draft != SCHEMA_DRAFT_2020:
-            issues.append(Issue("SCHEMA_ID", path, f"aicore schemas must use {SCHEMA_DRAFT_2020}"))
-        match = SCHEMA_ID.match(doc["$id"]) if isinstance(doc.get("$id"), str) else None
+            issues.append(Issue("SCHEMA_DRAFT", path, f"$schema {draft!r} must be {SCHEMA_DRAFT}"))
+        owner = schema_owner(path, ctx.root)
+        prefixes = _alias_prefixes(owner, ctx.config)
+        schema_id = doc.get("$id")
+        match = SCHEMA_ID.match(schema_id) if isinstance(schema_id, str) else None
         if match is None:
-            issues.append(Issue("SCHEMA_ID", path, f"$id {doc.get('$id')!r} must match {SCHEMA_ID.pattern}"))
-            continue
-        dirs = [VERSION_DIR.match(part) for part in parts[:-1]]
-        dirs = [m for m in dirs if m]
-        if dirs and dirs[-1].group(1) != match.group(1):
-            issues.append(Issue("SCHEMA_VERSION", path, f"$id ends with v{match.group(1)} but the folder is "
-                                                        f"v{dirs[-1].group(1)}"))
+            issues.append(Issue("SCHEMA_ID", path, f"$id {schema_id!r} must match {SCHEMA_ID.pattern}"))
+        elif mirror is None or (ctx.root / path).is_file() and mirror is not None and not _mirror_matches(ctx, path, mirror):
+            # A byte-identical mirror keeps the source module's $id. Anything else must name its owner or an alias.
+            if not any(isinstance(schema_id, str) and schema_id.startswith(prefix) for prefix in prefixes):
+                allowed = ", ".join(prefixes) or "(none)"
+                issues.append(Issue("SCHEMA_OWNER", path,
+                                    f"$id {schema_id!r} must start with {allowed} (owner {owner or 'unknown'!r})"))
+        if match is not None:
+            dirs = [found for found in (VERSION_DIR.match(part) for part in parts[:-1]) if found]
+            if dirs and dirs[-1].group(1) != match.group(1):
+                issues.append(Issue("SCHEMA_VERSION", path, f"$id ends with v{match.group(1)} but the folder is "
+                                                            f"v{dirs[-1].group(1)}"))
+        if profile is None:
+            schema_validator()  # the foundation lib on sys.path
+            from aicore.util.jsonschema_core import SchemaProfileError, _check_profile
+            profile = (_check_profile, SchemaProfileError)
+        check_profile, profile_error = profile
+        try:
+            check_profile(doc, path, "", root=True)
+        except profile_error as exc:
+            issues.append(Issue("SCHEMA_PROFILE", path, str(exc)))
+    ctx.legacy_notes = notes
     return issues
+
+
+def _mirror_matches(ctx: Context, path: str, mirror: dict) -> bool:
+    source = mirror.get("source", "")
+    try:
+        return (ctx.root / path).read_bytes() == (ctx.root / source).read_bytes()
+    except OSError:
+        return False
 
 
 # ----------------------------------------------------------------------------------------- boundaries
@@ -945,10 +1077,14 @@ def cmd_check(ctx: Context, args) -> int:
     boundary_errors, improvements = compare_with_baseline(violations, baseline, args.strict)
     issues.extend(boundary_errors)
     if args.json:
-        print(json.dumps({"ok": not issues, "errors": [i.as_json() for i in issues],
-                          "violations": [{"key": k, "count": c, "baseline": baseline.get(k, 0)}
-                                         for k, c in sorted(violations.items())],
-                          "improvements": improvements}, indent=2))
+        payload = {"ok": not issues, "errors": [i.as_json() for i in issues],
+                   "violations": [{"key": k, "count": c, "baseline": baseline.get(k, 0)}
+                                  for k, c in sorted(violations.items())],
+                   "improvements": improvements}
+        legacy_notes = getattr(ctx, "legacy_notes", None)
+        if legacy_notes:
+            payload["legacy"] = legacy_notes
+        print(json.dumps(payload, indent=2))
     for issue in issues:
         print(issue.text(), file=sys.stderr)
     for item in improvements:

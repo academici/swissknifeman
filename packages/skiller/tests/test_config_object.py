@@ -33,7 +33,7 @@ EXPECTED_CONFIG_KEYS = {
 }
 
 FULL_CONFIG = {
-    "$schema": "../schema/swissknife.schema.json",
+    "$schema": "../schemas/swissknife/v1/swissknife.schema.json",
     "_comment": "DX-key: not validated, but must survive loading",
     "project_type": "fixture",
     "buckets": ["general"],

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:skiller:evals:v1",
+  "title": "skiller skill evals (evals.json / pressure.json / triggers.json)",
+  "description": "Registry skill behavioral tests (eval-first). Lie in skills/<bucket>/<name>/evals/. Runner/grader — lib/skiller/eval.py (skiller eval). Manual runtime validation (validate.sh + eval.validate_*); scheme - for DX. evals/ is NOT a vendor or part of content-hash.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/evals"
+    },
+    {
+      "$ref": "#/$defs/pressure"
+    },
+    {
+      "$ref": "#/$defs/triggers"
+    }
+  ],
+  "$defs": {
+    "assertion": {
+      "type": "object",
+      "description": "Deterministic run output check (without LLM-judge — reproducible in CI).",
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "contains",
+            "not_contains",
+            "regex",
+            "not_regex",
+            "file_exists",
+            "file_absent",
+            "min_words"
+          ],
+          "description": "The type value."
+        },
+        "value": {
+          "description": "Substring/pattern/path/number - depending on type."
+        },
+        "flags": {
+          "type": "object",
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "description": "Comparison is case insensitive by default (natural language is more robust)."
+            }
+          },
+          "description": "The flags value.",
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "case": {
+      "type": "object",
+      "required": [
+        "id",
+        "prompt"
+      ],
+      "properties": {
+        "id": {
+          "description": "Unique case identifier in the file."
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Request in the user's real language (specifics: paths, names)."
+        },
+        "tempts": {
+          "type": "string",
+          "description": "Only for pressure: which is tempting the agent to do it, MISSING the skill."
+        },
+        "files": {
+          "type": "array",
+          "description": "Files written to workspace before the run.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "The path value."
+              },
+              "content": {
+                "type": "string",
+                "description": "The content value."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "assertions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/assertion"
+          },
+          "description": "The assertions value."
+        }
+      },
+      "additionalProperties": false
+    },
+    "evals": {
+      "type": "object",
+      "description": "evals.json — positive cases (what the skill should do).",
+      "required": [
+        "skill",
+        "cases"
+      ],
+      "properties": {
+        "skill": {
+          "type": "string",
+          "description": "The skill value."
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/case"
+          },
+          "description": "The cases value."
+        }
+      },
+      "additionalProperties": false
+    },
+    "pressure": {
+      "type": "object",
+      "description": "pressure.json — temptation scenarios (TDD for documentation): withhold behavior under pressure.",
+      "required": [
+        "skill",
+        "scenarios"
+      ],
+      "properties": {
+        "skill": {
+          "type": "string",
+          "description": "The skill value."
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/case"
+          },
+          "description": "The scenarios value."
+        }
+      },
+      "additionalProperties": false
+    },
+    "triggers": {
+      "type": "object",
+      "description": "triggers.json — response accuracy description (tier-0): should_trigger vs should_not.",
+      "required": [
+        "should_trigger",
+        "should_not"
+      ],
+      "properties": {
+        "skill": {
+          "type": "string",
+          "description": "The skill value."
+        },
+        "should_trigger": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "The should_trigger value."
+        },
+        "should_not": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "The should_not value."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

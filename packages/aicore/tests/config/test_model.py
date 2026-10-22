@@ -5,7 +5,6 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
-from unittest import mock
 
 from aicore import config
 from aicore.config import ConfigError, ExtraLayer
@@ -426,15 +425,6 @@ class TestFiles(Workspace):
             self.resolve()
         self.assertEqual((caught.exception.layer, caught.exception.line), ("machine", 4))
         self.assertRegex(str(caught.exception), re.escape(f"{self.machine_file}:4:"))
-
-
-class TestBackends(Workspace):
-    def test_resolution_is_the_same_on_the_vendored_backend(self):
-        self.machine("[demo.recompute]\ncandidate_min_n = 18\n")
-        self.proj("[demo]\nmode = \"fast\"\n[demo._append]\nsources = [\"x\"]\n")
-        expected = self.resolve().explain_json()
-        with mock.patch.object(config.toml, "default_backend", return_value="vendored"):
-            self.assertEqual(self.resolve().explain_json(), expected)
 
 
 class TestLayerOrder(Workspace):

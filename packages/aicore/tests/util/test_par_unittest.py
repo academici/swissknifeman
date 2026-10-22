@@ -63,7 +63,6 @@ class ParallelUnittestTests(unittest.TestCase):
 
 class SchedulingAndEvidenceTests(unittest.TestCase):
     def setUp(self):
-        import json
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)

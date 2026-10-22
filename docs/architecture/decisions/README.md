@@ -61,7 +61,7 @@ by a new record.
 | [0033](0033-error-record-context-limit-and-unknown.md) | error/v1: `context_limit`, request identity, `unknown` is not `unknown_outcome` | Accepted |
 | [0034](0034-layered-config-semantics.md) | Layered config semantics: schema, file, layers, merge operators, environment, secrets, explain | Accepted |
 | [0035](0035-state-locations-legacy-reads-and-backups.md) | State locations, legacy reads and backups | Accepted |
-| [0036](0036-toml-vendored-tomli-and-minimal-editor.md) | TOML: vendored tomli and a minimal verified editor | Accepted |
+| [0036](0036-toml-vendored-tomli-and-minimal-editor.md) | TOML: vendored tomli and a minimal verified editor | Superseded by 0087 |
 | [0037](0037-content-delivery-release-boundary-by-function.md) | Content, delivery and release: the aicore boundary is drawn by function | Accepted |
 | [0038](0038-skill-descriptor-agent-skills-standard.md) | Skill descriptor: the Agent Skills standard plus digest and provenance | Accepted |
 | [0039](0039-eval-result-context.md) | An evaluation result carries the context it was produced in | Accepted |
@@ -112,3 +112,4 @@ by a new record.
 | [0084](0084-gui-state-canonical-files.md) | GUI state: canonical files are the source of truth; SQLite is a rebuildable index | Accepted |
 | [0085](0085-portable-workspace.md) | Portable workspace: plans leave the project repository and live in one git root of their own | Accepted |
 | [0086](0086-product-philosophy.md) | Product philosophy is a normative document and a pinned root instruction | Accepted |
+| [0087](0087-python-311-floor.md) | Minimum Python is 3.11 | Accepted |

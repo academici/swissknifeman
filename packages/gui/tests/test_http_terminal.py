@@ -320,12 +320,46 @@ class TestWebSocket(Case):
 
     def test_credit_is_summed_up_to_the_cap(self):
         document = self.open_session()
+        session = self.state.terminals.get(document["session_id"])
+        cap = session.gate.limit
+        chunk = session.limits.credit_bytes
+        self.assertEqual(cap, core.CREDIT_FACTOR * chunk)
         with self.connect(document["session_id"]) as ws:
-            for _ in range(4):
-                ws.send_text(json.dumps({"t": "credit", "bytes": 65536}))
+            for _ in range(core.CREDIT_FACTOR):
+                ws.send_text(json.dumps({"t": "credit", "bytes": chunk}))
+            # The shell prompt spends a few bytes, so refill until the unpaid
+            # balance sits on the cap with nothing left to read. Output frames
+            # from that prompt are already queued ahead of the refusal.
+            deadline = time.monotonic() + 5
+            stable = 0
+            while time.monotonic() < deadline:
+                available, sent = session.output_state()
+                idle = sent > 0 and not session.readable_now()
+                if available == cap and idle:
+                    stable += 1
+                    if stable >= 3:
+                        break
+                else:
+                    stable = 0
+                    if idle and available < cap:
+                        ws.send_text(json.dumps({"t": "credit", "bytes": cap - available}))
+                        topped = time.monotonic() + 1
+                        while session.output_state()[0] < cap and time.monotonic() < topped:
+                            if session.readable_now():
+                                break
+                            time.sleep(0.01)
+                time.sleep(0.02)
+            else:
+                self.fail(f"unpaid credit did not settle at the cap: {session.output_state()}")
+            self.assertLessEqual(session.gate.available, cap)
             ws.send_text(json.dumps({"t": "credit", "bytes": 1}))
-            frame = json.loads(ws.receive_text())
+            frame = None
+            for _ in range(40):
+                frame = json.loads(ws.receive_text())
+                if frame.get("t") != "output":
+                    break
             self.assertEqual(("error", "INPUT_INVALID"), (frame["t"], frame["code"]))
+            self.assertLessEqual(session.output_state()[0], cap)
 
     def test_closing_the_socket_ends_the_shell_and_its_jobs(self):
         document = self.open_session()

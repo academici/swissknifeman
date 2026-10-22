@@ -1,0 +1,7 @@
+{
+  "run_id": "a",
+  "stage_id": "a",
+  "attempt": 1,
+  "status": "completed",
+  "not-a-field": 1
+}

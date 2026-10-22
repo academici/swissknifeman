@@ -1,7 +1,8 @@
 """Host configuration: the single neutral entry point for host-repository knowledge.
 
-A host repository may place `configs/skiller-host.json` (format: schema/host.schema.json,
-`urn:skiller:host:v1`) at its root to enable host functions: sibling plugin directories,
+A host repository may place `configs/skiller-host.json` (format:
+`schemas/host/v1/host.schema.json`, `urn:swissknifeman:skiller:host:v1`) at its root to enable
+host functions: sibling plugin directories,
 default command plugins, version files, machine plugins, external commands and so on.
 The host is discovered from where Skiller is installed (`package_root`), never from the
 target project, so consumers of a hub install see the hub's host. No config means an

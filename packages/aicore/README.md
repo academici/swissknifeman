@@ -2,7 +2,7 @@
 
 The shared foundation of the swissknifeman modules. Every module depends on `aicore` and on nothing else
 (see `requires` in its `unit.json`); `aicore` depends on no module and on nothing but the Python standard library
-(Python 3.9 or later).
+(Python 3.11 or later).
 
 ## Layout
 
@@ -12,10 +12,10 @@ packages/aicore/
   bin/aicore                           # command line: `aicore config|events|ext|schema ...`
   configs/       provider-{capabilities,distribution,projection,errors}.json  model-catalog.json  gitignore-policy.json
                  config.schema.json  telemetry-conventions.json
-  lib/aicore/    util/  provider/  artifacts/  state/  config/  content/  delivery/  release/  ext/  workspace/  usage.py  cli.py  _vendor/tomli/
+  lib/aicore/    util/  provider/  artifacts/  state/  config/  content/  delivery/  release/  ext/  workspace/  usage.py  cli.py
   schemas/       <contract>/v1/  and README.md
   scripts/       test.sh  validate.sh  aicore-locator.sh
-  tests/         util, io, text, usage, contracts, architecture, vendor; provider/, artifacts/, state/, config/, content/, delivery/, release/, ext/ and workspace (`test_workspace.py`)
+  tests/         util, io, text, usage, contracts, architecture; provider/, artifacts/, state/, config/, content/, delivery/, release/, ext/ and workspace (`test_workspace.py`)
 ```
 
 `lib/aicore/__init__.py` carries only the version; there is no flat facade. Import the subpackages directly.
@@ -145,7 +145,7 @@ example `SKM_ANALYST_RECOMPUTE__CANDIDATE_MIN_N=30`. The text is parsed by the t
 `true|false|1|0|yes|no`; arrays: a JSON array). An unknown path under a known module warns once; `SKM_<MODULE>_ROOT`
 locates the module's folder and is not configuration (unless the schema has a top-level key `root`).
 
-Config files are TOML 1.0. `tomllib` of Python 3.15 or later also accepts TOML 1.1, which Python 3.9 to 3.14 cannot
+Config files are TOML 1.0. `tomllib` of Python 3.15 or later also accepts TOML 1.1, which Python 3.11 to 3.14 cannot
 read, so do not use 1.1 syntax in a shared file.
 
 ### Secrets
@@ -187,12 +187,11 @@ aicore config set: <project>/.swissknifeman/config.toml:4: project: recompute.ca
 Every module with a `provides.config` entry in `unit.json` ships `configs/config.schema.json` and a generated
 `config.example.toml`; `scripts/ecosystem-units.py check` fails when the example drifts.
 
-### Vendored tomli
+### Reading TOML
 
-Before Python 3.11 the files are read by `aicore/_vendor/tomli` (tomli 2.3.1, MIT, copied byte for byte from the
-pure wheel; hashes in `VENDORED.json`, checked by `tests/test_vendor.py`). 2.3.x implements TOML 1.0 like `tomllib`
-of Python 3.11 to 3.14, so a file reads the same on 3.9 to 3.14. Never edit the vendored files; to update, take the
-new wheel, check its hash and write a new `VENDORED.json`. Decisions: ADR 0034 to 0036 in `docs/architecture`.
+`aicore.config.toml` reads every config with `tomllib`. Callers use `loads` and `load_file`; nothing else
+imports `tomllib`. Decisions: ADR 0034, the comment-preserving editor in ADR 0036, and ADR 0087 (the floor
+and the single reader) in `docs/architecture`.
 
 ## Finding aicore
 

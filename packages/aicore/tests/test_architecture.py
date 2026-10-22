@@ -8,27 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LIB = ROOT / "lib" / "aicore"
 
-# Python 3.9 has no sys.stdlib_module_names; _stdlib_names() reads the interpreter's own library
-# folder there, and this list stays as a floor for the modules aicore uses.
-_STDLIB_FALLBACK = frozenset({
-    "__future__", "ast", "collections", "concurrent", "contextlib", "copy", "dataclasses",
-    "datetime", "enum", "fcntl", "functools", "hashlib", "http", "inspect", "io",
-    "itertools", "json", "math", "os", "pathlib", "re", "select", "selectors", "shutil", "signal", "stat",
-    "subprocess", "sys", "tempfile", "textwrap", "threading", "time", "tomllib", "types",
-    "typing",
-    "unittest", "urllib", "uuid",
-})
-
-
 def _stdlib_names():
-    names = set(getattr(sys, "stdlib_module_names", ())) | _STDLIB_FALLBACK
-    if not hasattr(sys, "stdlib_module_names"):
-        import pkgutil
-        import sysconfig
-        root = Path(sysconfig.get_paths()["stdlib"])
-        folders = [str(root), str(root / "lib-dynload")]
-        names |= {module.name for module in pkgutil.iter_modules(folders)} | set(sys.builtin_module_names)
-    return frozenset(names)
+    return frozenset(sys.stdlib_module_names)
 
 
 STDLIB = _stdlib_names()
@@ -111,7 +92,7 @@ class TestImportBoundary(unittest.TestCase):
                 self.assertNotIn(target, ("provider", "artifacts", "state", "config", "content", "delivery",
                                           "release"), f"{path.name}:{line}")
         check("state", ("util",))
-        check("config", ("util", "state", "_vendor"))
+        check("config", ("util", "state"))
         check("provider", ("util", "artifacts"))
         check("content", ("util", "provider", "artifacts", "config"))
         check("release", ("util", "content"))
@@ -151,11 +132,11 @@ class TestImportBoundary(unittest.TestCase):
                     self.assertNotEqual(node.module, "model", f"config/{name}:{node.lineno}")
 
     def test_toml_is_imported_in_one_place_only(self):
-        """``tomllib`` and ``tomli`` are imported only by ``config/toml.py`` (and inside ``_vendor``)."""
+        """``tomllib`` and ``tomli`` are imported only by ``config/toml.py``."""
         offenders = []
         for path in sorted(LIB.rglob("*.py")):
             where = path.relative_to(LIB).as_posix()
-            if where.startswith("_vendor/") or where == "config/toml.py":
+            if where == "config/toml.py":
                 continue
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             for node in ast.walk(tree):

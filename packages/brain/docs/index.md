@@ -26,7 +26,7 @@ features:
 
 ## What is in the module
 
-`brain` is a small command-line tool on the `aicore` foundation (Python 3.9+, standard library only). It has the
+`brain` is a small command-line tool on the `aicore` foundation (Python 3.11+, standard library only). It has the
 commands `vault`, `project`, `docs`, `note`, `doctor` and `version`, the `[brain]` configuration table, the Claude Code
 plugin `brain` with the skill `brain-locator`, and one subscription (`brain:plan-notes`).
 

@@ -142,7 +142,7 @@ class HangAndTreeTests(unittest.TestCase):
             root = _repo(tmp)
             format_once = "grep -q formatted f.txt 2>/dev/null || echo formatted >> f.txt"
             runs = []
-            for number in (1, 2):
+            for _number in (1, 2):
                 seen = []
                 checks.run_checks(doc(format_once, "true"), project=root, evidence_dir=root / "ev", log_dir=root / "log",
                                   timeout_s=30, evidence_prefix="r:W1:checks.1", on_changed=seen.extend, reuse=False)

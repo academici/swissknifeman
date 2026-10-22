@@ -114,6 +114,12 @@ def _in_package(relative, root, package_root):
 def _checked_policy(value):
     if not isinstance(value, dict) or value.get("schema_version") != POLICY_SCHEMA:
         raise ValueError("RELEASE_UNIT_POLICY_INVALID")
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[3] / "schemas" / "release-unit-policy" / "v1"
+    registry, kind = load_contract(directory)
+    issues = validate(value, kind, registry)
+    if issues:
+        raise ValueError("RELEASE_UNIT_POLICY_INVALID: " + "; ".join(issue.message for issue in issues[:5]))
     return value
 
 

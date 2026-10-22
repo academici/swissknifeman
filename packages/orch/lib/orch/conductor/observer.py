@@ -385,6 +385,10 @@ def proposals(report: dict) -> list:
     if beacons.get("LIMIT_OVER"):
         found.append(f"{beacons['LIMIT_OVER']} round(s) went past a target: the item was larger or riskier than its "
                      "plan said; split items like it, or raise the target in their options.")
+    if beacons.get("REVIEW_DEBT"):
+        found.append(f"{beacons['REVIEW_DEBT']} piece(s) had findings in their last review round, corrected without a "
+                     "further review (review_debt in their state): the work likely left the executor unfinished; look at "
+                     "what the review found there and sharpen the self-check or the item, not the number of reviews.")
     findings = report.get("check_findings") or {}
     for row in findings.get("duplicate_modules", []):
         found.append(f"item {row['item']} runs the tests of {row['module']} twice ({row['cmds'][0]}, {row['cmds'][1]}): "

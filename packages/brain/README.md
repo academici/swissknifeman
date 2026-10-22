@@ -2,7 +2,7 @@
 
 The Obsidian vault module of the ecosystem. It finds the vault of the machine, finds the folder of a
 project inside it, and checks that both are healthy. It is a small command-line tool built on the `aicore`
-foundation (Python 3.9+, standard library only).
+foundation (Python 3.11+, standard library only).
 
 It covers vault lookup, the project catalog, document sync, `doctor`, and the subscriber that writes a vault note
 when a plan is closed.

@@ -113,9 +113,16 @@ class CiMatrixTests(unittest.TestCase):
 
     def test_list_python_and_step_filter(self):
         self.fx.unit("packages/mute", unit_doc("mute"))
-        out = json.loads(self.fx.run("list", "--json", "--step", "test", "--python", "3.9,3.13").stdout)
+        out = json.loads(self.fx.run("list", "--json", "--step", "test", "--python", "3.11,3.13").stdout)
         pairs = sorted((e["unit"], e["python"]) for e in out["include"])
-        self.assertEqual(pairs, sorted((u, v) for u in ("alpha", "link", "tooly") for v in ("3.9", "3.13")))
+        self.assertEqual(pairs, sorted((u, v) for u in ("alpha", "link", "tooly") for v in ("3.11", "3.13")))
+
+    def test_list_python_defaults_to_the_floor_matrix(self):
+        out = json.loads(self.fx.run("list", "--json", "--step", "test", "--python").stdout)
+        versions = sorted({e["python"] for e in out["include"]})
+        self.assertEqual(versions, ["3.11", "3.13", "3.14"])
+        bare = json.loads(self.fx.run("list", "--json", "--step", "test").stdout)
+        self.assertTrue(all("python" not in e for e in bare["include"]))
 
     def test_steps_of_a_module_and_a_bridge(self):
         module = [row.split("\t")[0] for row in self.fx.run("steps", "alpha").stdout.splitlines()]

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by 0087 (floor 3.11)
 
 ## Context
 

@@ -47,7 +47,10 @@ def allowance(self, item: Item, name: str, used: int, progress: bool, emit: bool
     cap = item.input_doc.get("review_rounds_max") if name == "review_rounds" else None
     if isinstance(cap, int) and used >= cap:  # the plan's bound is a wall: no round goes past it on progress
         return f"the plan allows at most {cap} review round(s) for {item.ref} (review.rounds_max)"
-    why, past = over_target(name, limits[name], used, progress, limits["ceiling_factor"])
+    # review rounds are a wall too (owner, D24): a review is the safety net of finished work, not a loop; what the last
+    # round finds is corrected without another review (review.final_correction) and marked review_debt
+    factor = 1 if name == "review_rounds" else limits["ceiling_factor"]
+    why, past = over_target(name, limits[name], used, progress, factor)
     self._limit_over(item, past, emit)
     if why or name not in BATCH_LIMITS:
         return why

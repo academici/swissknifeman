@@ -151,7 +151,7 @@
           "type": "boolean"
         },
         "fail_fast": {
-          "description": "After the first red command check no further check is started (those running meanwhile end; the rest are reported `skipped` with `skip_reason` `fail_fast`), and the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`). Checks run cheapest first by their time in earlier rounds. Default true; false runs every check.",
+          "description": "After the first red command check no further check is started (those running meanwhile end; the rest are reported `skipped` with `skip_reason` `fail_fast`), and the `phase` checks run only when every item check is green (else `skipped`, `skip_reason` `phase_after_red`). Checks run cheapest first by their time in earlier rounds. Default false: every item check runs, so one round reports every independent failure and one correction mends them together; the phase checks still wait for green item checks.",
           "type": "boolean"
         },
         "reuse": {
@@ -161,6 +161,11 @@
         "executor_runs_checks": {
           "description": "When false (default) the executor is told to run only the tests that cover the code it changed, because the conductor runs every acceptance check right after its report; true lets it run the checks itself.",
           "type": "boolean"
+        },
+        "self_check": {
+          "description": "Cheap commands of the project (the tests of the touched units and their dependents, lint) that the executor runs once on its final tree before it reports, fixing what goes red, and lists in the `self_check` field of its stage-report. They are not acceptance: the conductor still runs every acceptance check. Default empty: the executor proves its change with single test files.",
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
         },
         "overlap_review": {
           "description": "The checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated after the correction. Default false.",
@@ -185,7 +190,7 @@
           "enum": ["corrected", "full"]
         },
         "final_correction": {
-          "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan says so) instead of blocking with REVIEW_LIMIT. Default false.",
+          "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan, review_debt in the piece state and a REVIEW_DEBT beacon say so) instead of blocking with REVIEW_LIMIT. A spent run-wide `review_rounds_batch` stays a limit. Default true; false blocks with REVIEW_LIMIT.",
           "type": "boolean"
         },
         "pre_final": {
@@ -366,7 +371,7 @@
       "type": "object",
       "properties": {
         "review_rounds": {
-          "description": "Review rounds planned (the policy pack's max_rounds by default); 0 to 5. A target, not a wall: past it a round still runs while the last correction made progress, up to ceiling_factor times the target, with a LIMIT_OVER beacon and a plan note.",
+          "description": "Review rounds planned (the policy pack's max_rounds by default); 0 to 5. A wall: no round runs past it, whatever the progress (ceiling_factor does not apply). With review.final_correction (default) the findings of the last round are corrected without another review and the piece gets review_debt (REVIEW_DEBT beacon).",
           "type": "integer",
           "minimum": 0,
           "maximum": 5

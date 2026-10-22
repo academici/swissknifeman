@@ -129,6 +129,41 @@
       "maind"
     ]
   },
+  "schema_id_aliases": {
+    "task": {
+      "owner": "planner",
+      "reason": "urn:swissknifeman:task:plan:* is embedded in every plan document and is not renamed"
+    }
+  },
+  "mirrors": [
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "source": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "reason": "byte-identical mirror of the orch run-options schema, kept by bridges/planner-orch/scripts/sync-schema.py"
+    }
+  ],
+  "legacy_schema_files": [
+    {
+      "path": "packages/skiller/schema/evals.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/host.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/swissknife.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/swissknifeman-config.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/upstream.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    }
+  ],
   "ownership": [
     {
       "path": "scripts/ecosystem-units.py",

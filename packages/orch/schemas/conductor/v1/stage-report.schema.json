@@ -37,6 +37,29 @@
         "$ref": "#/$defs/check"
       }
     },
+    "self_check": {
+      "description": "The self-check commands of the run (`checks.self_check`) as the executor ran them on its final tree. A claim of the executor that shows whether it checked its work; it is not acceptance evidence.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cmd": {
+            "description": "Command as given in the self-check section.",
+            "type": "string",
+            "minLength": 1
+          },
+          "exit": {
+            "description": "Observed exit of the last run.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cmd",
+          "exit"
+        ],
+        "additionalProperties": false
+      }
+    },
     "evidence": {
       "description": "Paths of output files and evidence documents.",
       "type": "array",

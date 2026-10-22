@@ -284,6 +284,13 @@
       "released": false
     },
     {
+      "path": "configs/schema-tags.json",
+      "owner": "root",
+      "consumers": ["scripts/test-schema-tags.py"],
+      "released": true,
+      "note": "published short document tags mapped to schema $ids; orch records aliases stay pending until P4.3"
+    },
+    {
       "path": "configs/umbrella.json",
       "owner": "root",
       "consumers": [
@@ -609,7 +616,7 @@
       ],
       "released": true,
       "dynamic": true,
-      "note": "editor/doc schemas, loaded by name"
+      "note": "frozen copies of the skiller schemas kept for external raw URLs; the canon is packages/skiller/schemas/<kind>/v1"
     },
     {
       "path": "packages/planner/configs/command-routing.json",

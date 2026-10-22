@@ -310,7 +310,7 @@ class StartGateTests(LifeCase):
         original = self.load().items["P1.2"]
         for patch in ({"validation": []}, {"deliverables": []}, {"scope": {"include": []}}):
             with self.subTest(patch=patch):
-                demo.rewrite(self.root, "phases/P1/P1.2.json", lambda d: d.update({**original, **patch}))
+                demo.rewrite(self.root, "phases/P1/P1.2.json", lambda d, patch=patch: d.update({**original, **patch}))
                 error = self.refused("PLAN_INVALID", lifecycle.start, ["P1.1"], OPUS)
                 field = "scope/include" if "scope" in patch else next(iter(patch))
                 self.assertTrue(any(i.code == "incomplete" and i.where.endswith(f"P1.2.json/{field}")

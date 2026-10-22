@@ -3,10 +3,8 @@ from __future__ import annotations
 import ast
 import os
 from pathlib import Path
-import pkgutil
 import re
 import sys
-import sysconfig
 import unittest
 
 
@@ -80,14 +78,7 @@ class BoundaryTests(unittest.TestCase):
                 self.assertFalse(any(pattern.search(line) for pattern in FORBIDDEN))
 
     def test_runtime_imports_are_stdlib_orch_or_aicore(self):
-        allowed = getattr(sys, "stdlib_module_names", None)
-        if allowed is None:  # Python 3.9 CI; stdlib_module_names was added in 3.10.
-            paths = {sysconfig.get_path("stdlib"), sysconfig.get_path("platstdlib"),
-                     sysconfig.get_config_var("DESTSHARED")}
-            allowed = set(sys.builtin_module_names) | {
-                info.name for info in pkgutil.iter_modules([p for p in paths if p])
-            }
-        allowed = set(allowed) | {"orch", "aicore"}
+        allowed = set(sys.stdlib_module_names) | {"orch", "aicore"}
         root = Path(__file__).resolve().parents[1] / "lib/orch"
         for path in sorted(root.rglob("*.py")):
             for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):

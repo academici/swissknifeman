@@ -2,5 +2,5 @@
 
 __version__ = "0.1.0"
 
-# The hub runs on Python 3.9; gui needs 3.11 because its HTTP stack (P2) requires it.
+# The hub floor is aicore.MIN_PYTHON (3.11); gui.MIN_PYTHON equals that floor.
 MIN_PYTHON = (3, 11)

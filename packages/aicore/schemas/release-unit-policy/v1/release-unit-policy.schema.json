@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:release-unit-policy:v1",
+  "title": "release-unit-policy",
+  "description": "Release-unit policy.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Format identifier.",
+      "const": "release-unit-policy/v1"
+    },
+    "_doc": {
+      "description": "Note for people.",
+      "type": "string"
+    },
+    "plugins": {
+      "type": "object",
+      "description": "Plugin name to its version rule.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "description": "Version ownership of one plugin.",
+          "additionalProperties": false,
+          "properties": {
+            "_doc": {
+              "description": "Note for people.",
+              "type": "string"
+            },
+            "version_owner": {
+              "description": "Who states the expected version.",
+              "enum": [
+                "umbrella",
+                "package",
+                "explicit",
+                "skiller-publication-map"
+              ]
+            },
+            "grok_native": {
+              "description": "Grok installs the package and serves its commands/.",
+              "type": "boolean"
+            },
+            "required_providers": {
+              "description": "Providers whose surfaces must be present.",
+              "type": "array",
+              "items": {
+                "description": "Provider id.",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "minItems": 1
+            },
+            "package": {
+              "description": "Package id when version_owner is package.",
+              "type": "string",
+              "minLength": 1
+            },
+            "path": {
+              "description": "Path of the package root, relative to the host.",
+              "type": "string",
+              "minLength": 1
+            },
+            "expected_version": {
+              "description": "Version stated by the policy when version_owner is explicit.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "version_owner"
+          ]
+        }
+      }
+    },
+    "default_plugin_version_owner": {
+      "description": "Owner used when a plugin states none.",
+      "type": "string",
+      "minLength": 1
+    },
+    "package_units": {
+      "type": "object",
+      "description": "Runtime package id to its path inside the host.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "description": "Path of the package, relative to the host.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "legacy_policy": {
+      "type": "object",
+      "description": "Policy used for a historical ref that has no policy file.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "description": "Format identifier.",
+          "const": "release-unit-policy/v1"
+        },
+        "_doc": {
+          "description": "Note for people.",
+          "type": "string"
+        },
+        "plugins": {
+          "type": "object",
+          "description": "Plugin name to its version rule.",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "Version ownership of one plugin.",
+              "additionalProperties": false,
+              "properties": {
+                "_doc": {
+                  "description": "Note for people.",
+                  "type": "string"
+                },
+                "version_owner": {
+                  "description": "Who states the expected version.",
+                  "enum": [
+                    "umbrella",
+                    "package",
+                    "explicit"
+                  ]
+                },
+                "grok_native": {
+                  "description": "Grok installs the package and serves its commands/.",
+                  "type": "boolean"
+                },
+                "required_providers": {
+                  "description": "Providers whose surfaces must be present.",
+                  "type": "array",
+                  "items": {
+                    "description": "Provider id.",
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]*$"
+                  },
+                  "minItems": 1
+                },
+                "package": {
+                  "description": "Package id when version_owner is package.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "path": {
+                  "description": "Path of the package root, relative to the host.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "expected_version": {
+                  "description": "Version stated by the policy when version_owner is explicit.",
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "version_owner"
+              ]
+            }
+          }
+        },
+        "default_plugin_version_owner": {
+          "description": "Owner used when a plugin states none.",
+          "type": "string",
+          "minLength": 1
+        },
+        "package_units": {
+          "type": "object",
+          "description": "Runtime package id to its path inside the host.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "description": "Path of the package, relative to the host.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "plugins",
+        "default_plugin_version_owner"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "plugins",
+    "default_plugin_version_owner"
+  ]
+}

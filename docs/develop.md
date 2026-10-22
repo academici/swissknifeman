@@ -362,7 +362,11 @@ combine obligations; renames include both owners, and `--base` also includes unt
 profiles, inputs, context, per-unit obligation and requested/effective jobs. Nested runners divide `SKM_TEST_JOBS`.
 
 Green receipts are bound to content, Python, tools, configuration and execution environment; changed inputs during a
-command prevent reusable green. `--tier all` never uses the general green cache: reuse requires a safe `SKM_CHECK_RUN`
+command prevent reusable green. A miss against a prior green receipt of the same command prints `[miss]` with the
+changed component names and short hashes (`env:NAME`, `files:<folder>`, `tool:<name>`). Secret-named variables are
+not part of the key and are never printed. An unknown unit dependency prints `unknown dependency; conservative run`
+and is not reused. A first run, with no prior receipt, does not print `[miss]`. The cache is real: an unchanged
+command in the same `SKM_CHECK_RUN` still prints `[cached]`. `--tier all` never uses the general green cache: reuse requires a safe `SKM_CHECK_RUN`
 (`A-Za-z0-9`, then letters, digits, `_` or `-`) and is confined to that conductor run. Manual/release runs without that
 variable stay full; `--no-cache` disables all reuse. Receipts and duration data are atomically merged in the git
 directory, and run receipts older than 14 days are pruned when a run cache is written. Planner's `scripts/test.sh`
@@ -449,7 +453,7 @@ The tests of a module run once per invocation: after a green `test` step the `va
 `standalone` runs the tests in its copy once and then `validate` the same way.
 
 Each step runs with a throwaway `HOME` and `SKM_HOME` and prints `ok|fail|skip <unit> <step> <seconds>`; the exit code is
-1 when a step failed. `modules.yml` builds its matrix from `list --json`, tests on Python 3.9 and 3.13, marks the tools
+1 when a step failed. `modules.yml` builds its matrix from `list --json`, tests on Python 3.11, 3.13 and 3.14, marks the tools
 named by `standalone.tools` (`maind`, `analyst`) as `continue-on-error`, and has a `hub` job: `--check`,
 `ecosystem-units.py check --strict`, golden, `scripts/test-*.py`, `scripts/smoke-installed.sh` and
 `swissknifeman conformance engine`, the last two in a sandbox. `test.yml` and `validate.yml` no longer exist.
@@ -457,6 +461,14 @@ named by `standalone.tools` (`maind`, `analyst`) as `continue-on-error`, and has
 The documentation site is built from `docs/`: `cd docs && npm ci && npm run docs:build` (the `docs:sync` script first copies
 `packages/<module>/docs` into `docs/<module>/`; those copies are ignored by git). `.github/workflows/docs.yml` runs the same
 commands with `working-directory: docs`.
+
+## Schema rules
+
+Product JSON Schemas are draft 2020-12 and use the closed profile of `aicore.util.jsonschema_core`: `additionalProperties` is `false` or absent, and a map of identifiers is `patternProperties` plus `additionalProperties: false`. `$id` is `urn:swissknifeman:<owner>:<contract>[:<kind>]:v<N>`. `<owner>` is the module directory, the id in a bridge's `unit.json`, or `hub` for `configs/`. The one alias is `task` → `planner` (`urn:swissknifeman:task:plan:*` is stored in every plan document). A mirror listed in `configs/ecosystem-units.json` may carry another module's `$id` only while its bytes equal the source. `packages/skiller/schema/*.schema.json` is a frozen copy for external raw URLs; the canon is `packages/skiller/schemas/<kind>/v1`.
+
+`python3 scripts/ecosystem-units.py check` reports `SCHEMA_DRAFT`, `SCHEMA_OWNER`, `SCHEMA_PROFILE` and `SCHEMA_MIRROR_DRIFT`. `python3 scripts/schema-compat-all.py --base REF --json` compares every `schemas/<contract>/v<N>` contract of every unit in process (a path without `v<N>` is legacy and is not compared). `python3 scripts/test-schema-tags.py --allow-pending orch` checks that tag literals in `packages/*/lib` resolve to a `$id`, directly or through `configs/schema-tags.json`. `python3 scripts/test-contract-examples.py` requires `examples/valid` and `examples/invalid/<error-code>-<what>.json` for every document schema; a root that has only metadata and `$defs` is a support schema and needs no examples.
+
+A module validates a document of its own tag with `aicore.util.schema.validate` before it writes the document (and when it reads a config it owns). A failure is an error code of that module.
 
 ## Scripts-FAQ
 

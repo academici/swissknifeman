@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `484277fb69ea46e280a194b67e9edc0c96ea373d7380a1ee435b381113bf1db7`
-- Carrier SHA-256 (canonical bytes plus one LF): `7d9a3bd4af5ec7e8cb3bca9cbd5549e61f9389795d80b9eba2c3f664cd3b1e05`
+- Canonical JSON SHA-256 (without carrier LF): `0d8193b9020dfbc76fbf42e3714dffe97cb3456275e6580d6da019a00a2ff4c6`
+- Carrier SHA-256 (canonical bytes plus one LF): `f93aae540a71f9e01e215b2dd07625d61724b89ce99b93105699caeadf6f2ab5`
 - Common capabilities: `38`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`packages/aicore/configs/provider-capabilities.json`](../packages/aicore/configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -935,7 +935,7 @@ Read layered settings and report named policy conformance.
 
 - **codex** — `adapted`; binding: `—`; adapter: `harness.codex.settings.audit`.
   Diagnostic: deterministic harness adapter satisfies codex settings.audit (bounded: Codex-specific check set)
-  Limitations: the check set is Codex-specific and smaller than the Claude one: the 13 Claude checks are permission- and settings-shape rules with no Codex counterpart; layer content is parsed only where the interpreter provides tomllib (Python 3.11+); on 3.9 and 3.10 the layer is reported as unreadable, never as conforming; read-only, like the Claude auditor: nothing in ~/.codex or .codex is written.
+  Limitations: the check set is Codex-specific and smaller than the Claude one: the 13 Claude checks are permission- and settings-shape rules with no Codex counterpart; read-only, like the Claude auditor: nothing in ~/.codex or .codex is written.
   Evidence: [2026-07-30] the deterministic adapter harness.codex.settings.audit reads the documented Codex layers, reports named conformance findings with layer provenance, and reports an unreadable layer as a finding instead of asserting conformance — `docs/provider-support.md` (codex settings.audit over the documented Codex configuration layers, Codex-specific check set).
 
 - **cursor** — `adapted`; binding: `—`; adapter: `harness.cursor.settings.audit`.

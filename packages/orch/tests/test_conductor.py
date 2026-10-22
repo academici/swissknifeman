@@ -106,6 +106,7 @@ class ConductorCase(unittest.TestCase):
         catalog = launch.load_catalog()
         catalog["launch"]["executor"]["grok"].update(
             transport="acp", model_set="unknown", argv=["grok", "agent", "stdio"])
+        catalog["launch"]["executor"]["grok"].pop("resume_argv")  # the shipped one names a model
         launch.validate_catalog(catalog)
         patcher = mock.patch.object(launch, "load_catalog", return_value=catalog)
         patcher.start()
@@ -245,7 +246,19 @@ class DonePendingChecksTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         item = self.source()["items"]["W1"]
         self.assertEqual(item["status"], "blocked")
-        self.assertIn("CHECKS_RED", item["report"]["open_issues"][-1]["text"])
+        self.assertIn("CORRECTION_INEFFECTIVE", item["report"]["open_issues"][-1]["text"])
+        stages = [line["stage"] for line in self.lines(err) if line["event"] == "stage.end"]
+        self.assertNotIn("checks.2", stages)
+
+    def test_a_no_diff_environment_fix_with_evidence_still_runs_acceptance_once(self):
+        issue = {"kind": "note", "class": "environment", "text": "runner home",
+                 "impact": "runner repaired", "next": "acceptance", "evidence": ["runs/home.txt"]}
+        self.script({"executor": [{"result": report("W1")}, {"result": report("W1", open_issues=[issue])}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        stages = [line["stage"] for line in self.lines(err) if line["event"] == "stage.end"]
+        self.assertIn("checks.2", stages)
+        self.assertIn("CHECKS_RED", self.source()["items"]["W1"]["report"]["open_issues"][-1]["text"])
 
     def test_a_piece_whose_checks_were_all_skipped_is_not_closed_on_the_word_of_the_executor(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"checks": {"cadence": ["phase"]}}}]}})
@@ -475,7 +488,9 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
     def test_red_after_the_correction_limit_blocks_and_stops(self):
-        self.script({"executor": [{"result": report("W1")}]})
+        self.set_items({"W1": {"write_set": ["out/**"]}})
+        self.script({"executor": [{"result": report("W1")},
+                                  {"write": {"out/attempt.txt": "correction\n"}, "result": report("W1")}]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
         self.assertEqual(self.calls("executor"), 2)
@@ -588,6 +603,7 @@ class CorrectionTests(ConductorCase):
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
 
     def test_a_deviation_survives_a_review_limit_block_and_registers(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"review": {"final_correction": False}}}]}})
         deviation = {"text": "touched a file outside the write set", "kind": "deviation", "impact": "none", "next": "none"}
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                               "observed": "ok"}, "fix": "fix it"}],
@@ -599,7 +615,54 @@ class CorrectionTests(ConductorCase):
         issues = self.source()["items"]["W1"]["report"]["open_issues"]
         self.assertTrue(any(i["text"].startswith("deviation: touched") for i in issues), issues)
 
+    def test_findings_of_the_last_review_round_are_corrected_without_a_third_review(self):
+        # the review wall (D24): round 2 still finds F1; it is corrected, the checks run, no third review follows, and
+        # the piece is registered with review_debt for the look after the plan
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
+                                                                              "observed": "ok"}, "fix": "fix it"}],
+                             "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")},
+                                  {"write": {"out/W1.txt": "done!\n"}, "result": report("W1")}],
+                     "reviewer": [FINDING, FINDING, GREEN], "triager": [triage, triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer"), self.calls("triager")), (3, 2, 2))
+        state = self.state(err)["items"]["W1"]
+        self.assertEqual(state["review_debt"], {"round": 2, "findings": ["F1"]})
+        self.assertEqual([line["reason_code"] for line in self.lines(err) if line.get("reason_code") == "REVIEW_DEBT"],
+                         ["REVIEW_DEBT"])
+        self.assertEqual(self.source()["items"]["W1"]["status"], "done")
+
+    def test_a_final_correction_that_changes_nothing_leaves_the_findings_open_loudly(self):
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
+                                                                              "observed": "ok"}, "fix": "fix it"}],
+                             "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")},
+                                  {"result": report("W1")}],  # the last one writes nothing
+                     "reviewer": [FINDING, FINDING], "triager": [triage, triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (3, 2))
+        state = self.state(err)["items"]["W1"]
+        self.assertEqual(state["review_debt"], {"round": 2, "findings": ["F1"], "corrected": False})
+        self.assertNotIn("checks.3", state["steps"])  # an unchanged tree is not checked again
+        notes = [issue["text"] for issue in self.source()["items"]["W1"]["report"]["open_issues"]]
+        self.assertTrue(any("changed no product file" in text for text in notes), notes)
+
+    def test_review_debt_is_said_once_when_a_resume_walks_the_closed_rounds(self):
+        import threading
+        from types import SimpleNamespace
+        emitted, saved = [], []
+        owner = SimpleNamespace(store=SimpleNamespace(mutating=threading.RLock), _save=lambda: saved.append(1),
+                                progress=SimpleNamespace(emit=lambda *a, **k: emitted.append(k["reason_code"])),
+                                _beacon_event=lambda *a: emitted.append("beacon"))
+        item = SimpleNamespace(state={}, ref="W1")
+        for _ in range(2):
+            engine.Conductor._review_debt(owner, item, 2, ["F1"])
+        self.assertEqual((emitted, len(saved)), (["REVIEW_DEBT", "beacon"], 1))
+
     def test_findings_after_the_review_limit_block(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"review": {"final_correction": False}}}]}})
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
                                                                               "observed": "ok"}, "fix": "fix it"}],
                              "rejected": []}}
@@ -849,6 +912,21 @@ class StopTests(ConductorCase):
         self.assertTrue((directory / "W1" / "streams" / "executor.1-q1.jsonl").is_file())  # a kept longer key stays
         self.assertFalse((directory / "W1" / "streams" / "review.1.jsonl").exists())
         self.assertEqual(sum(1 for attempt in item["attempts"] for key in attempt["steps"] if key.startswith("review.")), 2)
+
+    def test_the_check_logs_of_a_dropped_round_are_kept_with_its_attempt(self):
+        # step checks.N writes the folder checks/N: a retry keeps it aside, not only the files named like the step key
+        directory = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(directory, ignore_errors=True))
+        for name in ("1", "12"):
+            (directory / "W1" / "checks" / name).mkdir(parents=True)
+            (directory / "W1" / "checks" / name / "V20.log").write_text(f"round {name}", encoding="utf-8")
+        steps = {"checks.1": {"status": "done", "verdict": "red V20", "ended": "2026-01-01T00:00:01Z"},
+                 "checks.12": {"status": "done", "verdict": "green", "ended": "2026-01-01T00:00:02Z"}}
+        item = {"steps": steps}
+        run_service.archive_attempt(type("Service", (), {"directory": directory})(), "W1", item, ["checks.1"])
+        self.assertEqual(item["attempts"][0]["steps"]["checks.1"]["files"], ["checks/1"])
+        self.assertEqual((directory / "W1" / "attempts" / "1" / "checks" / "1" / "V20.log").read_text(), "round 1")
+        self.assertTrue((directory / "W1" / "checks" / "12" / "V20.log").is_file())  # a kept round stays in place
 
     def test_a_resume_does_not_count_the_closed_correction_rounds_again(self):
         repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
@@ -1102,17 +1180,29 @@ class SoftLimitTests(ConductorCase):
         self.set_items({"W1": {"write_set": ["out/**"], "checks": [check("W1"), v2],
                                "options": [{"source": "item:W1", "options": options}] if options else []}})
 
+    def test_by_default_every_item_check_of_a_round_runs_so_one_correction_mends_all(self):
+        self.two_checks(checks={"parallel": 1})
+        self.script({"executor": [{"result": report("W1")}, {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        first = self.state(err)["items"]["W1"]["steps"]["checks.1"]["result"]
+        self.assertEqual([(row["id"], row["green"], bool(row.get("skipped"))) for row in first],
+                         [("V1", False, False), ("V2", False, False)])  # both failures reach the one correction
+        self.assertEqual(self.state(err)["items"]["W1"]["steps"]["checks.1"]["verdict"], "red V1,V2")
+
     def test_a_correction_round_runs_the_red_checks_first_by_default(self):
         # serial: the order of admission is the order of the round, so a red V1 is known before V2 would start; with
-        # checks.parallel above 1 both are admitted together (the next test)
-        self.two_checks(checks={"parallel": 1})
-        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+        # checks.parallel above 1 both are admitted together (the next test). fail_fast is asked for explicitly.
+        self.two_checks(checks={"parallel": 1, "fail_fast": True})
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
         steps = self.state(err)["items"]["W1"]["steps"]
         first, second = (steps[f"checks.{n}"]["result"] for n in (1, 2))
-        # fail_fast (the default): a red check ends the round, the other check is skipped and not run again while V1 is red
+        # fail_fast: a red check ends the round, the other check is skipped and not run again while V1 is red
         for rows in (first, second):
             self.assertEqual([(row["id"], row["green"], bool(row.get("skipped")), row.get("skip_reason")) for row in rows],
                              [("V1", False, False, None), ("V2", False, True, "fail_fast")])
@@ -1124,7 +1214,8 @@ class SoftLimitTests(ConductorCase):
         # Whatever the timing, a skipped row has the reason fail_fast, V1 is the only failure and the second round keeps
         # the red-first order (V1 ahead of V2) with V2 either skipped, re-run, or reused from the first round.
         self.two_checks()
-        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
@@ -1142,7 +1233,8 @@ class SoftLimitTests(ConductorCase):
 
     def test_red_first_off_runs_every_check_in_every_round(self):
         self.two_checks(checks={"red_first": False, "fail_fast": False})
-        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")}, {"result": report("W1")}],
+        self.script({"executor": [{"write": {"out/two.txt": "2\n"}, "result": report("W1")},
+                                  {"write": {"out/two.txt": "3\n"}, "result": report("W1")}],
                      "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 1, err)
@@ -1171,9 +1263,11 @@ class SoftLimitTests(ConductorCase):
 
     def test_a_combined_review_correction_is_sent_once(self):
         slow = {"id": "V1", "cmd": "sleep 2; test -f out/W1.txt", "expect": "exit 0", "kind": "acceptance"}
-        self.set_items({"W1": {"checks": [slow], "options": [{"source": "item:W1", "options": {
+        self.set_items({"W1": {"write_set": ["out/**"], "checks": [slow], "options": [{"source": "item:W1", "options": {
             "checks": {"overlap_review": True}, "limits": {"check_fixes": 2}}}]}})
-        self.script({"executor": [{"result": report("W1")}, {"result": report("W1")}, executor_ok("W1")],
+        self.script({"executor": [{"result": report("W1")},
+                                  {"write": {"out/correction.txt": "review fixed\n"}, "result": report("W1")},
+                                  executor_ok("W1")],
                      "reviewer": [FINDING, GREEN], "triager": [TRIAGE_F1]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
@@ -1258,6 +1352,85 @@ class RunClockTests(ConductorCase):
         self.assertGreaterEqual(self.state(err)["active_s"], 300)
 
 
+class ConcurrentRunTests(ConductorCase):
+    """``CONCURRENT_RUN``: a run that starts while another run of the project holds its lease says so; nothing stops."""
+
+    def test_a_live_run_of_the_project_is_announced_and_a_dead_one_is_not(self):
+        from orch.conductor.infrastructure.files import runs_root
+        from orch.conductor.infrastructure.lease import RunLease
+        live, dead = (runs_root(self.project) / name for name in ("cnd-20260101T000000Z-aaaaaa",
+                                                                  "cnd-20260101T000001Z-bbbbbb"))
+        for folder in (live, dead):
+            folder.mkdir(parents=True)
+        (dead / "lease.lock").write_text("", encoding="utf-8")  # a lock file nobody holds: its owner is gone
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        with RunLease(live).acquire("run"):
+            code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        (message,) = [line["message"] for line in self.lines(err) if line.get("reason_code") == "CONCURRENT_RUN"]
+        self.assertIn(live.name, message)
+        self.assertNotIn(dead.name, message)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        self.set_items({"W1": {}})
+        code, _, err = self.run_items("W1")
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "CONCURRENT_RUN"], err)
+
+
+class SelfCheckReturnTests(ConductorCase):
+    """``checks.self_check``: a completion report that does not show the self-check goes back to the executor once,
+    before any acceptance check (``RESULT_INCOMPLETE``); acceptance stays the conductor's."""
+
+    SELF = "python3 scripts/affected-tests.py --run"
+
+    def setUp(self):
+        super().setUp()
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"checks": {"self_check": [self.SELF]}}}]}})
+
+    def checked(self, exit_code: int = 0, **extra) -> dict:
+        return dict(executor_ok("W1"), result=report("W1", self_check=[{"cmd": self.SELF, "exit": exit_code}], **extra))
+
+    def keys(self, err: str) -> list:
+        return sorted((key for key in self.state(err)["items"]["W1"]["steps"] if key.startswith(("executor.", "checks."))),
+                      key=lambda key: (int(key.split(".")[1].split("-")[0]), key.startswith("checks.")))
+
+    def test_a_report_without_the_self_check_goes_back_once_before_the_checks(self):
+        self.script({"executor": [executor_ok("W1"), self.checked()], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.keys(err), ["executor.1", "executor.2", "checks.2"])  # no acceptance before the return
+        self.assertIn("does not show the self-check", self.prompt("executor", 2))
+        self.assertEqual(self.state(err)["items"]["W1"]["self_check_returned"], [1])
+        self.assertEqual(len([line for line in self.lines(err) if line.get("reason_code") == "RESULT_INCOMPLETE"]), 1)
+        # the claim stays with the stage-report; the planner's register-report keeps to its own fields
+        body = json.loads((self.run_dir(err) / "W1" / "register-report.json").read_text(encoding="utf-8"))
+        self.assertLessEqual(set(body), {"summary", "changed_paths", "checks_run", "evidence", "open_issues"})
+
+    def test_the_second_report_without_it_reaches_the_checks_as_it_is(self):
+        self.script({"executor": [executor_ok("W1"), executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("executor"), 2)
+        self.assertEqual(self.keys(err), ["executor.1", "executor.2", "checks.2"])
+
+    def test_a_shown_self_check_or_an_honest_red_one_goes_straight_to_the_checks(self):
+        deviation = {"text": "test_x fails: TypeError in y", "kind": "deviation", "impact": "y", "next": "none",
+                     "class": "scope", "outcome": "accepted"}
+        for result in (self.checked(), self.checked(1, status="done_with_deviations", open_issues=[deviation])):
+            with self.subTest(exit=result["result"]["self_check"][0]["exit"]):
+                self.set_items({"W1": {"options": [{"source": "item:W1",
+                                                    "options": {"checks": {"self_check": [self.SELF]}}}]}})
+                self.script({"executor": [result], "reviewer": [GREEN]})
+                code, _, err = self.run_items("W1")
+                self.assertEqual(self.keys(err), ["executor.1", "checks.1"], err)
+                self.assertNotIn("self_check_returned", self.state(err)["items"]["W1"])
+
+    def test_without_a_self_check_nothing_is_asked_again(self):
+        self.set_items({"W1": {}})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(self.keys(err), ["executor.1", "checks.1"], err)
+
+
 class BatchLimitTests(ConductorCase):
     """``limits.*_batch``: the target and ceiling rule over the whole run; an open Blocker stops it."""
 
@@ -1280,6 +1453,20 @@ class BatchLimitTests(ConductorCase):
         code, _, err = self.batch("Major", review_rounds_batch=1)
         self.assertEqual(self.calls("executor"), 2, err)  # W1 once, W2 once: no correction round
         self.assertTrue(any("batch:" in i["text"] for i in self.source()["items"]["W1"]["report"]["open_issues"]))
+
+    def test_a_spent_run_budget_wins_over_the_final_correction_of_the_review_wall(self):
+        # review_rounds 2 is the piece's wall and review_rounds_batch 2 the run's budget: both are spent at round 2;
+        # the run budget is the explicit limit, so a Blocker stops the run instead of getting a final correction
+        blocker = {"result": {"verdict": "ATTENTION",
+                              "findings": [dict(FINDING["result"]["findings"][0], severity="Blocker")]}}
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "limits": {"ceiling_factor": 1, "review_rounds_batch": 2}, "review": {"strategy": "each"}}}]}})
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [blocker, blocker], "triager": [TRIAGE_F1, TRIAGE_F1]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "REVIEW_LIMIT")), err)
+        self.assertIn("batch:", self.state(err)["stop"]["message"])
+        self.assertEqual(self.calls("executor"), 2)
 
     def test_without_a_batch_limit_the_correction_runs(self):
         code, _, err = self.batch("Major")

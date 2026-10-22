@@ -126,7 +126,7 @@ class ProjectConfig(Mapping):
     naked `dict` (audit `audits/skm.md` §4, plan).
 
     **The only carrier of the list of keys.** Previously, the keys lived in three places
-    (`CONFIG_KEYS` in `common.py`, `schema/swissknife.schema.json`, code); fields of this
+    (`CONFIG_KEYS` in `common.py`, `schemas/swissknife/v1/swissknife.schema.json`, code); fields of this
     object would become the fourth, so `CONFIG_KEYS` is now OUTPUT from here -
     `metadata["json_type"]` of each field is carried by the Python-type which `isinstance`
     validates the value (tuple = multi-type, in schema `oneOf`). Both gates are synchronized

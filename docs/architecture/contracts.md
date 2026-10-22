@@ -60,7 +60,7 @@ is expected to close it. Stages are named in [ecosystem](ecosystem.md#stages).
 | Planner config `planner` section | `urn:swissknifeman:planner:config:v1`, `packages/planner/configs/config.schema.json` | planner | beta | table `[planner]` of the layered config, plus the `plan.settings` layer ([ADR 0054](decisions/0054-planner-settings-in-the-layered-config.md)) |
 | Planner event data `event-data/v1` (one document per event type) | `urn:swissknifeman:planner:event-data:<type>:v1`, `packages/planner/schemas/event-data/v1` | planner | beta | none; consumers ignore unknown fields ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)) |
 | Planner check plugin `check-plugin/v1` (input, output) | `urn:swissknifeman:planner:check-plugin:<kind>:v1`, `packages/planner/schemas/check-plugin/v1` | planner | beta | none; the input of the extension point `planner:check` ([ADR 0055](decisions/0055-planner-events-overlays-and-external-checks.md)) |
-| Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:skiller:<kind>:v1`, `packages/skiller/schema` | skiller | beta | draft-07, migrate to 2020-12 when skiller contracts move (stage: content and delivery) |
+| Skiller schemas (`evals`, `host`, `swissknife`, `swissknifeman-config`, `upstream`) | `urn:swissknifeman:skiller:<kind>:v1`, `packages/skiller/schemas/<kind>/v1` | skiller | beta | draft 2020-12; `packages/skiller/schema/*.schema.json` remains as a frozen copy for external raw URLs |
 
 ### Contracts that exist only as data or code
 
@@ -299,19 +299,20 @@ variable or a command on `PATH`, never by a neighbouring path ([ADR 0058](decisi
 | Host config `bucket_aliases` | object in `configs/skiller-host.json`: bucket name mapped to the list of host plugins whose skills it expands to; applies to buckets marked `"provided_by": "host"` in `buckets.json`. Plugin directories come from `plugin_dirs`; without a host the bucket stays empty and skiller only warns ([ADR 0049](decisions/0049-module-skills-through-host-provided-buckets.md)) |
 | `skiller describe SKILL [--json]` | prints `skill-descriptor/v1` ([ADR 0038](decisions/0038-skill-descriptor-agent-skills-standard.md)) of a library or host-module skill; the schema stays with aicore, skiller adds no copy ([ADR 0051](decisions/0051-skill-metadata-in-the-index.md)) |
 
-### Skiller schemas (`urn:skiller:*`)
+### Skiller schemas (`urn:swissknifeman:skiller:*`)
 
 | Aspect | Policy |
 | --- | --- |
 | Reads | `v1` only |
-| Writes | `$id` `urn:skiller:<kind>:v1` |
+| Writes | `$id` `urn:swissknifeman:skiller:<kind>:v1` |
 | Upcast | none |
 | Deprecation window | set with `v2` |
-| Unknown fields | as declared by each schema |
-| Fixtures | module tests of `skiller` |
+| Unknown fields | rejected (closed profile) |
+| Fixtures | `schemas/<kind>/v1/examples` and the module tests of `skiller` |
 
-These schemas use draft-07; they are to be migrated to 2020-12 when the skiller contracts move (stage: content and
-delivery), after which they follow the closed profile like the others.
+The canon is `packages/skiller/schemas/<kind>/v1` (draft 2020-12). `packages/skiller/schema/*.schema.json` is a frozen
+copy: external documents still name the raw URL of `swissknife.schema.json`, and that `$id` stays `urn:skiller:<kind>:v1`
+until 2.0. New documents use the canon.
 
 ### Provider manifests
 

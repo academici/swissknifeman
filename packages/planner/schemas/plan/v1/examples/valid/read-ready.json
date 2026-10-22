@@ -1,0 +1,26 @@
+{
+  "plan": "a",
+  "limit": 0,
+  "lanes": [],
+  "running": [],
+  "conflicts": [],
+  "waiting": [],
+  "deferred": [],
+  "next": {
+    "kind": "run-items",
+    "exact": "a",
+    "phase": "a",
+    "batch": "a",
+    "items": [],
+    "route": {
+      "class": "economy",
+      "effort": "low"
+    },
+    "launch": {
+      "claude": "a",
+      "codex": "a"
+    },
+    "command": "a",
+    "reason": "a"
+  }
+}

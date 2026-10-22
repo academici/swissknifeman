@@ -50,6 +50,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                   rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
+                                  self_check=item.options["checks"].get("self_check") or (),
                                   skills=self._skills(item, "executor"),
                                   repo_rules=self._repo_rules(item, "executor"),
                                   skill_texts=self._skill_texts(item, "executor"),
@@ -158,7 +159,8 @@ def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: 
                if name.startswith("executor.") and name != key and isinstance(step.get("result"), dict)]
     return prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
                                     fix=fix, changed_paths=earlier[-1] if earlier else [],
-                                    targeted_tests=not item.options["checks"]["executor_runs_checks"])
+                                    targeted_tests=not item.options["checks"]["executor_runs_checks"],
+                                    self_check=item.options["checks"].get("self_check") or ())
 
 
 def batch_note(self, item: Item) -> str:
@@ -275,6 +277,43 @@ def autofix(self, item: Item, report: dict, round_no: int, scout_text: str) -> t
     self._save()
     round_no += 1
     return self._execute(item, round_no, scout_text, prompts.DEVIATION_FIX, prompts.fix_deviation(found)), round_no
+
+
+COMPLETION = ("done", "done_with_deviations", "done_pending_checks")
+
+
+def self_check_gap(item: Item, report: dict) -> list:
+    """What a completion report leaves out of the run's ``checks.self_check``: the commands it does not list, and the
+    red ones it lists without a deviation that names the failure. Empty when there is nothing to ask again."""
+    commands = list(item.options["checks"].get("self_check") or [])
+    if not commands or item.options["checks"]["executor_runs_checks"] or report.get("status") not in COMPLETION:
+        return []
+    claims = {row["cmd"]: row["exit"] for row in report.get("self_check") or [] if isinstance(row, dict)}
+    honest = any(issue.get("kind") == "deviation" for issue in report.get("open_issues") or [])
+    return [command for command in commands
+            if command not in claims or (claims[command] != 0 and not honest)]
+
+
+def self_check_return(self, item: Item, report: dict, round_no: int, scout_text: str) -> tuple:
+    """``(report, round_no)``: a completion report without the self-check goes back to the executor once per piece,
+    before any acceptance check runs (``RESULT_INCOMPLETE``); the session resumes with the delta prompt where it can.
+    The admission is saved before the round starts, so a resume replays it instead of granting another one. The claim
+    proves nothing: the conductor's acceptance decides as always; this only keeps unchecked work from reaching it."""
+    gap = self_check_gap(item, report)
+    if not gap:
+        return report, round_no
+    with self.store.mutating():
+        returned = item.state.setdefault("self_check_returned", [])
+        if returned and round_no not in returned:  # once per piece: the second report goes to the checks as it is
+            return report, round_no
+        if round_no not in returned:
+            returned.append(round_no)
+            self._save()
+    self.progress.emit("info", item=item.ref, stage=f"executor.{round_no}", reason_code="RESULT_INCOMPLETE",
+                       message="the report does not show the self-check " + ", ".join(gap)
+                               + "; the work goes back to the executor once before the acceptance checks")
+    round_no += 1
+    return self._execute(item, round_no, scout_text, prompts.self_check_missing(gap)), round_no
 
 
 def deviation_data(item: Item, issue: dict) -> dict:

@@ -61,13 +61,24 @@ def scout(self, item: Item) -> str:
     return self._hint(item, found["text"])
 
 
-def cache_key(self, item: Item, route: dict) -> str:
-    """The key of the scout map of a piece: what the map depends on and nothing else. The input counts by its content
-    (without ``provenance`` and ``digest``, which change with every write to the journal of the plan), with the route, the
-    instructions of the scout role, the names and the texts of its skills and its stub."""
-    doc = {name: value for name, value in item.input_doc.items() if name not in ("provenance", "digest")}
-    if isinstance(doc.get("input_id"), str):
-        doc["input_id"] = doc["input_id"].rsplit("@", 1)[0]  # the suffix is the digest of the whole input
+def scout_input(doc: dict) -> dict:
+    """The part of an execution-input the scout map depends on.
+
+    ``provenance`` and ``digest`` change with every journal write. The ``input_id`` suffix is that digest.
+    ``lessons[].ts`` is the time a lesson was recorded, not scope, an instruction or a dependency; the lesson
+    text stays in the key, so a different lesson still misses."""
+    kept = {name: value for name, value in doc.items() if name not in ("provenance", "digest")}
+    if isinstance(kept.get("input_id"), str):
+        kept["input_id"] = kept["input_id"].rsplit("@", 1)[0]
+    lessons = kept.get("lessons")
+    if isinstance(lessons, list):
+        kept["lessons"] = [{key: value for key, value in lesson.items() if key != "ts"}
+                          if isinstance(lesson, dict) else lesson for lesson in lessons]
+    return kept
+
+
+def cache_document(self, item: Item, route: dict) -> dict:
+    """What the scout map depends on: the normalised input, the route, the role, the skills and the stub."""
     names = self._skills(item, "context-scout")
     texts = {}
     for name, _id, path in self._skill_files(item, "context-scout"):
@@ -77,12 +88,16 @@ def cache_key(self, item: Item, route: dict) -> str:
             except OSError:
                 texts[name] = None
     origin, stub = self._stub("context-scout", route)
-    return sha256_hex(canonical_json_bytes({
-        "input": doc,
-        "route": [route["provider"], route["model"], route["effort"]],
-        "role": render.load_role("context-scout", self.roles_dir)[0].get("instructions"),
-        "skills": names, "skill_texts": texts,
-        "stub": sha256_hex(canonical_json_bytes([origin, stub]))}))
+    return {"input": scout_input(item.input_doc),
+            "route": [route["provider"], route["model"], route["effort"]],
+            "role": render.load_role("context-scout", self.roles_dir)[0].get("instructions"),
+            "skills": names, "skill_texts": texts,
+            "stub": sha256_hex(canonical_json_bytes([origin, stub]))}
+
+
+def cache_key(self, item: Item, route: dict) -> str:
+    """The key of the scout map of a piece. See ``scout_input`` for what of the input counts."""
+    return sha256_hex(canonical_json_bytes(cache_document(self, item, route)))
 
 
 def cached(path) -> Optional[str]:

@@ -1,6 +1,7 @@
 """Read-only skill identity resolution from skills.json using the shared dependency BFS."""
 import argparse
 import json
+from pathlib import Path
 
 from aicore.content.skill import resolve_requires_bfs
 from aicore.util.io import safe_load_json
@@ -92,8 +93,20 @@ def resolve_skills(registry, requested, provider=None):
                 diagnostics.append({"code": "SKILL_PROVIDER_UNSUPPORTED", "severity": "warning",
                                     "skill": identity, "provider": provider})
 
-    return {"schema": "skiller.resolve/v1", "requested": requested_ids,
-            "provider": provider, "skills": skills, "diagnostics": diagnostics}
+    document = {"schema": "skiller.resolve/v1", "requested": requested_ids,
+                "provider": provider, "skills": skills, "diagnostics": diagnostics}
+    _validate_resolve(document)
+    return document
+
+
+def _validate_resolve(document):
+    """Refuse a resolve document the schema does not accept (``SKILLER_RESOLVE_INVALID``)."""
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[2] / "schemas" / "resolve" / "v1"
+    registry, kind = load_contract(directory, urn_prefix="urn:swissknifeman:skiller:")
+    issues = validate(document, kind, registry)
+    if issues:
+        die("SKILLER_RESOLVE_INVALID: " + "; ".join(issue.message for issue in issues[:5]))
 
 
 def cmd_resolve(env, argv):

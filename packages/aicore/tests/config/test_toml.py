@@ -1,5 +1,4 @@
-"""TOML reading: both backends agree, errors carry the file and the line, LineIndex maps keys."""
-import sys
+"""TOML reading: tomllib, errors carry the file and the line, LineIndex maps keys."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,79 +9,59 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 VALID = ("basic", "strings", "numbers", "dates", "structures", "crlf")
 
 
-def backends():
-    names = ["vendored"]
-    if sys.version_info >= (3, 11):
-        names.append("stdlib")
-    return names
-
-
 class ParityTests(unittest.TestCase):
     def read(self, name):
         return (FIXTURES / (name + ".toml")).read_bytes().decode("utf-8")
 
-    def test_every_fixture_parses_identically_on_both_backends(self):
-        if sys.version_info < (3, 11):
-            self.skipTest("tomllib needs Python 3.11+; the vendored path is exercised below")
+    def test_every_fixture_parses(self):
         for name in VALID:
             with self.subTest(fixture=name):
-                text = self.read(name)
-                self.assertEqual(toml._parse(text, "stdlib"), toml._parse(text, "vendored"))
-
-    def test_vendored_backend_reads_the_fixtures(self):
-        for name in VALID:
-            with self.subTest(fixture=name):
-                self.assertIsInstance(toml._parse(self.read(name), "vendored"), dict)
+                self.assertIsInstance(toml._parse(self.read(name)), dict)
+                self.assertEqual(toml._parse(self.read(name), "stdlib"), toml._parse(self.read(name)))
 
     def test_known_values(self):
-        for backend in backends():
-            with self.subTest(backend=backend):
-                data = toml.loads(self.read("basic"), backend=backend)
-                self.assertEqual(data["schema_version"], 1)
-                self.assertEqual(data["analyst"]["recompute"]["names"], ["a", "b", "c"])
-                self.assertEqual(data["analyst"]["quoted key"], {"a.b": 1, "single": 2})
-                strings = toml.loads(self.read("strings"), backend=backend)
-                self.assertIn("\t", strings["basic"])
-                self.assertEqual(strings["literal"], "C:\\path\\no\\escapes")
-                self.assertEqual(strings["empty"], "")
-                self.assertEqual(toml.loads(self.read("numbers"), backend=backend)["hex"], 0xDEADBEEF)
+        data = toml.loads(self.read("basic"))
+        self.assertEqual(data["schema_version"], 1)
+        self.assertEqual(data["analyst"]["recompute"]["names"], ["a", "b", "c"])
+        self.assertEqual(data["analyst"]["quoted key"], {"a.b": 1, "single": 2})
+        strings = toml.loads(self.read("strings"))
+        self.assertIn("\t", strings["basic"])
+        self.assertEqual(strings["literal"], "C:\\path\\no\\escapes")
+        self.assertEqual(strings["empty"], "")
+        self.assertEqual(toml.loads(self.read("numbers"))["hex"], 0xDEADBEEF)
 
-    def test_default_backend_matches_the_interpreter(self):
-        self.assertEqual(toml.default_backend(), "stdlib" if sys.version_info >= (3, 11) else "vendored")
+    def test_loads_reads_toml(self):
         self.assertEqual(toml.loads("a = 1"), {"a": 1})
 
     def test_unknown_backend_is_rejected(self):
         with self.assertRaises(ValueError):
             toml._parse("a = 1", "other")
+        with self.assertRaises(ValueError):
+            toml._parse("a = 1", "vendored")
 
 
 class ErrorTests(unittest.TestCase):
-    def test_syntax_error_reports_file_and_line_on_every_backend(self):
+    def test_syntax_error_reports_file_and_line(self):
         text = (FIXTURES / "invalid_syntax.toml").read_text(encoding="utf-8")
-        for backend in backends():
-            with self.subTest(backend=backend):
-                with self.assertRaises(ConfigError) as caught:
-                    toml.loads(text, source="cfg.toml", backend=backend)
-                error = caught.exception
-                self.assertEqual(error.code, "CONFIG_FILE_INVALID")
-                self.assertEqual(error.file, "cfg.toml")
-                self.assertEqual(error.line, 4)
-                self.assertTrue(str(error).startswith("cfg.toml:4: "))
-                self.assertTrue(str(error).endswith("[CONFIG_FILE_INVALID]"))
+        with self.assertRaises(ConfigError) as caught:
+            toml.loads(text, source="cfg.toml")
+        error = caught.exception
+        self.assertEqual(error.code, "CONFIG_FILE_INVALID")
+        self.assertEqual(error.file, "cfg.toml")
+        self.assertEqual(error.line, 4)
+        self.assertTrue(str(error).startswith("cfg.toml:4: "))
+        self.assertTrue(str(error).endswith("[CONFIG_FILE_INVALID]"))
 
     def test_duplicate_key_reports_its_line(self):
         text = (FIXTURES / "invalid_duplicate.toml").read_text(encoding="utf-8")
-        for backend in backends():
-            with self.subTest(backend=backend):
-                with self.assertRaises(ConfigError) as caught:
-                    toml.loads(text, backend=backend)
-                self.assertEqual(caught.exception.line, 5)
+        with self.assertRaises(ConfigError) as caught:
+            toml.loads(text)
+        self.assertEqual(caught.exception.line, 5)
 
     def test_error_text_does_not_repeat_the_document(self):
-        for backend in backends():
-            with self.assertRaises(ConfigError) as caught:
-                toml.loads('token = "s3cr3t-value" = 1', backend=backend)
-            self.assertNotIn("s3cr3t-value", str(caught.exception))
+        with self.assertRaises(ConfigError) as caught:
+            toml.loads('token = "s3cr3t-value" = 1')
+        self.assertNotIn("s3cr3t-value", str(caught.exception))
 
     def test_load_file_reads_and_indexes(self):
         data, index = toml.load_file(FIXTURES / "basic.toml")

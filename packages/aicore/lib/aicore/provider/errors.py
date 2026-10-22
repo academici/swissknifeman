@@ -268,12 +268,24 @@ def _parse_rules(path: Path) -> tuple:
         doc = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise ValueError(f"{path.name}: cannot load: {exc}") from exc
+    _validate_rules_document(doc, path.name)
     _require_keys(doc, {"schema_version", "rules"}, {"schema_version", "rules"}, path.name)
     if doc["schema_version"] != RULES_SCHEMA_VERSION:
         raise ValueError(f"{path.name}: schema_version must be {RULES_SCHEMA_VERSION}")
     if not isinstance(doc["rules"], list):
         raise ValueError(f"{path.name}: rules must be a list")
     return tuple(_parse_rule(item, f"{path.name}: rules[{index}]") for index, item in enumerate(doc["rules"]))
+
+
+def _validate_rules_document(doc: object, where: str) -> None:
+    """Refuse a rules file the provider-errors schema does not accept (``PROVIDER_ERRORS_INVALID``)."""
+    from aicore.util.schema import load_contract, validate
+    directory = Path(__file__).resolve().parents[3] / "schemas" / "provider-errors" / "v1"
+    registry, kind = load_contract(directory)
+    issues = validate(doc, kind, registry)
+    if issues:
+        detail = "; ".join(issue.message for issue in issues[:5])
+        raise ValueError(f"{where}: PROVIDER_ERRORS_INVALID: {detail}")
 
 
 def _parse_rule(item: object, where: str) -> ErrorRule:

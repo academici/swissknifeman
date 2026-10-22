@@ -14,7 +14,7 @@ Module-specific notes: [`packages/skiller/SECURITY.md`](packages/skiller/SECURIT
 |---|---|
 | Version | the latest umbrella tag reachable from `main` (`releases/vX.Y.Z.json` attests it) |
 | OS | Linux (CI: Ubuntu). macOS and WSL are expected to work as POSIX hosts but are not tested in CI; native Windows is not supported |
-| Python | 3.9 – 3.14 (`aicore.MIN_PYTHON`; CI tests 3.9, 3.13 and 3.14) |
+| Python | 3.11 – 3.14 (`aicore.MIN_PYTHON`; CI tests 3.11, 3.13 and 3.14) |
 | Tools | `git`, `bash`; provider CLIs (`claude`, `codex`, `grok`) only for the roles that use them |
 
 `maind` and `analyst` are tools: their CI jobs never block the core (`configs/ecosystem-units.json`

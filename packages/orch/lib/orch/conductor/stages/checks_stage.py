@@ -9,12 +9,13 @@ import re
 import threading
 from typing import Optional
 
+from aicore.util.digest import canonical_json_bytes, sha256_hex
 from orch.conductor import checks as checks_mod, options as opts, process, prompts, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
 from orch.conductor.progress import human_duration
-from orch.conductor.stages import execute
+from orch.conductor.stages import execute, scout
 
 
 def red_signature(rows: list) -> tuple:
@@ -23,6 +24,113 @@ def red_signature(rows: list) -> tuple:
     red = [row for row in rows if not row["green"] and not row.get("skipped")]
     failures = sum(len(re.findall(r"^(?:FAIL|ERROR|FAILED|not ok)\b", row.get("tail") or "", re.M)) for row in red)
     return tuple(sorted(row["id"] for row in red)), failures
+
+
+COMPLETION = {"done", "done_with_deviations", "done_pending_checks"}
+
+
+def addressed_checks(item: Item, current_ids) -> list:
+    """Red checks of earlier rounds that a later acceptance showed green. A skip is not proof they are closed."""
+    current = set(current_ids)
+    steps = done_steps(item.state.get("steps") or {})
+    red_earlier, closed = {}, set()
+    rounds = sorted((key for key in steps if re.fullmatch(r"checks\.\d+", str(key))),
+                    key=lambda key: int(key.split(".")[1]))
+    for name in rounds:
+        for row in steps[name].get("result") or []:
+            if not isinstance(row, dict) or row.get("skipped"):
+                continue
+            check_id = row.get("id")
+            if not check_id:
+                continue
+            if row.get("green"):
+                if check_id in red_earlier:
+                    closed.add(check_id)
+            else:
+                if check_id not in current:
+                    red_earlier.setdefault(check_id, row)
+                closed.discard(check_id)
+    return [red_earlier[check_id] for check_id in red_earlier if check_id in closed and check_id not in current]
+
+
+def no_diff_cause(report: dict) -> Optional[str]:
+    """``environment`` or ``nondeterministic`` when the report proves a no-diff correction may be real, else None.
+
+    Evidence is required. The issue text is not a substitute for it, and a class without evidence is not a cause."""
+    for issue in report.get("open_issues") or []:
+        if not isinstance(issue, dict):
+            continue
+        evidence = [item for item in issue.get("evidence") or [] if isinstance(item, str) and item.strip()]
+        if not evidence:
+            continue
+        if issue.get("class") in ("environment", "test_env"):
+            return "environment"
+        if "nondetermin" in str(issue.get("text") or "").lower():
+            return "nondeterministic"
+    return None
+
+
+_RUNTIME_PREFIXES = (".swissknifeman/orch/", ".swissknifeman/orch-artifacts/", ".swissknifeman/state/")
+
+
+def _product_file(name: str) -> bool:
+    """Conductor bookkeeping is not a product change. A test repo may not ignore those folders."""
+    return not any(name == prefix.rstrip("/") or name.startswith(prefix) for prefix in _RUNTIME_PREFIXES)
+
+
+def product_snapshot(project: Path) -> Optional[tuple]:
+    """HEAD and the dirty product files, or None when git cannot say (then a no-diff is not provable)."""
+    try:
+        files = tuple(sorted((name, digest) for name, digest in checks_mod.dirty_files(project).items()
+                             if _product_file(name)))
+        return checks_mod.head(project), files
+    except (RuntimeError, OSError):
+        return None
+
+
+def correction_block(report: dict, *, product_changed: bool, input_changed: bool, command_red: tuple,
+                     proved: set) -> Optional[str]:
+    """Why acceptance must not start, or None when the correction may still be proved.
+
+    A completion report that changed no product file and no execution input is not fixed, unless it carries one
+    not-yet-used environment or nondeterministic proof for these red checks. An unknown tree is not provably unchanged."""
+    if not command_red or report.get("status") not in COMPLETION:
+        return None
+    if product_changed or input_changed:
+        return None
+    cause = no_diff_cause(report)
+    names = ", ".join(command_red)
+    if cause and tuple(command_red) not in proved:
+        return None
+    if cause:
+        return (f"not fixed: red checks {names} already had one no-diff {cause} proof; "
+                "acceptance was not started again")
+    return (f"not fixed: the correction reported {report.get('status')} but changed no product file and the "
+            f"execution input is unchanged; red checks {names} stay. Acceptance was not started")
+
+
+def correction_baseline(self, item: Item, round_no: int) -> dict:
+    """Save the pre-executor evidence once; replay must not replace it with the corrected tree."""
+    key = str(round_no)
+    with self.store.mutating():
+        baselines = item.state.setdefault("correction_baselines", {})
+        if key not in baselines:
+            closed = f"executor.{round_no}" in done_steps(item.state.get("steps") or {})
+            snapshot = None if closed else product_snapshot(self.project)
+            baselines[key] = {"product": None if snapshot is None else sha256_hex(canonical_json_bytes(snapshot)),
+                              "input": sha256_hex(canonical_json_bytes(scout.scout_input(item.input_doc)))}
+            self._save()
+        return dict(baselines[key])
+
+
+def admit_no_diff(self, item: Item, round_no: int, command_red: tuple) -> None:
+    """Consume the exceptional rerun before starting it; a replay of this round is idempotent."""
+    with self.store.mutating():
+        admitted = item.state.setdefault("no_diff_admitted", [])
+        if round_no not in admitted:
+            admitted.append(round_no)
+            item.state.setdefault("no_diff_proofs", []).append(list(command_red))
+            self._save()
 
 
 def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text: str,
@@ -40,6 +148,8 @@ def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text:
         done_before = len([number for number in state["check_fixes_at"] if number != round_no])
         why = None if replayed else self._allowance(item, "check_fixes", done_before, progress)
         advised = None
+        historical = addressed_checks(item, [row["id"] for row in red])
+        focus = prompts.check_correction(red, historical=historical, stage=f"checks.{round_no}")
         if why:
             advised = None if why.startswith("batch:") else self._advise_red(item, round_no, red, report)
             if advised and advised.get("held"):  # the owner decides; the question waits with the advice
@@ -56,7 +166,7 @@ def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text:
             state["check_fixes_used"] = len(state["check_fixes_at"])
             kept_advice = (state.get("advice_fix") or {}).get(str(round_no)) if replayed else None
             round_no += 1
-            text, combined = prompts.check_correction(red), state.get("combined")
+            text, combined = focus, state.get("combined")
             if advised:  # the allowance is spent; the advice makes one more round
                 text = advised["text"]
             elif kept_advice:
@@ -70,9 +180,31 @@ def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text:
                 state["corrections_used"] = len(state["corrections_at"])
                 state.pop("combined")
                 self._save()
+        already = f"checks.{round_no}" in done_steps(item.state.get("steps") or {})
+        before = None if already else correction_baseline(self, item, round_no)
         report = self._execute(item, round_no, scout_text, text)
         if report["status"] == "blocked":
             return rows, report, round_no
+        command_red = tuple(sorted(row["id"] for row in red if row.get("cmd")))
+        no_diff_proof = False
+        if not already:
+            after = product_snapshot(self.project)
+            product_changed = (before["product"] is None or after is None
+                               or before["product"] != sha256_hex(canonical_json_bytes(after)))
+            input_changed = before["input"] != sha256_hex(canonical_json_bytes(scout.scout_input(item.input_doc)))
+            proved = {tuple(sorted(ids)) for ids in state.get("no_diff_proofs") or [] if isinstance(ids, list)}
+            if round_no in state.get("no_diff_admitted", []):
+                proved.discard(command_red)  # same admitted checks resume; no new allowance
+            reason = correction_block(report, product_changed=product_changed, input_changed=input_changed,
+                                      command_red=command_red, proved=proved)
+            if reason:
+                self.progress.emit("info", item=item.ref, stage=f"executor.{round_no}",
+                                   reason_code="CORRECTION_INEFFECTIVE", message=reason[:300])
+                return rows, self._blocked(report, "CORRECTION_INEFFECTIVE", reason), round_no
+            no_diff_proof = (not product_changed and not input_changed and bool(command_red)
+                             and report.get("status") in COMPLETION)
+        if no_diff_proof:
+            admit_no_diff(self, item, round_no, command_red)
         rows = (self._checks_then_review(item, report, round_no, review_no) if review_no is not None
                 else self._run_checks(item, round_no, report))
     return rows, report, round_no

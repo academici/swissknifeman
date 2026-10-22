@@ -422,6 +422,9 @@ def conduct(self, item: Item) -> str:
     report, round_no = self._autofix(item, report, 1, scout_text)
     if report["status"] == "blocked":
         return self._finish(item, report, None)
+    report, round_no = self._self_check_return(item, report, round_no, scout_text)
+    if report["status"] == "blocked":
+        return self._finish(item, report, None)
     rows = self._checks_then_review(item, report, round_no, 1) if overlap else self._run_checks(item, round_no, report)
     rows, report, round_no = self._green(item, rows, report, round_no, scout_text, 1 if overlap else None)
     if report["status"] == "blocked":
@@ -444,28 +447,40 @@ def conduct(self, item: Item) -> str:
             self._defer_minor(item, findings, minor)
             if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
                 break
-            # progress: fewer findings to correct than the round before, or other ones (a first round has
-            # nothing to compare with, so it never goes past a target on its own)
+            # progress: fewer findings to correct than the round before; other findings in other places are not
+            # (a reviewer that finds something new every round would otherwise keep the loop going)
             state["review_rounds_used"] = review_round
             state.setdefault("findings_at", {})[str(review_round)] = len(triage["confirmed"])
             places = sorted(self._place(findings, entry["finding"]) for entry in major)
-            progress = earlier is not None and (len(places) < len(earlier) or places != earlier)
+            progress = earlier is not None and len(places) < len(earlier)
             earlier = places
             replayed = review_round in state["corrections_at"]
             rounds_why = self._allowance(item, "review_rounds", review_round, progress, emit=not replayed)
-            rounds_why = rounds_why or self._batch_allowance(item, "findings", self._piece_count(state, "findings_at"),
-                                                             progress, emit=not replayed)
+            # a spent run-wide budget (``*_batch``) is its own limit and wins over the per-piece wall, which refuses
+            # before ``allowance`` reaches the batch rule
+            batch_rounds = (self._batch_allowance(item, "review_rounds", review_round, progress, emit=False)
+                            if rounds_why else None)
+            batch_findings = self._batch_allowance(item, "findings", self._piece_count(state, "findings_at"),
+                                                   progress, emit=not replayed)
+            rounds_why = batch_rounds or batch_findings or rounds_why
             if review_round in state.get("combined_done", []):  # corrected together with the red checks
                 if rounds_why:
                     self._plan_note(item, f"findings of review round {review_round} were corrected together with the "
                                           "red checks; the correction was not reviewed again")
+                    self._review_debt(item, review_round, [entry["finding"] for entry in major])
                     break
                 review_round += 1
                 continue
             triage = dict(triage, confirmed=major)
-            final = bool(rounds_why) and item.options["review"]["final_correction"]  # correct, but audit no more
+            # correct, but audit no more; a spent run-wide budget (``*_batch``) stays the explicit limit it is
+            final = bool(rounds_why) and not rounds_why.startswith("batch:") and item.options["review"]["final_correction"]
             done_before = len([number for number in state["corrections_at"] if number != review_round])
-            fixes_why = None if replayed else self._allowance(item, "corrections", done_before, progress)
+            if final:  # bounded by the review wall: the per-piece corrections target does not refuse it, a run-wide one does
+                fixes_why = None if replayed else self._batch_allowance(item, "corrections", done_before, progress,
+                                                                        emit=not replayed)
+                final = not fixes_why
+            else:
+                fixes_why = None if replayed else self._allowance(item, "corrections", done_before, progress)
             batch_why = next((why for why in (rounds_why, fixes_why) if why and why.startswith("batch:")), None)
             if not replayed and batch_why and not final:
                 blockers = [entry["finding"] for entry in major
@@ -486,9 +501,18 @@ def conduct(self, item: Item) -> str:
                 state["corrections_at"].append(review_round)
             state["corrections_used"] = len(state["corrections_at"])
             round_no += 1
+            before = self._product_snapshot(self.project) if final and not replayed else None
             report = self._execute(item, round_no, scout_text, prompts.review_correction(findings, triage))
             if report["status"] == "blocked":
                 return self._finish(item, report, rows)
+            if before is not None and before == self._product_snapshot(self.project):
+                # no further review will look, so an unchanged tree is not "corrected": the findings stay open, loudly
+                ids = [entry["finding"] for entry in major]
+                self._defer_minor(item, findings, major)
+                self._plan_note(item, f"the final correction of review round {review_round} changed no product file; "
+                                      f"findings {', '.join(ids)} stay open")
+                self._review_debt(item, review_round, ids, corrected=False)
+                break
             rows = (self._checks_then_review(item, report, round_no, review_round + 1) if overlap and not final
                     else self._run_checks(item, round_no, report))
             rows, report, round_no = self._green(item, rows, report, round_no, scout_text,
@@ -499,6 +523,7 @@ def conduct(self, item: Item) -> str:
                 ids = ", ".join(entry["finding"] for entry in major)
                 self._plan_note(item, f"findings {ids} of review round {review_round} were corrected after the last "
                                       "review round the limit allows; the correction was not reviewed again")
+                self._review_debt(item, review_round, [entry["finding"] for entry in major])
                 break
             review_round += 1
     return self._finish(item, report, rows)

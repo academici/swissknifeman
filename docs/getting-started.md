@@ -15,7 +15,7 @@ scripts/check-env.sh
 | Level | Program or feature | Version | Needed for | Install (Debian/Ubuntu) |
 |:--|:--|:--|:--|:--|
 | required | `bash` | 4+ (macOS: any) | `install.sh`, hooks | preinstalled |
-| required | `python3` | 3.9+ | every module (they use only the standard library) | `sudo apt install python3` |
+| required | `python3` | 3.11+ | every module (they use only the standard library) | `sudo apt install python3` |
 | required | `git` | any (2.38+ for `workspace`) | `planner`, delivery, project steps; `workspace connect`/`clone`/`sync` need 2.38 (`WORKSPACE_GIT_TOO_OLD` otherwise) | `sudo apt install git` |
 | recommended | `~/.local/bin` on `PATH` | | the `swissknifeman`, `skiller`, `maind`, `harness`, `analyst`, `brain`, `plan.py` commands | `export PATH="$HOME/.local/bin:$PATH"` in your shell profile |
 | recommended | `jq` | any | Claude Code hooks (review-gate, observer) and the status line | `sudo apt install jq` |

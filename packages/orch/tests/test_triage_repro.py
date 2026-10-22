@@ -7,7 +7,6 @@ Most tests put a fake ``ro-run.py`` in place of the real one (a project in /tmp 
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import shutil
 import subprocess

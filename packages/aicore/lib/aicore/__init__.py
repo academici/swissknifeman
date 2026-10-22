@@ -7,4 +7,4 @@ Import the subpackages directly (``aicore.util``, ``aicore.provider``,
 __version__ = "0.1.0"
 
 # The single minimum Python version of the ecosystem modules (doctor checks read this).
-MIN_PYTHON = (3, 9)
+MIN_PYTHON = (3, 11)

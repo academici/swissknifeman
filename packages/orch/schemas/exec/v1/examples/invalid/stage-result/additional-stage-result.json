@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:stage-result:v1",
+  "contract_version": "exec/v1",
+  "run_id": "a",
+  "stage_id": "a",
+  "attempt": 0,
+  "role": "a",
+  "status": "completed",
+  "route": {
+    "requested": {
+      "class": "economy",
+      "effort": "low"
+    }
+  },
+  "hashes": {
+    "input": "abababababababababababababababababababababababababababababababab",
+    "instructions": "abababababababababababababababababababababababababababababababab"
+  },
+  "usage": {
+    "status": "reported"
+  },
+  "not-a-field": 1
+}

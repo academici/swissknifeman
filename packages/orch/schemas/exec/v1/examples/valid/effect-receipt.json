@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:effect-receipt:v1",
+  "contract_version": "exec/v1",
+  "effect_key": "a",
+  "kind": "git_commit",
+  "intent": {
+    "input_digest": "abababababababababababababababababababababababababababababababab",
+    "target": "a",
+    "expected_prior": {}
+  },
+  "precondition_checked": true,
+  "outcome": "applied",
+  "reconcile": {
+    "method": "git_rev_parse"
+  },
+  "recorded_at": "2026-01-02T03:04:05Z"
+}

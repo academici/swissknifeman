@@ -294,15 +294,31 @@ class RunnerTests(RunnerFixture):
             with patch.dict(os.environ, {"SKM_CHECK_RUN": run_id}):
                 self.assertNotIn("[cached]", self.run_runner("--tier", "all")[1])
 
+    def test_conductor_run_never_counts_green_of_a_manual_or_self_check_run(self):
+        self.assertEqual(self.run_runner()[0], 0)  # an executor's self-check: no SKM_CHECK_RUN, writes green.json
+        self.assertTrue(self.module.read_cache(self.module.cache_file()))
+        self.log.unlink()
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "acceptance"}):
+            code, out, _ = self.run_runner()
+            self.assertEqual(code, 0)
+            self.assertNotIn("[cached]", out)
+            self.assertTrue(any(s.startswith("a test") for s in self.lines()))
+            self.log.unlink()
+            self.assertIn("[cached] packages/a:", self.run_runner()[1])  # its own receipts are reused within the run
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "next-item"}):
+            self.assertIn("[cached] packages/a:", self.run_runner()[1])  # and by the next conductor run
+        self.assertTrue(self.module.cache_file().with_name("conductor.json").exists())
+
     def test_corrupt_receipts_are_misses_and_replaced_and_old_runs_pruned(self):
         store = self.module.cache_file()
-        for filename, tier in (("green.json", "fast"), ("run-r2.json", "all")):
+        for filename, tier, run_id in (("green.json", "fast", ""), ("run-r2.json", "all", "r2"),
+                                       ("conductor.json", "fast", "r3")):
             path = store.with_name(filename)
             path.write_text("{broken")
             old = store.with_name("run-old.json")
             old.write_text("{}")
             os.utime(old, (1, 1))
-            with patch.dict(os.environ, {"SKM_CHECK_RUN": "r2"}):
+            with patch.dict(os.environ, {"SKM_CHECK_RUN": run_id}):
                 self.assertEqual(self.run_runner("--tier", tier)[0], 0)
             self.assertTrue(self.module.read_cache(path))
             if tier == "all":
@@ -329,6 +345,30 @@ class RunnerTests(RunnerFixture):
                 self.module.main(["--paths", "packages/a/x.py", "--json", "-j", "20"])
             doc = json.loads(out.getvalue())
             self.assertEqual(doc["jobs"], {"requested": 20, "effective": 1, "budget": 5, "child": 5})
+
+    def test_a_reuse_miss_names_the_changed_component_and_not_the_secret_value(self):
+        secret = "super-secret-clash-value"
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "explain", "SKM_TEST_CLASH": "one"}):
+            self.assertEqual(self.run_runner("--tier", "all")[0], 0)
+            self.assertIn("[cached] packages/a:", self.run_runner("--tier", "all")[1])
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "explain", "SKM_TEST_CLASH": secret}):
+            code, out, _ = self.run_runner("--tier", "all")
+        self.assertEqual(code, 0)
+        self.assertIn("[miss] packages/a:", out)
+        self.assertIn("env:SKM_TEST_CLASH=", out)
+        self.assertNotIn(secret, out)
+        self.assertIn("[ok] packages/a:", out)
+
+    def test_an_unknown_dependency_says_why_it_cannot_be_reused(self):
+        path = self.root / "packages/a/unit.json"
+        doc = json.loads(path.read_text())
+        doc["requires"] = [{"unit": "not-a-unit"}]
+        path.write_text(json.dumps(doc))
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "unknown"}):
+            code, out, _ = self.run_runner("--tier", "fast", "--paths", "packages/a/x.py")
+        self.assertEqual(code, 0)
+        self.assertIn("unknown dependency; conservative run", out)
+        self.assertNotIn("[cached] packages/a:", out)
 
     def test_env_runner_fixture_dependency_and_tool_changes_invalidate_reuse(self):
         with patch.dict(os.environ, {"SKM_CHECK_RUN": "context"}):

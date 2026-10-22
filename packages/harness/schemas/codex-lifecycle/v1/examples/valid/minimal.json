@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:harness:codex-lifecycle:v1",
+  "fragment": {
+    "target_path": "a",
+    "event": "a",
+    "group": {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "a"
+        }
+      ]
+    },
+    "handler": "a",
+    "handler_sha256": "sha256:abababababababababababababababababababababababababababababababab",
+    "source": {
+      "id": "a",
+      "path": "a",
+      "sha256": "sha256:abababababababababababababababababababababababababababababababab"
+    }
+  }
+}

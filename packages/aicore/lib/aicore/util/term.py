@@ -22,7 +22,7 @@ def now_iso():
 def parse_iso(s):
     """Parse ISO-8601 into an aware datetime, returning ``None`` on failure.
 
-    Normalize ``Z`` and fractional seconds for Python 3.9 compatibility.
+    Normalize ``Z`` and fractional seconds before ``fromisoformat``.
     """
     if not isinstance(s, str):
         return None

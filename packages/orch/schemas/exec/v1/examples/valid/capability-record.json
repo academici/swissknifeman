@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:capability-record:v1",
+  "contract_version": "exec/v1",
+  "binding": "native",
+  "provider": "a",
+  "cli": {
+    "name": "a"
+  },
+  "status": "declared",
+  "recorded_at": "2026-01-02T03:04:05Z",
+  "transport": "jsonl",
+  "auth_route": "subscription_oauth",
+  "model": {
+    "set": "supported",
+    "observe": "supported"
+  },
+  "effort": {
+    "set": "supported",
+    "observe": "supported"
+  },
+  "stream": "supported",
+  "attach": "supported",
+  "cancel": "supported",
+  "resume": "supported",
+  "usage": "supported",
+  "restrictions": {
+    "tools_native": "supported",
+    "sandbox_os": "supported",
+    "prompt_only": true
+  },
+  "skill_delivery": {
+    "mode": "native_plugin_dir",
+    "per_run_isolation": "supported"
+  },
+  "plan_write_prevention": "supported",
+  "terminal_signal": "a",
+  "evidence": [
+    {
+      "kind": "doc",
+      "ref": "a"
+    }
+  ]
+}

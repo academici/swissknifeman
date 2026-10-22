@@ -2391,7 +2391,6 @@
           "level": "adapted",
           "limitations": [
             "the check set is Codex-specific and smaller than the Claude one: the 13 Claude checks are permission- and settings-shape rules with no Codex counterpart",
-            "layer content is parsed only where the interpreter provides tomllib (Python 3.11+); on 3.9 and 3.10 the layer is reported as unreadable, never as conforming",
             "read-only, like the Claude auditor: nothing in ~/.codex or .codex is written"
           ]
         },

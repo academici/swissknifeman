@@ -334,7 +334,7 @@ Run every acceptance check of the input yourself, exactly as written, before you
 """
 
 
-def _conductor_checks(input_doc: dict, containers: bool = True) -> str:
+def _conductor_checks(input_doc: dict, containers: bool = True, self_check: bool = False) -> str:
     """The acceptance checks the conductor itself runs after the report, by id and expectation and never by command: the
     executor does not run them (a full run of them by the executor measured 30–50% of its step). What it cannot prove in its
     environment stays ``pending`` for the conductor; it is not an escalation. ``containers`` says whether the executor can
@@ -348,12 +348,50 @@ def _conductor_checks(input_doc: dict, containers: bool = True) -> str:
     return ("\nThe conductor runs these acceptance checks itself right after your report:\n"
             + "\n".join(f"- `{check['id']}`: {check.get('expect', '-')}" for check in checks)
             + "\n\nDo not run them, nor the whole suites they start"
+            + (" (the self-check section below names the commands you do run)" if self_check else "")
             + ("" if containers else ", and do not start containers or call docker or compose")
             + f": prove your change with what is cheap ({use}. A proof that needs something your environment does not give "
               "(" + ("" if containers else "a container, the docker socket, ")
             + "write access to `.git`, the network, a credential) is not a blocker: finish the work, name each check you "
               "could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` and keep "
               "`checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n")
+
+
+def _self_check(commands) -> str:
+    """The "Ready to hand over" section (``checks.self_check``): the cheap commands of the project the executor runs once
+    on its final tree, so the expensive acceptance confirms finished work instead of finding the next defect. They are
+    not acceptance checks; the report lists them in ``self_check``, a claim that proves nothing to the conductor."""
+    if not commands:
+        return ""
+    return ("## Ready to hand over\n\n"
+            "Review and acceptance are a safety net, not the way to find your mistakes: report work you would hand over "
+            "as finished.\n\n"
+            "- While you work, run the narrow tests of what you change, kept in the repository's test files rather than "
+            "throwaway scripts.\n"
+            "- A new rule, checker, invariant or migration gets at least one negative example: a test that fails "
+            "without it.\n"
+            "- Before you report, run each self-check command once on your final tree:\n"
+            + "\n".join(f"  - `{command}`" for command in commands)
+            + "\n- A red one: fix it, rerun what failed, then the command again. When the same failure comes back three "
+              "times, or its cause is outside the write set, stop and report it as a deviation with the failing test "
+              "and its error.\n"
+              "- These are not the acceptance checks above, and the conductor still runs those. List each self-check "
+              "command in `self_check` of the report as `{\"cmd\": \"<command>\", \"exit\": <exit of its last run>}`.\n")
+
+
+def self_check_missing(commands) -> str:
+    """The correction of a completion report that does not show the self-check (``RESULT_INCOMPLETE``)."""
+    return ("Your report does not show the self-check, or shows a red one without a deviation that names the failure: "
+            + ", ".join(f"`{command}`" for command in commands)
+            + ". Run each of them on your final tree, fix what goes red inside the scope, and report again with "
+              "`self_check` filled. A failure you cannot fix inside the scope is a deviation with the failing test and its "
+              "error, not a silent omission.")
+
+
+def _self_check_again(commands) -> str:
+    """The sentence of a correction round that asks for the self-check again."""
+    return (" and run the self-check commands again (" + ", ".join(f"`{command}`" for command in commands) + ")"
+            if commands else "")
 
 
 DEVIATION_FIX = "Fix the deviation named in the section above: change only what its evidence names, inside the write set."
@@ -424,7 +462,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              role: str = "executor", roles_dir=None, stub=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
-             file_tools: bool = False, containers: bool = True) -> list:
+             file_tools: bool = False, containers: bool = True, self_check=()) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
@@ -444,11 +482,14 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append([Block("research", f"research-result:{research_origin}" if research_origin else "research-result",
                             _research(research))])
     if targeted_tests:
-        checks = _conductor_checks(input_doc, containers)
+        checks = _conductor_checks(input_doc, containers, bool(self_check))
         if checks:
             parts.append([Block("verification", CONDUCTOR, "## Verification\n" + checks)])
+        if self_check:
+            parts.append([Block("verification", CONDUCTOR, _self_check(self_check))])
     else:
         parts.append([Block("verification", CONDUCTOR, _RUN_CHECKS)])
+        self_check = ()
     if rules:
         parts.append([Block("run_rules", CONDUCTOR, "## Run rules\n\n" + "\n".join(f"- {rule}" for rule in rules))])
     if answers:
@@ -456,26 +497,30 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests))])
+        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests, self_check))])
     parts.append([_progress(item, step)])
     parts.append([Block("result_contract", CONDUCTOR, "## Result\n\n" + _STAGE_REPORT)])
     return _join(parts)
 
 
 def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), interrupted: str = "", fix: str = "",
-                     changed_paths=(), targeted_tests: bool = True) -> list:
+                     changed_paths=(), targeted_tests: bool = True, self_check=()) -> list:
     """The delta prompt of a round in a resumed executor session: the session holds the task, the rules and the result
     contract of the latest full prompt of the piece, so it gets only what this round asks: the correction (``fix`` is the
     deviation to fix), the answers it has not seen, the note of an interrupted round, the paths changed so far and the
     result contract. ``executor`` builds the full prompt of the same round (the fallback when the session is lost)."""
     parts = [[Block("resumed", CONDUCTOR, f"## Continuation\n\nYou continue piece {item} in the same session. The task, the "
-                    "rules and the result contract of your latest full prompt still apply; do only what this round asks.")]]
+                    "rules and the result contract of your latest full prompt still apply; do only what this round asks. "
+                    "Earlier correction instructions in this session are historical and are not a current assignment. "
+                    "The correction section below, when there is one, is the only current correction focus. "
+                    "The goal, the scope, the authority and the acceptance contract stay in force.")]]
     if answers:
         parts.append([Block("answers", "questions.json", _answers(answers))])
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests))])
+        parts.append([Block("correction", CONDUCTOR,
+                            _correction(correction, targeted_tests, self_check if targeted_tests else ()))])
     if interrupted:
         parts.append([Block("interrupted", CONDUCTOR, "## Interrupted round\n\n" + interrupted.strip())])
     if changed_paths:
@@ -492,10 +537,17 @@ def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), 
 CHANGED_PATHS = 60  # changed paths named in a delta prompt
 
 
-def _correction(correction: str, targeted_tests: bool) -> str:
-    return ("## Correction\n\nYour previous attempt is in the working tree. Make exactly this correction, inside the same "
-            "scope" + (" and re-run the tests of what you touched" if targeted_tests
-                       else ", then run the acceptance checks again") + ".\n\n" + _fence(correction, "text"))
+def _correction(correction: str, targeted_tests: bool, self_check=()) -> str:
+    """The correction block of a full prompt and of a resumed one. The text below is the only current assignment;
+    product requirements and authority are not restated here because the task still holds them."""
+    return ("## Correction\n\nYour previous attempt is in the working tree. The current correction focus below is the "
+            "only assignment of this round. Earlier correction instructions are historical and are not a current "
+            "assignment. The goal, the scope, the authority and the acceptance contract stay in force. Make exactly "
+            "this correction, inside the same scope" + (" and re-run the tests of what you touched"
+                                                         + _self_check_again(self_check) if targeted_tests
+                       else ", then run the acceptance checks again")
+            + (". Do not rerun acceptance checks the conductor owns." if targeted_tests else ".")
+            + "\n\n" + _fence(correction, "text"))
 
 
 _PRE_FINAL = """\
@@ -676,35 +728,110 @@ def interrupted_correction(base_head: Optional[str], paths: list) -> str:
             "Continue from them inside the same scope; do not redo finished parts.")
 
 
+_FAILURE_HEADER = re.compile(
+    r"^(?:FAIL(?:ED)?(?:[: \[]|$)|ERROR[: \[]|Traceback|AssertionError|\[fail\])", re.I)
+_CHILD_LOG = re.compile(r"(?:full output:|child log:)\s*(\S+)")
+_NO_DIFF_RULE = (
+    "A correction that changes no product file is not accepted as done, and the conductor does not start "
+    "acceptance again, unless this report records a legitimate no-diff cause with evidence: an environment fix "
+    "(`open_issues` class `environment` or `test_env`, with `evidence`) or a confirmed nondeterministic failure "
+    "(the issue text says nondeterministic and `evidence` names the proof). One such proof is accepted for the "
+    "same red checks. A repeat with no product change is not fixed.")
+
+
 def _failure_excerpt(log) -> str:
-    """A bounded hint from the start of a check log; its full path remains authoritative."""
+    """A bounded hint from the first failure header; its full path remains authoritative."""
+    text, _children = _failure_report(log, headers=1, total=1600)
+    return text
+
+
+def _failure_report(log, *, headers: int = 40, total: int = 8000) -> tuple:
+    """A bounded sample of failure headers (plus one following line) and child-log paths.
+    The full log stays the authority; a tail does not replace these headers."""
+    found, children = [], []
     try:
         with Path(log).open(encoding="utf-8", errors="replace") as stream:
-            for _ in range(1000):
+            pending = None
+            for _ in range(20000):
                 line = stream.readline(2048)
                 if not line:
                     break
-                if re.match(r"^(?:FAIL(?:ED)?(?:[: \[]|$)|ERROR[: \[]|Traceback|AssertionError|\[fail\])", line, re.I):
-                    return (line + "".join(stream.readline(2048) for _ in range(4)))[:1600]
+                for match in _CHILD_LOG.finditer(line):
+                    child = match.group(1).rstrip(".,);")
+                    if child not in children:
+                        children.append(child)
+                if _FAILURE_HEADER.match(line):
+                    if pending is not None:
+                        found.append(pending)
+                    pending = line.rstrip("\n")[:500]
+                    if len(found) >= headers:
+                        pending = None
+                        break
+                elif pending is not None:
+                    extra = line.rstrip("\n")[:300]
+                    if extra:
+                        pending = pending + "\n" + extra
+                    found.append(pending)
+                    pending = None
+                    if len(found) >= headers:
+                        break
+            if pending is not None and len(found) < headers:
+                found.append(pending)
     except OSError:
-        pass
-    return ""
+        return "", []
+    text = "\n".join(found)
+    if len(text) > total:
+        text = text[:total]
+    return text, children[:20]
 
 
-def check_correction(failed: list) -> str:
-    """Red commands with full log paths, bounded earlier failure hints and output tails."""
-    lines = []
+def _historical_causes(historical) -> str:
+    if not historical:
+        return ""
+    lines = ["## Historical causes", "",
+             "These causes were addressed in an earlier acceptance. They are not current work. Do not reopen them "
+             "unless a current failure shows the same cause is still red.", ""]
+    for row in historical:
+        cmd = row.get("cmd") or row.get("procedure") or "-"
+        lines.append(f"- {row.get('id', '-')} `{cmd}`: addressed; the latest completed non-skipped result was green.")
+    return "\n".join(lines)
+
+
+def check_correction(failed: list, *, historical=None, stage: str = "checks") -> str:
+    """The current correction focus: latest red checks, every failure header, full and child logs.
+
+    ``historical`` lists earlier red checks that a later acceptance showed green. They are marked historical
+    and are not an assignment. Product requirements are not rewritten here."""
+    lines = [
+        "## Current correction focus",
+        "",
+        "This section is the only current correction. It comes from the latest acceptance. "
+        "Product requirements, scope, authority and the acceptance contract are unchanged. "
+        "Diagnose only the failures below. Review findings appended in this same round are current too. "
+        "Follow the configured acceptance owner; diagnose with the exact new or failed cases named here.",
+        "",
+        _NO_DIFF_RULE,
+        "",
+        f"Stage `{stage}`. Status: red.",
+        "",
+        "These acceptance checks are red on your candidate:",
+        "",
+    ]
     for row in failed:
         lines.append(f"{row['id']}: `{row.get('cmd') or row.get('procedure')}` → "
                      f"{row.get('exit', row.get('verdict'))}")
         if row.get("log"):
             lines.append(f"Full check log: `{row['log']}`. Read the failing section; the tail may omit it.")
-            excerpt = _failure_excerpt(row["log"])
+            excerpt, children = _failure_report(row["log"])
             if excerpt:
-                lines.append("Earlier failure excerpt (bounded):\n" + excerpt)
+                lines.append("Failure headers (bounded sample: at most 40 headers, 20000 reads and 8000 characters; "
+                             "the full log is authoritative and may contain further failures):\n" + excerpt)
+            for child in children:
+                lines.append(f"Child log: `{child}`")
         if row.get("tail"):
             lines.append(row["tail"])
-    return "These acceptance checks are red on your candidate:\n\n" + "\n".join(lines)
+    older = _historical_causes(historical or [])
+    return "\n".join(lines) + ("\n\n" + older if older else "")
 
 
 def review_correction(findings: dict, triage: dict) -> str:

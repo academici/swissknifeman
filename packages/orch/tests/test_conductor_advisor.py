@@ -307,8 +307,15 @@ class GateReadingTests(unittest.TestCase):
 
 
 class RedChecksTriggerTests(AdvisorCase):
+    def setUp(self):
+        super().setUp()
+        self.set_items({"W1": {"write_set": ["out/**"]}})  # the ineffective attempts stay inside the write set
+
     def red(self):
-        return {"result": report("W1")}  # writes nothing: the check stays red
+        # changes a product file but not the one the check wants: the check stays red, and the no-progress guard
+        # (CORRECTION_INEFFECTIVE) does not take a correction that did change the tree for one that did nothing
+        self.attempt = getattr(self, "attempt", 0) + 1
+        return {"write": {"out/attempt.txt": f"attempt {self.attempt}\n"}, "result": report("W1")}
 
     def test_the_spent_allowance_gets_one_more_correction_round_by_the_advice(self):
         self.script({"executor": [self.red(), self.red(), executor_ok("W1")], "advisor": [advice("checks:2", "keep")],
@@ -360,7 +367,7 @@ class RedChecksTriggerTests(AdvisorCase):
         self.assertIn("CHECKS_RED", self.source()["items"]["W1"]["report"]["open_issues"][-1]["text"])
 
     def test_advice_does_not_loop_past_max_rounds(self):
-        self.script({"executor": [self.red()] * 4, "advisor": [advice("checks:2"), advice("checks:3"), advice("checks:4")]})
+        self.script({"executor": [self.red() for _ in range(4)], "advisor": [advice("checks:2"), advice("checks:3"), advice("checks:4")]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("advisor"), self.calls("executor")), (1, 2, 4), err)
         self.assertIn("CHECKS_RED", self.source()["items"]["W1"]["report"]["open_issues"][-1]["text"])

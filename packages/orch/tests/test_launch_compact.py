@@ -118,12 +118,12 @@ class ResumeArgvTests(unittest.TestCase):
         with self.assertRaises(launch.LaunchError):
             launch.build_resume_argv(catalog, "executor", "codex")  # a model is needed
 
-    def test_the_shipped_catalog_resumes_a_codex_executor_only(self):
+    def test_the_shipped_catalog_resumes_a_codex_and_a_grok_executor_only(self):
         catalog = launch.load_catalog()
-        self.assertEqual(catalog["catalog_version"], "1.6.0")
+        self.assertEqual(catalog["catalog_version"], "1.7.0")
         found = [(role, provider) for role, providers in catalog["launch"].items() for provider, entry in providers.items()
                  if "resume_argv" in entry]
-        self.assertEqual(found, [("executor", "codex")])
+        self.assertEqual(found, [("executor", "codex"), ("executor", "grok")])
         argv = launch.build_resume_argv(catalog, "executor", "codex", model="gpt-6.1-sol", effort="xhigh")
         self.assertEqual(argv[:6], ["codex", "-a", "never", "exec", "resume", "{session}"])  # -a is before exec
         self.assertNotIn("--sandbox", argv)  # `codex exec resume` has no such option

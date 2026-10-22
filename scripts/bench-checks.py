@@ -97,7 +97,7 @@ def read_commands(path: str) -> list:
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
-        raise BenchError("BENCH_COMMANDS_INVALID", f"{path}: {error}")
+        raise BenchError("BENCH_COMMANDS_INVALID", f"{path}: {error}") from error
     if not isinstance(data, list) or not data:
         raise BenchError("BENCH_COMMANDS_INVALID", f"{path}: expected a non-empty JSON list")
     found = []
@@ -629,7 +629,7 @@ def load_evidence(path: str) -> tuple:
         data = file.read_bytes()
         raw = json.loads(data.decode("utf-8"))
     except (OSError, ValueError) as error:
-        raise BenchError("BENCH_RECOVERY_EVIDENCE_INVALID", f"{path}: {error}")
+        raise BenchError("BENCH_RECOVERY_EVIDENCE_INVALID", f"{path}: {error}") from error
     found = normalize_evidence(raw)
     legs = found["legs"]
     if not legs["before"] or len(legs["before"]) != len(legs["after"]) or any(

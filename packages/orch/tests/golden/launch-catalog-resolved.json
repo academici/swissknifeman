@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.6.0",
+  "catalog_version": "1.7.0",
   "launch": {
     "scout": {
       "claude-code": {
@@ -165,6 +165,28 @@
           "{effort}",
           "--permission-mode",
           "bypassPermissions",
+          "--output-format",
+          "streaming-messages-json"
+        ],
+        "resume_argv": [
+          "python3",
+          "{orch}/scripts/ro-run.py",
+          "--rw",
+          "{cwd}",
+          "--",
+          "grok",
+          "--cwd",
+          "{cwd}",
+          "--prompt-file",
+          "/dev/stdin",
+          "--model",
+          "{model}",
+          "--effort",
+          "{effort}",
+          "--permission-mode",
+          "bypassPermissions",
+          "--resume",
+          "{session}",
           "--output-format",
           "streaming-messages-json"
         ],

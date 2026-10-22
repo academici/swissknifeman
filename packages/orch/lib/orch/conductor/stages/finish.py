@@ -8,9 +8,11 @@ from typing import Optional
 
 from orch.conductor import checks as checks_mod, questions as questions_mod
 from orch.conductor.domain.item import Item, done_steps
+from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure import work_source
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
+from orch.worksource_report import report_problems
 
 
 def settle_pending(self, report: dict, rows: Optional[list]) -> dict:
@@ -79,6 +81,10 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
     else:  # a blocked registration takes no deviation issue (the register verb pairs it with done_with_deviations)
         body["open_issues"] = [dict(issue, kind="difficulty", text=f"deviation: {issue['text']}")
                                if issue["kind"] == "deviation" else issue for issue in body["open_issues"]]
+    found = report_problems(body)
+    if found:  # the conductor built a body the source would refuse after the work is done: a defect of the conductor
+        raise Stop("REGISTER_REPORT_INVALID", f"{item.ref}: the register-report is outside work-source/v1 register-report: "
+                   + "; ".join(found[:3]))
     report_path = write_json(item.directory / "register-report.json", body)
     evidence = {row["id"]: row["evidence"] for row in rows or [] if row.get("evidence") and row["kind"] == "acceptance"}
     executor = self._actor(item.routes["executor"])

@@ -160,7 +160,11 @@ class MappingTests(BriefCase):
         ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
                                      "sections": [{"id": "a", "title": "A", "text": "t"}]})
         (self.root / "context").mkdir()
-        (self.root / "context" / "P1.1.scout.json").write_text(json.dumps({"entries": ["lib/x.py — entry"]}))
+        (self.root / "context" / "P1.1.scout.json").write_text(json.dumps({
+            "$schema": "urn:swissknifeman:task:plan:scout-map:v1", "item": "P1.1", "provider": "codex",
+            "model": "gpt-mini", "created_at": "2026-10-22T10:00:00Z",
+            "entries": [{"path": "lib/x.py", "why": "entry"}, {"path": "lib/y.py", "symbol": "load", "why": "reads it"},
+                        {"path": None, "why": "Unknowns:"}, {"path": None, "why": "- who calls load"}]}))
         doc = self.brief()
         prov = doc["provenance"]
         self.assertEqual((prov["kind"], prov["plan"], prov["item"]), ("plan", "PLAN1", "P1.1"))
@@ -174,7 +178,14 @@ class MappingTests(BriefCase):
         self.assertEqual(pack["path"], f"plans/{self.root.name}/context/P1.1.json")
         self.assertEqual((document["kind"], document["ref"]), ("document", "knowledge/design"))
         self.assertEqual(document["sha256"], hashlib.sha256((self.root / "knowledge" / "design.json").read_bytes()).hexdigest())
-        self.assertEqual(doc["hints"], [{"text": "lib/x.py — entry", "source": "scout"}])
+        self.assertEqual([hint["text"] for hint in doc["hints"]],
+                         ["lib/x.py — entry", "lib/y.py:load — reads it", "Unknowns:", "- who calls load"])
+        self.assertEqual({hint["source"] for hint in doc["hints"]}, {"scout"})
+
+    def test_a_scout_file_of_an_older_planner_gives_no_hints(self):
+        (self.root / "context").mkdir()
+        (self.root / "context" / "P1.1.scout.json").write_text(json.dumps({"entries": ["lib/x.py — entry"]}))
+        self.assertNotIn("hints", self.brief())
 
     def test_owner_gate_adds_an_escalation_line(self):
         ops.patch(self.root, "P1.1", {"authority": {"kind": "owner_gate", "gate": "RELEASE", "scope": "tag"}})

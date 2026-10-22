@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 
-from . import edges, execution, refs, settings, store
+from . import edges, execution, refs, schema, settings, store
 from .model import ITEM_ID, TERMINAL, PlanError, item_phase, parse_ref
 
 PACK_DIR = "context"
@@ -328,17 +328,46 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
         result["upstream"] = [_project_upstream(d) for d in result["upstream"]]
         result["phase_dependencies"] = [_project_phase(d) for d in result["phase_dependencies"]]
         _dedupe_reads(plan, item_id, result)
-    scout = plan.root / PACK_DIR / f"{item_id}.scout.json"
-    if with_scout and scout.is_file():
-        result["scout"] = json.loads(scout.read_text(encoding="utf-8"))
+    scout = read_scout(plan, item_id) if with_scout else None
+    if scout is not None:
+        result["scout"] = scout
     return result
 
 
+def read_scout(plan: store.Plan, item_id: str) -> dict | None:
+    """The scout map of ``item_id`` (``context/<item>.scout.json``) when it is a valid ``scout-map`` of the item; None
+    otherwise. The map is a lead, never required: a missing, unreadable or foreign file (such as the ``{"entries":
+    [lines]}`` of an older planner) leaves the pack without it, as a failed scout does."""
+    path = plan.root / PACK_DIR / f"{item_id}.scout.json"
+    if not path.is_file():
+        return None
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if schema.validate(doc, "scout-map") or doc.get("item") != item_id:
+        return None
+    return doc
+
+
+def _dump(pack: dict) -> str:
+    return json.dumps(pack, ensure_ascii=False, indent=2) + "\n"
+
+
 def render(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=None) -> str:
-    return json.dumps(collect(plan, item_id, with_scout=with_scout, repos=repos), ensure_ascii=False, indent=2) + "\n"
+    return _dump(collect(plan, item_id, with_scout=with_scout, repos=repos))
 
 
 def build(plan: store.Plan, item_id: str, *, repos=None) -> Path:
+    """Write ``context/<item>.json``; a pack outside ``context-pack`` (its envelope, or a plan document in it that does not
+    match its own kind) is ``SCHEMA_INVALID`` and is not written. An extension slot without a supplier is ``check``'s to
+    report (``EXTENSION_UNAVAILABLE``), not a reason to withhold the pack: it accepts its value wherever it sits (plan,
+    phase, item, upstream), and the other fields are checked as usual."""
+    pack = collect(plan, item_id, repos=repos)
+    issues = schema.validate_open_slots(pack, "context-pack")
+    if issues:
+        raise PlanError("SCHEMA_INVALID", f"context pack of {item_id} is outside context-pack: "
+                        + "; ".join(issue.message for issue in issues[:3]))
     path = plan.root / PACK_DIR / f"{item_id}.json"
-    store.atomic_write(path, render(plan, item_id, repos=repos))
+    store.atomic_write(path, _dump(pack))
     return path

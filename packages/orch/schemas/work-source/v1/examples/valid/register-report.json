@@ -1,0 +1,13 @@
+{
+  "summary": "Added the register-report contract and checked the body before it is written.",
+  "changed_paths": ["packages/orch/lib/orch/worksource_report.py", "packages/orch/schemas/work-source/v1/register-report.schema.json"],
+  "checks_run": [
+    {"id": "V1", "cmd": "bash packages/orch/scripts/test.sh -p 'test_worksource.py'", "exit": 0},
+    {"id": "V2", "procedure": "read the rendered page", "verdict": "pass"}
+  ],
+  "evidence": [],
+  "open_issues": [
+    {"text": "the register-report carries no $schema tag", "kind": "deviation", "impact": "the body stays the stage-report shape", "next": "none", "class": "spec_mismatch", "outcome": "accepted", "severity": "low", "auto_fixable": false, "evidence": ["packages/orch/schemas/work-source/v1/register-report.schema.json"]},
+    {"text": "UTC timestamps everywhere", "kind": "assumption"}
+  ]
+}

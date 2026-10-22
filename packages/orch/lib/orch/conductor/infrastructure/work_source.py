@@ -21,7 +21,7 @@ from aicore.util import timefmt
 from aicore.util.digest import canonical_json_bytes, sha256_hex
 from aicore.workspace import WorkspaceError, read_marker
 
-from orch import journal
+from orch import contracts, journal
 from orch.conductor import checks as checks_mod, options as opts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
@@ -274,6 +274,14 @@ def release_claim(self, ref: str, state: dict, reason: str) -> bool:
     return released
 
 
+def input_errors(doc) -> list:
+    """``path code: message`` of every error of ``doc`` as an exec/v1 execution-input (schema and semantics)."""
+    if not isinstance(doc, dict):
+        return ["/ type: the brief is not a JSON object"]
+    return [f"{issue.path or '/'} {issue.code}: {issue.message}" for issue in contracts.validate(doc, "execution-input")
+            if issue.level == "error"]
+
+
 def brief(self, item: Item) -> dict:
     code, answer, err = self._orch("source", "brief", "--run", item.orch_run)
     if code != 0 or not isinstance(answer, dict):
@@ -282,6 +290,10 @@ def brief(self, item: Item) -> dict:
         doc = json.loads(blobs.read_bytes(answer["input_ref"], project=self.project))
     except (OSError, ValueError, KeyError) as error:
         raise Stop("BRIEF_UNAVAILABLE", str(error)) from None
+    errors = input_errors(doc)
+    if errors:  # the run executes only what the file source would accept too
+        raise Stop("BRIEF_INVALID", f"{item.ref}: the brief {answer.get('input_id') or answer['input_ref']} is outside "
+                   f"exec/v1 execution-input: {'; '.join(errors[:3])}")
     path = write_json(item.directory / "input.json", doc)
     artifacts = answer.get("artifacts_dir") or (FALLBACK_ARTIFACTS / self.run_id / safe(item.ref)).as_posix()
     try:
@@ -365,6 +377,12 @@ def refresh_input(self, item: Item) -> None:
     except (OSError, ValueError, KeyError):
         self.progress.emit("info", item=item.ref, reason_code="INPUT_REFRESH_FAILED",
                            message="the re-asked brief cannot be read; the next round keeps the earlier input")
+        return
+    errors = input_errors(doc)
+    if errors:
+        self.progress.emit("info", item=item.ref, reason_code="INPUT_REFRESH_FAILED",
+                           message=f"the re-asked brief is outside exec/v1 ({errors[0][:160]}); the next round keeps "
+                                   "the earlier input")
         return
     if doc.get("digest") and doc.get("digest") != item.input_doc.get("digest"):
         check_brief_size(item, doc)

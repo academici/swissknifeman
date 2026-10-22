@@ -18,9 +18,17 @@ from orch.conductor import contract as conductor_contract, records as conductor_
 from orch.contracts import validate
 from orch.port import PortError
 from orch.schema import SchemaProfileError
+from orch import worksource
 from orch.worksource import PluginWorkSource, WorkSourceError
 from orch.worksource_file import FileWorkSource
 from aicore.util.proc import run as run_with_timeout
+
+# ``validate`` of the closed contracts other than exec/v1, kind -> the ``problems(doc, kind)`` of its contract: the documents
+# of the conductor (schemas/conductor/v1), its run records (schemas/records/v1) and the work source (schemas/work-source/v1:
+# input, output, register-report)
+CLOSED_KINDS = {**{kind: conductor_contract.problems for kind in conductor_contract.KINDS},
+                **{kind: conductor_records.problems for kind in conductor_records.KINDS},
+                **{kind: worksource.problems for kind in worksource.KINDS}}
 
 
 def _launch(args: argparse.Namespace) -> int:
@@ -1136,10 +1144,9 @@ def _main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as exc:
         print(f"INPUT_INVALID: {exc}", file=sys.stderr)
         return 1
-    if args.kind in conductor_contract.KINDS or args.kind in conductor_records.KINDS:
-        # the closed documents of the conductor (schemas/conductor/v1) and its run records (schemas/records/v1)
-        found = (conductor_contract.problems(doc, args.kind) if args.kind in conductor_contract.KINDS
-                 else conductor_records.problems(doc, args.kind))
+    closed = CLOSED_KINDS.get(args.kind)
+    if closed is not None:
+        found = closed(doc, args.kind)
         for line in found:
             print(f"SCHEMA_INVALID: {line}", file=sys.stderr)
         if not args.quiet:

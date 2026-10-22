@@ -3,7 +3,8 @@
 The extension point ``orch:work-source`` (``unit.json``) is served by a command plugin of ``aicore.ext.plugins``;
 the configuration names the plugin (``work_source``). Every call is checked on both sides against the contract
 ``schemas/work-source/v1`` (``input``, ``output``): a request orch builds wrongly never leaves, and an answer that
-does not match the contract is a failure of the plugin, never data. Refusals of the source (a blocked claim, a
+does not match the contract is a failure of the plugin, never data. The report a register request carries is the kind
+``register-report`` of the same contract (``orch.worksource_report``). Refusals of the source (a blocked claim, a
 refused registration) are answers with a ``reason_code``; the caller decides what they mean.
 """
 from __future__ import annotations
@@ -21,6 +22,8 @@ from orch.settings import ORCH_ROOT
 POINT = "orch:work-source"
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "work-source" / "v1"
 OPS = ("claim", "brief", "register", "commit", "release", "note", "research")
+REPORT_KIND = "register-report"
+KINDS = ("input", "output", REPORT_KIND)
 _REGISTRY: list = []
 
 
@@ -63,9 +66,14 @@ def _registry():
 
 
 def problems(doc: object, kind: str) -> list[str]:
-    """Violations of ``work-source/v1`` ``kind`` (``input`` or ``output``) by ``doc``, checked against the branch of
-    its ``op`` so that the messages name the field that is wrong."""
+    """Violations of ``work-source/v1`` ``kind`` by ``doc`` as ``pointer: message`` lines. ``input`` and ``output`` are
+    checked against the branch of their ``op`` so that the messages name the field that is wrong; ``register-report``
+    (the report of a register request) is checked as a whole."""
+    if kind not in KINDS:
+        raise schema.SchemaProfileError(f"unknown work-source kind: {kind!r}")
     registry = _registry()
+    if kind == REPORT_KIND:
+        return [issue.message for issue in schema.validate(doc, kind, registry)]
     op = doc.get("op") if isinstance(doc, dict) else None
     if op not in OPS:
         return [f"/op: must be one of {', '.join(OPS)}"]

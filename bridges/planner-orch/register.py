@@ -5,6 +5,9 @@ Replaces the manual registrar map: every report field becomes a ``plan.py`` call
 function (report and arguments to argv lists); ``main`` runs the calls, all ``log`` first and then one
 ``finish`` or ``unit … return``, and prints a registration-receipt.
 
+The report is checked by ``check_report`` (its codes: ``REGISTER_UNCLASSIFIED``, ``REGISTER_REPORT_INVALID``) and then,
+for parity, against the orch contract ``work-source/v1`` ``register-report`` through ``orch.py validate``.
+
 Two guards run before the first call that changes the plan. ``--owner-session SESSION`` (fencing) refuses with
 ``REGISTER_STALE_OWNER`` when the item's executor session is another one, for example after ``start --take-over``.
 ``--gate evidence`` lets only check-evidence files decide an item's acceptance checks: ``done`` and
@@ -24,6 +27,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 
 import partners
 
@@ -136,6 +140,25 @@ def check_report(report) -> dict:
             raise invalid(f"{where} evidence must be a non-empty list of non-empty strings")
     out["open_issues"] = list(issues)
     return out
+
+
+def check_schema(report) -> None:
+    """Parity of ``check_report`` with the orch contract ``work-source/v1`` ``register-report``
+    (``orch.py validate register-report``): a report ``check_report`` accepted and the schema refuses is
+    ``REGISTER_REPORT_INVALID`` ``schema parity: <pointer>: <message>``, so the two checkers cannot drift apart
+    unnoticed. An orch that cannot be found stops the bridge as any missing partner does."""
+    with tempfile.TemporaryDirectory(prefix="planner-orch-report-") as tmp:
+        path = Path(tmp) / "register-report.json"
+        path.write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
+        code, out = partners.orch_validate("register-report", path)
+    if code == 0:
+        return
+    try:
+        found = json.loads(out)
+        lines = [f"{row['path'] or '/'}: {row['message']}" for row in found]
+    except (ValueError, TypeError, KeyError):
+        lines = [f"orch validate exited {code} without a verdict"]
+    raise Refusal("REGISTER_REPORT_INVALID", "schema parity: " + "; ".join(lines[:3] or [f"orch validate exited {code}"]))
 
 
 # ---------------------------------------------------------------- the calls
@@ -428,7 +451,9 @@ def main(argv: list[str] | None = None) -> int:
     args.evidence = evidence
     item, _, unit = args.ref.partition("/")
     try:
-        calls = plan_calls(load_json(args.report, "REGISTER_REPORT_INVALID", "stage-report"), args)
+        report = load_json(args.report, "REGISTER_REPORT_INVALID", "stage-report")
+        calls = plan_calls(report, args)
+        check_schema(report)  # after check_report (its codes come first), before any guard reads or writes
         gate = guard(args, item, unit)
     except Refusal as refusal:
         if refusal.gate is not None:  # under the guards the refusal also says what the gate saw

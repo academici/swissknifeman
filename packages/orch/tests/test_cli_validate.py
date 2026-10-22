@@ -67,6 +67,22 @@ class CliValidateTests(unittest.TestCase):
         issues = {i["code"]: i["level"] for i in json.loads(result.stdout)}
         self.assertEqual(issues, {"required": "error", "LIFECYCLE_LEAK": "warning"})
 
+    def test_work_source_kinds(self):
+        examples = Path(__file__).resolve().parents[1] / "schemas/work-source/v1/examples"
+        for kind, name in (("register-report", "register-report.json"), ("input", "input.json"),
+                           ("output", "output.json")):
+            with self.subTest(kind=kind):
+                result = self.run_cli(kind, json.loads((examples / "valid" / name).read_text(encoding="utf-8")))
+                self.assertEqual((result.returncode, json.loads(result.stdout)), (0, {"valid": True}), result.stderr)
+        result = self.run_cli("register-report", {"summary": "s", "open_issues": [{"text": "t", "kind": "todo"}]})
+        self.assertEqual(result.returncode, 1)
+        (issue,) = json.loads(result.stdout)
+        self.assertEqual((issue["path"], issue["code"], issue["level"]), ("/open_issues/0/kind", "SCHEMA_INVALID", "error"))
+        self.assertIn("SCHEMA_INVALID: /open_issues/0/kind: must be one of", result.stderr)
+        result = self.run_cli("input", {"op": "brief"})
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("missing required property", result.stderr)
+
     def test_missing_schema_fails_closed(self):
         with self.assertRaises(schema.SchemaProfileError):
             schema.Registry({}, urn_prefix=contracts.URN_PREFIX, kinds=contracts.KINDS).for_kind("run-policy")

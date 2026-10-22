@@ -1,0 +1,696 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:context-pack:v1",
+  "title": "Context pack",
+  "type": "object",
+  "description": "The deterministic input of an executor for one item (context/<item>.json, plan.py context): the plan, brief, phase and item documents, the decisions, dependencies, reads, lessons, documents and units that reach the item, its orchestration and loop policy. Whole documents are held to their own kinds (plan, brief, phase, item, decision, log-event, document, unit, scout-map); the summaries of a scoped pack, the read entries, the decisions of other plans and the ready units have closed shapes of their own. The pack is checked before it is written, so a plan file that does not match its kind cannot reach an executor through the pack.",
+  "properties": {
+    "ref": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Qualified item reference <plan short id>.<item>."
+    },
+    "plan": {
+      "$ref": "urn:swissknifeman:task:plan:plan:v1",
+      "description": "The plan document."
+    },
+    "brief": {
+      "$ref": "urn:swissknifeman:task:plan:brief:v1",
+      "description": "The brief document of the plan."
+    },
+    "phase": {
+      "description": "The phase document of the item, or an empty object when the plan has no such phase.",
+      "oneOf": [
+        {
+          "$ref": "urn:swissknifeman:task:plan:phase:v1",
+          "description": "The phase document."
+        },
+        {
+          "type": "object",
+          "description": "No phase document.",
+          "maxProperties": 0
+        }
+      ]
+    },
+    "item": {
+      "$ref": "urn:swissknifeman:task:plan:item:v1",
+      "description": "The item document."
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Decisions the item names or that apply to it: local decision documents, and decisions of other plans as they resolved.",
+      "items": {
+        "description": "A decision.",
+        "oneOf": [
+          {
+            "$ref": "urn:swissknifeman:task:plan:decision:v1",
+            "description": "A local decision document."
+          },
+          {
+            "$ref": "urn:swissknifeman:task:plan:context-pack:v1#/$defs/foreignDecision",
+            "description": "A decision of another plan."
+          }
+        ]
+      }
+    },
+    "upstream": {
+      "type": "array",
+      "description": "Dependencies and related items: whole item documents (legacy pack) or summaries (scoped pack).",
+      "items": {
+        "description": "An upstream item.",
+        "oneOf": [
+          {
+            "$ref": "urn:swissknifeman:task:plan:item:v1",
+            "description": "A whole item document."
+          },
+          {
+            "$ref": "urn:swissknifeman:task:plan:context-pack:v1#/$defs/upstreamSummary",
+            "description": "A scoped summary of an item."
+          }
+        ]
+      }
+    },
+    "phase_dependencies": {
+      "type": "array",
+      "description": "Phases the item's phase depends on: whole phase documents (legacy pack) or summaries (scoped pack).",
+      "items": {
+        "description": "A phase.",
+        "oneOf": [
+          {
+            "$ref": "urn:swissknifeman:task:plan:phase:v1",
+            "description": "A whole phase document."
+          },
+          {
+            "$ref": "urn:swissknifeman:task:plan:context-pack:v1#/$defs/phaseSummary",
+            "description": "A scoped summary of a phase."
+          }
+        ]
+      }
+    },
+    "reads": {
+      "type": "array",
+      "description": "The reads of the item with their content, or with where the pack already holds it.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:context-pack:v1#/$defs/readEntry",
+        "description": "A read entry."
+      }
+    },
+    "lessons": {
+      "type": "array",
+      "description": "Journal events of the phase and of the nearby items that teach something (deviation, blocker, difficulty, assumption).",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:log-event:v1",
+        "description": "A journal event."
+      }
+    },
+    "documents": {
+      "type": "array",
+      "description": "Knowledge documents that apply to the item.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:document:v1",
+        "description": "A knowledge document."
+      }
+    },
+    "units": {
+      "type": "array",
+      "description": "Units of the item.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:unit:v1",
+        "description": "A unit document."
+      }
+    },
+    "orchestration": {
+      "type": "object",
+      "description": "The orchestration of the plan, the phase and the item merged in that order (strategy dag by default), with the resolved scenario and where it comes from.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "dag",
+            "sequential"
+          ],
+          "description": "Strategy."
+        },
+        "instructions": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Instructions."
+        },
+        "max_parallel": {
+          "type": "integer",
+          "description": "Optional concurrent dispatch ceiling; positive when present."
+        },
+        "scenario": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Resolved scenario, or null when nothing names one."
+        },
+        "options": {
+          "$ref": "urn:swissknifeman:task:plan:extension:orchestration.options:v1",
+          "description": "Run options of the execution engine: an extension slot whose schema the bridge of that engine supplies (bridge.json extends); without such a bridge the field is refused with EXTENSION_UNAVAILABLE."
+        },
+        "scenario_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Where the scenario comes from (item, phase, plan, config:by_class, config:default)."
+        }
+      },
+      "required": [
+        "strategy",
+        "scenario",
+        "scenario_source"
+      ],
+      "additionalProperties": false
+    },
+    "ready_units": {
+      "type": "array",
+      "description": "Units ready to dispatch.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:context-pack:v1#/$defs/readyUnit",
+        "description": "A ready unit."
+      }
+    },
+    "policy": {
+      "type": "object",
+      "description": "Loop policy of the commands.",
+      "properties": {
+        "review_rounds_max": {
+          "type": "integer",
+          "description": "Review rounds per item.",
+          "minimum": 0
+        },
+        "corrections_max": {
+          "type": "integer",
+          "description": "Owning corrections per review.",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "review_rounds_max",
+        "corrections_max"
+      ],
+      "additionalProperties": false
+    },
+    "batch": {
+      "type": "object",
+      "description": "The batch that holds the item, when one does.",
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Batch id."
+        },
+        "items": {
+          "type": "array",
+          "description": "Items of the batch.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId",
+            "description": "An item."
+          }
+        },
+        "mode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "How the batch runs."
+        },
+        "note": {
+          "type": "string",
+          "description": "Note of the batch."
+        },
+        "run_with": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Command that runs the whole batch."
+        }
+      },
+      "required": [
+        "id",
+        "items",
+        "mode",
+        "run_with"
+      ],
+      "additionalProperties": false
+    },
+    "projection": {
+      "type": "object",
+      "description": "Present in a scoped pack: how upstream, phase dependencies and duplicate reads are projected.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "Pack mode.",
+          "enum": [
+            "scoped"
+          ]
+        },
+        "note": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "How to read the projection."
+        }
+      },
+      "required": [
+        "mode",
+        "note"
+      ],
+      "additionalProperties": false
+    },
+    "scout": {
+      "$ref": "urn:swissknifeman:task:plan:scout-map:v1",
+      "description": "The scout map of the item, when a scout wrote a valid one."
+    }
+  },
+  "required": [
+    "ref",
+    "plan",
+    "brief",
+    "phase",
+    "item",
+    "decisions",
+    "upstream",
+    "phase_dependencies",
+    "reads",
+    "lessons",
+    "documents",
+    "units",
+    "orchestration",
+    "ready_units",
+    "policy"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "upstreamSummary": {
+      "type": "object",
+      "description": "A dependency in a scoped pack: identity, summary, deliverables, artifacts and the outcome (the fields of the item kind).",
+      "properties": {
+        "id": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId",
+          "description": "Item id, equals the file name."
+        },
+        "title": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Item title."
+        },
+        "status": {
+          "type": "string",
+          "description": "Lifecycle-owned after design.",
+          "minLength": 1,
+          "enum": [
+            "todo",
+            "in_progress",
+            "done",
+            "done_with_deviations",
+            "blocked",
+            "skipped"
+          ]
+        },
+        "summary": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Observable outcome in 1-3 sentences."
+        },
+        "deliverables": {
+          "type": "array",
+          "description": "Deliverables.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "description": "Plan or repo artifacts consumed or produced.",
+          "items": {
+            "type": "object",
+            "description": "One artifact.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Optional artifact id, addressed as artifact/<id>; an output declares it (unique in the plan), an input cites it.",
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+              },
+              "path": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+                "description": "Artifact path."
+              },
+              "role": {
+                "type": "string",
+                "description": "Consumed or produced.",
+                "minLength": 1,
+                "enum": [
+                  "input",
+                  "output"
+                ]
+              },
+              "note": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+                "description": "Remark."
+              }
+            },
+            "required": [
+              "path",
+              "role"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "result": {
+          "type": "object",
+          "description": "The outcome of the item (the fields of its result).",
+          "properties": {
+            "notes": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+              "description": "Completion notes."
+            },
+            "deviations": {
+              "type": "array",
+              "description": "Known deviations.",
+              "items": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+              }
+            },
+            "pending": {
+              "type": "array",
+              "description": "Pending work.",
+              "items": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+              }
+            },
+            "escalation": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Escalation needed, or null.",
+              "minLength": 1
+            },
+            "commits": {
+              "type": "array",
+              "description": "Commit SHAs.",
+              "items": {
+                "type": "string",
+                "description": "Commit SHA, 7-40 hex.",
+                "minLength": 1,
+                "pattern": "^[0-9a-f]{7,40}$"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "phaseSummary": {
+      "type": "object",
+      "description": "A phase dependency in a scoped pack (the fields of the phase kind).",
+      "properties": {
+        "id": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/phaseId",
+          "description": "Phase id, equals the directory name."
+        },
+        "title": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Phase title."
+        },
+        "goal": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Phase goal."
+        },
+        "deliverables": {
+          "type": "array",
+          "description": "Deliverables.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+          }
+        },
+        "contract": {
+          "type": "object",
+          "description": "What the phase consumes, produces and respects.",
+          "properties": {
+            "consumes": {
+              "type": "array",
+              "description": "Consumed inputs.",
+              "items": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+              }
+            },
+            "produces": {
+              "type": "array",
+              "description": "Produced outputs.",
+              "items": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+              }
+            },
+            "boundaries": {
+              "type": "array",
+              "description": "Boundaries.",
+              "items": {
+                "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+              }
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "closed": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Phase closure written by lifecycle only, or null.",
+          "properties": {
+            "at": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+              "description": "Closure time."
+            },
+            "result": {
+              "type": "string",
+              "description": "Worst-of item results.",
+              "minLength": 1,
+              "enum": [
+                "done",
+                "done_with_deviations",
+                "blocked",
+                "skipped"
+              ]
+            },
+            "summary": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+              "description": "Closure summary."
+            }
+          },
+          "required": [
+            "at",
+            "result",
+            "summary"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "readEntry": {
+      "type": "object",
+      "description": "A read of the item (the fields of an item read; a read by ref also gets the path of its source) with its content.",
+      "properties": {
+        "path": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path",
+          "description": "File to read; exclusive with ref."
+        },
+        "ref": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref",
+          "description": "Plan data to read by reference (knowledge/<id>[#section], artifact/<id>, Pn.m, D#); exclusive with path."
+        },
+        "section": {
+          "type": "string",
+          "description": "Section within the file.",
+          "minLength": 1
+        },
+        "why": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Why read it."
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether the read is mandatory."
+        },
+        "exists": {
+          "type": "boolean",
+          "description": "Whether the path exists (a ref that names no source: false)."
+        },
+        "content": {
+          "description": "The content of the read: the JSON document (with only the selected sections) or the selected Markdown section."
+        },
+        "error": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Why the content could not be read (section not found, unreadable file)."
+        },
+        "included": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Scoped pack: the pack key (or reads/<n>) that already holds this source; the content is left out."
+        }
+      },
+      "required": [
+        "why",
+        "required"
+      ],
+      "additionalProperties": false
+    },
+    "foreignDecision": {
+      "type": "object",
+      "description": "A decision of another plan as it resolved: loaded with its decision and source, or not loaded with the reason.",
+      "properties": {
+        "ref": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref",
+          "description": "The reference as the item names it."
+        },
+        "loaded": {
+          "type": "boolean",
+          "description": "Whether the decision was found."
+        },
+        "reason": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "CODE: message of a reference that did not resolve."
+        },
+        "plan": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Short id of the other plan."
+        },
+        "plan_dir": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Folder of the other plan as shown to the executor."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Kind of the target.",
+          "enum": [
+            "decision",
+            "item",
+            "phase"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Status of the target."
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Title of the target."
+        },
+        "decision": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "The decision text."
+        },
+        "rationale": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "The rationale."
+        },
+        "id": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "The decision the supersede chain ends at."
+        },
+        "superseded": {
+          "type": "array",
+          "description": "The superseded decisions on the way.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "A decision id."
+          }
+        },
+        "source": {
+          "type": "object",
+          "description": "The file of the target and its digest.",
+          "properties": {
+            "path": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+              "description": "Path of the source file."
+            },
+            "sha256": {
+              "type": "string",
+              "description": "SHA-256 of the file.",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "ref",
+        "loaded"
+      ],
+      "additionalProperties": false
+    },
+    "readyUnit": {
+      "type": "object",
+      "description": "A unit ready to dispatch (the fields of the unit kind).",
+      "properties": {
+        "ref": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Unit reference <item>/<U#>."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "preparation",
+            "implementation",
+            "review",
+            "verification",
+            "integration",
+            "command"
+          ],
+          "description": "Kind."
+        },
+        "mode": {
+          "type": "string",
+          "description": "self never handed out; either lets the executor decide.",
+          "minLength": 1,
+          "enum": [
+            "self",
+            "delegate",
+            "either"
+          ]
+        },
+        "route": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/route",
+          "description": "Minimum route for the worker."
+        },
+        "files": {
+          "type": "array",
+          "description": "Files the unit owns (write set); parallel units must be disjoint.",
+          "items": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
+          }
+        }
+      },
+      "required": [
+        "ref",
+        "kind",
+        "mode",
+        "route",
+        "files"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -142,6 +142,28 @@ class FileSourceRunTests(InputCase):
         self.assertEqual((blocked["outcome"], blocked["gate"]["verdict"]), ("recorded", "none"))
         self.assertEqual(source.register(status="blocked", evidence={}, **fields)["outcome"], "no-op")
 
+    def test_a_report_outside_register_report_is_refused_with_the_codes_of_the_plan_source(self):
+        path = self.write_input()
+        source = FileWorkSource(path, project=self.project)
+        fields = {"plan": str(path), "ref": self.input_doc["input_id"], "run_id": "run-x", "attempt_id": "att-run-x-a",
+                  "registrar": {"provider": "orch", "model": "conductor"},
+                  "executed_by": {"provider": "claude-code", "model": "m"}}
+        twice = [{"id": "V1", "cmd": "make", "exit": 0}, {"id": "V1", "cmd": "make lint", "exit": 1}]
+        cases = [({"summary": "s", "status": "done"}, "REGISTER_REPORT_INVALID", "/status"),
+                 ({"summary": "s", "checks_run": twice}, "REGISTER_REPORT_INVALID", "repeats V1"),
+                 ({"summary": " "}, "REGISTER_REPORT_INVALID", "/summary: is blank"),
+                 ({"summary": "s", "open_issues": [{"text": "no kind"}]}, "REGISTER_UNCLASSIFIED", "/open_issues/0"),
+                 ({"summary": "s", "open_issues": [{"text": " ", "kind": "note"}]}, "REGISTER_UNCLASSIFIED", "/text"),
+                 ({"summary": "s", "open_issues": [{"text": "t", "kind": "note", "evidence": []}]},
+                  "REGISTER_REPORT_INVALID", "/open_issues/0/evidence")]
+        for body, code, where in cases:
+            with self.subTest(report=body):
+                answer = source.register(status="blocked", evidence={}, report=body, **fields)
+                self.assertEqual((answer["outcome"], answer["reason_code"], answer["gate"]["verdict"]),
+                                 ("refused", code, "none"))
+                self.assertIn(where, answer["message"])
+        self.assertFalse((self.project / ".swissknifeman" / "orch-artifacts" / "run-x").exists())
+
     def test_a_changed_input_is_refused_at_brief(self):
         path = self.write_input()
         source = FileWorkSource(path, project=self.project)

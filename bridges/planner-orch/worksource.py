@@ -9,7 +9,8 @@ and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a 
   and the orchestration overlay documents that apply to them), checks the scenario against the run-policy packs of
   orch (``orch.py policy show``) and starts it with ``plan.py start --session <run_id>``; ``ITEM_OWNED`` is a refusal,
   never a take-over;
-- ``brief`` builds the execution-input in process (``brief.build``, read-only), stores it as a content-addressed
+- ``brief`` builds the execution-input in process (``brief.build``, read-only), checks it against exec/v1
+  (``orch.py validate execution-input``; a brief outside it is ``BRIEF_INVALID`` and is not stored), stores it as a content-addressed
   blob of the plan's repository and declares it with ``plan.py add-artifact`` (a repeat changes nothing); the answer
   names the item's artifact folder of the plan;
 - ``register`` runs ``register.py`` with owner fencing (``--owner-session <run_id>``) and the evidence gate;
@@ -373,6 +374,24 @@ def _previous_brief(plan, item_id: str, unit: str | None, project: Path, blobs):
     return None
 
 
+def check_brief(doc: dict) -> None:
+    """``orch.py validate execution-input`` of the brief (schema and semantics of exec/v1): a brief the file source would
+    refuse is ``BRIEF_INVALID`` (the first three problems) and is never stored."""
+    with tempfile.TemporaryDirectory(prefix="planner-orch-brief-") as tmp:
+        path = Path(tmp) / "execution-input.json"
+        path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        code, out = partners.orch_validate("execution-input", path)
+    if code == 0:
+        return
+    try:
+        lines = [f"{row.get('path') or '/'} {row['code']}: {row['message']}" for row in json.loads(out)
+                 if row.get("level", "error") == "error"]
+    except (ValueError, TypeError, KeyError, AttributeError):
+        lines = []
+    raise Blocked("BRIEF_INVALID", "the brief is outside exec/v1 execution-input: "
+                  + ("; ".join(lines[:3]) or f"orch validate exited {code} without a verdict"))
+
+
 def op_brief(fields: dict) -> dict:
     import brief  # the planner engine is located and imported only when a brief is built
     from aicore.state import blobs
@@ -391,7 +410,8 @@ def op_brief(fields: dict) -> dict:
     previous = _previous_brief(plan, item, unit or None, project, blobs)
     if previous is not None and _worker_view(previous) == _worker_view(doc):
         doc = previous  # unchanged inputs: the stored brief and its digest stay the brief of this item
-    reused = blobs.blob_path(sha256_tagged(canonical_json_bytes(doc)), project=project).is_file()
+    check_brief(doc)  # the document that is stored, before the blob and the declaration
+    reused =blobs.blob_path(sha256_tagged(canonical_json_bytes(doc)), project=project).is_file()
     stored = blobs.put_json(doc, sensitivity="normal", name=f"brief-{ref}", project=project)
     path = blobs.blob_path(stored, project=project)
     relative = _declared_path(plan, path, project)

@@ -421,6 +421,7 @@ COVERAGE = {
     "CHECKS_MUTATED": "test:test_write_fence.py",
     "RUN_INVALID": "test:test_records_migration.py", "STATE_INVALID": "test:test_records_migration.py",
     "QUESTIONS_INVALID": "test:test_records_contract.py", "RECORD_INVALID": "test:test_records_contract.py",
+    "BRIEF_INVALID": "test:test_worksource.py", "REGISTER_REPORT_INVALID": "test:test_worksource.py",
     # Beacons
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",

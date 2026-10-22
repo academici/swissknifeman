@@ -33,7 +33,8 @@ from ._jsonschema_core import (  # noqa: F401  (re-exported: the names the plann
 SCHEMA_URN_PREFIX = "urn:swissknifeman:task:plan:"
 KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot", "envelope",
          "bridge", "check-evidence", "read-get", "read-list", "read-events", "read-artifact", "read-links",
-         "read-neighborhood", "read-catalog", "read-commits", "read-ready", "read-followups", "read-plans")
+         "read-neighborhood", "read-catalog", "read-commits", "read-ready", "read-followups", "read-plans",
+         "scout-map", "context-pack")
 EXTENSION_PREFIX = f"{SCHEMA_URN_PREFIX}extension:"
 # Issue code of an extension slot without a usable supplier; engine-only, outside the shared closed profile.
 EXTENSION_CODE = "extension"
@@ -112,6 +113,29 @@ def clear_registry_cache() -> None:
     _cache.clear()
     from . import extensions
     extensions.clear_cache()
+
+
+class _OpenSlots:
+    """A registry in which an extension slot whose supplier is unavailable accepts any value; a supplied slot keeps its
+    schema. Validation then decides every ``oneOf`` on the other fields, wherever the slot sits."""
+
+    def __init__(self, registry: Registry):
+        self._registry = registry
+
+    def for_kind(self, kind: str) -> tuple[dict, str]:
+        return self._registry.for_kind(kind)
+
+    def resolve(self, ref: str, base_id: str) -> tuple[dict, str]:
+        try:
+            return self._registry.resolve(ref, base_id)
+        except ExtensionUnavailable:
+            return {}, ref.partition("#")[0] or base_id
+
+
+def validate_open_slots(doc: object, kind: str, registry: Registry | None = None) -> list[ValidationIssue]:
+    """``validate``, except that an extension slot without a usable supplier is not an issue: for a document the planner
+    writes from plan data that ``check`` already reports the slot of (``EXTENSION_UNAVAILABLE``)."""
+    return validate(doc, kind, _OpenSlots(registry if registry is not None else load_registry()))
 
 
 def validate(doc: object, kind: str, registry: Registry | None = None) -> list[ValidationIssue]:

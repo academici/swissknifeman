@@ -492,6 +492,23 @@ class BriefTests(Case):
         import brief
         self.assertEqual(brief.canonical_digest(fixture), fixture["digest"])
 
+    def test_a_brief_outside_exec_v1_is_refused_before_the_blob(self):
+        import brief
+        self.claim()
+        built = brief.build
+
+        def spoiled(*args, **kwargs):
+            return {**built(*args, **kwargs), "verify": "an extra field verify() does not look at"}
+        store = blobs.blob_path("sha256:" + "0" * 64, project=self.project).parent
+        before = sorted(store.glob("*")) if store.is_dir() else []
+        with mock.patch.object(brief, "build", side_effect=spoiled):
+            with self.assertRaises(worksource.Blocked) as caught:
+                worksource.op_brief({"op": "brief", "plan": self.plan, "ref": "P1.1", "run_id": "run-a"})
+        self.assertEqual(caught.exception.code, "BRIEF_INVALID")
+        self.assertIn("/verify", caught.exception.message)
+        self.assertEqual(sorted(store.glob("*")) if store.is_dir() else [], before)
+        self.assertEqual(self.item("P1.1").get("artifacts", []), [])
+
 
 class RegisterTests(Case):
     def test_evidence_that_passes_closes_the_item_and_a_repeat_is_a_no_op(self):

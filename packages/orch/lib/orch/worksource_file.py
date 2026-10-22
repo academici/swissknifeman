@@ -6,8 +6,9 @@ plugin source: a request orch builds wrongly never reaches it, and its answers a
 
 - ``claim`` always succeeds for the one input (a repeated claim answers the same piece);
 - ``brief`` is the document itself, stored as a content-addressed blob; a file that changed during the run is refused;
-- ``register`` records ``stage-report.json`` and ``evidence/V#.json`` in ``.swissknifeman/orch-artifacts/<run>/<input>``
-  (never in ``plans/``) after the evidence gate;
+- ``register`` refuses a report outside ``work-source/v1`` ``register-report`` with the codes of the plan source
+  (``REGISTER_UNCLASSIFIED``, ``REGISTER_REPORT_INVALID``), then records ``stage-report.json`` and ``evidence/V#.json``
+  in ``.swissknifeman/orch-artifacts/<run>/<input>`` (never in ``plans/``) after the evidence gate;
 - ``commit`` commits nothing unless the run asked for it (the changes stay in the tree); then it commits the given paths
   with the message ``adhoc(<input_id>): <title>``;
 - ``release`` is a no-op (a file input keeps no claim) and ``note`` is refused: the journal of a plan belongs to the plan's
@@ -28,6 +29,7 @@ from aicore.util.digest import canonical_json_bytes, sha256_tagged
 
 from orch import contracts
 from orch.worksource import WorkSourceError, problems
+from orch.worksource_report import refusal_code, report_problems
 from aicore.util.proc import run as run_with_timeout
 
 ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
@@ -166,6 +168,11 @@ class FileWorkSource:
     def _register(self, request: dict) -> dict:
         doc = read_input(self.path)
         status, evidence = request["status"], request["evidence"]
+        found = report_problems(request["report"])
+        if found:  # the refusal the plan source gives the same report, before the gate and before anything is written
+            return {"op": "register", "outcome": "refused", "gate": {"verdict": "none", "checks": {}},
+                    "reason_code": refusal_code(request["report"], found),
+                    "message": "the report is outside work-source/v1 register-report: " + "; ".join(found[:3])}
         checks = {check["id"]: self._proven(check, evidence)
                   for check in (doc.get("acceptance") or {}).get("checks", []) if check.get("kind") == "acceptance"}
         if status == "blocked":

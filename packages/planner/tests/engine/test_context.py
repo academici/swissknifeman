@@ -1,15 +1,18 @@
 """Context pack (dossier §7): golden pack, section extraction, reads, lessons, decisions, start integration."""
+import copy
 import json
 import subprocess
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 _LIB = Path(__file__).resolve().parents[2] / "lib"
 if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
-from planner.plan import context, lifecycle, ops  # noqa: E402
+from planner.plan import context, lifecycle, ops, schema  # noqa: E402
 from planner.plan.model import PlanError  # noqa: E402
 
 try:
@@ -46,6 +49,69 @@ Last.
 ## Tail
 tail text
 """
+
+
+class ExtensionSlotTests(unittest.TestCase):
+    """``orchestration.options`` is an extension slot; without its supplier the pack is still written, wherever the slot
+    sits, and every other field is still checked (F2)."""
+    LOCATIONS = ("plan", "item", "phase", "upstream", "phase_dependencies")
+
+    def setUp(self):
+        example = schema.default_schema_dir() / "examples" / "valid" / "context-pack.json"
+        self.base = json.loads(example.read_text(encoding="utf-8"))
+
+    def pack(self, location: str) -> tuple:
+        pack = copy.deepcopy(self.base)
+        target = pack[location][0] if isinstance(pack[location], list) else pack[location]
+        target["orchestration"] = {"options": {"executor": "anything"}}
+        return pack, target
+
+    def build(self, pack: dict, supplier):
+        from planner.plan import extensions
+        with mock.patch.object(extensions, "schema_for", side_effect=supplier), \
+                mock.patch.object(context, "collect", return_value=pack), \
+                mock.patch.object(context.store, "atomic_write") as write:
+            try:
+                context.build(SimpleNamespace(root=Path("/nonexistent-plan")), "P2.2")
+            except PlanError as error:
+                return error, write.called
+        return None, write.called
+
+    @staticmethod
+    def unavailable(schema_id):
+        raise schema.ExtensionUnavailable(f"EXTENSION_UNAVAILABLE: no supplier of {schema_id}")
+
+    def test_an_unavailable_supplier_does_not_withhold_the_pack_at_any_level(self):
+        self.assertIsInstance(self.base["upstream"][0], dict)
+        self.assertIsInstance(self.base["phase_dependencies"][0], dict)
+        for location in self.LOCATIONS:
+            with self.subTest(location=location):
+                pack, _ = self.pack(location)
+                self.assertEqual(self.build(pack, self.unavailable), (None, True))
+                with mock.patch("planner.plan.extensions.schema_for", side_effect=self.unavailable):
+                    issues = schema.validate(pack, "context-pack")
+                self.assertTrue(issues)  # the plain validator still reports the missing supplier
+
+    def test_a_violation_next_to_an_unavailable_slot_is_still_refused(self):
+        broken = {"plan": ("title", 5), "item": ("summary", 42), "phase": ("goal", 7),
+                  "upstream": ("summary", 3), "phase_dependencies": ("goal", 9)}
+        for location, (field, value) in broken.items():
+            with self.subTest(location=location):
+                pack, target = self.pack(location)
+                target[field] = value
+                error, written = self.build(pack, self.unavailable)
+                self.assertFalse(written)
+                self.assertEqual(error.code, "SCHEMA_INVALID")
+                self.assertIn(f"/{location}", error.message)
+
+    def test_a_supplied_slot_is_held_to_its_schema(self):
+        closed = {"type": "object", "properties": {"steps": {"type": "integer"}}, "additionalProperties": False}
+        for location in self.LOCATIONS:
+            with self.subTest(location=location):
+                pack, _ = self.pack(location)
+                error, written = self.build(pack, lambda schema_id: closed)
+                self.assertFalse(written)
+                self.assertEqual(error.code, "SCHEMA_INVALID")
 
 
 class SectionTests(unittest.TestCase):
@@ -94,6 +160,50 @@ class JsonContextTests(test_lifecycle.LifeCase):
         self.assertEqual(path.name, "P1.1.json")
         self.assertEqual(path.read_text(), text)
         self.assertEqual(context.render(self.load(), "P1.1"), text)
+
+    def test_the_pack_follows_its_schema_and_a_pack_outside_it_is_not_written(self):
+        lifecycle.log(self.root, "P1.1", "difficulty", "a lesson")
+        self.assertEqual(schema.validate(context.collect(self.load(), "P1.1"), "context-pack"), [])
+        target = self.root / context.PACK_DIR / "P1.1.json"
+        collect = context.collect
+        with mock.patch.object(context, "collect", side_effect=lambda *a, **k: {**collect(*a, **k), "notes": "x"}):
+            with self.assertRaises(PlanError) as caught:
+                context.build(self.load(), "P1.1")
+        self.assertEqual(caught.exception.code, "SCHEMA_INVALID")
+        self.assertIn("/notes", caught.exception.message)
+        self.assertFalse(target.exists())
+
+    def test_a_plan_document_outside_its_kind_does_not_reach_the_pack(self):
+        plan = self.load()
+        plan.items["P1.1"]["summary"] = 42  # a damaged item file: load_plan checks JSON, not the item schema
+        issues = schema.validate(context.collect(plan, "P1.1"), "context-pack")
+        self.assertEqual([(issue.path, issue.code) for issue in issues], [("/item/summary", "type")])
+        with mock.patch.object(context.store, "atomic_write") as write:
+            with self.assertRaises(PlanError) as caught:
+                context.build(plan, "P1.1")
+        self.assertEqual(caught.exception.code, "SCHEMA_INVALID")
+        self.assertIn("/item/summary", caught.exception.message)
+        write.assert_not_called()
+        plan = self.load()
+        plan.plan["settings"]["context_pack"] = 7
+        self.assertTrue(any(issue.path.startswith("/plan/") for issue in
+                            schema.validate(context.collect(plan, "P1.1"), "context-pack")))
+
+    def test_the_projections_keep_the_fields_of_their_kinds(self):
+        def load(kind):
+            return json.loads((schema.default_schema_dir() / f"{kind}.schema.json").read_text(encoding="utf-8"))
+        defs, item, phase, unit = load("context-pack")["$defs"], load("item"), load("phase"), load("unit")
+        upstream = defs["upstreamSummary"]["properties"]
+        self.assertEqual({key: upstream[key] for key in context.UPSTREAM_KEYS},
+                         {key: item["properties"][key] for key in context.UPSTREAM_KEYS})
+        self.assertEqual(upstream["result"]["properties"],
+                         {key: item["properties"]["result"]["properties"][key] for key in context.RESULT_KEYS})
+        self.assertEqual(defs["phaseSummary"]["properties"],
+                         {key: phase["properties"][key] for key in context.PHASE_KEYS})
+        read = item["properties"]["reads"]["items"]["properties"]
+        self.assertEqual({key: defs["readEntry"]["properties"][key] for key in read}, read)
+        self.assertEqual({key: defs["readyUnit"]["properties"][key] for key in ("kind", "mode", "route", "files")},
+                         {key: unit["properties"][key] for key in ("kind", "mode", "route", "files")})
 
     def test_all_lessons_survive_without_a_read_budget(self):
         for n in range(12):
@@ -385,6 +495,8 @@ class ScopeTests(test_lifecycle.LifeCase):
         self.assertIn("summaries", value["projection"]["note"])
         deps = context.collect(self.load(), "P2.1")["phase_dependencies"]
         self.assertTrue(all(set(d) <= set(context.PHASE_KEYS) for d in deps))
+        for ref in ("P1.2", "P2.1"):
+            self.assertEqual(schema.validate(context.collect(self.load(), ref), "context-pack"), [], ref)
 
 
 class SchemaScopeTests(test_lifecycle.LifeCase):

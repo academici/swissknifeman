@@ -15,7 +15,8 @@ plans/<YYYY.MM.DD-№N-SLUG>/
   knowledge/<id>.json                     # complete design/runbook/evidence sections
   artifacts/ research/ findings/ backlog/ # raw supporting evidence
   views/                                 # template-generated human views
-  context/<Pn.m>.json                     # generated executor input
+  context/<Pn.m>.json                     # generated executor input (schema context-pack)
+  context/<Pn.m>.scout.json               # scout map of an item (schema scout-map)
   .ignore .cursorignore .gitignore
 ```
 
@@ -44,6 +45,16 @@ content is dropped, reads already present in the pack are marked `included`, ups
 phase dependencies are summaries). `settings.context_budget_kb` (default 256, the `context.budget_kb` key of the `[planner]`
 configuration) is the warning threshold of `plan.py context <plan> <item> --budget`; the pack is never trimmed.
 It carries `policy` (`review_rounds_max`, `corrections_max`) from the same configuration.
+The pack follows the schema `context-pack` and is checked before `context/<item>.json` is written (`SCHEMA_INVALID`
+otherwise): the whole documents in it are held to their own kinds (`plan`, `brief`, `phase` or an empty object, `item`,
+`decision`, `log-event`, `document`, `unit`, `scout-map`), and the summaries of a scoped pack, the read entries, the
+decisions of other plans and the ready units to closed shapes built from the fields of those kinds. Loading a plan
+checks JSON only, so this is where a damaged plan file stops before it reaches an executor; an extension slot without
+a supplier is left to `check` (`EXTENSION_UNAVAILABLE`). A scout (`--scout`, `settings.scout: auto`) writes `context/<item>.scout.json` as a `scout-map` document
+(`$schema`, `item`, `provider`, `model`, `created_at`, `entries` of `{path, symbol?, why}` parsed from its
+`path[:symbol] — why` lines; a line that names no path, and the `Unknowns:` block, keep their text with `path` null),
+checked before it is written: a map outside the schema is a failed scout and `start` goes on without it. The pack
+carries a valid map of the item as `scout`; a file of an older planner (`{"entries": [lines]}`) is left out.
 An item read names exactly one of `path` or `ref`. Local refs include phases, items,
 units (`P1.1/U1`), decisions, `knowledge/<id>[#section-id]` and `artifact/<id>`.
 The separate `section` key accepts a knowledge section id or exact title; it cannot

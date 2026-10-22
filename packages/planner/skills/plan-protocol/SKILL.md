@@ -35,7 +35,8 @@ plans/<YYYY.MM.DD-№N-CODENAME>/
   research/  artifacts/                                 # raw evidence, not Markdown execution contracts
   knowledge/<id>.json                                   # design, runbooks, evidence sections
   views/{index,plan,roadmap,status,handoff,open-questions}.md  # human views; git-ignored, excluded from agent reads/indexing
-  context/<Pn.m>.json                                     # generated context packs (git-ignored)
+  context/<Pn.m>.json                                     # generated context packs (git-ignored; schema context-pack)
+  context/<Pn.m>.scout.json                               # scout map of an item (git-ignored; schema scout-map)
 ```
 
 Never open or edit plan source files directly; generated human views are not read for work.
@@ -102,7 +103,7 @@ Parallel work uses `plan.py next <plan> --parallel N`; lanes never share `task_f
 `next` returns exactly one semantic step: `design-phase`, `run-items` (a ready batch with its
 route), `waiting` (dependency, gate, open decision, blocked item), `archive`, or `terminal`.
 For `run-items`, `next` and `finish` also print `batch <id> (<mode>) -> <command>` (`plan.py next` adds the `overlays planner:plan-run` result): `recommended` batches run together and a split needs `log --type deviation`, `required` batches run as one. `start` of part of a batch prints a `warn:` line; `context` carries `batch {id, items, mode, note, run_with}`; `stats` lists the batches run as a batch and the split ones.
-`start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input.
+`start` writes `context/<item>.json`: goal, scope, context, decisions, upstream results, reads (as JSON with complete sections), files, lessons, rules and done-when — the executor's whole input; a pack outside `schema context-pack` (which holds each plan document in it to its own kind) is refused with `SCHEMA_INVALID` and not written. A scout (`--scout`, `settings.scout: auto`) adds its map (`schema scout-map`: entries `{path, symbol?, why}`, `path` null for a line that names none) as `scout`; a failed scout leaves the pack without it.
 `finish --status done` needs every acceptance check recorded with exit 0.
 Every operation ends with one scoped `plan.py commit … --role executor|reviewer|fix` (never `git add -A`,
 `--no-verify`, amend or push); trailers link commits to the plan and `plan.py commits` lists them.

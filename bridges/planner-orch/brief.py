@@ -380,7 +380,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
                   for r in reads],
         "context_refs": _context_refs(plan, pack, plan_dir, outside), "upstream": _upstream(pack),
         "lessons": [{key: e[key] for key in _LESSON_KEYS if key in e} for e in pack["lessons"]],
-        "hints": [{"text": text, "source": "scout"} for text in pack.get("scout", {}).get("entries", [])],
+        "hints": [{"text": _hint(entry), "source": "scout"} for entry in (pack.get("scout") or {}).get("entries", [])],
         "research": _research(item),
         "review_mode": (item.get("review") or {}).get("mode"),
         "review_route": _review_route(item), "review_rounds_max": (item.get("review") or {}).get("rounds_max"),
@@ -395,6 +395,14 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
     doc["digest"] = canonical_digest(doc)
     doc["input_id"] += f"@{doc['digest'][:12]}"
     return doc
+
+
+def _hint(entry: dict) -> str:
+    """A scout-map entry of the pack (``{path, symbol?, why}``) as the hint line ``path[:symbol] — why``; an entry that
+    names no path is its text."""
+    if not entry.get("path"):
+        return entry["why"]
+    return entry["path"] + (f":{entry['symbol']}" if entry.get("symbol") else "") + " — " + entry["why"]
 
 
 def _review_route(item: dict) -> dict:

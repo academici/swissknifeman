@@ -5,10 +5,13 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 import bridge_fixture
 import register
@@ -214,6 +217,59 @@ class PlanCallsTests(unittest.TestCase):
     def test_issues_need_an_attempt_id(self):
         message = self.refused("REGISTER_ATTEMPT_REQUIRED", report(open_issues=ALL_ISSUES[3:4]))
         self.assertIn("--attempt-id", message)
+
+    def test_semantics_the_schema_cannot_state_keep_their_codes(self):
+        twice = [{"id": "V1", "cmd": "make test", "exit": 0}, {"id": "V1", "cmd": "make lint", "exit": 1}]
+        self.assertIn("repeats V1", self.refused("REGISTER_REPORT_INVALID", report(checks_run=twice), attempt_id="a"))
+        for issue in ({"text": "   ", "kind": "note"}, {"text": "no kind"}, "a string issue"):
+            with self.subTest(issue=issue):
+                self.refused("REGISTER_UNCLASSIFIED", report(open_issues=[issue]), attempt_id="a")
+        self.refused("REGISTER_REPORT_INVALID", report(summary=" \t "), attempt_id="a")
+
+    def test_the_summary_is_returned_stripped(self):
+        self.assertEqual(register.check_report(report(summary="  Implemented the piece \n"))["summary"],
+                         "Implemented the piece")
+
+
+class SchemaParityTests(unittest.TestCase):
+    """``check_schema`` after ``check_report``: the orch contract register-report (``orch.py validate``) is the second
+    reader of the same report."""
+
+    def main(self, doc) -> tuple:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "report.json"
+            path.write_text(json.dumps(doc), encoding="utf-8")
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
+                code = register.main(["PLAN3", "P2.1", "--report", str(path), "--status", "done", "--actor", REGISTRAR,
+                                      "--attempt-id", "a", "--dry-run"])
+        return code, err.getvalue()
+
+    def test_a_report_check_report_accepts_passes_the_schema(self):
+        full = report(evidence=["out/log.txt"], checks_run=[{"id": "V1", "cmd": "make", "exit": 0},
+                                                            {"id": "V2", "procedure": "read it", "verdict": "pass"}],
+                      open_issues=ALL_ISSUES[3:])
+        self.assertEqual(self.main(full), (0, ""))
+        register.check_schema(report(summary="  padded  "))
+
+    def test_a_drift_between_check_report_and_the_schema_is_refused(self):
+        with mock.patch.object(register, "ISSUE_KINDS", register.ISSUE_KINDS + ("todo",)):
+            code, err = self.main(report(open_issues=[{"text": "later", "kind": "todo"}]))
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("REGISTER_REPORT_INVALID: schema parity: /open_issues/0/kind: "), err)
+
+    def test_check_report_comes_first(self):
+        with mock.patch.object(register.partners, "orch_validate", side_effect=AssertionError("validated")):
+            code, err = self.main(report(open_issues=[{"text": "no kind"}]))
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("REGISTER_UNCLASSIFIED: "), err)
+
+    def test_an_orch_without_a_verdict_is_a_refusal(self):
+        with mock.patch.object(register.partners, "orch_validate", return_value=(124, "")):
+            with self.assertRaises(register.Refusal) as caught:
+                register.check_schema(report())
+        self.assertEqual(caught.exception.code, "REGISTER_REPORT_INVALID")
+        self.assertIn("orch validate exited 124", str(caught.exception))
 
 
 class CliCase(unittest.TestCase):

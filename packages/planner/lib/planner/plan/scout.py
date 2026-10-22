@@ -2,8 +2,10 @@
 
 ``run`` hands the deterministic context pack to the provider's economy CLI (``orchestration.scout.<provider>`` in
 ``command-routing.json``; the prompt goes through stdin), keeps the full useful answer of "path[:symbol] — why"
-plus the unknowns block in ``context/<item>.scout.json`` and logs one ``scout`` event. Any failure is an outcome, never
-an exception: the caller (``lifecycle.start``) continues without the map.
+plus the unknowns block as a ``scout-map`` document (``schemas/plan/v1/scout-map.schema.json``: entries
+``{path, symbol?, why}``, ``path`` null for a line that names none) in ``context/<item>.scout.json`` and logs one
+``scout`` event. Any failure is an outcome, never an exception: the caller (``lifecycle.start``) continues without the
+map.
 """
 from __future__ import annotations
 
@@ -17,10 +19,12 @@ from typing import Callable
 
 from planner.command_catalog import SCOUT_PLACEHOLDERS, load_routing_metadata
 
-from . import context, lifecycle, store
+from . import context, lifecycle, schema, store
 from .model import PlanError
 
+MAP_SCHEMA = "urn:swissknifeman:task:plan:scout-map:v1"
 _ENTRY = re.compile(r"^(?:- |[\w@./\\-]+(?::[\w.<>-]+)?\s+[—–-]\s+\S)")
+_LINE = re.compile(r"^(?:- )?(?P<path>[\w@./\\-]+)(?::(?P<symbol>[\w.<>-]+))?\s+[—–-]\s+(?P<why>\S.*)$")
 _UNKNOWNS = re.compile(r"^unknowns?\s*:", re.IGNORECASE)
 
 
@@ -73,7 +77,39 @@ def _config(provider: str, routing_path: str | Path | None) -> dict | None:
     return metadata.get("orchestration", {}).get("scout", {}).get(provider)
 
 
-def _attempt(plan: store.Plan, item_id: str, entry: dict, runner: Callable) -> tuple[str, str, int]:
+def parse_entries(lines: list[str]) -> list[dict]:
+    """The lines of ``filter_answer`` as scout-map entries: ``path[:symbol] — why`` becomes ``{path, symbol?, why}``; a
+    line that names no path, and every line of the ``Unknowns:`` block, keeps its text as ``{path: null, why}``."""
+    entries: list[dict] = []
+    unknowns = False
+    for text in lines:
+        unknowns = unknowns or bool(_UNKNOWNS.match(text))
+        found = None if unknowns else _LINE.match(text)
+        if found is None:
+            entries.append({"path": None, "why": text})
+            continue
+        entry = {"path": found["path"]}
+        if found["symbol"]:
+            entry["symbol"] = found["symbol"]
+        entry["why"] = found["why"].strip()
+        entries.append(entry)
+    return entries
+
+
+def entry_text(entry: dict) -> str:
+    """One scout-map entry as the line ``path[:symbol] — why`` (only ``why`` when it names no path)."""
+    if not entry.get("path"):
+        return entry["why"]
+    return entry["path"] + (f":{entry['symbol']}" if entry.get("symbol") else "") + " — " + entry["why"]
+
+
+def map_document(item_id: str, provider: str, model: str, lines: list[str]) -> dict:
+    """The scout-map of ``item_id`` from the kept lines of an answer."""
+    return {"$schema": MAP_SCHEMA, "item": item_id, "provider": provider, "model": model, "created_at": store.now(),
+            "entries": parse_entries(lines)}
+
+
+def _attempt(plan: store.Plan, item_id: str, entry: dict, runner: Callable, provider: str) -> tuple[str, str, int]:
     """``(outcome, reason, lines)``; writes or removes ``context/<item>.scout.json``."""
     target = plan.root / context.PACK_DIR / f"{item_id}.scout.json"
     reason, kept = "", []
@@ -92,10 +128,16 @@ def _attempt(plan: store.Plan, item_id: str, entry: dict, runner: Callable) -> t
             kept = filter_answer(done.stdout or "")
             if not kept:
                 reason = "empty answer"
+    document = None
+    if not reason:
+        document = map_document(item_id, provider, entry["model"], kept)
+        issues = schema.validate(document, "scout-map")
+        if issues:
+            reason = f"map outside scout-map: {issues[0].message}"[:300]
     if reason:
         target.unlink(missing_ok=True)  # a stale map must not outlive a failed run
         return "failed", reason, 0
-    store.atomic_write(target, json.dumps({"entries": kept}, ensure_ascii=False, indent=2) + "\n")
+    store.atomic_write(target, json.dumps(document, ensure_ascii=False, indent=2) + "\n")
     return "ok", "", len(kept)
 
 
@@ -116,7 +158,7 @@ def run(plan, item_id: str, provider: str, *, runner: Callable | None = None,
     if entry is not None and snapshot.source_root is None:
         entry, outcome, reason, lines = None, "skipped", "source_unbound", 0  # nothing to scout without a checkout
     if entry is not None:
-        outcome, reason, lines = _attempt(snapshot, item_id, entry, runner)
+        outcome, reason, lines = _attempt(snapshot, item_id, entry, runner, provider)
     seconds = round(time.monotonic() - started, 1)
     model = entry["model"] if entry else "none"
     result = ScoutResult(outcome, provider, model, seconds, lines,

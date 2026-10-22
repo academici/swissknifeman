@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -231,6 +232,112 @@ class ConductorCommitTests(unittest.TestCase):
         self.assertEqual(kept, {"outcome": "committed", "sha": "abc1234", "message": answer["message"]})
         owner = SimpleNamespace(_orch=lambda *args: (0, {"op": "commit", "outcome": "committed", "sha": "abc1234"}, ""))
         self.assertNotIn("message", work_source.commit(owner, SimpleNamespace(orch_run="run-1"), ["a.py"]))
+
+
+class RegisterReportTests(unittest.TestCase):
+    """work-source/v1 register-report: the schema and the rules in code (orch.worksource_report)."""
+
+    def test_the_schema_and_the_semantics(self):
+        from orch.worksource_report import report_problems, report_semantics
+        valid = {"summary": " s ", "changed_paths": ["a.py"], "evidence": [],
+                 "checks_run": [{"id": "V1", "cmd": "make", "exit": 0}, {"id": "V2", "procedure": "look", "verdict": "pass"}],
+                 "open_issues": [{"text": "t", "kind": "deviation", "class": "docs", "outcome": "accepted",
+                                  "impact": "i", "evidence": ["a.py:1"]}]}
+        self.assertEqual(report_problems(valid), [])
+        twice = dict(valid, checks_run=[{"id": "V1", "cmd": "make", "exit": 0}, {"id": "V1", "cmd": "lint", "exit": 1}])
+        self.assertEqual(worksource.problems(twice, "register-report"), [])  # uniqueness is not a schema rule
+        self.assertEqual(report_semantics(twice), ["/checks_run/1/id: repeats V1"])
+        blank = dict(valid, summary=" ", open_issues=[{"text": "t", "kind": "note", "next": " "}])
+        self.assertEqual(worksource.problems(blank, "register-report"), [])  # \S of the schema is ASCII
+        self.assertEqual(report_semantics(blank), ["/summary: is blank", "/open_issues/0/next: is blank"])
+        self.assertTrue(worksource.problems(dict(valid, status="done"), "register-report"))
+        with self.assertRaises(worksource.schema.SchemaProfileError):
+            worksource.problems(valid, "not-a-kind")
+
+    def test_the_refusal_code_follows_the_order_of_the_plan_source(self):
+        from orch.worksource_report import refusal_code, report_problems
+
+        def code(report):
+            return refusal_code(report, report_problems(report))
+        self.assertEqual(code({"summary": "s", "open_issues": ["a string"]}), "REGISTER_UNCLASSIFIED")
+        self.assertEqual(code({"summary": "s", "open_issues": [{"text": "t", "kind": "todo"}]}), "REGISTER_UNCLASSIFIED")
+        self.assertEqual(code({"summary": "s", "open_issues": [{"text": "t", "kind": "note", "why": "x"}]}),
+                         "REGISTER_REPORT_INVALID")
+        self.assertEqual(code({"summary": "s", "open_issues": [{"text": "t", "kind": "note", "why": "x"}, {"kind": "note"}]}),
+                         "REGISTER_REPORT_INVALID")
+        self.assertEqual(code({"summary": " ", "open_issues": [{"kind": "note"}]}), "REGISTER_REPORT_INVALID")
+
+
+class ConductorBriefTests(unittest.TestCase):
+    """The conductor reads the stored brief as exec/v1 before it writes ``input.json`` (BRIEF_INVALID)."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.project = Path(tmp.name)
+        self.item = SimpleNamespace(orch_run="run-1", ref="W1", directory=self.project / "run" / "W1",
+                                    input_doc={"digest": "sha256:old"})
+        self.emitted = []
+
+    def owner(self, doc) -> SimpleNamespace:
+        stored = blobs.put_json(doc, sensitivity="normal", name="brief-W1", project=self.project)
+        answer = {"op": "brief", "input_ref": stored, "input_id": doc.get("input_id", "x") if isinstance(doc, dict) else "x"}
+        return SimpleNamespace(_orch=lambda *args: (0, answer, ""), project=self.project, run_id="run-1",
+                               progress=SimpleNamespace(emit=lambda *a, **k: self.emitted.append(k)))
+
+    def test_a_brief_outside_exec_v1_stops_before_input_json(self):
+        from orch.conductor.domain.stop import Stop
+        from orch.conductor.infrastructure import work_source
+        spoiled = {**json.loads(INPUT.read_text(encoding="utf-8")), "verify": "a field verify() does not look at"}
+        with self.assertRaises(Stop) as caught:
+            work_source.brief(self.owner(spoiled), self.item)
+        self.assertEqual(caught.exception.code, "BRIEF_INVALID")
+        self.assertIn("/verify", caught.exception.message)
+        self.assertFalse((self.item.directory / "input.json").exists())
+        with self.assertRaises(Stop) as caught:
+            work_source.brief(self.owner(["not", "an", "object"]), self.item)
+        self.assertEqual(caught.exception.code, "BRIEF_INVALID")
+
+    def test_a_valid_brief_passes_and_a_spoiled_refresh_keeps_the_earlier_input(self):
+        from orch.conductor.infrastructure import work_source
+        self.assertEqual(work_source.input_errors(json.loads(INPUT.read_text(encoding="utf-8"))), [])
+        spoiled = {**json.loads(INPUT.read_text(encoding="utf-8")), "verify": "x"}
+        work_source.refresh_input(self.owner(spoiled), self.item)
+        self.assertEqual([entry["reason_code"] for entry in self.emitted], ["INPUT_REFRESH_FAILED"])
+        self.assertEqual(self.item.input_doc, {"digest": "sha256:old"})
+        self.assertFalse((self.item.directory / "input.json").exists())
+
+
+class ConductorFinishTests(unittest.TestCase):
+    """``finish`` checks the register-report body before it writes it (REGISTER_REPORT_INVALID: a conductor defect)."""
+
+    def finish(self, report):
+        from orch.conductor.stages import finish
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        item = SimpleNamespace(ref="W1", directory=Path(tmp.name), state={"steps": {}, "autofixed": []})
+        written = []
+        owner = SimpleNamespace(
+            _settle_pending=lambda report, rows: report, _changed=lambda item: [], _outside=lambda item: [],
+            _autofix_issues=lambda item, report: [], _notes=lambda item: [], _questions=lambda item: {},
+            _write_artifact=lambda item, name, doc: written.append(name), _deviation_recorded=lambda item, issue: None,
+            _beacon_event=lambda *args: None,
+            _register_args=mock.Mock(side_effect=AssertionError("registered")))
+        return finish.finish(owner, item, report, []), item, written
+
+    def test_a_body_outside_register_report_stops_before_it_is_written(self):
+        from orch.conductor.domain.stop import Stop
+        report = {"status": "done", "summary": "s", "changed_paths": [], "checks_run": [], "evidence": [],
+                  "open_issues": [{"text": "slow", "kind": "difficulty", "evidence": []}]}  # a stage-report allows []
+        with self.assertRaises(Stop) as caught:
+            self.finish(report)
+        self.assertEqual(caught.exception.code, "REGISTER_REPORT_INVALID")
+        self.assertIn("W1: the register-report is outside work-source/v1 register-report: /open_issues/0/evidence",
+                      caught.exception.message)
+        twice = dict(report, checks_run=[{"id": "V1", "cmd": "make", "exit": 0}] * 2, open_issues=[])
+        with self.assertRaises(Stop) as caught:
+            self.finish(twice)
+        self.assertIn("repeats V1", caught.exception.message)
 
 
 if __name__ == "__main__":

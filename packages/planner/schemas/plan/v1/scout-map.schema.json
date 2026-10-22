@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:scout-map:v1",
+  "title": "Scout map",
+  "type": "object",
+  "description": "The map a scout of an item wrote (context/<item>.scout.json): where to look and why, parsed from the scout's answer of \"path[:symbol] — why\" lines. A line that names no path (a list entry, the Unknowns block) keeps its text with path null. Leads, not facts: the bridge copies them into the hints of the execution-input.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:task:plan:scout-map:v1",
+      "description": "Schema marker."
+    },
+    "item": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId",
+      "description": "Item the map belongs to."
+    },
+    "provider": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Provider whose scout CLI answered."
+    },
+    "model": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Model of the scout."
+    },
+    "created_at": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+      "description": "When the map was written."
+    },
+    "entries": {
+      "type": "array",
+      "description": "The useful lines of the answer in order; never empty (an empty answer writes no map).",
+      "minItems": 1,
+      "items": {
+        "description": "One line of the map.",
+        "$ref": "urn:swissknifeman:task:plan:scout-map:v1#/$defs/entry"
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "item",
+    "provider",
+    "model",
+    "created_at",
+    "entries"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "description": "A path with an optional symbol and why it matters, or (path null) a line that names no path.",
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Repository path the line names, or null when the line names none.",
+          "minLength": 1,
+          "pattern": "^\\S+$"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Symbol inside the path (function, class), when the line names one.",
+          "minLength": 1,
+          "pattern": "^\\S+$"
+        },
+        "why": {
+          "type": "string",
+          "description": "Why the path matters, or the whole line when it names no path.",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "path",
+        "why"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

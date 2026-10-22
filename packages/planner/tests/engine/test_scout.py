@@ -13,7 +13,7 @@ if str(_LIB) not in sys.path:
     sys.path.insert(0, str(_LIB))
 
 from planner import command_catalog  # noqa: E402
-from planner.plan import cli, context, lifecycle, ops, scout, store  # noqa: E402
+from planner.plan import cli, context, lifecycle, ops, schema, scout, store  # noqa: E402
 from planner.plan.model import PlanError  # noqa: E402
 
 OPUS = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
@@ -81,8 +81,14 @@ class RunTests(ScoutCase):
         runner = FakeRunner(completed(ANSWER))
         result = self.run_scout(runner)
         self.assertEqual((result.outcome, result.lines, result.model), ("ok", 4, "haiku"))
-        self.assertEqual(json.loads(self.scout_file.read_text())["entries"],
-                         ["- lib/x.py:load — entry point", "lib/y.py — helper", "Unknowns:", "- where tests live"])
+        document = json.loads(self.scout_file.read_text())
+        self.assertEqual(schema.validate(document, "scout-map"), [])
+        self.assertEqual({k: document[k] for k in ("$schema", "item", "provider", "model")},
+                         {"$schema": scout.MAP_SCHEMA, "item": "P1.1", "provider": "claude-code", "model": "haiku"})
+        self.assertEqual(document["entries"],
+                         [{"path": "lib/x.py", "symbol": "load", "why": "entry point"},
+                          {"path": "lib/y.py", "why": "helper"},
+                          {"path": None, "why": "Unknowns:"}, {"path": None, "why": "- where tests live"}])
         (event,) = self.events()
         self.assertEqual({k: event["data"][k] for k in ("provider", "model", "outcome", "lines")},
                          {"provider": "claude-code", "model": "haiku", "outcome": "ok", "lines": 4})
@@ -120,6 +126,17 @@ class RunTests(ScoutCase):
         result = self.run_scout(FakeRunner(completed("- a — b\n", returncode=3, stderr="boom\n")))
         self.assertEqual(result.outcome, "failed")
         self.assertIn("exit 3: boom", result.reason)
+        self.assertFalse(self.scout_file.exists())
+
+    def test_a_map_outside_the_schema_is_a_failure_without_a_map(self):
+        original = scout.map_document
+
+        def broken(*args):
+            return {**original(*args), "entries": [{"path": "lib/x.py", "why": "   "}]}
+        with mock.patch.object(scout, "map_document", side_effect=broken):
+            result = self.run_scout(FakeRunner(completed(ANSWER)))
+        self.assertEqual(result.outcome, "failed")
+        self.assertIn("map outside scout-map: /entries/0/why", result.reason)
         self.assertFalse(self.scout_file.exists())
 
     def test_missing_executable_is_a_failure(self):
@@ -178,7 +195,17 @@ class PackTests(ScoutCase):
     def test_section_13_appears_only_with_a_map(self):
         self.assertNotIn("scout", context.collect(store.load_plan(self.root), "P1.1"))
         self.run_scout(FakeRunner(completed(ANSWER)))
-        self.assertIn("- lib/x.py:load — entry point", context.render(store.load_plan(self.root), "P1.1"))
+        pack = context.collect(store.load_plan(self.root), "P1.1")
+        self.assertEqual(pack["scout"]["entries"][0], {"path": "lib/x.py", "symbol": "load", "why": "entry point"})
+        self.assertEqual(schema.validate(pack, "context-pack"), [])
+
+    def test_a_map_of_an_older_planner_or_another_item_stays_out_of_the_pack(self):
+        self.scout_file.parent.mkdir()
+        for text in (json.dumps({"entries": ["lib/x.py — entry"]}), "- old/map.py — stale\n",
+                     json.dumps(scout.map_document("P1.2", "codex", "mini", ["lib/x.py — entry"]))):
+            with self.subTest(text=text):
+                self.scout_file.write_text(text, encoding="utf-8")
+                self.assertNotIn("scout", context.collect(store.load_plan(self.root), "P1.1"))
 
 
 class StartTests(ScoutCase):
@@ -260,6 +287,15 @@ class FilterTests(unittest.TestCase):
     def test_only_entries_and_the_unknowns_block_survive(self):
         self.assertEqual(scout.filter_answer("Sure!\n- a/b.py — x\npkg/m.py:f — y\nnot an entry\nUnknowns:\n- z\nfree text\n"),
                          ["- a/b.py — x", "pkg/m.py:f — y", "Unknowns:", "- z", "free text"])
+
+    def test_lines_become_entries_and_a_line_without_a_path_keeps_its_text(self):
+        lines = ["- a/b.py — x", "pkg/m.py:f — y  ", "- a list entry", "c.py - z", "Unknowns:", "- d.py — not a lead"]
+        entries = scout.parse_entries(lines)
+        self.assertEqual(entries, [{"path": "a/b.py", "why": "x"}, {"path": "pkg/m.py", "symbol": "f", "why": "y"},
+                                   {"path": None, "why": "- a list entry"}, {"path": "c.py", "why": "z"},
+                                   {"path": None, "why": "Unknowns:"}, {"path": None, "why": "- d.py — not a lead"}])
+        self.assertEqual([scout.entry_text(entry) for entry in entries[:3]],
+                         ["a/b.py — x", "pkg/m.py:f — y", "- a list entry"])
 
 
 if __name__ == "__main__":

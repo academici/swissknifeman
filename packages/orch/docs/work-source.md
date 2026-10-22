@@ -30,6 +30,25 @@ state folder). A `register` answer may name `evidence` (`{V#: path}`): where the
 good (the planner bridge copies the evidence of a workspace plan into the plan folder); the conductor then records
 those paths.
 
+The `report` of a `register` request is the kind `register-report` of the same contract
+(`register-report.schema.json`, `urn:swissknifeman:orch:work-source:register-report:v1`): the stage-report of the worker
+without `status`, `questions`, `review_recommendation` and `self_check`, closed (`summary`, `changed_paths`, `checks_run`
+as `{id, cmd, exit}` or `{id, procedure, verdict}`, `evidence`, `open_issues` with `text`, `kind`, `impact`, `next`,
+`class`, `severity`, `outcome`, `auto_fixable`, `evidence`), every text with a non-whitespace character, the `evidence`
+of an issue not empty when present. It carries no `$schema` tag: the report keeps the stage-report shape. Two rules stay
+in code (`orch.worksource_report.report_semantics`, and `check_report` of the planner bridge): an id of `checks_run`
+appears once, and a text keeps a character once Unicode whitespace is stripped. Each source refuses a report outside it
+with the same codes: `REGISTER_UNCLASSIFIED` for an issue that is not an object with a text and a known `kind`,
+`REGISTER_REPORT_INVALID` for anything else (a problem of the report itself comes first). The conductor checks the body
+before it writes `register-report.json` (a body outside it is a conductor defect: `REGISTER_REPORT_INVALID` stop), the
+file source before its gate, and the planner bridge runs `check_report` first and then the schema for parity
+(`REGISTER_REPORT_INVALID: schema parity: <pointer>: <message>`). `orch.py validate register-report|input|output FILE`
+checks a document by hand.
+
+A brief is an `exec/v1` execution-input: the planner bridge checks the document it built (`orch.py validate
+execution-input`) before it stores it (`BRIEF_INVALID`, nothing stored), and the conductor checks the stored brief before
+it writes `input.json` of the piece (`BRIEF_INVALID` stop), as the file source checks its input.
+
 `run_id` uses the characters of an attempt id (`[A-Za-z0-9._:-]`, at most 100) because the attempt id
 `att-<run_id>-<ref>` is built from it. A refusal of the source is an answer with a `reason_code`. A plugin that fails, answers an error or answers
 outside the contract is a failure of the source.
@@ -95,8 +114,8 @@ refusal), 2 usage, 3 `WORK_SOURCE_UNAVAILABLE`.
 `orch.worksource_file.FileWorkSource`, the same protocol and contract, checked on both sides. `claim` always succeeds for the one
 input (the reference is its `input_id`; a different candidate is `INPUT_UNKNOWN`; an input outside `exec/v1` is `INPUT_INVALID`);
 `brief` is the document itself in the artifact store (a file that changed since the claim is `INPUT_CHANGED`, a failure of the
-source); `register` applies the same evidence gate as the planner bridge (check-evidence with exit 0 for every acceptance
-check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (the idempotency receipt) into
+source); `register` refuses a report outside `register-report` with the codes of the planner bridge, applies the same
+evidence gate as the planner bridge (check-evidence with exit 0 for every acceptance check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (the idempotency receipt) into
 `.swissknifeman/orch-artifacts/<run_id>/<input_id>/` (local records, not committed); `commit` commits nothing unless `--commit`, then only the given paths with
 `adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input. For provenance
 `plan_support` and `phase_support` the `register` command forwards the note to the configured plugin source

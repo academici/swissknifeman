@@ -25,9 +25,11 @@ class ReviewPlanTests(ConductorCase):
         from orch.conductor.application import review_plan
         from orch.conductor.domain.item import Item
         from orch.conductor.domain.stop import Stop
+        from orch.conductor.infrastructure.files import RunStore
         from orch import settings
         owner = engine.Conductor(project=self.project, settings=settings.load(project=self.project))
         owner.run_id = "R"
+        owner.store = RunStore(self.project, owner.run_id)
         owner.state = {"tokens": {"input": 10}}
         item = Item("W1", "source-run", {}, self.project, {})
         item.options = {"limits": {"run_tokens_hard_max": 10}}

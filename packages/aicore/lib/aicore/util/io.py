@@ -1,5 +1,6 @@
 """Shared stdlib-only helpers for atomic file writes and resilient JSON reads."""
 import copy
+import errno
 import json
 import os
 import shutil
@@ -143,15 +144,24 @@ def _replace(path, data, *, mode, check_target, private):
     _fsync_folder(path.parent)
 
 
+# A filesystem that cannot open or fsync a folder says so with one of these; any other error (EIO, ENOSPC) means the
+# rename may not be durable and is raised, so a caller never acknowledges a document that is not on disk.
+_NO_FOLDER_SYNC = {errno.EINVAL, errno.EOPNOTSUPP, getattr(errno, "ENOTSUP", errno.EOPNOTSUPP), errno.EACCES,
+                   errno.EPERM, errno.EISDIR, errno.EBADF}
+
+
 def _fsync_folder(folder):
     """Make a rename in ``folder`` durable; a filesystem that cannot fsync a folder is left as it is."""
     try:
-        handle = os.open(str(folder), os.O_RDONLY)
-    except OSError:
-        return
+        handle = os.open(str(folder), os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    except OSError as error:
+        if error.errno in _NO_FOLDER_SYNC:
+            return
+        raise
     try:
         os.fsync(handle)
-    except OSError:
-        pass
+    except OSError as error:
+        if error.errno not in _NO_FOLDER_SYNC:
+            raise
     finally:
         os.close(handle)

@@ -295,7 +295,7 @@ class ProviderLockTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 provider_lock._atomic_write_bytes(target, b"new\n")
         self.assertEqual(["generated.tmp"], sorted(path.name for path in self.root.iterdir()
-                                                  if path.name.startswith("generated")))
+                                                  if "generated" in path.name))  # .generated.txt.<pid>.<hex>.tmp too
         self.assertEqual(b"not ours\n", bystander.read_bytes())
         self.assertFalse(target.exists())
 

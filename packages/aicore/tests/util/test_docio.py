@@ -16,7 +16,8 @@ SCHEMA = {
     "type": "object",
     "required": ["name", "count"],
     "additionalProperties": False,
-    "properties": {"name": {"type": "string", "minLength": 1}, "count": {"type": "integer", "minimum": 0}},
+    "properties": {"name": {"type": "string", "minLength": 1}, "count": {"type": "integer", "minimum": 0},
+                   "ratio": {"type": "number", "minimum": 0, "maximum": 1}},
 }
 
 
@@ -33,6 +34,21 @@ class DocioTests(unittest.TestCase):
 
     def read(self, **kwargs):
         return read_document(self.path, kind="thing", registry=self.reg, **kwargs)
+
+    def test_non_finite_numbers_are_neither_read_nor_written(self):
+        # NaN passes a 0..1 bound (every comparison is false) and json writes it as NaN: not JSON either way
+        for literal in ("NaN", "Infinity", "-Infinity", "1e999"):
+            with self.subTest(literal=literal):
+                self.path.parent.mkdir(parents=True, exist_ok=True)
+                self.path.write_text('{"name": "x", "count": 1, "ratio": %s}' % literal, encoding="utf-8")
+                with self.assertRaises(DocumentCorrupt):
+                    self.read()
+        for value in (float("nan"), float("inf")):
+            with self.subTest(value=value):
+                self.path.unlink(missing_ok=True)
+                with self.assertRaises(DocumentInvalid):
+                    write_document(self.path, {"name": "x", "count": 1, "ratio": value}, kind="thing", registry=self.reg)
+                self.assertFalse(self.path.exists())
 
     def test_a_missing_file_is_none(self):
         self.assertIsNone(self.read())

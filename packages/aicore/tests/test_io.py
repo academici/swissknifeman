@@ -87,6 +87,25 @@ class TestAtomicWriteTextTargetCheck(unittest.TestCase):
 
 
 class TestDurableWrites(unittest.TestCase):
+    def test_a_folder_fsync_io_error_is_raised_and_an_unsupported_one_is_not(self):
+        import errno
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "doc.json"
+            real = os.fsync
+
+            def failing(code):
+                def fsync(handle):
+                    if os.path.isdir(f"/proc/self/fd/{handle}") or Path(os.readlink(f"/proc/self/fd/{handle}")).is_dir():
+                        raise OSError(code, os.strerror(code))
+                    return real(handle)
+                return fsync
+            with mock.patch.object(io.os, "fsync", failing(errno.EIO)):
+                with self.assertRaises(OSError):  # the rename may not be on disk: never acknowledged
+                    durable_replace(target, b"{}\n")
+            with mock.patch.object(io.os, "fsync", failing(errno.EINVAL)):
+                durable_replace(target, b"{}\n")  # a filesystem that cannot fsync a folder
+            self.assertEqual(b"{}\n", target.read_bytes())
+
     """One primitive under atomic_write_text and durable_replace: unique temp, no link followed, fsync, umask."""
 
     def test_the_file_and_its_folder_are_fsynced(self):

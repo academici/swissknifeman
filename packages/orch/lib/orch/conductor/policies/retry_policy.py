@@ -2,7 +2,6 @@
 route or a stop; a quota with a known reset gates the provider on the machine."""
 from __future__ import annotations
 
-import time
 from typing import Optional
 
 from aicore.util import timefmt

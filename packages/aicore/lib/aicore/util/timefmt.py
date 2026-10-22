@@ -49,7 +49,10 @@ def parse_rfc3339(text: object, *, convert: bool = True) -> Optional[datetime]:
         return None
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc) if convert else parsed
+    try:
+        return parsed.astimezone(timezone.utc) if convert else parsed
+    except OverflowError:  # 0001-01-01T00:00:00+01:00 parses but has no UTC moment
+        return None
 
 
 def _moment(value: Moment) -> Optional[datetime]:

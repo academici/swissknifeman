@@ -40,7 +40,7 @@ def read_document(path, *, kind: str, registry: Registry, migrate: Optional[Call
     except UnicodeDecodeError as error:
         raise DocumentCorrupt(path, error) from None
     try:
-        document = json.loads(text)
+        document = json.loads(text, parse_constant=_no_constant, parse_float=_finite_float)
     except ValueError as error:
         raise DocumentCorrupt(path, error) from None
     if migrate is not None:
@@ -57,5 +57,21 @@ def write_document(path, document, *, kind: str, registry: Registry, mode: int =
     issues = validate(document, kind, registry)
     if issues:
         raise DocumentInvalid(path, issues)
-    text = json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    try:
+        text = json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    except ValueError as error:  # NaN or an infinity: not JSON, and a schema bound never rejects it
+        raise DocumentInvalid(path, [f"not a JSON number: {error}"]) from None
     durable_replace(path, text.encode("utf-8"), mode=mode)
+
+
+def _no_constant(name: str):
+    """``NaN``, ``Infinity`` and ``-Infinity`` are not JSON: a document that holds one is corrupt."""
+    raise ValueError(f"{name} is not a JSON number")
+
+
+def _finite_float(text: str) -> float:
+    """A float literal that overflows to an infinity (``1e999``) is not a JSON number this module accepts."""
+    value = float(text)
+    if value != value or value in (float("inf"), float("-inf")):
+        raise ValueError(f"{text} is not a finite JSON number")
+    return value

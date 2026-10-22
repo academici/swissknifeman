@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-10-22
+
 ### Fixed
 
 - gui: closing a terminal WebSocket ends the shell even when the connection task is cancelled, and unpaid terminal credit stays at most `4 * credit_bytes` while a read is in progress.

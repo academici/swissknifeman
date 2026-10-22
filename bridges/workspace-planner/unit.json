@@ -8,7 +8,7 @@
   "destination": "hub",
   "requires": [
     {"unit": "aicore", "range": "^0.1", "description": "Foundation: workspace documents (the project marker), locations and the plugin protocol of the plans-migrator port."},
-    {"unit": "planner", "range": "^0.32", "description": "Plan store (PlanLock, load_plan) and the plan checks the migration is verified with."},
+    {"unit": "planner", "range": "^0.33", "description": "Plan store (PlanLock, load_plan) and the plan checks the migration is verified with."},
     {"unit": "workspace", "range": "^0.1", "description": "Portable workspace layout and the plans-migrator extension point this bridge fills."}
   ],
   "provides": {

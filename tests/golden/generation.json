@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "1e614cc6cdb5",
-  "reason": "orch-debug: operator model and session recommendation",
+  "captured_from": "3d811695f405",
+  "reason": "planner 0.33.0 umbrella release: plugin version surfaces",
   "generators": [
     {
       "id": "skiller-registry",
@@ -254,7 +254,7 @@
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-run.md": "ece4c6c669ccbf6ed20defa38737aa515fe3e37ac2e26915bf0631e4f489b3c5",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/research.md": "6080f825740c10cc28214b86cafadf3ceb3e1fd48079996f8aa6634ceb18e2c8",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/review.md": "ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f",
-    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "149c0d80f91f7ec6c43d7120aa609a15563c9b35960d34a25042393b26d4f3fd",
+    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "fa9af383d2872d53fdcef2565f95b1c4b002f304d505fe26dfcc0576b52ed907",
     "packages/skiller/.claude-plugin/catalog.json": "112dac245b7ad3e99356cd42ef68cf181273037194a5754a11b92f0c13f85521",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "dd59120751e6a94f72849d690566e0ec04042d653f674f142ee4a459172d2280",
     "packages/skiller/adapters/codex/core/publication-lock.json": "f54d35dc75aeb6ae0781dee2ec864f2f1d2facab7d862f173aacdfdfffb57593",

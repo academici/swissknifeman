@@ -315,11 +315,12 @@ def _tool_digest(path: Path, signature: tuple) -> bytes:
 
 
 def context_env(env: dict) -> dict:
-    """Names and values that affect discovery or execution. Secret-named variables are left out and never hashed."""
+    """Names and values that affect discovery or execution. Secret-named variables are left out and never hashed.
+    ``SKM_LAUNCHER_PID`` differs per launcher process and binds nothing in a child, so it is not a context either."""
     found = {name: env.get(name) for name in CONTEXT_ENV}
     for name in env:
         if (name.startswith(("SKM_", "PLANNER_", "AICORE_"))
-                and name not in ("SKM_CHECK_RUN", "SKM_CHECK_ROUND", "SKM_VALIDATE_SKIP_TESTS")
+                and name not in ("SKM_CHECK_RUN", "SKM_CHECK_ROUND", "SKM_VALIDATE_SKIP_TESTS", "SKM_LAUNCHER_PID")
                 and not any(word in name for word in ("TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "API_KEY"))):
             found[name] = env[name]
     return found

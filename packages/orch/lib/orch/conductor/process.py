@@ -126,7 +126,8 @@ def parse_stream(transport: str, data: str) -> dict:
             # same process (``task_notification``), so one answer can span several results: their texts are joined
             # (the contract block of an earlier turn stays visible) and their usage, counted per turn, is summed.
             # The text of a failed turn is not part of the answer; a final failure keeps its own text.
-            text = doc.get("result") if isinstance(doc.get("result"), str) else ""
+            result = doc.get("result")
+            text = result if isinstance(result, str) else ""
             usage = _usage(doc.get("usage"))
             found["session"] = doc.get("session_id") or found["session"]
             found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}

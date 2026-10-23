@@ -390,6 +390,13 @@ class RunnerTests(RunnerFixture):
             with patch.dict(os.environ, {"PATH": str(tool.parent) + os.pathsep + os.environ["PATH"]}):
                 self.assertNotIn("[cached]", self.run_runner("--tier", "all")[1])
 
+    def test_the_launcher_pid_of_another_process_does_not_invalidate_reuse(self):
+        # Each launcher process exports its own pid; a check of a resumed run would never find its receipt (P5.5 V90).
+        with patch.dict(os.environ, {"SKM_CHECK_RUN": "launcher", "SKM_LAUNCHER_PID": "101"}):
+            self.run_runner("--tier", "all")
+            with patch.dict(os.environ, {"SKM_LAUNCHER_PID": "202"}):
+                self.assertIn("[cached] packages/a:", self.run_runner("--tier", "all")[1])
+
     def test_inputs_mutated_during_execution_do_not_publish_reusable_green(self):
         script = self.root / "packages/a/scripts/test.sh"
         script.write_text(script.read_text() + 'echo mutation >> changed.txt\n')

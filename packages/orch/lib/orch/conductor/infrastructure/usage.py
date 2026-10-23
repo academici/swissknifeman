@@ -2,7 +2,7 @@
 logical step they add to (a replayed receipt replaces its contribution, an incomplete one is said)."""
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from orch.conductor import agents
 from orch.conductor.domain.item import Item
@@ -30,8 +30,9 @@ def add_tokens(self, item: Item, usage: dict, *, usage_complete: Optional[bool] 
             handle["usage"] = {key: sum(row[key] for row in attempts.values()) for key in agents.USAGE_KEYS}
             completeness = [row["usage_complete"] for row in attempts.values()]
             handle["usage_complete"] = (False if False in completeness else True if True in completeness else None)
-        for bucket in (self.state.setdefault("tokens", {"input": 0, "output": 0}),
-                       item.state.setdefault("tokens", {"input": 0, "output": 0}), step_bucket):
+        buckets: list[Any] = [self.state.setdefault("tokens", {"input": 0, "output": 0}),
+                               item.state.setdefault("tokens", {"input": 0, "output": 0}), step_bucket]
+        for bucket in buckets:
             for key in agents.USAGE_KEYS:
                 bucket[key] = bucket.get(key, 0) + delta[key]
         if callable(remember_stage):

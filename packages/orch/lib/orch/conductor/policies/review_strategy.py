@@ -12,9 +12,16 @@ import json
 import re
 
 MODES = ("each", "groups", "single", "none")
+PER_PIECE_OFF = ("groups", "single", "none")  # the modes in which a piece is not reviewed on its own
 MAX_GROUP = 4          # pieces one review reads at most: a longer chain is cut into groups
 FOUNDATION = ("packages/aicore/",)   # a piece that changes the foundation is read on its own, at a high effort
 HIGH_EFFORT_MARKS = ("security", "secret", "permission", "auth", "redact", "sandbox", "guard")
+
+
+def per_piece_off(review_strategy_state: dict | None) -> bool:
+    """Whether the recorded review strategy of the run (``state.review_strategy``) leaves the review of a piece to its group
+    or to nobody."""
+    return (review_strategy_state or {}).get("mode") in PER_PIECE_OFF
 
 
 def facts(ref: str, title: str, brief: dict) -> dict:

@@ -36,7 +36,7 @@ def writes(role: str) -> bool:
 
 def role_argv(self, item: Item, role: str, route: dict) -> list:
     isolated = role in item.options["instructions"]["isolate_roles"]
-    extra = ISOLATION_ARGS.get(route.get("provider")) if isolated else None
+    extra = ISOLATION_ARGS.get(route.get("provider", "")) if isolated else None
     if extra and not self.role_ports.knows(route["argv"], extra):
         extra = None
     resume = sessions.resume_args(self, item, role, route)
@@ -124,7 +124,7 @@ def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
     instructions: they carry the rules of a developer's own session ("quality over speed", "fix every defect even
     beyond the scope"), which contradict the role's own scope rules; every role gets exactly the instructions of its
     own prompt."""
-    extra = ISOLATION_ENV.get(route.get("provider")) if role in item.options["instructions"]["isolate_roles"] else None
+    extra = ISOLATION_ENV.get(route.get("provider", "")) if role in item.options["instructions"]["isolate_roles"] else None
     if not extra:
         return self.env
     base = dict(os.environ if self.env is None else self.env)

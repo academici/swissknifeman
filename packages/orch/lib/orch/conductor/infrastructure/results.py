@@ -17,7 +17,7 @@ def closed(text: str, kind: str, extra) -> tuple:
     original, error = json_block(text, kind)
     if error:
         return None, [], [error], None
-    doc, healed = heal.heal(kind, original)
+    doc, healed = heal.heal(kind, original or {})
     if kind == "stage-report" and healed:
         doc = dict(doc, open_issues=list(doc.get("open_issues") or []) + [
             {"text": ("the conductor mended the form of this report: " + "; ".join(healed))[:900], "kind": "note",

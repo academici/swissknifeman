@@ -161,7 +161,7 @@ def selected(self, item: Item, role: str, persist: bool) -> dict:
             return route
         raise Stop("PROVIDER_QUOTA", f"{role}: {until}" + (f"; no fallback: {'; '.join(refused)}" if refused else "")
                    + "; resume after the reset, or remove the gate with orch conduct gates --clear")
-    reason = "CAPACITY_GATED" if gate else problem.split(":", 1)[0]
+    reason = "CAPACITY_GATED" if gate else (problem or "").split(":", 1)[0]
     item.route_notes.append({"role": role, "reason_code": reason, "from": self.label(route), "to": self.label(found),
                              "detail": until})
     if persist and self.progress is not None:

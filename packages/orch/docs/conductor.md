@@ -1019,7 +1019,7 @@ The heading, block position and authority remain the same.
 The resolved manifest must stay inside the item's directory (and the item inside the run); traversal and symlink
 escapes return exit 1 with `PROMPT_PATH_INVALID`. This read-only command never starts a provider.
 
-A prompt is built from blocks `Block(kind, origin, text)` (`conductor/prompts.py`); `render(blocks)` joins their texts into
+A prompt is built from blocks `Block(kind, origin, text)` (`conductor/prompts/`, `blocks.py`); `render(blocks)` joins their texts into
 the prompt byte for byte (a separator belongs to the block it follows). Every model role step writes
 `<item>/prompts/<step>.manifest.json` (`prompt-manifest/v1`) beside `<step>.md`: `step`, `role`, `route` (`provider`,
 `model`, `effort`), `blocks` (`kind`, `origin`, `sha256`, `tokens` estimated by `aicore.content.budget`, `id` for a skill),
@@ -1304,6 +1304,16 @@ the latest start/resume segment has ended. Without that final `run.end`, two con
 exit 3 and a resume hint; an unavailable probe keeps waiting. The observer never writes run state or progress.
 Silence alone never returns success (`idle_exit_s` remains accepted by the Python helper but no longer ends follow).
 Appending progress after a torn line first restores its newline, so the next event remains readable.
+
+**Incremental reading of follow.** `follow` does not read the whole journal on every poll (2 s): `ProgressCursor`
+(`observer/reader.py`) keeps the byte offset it has read and the unfinished tail, and each poll reads only the bytes
+after the offset. Only lines ended by a newline are parsed; a line the writer has not finished stays in the tail until its
+newline arrives, so no line is lost or read twice. A complete line that is not a progress line is skipped and counted, as
+`read_lines` does. When the journal became shorter than the offset, its beginning differs from the one read, it was
+replaced by another file or it disappeared, the cursor reads from the beginning again and `follow` forgets the lifecycle
+it had seen. The printed lines, the exit codes and `observer.json` / `observer.md` are the same as before. A valid line
+without its final newline is shown by the poll after the newline arrives (the whole-journal reader used by `build` and
+`status` accepts it at once).
 `state.ended` keeps the precise UTC end of a completed segment, including fractions of a second; it is cleared by
 the next loop. A running segment uses the latest progress line even if an earlier end remains in an older state save.
 

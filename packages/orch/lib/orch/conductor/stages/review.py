@@ -6,11 +6,12 @@ from orch.conductor import checks as checks_mod, prompts, records, risk as risk_
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import findings_problems
 from orch.conductor.domain.stop import Stop
+from orch.conductor.policies import review_strategy
 from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE
 
 
 def review_enabled(self, item: Item) -> bool:
-    if self._per_piece_review_off():  # the batch is reviewed by group (or not at all): review.strategy
+    if review_strategy.per_piece_off(self.state.get("review_strategy")):  # the batch is reviewed by group (or not at all): review.strategy
         return False
     if item.input_doc.get("review_mode") in ("none", "self"):  # the plan declares no independent review for this piece
         return False
@@ -50,7 +51,7 @@ def dynamic_review(self, item: Item, report: dict) -> None:
     review, limits = item.options["review"], item.options["limits"]
     if item.input_doc.get("review_mode") in ("none", "self"):  # the plan decided: no risk score adds a review to it
         return
-    if self._per_piece_review_off() or self._review_enabled(item) or not review["dynamic"] or limits["review_rounds"] <= 0:
+    if review_strategy.per_piece_off(self.state.get("review_strategy")) or self._review_enabled(item) or not review["dynamic"] or limits["review_rounds"] <= 0:
         return
     found = item.state.get("risk")
     if found is None:

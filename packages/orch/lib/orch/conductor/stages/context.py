@@ -5,7 +5,7 @@ progress lines, the Stops and the cache in the state of the piece."""
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 from orch.conductor import options as opts
 from orch.conductor.context import discover, rules as rules_step, select, snapshot, validate
@@ -104,7 +104,7 @@ def _checked_candidates(self, item: Item, role: str, names=None):
     return validate.checked(candidates, names)
 
 
-def _exclude_path(self, item: Item, role: str, result: dict, skill: dict) -> None:
+def _exclude_path(self, item: Item, role: str, result: dict, skill: Mapping[str, Any]) -> None:
     row = {"id": skill["id"], "reason": skill["reason"]}
     result["names"][:] = [name for name in result["names"] if name != skill["name"]]
     if row not in result["excluded"]:

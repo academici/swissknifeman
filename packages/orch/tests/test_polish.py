@@ -15,7 +15,7 @@ from unittest import mock
 from orch.conductor import checks as checks_mod
 from orch.conductor import frozen, options as opts, prompts, review_batch
 from orch.conductor.application import loop
-from orch.conductor.stages import context
+from orch.conductor.stages import context, step as step_stage
 from orch.conductor.infrastructure import disk, roles
 
 from orch.conductor.application import run_service
@@ -230,7 +230,7 @@ class DiskGuard(unittest.TestCase):
         me = types.SimpleNamespace(project=Path("."), conductor={}, progress=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=0.2):
             with self.assertRaises(Stop) as stop:
-                loop.disk_guard(me)
+                step_stage.disk_guard(me)
         self.assertEqual(stop.exception.code, "DISK_LOW")
         self.assertEqual(me.progress.emit.call_args.kwargs["reason_code"], "DISK_LOW")
 
@@ -238,10 +238,10 @@ class DiskGuard(unittest.TestCase):
         item = types.SimpleNamespace(ref="W1", options={"limits": {"disk_min_gb": 0}})
         me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=0.2):
-            loop.disk_guard(me, item)  # the piece switched it off: no stop
+            step_stage.disk_guard(me, item)  # the piece switched it off: no stop
         me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=50.0), self.assertRaises(Stop):
-            loop.disk_guard(me)  # the configuration's limit applies without a piece
+            step_stage.disk_guard(me)  # the configuration's limit applies without a piece
 
 
 CLEAN = "## Findings\nnone\n## Checked and fine\n- the claim path\n"

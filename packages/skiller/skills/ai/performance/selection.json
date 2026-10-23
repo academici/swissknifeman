@@ -5,5 +5,5 @@
   "also": [
     "DELETE"
   ],
-  "replaced_by": "orch/lib/orch/conductor/prompts.py"
+  "replaced_by": "orch/lib/orch/conductor/prompts"
 }

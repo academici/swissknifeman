@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "ca18733bb65e",
-  "reason": "orch-debug: замкнутая схема наблюдатель + субагент разбора, handoff-файл, промпты как источник P8.5",
+  "captured_from": "28e005e7621a",
+  "reason": "PLAN9.P5.5: replaced_by conductor/prompts.py → prompts/ (регрессия P5.4)",
   "generators": [
     {
       "id": "skiller-registry",
@@ -301,7 +301,7 @@
     "packages/skiller/generate-skill/.claude-plugin/plugin.json": "2052fdc81213dd0c50c220ea9753118f76f30ff66ef95ecda7f2593596e2e10f",
     "packages/skiller/generate-skill/.codex-plugin/plugin.json": "05157f8990810f67f7c0f0c28fef6fd40580da029ae1285b2b04a2b783877073",
     "packages/skiller/generate-skill/generate-skill/snippets/SKILL_TEMPLATE.md": "90aff9e0d25cdb0dd933c51b7b2150c3ffd29b5fa9bde91e6946a9694c86118d",
-    "packages/skiller/skills.json": "4a7f58cd2b8487ef50b46d15e3f4f6bd1366e7bd55dd45ef3536bfa16637c7c9",
+    "packages/skiller/skills.json": "695f52f0312f2354f6390ddff45d65f220d0e3831957a2e80a36dc602dccc79f",
     "packages/skiller/skills/_index.md": "6b9f1ef2521aac8344f619ba83cdded81cae1c09ed934e2a7b3b0ed87b18927e",
     "packages/skiller/skills/ai/.claude-plugin/plugin.json": "b92d6476f4838ac09cecd5049a6befc8b3f28284cfb3714fe336ccf6c75572e9",
     "packages/skiller/skills/ai/.codex-plugin/plugin.json": "aed390ab0e91a292c8daf4f872711b1135088bab0c3b3990720fbede19488cdb",

@@ -41,7 +41,7 @@ class RolePorts(NamedTuple):
     sandbox_args: Optional[Callable] = None  # application.route_service.sandbox_args
     knows: Optional[Callable] = None  # infrastructure.cli_probe.run_knows
     skills_excluded: Optional[Callable] = None  # stages.context.skills_excluded
-    run_clock: Optional[Callable] = None  # the step-boundary run clock (application.loop.run_clock)
+    run_clock: Optional[Callable] = None  # the step-boundary run clock (stages.step.run_clock)
 
 
 def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int,

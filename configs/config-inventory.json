@@ -979,7 +979,7 @@
       "owner": "orch",
       "consumers": [
         "packages/orch/lib/orch/render.py",
-        "packages/orch/lib/orch/conductor/prompts.py"
+        "packages/orch/lib/orch/conductor/prompts/roles.py"
       ],
       "released": false,
       "kind": "role-prompt",

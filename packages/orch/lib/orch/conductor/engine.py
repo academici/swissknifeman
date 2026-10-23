@@ -46,7 +46,7 @@ from orch.conductor import stubs as stubs_mod
 from orch.conductor.progress import Progress
 from orch.conductor.stages import advice, checks_stage, close, context, execute, finish
 from orch.conductor.stages import research as research_stage, review as review_stage, scout as scout_stage
-from orch.conductor.stages import triage as triage_stage
+from orch.conductor.stages import step as step_stage, triage as triage_stage
 from orch.settings import ORCH_ROOT
 
 # The names other modules and the tests import from here. ``process`` and ``sandbox`` are the modules the tests patch
@@ -147,9 +147,9 @@ class Conductor:
     _kill_orphaned_roles = recovery.kill_orphaned_roles
     _reconcile_interrupted = recovery.reconcile_interrupted
 
-    _active_s = loop.active_s
-    _disk_guard = loop.disk_guard
-    _run_clock = loop.run_clock
+    _active_s = step_stage.active_s
+    _disk_guard = step_stage.disk_guard
+    _run_clock = step_stage.run_clock
     _loop = loop.loop
     _pieces = loop.pieces
     _claim_all = loop.claim_all
@@ -166,9 +166,9 @@ class Conductor:
     _invocation_executor_class = loop.invocation_executor_class
     _piece = loop.piece
     _conduct = loop.conduct
-    _step = loop.step
-    _start_step = loop.start_step
-    _stage_event = loop.stage_event
+    _step = step_stage.step
+    _start_step = step_stage.start_step
+    _stage_event = step_stage.stage_event
     _resolve = loop.resolve
 
     # ------------------------------------------------------------------ domain: the report of a piece

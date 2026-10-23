@@ -10,6 +10,30 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import REPORTS
 
 
+def porcelain_paths(project, limit: int = 500) -> list:
+    """Sorted porcelain paths, including both names of renames and all untracked files."""
+    try:
+        entries = checks_mod.git(project, "status", "--porcelain=v1", "-z", "--untracked-files=all").split("\0")
+    except RuntimeError:
+        try:
+            checks_mod.git(project, "rev-parse", "--git-dir")
+        except RuntimeError:
+            return []  # a step can also be journalled outside a git repository
+        raise
+    found, index = set(), 0
+    while index < len(entries):
+        entry = entries[index]
+        index += 1
+        if not entry:
+            continue
+        found.add(entry[3:])
+        if "R" in entry[:2] or "C" in entry[:2]:
+            if index < len(entries) and entries[index]:
+                found.add(entries[index])
+                index += 1
+    return sorted(found)[:limit]
+
+
 def dirty_paths(self) -> list:
     """Changed paths of the tree outside the conductor reports."""
     try:

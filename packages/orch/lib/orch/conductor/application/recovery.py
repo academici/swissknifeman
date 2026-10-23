@@ -6,35 +6,12 @@ import signal
 import time
 
 from orch import events
-from orch.conductor import agents, checks, process, prompts, records
+from orch.conductor import agents, process, prompts, records
 from orch.conductor.domain.stop import Stop
 from orch.conductor.domain.item import Item
 from orch.conductor.infrastructure import clock, work_source
+from orch.conductor.infrastructure.tree import porcelain_paths as dirty_paths
 from orch.conductor.infrastructure.files import safe
-
-
-def dirty_paths(project, limit: int = 500) -> list:
-    """Sorted porcelain paths, including both names of renames and all untracked files."""
-    try:
-        entries = checks.git(project, "status", "--porcelain=v1", "-z", "--untracked-files=all").split("\0")
-    except RuntimeError:
-        try:
-            checks.git(project, "rev-parse", "--git-dir")
-        except RuntimeError:
-            return []  # a step can also be journalled outside a git repository
-        raise
-    found, index = set(), 0
-    while index < len(entries):
-        entry = entries[index]
-        index += 1
-        if not entry:
-            continue
-        found.add(entry[3:])
-        if "R" in entry[:2] or "C" in entry[:2]:
-            if index < len(entries) and entries[index]:
-                found.add(entries[index])
-                index += 1
-    return sorted(found)[:limit]
 
 
 def reconcile_interrupted(run) -> None:

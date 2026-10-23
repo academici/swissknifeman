@@ -299,7 +299,7 @@
         "also": [
           "DELETE"
         ],
-        "replaced_by": "orch/lib/orch/conductor/prompts.py"
+        "replaced_by": "orch/lib/orch/conductor/prompts"
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
@@ -2714,7 +2714,7 @@
       "selection": {
         "kind": "procedure",
         "decision": "WORKFLOW",
-        "replaced_by": "orch/lib/orch/conductor/prompts.py"
+        "replaced_by": "orch/lib/orch/conductor/prompts"
       },
       "source": "local"
     },

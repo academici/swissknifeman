@@ -24,7 +24,7 @@ from orch.conductor.infrastructure.files import read_json, safe, write_json
 from orch.conductor.policies import review_strategy as strategy
 from orch.conductor.policies.routing import CLASS_RANK
 
-PER_PIECE_OFF = ("groups", "single", "none")  # the strategy modes in which a piece is not reviewed on its own
+PER_PIECE_OFF = strategy.PER_PIECE_OFF  # the strategy modes in which a piece is not reviewed on its own
 GROUP_ATTEMPTS = 2  # a group review that failed is repeated once (on resume) before the group stays unreviewed
 STRATEGY_FILE = "review-strategy.json"  # records/v1 review-strategy
 
@@ -151,8 +151,7 @@ def decide(self, answers: list) -> None:
 
 
 def per_piece_off(self) -> bool:
-    plan = self.state.get("review_strategy") or {}
-    return plan.get("mode") in PER_PIECE_OFF
+    return strategy.per_piece_off(self.state.get("review_strategy"))
 
 
 def group_review_due(self, ref: str) -> None:

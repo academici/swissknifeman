@@ -81,8 +81,9 @@ def effective_limit(key: str, *, limit_raises: list, limits_run: Optional[dict],
     for change in reversed(limit_raises):
         if change["key"] == key and (key != "tokens_hard_max" or change.get("item") in (None, item_ref)):
             return change["to"]
-    if key == "run_tokens_hard_max" and key in limits_run:
-        return limits_run[key]["value"]
+    run_caps = limits_run or {}
+    if key == "run_tokens_hard_max" and key in run_caps:
+        return run_caps[key]["value"]
     return ((item_options or {}).get("limits") or {}).get(key, 0) or 0
 
 

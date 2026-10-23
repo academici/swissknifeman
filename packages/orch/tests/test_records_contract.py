@@ -16,12 +16,11 @@ from unittest import mock
 from aicore.util import schema
 
 from orch.conductor import engine, questions, records
-from orch.conductor.application import loop
 from orch.conductor.context import discover
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import RunStore, write_json
-from orch.conductor.stages import checks_stage, context
+from orch.conductor.stages import checks_stage, context, step as step_stage
 from tests.test_conductor import GREEN, ConductorCase, executor_ok
 from tests.test_conductor_questions import ASK, asking
 
@@ -231,11 +230,11 @@ class ReadWriteTests(unittest.TestCase):
 
 
 def replaying_engine():
-    """The parts of a conductor that ``loop.step`` and ``checks_stage.run_checks`` touch when a step is closed: a step
+    """The parts of a conductor that ``step.step`` and ``checks_stage.run_checks`` touch when a step is closed: a step
     that is not closed would compute, and that fails the test."""
     found = SimpleNamespace(store=SimpleNamespace(mutating=nullcontext), progress=mock.Mock(),
                             _compute_checks=mock.Mock(side_effect=AssertionError("a closed step must not run again")))
-    found._step = lambda *args, **kwargs: loop.step(found, *args, **kwargs)
+    found._step = lambda *args, **kwargs: step_stage.step(found, *args, **kwargs)
     return found
 
 
@@ -307,7 +306,7 @@ class StepRecordTests(unittest.TestCase):
         found = replaying_engine()
         self.assertEqual(checks_stage.run_checks(found, item, 1, {"status": "done"}), rows)
         self.assertEqual(found._compute_checks.call_count, 0)
-        self.assertEqual(loop.step(found, item, "commit", mock.Mock(side_effect=AssertionError("ran"))), commit)
+        self.assertEqual(step_stage.step(found, item, "commit", mock.Mock(side_effect=AssertionError("ran"))), commit)
 
     def test_the_auto_skills_choice_is_saved_loaded_and_reused(self):
         item = Item("W1", "run-test", {}, self.root / "W1", {}, options={"skills": {"executor": ["auto"]}})

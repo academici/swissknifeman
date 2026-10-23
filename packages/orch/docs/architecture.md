@@ -40,12 +40,22 @@ component and each oversized module. Domain self functions and self functions ou
 Binding counts, other layer self functions, call distribution, facade calls and port calls are informational.
 After a reduction, `--check` requires `--update` to record the improvement; `--update` refuses gate growth and
 preserves the item targets. `--check --target P5.2`, `P5.3` or `P5.4` also checks the stored extraction goals;
-P5.5 uses the ordinary ratchet with upward calls reduced to zero. Both metric and baseline documents have embedded
+P5.5 uses the ordinary ratchet: it closed P5 with upward calls reduced from 24 to 15; reducing them to zero (stage ports)
+is deferred. Both metric and baseline documents have embedded
 JSON Schemas with `urn:swissknifeman:orch:layering-*` IDs, validated by the standalone stdlib script. Synthetic
 trees can use `--root DIR --baseline FILE`. Characterization snapshots additionally pin argv (including a fake
 guard's prefix), manifest block metadata, ordered `orch.*` events and per-item routes before extraction.
 
-Two packages of the conductor hold what used to be single large modules, each module under 600 lines:
+The boundary of a step lives in `conductor/stages/step.py`: `step` (skip of a closed step, run clock, admission before a
+role step, the `started` record, the `done` or `stopped` record, the stage event, budget after the step), `start_step`,
+`stage_event`, `run_clock`, `active_s` and `disk_guard`. The stages call it sideways; `application/loop.py` calls it down.
+The facade keeps the bindings `_step`, `_start_step`, `_stage_event`, `_run_clock`, `_active_s` and `_disk_guard`. What a
+step still needs from the budget service (`_bind_stage`, `_stage_bucket`, `_stage_key`, `_budget`, `_admit_budget`) it
+calls through the facade: these are the seven `stages.step` upward sites of the ratchet. The tree a checks step starts on
+(`dirty_before`) comes from `infrastructure/tree.porcelain_paths`, which recovery also uses. The pure rule of the review
+strategy `policies/review_strategy.per_piece_off(state.review_strategy)` is called by `stages/review.py` directly.
+
+Three packages of the conductor hold what used to be single large modules, each module under 600 lines:
 
 - `conductor/context/` is the pipeline of what a role still needs to know, in steps without `self`: `discover` (rule
   carriers, skill files, the skills bridge answer, owned paths), `validate` (names, containment, symlinks, size, digest,
@@ -57,6 +67,11 @@ Two packages of the conductor hold what used to be single large modules, each mo
   `manifest` (manifest and its diff), `roles` (the builder of each role) and `corrections` (correction packages).
   `prompts.manifest` is the function, not its module. The prompt texts and the order of blocks did not change; the
   goldens in `tests/golden/conductor-prompts` pin them.
+- `conductor/observer/` keeps the API of the former `observer.py` (`build`, `markdown`, `write_report`, `follow`,
+  `proposals`, `prompt_blocks`, `prompt_budgets`, `TOP_BLOCKS`, `IDLE_S`, `EVENT_TYPES`): `reader` (the only module that
+  opens a file, with the incremental `ProgressCursor`), `metrics` (numbers from what was read, no I/O), `proposals`,
+  `render` (markdown) and `follow`. `observer.follow` is the function; the module is
+  `orch.conductor.observer.follow`. The report bytes did not change.
 
 ## Work source and bridges
 

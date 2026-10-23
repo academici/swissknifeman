@@ -2,7 +2,7 @@
 skill declares in its ``selection.json`` against the tools of the route and the budget; no text is cut."""
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 from aicore.content import budget as token_budget
 
@@ -10,7 +10,7 @@ from orch.conductor.context import Selection
 from orch.conductor.policies import skills as skill_policy
 
 
-def candidate(skill: dict, weigh: bool) -> dict:
+def candidate(skill: Mapping[str, Any], weigh: bool) -> dict:
     """The row ``check_skills`` takes for a checked skill; its tokens are estimated only when the text goes into the
     prompt (``weigh``: the role runs isolated) and the skill has a file."""
     tokens = token_budget.estimate_tokens(skill["body"]) if weigh and skill["path"] is not None else None

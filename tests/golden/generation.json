@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "21c4caf71d64",
-  "reason": "P4.8 strict typing: schemacodegen flattens nested unions",
+  "captured_from": "ca18733bb65e",
+  "reason": "orch-debug: замкнутая схема наблюдатель + субагент разбора, handoff-файл, промпты как источник P8.5",
   "generators": [
     {
       "id": "skiller-registry",
@@ -222,7 +222,7 @@
     ".agents/skills/field-feedback-loop/SKILL.md": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35",
     ".agents/skills/harness-operations/SKILL.md": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b",
     ".agents/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
-    ".agents/skills/orch-debug/SKILL.md": "3d05e6cf763089192540a5d617bbf042a496cf220505db43d7ceee01803f1267",
+    ".agents/skills/orch-debug/SKILL.md": "eeef82306b5b148d94351046c1a7f9aa37f7d0645ecbe6555c91a6d59f226474",
     ".agents/skills/package-architecture/SKILL.md": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86",
     ".agents/skills/planner-development-philosophy/SKILL.md": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3",
     ".agents/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
@@ -238,7 +238,7 @@
     ".claude/skills/field-feedback-loop/SKILL.md": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35",
     ".claude/skills/harness-operations/SKILL.md": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b",
     ".claude/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
-    ".claude/skills/orch-debug/SKILL.md": "3d05e6cf763089192540a5d617bbf042a496cf220505db43d7ceee01803f1267",
+    ".claude/skills/orch-debug/SKILL.md": "eeef82306b5b148d94351046c1a7f9aa37f7d0645ecbe6555c91a6d59f226474",
     ".claude/skills/package-architecture/SKILL.md": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86",
     ".claude/skills/planner-development-philosophy/SKILL.md": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3",
     ".claude/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
@@ -254,7 +254,7 @@
     ".cursor/rules/swissknifeman-router.mdc": "e3be1b179d98ca3956b76517663327ea42a9370bb51de337d9755ef017795b97",
     ".grok/hooks/lifecycle.py": "bc30cfb6b0ad8a4480ac17c1aecd21c8fb6b930458b08e449d0d8a5d7d758f51",
     ".grok/rules/swissknifeman-instructions.md": "f05f5bcb3ad67ce5942780861f2ae6caf5bea80d00a18c900382e985df4acb99",
-    "bootstrap/publication-lock.json": "d236db35ab63c3e0ffe8011f6319587a1f6a07bc53d414426386543db11ef969",
+    "bootstrap/publication-lock.json": "72d05bd63fa46cd7ba6df398b5fb750f3a6c22d8daed47adb8dfc0bdbadb12f0",
     "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",

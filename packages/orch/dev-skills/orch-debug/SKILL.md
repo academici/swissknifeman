@@ -79,25 +79,31 @@ journal instead of slowing the work, and the process is tuned from the journals 
 
 ## Operator model and session
 
-The conductor owns the loop; the operator starts a group, waits for its end, reads a stop and decides. Most of its time
+The conductor owns the loop; the observer starts a group, waits for its end, reads a stop and decides. Most of its time
 is waiting, so keep the waiting cheap and the context small.
 
-- **Model:** a Haiku-class model with high effort is enough for the observer: start a group, wait on events, resume and
-  classify a stop by the table of the operator protocol. Everything else goes to a Sonnet or Opus subagent whose
-  conclusion the operator acts on: a hotfix or any code change, a plan or route amendment, a stop the table does not
-  name or that repeats, contradictory signals, the substance of an executor question, the analysis at the end of a
-  phase. Vendor and independent benchmarks put Haiku well below Sonnet on terminal-agent tasks, so it must not improvise
-  recovery; without the escalation rule use Sonnet (effort medium). Long Codex operator sessions compact again and again
-  and lose the protocol; a Grok operator is not measured. The analysis at the end of each phase rates the operator too
-  (protocol errors, missed stops, needless interventions), which decides the model of the next phase.
+- **Closed loop of two roles.** The *observer* (a Haiku-class model, high effort) runs one phase per session: it
+  starts the groups through the project launcher, waits on events and acts only on an unambiguous row of its stop
+  table (code -> branch -> action). Branch A it does itself (resume, retry, wait); branch B (anything not in the table,
+  a repeat, contradictory signals, an executor question, a red check) it hands to a *review subagent* (Opus) and then
+  does exactly the one action that subagent returns; branch C goes to the owner, and only for what the owner alone
+  can do (a provider login, a change of the machine, a push, a grant, placing a file the provider refuses to write).
+  The observer calls no other subagent or model, changes no code, plan or configuration and runs no git in the
+  conductor tree. The review subagent owns hotfixes between runs and plan amendments with a decision.
+- **Between phases:** the owner starts a review session (Opus) for the closed phase: the analysis of its runs, the
+  rating of the observer (protocol errors, missed stops, needless escalations), the promotion and the economy audit of
+  the next phase (the criteria of PLAN9 P8.4). The rating decides the observer model of the next phase: benchmarks put
+  Haiku well below Sonnet on terminal-agent tasks, so it must not improvise recovery, and Sonnet (effort medium) is the
+  step up. Long Codex operator sessions compact again and again and lose the protocol; a Grok operator is not measured.
 - **Event-driven waiting:** start the run in the background and arm one completion monitor filtered to `run.end`,
-  `item.end` and the beacons (see *Watch*); no polling, no tail of raw streams in the operator context.
-- **Fresh context per group:** one operator session per group (batch). When the group ends, write the short handoff
-  (memory `active-handoff`, the run id, the outcome, the next group), end the session, and start the next group in a
-  new session from the handoff. A day-long session is the thing to avoid.
-- **Analysis outside the operator:** a deep look at a stop or at a slow item goes to a subagent (Opus or Sonnet) that
-  reads `observer.md`, `step-profile.py`, `run-usage.py` and the logs and returns a short report; the operator keeps
-  only its conclusion. `orch conduct autopilot` (PLAN9 P8.5) is meant to take over the waiting entirely.
+  `item.end` and the beacons (see *Watch*); no polling, no tail of raw streams in the observer context. The reason of a
+  blocked piece is in `orch conduct status` (its escalation code and an `escalation:` line).
+- **State in a file:** the handoff is one file in the plan folder, rewritten after each group and each report (what
+  runs, the escalations and their answers, what waits for a merge); it is not shared memory. A fresh session starts
+  from it.
+- **The prompts are temporary:** the observer and review prompts of a plan grew case by case, each row a problem met in
+  practice. `orch conduct autopilot` (PLAN9 P8.5) takes them as source material: the deterministic rows become code,
+  the model keeps the report and the review.
 
 ## Per item loop
 

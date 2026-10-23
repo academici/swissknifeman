@@ -19,7 +19,7 @@ from orch.conductor import records, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, disk
-from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, safe
+from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
 from orch.conductor.progress import human_duration
 from orch.conductor.application import recovery, run_service
 from orch.conductor.application import budget_service as token_budget
@@ -189,7 +189,8 @@ def pieces(self) -> None:
                 adopted = self._dirty_paths()  # the work of an earlier attempt, checked against the write set later
             else:
                 self._require_clean_tree()
-        answer = claimed.get(key) or self._claim(key, asked)
+        answer = claimed.get(key) or self._claim(key, asked, actor=self._claim_actor(),
+                                                 actor_source=self._claim_actor_source())
         if answer is None:
             break
         count += 1
@@ -236,7 +237,7 @@ def expand_ready(self) -> Optional[tuple]:
             self._require_clean_tree()
     else:
         adopted = []
-    answer = self._claim("next-1", [], batch=True)
+    answer = self._claim("next-1", [], batch=True, actor=self._claim_actor(), actor_source=self._claim_actor_source())
     lane = list(answer.get("lane") or []) if answer else []
     if len(lane) < 2:
         return None
@@ -273,7 +274,8 @@ def claim_all(self, keys: list) -> tuple:
             else:
                 self._require_clean_tree()
         try:
-            answer = self._claim(key, asked, batch=True)
+            answer = self._claim(key, asked, batch=True, actor=self._claim_actor(),
+                                 actor_source=self._claim_actor_source())
         except Stop as stop:
             if stop.code == "CLAIM_BLOCKED" and "DEPENDENCY_NOT_READY" in stop.message:
                 continue  # waits for something outside this batch: claimed when its turn comes
@@ -286,14 +288,6 @@ def claim_all(self, keys: list) -> tuple:
 
 def on_blocked(self) -> str:
     return self.state.get("on_blocked") or self.conductor.get("on_blocked") or "stop"
-
-
-def dirty_paths(self) -> list:
-    """Changed paths of the tree outside the conductor reports."""
-    try:
-        return scopes.own(scopes.dirty(self.project), [REPORTS.as_posix()])
-    except RuntimeError as error:
-        raise Stop("PROJECT_NOT_GIT", str(error)) from None
 
 
 def require_clean_tree(self) -> None:

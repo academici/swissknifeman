@@ -3,25 +3,37 @@
  "bindings": 213,
  "facade_calls": {
   "application": 45,
-  "infrastructure": 6,
+  "infrastructure": 21,
   "stages": 28
  },
- "largest_self_scc": 17,
- "measured_at": "8ce7b2b41b3fd7e914f3957c41e4aa4ac7f3806c",
+ "largest_self_scc": 13,
+ "measured_at": "6a29b9bdb6eb40ecd3ac73ae16cfea2614eb4b48",
  "oversized_modules": {
-  "application/loop.py": 655,
+  "application/loop.py": 649,
   "checks.py": 1109,
   "cli.py": 620,
-  "infrastructure/roles.py": 601,
   "prompts.py": 895
  },
- "port_calls": {},
+ "port_calls": {
+  "infrastructure.role_ports.admit_budget": 2,
+  "infrastructure.role_ports.budget": 1,
+  "infrastructure.role_ports.knows": 1,
+  "infrastructure.role_ports.prompt_for_route": 2,
+  "infrastructure.role_ports.provider_disabled": 1,
+  "infrastructure.role_ports.provider_failure": 1,
+  "infrastructure.role_ports.routed_blocks": 1,
+  "infrastructure.role_ports.run_clock": 1,
+  "infrastructure.role_ports.sandbox_args": 1,
+  "infrastructure.role_ports.skills_excluded": 1,
+  "infrastructure.role_ports.start_route": 2,
+  "infrastructure.role_ports.unmetered": 1
+ },
  "private_facade_access": {},
  "private_facade_access_total": 0,
  "self_functions": {
-  "application": 97,
+  "application": 96,
   "domain": 0,
-  "infrastructure": 38,
+  "infrastructure": 39,
   "policies": 0,
   "stages": 81
  },
@@ -44,10 +56,8 @@
  },
  "unlayered_self_functions": {},
  "upward_self_calls": {
-  "infrastructure->application": 19,
-  "infrastructure->stages": 1,
-  "stages->application": 26
+  "stages->application": 24
  },
- "upward_total": 46,
+ "upward_total": 24,
  "version": 1
 }

@@ -263,7 +263,7 @@ class QuestionTests(ConductorCase):
     def _ready(self, *argv, answers):
         queue = [dict(row) for row in answers]
 
-        def claim(conductor, key, asked, batch=False):
+        def claim(conductor, key, asked, batch=False, *, actor, actor_source):
             if not queue:
                 conductor.progress.emit("info", message="the work source has no ready piece of work")
                 return None

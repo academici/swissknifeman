@@ -216,15 +216,16 @@ def owned_hint(answer: dict) -> str:
     return OWNED_HINT if "ITEM_OWNED" in f"{answer.get('reason_code', '')} {answer.get('message', '')}" else ""
 
 
-def claim(self, key: str, asked: list, batch: bool = False) -> Optional[dict]:
-    actor = self._claim_actor()
+def claim(self, key: str, asked: list, batch: bool = False, *, actor: str, actor_source: tuple) -> Optional[dict]:
+    """Claim ``asked`` (the source picks when empty) as ``actor``; ``actor_source`` is ``(source, fields, model_class)``
+    of that actor (``claim_actor`` and ``claim_actor_source`` of the run)."""
     kept = (self.state["claims"].get(key) or {}).get("submission")
     submission = kept or f"sub-{safe(self.run_id)}-{safe(key)}"[:120]
     file_source = self.run_doc.get("source") or {}
     where = ["--input", file_source["path"]] + (["--commit"] if file_source.get("commit") else []) \
         if file_source.get("kind") == "file" else ["--plan", self.run_doc["plan"]]
     args = ["source", "claim", *where, "--actor", actor, "--submission-id", submission]
-    source, named, model_class = self._claim_actor_source()
+    source, named, model_class = actor_source
     args += ["--actor-source", source] + [arg for name in named or [] for arg in ("--actor-field", name)]
     if model_class:
         args += ["--actor-class", model_class]

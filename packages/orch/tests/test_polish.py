@@ -34,11 +34,10 @@ class OwnedPieceHint(unittest.TestCase):
 
     def test_the_blocked_claim_carries_the_hint(self):
         answer = {"status": "blocked", "ref": "W1", "reason_code": "ITEM_OWNED", "message": "held"}
-        me = types.SimpleNamespace(
-            _claim_actor=lambda: "p/m", _claim_actor_source=lambda: ("default", None, None), state={"claims": {}}, run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(),
-            _orch=lambda *args: (1, answer, ""), _save=lambda: None)
+        me = types.SimpleNamespace(state={"claims": {}}, run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(),
+                                   _orch=lambda *args: (1, answer, ""), _save=lambda: None)
         with self.assertRaises(Stop) as stop:
-            work_source.claim(me, "k", ["W1"])
+            work_source.claim(me, "k", ["W1"], actor="p/m", actor_source=("default", None, None))
         self.assertEqual(stop.exception.code, "CLAIM_BLOCKED")
         self.assertIn("orch conduct release", stop.exception.message)
 
@@ -50,13 +49,33 @@ class ClaimOverrideRecord(unittest.TestCase):
                     "run": {"provider": "claude-code", "model": "opus"}, "message": "W1: replaced"}
         answer = {"status": "claimed", "ref": "W1", "run_id": "src-1"}
         me = types.SimpleNamespace(
-            _claim_actor=lambda: "p/m", _claim_actor_source=lambda: ("options", ["provider", "model"], None),
             state={"claims": {"k": {"ref": "W1", "submission": "sub-r-k", "actor_override": override}}},
             run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(), _orch=lambda *args: (0, answer, ""),
             _save=lambda: None)
-        work_source.claim(me, "k", ["W1"])
+        work_source.claim(me, "k", ["W1"], actor="p/m", actor_source=("options", ["provider", "model"], None))
         self.assertEqual(me.state["claims"]["k"]["actor_override"], override)
         me.progress.emit.assert_not_called()  # said once, at the first claim
+
+    def test_the_claim_carries_the_actor_it_is_given(self):
+        seen = []
+        me = types.SimpleNamespace(state={"claims": {}}, run_doc={"plan": "T"}, run_id="r", progress=mock.Mock(),
+                                   _orch=lambda *args: (seen.extend(args), (0, {"status": "none"}, ""))[1],
+                                   _save=lambda: None)
+        work_source.claim(me, "k", [], actor="codex/m/high", actor_source=("options", ["provider"], "strong"))
+        at = seen.index("--actor")
+        self.assertEqual(seen[at:at + 2], ["--actor", "codex/m/high"])
+        self.assertEqual(seen[seen.index("--actor-source"):][:6],
+                         ["--actor-source", "options", "--actor-field", "provider", "--actor-class", "strong"])
+
+
+class RolePortsOfTheConductor(unittest.TestCase):
+    def test_every_port_is_filled_and_calls_the_binding_as_it_is_now(self):
+        from orch.conductor import engine
+        eng = engine.Conductor.__new__(engine.Conductor)  # never opened: the dry run asks for role_argv too
+        self.assertEqual([name for name, port in eng.role_ports._asdict().items() if not callable(port)], [])
+        with mock.patch.object(engine.Conductor, "_knows", return_value="patched") as knows:
+            self.assertEqual(eng.role_ports.knows(["claude"], ["--safe-mode"]), "patched")
+        knows.assert_called_once_with(["claude"], ["--safe-mode"])
 
 
 class RepeatedRetry(unittest.TestCase):

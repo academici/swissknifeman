@@ -276,7 +276,9 @@ def group_review(self, number: int, group: list, effort: str) -> None:
                            message=f"group {number} ({', '.join(refs)}): the production diff is empty (the commits changed only "
                                    "tests, docs, fixtures or other excluded paths); not reviewed")
         return
-    item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r]) for r in group[-1:]) if a))
+    item = piece_item(self, next(a for a in (self._claim(f"item-{safe(r)}", [r], actor=self._claim_actor(),
+                                                         actor_source=self._claim_actor_source())
+                                             for r in group[-1:]) if a))
     self._resolve(item, persist=False)
     group_route(self, number, group, item)
     # The group review is its own logical stage: the cap is the stage's, not whichever piece step ran last.

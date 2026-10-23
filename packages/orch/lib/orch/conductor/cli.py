@@ -21,7 +21,7 @@ from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, prompts, questions
 from orch.conductor import records, runs
 from orch.conductor.application import run_service
-from orch.conductor.infrastructure import roles
+from orch.conductor.infrastructure import launch_plan
 
 
 def _project(args):
@@ -62,7 +62,7 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     for role, route in item.routes.items():
         built = conductor.role_argv(item, role, route)
         guarded = any(arg.endswith("ro-run.py") for arg in built[:2])
-        base = route["argv"] if guarded else roles.strip_guard(route["argv"])
+        base = route["argv"] if guarded else launch_plan.strip_guard(route["argv"])
         isolation[role] = built[len(base):]
     probed = sandbox.probe()
     network, warnings = {}, []

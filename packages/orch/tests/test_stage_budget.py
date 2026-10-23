@@ -27,6 +27,9 @@ def _bind(owner):
     owner._stage_bucket = lambda: budget.stage_bucket(owner)
     owner._stage_key = lambda: budget.stage_key(owner)
     owner._remember_stage = lambda item, bucket: budget.remember_stage(owner, item, bucket)
+    owner.role_ports = roles.RolePorts(stage_key=owner._stage_key, stage_bucket=owner._stage_bucket,
+                                       remember_stage=owner._remember_stage,
+                                       unmetered=lambda item, attempt=None: budget.unmetered(owner, item, attempt))
     owner._stage_slots = {}
     owner._local = threading.local()
     owner._step_tokens = {"input": 0, "output": 0}

@@ -32,7 +32,8 @@ from orch.conductor.domain import report as report_rules, route as route_rules
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import continued, evidence_paths, findings_problems, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import beacon_events, cli_probe, roles, work_source
+from orch.conductor.infrastructure import beacon_events, cli_probe, launch_plan, results, roles, sessions, tree, usage
+from orch.conductor.infrastructure import work_source
 from orch.conductor.infrastructure.clock import new_run_id, sleep, unit_random, utc_now, utc_stamp, wall
 from orch.conductor.infrastructure.files import (OPTIONS_COPY, REPORTS, RUN_FILE, STATE_FILE, RunStore, read_json,
                                                  runs_root, safe, write_json)
@@ -157,7 +158,7 @@ class Conductor:
     _group_review_due = review_plan.group_review_due
     _per_piece_review_off = review_plan.per_piece_off
     _on_blocked = loop.on_blocked
-    _dirty_paths = loop.dirty_paths
+    _dirty_paths = tree.dirty_paths
     _require_clean_tree = loop.require_clean_tree
     _claim_actor = loop.claim_actor
     _claim_actor_source = loop.claim_actor_source
@@ -234,24 +235,37 @@ class Conductor:
     _role = roles.run_role
     _denied = staticmethod(roles.denied)
     _role_body = roles.role_body
-    _closed = staticmethod(roles.closed)
-    _repair = roles.repair
+    _closed = staticmethod(results.closed)
+    _repair = results.repair
     _beacons = roles.beacons
-    _tokens = roles.add_tokens
+    _tokens = usage.add_tokens
     _relative = roles.relative
-    _writes = staticmethod(roles.writes)
-    _tree_mark = roles.tree_mark
-    _continuation = roles.continuation
-    _role_argv = roles.role_argv
-    _extra_write_dirs = roles.extra_write_dirs
-    _claude_transcripts = roles.claude_transcripts
-    _scope_option = staticmethod(roles.scope_option)
-    _session_mode = staticmethod(roles.session_mode)
-    _shared_session = roles.shared_session
-    _resume_args = roles.resume_args
-    _keep_session = roles.keep_session
-    _delta_mode = roles.delta_mode
-    _role_env = roles.role_env
+    _writes = staticmethod(launch_plan.writes)
+    _tree_mark = tree.tree_mark
+    _continuation = tree.continuation
+    _role_argv = launch_plan.role_argv
+    _extra_write_dirs = launch_plan.extra_write_dirs
+    _claude_transcripts = launch_plan.claude_transcripts
+    _scope_option = staticmethod(launch_plan.scope_option)
+    _session_mode = staticmethod(sessions.session_mode)
+    _shared_session = sessions.shared_session
+    _resume_args = sessions.resume_args
+    _keep_session = sessions.keep_session
+    _delta_mode = sessions.delta_mode
+    _role_env = launch_plan.role_env
+
+    @property
+    def role_ports(self) -> roles.RolePorts:
+        """The ports of the role functions, built from the bindings of the layers above the infrastructure each time
+        they are asked for: a run that is not opened (``role_argv`` of the dry run) has them too, and a binding a test
+        replaces is the one called."""
+        return roles.RolePorts(
+            start_route=self._start_route, prompt_for_route=self._prompt_for_route,
+            provider_failure=self._provider_failure, routed_blocks=self._routed_blocks, budget=self._budget,
+            unmetered=self._unmetered, admit_budget=self._admit_budget, stage_key=self._stage_key,
+            stage_bucket=self._stage_bucket, remember_stage=self._remember_stage,
+            provider_disabled=self.provider_disabled, sandbox_args=self._sandbox_args, knows=self._knows,
+            skills_excluded=self._skills_excluded, run_clock=self._run_clock)
 
     # ------------------------------------------------------------------ policies
 

@@ -1,8 +1,8 @@
 {
-  "ref": "PLAN3.P2.2",
+  "ref": "P2.2",
   "plan": {
     "$schema": "urn:swissknifeman:task:plan:plan:v1",
-    "id": "2026.10.05-№1-GOLD",
+    "id": "2026.10.05-№1-DEMO",
     "short_id": "PLAN3",
     "title": "Plan №1 — Gold | pipes",
     "status": "active",
@@ -446,7 +446,7 @@
       "P2.2"
     ],
     "mode": "recommended",
-    "run_with": "planner:plan-run 2026.10.05-№1-GOLD P2.2"
+    "run_with": "planner:plan-run 2026.10.05-№1-DEMO P2.2"
   },
   "notes": "x"
 }

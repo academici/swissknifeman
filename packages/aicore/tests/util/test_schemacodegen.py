@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import types
 import typing
 import unittest
 from pathlib import Path
@@ -92,6 +93,16 @@ class TestMapping(GeneratedBase):
         self.assertEqual(typing.Optional[float], hints["weight"])
         self.assertEqual(typing.Dict[str, typing.Any], hints["extra"])
         self.assertEqual(typing.List[str], hints["tags"])
+
+    def test_a_null_branch_of_a_one_of_is_opened_into_the_union(self):
+        text = schemacodegen.generate(FIXTURES / "null-branch")
+        self.assertNotIn("Union[None]", text)  # a union of one member is not valid typing
+        self.assertNotIn("Union[str, Union", text)
+        module = types.ModuleType("nullable")
+        exec(compile(text, "nullable", "exec"), module.__dict__)
+        hints = typing.get_type_hints(module.Nullable)
+        self.assertEqual(typing.Optional[str], hints["name"])
+        self.assertEqual(typing.Optional[typing.Union[int, float]], hints["size"])
 
     def test_constraint_branches_leave_the_keys_optional(self):
         choice = self.module.Choice

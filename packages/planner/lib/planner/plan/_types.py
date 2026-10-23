@@ -449,7 +449,7 @@ Item = TypedDict("Item", {
     "examples": NotRequired[List[ItemExamplesItem]],
     "validation": NotRequired[List[DefsCheck]],
     "deliverables": NotRequired[List[DefsText]],
-    "route": Union[DefsRoute, Union[None]],
+    "route": Optional[DefsRoute],
     "review": ItemReview,
     "authority": ItemAuthority,
     "rag": ItemRag,
@@ -827,10 +827,10 @@ class ReadPlansProgress(TypedDict):
 
 class ReadPlansPlan(TypedDict):
     id: str
-    short_id: NotRequired[Union[str, Union[None]]]
-    title: NotRequired[Union[str, Union[None]]]
-    status: NotRequired[Union[str, Union[None]]]
-    updated_at: NotRequired[Union[str, Union[None]]]
+    short_id: NotRequired[Optional[str]]
+    title: NotRequired[Optional[str]]
+    status: NotRequired[Optional[str]]
+    updated_at: NotRequired[Optional[str]]
     progress: NotRequired[ReadPlansProgress]
     error: NotRequired[str]
 
@@ -858,14 +858,14 @@ class ReadReadyLane(TypedDict):
     phase: str
     batch: Optional[str]
     items: List[str]
-    route: Union[DefsRoute, Union[None]]
+    route: Optional[DefsRoute]
     command: str
     launch: ReadReadyLaneLaunch
 
 
 class ReadReadyNextLaterItem(TypedDict):
     items: List[str]
-    route: Union[DefsRoute, Union[None]]
+    route: Optional[DefsRoute]
 
 
 class ReadReadyNextLaunchVariant1(TypedDict):
@@ -879,8 +879,8 @@ class ReadReadyNext(TypedDict):
     phase: Optional[str]
     batch: Optional[str]
     items: List[str]
-    route: Union[DefsRoute, Union[None]]
-    launch: Union[ReadReadyNextLaunchVariant1, Union[None]]
+    route: Optional[DefsRoute]
+    launch: Optional[ReadReadyNextLaunchVariant1]
     command: Optional[str]
     reason: str
     mode: NotRequired[Optional[str]]

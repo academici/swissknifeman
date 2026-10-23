@@ -4,7 +4,7 @@ from __future__ import annotations
 import importlib
 import sys
 from pathlib import Path
-from typing import Mapping, Optional, Sequence, TextIO
+from typing import Mapping, Optional, Sequence, TextIO, cast
 
 from .schemacompat import USAGE
 
@@ -19,8 +19,8 @@ def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str
          cwd: Optional[Path] = None, out: Optional[TextIO] = None, err: Optional[TextIO] = None) -> int:
     """``aicore schema <command>``; the exit code is the one of the command, 2 for an unknown command."""
     args = list(sys.argv[1:] if argv is None else argv)
-    out = out or sys.stdout
-    err = err or sys.stderr
+    out = out if out is not None else cast(TextIO, sys.stdout)
+    err = err if err is not None else cast(TextIO, sys.stderr)
     if not args:
         err.write(USAGE)
         return 2

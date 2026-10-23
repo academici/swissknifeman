@@ -28,7 +28,7 @@ if __name__ == "__main__":  # run as a script: the package root is the parent of
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "packages" / "aicore" / "lib"))
 
 from orch import adhoc
-from orch.conductor import engine
+from orch.conductor import checks, engine
 from orch.conductor.infrastructure import clock
 from tests import test_conductor as tc
 from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
@@ -76,6 +76,12 @@ class CharacterizationCase(ConductorCase):
             patcher = mock.patch.object(clock, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
+        # The partner roots of the environment (SKM_*_ROOT) are read as git repositories to fingerprint a check; where
+        # they are not (a standalone copy, a sandbox) the fingerprint is unknown and a row gains a `reuse_miss`. The
+        # snapshots must not depend on that: the partners are a fixed state here.
+        patcher = mock.patch.object(checks, "_external_state", lambda path, known=None: "partner-state")
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.captured = {}
 
     def options(self, **layer) -> None:

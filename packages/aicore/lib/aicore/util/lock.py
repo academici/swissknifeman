@@ -13,7 +13,9 @@ import os
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Generator, Optional, Union
+
+PathLike = Union[str, "os.PathLike[str]"]
 
 DEFAULT_POLL_S = 0.02
 _BUSY = (errno.EAGAIN, errno.EACCES)  # EWOULDBLOCK == EAGAIN
@@ -22,7 +24,7 @@ _BUSY = (errno.EAGAIN, errno.EACCES)  # EWOULDBLOCK == EAGAIN
 class LockTimeout(Exception):
     """A lock stayed busy for the whole timeout; ``code`` is the reason code and ``path`` the lock file."""
 
-    def __init__(self, code: str, path):
+    def __init__(self, code: str, path: PathLike):
         self.code, self.path = code, Path(path)
         super().__init__(f"{code}: {self.path} is held by another process")
 
@@ -30,9 +32,10 @@ class LockTimeout(Exception):
 class FileLock:
     """A flock on the inode currently at ``path``, on a descriptor closed by exec."""
 
-    def __init__(self, path, *, create: bool = True, readonly: bool = False):
+    def __init__(self, path: PathLike, *, create: bool = True, readonly: bool = False):
         # ``readonly`` opens the lock file O_RDONLY: flock works on it, so a probe needs no write access
-        self.path, self.create, self.readonly, self.fd = Path(path), create, readonly, None
+        self.path, self.create, self.readonly = Path(path), create, readonly
+        self.fd: Optional[int] = None
 
     def acquire(self, blocking: bool = False, timeout: Optional[float] = None, poll: float = DEFAULT_POLL_S) -> bool:
         """``True`` when held. A busy lock gives ``False`` at once (not ``blocking``) or after ``timeout`` seconds
@@ -74,7 +77,7 @@ class FileLock:
                 os.close(fd)
 
     @contextmanager
-    def hold(self, *, timeout: Optional[float], poll: float = DEFAULT_POLL_S, code: str = "LOCK_TIMEOUT") -> Iterator["FileLock"]:
+    def hold(self, *, timeout: Optional[float], poll: float = DEFAULT_POLL_S, code: str = "LOCK_TIMEOUT") -> Generator["FileLock"]:
         """Hold the lock for the block, waiting up to ``timeout`` seconds; ``LockTimeout(code, path)`` when it stays busy."""
         if not self.acquire(blocking=True, timeout=timeout, poll=poll):
             raise LockTimeout(code, self.path)
@@ -85,7 +88,7 @@ class FileLock:
 
 
 @contextmanager
-def hold(path, *, timeout: Optional[float], poll: float = DEFAULT_POLL_S, code: str = "LOCK_TIMEOUT") -> Iterator[FileLock]:
+def hold(path: PathLike, *, timeout: Optional[float], poll: float = DEFAULT_POLL_S, code: str = "LOCK_TIMEOUT") -> Generator[FileLock]:
     """``FileLock(path)`` held for the block (see :meth:`FileLock.hold`)."""
     with FileLock(path).hold(timeout=timeout, poll=poll, code=code) as lock:
         yield lock
@@ -108,7 +111,7 @@ def lock_descriptor(fd: int, *, timeout: Optional[float] = 0.0, poll: float = DE
         time.sleep(poll)
 
 
-def probe_free(path) -> Optional[bool]:
+def probe_free(path: PathLike) -> Optional[bool]:
     """Probe on a separate read-only fd without creating a file or changing owner metadata: ``True`` free (a missing
     lock file is free too), ``False`` held, ``None`` when the lock file cannot be opened (a read-only context that may
     not even read it)."""

@@ -81,6 +81,9 @@ jobs:
           python-version: '3.12'
       - name: Workflow and matrix structure
         run: python3 scripts/ci-matrix.py --check
+      # Pinned pyright over every packages/*/lib: per-package error counts may only shrink (configs/typecheck-baseline.json).
+      - name: Type check
+        run: python3 scripts/ci-matrix.py run --unit hub --step typecheck
       - name: Module boundary (strict)
         run: python3 scripts/ecosystem-units.py check --strict
       - name: Golden files

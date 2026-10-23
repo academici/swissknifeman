@@ -34,9 +34,11 @@ import keyword
 import re
 import sys
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence, TextIO
+from typing import Any, Mapping, NoReturn, Optional, Sequence, TextIO, Union, cast
 
-from .jsonschema_core import SchemaProfileError, _check_profile
+from .jsonschema_core import SchemaProfileError, _check_profile  # pyright: ignore[reportPrivateUsage]
+
+Node = dict[str, Any]  # a JSON object of a schema
 
 UNSUPPORTED = "SCHEMA_CODEGEN_UNSUPPORTED"
 DRIFT = "SCHEMA_CODEGEN_DRIFT"
@@ -70,13 +72,13 @@ def _unsupported(file: str, pointer: str, reason: str) -> CodegenError:
 class _Expr:
     """A type expression; rendering decides which class names need quotes (declared later or in a cycle)."""
 
-    def render(self, emitted: set, used: set) -> str:
+    def render(self, emitted: set[str], used: set[str]) -> str:
         raise NotImplementedError
 
-    def refs(self) -> set:
+    def refs(self) -> set[str]:
         return set()
 
-    def externals(self) -> set:
+    def externals(self) -> set[str]:
         return set()
 
 
@@ -84,7 +86,7 @@ class _Prim(_Expr):
     def __init__(self, text: str, needs: str = ""):
         self.text, self.needs = text, needs
 
-    def render(self, emitted, used):
+    def render(self, emitted: set[str], used: set[str]) -> str:
         if self.needs:
             used.add(self.needs)
         return self.text
@@ -94,10 +96,10 @@ class _Ref(_Expr):
     def __init__(self, name: str):
         self.name = name
 
-    def render(self, emitted, used):
+    def render(self, emitted: set[str], used: set[str]) -> str:
         return self.name if self.name in emitted else f'"{self.name}"'
 
-    def refs(self):
+    def refs(self) -> set[str]:
         return {self.name}
 
 
@@ -105,29 +107,29 @@ class _External(_Expr):
     def __init__(self, urn: str):
         self.urn = urn
 
-    def render(self, emitted, used):
+    def render(self, emitted: set[str], used: set[str]) -> str:
         used.add("Any")
         return "Any"
 
-    def externals(self):
+    def externals(self) -> set[str]:
         return {self.urn}
 
 
 class _Wrap(_Expr):
     """``Head[args]`` for List, Dict, NotRequired, Optional, Union and Literal."""
 
-    def __init__(self, head: str, *args: Any):
+    def __init__(self, head: str, *args: Union[str, _Expr]):
         self.head, self.args = head, args
 
-    def render(self, emitted, used):
+    def render(self, emitted: set[str], used: set[str]) -> str:
         used.add(self.head)
         parts = [arg if isinstance(arg, str) else arg.render(emitted, used) for arg in self.args]
         return f"{self.head}[{', '.join(parts)}]"
 
-    def refs(self):
+    def refs(self) -> set[str]:
         return {name for arg in self.args if isinstance(arg, _Expr) for name in arg.refs()}
 
-    def externals(self):
+    def externals(self) -> set[str]:
         return {urn for arg in self.args if isinstance(arg, _Expr) for urn in arg.externals()}
 
 
@@ -135,10 +137,23 @@ _ANY = _Prim("Any", "Any")
 _OPEN_OBJECT = _Wrap("Dict", "str", _ANY)
 
 
-def _union(members: list) -> _Expr:
-    unique: list = []
-    seen: set = set()
+def _flat(members: Sequence[_Expr]) -> list[_Expr]:
+    """The members of a union with the unions among them opened (``Optional[T]`` is ``T`` and ``None``)."""
+    out: list[_Expr] = []
     for member in members:
+        if isinstance(member, _Wrap) and member.head in ("Union", "Optional"):
+            out.extend(_flat([arg for arg in member.args if isinstance(arg, _Expr)]))
+            if member.head == "Optional":
+                out.append(_Prim("None"))
+        else:
+            out.append(member)
+    return out
+
+
+def _union(members: Sequence[_Expr]) -> _Expr:
+    unique: list[_Expr] = []
+    seen: set[str] = set()
+    for member in _flat(members):
         key = _key(member)
         if key not in seen:
             seen.add(key)
@@ -147,6 +162,8 @@ def _union(members: list) -> _Expr:
     rest = [m for m in unique if not (isinstance(m, _Prim) and m.text == "None")]
     if any(isinstance(m, _Prim) and m.text == "Any" for m in rest):
         return _ANY
+    if not rest:
+        return none[0]
     if len(rest) == 1 and not none:
         return rest[0]
     if len(rest) == 1:
@@ -163,12 +180,12 @@ def _key(expr: _Expr) -> str:
 class _Decl:
     def __init__(self, name: str, file: str):
         self.name, self.file = name, file
-        self.fields: Optional[list] = None  # [(key, expr, required)] for a TypedDict
+        self.fields: Optional[list[tuple[str, _Expr, bool]]] = None  # [(key, expr, required)] for a TypedDict
         self.alias: Optional[_Expr] = None
         self.note = ""
 
-    def refs(self) -> set:
-        found: set = set()
+    def refs(self) -> set[str]:
+        found: set[str] = set()
         for _name, expr, _required in self.fields or ():
             found |= expr.refs()
         if self.alias is not None:
@@ -176,8 +193,8 @@ class _Decl:
         found.discard(self.name)
         return found
 
-    def externals(self) -> set:
-        found: set = set()
+    def externals(self) -> set[str]:
+        found: set[str] = set()
         for _name, expr, _required in self.fields or ():
             found |= expr.externals()
         if self.alias is not None:
@@ -194,23 +211,23 @@ def _word(text: str) -> str:
 
 
 class _Document:
-    def __init__(self, file: str, schema: dict, kind: str):
+    def __init__(self, file: str, schema: Node, kind: str):
         self.file, self.schema, self.kind = file, schema, kind
         self.name = _camel(kind)
 
 
 class _Generator:
-    def __init__(self, documents: list):
+    def __init__(self, documents: list[_Document]):
         self.documents = documents
-        self.by_id = {doc.schema["$id"]: doc for doc in documents}
-        self.decls: dict = {}
-        self.order: list = []
-        self.defs: dict = {}  # (document id, def name) -> declaration name
-        self.roots: dict = {}  # document id -> declaration name (when the root maps to a type)
+        self.by_id: dict[str, _Document] = {doc.schema["$id"]: doc for doc in documents}
+        self.decls: dict[str, _Decl] = {}
+        self.order: list[str] = []
+        self.defs: dict[tuple[str, str], str] = {}  # (document id, def name) -> declaration name
+        self.roots: dict[str, str] = {}  # document id -> declaration name (when the root maps to a type)
         self._top = ""  # the declaration being mapped; its object class takes the same name
         self._top_free = False
 
-    def run(self) -> list:
+    def run(self) -> list[_Decl]:
         # names first, so that a reference may point forward
         for doc in self.documents:
             schema_id = doc.schema["$id"]
@@ -228,7 +245,7 @@ class _Generator:
         return [self.decls[name] for name in self.order]
 
     @staticmethod
-    def _has_type(node: dict) -> bool:
+    def _has_type(node: Node) -> bool:
         return any(key in node for key in _TYPED)
 
     def _declare(self, name: str, file: str, pointer: str) -> _Decl:
@@ -239,7 +256,7 @@ class _Generator:
         self.order.append(name)
         return decl
 
-    def _declare_node(self, doc: _Document, name: str, node: dict, pointer: str) -> None:
+    def _declare_node(self, doc: _Document, name: str, node: Node, pointer: str) -> None:
         decl = self._declare(name, doc.file, pointer)
         self._top, self._top_free = name, True
         expr = self._map(doc, node, name, pointer, top=True)
@@ -250,7 +267,7 @@ class _Generator:
             decl.note = "constraint-only schema: no type of its own"
 
     # -- mapping
-    def _map(self, doc: _Document, node: dict, name: str, pointer: str, top: bool = False) -> _Expr:
+    def _map(self, doc: _Document, node: Node, name: str, pointer: str, top: bool = False) -> _Expr:
         if "$ref" in node:
             for keyword_ in ("type", "enum", "const", "items", "patternProperties"):
                 if keyword_ in node:
@@ -277,7 +294,7 @@ class _Generator:
         return _union([self._of_type(doc, t, node, object_name if t == "object" else name, pointer)
                        for t in types])
 
-    def _of_type(self, doc: _Document, type_name: str, node: dict, name: str, pointer: str) -> _Expr:
+    def _of_type(self, doc: _Document, type_name: str, node: Node, name: str, pointer: str) -> _Expr:
         if type_name == "string":
             return _Prim("str")
         if type_name == "integer":
@@ -294,7 +311,7 @@ class _Generator:
             return _Wrap("List", self._map(doc, node["items"], name + "Item", f"{pointer}/items"))
         return self._object(doc, node, name, pointer)
 
-    def _object(self, doc: _Document, node: dict, name: str, pointer: str) -> _Expr:
+    def _object(self, doc: _Document, node: Node, name: str, pointer: str) -> _Expr:
         properties = node.get("properties", {})
         patterns = node.get("patternProperties", {})
         if node.get("additionalProperties") is not False:
@@ -322,7 +339,7 @@ class _Generator:
         return _Ref(name)
 
     @staticmethod
-    def _branch_keys(doc: _Document, node: dict, pointer: str) -> None:
+    def _branch_keys(doc: _Document, node: Node, pointer: str) -> None:
         """A constraint branch of ``oneOf`` may only speak of keys the node declares."""
         properties = node.get("properties")
         if properties is None:
@@ -334,9 +351,9 @@ class _Generator:
                                        f"branch key {key!r} is not a property of the object")
 
     @staticmethod
-    def _literal(doc: _Document, node: dict, pointer: str) -> _Expr:
+    def _literal(doc: _Document, node: Node, pointer: str) -> _Expr:
         values = node["enum"] if "enum" in node else [node["const"]]
-        parts = []
+        parts: list[str] = []
         for value in values:
             if value is None or isinstance(value, (bool, int)):
                 parts.append(repr(value))
@@ -346,7 +363,7 @@ class _Generator:
                 raise _unsupported(doc.file, pointer, f"enum value {value!r} cannot be a Literal")
         return _Wrap("Literal", *dict.fromkeys(parts))
 
-    def _one_of(self, doc: _Document, node: dict, name: str, pointer: str) -> _Expr:
+    def _one_of(self, doc: _Document, node: Node, name: str, pointer: str) -> _Expr:
         branches = node["oneOf"]
         constraint = [all(key in _CONSTRAINT_BRANCH for key in branch) for branch in branches]
         rest = {k: v for k, v in node.items() if k != "oneOf"}
@@ -363,7 +380,7 @@ class _Generator:
         return _union([self._map(doc, branch, f"{name}Variant{index}", f"{pointer}/oneOf/{index - 1}")
                        for index, branch in enumerate(branches, 1)])
 
-    def _compose(self, doc: _Document, node: dict, name: str, pointer: str, top: bool) -> _Expr:
+    def _compose(self, doc: _Document, node: Node, name: str, pointer: str, top: bool) -> _Expr:
         """A ``$ref`` whose siblings change the shape of the target: the target object with its keys, the extra
         ``required`` and the closing ``additionalProperties`` of the siblings, mapped as one object. A sibling
         ``properties`` entry only annotates a key the target declares, or adds a key it does not."""
@@ -375,20 +392,20 @@ class _Generator:
                 or any(key in target for key in ("$ref", "oneOf", "enum", "const", "items")):
             raise _unsupported(doc.file, pointer, f"$ref {ref!r} with siblings needs an object target without "
                                                   "$ref, oneOf or patternProperties")
-        properties = dict(target.get("properties", {}))
+        properties: Node = dict(target.get("properties", {}))
         for key, child in node.get("properties", {}).items():
             if key in properties and not all(word in _ANNOTATION for word in child):
                 raise _unsupported(doc.file, f"{pointer}/properties/{_escape(key)}",
                                    f"sibling of $ref {ref!r} retypes the key {key!r}")
             properties.setdefault(key, child)
-        merged = {key: value for key, value in target.items() if key not in ("description", "title")}
+        merged: Node = {key: value for key, value in target.items() if key not in ("description", "title")}
         merged.update({key: node[key] for key in ("additionalProperties", "oneOf") if key in node})
         merged["type"] = "object"
         merged["properties"] = properties
         merged["required"] = sorted(set(target.get("required", ())) | set(node.get("required", ())))
         return self._map(owner, merged, name, pointer, top)
 
-    def _target(self, doc: _Document, ref: str, pointer: str) -> tuple:
+    def _target(self, doc: _Document, ref: str, pointer: str) -> tuple[Optional[_Document], Optional[Node]]:
         """``(document, node)`` of a ``$ref`` into this directory, ``(None, None)`` outside it."""
         document, _, fragment = ref.partition("#")
         target = self.by_id.get(document or doc.schema["$id"])
@@ -425,11 +442,11 @@ def _escape(key: str) -> str:
 
 # ---- rendering ----------------------------------------------------------------------------------------------------
 
-def _order(decls: list) -> list:
+def _order(decls: list[_Decl]) -> list[_Decl]:
     """Declarations before their users; a reference that points forward or into a cycle is quoted when rendered."""
     by_name = {decl.name: decl for decl in decls}
-    done: list = []
-    state: dict = {}
+    done: list[_Decl] = []
+    state: dict[str, int] = {}
 
     def visit(decl: _Decl) -> None:
         if state.get(decl.name):
@@ -444,7 +461,7 @@ def _order(decls: list) -> list:
     return done
 
 
-def _render_decl(decl: _Decl, emitted: set, used: set) -> str:
+def _render_decl(decl: _Decl, emitted: set[str], used: set[str]) -> str:
     comment = ""
     externals = sorted(decl.externals())
     if externals:
@@ -454,7 +471,7 @@ def _render_decl(decl: _Decl, emitted: set, used: set) -> str:
         note = f"  # {decl.note}" if decl.note and not comment else ""
         return f"{decl.name} = {text}{comment}{note}\n"
     used.add("TypedDict")
-    rows = []
+    rows: list[tuple[str, str]] = []
     for key, expr, required in decl.fields:
         text = expr.render(emitted, used)
         if not required:
@@ -472,12 +489,12 @@ def _render_decl(decl: _Decl, emitted: set, used: set) -> str:
 _TYPING_ORDER = ("Any", "Dict", "List", "Literal", "NotRequired", "Optional", "TypedDict", "Union")
 
 
-def load_documents(root: Path) -> list:
+def load_documents(root: Path) -> list[_Document]:
     root = Path(root)
     files = sorted(root.glob("*.schema.json"))
     if not files:
         raise CodegenError(USAGE_CODE, f"no *.schema.json files in {root}")
-    documents = []
+    documents: list[_Document] = []
     for path in files:
         try:
             schema = json.loads(path.read_text(encoding="utf-8"))
@@ -509,9 +526,9 @@ def generate(root: Path, label: Optional[str] = None) -> str:
     root = Path(root)
     documents = load_documents(root)
     decls = _order(_Generator(documents).run())
-    emitted: set = set()
-    used: set = set()
-    blocks = []
+    emitted: set[str] = set()
+    used: set[str] = set()
+    blocks: list[str] = []
     for decl in decls:
         blocks.append(_render_decl(decl, emitted, used))
         emitted.add(decl.name)
@@ -534,15 +551,15 @@ class _Parser(argparse.ArgumentParser):
     out: TextIO = sys.stdout
     err: TextIO = sys.stderr
 
-    def _print_message(self, message, file=None):  # type: ignore[override]
+    def _print_message(self, message: str, file: Any = None) -> None:
         if message:
             (self.err if file is sys.stderr else self.out).write(message)
 
-    def error(self, message: str):  # type: ignore[override]
+    def error(self, message: str) -> NoReturn:
         self.err.write(f"{USAGE_CODE}: {message}\n")
         raise _Exit(2)
 
-    def exit(self, status=0, message=None):  # type: ignore[override]
+    def exit(self, status: int = 0, message: Optional[str] = None) -> NoReturn:
         if message:
             self.err.write(message)
         raise _Exit(status)
@@ -562,8 +579,8 @@ def build_parser(out: TextIO, err: TextIO) -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None, *, env: Optional[Mapping[str, str]] = None,
          cwd: Optional[Path] = None, out: Optional[TextIO] = None, err: Optional[TextIO] = None) -> int:
     """``aicore schema codegen``; exit 0 written or in sync, 1 drift or unsupported schema, 2 usage."""
-    out = out or sys.stdout
-    err = err or sys.stderr
+    out = out if out is not None else cast(TextIO, sys.stdout)
+    err = err if err is not None else cast(TextIO, sys.stderr)
     parser = build_parser(out, err)
     try:
         options = parser.parse_args(list(sys.argv[1:] if argv is None else argv))

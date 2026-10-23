@@ -71,9 +71,9 @@ class Fixture:
         self.write("legacy.json", json.dumps(commands))
         return str(self.root / "legacy.json")
 
-    def run(self, *args: str) -> subprocess.CompletedProcess:
+    def run(self, *args: str, env: dict | None = None) -> subprocess.CompletedProcess:
         return subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), *args],
-                              capture_output=True, text=True, timeout=120)
+                              capture_output=True, text=True, timeout=120, env=env)
 
 
 class CiMatrixTests(unittest.TestCase):
@@ -223,6 +223,58 @@ class CiMatrixTests(unittest.TestCase):
         self.fx.unit("packages/homey", unit_doc("homey", test=["bash", "-c", f'echo "$HOME" > {marker}']))
         self.assertEqual(self.fx.run("run", "--unit", "homey", "--step", "test").returncode, 0)
         self.assertNotEqual(marker.read_text().strip(), str(Path.home()))
+
+    def typecheck_script(self, code: int, marker: str = "") -> None:
+        """A stand-in for scripts/typecheck.sh: records its arguments and the HOME it saw, exits with ``code``."""
+        self.fx.write("scripts/typecheck.sh", f'echo "$HOME $@" > {self.fx.root / "typecheck-seen"}\nexit {code}\n')
+
+    def test_the_hub_has_the_typecheck_step_only_when_the_script_exists_and_is_not_in_the_matrix(self):
+        self.assertEqual(self.fx.run("steps", "hub").stdout, "")  # no script: no step
+        self.assertEqual(self.fx.run("run", "--unit", "hub", "--step", "typecheck").returncode, 2)
+        self.typecheck_script(0)
+        steps = self.fx.run("steps", "hub")
+        self.assertEqual(steps.stdout.strip(), "typecheck\tbash scripts/typecheck.sh --baseline")
+        listed = [e["unit"] for e in json.loads(self.fx.run("list", "--json").stdout)["include"]]
+        self.assertNotIn("hub", listed)  # the matrix holds the units of unit.json only
+
+    def test_run_hub_typecheck_reports_ok_and_fail_and_keeps_the_real_home(self):
+        self.typecheck_script(0)
+        ok = self.fx.run("run", "--unit", "hub", "--step", "typecheck")
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertRegex(ok.stdout, r"^ok hub typecheck \d+\.\d\n$")
+        seen = (self.fx.root / "typecheck-seen").read_text(encoding="utf-8").split()
+        self.assertEqual(seen, [os.environ.get("HOME", str(Path.home())), "--baseline"])  # the pinned tool lives in the real cache
+        self.typecheck_script(1)
+        bad = self.fx.run("run", "--unit", "hub", "--step", "typecheck")
+        self.assertEqual(bad.returncode, 1)
+        self.assertRegex(bad.stdout, r"^fail hub typecheck \d+\.\d\n$")
+
+    def test_a_missing_typecheck_tool_is_a_skip_off_ci_and_a_failure_on_ci(self):
+        self.typecheck_script(2)
+        env = {k: v for k, v in os.environ.items() if k != "CI"}
+        local = self.fx.run("run", "--unit", "hub", "--step", "typecheck", env=env)
+        self.assertEqual(local.returncode, 0, local.stderr)
+        self.assertRegex(local.stdout, r"^skip hub typecheck ")
+        on_ci = self.fx.run("run", "--unit", "hub", "--step", "typecheck", env={**env, "CI": "true"})
+        self.assertEqual(on_ci.returncode, 1)
+        self.assertRegex(on_ci.stdout, r"^fail hub typecheck ")
+
+    def test_run_all_includes_the_hub_typecheck_when_the_script_exists(self):
+        before = self.fx.run("run", "--all", "--skip", "contracts", "--skip", "secrets", "--skip", "standalone")
+        self.assertNotIn(" hub ", before.stdout)
+        self.typecheck_script(0)
+        after = self.fx.run("run", "--all", "--skip", "contracts", "--skip", "secrets", "--skip", "standalone")
+        self.assertRegex(after.stdout, r"(?m)^ok hub typecheck ")
+
+    def test_check_demands_the_hub_typecheck_job_once_the_script_exists(self):
+        self.fx.workflow(GOOD_WORKFLOW)
+        legacy = self.fx.legacy(["bash packages/alpha/scripts/test.sh -v", "bash packages/alpha/scripts/validate.sh"])
+        self.typecheck_script(0)
+        out = self.fx.run("--check", "--legacy", legacy)
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("ci-matrix.py run --unit hub --step typecheck", out.stderr)
+        self.fx.workflow(GOOD_WORKFLOW + "  hub:\n    steps:\n      - run: python3 scripts/ci-matrix.py run --unit hub --step typecheck\n")
+        self.assertEqual(self.fx.run("--check", "--legacy", legacy).returncode, 0)
 
     def test_check_passes_on_a_covered_hub(self):
         self.fx.workflow(GOOD_WORKFLOW)
@@ -381,6 +433,14 @@ class StepTests(unittest.TestCase):
 
 
 class RealHubTests(unittest.TestCase):
+    def test_the_real_hub_has_the_typecheck_step_and_its_workflow_job(self):
+        module = eu_module()
+        steps = module.build_steps(HUB, module.hub_unit(HUB))
+        self.assertEqual([s["id"] for s in steps], ["typecheck"])
+        self.assertEqual(steps[0]["argv"], ["bash", "scripts/typecheck.sh", "--baseline"])
+        self.assertIn("ci-matrix.py run --unit hub --step typecheck",
+                      (HUB / ".github/workflows/modules.yml").read_text(encoding="utf-8"))
+
     def test_every_unit_of_the_hub_is_in_the_matrix(self):
         out = subprocess.run([sys.executable, str(SCRIPT), "list", "--json"], capture_output=True, text=True, timeout=60)
         self.assertEqual(out.returncode, 0, out.stderr)

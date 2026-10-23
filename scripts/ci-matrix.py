@@ -3,7 +3,7 @@
 
 Usage:
   ci-matrix.py list [--json] [--step S] [--python V,V]    units of the hub as a matrix {"include": [{unit, kind, tool}]}
-  ci-matrix.py steps UNIT [--json]                        the steps of one unit
+  ci-matrix.py steps UNIT [--json]                        the steps of one unit (`hub`: the steps of the hub itself)
   ci-matrix.py run (--unit U [--step S]... [--skip S]... | --all [--include-tools]) [--base-ref REF] [--repeat-tests] [--jobs N]
                                                           run steps; one line `ok|fail|skip <unit> <step> <seconds>` each;
                                                           after a green `test` step `validate` runs with
@@ -15,7 +15,10 @@ Common option: --root DIR (hub root; default: the checkout of this script).
 Units are read from packages/*/unit.json and bridges/*/unit.json; `tool` marks the modules named by
 configs/ecosystem-units.json standalone.tools (their failure never blocks: the workflow sets continue-on-error).
 Steps of a module: lint, test, validate, standalone, cli-smoke, contracts, schema-compat, secrets; of a bridge: test,
-contracts. Every step runs with a throwaway HOME and SKM_HOME (lint keeps the real one for the pipx cache).
+contracts. Every step runs with a throwaway HOME and SKM_HOME (lint and typecheck keep the real one for the pipx/uvx cache).
+The pseudo unit `hub` (not in the matrix) has the step `typecheck`: `bash scripts/typecheck.sh --baseline`, the pinned
+pyright over every packages/*/lib against configs/typecheck-baseline.json; `run --all` includes it when
+scripts/typecheck.sh exists.
 Exit: 0 ok, 1 a step failed or the check found a problem, 2 usage.
 """
 from __future__ import annotations
@@ -40,6 +43,10 @@ TEST_PYTHONS = "3.11,3.13,3.14"
 # validate.sh of a module skips its test run when this is set: the `test` step has just run them (the standalone step
 # does the same inside its copy, see ecosystem-units.py).
 SKIP_TESTS_ENV = "SKM_VALIDATE_SKIP_TESTS"
+HUB_ID = "hub"
+HUB_TYPECHECK = "scripts/typecheck.sh"
+# Steps that keep the real HOME (the pinned tool is fetched into its cache); exit 2 of the tool is a skip off CI.
+REAL_HOME_STEPS = ("lint", "typecheck")
 STEP_ORDER = ("lint", "test", "validate", "standalone", "cli-smoke", "contracts", "schema-compat", "secrets")
 # Extra arguments of dev.validate in CI (the plan fleet is checked besides the module itself). Data until unit.json
 # gets a field for it.
@@ -79,6 +86,7 @@ class Unit:
         self.id = doc.get("id") or self.root.name
         self.kind = doc.get("kind", "capability")
         self.bridge = kind_dir == "bridges"
+        self.hub = kind_dir == "hub"
 
     @property
     def provides(self) -> dict:
@@ -102,6 +110,11 @@ def discover(root: Path) -> dict:
     return units
 
 
+def hub_unit(root: Path) -> Unit:
+    """The hub itself as a unit: not discovered from a unit.json, so never in the matrix."""
+    return Unit(root / "unit.json", {"id": HUB_ID, "kind": "hub"}, "hub")
+
+
 def tools(root: Path) -> set:
     try:
         config = json.loads((root / "configs/ecosystem-units.json").read_text(encoding="utf-8"))
@@ -120,8 +133,14 @@ def has_schemas(unit: Unit) -> bool:
 
 def build_steps(root: Path, unit: Unit) -> list:
     """The ordered steps of a unit: dicts {id, kind: argv|internal, argv, cwd, env, text}."""
-    base = rel(root, unit.root)
     out = []
+    if unit.hub:
+        if (root / HUB_TYPECHECK).is_file():
+            out.append({"id": "typecheck", "kind": "argv", "argv": ["bash", HUB_TYPECHECK, "--baseline"], "cwd": ".", "env": {}})
+        for step in out:
+            step["text"] = " ".join(step["argv"])
+        return out
+    base = rel(root, unit.root)
     lint_paths = [f"{base}/{name}" for name in ("lib", "tests") if (unit.root / name).is_dir()]
     if lint_paths and not unit.bridge:
         out.append({"id": "lint", "kind": "argv", "argv": ["bash", "scripts/lint.sh", *lint_paths], "cwd": ".", "env": {}})
@@ -191,12 +210,12 @@ def temp_env(home: Path, extra: dict) -> dict:
 def run_argv(root: Path, step: dict, extra_env: dict | None = None) -> tuple:
     home = Path(tempfile.mkdtemp(prefix="skm-ci-"))
     try:
-        env = dict(os.environ) if step["id"] == "lint" else temp_env(home, {})
+        env = dict(os.environ) if step["id"] in REAL_HOME_STEPS else temp_env(home, {})
         env.update(step.get("env") or {})
         env.update(extra_env or {})
         proc = subprocess.run(step["argv"], cwd=str(root / step["cwd"]), env=env)
-        if step["id"] == "lint" and proc.returncode == 2 and not os.environ.get("CI"):
-            return "skip", "lint tool missing (need pipx or ruff at the pinned version)"
+        if step["id"] in REAL_HOME_STEPS and proc.returncode == 2 and not os.environ.get("CI"):
+            return "skip", f"{step['id']} tool missing (lint: pipx or ruff at the pinned version; typecheck: pyright at the pinned version, uvx or pipx)"
         return ("ok" if proc.returncode == 0 else "fail"), f"exit {proc.returncode}"
     except OSError as exc:
         return "fail", str(exc)
@@ -394,10 +413,15 @@ def execute(root: Path, unit: Unit, step: dict, base_ref: str, extra_env: dict |
 
 def cmd_run(args, root: Path) -> int:
     units = discover(root)
+    hub = hub_unit(root)
     if args.all:
         tool_ids = tools(root)
         chosen = [u for u in units.values() if args.include_tools or u.id not in tool_ids]
+        if build_steps(root, hub):
+            chosen.append(hub)
     else:
+        if HUB_ID not in units:
+            units[HUB_ID] = hub
         missing = [u for u in (args.unit or []) if u not in units]
         if missing or not args.unit:
             print(f"ci-matrix: unknown or missing unit: {', '.join(missing) or '(none given)'}", file=sys.stderr)
@@ -527,6 +551,8 @@ def cmd_check(args, root: Path) -> int:
         runs = workflow_run_lines(workflow)
         if not any("ci-matrix.py run --unit ${{ matrix.unit }}" in r for r in runs):
             problems.append(f"{WORKFLOW}: no job runs `ci-matrix.py run --unit ${{{{ matrix.unit }}}}`")
+        if build_steps(root, hub_unit(root)) and not any("ci-matrix.py run --unit hub --step typecheck" in r for r in runs):
+            problems.append(f"{WORKFLOW}: no job runs `ci-matrix.py run --unit hub --step typecheck`")
         for run in runs:  # the steps live in this script only
             if re.search(r"packages/[A-Za-z0-9_-]+/scripts/(test|validate)\.sh|scripts/lint\.sh", run):
                 problems.append(f"{WORKFLOW}: duplicates a step command: {run}")
@@ -603,7 +629,7 @@ def main(argv) -> int:
                 print(" ".join(str(v) for v in entry.values()))
         return 0
     if args.command == "steps":
-        unit = discover(root).get(args.unit)
+        unit = discover(root).get(args.unit) or (hub_unit(root) if args.unit == HUB_ID else None)
         if unit is None:
             print(f"ci-matrix: unknown unit {args.unit}", file=sys.stderr)
             return 2

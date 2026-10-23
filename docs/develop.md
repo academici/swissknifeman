@@ -480,6 +480,34 @@ The JSON Schema is the one source of truth; the Python types of a document are g
 - `python3 scripts/schema-types.py --check` fails with `SCHEMA_CODEGEN_DRIFT: <out>` when a module differs from its schemas; it is the golden generator `schema-types` (`python3 scripts/golden.py check`). `packages/orch/tests/test_records_types.py` compares `__required_keys__` / `__optional_keys__` of every generated class with `required` and `properties` of its schema.
 - A new root: add a `{root, out}` entry to the registry, add `out` to `outputs` of the `schema-types` generator in `tests/golden/generation.json`, run `--write` and the capture.
 
+## Type checking
+
+`bash scripts/typecheck.sh --baseline` is the type gate. It runs one pinned pyright (`PYRIGHT_VERSION` in the script, 1.1.414)
+over every `packages/*/lib` in `basic` mode with `pyrightconfig.json` and compares the number of errors of each package
+with `configs/typecheck-baseline.json` (`{"pyright", "mode", "errors": {<package>: N}}`). A pyright of another version on
+`PATH` is not used: the order is `PATH` at the pinned version, `uvx pyright==VERSION`, `pipx run pyright==VERSION`, else exit 2
+`TYPECHECK_TOOL_MISSING` (`ci-matrix.py` reports that as `skip` off CI and as a failure on CI).
+
+| Output | Meaning |
+| --- | --- |
+| `TYPECHECK_REGRESSION: <pkg> <old> -> <new>` (exit 1) | a package has more errors than the baseline; a package missing from the baseline counts from 0 |
+| `TYPECHECK_IMPROVED: <pkg> <old> -> <new>` | fewer errors; lock it in with `--update-baseline` |
+| `TYPECHECK_STRICT: <file>:<line>: <message>` (exit 1) | an error in a strict path |
+| `TYPECHECK_BASELINE_VERSION` / `_MISSING` / `_INVALID` (exit 1) | the baseline is of another pyright, absent or unreadable |
+
+- The baseline only shrinks. `bash scripts/typecheck.sh --update-baseline` writes smaller counts; a larger count (and the
+  first baseline) needs `--allow-growth "<reason>"`, and the reason goes into the commit message. A new pyright version moves
+  every count: change `PYRIGHT_VERSION` and update the baseline with a reason in the same commit.
+- Strict paths (`strict` in `pyrightconfig.json`) must have 0 errors in pyright `strict` mode: the generated `_types`
+  (`packages/orch/lib/orch/_types`, `packages/planner/lib/planner/plan/_types.py`) and the aicore modules
+  `util/{lock,timefmt,docio,schemacodegen,schemacli}.py`. Their errors are not part of a package count. A new module of
+  `aicore` and every generated type module should join the list.
+- `packages/gui/lib/gui/http` is excluded: it imports `starlette` and `uvicorn`, which are optional and not installed
+  everywhere, so its errors (34 unresolved imports on a machine without them) would depend on the machine.
+- `bash scripts/typecheck.sh <pyright args>` without a gate flag runs the pinned pyright as it is. The hub step is
+  `python3 scripts/ci-matrix.py run --unit hub --step typecheck` (also part of `run --all`); the `hub` job of `modules.yml` runs it.
+  `scripts/test-typecheck-baseline.py` tests the gate on recorded pyright reports.
+
 ## Scripts-FAQ
 
 **«Phase ended, he proposes `/task` with text - compact or a new session?»**

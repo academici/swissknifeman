@@ -110,7 +110,7 @@ def atomic_write_json(path, data, *, version=None, indent=2, mode=None, check_ta
                       mode=mode, check_target=check_target)
 
 
-def durable_replace(path, data, *, mode=None):
+def durable_replace(path: "str | os.PathLike[str]", data: bytes, *, mode: Optional[int] = None) -> None:
     """Replace ``path`` with ``data`` (bytes) crash-safely, the new file private (``0600``) unless ``mode`` says
     otherwise; an unsafe target (symlink, hard link, not a regular file) is refused."""
     _replace(Path(path), data, mode=mode, check_target=True, private=True)

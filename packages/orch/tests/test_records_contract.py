@@ -90,7 +90,7 @@ class SchemaTests(unittest.TestCase):
 
     def test_every_golden_state_matches_the_state_schema(self):
         paths = sorted(GOLDEN.glob("*.json"))
-        self.assertEqual(len(paths), 11)
+        self.assertEqual(len(paths), 17)
         for path in paths:
             with self.subTest(golden=path.stem):
                 self.assertEqual(records.problems(golden_state(path), "state"), [])

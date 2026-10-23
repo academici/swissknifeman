@@ -29,6 +29,22 @@ engines use partner CLI/JSON APIs only
 - `tests/test_boundaries.py` walks `lib/orch/**/*.py` and rejects imports outside the standard library, `orch` and `aicore`, and scans the
   package for names of other packages.
 
+The conductor layer ratchet is `python3 scripts/layering.py --check` (from this module);
+`--json` shows the AST measurements without importing conductor code. It counts facade bindings and staticmethod
+bindings, module-level functions whose first argument is `self`, upward facade calls, facade-owned method calls,
+port calls, the largest strongly connected component of module calls, private facade access and modules over
+600 lines. Methods of module-owned classes are excluded; `self.role_ports.*` and `self.stage_ports.*` count only
+as port calls. The baseline is `tests/golden/layering-baseline.json`, measured at the start of P5 after P2–P4.
+Gates forbid growth in total upward calls, policy/domain self functions, total private facade access, the largest
+component and each oversized module. Domain self functions and self functions outside the layers must stay zero.
+Binding counts, other layer self functions, call distribution, facade calls and port calls are informational.
+After a reduction, `--check` requires `--update` to record the improvement; `--update` refuses gate growth and
+preserves the item targets. `--check --target P5.2`, `P5.3` or `P5.4` also checks the stored extraction goals;
+P5.5 uses the ordinary ratchet with upward calls reduced to zero. Both metric and baseline documents have embedded
+JSON Schemas with `urn:swissknifeman:orch:layering-*` IDs, validated by the standalone stdlib script. Synthetic
+trees can use `--root DIR --baseline FILE`. Characterization snapshots additionally pin argv (including a fake
+guard's prefix), manifest block metadata, ordered `orch.*` events and per-item routes before extraction.
+
 ## Work source and bridges
 
 `orch` takes work through the extension point `orch:work-source` (contract `work-source/v1`, see [work-source.md](work-source.md)),

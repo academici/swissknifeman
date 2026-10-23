@@ -1,4 +1,4 @@
-"""Characterization of the conductor (P11.1): normalized ``progress.jsonl`` and ``state.json`` of scenarios on fake roles.
+"""Characterization of conductor state, argv, prompt manifests, events and routes on fake roles.
 
 Each scenario runs the conductor on the fake roles of ``tests/fixtures/conductor/fake_role.py`` and compares the run
 with a snapshot in ``tests/golden/characterization/<scenario>.json``. The snapshot holds the journal and the state of
@@ -19,6 +19,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -26,6 +27,8 @@ if __name__ == "__main__":  # run as a script: the package root is the parent of
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "packages" / "aicore" / "lib"))
+
+from aicore.ext import events as event_journal
 
 from orch import adhoc
 from orch.conductor import checks, engine
@@ -66,11 +69,51 @@ def normalize(value, paths: dict):
     return value
 
 
+def event_data(value):
+    """Remove event clocks and digest values before applying the shared normalization."""
+    if isinstance(value, dict):
+        return {key: event_data(item) for key, item in value.items()
+                if key not in VOLATILE | {"id", "time", "duration_ms"}
+                and "digest" not in key and "sha256" not in key}
+    if isinstance(value, list):
+        return [event_data(item) for item in value]
+    return value
+
+
+def projections(run: Path, fake: Path, project: Path, paths: dict) -> dict:
+    """Keep item and manifest file identities; block texts and event envelope IDs stay out."""
+    argv = []
+    for path in fake.glob("*.argv"):
+        role, number = path.stem.rsplit("-", 1)
+        # The extra-paths fixture also records the guard prefix, which the child CLI cannot see.
+        launch = path.with_suffix(".launch-argv")
+        argv.append({"role": role, "n": int(number),
+                     "argv": json.loads((launch if launch.exists() else path).read_text(encoding="utf-8"))})
+    argv.sort(key=lambda row: (row["role"], row["n"]))
+    manifests, routes = {}, {}
+    for path in sorted(run.glob("*/prompts/*.manifest.json")):
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        projected = {key: doc[key] for key in ("step", "role", "route", "excluded", "budgets") if key in doc}
+        projected["blocks"] = [{key: row[key] for key in ("kind", "origin", "id", "tokens") if key in row}
+                               for row in doc["blocks"]]
+        manifests[path.relative_to(run).as_posix()] = projected
+    for path in sorted(run.glob("*/routes.json")):
+        routes[path.parent.name] = json.loads(path.read_text(encoding="utf-8"))
+    events, problems = event_journal.read_events(project, types=["orch.*"])
+    if problems:
+        raise AssertionError(f"event journal is unreadable: {problems}")
+    return normalize({"argv": argv, "manifests": manifests, "routes": routes,
+                      "events": [{"type": event.type, "data": event_data(event.data)} for event in events]}, paths)
+
+
 class CharacterizationCase(ConductorCase):
     """Runs a scenario and keeps the normalized journal and state under its name."""
 
     def setUp(self):
-        super().setUp()
+        # Parallel unittest workers nest TMPDIR under their own home. Absolute paths enter prompt text and its
+        # token estimates, so keep fixture paths the same length as the direct recapture command's paths.
+        with mock.patch.object(tempfile, "tempdir", "/tmp"):
+            super().setUp()
         self.slept = []
         for name, value in (("sleep", self.slept.append), ("unit_random", lambda: 0.5)):
             patcher = mock.patch.object(clock, name, value)
@@ -102,7 +145,9 @@ class CharacterizationCase(ConductorCase):
         for item in state_doc.get("items", {}).values():
             item.pop("usage_by_agent", None)  # replay bookkeeping; totals are covered here, receipts in test_usage_normalization
         state = normalize(state_doc, paths)
-        compare(self, name, {"progress": journal, "state": state})
+        projection_paths = {**paths, str(ROOT): "<orch>", sys.executable: "<python>"}
+        compare(self, name, {"progress": journal, "state": state,
+                             **projections(run, self.fake, self.project, projection_paths)})
 
 
 def compare(case: unittest.TestCase, name: str, document: dict) -> None:
@@ -120,6 +165,61 @@ def compare(case: unittest.TestCase, name: str, document: dict) -> None:
 
 def repro(cmd="cat out/W1.txt", observed="ok") -> dict:
     return {"cmd": cmd, "exit": 0, "observed": observed}
+
+
+class ProjectionTests(unittest.TestCase):
+    def test_fixture_paths_do_not_grow_under_a_parallel_worker_tmpdir(self):
+        with tempfile.TemporaryDirectory(prefix="characterization-parent-") as directory:
+            with mock.patch.object(tempfile, "tempdir", directory):
+                case = CharacterizationCase()
+                try:
+                    case.setUp()
+                    self.assertEqual(case.project.parent.parent, Path("/tmp").resolve())
+                finally:
+                    case.doCleanups()
+
+    def test_projection_keeps_arguments_item_identity_and_block_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fake, run = root / "fake", root / "run"
+            fake.mkdir()
+            for role, number in (("executor", 10), ("reviewer", 1), ("executor", 2)):
+                (fake / f"{role}-{number}.argv").write_text(json.dumps([str(root / "output")]))
+            (fake / "executor-2.launch-argv").write_text(json.dumps(["--rw", str(root / "output"), "--", "fake"]))
+            manifest = {"step": "executor.1", "role": "executor", "route": {"provider": "fake"},
+                        "blocks": [{"kind": "skill", "origin": str(root / "skill"), "id": "demo", "tokens": 7,
+                                    "sha256": "a" * 64, "text": "a block text must never enter the projection"}],
+                        "excluded": [{"id": "other", "reason": "budget"}], "budgets": {"skill": {"tokens": 7, "limit": 9}}}
+            for item in ("W1", "W2"):
+                prompts = run / item / "prompts"
+                prompts.mkdir(parents=True)
+                (prompts / "executor.1.manifest.json").write_text(json.dumps(manifest))
+                (prompts.parent / "routes.json").write_text(json.dumps({"executor": {"model": item}}))
+            events = [mock.Mock(type=kind, data={"id": "volatile", "time": "volatile", "ts": "volatile",
+                                               "duration_ms": 12, "prompt_sha256": "b" * 64,
+                                               "nested": {"config_digest": "c" * 64, "status": "done"}})
+                      for kind in ("orch.agent.started", "orch.agent.finished")]
+            with mock.patch.object(event_journal, "read_events", return_value=(events, [])) as read:
+                actual = projections(run, fake, root, {str(root): "<tmp>"})
+            read.assert_called_once_with(root, types=["orch.*"])
+            self.assertEqual([(row["role"], row["n"]) for row in actual["argv"]],
+                             [("executor", 2), ("executor", 10), ("reviewer", 1)])
+            self.assertEqual(actual["argv"][0]["argv"], ["--rw", "<tmp>/output", "--", "fake"])
+            self.assertEqual(actual["routes"], {"W1": {"executor": {"model": "W1"}}, "W2": {"executor": {"model": "W2"}}})
+            self.assertEqual(set(actual["manifests"]), {f"{item}/prompts/executor.1.manifest.json" for item in ("W1", "W2")})
+            projected = actual["manifests"]["W1/prompts/executor.1.manifest.json"]
+            self.assertEqual(projected["blocks"], [{"kind": "skill", "origin": "<tmp>/skill", "id": "demo", "tokens": 7}])
+            self.assertEqual(projected["budgets"], manifest["budgets"])
+            self.assertEqual(projected["excluded"], manifest["excluded"])
+            self.assertEqual(actual["events"], [{"type": kind, "data": {"nested": {"status": "done"}}}
+                                                 for kind in ("orch.agent.started", "orch.agent.finished")])
+
+    def test_unreadable_event_journal_fails_instead_of_capturing_empty_events(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with mock.patch.object(event_journal, "read_events", return_value=([], [{"code": "BROKEN"}])):
+                with self.assertRaisesRegex(AssertionError, "event journal is unreadable"):
+                    projections(root, root, root, {})
 
 
 class ScenarioTests(CharacterizationCase):
@@ -224,6 +324,91 @@ class ScenarioTests(CharacterizationCase):
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.snapshot("advisor", err)
+
+    def test_session_handoff(self):
+        self.options(session={"executor": "handoff"})
+        self.script({"executor": [{"result": report("W1")}, executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        argv = json.loads((self.fake / "executor-2.argv").read_text(encoding="utf-8"))
+        self.assertEqual(argv[argv.index("--resume") + 1], "executor-session-1")
+        self.snapshot("session-handoff", err)
+
+    def test_report_fixer_repair(self):
+        self.write_config({role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
+                           for role in (*ROLES, "report-fixer")})
+        broken = {**executor_ok("W1"), "result": report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])}
+        self.script({"executor": [broken], "reviewer": [GREEN],
+                     "report-fixer": [{"result": report("W1"), "tag": "stage-report"}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual((self.calls("executor"), self.calls("report-fixer")), (1, 1))
+        self.assertIn("RESULT_REPAIRED", err)
+        self.snapshot("report-fixer-repair", err)
+
+    def test_isolated_skills(self):
+        skill = self.project / ".claude/skills/characterization/SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("---\nname: characterization\n---\n\nKeep the output deterministic.\n", encoding="utf-8")
+        self.git("add", ".claude")
+        self.git("commit", "-qm", "skill fixture")
+        self.options(instructions=tc.opts.DEFAULT_INSTRUCTIONS,
+                     skills=[{"role": "executor", "names": ["characterization"]}])
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        argv = json.loads((self.fake / "executor-1.argv").read_text(encoding="utf-8"))
+        self.assertIn("--safe-mode", argv)
+        manifest = json.loads((self.run_dir(err) / "W1/prompts/executor.1.manifest.json").read_text(encoding="utf-8"))
+        self.assertTrue(any(row.get("id") == "characterization" for row in manifest["blocks"]), manifest)
+        self.assertIn("Keep the output deterministic.", self.prompt("executor", 1))
+        self.snapshot("isolated-skills", err)
+
+    def test_extra_paths(self):
+        allowed = self.project.parent / "extra-output"
+        allowed.mkdir()
+        wrapper = self.project.parent / "ro-run.py"
+        wrapper.write_text(
+            "import json, os, subprocess, sys\nfrom pathlib import Path\n"
+            "state = Path(os.environ['FAKE_ROLE_STATE'])\nstate.mkdir(exist_ok=True)\n"
+            "counter = state / 'executor.count'\n"
+            "n = int(counter.read_text()) + 1 if counter.exists() else 1\n"
+            "(state / f'executor-{n}.launch-argv').write_text(json.dumps([sys.executable, *sys.argv]))\n"
+            "sys.exit(subprocess.run(sys.argv[sys.argv.index('--') + 1:]).returncode)\n", encoding="utf-8")
+        argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        argv["executor"] = [sys.executable, str(wrapper), "--rw", str(self.project), "--", *argv["executor"]]
+        self.write_config(argv)
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--allow-path", allowed))
+        self.assertEqual(code, 0, err)
+        launched = json.loads((self.fake / "executor-1.launch-argv").read_text(encoding="utf-8"))
+        self.assertIn(["--rw", str(allowed)], [launched[n:n + 2] for n in range(launched.index("--"))])
+        self.snapshot("extra-paths", err)
+
+    def test_budget_stop(self):
+        self.options(limits={"tokens_hard_max": 110})
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
+        self.assertEqual((self.calls("executor"), self.calls("reviewer")), (1, 0))
+        self.assertEqual(self.state(err)["items"]["W1"]["steps"]["executor.1"]["status"], "done")
+        self.snapshot("budget-stop", err)
+
+    def test_group_review(self):
+        self.set_items({ref: {} for ref in ("W1", "W2")})
+        options = self.project.parent / "group-options.json"
+        options.write_text(json.dumps({"review": {"strategy": "groups"}}), encoding="utf-8")
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")],
+                     "reviewer": [{"text": "## Findings\nnone\n## Checked and fine\n- outputs\n"}]})
+        # Group review persists its wall time in both state and a message; fix only that module's timer.
+        with mock.patch("orch.conductor.application.review_plan.time") as timer:
+            timer.monotonic.return_value = 0.0
+            code, _, err = self.run_items("W1", "W2", extra=("--options", options))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        self.assertEqual(self.state(err)["group_reviews"]["1"]["refs"], ["W1", "W2"])
+        self.assertIn("GROUP_REVIEW", err)
+        self.snapshot("group-review", err)
 
 
 class EventSequenceTests(CharacterizationCase):
@@ -420,7 +605,7 @@ COVERAGE = {
     "GROUP_REVIEW_BLOCKER": "test:test_conductor_review_plan.py", "GROUP_REVIEW_FAILED": "test:test_conductor_review_plan.py",
     "GROUP_UNKNOWN": "test:test_conductor_review_plan.py", "GROUP_FOLLOWUP_MISMATCH": "test:test_conductor_review_plan.py",
     "GROUP_FOLLOWUP_NOT_DONE": "test:test_conductor_review_plan.py",
-    "TOKEN_BUDGET": "test:test_budget_hard.py", "TOKEN_BUDGET_UNMETERED": "test:test_budget_hard.py",
+    "TOKEN_BUDGET": "snapshot:budget-stop", "TOKEN_BUDGET_UNMETERED": "test:test_budget_hard.py",
     "BRIEF_TOO_LARGE": "test:test_budget_hard.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
     "OUTSIDE_MODULE": "test:test_write_fence.py", "OUTSIDE_RUNTIME_ARTIFACT": "test:test_write_fence.py",
@@ -432,7 +617,7 @@ COVERAGE = {
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
     "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": "snapshot:green",
-    "RESULT_REPAIRED": f"test:{T}", "REPAIR_FAILED": f"test:{C}", "REPAIR_SEMANTIC_DRIFT": "test:test_repair_semantics.py",
+    "RESULT_REPAIRED": "snapshot:report-fixer-repair", "REPAIR_FAILED": f"test:{C}", "REPAIR_SEMANTIC_DRIFT": "test:test_repair_semantics.py",
     "INPUT_REBUILT": "snapshot:input-rebuilt",
     "PROVIDER_WAIT": "snapshot:quota-wait", "ROUTE_FALLBACK": "snapshot:route-fallback",
     "ROUTE_UPGRADED": "test:test_conductor_focus.py", "CAPACITY_GATED": f"test:{T}",
@@ -486,10 +671,17 @@ class CoverageTests(unittest.TestCase):
     def test_every_snapshot_belongs_to_a_scenario_and_back(self):
         wanted = {name[len("test_"):].replace("_", "-") for name in dir(ScenarioTests) if name.startswith("test_")}
         self.assertEqual({path.stem for path in GOLDEN.glob("*.json")}, wanted)
+        for name in sorted(wanted):
+            with self.subTest(scenario=name):
+                document = json.loads((GOLDEN / f"{name}.json").read_text(encoding="utf-8"))
+                self.assertEqual(set(document), {"progress", "state", "argv", "manifests", "events", "routes"})
+                for key in ("argv", "manifests", "events", "routes"):
+                    self.assertTrue(document[key], f"{name}: empty {key} projection")
 
 
 def main() -> int:
     argv = sys.argv[1:]
+    default = None
     if "--recapture" in argv:
         argv.remove("--recapture")
         reason = ""
@@ -502,7 +694,11 @@ def main() -> int:
             return 2
         os.environ[RECAPTURE] = reason
         print(f"recapturing the snapshots: {reason}")
-    unittest.main(argv=[sys.argv[0], *argv], module=__name__)
+        # New snapshots must exist before CoverageTests checks the scenario/snapshot bijection.
+        default = sorted((name for name, value in globals().items() if isinstance(value, type)
+                          and issubclass(value, unittest.TestCase) and value.__module__ == __name__),
+                         key=lambda name: (name != "ScenarioTests", name))
+    unittest.main(argv=[sys.argv[0], *argv], module=__name__, defaultTest=default)
     return 0
 
 

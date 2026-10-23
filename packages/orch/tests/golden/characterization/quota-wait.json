@@ -1,4 +1,445 @@
 {
+ "argv": [
+  {
+   "argv": [
+    "--safe-mode"
+   ],
+   "n": 1,
+   "role": "context-scout"
+  },
+  {
+   "argv": [
+    "--safe-mode"
+   ],
+   "n": 1,
+   "role": "executor"
+  },
+  {
+   "argv": [
+    "--safe-mode"
+   ],
+   "n": 2,
+   "role": "executor"
+  },
+  {
+   "argv": [],
+   "n": 1,
+   "role": "reviewer"
+  }
+ ],
+ "events": [
+  {
+   "data": {
+    "attempt_id": "att-run-<digest>-W1",
+    "project_resolution": "git",
+    "run_id": "run-<digest>",
+    "scenario": "full",
+    "source": {
+     "plugin": "fake-cs",
+     "ref": "W1"
+    },
+    "submission_id": "sub-<run>-item-W1"
+   },
+   "type": "orch.run.started"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "brief",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "prepare",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-1",
+    "attempt": 1,
+    "item": "W1",
+    "role": "context-scout",
+    "route": {
+     "effort": "low",
+     "model": "haiku",
+     "model_class": "economy",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "step": "scout",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.started"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-1",
+    "attempt": 1,
+    "item": "W1",
+    "role": "context-scout",
+    "route": {
+     "effort": "low",
+     "model": "haiku",
+     "model_class": "economy",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "step": "scout",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "scout",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-2",
+    "attempt": 1,
+    "item": "W1",
+    "role": "executor",
+    "route": {
+     "effort": "high",
+     "model": "sonnet",
+     "model_class": "implementation",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "step": "executor.1",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.started"
+  },
+  {
+   "data": {
+    "item": "W1",
+    "provider": "claude-code",
+    "reason_code": "PROVIDER_WAIT",
+    "role": "executor",
+    "run_id": "run-<digest>",
+    "step": "executor.1",
+    "until": "<time>",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.provider.quota-exhausted"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-2",
+    "attempt": 1,
+    "item": "W1",
+    "role": "executor",
+    "route": {
+     "effort": "high",
+     "model": "sonnet",
+     "model_class": "implementation",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "step": "executor.1",
+    "tokens": {
+     "cached": 0,
+     "input": 200,
+     "output": 20
+    },
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "executor",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "checks",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-3",
+    "attempt": 1,
+    "item": "W1",
+    "role": "reviewer",
+    "route": {
+     "effort": "high",
+     "model": "grok-4.7",
+     "model_class": "implementation",
+     "provider": "grok"
+    },
+    "run_id": "run-<digest>",
+    "step": "review.1",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.started"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-3",
+    "attempt": 1,
+    "item": "W1",
+    "role": "reviewer",
+    "route": {
+     "effort": "high",
+     "model": "grok-4.7",
+     "model_class": "implementation",
+     "provider": "grok"
+    },
+    "run_id": "run-<digest>",
+    "step": "review.1",
+    "tokens": {
+     "cached": 0,
+     "input": 100,
+     "output": 10
+    },
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "review",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "primary",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt_id": "att-run-<digest>-W1",
+    "gate": "pass",
+    "outcome": "done",
+    "ref": "W1",
+    "run_id": "run-<digest>",
+    "submission_id": "sub-<run>-item-W1"
+   },
+   "type": "orch.run.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "register",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "commit",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  }
+ ],
+ "manifests": {
+  "W1/prompts/executor.1.manifest.json": {
+   "blocks": [
+    {
+     "kind": "role_text",
+     "origin": "roles/executor.md",
+     "tokens": 2306
+    },
+    {
+     "kind": "input",
+     "origin": "input.json",
+     "tokens": 368
+    },
+    {
+     "kind": "run_rules",
+     "origin": "conductor",
+     "tokens": 150
+    },
+    {
+     "kind": "context_map",
+     "origin": "scout-cache:.swissknifeman/state/orch/conductor/cache/scout/W1/<digest>.txt",
+     "tokens": 47
+    },
+    {
+     "kind": "verification",
+     "origin": "conductor",
+     "tokens": 193
+    },
+    {
+     "kind": "progress",
+     "origin": "conductor",
+     "tokens": 37
+    },
+    {
+     "kind": "result_contract",
+     "origin": "conductor",
+     "tokens": 894
+    }
+   ],
+   "budgets": {
+    "core": {
+     "limit": 12000,
+     "tokens": 3798
+    },
+    "retrieval": {
+     "limit": 50000,
+     "tokens": 0
+    },
+    "supporting": {
+     "limit": 30000,
+     "tokens": 197
+    }
+   },
+   "excluded": [],
+   "role": "executor",
+   "route": {
+    "effort": "high",
+    "model": "sonnet",
+    "provider": "claude-code"
+   },
+   "step": "executor.1"
+  },
+  "W1/prompts/review.1.manifest.json": {
+   "blocks": [
+    {
+     "kind": "role_text",
+     "origin": "roles/reviewer.md",
+     "tokens": 508
+    },
+    {
+     "kind": "input",
+     "origin": "input.json",
+     "tokens": 358
+    },
+    {
+     "kind": "candidate",
+     "origin": "conductor",
+     "tokens": 65
+    },
+    {
+     "kind": "verification",
+     "origin": "conductor",
+     "tokens": 20
+    },
+    {
+     "kind": "diff",
+     "origin": "conductor",
+     "tokens": 34
+    },
+    {
+     "kind": "progress",
+     "origin": "conductor",
+     "tokens": 37
+    },
+    {
+     "kind": "result_contract",
+     "origin": "conductor",
+     "tokens": 207
+    }
+   ],
+   "budgets": {
+    "core": {
+     "limit": 12000,
+     "tokens": 1229
+    },
+    "retrieval": {
+     "limit": 50000,
+     "tokens": 0
+    },
+    "supporting": {
+     "limit": 30000,
+     "tokens": 0
+    }
+   },
+   "excluded": [],
+   "role": "reviewer",
+   "route": {
+    "effort": "high",
+    "model": "grok-4.7",
+    "provider": "grok"
+   },
+   "step": "review.1"
+  },
+  "W1/prompts/scout.manifest.json": {
+   "blocks": [
+    {
+     "kind": "role_text",
+     "origin": "roles/context-scout.md",
+     "tokens": 606
+    },
+    {
+     "kind": "input",
+     "origin": "input.json",
+     "tokens": 358
+    },
+    {
+     "kind": "progress",
+     "origin": "conductor",
+     "tokens": 35
+    }
+   ],
+   "budgets": {
+    "core": {
+     "limit": 12000,
+     "tokens": 999
+    },
+    "retrieval": {
+     "limit": 50000,
+     "tokens": 0
+    },
+    "supporting": {
+     "limit": 30000,
+     "tokens": 0
+    }
+   },
+   "excluded": [],
+   "role": "context-scout",
+   "route": {
+    "effort": "low",
+    "model": "haiku",
+    "provider": "claude-code"
+   },
+   "step": "scout"
+  }
+ },
  "progress": [
   {
    "event": "run.start",
@@ -169,6 +610,97 @@
    "outcome": "finished"
   }
  ],
+ "routes": {
+  "W1": {
+   "$schema": "urn:swissknifeman:orch:records:item-routes:v1",
+   "context-scout": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "context-scout"
+    ],
+    "effort": "low",
+    "idle_timeout_s": 0,
+    "model": "haiku",
+    "model_class": "economy",
+    "provider": "claude-code",
+    "role": "context-scout",
+    "timeout_s": 300,
+    "transport": "text"
+   },
+   "executor": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "executor"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "sonnet",
+    "model_class": "implementation",
+    "provider": "claude-code",
+    "role": "executor",
+    "timeout_s": 0,
+    "transport": "jsonl"
+   },
+   "report-fixer": {
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "haiku",
+     "--effort",
+     "low",
+     "--tools",
+     "",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
+    ],
+    "effort": "low",
+    "idle_timeout_s": 5400,
+    "model": "haiku",
+    "model_class": "economy",
+    "provider": "claude-code",
+    "role": "report-fixer",
+    "timeout_s": 600,
+    "transport": "jsonl"
+   },
+   "reviewer": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "reviewer"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "grok-4.7",
+    "model_class": "implementation",
+    "provider": "grok",
+    "role": "reviewer",
+    "timeout_s": 3600,
+    "transport": "jsonl"
+   },
+   "triager": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "triager"
+    ],
+    "effort": "medium",
+    "idle_timeout_s": 5400,
+    "model": "sonnet",
+    "model_class": "implementation",
+    "provider": "claude-code",
+    "role": "triager",
+    "timeout_s": 1800,
+    "transport": "jsonl"
+   }
+  }
+ },
  "state": {
   "agents": 3,
   "claims": {

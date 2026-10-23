@@ -1,0 +1,59 @@
+{
+ "$schema": "urn:swissknifeman:orch:layering-baseline:v1",
+ "bindings": 213,
+ "facade_calls": {
+  "application": 37,
+  "infrastructure": 6,
+  "policies": 8,
+  "stages": 28
+ },
+ "largest_self_scc": 19,
+ "measured_at": "44a896804597ed35c96a70e1194bc0b010dae50e",
+ "oversized_modules": {
+  "application/loop.py": 655,
+  "checks.py": 1109,
+  "cli.py": 621,
+  "infrastructure/roles.py": 601,
+  "prompts.py": 895
+ },
+ "port_calls": {},
+ "private_facade_access": {
+  "cli.py": 8,
+  "explain.py": 9
+ },
+ "private_facade_access_total": 17,
+ "self_functions": {
+  "application": 55,
+  "domain": 0,
+  "infrastructure": 37,
+  "policies": 45,
+  "stages": 81
+ },
+ "staticmethod_bindings": 43,
+ "targets": {
+  "P5.2": {
+   "private_facade_access_total": "== 0",
+   "self_functions.policies": "== 0",
+   "upward_self_calls.policies->stages": "absent"
+  },
+  "P5.3": {
+   "infrastructure/roles.py": "<= 300 lines",
+   "upward_self_calls.infrastructure->*": "absent"
+  },
+  "P5.4": {
+   "oversized_modules.context/*": "absent",
+   "oversized_modules.prompts.py": "absent",
+   "oversized_modules.prompts/*": "absent"
+  }
+ },
+ "unlayered_self_functions": {},
+ "upward_self_calls": {
+  "infrastructure->application": 4,
+  "infrastructure->policies": 28,
+  "infrastructure->stages": 1,
+  "policies->stages": 9,
+  "stages->application": 18
+ },
+ "upward_total": 60,
+ "version": 1
+}

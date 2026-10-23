@@ -89,6 +89,37 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "deferred_findings": {
+          "description": "Confirmed findings awaiting delivery in a later correction. Evidence lives in the recorded review and triage steps.",
+          "type": "array",
+          "items": {
+            "description": "Source of one deferred finding.",
+            "type": "object",
+            "properties": {
+              "key": {
+                "description": "Stable finding key.",
+                "type": "string",
+                "pattern": "^fk-[a-f0-9]{16}$"
+              },
+              "round": {
+                "description": "Review round containing full evidence.",
+                "type": "integer",
+                "minimum": 1
+              },
+              "id": {
+                "description": "Original review finding id.",
+                "type": "string",
+                "pattern": "^F[0-9]+$"
+              }
+            },
+            "required": [
+              "key",
+              "round",
+              "id"
+            ],
+            "additionalProperties": false
+          }
+        },
         "steps": {
           "description": "Steps of the current attempt by step key.",
           "type": "object",
@@ -167,6 +198,12 @@
         "check_fixes_used": {"description": "Check fix rounds used.", "type": "integer", "minimum": 0},
         "corrections_at": {"$ref": "#/$defs/round-list"},
         "corrections_used": {"description": "Correction rounds used.", "type": "integer", "minimum": 0},
+        "followup_corrections": {
+          "description": "Executor rounds assigned to the ordered fix-brief backlog of a group-review follow-up. Saved before execution for replay and correction budget accounting.",
+          "type": "array",
+          "items": {"description": "Executor round owning the corresponding queued fix-brief.", "type": "integer", "minimum": 2},
+          "uniqueItems": true
+        },
         "correction_baselines": {"description": "Tree marks taken before corrections, by round.", "type": "object"},
         "findings_at": {"description": "Findings counted by review round.", "type": ["object", "array"]},
         "review_rounds_used": {"description": "Review rounds used.", "type": "integer", "minimum": 0},

@@ -172,12 +172,20 @@ def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text:
             elif kept_advice:
                 text = kept_advice
             if combined:  # the finished review's confirmed findings are corrected in this one round, and only in it
-                text += "\n\n" + combined["text"]
+                from orch.conductor.domain.fix_brief import correction_inputs
+                from orch.conductor.stages.review import review_correction
+                review_step = done_steps(state["steps"])[f"review.{combined['review']}"]["result"]["findings"]
+                triage_step = (done_steps(state["steps"]).get(f"triage.{combined['review']}-a")
+                               or done_steps(state["steps"])[f"triage.{combined['review']}"])["result"]["triage"]
+                findings, triage, sources = correction_inputs(item.state, combined["review"], review_step, triage_step)
+                major, _minor = self._split_confirmed(item, findings, triage)
+                text += "\n\n" + review_correction(self, item, round_no, combined["review"], findings,
+                                                   dict(triage, confirmed=major), sources)
                 if combined["review"] not in state.setdefault("combined_done", []):
                     state["combined_done"].append(combined["review"])
                 if combined["review"] not in state["corrections_at"]:
                     state["corrections_at"].append(combined["review"])
-                state["corrections_used"] = len(state["corrections_at"])
+                state["corrections_used"] = self._piece_count(state, "corrections_at")
                 state.pop("combined")
                 self._save()
         already = f"checks.{round_no}" in done_steps(item.state.get("steps") or {})
@@ -398,7 +406,6 @@ def carry_review(self, item: Item, review_no: int) -> None:
         major, minor = self._split_confirmed(item, findings, triage)
         self._defer_minor(item, findings, minor)
         if major:
-            item.state["combined"] = {"review": review_no,
-                                      "text": prompts.review_correction(findings, dict(triage, confirmed=major))}
+            item.state["combined"] = {"review": review_no}
     self.progress.emit("info", item=item.ref, message=f"the checks are red but review {review_no} is done: its "
                                                       f"{len(major)} finding(s) to correct go into the same correction")

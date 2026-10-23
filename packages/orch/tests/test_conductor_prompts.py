@@ -185,6 +185,15 @@ class BlockTests(unittest.TestCase):
         kinds = [item.kind for item in blocks]
         self.assertLess(kinds.index("research"), kinds.index("progress"))
 
+    def test_full_and_resumed_review_corrections_name_the_fix_brief_origin(self):
+        origin = "run/W1/fix-briefs/executor.2.json"
+        full = prompts.executor(fixture("adhoc"), item="W1", step="executor.2", correction="fix the defect",
+                                correction_origin=origin)
+        resumed = prompts.executor_resumed(item="W1", step="executor.2", correction="fix the defect",
+                                           correction_origin=origin)
+        for blocks in (full, resumed):
+            self.assertEqual([origin], [row.origin for row in blocks if row.kind == "correction"])
+
     def test_no_research_no_block(self):
         for research in (None, {}):
             blocks = prompts.executor(fixture("adhoc"), item="W1", step="executor.1", research=research)

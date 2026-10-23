@@ -67,11 +67,12 @@ def _input_adhoc(args: argparse.Namespace) -> int:
         if args.provenance:
             provenance = adhoc.support_provenance(args.provenance, plan=args.plan, phase=args.phase, item=args.item,
                                                   finding=args.finding, event=args.event, question=args.question)
-        elif any((args.plan, args.phase, args.item, args.finding, args.event, args.question)):
+        elif any((args.phase, args.finding, args.event, args.question)) or (not args.review and (args.plan or args.item)):
             raise adhoc.AdhocError("USAGE", "--plan, --phase, --item, --finding, --event and --question need --provenance")
         doc = adhoc.build_adhoc_input(args.goal, args.include or [], args.exclude or [], args.check or [],
                                       args.procedure or [], args.read or [], route=route, review=args.review,
-                                      why=args.why, expect=args.expect, provenance=provenance)
+                                      why=args.why, expect=args.expect, provenance=provenance,
+                                      plan=args.plan if args.review else None, item=args.item if args.review else None)
     except adhoc.AdhocError as error:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 2 if error.code == "USAGE" else 1

@@ -1,0 +1,11 @@
+{
+  "run": "R",
+  "receipt": "artifacts/review-receipt.json",
+  "verdict": "GREEN",
+  "open": {
+    "blocker": 0,
+    "major": 0
+  },
+  "findings": [],
+  "stream": "not allowed"
+}

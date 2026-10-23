@@ -41,7 +41,9 @@ class BatchReviewTests(unittest.TestCase):
         return subprocess.run(["git", *args], cwd=self.project, capture_output=True, text=True, check=True).stdout
 
     def review(self, *extra) -> subprocess.CompletedProcess:
-        fake = ["python3", "-c", "import sys,json; t=sys.stdin.read(); print(json.dumps({'type':'result','result':'## Findings\\nnone\\nSAW '+str(t.count('diff --git'))}))"]
+        fake = ["python3", "-c", "import sys,json; t=sys.stdin.read(); d={'verdict':'GREEN','findings':[], "
+                "'residual_risk':'SAW '+str(t.count('diff --git'))}; "
+                "print(json.dumps({'type':'result','result':'```json review-findings\\n'+json.dumps(d)+'\\n```'}))"]
         return subprocess.run([sys.executable, str(SCRIPT), "cnd-test", "--project", str(self.project), "--argv-json",
                                json.dumps(fake), *extra], capture_output=True, text=True, check=False)
 
@@ -49,7 +51,7 @@ class BatchReviewTests(unittest.TestCase):
         done = self.review()
         self.assertEqual(done.returncode, 0, done.stderr)
         text = (self.run_dir / "batch-review.md").read_text(encoding="utf-8")
-        self.assertIn("## Findings", text)
+        self.assertIn("json review-findings", text)
         self.assertIn("SAW 2", text)  # lib/W1.py and lib/W2.py; the tests are left out
         measured = json.loads((self.run_dir / "batch-review.json").read_text(encoding="utf-8"))
         self.assertEqual((measured["returncode"], measured["pieces"]), (0, ["W1", "W2"]))
@@ -68,6 +70,21 @@ class BatchReviewTests(unittest.TestCase):
         info = json.loads(done.stdout)
         self.assertEqual(info["pieces"], ["W1", "W2"])
         self.assertFalse((self.run_dir / "batch-review.md").exists())
+
+
+class BatchJSONTests(unittest.TestCase):
+    def test_markdown_is_malformed_and_closed_json_supplies_counts(self):
+        from orch.conductor.review_batch import verdict
+        self.assertEqual(verdict("## Findings\nnone")["format"], "malformed")
+        finding = {"id": "F1", "severity": "Major", "confidence": "high", "location": "a.py:1",
+                   "failure_scenario": "empty input crashes", "basis": "correctness"}
+        def reply(doc):
+            return "```json review-findings\n" + json.dumps(doc) + "\n```"
+        doc = {"verdict": "ATTENTION", "findings": [finding]}
+        self.assertEqual(verdict(reply(doc))["counts"], {"Blocker": 0, "Major": 1, "Minor": 0})
+        finding["unexpected"] = "no"
+        self.assertEqual(verdict(reply(doc))["format"], "malformed")
+        self.assertEqual(verdict("```json review-findings\n{}\n```")["format"], "malformed")
 
 
 if __name__ == "__main__":

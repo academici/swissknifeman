@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 from pathlib import Path
 import signal
@@ -244,9 +245,16 @@ class DiskGuard(unittest.TestCase):
             step_stage.disk_guard(me)  # the configuration's limit applies without a piece
 
 
-CLEAN = "## Findings\nnone\n## Checked and fine\n- the claim path\n"
-DRESSED = ("Here is my review.\n\n## Findings\n1. **[Major]** `lib/a.py:12` - wrong state on resume\n   Scenario: x -> y\n"
-           "- [Minor] lib/b.py:3 - a nit\n- `[Blocker]` lib/c.py:7 - unsafe path\n\n## Checked and fine\n- [Major] in a bullet here\n")
+def batch_reply(rows=()):
+    findings = [{"id": f"F{index}", "severity": severity, "confidence": "high", "location": location,
+                 "failure_scenario": "concrete input produces wrong state", "basis": "correctness"}
+                for index, (severity, location) in enumerate(rows, 1)]
+    return "```json review-findings\n" + json.dumps({"verdict": "RED" if findings else "GREEN",
+                                                       "findings": findings}) + "\n```"
+
+
+CLEAN = batch_reply()
+FINDINGS_JSON = batch_reply([("Major", "lib/a.py:12"), ("Minor", "lib/b.py:3"), ("Blocker", "lib/c.py:7")])
 
 
 class ReviewVerdict(unittest.TestCase):
@@ -254,24 +262,25 @@ class ReviewVerdict(unittest.TestCase):
         read = review_batch.verdict(CLEAN)
         self.assertEqual((read["format"], read["counts"]), ("none", {"Blocker": 0, "Major": 0, "Minor": 0}))
 
-    def test_findings_dressed_as_list_items_numbers_bold_or_code_are_counted(self):
-        read = review_batch.verdict(DRESSED)
+    def test_closed_json_findings_supply_counts_and_locations(self):
+        read = review_batch.verdict(FINDINGS_JSON)
         self.assertEqual(read["format"], "findings")
-        self.assertEqual(read["counts"], {"Blocker": 1, "Major": 1, "Minor": 1})  # the line under "Checked and fine" is not one
+        self.assertEqual(read["counts"], {"Blocker": 1, "Major": 1, "Minor": 1})
         self.assertEqual([row["location"] for row in read["findings"]], ["lib/a.py:12", "lib/b.py:3", "lib/c.py:7"])
 
     def test_a_reply_in_another_format_is_malformed_and_never_clean(self):
-        for text in ("The change looks fine to me.", "", "## Review\nAll good", "## Findings\nIt seems OK, nothing serious.\n"):
+        for text in ("The change looks fine to me.", "", "## Review\nAll good", "## Findings\nnone\n",
+                     "## Findings\n[Major] a.py:1 - a defect\n"):
             self.assertEqual(review_batch.verdict(text)["format"], "malformed", text)
 
     def test_the_paths_to_correct_come_from_blocker_and_major_findings_only(self):
-        read = review_batch.verdict(DRESSED)
+        read = review_batch.verdict(FINDINGS_JSON)
         self.assertEqual(review_batch.followup_paths(read["findings"]), ["lib/a.py", "lib/c.py"])
-        hostile = review_batch.verdict("## Findings\n[Major] ../../etc/passwd:1 - x\n[Major] /abs/p.py:1 - y\n")
+        hostile = review_batch.verdict(batch_reply([("Major", "../../etc/passwd:1"), ("Major", "/abs/p.py:1")]))
         self.assertEqual(review_batch.followup_paths(hostile["findings"]), [])
 
-    def test_counts_keeps_its_old_meaning(self):
-        self.assertEqual(review_batch.counts("## Findings\n[Major] a.py:1 - d\n")["Major"], 1)
+    def test_counts_comes_from_json(self):
+        self.assertEqual(review_batch.counts(batch_reply([("Major", "a.py:1")]))["Major"], 1)
 
 
 class SessionRoute(unittest.TestCase):

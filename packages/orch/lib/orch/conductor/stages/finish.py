@@ -36,6 +36,11 @@ def settle_pending(self, report: dict, rows: Optional[list]) -> dict:
 
 
 def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
+    deferred = item.state.get("deferred_findings", [])
+    if deferred:
+        self._plan_note(item, "Confirmed findings remain deferred after the correction allowance: "
+                        + ", ".join(row["key"] for row in deferred)
+                        + f"; full evidence: {self._relative(work_source.artifact_path(item, 'review-verdict.json'))}")
     report = self._settle_pending(report, rows)
     changed = self._changed(item)
     if changed or any("changed" in (step.get("result") or {}) for key, step in done_steps(item.state.get("steps", {})).items()
@@ -89,13 +94,14 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
                    + "; ".join(found[:3]))
     report_path = write_json(item.directory / "register-report.json", body)
     evidence = {row["id"]: row["evidence"] for row in rows or [] if row.get("evidence") and row["kind"] == "acceptance"}
-    executor = self._actor(item.routes["executor"])
+    review_only = item.input_doc.get("provenance", {}).get("kind") == "review"
+    executor = self._actor(item.routes["reviewer" if review_only else "executor"])
     registrar = self.conductor.get("registrar") or "orch/conductor"
 
     receipt = work_source.review_receipt(item) if status != "blocked" and self._reviewing(item) else None
     args = self._register_args(item, report_path, status, registrar, self.label(executor), evidence,
                                review_receipt=self._relative(receipt) if receipt else None)
-    closed = self._close(item, args) if self._closer_named(item) else None
+    closed = self._close(item, args) if not review_only and self._closer_named(item) else None
 
     def said(result: dict) -> str:
         by_closer = closed is not None and closed["by"] == "closer" and result["outcome"] == "no-op"
@@ -109,7 +115,7 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         and not report.get("changed_paths")
     if status == "blocked" and not records_only:
         item.state["partial"] = bool(report.get("changed_paths"))
-    if (status != "blocked" or records_only) and item.policy.get("git_action") == "commit":
+    if not review_only and (status != "blocked" or records_only) and item.policy.get("git_action") == "commit":
         paths = commit_paths(self, item, report)
         self._step(item, "commit", lambda: self._commit(item, paths),
                    verdict=lambda result: " ".join(part for part in (result["outcome"], result.get("sha"),

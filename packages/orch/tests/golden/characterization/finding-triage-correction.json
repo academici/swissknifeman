@@ -510,8 +510,8 @@
     },
     {
      "kind": "correction",
-     "origin": "conductor",
-     "tokens": 192
+     "origin": ".swissknifeman/state/orch/conductor/<run>/W1/fix-briefs/executor.2.json",
+     "tokens": 244
     },
     {
      "kind": "changed",
@@ -532,7 +532,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 1123
+     "tokens": 1175
     },
     "retrieval": {
      "limit": 50000,
@@ -1127,6 +1127,7 @@
      1
     ],
     "corrections_used": 1,
+    "deferred_findings": [],
     "executor_started": true,
     "expected": null,
     "findings_at": {

@@ -169,7 +169,8 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              role: str = "executor", roles_dir=None, stub=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
-             file_tools: bool = False, containers: bool = True, self_check=(), protected=(), staged: str = "") -> list:
+             file_tools: bool = False, containers: bool = True, self_check=(), protected=(), staged: str = "",
+             correction_origin: str = CONDUCTOR) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
@@ -206,14 +207,14 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests, self_check))])
+        parts.append([Block("correction", correction_origin, _correction(correction, targeted_tests, self_check))])
     parts.append([_progress(item, step)])
     parts.append([Block("result_contract", CONDUCTOR, "## Result\n\n" + _STAGE_REPORT)])
     return _join(parts)
 
 
 def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), interrupted: str = "", fix: str = "",
-                     changed_paths=(), targeted_tests: bool = True, self_check=()) -> list:
+                     changed_paths=(), targeted_tests: bool = True, self_check=(), correction_origin: str = CONDUCTOR) -> list:
     """The delta prompt of a round in a resumed executor session: the session holds the task, the rules and the result
     contract of the latest full prompt of the piece, so it gets only what this round asks: the correction (``fix`` is the
     deviation to fix), the answers it has not seen, the note of an interrupted round, the paths changed so far and the
@@ -228,7 +229,7 @@ def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), 
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR,
+        parts.append([Block("correction", correction_origin,
                             _correction(correction, targeted_tests, self_check if targeted_tests else ()))])
     if interrupted:
         parts.append([Block("interrupted", CONDUCTOR, "## Interrupted round\n\n" + interrupted.strip())])

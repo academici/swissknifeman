@@ -223,7 +223,7 @@ Every step has a key and is recorded in `state.json` before it starts and once i
 Red checks get `limits.check_fixes` corrections; confirmed findings `limits.corrections` corrections within
 `limits.review_rounds` rounds (2 rounds and 1 correction by default, as in the `full` pack). `check_fixes` and
 `corrections` are **targets**: past one, a further round runs while the last correction made progress (the set of red
-checks changed or fewer failures show; fewer findings to correct, not other ones), up to `limits.ceiling_factor` times
+checks changed or fewer failures show; the set of confirmed finding keys changed), up to `limits.ceiling_factor` times
 the target (2 by default). Every round past a target prints a `LIMIT_OVER` beacon and leaves a plan note.
 `review_rounds` is a **wall** (D24): a review is the safety net of finished work, not a loop. The findings of the last
 round are corrected once without another review (`review.final_correction`, default true), the acceptance checks of
@@ -369,7 +369,7 @@ The conductor stops only on:
 | `OUTSIDE_RUNTIME_ARTIFACT` | the executor (blocked piece) or the checks (the run stops) changed a **tracked** file under `scope.runtime_paths` (`.swissknifeman/orch-artifacts/**`, `tests/evidence/**`, …): runtime artifacts are history, not product; restore the file from git |
 | `CHECKS_MUTATED` | the checks changed the tree again when they ran a second time on the tree their first run had changed: they are not idempotent (resumable); make the check change nothing on a tree it has already changed |
 | `GROUP_REVIEW_BLOCKER` | the group review of a batch found a **Blocker**; the run stops (resumable) and a resume stops again at once until the group is settled: run the follow-up (`orch conduct run --input <run folder>/group-review-<n>.followup.json --commit`), then `orch conduct settle --run <R> --group <n> --followup-run <F> --reason …` (see "The review strategy of a batch") |
-| `GROUP_REVIEW_FAILED` | the group review failed (the role failed or its reply has no readable `## Findings` section) and a piece of the group has `review_mode: requested`, which no other review covers; a resume repeats the review once (two attempts in all); a group without a requested piece only gets the beacon |
+| `GROUP_REVIEW_FAILED` | the group review failed (the role failed or its reply has malformed `review-findings` JSON) and a piece of the group has `review_mode: requested`, which no other review covers; a resume repeats the review once (two attempts in all); a group without a requested piece only gets the beacon |
 | `GROUP_UNKNOWN`, `GROUP_FOLLOWUP_MISMATCH`, `GROUP_FOLLOWUP_NOT_DONE` | refusals of `settle --group`, exit 1, the state of the run is not changed: the run has no such blocked group; the follow-up run did not run `group-review-<n>.followup.json` of this run (or does not exist); it is not finished with its one piece done and committed |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
@@ -696,6 +696,50 @@ piece that closed (done or blocked) is not claimed again; a piece that stopped h
 tree. The configuration of the run is read again, so a fixed provider or a corrected `[orch.conductor.argv]` takes
 effect.
 
+## Bounded corrections: fix-brief/v1
+
+Every review correction, including a correction combined with red checks, is rendered from a
+validated `fix-brief/v1` at `<item run directory>/fix-briefs/executor.<n>.json`. The correction
+block's prompt manifest names that file as its origin. `review.fix_brief` (`fix_brief`) merges by key and defaults
+to `max_findings: 12`, `max_chars: 24000` (rendered characters). Findings sort by Blocker, Major,
+Minor, Nit, then high, medium, low confidence, then id. Blockers always reach the executor, even
+above either cap: the informational `FIX_BRIEF_OVER` message reports actual and configured counts.
+An insufficient non-Blocker character budget for the required framing and deferred reference is refused.
+
+Problem, fix, observed output and reproduction command fields are bounded to 1200, 800, 600 and
+400 characters respectively, keeping head and tail with `… [clipped N chars; full: <ref>#<id>]`.
+The `clipped` array names those fields; a delivered finding is never removed or cut as a whole.
+The brief carries stable finding keys, scope constraints, check ids and a deferred summary with
+counts by severity and a link to the full review verdict. Undelivered confirmed findings persist
+as `state.items[ref].deferred_findings` references to validated review/triage steps and enter the
+next correction even if the next reviewer reports no new findings. At the correction wall they
+remain deferred in the receipt and become an explicit plan note with the artifact reference.
+They are never silently counted as corrected. Keys recognize exact repeated findings, including
+line drift; they are not semantic deduplication of reworded defects.
+
+No reviewer stream, full check log or session transcript enters a correction brief. Each failed
+check's tail is bounded to forty lines and 4000 characters including an omitted-count marker and
+the full log path (`checks/<round>/<V#>.log`); failure-header samples are bounded separately to
+4000 characters. Read the referenced full log when diagnosing all independent failures.
+
+## Interactive review-only runner
+
+`orch input adhoc --review BASE..WORKTREE --plan P --item I` builds a read-only execution-input.
+`orch conduct run --input FILE --options REVIEWER_OPTIONS` runs only `review.1` and `triage.1`,
+then registers through the file source. It does not run scout, researcher, executor, acceptance
+commands, advisor, corrections or commit (even with `--commit`). A dirty worktree is the subject
+of review, not adopted executor work. Named heads such as `BASE..HEAD` bind the revision's blobs
+and diff; `WORKTREE` binds `git diff --name-only BASE` plus untracked paths.
+
+The existing receipt is written with subject `P.I` when both identities are supplied, otherwise
+the execution input id. The default findings-shape procedure gets engine evidence from the
+validated review and triage documents; command checks are not executed by this path. Stdout ends
+with one compact JSON line validated as `review-summary/v1`: `run`, `receipt`, `verdict`, `open`, and findings with only `key`, `id`,
+`severity`, `location`. Raw streams stay at `<run>/<input>/streams/review.1.jsonl`. An interactive
+session reads only that JSON and the receipt, then supplies `--review-receipt` to finish. Review
+intent expressed by the owner is first recorded in the plan (D13); the canonical intent table and
+runner commands live in planner's plan-run, reviewer-selection and intent-routing documents.
+
 ## The environment of a check
 
 A check command tests the project, so it does not inherit the install roots of the orchestrator the conductor runs from:
@@ -792,15 +836,26 @@ commits of the group once (`review_batch`: production code only, the same as `ba
 (`state.group_reviews`).
 The reserved reviewer of a last piece with `review.mode: none|self` does not override the group's requested review routes;
 an explicit configuration or invocation reviewer still wins.
-The reply must hold a `## Findings` section with `[Blocker|Major|Minor] file:line - defect` lines (a
-list marker, a number, bold or backticks around them are read too) or the word `none`. The beacon `GROUP_REVIEW` gives the
-counts; a reply that is neither is `GROUP_REVIEW_FAILED` (`format: malformed` in `state.group_reviews`), never a clean review, and
+The reply must be one closed `json review-findings` block, with the same schema as a per-item
+reviewer: verdict, findings (id, severity, confidence, location, failure_scenario, basis, optional
+reported reproduction), questions and residual_risk. The conductor heals form only and validates
+the schema and verdict consistency. Markdown findings and invalid JSON are `format: malformed`,
+announced as `GROUP_REVIEW_FAILED`, never a clean review. Counts come from the validated JSON;
 so is a group without a commit. Blocker and Major findings are corrected in a commit of their own: the conductor writes
 `group-review-<n>.followup.json` (an execution-input with `provenance: review_followup`, the files the findings name as scope,
+a goal rendered from `group-review-<n>.fix-brief.json` with problem, reported reproduction and correction guidance,
 and as acceptance the command checks of the reviewed pieces, once each — `cd DIR && CMD` for a check with its own `cwd`, the
 `cadence: phase` checks left out — so the correction is tested like the pieces were) and the beacon names the command, `orch conduct run --input <that file> --commit` (the executor corrects them, the conductor
 checks and commits; native correction inside the run is not built, because the pieces of the group are already registered and
 committed in the work source).
+
+When the findings exceed one brief, `provenance.fix_briefs` carries an ordered backlog of further bounded
+fix-brief artifacts, each pinned by its canonical digest. The initial goal stays bounded. The follow-up conductor
+assigns the backlog to later executor rounds, records their numbers in `state.items[ref].followup_corrections`
+before execution, and checks each round. These assignments share the normal piece and batch correction allowance.
+Resume replays the same assignments without spending the allowance twice. If the allowance runs out, the follow-up
+is blocked with `REVIEW_LIMIT`; its notes and report list every unassigned finding's id, key and artifact reference
+as unresolved debt. Such a follow-up cannot satisfy `settle --group`.
 
 A group review with a **Blocker** does not end in `finished`: the run stops with `GROUP_REVIEW_BLOCKER` (resumable;
 `state.group_reviews[n].blocking`), and a resume stops again with the same code until the group is settled. The stop names the way
@@ -813,7 +868,7 @@ read without a lease and is accepted only when it ran exactly that file of this 
 `{followup_run, commit, reason, at}`, the beacon `GROUP_REVIEW_RESOLVED` is printed and the next resume goes on; no run writes into the state
 of another. Major findings are not a stop: the follow-up is announced as above.
 
-A group review that fails (the role failed, or the reply has no readable `## Findings`) while a piece of the group has
+A group review that fails (the role failed, or the reply has malformed `review-findings` JSON) while a piece of the group has
 `review_mode: requested` stops the run with `GROUP_REVIEW_FAILED` (those pieces have no review of their own); a resume repeats the review once
 (`state.group_reviews[n].attempts`, at most 2); after the second failure the stop stays: a resume raises `GROUP_REVIEW_FAILED` again
 without a third reviewer call and is no waiver, and only a review that reads (a repeated review below the cap) ends it. Without a requested piece it stays a

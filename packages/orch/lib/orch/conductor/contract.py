@@ -1,4 +1,4 @@
-"""The closed documents of the conductor (``schemas/conductor/v1``): run-options, stage-report, review-findings,
+"""The closed documents of the conductor (``schemas/conductor/v1``): fix-brief, review-summary, run-options, stage-report, review-findings,
 triage-result, research-result, advice, progress-line, scout-write-set and prompt-manifest, checked by the closed-profile validator of aicore."""
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from aicore.util import schema
 from orch.settings import ORCH_ROOT
 
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "conductor" / "v1"
-KINDS = ("advice", "progress-line", "prompt-manifest", "research-result", "review-findings", "review-receipt", "run-options", "scout-write-set", "stage-report",
+KINDS = ("advice", "fix-brief", "progress-line", "prompt-manifest", "research-result", "review-findings", "review-receipt", "review-summary", "run-options", "scout-write-set", "stage-report",
          "triage-result")
 _REGISTRY: list = []
 

@@ -34,8 +34,10 @@ class CompactCanonTests(unittest.TestCase):
         text = (COMMANDS / "plan-run.md").read_text(encoding="utf-8")
         for verb in ("plan.py next", "plan.py start", "plan.py log", "plan.py finish", "plan.py show"):
             self.assertIn(verb, text)
-        for retired in ("journal", "bundle", "receipt", "continuity"):
+        for retired in ("journal", "bundle", "plan.py receipt", "continuity"):
             self.assertNotIn(retired, text)
+        self.assertIn("--review-receipt", text)
+        self.assertIn("review-receipt.json", text)
         self.assertIsNone(re.search(r"plan-(work|views|lint)\.py", text))
 
 

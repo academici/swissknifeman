@@ -4,7 +4,7 @@
       "artifact_id": "planner.codex.plugin",
       "path": "packages/planner/.codex-plugin/plugin.json",
       "rendered_hash": "sha256:ff6f4106b193556acb2672cf774c95047de1db19b0e6f38969bceab8f52d7676",
-      "source_hash": "sha256:c709530c58c69eb286c9ad34307e96389abe5c8fe15468e4876b146ccf2eb6c6"
+      "source_hash": "sha256:9a864bdea232d50d64b8af565713c07e0098f0636b713f5c33630a535317d550"
     },
     {
       "artifact_id": "planner.codex.design.skill",
@@ -135,20 +135,20 @@
     {
       "artifact_id": "planner.codex.plan.run.skill",
       "path": "packages/planner/adapters/codex/skills/planner-plan-run/SKILL.md",
-      "rendered_hash": "sha256:0f6678ab7e79eea5d6ce99813c37277ab6ae78da0637877419683c5d0a0a5a67",
-      "source_hash": "sha256:33a2df6ecff707985915e11be474ab5c014062ec3c5135082b029bde03c3909c"
+      "rendered_hash": "sha256:ba30ea5a5be01ceb0688e6feb7f1a7b8b04846713c455398dfe3ef8aec0aee8c",
+      "source_hash": "sha256:71964a74fdaca1027b6ff062d65979269799c8088f2bd8f85da4728e2aaa606f"
     },
     {
       "artifact_id": "planner.codex.plan.run.invocation-policy",
       "path": "packages/planner/adapters/codex/skills/planner-plan-run/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:8c92e08960d5e27d106862a391a7e959a45ecc838556ee1cf50e2d543a21f643"
+      "source_hash": "sha256:d595802b731cd6bac6323ea99e58ce61d61f0b5fee310e640a3a621524d1066e"
     },
     {
       "artifact_id": "planner.codex.plan.run.runtime",
       "path": "packages/planner/adapters/codex/skills/planner-plan-run/command.md",
-      "rendered_hash": "sha256:c6bfadcd3807000ba1d1a490f2c0718ee39af6aa012de9b23f59fcfad092b2aa",
-      "source_hash": "sha256:6d435438831567635c271ff256134b47d9564a6c022705a76889a5e90d6f1a22"
+      "rendered_hash": "sha256:8037f08b30b677dcc277325eca272758374e206e9256743ebcb58402f00a3c05",
+      "source_hash": "sha256:8c792e4f30f2817814d302f872e4aa049d0e1520407340d56c8380fe401a765f"
     },
     {
       "artifact_id": "planner.codex.research.skill",

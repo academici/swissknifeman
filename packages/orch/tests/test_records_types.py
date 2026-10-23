@@ -16,6 +16,7 @@ SCHEMAS = ROOT / "schemas"
 MODULES = {"records": "records", "conductor": "conductor", "exec": "exec", "work-source": "work_source"}
 # Roots that are no TypedDict, with the reason: the schema has no fixed key set, or the root has no type of its own.
 NOT_CLASSES = {
+    "conductor/review-summary": "oneOf of review-only and batch summaries: a Union",
     "records/item-routes": "route labels are dynamic keys (patternProperties): a Dict",
     "exec/defs": "definitions only",
     "work-source/input": "oneOf of two documents: a Union",

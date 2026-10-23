@@ -1,6 +1,6 @@
 <!-- Generated Cursor runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-run.md
-Canonical SHA-256: sha256:ece4c6c669ccbf6ed20defa38737aa515fe3e37ac2e26915bf0631e4f489b3c5
+Canonical SHA-256: sha256:ebd5d162f28d8bd7041a2b3951d8eac0a0b4cbbf70166e3953fdf170a27ea00e
 Adapter: planner.cursor-command/1.0.18
 -->
 ## Native Cursor launch-block — required only at a real user-facing boundary
@@ -33,7 +33,7 @@ one commit per item, inside the item's scope.
 1. `plan.py next <plan>` — without item ids, run the batch it names; with ids, run those.
    Review flags are options, never item ids. Read `references/reviewer-selection.md` when requested.
    `--reviewer` requests a fresh read-only review of each selected item before `finish`;
-   an omitted reviewer flag never starts a review.
+   a recorded requested review or an explicit owner message also uses the normal review path.
    **A review runs only when the plan JSON records it** (`review.mode: requested` with its reviewer, or a review
    item of the phase); one that no document declares is not run, like a subagent when the registration command is
    given. A phase item that is itself the review of the phase needs no further review. Batches are a
@@ -46,16 +46,44 @@ one commit per item, inside the item's scope.
 5. When reality changes the plan, an assumption or a blocker appears:
    `plan.py log <plan> <item> --type deviation|blocker|difficulty|assumption|note --summary "…"`.
 6. Run each Validation check once per relevant change; keep long output in a file.
-   With `--reviewer`, run the selected native read-only reviewer after GREEN checks; record its
-   verdict and actual session in an artifact and a `plan.py log --type note` event, then
-   `plan.py commit <plan> <item> --role reviewer`. A finding returns at most `policy.corrections_max` owning
-   corrections (context pack `policy`, or `plan.py config show`; default 1) and affected checks, committed with
-   `--role fix` after they rerun, then a re-review while fewer than `policy.review_rounds_max` rounds (default 2)
-   are complete; no recursive reviewer fixes.
-7. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…"`
+   For a requested item review, use the review-only runner below after GREEN checks, with the exact
+   selected reviewer route. Read only its compact final JSON and receipt. A finding returns at most
+   `policy.corrections_max` owning corrections (default 1), with affected checks, and a re-review while
+   fewer than `policy.review_rounds_max` rounds (default 2) are complete. No recursive reviewer fixes.
+7. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…" --review-receipt <path>`
    (`done_with_deviations` with `--deviation`, `blocked` with `--escalation`). The last item closes its phase.
 8. One scoped commit: `plan.py commit <plan> <item> --role executor` (plan JSON + product files of the item;
    `--path` for an extra file, logged as a deviation). Report the printed sha, then the next item of the batch.
+
+**Review intent**
+
+| Source | Action |
+|:--|:--|
+| Command flag `--reviewer` / `--review` | Explicit opt-in, with the command's existing item or scope shape; record the requested review in the plan before running it. |
+| Owner message in the session asking for review, in ordinary words or with a selector | Normalize into the plan for unfinished items of this invocation: `plan.py set <plan> <item> --json '{"review":{"mode":"requested","reviewer":{...},"reason":"owner request: <quote>"}}'` (D13), then use the normal path. |
+| `item.review.mode: requested` in the plan | Conductor reviews per item when run policy enables it; otherwise it announces `REVIEW_REQUESTED_POLICY_OFF`. Interactive plan-run uses the review-only runner below. |
+| None of the above | Self-check plus affected tests. |
+
+**Interactive review runner**
+
+Use the orchestrator's review-only runner after GREEN item checks. Build a run-options JSON file
+with `reviewer` set to the exact selected `provider/model[/context][/effort]`; keep its path as
+`<reviewer-options.json>`. Record the review request in the plan first; there is no unrecorded
+run-only review of a plan item. Use the parent of the first implementation commit as `<base>`
+(or the pre-implementation HEAD when the implementation is still uncommitted).
+
+```sh
+python3 -I .swissknifeman/launcher.py orch input adhoc --review <base>..WORKTREE --plan <plan> --item <item> --goal "<item summary>" > "$TMPDIR/review-<item>.json"
+python3 -I .swissknifeman/launcher.py orch conduct run --input "$TMPDIR/review-<item>.json" --options <reviewer-options.json> > "$TMPDIR/review-<item>.result.json"
+```
+
+Read only the final JSON line (`run`, `receipt`, `verdict`, `open`, compact `findings`) and the
+`review-receipt.json` it names. Raw reviewer streams and transcripts stay in the run directory;
+never load them into the owner/executor session. The runner performs review and triage once,
+without executor work, acceptance commands, correction rounds, advisor or commit. Pass its receipt
+to `plan.py finish <plan> <item> … --review-receipt <path>`. A receipt with open confirmed defects
+is review evidence, not a claim that those defects were fixed: correct them within the existing
+bounded rounds and refresh the receipt for the resulting candidate before closing.
 
 **Units (optional)**
 - Represent preparation, implementation, review and checks as units with dependencies and optional parents; `plan.py unit <plan> <item> add --title … --json …`.

@@ -8,6 +8,7 @@ import re
 from typing import Optional
 
 from orch.conductor.prompts.blocks import _fence
+from orch.conductor.domain.fix_brief import render
 
 
 def self_check_missing(commands) -> str:
@@ -96,7 +97,7 @@ def _failure_excerpt(log) -> str:
     return text
 
 
-def _failure_report(log, *, headers: int = 40, total: int = 8000) -> tuple:
+def _failure_report(log, *, headers: int = 40, total: int = 4000) -> tuple:
     """A bounded sample of failure headers (plus one following line) and child-log paths.
     The full log stays the authority; a tail does not replace these headers."""
     found, children = [], []
@@ -131,9 +132,27 @@ def _failure_report(log, *, headers: int = 40, total: int = 8000) -> tuple:
     except OSError:
         return "", []
     text = "\n".join(found)
-    if len(text) > total:
-        text = text[:total]
+    text = _bounded_log(text, log, total)
     return text, children[:20]
+
+
+def _bounded_log(text: str, log, total: int = 4000) -> str:
+    """At most forty lines and ``total`` characters, including the full-log marker."""
+    original = text
+    text = "\n".join(text.splitlines()[-40:])
+    if len(text) <= total and text == original.rstrip("\n"):
+        return text
+    text = "\n".join(text.splitlines()[-38:])
+    kept = min(len(text), total)
+    for _ in range(8):
+        marker = f"\n… [{len(original) - kept} chars omitted; full log: {log}]\n"
+        size = min(len(text), max(0, total - len(marker)))
+        if size == kept:
+            break
+        kept = size
+    head = min(1000, kept // 4)
+    tail = kept - head
+    return text[:head] + marker + (text[-tail:] if tail else "")
 
 
 def _historical_causes(historical) -> str:
@@ -175,27 +194,19 @@ def check_correction(failed: list, *, historical=None, stage: str = "checks") ->
             lines.append(f"Full check log: `{row['log']}`. Read the failing section; the tail may omit it.")
             excerpt, children = _failure_report(row["log"])
             if excerpt:
-                lines.append("Failure headers (bounded sample: at most 40 headers, 20000 reads and 8000 characters; "
+                lines.append("Failure headers (bounded sample: at most 40 headers, 20000 reads and 4000 characters; "
                              "the full log is authoritative and may contain further failures):\n" + excerpt)
             for child in children:
                 lines.append(f"Child log: `{child}`")
         if row.get("tail"):
-            lines.append(row["tail"])
+            lines.append(_bounded_log(row["tail"], row.get("log", "checks/<round>/<id>.log")))
     older = _historical_causes(historical or [])
     return "\n".join(lines) + ("\n\n" + older if older else "")
 
 
-def review_correction(findings: dict, triage: dict) -> str:
-    """Correction package of the confirmed findings: the finding, its reproduction and the fix to make."""
-    by_id = {item["id"]: item for item in findings.get("findings", [])}
-    lines = []
-    for entry in triage.get("confirmed", []):
-        finding = by_id.get(entry["finding"], {})
-        repro = entry["reproduction"]
-        lines.append(f"{entry['finding']} ({finding.get('severity', '-')}, {finding.get('location', '-')}): "
-                     f"{finding.get('failure_scenario', '')}\n  reproduced: `{repro['cmd']}` → exit {repro['exit']}: "
-                     f"{repro['observed']}\n  fix: {entry['fix']}")
-    return "The review found these defects and the triage reproduced each one:\n\n" + "\n".join(lines)
+def review_correction(fix_brief: dict) -> str:
+    """The correction is rendered exclusively from the conductor-owned fix-brief."""
+    return render(fix_brief)
 
 
 def evidence(title: str, text: str, tag: str = "") -> str:

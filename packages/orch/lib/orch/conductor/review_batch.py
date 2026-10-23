@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
-from typing import Optional
 from aicore.util.proc import run as run_with_timeout
 
-from orch.conductor import records
+from orch.conductor import contract, records
+from orch.conductor.heal import heal
+from orch.conductor.domain.report import json_block, findings_problems
 from orch.conductor.domain.item import done_steps
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import STATE_FILE
@@ -24,12 +25,15 @@ behaviour on normal or edge input (state, resume/retry, empty values, ordering, 
 reaching a command, a shell or a path; drift between a schema and the code that uses it; a failure swallowed silently or \
 state saved inconsistently. Do NOT report style, naming, missing comments, test gaps or suggestions without a failing scenario.
 
-Answer in exactly this format, nothing else:
-## Findings
-For each: `[Blocker|Major|Minor] file:line - one-sentence defect`, then `Scenario: concrete inputs/state -> wrong result`, then \
-`Fix: one line`. Most severe first, at most 12. If nothing real: `## Findings` then `none`.
-## Checked and fine
-At most 6 bullets naming the riskiest areas you traced and found sound.
+Answer with one closed JSON block tagged `json review-findings`, and nothing else:
+```json review-findings
+{{"verdict":"GREEN|ATTENTION|RED","findings":[{{"id":"F1","severity":"Blocker|Major|Minor|Nit",
+"confidence":"high|medium|low","location":"file:line","failure_scenario":"concrete input/state -> wrong result",
+"basis":"correctness|security|performance|project rule|input contract","reproduction":"command or concrete steps, when known"}}],
+"questions":[],"residual_risk":""}}
+```
+Use GREEN with an empty findings list when nothing real was found. Every finding needs a concrete failure scenario.
+No additional properties. Do not cap findings or drop Blockers; the conductor bounds their delivery to the fixer.
 
 --- DIFF ---
 """
@@ -77,44 +81,22 @@ def commits_of(run_dir: Path) -> tuple:
     return commits_of_state(state)
 
 
-# A finding line of the reply: ``[Major] file:line - defect``, as the prompt asks, also when the model dresses it as a list
-# item, a number, bold or code (``- [Major]``, ``1. **[Major]**``, ```[Major]```).
-SEVERITY = re.compile(r"^[ \t]*(?:[-*+][ \t]+|\d+[.)][ \t]+)?[`*_ \t]*\[(Blocker|Major|Minor)\][`*_ \t]*(.*)$", re.M)
-_HEADER = re.compile(r"^[ \t]*#{1,6}[ \t]*\**[ \t]*(.+?)[ \t]*\**[ \t]*$", re.M)
-_NONE = re.compile(r"^[ \t]*[`*_\-]*[ \t]*none[ \t]*[`*_.\-]*[ \t]*$", re.I | re.M)
-
-
-def findings_section(text: str) -> Optional[str]:
-    """The text under ``## Findings`` up to the next heading; ``None`` when the reply has no such heading."""
-    heads = list(_HEADER.finditer(text or ""))
-    for index, head in enumerate(heads):
-        if head.group(1).strip().lower().rstrip(":") == "findings":
-            end = heads[index + 1].start() if index + 1 < len(heads) else len(text)
-            return text[head.end():end]
-    return None
-
-
 def verdict(text: str) -> dict:
-    """What a review reply says: ``format`` is ``findings`` (at least one ``[Severity]`` line), ``none`` (the section says
-    so) or ``malformed`` (no ``## Findings`` heading, or a section that is neither): a malformed reply is not a clean
-    review; ``counts`` per severity and ``findings`` ``[{severity, location, text}]`` in the order of the reply."""
-    section = findings_section(text)
-    found = {"Blocker": 0, "Major": 0, "Minor": 0}
-    rows = []
-    for match in SEVERITY.finditer(section or ""):
-        found[match.group(1)] += 1
-        rest = match.group(2).strip().strip("`*_ ")
-        location = rest.split(" - ", 1)[0].strip().strip("`*_ ") if " - " in rest else ""
-        rows.append({"severity": match.group(1), "location": location, "text": rest})
-    if section is None:
-        kind = "malformed"
-    elif rows:
-        kind = "findings"
-    elif _NONE.search(section):
-        kind = "none"
-    else:
-        kind = "malformed"
-    return {"format": kind, "counts": found, "findings": rows}
+    """Parse the same closed review-findings contract as an item review. Invalid output fails closed."""
+    doc, error = json_block(text, "review-findings")
+    counts = {"Blocker": 0, "Major": 0, "Minor": 0}
+    if not error:
+        doc, _notes = heal("review-findings", doc)
+        error = contract.problems(doc, "review-findings")
+        if not error:
+            error = findings_problems(doc)
+    if error:
+        return {"format": "malformed", "counts": counts, "findings": []}
+    for row in doc["findings"]:
+        if row["severity"] in counts:
+            counts[row["severity"]] += 1
+    return {"format": "findings" if doc["findings"] else "none", "counts": counts,
+            "findings": doc["findings"], "document": doc}
 
 
 def counts(text: str) -> dict:

@@ -399,7 +399,7 @@ class ScenarioTests(CharacterizationCase):
         options = self.project.parent / "group-options.json"
         options.write_text(json.dumps({"review": {"strategy": "groups"}}), encoding="utf-8")
         self.script({"executor": [executor_ok("W1"), executor_ok("W2")],
-                     "reviewer": [{"text": "## Findings\nnone\n## Checked and fine\n- outputs\n"}]})
+                     "reviewer": [GREEN]})
         # Group review persists its wall time in both state and a message; fix only that module's timer.
         with mock.patch("orch.conductor.application.review_plan.time") as timer:
             timer.monotonic.return_value = 0.0

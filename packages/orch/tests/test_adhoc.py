@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import io
 import json
 import os
@@ -86,6 +87,34 @@ class AdhocTests(unittest.TestCase):
         self.assertEqual(doc["scope"]["include"], ["diff main..feature/x"])
         self.assertEqual(doc["acceptance"]["checks"][0]["procedure"], adhoc.REVIEW_PROCEDURE)
         self.assertEqual([i for i in validate(doc, "execution-input") if i.level == "error"], [])
+
+    def test_review_cli_records_plan_item_identity_and_worktree_target(self):
+        code, out, err = run("input", "adhoc", "--review", "base..WORKTREE", "--plan", "T", "--item", "W1")
+        self.assertEqual(code, 0, err)
+        doc = json.loads(out)
+        self.assertEqual((doc["provenance"]["plan"], doc["provenance"]["item"]), ("T", "W1"))
+        self.assertEqual(doc["digest"], canonical_digest(doc))
+        self.assertEqual(run("input", "adhoc", "--review", "a..b", "--phase", "P1")[0], 2)
+
+    def test_review_provenance_new_fields_are_additive_in_its_disjoint_branch(self):
+        from aicore.util.schema import Registry
+        from aicore.util.schemacompat import compare
+        doc = json.loads((ROOT / "schemas/exec/v1/execution-input.schema.json").read_text())
+        branch = next(row for row in doc["properties"]["provenance"]["oneOf"]
+                      if row["properties"]["kind"].get("const") == "review")
+        before = copy.deepcopy(branch)
+        before["properties"].pop("plan")
+        before["properties"].pop("item")
+        sid = "urn:swissknifeman:orch:exec:review-provenance:v1"
+        defs = json.loads((ROOT / "schemas/exec/v1/defs.schema.json").read_text())
+        registry = lambda body: Registry({sid: body, doc["$id"]: doc, defs["$id"]: defs}, urn_prefix="urn:swissknifeman:orch:exec:",
+                                        kinds=("review-provenance",))
+        changes = compare(registry(before), sid, registry(branch), sid)
+        self.assertEqual(["property-added", "property-added"], [change.rule for change in changes])
+        self.assertFalse(any(change.breaking for change in changes), changes)
+        # Every other branch has its own const kind; optional fields cannot create oneOf overlap.
+        kinds = [row["properties"]["kind"]["const"] for row in doc["properties"]["provenance"]["oneOf"]]
+        self.assertEqual(len(kinds), len(set(kinds)))
 
     def test_acceptance_is_mandatory(self):
         with self.assertRaises(adhoc.AdhocError) as caught:

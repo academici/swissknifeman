@@ -179,6 +179,24 @@
       "description": "How review findings are handled; a more specific layer overrides the keys it names.",
       "type": "object",
       "properties": {
+        "fix_brief": {
+          "description": "Delivery limits; Blockers may exceed both.",
+          "type": "object",
+          "properties": {
+            "max_findings": {
+              "description": "Positive delivery limit.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_chars": {
+              "description": "Positive delivery limit.",
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
         "correct_min_severity": {
           "description": "Confirmed findings of this severity or higher are corrected; lower ones are deferred to the plan as notes for the cleanup of the phase (Blocker > Major > Minor > Nit). Default Major.",
           "type": "string",

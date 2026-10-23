@@ -460,6 +460,11 @@ def write_artifact(self, item: Item, name: str, doc) -> Path:
     return write_json(item.artifacts / name, doc)
 
 
+def artifact_path(item: Item, name: str) -> Path:
+    """The source-owned location of an item artifact, without assuming a plan's folder layout."""
+    return item.artifacts / name
+
+
 def stray_dir(item: Item) -> Path:
     """Where the runtime artifacts an executor left in the tree are set aside: ``<artifacts>/stray/<original path>``."""
     return (item.artifacts or item.directory) / "stray"

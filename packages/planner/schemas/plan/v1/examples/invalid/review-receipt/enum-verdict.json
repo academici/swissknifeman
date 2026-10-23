@@ -1,6 +1,6 @@
 {
   "$schema": "urn:swissknifeman:task:plan:review-receipt:v1",
-  "subject": "PLAN9.P7.1",
+  "subject": "T.P7.1",
   "item": "P7.1",
   "run": "cnd-example",
   "attempt_id": "att-example",

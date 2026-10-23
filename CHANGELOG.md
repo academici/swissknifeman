@@ -4,6 +4,9 @@
 
 ### Changed
 
+- orch, planner: review corrections now use bounded `fix-brief/v1` handoffs (12 findings / 24000 characters), preserve every Blocker and carry deferred Major findings into later corrections. Check tails are bounded; group reviews use closed JSON. Interactive plan-run uses the conductor review-only runner and content-bound receipts, with one recorded review-intent rule.
+- orch: group-review follow-ups retain overflow findings in a durable backlog, assign later bounded correction rounds, and block settlement with explicit unresolved debt when the correction allowance is exhausted.
+
 - orch, planner: blocked registrations omit automatic review receipts; historical corrected findings no longer authorize edits after a later review. A check-fix following a completed overlap review without a combined correction requires a new review within the existing round limit.
 
 - orch, planner, planner-orch: per-item reviews now produce content-bound `review-receipt/v1` records and finding keys. Registration forwards `--review-receipt` to planner finish; opt-in `settings.review_receipt: required` gates requested reviews on a fresh receipt and no open Blocker findings. `register-review --receipt` records the receipt, and legacy findings accept `id` and `reproduction`.

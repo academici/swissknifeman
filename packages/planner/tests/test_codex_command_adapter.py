@@ -114,8 +114,11 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn("python3 -I .swissknifeman/launcher.py planner", runtime)
                 self.assertNotIn("scripts/plan.py", runtime)
                 for retired in ("route_evidence_codex", "TASK_CODEX_ROUTE_EVIDENCE",
-                                "continue-root", "receipt"):
+                                "continue-root"):
                     self.assertNotIn(retired, runtime)
+                if command == "plan-run":
+                    self.assertIn("review-receipt.json", runtime)
+                    self.assertIn("or" + "ch conduct run --input", runtime)
 
     def test_plan_runtimes_do_not_reintroduce_the_retired_route_recipe(self):
         for command, runtime in self._plan_runtimes().items():

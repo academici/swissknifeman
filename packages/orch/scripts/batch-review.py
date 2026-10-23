@@ -25,7 +25,7 @@ sys.path.insert(0, str(ORCH / "lib"))
 if (ORCH.parent / "aicore" / "lib").is_dir():
     sys.path.insert(0, str(ORCH.parent / "aicore" / "lib"))
 
-from orch.conductor import review_batch  # noqa: E402
+from orch.conductor import contract, review_batch  # noqa: E402
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -81,8 +81,16 @@ def main(argv=None) -> int:
             text = event.get("result") or text
             break
     (run_dir / "batch-review.md").write_text(text, encoding="utf-8")
-    print(text)
-    return 0 if done.returncode == 0 else done.returncode
+    read = review_batch.verdict(text)
+    summary = {"format": read["format"], "counts": read["counts"], "file": str(run_dir / "batch-review.md")}
+    problems = contract.problems(summary, "review-summary")
+    if problems:
+        raise ValueError("invalid batch review summary: " + "; ".join(problems))
+    print(json.dumps(summary))
+    if read["format"] == "malformed":
+        print("GROUP_REVIEW_FAILED: malformed review-findings JSON", file=sys.stderr)
+        return done.returncode or 1
+    return done.returncode
 
 
 if __name__ == "__main__":

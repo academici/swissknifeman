@@ -34,6 +34,18 @@ SKIPPED_DIRS = ("docs/.vitepress/cache/", "docs/.vitepress/dist/", "skills/workf
 SKIPPED_PARTS = {"__pycache__", "node_modules"}
 SKIPPED_FILES = {"CHANGELOG.md", SELF}
 REASON = re.compile(r"^P7\.[0-9]+: \S")
+# The review runner is a project-launcher protocol documented by P7.2, without a partner import or package path.
+REVIEW_COMMAND_DOCS = {
+    "commands/plan-run.md", "references/reviewer-selection.md", "references/intent-routing.md",
+    "adapters/codex/skills/planner-plan-run/command.md", "adapters/cursor/skills/planner-plan-run/command.md",
+    "tests/fixtures_data/claude-command-golden/commands/plan-run.md",
+}
+REVIEW_COMMAND = re.compile(r"(?:(?<=launcher\.py )|(?<=`))orch (?=input adhoc --review |conduct run --input )")
+
+
+def checked_line(relative: str, line: str) -> str:
+    """Exempt only the two documented launcher verbs; imports, package paths and other partners stay forbidden."""
+    return REVIEW_COMMAND.sub("orchestrator ", line) if relative in REVIEW_COMMAND_DOCS else line
 
 
 def core_files() -> list[str]:
@@ -56,6 +68,7 @@ def violations(relative: str) -> list[str]:
         return []  # binary files carry no references
     found = []
     for number, line in enumerate(text.splitlines(), 1):
+        line = checked_line(relative, line)
         for pattern in FORBIDDEN:
             match = pattern.search(line)
             if match:
@@ -69,6 +82,15 @@ def allowlist() -> dict[str, str]:
 
 
 class BoundaryTests(unittest.TestCase):
+    def test_review_launcher_docs_do_not_allow_runtime_imports_or_other_partner_paths(self):
+        allowed = "python3 -I .swissknifeman/launcher.py orch conduct run --input input.json"
+        for path in REVIEW_COMMAND_DOCS:
+            self.assertFalse(any(p.search(checked_line(path, allowed)) for p in FORBIDDEN))
+        self.assertTrue(any(p.search(checked_line("lib/planner/plan/runner.py", allowed)) for p in FORBIDDEN))
+        for line in ("from orch import cli", "packages/orch/lib", "`orch conduct resume --run R`",
+                     allowed + " packages/harness/config.json"):
+            self.assertTrue(any(p.search(checked_line("commands/plan-run.md", line)) for p in FORBIDDEN), line)
+
     def test_core_names_no_other_package(self):
         allowed = allowlist()
         found = [hit for relative in core_files() if relative not in allowed for hit in violations(relative)]

@@ -37,15 +37,20 @@ A hard risk (security/auth, destructive migration, payments/accounting, concurre
 public API/schema, irreversible external effect) widens those checks and is named in the final report
 with a `planner:review` recommendation; it does not start a review.
 
-Review runs only on an explicit owner request:
+Review intent has one rule for interactive and conductor execution:
 
-| Owner request | Result |
+| Source | Action |
 |:--|:--|
-| `--review` in `planner:dev` or `planner:plan-run` arguments | one `planner:review` pass over the whole requested result, before the final close |
-| `--review` in `planner:plan-design` arguments | the plan includes one `Review Pn` item at the end of the requested scope |
-| `--reviewer provider/model` | explicitly requested separate native reviewer on that route; plan-run reviews its selected items |
-| `planner:review` | standalone read-only review |
-| `planner:plan-audit` | design or phase audit; JSON v3 audits run only on explicit owner invocation |
+| Command flag `--reviewer` / `--review` | Explicit opt-in, with the command's existing item or scope shape; record the requested review in the plan before running it. |
+| Owner message in the session asking for review, in ordinary words or with a selector | Normalize into the plan for unfinished items of this invocation: `plan.py set <plan> <item> --json '{"review":{"mode":"requested","reviewer":{...},"reason":"owner request: <quote>"}}'` (D13), then use the normal path. |
+| `item.review.mode: requested` in the plan | Conductor reviews per item when run policy enables it; otherwise it announces `REVIEW_REQUESTED_POLICY_OFF`. Interactive plan-run uses the review-only runner below. |
+| None of the above | Self-check plus affected tests. |
+
+The review-only runner is documented in `reviewer-selection.md` and `plan-run.md`. It uses
+`orch input adhoc --review <base>..WORKTREE --plan <plan> --item <item>` followed by
+`orch conduct run --input <file> --options <reviewer-options.json>`. Read only the final JSON line
+and its receipt; finish with `--review-receipt <path>`. Standalone `planner:review` remains read-only;
+`planner:plan-audit` still requires explicit owner invocation.
 
 One review is one reviewer over the requested scope. `--reviewer` in `plan-run` explicitly requests
 item-scoped independent sessions; otherwise do not split the scope or spawn subagents unless asked.

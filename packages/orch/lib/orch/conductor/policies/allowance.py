@@ -26,7 +26,8 @@ def over_target(name: str, target: int, used: int, progress: bool, factor: int, 
 
 def piece_count(row: dict, key: str) -> int:
     value = row.get(key, 0)
-    return sum(value.values()) if isinstance(value, dict) else len(value) if isinstance(value, list) else int(value)
+    count = sum(value.values()) if isinstance(value, dict) else len(value) if isinstance(value, list) else int(value)
+    return count + (len(row.get("followup_corrections", [])) if key == "corrections_at" else 0)
 
 
 def batch_used(items: dict, ref: str, name: str, own: int) -> int:

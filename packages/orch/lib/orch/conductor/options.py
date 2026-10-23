@@ -40,7 +40,8 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "disk_min_gb": 5, "triage_repro_timeout_s": 600}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": True,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
-                  "strategy": "auto", "strategist": "rules"}
+                  "strategy": "auto", "strategist": "rules",
+                  "fix_brief": {"max_findings": 12, "max_chars": 24000}}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
@@ -170,6 +171,8 @@ def merge(base: dict, layer: dict) -> dict:
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
             if key == "limits" and "role_timeout_s" in value:  # by role: a layer names the walls it changes
                 out[key]["role_timeout_s"] = {**(base.get(key, {}).get("role_timeout_s") or {}), **value["role_timeout_s"]}
+            if key == "review" and "fix_brief" in value:
+                out[key]["fix_brief"] = {**(base.get(key, {}).get("fix_brief") or {}), **value["fix_brief"]}
         elif key == "skills":
             out[key] = {**out.get(key, {}), **{entry["role"]: list(entry["names"]) for entry in value}}
         else:

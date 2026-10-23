@@ -10,7 +10,7 @@ from typing import Optional
 from aicore.util.digest import sha256_hex
 
 from orch.contracts import required_digest
-from orch.conductor import checks as checks_mod, options as opts, prompts, questions as questions_mod, scope as scopes
+from orch.conductor import checks as checks_mod, contract, options as opts, prompts, questions as questions_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import evidence_paths, report_problems
 from orch.conductor.domain.stop import Stop
@@ -22,6 +22,17 @@ from orch.conductor.stages import advice
 def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
     """One executor round. A blocking question is queued, denied or, with a default, answered by policy once and the
     round is asked again (``executor.<n>-q<k>``); the answers of earlier questions reach every round."""
+    # A combined correction may have consumed its transient state before an interruption. Its durable brief still
+    # owns the assignment of this executor round, including on resume after that interruption.
+    path = item.directory / "fix-briefs" / f"executor.{number}.json"
+    if path.is_file():
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        problems = contract.problems(doc, "fix-brief")
+        if problems:
+            raise ValueError("invalid fix-brief: " + "; ".join(problems))
+        text = prompts.review_correction(doc)
+        if text not in correction:
+            correction = "\n\n".join(part for part in (correction, text) if part)
     again = 0
     while True:
         key = f"executor.{number}" + (f"-q{again}" if again else "")
@@ -48,6 +59,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         corrected = "\n\n".join(text for text in (correction, note) if text)
         answers = questions_mod.answers_text(self._questions(item))
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
+                                  correction_origin=correction_origin(self, item, key),
                                   rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                   self_check=item.options["checks"].get("self_check") or (),
@@ -160,6 +172,7 @@ def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: 
     earlier = [step["result"].get("changed") or [] for name, step in steps.items()
                if name.startswith("executor.") and name != key and isinstance(step.get("result"), dict)]
     return prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
+                                    correction_origin=correction_origin(self, item, key) if correction else "conductor",
                                     fix=fix, changed_paths=earlier[-1] if earlier else [],
                                     targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                     self_check=item.options["checks"].get("self_check") or ())
@@ -263,7 +276,7 @@ def autofix(self, item: Item, report: dict, round_no: int, scout_text: str) -> t
     if not found:
         return report, round_no
     replayed = round_no in state["autofix_at"]
-    done_before = len([number for number in state["autofix_at"] if number != round_no]) + len(state["corrections_at"])
+    done_before = len([number for number in state["autofix_at"] if number != round_no]) + self._piece_count(state, "corrections_at")
     why = None if replayed else self._allowance(item, "corrections", done_before, False)
     if why:
         self.progress.emit("info", item=item.ref, reason_code="DEVIATION_AUTOFIX_SKIPPED",
@@ -524,3 +537,9 @@ def adopted(self, item: Item) -> list:
         raise Stop("WORKTREE_DIRTY", f"run --adopt takes only changes inside the write set of {item.ref}; outside it: "
                                      + ", ".join(stray[:10]))
     return adopted
+
+
+def correction_origin(self, item: Item, key: str) -> str:
+    """Review handoffs name their persisted brief in both full and resumed manifests."""
+    path = item.directory / "fix-briefs" / (key.split("-q", 1)[0] + ".json")
+    return self._relative(path) if path.is_file() else "conductor"

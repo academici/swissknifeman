@@ -54,7 +54,9 @@ def dynamic_review(self, item: Item, report: dict) -> None:
         return
     found = item.state.get("risk")
     if found is None:
-        facts = self._risk_facts(item, report)
+        changed = self._changed(item)
+        facts = self._risk_facts(item, report, changed=changed, outside=self._outside(item),
+                                 diff_lines=scopes.diff_lines(self.project, changed))
         found = dict(risk_mod.score(facts, self.conductor.get("risk")), facts=facts,
                      threshold=review["dynamic_threshold"])
         found["added"] = found["score"] >= found["threshold"] or bool(found.get("critical"))

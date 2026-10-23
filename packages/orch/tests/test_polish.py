@@ -367,8 +367,8 @@ class PreviewBatchKeys(unittest.TestCase):
         item = types.SimpleNamespace(routes={}, policy={}, options={"reviewer": "x", "fallback_routes": []}, sources={},
                                      route_notes=[])
         conductor = types.SimpleNamespace(run_id="", run_doc={}, settings=types.SimpleNamespace(default_profile="solo"),
-                                          _resolve=lambda *a, **k: None, _routes=lambda *a, **k: None,
-                                          _sandbox_mode=lambda it: "off", _claim_actor=lambda: "p/m")
+                                          preview_routes=lambda it: {},
+                                          sandbox_mode=lambda it: "off", claim_actor=lambda: "p/m")
         with mock.patch.object(cli.engine, "Item", return_value=item), \
                 mock.patch.object(cli.sandbox, "probe", return_value={"available": False, "reason": "test"}):
             return cli._preview(conductor, args)
@@ -392,10 +392,10 @@ class PreviewClaimActor(unittest.TestCase):
         item = types.SimpleNamespace(routes=routes, policy={}, options={"reviewer": "x", "fallback_routes": []}, sources={},
                                      route_notes=[])
         conductor = types.SimpleNamespace(
-            run_id="", run_doc={}, settings=types.SimpleNamespace(default_profile="solo"), _resolve=lambda *a, **k: None,
-            _routes=lambda *a, **k: None, _sandbox_mode=lambda it: "off", _claim_actor=lambda: claim_actor,
-            route_problem=lambda route: None, _role_argv=lambda it, role, route: route["argv"],
-            declared_network=lambda role: "none", _codex_sandboxed=lambda route: False, _claude_bash=lambda route: False)
+            run_id="", run_doc={}, settings=types.SimpleNamespace(default_profile="solo"),
+            preview_routes=lambda it: {}, sandbox_mode=lambda it: "off", claim_actor=lambda: claim_actor,
+            route_problem=lambda route: None, role_argv=lambda it, role, route: route["argv"],
+            declared_network=lambda role: "none", codex_sandboxed=lambda route: False, claude_bash=lambda route: False)
         with mock.patch.object(cli.engine, "Item", return_value=item), \
                 mock.patch.object(cli.sandbox, "probe", return_value={"available": True, "reason": ""}):
             return cli._preview(conductor, args)

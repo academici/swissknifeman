@@ -54,14 +54,13 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     item = engine.Item(ref="(preview)", orch_run="-", state={}, directory=Path(), claim=claim)
     conductor.run_doc = {"options_file": str(args.options) if args.options else None,
                          "fence": getattr(args, "fence", None), "extra_paths": getattr(args, "allow_path", [])}
-    conductor._resolve(item, persist=False)
-    unavailable = conductor._routes(item, persist=False, preview=True) or {}
+    unavailable = conductor.preview_routes(item)
     problems = {**{role: conductor.route_problem(route) for role, route in item.routes.items()}, **unavailable}
     available = {role: problem is None for role, problem in problems.items()}
     unavailable = {role: problem for role, problem in problems.items() if problem}
     isolation = {}
     for role, route in item.routes.items():
-        built = conductor._role_argv(item, role, route)
+        built = conductor.role_argv(item, role, route)
         guarded = any(arg.endswith("ro-run.py") for arg in built[:2])
         base = route["argv"] if guarded else roles.strip_guard(route["argv"])
         isolation[role] = built[len(base):]
@@ -72,8 +71,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
         if network[role]["declared"] == "none" and not network[role]["enforced"]:
             warnings.append(f"{role}: network is declared none, but nothing enforces it "
                             f"({route['provider']} has no sandbox for its commands here)")
-    if conductor._sandbox_mode(item) == "require" and not probed["available"] \
-            and any(conductor._claude_bash(route) for route in item.routes.values()):
+    if conductor.sandbox_mode(item) == "require" and not probed["available"] \
+            and any(conductor.claude_bash(route) for route in item.routes.values()):
         warnings.append(f"instructions.sandbox is require and the sandbox cannot start ({probed['reason']}): "
                         "a run stops with SANDBOX_UNAVAILABLE")
     claim_actor, gap = _claim_actor_of(conductor, item.routes.get("executor"))
@@ -96,7 +95,7 @@ def _claim_actor_of(conductor, route: dict | None) -> tuple:
     piece against it), and a warning when it is not the executor the preview routes, which the claim would refuse
     (``ROUTE_MISMATCH``, ``ROUTE_UNDERSHOOT``) while this preview is green."""
     try:
-        actor = conductor._claim_actor()
+        actor = conductor.claim_actor()
     except engine.Stop as stop:
         return None, f"claim actor: {stop.code}: {stop.message}"
     if route is None:
@@ -118,9 +117,9 @@ def _network(conductor, role: str, route: dict, isolation: list, probed: dict) -
     by = None
     if "--settings" in isolation:
         by = "claude-sandbox"
-    elif conductor._codex_sandboxed(route) and probed["available"]:
+    elif conductor.codex_sandboxed(route) and probed["available"]:
         by = "codex-sandbox"
-    elif route.get("provider") == "claude-code" and not conductor._claude_bash(route):
+    elif route.get("provider") == "claude-code" and not conductor.claude_bash(route):
         by = "claude-tools"  # no shell tool: its commands cannot reach anything
     return {"declared": declared, "enforced": by is not None, "by": by}
 

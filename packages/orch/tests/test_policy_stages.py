@@ -239,5 +239,198 @@ class PolicyStageRunTests(ConductorCase):
                 self.assertNotIn("POLICY_STAGE_SKIPPED", out)
 
 
+class PureRuleTests(unittest.TestCase):
+    """The rules of policies/ take their facts as arguments (P5.2): the probes and lookups are the caller's and asked
+    only when a rule needs them."""
+
+    ENTRY = {"model_class": "implementation", "effort": "high", "model_set": "supported", "transport": "text",
+             "timeout_s": 5}
+
+    def test_the_route_rules_take_values_step_by_step(self):
+        cfg = {"provider": "codex", "argv": {"executor": ["fake", "{model}", "{effort}"]}}
+        target = routing.route_target(role="executor", item_options={"stages": []}, conductor_cfg=cfg, override=None,
+                                      reviewer=None)
+        self.assertEqual((target["provider"], target["model"], target["effort"]), ("codex", None, None))
+        chosen = routing.route_model(target, role="executor", entry=dict(self.ENTRY), claim={"route": {"effort": "xhigh"}},
+                                     launch_plan={})
+        self.assertEqual((chosen["model_class"], chosen["effort"], chosen["needs_model"]), ("implementation", "xhigh", True))
+        planned = routing.route_model(target, role="executor", entry=dict(self.ENTRY), claim={},
+                                      launch_plan={"stages": [{"role": "executor", "provider": "codex", "model": "p-1"}]})
+        self.assertEqual((planned["model"], planned["needs_model"]), ("p-1", False))
+        self.assertFalse(routing.builds_argv("executor", "xhigh", cfg))  # [orch.conductor.argv]: no launch catalog
+        self.assertTrue(routing.builds_argv("executor", "high", {}))
+        self.assertFalse(routing.builds_argv("executor", "warp", {}))  # refused by route, without the catalog
+        found = routing.route(role="executor", item_options={"limits": {}}, chosen=dict(chosen, model="m-1"),
+                              entry=dict(self.ENTRY), conductor_cfg=cfg, project=Path("/p"), launch_catalog=None,
+                              access=None)
+        self.assertEqual((found["provider"], found["model"], found["effort"], found["argv"]),
+                         ("codex", "m-1", "xhigh", ["fake", "m-1", "xhigh"]))
+        with self.assertRaises(routing.Stop) as caught:
+            routing.route(role="executor", item_options={"limits": {}}, chosen=dict(chosen, effort="warp"),
+                          entry=dict(self.ENTRY), conductor_cfg={}, project=Path("/p"), launch_catalog=None, access=None)
+        self.assertEqual(caught.exception.code, "ROUTE_UNDERSHOOT")
+
+    def test_route_minimum_and_acp_raise_their_stop(self):
+        route = {"model_class": "economy", "effort": "high"}
+        routing.route_minimum({}, route, "W1")
+        with self.assertRaises(routing.Stop) as caught:
+            routing.route_minimum({"class": "implementation"}, route, "W1")
+        self.assertEqual(caught.exception.code, "ROUTE_UNDERSHOOT")
+        self.assertIn("required by W1", caught.exception.message)
+        routing.refuse_acp({"context-scout": {"transport": "acp", "provider": "grok"}})  # optional: only skipped
+        with self.assertRaises(routing.Stop) as caught:
+            routing.refuse_acp({"executor": {"transport": "acp", "provider": "grok"}})
+        self.assertEqual(caught.exception.code, "TRANSPORT_UNSUPPORTED")
+        self.assertIsNone(routing.provider_disabled(None, "codex"))
+
+    def test_the_sandbox_rules_take_the_probe_results(self):
+        from orch.conductor.policies import sandbox as sandbox_rules
+        bash = {"provider": "claude-code", "argv": ["claude", "--tools", "Read,Bash", "-p"]}
+        prefer = {"instructions": {"sandbox": "prefer"}}
+        require = {"instructions": {"sandbox": "require"}}
+        self.assertFalse(sandbox_rules.claude_confinement_required(prefer, bash))
+        self.assertTrue(sandbox_rules.claude_confinement_required(require, bash))
+        self.assertIsNone(sandbox_rules.claude_sandbox_problem(prefer, bash, probe=None, settings_listed=None))
+        down = sandbox_rules.claude_sandbox_problem(require, bash, probe={"available": False, "reason": "no bwrap"},
+                                                    settings_listed=None)
+        self.assertEqual(down, "SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start "
+                               "(no bwrap)")
+        self.assertIn("does not list --settings", sandbox_rules.claude_sandbox_problem(
+            require, bash, probe={"available": True, "reason": None}, settings_listed=False))
+        self.assertIsNone(sandbox_rules.claude_sandbox_problem(require, bash, probe={"available": True, "reason": None},
+                                                               settings_listed=True))
+        self.assertEqual(sandbox_rules.sandbox_args({"instructions": {"sandbox": "off"}}, "executor", bash,
+                                                    extra_paths=[], network="none"), [])
+
+    def test_the_cli_probe_reads_the_run_progress_only_for_an_unlisted_flag(self):
+        from orch.conductor import engine
+        from orch.conductor.infrastructure import cli_probe
+        bare = engine.Conductor.__new__(engine.Conductor)  # no __init__: a facade without progress (pitfall 4)
+        help_text = mock.Mock(stdout="usage: claude --listed")
+        with mock.patch.dict(cli_probe._KNOWN, clear=True), \
+                mock.patch.object(cli_probe.subprocess, "run", return_value=help_text) as ran:
+            self.assertTrue(bare._knows(["/opt/claude", "-p"], ["--listed"]))
+            noted = engine.Conductor.__new__(engine.Conductor)
+            noted.progress = mock.Mock()
+            for _ in range(2):  # the probe and the line are once per process
+                self.assertFalse(noted._knows(["/opt/claude", "-p"], ["--missing"]))
+        self.assertEqual(ran.call_count, 2)
+        noted.progress.emit.assert_called_once_with(
+            "info", reason_code="ISOLATION_PARTIAL",
+            message="/opt/claude does not list --missing; roles are isolated by the environment only")
+
+    def test_budget_admission_returns_its_stop(self):
+        from orch.conductor.policies import budget
+        facts = dict(item_ref="W1", run_id="R", item_tokens={"input": 90, "output": 10}, run_tokens={"input": 90},
+                     limits={"tokens_hard_max": 100, "run_tokens_hard_max": 0}, item_limits={},
+                     usage_incomplete=False, usage_unmetered=[])
+        self.assertIsNone(budget.admission(scope="run", **facts))
+        stop = budget.admission(scope="item", **facts)
+        self.assertEqual((stop.code, stop.message.split(";")[0]), ("TOKEN_BUDGET",
+                                                                  "W1 used 100 fresh tokens >= tokens_hard_max 100"))
+        raises = [{"key": "tokens_hard_max", "to": 600, "item": "W2"}]
+        self.assertEqual(budget.effective_limit("tokens_hard_max", limit_raises=raises, limits_run=None,
+                                                item_options={"limits": {"tokens_hard_max": 5}}, item_ref="W1"), 5)
+        self.assertEqual(budget.effective_limit("run_tokens_hard_max", limit_raises=raises,
+                                                limits_run={"run_tokens_hard_max": {"value": 7}}, item_options={},
+                                                item_ref="W1"), 7)
+
+
+def _policy_frames() -> list:
+    """The rules of ``policies/`` on the stack now (a probe or a catalog load made inside a rule shows here)."""
+    import inspect
+    return [frame.function for frame in inspect.stack()
+            if frame.frame.f_globals.get("__name__", "").startswith("orch.conductor.policies.")]
+
+
+class FactsBeforeRulesTests(unittest.TestCase):
+    """The facade gathers the facts (the sandbox probe, the flags of the CLI, the launch and model catalogs) before a
+    rule of ``policies/`` runs: no probe or catalog load happens inside a rule, and the calls keep their old conditions,
+    count and order (review F1, P5.2)."""
+
+    BASH = {"provider": "claude-code", "argv": ["claude", "--tools", "Read,Bash", "-p"]}
+    UP, DOWN = {"available": True, "reason": None}, {"available": False, "reason": "fixture sandbox unavailable"}
+
+    def owner(self):
+        from orch.conductor import engine
+        owner = engine.Conductor.__new__(engine.Conductor)  # no __init__ and no settings: the tolerant reads hold
+        owner.settings, owner.conductor, owner.project, owner.progress = None, {}, Path.cwd(), mock.Mock()
+        return owner
+
+    def item(self, sandbox: str = "require", stages=None):
+        from types import SimpleNamespace
+        return SimpleNamespace(options={"instructions": {"sandbox": sandbox}, "limits": {}, "scope": {},
+                                        "stages": stages or []}, claim={}, launch_plan={})
+
+    def instrumented(self, result):
+        seen = []
+
+        def call(*args, **kwargs):
+            seen.append(_policy_frames())
+            return result(*args, **kwargs) if callable(result) else result
+        return call, seen
+
+    def test_the_claude_sandbox_facts_are_probed_outside_the_rule(self):
+        from orch.conductor import engine
+        cases = (("require", self.BASH, self.DOWN, True, 1, 0,
+                  "SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start "
+                  "(fixture sandbox unavailable)"),
+                 ("require", self.BASH, self.UP, False, 1, 1,
+                  "SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the claude CLI does not list --settings"),
+                 ("require", self.BASH, self.UP, True, 1, 1, None),
+                 ("prefer", self.BASH, self.DOWN, True, 0, 0, None),
+                 ("off", self.BASH, self.DOWN, True, 0, 0, None),
+                 ("require", {"provider": "claude-code", "argv": ["claude", "-p"]}, self.DOWN, True, 0, 0, None))
+        for mode, route, probed, listed, probes, asks, expected in cases:
+            with self.subTest(mode=mode, route=route["argv"], sandbox=probed["available"], listed=listed):
+                probe, probe_frames = self.instrumented(probed)
+                knows, knows_frames = self.instrumented(listed)
+                with mock.patch.object(engine.sandbox, "probe", side_effect=probe), \
+                        mock.patch.object(engine.Conductor, "_knows", side_effect=knows):
+                    problem = self.owner()._claude_sandbox_problem(self.item(mode), route)
+                self.assertEqual(problem, expected)
+                self.assertEqual((len(probe_frames), len(knows_frames)), (probes, asks))
+                self.assertFalse(any(probe_frames) or any(knows_frames), (probe_frames, knows_frames))
+
+    def test_the_sandbox_args_facts_are_probed_outside_the_rule(self):
+        from orch.conductor import engine
+        cases = (("prefer", self.UP, True, 1, 1, True), ("prefer", self.UP, False, 1, 1, False),
+                 ("prefer", self.DOWN, True, 1, 0, False), ("off", self.UP, True, 0, 0, False))
+        for mode, probed, listed, probes, asks, confined in cases:
+            with self.subTest(mode=mode, sandbox=probed["available"], listed=listed):
+                probe, probe_frames = self.instrumented(probed)
+                knows, knows_frames = self.instrumented(listed)
+                owner = self.owner()
+                owner._sandbox_noted = False
+                with mock.patch.object(engine.sandbox, "probe", side_effect=probe), \
+                        mock.patch.object(engine.Conductor, "_knows", side_effect=knows):
+                    args = owner._sandbox_args(self.item(mode), "executor", self.BASH)
+                self.assertEqual(args[:1], ["--settings"] if confined else [])
+                self.assertEqual((len(probe_frames), len(knows_frames)), (probes, asks))
+                self.assertFalse(any(probe_frames) or any(knows_frames), (probe_frames, knows_frames))
+
+    def test_the_catalogs_are_loaded_outside_the_route_rules(self):
+        from orch import launch
+        from orch.conductor.application import route_service
+        catalog = launch.load_catalog()
+        load, load_frames = self.instrumented(lambda settings: catalog)
+        owner = self.owner()
+        named = self.item(stages=[{"role": "executor", "provider": "claude-code", "model": "fixture-model"}])
+        with mock.patch.object(route_service.launch, "effective_catalog", side_effect=load):
+            cold = owner._route(named, "executor")
+            self.assertIs(owner._launch_cache, catalog)  # the cold cache is filled by the facade, once
+            warm = owner._route(named, "executor")
+        self.assertEqual(cold, warm)
+        self.assertEqual((cold["provider"], cold["model"]), ("claude-code", "fixture-model"))
+        self.assertEqual(len(load_frames), 1)
+        self.assertFalse(any(load_frames), load_frames)
+        resolve, resolve_frames = self.instrumented(lambda provider, model_class: "resolved-model")
+        owner._catalog = mock.Mock(resolve_model=mock.Mock(side_effect=resolve))
+        unnamed = self.item(stages=[{"role": "executor", "provider": "claude-code"}])
+        self.assertEqual(owner._route(unnamed, "executor")["model"], "resolved-model")
+        self.assertEqual(len(resolve_frames), 1)
+        self.assertFalse(any(resolve_frames), resolve_frames)
+
+
 if __name__ == "__main__":
     unittest.main()

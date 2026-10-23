@@ -26,17 +26,18 @@ from typing import Callable, Optional
 
 from orch import catalog as catalogs, sandbox
 from orch.conductor import process
-from orch.conductor.application import loop, recovery, review_plan, run_service
-from orch.conductor.domain import report as report_rules
+from orch.conductor.application import budget_service, limits_service, loop, recovery, retry_service, review_plan
+from orch.conductor.application import route_service, run_service
+from orch.conductor.domain import report as report_rules, route as route_rules
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import continued, evidence_paths, findings_problems, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import beacon_events, roles, work_source
+from orch.conductor.infrastructure import beacon_events, cli_probe, roles, work_source
 from orch.conductor.infrastructure.clock import new_run_id, sleep, unit_random, utc_now, utc_stamp, wall
 from orch.conductor.infrastructure.files import (OPTIONS_COPY, REPORTS, RUN_FILE, STATE_FILE, RunStore, read_json,
                                                  runs_root, safe, write_json)
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
-from orch.conductor.policies import allowance, budget, retry_policy, routing
+from orch.conductor.policies import allowance, retry_policy
 from orch.conductor.policies import risk as risk_policy, sandbox as sandbox_policy
 from orch.conductor.policies.allowance import BATCH_FIELDS, BATCH_LIMITS
 from orch.conductor.policies.routing import CLASS_RANK, EFFORT_RANK, LAUNCH_ROLE
@@ -254,57 +255,96 @@ class Conductor:
 
     # ------------------------------------------------------------------ policies
 
-    _allowance = allowance.allowance
-    _batch_allowance = allowance.batch_allowance
-    _limit_over = allowance.limit_over
+    _allowance = limits_service.allowance
+    _batch_allowance = limits_service.batch_allowance
+    _limit_over = limits_service.limit_over
     _piece_count = staticmethod(allowance.piece_count)
 
-    _entry = routing.entry
-    _launch_catalog = routing.launch_catalog
-    _launch_access = routing.launch_access
-    _routes = routing.routes
-    route_problem = routing.route_problem
-    provider_disabled = routing.provider_disabled
-    _selected = routing.selected
-    _fallback = routing.fallback
-    _admit = routing.admit
-    _refuse_acp = routing.refuse_acp
-    _preflight = routing.preflight
-    _route = routing.route
-    _route_minimum = routing.route_minimum
-    _reviewer_selector = routing.reviewer_selector
-    label = staticmethod(routing.label)
-    _actor = routing.actor
+    _entry = route_service.entry
+    _launch_catalog = route_service.launch_catalog
+    _launch_access = route_service.launch_access
+    _routes = route_service.routes
+    route_problem = route_service.route_problem
+    provider_disabled = route_service.provider_disabled
+    _selected = route_service.selected
+    _fallback = route_service.fallback
+    _admit = route_service.admit
+    _refuse_acp = route_service.refuse_acp
+    _preflight = route_service.preflight
+    _route = route_service.route
+    _route_minimum = route_service.route_minimum
+    _reviewer_selector = route_service.reviewer_selector
+    label = staticmethod(route_rules.label)
+    _actor = staticmethod(route_rules.actor)
 
-    _claude_sandbox_problem = sandbox_policy.claude_sandbox_problem
+    _claude_sandbox_problem = route_service.claude_sandbox_problem
     _codex_sandboxed = staticmethod(sandbox_policy.codex_sandboxed)
     _sandbox_mode = staticmethod(sandbox_policy.sandbox_mode)
     _claude_bash = staticmethod(sandbox_policy.claude_bash)
     declared_network = staticmethod(sandbox_policy.declared_network)
-    _sandbox_args = sandbox_policy.sandbox_args
-    _knows = sandbox_policy.knows
+    _sandbox_args = route_service.sandbox_args
+    _knows = cli_probe.run_knows
 
-    _start_route = retry_policy.start_route
-    _prompt_for_route = retry_policy.prompt_for_route
-    _routed_blocks = retry_policy.routed_blocks
-    _provider_failure = retry_policy.provider_failure
-    _provider_stop = retry_policy.provider_stop
-    _gate = retry_policy.gate
-    _wait = retry_policy.wait
+    _start_route = retry_service.start_route
+    _prompt_for_route = retry_service.prompt_for_route
+    _routed_blocks = retry_service.routed_blocks
+    _provider_failure = retry_service.provider_failure
+    _provider_stop = retry_service.provider_stop
+    _gate = retry_service.gate
+    _wait = retry_service.wait
     _pause = staticmethod(retry_policy.pause)
 
     _first_checks = staticmethod(risk_policy.first_checks)
     _recommended = staticmethod(risk_policy.recommended)
-    _risk_facts = risk_policy.risk_facts
+    _risk_facts = staticmethod(risk_policy.risk_facts)
 
-    _budget = budget.budget
-    _unmetered = budget.unmetered
-    _admit_budget = budget.admit
-    _bind_stage = budget.bind_stage
-    _restore_stage = budget.restore_stage
-    _stage_bucket = budget.stage_bucket
-    _stage_key = budget.stage_key
-    _remember_stage = budget.remember_stage
+    _budget = budget_service.budget
+    _unmetered = budget_service.unmetered
+    _admit_budget = budget_service.admit
+    _bind_stage = budget_service.bind_stage
+    _restore_stage = budget_service.restore_stage
+    _stage_bucket = budget_service.stage_bucket
+    _stage_key = budget_service.stage_key
+    _remember_stage = budget_service.remember_stage
+
+    # ------------------------------------------------------------------ the read-only facade of explain and the dry-run
+
+    def preview_routes(self, item: Item) -> dict:
+        """The options and the routes of ``item`` as ``run --dry-run`` shows them; the roles that cannot start."""
+        self._resolve(item, persist=False)
+        return self._routes(item, persist=False, preview=True) or {}
+
+    def resolve_preview(self, item: Item) -> None:
+        """The policy and the options of ``item`` without writing them."""
+        self._resolve(item, persist=False)
+
+    def route_for(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
+        return self._route(item, role, override)
+
+    def selected_route(self, item: Item, role: str) -> dict:
+        """The route of ``role`` route choice would take (a fallback when its own cannot start), nothing announced."""
+        return self._selected(item, role, False)
+
+    def admission(self, item: Item, role: str, route: dict) -> Optional[str]:
+        return self._admit(item, role, route)
+
+    def reviewer_for(self, item: Item) -> tuple:
+        return self._reviewer_selector(item)
+
+    def role_argv(self, item: Item, role: str, route: dict) -> list:
+        return self._role_argv(item, role, route)
+
+    def sandbox_mode(self, item: Item) -> str:
+        return self._sandbox_mode(item)
+
+    def claude_bash(self, route: dict) -> bool:
+        return self._claude_bash(route)
+
+    def codex_sandboxed(self, route: dict) -> bool:
+        return self._codex_sandboxed(route)
+
+    def claim_actor(self) -> str:
+        return self._claim_actor()
 
     # ------------------------------------------------------------------ stages
 

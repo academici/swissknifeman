@@ -1,0 +1,318 @@
+"""The routes of a piece in a run: the launch catalog of the run, the route of each role and its fallback, the
+admission of a route (startable here, not gated, not below the minimum of the work) and the preflight before any work.
+The rules are ``policies/routing.py`` and ``policies/sandbox.py``; this module probes the machine (``sandbox.probe``,
+``process.available``, ``gates.blocked``), keeps the routes of the piece and says what moved."""
+from __future__ import annotations
+
+from typing import Optional
+
+from orch import catalog as catalogs, launch, sandbox
+from orch.conductor import gates, process, records
+from orch.conductor.domain.item import Item
+from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure import clock
+from orch.conductor.policies import routing as route_rules, sandbox as sandbox_rules
+from orch.conductor.policies.routing import OPTIONAL_ROLES
+
+
+def _policy_scenario(self, item: Item) -> str:
+    policy = getattr(item, "policy", None) or {}
+    claim = getattr(item, "claim", None) or {}
+    return policy.get("policy_id") or claim.get("scenario") or "-"
+
+
+def policy_stage_unavailable(self, item: Item, preview: bool = False) -> dict:
+    """Refuse a required stage the conductor does not run; beacon an optional one once per run.
+
+    A preview (``run --dry-run``) does not stop: both cases are returned as ``unavailable`` with the same text.
+    The beacon flag lives on the run state so a later piece or a resume does not repeat it.
+    """
+    required, optional = route_rules.unsupported_stages(getattr(item, "policy", None))
+    unavailable = {}
+    scenario = _policy_scenario(self, item)
+    if optional:
+        message = f"{scenario}: {route_rules.stage_list(optional)} is not run by the conductor; skipped"
+        for _stage_id, role in optional:
+            unavailable[role] = f"POLICY_STAGE_SKIPPED: {message}"
+        if not (getattr(self, "state", None) or {}).get("policy_stage_skipped"):
+            self.state["policy_stage_skipped"] = True
+            run_id = getattr(self, "run_id", "") or ""
+            if getattr(self, "store", None) is not None and run_id not in ("", "cnd-dry-run"):
+                self._save()
+            progress = getattr(self, "progress", None)
+            if progress is not None:
+                progress.emit("info", item=getattr(item, "ref", None), reason_code="POLICY_STAGE_SKIPPED",
+                              message=message)
+    if required:
+        message = (f"{scenario}: {route_rules.stage_list(required)} is not run by the conductor; "
+                   "choose another scenario or run the plan natively")
+        if preview:
+            for _stage_id, role in required:
+                unavailable[role] = f"POLICY_STAGE_UNSUPPORTED: {message}"
+        else:
+            raise Stop("POLICY_STAGE_UNSUPPORTED", message)
+    return unavailable
+
+
+def launch_catalog(self) -> dict:
+    """The launch catalog of this run: the shipped one, or the file and the entry changes ``[orch.launch]`` names; read
+    and checked once."""
+    found = getattr(self, "_launch_cache", None)
+    if found is None:
+        try:
+            found = self._launch_cache = launch.effective_catalog(getattr(getattr(self, "settings", None), "launch", None))
+        except launch.LaunchError as error:
+            raise Stop(error.code, str(error)) from None
+    return found
+
+
+def launch_access(self) -> str:
+    """``[orch.launch] access`` of this run (:func:`policies.routing.launch_access`); a run without settings is ``open``."""
+    return route_rules.launch_access(getattr(getattr(self, "settings", None), "launch", None))
+
+
+def entry(self, role: str, provider: str) -> dict:
+    return route_rules.entry(self._launch_catalog(), role, provider)
+
+
+def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dict:
+    """Select routes and return unavailable roles for a preview; required launch errors stop a real run."""
+    unavailable = {}
+    # Before any role of the piece: a required stage this conductor does not run stops a real run here
+    # (the first call is persist=False, still before prepare). A dry-run only reports it.
+    unavailable.update(policy_stage_unavailable(self, item, preview=preview))
+    roles = ["executor"]
+    if self._scout_stage(item) is not None:
+        roles.insert(0, "context-scout")
+    if self._research_wanted(item):
+        roles.insert(1 if roles[0] == "context-scout" else 0, "researcher")
+    if self._reviewing(item):
+        roles += ["reviewer", self._triage_role(item)]
+    if self._closer_named(item):
+        roles.append("registrar")
+    if self._advisor_on():
+        roles.append("advisor")
+    for role in roles:
+        try:
+            item.routes[role] = self._selected(item, role, persist)
+        except Stop as stop:
+            if stop.code not in ("LAUNCH_UNKNOWN", "LAUNCH_REFUSED") or (not preview and role not in OPTIONAL_ROLES):
+                raise
+            item.routes.pop(role, None)
+            unavailable[role] = f"{stop.code}: {stop.message}"
+            if persist and self.progress is not None:
+                self.progress.emit("stage.skip", item=item.ref, stage="scout", role=role,
+                                   reason_code=stop.code, message=f"{stop.message}; optional stage skipped")
+    if item.options["limits"].get("repairs", 0) > 0:
+        try:  # optional: without a launch entry or a model for it, results are only healed and repeated
+            item.routes["report-fixer"] = self._selected(item, "report-fixer", persist)
+        except Stop as stop:
+            item.routes.pop("report-fixer", None)
+            unavailable["report-fixer"] = f"{stop.code}: {stop.message}"
+    if "executor" in item.routes:
+        self._route_minimum(item)
+    if persist:
+        self._preflight(item)
+        records.write(item.directory / "routes.json", item.routes, "item-routes")
+    return unavailable
+
+
+def route_problem(self, route: dict) -> str | None:
+    """Why a route cannot run, as ``CODE: text``; ``None`` when it can. An ``acp`` role is never driven by the
+    conductor (D4), whatever command line stands in for it; a Codex route confined by ``--sandbox`` needs the
+    provider sandbox to start on this machine."""
+    disabled = self.provider_disabled(route["provider"])
+    if disabled:
+        return disabled
+    if route["transport"] == "acp":
+        return "TRANSPORT_UNSUPPORTED: the conductor does not drive acp roles"
+    if self._codex_sandboxed(route) and not sandbox.probe()["available"]:
+        return f"SANDBOX_UNAVAILABLE: {sandbox.probe()['reason']}"
+    if not process.available(route["argv"]):
+        return f"PROVIDER_UNAVAILABLE: {route['argv'][0]} not found"
+    gate = gates.blocked(route["provider"], clock.wall())
+    if gate:
+        return f"PROVIDER_QUOTA: {route['provider']} is gated until {gate['until']}"
+    return None
+
+
+def provider_disabled(self, provider: str) -> str | None:
+    """:func:`policies.routing.provider_disabled` over the ``aicore`` settings of this run (none: nothing is disabled)."""
+    return route_rules.provider_disabled(self.settings.aicore if self.settings is not None else None, provider)
+
+
+def selected(self, item: Item, role: str, persist: bool) -> dict:
+    """The route of ``role`` that can start: its own, or, when its provider is gated (the account quota is known to
+    be exhausted until a reset) or cannot start here (no CLI, a sandbox that does not start), the first declared
+    fallback route that passes the admission. A gated route with no such fallback stops the run with
+    ``PROVIDER_QUOTA``; one that cannot start keeps its route and is refused by the preflight with its own code (the
+    optional scout is left to its own step: it is skipped when it may be)."""
+    kept = (item.state.get("route_overrides") or {}).get(role)  # a fallback taken before a stop: a resume keeps it
+    route = self._route(item, role, kept) if kept else self._route(item, role)
+    gate = gates.blocked(route["provider"], clock.wall())
+    problem = None if gate else self.route_problem(route)
+    if gate is None and problem is None:
+        return route
+    found, refused = self._fallback(item, role, route)
+    until = f"{route['provider']} is gated until {gate['until']} ({gate['class']} {gate['code']}, set by {gate['set_by']})" \
+        if gate else problem
+    if found is None:
+        if gate is None or role == "context-scout":
+            return route
+        raise Stop("PROVIDER_QUOTA", f"{role}: {until}" + (f"; no fallback: {'; '.join(refused)}" if refused else "")
+                   + "; resume after the reset, or remove the gate with orch conduct gates --clear")
+    reason = "CAPACITY_GATED" if gate else problem.split(":", 1)[0]
+    item.route_notes.append({"role": role, "reason_code": reason, "from": self.label(route), "to": self.label(found),
+                             "detail": until})
+    if persist and self.progress is not None:
+        if gate:
+            self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="CAPACITY_GATED",
+                               message=f"{role}: {until}")
+            self._provider_limit(item, None, role, route["provider"], gate["class"], "CAPACITY_GATED",
+                                 until=gate["until"])
+        self.progress.emit("info", item=item.ref, role=role, route=self.label(found), reason_code="ROUTE_FALLBACK",
+                           message=f"{role}: {self.label(route)} -> {self.label(found)} ({reason})")
+        self._route_fallback(item, None, role, route, found, [reason])
+    return found
+
+
+def fallback(self, item: Item, role: str, current: dict, declared: Optional[dict] = None) -> tuple:
+    """``(route, refused)``: the first declared fallback route of ``role`` other than ``current`` that passes
+    ``_admit`` (``declared`` narrows the choice to the route retry.decide named), and why the others were refused."""
+    refused = []
+    for entry in item.options.get("fallback_routes", []):
+        if entry["role"] != role or (entry["provider"], entry["model_class"]) == (current["provider"],
+                                                                                current["model_class"]):
+            continue
+        if declared is not None and (entry["provider"], entry["model_class"]) != (declared["provider"],
+                                                                                declared["model_class"]):
+            continue
+        try:
+            candidate = self._route(item, role, entry)
+        except Stop as stop:
+            refused.append(f"{entry['provider']}/{entry['model_class']}: {stop.code}: {stop.message}")
+            continue
+        problem = self._admit(item, role, candidate)
+        if problem is None:
+            return candidate, refused
+        refused.append(f"{self.label(candidate)}: {problem}")
+    return None, refused
+
+
+def admit(self, item: Item, role: str, route: dict) -> Optional[str]:
+    """Why ``route`` may not take over the work of ``role``, as ``CODE: text``; ``None`` when it may: not below the
+    class and effort the work requires, startable here (transport, sandbox, command) and not gated."""
+    if role == "executor":
+        try:
+            self._route_minimum(item, route)
+        except Stop as stop:
+            return f"{stop.code}: {stop.message}"
+    return self.route_problem(route) or self._claude_sandbox_problem(item, route)
+
+
+def refuse_acp(self, item: Item) -> None:
+    route_rules.refuse_acp(item.routes)
+
+
+def preflight(self, item: Item) -> None:
+    """Every required role can start before any work is done: an acp route or a missing CLI stops the run now with a
+    plain message, not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
+    policy_stage_unavailable(self, item, preview=False)
+    self._refuse_acp(item)
+    required = {role: route for role, route in item.routes.items() if role not in OPTIONAL_ROLES}
+    codex = [(role, route) for role, route in required.items() if self._codex_sandboxed(route)]
+    claude = self._sandbox_mode(item) == "require" and any(self._claude_bash(route) for route in required.values())
+    blocked = []
+    if (codex or claude) and not sandbox.probe()["available"]:  # probed only when a role depends on it
+        reason = sandbox.probe()["reason"]
+        blocked = [f"{role} on {route['provider']}: the provider sandbox cannot start ({reason})"
+                   for role, route in codex]
+        if claude:
+            blocked.append(f"instructions.sandbox is require, and the sandbox cannot start ({reason})")
+    elif claude:  # the sandbox starts, but a CLI that does not list --settings would run the role unconfined
+        blocked = [f"{role}: instructions.sandbox is require, and the claude CLI does not list --settings"
+                   for role, route in required.items()
+                   if self._claude_bash(route) and not self._knows(route["argv"], ["--settings"])]
+    if blocked:
+        raise Stop("SANDBOX_UNAVAILABLE", "; ".join(blocked))
+    off = [f"{role}: {self.provider_disabled(route['provider'])}" for role, route in required.items()
+           if self.provider_disabled(route["provider"])]
+    if off:
+        raise Stop("PROVIDER_UNAVAILABLE", f"cannot start {'; '.join(off)}")
+    missing = [f"{role} ({route['argv'][0]})" for role, route in item.routes.items()
+               if role not in OPTIONAL_ROLES and not process.available(route["argv"])]
+    if missing:
+        raise Stop("PROVIDER_UNAVAILABLE", f"cannot start {', '.join(missing)}: install or log in the CLI, then resume")
+    gated = [f"{role} on {route['provider']} until {gate['until']}" for role, route in required.items()
+             for gate in [gates.blocked(route["provider"], clock.wall())] if gate]
+    if gated:
+        raise Stop("PROVIDER_QUOTA", f"{'; '.join(gated)}: the account quota is exhausted; resume after the reset, "
+                                     "or remove the gate with orch conduct gates --clear")
+
+
+def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
+    """The route of ``role`` over the options, the claim and the launch plan of ``item``, the configuration of the run and
+    its catalogs; ``override`` (a ``fallback_routes`` entry or retry.decide's route) replaces the provider, the model
+    class and, when it has one, the effort of the stage. The rules are ``policies/routing.py``; the lookups between them
+    (the reviewer selector, the launch entry and catalog, the model catalog, the access) are made here, in that order and
+    only when a rule needs them."""
+    reviewer = self._reviewer_selector(item) if role == "reviewer" and not override else None
+    target = route_rules.route_target(role=role, item_options=item.options, conductor_cfg=self.conductor,
+                                      override=override, reviewer=reviewer)
+    entry = self._entry(role, target["provider"])
+    chosen = route_rules.route_model(target, role=role, entry=entry, claim=item.claim, launch_plan=item.launch_plan)
+    if chosen["needs_model"]:
+        try:
+            chosen["model"] = self._catalog_get().resolve_model(chosen["provider"], chosen["model_class"])
+        except catalogs.CatalogError as error:
+            raise Stop(error.code, str(error)) from None
+    builds = route_rules.builds_argv(role, chosen["effort"], self.conductor)
+    return route_rules.route(role=role, item_options=item.options, chosen=chosen, entry=entry,
+                             conductor_cfg=self.conductor, project=self.project,
+                             launch_catalog=self._launch_catalog() if builds else None,
+                             access=self._launch_access() if builds else None)
+
+
+def reviewer_selector(self, item: Item) -> tuple:
+    """:func:`policies.routing.reviewer_selector` of ``item``."""
+    return route_rules.reviewer_selector(item.options, item.sources, item.input_doc)
+
+
+def route_minimum(self, item: Item, route: Optional[dict] = None) -> None:
+    """:func:`policies.routing.route_minimum`: ``route`` (the executor route of ``item`` by default) against the route
+    its claim requires."""
+    minimum = item.claim.get("route") or {}
+    route_rules.route_minimum(minimum, route or item.routes["executor"], item.ref)
+
+
+def claude_sandbox_problem(self, item: Item, route: dict) -> Optional[str]:
+    """:func:`policies.sandbox.claude_sandbox_problem` over the sandbox probe of this machine and the flags the CLI
+    lists, probed here only for a Claude Code shell under ``require`` (the CLI only when the sandbox starts)."""
+    if not sandbox_rules.claude_confinement_required(item.options, route):
+        return None
+    probed = sandbox.probe()
+    listed = self._knows(route["argv"], ["--settings"]) if probed["available"] else None
+    return sandbox_rules.claude_sandbox_problem(item.options, route, probe=probed, settings_listed=listed)
+
+
+def sandbox_args(self, item: Item, role: str, route: dict) -> list:
+    """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash (the provider merges it with
+    the user's settings), with a write grant for ``scope.extra_paths`` when the role writes. A sandbox that cannot start
+    never leaves the commands unconfined silently: ``prefer`` says so once and goes on under the filesystem guard (which
+    gets the paths as ``--rw``), ``require`` was stopped in the preflight."""
+    mode = self._sandbox_mode(item)
+    if mode == "off" or not self._claude_bash(route):
+        return []
+    probed = sandbox.probe()
+    if not probed["available"]:
+        if mode == "prefer" and not self._sandbox_noted and self.progress is not None:
+            self._sandbox_noted = True
+            self.progress.emit("info", reason_code="ISOLATION_PARTIAL",
+                               message=f"sandbox unavailable: {probed['reason']}; the commands of claude-code roles "
+                                       "run under the filesystem guard only")
+        return []
+    if not self._knows(route["argv"], ["--settings"]):
+        return []
+    return sandbox_rules.sandbox_args(item.options, role, route,
+                                      extra_paths=self._scope_option(item, "extra_paths", []),
+                                      network=self.declared_network(role))

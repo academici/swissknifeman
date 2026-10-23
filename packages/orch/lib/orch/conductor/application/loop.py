@@ -22,7 +22,7 @@ from orch.conductor.infrastructure import clock, disk
 from orch.conductor.infrastructure.files import OPTIONS_COPY, REPORTS, safe
 from orch.conductor.progress import human_duration
 from orch.conductor.application import recovery, run_service
-from orch.conductor.policies import budget as token_budget
+from orch.conductor.application import budget_service as token_budget
 
 ROLE_ALIASES_ENGINE = {"scout": "context-scout"}  # the stage role names of the options that name a launch role
 

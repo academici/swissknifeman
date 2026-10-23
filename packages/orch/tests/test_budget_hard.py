@@ -16,7 +16,7 @@ from orch.conductor import options
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import work_source
-from orch.conductor.policies import budget
+from orch.conductor.application import budget_service as budget
 from tests.test_conductor import ConductorCase, FIXTURES, GREEN, ROLES, executor_ok
 
 

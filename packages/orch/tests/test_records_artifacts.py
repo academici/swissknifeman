@@ -20,6 +20,7 @@ from orch.conductor import agents, observer, process, prompts, records
 from orch.conductor.application import recovery, review_plan
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
+from orch.conductor.application import budget_service
 from orch.conductor.policies import budget
 from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
 
@@ -254,7 +255,7 @@ class ColdStageUsageTests(unittest.TestCase):
 
     def admit(self, recovered: dict) -> None:
         actor = SimpleNamespace(state={}, run_doc={}, run_id="run", _step_tokens=recovered, _current_step="executor.1")
-        budget.admit(actor, self.item, "attempt")
+        budget_service.admit(actor, self.item, "attempt")
 
     def test_valid_old_records_are_recovered_and_enforce_the_stage_budget(self):
         self.write(self.request, self.usage)

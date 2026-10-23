@@ -17,7 +17,7 @@ from aicore.provider import models
 from aicore.util.digest import sha256_hex
 from orch import cli as orch_cli
 from orch.conductor import engine, gates, stubs
-from orch.conductor.policies import retry_policy
+from orch.conductor.application import retry_service
 
 from tests.test_conductor import ConductorCase, executor_ok
 
@@ -191,7 +191,7 @@ class VariantRunTests(ConductorCase):
             if role == "executor":
                 gates.set_gate("codex", until=time.time() + 3600, code="PROVIDER_QUOTA",
                                run_id="other", now=time.time())
-            return retry_policy.start_route(conductor, item, key, role, route, cancel)
+            return retry_service.start_route(conductor, item, key, role, route, cancel)
 
         with mock.patch.object(engine.Conductor, "_start_route", gate_then_start):
             code, _, err = self.run_items("W1")

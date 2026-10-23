@@ -1,11 +1,9 @@
 """The limits of a run as targets: a round past its target runs while the last correction made progress, up to the
-ceiling; the run-wide ``<name>_batch`` limits count every piece of the run."""
+ceiling; the run-wide ``<name>_batch`` limits count every piece of the run. The beacons, plan notes and the batch
+counters of the run state are ``application/limits_service.py``."""
 from __future__ import annotations
 
 from typing import Optional
-
-from orch.conductor.domain.item import Item
-from orch.conductor.policies import budget as token_budget
 
 # The limits of the whole run (``limits.<name>_batch``) and the field of a piece's state that each one counts.
 BATCH_FIELDS = {"review_rounds": "review_rounds_used", "corrections": "corrections_at", "findings": "findings_at"}
@@ -38,44 +36,21 @@ def batch_used(items: dict, ref: str, name: str, own: int) -> int:
     return sum(piece_count(row, key) for other, row in items.items() if other != ref) + own
 
 
-def allowance(self, item: Item, name: str, used: int, progress: bool, emit: bool = True) -> Optional[str]:
-    """``None`` when one more round of ``name`` (``review_rounds``, ``corrections``, ``check_fixes``) may run after
-    ``used`` of them, else why not. The limit is a target: past it a round still runs while the last one made
-    progress, up to ``ceiling_factor`` times the target; every such round prints a LIMIT_OVER beacon and leaves a
-    plan note, so a long fight with a piece of work is visible, and a correction that changes nothing ends it."""
-    limits = item.options["limits"]
-    cap = item.input_doc.get("review_rounds_max") if name == "review_rounds" else None
-    if isinstance(cap, int) and used >= cap:  # the plan's bound is a wall: no round goes past it on progress
-        return f"the plan allows at most {cap} review round(s) for {item.ref} (review.rounds_max)"
-    # review rounds are a wall too (owner, D24): a review is the safety net of finished work, not a loop; what the last
-    # round finds is corrected without another review (review.final_correction) and marked review_debt
+def review_wall(name: str, cap, used: int, ref: str) -> Optional[str]:
+    """Why no more review round may run when the plan bounds them (``review.rounds_max`` as ``cap``): the plan's bound
+    is a wall, no round goes past it on progress; ``None`` without one or below it."""
+    if name == "review_rounds" and isinstance(cap, int) and used >= cap:
+        return f"the plan allows at most {cap} review round(s) for {ref} (review.rounds_max)"
+    return None
+
+
+def round_target(name: str, limits: dict, used: int, progress: bool) -> tuple:
+    """``(refusal, past)`` of one more round of ``name`` after ``used`` of them under the run ``limits``; review rounds
+    are a wall too (owner, D24): a review is the safety net of finished work, not a loop, so their factor is 1."""
     factor = 1 if name == "review_rounds" else limits["ceiling_factor"]
-    why, past = over_target(name, limits[name], used, progress, factor)
-    self._limit_over(item, past, emit)
-    if why or name not in BATCH_LIMITS:
-        return why
-    return self._batch_allowance(item, name, used, progress, emit)
+    return over_target(name, limits[name], used, progress, factor)
 
 
-def batch_allowance(self, item: Item, name: str, used: int, progress: bool, emit: bool = True) -> Optional[str]:
-    """The limit ``<name>_batch`` of the whole run, with the same target and ceiling rule; 0 has no limit.
-    The refusal text starts with ``batch:``."""
-    limits = item.options["limits"]
-    target = limits.get(f"{name}_batch", 0)
-    if not target:
-        return None
-    items = self.state["items"]
-    self.state["batch"] = {key: batch_used(items, item.ref, key, piece_count(item.state, BATCH_FIELDS[key]))
-                           for key in BATCH_LIMITS}
-    why, past = over_target(f"{name}_batch", target, batch_used(items, item.ref, name, used), progress,
-                            limits["ceiling_factor"], "batch: ")
-    self._limit_over(item, past, emit)
-    return why
-
-
-def limit_over(self, item: Item, past: Optional[str], emit: bool) -> None:
-    """The LIMIT_OVER beacon and plan note of a round that goes past its target."""
-    if past and emit:
-        self.progress.emit("info", item=item.ref, reason_code="LIMIT_OVER", message=past)
-        self._beacon_event("orch.run.warning", item, {"reason_code": "LIMIT_OVER", "step": token_budget.stage_key(self)})
-        self._plan_note(item, past)
+def batch_counts(items: dict, ref: str, own_state: dict) -> dict:
+    """``{name: used}`` of every run-wide limit, piece ``ref`` counted from ``own_state``."""
+    return {key: batch_used(items, ref, key, piece_count(own_state, BATCH_FIELDS[key])) for key in BATCH_LIMITS}

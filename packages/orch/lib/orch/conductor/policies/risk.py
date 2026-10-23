@@ -2,9 +2,7 @@
 checks, deviations and the executor's own advice to review."""
 from __future__ import annotations
 
-from orch.conductor import scope as scopes
 from orch.conductor.domain.item import Item, done_steps
-
 
 
 def first_checks(steps: dict) -> list:
@@ -20,12 +18,13 @@ def recommended(steps: dict) -> bool:
                for key, step in done_steps(steps).items() if key.startswith("executor.") and isinstance(step.get("result"), dict))
 
 
-def risk_facts(self, item: Item, report: dict) -> dict:
-    changed = self._changed(item)
+def risk_facts(item: Item, report: dict, *, changed: list, outside: list, diff_lines: int) -> dict:
+    """The facts of ``item`` after its executor and check rounds; the caller reads the tree (``changed``, ``outside``
+    and ``diff_lines`` of ``changed``)."""
     steps = item.state.get("steps", {})
-    return {"changed": changed, "outside": self._outside(item), "diff_lines": scopes.diff_lines(self.project, changed),
-            "red_first": any(not row.get("green") and not row.get("skipped") for row in self._first_checks(steps)),
+    return {"changed": changed, "outside": outside, "diff_lines": diff_lines,
+            "red_first": any(not row.get("green") and not row.get("skipped") for row in first_checks(steps)),
             "deviation": bool(item.state.get("autofixed")) or any(
                 issue.get("kind") == "deviation" for issue in report.get("open_issues", [])),
-            "recommended": self._recommended(steps)
+            "recommended": recommended(steps)
             or bool((report.get("review_recommendation") or {}).get("recommended"))}

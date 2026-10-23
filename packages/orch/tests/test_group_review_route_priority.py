@@ -5,7 +5,7 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 from orch.conductor.application.review_plan import group_route
-from orch.conductor.policies.routing import reviewer_selector
+from orch.conductor.application.route_service import reviewer_selector
 
 def route(model, strength="frontier", provider="claude-code"):
     return {"provider": provider, "model": model, "class": strength, "effort": "high"}

@@ -65,7 +65,7 @@ def _field_sources(conductor: engine.Conductor, item: engine.Item, role: str, pr
     stage_source = sources.get(f"stages.{role}")
     sources_of = {}
     if role == "reviewer":
-        selector, review_class, reviewer = conductor._reviewer_selector(item)
+        selector, review_class, reviewer = conductor.reviewer_for(item)
         reviewer = reviewer or DEFAULT_SOURCE
         sources_of["provider"] = reviewer
         for key, value in (("model", selector.get("model")), ("effort", selector.get("effort")), ("model_class", review_class)):
@@ -95,16 +95,16 @@ def _row(conductor: engine.Conductor, item: engine.Item, role: str, origin: str,
     """One candidate with its route and why it can or cannot start."""
     row = {"origin": origin, "layer": layer}
     try:
-        route = conductor._route(item, role, override)
+        route = conductor.route_for(item, role, override)
     except engine.Stop as stop:
         wanted = {**opts.stage_route(item.options, role), **(override or {})}
         if role == "reviewer" and not override:
-            selector, review_class, _ = conductor._reviewer_selector(item)
+            selector, review_class, _ = conductor.reviewer_for(item)
             wanted.update(selector, **({"model_class": review_class} if review_class else {}))
         wanted["provider"] = wanted.get("provider") or conductor.conductor.get("provider") or "claude-code"
         return {**row, **{key: wanted.get(key) for key in ("provider", "model_class", "effort")},
                 "available": False, "problem": f"{stop.code}: {stop.message}"}
-    problem = conductor._admit(item, role, route)  # the rules of a run: start, gate, sandbox, and the minimum of the work
+    problem = conductor.admission(item, role, route)  # the rules of a run: start, gate, sandbox, and the minimum of the work
     return {**row, "provider": route["provider"], "model": route["model"], "model_class": route["model_class"],
             "effort": route["effort"], "transport": route["transport"], "available": problem is None,
             "problem": problem}
@@ -145,12 +145,12 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
             claim["scenario"] = doc.get("scenario") or claim["scenario"]
             if doc.get("claim_route"):
                 claim["route"] = doc["claim_route"]  # the class and effort the work requires of its executor
-            conductor._resolve(item, persist=False)  # the policy of the scenario; the options are the recorded ones
+            conductor.resolve_preview(item)  # the policy of the scenario; the options are the recorded ones
             item.options, item.sources = records.options_effective(doc["options"]), doc.get("sources") or {}
             origin = f"run {run_id}"
             item.input_doc = engine.read_json(engine.runs_root(conductor.project) / run_id / engine.safe(ref) / "input.json") or {}
         else:
-            conductor._resolve(item, persist=False)
+            conductor.resolve_preview(item)
         stages = [stage["role"] for stage in item.policy.get("stages", [])]
         rows = []
         stage = opts.stage_route(item.options, role)
@@ -158,7 +158,7 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
         if named:
             rows.append(_row(conductor, item, role, "stages", item.sources.get(f"stages.{role}"), None))
         if role == "reviewer":
-            rows.append(_row(conductor, item, role, "reviewer", conductor._reviewer_selector(item)[2] or DEFAULT_SOURCE, None))
+            rows.append(_row(conductor, item, role, "reviewer", conductor.reviewer_for(item)[2] or DEFAULT_SOURCE, None))
         elif not named:
             layer = _provider_layer(conductor) if conductor.conductor.get("provider") else f"launch-catalog ({DEFAULT_SOURCE})"
             rows.append(_row(conductor, item, role, "orch.conductor" if conductor.conductor.get("provider")
@@ -168,12 +168,12 @@ def explain(conductor: engine.Conductor, role: str, *, scenario: Optional[str] =
                 rows.append(_row(conductor, item, role, "fallback_routes", item.sources.get("fallback_routes"), entry))
         selected, stop = None, None
         try:
-            route = conductor._selected(item, role, False)
+            route = conductor.selected_route(item, role)
             selected = {key: route.get(key) for key in ("provider", "model", "model_class", "effort", "transport")}
             selected["sources"] = _field_sources(conductor, item, role, route["provider"])
             moved = next((note for note in item.route_notes if note["role"] == role), None)
             selected["moved"] = moved
-            problem = conductor._admit(item, role, route)  # what the preflight would refuse before any work
+            problem = conductor.admission(item, role, route)  # what the preflight would refuse before any work
             if problem:
                 code, _, message = problem.partition(": ")
                 stop = {"code": code, "message": message}

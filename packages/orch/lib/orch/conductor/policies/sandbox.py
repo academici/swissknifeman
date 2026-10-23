@@ -1,30 +1,35 @@
-"""The sandbox of the provider roles: when a Codex or Claude Code route is confined, what a route that cannot be
-confined may still do (``instructions.sandbox``), and which flags the provider CLI lists."""
+"""The sandbox of the provider roles: when a Codex or Claude Code route is confined, and what a route that cannot be
+confined may still do (``instructions.sandbox``). The probes (the sandbox, the flags the provider CLI lists) are the
+caller's: ``application/route_service.py`` and ``infrastructure/cli_probe.py``."""
 from __future__ import annotations
 
 import json
 import os
-import subprocess
 from typing import Optional
 
-from orch import sandbox
 from orch.conductor import options as opts
 from orch.conductor.domain.item import Item
 from orch.settings import ORCH_ROOT
 
-_KNOWN: dict = {}  # (command, flags) -> whether the provider CLI lists the flags in its --help
+
+def claude_confinement_required(item_options: dict, route: dict) -> bool:
+    """``instructions.sandbox`` is ``require`` and ``route`` is a Claude Code role with Bash: only then does
+    :func:`claude_sandbox_problem` need the sandbox probe and the flags of the CLI."""
+    return mode_of(item_options) == "require" and claude_bash(route)
 
 
-def claude_sandbox_problem(self, item: Item, route: dict) -> Optional[str]:
+def claude_sandbox_problem(item_options: dict, route: dict, *, probe: Optional[dict],
+                           settings_listed: Optional[bool]) -> Optional[str]:
     """``SANDBOX_UNAVAILABLE: ...`` when ``instructions.sandbox`` is ``require`` and a Claude Code role with Bash on
     ``route`` could not be confined (the sandbox cannot start, or the CLI does not list ``--settings``): the rule of
-    the preflight, applied to a route that was not in it."""
-    if self._sandbox_mode(item) != "require" or not self._claude_bash(route):
+    the preflight, applied to a route that was not in it. ``probe`` is the result of the sandbox probe and
+    ``settings_listed`` whether the CLI lists ``--settings`` (asked only when the sandbox starts); the caller probes
+    when :func:`claude_confinement_required`."""
+    if not claude_confinement_required(item_options, route):
         return None
-    probed = sandbox.probe()
-    if not probed["available"]:
-        return f"SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start ({probed['reason']})"
-    if not self._knows(route["argv"], ["--settings"]):
+    if not probe["available"]:
+        return f"SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start ({probe['reason']})"
+    if not settings_listed:
         return "SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the claude CLI does not list --settings"
     return None
 
@@ -36,7 +41,12 @@ def codex_sandboxed(route: dict) -> bool:
 
 
 def sandbox_mode(item: Item) -> str:
-    return item.options["instructions"].get("sandbox", "prefer")
+    return mode_of(item.options)
+
+
+def mode_of(item_options: dict) -> str:
+    """``instructions.sandbox`` of the run options: ``off``, ``prefer`` (default) or ``require``."""
+    return item_options["instructions"].get("sandbox", "prefer")
 
 
 def claude_bash(route: dict) -> bool:
@@ -55,51 +65,21 @@ def declared_network(role: str) -> str:
     return (manifest.get("tools") or {}).get("network", "none")
 
 
-def sandbox_args(self, item: Item, role: str, route: dict) -> list:
-    """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash (the provider merges it with
-    the user's settings), with a write grant for ``scope.extra_paths`` when the role writes. A sandbox that cannot start
-    never leaves the commands unconfined silently: ``prefer`` says so once and goes on under the filesystem guard (which
-    gets the paths as ``--rw``), ``require`` was stopped in the preflight."""
-    mode = self._sandbox_mode(item)
-    if mode == "off" or not self._claude_bash(route):
-        return []
-    probed = sandbox.probe()
-    if not probed["available"]:
-        if mode == "prefer" and not self._sandbox_noted and self.progress is not None:
-            self._sandbox_noted = True
-            self.progress.emit("info", reason_code="ISOLATION_PARTIAL",
-                               message=f"sandbox unavailable: {probed['reason']}; the commands of claude-code roles "
-                                       "run under the filesystem guard only")
-        return []
-    if not self._knows(route["argv"], ["--settings"]):
+def sandbox_args(item_options: dict, role: str, route: dict, *, extra_paths: list, network: str) -> list:
+    """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash on a machine where the sandbox
+    starts and whose CLI lists ``--settings`` (the caller probed both; the provider merges the block with the user's
+    settings), with a write grant for ``extra_paths`` (``scope.extra_paths``) when the role writes and a domain
+    allowlist unless the role's ``network`` is ``allowed``."""
+    if mode_of(item_options) == "off" or not claude_bash(route):
         return []
     block = {"enabled": True, "allowUnsandboxedCommands": False, "failIfUnavailable": True}
     if role in opts.WRITING_ROLES:
         # the shell of a writer may change the directories ``scope.extra_paths`` grants, as its file tools do (``--add-dir``);
         # ``sandbox.filesystem.allowWrite`` takes absolute or ``~`` paths and merges with the settings of the user
-        granted = [os.path.expanduser(path) for path in self._scope_option(item, "extra_paths", [])]
+        granted = [os.path.expanduser(path) for path in extra_paths]
         if granted:
             block["filesystem"] = {"allowWrite": granted}
-    if self.declared_network(role) != "allowed":
+    if network != "allowed":
         block["network"] = {"strictAllowlist": True,
-                            "allowedDomains": list(item.options["instructions"].get("sandbox_domains") or [])}
+                            "allowedDomains": list(item_options["instructions"].get("sandbox_domains") or [])}
     return ["--settings", json.dumps({"sandbox": block}, sort_keys=True)]
-
-
-def knows(self, argv: list, flags: list) -> bool:
-    """Whether the provider CLI of ``argv`` lists ``flags`` in its ``--help`` (an older CLI without ``--safe-mode``
-    still runs, isolated by the environment only, and the run says so once)."""
-    command = next((arg for arg in argv if os.path.basename(arg) in ("claude", "codex", "grok")), None)
-    if command is None:  # a test stand-in or a wrapper the conductor does not know: pass the flags as asked
-        return True
-    key = (command, tuple(flags))
-    if key not in _KNOWN:
-        try:
-            text = subprocess.run([command, "--help"], capture_output=True, text=True, timeout=20).stdout
-        except (OSError, subprocess.SubprocessError):
-            text = ""
-        _KNOWN[key] = all(flag in text for flag in flags)
-        if not _KNOWN[key] and self.progress is not None:
-            self.progress.emit("info", reason_code="ISOLATION_PARTIAL",
-                               message=f"{command} does not list {' '.join(flags)}; roles are isolated by the environment only")
-    return _KNOWN[key]

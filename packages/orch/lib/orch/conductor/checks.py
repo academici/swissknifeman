@@ -949,9 +949,9 @@ def reuse_miss(target: Path, check: dict, *, cwd: Path, root: Path, candidate: d
                print_of: Optional[str]) -> Optional[str]:
     """Why a prior evidence file does not prove this check again, as safe component names and short hashes.
 
-    None when there is no prior file: that is a first run, not a reuse miss. Environment values are never included."""
-    if print_of is None:
-        return "unknown inputs; nothing reused"
+    None when there is no prior file: that is a first run, not a reuse miss, whether the inputs are known or not.
+    ``inputs-unknown`` stands for the fingerprint when the inputs of the command cannot be established. Environment
+    values are never included."""
     try:
         raw = target.read_text(encoding="utf-8")
     except OSError:
@@ -982,8 +982,10 @@ def reuse_miss(target: Path, check: dict, *, cwd: Path, root: Path, candidate: d
     if procedure.get("cmd") != check["cmd"]:
         changed.append("command")
     stored = (doc.get("environment") or {}).get("env_digest")
-    if stored != print_of:
-        changed.append("fingerprint=" + (print_of or "")[:12])
+    if print_of is None:
+        changed.append("inputs-unknown")
+    elif stored != print_of:
+        changed.append("fingerprint=" + print_of[:12])
     try:
         if (root / procedure.get("cwd", ".")).resolve() != cwd:
             changed.append("cwd")

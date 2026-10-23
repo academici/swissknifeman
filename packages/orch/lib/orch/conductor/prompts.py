@@ -434,6 +434,18 @@ def _research(result: dict) -> str:
     return "\n\n".join(parts)
 
 
+def protected_rule(paths, staged: str) -> str:
+    """The rule for write-set ``paths`` the provider refuses to write in this session: their content goes to ``staged``
+    and the round ends ``blocked`` with ``WRITE_PROTECTED_PATH`` for the owner, after the rest of the task is done."""
+    named = ", ".join(f"`{path}`" for path in paths)
+    return (f"## Protected paths\n\nThe provider refuses your writes to {named} in this session (nobody can approve "
+            "them). Do not try Write or Edit there, and do not write them through Bash or another tool. When the task "
+            "needs such a file and the tree does not already hold the content it needs, write that full content to "
+            f"`{staged}/<the same path>`, do the rest of the task, and report `blocked` with one `escalation` issue per "
+            "file: `WRITE_PROTECTED_PATH: <path> -> <staged path>`; the owner places the file and the piece is retried. "
+            "When the tree already holds the content the task needs, leave the file alone and do not escalate it.")
+
+
 def _fence_rule(fence: str, extra_paths) -> str:
     """The write fence of the run (``scope.fence``, ``scope.extra_paths``): it overrides the "stay inside the write set /
     block on a path outside it" lines of the role text, which describe the plan fence."""
@@ -464,7 +476,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              role: str = "executor", roles_dir=None, stub=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
-             file_tools: bool = False, containers: bool = True, self_check=()) -> list:
+             file_tools: bool = False, containers: bool = True, self_check=(), protected=(), staged: str = "") -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
@@ -473,6 +485,8 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append([Block("run_rules", CONDUCTOR, _fence_rule(fence, extra_paths))])
     if file_tools:
         parts.append([Block("run_rules", CONDUCTOR, _FILE_TOOLS_RULE)])
+    if protected:
+        parts.append([Block("run_rules", CONDUCTOR, protected_rule(protected, staged))])
     if batch:
         parts.append([Block("run_rules", CONDUCTOR, batch, id=BATCH_ID)])
     if scout_text:

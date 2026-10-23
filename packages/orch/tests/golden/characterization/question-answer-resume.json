@@ -105,7 +105,9 @@
   {
    "event": "item.end",
    "item": "W1",
-   "outcome": "blocked"
+   "message": "needs an answer from the owner",
+   "outcome": "blocked",
+   "reason_code": "QUESTION"
   },
   {
    "event": "run.end",

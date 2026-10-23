@@ -70,9 +70,11 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         if issue["kind"] == "deviation" and issue["text"] not in reported:
             self._deviation_recorded(item, issue)
     if status == "blocked":
-        codes = [issue["text"].split(":", 1)[0] for issue in report.get("open_issues", [])
-                 if issue["kind"] == "escalation" and re.match(r"^[A-Z][A-Z0-9_]*:", issue["text"])]
+        escalations = [issue["text"] for issue in report.get("open_issues", []) if issue["kind"] == "escalation"]
+        codes = [text.split(":", 1)[0] for text in escalations if re.match(r"^[A-Z][A-Z0-9_]*:", text)]
         self._beacon_event("orch.work.blocked", item, {"code": codes[0] if codes else "BLOCKED"})
+        item.escalation = {"code": codes[0] if codes else "BLOCKED",  # the item.end line and status show it
+                           "text": " ".join((escalations[0] if escalations else report.get("summary") or "").split())[:300]}
     # the self-check claim stays with the stage-report of the run; the planner's register-report does not carry it
     body = {key: value for key, value in report.items()
             if key not in ("status", "questions", "review_recommendation", "self_check")}

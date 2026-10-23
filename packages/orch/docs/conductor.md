@@ -435,6 +435,7 @@ The informational limits report long or costly work through `info` lines with a 
 | `SESSION_ROUTE_CHANGED` | a piece resumes the shared executor session under another model or effort than the one that built it (the session continues, the provider cache of the old model is lost) | the old and the new route |
 | `CAPACITY_GATED` | the provider of a role is gated when the routes of a piece are chosen | the gate (until, class, who set it) |
 | `RESULT_SILENT_DENIAL` | a Claude role had tool calls refused without a prompt (`--permission-prompts none`) | the tools and how many calls (`Bash×2, WebFetch`), never their input; for the executor and the bounded-implementer the report also gets a `note` issue "tools denied without a prompt: …" with the way out (widen `allowedTools` in the launch catalog, or change the plan) |
+| `WRITE_PROTECTED_PATH` | before the scout, the write set of the piece names paths the provider of the executor refuses to write in a session without prompts (`policies/protected_writes.py`; for `claude-code`, measured on 2.1.309: `pyrightconfig.json`, `.mcp.json`, `.env`, `.envrc`, `.npmrc`, `.pre-commit-config.yaml`, `.gitmodules`, `.claude.json`, shell rc files and everything under `.claude/`, `.vscode/`, `.idea/`, `.husky/`, `.devcontainer/`, `.git/`, at any depth) | the paths; the executor prompt gets a `Protected paths` rule: the content goes to `<artifacts of the piece>/protected/<path>`, the round ends `blocked` with an escalation `WRITE_PROTECTED_PATH: <path> -> <staged path>`, the owner places the file and retries the piece (`resume --retry`); a file the tree already holds as needed is left alone |
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
 | `ROLE_LINGERED` | the final `result` of a role was out and its process was still alive `RESULT_GRACE_S` (30 s) later, typically a provider CLI waiting for a background task the model started (a monitor loop that never ends) | the answer is complete; the process group was stopped and the role counts as exited 0 |
 | `STUBS_CHANGED` | on `resume`, the stub files say something else than the snapshot of the run | the run keeps its snapshot; a new run reads the new text |
@@ -738,8 +739,8 @@ every check that starts after an earlier check of the round changed the tree or 
 taken at the start of the round). A reused row keeps `reused_from` (the evidence it stands for)
 and `original_seconds`; the evidence file is not rewritten. When a prior evidence file does not prove the check, the row
 carries `reuse_miss`: the component that differs (`candidate.head`, `candidate.dirty_digest`, `command`, `cwd`,
-`fingerprint=<short hash>`, `run`, `subject`, `unknown inputs`), never an environment value. A first run, with no
-evidence file, has no `reuse_miss`. The folder of the evidence and the logs of the checks is not part of
+`fingerprint=<short hash>`, `inputs-unknown`, `run`, `subject`), never an environment value. A first run, with no
+evidence file, has no `reuse_miss`, whether its inputs are known or not. The folder of the evidence and the logs of the checks is not part of
 the candidate.
 
 A correction is built from the latest red acceptance. Both the full executor prompt and the resumed delta say that
@@ -931,7 +932,9 @@ whole line goes to `progress.invalid.jsonl` beside the journal and the journal g
 lines that fit the contract and the observer report counts the others in `discarded_lines`. Every role is told to print the same kind of line
 (`[orch] <item> <step> <what>`, no time: a role cannot know it; the time of a line is the receive stamp in the `<step>.jsonl.times` file next to the stream) into its own stream. `orch conduct status` summarises the journal: run status,
 the step running now, the last step and outcome of each piece, the tokens and the agent runs of the current piece
-(`status --json` has them as `agents: [{agent_run_id, role, step, status, tokens}]`).
+(`status --json` has them as `agents: [{agent_run_id, role, step, status, tokens}]`). A blocked piece shows the code of
+its first escalation after its outcome and the escalation text on an `escalation:` line (the `item.end` line of the
+journal carries them as `reason_code` and `message`; `escalation` in `status --json`).
 
 ### Agent runs
 

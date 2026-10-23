@@ -464,6 +464,11 @@ def stray_dir(item: Item) -> Path:
     return (item.artifacts or item.directory) / "stray"
 
 
+def protected_dir(item: Item) -> Path:
+    """Where the executor stages the content of a path its provider refuses to write: ``<artifacts>/protected/<path>``."""
+    return (item.artifacts or item.directory) / "protected"
+
+
 def local_records(self, item: Item) -> bool:
     """The artifact folder of the piece is the local fallback (the source named none): it is not committed."""
     try:

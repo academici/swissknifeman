@@ -28,3 +28,4 @@ class Item:
     routes: dict = field(default_factory=dict)
     launch_plan: dict = field(default_factory=dict)
     route_notes: list = field(default_factory=list)  # routes moved at selection: gated or unavailable provider
+    escalation: dict = field(default_factory=dict)  # {code, text} of a blocked report, for the item.end line

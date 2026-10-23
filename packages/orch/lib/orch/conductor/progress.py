@@ -26,7 +26,8 @@ MODES = ("text", "json-lines", "quiet")
 # ``info`` lines that report a long or costly run without stopping it; the latest one of the running step is the
 # answer to "why is it taking so long" (``orch conduct status`` prints it)
 BEACONS = ("STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "BUDGET_OVER", "LIMIT_OVER", "PROVIDER_WAIT", "ROUTE_FALLBACK",
-           "CAPACITY_GATED", "WORK_SOURCE_NO_NOTE", "RESULT_SILENT_DENIAL", "DISK_LOW")
+           "CAPACITY_GATED", "WORK_SOURCE_NO_NOTE", "RESULT_SILENT_DENIAL", "DISK_LOW",
+           "WRITE_PROTECTED_PATH")
 PROGRESS_FILE = "progress.jsonl"
 INVALID_FILE = "progress.invalid.jsonl"
 INVALID_CODE = "PROGRESS_LINE_INVALID"
@@ -212,6 +213,8 @@ def summarize(lines: list) -> dict:
             elif event == "item.end":
                 row["outcome"] = line.get("outcome")
                 row["reason_code"] = line.get("reason_code")
+                if line.get("outcome") == "blocked" and line.get("message"):
+                    row["escalation"] = line["message"]  # the first escalation of the blocked report
             elif event == "info" and line.get("reason_code") == "SETTLED" and line.get("outcome"):
                 row["outcome"], row["reason_code"] = line["outcome"], "SETTLED"  # set by hand after the run stopped
     return {"status": status, "reason_code": reason, "current": current, "beacon": beacon if current else None,

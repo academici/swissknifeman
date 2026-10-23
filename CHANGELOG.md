@@ -4,6 +4,8 @@
 
 ### Added
 
+- orch: write-protected paths. `policies/protected_writes.py` lists the paths `claude-code` refuses to write in a session without prompts (measured on 2.1.309: `pyrightconfig.json`, `.mcp.json`, `.env`, `.envrc`, `.npmrc`, `.pre-commit-config.yaml`, `.gitmodules`, `.claude.json`, shell rc files and everything under `.claude/`, `.vscode/`, `.idea/`, `.husky/`, `.devcontainer/`, `.git/`, at any depth). Before the scout the conductor checks the write set of the piece: the beacon `WRITE_PROTECTED_PATH` names the paths and the executor prompt gets a `Protected paths` rule (stage the content under `<artifacts>/protected/<path>`, end `blocked` with `WRITE_PROTECTED_PATH: <path> -> <staged path>`; the owner places the file and retries). The executor no longer meets the refusal after a whole round.
+- orch: `orch conduct status` shows why a blocked piece stopped: the code of its first escalation after the outcome and its text on an `escalation:` line (`escalation` in `--json`); the `item.end` line of a blocked piece carries them as `reason_code` and `message`.
 - aicore, hub: `aicore schema codegen --root DIR --out FILE [--check]` generates a stdlib `TypedDict` module (`NotRequired`, `Literal`, `Union`, `Dict` for `patternProperties`) from the contract schemas of a directory, deterministically; `--check` exits 1 with `SCHEMA_CODEGEN_DRIFT: <out>`, and a shape outside the supported mapping exits 1 with `SCHEMA_CODEGEN_UNSUPPORTED: <file>:<pointer>`. `aicore schema` now dispatches `compat` and `codegen`. `configs/schema-types.json` and `scripts/schema-types.py --check|--write` keep `orch/_types/{records,conductor,exec,work_source}.py` and `planner/plan/_types.py` in step with their schemas (the generator `schema-types` is part of the golden check). `RunStore.load`/`save` and `questions.read` are annotated with the generated `Run`, `State` and `Questions`; behaviour is unchanged.
 - aicore: shared primitives. `aicore.util.lock` (`FileLock` with the samestat loop, `hold`, `LockTimeout`, `probe_free`, `lock_descriptor`), `aicore.util.timefmt` (`utc_now`, `utc_stamp`, `parse_rfc3339` giving an aware UTC datetime, `epoch`, `seconds_between`; a naive text is UTC, a bad text is `None`) and `aicore.util.docio` (`read_document` / `write_document`: parse, migrate, validate against the schema, `durable_replace`; `DocumentCorrupt`, `DocumentInvalid`).
 
@@ -28,6 +30,7 @@
 
 ### Fixed
 
+- orch: a check without prior evidence is a first run, not a reuse miss, also when its inputs cannot be established (a standalone copy): `reuse_miss` is no longer set on it. With a prior evidence file the row names the differing components and `inputs-unknown` in place of the fingerprint (was the opaque `unknown inputs; nothing reused`).
 - orch: `orch.run.started` of a claim that names no scenario (a run of a file input) now carries the default profile as `scenario`, as its schema requires; it used to be journaled without it.
 - gui: the run event of a timed-out run is `gui.run.timed-out` (was `gui.run.timed_out`, which is not a valid event type, so it was never journaled).
 

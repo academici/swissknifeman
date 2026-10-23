@@ -15,7 +15,7 @@ from aicore.util import schema
 from orch.conductor import options as opts, prompts, scope as scopes
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
-from orch.conductor.policies import paths
+from orch.conductor.policies import paths, protected_writes
 
 RULE_HEADING = re.compile(r"^## ([A-Za-z0-9_.-]+)[ \t]*$", re.M)
 SKILL_NAME = re.compile(r"[a-z0-9][a-z0-9_:-]*(?:[./][a-z0-9][a-z0-9_:-]*)*")
@@ -266,6 +266,14 @@ def file_tools_rule(self, item: Item) -> bool:
     if not item.options["instructions"].get("file_tools_rule", True):
         return False
     return {"Read", "Edit"} <= (self._route_tools(item.routes.get("executor")) or set())
+
+
+def write_protected(self, item: Item) -> list:
+    """The write-set patterns of the piece that the provider of its executor route refuses to write without a prompt
+    (``policies.protected_writes``); the executor prompt names them and where their content goes instead."""
+    route = item.routes.get("executor") or {}
+    return protected_writes.protected(route.get("provider", ""), route.get("argv"),
+                                      (item.input_doc.get("scope") or {}).get("write_set"))
 
 
 def skill_set(self, item: Item, role: str) -> dict:

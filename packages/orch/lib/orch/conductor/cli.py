@@ -304,7 +304,8 @@ def _status_details(directory: Path, found: dict) -> dict:
                         entry[key] = change["to"]
             elif key == "run_tokens_hard_max":
                 limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
-    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED"}
+    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED",
+             "WRITE_PROTECTED_PATH"}
     beacons = {}
     for line in progress.read_lines(directory):
         if line.get("event") == "info" and line.get("reason_code") in codes:
@@ -386,6 +387,8 @@ def _status(args, project: Path) -> int:
         print(f"  {row['item']}: {row['outcome'] or 'running'}"
               + (f" ({row.get('reason_code')})" if row.get("reason_code") else "")
               + f"; {row['stages']} step(s), last {last.get('stage', '-')} {last.get('verdict') or ''}".rstrip())
+        if row.get("escalation") and row["outcome"] == "blocked":
+            print(f"    escalation: {row['escalation']}")
     if held:
         print("  " + run_service.held_hint(run_id, held))
     tokens = found["state"].get("tokens") or {}

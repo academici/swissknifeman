@@ -388,7 +388,9 @@ def piece(self, answer: dict) -> str:
         raise
     state["outcome"] = outcome
     self._save()
-    self.progress.emit("item.end", item=ref, outcome=outcome, duration_s=round(time.monotonic() - begin, 1))
+    said = item.escalation if outcome == "blocked" else {}  # the first escalation: status shows why the piece stopped
+    self.progress.emit("item.end", item=ref, outcome=outcome, duration_s=round(time.monotonic() - begin, 1),
+                       **({"reason_code": said["code"], "message": said["text"] or said["code"]} if said else {}))
     return outcome
 
 
@@ -407,6 +409,13 @@ def conduct(self, item: Item) -> str:
     item.launch_plan = self._step(item, "prepare", lambda: self._prepare(item))
     self._routes(item)
     adopted = self._adopted(item)
+    protected = self._write_protected(item)
+    if protected:  # said before any model work: the executor is told, the owner places these files after its round
+        self.progress.emit("info", item=item.ref, role="executor", route=self.label(item.routes["executor"]),
+                           reason_code="WRITE_PROTECTED_PATH",
+                           message=f"{item.routes['executor']['provider']} refuses writes to {', '.join(protected)} "
+                                   "without a prompt: the executor stages their content under protected/ of the "
+                                   "artifacts and ends blocked; the owner places them, then resume --retry")
     scout_text = self._scout(item)
     self._research(item)
     report = self._execute(item, 1, scout_text, prompts.ADOPTED.format(paths=", ".join(adopted)) if adopted else "")

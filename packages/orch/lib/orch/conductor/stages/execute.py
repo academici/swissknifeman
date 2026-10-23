@@ -62,7 +62,9 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   fence=self._scope_option(item, "fence", "plan"),
                                   extra_paths=self._scope_option(item, "extra_paths", []),
                                   file_tools=self._file_tools_rule(item),
-                                  containers=not self._codex_sandboxed(route))
+                                  containers=not self._codex_sandboxed(route),
+                                  protected=self._write_protected(item),
+                                  staged=self._relative(work_source.protected_dir(item)))
         resumed = self._resumed_prompt(item, key, correction, note, fix, answers)
         report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems, resumed=resumed)
         if self._shared_session(item, "executor", item.routes["executor"]) \

@@ -327,6 +327,7 @@ class Conductor:
     _skill_body = staticmethod(context.skill_body)
     _route_tools = staticmethod(context.route_tools)
     _file_tools_rule = context.file_tools_rule
+    _write_protected = context.write_protected
     _skill_set = context.skill_set
     _skills_excluded = context.skills_excluded
     _skill_texts = context.skill_texts

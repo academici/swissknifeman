@@ -30,6 +30,7 @@
 
 ### Fixed
 
+- orch: the self-check of a completion report counts a command that the executor wrote with a note in parentheses (`ruff check . (run as /snap/bin/ruff)`); it used to be a missing self-check (`RESULT_INCOMPLETE`) and cost a round.
 - aicore: `timefmt.parse_rfc3339` no longer reads a date without a time (`2024-01-01Z`, `2024-01-01`) as a moment: it is `None`, as for any text that is not an RFC 3339 date-time.
 - orch: a check without prior evidence is a first run, not a reuse miss, also when its inputs cannot be established (a standalone copy): `reuse_miss` is no longer set on it. With a prior evidence file the row names the differing components and `inputs-unknown` in place of the fingerprint (was the opaque `unknown inputs; nothing reused`).
 - orch: `orch.run.started` of a claim that names no scenario (a run of a file input) now carries the default profile as `scenario`, as its schema requires; it used to be journaled without it.

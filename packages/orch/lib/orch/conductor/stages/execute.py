@@ -290,10 +290,22 @@ def self_check_gap(item: Item, report: dict) -> list:
     commands = list(item.options["checks"].get("self_check") or [])
     if not commands or item.options["checks"]["executor_runs_checks"] or report.get("status") not in COMPLETION:
         return []
-    claims = {row["cmd"]: row["exit"] for row in report.get("self_check") or [] if isinstance(row, dict)}
+    claims = {str(row["cmd"]).strip(): row["exit"] for row in report.get("self_check") or [] if isinstance(row, dict)}
     honest = any(issue.get("kind") == "deviation" for issue in report.get("open_issues") or [])
-    return [command for command in commands
-            if command not in claims or (claims[command] != 0 and not honest)]
+    found = {command: claimed(command, claims) for command in commands}
+    return [command for command in commands if found[command] is None or (found[command] != 0 and not honest)]
+
+
+def claimed(command: str, claims: dict):
+    """The exit a report gives for ``command``: its own row, or a row that is the command followed only by a note in
+    parentheses (``ruff check . (run as /snap/bin/ruff)``); None when the report does not show it."""
+    if command in claims:
+        return claims[command]
+    for text, code in claims.items():
+        rest = text[len(command):].strip() if text.startswith(command + " ") else ""
+        if rest.startswith("(") and rest.endswith(")"):
+            return code
+    return None
 
 
 def self_check_return(self, item: Item, report: dict, round_no: int, scout_text: str) -> tuple:

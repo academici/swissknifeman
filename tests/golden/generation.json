@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "ca18733bb65e",
-  "reason": "orch-debug: замкнутая схема наблюдатель + субагент разбора, handoff-файл, промпты как источник P8.5",
+  "captured_from": "1dc3752088e6",
+  "reason": "orch: outside_module по умолчанию deviation (описание схемы)",
   "generators": [
     {
       "id": "skiller-registry",
@@ -258,7 +258,7 @@
     "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
-    "packages/orch/lib/orch/_types/conductor.py": "82bfb31bdde2c1a14e1a7dbbeb786bdc37a07aaf5b9d8c98ac81a30104ac493d",
+    "packages/orch/lib/orch/_types/conductor.py": "565d191a8d12ce0962f2cdbc8d9de5e569233f472668d7f5f280bbdb8c1bf720",
     "packages/orch/lib/orch/_types/exec.py": "8d7f1b3e3002b03f062b5cfc70f6a57f2c511d4004cae31ee31870a94f1ed3e8",
     "packages/orch/lib/orch/_types/records.py": "91fed3f7ec7c362e785fef451f50fcf991ff8620f70d53a0e695b4e4e0acf11f",
     "packages/orch/lib/orch/_types/work_source.py": "f2304452901752a496ad6dd3843b4b967347a7d8a96f999e36db46cef9ce4572",

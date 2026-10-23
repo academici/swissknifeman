@@ -39,6 +39,15 @@ class ShippedFileTests(unittest.TestCase):
         self.assertNotIn("launch", raw)
         self.assertLess(len(launch.CATALOG_PATH.read_text(encoding="utf-8")), GOLDEN.stat().st_size * 0.6)
 
+    def test_every_writing_claude_role_skips_the_local_settings_of_the_checkout(self):
+        # Claude Code loads the main checkout's .claude/settings.local.json in a linked worktree too, and with the sandbox
+        # on its Read denies of context economy (skills.json, lock files) become /dev/null masks the executor cannot write.
+        for role, providers in launch.load_catalog()["launch"].items():
+            argv = (providers.get("claude-code") or {}).get("argv")
+            if argv and "Edit" in argv[argv.index("--tools") + 1].split(","):
+                with self.subTest(role=role):
+                    self.assertEqual(argv[argv.index("--setting-sources") + 1], "user,project")
+
     def test_the_sandbox_of_every_codex_role_is_stated_in_its_own_entry(self):
         raw = json.loads(launch.CATALOG_PATH.read_text(encoding="utf-8"))
         for role, body in raw["roles"].items():

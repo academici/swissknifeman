@@ -75,14 +75,16 @@ class ModuleTests(unittest.TestCase):
 
 class FloorTests(unittest.TestCase):
     def test_defaults(self):
-        self.assertEqual(options.DEFAULT_SCOPE["outside_module"], "block")
+        self.assertEqual(options.DEFAULT_SCOPE["outside_module"], "deviation")
         self.assertIn(".swissknifeman/orch-artifacts/**", options.DEFAULT_SCOPE["runtime_paths"])
 
     def test_a_layer_of_the_work_source_cannot_set_outside_module_to_deviation_or_drop_runtime_paths(self):
         for layer in ({"scope": {"outside_module": "deviation"}}, {"scope": {"runtime_paths": ["x/**"]}}):
             with self.subTest(layer=layer):
                 with self.assertRaises(options.OptionsError) as caught:
-                    options.effective({}, {}, [{"source": "item:W1", "options": layer}])
+                    options.effective({}, {}, [{"source": "invocation:--options", "trusted": True,
+                                                "options": {"scope": {"outside_module": "block"}}},
+                                               {"source": "item:W1", "options": layer}])
                 self.assertEqual(caught.exception.code, "OPTIONS_UNTRUSTED")
 
     def test_a_work_source_layer_may_add_runtime_paths_and_a_trusted_one_may_loosen(self):
@@ -94,6 +96,9 @@ class FloorTests(unittest.TestCase):
         self.assertEqual(found["scope"]["outside_module"], "deviation")
 
 
+STRICT = [{"source": "item:W1", "options": {"scope": {"outside_module": "block"}}}]
+
+
 class OutsideModuleTests(ConductorCase):
     def piece(self, write_set, cmd="test -f packages/orch/x.txt", **fields):
         self.set_items({"W1": {"write_set": write_set, "checks": [module_check("W1", "", cmd)], **fields}})
@@ -103,8 +108,8 @@ class OutsideModuleTests(ConductorCase):
         issues = self.source()["items"]["W1"]["report"]["open_issues"]
         self.assertTrue(any(code in issue["text"] for issue in issues if issue["kind"] != "note"), issues)
 
-    def test_a_file_of_another_module_blocks_the_piece_and_nothing_is_committed(self):
-        self.piece(["packages/orch/**"])
+    def test_under_block_a_file_of_another_module_blocks_the_piece_and_nothing_is_committed(self):
+        self.piece(["packages/orch/**"], options=STRICT)
         self.script({"executor": [{"write": {"packages/orch/x.txt": "ok\n", "packages/other/x.py": "y\n"},
                                    "result": module_report("packages/orch/x.txt", "test -f packages/orch/x.txt")}]})
         code, _, err = self.run_items("W1")
@@ -114,8 +119,8 @@ class OutsideModuleTests(ConductorCase):
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (1, 0))
         self.assertEqual(self.source()["commits"], [])
 
-    def test_the_changelog_and_the_docs_stay_a_deviation_and_are_committed(self):
-        self.piece(["packages/orch/**"])
+    def test_under_block_the_changelog_and_the_docs_stay_a_deviation_and_are_committed(self):
+        self.piece(["packages/orch/**"], options=STRICT)
         self.script({"executor": [{"write": {"packages/orch/x.txt": "ok\n", "docs/x.md": "d\n", "CHANGELOG.md": "c\n"},
                                    "result": module_report("packages/orch/x.txt", "test -f packages/orch/x.txt")}],
                      "reviewer": [GREEN]})
@@ -128,8 +133,8 @@ class OutsideModuleTests(ConductorCase):
         self.assertEqual(sorted(self.source()["commits"][0]["paths"]).count("docs/x.md"), 1)
         self.assertIn("CHANGELOG.md", self.source()["commits"][0]["paths"])
 
-    def test_a_hub_path_is_not_a_module_of_a_package_piece(self):
-        self.piece(["packages/orch/**"])
+    def test_under_block_a_hub_path_is_not_a_module_of_a_package_piece(self):
+        self.piece(["packages/orch/**"], options=STRICT)
         self.script({"executor": [{"write": {"packages/orch/x.txt": "ok\n", "scripts/x.py": "y\n"},
                                    "result": module_report("packages/orch/x.txt", "test -f packages/orch/x.txt")}]})
         code, _, err = self.run_items("W1")
@@ -144,25 +149,16 @@ class OutsideModuleTests(ConductorCase):
         self.assertEqual(code, 0, err)
         self.assertEqual(self.source()["items"]["W1"]["status"], "done_with_deviations")
 
-    def test_outside_module_deviation_of_the_invocation_gives_the_old_behaviour(self):
+    def test_by_default_a_file_of_another_module_is_a_deviation_and_is_committed(self):
         self.piece(["packages/orch/**"])
-        path = self.project.parent / "options.json"
-        path.write_text('{"scope": {"outside_module": "deviation"}}', encoding="utf-8")
         self.script({"executor": [{"write": {"packages/orch/x.txt": "ok\n", "packages/other/x.py": "y\n"},
                                    "result": module_report("packages/orch/x.txt", "test -f packages/orch/x.txt")}],
                      "reviewer": [GREEN]})
-        code, _, err = self.run_items("W1", extra=("--options", path))
+        code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         item = self.source()["items"]["W1"]
         self.assertEqual(item["status"], "done_with_deviations")
         self.assertIn("packages/other/x.py", self.source()["commits"][0]["paths"])
-
-    def test_a_work_source_layer_that_loosens_outside_module_is_untrusted(self):
-        self.piece(["packages/orch/**"], options=[{"source": "item:W1", "options": {"scope": {"outside_module": "deviation"}}}])
-        self.script({"executor": [executor_ok("W1")]})
-        code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "OPTIONS_UNTRUSTED")), err)
-        self.assertEqual(self.calls("executor"), 0)
 
     def test_outside_block_keeps_the_stricter_outside_write_set_stop(self):
         self.set_items({"W1": {"options": [{"source": "item:W1", "options": {"scope": {"outside": "block"}}}]}})
@@ -322,10 +318,10 @@ class MutatingChecksTests(ConductorCase):
         self.assertIn("out/W1.txt", end["message"])
         self.assertIn("idempotent", end["message"])
 
-    def test_a_check_that_writes_a_file_of_another_module_stops_the_run(self):
+    def test_under_block_a_check_that_writes_a_file_of_another_module_stops_the_run(self):
         cmd = "test -f packages/orch/x.txt && mkdir -p packages/other && echo gen > packages/other/gen.py"
         self.set_items({"W1": {"write_set": ["packages/orch/**"], "checks": [{"id": "V1", "cmd": cmd, "expect": "exit 0",
-                                                                          "kind": "acceptance"}]}})
+                                                                          "kind": "acceptance"}], "options": STRICT}})
         self.script({"executor": [{"write": {"packages/orch/x.txt": "ok\n"},
                                    "result": module_report("packages/orch/x.txt", cmd)}], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")

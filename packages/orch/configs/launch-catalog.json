@@ -8,7 +8,7 @@
     "claude.stream": ["claude", "-p", "--output-format", "stream-json", "--verbose"],
     "claude.model": ["--model", "{model}", "--effort", "{effort}"],
     "claude.quiet": ["--permission-prompts", "none", "--no-session-persistence"],
-    "claude.write-tools": ["--tools", "Bash,Read,Edit,Write,Grep,Glob", "--permission-mode", "acceptEdits", "--allowedTools", "Bash"],
+    "claude.write-tools": ["--tools", "Bash,Read,Edit,Write,Grep,Glob", "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "--setting-sources", "user,project"],
     "claude.read-tools": ["--tools", "Bash,Read,Grep,Glob"],
     "claude.research-query": ["--allowedTools", "Bash(python3 *orch.py research query *)", "Bash(python3 *orch.py --config * research query *)"],
     "claude.no-edit": ["--disallowedTools", "Edit,Write,NotebookEdit"],

@@ -319,7 +319,7 @@ def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
     write_set = (item.input_doc.get("scope") or {}).get("write_set")
     stranger = scopes.foreign(scopes.outside(product, write_set), write_set,
                               self._scope_option(item, "extra_paths", []), self.project)
-    if stranger and item.options["scope"].get("outside_module", "block") == "block":
+    if stranger and item.options["scope"].get("outside_module", "deviation") == "block":
         raise Stop("OUTSIDE_MODULE", "the checks changed files of other modules: " + ", ".join(stranger[:20])
                    + "; add them to the item's task_files or make the check write them elsewhere")
     return product

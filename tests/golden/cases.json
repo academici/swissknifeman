@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "ca18733bb65e",
-  "reason": "orch-debug: замкнутая схема наблюдатель + субагент разбора, handoff-файл, промпты как источник P8.5",
+  "captured_from": "1dc3752088e6",
+  "reason": "orch: outside_module по умолчанию deviation (описание схемы)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

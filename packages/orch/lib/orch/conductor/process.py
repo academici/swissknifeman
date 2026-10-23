@@ -105,7 +105,7 @@ def parse_stream(transport: str, data: str) -> dict:
              "usage_complete": False, "signals": {}, "denials": []}
     denied: dict = {}  # tool_use_id -> tool name, in order of first sight
     signals, retry_status, retries, last = found["signals"], None, 0, {}  # last: the final terminal event only
-    messages = []
+    messages, answers, complete = [], [], True  # answers: texts of the results that did not fail
     for raw in data.splitlines():
         try:
             doc = json.loads(raw)
@@ -122,11 +122,22 @@ def parse_stream(transport: str, data: str) -> dict:
         elif kind == "result":
             for entry in doc.get("permission_denials") if isinstance(doc.get("permission_denials"), list) else []:
                 _deny(denied, entry)
-            found["text"] = doc.get("result") if isinstance(doc.get("result"), str) else found["text"]
+            # Claude closes a turn with a ``result``; a background task that finishes later opens one more turn in the
+            # same process (``task_notification``), so one answer can span several results: their texts are joined
+            # (the contract block of an earlier turn stays visible) and their usage, counted per turn, is summed.
+            # The text of a failed turn is not part of the answer; a final failure keeps its own text.
+            text = doc.get("result") if isinstance(doc.get("result"), str) else ""
+            usage = _usage(doc.get("usage"))
             found["session"] = doc.get("session_id") or found["session"]
-            found["usage"] = _usage(doc.get("usage"))
-            found["usage_complete"] = bool(found["usage"]["input"] or found["usage"]["output"])
+            found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
+            complete = complete and bool(usage["input"] or usage["output"])
+            found["usage_complete"] = complete
             found["is_error"] = bool(doc.get("is_error"))
+            if found["is_error"]:
+                found["text"] = text or found["text"]
+            else:
+                answers = [*answers, text] if text.strip() else answers
+                found["text"] = "\n\n".join(answers)
             last = {"terminal": True}
             if found["is_error"]:
                 if isinstance(doc.get("result"), str):

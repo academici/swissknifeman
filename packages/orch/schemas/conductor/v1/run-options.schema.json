@@ -97,7 +97,7 @@
           "enum": ["deviation", "block"]
         },
         "outside_module": {
-          "description": "`block` (default): the piece is blocked (`OUTSIDE_MODULE`) when the executor changed files of another module than the ones its write set names (`packages/<id>/`, `bridges/<id>/`, else the hub; `CHANGELOG.md` and `docs/` are always allowed, as are the granted `extra_paths`); `deviation`: such paths are reported as a deviation like any other path outside the write set. A layer of the work source can only tighten it.",
+          "description": "`deviation` (default): files of another module than the ones the write set names (`packages/<id>/`, `bridges/<id>/`, else the hub) are reported as a deviation like any other path outside the write set; `block`: the piece is blocked (`OUTSIDE_MODULE`) instead (`CHANGELOG.md` and `docs/` are always allowed, as are the granted `extra_paths`). A layer of the work source can only tighten it.",
           "type": "string",
           "enum": ["deviation", "block"]
         },

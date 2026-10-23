@@ -100,6 +100,8 @@
           "acceptEdits",
           "--allowedTools",
           "Bash",
+          "--setting-sources",
+          "user,project",
           "--permission-prompts",
           "none",
           "--no-session-persistence"
@@ -220,6 +222,8 @@
           "acceptEdits",
           "--allowedTools",
           "Bash",
+          "--setting-sources",
+          "user,project",
           "--permission-prompts",
           "none",
           "--no-session-persistence"

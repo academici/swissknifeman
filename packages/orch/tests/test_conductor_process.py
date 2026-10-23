@@ -289,6 +289,33 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class MultiTurnResultTests(unittest.TestCase):
+    def test_a_turn_after_a_background_task_keeps_the_answer_of_the_first_turn(self):
+        # P5.3: the executor ended its answer with the stage-report while a background check ran; the task
+        # notification opened one more turn ("nothing in the report changes") and only that text was kept
+        report = "done.\n\n```stage-report\n{\"status\": \"done\"}\n```"
+        parsed = process.parse_stream("jsonl", "\n".join(json.dumps(doc) for doc in (
+            {"type": "result", "is_error": False, "result": report,
+             "usage": {"input_tokens": 10, "cache_read_input_tokens": 100, "output_tokens": 50}},
+            {"type": "system", "subtype": "task_notification", "status": "completed"},
+            {"type": "result", "is_error": False, "result": "The background check finished; the report above stands.",
+             "usage": {"input_tokens": 4, "cache_read_input_tokens": 20, "output_tokens": 3}})))
+        self.assertIn("```stage-report", parsed["text"])
+        self.assertTrue(parsed["text"].endswith("the report above stands."))
+        self.assertEqual(parsed["usage"], {"input": 14, "cached": 120, "output": 53})
+        self.assertFalse(parsed["is_error"])
+
+    def test_the_text_of_a_failed_turn_is_not_part_of_a_later_answer(self):
+        parsed = process.parse_stream("jsonl", "\n".join(json.dumps(doc) for doc in (
+            {"type": "result", "is_error": True, "result": "weekly limit"},
+            {"type": "result", "is_error": False, "result": "all good"})))
+        self.assertEqual(parsed["text"], "all good")
+        parsed = process.parse_stream("jsonl", "\n".join(json.dumps(doc) for doc in (
+            {"type": "result", "is_error": False, "result": "half"},
+            {"type": "result", "is_error": True, "result": "weekly limit"})))
+        self.assertEqual((parsed["text"], parsed["is_error"]), ("weekly limit", True))
+
+
 class ActivityAndUsageTests(unittest.TestCase):
     def test_activity_names_the_child_processes_of_a_role(self):
         import subprocess

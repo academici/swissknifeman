@@ -322,6 +322,13 @@ class JsonContextTests(test_lifecycle.LifeCase):
         force_patch(self.root, "P1.1", {"task_files": [{"path": "lib/new.py", "change": "modify"}]})
         self.assertEqual(context.missing_reads(self.load(), "P1.2"), ["lib/new.py"])  # only a created file is promised
 
+    def test_a_reopened_item_may_start_after_its_own_work_deleted_a_read(self):
+        # PLAN9.P5.5: reopen returns the item to todo while its work (observer.py -> observer/) stays in the tree.
+        force_patch(self.root, "P1.1", {"reads": [{"path": "gone.py", "why": "module to split", "required": True}],
+                                        "task_files": [{"path": "gone.py", "change": "delete"}]})
+        lifecycle.start(self.root, ["P1.1"], test_lifecycle.OPUS)
+        self.assertEqual(self.load().items["P1.1"]["status"], "in_progress")
+
     def test_missing_required_input_is_refused_without_mutation(self):
         force_patch(self.root, "P1.1", {"reads": [{"path": "gone.py", "why": "needed", "required": True}]})
         self.refused("READ_MISSING", lambda root: lifecycle.start(root, ["P1.1"], test_lifecycle.OPUS))

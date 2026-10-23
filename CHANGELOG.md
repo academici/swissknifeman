@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- orch: `scope.outside_module` defaults to `deviation`: files of another module than the write set names no longer stop a piece; they are a deviation that raises its review risk, and a plan layer can still set `block`. In phases P4–P5 every one of the three `OUTSIDE_MODULE` stops was a legitimate repair accepted later.
+- orch: the writing Claude Code roles (executor, bounded-implementer) start with `--setting-sources user,project`. In a linked worktree Claude Code also loaded the main checkout's `.claude/settings.local.json`, whose context-economy `Read` denies (`skills.json`, lock files) became `/dev/null` masks under the sandbox, so an executor could not regenerate `packages/skiller/skills.json`. The user's own denies still apply.
+
 ### Added
 
 - orch: write-protected paths. `policies/protected_writes.py` lists the paths `claude-code` refuses to write in a session without prompts (measured on 2.1.309: `pyrightconfig.json`, `.mcp.json`, `.env`, `.envrc`, `.npmrc`, `.pre-commit-config.yaml`, `.gitmodules`, `.claude.json`, shell rc files and everything under `.claude/`, `.vscode/`, `.idea/`, `.husky/`, `.devcontainer/`, `.git/`, at any depth). Before the scout the conductor checks the write set of the piece: the beacon `WRITE_PROTECTED_PATH` names the paths and the executor prompt gets a `Protected paths` rule (stage the content under `<artifacts>/protected/<path>`, end `blocked` with `WRITE_PROTECTED_PATH: <path> -> <staged path>`; the owner places the file and retries). The executor no longer meets the refusal after a whole round.

@@ -739,8 +739,11 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         from . import context  # context imports this module for scheduling
 
         # An item already in progress passed this check at its first start; its own work may have moved a read.
+        # A read the item itself deletes (task_files change=delete) may be gone after a reopen kept its work.
         missing = [f"{i}: {path}" for i in requested if status_of(p, i) != "in_progress"
-                   for path in context.missing_reads(p, i)]
+                   for path in context.missing_reads(p, i)
+                   if not any(t.get("change") == "delete" and t.get("path") == path
+                              for t in p.items[i].get("task_files") or [])]
         if missing:
             raise PlanError("READ_MISSING", f"required read(s) missing — {'; '.join(missing)}")
         # Resolve inputs before any lifecycle state is written.

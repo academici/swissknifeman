@@ -98,7 +98,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
     outside = self._outside(item)
     stranger = scopes.foreign(outside, (item.input_doc.get("scope") or {}).get("write_set"),
                               self._scope_option(item, "extra_paths", []), self.project)
-    if stranger and report["status"] != "blocked" and item.options["scope"].get("outside_module", "block") == "block":
+    if stranger and report["status"] != "blocked" and item.options["scope"].get("outside_module", "deviation") == "block":
         report = self._blocked(report, "OUTSIDE_MODULE", "the executor changed files of other modules: "
                                + ", ".join(stranger[:20]) + "; add them to the item's task_files or set them aside, then retry")
     if outside and report["status"] != "blocked" and item.options["scope"]["outside"] == "block":

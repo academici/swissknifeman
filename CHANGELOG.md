@@ -4,6 +4,10 @@
 
 ### Changed
 
+- orch, planner: blocked registrations omit automatic review receipts; historical corrected findings no longer authorize edits after a later review. A check-fix following a completed overlap review without a combined correction requires a new review within the existing round limit.
+
+- orch, planner, planner-orch: per-item reviews now produce content-bound `review-receipt/v1` records and finding keys. Registration forwards `--review-receipt` to planner finish; opt-in `settings.review_receipt: required` gates requested reviews on a fresh receipt and no open Blocker findings. `register-review --receipt` records the receipt, and legacy findings accept `id` and `reproduction`.
+
 - orch: `scope.outside_module` defaults to `deviation`: files of another module than the write set names no longer stop a piece; they are a deviation that raises its review risk, and a plan layer can still set `block`. In phases P4–P5 every one of the three `OUTSIDE_MODULE` stops was a legitimate repair accepted later.
 - orch: the writing Claude Code roles (executor, bounded-implementer) start with `--setting-sources user,project`. In a linked worktree Claude Code also loaded the main checkout's `.claude/settings.local.json`, whose context-economy `Read` denies (`skills.json`, lock files) became `/dev/null` masks under the sandbox, so an executor could not regenerate `packages/skiller/skills.json`. The user's own denies still apply.
 

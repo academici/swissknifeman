@@ -28,6 +28,7 @@ from aicore.state import blobs
 from aicore.util.digest import canonical_json_bytes, sha256_tagged
 
 from orch import contracts
+from orch.conductor import contract as conductor_contract
 from orch.worksource import WorkSourceError, problems
 from orch.worksource_report import refusal_code, report_problems
 from aicore.util.proc import run as run_with_timeout
@@ -190,6 +191,17 @@ class FileWorkSource:
         else:
             verdict = "pass"
         gate = {"verdict": verdict, "checks": checks}
+        review = None
+        if request.get("review_receipt"):
+            source = self.project / request["review_receipt"]
+            try:
+                review = json.loads(source.read_text(encoding="utf-8"))
+                errors = conductor_contract.problems(review, "review-receipt")
+            except (OSError, ValueError) as error:
+                errors = [str(error)]
+            if errors:
+                return {"op": "register", "outcome": "refused", "gate": gate,
+                        "reason_code": "REGISTER_REPORT_INVALID", "message": "invalid review receipt: " + "; ".join(errors[:3])}
         folder = self.project / self._artifacts(request["run_id"], doc)
         receipt_path = folder / RECEIPT
         receipt = {"attempt_id": request["attempt_id"], "status": status}
@@ -216,6 +228,8 @@ class FileWorkSource:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(source.read_bytes())
                 copied.append(check_id)
+        if review is not None:
+            (folder / "review-receipt.json").write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         return {"op": "register", "outcome": "recorded", "gate": gate,
                 "receipt": {"artifacts": folder.relative_to(self.project).as_posix(), "evidence_copied": copied}}

@@ -16,7 +16,7 @@ choose a branch by `op`.
 | --- | --- | --- |
 | `claim` | `plan`, `plans_root?`, `items?` (candidate refs in order), `batch?`, `scenario?` (the invocation's `--scenario`: wins over the scenario the source resolves), `run_id`, `submission_id`, `actor` (`provider`, `model`, `effort?`), `orch_config?` (the invocation configuration of the orch command, for the source's own calls to orch) | `status` `claimed` \| `none` \| `blocked`; `ref`, `title`, `scenario`, `scenario_source`, `route`, `depends_on?` (the pieces it depends on: the conductor holds it when one of them ended blocked in the run), `attempt_id`, `session` when claimed; `reason_code`, `message` when blocked |
 | `brief` | `plan`, `plans_root?`, `ref`, `unit?`, `run_id` | `input_ref` (`artifact-ref/v1`), `input_id`, `digest`, `reused`, `artifact_id` |
-| `register` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `status` (`done` \| `done_with_deviations` \| `blocked`), `report`, `evidence` (`{"V<n>": path}`), `registrar`, `executed_by` | `outcome` `recorded` \| `no-op` \| `refused`; `gate` (`verdict` `pass` \| `missing` \| `red` \| `stale` \| `none`, `checks` `{"V<n>": exit or null}`); `receipt?`; `reason_code`, `message` when refused |
+| `register` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `status` (`done` \| `done_with_deviations` \| `blocked`), `report`, `evidence` (`{"V<n>": path}`), `registrar`, `executed_by`, `review_receipt?` | `outcome` `recorded` \| `no-op` \| `refused`; `gate` (`verdict` `pass` \| `missing` \| `red` \| `stale` \| `none`, `checks` `{"V<n>": exit or null}`); `receipt?`; `reason_code`, `message` when refused |
 | `commit` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `paths` (extra owned paths, such as the artifact folder), `actor?` | `outcome` `committed` \| `no-op` \| `refused`; `sha` when committed; `reason_code`, `message` when refused |
 | `release` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `reason?`, `actor?` | `outcome` `released` \| `no-op` (the run does not hold the piece) \| `refused`; `reason_code`, `message` when refused |
 | `note` (optional) | `collection`, `plans_root?`, `text`, `refs` (a phase or an item of the collection), `run_id?`, `actor?` | `outcome` `recorded` \| `no-op` \| `refused`; `reason_code`, `message` when refused |
@@ -75,7 +75,7 @@ Between `source prepare` and `source register` a session, a person or the [condu
 orch.py source claim (--plan P | --input FILE [--commit]) [--plans-root DIR] [--item REF]… --actor P/M[/E] [--submission-id SUB]
 orch.py source brief --run RUN
 orch.py source prepare --run RUN --provider P [--binding B] [--model-catalog FILE]
-orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]… --actor P/M[/E] [--executed-by P/M[/E]]
+orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]… [--review-receipt PATH] --actor P/M[/E] [--executed-by P/M[/E]]
 orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]]
 orch.py source release --run RUN [--reason TEXT] [--actor P/M[/E]]
 orch.py source research --run RUN --result FILE --number N [--actor P/M[/E]]
@@ -109,6 +109,12 @@ folder with `.swissknifeman`), else under the machine state. Exit codes: 0 ok (`
 refusal), 2 usage, 3 `WORK_SOURCE_UNAVAILABLE`.
 
 ## The built-in file source
+
+`register` accepts optional `review_receipt` (a path), exposed as `orch.py source register --review-receipt PATH`.
+The conductor forwards the last per-item `review-receipt/v1` alongside check evidence. The planner bridge passes it
+to the source's `finish --review-receipt` command; the file source validates and copies it to `review-receipt.json` in its own
+artifact folder without applying a freshness gate. The receipt is a durable review record alongside the report and
+check evidence.
 
 `--input FILE` (`orch.py source claim --input`, `orch conduct run --input`) serves one execution-input document with no plan:
 `orch.worksource_file.FileWorkSource`, the same protocol and contract, checked on both sides. `claim` always succeeds for the one

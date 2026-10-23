@@ -427,7 +427,9 @@ class Conductor:
     _review_focus = review_stage.review_focus
     _upgrade_reviewer = review_stage.upgrade_reviewer
     _review = review_stage.review
+    _review_changed = review_stage.review_changed
     _verdict_file = review_stage.verdict_file
+    _corrected_receipt = review_stage.corrected_receipt
 
     _triage_role = triage_stage.role
     _triage = triage_stage.triage

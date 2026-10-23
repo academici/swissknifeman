@@ -34,10 +34,16 @@ def concrete(value):
     """A golden snapshot with its placeholders (``<time>``, ``<digest>``, ``<run>``, the folders) made concrete, as the
     normalizer of test_characterization wrote them."""
     if isinstance(value, dict):
-        return {key: concrete(item) for key, item in value.items()}
+        found = {key: concrete(item) for key, item in value.items()}
+        for key in ("base", "head"):
+            if value.get(key) == "<digest>":
+                found[key] = DIGEST[:40]
+        return found
     if isinstance(value, list):
         return [concrete(item) for item in value]
     if isinstance(value, str):
+        if value.startswith(("100644 ", "100755 ", "120000 ")) and value.endswith("<digest>"):
+            return value.replace("<digest>", DIGEST[:40])
         for mark, real in (("<time>", TIME), ("<digest>", DIGEST), ("<run>", "cnd-20260101T000000Z-abcdef"),
                            ("<project>", "/project"), ("<home>", "/home/owner"), ("<tmp>", "/tmp")):
             value = value.replace(mark, real)

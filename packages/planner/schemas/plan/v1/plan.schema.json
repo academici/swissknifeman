@@ -283,6 +283,15 @@
         "context_budget_kb": {
           "type": "integer",
           "description": "Context pack size warning threshold in KB, at least 1; absent means 256."
+        },
+        "review_receipt": {
+          "type": "string",
+          "description": "Required gates requested reviews on done outcomes; absent means optional.",
+          "enum": [
+            "optional",
+            "required"
+          ],
+          "default": "optional"
         }
       },
       "required": [

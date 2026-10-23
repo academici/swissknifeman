@@ -1086,6 +1086,35 @@ diff. Each review stores the tree it started from in `state.items[ref].review_ma
 without the conductor reports, the artifact folder and the plan folder). Round 1, `audit_scope: full` and a run without
 marks (made before they existed) get the whole diff, as before.
 
+### Review receipts
+
+Every completed per-item review writes `<artifacts>/review-receipt.json` (`review-receipt/v1`), validated before writing.
+It binds the subject and optional attempt to the review base, candidate path fingerprints and digest, reviewer route,
+policy, verdict, findings, open Blocker/Major counts, questions and residual risk. The snapshot is taken before the
+reviewer starts. A later triage updates dispositions without replacing the reviewed candidate. `review-verdict.json`
+keeps its published fields and round history, adding `base`, `candidate_digest` and each finding's `key`.
+
+The conductor assigns `fk-` keys from the path (without line), lowercased basis and normalized failure scenario
+(lowercase, digits removed, whitespace collapsed, first 160 characters). Rephrasing the same error can produce a new
+key: this identifies exact repeats and references; it does not perform semantic deduplication. The closed
+`review-findings/v1` payload stays unchanged; step results carry `finding_keys` beside it.
+
+Fingerprints are `<mode> <git blob>` (`100644`, `100755`, `120000`), `absent`, or `other` for unsupported types.
+Regular files use `git hash-object --no-filters`; symlinks hash their target bytes. Candidate digest is `sha256:` of
+sorted `path\tfingerprint` lines joined with newline. `outside` records product paths already different from the
+base beyond candidate paths, excluding the plan/artifact folders and `.swissknifeman/`.
+
+A correction without another review (`final_correction` or combined red-check correction at the review limit)
+retains the reviewed candidate, records `corrected_after.round/paths` and marks corrected findings. An unchanged
+product does not become a correction. Registration forwards the receipt with `source register --review-receipt PATH`.
+Blocked registration omits the automatic receipt, so a stale or previous-attempt review cannot prevent recording
+the escalation. If a completed overlap review supplies no combined correction and a check-fix changes its candidate,
+the conductor preserves that review's history and reviews the new candidate in the next available round. A spent
+review limit records the piece blocked with `REVIEW_LIMIT` instead of forwarding a stale completion receipt.
+The source decides whether it gates completion; planner's optional gate compares contents and permits only `fresh`
+or `findings_only` (changes confined to current confirmed finding locations or `corrected_after.paths`). Historical
+`corrected` findings grant no permission for edits after a later review.
+
 ### Review focus
 
 The reviewer prompt gets a block `focus` (`origin` `stage-report`, `risk.json` or `stage-report+risk.json`; budget class
@@ -1155,7 +1184,7 @@ means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer
 | `.swissknifeman/state/orch/conductor/<run>/` (`projects/<code>/local/state/orch/conductor/<run>/` of the workspace when the project marker names one) | ignored | `run.json`, `state.json`, `progress.jsonl`; per piece `input.json`, `options.json`, `routes.json`, `prompts/` (`<step>.md`, `<step>.resumed.md` (the delta prompt, when it was sent) and `<step>.manifest.json`), `streams/` (raw role streams with token logs), `agents/<agent_run_id>/`, `reports/`, `checks/<n>/V#.log`, `register-report.json`; after a `resume --retry` `attempts/<n>/` holds the streams, reports, prompts and checks of the steps that retry repeated, and `state.json` the record `items.<ref>.attempts[]` (`n`, `retried_at`, per step `verdict`, `role`, `route`, `ended`, `report_status`, `files`); the observer report lists them under "Retried pieces" |
 | `.swissknifeman/state/orch/conductor/cache/scout/` | ignored | context maps keyed by the content of the brief (without `provenance` and `digest`, which move with every write to the plan journal), the route, the role text, the names and texts of the selected skills and the stub; written whole (`durable_replace`), a hit only for a non-empty UTF-8 file |
 | `.swissknifeman/state/orch/runs/<run>/` | ignored | the orch run journal of `source …` |
-| artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
+| artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-receipt.json` (last review, subject/attempt, content fingerprints and finding keys), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
 | `.swissknifeman/orch/reports/<run>/` | ignored | `observer.json`, `observer.md` (written when the run ends, after its last commit) |
 | `.swissknifeman/orch-artifacts/<run>/<item>/` | ignored | local records: the artifact folder of a source without `artifacts_dir` (a workspace plan, the file source); never in a commit of the piece. The planner bridge copies the evidence of a workspace plan item into `<plan>/artifacts/<item>/<run>/evidence/` at register and the item refers to it there; files tracked before the folder was ignored stay in the index |
 | the plan (JSON) | committed | through the work source's own commit |

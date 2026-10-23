@@ -29,7 +29,17 @@
         "verdict": {"description": "Verdict of the round (review-findings).", "type": "string", "enum": ["GREEN", "ATTENTION", "RED"]},
         "findings": {"description": "Findings of the round.", "type": "array", "items": {"$ref": "#/$defs/finding"}},
         "triage": {"$ref": "#/$defs/triage"},
-        "stream": {"description": "Stream of the reviewer, relative to the project.", "type": ["string", "null"]}
+        "stream": {"description": "Stream of the reviewer, relative to the project.", "type": ["string", "null"]},
+        "base": {
+          "type": "string",
+          "description": "Git revision.",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "candidate_digest": {
+          "type": "string",
+          "description": "SHA-256 of sorted path-tab-fingerprint lines joined with newline.",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
       }
     },
     "finding": {
@@ -45,7 +55,12 @@
         "failure_scenario": {"description": "Concrete inputs or state and the wrong outcome.", "type": "string", "minLength": 1},
         "basis": {"description": "Correctness, security, performance, a project rule or the input contract.", "type": "string", "minLength": 1},
         "reproduction": {"description": "How the reviewer observed the failure.", "type": "string", "minLength": 1},
-        "triage_reproduction": {"description": "How triage reproduced the confirmed finding (conductor/v1 triage-result reproduction: cmd, exit, observed).", "$ref": "urn:swissknifeman:orch:conductor:triage-result:v1#/$defs/reproduction"}
+        "triage_reproduction": {"description": "How triage reproduced the confirmed finding (conductor/v1 triage-result reproduction: cmd, exit, observed).", "$ref": "urn:swissknifeman:orch:conductor:triage-result:v1#/$defs/reproduction"},
+        "key": {
+          "type": "string",
+          "description": "Conductor finding identity; exact repeats only.",
+          "pattern": "^fk-[0-9a-f]{16}$"
+        }
       }
     },
     "triage": {

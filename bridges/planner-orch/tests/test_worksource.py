@@ -52,6 +52,20 @@ def run(cwd, *argv, check=True) -> subprocess.CompletedProcess:
     return done
 
 
+class ReviewReceiptForwardingTests(unittest.TestCase):
+    def test_register_forwards_receipt_to_register_cli(self):
+        fields = {"plan": "PLAN1", "ref": "P1.1", "run_id": "run", "attempt_id": "att-run",
+                  "status": "done", "report": {}, "registrar": ACTOR, "executed_by": ACTOR,
+                  "review_receipt": "artifacts/review-receipt.json"}
+        done = subprocess.CompletedProcess([], 0, json.dumps({"calls": [{"result": "recorded"}]}), "")
+        with mock.patch.object(worksource, "_supersede_blocked_attempt"), \
+                mock.patch.object(worksource, "_kept_evidence", return_value={}), \
+                mock.patch.object(partners, "run_bounded", return_value=done) as run_register:
+            self.assertEqual(worksource.op_register(fields)["outcome"], "recorded")
+        argv = run_register.call_args.args[0]
+        self.assertEqual(argv[argv.index("--review-receipt") + 1], fields["review_receipt"])
+
+
 class Template:
     """One temporary plan with three items in three batches, built once and copied for every test."""
 

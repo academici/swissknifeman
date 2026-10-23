@@ -92,7 +92,9 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
     executor = self._actor(item.routes["executor"])
     registrar = self.conductor.get("registrar") or "orch/conductor"
 
-    args = self._register_args(item, report_path, status, registrar, self.label(executor), evidence)
+    receipt = work_source.review_receipt(item) if status != "blocked" and self._reviewing(item) else None
+    args = self._register_args(item, report_path, status, registrar, self.label(executor), evidence,
+                               review_receipt=self._relative(receipt) if receipt else None)
     closed = self._close(item, args) if self._closer_named(item) else None
 
     def said(result: dict) -> str:

@@ -548,6 +548,8 @@ def op_register(fields: dict) -> dict:
                 "--owner-session", run_id, "--gate", "evidence"]
         for check_id, path in sorted(fields.get("evidence", {}).items()):
             argv += ["--evidence", f"{check_id}={path}"]
+        if fields.get("review_receipt"):
+            argv += ["--review-receipt", fields["review_receipt"]]
         if fields.get("plans_root"):
             argv += ["--plans-root", str(fields["plans_root"])]
         done = partners.run_bounded(argv, timeout=900, capture_output=True, text=True, encoding="utf-8", check=False)

@@ -789,7 +789,8 @@ def _source_register(args, current, project) -> int:
     answer = _source_effect(_source(current, project, args.config, doc), directory, "register", plan=doc["plan"],
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
                    attempt_id=doc["attempt_id"], status=args.status, report=report, evidence=evidence,
-                   registrar=args.actor, executed_by=args.executed_by or args.actor)
+                   registrar=args.actor, executed_by=args.executed_by or args.actor,
+                   **({"review_receipt": str(args.review_receipt)} if getattr(args, "review_receipt", None) else {}))
     if answer["outcome"] == "recorded":
         note = _support_note(args, current, project, doc, report)
         if note:
@@ -951,6 +952,7 @@ def _source_parser(verbs) -> None:
     register = actions.add_parser("register", help="register the outcome of a run (fencing and evidence gate)")
     register.add_argument("--run", required=True, metavar="RUN")
     register.add_argument("--report", required=True, type=Path, help="stage-report JSON file")
+    register.add_argument("--review-receipt", type=Path, metavar="PATH", help="review-receipt/v1 file of this attempt")
     register.add_argument("--status", required=True, choices=sorted(STAGE_STATUS))
     register.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V#=PATH",
                           help="check-evidence file of an acceptance check (repeatable)")

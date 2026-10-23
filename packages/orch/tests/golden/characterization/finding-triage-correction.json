@@ -1379,7 +1379,18 @@
       "result": {
        "agent": "agent-<run>-3",
        "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/W1.txt": "100644 <digest>"
+        }
+       },
        "exit": 0,
+       "finding_keys": {
+        "F1": "fk-fa5a8a7f127f2d58"
+       },
        "findings": {
         "findings": [
          {
@@ -1394,6 +1405,7 @@
         "verdict": "ATTENTION"
        },
        "model": "fake-model",
+       "outside": {},
        "session": "reviewer-session-1",
        "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.1.jsonl",
        "usage": {
@@ -1417,12 +1429,22 @@
       "result": {
        "agent": "agent-<run>-6",
        "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/W1.txt": "100644 <digest>"
+        }
+       },
        "exit": 0,
+       "finding_keys": {},
        "findings": {
         "findings": [],
         "verdict": "GREEN"
        },
        "model": "fake-model",
+       "outside": {},
        "session": "reviewer-session-2",
        "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.2.jsonl",
        "usage": {

@@ -1130,12 +1130,22 @@
       "result": {
        "agent": "agent-<run>-4",
        "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/W1.txt": "100644 <digest>"
+        }
+       },
        "exit": 0,
+       "finding_keys": {},
        "findings": {
         "findings": [],
         "verdict": "GREEN"
        },
        "model": "fake-model",
+       "outside": {},
        "session": "reviewer-session-1",
        "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.1.jsonl",
        "usage": {

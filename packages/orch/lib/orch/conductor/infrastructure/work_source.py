@@ -484,12 +484,21 @@ def evidence_dir(item: Item) -> Path:
     return item.artifacts / "evidence"
 
 
-def register_args(item: Item, report_path: Path, status: str, actor: str, executed_by: str, evidence: dict) -> list:
+def review_receipt(item: Item) -> Optional[Path]:
+    """The completed review receipt, when the piece has one."""
+    path = item.artifacts / "review-receipt.json"
+    return path if path.is_file() else None
+
+
+def register_args(item: Item, report_path: Path, status: str, actor: str, executed_by: str, evidence: dict,
+                  review_receipt: Optional[str] = None) -> list:
     """The arguments of ``orch.py source register`` for the result of the piece."""
     args = ["source", "register", "--run", item.orch_run, "--report", str(report_path), "--status", status,
             "--actor", actor, "--executed-by", executed_by]
     for check_id, path in sorted(evidence.items()):
         args += ["--evidence", f"{check_id}={path}"]
+    if review_receipt:
+        args += ["--review-receipt", review_receipt]
     return args
 
 

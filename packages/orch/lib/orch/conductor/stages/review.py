@@ -2,9 +2,9 @@
 focus of its prompt, and the review-verdict record of every round."""
 from __future__ import annotations
 
-from orch.conductor import checks as checks_mod, prompts, records, risk as risk_mod, scope as scopes
+from orch.conductor import checks as checks_mod, contract, prompts, records, risk as risk_mod, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
-from orch.conductor.domain.report import findings_problems
+from orch.conductor.domain.report import finding_key, findings_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.policies import review_strategy
 from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE
@@ -186,6 +186,8 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
 
     def run() -> dict:
         base = checks_mod.head(self.project)  # not the claim-time base: commits made meanwhile are not the candidate
+        candidate = checks_mod.candidate(self.project, self._changed(item))
+        outside = checks_mod.review_outside(self.project, base, candidate["paths"], self._not_the_role(item))
         dirty = checks_mod.dirty_files(self.project)  # without what the conductor writes (reports, artifacts, plan folder)
         tree = {path: dirty[path] for path in scopes.own(dirty, self._not_the_role(item))}
         with self.store.mutating():  # the tree this review starts from: the next review reads what changed after it
@@ -209,7 +211,8 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
                                   skill_texts=self._skill_texts(item, "reviewer"))
         findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems,
                                     cancel=cancel)
-        return {"findings": findings, **meta}
+        return {"findings": findings, "finding_keys": {f["id"]: finding_key(f) for f in findings["findings"]},
+                "base": base, "candidate": candidate, "outside": outside, **meta}
 
     found = self._step(item, key, run, role="reviewer", route=self.label(route),
                        verdict=lambda result: f"{result['findings']['verdict']} "
@@ -218,7 +221,22 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
     return found["findings"]
 
 
-def verdict_file(self, item: Item) -> None:
+def review_changed(self, item: Item, number: int) -> bool:
+    """A cached overlap review without a combined correction must still describe the current product."""
+    if number in item.state.get("combined_done", []):
+        return False  # the loop audits the combined correction or records corrected_after at its review wall
+    step = done_steps(item.state.get("steps", {})).get(f"review.{number}")
+    reviewed = (step or {}).get("result") or {}
+    if "candidate" not in reviewed:
+        return False  # legacy steps have no content binding to compare
+    paths = set(reviewed["candidate"]["paths"]) | set(self._changed(item))
+    current = checks_mod.candidate(self.project, paths)["paths"]
+    outside = checks_mod.review_outside(self.project, reviewed["base"], paths, self._not_the_role(item))
+    return (current != reviewed["candidate"]["paths"] or outside != reviewed.get("outside", {})
+            or "other" in current.values() or "other" in outside.values())
+
+
+def verdict_file(self, item: Item, corrected_after=None) -> None:
     """``review-verdict.json`` in the item's artifacts: the short committed record of every review round; the
     streams stay in the ignored runtime folder."""
     steps = done_steps(item.state.get("steps", {}))
@@ -234,7 +252,10 @@ def verdict_file(self, item: Item) -> None:
             "round": number, "provider": route.get("provider"), "model": review.get("model") or route.get("model"),
             "effort": route.get("effort"), "session": review.get("session"),
             "verdict": review["findings"]["verdict"],
-            "findings": [{**finding, **({"triage_reproduction": reproduced[finding["id"]]}
+            **({"base": review["base"], "candidate_digest": review["candidate"]["digest"]}
+               if "candidate" in review else {}),
+            "findings": [{**finding, "key": (review.get("finding_keys") or {}).get(finding["id"], finding_key(finding)),
+                          **({"triage_reproduction": reproduced[finding["id"]]}
                                         if finding["id"] in reproduced else {})}
                          for finding in review["findings"]["findings"]],
             "triage": {"confirmed": [entry["finding"] for entry in triaged.get("confirmed", [])],
@@ -251,3 +272,71 @@ def verdict_file(self, item: Item) -> None:
     self._write_artifact(item, "review-verdict.json",
                          records.check(doc, "review-verdict", f"review-verdict.json of {item.ref}",
                                        hint=records.WRITER_HINT))
+    if rounds and "candidate" in steps[f"review.{rounds[-1]['round']}"]["result"]:
+        receipt_file(self, item, rounds, steps, corrected_after)
+
+
+def receipt_file(self, item: Item, rounds: list, steps: dict, corrected_after=None) -> None:
+    """Write the last completed review's binding, retaining earlier findings by conductor key."""
+    last = rounds[-1]
+    review = steps[f"review.{last['round']}"]["result"]
+    findings = {}
+    severity = {"Blocker": 0, "Major": 1, "Minor": 2, "Nit": 3}
+    floor = severity[item.options["review"]["correct_min_severity"]]
+    for row in rounds:
+        triage = row.get("triage") or {}
+        confirmed = set(triage.get("confirmed", []))
+        rejected = {entry["finding"] for entry in triage.get("rejected", [])}
+        for found in row["findings"]:
+            status = "rejected" if found["id"] in rejected else "open"
+            if found["id"] in confirmed:
+                status = "deferred" if severity[found["severity"]] > floor else "confirmed"
+                if status == "confirmed" and (row["round"] < last["round"] or
+                                               corrected_after and row["round"] == corrected_after["round"]):
+                    status = "corrected"
+            findings[found["key"]] = {k: v for k, v in dict(found, status=status).items()
+                                      if k != "triage_reproduction"}
+    values = list(findings.values())
+    route = {k: last[k] for k in ("provider", "model", "effort", "session") if last.get(k)}
+    route["selector_source"] = item.sources.get("reviewer") or (PLAN_REVIEW_SOURCE if item.input_doc.get("review_route") else "defaults")
+    policy = item.options["review"]
+    doc = {"$schema": "urn:swissknifeman:orch:conductor:review-receipt:v1",
+           "subject": (checks_mod.subject_of(item.input_doc) if (item.input_doc.get("provenance") or {}).get("kind") == "plan"
+                       else item.input_doc["input_id"]), "item": item.ref, "run": self.run_id,
+           "round": last["round"], "base": review["base"], "candidate": review["candidate"],
+           "outside": review.get("outside", {}), "reviewer": route,
+           "policy": {"review_mode": item.input_doc.get("review_mode", "requested"),
+                      "strategy": (self.state.get("review_strategy") or {}).get("mode", "each"),
+                      "rounds_max": item.options["limits"]["review_rounds"],
+                      **{k: policy[k] for k in ("correct_min_severity", "pre_final")},
+                      "source": item.sources.get("review") or "run:review"},
+           "verdict": last["verdict"], "findings": values,
+           "open": {name.lower(): sum(f["severity"] == name and f["status"] in ("confirmed", "deferred", "open") for f in values)
+                    for name in ("Blocker", "Major")},
+           "questions": review["findings"].get("questions", []),
+           "residual_risk": review["findings"].get("residual_risk", ""),
+           "corrected_after": corrected_after, "at": checks_mod._utc(),
+           "producer": {"kind": "orch-conductor", "version": "0.1.0"}}
+    if item.claim.get("attempt_id"):
+        doc["attempt_id"] = item.claim["attempt_id"]
+    write_receipt(self, item, doc)
+
+
+def write_receipt(self, item: Item, doc: dict) -> None:
+    problems = contract.problems(doc, "review-receipt")
+    if problems:
+        raise ValueError("invalid review-receipt: " + "; ".join(problems))
+    self._write_artifact(item, "review-receipt.json", doc)
+
+
+def corrected_receipt(self, item: Item, number: int) -> None:
+    """Bind an unreviewed correction to the paths it actually changed, keeping the reviewed candidate intact."""
+    review = done_steps(item.state.get("steps", {}))[f"review.{number}"]["result"]
+    if "candidate" not in review:  # old persisted steps cannot acquire a retrospective review binding
+        return
+    before = {**review.get("outside", {}), **review["candidate"]["paths"]}
+    after = checks_mod.review_outside(self.project, review["base"], [], self._not_the_role(item))
+    paths = sorted(path for path in set(before) | set(after)
+                   if before.get(path, "absent") != checks_mod.path_fingerprint(self.project, path))
+    if paths:
+        self._verdict_file(item, corrected_after={"round": number, "paths": paths})

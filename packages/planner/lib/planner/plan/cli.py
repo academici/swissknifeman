@@ -460,7 +460,7 @@ def cmd_finish(args) -> int:
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
         deviations=args.deviation, pending=args.pending, escalation=args.escalation, commits=args.commit,
         decision=args.decision, actor=args.actor, executed_by=args.executed_by, attempt_id=args.attempt_id,
-        evidence=_evidence_map(args.evidence), owner_session=args.owner_session)
+        evidence=_evidence_map(args.evidence), owner_session=args.owner_session, review_receipt=args.review_receipt)
     if args.json:
         _print_json({"item": result.item, "status": result.status, "phase_closed": result.phase_closed,
                      "plan_done": result.plan_done, "next": result.next.as_dict(),
@@ -898,6 +898,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--attempt-id", metavar="ID", help="registration attempt; a repeat of it is a no-op")
     p.add_argument("--owner-session", metavar="SESSION",
                    help="refuse with ITEM_OWNED unless the item's executor session is SESSION (fencing)")
+    p.add_argument("--review-receipt", metavar="PATH", help="review-receipt/v1 file bound to the reviewed candidate")
     p.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V1=PATH",
                    help="check-evidence file (planner field contract; see `plan.py schema check-evidence`) whose "
                         "exit is the check result (repeatable)")

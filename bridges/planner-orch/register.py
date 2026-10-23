@@ -228,6 +228,8 @@ def plan_calls(report: dict, args) -> list[list[str]]:
         notes.append("Evidence: " + ", ".join(extra_evidence))
     calls = [_log(args, item, issue) for issue in issues if issue["kind"] in LOG_KINDS]
     finish = ["finish", args.plan, item, "--status", args.status, "--notes", "\n".join(notes)]
+    if getattr(args, "review_receipt", None):
+        finish += ["--review-receipt", str(args.review_receipt)]
     for check in report["checks_run"]:
         # The evidence file carries the exit (D19); never both. Under the gate a claim without a file is not a result.
         if check["id"] not in evidence and not getattr(args, "gate", None):
@@ -428,6 +430,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("plan", help="plan id, PLAN<N> or path")
     p.add_argument("ref", metavar="item[/U#]")
     p.add_argument("--report", required=True, help="stage-report JSON file")
+    p.add_argument("--review-receipt", metavar="PATH", help="review-receipt/v1 file passed to finish")
     p.add_argument("--status", choices=STATUSES, help="item outcome; a unit return takes none")
     p.add_argument("--actor", required=True, metavar="P/M[/E]", help="the registrar")
     p.add_argument("--executed-by", metavar="P/M[/E]", help="the worker that produced the report")

@@ -121,7 +121,12 @@
           "additionalProperties": false
         },
         "registrar": {"description": "Who registers the outcome.", "$ref": "#/$defs/actor"},
-        "executed_by": {"description": "Who did the work.", "$ref": "#/$defs/actor"}
+        "executed_by": {"description": "Who did the work.", "$ref": "#/$defs/actor"},
+        "review_receipt": {
+          "type": "string",
+          "description": "Path of the review-receipt/v1 file.",
+          "minLength": 1
+        }
       },
       "required": ["op", "plan", "ref", "run_id", "attempt_id", "status", "report", "evidence", "registrar", "executed_by"],
       "additionalProperties": false

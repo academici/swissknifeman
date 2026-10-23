@@ -516,6 +516,9 @@ class CorrectionTests(ConductorCase):
         self.assertEqual([item["verdict"] for item in verdict["rounds"]], ["ATTENTION", "GREEN"])
         self.assertEqual(verdict["rounds"][0]["triage"]["confirmed"], ["F1"])
         self.assertIn("triage_reproduction", verdict["rounds"][0]["findings"][0])
+        self.assertRegex(verdict["rounds"][0]["findings"][0]["key"], r"^fk-[0-9a-f]{16}$")
+        self.assertIn("base", verdict["rounds"][0])
+        self.assertIn("candidate_digest", verdict["rounds"][0])
         self.assertEqual((self.project / "out/W1.txt").read_text(), "done\n")
 
     def test_the_last_round_corrects_without_another_review_when_final_correction_is_on(self):

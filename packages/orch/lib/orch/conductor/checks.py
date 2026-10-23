@@ -1,5 +1,4 @@
 """Deterministic acceptance checks of a candidate and their check-evidence files.
-
 Every ``acceptance`` and ``impact`` command check of the execution-input runs as written (``bash -c``, in its
 ``cwd`` below the project) with the output kept in the ignored runtime folder. Each check gets an ``exec/v1``
 check-evidence document in the item's artifact folder (committed), produced by the engine and bound to the candidate
@@ -28,6 +27,7 @@ from aicore.util import timefmt
 from aicore.util.io import durable_replace
 
 from orch import contracts
+from orch.conductor.infrastructure.review_tree import candidate as candidate, path_fingerprint as path_fingerprint, review_outside as review_outside
 from aicore.util.proc import run as run_with_timeout
 
 ORCH_ROOT = Path(__file__).resolve().parents[3]  # not orch.settings: that module imports this one

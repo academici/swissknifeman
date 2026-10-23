@@ -388,6 +388,17 @@ def conduct(self, item: Item) -> str:
     if self._reviewing(item):
         review_round, earlier = 1, None
         while True:
+            while self._review_changed(item, review_round):
+                used = review_round
+                review_round += 1
+                if state["steps"].get(f"review.{review_round}", {}).get("status") == "done":
+                    continue  # resume reuses a later review only after comparing its own binding
+                state["review_rounds_used"] = max(state.get("review_rounds_used", 0), used)
+                self._save()
+                why = self._allowance(item, "review_rounds", used, False)
+                if why:
+                    return self._finish(item, self._blocked(report, "REVIEW_LIMIT",
+                        f"the candidate changed after review {used}; another review is required: {why}"), rows)
             findings = self._review(item, review_round, rows)
             if not findings["findings"]:
                 break
@@ -419,6 +430,7 @@ def conduct(self, item: Item) -> str:
             rounds_why = batch_rounds or batch_findings or rounds_why
             if review_round in state.get("combined_done", []):  # corrected together with the red checks
                 if rounds_why:
+                    self._corrected_receipt(item, review_round)
                     self._plan_note(item, f"findings of review round {review_round} were corrected together with the "
                                           "red checks; the correction was not reviewed again")
                     self._review_debt(item, review_round, [entry["finding"] for entry in major])
@@ -474,6 +486,7 @@ def conduct(self, item: Item) -> str:
             if report["status"] == "blocked":
                 return self._finish(item, report, rows)
             if final:
+                self._corrected_receipt(item, review_round)
                 ids = ", ".join(entry["finding"] for entry in major)
                 self._plan_note(item, f"findings {ids} of review round {review_round} were corrected after the last "
                                       "review round the limit allows; the correction was not reviewed again")

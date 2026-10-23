@@ -215,6 +215,19 @@ The check-evidence file follows planner's field contract (`plan.py schema check-
 
 ## Lifecycle and scheduling
 
+`finish --review-receipt PATH` validates a `review-receipt/v1` field contract and records `result.review`
+(`receipt`, `verdict`, `round`, `freshness`, `reviewer`). `settings.review_receipt` is `optional` by default;
+`required` gates `done` and `done_with_deviations` items whose `review.mode` is `requested`.
+
+The receipt must match the qualified item subject and, when both are given, the finish attempt. Freshness compares
+Git blob contents, executable mode and symlink targets against `candidate.paths`, independently of HEAD.
+Unchanged `outside` paths already present at review do not invalidate it. New or changed product paths make it
+`REVIEW_RECEIPT_STALE` unless all changes belong to current confirmed finding locations or `corrected_after.paths`
+(`findings_only`); otherwise it is `fresh`. The plan directory and `.swissknifeman/` are excluded. Receipts without
+`outside` conservatively treat every outside product diff as new. Unavailable Git bases fail validation.
+Open Blocker findings refuse done outcomes. Every `REVIEW_RECEIPT_*` refusal leaves the plan unchanged.
+Historical `corrected` findings grant no permission to change the candidate seen by a later review.
+
 Items: `todo → in_progress → done | done_with_deviations | blocked | skipped`.
 Blocked items do not satisfy dependencies; skipped items require an accepted decision.
 Phases progress `skeleton → detailed` via `design-done`. A detailed item needs real scope,

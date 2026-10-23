@@ -1,0 +1,44 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:review-receipt:v1",
+  "subject": "PLAN9.P7.1",
+  "item": "P7.1",
+  "run": "cnd-example",
+  "attempt_id": "att-example",
+  "round": 1,
+  "policy": {
+    "review_mode": "requested",
+    "strategy": "each",
+    "rounds_max": 2,
+    "correct_min_severity": "Major",
+    "pre_final": true,
+    "source": "plan:review"
+  },
+  "reviewer": {
+    "provider": "codex",
+    "model": "test",
+    "effort": "high",
+    "session": "test",
+    "selector_source": "plan:review.reviewer"
+  },
+  "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "candidate": {
+    "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "paths": {}
+  },
+  "outside": {},
+  "verdict": "INVALID",
+  "findings": [],
+  "open": {
+    "blocker": 0,
+    "major": 0
+  },
+  "questions": [],
+  "residual_risk": "",
+  "corrected_after": null,
+  "at": "2026-10-23T10:00:00Z",
+  "producer": {
+    "kind": "orch-conductor",
+    "version": "0.1.0"
+  }
+}

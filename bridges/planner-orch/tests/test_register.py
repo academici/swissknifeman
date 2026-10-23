@@ -61,6 +61,10 @@ def flag_values(argv: list[str], flag: str) -> list[str]:
 
 
 class PlanCallsTests(unittest.TestCase):
+    def test_review_receipt_is_forwarded_to_finish(self):
+        calls = register.plan_calls(report(), args(review_receipt="artifacts/review-receipt.json"))
+        self.assertEqual(flag_values(calls[-1], "--review-receipt"), ["artifacts/review-receipt.json"])
+
     def refused(self, code, doc, **kw):
         with self.assertRaises(register.Refusal) as caught:
             register.plan_calls(doc, args(**kw))
@@ -431,6 +435,27 @@ class RegisterCliTests(CliCase):
 
 
 class RegisterReviewTests(CliCase):
+    def test_receipt_becomes_document_and_note_once(self):
+        import partners
+        root = partners.require_orch()
+        doc = json.loads((root / "schemas/conductor/v1/examples/valid/review-receipt.json").read_text())
+        doc.update(subject="PLAN3.P2.1", item="P2.1")
+        path = self.write("review-receipt.json", doc)
+        for expected in ("recorded", "no-op"):
+            done = self.plan_py("bridge", "planner-orch", "register-review", self.plan, "P2.1",
+                                "--receipt", path, "--actor", REGISTRAR)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual([c["result"] for c in json.loads(done.stdout)["calls"]], [expected, expected])
+        stored = self.get("knowledge/review-P2-1-2026-10-23")
+        self.assertEqual(stored["sections"][-1]["id"], "receipt")
+        self.assertIn(doc["candidate"]["digest"], stored["sections"][-1]["text"])
+
+    def test_legacy_findings_accept_id_and_reproduction(self):
+        doc = json.loads(json.dumps(FINDINGS))
+        doc["findings"][0].update(id="F1", reproduction="python3 -m unittest")
+        code, _, err = self.review(doc)
+        self.assertEqual(code, 0, err)
+
     def review(self, findings, ref="P2.1", *extra):
         done = self.plan_py("bridge", "planner-orch", "register-review", self.plan, ref, "--findings",
                             self.write("findings.json", findings), "--actor", REGISTRAR, *extra)

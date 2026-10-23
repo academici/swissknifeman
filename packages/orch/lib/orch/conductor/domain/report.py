@@ -2,6 +2,7 @@
 cannot say, the escalation that blocks a report and the plan notes it carries."""
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 
@@ -9,6 +10,14 @@ from orch.conductor.domain.item import done_steps
 
 _FENCE_BLOCK = re.compile(r"(?P<fence>`{3,})(?:json[ \t]+(?=[A-Za-z0-9_-]))?(?P<tag>[A-Za-z0-9_-]*)[ \t]*\n(?P<body>.*?)\n(?P=fence)[ \t]*(?:\n|$)", re.S)
 _EVIDENCE_CHECK = re.compile(r"^V[0-9]+$")
+
+
+def finding_key(finding: dict) -> str:
+    """Identity of an exact repeated finding, independent of line numbers and numeric examples."""
+    path = finding.get("location", "").split(":", 1)[0]
+    scenario = " ".join(re.sub(r"\d+", "", finding.get("failure_scenario", "").lower()).split())[:160]
+    text = f"{path}\n{finding.get('basis', '').lower()}\n{scenario}"
+    return "fk-" + hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
 def json_block(text: str, tag: str):

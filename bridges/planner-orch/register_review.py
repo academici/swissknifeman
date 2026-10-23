@@ -16,6 +16,7 @@ from pathlib import Path
 import re
 import sys
 
+import partners
 from register import Refusal, _text, finish_receipt, journal, load_json, run_plan, execute
 
 DOCUMENT_SCHEMA = "urn:swissknifeman:task:plan:document:v1"
@@ -43,10 +44,13 @@ def check_findings(findings) -> dict:
     if not isinstance(findings["findings"], list):
         raise invalid("findings must be a list")
     for index, finding in enumerate(findings["findings"]):
-        if not isinstance(finding, dict) or set(finding) != set(FINDING_FIELDS) \
+        if not isinstance(finding, dict) or not set(FINDING_FIELDS) <= set(finding) \
+                or set(finding) - set(FINDING_FIELDS) - {"id", "reproduction"} \
                 or not all(_text(finding[key]) or isinstance(finding[key], (int, float)) and
                            not isinstance(finding[key], bool) for key in FINDING_FIELDS):
             raise invalid(f"findings[{index}] needs non-empty {', '.join(FINDING_FIELDS)}")
+        if any(not _text(finding[key]) for key in ("id", "reproduction") if key in finding):
+            raise invalid(f"findings[{index}] id and reproduction must be non-empty strings when present")
     return findings
 
 
@@ -70,10 +74,28 @@ def review_document(ref: str, findings: dict) -> dict:
 
 def plan_calls(findings: dict, args) -> list[list[str]]:
     """``add-document`` then one ``log … --type note``; pure, like ``register.plan_calls``."""
-    findings = check_findings(findings)
+    receipt = findings if getattr(args, "receipt", None) else None
+    if receipt is not None:
+        schema = partners.planner_engine("plan.schema")
+        issues = schema.validate(receipt, "review-receipt")
+        if issues:
+            raise Refusal("REGISTER_FINDINGS_INVALID", "; ".join(f"{i.path}: {i.message}" for i in issues[:3]))
+        if not receipt["subject"].endswith("." + args.ref):
+            raise Refusal("REGISTER_FINDINGS_INVALID", "receipt subject does not match the review reference")
+        if not _text(receipt.get("at")) or not _DATE.fullmatch(receipt["at"][:10]):
+            raise Refusal("REGISTER_FINDINGS_INVALID", "receipt at must begin with YYYY-MM-DD")
+        reviewer = receipt["reviewer"]
+        findings = {"verdict": receipt["verdict"], "findings": receipt["findings"], "date": receipt["at"][:10],
+                    "reviewer": {"route": "/".join(reviewer[k] for k in ("provider", "model", "effort") if reviewer.get(k)),
+                                 "session": reviewer.get("session") or "unrecorded"}}
+    else:
+        findings = check_findings(findings)
     if not _REF.fullmatch(args.ref or ""):
         raise Refusal("REGISTER_FINDINGS_INVALID", f"ref {args.ref!r} must be an item Pn.m or a phase Pn")
     doc = review_document(args.ref, findings)
+    if receipt is not None:
+        doc["sections"].append({"id": "receipt", "title": "Review receipt",
+                                "text": "```json\n" + json.dumps(receipt, ensure_ascii=False, indent=2) + "\n```"})
     root = ["--plans-root", str(args.plans_root)] if args.plans_root else []
     reviewer = findings["reviewer"]
     summary = (f"review {findings['verdict']}: @plan/knowledge/{doc['id']}.json; "
@@ -98,7 +120,9 @@ def parser() -> argparse.ArgumentParser:
                                 description="Register orch review-findings into the plan through plan.py.")
     p.add_argument("plan", help="plan id, PLAN<N> or path")
     p.add_argument("ref", metavar="item|phase")
-    p.add_argument("--findings", required=True, help="review-findings JSON file")
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument("--findings", help="legacy review-findings JSON file")
+    source.add_argument("--receipt", help="review-receipt/v1 JSON file")
     p.add_argument("--actor", required=True, metavar="P/M[/E]", help="the registrar")
     p.add_argument("--plans-root", type=Path)
     p.add_argument("--dry-run", action="store_true", help="print the argv lists as JSON and write nothing")
@@ -108,7 +132,7 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
-        calls = plan_calls(load_json(args.findings, "REGISTER_FINDINGS_INVALID", "review-findings"), args)
+        calls = plan_calls(load_json(args.receipt or args.findings, "REGISTER_FINDINGS_INVALID", "review result"), args)
     except Refusal as refusal:
         print(refusal, file=sys.stderr)
         return 1

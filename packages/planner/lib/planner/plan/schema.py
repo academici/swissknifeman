@@ -34,7 +34,7 @@ SCHEMA_URN_PREFIX = "urn:swissknifeman:task:plan:"
 KINDS = ("plan", "brief", "phase", "item", "unit", "decision", "log-event", "document", "snapshot", "envelope",
          "bridge", "check-evidence", "read-get", "read-list", "read-events", "read-artifact", "read-links",
          "read-neighborhood", "read-catalog", "read-commits", "read-ready", "read-followups", "read-plans",
-         "scout-map", "context-pack")
+         "scout-map", "context-pack", "review-receipt")
 EXTENSION_PREFIX = f"{SCHEMA_URN_PREFIX}extension:"
 # Issue code of an extension slot without a usable supplier; engine-only, outside the shared closed profile.
 EXTENSION_CODE = "extension"

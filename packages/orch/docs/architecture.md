@@ -45,6 +45,19 @@ JSON Schemas with `urn:swissknifeman:orch:layering-*` IDs, validated by the stan
 trees can use `--root DIR --baseline FILE`. Characterization snapshots additionally pin argv (including a fake
 guard's prefix), manifest block metadata, ordered `orch.*` events and per-item routes before extraction.
 
+Two packages of the conductor hold what used to be single large modules, each module under 600 lines:
+
+- `conductor/context/` is the pipeline of what a role still needs to know, in steps without `self`: `discover` (rule
+  carriers, skill files, the skills bridge answer, owned paths), `validate` (names, containment, symlinks, size, digest,
+  sidecar), `select` (`policies.skills.check_skills`), `snapshot` (skill texts) and `rules` (`module_rules` returns
+  `{text, included, omitted}`). `stages/context.py` stays the thin layer of facade bindings and keeps every effect:
+  progress lines, Stops and the `skills_auto` / `skills_checked` cache.
+- `conductor/prompts/` keeps the API of the former `prompts.py` (`from orch.conductor import prompts`, `prompts.<name>`
+  for every public and private name): `blocks` (Block, render, joins, task digest), `contracts` (result block texts),
+  `manifest` (manifest and its diff), `roles` (the builder of each role) and `corrections` (correction packages).
+  `prompts.manifest` is the function, not its module. The prompt texts and the order of blocks did not change; the
+  goldens in `tests/golden/conductor-prompts` pin them.
+
 ## Work source and bridges
 
 `orch` takes work through the extension point `orch:work-source` (contract `work-source/v1`, see [work-source.md](work-source.md)),

@@ -17,6 +17,7 @@ from aicore.util import schema
 
 from orch.conductor import engine, questions, records
 from orch.conductor.application import loop
+from orch.conductor.context import discover
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import RunStore, write_json
@@ -315,7 +316,7 @@ class StepRecordTests(unittest.TestCase):
         conductor = SimpleNamespace(conductor={"skills_bridge": ["fake-bridge"]}, project=self.root, env={},
                                     _work_paths=lambda _item: [], progress=mock.Mock())
         answer = SimpleNamespace(returncode=0, stdout=json.dumps(chosen), stderr="")
-        with mock.patch.object(context.subprocess, "run", return_value=answer) as bridge:
+        with mock.patch.object(discover.subprocess, "run", return_value=answer) as bridge:
             context.auto_skills(conductor, item, "executor")
         self.assertEqual(bridge.call_count, 1)
         self.assertEqual(item.state["skills_auto"]["executor"]["tokens"], 120)
@@ -325,7 +326,7 @@ class StepRecordTests(unittest.TestCase):
         store.save({"items": {"W1": item.state}})
         loaded = store.load()[1]["items"]["W1"]
         again = Item("W1", "run-test", loaded, self.root / "W1", {}, options={"skills": {"executor": ["auto"]}})
-        with mock.patch.object(context.subprocess, "run", side_effect=AssertionError("the bridge ran again")):
+        with mock.patch.object(discover.subprocess, "run", side_effect=AssertionError("the bridge ran again")):
             self.assertEqual(context.auto_skills(conductor, again, "executor"), item.state["skills_auto"]["executor"])
         for wrong in ([chosen], {"executor": {"skills": "python"}}, {"executor": dict(chosen, unknown=1)}):
             with self.subTest(wrong=wrong), self.assertRaises(Stop) as caught:

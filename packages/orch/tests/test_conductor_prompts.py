@@ -502,5 +502,36 @@ class RunManifestTests(ConductorCase):
         self.assertNotIn("executor", observer.build(directory, self.project)["prompt_blocks_by_role"])
 
 
+# Every name ``orch.conductor.prompts`` had as a module (``dir``) before it became a package (PLAN9 P5.4): callers and
+# tests reach them as ``prompts.<name>``, the private ones included.
+API_NAMES = (
+    "ADOPTED BATCH_ID BUDGET_CLASSES BUDGET_LIMITS Block CHANGED_PATHS CONDUCTOR CONTRACT_TEXT DEVIATION_FIX "
+    "EXCLUSIVE_GROUP_LIMITS EXCLUSIVE_GROUP_MAX INTERACTIVE_TOOL KINDS Optional Path RESULT_KINDS ROUND_KINDS _ADVICE "
+    "_CHILD_LOG _FAILURE_HEADER _FILE_TOOLS_RULE _NO_DIFF_RULE _PRE_FINAL _PROGRESS _RESEARCH_RESULT _REVIEW_FINDINGS "
+    "_RUN_CHECKS _STAGE_REPORT _TRIAGE_RESULT _answers _conductor_checks _corrected_scope _correction _diff_title "
+    "_expected _failure_excerpt _failure_report _fence _fence_rule _focus _head _historical_causes _join _outside_scope "
+    "_progress _research _self_check _self_check_again _then advice_correction advice_for_triage advice_text advisor "
+    "annotations budget_class budgets check_correction check_skills closer dataclass diff_manifests diff_table "
+    "estimate_tokens evidence executor executor_resumed explain_table fix_deviation interrupted_correction json "
+    "json_block manifest over_budget protected_rule re records render replace report_fixer researcher review_correction "
+    "reviewer role_render scout self_check_missing sha256_hex task_digest top_blocks triager write_set_block").split()
+
+
+class PackageShapeTests(unittest.TestCase):
+    def test_the_package_keeps_every_name_of_the_module(self):
+        missing = [name for name in API_NAMES if not hasattr(prompts, name)]
+        self.assertEqual(missing, [])
+
+    def test_the_manifest_builder_is_the_function_not_its_module(self):
+        self.assertTrue(callable(prompts.manifest))
+
+    def test_no_module_of_the_prompts_and_context_packages_is_oversized(self):
+        base = ROOT / "lib" / "orch" / "conductor"
+        sizes = {str(path.relative_to(base)): len(path.read_text(encoding="utf-8").splitlines())
+                 for folder in ("prompts", "context") for path in (base / folder).glob("*.py")}
+        self.assertTrue(sizes)
+        self.assertEqual({name: size for name, size in sizes.items() if size > 600}, {})
+
+
 if __name__ == "__main__":
     unittest.main()

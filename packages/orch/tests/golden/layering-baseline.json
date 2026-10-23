@@ -7,12 +7,11 @@
   "stages": 28
  },
  "largest_self_scc": 13,
- "measured_at": "6a29b9bdb6eb40ecd3ac73ae16cfea2614eb4b48",
+ "measured_at": "9585134073adc6a1a797414fa4e96c37c7ea5676",
  "oversized_modules": {
   "application/loop.py": 649,
   "checks.py": 1109,
-  "cli.py": 620,
-  "prompts.py": 895
+  "cli.py": 620
  },
  "port_calls": {
   "infrastructure.role_ports.admit_budget": 2,
@@ -35,7 +34,7 @@
   "domain": 0,
   "infrastructure": 39,
   "policies": 0,
-  "stages": 81
+  "stages": 80
  },
  "staticmethod_bindings": 45,
  "targets": {

@@ -4,6 +4,10 @@
     batch-review.py RUN [--root DIR] [--project DIR] [--provider P] [--model M] [--effort E] [--max-tools N]
                     [--include PATH ...] [--exclude PATH ...] [--argv-json JSON] [--dry-run]
 
+A Blocker or Major finding also writes ``batch-review.followup.json``, the execution-input of a commit that corrects it
+(``orch conduct run --input FILE --commit``): its ``provenance.session_ref`` names the run and every piece and, when the last
+piece kept a session, that session, so the follow-up resumes it or starts fresh with the handoff of the whole group.
+
 The pieces of a batch are reviewed together (the conductor reviews per piece): the reviewer sees what the pieces did to
 each other. The diff is the commits of the run (``state.json``), limited to the paths of ``--include`` (default
 ``.``, the whole project) without tests, docs, fixtures, goldens and plans (``--exclude`` adds more). The reviewer role
@@ -19,13 +23,16 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+import types
 
 ORCH = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ORCH / "lib"))
 if (ORCH.parent / "aicore" / "lib").is_dir():
     sys.path.insert(0, str(ORCH.parent / "aicore" / "lib"))
 
-from orch.conductor import contract, review_batch  # noqa: E402
+from orch.conductor import contract, records, review_batch  # noqa: E402
+from orch.conductor.application import review_plan  # noqa: E402
+from orch.conductor.infrastructure.files import STATE_FILE  # noqa: E402
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -90,7 +97,34 @@ def main(argv=None) -> int:
     if read["format"] == "malformed":
         print("GROUP_REVIEW_FAILED: malformed review-findings JSON", file=sys.stderr)
         return done.returncode or 1
+    followup = followup_of(args, run_dir, refs, read)
+    if followup:
+        print(f"BATCH_REVIEW_FOLLOWUP: {followup}", file=sys.stderr)
     return done.returncode
+
+
+class _Say:
+    """The ``progress`` of the conductor that ``review_plan.followup_input`` reports to, here the standard error."""
+
+    @staticmethod
+    def emit(event, **fields):
+        print(f"{fields.get('reason_code', event)}: {fields.get('message', '')}", file=sys.stderr)
+
+
+def followup_of(args, run_dir: Path, refs: list, read: dict):
+    """The follow-up execution-input of the Blocker and Major findings of the review (``review_plan.followup_input`` on the
+    state of the run), or ``None`` when there is none to correct."""
+    project = Path(args.project).resolve()
+
+    def relative(path) -> str:
+        try:
+            return Path(path).resolve().relative_to(project).as_posix()
+        except ValueError:
+            return str(path)
+
+    owner = types.SimpleNamespace(run_id=args.run, directory=run_dir, state=records.read(run_dir / STATE_FILE, "state"),
+                                  progress=_Say(), _relative=relative)
+    return review_plan.followup_input(owner, 1, refs, read, name="batch-review")
 
 
 if __name__ == "__main__":

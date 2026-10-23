@@ -102,6 +102,7 @@ def build(directory: Path, project: Path) -> dict:
         "open_questions": questions_mod.listing(directory, time.time()),
         "seconds_by_role": {role: round(value, 1) for role, value in sorted(seconds.items())},
         "scout_cache": {"runs": found["scout_runs"], "hits": found["scout_hits"]},
+        "sessions": metrics.session_totals(lines),
         "items": items, "events": counts, "event_problems": problems,
     }
     if discarded:  # lines of progress.jsonl that were left out (not progress-line documents) or quarantined at write

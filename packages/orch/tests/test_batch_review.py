@@ -59,6 +59,44 @@ class BatchReviewTests(unittest.TestCase):
         self.assertIn('"type": "result"', (self.run_dir / "streams" / "batch-review.jsonl").read_text(encoding="utf-8"))
         self.assertIn("BATCH_REVIEW:", done.stderr)
 
+    def major_review(self) -> subprocess.CompletedProcess:
+        doc = {"verdict": "ATTENTION", "findings": [{"id": "F1", "severity": "Major", "confidence": "high",
+                                                    "location": "lib/W1.py:1", "failure_scenario": "empty input crashes",
+                                                    "basis": "correctness"}]}
+        reply = json.dumps({"type": "result", "result": "```json review-findings\n" + json.dumps(doc) + "\n```"})
+        fake = ["python3", "-c", f"import sys; sys.stdin.read(); print({reply!r})"]
+        return subprocess.run([sys.executable, str(SCRIPT), "cnd-test", "--project", str(self.project), "--argv-json",
+                               json.dumps(fake)], capture_output=True, text=True, check=False)
+
+    def test_a_major_finding_writes_a_followup_input_that_names_the_group_and_its_last_session(self):
+        fingerprint = {"provider": "claude-code", "project": "/p", "worktree": "/p", "role": "executor", "item": "W2",
+                       "attempt_id": "att-2", "instructions_digest": "sha256:" + "1" * 64, "authority_digest": "",
+                       "isolation_home": "", "base": "abc"}
+        state = json.loads((self.run_dir / "state.json").read_text(encoding="utf-8"))
+        state["executor_sessions"] = {"W2": {"session": "s2", "provider": "claude-code", "fingerprint": fingerprint}}
+        (self.run_dir / "state.json").write_text(json.dumps(state), encoding="utf-8")
+        done = self.major_review()
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertIn("BATCH_REVIEW_FOLLOWUP:", done.stderr)
+        from orch import contracts
+        from orch.conductor.infrastructure import sessions
+        doc = json.loads((self.run_dir / "batch-review.followup.json").read_text(encoding="utf-8"))
+        self.assertEqual([issue for issue in contracts.validate(doc, "execution-input") if issue.level == "error"], [])
+        ref = doc["provenance"]["session_ref"]
+        self.assertEqual((ref["run"], ref["item"], ref["items"], ref["session"], ref["provider"]),
+                         ("cnd-test", "W2", ["W1", "W2"], "s2", "claude-code"))
+        self.assertEqual(ref["fingerprint_digest"], sessions.identity_digest(fingerprint))
+
+    def test_a_followup_without_a_kept_session_still_names_the_group(self):
+        done = self.major_review()
+        self.assertEqual(done.returncode, 0, done.stderr)
+        ref = json.loads((self.run_dir / "batch-review.followup.json").read_text(encoding="utf-8"))["provenance"]["session_ref"]
+        self.assertEqual(ref, {"run": "cnd-test", "item": "W2", "items": ["W1", "W2"]})
+
+    def test_a_green_review_writes_no_followup(self):
+        self.assertEqual(self.review().returncode, 0)
+        self.assertFalse((self.run_dir / "batch-review.followup.json").exists())
+
     def test_a_run_without_commits_is_refused(self):
         (self.run_dir / "state.json").write_text(json.dumps({"items": {}}), encoding="utf-8")
         done = self.review()

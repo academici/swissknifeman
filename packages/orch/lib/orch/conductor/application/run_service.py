@@ -14,7 +14,7 @@ from orch.conductor import debug_mode, options as opts, progress, review_batch, 
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import clock, sessions
 from orch.conductor.infrastructure.files import RunStore, safe, write_json
 from orch.conductor.application.budget_service import effective_limit
 from orch.conductor.policies.budget import HARD_LIMITS
@@ -100,6 +100,10 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
             self._kill_orphaned_roles()
         stubs_changed(self, run_doc)
         catalogs_changed(self, run_doc)
+        if sessions.migrate_state(state, clock.utc_now()):  # a state of the single session slot of an older conductor
+            self._save()
+            self.progress.emit("info", reason_code="SESSION_STATE_MIGRATED",
+                               message="the executor session of an older state moved into the session slots; it resumes as before")
         for ref in retry:
             self._retry(ref)
         self._reconcile_interrupted()

@@ -123,6 +123,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
     "step": "executor.1",
     "work_id": "PLAN9.W1@<digest>"
    },
@@ -184,6 +188,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "correction",
+     "resumed": true
+    },
     "step": "executor.2",
     "work_id": "PLAN9.W1@<digest>"
    },
@@ -604,6 +612,15 @@
    "stage": "executor.1"
   },
   {
+   "event": "info",
+   "item": "W1",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
    "agent": "agent-<run>-2",
    "event": "stage.end",
    "item": "W1",
@@ -633,6 +650,15 @@
   {
    "event": "stage.start",
    "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.2"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "session executor-session-1 resumed; reuse=correction",
+   "reason_code": "SESSION_RESUMED",
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.2"
@@ -825,10 +851,31 @@
     "title": "Work W1"
    }
   },
-  "executor_session": "executor-session-2",
-  "executor_session_item": "W1",
-  "executor_session_route": "claude-code/sonnet/high",
-  "executor_session_task_digest": "<digest>",
+  "executor_sessions": {
+   "W1": {
+    "created_at": "<time>",
+    "fingerprint": {
+     "attempt_id": "att-run-<digest>-W1",
+     "authority_digest": "",
+     "base": "<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "item": "W1",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "W1",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 2,
+    "route": "claude-code/sonnet/high",
+    "session": "executor-session-2",
+    "task_digest": "<digest>"
+   }
+  },
   "items": {
    "W1": {
     "adopted": [],
@@ -856,6 +903,7 @@
       "out/W1.txt": "<digest>"
      }
     },
+    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {

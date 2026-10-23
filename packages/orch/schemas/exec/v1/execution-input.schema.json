@@ -236,6 +236,42 @@
                 "required": ["path", "digest"],
                 "additionalProperties": false
               }
+            },
+            "session_ref": {
+              "description": "Where the reviewed group comes from (run, last piece, every piece) and, when the last piece kept a resumable session, that session: the follow-up run resumes it when the provider and the identity still match, and otherwise starts fresh with the handoff of every piece of the group.",
+              "type": "object",
+              "properties": {
+                "run": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Conductor run that made the reviewed pieces."
+                },
+                "item": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Last piece of the group, whose session this is."
+                },
+                "session": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Provider session id; absent when the group kept none to resume."
+                },
+                "provider": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Provider that built the session."
+                },
+                "fingerprint_digest": {
+                  "description": "Canonical digest of the fingerprint of the session without piece, attempt and base revision (the identity a follow-up shares with it).",
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "items": {
+                  "description": "Every piece of the reviewed group, for the handoff of a follow-up that starts fresh.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text"
+                  }
+                }
+              },
+              "required": ["run", "item", "items"],
+              "additionalProperties": false
             }
           },
           "required": [

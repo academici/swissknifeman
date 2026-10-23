@@ -17,6 +17,7 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.launch_plan import claude_transcripts, strip_guard, transcript_folder_name  # noqa: F401 — re-export for callers
+from orch.conductor.infrastructure import sessions
 from orch.conductor.infrastructure.sessions import keep_session, resume_args  # noqa: F401 — re-export for callers
 from orch.conductor.infrastructure.usage import add_tokens  # noqa: F401 — re-export for callers
 from orch.conductor.progress import human_duration
@@ -45,9 +46,11 @@ class RolePorts(NamedTuple):
 
 
 def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int,
-                causation: Optional[str] = None, prompt_sha256: Optional[str] = None) -> dict:
+                causation: Optional[str] = None, prompt_sha256: Optional[str] = None,
+                session: Optional[dict] = None) -> dict:
     """A new agent run (``agents``): its folder and ``request.json``. It becomes the agent of this thread, so that the
-    usage of the process is counted to it and a role started inside it (the report-fixer) names it as its parent."""
+    usage of the process is counted to it and a role started inside it (the report-fixer) names it as its parent.
+    ``session`` (``data.session`` of ``orch.agent.started``) says whether the executor attempt resumes a session and why."""
     number = self.store.next_agent(self.state)
     parent = getattr(self._local, "agent", None)
     handle = agents.start(item.directory, agents.agent_id(self.run_id, number), role=role, route=actor(route),
@@ -61,7 +64,7 @@ def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file:
                             "prompt_sha256": prompt_sha256,
                             "config_digest": settings_mod.config_digest(self.settings),
                             "options_digest": opts.digest(item.options) if item.options else None}
-    handle["event_started"] = self._agent_event("orch.agent.started", handle)
+    handle["event_started"] = self._agent_event("orch.agent.started", handle, {"session": session} if session else None)
     return handle
 
 
@@ -126,11 +129,11 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
     # The route the role starts on (a provider gated since the routes were chosen moves to its fallback) and the prompt
     # rebuilt for it come first: orch.agent.started names the route and the digest of the prompt really sent.
     route = self.role_ports.start_route(item, key, role, item.routes[role], cancel)
-    delta, digest, _resuming = self._delta_mode(item, role, route, blocks, resumed)
+    delta, digest, _resuming, decision = self._delta_mode(item, key, role, route, blocks, resumed)
     _first, prompt = self.role_ports.prompt_for_route(item, key, role, route, blocks, prompt, prompt,
                                                       resumed=resumed if delta else None, digest=digest)
     handle = self._agent_start(item, key, role, route, prompt_file, attempt, causation,
-                               prompt_sha256=sha256_hex(prompt.encode("utf-8")))
+                               prompt_sha256=sha256_hex(prompt.encode("utf-8")), session=sessions.event_data(decision))
     try:
         doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle, blocks, resumed)
     except Stop as stop:
@@ -176,19 +179,20 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
     route = self.role_ports.start_route(item, key, role, route, cancel)
     while True:
         self.role_ports.admit_budget(item, "attempt")  # before every provider call: a repeat, a fallback, a wait (I10)
-        delta, digest, resuming = self._delta_mode(item, role, route, blocks, resumed)
+        delta, digest, resuming, decision = self._delta_mode(item, key, role, route, blocks, resumed)
+        self._announce_session(item, key, role, route, decision)
         first_prompt, prompt = self.role_ports.prompt_for_route(item, key, role, route, blocks, first_prompt, prompt,
                                                                 resumed=resumed if delta else None, digest=digest)
         attempt += 1
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
-        run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
+        run = process.run_role(self._role_argv(item, role, route, decision), prompt, transport=route["transport"], cwd=self.project,
                                timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
                                idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
                                on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
                                agent_directory=handle["directory"])
         self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
-        self._keep_session(item, role, route, run, task_digest=digest, delta=delta)
+        self._keep_session(item, role, route, run, task_digest=digest, delta=delta, decision=decision)
         if resuming and (run.error or not run.session):  # the next attempt starts a fresh session with the whole prompt
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),
                                reason_code="SESSION_RESUME_FAILED",

@@ -5,5 +5,9 @@
   "role": "a",
   "route": {
     "provider": "a"
+  },
+  "session": {
+    "resumed": false,
+    "reason": "first_round"
   }
 }

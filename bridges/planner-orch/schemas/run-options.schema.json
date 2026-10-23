@@ -75,13 +75,18 @@
       "additionalProperties": false
     },
     "session": {
-      "description": "How the sessions of the executor are shared inside one run of several pieces (Claude Code roles).",
+      "description": "How the sessions of the executor are shared inside one run of several pieces (roles of a provider whose capability record allows resume).",
       "type": "object",
       "properties": {
         "executor": {
           "description": "`handoff` (default): each piece starts a fresh session that its correction rounds resume (`--resume`), and its first prompt names the pieces of the run and carries the handoff of the earlier ones (commit, summary, open issues, changed paths); `shared`: the executor of a piece, and of every correction round of it, resumes the session of the previous executor of the run, so the later pieces start with the whole transcript of the earlier ones; `per-item`: each executor step starts a fresh session. A provider that cannot resume starts fresh either way.",
           "type": "string",
           "enum": ["handoff", "shared", "per-item"]
+        },
+        "max_idle_s": {
+          "description": "Seconds a session may stay unused before the next executor attempt starts a fresh one instead of resuming it (`SESSION_FRESH` reason `idle_expired`; a resume after the provider's prompt cache expired re-reads the whole history uncached). 0 (default): no limit.",
+          "type": "integer",
+          "minimum": 0
         }
       },
       "required": [],

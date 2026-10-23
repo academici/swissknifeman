@@ -16,7 +16,7 @@ _CHECK_ID = re.compile(r"^V[0-9]+$")
 SUPPORT_PROVENANCE = {
     "plan_support": (("plan", "phase"), ("plan",)),
     "phase_support": (("plan", "phase"), ("plan", "phase")),
-    "review_followup": (("plan", "item", "finding"), ()),
+    "review_followup": (("plan", "item", "finding", "session_ref"), ()),
     "deviation_fix": (("plan", "item", "event"), ("plan", "item")),
     "research": (("plan", "question"), ()),
     "advisor": (("plan", "item", "question"), ()),

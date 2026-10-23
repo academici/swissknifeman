@@ -62,7 +62,7 @@ DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "deviation", "fence":
 # a later piece does not re-read the whole transcript of the earlier ones on every turn. ``shared``: one session for all
 # pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
 SESSION_MODES = ("handoff", "shared", "per-item")
-DEFAULT_SESSION = {"executor": "handoff"}
+DEFAULT_SESSION = {"executor": "handoff", "max_idle_s": 0}  # max_idle_s 0: a session never expires by idleness
 # ``self_check``: the project's cheap commands the executor runs once on its final tree before it reports (the tests of the
 # units it touched and their dependents, lint); empty keeps the old "single test files" rule. They are not acceptance:
 # the conductor still runs every acceptance check itself, and the executor's claims about them prove nothing.

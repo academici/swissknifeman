@@ -1,9 +1,33 @@
 {
   "beacons": {},
-  "check_findings": {"duplicate_modules": [], "executor_runs_checks": [], "phase_after_red": []},
+  "check_findings": {
+    "duplicate_modules": [],
+    "executor_runs_checks": [],
+    "phase_after_red": []
+  },
   "checks_by_command": [
-    {"cmd": "test -f out/W1.txt", "contexts": ["local"], "executed": 1, "ids": ["V1"], "invocations": 1, "items": ["W1"],
-     "red": 0, "retried": 0, "reused": 0, "reused_from": [], "runs": 1, "saved_s": 0, "seconds": 0.0, "skipped": 0}
+    {
+      "cmd": "test -f out/W1.txt",
+      "contexts": [
+        "local"
+      ],
+      "executed": 1,
+      "ids": [
+        "V1"
+      ],
+      "invocations": 1,
+      "items": [
+        "W1"
+      ],
+      "red": 0,
+      "retried": 0,
+      "reused": 0,
+      "reused_from": [],
+      "runs": 1,
+      "saved_s": 0,
+      "seconds": 0.0,
+      "skipped": 0
+    }
   ],
   "checks_share": 0.0,
   "ended": null,
@@ -11,14 +35,37 @@
   "events": {},
   "findings_by_severity": {},
   "group_reviews": {},
-  "idle": {"max_between": null, "max_s": 0.0, "total_s": 0.0},
+  "idle": {
+    "max_between": null,
+    "max_s": 0.0,
+    "total_s": 0.0
+  },
   "incomplete_group_reviews": [],
   "items": [
-    {"attempts": [], "check_fixes": 0, "corrections": 0, "item": "W1", "outcome": "done", "retries": 0, "reviews": 1,
-     "stop": {"code": "PROVIDER_UNAVAILABLE", "message": "cannot start reviewer (/home/owner/project/no-such-grok): install or log in the CLI, then resume"},
-     "tokens": {"cached": 0, "input": 200, "output": 20}}
+    {
+      "attempts": [],
+      "check_fixes": 0,
+      "corrections": 0,
+      "item": "W1",
+      "outcome": "done",
+      "retries": 0,
+      "reviews": 1,
+      "stop": {
+        "code": "PROVIDER_UNAVAILABLE",
+        "message": "cannot start reviewer (/home/owner/project/no-such-grok): install or log in the CLI, then resume"
+      },
+      "tokens": {
+        "cached": 0,
+        "input": 200,
+        "output": 20
+      }
+    }
   ],
-  "last_stop": {"code": "PROVIDER_UNAVAILABLE", "message": "cannot start reviewer (/home/owner/project/no-such-grok): install or log in the CLI, then resume", "resume": 1},
+  "last_stop": {
+    "code": "PROVIDER_UNAVAILABLE",
+    "message": "cannot start reviewer (/home/owner/project/no-such-grok): install or log in the CLI, then resume",
+    "resume": 1
+  },
   "long_run": null,
   "open_questions": [],
   "prompt_blocks_by_role": {},
@@ -29,13 +76,29 @@
   "resumes": 0,
   "run": "cnd-20261020T090000Z-0d0e0f",
   "schema": "orch-conductor-observer/v1",
-  "scout_cache": {"hits": 0, "runs": 1},
+  "scout_cache": {
+    "hits": 0,
+    "runs": 1
+  },
   "seconds_by_role": {},
   "started": null,
   "status": "finished",
   "stop": null,
   "tokens_by_agent": [],
   "tokens_by_role": {},
-  "triage": {"confirmed": 0, "rejected": 0},
-  "wall_s": 0.0
+  "triage": {
+    "confirmed": 0,
+    "rejected": 0
+  },
+  "wall_s": 0.0,
+  "sessions": {
+    "resumed": {
+      "correction": 2,
+      "retry": 1
+    },
+    "fresh": {
+      "first_round": 1,
+      "fingerprint_changed:authority_digest": 1
+    }
+  }
 }

@@ -23,6 +23,7 @@ from orch.conductor.domain import fix_brief
 from orch.conductor.domain.report import finding_key
 from orch.conductor import contract
 from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure import sessions
 from orch.conductor.infrastructure.clock import utc_now
 from orch.conductor.infrastructure.files import read_json, safe, write_json
 from orch.conductor.policies import review_strategy as strategy
@@ -358,11 +359,28 @@ def piece_checks(self, refs: list) -> list:
     return found
 
 
-def followup_input(self, number: int, refs: list, read: dict, effort: Optional[str] = None) -> Optional[str]:
+def session_ref(self, refs: list) -> dict:
+    """``provenance.session_ref`` of a follow-up: where the reviewed group comes from (the run and every piece, so that a
+    follow-up that starts fresh can be told what they did) and, when the last piece of the group kept a session with a
+    fingerprint, that session with the digest of the identity a follow-up shares with it (``sessions.identity_digest``).
+    A provider that cannot resume, a failed session or a slot migrated from an older state leave the origin alone."""
+    slots = self.state.get("executor_sessions") or {}
+    last = refs[-1]
+    found = {"run": self.run_id, "item": last, "items": list(refs)}
+    slot = slots.get(last) or slots.get(sessions.SHARED_KEY) or {}
+    if slot.get("session") and slot.get("fingerprint") and slot.get("provider"):
+        found.update(session=slot["session"], provider=slot["provider"],
+                     fingerprint_digest=sessions.identity_digest(slot["fingerprint"]))
+    return found
+
+
+def followup_input(self, number: int, refs: list, read: dict, effort: Optional[str] = None,
+                   name: Optional[str] = None) -> Optional[str]:
     """The Blocker and Major findings of a group review as a ready execution-input (``provenance: review_followup``): one
     command corrects them in a commit of their own, with the file source (``run --input FILE --commit``). The route minimum
     is the effort of the executor of the run (``high`` when it has none): a run configured for a lighter executor must be
     able to start its own follow-up (``ROUTE_UNDERSHOOT`` otherwise)."""
+    stem = name or f"group-review-{number}"  # the files of the review: a run's group review, or batch-review.py's
     paths = review_batch.followup_paths(read["findings"])
     loud = [row for row in read["findings"] if row["severity"] in ("Blocker", "Major")]
     if not paths or not loud:
@@ -376,12 +394,12 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
     brief = fix_brief.build({"findings": loud}, {"confirmed": confirmed},
                             {row["id"]: finding_key(row) for row in loud}, {}, {
         "review": {"run": self.run_id, "item": ", ".join(refs), "round": number, "receipt": ""},
-        "base": checks_base(self, refs), "findings": self._relative(self.directory / f"group-review-{number}.md"),
+        "base": checks_base(self, refs), "findings": self._relative(self.directory / f"{stem}.md"),
         "scope_constraints": ["Change only the files named by these findings"], "required_checks": []})
     issues = contract.problems(brief, "fix-brief")
     if issues:
         raise ValueError("invalid group fix-brief: " + "; ".join(issues))
-    write_json(self.directory / f"group-review-{number}.fix-brief.json", brief)
+    write_json(self.directory / f"{stem}.fix-brief.json", brief)
     backlog = []
     remaining = loud
     pending = brief
@@ -396,12 +414,13 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
         issues = contract.problems(pending, "fix-brief")
         if issues or not pending["findings"]:
             raise ValueError("invalid follow-up fix-brief: " + "; ".join(issues or ["no finding fits the limits"]))
-        path = self.directory / f"group-review-{number}.fix-brief.{len(backlog) + 2}.json"
+        path = self.directory / f"{stem}.fix-brief.{len(backlog) + 2}.json"
         write_json(path, pending)
         backlog.append({"path": self._relative(path), "digest": canonical_digest(pending)})
     goal = ("Correct the review findings of pieces " + ", ".join(refs) + ". "
             "The reproduction below is reported by the reviewer and must be verified before correction.\n"
             + fix_brief.render(brief))
+    reference = session_ref(self, refs)
     commands = piece_checks(self, refs)
     # the reviewed pieces' own command checks decide when they exist: a procedure check (a verdict the executor must report)
     # cost a round and a full checks pass whenever the executor forgot it; only a follow-up without commands keeps one
@@ -411,11 +430,12 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
         doc = adhoc.build_adhoc_input(goal, paths, checks=checks, procedures=procedures,
                                       why=f"group review {number} of this run",
                                       route={"class": "implementation", "effort": effort or "high"},
-            provenance={**adhoc.support_provenance("review_followup"), **({"fix_briefs": backlog} if backlog else {})})
+            provenance={**adhoc.support_provenance("review_followup"), **({"fix_briefs": backlog} if backlog else {}),
+                        **({"session_ref": reference} if reference else {})})
     except adhoc.AdhocError as error:
         self.progress.emit("info", reason_code="GROUP_REVIEW_FOLLOWUP_FAILED", message=f"group {number}: {error}"[:200])
         return None
-    target = self.directory / f"group-review-{number}.followup.json"
+    target = self.directory / f"{stem}.followup.json"
     write_json(target, doc)
     return self._relative(target)
 

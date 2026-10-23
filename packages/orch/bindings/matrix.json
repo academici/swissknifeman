@@ -75,7 +75,7 @@
         "by_provider": {
           "claude-code": "adapted",
           "codex": "adapted",
-          "grok": "unknown"
+          "grok": "adapted"
         },
         "note": "native session resume with hash check"
       },

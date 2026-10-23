@@ -17,7 +17,7 @@ from tests.test_conductor_prompts import fixture
 
 class SessionOptionsTests(unittest.TestCase):
     def test_handoff_is_the_default(self):
-        self.assertEqual(options.DEFAULTS["session"], {"executor": "handoff"})
+        self.assertEqual(options.DEFAULTS["session"], {"executor": "handoff", "max_idle_s": 0})
 
     def test_a_layer_can_choose_per_item_and_a_bad_value_is_refused(self):
         merged = options.merge(options.DEFAULTS, {"session": {"executor": "per-item"}})
@@ -57,7 +57,8 @@ class SharedSessionTests(ConductorCase):
         self.assertEqual(self.calls("executor"), 2)
         self.assertNotIn("--resume", self.argv(1))
         self.assertEqual(self.argv(2)[self.argv(2).index("--resume") + 1], "executor-session-1")
-        self.assertEqual(self.state(err)["executor_session"], "executor-session-2")
+        self.assertEqual(self.state(err)["executor_sessions"]["*"]["session"], "executor-session-2")
+        self.assertNotIn("executor_session", self.state(err))  # the deprecated key is no longer written
 
     def with_no_persistence(self):
         roles = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
@@ -93,7 +94,7 @@ class SharedSessionTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         self.assertNotIn("--resume", self.argv(2))
         self.assertNotIn("## Run batch", self.prompt("executor", 1))
-        self.assertNotIn("executor_session", self.state(err))
+        self.assertNotIn("executor_sessions", self.state(err))  # a per-item session is kept nowhere
 
     def test_one_piece_alone_has_no_note_and_no_resume(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
@@ -123,20 +124,25 @@ class HandoffSessionTests(ConductorCase):
         self.assertNotIn("Handoff of", first)
         self.assertIn("You start W2 in a fresh session", second)
         self.assertIn("### Handoff of `W1` (commit ", second)
-        self.assertEqual(self.state(err)["executor_session_item"], "W2")
+        self.assertEqual(self.state(err)["executor_sessions"]["W2"]["last_item"], "W2")
+        self.assertEqual(sorted(self.state(err)["executor_sessions"]), ["W1", "W2"])  # a slot of its own for each piece
 
     def test_a_correction_round_resumes_the_session_of_its_own_piece_only(self):
         from types import SimpleNamespace
-        from orch.conductor.infrastructure import roles
+        from orch.conductor.infrastructure import roles, sessions
         owner = engine.Conductor.__new__(engine.Conductor)
-        owner.state = {"executor_session": "s1", "executor_session_item": "W2"}
+        owner.project = owner.directory = self.project
         route = {"provider": "claude-code", "model": "m", "effort": "high"}
-        item = SimpleNamespace(ref="W2", options={"session": {"executor": "handoff"}})
+        item = SimpleNamespace(ref="W2", options={"session": {"executor": "handoff"}}, state={}, claim={}, input_doc={})
         owner.progress = SimpleNamespace(emit=lambda *a, **k: None)
+        owner.state = {"executor_sessions": {"W2": {"session": "s1", "provider": "claude-code", "last_item": "W2",
+                                                    "fingerprint": sessions.fingerprint(owner, item, route)}}}
         self.assertEqual(roles.resume_args(owner, item, "executor", route), ["--resume", "s1"])
         item.ref = "W3"
-        self.assertEqual(roles.resume_args(owner, item, "executor", route), [])
+        self.assertEqual(roles.resume_args(owner, item, "executor", route), [])  # another piece: no slot of its own
         item.options["session"]["executor"] = "shared"
+        owner.state["executor_sessions"]["*"] = dict(owner.state["executor_sessions"]["W2"],
+                                                     fingerprint=sessions.fingerprint(owner, item, route))
         self.assertEqual(roles.resume_args(owner, item, "executor", route), ["--resume", "s1"])
 
 
@@ -228,7 +234,7 @@ class ResumedRoundTests(ConductorCase):
         self.assertEqual(manifest["task_digest"], self.manifest(err, "executor.1")["task_digest"])
         self.assertNotIn("resumed_session", self.manifest(err, "executor.1"))
         self.assertFalse((self.item_dir(err) / "prompts" / "executor.1.resumed.md").exists())
-        self.assertEqual(self.state(err)["executor_session_task_digest"], manifest["task_digest"])
+        self.assertEqual(self.state(err)["executor_sessions"]["W1"]["task_digest"], manifest["task_digest"])
 
     def test_a_lost_session_gives_the_next_attempt_the_whole_prompt_in_a_fresh_session(self):
         self.script({"executor": [self.RED, {"exit": 3}, executor_ok("W1")], "reviewer": [GREEN]})
@@ -293,8 +299,9 @@ class ResumedRoundTests(ConductorCase):
         seen = {"id": "alpha", "text": "which?", "answer": "this", "by": "owner"}
         new = {"id": "beta", "text": "how?", "answer": "so", "by": "owner"}
         owner = engine.Conductor.__new__(engine.Conductor)
-        owner.state = {"executor_session_answers": [execute.answer_key(seen)]}
-        item = mock.Mock(ref="W1", state={"steps": {}}, options={"checks": {"executor_runs_checks": False}})
+        owner.state = {"executor_sessions": {"W1": {"session": "s1", "answers": [execute.answer_key(seen)]}}}
+        item = mock.Mock(ref="W1", state={"steps": {}},
+                         options={"checks": {"executor_runs_checks": False}, "session": {"executor": "handoff"}})
         blocks = owner._resumed_prompt(item, "executor.2", "", "", "", [seen, new])
         text = prompts.render(blocks)
         self.assertIn("beta", text)
@@ -343,7 +350,7 @@ class CodexResumeTests(ConductorCase):
         second = self.prompt("executor", 2)
         self.assertIn("You continue piece W1 in the same session", second)  # the delta prompt on the thread
         self.assertNotIn("Create the output of W1.", second)
-        self.assertEqual(self.state(err)["executor_session"], "executor-session-2")
+        self.assertEqual(self.state(err)["executor_sessions"]["W1"]["session"], "executor-session-2")
 
     def test_a_per_item_session_starts_a_new_thread_each_round(self):
         self.script({"executor": [self.RED, dict(executor_ok("W1"), codex=True)], "reviewer": [GREEN]})

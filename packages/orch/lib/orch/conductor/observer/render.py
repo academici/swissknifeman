@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 
+def _counted(counts: dict) -> str:
+    return ", ".join(f"{name}×{number}" for name, number in counts.items()) or "none"
+
+
 def markdown(report: dict) -> str:
     lines = [f"# Observer report {report['run']}", "",
              f"- Status: {report['status']}" + (f" ({report['stop']['code']}: {report['stop']['message']})"
@@ -19,6 +23,8 @@ def markdown(report: dict) -> str:
              f"- Idle between stages: {report['idle']['total_s']} s (longest {report['idle']['max_s']} s"
              + (f", {report['idle']['max_between']}" if report['idle']['max_between'] else "") + ")",
              f"- Scout cache: {report['scout_cache']['hits']}/{report['scout_cache']['runs']} hits",
+             *([f"- Executor sessions: resumed {_counted(report['sessions']['resumed'])}; fresh {_counted(report['sessions']['fresh'])}"]
+               if report.get("sessions") and (report["sessions"]["resumed"] or report["sessions"]["fresh"]) else []),
              f"- Wall time {report['wall_s']} s; checks {int(report['checks_share'] * 100)} % of it",
              f"- Beacons and mends: {', '.join(f'{k}×{v}' for k, v in report['beacons'].items()) or 'none'}", "",
              "## Items", "", "| Item | Outcome | Check fixes | Corrections | Repeats | Tokens in/out |",

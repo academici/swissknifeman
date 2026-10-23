@@ -888,7 +888,7 @@ and `REVIEW_MODE_NONE_SKIPPED` names it.
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]`; `names: ["auto"]` asks the skills bridge (`[orch.conductor] skills_bridge`, a command run as a process with `--select --role R --provider P --project DIR --paths <write set files>`) for the skills of the role from the write set of the piece: the answer (`skills[].name`, `path`, `reason`) is kept in the state of the piece, an isolated role gets the text of the `SKILL.md` at the path the bridge names, beacon `SKILLS_SELECTED`; no bridge stops the piece `SKILLS_BRIDGE_UNAVAILABLE`, a failing one `SKILLS_SELECT_FAILED`; `auto` is not listed with other names |
 | `instructions` | `isolate_roles` (default every role; a listed role starts without the project instructions and customizations of its provider: for Claude Code `--safe-mode` plus no `CLAUDE.md`/project memory, which cuts the start-up context from ≈16 K to ≈6 K tokens and drops the plugins, MCP servers, user skills and hooks; grok was probed and does not read the repository `CLAUDE.md`); `module_rules` (default `["module-folders", "module-boundaries", "engineering-invariants"]`: the instruction sections, by the last part of their `## <scope>.<name>` heading, that a role still gets from the CLAUDE.md or AGENTS.md of the root and of every folder on the way to a write-set path, as a short Repository rules block). An isolated role gets the text of its `skills` in the prompt, because its provider loads none by name; `sandbox` (`off` \| `prefer` default \| `require`: the provider sandbox for shell commands, see Sandboxes) and `sandbox_domains` (default `[]`: the domains a sandboxed Claude Code role may reach); `file_tools_rule` (default `true`: a `## File tools` run-rules block in the executor prompt that says to read and change files with Read/Grep/Edit/Write and not with Bash `cat`/`sed`/heredocs, added only when the route offers Read and Edit; measured before the rule: P10.2 81 Bash calls and 1 Edit, a heredoc edit 55–120 s of model time) |
-| `session` | `executor`: `handoff` (default), `shared` or `per-item`. `handoff`: each piece of the run starts a fresh Claude Code session and its correction rounds resume it; the prompt of every piece carries the `## Run batch` block that names all pieces and, for each piece already done, a bounded `### Handoff of` (commit, summary, open issues, changed paths from its `register-report.json`) — a later piece does not re-read the transcript of the earlier ones on every turn (measured: a shared session carried 229K→372K tokens of context into the second piece, 18.5M cache-read tokens for one step). The piece of the kept session is `executor_session_item` of the run state. `shared`: the executor of every piece of the run, and of every correction round of a piece, resumes the Claude Code session of the previous executor (`claude -p --resume`), so the later pieces start with what the earlier ones learned, and the prompt of the first one carries a `run_rules` block `## Run batch` that names all pieces; the later ones are told that the session is resumed. Checks, review, register and commit stay per piece. `per-item`: a fresh session per executor step. `--batch` / `--no-batch` of `run` set it (`handoff` / `per-item`), and `--no-batch` also claims the pieces one at a time (layer `invocation:--batch`, above `--options`). Shared executors run without `--no-session-persistence` (the launch catalog sets it; a session that is not saved cannot be resumed), so their sessions stay in the provider's own store. A session that failed is forgotten and a fresh one starts. The session id is kept in `executor_session` of the run state, with `executor_session_item`, `executor_session_task_digest` and `executor_session_answers` (see *Resumed sessions*). Claude Code resumes with `--resume`; a Codex executor resumes its thread through the `resume_argv` of its launch catalog entry (`codex -a never exec resume <thread> --json -c sandbox_mode="…" --model … -`); Grok always starts fresh. |
+| `session` | `executor`: `handoff` (default), `shared` or `per-item`; `max_idle_s` (default 0 = never): a session unused for longer is not resumed, the next attempt starts fresh (`idle_expired`). `handoff`: each piece of the run starts a fresh Claude Code session and its correction rounds resume it; the prompt of every piece carries the `## Run batch` block that names all pieces and, for each piece already done, a bounded `### Handoff of` (commit, summary, open issues, changed paths from its `register-report.json`) — a later piece does not re-read the transcript of the earlier ones on every turn (measured: a shared session carried 229K→372K tokens of context into the second piece, 18.5M cache-read tokens for one step). Each piece keeps its own slot in `executor_sessions` of the run state (see *Session slots*). `shared`: the executor of every piece of the run, and of every correction round of a piece, resumes the Claude Code session of the previous executor (`claude -p --resume`), so the later pieces start with what the earlier ones learned, and the prompt of the first one carries a `run_rules` block `## Run batch` that names all pieces; the later ones are told that the session is resumed. Checks, review, register and commit stay per piece. `per-item`: a fresh session per executor step. `--batch` / `--no-batch` of `run` set it (`handoff` / `per-item`), and `--no-batch` also claims the pieces one at a time (layer `invocation:--batch`, above `--options`). Shared executors run without `--no-session-persistence` (the launch catalog sets it; a session that is not saved cannot be resumed), so their sessions stay in the provider's own store. A session that failed is forgotten and a fresh one starts. The session id, the task digest and the answers it has seen are kept in the slot of the piece (see *Session slots* and *Resumed sessions*). A provider resumes when its capability record says `resume` is `supported` or `adapted` (not by its name): Claude Code with `--resume`; a Codex executor its thread and a Grok executor its conversation through the `resume_argv` of the launch catalog entry (`codex -a never exec resume <thread> --json -c sandbox_mode="…" --model … -`, `grok … --resume <id>`). |
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and granted to every writing role: `--rw` on its `ro-run.py` guard, for Claude Code also `--add-dir` and, under the provider sandbox, `sandbox.filesystem.allowWrite`, for Codex `--add-dir`); `outside_module`: `deviation` (default) or `block`, for paths of another module than the write set names (`OUTSIDE_MODULE` under `block`); `runtime_paths`: patterns of runtime artifacts that are set aside, never committed (see "The write set is a fence by module"). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
 | `checks` | `parallel` (1–8, default 2: command checks run together, sharing the jobs budget `SKM_TEST_JOBS`), `fail_fast` (default false: every item check runs, so one round collects every independent failure; true: after a red command check no other check starts, the ones running end and the rest are `skipped` with `skip_reason` `fail_fast`; `phase` checks run only when every item check is green, else `skipped` with `phase_after_red`; the item checks run cheapest first by their time in earlier rounds), `reuse` (default true: a command check with green evidence of this run for the same candidate, command, directory and fingerprint is not run again; its row is `reused`), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs the checks in plan order in every round, with no red-first staging; whether the later checks start after a red one is decided by `fail_fast` alone, independently of `red_first`), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed), `self_check` (default empty: a list of the project's cheap commands, e.g. the tests of the touched units and their dependents and lint, that an executor with `executor_runs_checks: false` runs once on its final tree before it reports and lists in `self_check` of its stage-report; the claim proves nothing, the conductor still runs every acceptance check) |
 | `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the diff of the paths changed since the previous review, see *Review of round 2 and later*; `full`: the whole diff every round), `final_correction` (default `true`: when no further round is allowed the findings are corrected without another review, noted in the plan and as `review_debt` of the piece with a `REVIEW_DEBT` beacon, instead of `REVIEW_LIMIT`; `review_rounds` is a wall, `ceiling_factor` does not extend it), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`rules` default, `model`: who chooses it) |
@@ -1101,15 +1101,15 @@ A correction round of an executor whose session goes on does not send the whole 
 the rules, the skills, the scout map: 56–115 KB) to a session that holds it already. `prompts.executor_resumed` builds the
 **delta prompt** from the blocks `resumed` (`## Continuation`: the task, the rules and the result contract of the latest full prompt
 still apply; earlier correction instructions in the session are historical, and the correction section of this message is the
-only current focus), `answers` (only the answers the session has not seen: `executor_session_answers`), `correction` (the red checks,
+only current focus), `answers` (only the answers the session has not seen: `answers` of its slot), `correction` (the red checks,
 the confirmed findings, the deviation to fix), `interrupted` (the note of an interrupted round), `changed` (the paths the
 earlier round changed), `progress` and `result_contract`. A round that asks nothing the session lacks (the first round of a
 piece, a repeat of it) has no delta prompt and is sent in full.
 
 The delta prompt goes only if all three conditions hold for the attempt: (1) its command line continues the session
 (`--resume`, or the `resume_argv` of the route); (2) the session received the full prompt of this very piece
-(`state.executor_session_item` is the piece: in `shared` mode the first round of the next piece is sent in full into the
-continued session); (3) the `task_digest` of the full prompt now equals `state.executor_session_task_digest`, the digest of
+(`last_item` of the slot is the piece: in `shared` mode the first round of the next piece is sent in full into the
+continued session); (3) the `task_digest` of the full prompt now equals `task_digest` of the slot, the digest of
 the last full prompt the session received. `task_digest` is the sha256 of the canonical JSON `[kind, origin, text]` of the
 blocks that carry the task and the instructions — every block but `correction`, `answers`, `interrupted`, `changed`,
 `progress` (it names the round) and the `## Run batch` note (it describes the batch, not the task) — so a rebuilt input
@@ -1117,18 +1117,75 @@ blocks that carry the task and the instructions — every block but `correction`
 Any other doubt does the same: the delta prompt is an optimisation, never the only copy of the task.
 
 An attempt that continued a session and ended with an error or without a session (a lost transcript, a provider that
-refused the id) forgets the session (the fields above go with it) and emits the info `SESSION_RESUME_FAILED` (`item`,
+refused the id) forgets the session (its id, task digest and answers go with it; the next decision is `provider_error` or `no_session_id`) and emits the info `SESSION_RESUME_FAILED` (`item`,
 `stage`, the route with its provider). The next attempt of the step starts a fresh session with the **whole** prompt and no
 `--resume`. `prompts/<step>.md` always holds the full prompt of the step, `prompts/<step>.resumed.md` the delta one when it
 was sent; the manifest of the step lists the blocks that were sent, with `resumed_session: true` for a delta prompt and the
 `task_digest` of the full one (both optional fields of `prompt-manifest/v1`).
 
-A Codex executor resumes with `resume_argv` of its entry in the launch catalog (`launch-catalog.json` 1.6.0):
+A Codex or Grok executor resumes with `resume_argv` of its entry in the launch catalog (`launch-catalog.json` 1.6.0):
 `codex -a never exec resume {session} --json -c sandbox_mode="{write_sandbox}" --model … -c model_reasoning_effort=… -`.
 `codex exec resume` has no `--sandbox`, so the mode of the first round (`danger-full-access` for `[orch.launch] access =
 open`, `workspace-write` for `confined`) is passed as a `-c` override; the model and the effort are those of the first
 round and `-a never` stays before `exec`. The thread id comes from `thread.started`. A route started from
 `[orch.conductor.argv]` (a command line of the user) has no `resume_argv` and starts fresh.
+
+### Session slots
+
+The run keeps one executor session per piece in `executor_sessions` of `state.json` (`records/v1` `state`): the key is the
+piece, or `*` for `session.executor = shared`. A slot holds the provider `session`, its `provider` and `route`, the
+`fingerprint` it was built under with its `fingerprint_digest`, `created_at`, `last_used_at`, `rounds`, `last_item`
+(the piece that used it last), and the `task_digest` and `answers` of *Resumed sessions*. A retry of an earlier piece
+(`resume --retry W1` after W2 ran) therefore resumes the session of W1, not that of W2.
+
+The **fingerprint** is the identity a session is built under: `provider`, `project` (real path), `worktree` (real path of
+the git top level), `role`, `item`, `attempt_id` (of the claim), `instructions_digest` (canonical digest of
+`<run>/instructions.json`, without what the run fills in itself), `authority_digest`, `isolation_home` and `base` (the
+revision of the first brief of the piece, `session_base` of the piece state). `shared` leaves out `item`, `attempt_id` and `base`.
+`authority_digest` and `isolation_home` are empty (`sessions.identity_inputs`) until the authority envelope and the
+isolation profiles fill them in. The model and the effort are not part of it: a change resumes and says
+`SESSION_ROUTE_CHANGED`.
+
+Every executor attempt decides, once, whether to resume (`session_decision`), and says it in the journal. The info
+`SESSION_RESUMED` (`item`, `stage`, the session and `reuse=` one of `correction`, `retry`, `question`, `next_piece`,
+`followup`) or `SESSION_FRESH` (`item`, `stage`, `reason=`) is the same for the event `orch.agent.started`, whose
+`data.session` is `{resumed, reason}`. The reason of a fresh session is one of:
+
+| `reason` | the attempt starts fresh because |
+| --- | --- |
+| `per_item_mode` | `session.executor` is `per-item` (`--no-batch`) |
+| `provider_unsupported` | the capability record of the provider has `resume` `unknown` or `unsupported`, or the route has no command that continues a session (a provider that resumes through `resume_argv` but runs a command line of the user from `[orch.conductor.argv]`) |
+| `first_round` | the piece has no session yet |
+| `provider_error` | the previous attempt on the session ended with an error |
+| `no_session_id` | the previous attempt returned no session id |
+| `fingerprint_changed:<field>` | `provider`, `project`, `worktree`, `attempt_id`, `instructions_digest`, `authority_digest`, `isolation_home` or `base` differs from the slot (the first one in this order). A change of the authority or of the instructions is never a resume: a session with broader rights must not continue silently (invariant I7) |
+| `idle_expired` | `session.max_idle_s` is above 0 and the slot was used longer ago (the provider's prompt cache is gone: a resume would re-bill the whole history) |
+| `followup_mismatch` | a group review follow-up whose `session_ref` does not match (below) |
+
+A fresh session gets the whole prompt; in `handoff` mode the `## Run batch` note names the pieces already done and carries their
+handoff. The delta prompt goes exactly when the decision is a resume (with the conditions of *Resumed sessions*).
+Resume uses the explicit session id of the slot; `--continue` and `--last` are never used.
+
+**Older runs.** A state written before the slots has `executor_session`, `executor_session_route`,
+`executor_session_item`, `executor_session_task_digest` and `executor_session_answers` (still valid, deprecated). `resume`
+moves them into a slot without a fingerprint, removes them and says the info `SESSION_STATE_MIGRATED` once; the session
+resumes as before and the next round gives its slot an identity; that round also drops the copy of the session filed
+under the other key, so a run that changes `session.executor` or whose identity changed never resumes it unchecked.
+
+**Group review follow-up.** The execution-input of a follow-up (`provenance.kind = review_followup`) carries
+`session_ref` `{run, item, items, session?, provider?, fingerprint_digest?}`: where the group comes from (the run, its last
+piece and every piece) and, when the last piece kept a resumable session, that session with the digest of its fingerprint
+without `item`, `attempt_id` and `base` (a follow-up is another attempt and starts after the commits it corrects).
+`review_plan.followup_input` writes it for the group review of a run, and `scripts/batch-review.py` writes
+`batch-review.followup.json` beside `batch-review.md` for a Blocker or Major finding. The first executor round of the
+follow-up resumes the session when the provider and the digest of its own fingerprint match (`SESSION_RESUMED
+reuse=followup`). Every other start of the follow-up is fresh (`followup_mismatch`, a group that kept no session,
+`per_item_mode`, `provider_unsupported`, …) and its prompt carries the handoff of every piece of the group, read as a
+`state` record from the run `session_ref.run` and its registered reports (a damaged state is `STATE_INVALID` /
+`STATE_CORRUPT`, not a silent gap).
+
+**Observer.** `observer.json` has `sessions` `{resumed: {reuse: n}, fresh: {reason: n}}` from these info lines, and
+`observer.md` a line `Executor sessions`.
 
 ### Review of round 2 and later
 

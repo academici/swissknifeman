@@ -114,6 +114,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
     "step": "executor.1",
     "work_id": "adhoc@<digest>"
    },
@@ -488,6 +492,15 @@
    "stage": "executor.1"
   },
   {
+   "event": "info",
+   "item": "adhoc@<digest>",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
    "agent": "agent-<run>-2",
    "event": "stage.end",
    "item": "adhoc@<digest>",
@@ -675,10 +688,31 @@
     "title": "Make out/adhoc.txt"
    }
   },
-  "executor_session": "executor-session-1",
-  "executor_session_item": "adhoc@<digest>",
-  "executor_session_route": "claude-code/sonnet/high",
-  "executor_session_task_digest": "<digest>",
+  "executor_sessions": {
+   "adhoc@9b97afced891": {
+    "created_at": "<time>",
+    "fingerprint": {
+     "attempt_id": "att-run-<digest>-adhoc-9b97afced891",
+     "authority_digest": "",
+     "base": "<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "item": "adhoc@<digest>",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "adhoc@<digest>",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 1,
+    "route": "claude-code/sonnet/high",
+    "session": "executor-session-1",
+    "task_digest": "<digest>"
+   }
+  },
   "items": {
    "adhoc@9b97afced891": {
     "adopted": [],
@@ -698,6 +732,7 @@
       "out/adhoc.txt": "<digest>"
      }
     },
+    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {

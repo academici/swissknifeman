@@ -252,6 +252,10 @@ class Conductor:
     _resume_args = sessions.resume_args
     _keep_session = sessions.keep_session
     _delta_mode = sessions.delta_mode
+    _announce_session = sessions.announce_session
+    _session_slot = sessions.slot_of
+    _answers_seen = sessions.answers_seen
+    _note_answers = sessions.note_answers
     _role_env = launch_plan.role_env
 
     @property

@@ -10,12 +10,12 @@ from typing import Optional
 from aicore.util.digest import sha256_hex
 
 from orch.contracts import required_digest
-from orch.conductor import checks as checks_mod, contract, options as opts, prompts, questions as questions_mod, scope as scopes
+from orch.conductor import checks as checks_mod, contract, options as opts, prompts, questions as questions_mod, records, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import evidence_paths, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock, work_source
-from orch.conductor.infrastructure.files import REPORTS, safe, write_json
+from orch.conductor.infrastructure import clock, sessions, work_source
+from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write_json
 from orch.conductor.stages import advice
 
 
@@ -79,11 +79,8 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   staged=self._relative(work_source.protected_dir(item)))
         resumed = self._resumed_prompt(item, key, correction, note, fix, answers)
         report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems, resumed=resumed)
-        if self._shared_session(item, "executor", item.routes["executor"]) \
-                and (answers or "executor_session_answers" in self.state):  # the session has now seen every answer the prompt carried
-            with self.store.mutating():
-                self.state["executor_session_answers"] = [answer_key(row) for row in answers]
-                self._save()
+        if self._shared_session(item, "executor", item.routes["executor"]):  # the session has now seen every answer the prompt carried
+            self._note_answers(item, [answer_key(row) for row in answers])
         write_json(item.directory / "reports" / f"{key}.json", report)
         return {"report": report, "changed": self._changed_now(item), **meta}
 
@@ -164,7 +161,7 @@ def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: 
     with the paths the earlier round of the piece changed. ``None`` when the round asks nothing the session lacks (the
     first round of a piece, a repeat of it): it is sent the whole prompt, as before. Whether the delta really goes is
     decided per attempt (``_delta_mode``)."""
-    seen = set(self.state.get("executor_session_answers") or [])
+    seen = self._answers_seen(item)
     fresh = [row for row in answers if answer_key(row) not in seen]
     if not (correction or note or fix or fresh):
         return None
@@ -185,7 +182,7 @@ def batch_note(self, item: Item) -> str:
     mode = self._session_mode(item)
     if len(refs) < 2 or mode not in ("shared", "handoff") \
             or not self._shared_session(item, "executor", item.routes["executor"]):
-        return ""
+        return followup_handoff(self, item)
     claims = {value["ref"]: value for value in (self.state.get("claims") or {}).values()}
     rows, done_refs = [], []
     for ref in refs:
@@ -196,8 +193,8 @@ def batch_note(self, item: Item) -> str:
                                                      else "next" if done is None else done)
         title = (claims.get(ref) or {}).get("title")
         rows.append(f"- `{ref}`{' — ' + title if title else ''} ({mark})")
+    resumed = sessions.decide(self, item, "", "executor", item.routes["executor"])["action"] == "resume"
     if mode == "handoff":
-        resumed = self.state.get("executor_session_item") == item.ref and bool(self.state.get("executor_session"))
         lines = ["## Run batch", "", "All pieces of this run are in progress; each piece has a session of its own, in order:",
                  *rows, "",
                  (f"You are resuming the session of {item.ref}; the instructions below are for its next round." if resumed
@@ -208,7 +205,6 @@ def batch_note(self, item: Item) -> str:
         if not resumed:
             lines += [block for ref in done_refs for block in ("", handoff_of(self, ref))]
         return "\n".join(lines)
-    resumed = bool(self.state.get("executor_session"))
     lines = ["## Run batch", "", "All pieces of this run are in progress and one session carries them in order:", *rows, "",
              (f"You are resuming that session: the pieces before {item.ref} are done and committed, what you learned stays "
               "valid (re-read only what this piece needs), and the instructions below are for this piece."
@@ -218,18 +214,38 @@ def batch_note(self, item: Item) -> str:
     return "\n".join(lines)
 
 
+def followup_handoff(self, item: Item) -> str:
+    """The handoff of every piece of the group a review follow-up corrects, from the state of the run that made them, for
+    a follow-up that starts a fresh session whatever the reason (a session that does not match, ``per-item``, a provider
+    that cannot resume, a group that kept no session): it must know what the pieces did. The state of that run is read as
+    any record is (``STATE_INVALID`` / ``STATE_CORRUPT`` for a damaged one)."""
+    ref = sessions.followup_ref(item) or {}
+    if not ref.get("run") or sessions.decide(self, item, "", "executor", item.routes["executor"])["action"] != "fresh":
+        return ""
+    directory = self.directory.parent / safe(str(ref["run"]))
+    earlier = records.read(directory / STATE_FILE, "state")
+    if earlier is None:
+        return ""
+    refs = [str(name) for name in ref.get("items") or [ref.get("item")] if name]
+    blocks = [handoff_of(self, name, state=earlier, directory=directory) for name in refs]
+    return "\n\n".join(["## Pieces under review", "",
+                         "You start in a fresh session; the session that made these pieces cannot be continued. "
+                         "Their handoff follows: read the code they committed only where the findings need it.", "", *blocks])
+
+
 HANDOFF_ISSUES = 8  # the open issues of an earlier piece named in a handoff
 HANDOFF_TEXT = 400  # characters of the summary and of each issue
 HANDOFF_PATHS = 25  # changed paths named
 
 
-def handoff_of(self, ref: str) -> str:
+def handoff_of(self, ref: str, state: Optional[dict] = None, directory=None) -> str:
     """What a later piece of the run must know of the done piece ``ref``: its commit, summary, open issues and changed
-    paths, from the report it registered (``register-report.json``), each part bounded."""
-    state = self.state["items"].get(ref) or {}
-    sha = ((done_steps(state.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+    paths, from the report it registered (``register-report.json``), each part bounded. ``state`` and ``directory`` are
+    those of another run (the run a review follow-up corrects); the default is this one."""
+    piece = ((self.state if state is None else state).get("items") or {}).get(ref) or {}
+    sha = ((done_steps(piece.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
     try:
-        report = json.loads((self.directory / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
+        report = json.loads(((directory or self.directory) / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         report = {}
     lines = [f"### Handoff of `{ref}`" + (f" (commit {sha[:12]})" if sha else "")]

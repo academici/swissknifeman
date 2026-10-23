@@ -284,14 +284,23 @@ class ReviewVerdict(unittest.TestCase):
 
 
 class SessionRoute(unittest.TestCase):
-    def me(self, state: dict):
-        return types.SimpleNamespace(state=state, _shared_session=lambda item, role, route: True, progress=mock.Mock(),
+    def me(self, slots: dict):
+        """A conductor stub whose slots of the shared executor session (key ``*``) are ``slots``; the slot has no
+        fingerprint, as one migrated from an older state, so the route is the only thing that differs."""
+        base = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(base, True))
+        return types.SimpleNamespace(state={"executor_sessions": slots} if slots else {}, project=base, directory=base,
+                                     _shared_session=lambda item, role, route: True, progress=mock.Mock(),
                                      _session_mode=lambda item: "shared",  # a later piece resumes only a shared session
                                      store=types.SimpleNamespace(mutating=contextlib.nullcontext))
 
+    @staticmethod
+    def item(ref: str):
+        return types.SimpleNamespace(ref=ref, options={}, state={}, claim={}, input_doc={})
+
     def test_a_piece_on_another_model_resumes_the_session_and_says_so_once(self):
-        item = types.SimpleNamespace(ref="W2")
-        me = self.me({"executor_session": "s1", "executor_session_route": "claude-code/claude-haiku-5-5/low"})
+        item = self.item("W2")
+        me = self.me({"*": {"session": "s1", "route": "claude-code/claude-haiku-5-5/low", "provider": "claude-code"}})
         route = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
         self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
         self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
@@ -299,21 +308,24 @@ class SessionRoute(unittest.TestCase):
         self.assertEqual(emitted, ["SESSION_ROUTE_CHANGED"])
 
     def test_the_same_route_says_nothing_and_no_session_gives_no_resume(self):
-        item = types.SimpleNamespace(ref="W2")
+        item = self.item("W2")
         route = {"provider": "claude-code", "model": "m", "effort": "high"}
-        me = self.me({"executor_session": "s1", "executor_session_route": "claude-code/m/high"})
+        me = self.me({"*": {"session": "s1", "route": "claude-code/m/high", "provider": "claude-code"}})
         self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
         me.progress.emit.assert_not_called()
         self.assertEqual(roles.resume_args(self.me({}), item, "executor", route), [])
 
-    def test_keep_session_records_the_route_and_forgets_it_with_a_failed_session(self):
-        item, route = types.SimpleNamespace(ref="W1"), {"provider": "claude-code", "model": "m", "effort": "low"}
+    def test_keep_session_records_the_route_and_drops_the_id_of_a_failed_session(self):
+        item, route = self.item("W1"), {"provider": "claude-code", "model": "m", "effort": "low"}
         me = self.me({})
         me._save = lambda: None
         roles.keep_session(me, item, "executor", route, types.SimpleNamespace(error=None, session="s9"))
-        self.assertEqual((me.state["executor_session"], me.state["executor_session_route"]), ("s9", "claude-code/m/low"))
+        slot = me.state["executor_sessions"]["*"]
+        self.assertEqual((slot["session"], slot["route"], slot["rounds"]), ("s9", "claude-code/m/low", 1))
         roles.keep_session(me, item, "executor", route, types.SimpleNamespace(error="ROLE_FAILED", session=None))
-        self.assertNotIn("executor_session_route", me.state)
+        slot = me.state["executor_sessions"]["*"]
+        self.assertNotIn("session", slot)  # nothing left to resume: the next attempt starts fresh, and says why
+        self.assertEqual(slot["error"], "ROLE_FAILED")
 
 
 class FrozenMode(unittest.TestCase):

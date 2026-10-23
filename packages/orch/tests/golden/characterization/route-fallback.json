@@ -119,6 +119,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
     "step": "executor.1",
     "work_id": "PLAN9.W1@<digest>"
    },
@@ -523,6 +527,15 @@
   {
    "event": "info",
    "item": "W1",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "W1",
    "message": "attempt 1 failed at the provider (quota: provider quota exhausted); fallback_route (ACTION_DEFAULT, WAIT_TOO_LONG, FALLBACK_ROUTE)",
    "role": "executor",
    "route": "claude-code/sonnet/high",
@@ -533,6 +546,15 @@
    "item": "W1",
    "message": "executor: claude-code/sonnet/high -> codex/gpt-6-sol/high (quota; ACTION_DEFAULT, WAIT_TOO_LONG, FALLBACK_ROUTE)",
    "reason_code": "ROUTE_FALLBACK",
+   "role": "executor",
+   "route": "codex/gpt-6-sol/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "a fresh session starts; reason=provider_unsupported",
+   "reason_code": "SESSION_FRESH",
    "role": "executor",
    "route": "codex/gpt-6-sol/high",
    "stage": "executor.1"
@@ -723,6 +745,30 @@
     "ref": "W1",
     "submission": "sub-<run>-item-W1",
     "title": "Work W1"
+   }
+  },
+  "executor_sessions": {
+   "W1": {
+    "created_at": "<time>",
+    "error": "ROLE_FAILED",
+    "fingerprint": {
+     "attempt_id": "att-run-<digest>-W1",
+     "authority_digest": "",
+     "base": "<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "item": "W1",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "W1",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 0,
+    "route": "claude-code/sonnet/high"
    }
   },
   "items": {

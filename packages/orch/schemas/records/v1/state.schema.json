@@ -36,12 +36,18 @@
       },
       "additionalProperties": false
     },
-    "executor_session": {"description": "Session of the shared executor.", "type": ["string", "null"]},
-    "executor_session_item": {"description": "Piece that built the shared executor session.", "type": ["string", "null"]},
-    "executor_session_route": {"description": "Route label that built the shared executor session.", "type": ["string", "null"]},
+    "executor_sessions": {
+      "description": "Executor session of each piece by reference (the key * for session.executor shared): the provider session, the identity it was built under and its use. Replaces the deprecated executor_session* keys.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"$ref": "#/$defs/executor-session"}},
+      "additionalProperties": false
+    },
+    "executor_session": {"description": "Deprecated: session of the shared executor; moved into executor_sessions when the run is resumed (SESSION_STATE_MIGRATED).", "type": ["string", "null"]},
+    "executor_session_item": {"description": "Deprecated: piece that built the shared executor session; see executor_sessions.", "type": ["string", "null"]},
+    "executor_session_route": {"description": "Deprecated: route label that built the shared executor session; see executor_sessions.", "type": ["string", "null"]},
     "executor_session_route_said": {"description": "Route label already announced by SESSION_ROUTE_CHANGED.", "type": ["string", "null"]},
-    "executor_session_task_digest": {"description": "Digest of the full task prompt the shared session holds (P2.4).", "type": ["string", "null"]},
-    "executor_session_answers": {"description": "Answer keys the shared session has already seen (P2.4).", "type": "array", "items": {"type": "string"}},
+    "executor_session_task_digest": {"description": "Deprecated: digest of the full task prompt the shared session holds; see executor_sessions.", "type": ["string", "null"]},
+    "executor_session_answers": {"description": "Deprecated: answer keys the shared session has already seen; see executor_sessions.", "type": "array", "items": {"type": "string"}},
     "review_strategy": {"description": "Review strategy decided for the batch (mode, groups, source, ...).", "type": ["object", "null"]},
     "group_reviews": {
       "description": "Group reviews by number.",
@@ -62,6 +68,43 @@
     "policy_stage_skipped": {"description": "POLICY_STAGE_SKIPPED was announced once for the run (P3.10).", "type": "boolean"}
   },
   "$defs": {
+    "executor-session": {
+      "description": "The executor session of a piece (or of the run): what the provider returned, the identity it was built under (p7-design) and its use. A slot without session and with error (or neither) records why the next attempt starts fresh.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "session": {"description": "Provider session id to resume; absent after a failed attempt or one that returned none.", "type": "string", "minLength": 1},
+        "provider": {"description": "Provider that built the session.", "type": "string"},
+        "route": {"description": "Route label (provider/model/effort) that last used the session.", "type": "string"},
+        "fingerprint": {"$ref": "#/$defs/session-fingerprint"},
+        "fingerprint_digest": {"description": "Canonical digest of the fingerprint; empty for a slot migrated from an older state.", "type": "string"},
+        "created_at": {"description": "UTC time the slot was created.", "type": "string"},
+        "last_used_at": {"description": "UTC time of the last attempt that used it (session.max_idle_s counts from here).", "type": "string"},
+        "rounds": {"description": "Attempts that ended with this session.", "type": "integer", "minimum": 0},
+        "last_item": {"description": "Piece whose attempt used the session last.", "type": "string"},
+        "task_digest": {"description": "Digest of the full task prompt the session holds; the delta prompt is sent only when it matches.", "type": "string"},
+        "answers": {"description": "Answer keys the session has already seen.", "type": "array", "items": {"type": "string"}},
+        "error": {"description": "Error code of the attempt that lost the session (provider_error).", "type": "string"},
+        "migrated": {"description": "The slot was moved from the deprecated executor_session keys and has no fingerprint yet.", "type": "boolean"}
+      }
+    },
+    "session-fingerprint": {
+      "description": "Identity of an executor session: another value of any field but the model and effort starts a fresh session. Empty authority_digest and isolation_home until the authority envelope and the isolation profiles exist.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {"type": "string"},
+        "project": {"description": "Real path of the project.", "type": "string"},
+        "worktree": {"description": "Real path of the git top level of the project.", "type": "string"},
+        "role": {"type": "string"},
+        "item": {"description": "Piece (absent for a shared session).", "type": "string"},
+        "attempt_id": {"description": "Attempt of the claim (absent for a shared session).", "type": "string"},
+        "instructions_digest": {"description": "Digest of the instructions snapshot of the run.", "type": "string"},
+        "authority_digest": {"type": "string"},
+        "isolation_home": {"type": "string"},
+        "base": {"description": "Revision of the first brief of the piece (absent for a shared session).", "type": "string"}
+      }
+    },
     "usage": {
       "description": "Token usage bucket.",
       "type": "object",
@@ -160,6 +203,7 @@
         "stop": {"$ref": "#/$defs/stop"},
         "partial": {"description": "The blocked piece left changes in the tree.", "type": "boolean"},
         "retried": {"description": "UTC time of the last retry.", "type": "string"},
+        "session_base": {"description": "Revision of the first brief of the piece: the base of the fingerprint of its executor session.", "type": "string"},
         "released": {"description": "Releases of the claim.", "type": "array", "items": {"type": "object"}},
         "tokens": {"$ref": "#/$defs/usage"},
         "stage_usage": {

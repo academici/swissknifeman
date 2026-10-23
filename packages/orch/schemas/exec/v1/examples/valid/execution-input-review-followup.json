@@ -10,7 +10,18 @@
         "path": ".swissknifeman/state/group-review-1.fix-brief.2.json",
         "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       }
-    ]
+    ],
+    "session_ref": {
+      "run": "cnd-20261023T100000Z-1",
+      "item": "W2",
+      "session": "sess-2",
+      "provider": "claude-code",
+      "fingerprint_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "items": [
+        "W1",
+        "W2"
+      ]
+    }
   },
   "goal": "Correct the first bounded group-review assignment.",
   "scope": {

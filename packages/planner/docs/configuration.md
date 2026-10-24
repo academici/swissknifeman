@@ -39,7 +39,7 @@ Add `--json` for machine-readable output. Code reads settings only through `plan
 | `check.heavy_text_kb` | integer 1–1024 | 16 | size of a text that `check` calls heavy, KB |
 | `refs.max_chain` | integer 1–64 | 8 | depth of the chain of successor plans |
 | `lock.timeout_seconds` | integer 1–600 | 30 | how long a command waits for the plan lock |
-| `new_plan.design_audit` | `none`, `required` | `none` | `settings.design_audit` of a new plan |
+| `new_plan.design_audit` | `none`, `required` | `none` | `settings.design_audit` of a new plan; `required` gates execution on a current phase readiness certificate |
 | `new_plan.scout` | `off`, `auto` | `off` | `settings.scout` of a new plan |
 | `new_plan.context_pack` | `legacy`, `scoped` | `scoped` | `settings.context_pack` of a new plan |
 | `new_plan.evidence` | `optional`, `required` | `optional` | `settings.evidence`; written only when `required` |

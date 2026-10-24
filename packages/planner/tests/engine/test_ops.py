@@ -63,6 +63,14 @@ class DemoCase(unittest.TestCase):
         return ctx.exception
 
 
+class ReadinessOwnershipTests(DemoCase):
+    def test_set_push_and_apply_cannot_write_readiness(self):
+        self.assertRefused("FIELD_OWNED", ops.patch, self.root, "P1", {"readiness": None})
+        self.assertRefused("FIELD_OWNED", ops.push, self.root, "P1", "readiness.findings", {})
+        self.assertRefused("FIELD_OWNED", ops.apply, self.root,
+                           [{"ref": "P1", "patch": {"readiness": {"status": "ready"}}}])
+
+
 class NewPlanTests(RootCase):
     def test_allocates_ordinal_and_short_id(self):
         first = self.new("DEMO", "Demo")

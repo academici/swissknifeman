@@ -146,7 +146,8 @@ class Case(unittest.TestCase):
     def evidence(self, check="V1", exit_code=0, subject="P1.1") -> str:
         path = self.project / "ev" / f"{subject}-{check}.json"
         path.parent.mkdir(exist_ok=True)
-        short = json.loads((self.project / "plans" / self.plan / "plan.json").read_text())["short_id"]
+        plan_root = getattr(self, "plan_root", self.project / "plans" / self.plan)
+        short = json.loads((plan_root / "plan.json").read_text())["short_id"]
         path.write_text(json.dumps({
             "$schema": "urn:swissknifeman:task:plan:check-evidence:v1", "evidence_id": f"ev-{check}",
             "check_id": check, "subject": f"{short}.{subject}", "procedure": {"cmd": "true"},
@@ -161,6 +162,13 @@ class Case(unittest.TestCase):
 
 
 class ClaimTests(Case):
+    def test_claim_readiness_refusal_preserves_code_in_claim_blocked_message(self):
+        run(self.project, "set", self.plan, "plan", "--json", '{"settings":{"design_audit":"required"}}')
+        answer = self.claim(items=["P1.1"])
+        self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "CLAIM_BLOCKED"), answer)
+        self.assertIn("READINESS_REQUIRED", answer["message"])
+        self.assertEqual(self.item("P1.1")["status"], "todo")
+
     def test_claim_start_passes_strict_route_through_cli(self):
         wrapper, log = self.trace_planner_cli()
         with mock.patch.dict(os.environ, {"PLANNER_PLAN_PY": str(wrapper)}):
@@ -484,13 +492,60 @@ class BriefTests(Case):
         self.assertEqual(stored["digest"], first["digest"])
         self.assertTrue(stored["input_id"].endswith("@" + first["digest"][:12]))
         self.assertEqual(first["artifact_id"], "brief-P1-1-" + first["digest"][:12])
-        path = blobs.blob_path(first["input_ref"], project=self.project).relative_to(self.project).as_posix()
+        blob = blobs.blob_path(first["input_ref"], project=self.project)
+        path = "@plan/inputs/" + blob.name
         self.assertEqual(self.item("P1.1")["artifacts"], [{"path": path, "role": "input"}])
+        self.assertEqual((self.project / "plans" / self.plan / "inputs" / blob.name).read_bytes(), blob.read_bytes())
         again = self.brief()
         self.assertTrue(again["reused"])
         self.assertEqual({k: again[k] for k in ("input_ref", "digest", "artifact_id")},
                          {k: first[k] for k in ("input_ref", "digest", "artifact_id")})
         self.assertEqual(len(self.item("P1.1")["artifacts"]), 1)
+
+    def test_brief_reuse_reads_the_plan_copy_when_the_local_blob_is_gone(self):
+        self.claim()
+        first = self.brief()
+        blobs.blob_path(first["input_ref"], project=self.project).unlink()
+        again = self.brief()
+        self.assertEqual(again["input_ref"], first["input_ref"])
+        self.assertEqual(again["digest"], first["digest"])
+        self.assertTrue(self.brief()["reused"])
+        self.assertEqual(len(self.item("P1.1")["artifacts"]), 1)
+
+    def test_legacy_repository_blob_declarations_remain_reusable(self):
+        self.claim()
+        first = self.brief()
+        old_path = blobs.blob_path(first["input_ref"], project=self.project).relative_to(self.project).as_posix()
+        run(self.project, "set", self.plan, "P1.1", "--json",
+            json.dumps({"artifacts": [{"role": "input", "path": old_path}]}))
+        again = self.brief()
+        self.assertEqual((again["input_ref"], again["reused"]), (first["input_ref"], True))
+        self.assertEqual(len(self.item("P1.1")["artifacts"]), 2)
+
+    def test_corrupt_plan_copy_is_not_reused(self):
+        self.claim()
+        first = self.brief()
+        root = self.project / "plans" / self.plan
+        path = root / self.item("P1.1")["artifacts"][0]["path"].removeprefix("@plan/")
+        doc = json.loads(path.read_bytes())
+        doc["goal"] = "corrupted"
+        path.write_text(json.dumps(doc))
+        store = partners.planner_engine("plan.store")
+        self.assertIsNone(worksource._previous_brief(store.load_plan(root), "P1.1", None, self.project, blobs))
+        self.assertTrue(blobs.blob_path(first["input_ref"], project=self.project).is_file())
+
+    def test_runtime_copy_refuses_an_inputs_folder_that_is_a_symlink(self):
+        root = self.project / "plans" / self.plan
+        outside = Path(self.tmp.name) / "outside"
+        outside.mkdir()
+        (root / "inputs").symlink_to(outside, target_is_directory=True)
+        source = self.project / "source.json"
+        source.write_text("{}")
+        store = partners.planner_engine("plan.store")
+        with self.assertRaises(worksource.Blocked) as stop:
+            worksource._declared_path(store.load_plan(root), source, self.project, runtime_input=True)
+        self.assertEqual(stop.exception.code, "ARTIFACT_REFUSED")
+        self.assertEqual(list(outside.iterdir()), [])
 
     def test_brief_names_the_artifact_folder_of_the_item(self):
         self.claim()
@@ -849,8 +904,8 @@ class ResearchTests(Case):
         self.claim()
         answer = self.research()
         self.assertEqual(answer["outcome"], "recorded")
-        path = self.project / answer["path"]
-        self.assertEqual(answer["path"], f"plans/{self.plan}/research/P1.1-1.json")
+        path = self.project / "plans" / self.plan / answer["path"].removeprefix("@plan/")
+        self.assertEqual(answer["path"], "@plan/inputs/research/P1.1-1.json")
         self.assertEqual(json.loads(path.read_text(encoding="utf-8")), self.RESULT)
         self.assertEqual(len(self.declared()), 1)
 
@@ -861,7 +916,8 @@ class ResearchTests(Case):
         self.assertEqual(len(self.declared()), 1)
         again = self.research(result={**self.RESULT, "unknowns": ["new"]})
         self.assertEqual(again["outcome"], "recorded")
-        self.assertEqual(json.loads((self.project / again["path"]).read_text())["unknowns"], ["new"])
+        path = self.project / "plans" / self.plan / again["path"].removeprefix("@plan/")
+        self.assertEqual(json.loads(path.read_text())["unknowns"], ["new"])
 
     def test_a_number_below_one_or_a_ref_that_is_no_file_name_is_refused(self):
         self.claim()
@@ -873,6 +929,113 @@ class ResearchTests(Case):
         self.assertEqual(answer["outcome"], "refused")
         self.assertTrue(answer["reason_code"])
         self.assertFalse((self.project / "plans" / self.plan / "research" / "P9.9-1.json").exists())
+
+
+class ReadyRuntimeTests(Case):
+    """A required certificate survives actual bridge operations in both supported plan layouts."""
+
+    def setUp(self):
+        super().setUp()
+        self.plan_root = self.project / "plans" / self.plan
+        self.readiness, self.store, self.lifecycle, self.ops = partners.planner_engine(
+            "plan.readiness", "plan.store", "plan.lifecycle", "plan.ops")
+
+    def workspace(self):
+        base = Path(self.tmp.name)
+        home, workspace = base / "home", base / "workspaces" / "runtime"
+        marker = self.project / ".swissknifeman" / "project.json"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1",
+                                      "workspace": "runtime", "project_id": "runtime-test", "plans_store": "workspace"}))
+        bindings = home / "state/workspaces/runtime/bindings.json"
+        bindings.parent.mkdir(parents=True)
+        bindings.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:workspace-bindings:v1", "projects": {
+            "runtime-test": {"paths": [str(self.project)], "primary": str(self.project),
+                             "bound_at": "2026-10-24T00:00:00Z"}}}))
+        patcher = mock.patch.dict(os.environ, {"HOME": str(home), "SKM_HOME": str(home),
+                                               "SKM_WORKSPACES_ROOT": str(workspace.parent),
+                                               "SKM_AICORE_EVENTS__DELIVERY": "off"})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        target = workspace / "projects/runtime-test/plans" / self.plan
+        target.parent.mkdir(parents=True)
+        shutil.move(str(self.plan_root), str(target))
+        self.plan_root = target
+
+    def assert_ready(self, digest):
+        p = self.store.load_plan(self.plan_root)
+        self.assertEqual(self.readiness.semantic_digest(p, "P1"), digest)
+        self.assertEqual(self.readiness.status(p, "P1")["phases"][0]["status"], "ready")
+        self.readiness.require(p, "P1")
+        self.assertEqual(self.lifecycle.next(p).kind, "run-items")
+
+    def runtime_cycle(self):
+        run(self.project, "set", self.plan, "plan", "--json",
+            '{"settings":{"design_audit":"required","evidence":"required"}}')
+        self.ops.add_document(self.plan_root, {"id": "audit-p1-runtime", "title": "Runtime audit", "sections": []})
+        self.readiness.record(self.plan_root, "P1", verdict="ready", audit="knowledge/audit-p1-runtime", actor=ACTOR)
+        digest = self.readiness.semantic_digest(self.store.load_plan(self.plan_root), "P1")
+        self.assertEqual(self.claim(items=["P1.1"])["status"], "claimed")
+        self.assert_ready(digest)
+
+        first = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
+        again = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
+        self.assertEqual((again["input_ref"], again["reused"]), (first["input_ref"], True))
+        self.assert_ready(digest)
+
+        research = {"op": "research", "plan": self.plan, "ref": "P1.1", "run_id": "run-a", "number": 1,
+                    "result": ResearchTests.RESULT, "actor": ACTOR}
+        saved = self.op(worksource.op_research, **research)
+        self.assertEqual(saved["outcome"], "recorded")
+        self.assertEqual(saved["path"], "@plan/inputs/research/P1.1-1.json")
+        self.assertEqual(self.op(worksource.op_research, **research)["outcome"], "no-op")
+        changed_research = {**research, "result": {**ResearchTests.RESULT, "unknowns": ["new finding"]}}
+        self.assertEqual(self.op(worksource.op_research, **changed_research)["outcome"], "recorded")
+        self.assert_ready(digest)
+        self.assertTrue(all(a["role"] == "input" and a["path"].startswith("@plan/inputs/")
+                            for a in self.item("P1.1")["artifacts"]))
+        refreshed = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
+        if not self.plan_root.is_relative_to(self.project):
+            self.assertNotEqual(refreshed["input_ref"], first["input_ref"])  # research remains visible in the embedded pack
+        repeated = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
+        self.assertEqual((repeated["input_ref"], repeated["reused"]), (refreshed["input_ref"], True))
+        self.assert_ready(digest)
+        self.assertEqual(self.claim(items=["P1.1"])["status"], "claimed")  # resume after briefing/research
+        self.assert_ready(digest)
+
+        evidence = {"V1": self.evidence()}
+        registered = self.register(evidence=evidence)
+        self.assertEqual(registered["outcome"], "recorded", registered)
+        item = self.item("P1.1")
+        (proof,) = item["result"]["checks"]
+        self.assertEqual((proof["id"], proof["exit"]), ("V1", 0))
+        path = proof["evidence"]
+        kept = self.plan_root / path.removeprefix("@plan/") if path.startswith("@plan/") else self.project / path
+        self.assertEqual(json.loads(kept.read_bytes())["exit"], 0)
+        self.assertFalse(any(a["role"] == "output" for a in item["artifacts"]))
+        self.assert_ready(digest)
+        self.assertEqual(self.register(evidence=evidence)["outcome"], "no-op")
+        self.assert_ready(digest)
+
+        second = self.claim(run_id="run-b")
+        self.assertEqual((second["status"], second["ref"]), ("claimed", "P1.2"), second)
+        self.assertEqual(self.claim(run_id="run-b", items=["P1.2"])["status"], "claimed")
+        self.assert_ready(digest)
+
+        # Authored artifact declarations are still semantic, including inputs outside the reserved runtime folder.
+        self.ops.add_artifact(self.plan_root, "P1.2", "authored-input.json", "input")
+        row = self.readiness.status(self.store.load_plan(self.plan_root), "P1")["phases"][0]
+        self.assertEqual((row["status"], row["changed"]), ("stale", ["digest"]))
+        refused = self.claim(run_id="run-b", items=["P1.2"])
+        self.assertEqual((refused["status"], refused["reason_code"]), ("blocked", "CLAIM_BLOCKED"))
+        self.assertIn("READINESS_STALE", refused["message"])
+
+    def test_required_repository_phase_survives_runtime_cycle(self):
+        self.runtime_cycle()
+
+    def test_required_workspace_phase_survives_runtime_cycle(self):
+        self.workspace()
+        self.runtime_cycle()
 
 
 class ProtocolTests(Case):

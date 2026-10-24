@@ -245,6 +245,17 @@ class TestRules(unittest.TestCase):
         new = {"oneOf": [obj({"id": STR, "origin": STR}, ["id"]), old["oneOf"][1]]}
         self.assertEqual([("/oneOf/0", "oneof-changed")], [(c.path, c.rule) for c in changes(old, new)])
 
+    def test_required_fields_prove_disjointness_from_bounded_empty_object(self):
+        phase = obj({"id": STR}, ["id"])
+        old = {"oneOf": [phase, {"type": "object", "maxProperties": 0}]}
+        new = {"oneOf": [obj({"id": STR, "readiness": STR}, ["id"]), old["oneOf"][1]]}
+        self.assertEqual(["property-added"], rules(old, new))
+        # At the boundary the formerly unique {id, readiness} may now match both branches.
+        for limit in (1, 2):
+            before = {"oneOf": [phase, {"type": "object", "maxProperties": limit}]}
+            after = {"oneOf": [new["oneOf"][0], before["oneOf"][1]]}
+            self.assertEqual(["oneof-changed"], rules(before, after))
+
     def test_oneof_discriminator_and_types_prove_branches_apart(self):
         kind = {"kind": {"const": "a"}, "x": STR}
         old = {"oneOf": [{"type": "object", "properties": kind, "required": ["kind"]},

@@ -46,6 +46,10 @@ if PYTHONPATH="$AICORE_LIB" python3 -c "import aicore.util.par_unittest" 2>/dev/
 hermetic PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
   "${UT[@]}" discover -s tests -p "$PATTERN" >"$TEST_HOME/tests.log" 2>&1 && status=0 || status=$?
 echo "== tests"
-tail -n 40 "$TEST_HOME/tests.log"
+if [[ "$status" = 0 ]]; then
+  tail -n 40 "$TEST_HOME/tests.log"
+else
+  cat "$TEST_HOME/tests.log"
+fi
 [[ "$status" = 0 ]] || echo "FAIL: planner unittest" >&2
 exit "$status"

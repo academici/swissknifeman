@@ -255,6 +255,11 @@ def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa:
             return Next("waiting", unmet[0], phase=phase_id)
         if phase.get("design") != "detailed":
             return Next("design-phase", phase=phase_id, command=f"{COMMAND_NAMESPACE}:plan-design {plan_id} {phase_id}")
+        from . import readiness
+        readiness_row = readiness.gate(plan, phase_id)
+        if readiness_row:
+            return Next("audit-phase", readiness_row["status"], phase=phase_id,
+                        command=f"{COMMAND_NAMESPACE}:plan-audit {plan_id} {phase_id}")
         for batch in batches_of(plan, phase_id):
             members = batch_members(plan, phase_id, batch)
             if all(status_of(plan, i) in TERMINAL for i in members):
@@ -800,6 +805,8 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         if errors:
             shown = "; ".join(f"{i.where}: {i.message}" for i in errors[:3])
             raise PlanError("PLAN_INVALID", f"{len(errors)} error(s) block {phase_id}: {shown}", errors)
+        from . import readiness
+        readiness.require(p, phase_id)
         for item_id in requested:
             if status_of(p, item_id) not in ("todo", "in_progress"):
                 raise PlanError("ITEM_NOT_STARTABLE", f"{item_id} is {status_of(p, item_id)}; use reopen to redo it")

@@ -202,8 +202,7 @@ class WorkspaceCommitBridge(unittest.TestCase):
         self.assertEqual(self.kept(local), kept)  # a repeated register is a no-op
         target = self.plan / "artifacts/P2.1/orch-run-1/evidence/V1.json"
         self.assertEqual(target.read_bytes(), (self.src / local).read_bytes())
-        self.assertEqual([entry for entry in self.artifacts_of() if entry["path"] == kept["V1"]],
-                         [{"path": kept["V1"], "role": "output"}])
+        self.assertEqual([entry for entry in self.artifacts_of() if entry["path"] == kept["V1"]], [])
 
     def test_a_run_that_does_not_own_the_item_changes_nothing_of_the_plan(self):
         local = self.local_evidence(owner="another-session")

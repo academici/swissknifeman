@@ -29,7 +29,7 @@ repository-relative or `@plan/…`; `..` is rejected. Stable identities may cont
 | --- | --- |
 | plan | identity, goal, context, rules, non_goals, phase order, settings, contracts, sections, orchestration |
 | brief | owner quotes or explicitly marked source records, requirements, constraints, environment, sections |
-| phase | design, goal, scope, contracts, dependencies, pitfalls, validation, ordered batches, closure, sections |
+| phase | readiness (lifecycle-owned), design, goal, scope, contracts, dependencies, pitfalls, validation, ordered batches, closure, sections |
 | item | status, summary, why, scope, reads, files, rules, guidance, checks, outputs, route, review, authority, units, result |
 | unit | kind, goal, files, reads, checks, instructions, dependencies, parent, route, mode, outputs, command, status, outcome |
 | decision | status, question/options or decision/rationale, applicability, evidence, supersession, sections |
@@ -359,3 +359,42 @@ on the same plan. The events of one command form a chain through `causationid`. 
 Emission is best-effort: a failing journal never changes the result or exit code of a command and gives one
 `PLANNER_EVENT_NOT_EMITTED` warning on stderr per process. Notes, deviation texts and rationales never travel in an
 event. The module `brain` subscribes to `planner.plan.closed` and writes a note into the vault.
+
+## Phase readiness material
+
+`phase.readiness` is optional and written only by `readiness record` under the plan lock,
+with a `readiness_recorded` event. It contains status (`ready`, `ready_with_advisories`,
+`not_ready`), semantic/policy digests, validator_version, checked_at, structural error/warning
+counts (including external counts), audit ref/verdict, findings, observed actor and independent
+(actor provider differs from authoring provider, informational). Findings carry id, severity
+(blocker/major/minor), blocking, ref and text. Ready verdicts refuse structural/external errors
+or blocking/Major+ findings. The audit document must exist. `set`, `push`, `apply` refuse
+readiness edits with the existing FIELD_OWNED code.
+
+Both digests use `sha256:` plus SHA-256 of UTF-8 canonical JSON (`sort_keys=True`,
+`separators=(",", ":")`, `ensure_ascii=False`). Record and status share one implementation.
+
+| Material | Included | Excluded |
+| --- | --- | --- |
+| plan | Authoring fields of plan.json | OWNED_FIELDS[plan], pause, phase order, readiness, settings |
+| brief | brief.json | $schema |
+| phase | Authoring fields of target phase | OWNED_FIELDS[phase], readiness |
+| items | Items in phase.items order | OWNED_FIELDS[item]; role=input artifacts under @plan/inputs/; rag.status, rag.captures |
+| units | Units belonging to those items | OWNED_FIELDS[unit] |
+| decisions | global, applies_to phase/items, or item.decisions | $schema |
+| documents | global, applies_to phase/items, or item reads knowledge refs/paths (whole document) | audit-* and readiness-* ids |
+| policy | plan.settings and planner_version | Separate from semantic material |
+
+Empty artifact lists after runtime-input filtering have the same meaning as absent lists.
+Execution status/results, log, views, context packs and reconciliation do not invalidate a
+certificate. `check` warns readiness_stale when digest or policy changes under required audit.
+Its execution economy heuristics warn on rules/guidance plus whole-read-file bytes above
+`check.heavy_text_kb`, conflicting test restrictions, per-step commits and empty write sets;
+existing write_set_no_tests covers code changes without test carriers. These are warnings;
+the audit judges measured impact and whether one or two executor rounds suffice.
+
+Execution bridges put generated brief and research inputs under `@plan/inputs/` in both
+repository and workspace layouts. Brief blobs have a verified copy there for reuse. Registration
+keeps execution evidence in `item.result.checks[].evidence`; it does not add semantic output
+artifacts. Claims, briefing, research and result registration preserve a ready certificate, while
+edits to authored artifact declarations still make it stale.

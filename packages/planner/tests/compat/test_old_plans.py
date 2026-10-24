@@ -80,8 +80,15 @@ class Engine0283Tests(OldPlanCase):
 
     def test_next_returns_a_step(self):
         step = lifecycle.next(self.load())
-        self.assertEqual(step.kind, "run-items")
-        self.assertEqual(step.items, ("P2.1",))
+        # The frozen fixture opted into required design audit before the gate was implemented.
+        self.assertEqual(step.kind, "audit-phase")
+        self.assertEqual((step.phase, step.reason), ("P2", "missing"))
+
+    def test_none_preserves_the_historical_next_step(self):
+        plan = self.load()
+        plan.plan["settings"]["design_audit"] = "none"
+        step = lifecycle.next(plan)
+        self.assertEqual((step.kind, step.items), ("run-items", ("P2.1",)))
 
     def test_context_of_every_item_carries_the_orchestration_scenario(self):
         plan = self.load()

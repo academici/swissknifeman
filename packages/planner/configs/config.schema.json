@@ -76,7 +76,7 @@
       "properties": {
         "design_audit": {
           "type": "string",
-          "description": "settings.design_audit of a new plan.",
+          "description": "settings.design_audit of a new plan; required gates execution on a current phase readiness certificate.",
           "default": "none",
           "enum": [
             "none",

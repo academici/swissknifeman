@@ -156,6 +156,8 @@ def check(plan: store.Plan) -> list[Issue]:
     ctx.log()
     ctx.advisories()
     ctx.context_scope()
+    ctx.readiness()
+    ctx.execution_economy()
     return issues
 
 
@@ -837,6 +839,64 @@ class _Context:
                 self.warn("context_legacy", f"{where}/{field}/{index}",
                           "legacy projection enters every context pack; move what is still current to knowledge, "
                           "drop the rest")
+
+    def readiness(self) -> None:
+        from . import readiness
+        policy = self.p.plan.get("settings")
+        if not isinstance(policy, dict) or policy.get("design_audit") != "required":
+            return
+        for key, phase in self.p.phases.items():
+            if phase.get("design") != "detailed" or not phase.get("readiness"):
+                continue
+            try:
+                row = readiness.status(self.p, key)["phases"][0]
+            except (ValueError, TypeError, KeyError, AttributeError, store.PlanError):
+                continue  # schema and structural passes own malformed documents
+            if row["status"] == "stale":
+                self.warn("readiness_stale", self.file_of("phase", key),
+                          f"readiness certificate changed: {', '.join(row['changed'])}; run plan-audit")
+
+    def execution_economy(self) -> None:
+        """Cheap warning heuristics, not a second semantic audit or an execution gate."""
+        p = self.p
+        threshold = settings.for_plan(p).get("check.heavy_text_kb") * 1024
+        for key, item in p.items.items():
+            if item.get("status") in TERMINAL or p.phases.get(key.split(".")[0], {}).get("design") != "detailed":
+                continue
+            texts = [p.plan.get("rules", []), p.phases[key.split(".")[0]].get("pitfalls", []),
+                     item.get("rules", []), item.get("guidance", "")]
+            prompt = json.dumps(texts, ensure_ascii=False)
+            size = len(prompt.encode("utf-8"))
+            for read in item.get("reads", []) if isinstance(item.get("reads"), list) else []:
+                if not isinstance(read, dict):
+                    continue
+                try:
+                    normalized = _context.normalize_read(p, read)
+                    path = normalized.get("path", "")
+                    if not isinstance(path, str):
+                        continue  # the schema pass reports malformed paths
+                    base = p.root if path.startswith("@plan/") else p.source_root
+                    if base is not None and path:
+                        target = (base / path.removeprefix("@plan/")).resolve()
+                        if target.is_relative_to(base.resolve()) and target.is_file():
+                            size += target.stat().st_size  # whole file, even when the read selects a section
+                except (OSError, ValueError, TypeError, KeyError):
+                    continue
+            where = self.file_of("item", key)
+            if size > threshold:
+                self.warn("execution_prompt_heavy", where,
+                          f"rules, guidance and whole-file reads weigh {size} bytes (warning threshold {threshold}); "
+                          "audit whether this item fits one or two executor rounds")
+            if re.search(r"only (?:the )?(?:targeted|narrow) tests|только (?:целевые|узкие) тесты", prompt, re.I):
+                self.warn("execution_rules_conflict", where,
+                          "instructions restrict tests; preserve the single required self-check line")
+            if re.search(r"commit (?:after|each|every|per)|коммит.{0,20}(?:шаг|пункт)", prompt, re.I):
+                self.warn("execution_commit_instruction", where,
+                          "per-step commit instruction conflicts with coordinator-owned commits")
+            hints = item.get("task_files", [])
+            if not hints:
+                self.warn("execution_write_set_empty", f"{where}/task_files",
+                          "empty write set; audit whether this is intentionally read-only and tests have an owner")
 
     def exists(self, path: str) -> bool:
         base = self.p.root if path.startswith("@plan/") else self.p.source_root

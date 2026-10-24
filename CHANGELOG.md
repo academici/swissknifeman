@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Planner-orch: generated brief/research inputs use `@plan/inputs/` in both plan layouts, and execution evidence stays in lifecycle-owned check results, preserving phase readiness across conductor items and resumes.
+
+- Planner: phase readiness certificates bind semantic inputs and policy; `readiness record|status`, required design-audit gates and execution-economy audit checks. Planner-orch provides read-only `planner:check` preflight for incomplete briefs and unknown scenarios. Schema compatibility recognises required objects as disjoint from bounded empty-object branches.
+
 - orch, gui-orch: detached run/resume with nonce-bound startup acknowledgement and private logs; GUI launches survive restart and show conductor health, silence, beacon and launcher. Added printable/verifiable systemd user supervisor units, conductor lifecycle events and warning events for stage/check/disk/stall beacons.
 - orch: detached resume reports invalid retries and limit overrides before acknowledging startup; roles and checks do not inherit the conductor's internal detach authority or launcher environment.
 

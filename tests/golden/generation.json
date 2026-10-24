@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "b5a9aac57329",
-  "reason": "P8.3: schemas",
+  "captured_from": "69f7430e9372",
+  "reason": "P8.4: readiness CLI and audit command",
   "generators": [
     {
       "id": "skiller-registry",
@@ -262,15 +262,15 @@
     "packages/orch/lib/orch/_types/exec.py": "e57ca5117882291c217edba3f17b63f499e2ebdf9f5f8e848d9d163c3f0e36bf",
     "packages/orch/lib/orch/_types/records.py": "c271fa3831979d0a8c0d38635220aefe71c7935600989ad11bc508f90799f187",
     "packages/orch/lib/orch/_types/work_source.py": "89927058c10e1bbcfb620720c7d2e2639762dfea2d0d5b4801ae832dd5f0f7f9",
-    "packages/planner/docs/reference/provider-commands.md": "dbcd7600dea8608f3944e6128dd1db1f725b8d3af3891610be73e650208e9f5a",
+    "packages/planner/docs/reference/provider-commands.md": "ff29dea94c6ad4d4988f6ae5a0538606f7b92ab0d3b27e9dfbe03bb56e270688",
     "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
-    "packages/planner/lib/planner/plan/_types.py": "155291619c424adc18994ca891dabf4ae48e40c1d22cb3cf7a9f68677853b2fc",
+    "packages/planner/lib/planner/plan/_types.py": "b59de7bd898cc164c27edf58894c7256159420249df7d039ec3e4e150be83d6c",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "1ea50aa97adbde27580b0c04913c0ed7afd0dba929a8188d3939abba3cac3b6d",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/dev.md": "00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/fix.md": "6e7574d4d67fa5861ca5051f9a97e21c3972d89aac82bd757a7c85cb429dbd5a",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/make-workflow.md": "9086b1ae53826a71b9e422a7fcf71025dc5c932cb7364a5f48ac84ee75dd90dd",
-    "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-audit.md": "4c208ed87d16686c3965ffcbb33f942fc99eaf295cea0f13619c9443c75a21ec",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-audit.md": "00787d0d0207672b8669544ece39360c45d2ea73b87b1e6bd601c6d6682a440b",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-close.md": "71622dd35042f16da2401737a4aaddb5fea75687b7ea9a560f2162394f406925",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-design.md": "c92359c561b8de889c1eb35ff66f12b5545678c012b16acd45a5dc2497c03f9c",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-run.md": "ebd5d162f28d8bd7041a2b3951d8eac0a0b4cbbf70166e3953fdf170a27ea00e",

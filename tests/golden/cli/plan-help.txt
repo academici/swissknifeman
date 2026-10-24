@@ -54,6 +54,7 @@ positional arguments:
     check               check a plan; exit 1 on errors
     render              regenerate the Markdown views
     next                semantic next step
+    readiness           record or inspect phase readiness certificates
     commit              create one scoped Git commit for an item or unit
                         operation
     start               start (or resume) items of one detailed phase

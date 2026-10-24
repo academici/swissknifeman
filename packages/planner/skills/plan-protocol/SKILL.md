@@ -138,6 +138,8 @@ not executed by the conductor, so it is no reason for `none`/`self`. New items d
 owner-requested review. `--review` or an
 explicit owner request adds one read-only review item at the end of the scope. `planner:plan-audit`
 runs only on explicit owner invocation and writes a verdict file plus a `note` event.
+When `settings.design_audit: required`, `next` returns `audit-phase` and execution requires a current
+phase certificate from `plan-audit` (`plan.py readiness record|status`); `phase.readiness` is lifecycle-owned.
 
 ## References
 

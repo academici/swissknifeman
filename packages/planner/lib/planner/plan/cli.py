@@ -15,7 +15,7 @@ import sys
 
 from .. import integration
 from . import (bridges, budget, catalog, check, context, gitops, lifecycle, ops, parallel, query, schema, settings, snapshot,
-               stats, store, units, views)
+               readiness, stats, store, units, views)
 from .model import EFFORT_ORDER, PHASE_ID, PlanError
 
 
@@ -297,9 +297,9 @@ def cmd_batches(args) -> int:
 
 
 def _external_issues(plan, args) -> list:
-    """The findings of the plugins at ``planner:check``; only the ``check`` verb asks, never a mutation."""
+    """External checks for check or the fresh snapshot locked by readiness record."""
     document = plan.plan if isinstance(plan.plan, dict) else {}
-    if args.no_external or not integration.available() or not isinstance(document.get("id"), str):
+    if getattr(args, "no_external", False) or not integration.available() or not isinstance(document.get("id"), str):
         return []
     config = settings.for_plan(plan)
     if not config.get("checks.external"):
@@ -310,6 +310,26 @@ def _external_issues(plan, args) -> list:
                                      plan_dir=plan.root, plans_root=plan.root.parent, project_root=project)
     failure = "error" if config.get("checks.external_failure") == "error" else "warning"
     return [check.Issue(*finding) for finding in plugins.run_checks(plan_input, project=project, failure=failure)]
+
+
+def cmd_readiness(args) -> int:
+    if args.action == "status":
+        result = readiness.status(store.load_plan(_plan_dir(args)), args.phase)
+        if args.json:
+            return _read_result(result, "read-readiness")
+        for row in result["phases"]:
+            print(f"{row['id']}: {row['status']}" + (f" ({', '.join(row['changed'])})" if row["changed"] else ""))
+    else:
+        findings = []
+        for value in args.finding:
+            try:
+                findings.append(json.loads(value))
+            except ValueError as exc:
+                raise UsageError(f"--finding must be a JSON object: {exc}") from None
+        readiness.record(_plan_dir(args), args.phase, verdict=args.verdict, audit=args.audit, actor=args.actor,
+                         findings=findings, external=lambda p: _external_issues(p, args))
+        print(f"{args.phase}: {args.verdict}")
+    return 0
 
 
 def cmd_check(args) -> int:
@@ -839,6 +859,22 @@ def build_parser() -> argparse.ArgumentParser:
     p = verb("next", cmd_next, "semantic next step")
     p.add_argument("--json", action="store_true")
     p.add_argument("--parallel", type=int, metavar="N", help="list up to N lanes that can run side by side across the plan")
+
+    p = verb("readiness", cmd_readiness, "record or inspect phase readiness certificates", plan=False)
+    readiness_sub = p.add_subparsers(dest="action", required=True)
+    for action in ("record", "status"):
+        child = readiness_sub.add_parser(action, description=f"{action} phase readiness")
+        child.add_argument("--plans-root", type=Path, default=argparse.SUPPRESS,
+                           help="plans directory (may also precede the readiness subcommand)")
+        child.add_argument("plan", help="plan id, PLAN<N> or path")
+        child.add_argument("phase", nargs=None if action == "record" else "?", help="phase id Pn")
+        if action == "record":
+            child.add_argument("--verdict", choices=readiness.VERDICTS, required=True)
+            child.add_argument("--audit", required=True, help="existing knowledge/<id> audit document")
+            child.add_argument("--actor", required=True, type=_actor, help="observed PROVIDER/MODEL[/EFFORT]")
+            child.add_argument("--finding", action="append", default=[], help="JSON {id,severity,blocking,ref,text}")
+        else:
+            child.add_argument("--json", action="store_true", help="validated machine-readable readiness status")
 
     def actor_arg(p, required=False, text="PROVIDER/MODEL[/EFFORT] (default: the item executor, else plan authoring)"):
         p.add_argument("--actor", type=_actor, required=required, help=text)

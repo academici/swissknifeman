@@ -301,6 +301,11 @@ def _disjoint(registry: Registry, first: Optional[Tuple[dict, str]], second: Opt
     for this, other in ((a, b), (b, a)):
         if _types(this) == {"object"} and any(_forbids(other, name) for name in this.get("required", ())):
             return True
+        # A required phase document cannot overlap the context pack's maxProperties: 0 sentinel.
+        # Count distinct names: duplicate required entries must not manufacture a proof of disjointness.
+        if (_types(this) == {"object"} and isinstance(other.get("maxProperties"), int)
+                and len(set(this.get("required", ()))) > other["maxProperties"]):
+            return True
     if _types(a) != {"object"} or _types(b) != {"object"}:
         return False
     for name in set(a.get("required", ())) & set(b.get("required", ())):

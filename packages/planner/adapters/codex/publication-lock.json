@@ -4,7 +4,7 @@
       "artifact_id": "planner.codex.plugin",
       "path": "packages/planner/.codex-plugin/plugin.json",
       "rendered_hash": "sha256:ff6f4106b193556acb2672cf774c95047de1db19b0e6f38969bceab8f52d7676",
-      "source_hash": "sha256:9a864bdea232d50d64b8af565713c07e0098f0636b713f5c33630a535317d550"
+      "source_hash": "sha256:f90f29d0318a924df0b87ed40a796689583933ce94b08db87eb094dda7b791c5"
     },
     {
       "artifact_id": "planner.codex.design.skill",
@@ -81,20 +81,20 @@
     {
       "artifact_id": "planner.codex.plan.audit.skill",
       "path": "packages/planner/adapters/codex/skills/planner-plan-audit/SKILL.md",
-      "rendered_hash": "sha256:26936c858a45b7d67a7ab2fa7b569ba3219762acccf5c1f660bf1a6e8156e1b5",
-      "source_hash": "sha256:d6f68d20eae99b5e1df17ee64716d1d16314fcbc9ce199df9f5d4574fbfbf5d2"
+      "rendered_hash": "sha256:cb789507828eaa07a4663bbb6abe60aabb3c6c4aa397813932b2d6fcc2b03792",
+      "source_hash": "sha256:04f645743c87f7ab03de6791648e2f666bd01f58785cbda58cf2ae337e20ccf5"
     },
     {
       "artifact_id": "planner.codex.plan.audit.invocation-policy",
       "path": "packages/planner/adapters/codex/skills/planner-plan-audit/agents/openai.yaml",
       "rendered_hash": "sha256:a1499d95abd8447558c535fe5554adcc3c9b988a0a39264a6283d430effe1e94",
-      "source_hash": "sha256:5bb6bb3f9514431aedd9b4c9e3421f19873df3a14a95144ae54de37f98fb1161"
+      "source_hash": "sha256:4fc25529a171a9e8ddc5c1bec90678d90b2c7d31409446bfb146e9642f3eab40"
     },
     {
       "artifact_id": "planner.codex.plan.audit.runtime",
       "path": "packages/planner/adapters/codex/skills/planner-plan-audit/command.md",
-      "rendered_hash": "sha256:b70e9f9e9f81b433cad2a1eccaab9538a741b3ec1e09d692cc642cb0bfc760d6",
-      "source_hash": "sha256:b559b4a8adec7a693892ed2e4cb7d3dc4a039d7d831c66e59525d02c3906cd10"
+      "rendered_hash": "sha256:1deba5c4bf4695e1bf85fcecdc5fe75b652784cf5e7664e45a71356180bc2820",
+      "source_hash": "sha256:7d8052063882d6eee1a0c655f5c0c80d825b2a5ee2aeb379a9aa2360f366019c"
     },
     {
       "artifact_id": "planner.codex.plan.close.skill",

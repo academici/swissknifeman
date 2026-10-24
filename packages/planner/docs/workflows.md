@@ -53,6 +53,27 @@ An unknown pool model normally starts with the recorded verdict `ROUTE_MODEL_UNK
 refuses it; the work-source bridge supplies this flag for conductor claims and retry registration. Set
 [`routing.unknown_model = "refuse"`](./configuration) to apply the same refusal to interactive admission.
 
+## Phase readiness
+
+With `settings.design_audit: required`, `next` returns `audit-phase` and the command
+`planner:plan-audit <plan> <Pn>` until the first pending detailed phase is certified ready.
+`next --parallel` also excludes run lanes of uncertified phases. The owner invokes the audit;
+the planner launches no model. Before execution the audit checks executability and execution
+economy (prompt size, generated/test carriers, proportional checks and instruction consistency).
+Major+ findings yield `not_ready`; minor advisories may yield `ready_with_advisories`.
+
+`plan.py readiness status <plan> [<Pn>] --json` reports missing, ready, ready_with_advisories,
+not_ready or stale. The auditor adds a knowledge document and records the observed route:
+
+```sh
+plan.py readiness record <plan> <Pn> --verdict ready --audit knowledge/audit-p1-date --actor provider/model/effort
+```
+
+`start` checks PHASE_NOT_DETAILED, then the existing PLAN_INVALID check gate, then readiness:
+READINESS_REQUIRED for a missing certificate, READINESS_STALE for changed digest/policy, or
+READINESS_NOT_READY for a failed audit. Bridge claims return CLAIM_BLOCKED with the readiness
+code in the message. `design_audit: none` preserves execution behavior.
+
 ## Scoped commits per operation
 
 Every operation of an item ends with its own scoped commit: the executor after `finish`

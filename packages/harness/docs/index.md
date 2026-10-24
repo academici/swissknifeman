@@ -56,9 +56,11 @@ harness hooks sync|show [--target P] [--json]     # render / inspect .swissknife
 ```
 
 - The mode flags (`--auto-approve`, `--memory`, `--router`, `--run-report`, `--pack-guard`, `--plan-guard`, ...) set a key of
-  `[harness.hooks.<hook>]` in `.swissknifeman/config.toml` and regenerate the committed `.swissknifeman/hooks.env`; no
+  `[harness.hooks.<hook>]` in the project configuration and regenerate the committed `.swissknifeman/hooks.env`; no
   `*.env.ini` is written any more ([hook modes](./reference/hook-intent-files)). `harness hooks sync` regenerates the carrier
   from the configuration, `harness hooks show` prints configuration, carrier and legacy files (`hooks-state/v1`).
+  For a project bound to a workspace, the configuration is `projects/<code>/local/config.toml` inside that workspace.
+  Carrier generation reads that project layer and excludes machine defaults.
 - `--auto-approve` also registers the PreToolUse-hook (Bash/ExitPlanMode), merge-only.
 - `--memory BRAIN:MODE` attaches the project to the brain: `.swissknife.json:memory_brain`
   + `[harness.hooks.memory]` (`MEMORY_MODE` in `.swissknifeman/hooks.env`).

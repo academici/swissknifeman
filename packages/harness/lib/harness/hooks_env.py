@@ -124,9 +124,10 @@ def project_settings(project, *, warn=None):
     """`settings` of the project: the harness section of its project file (set keys only).
 
     The machine layer is left out on purpose: the carrier is committed, so a user's machine
-    defaults must not be copied into it. The machine location points at a file that never exists."""
+    defaults must not be copied into it. An empty machine layer preserves workspace lookup
+    through the real home directory while excluding machine settings."""
     resolved = resolve("harness", schema=SCHEMA_FILE, project=project, env={},
-                       home=Path(project) / ".swissknifeman" / ".no-machine-layer",
+                       layer_texts={"machine": ""},
                        warn=warn or (lambda _m: None))
     tree = resolved.as_dict()
     settings = {}

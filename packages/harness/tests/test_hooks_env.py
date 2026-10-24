@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
@@ -188,6 +189,29 @@ class WritersCase(Base):
 
 
 class ShowSyncCase(Base):
+    def test_workspace_hook_settings_are_rendered_without_machine_defaults(self):
+        home = self.tmp / "home"
+        local = (home / ".local/share/swissknifeman/workspaces/axioma/projects/tenant/local")
+        local.mkdir(parents=True)
+        local.joinpath("config.toml").write_text(
+            'schema_version = 1\n[harness.hooks.memory]\nmode = "manual"\n', encoding="utf-8")
+        machine = home / ".local/share/swissknifeman/config/config.toml"
+        machine.parent.mkdir(parents=True)
+        machine.write_text('schema_version = 1\n[harness.hooks.auto_approve]\nmode = "bypass"\n',
+                           encoding="utf-8")
+        self.config.parent.mkdir(parents=True)
+        self.config.write_text('schema_version = 1\n[harness.hooks.memory]\nmode = "off"\n',
+                               encoding="utf-8")
+        self.config.with_name("project.json").write_text(json.dumps({
+            "workspace": "axioma", "project_id": "tenant", "plans_store": "workspace"}),
+            encoding="utf-8")
+        with patch("pathlib.Path.home", return_value=home):
+            run("sync", "--target", str(self.proj))
+            state = self.show()
+        self.assertEqual(self.carrier_lines()[1:], ["MEMORY_MODE=manual"])
+        self.assertEqual(state["settings"], {"hooks": {"memory": {"mode": "manual"}}})
+        self.assertFalse(state["stale"])
+
     def contract(self):
         return load_contract(PKG / "schemas" / "hooks-state" / "v1", urn_prefix="urn:swissknifeman:harness:",
                              foundation=FOUNDATION)

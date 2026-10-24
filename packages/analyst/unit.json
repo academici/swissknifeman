@@ -3,7 +3,7 @@
   "id": "analyst",
   "title": "Session and usage analysis",
   "kind": "capability",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "stability": "beta",
   "destination": "hub",
   "requires": [

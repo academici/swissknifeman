@@ -1,6 +1,6 @@
 {
   "name": "@academici/maind",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "private": true,
   "license": "MIT",
   "description": "mAInd — central node of the ecosystem academici: agent memory, connection graph, agent and project registry, MCP-server. Core - Python + bash; npm is only needed for the memory daemon and documentation.",

@@ -1,6 +1,6 @@
 {
   "name": "@academici/analyst",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "license": "MIT",
   "description": "analyst — continuous learning ecosystems academici: deterministic capture of lessons from runs Claude Code with a man at the gate. Core - Python stdlib; npm is only needed for documentation (VitePress).",

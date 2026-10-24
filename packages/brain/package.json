@@ -1,6 +1,6 @@
 {
   "name": "@academici/brain",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "license": "MIT",
   "description": "Obsidian vault lookup, document sync and notes from ecosystem events. Python stdlib runtime."

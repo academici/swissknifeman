@@ -9,21 +9,21 @@
 | id | kind | version | destination | stability | requires |
 | --- | --- | --- | --- | --- | --- |
 | aicore | foundation | 0.1.0 | own-repo | development | - |
-| analyst | capability | 0.4.4 | hub | beta | aicore |
-| brain | capability | 0.1.3 | hub | alpha | aicore |
+| analyst | capability | 0.4.5 | hub | beta | aicore |
+| brain | capability | 0.1.4 | hub | alpha | aicore |
 | gui | capability | 0.1.0 | own-repo | development | aicore |
 | gui-hub | bridge | 0.1.0 | hub | alpha | aicore, gui |
 | gui-orch | bridge | 0.1.0 | hub | alpha | aicore, gui, orch |
 | gui-planner | bridge | 0.1.0 | hub | alpha | aicore, gui, planner |
 | gui-workspace | bridge | 0.1.0 | hub | alpha | aicore, gui, workspace |
-| harness | capability | 0.7.5 | hub | beta | aicore |
-| maind | capability | 0.6.5 | hub | beta | aicore |
+| harness | capability | 0.7.6 | hub | beta | aicore |
+| maind | capability | 0.6.6 | hub | beta | aicore |
 | orch | capability | 0.1.0 | own-repo | alpha | aicore |
 | orch-harness | bridge | 0.1.0 | hub | alpha | aicore, orch, harness |
 | orch-skiller | bridge | 0.1.0 | hub | alpha | aicore, orch, skiller |
-| planner | capability | 0.33.0 | own-repo | beta | aicore |
+| planner | capability | 0.34.0 | own-repo | beta | aicore |
 | planner-orch | bridge | 0.1.0 | hub | alpha | aicore, planner, orch |
-| skiller | capability | 0.20.0 | own-repo | beta | aicore |
+| skiller | capability | 0.20.1 | own-repo | beta | aicore |
 | workspace | capability | 0.1.0 | hub | development | aicore |
 | workspace-planner | bridge | 0.1.0 | hub | alpha | aicore, planner, workspace |
 

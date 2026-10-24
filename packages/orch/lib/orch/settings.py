@@ -183,10 +183,12 @@ def _layered(resolved: ResolvedConfig, key: str, lowest) -> object:
 
 
 def _supervisor(resolved: ResolvedConfig) -> dict:
-    """``[orch.supervisor]`` as plain data: ``recover`` and ``max_recoveries`` are the lowest of the machine and invocation values."""
+    """``[orch.supervisor]`` as plain data: ``recover`` and ``max_recoveries`` are the lowest of the machine and invocation
+    values, ``window_s`` the highest (a shorter window forgets recoveries sooner, which widens the budget)."""
     return {"recover": _layered(resolved, "supervisor.recover", effective_recover),
             "max_recoveries": _layered(resolved, "supervisor.max_recoveries", lambda *values: min(values)),
-            **{key: resolved.get(f"supervisor.{key}") for key in ("interval_s", "hung_after_s", "grace_s", "window_s", "notify_send")}}
+            "window_s": _layered(resolved, "supervisor.window_s", lambda *values: max(values)),
+            **{key: resolved.get(f"supervisor.{key}") for key in ("interval_s", "hung_after_s", "grace_s", "notify_send")}}
 
 
 def _research(resolved: ResolvedConfig) -> dict:

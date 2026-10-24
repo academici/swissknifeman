@@ -413,6 +413,14 @@ class StreamMarkerTests(unittest.TestCase):
         spin.wait()
         self.assertIsNone(process.tree_cpu_ticks(2 ** 22 + 12345))  # no such process
 
+    def test_the_tree_cpu_keeps_the_time_of_descendants_that_already_finished(self):
+        if not Path("/proc/self/stat").exists():
+            self.skipTest("no /proc")
+        base = process.tree_cpu_ticks(os.getpid())
+        subprocess.run([sys.executable, "-c", "import time\nt=time.process_time()\nwhile time.process_time()-t<0.6: pass"], check=True)
+        grown = process.tree_cpu_ticks(os.getpid()) - base
+        self.assertGreaterEqual(grown, int(0.5 * signals._clock_ticks()), "the finished child's CPU is not in the tree any more")
+
     def test_the_stall_watch_says_a_repeated_command_once_and_a_silent_window_each_window(self):
         watch = signals.StallWatch(3, 100)
         use = signals.TickInfo("tool_use", 10, None, ("Bash: x",))

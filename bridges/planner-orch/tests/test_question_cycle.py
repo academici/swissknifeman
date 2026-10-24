@@ -119,6 +119,28 @@ class QuestionCycleTests(unittest.TestCase):
             self.assertIn("Answer: keep (by owner)", (base / "roles/executor-2.md").read_text())
             saved = json.loads((item / "questions.json").read_text())["questions"][0]
             self.assertEqual((saved["status"], saved["resolution"]["by"]), ("applied", "owner"))
+            # After register the answer is a decision of the plan that applies to the item (PLAN9 P7.6) ...
+            listed = json.loads(plan("--output", "json", "list", collection, "decision").stdout)["data"]
+            self.assertEqual(len(listed), 1, listed)
+            decision = json.loads(plan("--output", "json", "get", collection, listed[0]["ref"]).stdout)["data"]["doc"]
+            self.assertEqual((decision["status"], decision["applies_to"], decision["answered_by"], decision["decision"]),
+                             ("accepted", ["P1.1"], "owner", "keep: Keep"))
+            origin = decision["origin"]
+            self.assertEqual((origin["kind"], origin["item"], origin["question_id"]), ("question", "P1.1", "Q1"))
+            self.assertRegex(origin["question_key"], r"^qk-[0-9a-f]{16}$")
+            self.assertEqual(origin["question_key"], "qk-" + origin["question_digest"][:16])
+            # ... and the same call again, through orch.py source decision -> the plugin -> the bridge, changes nothing.
+            state = json.loads((item.parent / "state.json").read_text())
+            source_run = state["claims"]["item-P1.1"]["orch_run"]
+            self.assertEqual(origin["run"], source_run)
+            again = subprocess.run([sys.executable, str(orch / "scripts/orch.py"), "--project", str(project), "source",
+                                    "decision", "--run", source_run, "--ref", "P1.1", "--file", str(item / "decisions/Q1.json")],
+                                   env=env, cwd=project, capture_output=True, text=True)
+            self.assertEqual((again.returncode, json.loads(again.stdout)["outcome"]), (0, "no-op"), again.stderr)
+            self.assertEqual(len(json.loads(plan("--output", "json", "list", collection, "decision").stdout)["data"]), 1)
+            receipt = list(base.rglob(f"{source_run}/receipts/decision-Q1.json"))
+            self.assertEqual(len(receipt), 1, receipt)
+            self.assertEqual(json.loads(receipt[0].read_text())["outcome"], "no-op")
 
 
 if __name__ == "__main__":

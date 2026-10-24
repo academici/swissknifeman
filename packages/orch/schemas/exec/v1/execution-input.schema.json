@@ -510,6 +510,16 @@
             "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
             "description": "Decision rationale."
           },
+          "question_key": {
+            "type": "string",
+            "pattern": "^qk-[0-9a-f]{16}$",
+            "description": "Key of the question this decision answered when an orchestration run recorded it: the conductor answers the same question of the same piece again by it."
+          },
+          "question_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the canonical meaning of that question; a decision is reused only when it matches the question asked now."
+          },
           "source": {
             "type": "object",
             "description": "Decision source.",

@@ -95,7 +95,7 @@ class ClientTests(SourceCase):
         with self.assertRaises(worksource.WorkSourceError) as caught:
             self.source().claim(plan="P", run_id="run-1", submission_id="not-a-submission", actor=ACTOR)
         self.assertEqual(caught.exception.code, "INPUT_INVALID")
-        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit, release, note, research"])
+        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit, release, note, research, decision"])
 
 
 class UnregisteredTests(SourceCase):
@@ -129,6 +129,51 @@ class CycleTests(SourceCase):
         self.assertEqual(json.loads(out), {"op": "release", "outcome": "released", "message": "the tree was dirty"})
         self.assertEqual(journal.read_doc(self.run_dir(run_id), "receipts/release.json")["outcome"], "released")
         code, _, err = self.cli("source", "release", "--run", "run-unknown")
+        self.assertEqual((code, err.split(":")[0]), (1, "RUN_UNKNOWN"))
+
+    def decision_file(self, name: str = "Q1") -> Path:
+        path = Path(self.tmp.name) / f"{name.replace('/', '_')}-decision.json"
+        path.write_text(json.dumps({
+            "question": {"id": name, "revision": 1, "kind": "decision", "text": "Keep?", "options": [{"id": "keep"}]},
+            "question_key": "qk-" + "a" * 16, "question_digest": "a" * 64,
+            "resolution": {"value": "keep", "by": "owner"}, "authority": "owner", "rationale": "Answered by owner: keep",
+            "evidence": ["x/questions.json"]}), encoding="utf-8")
+        return path
+
+    def test_decision_goes_to_the_source_with_the_run_and_writes_a_receipt_per_question(self):
+        run_id = self.claim()["run_id"]
+        code, out, err = self.cli("source", "decision", "--run", run_id, "--ref", "W1", "--file", self.decision_file("Q1"),
+                                  "--actor", "orch/conductor")
+        self.assertEqual((code, err, json.loads(out)), (0, "", {"op": "decision", "outcome": "recorded", "decision_id": "D1"}))
+        sent = [json.loads(line) for line in self.marks.read_text().splitlines() if '"decision"' in line]
+        (given,) = sent
+        self.assertEqual((given["collection"], given["ref"], given["run_id"], given["attempt_id"], given["actor"]),
+                         ("P", "W1", run_id, f"att-{run_id}-W1", {"provider": "orch", "model": "conductor"}))
+        self.assertEqual(given["question_key"], "qk-" + "a" * 16)
+        self.cli("source", "decision", "--run", run_id, "--file", self.decision_file("esc/2"))
+        directory = self.run_dir(run_id)
+        self.assertEqual(journal.read_doc(directory, "receipts/decision-Q1.json")["outcome"], "recorded")
+        self.assertEqual(journal.read_doc(directory, "receipts/decision-esc-2.json")["outcome"], "recorded")
+        self.assertEqual(journal.read_doc(directory, "receipts/decision-Q1-request.json")["parameters"]["ref"], "W1")
+
+    def test_a_source_without_the_decision_operation_answers_unsupported(self):
+        run_id = self.claim()["run_id"]
+        self.mode("no-decision")
+        code, out, err = self.cli("source", "decision", "--run", run_id, "--file", self.decision_file())
+        answer = json.loads(out)
+        self.assertEqual((code, answer["op"], answer["outcome"]), (1, "decision", "unsupported"), err)
+        self.assertIn("OP_UNSUPPORTED", answer["message"])
+        self.assertEqual(journal.read_doc(self.run_dir(run_id), "receipts/decision-Q1.json")["outcome"], "unsupported")
+
+    def test_decision_refuses_another_piece_a_request_outside_the_contract_and_an_unknown_run(self):
+        run_id = self.claim()["run_id"]
+        code, _, err = self.cli("source", "decision", "--run", run_id, "--ref", "W9", "--file", self.decision_file())
+        self.assertEqual((code, err.split(":")[0]), (1, "INPUT_INVALID"))
+        broken = Path(self.tmp.name) / "broken.json"
+        broken.write_text(json.dumps({"question": {"id": "Q1"}}), encoding="utf-8")
+        code, _, err = self.cli("source", "decision", "--run", run_id, "--file", broken)
+        self.assertEqual((code, err.split(":")[0]), (1, "INPUT_INVALID"))
+        code, _, err = self.cli("source", "decision", "--run", "run-unknown", "--file", self.decision_file())
         self.assertEqual((code, err.split(":")[0]), (1, "RUN_UNKNOWN"))
 
     def test_claim_writes_the_run_and_a_repeat_is_the_same_run(self):

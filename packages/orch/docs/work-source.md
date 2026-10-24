@@ -21,6 +21,17 @@ choose a branch by `op`.
 | `release` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `reason?`, `actor?` | `outcome` `released` \| `no-op` (the run does not hold the piece) \| `refused`; `reason_code`, `message` when refused |
 | `note` (optional) | `collection`, `plans_root?`, `text`, `refs` (a phase or an item of the collection), `run_id?`, `actor?` | `outcome` `recorded` \| `no-op` \| `refused`; `reason_code`, `message` when refused |
 | `research` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `number` (from 1), `result` (a `research-result`), `actor?` | `outcome` `recorded` \| `no-op` (the same result is already kept) \| `refused`; `path` (repository-relative) when kept; `reason_code`, `message` when refused |
+| `decision` (optional) | `collection`, `plans_root?`, `ref`, `run_id`, `attempt_id?`, `question` (`id`, `revision`, `kind` `clarification` \| `decision`, `text`, `options?`, `answer_schema?`), `question_key`, `question_digest`, `resolution` (`value`, `by`, `at?`), `authority` (`owner` \| `advisor` \| `panel`), `rationale`, `evidence` (repository paths), `actor?` | `outcome` `recorded` \| `no-op` (the question is already recorded) \| `refused` \| `unsupported` (the source does not serve the operation); `decision_id?`; `reason_code`, `message` when refused |
+
+`decision` records an answered question of a piece (an owner's answer, an advice or a panel recommendation the conductor
+applied) as an accepted decision that applies to the piece, so that a later run of the piece finds it ([Questions of
+the executor](conductor.md#questions-of-the-executor-d11)). `question_key` (`qk-` + 16 hex) and `question_digest` (SHA-256)
+come from the meaning of the question: the piece, the kind, the text, the full options and the answer schema. The source
+treats a repeat for the same `question_key` and piece as a no-op. The planner bridge adds a `D#` with
+`applies_to` the piece, `answered_by` `owner` (a person) or `agent` (advisor, panel) and an `origin`
+`{kind: question|advice|panel, run, item, question_id, question_key, question_digest, revision}`; its next brief carries
+`question_key` and `question_digest` in the `decisions` entry of `exec/v1`. A source without the operation answers an error
+or `unsupported`; the conductor then prints the info `DECISION_NOT_RECORDED` and the piece does not change.
 
 A claim may also answer `options`: the run-option layers of the work, general first (`[{source, options}]`, each a
 conductor `run-options` document that orch validates). A brief may answer `artifacts_dir`: the repository folder
@@ -56,7 +67,7 @@ outside the contract is a failure of the source.
 ## Client
 
 `orch.worksource.PluginWorkSource(plugin_id, *, project=None, env=None, config_file=None)` implements the
-`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, `note(**fields)`, `research(**fields)`, each returning
+`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, `note(**fields)`, `research(**fields)`, `decision(**fields)`, each returning
 the output document). Every call looks the registration up again, validates the request (`INPUT_INVALID`, nothing is sent),
 describes and invokes the plugin through `aicore.ext.plugins.invoke_one`, and validates the answer.
 
@@ -79,6 +90,7 @@ orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]â
 orch.py source commit --run RUN [--path PATH]â€¦ [--actor P/M[/E]]
 orch.py source release --run RUN [--reason TEXT] [--actor P/M[/E]]
 orch.py source research --run RUN --result FILE --number N [--actor P/M[/E]]
+orch.py source decision --run RUN --file FILE [--ref ITEM] [--actor P/M[/E]]
 ```
 
 - `claim` derives `submission_id` = `sub-` + the first 24 hex characters of the SHA-256 of the canonical JSON
@@ -90,6 +102,12 @@ orch.py source research --run RUN --result FILE --number N [--actor P/M[/E]]
   moves on to other work after its item is closed.
   With `--config FILE` the claim passes the file as `orch_config`, so the scenario check of the source sees the same
   run-policy packs.
+- `decision` reads `FILE` (`question`, `question_key`, `question_digest`, `resolution`, `authority`, `rationale`, `evidence`),
+  adds the collection, the piece, the run and the attempt of the run, and sends it through the same intent-then-receipt path as
+  `register`: `receipts/decision-<question id>-request.json` before the call and `receipts/decision-<question id>.json`
+  after it. `--ref` must be the piece of the run (`INPUT_INVALID` otherwise). Exit 0 for `recorded` and `no-op`; a source that
+  failed or answered outside the contract (a plugin without the operation) prints `{"op": "decision", "outcome":
+  "unsupported", "message"}` and exits 1, a refusal exits 1, no source exits 3.
 - `brief` stores the brief through the source and records `input_ref` and `input_id` in `run.json`.
 - `prepare` reads the brief from the artifact store of the project, loads the run-policy pack of the run's scenario
   (`orch.py policy show`), prepares a dry run with `out = <run>/prepare` and the run's `submission_id`, and writes
@@ -123,7 +141,7 @@ input (the reference is its `input_id`; a different candidate is `INPUT_UNKNOWN`
 source); `register` refuses a report outside `register-report` with the codes of the planner bridge, applies the same
 evidence gate as the planner bridge (check-evidence with exit 0 for every acceptance check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (the idempotency receipt) into
 `.swissknifeman/orch-artifacts/<run_id>/<input_id>/` (local records, not committed); `commit` commits nothing unless `--commit`, then only the given paths with
-`adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input. For provenance
+`adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input; `decision` appends the request to `decisions.json` there (a repeat of the same `question_key` changes nothing). For provenance
 `plan_support` and `phase_support` the `register` command forwards the note to the configured plugin source
 (the CLI prints the answer with `note: {outcome: recorded | unsupported | refused, message?}`; `receipts/register.json` keeps the pure answer of the source and the note goes to `receipts/note.json`). The `input_id` of a file input names the artifact folder, so it must be one path component (`INPUT_INVALID` otherwise); `commit` uses literal git pathspecs, and a commit refused by a hook leaves the index as it was. `run.json` of the cycle gets
 `source = {kind: file, path, commit}` and `plugin: file`; the later commands read it.

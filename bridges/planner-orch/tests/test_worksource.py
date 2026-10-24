@@ -752,6 +752,86 @@ class NoteTests(Case):
         self.assertTrue(answer["reason_code"])
 
 
+class DecisionTests(Case):
+    """``decision``: an answered question of an item becomes an accepted D# that applies to the item, with the origin that
+    lets a later run find it by ``question_key``; a repeat changes nothing."""
+
+    KEY = "qk-" + "a1" * 8
+    DIGEST = "a1" * 32
+
+    def decision(self, **extra) -> dict:
+        fields = {"op": "decision", "collection": self.plan, "ref": "P1.1", "run_id": "run-a",
+                  "attempt_id": "att-run-a-P1.1",
+                  "question": {"id": "Q1", "revision": 1, "kind": "decision", "text": "Keep  the old flag name?",
+                               "options": [{"id": "keep", "label": "keep it"}, {"id": "rename", "label": "rename it"}]},
+                  "question_key": self.KEY, "question_digest": self.DIGEST,
+                  "resolution": {"value": "rename", "by": "owner", "at": "2026-10-24T00:00:00Z"}, "authority": "owner",
+                  "rationale": "Answered by owner: rename: rename it", "evidence": ["plans/x/questions.json"],
+                  "actor": ACTOR, **extra}
+        return self.op(worksource.op_decision, **fields)
+
+    def decisions(self) -> list:
+        rows = json.loads(run(self.project, "--output", "json", "list", self.plan, "decision").stdout)["data"]
+        return [self.item(row["ref"]) for row in rows]
+
+    def test_the_answer_becomes_an_accepted_decision_that_applies_to_the_item(self):
+        answer = self.decision()
+        self.assertEqual((answer["outcome"], answer["decision_id"]), ("recorded", "D1"))
+        (doc,) = self.decisions()
+        self.assertEqual((doc["status"], doc["applies_to"], doc["answered_by"]), ("accepted", ["P1.1"], "owner"))
+        self.assertEqual(doc["decision"], "rename: rename it")
+        self.assertEqual(doc["question"], "Keep the old flag name?")
+        self.assertEqual([(row["id"], row["text"]) for row in doc["options"]], [("A", "keep: keep it"), ("B", "rename: rename it")])
+        self.assertEqual(doc["origin"], {"kind": "question", "run": "run-a", "item": "P1.1", "question_id": "Q1",
+                                         "question_key": self.KEY, "question_digest": self.DIGEST, "revision": 1})
+        self.assertIn({"kind": "owner", "ref": "owner", "note": "answered with orch conduct answer"}, doc["evidence"])
+        self.assertIn({"kind": "repo", "ref": "plans/x/questions.json"}, doc["evidence"])
+        self.assertEqual(doc["actor"]["provider"], "claude-code")
+        self.assertEqual(run(self.project, "check", self.plan, check=False).returncode, 0)
+
+    def test_a_repeat_for_the_same_question_key_and_item_is_a_no_op(self):
+        self.decision()
+        again = self.decision(run_id="run-b", resolution={"value": "keep", "by": "owner"})
+        self.assertEqual((again["outcome"], again["decision_id"]), ("no-op", "D1"))
+        self.assertEqual(len(self.decisions()), 1)
+        other = self.decision(question_key="qk-" + "b2" * 8)
+        self.assertEqual((other["outcome"], other["decision_id"]), ("recorded", "D2"))
+
+    def test_the_same_key_on_another_item_is_another_decision(self):
+        self.decision()
+        self.assertEqual(self.decision(ref="P1.2")["outcome"], "recorded")
+
+    def test_an_advice_and_a_panel_name_their_origin_and_are_answered_by_an_agent(self):
+        advice = self.decision(authority="advisor", resolution={"value": "keep", "by": "advisor"})
+        panel = self.decision(question_key="qk-" + "c3" * 8, authority="panel", resolution={"value": "keep", "by": "panel"})
+        self.assertEqual((advice["outcome"], panel["outcome"]), ("recorded", "recorded"))
+        first, second = self.decisions()
+        self.assertEqual((first["origin"]["kind"], first["answered_by"], second["origin"]["kind"]), ("advice", "agent", "panel"))
+        self.assertNotIn("owner", [row["kind"] for row in first["evidence"]])
+
+    def test_a_free_text_and_a_json_value_are_the_text_of_the_decision(self):
+        text = self.decision(question={"id": "Q2", "revision": 2, "kind": "clarification", "text": "How many retries?"},
+                             resolution={"value": 3, "by": "owner"})
+        self.assertEqual(text["outcome"], "recorded")
+        (doc,) = self.decisions()
+        self.assertEqual((doc["decision"], doc.get("options")), ("3", None))
+
+    def test_the_next_brief_carries_the_decision_with_its_key_inside_exec_v1(self):
+        self.claim()
+        self.decision()
+        brief = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")  # checked by orch
+        stored = json.loads(blobs.read_bytes(brief["input_ref"], project=self.project))
+        (entry,) = [row for row in stored["decisions"] if row.get("question_key")]
+        self.assertEqual((entry["question_key"], entry["question_digest"], entry["status"], entry["decision"]),
+                         (self.KEY, self.DIGEST, "accepted", "rename: rename it"))
+
+    def test_an_unknown_item_is_refused_with_the_planner_code(self):
+        answer = self.decision(ref="P9.9")
+        self.assertEqual(answer["outcome"], "refused")
+        self.assertTrue(answer["reason_code"])
+        self.assertEqual(self.decisions(), [])
+
+
 class ResearchTests(Case):
     RESULT = {"query": "q", "claims": [{"text": "t", "sources": ["https://example.org/c"]}], "contradictions": [],
               "unknowns": [], "sources_used": ["fake"]}

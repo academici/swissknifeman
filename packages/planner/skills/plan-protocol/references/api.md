@@ -171,6 +171,15 @@ Unknown sections/fields return `SECTION_UNKNOWN`/`FIELD_UNKNOWN`. Graph options 
 invalid inline content return `PATH_INVALID`, `HUMAN_VIEW` and `CONTENT_INVALID` respectively.
 Use the catalog for the complete per-verb refusal sets.
 
+`list ... decision` returns only `{ref,title,status}`; a decision's optional `origin` is read with `get`.
+`origin` (`kind` question|advice|panel, `run`, `item`, `question_id`, `question_key`, optional
+`question_digest` and `revision`; closed) is written by an orchestration run when an answered question
+becomes an accepted decision that applies to the item (`add-decision --json '{"status":"accepted",...,"origin":{...}}'`
+through the work-source operation `decision`). `question_key` is `qk-` and 16 hex characters of the digest of the
+meaning of the question (piece, kind, text, options, answer schema); `question_digest` is the full SHA-256. A later
+run of the item finds the decision in its brief by that key, so the same question is not asked again. The planner
+does not interpret `origin`.
+
 These read queries take no plan lock and write no files. `show PLAN REF` remains a document-only
 compatibility view, while `show` without a reference remains the overview. Existing `context`
 continues to provide the full execution pack. State changes use authoring/lifecycle verbs;

@@ -16,7 +16,7 @@ from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evi
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, sessions, work_source
 from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write_json
-from orch.conductor.stages import advice
+from orch.conductor.stages import advice, decisions
 
 
 def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
@@ -454,7 +454,7 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
     binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest"),
                "input_part_digest": answer_digest(item.input_doc)}
     new = questions_mod.record(store, asked, binding, clock.utc_now())
-    waiting = questions_mod.blocking_open(store, asked)
+    waiting = decisions.reuse_decisions(self, item, key, questions_mod.blocking_open(store, asked))
     for entry in new:  # a round walked again by a resume adds nothing
         self._beacon_event("orch.agent.questioned", item, {
             "step": key, "question_id": entry["id"], "revision": entry["revision"], "blocking": bool(entry["blocking"])})

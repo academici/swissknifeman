@@ -692,6 +692,27 @@
           ],
           "default": "medium",
           "description": "Minimum confidence for automatic advice. The strictest value across all layers wins (high > medium > low); lower values and _unset cannot weaken it."
+        },
+        "panel": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*(/(economy|implementation|frontier)(/(low|medium|high|xhigh))?)?$",
+            "description": "Route of one panel member: PROVIDER[/MODEL_CLASS[/EFFORT]], such as grok/frontier/high."
+          },
+          "default": [],
+          "description": "Routes of an advisor panel (2 or 3; fewer is off, members past the third are ignored), each PROVIDER[/MODEL_CLASS[/EFFORT]]. When a trigger of panel_on fires, each member advises independently, without seeing the others: agreement is applied, a majority gets one round of critique by a member of the minority, a split goes to the owner. At most len(panel)+1 calls per problem, each admitted by the token budget; the result is read by the same gates as one advice (human_gate, min_confidence, code categories). A member that cannot start (codex has no advisor launch entry) is skipped with ADVISOR_PANEL_FAILED; fewer than two answers is the single advisor."
+        },
+        "panel_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["low_confidence", "always"],
+            "description": "One trigger."
+          },
+          "default": ["low_confidence"],
+          "description": "When the panel advises: low_confidence (the single advice of a problem has low confidence) or always (every problem goes to the panel first)."
         }
       }
     },

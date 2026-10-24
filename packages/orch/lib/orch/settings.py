@@ -51,7 +51,7 @@ class Settings:
     conductor: Mapping[str, object] = field(default_factory=dict)
     aicore: ResolvedConfig | None = None  # the ``aicore`` module: ``providers.available`` is read from it (routing)
     research: Mapping[str, object] = field(default_factory=dict)  # ``[orch.research]``: ``policy`` and ``sources``
-    advisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.advisor]``: ``enabled``, ``max_rounds``, ``human_gate``
+    advisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.advisor]``: ``enabled``, ``max_rounds``, ``human_gate``, ``panel``, ``panel_on``
     stubs: Mapping[str, object] = field(default_factory=dict)  # ``[orch.stubs]``: ``enabled``, ``layers``
     launch: Mapping[str, object] = field(default_factory=dict)  # ``[orch.launch]``: ``catalog`` (a file), ``access`` and ``entries``
     debug: bool = False  # ``[orch] debug`` / ``--debug``: the observer protocol and journal of a run (conductor.debug_mode)
@@ -152,6 +152,11 @@ def _research(resolved: ResolvedConfig) -> dict:
             "sources": {name: dict(entry) for name, entry in (resolved.get("research.sources") or {}).items()}}
 
 
+def _panel_member(text: str) -> dict:
+    """``PROVIDER[/MODEL_CLASS[/EFFORT]]`` of ``advisor.panel`` as the route override of a stage."""
+    return dict(zip(("provider", "model_class", "effort"), text.split("/")))
+
+
 def _advisor(resolved: ResolvedConfig) -> dict:
     """Effective advisor authority: extra gates accumulate and confidence can only rise across layers."""
     def values(key: str) -> list:
@@ -163,7 +168,9 @@ def _advisor(resolved: ResolvedConfig) -> dict:
     ranks = {"low": 0, "medium": 1, "high": 2}
     return {"enabled": bool(resolved.get("advisor.enabled")), "max_rounds": int(resolved.get("advisor.max_rounds")),
             "human_gate": sorted(set(resolved.get("advisor.human_gate") or []) | extra),
-            "min_confidence": max(values("advisor.min_confidence"), key=ranks.__getitem__)}
+            "min_confidence": max(values("advisor.min_confidence"), key=ranks.__getitem__),
+            "panel": [_panel_member(text) for text in resolved.get("advisor.panel") or []],
+            "panel_on": list(resolved.get("advisor.panel_on") or [])}
 
 
 def load(*, project: str | Path | None = None, config_file: str | Path | None = None,

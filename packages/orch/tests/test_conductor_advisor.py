@@ -446,6 +446,192 @@ class RejectedFindingTriggerTests(AdvisorCase):
         self.assertEqual((code, self.calls("advisor"), self.calls("triager")), (0, 0, 1), err)
 
 
+PANEL3 = 'panel = ["grok/frontier/high", "claude-code/frontier/high", "claude-code/economy/low"]\npanel_on = ["always"]\n'
+
+
+class PanelTests(AdvisorCase):
+    """``orch.advisor.panel`` (D10): independent members, agreement applied, a majority critiqued once, a split to the owner,
+    at most len(panel)+1 calls, the gates of one advice, a member that cannot start skipped."""
+
+    def setUp(self):
+        super().setUp()
+        self.configure(ENABLED + PANEL3)
+
+    def panel_file(self, number: int = 1) -> dict:
+        return json.loads((self.project / f"plans/T/artifacts/W1/advice-{number}-panel.json").read_text())
+
+    def question_run(self, *answers, **extra) -> tuple:
+        self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "advisor": list(answers), "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        return code, err
+
+    def test_three_members_who_agree_answer_the_question_by_the_panel(self):  # (g)
+        code, err = self.question_run(*[advice("question:Q1@1")] * 3)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("advisor"), 3)
+        entry = self.state(err)["questions"]["W1"]["Q1"]
+        self.assertEqual((entry["status"], entry["resolution"]["value"], entry["resolution"]["by"]),
+                         ("applied", "keep", "panel"))
+        self.assertEqual(entry["resolution"]["authority"]["mode"], "panel")
+        (said,) = self.messages(err, "ADVISOR_PANEL")
+        self.assertIn("panel agreement: keep (3 of 3 members)", said)
+        record = self.panel_file()
+        self.assertEqual((record["synthesis"]["kind"], record["synthesis"]["chosen"], len(record["members"])),
+                         ("agreement", "keep", 3))
+        self.assertEqual(contract.problems(record, "advice-panel"), [])
+        self.assertEqual(contract.problems(record["synthesis"]["advice"], "advice"), [])
+        self.assertEqual([row["route"].split("/")[0] for row in record["members"]], ["grok", "claude-code", "claude-code"])
+
+    def test_the_members_do_not_see_each_other_and_only_the_critic_sees_the_options(self):
+        self.question_run(*[advice("question:Q1@1")] * 2, advice("question:Q1@1", "rename"),
+                          advice("question:Q1@1", sources=["README.md"]))
+        for number in (1, 2, 3):
+            self.assertNotIn("Panel options", self.prompt("advisor", number))
+            self.assertNotIn("recommends", self.prompt("advisor", number))
+        critic = self.prompt("advisor", 4)
+        self.assertIn("## Panel options", critic)
+        self.assertIn("### Position 3: recommends `rename`", critic)
+        self.assertNotIn("grok", critic.split("## Panel options")[1])  # anonymised
+
+    def test_a_majority_the_critic_confirms_is_applied_after_one_round_of_critique(self):  # (h)
+        code, err = self.question_run(advice("question:Q1@1"), advice("question:Q1@1"), advice("question:Q1@1", "rename"),
+                                      advice("question:Q1@1", "keep", sources=["README.md"]))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("advisor"), 4)  # len(panel) + 1, never more
+        record = self.panel_file()
+        self.assertEqual((record["synthesis"]["kind"], record["synthesis"]["chosen"]), ("majority", "keep"))
+        self.assertEqual((record["synthesis"]["critic"]["member"], record["synthesis"]["critic"]["agrees"]), (3, True))
+        self.assertEqual(contract.problems(record, "advice-panel"), [])
+        self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["resolution"]["by"], "panel")
+
+    def test_a_critic_against_the_majority_holds_the_question_for_the_owner(self):  # (h)
+        code, err = self.question_run(advice("question:Q1@1"), advice("question:Q1@1"), advice("question:Q1@1", "rename"),
+                                      advice("question:Q1@1", "rename", sources=["README.md"]))
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
+        self.assertEqual(self.calls("advisor"), 4)
+        entry = self.state(err)["questions"]["W1"]["Q1"]
+        self.assertEqual(entry["status"], "open")
+        self.assertIn("only the owner can decide", entry["advice"]["held"])
+        self.assertFalse(self.panel_file()["synthesis"]["critic"]["agrees"])
+
+    def test_a_critic_that_cites_no_evidence_confirms_nothing(self):
+        code, err = self.question_run(advice("question:Q1@1"), advice("question:Q1@1"), advice("question:Q1@1", "rename"),
+                                      advice("question:Q1@1", "keep", sources=[]))
+        self.assertEqual(code, 4, err)
+        self.assertFalse(self.panel_file()["synthesis"]["critic"]["agrees"])
+
+    def test_two_members_who_differ_leave_the_decision_to_the_owner(self):  # (i)
+        self.configure(ENABLED + 'panel = ["grok/frontier/high", "claude-code/frontier/high"]\npanel_on = ["always"]\n')
+        code, err = self.question_run(advice("question:Q1@1"), advice("question:Q1@1", "rename"))
+        self.assertEqual((code, self.calls("advisor")), (4, 2), err)  # no critic round for a split
+        self.assertEqual(self.panel_file()["synthesis"]["kind"], "split")
+        self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
+
+    def test_a_member_that_cannot_start_is_skipped_and_the_rest_decide(self):  # (j)
+        self.configure(ENABLED + 'panel = ["codex/frontier/high", "grok/frontier/high", "claude-code/frontier/high"]\n'
+                       'panel_on = ["always"]\n')
+        code, err = self.question_run(*[advice("question:Q1@1")] * 2)
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("advisor"), 2)
+        (failed,) = self.messages(err, "ADVISOR_PANEL_FAILED")
+        self.assertIn("codex", failed)
+        self.assertEqual(len(self.panel_file()["members"]), 2)
+
+    def test_fewer_than_two_answers_fall_back_to_the_single_advisor(self):
+        self.configure(ENABLED + 'panel = ["codex/frontier/high", "grok/frontier/high"]\npanel_on = ["always"]\n')
+        code, err = self.question_run(advice("question:Q1@1"))
+        self.assertEqual((code, self.calls("advisor")), (0, 2), err)  # the member that answered, then the single advisor
+        self.assertIn("1 of 2 panel members answered", self.messages(err, "ADVISOR_PANEL_FAILED")[-1])
+        self.assertFalse((self.project / "plans/T/artifacts/W1/advice-1-panel.json").exists())
+        self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["resolution"]["by"], "advisor")
+
+    def test_a_low_confidence_advice_starts_the_panel_and_a_confident_one_does_not(self):
+        self.configure(ENABLED + 'panel = ["grok/frontier/high", "claude-code/frontier/high"]\n')  # panel_on: low_confidence
+        code, err = self.question_run(advice("question:Q1@1", confidence="low"), advice("question:Q1@1", confidence="high"),
+                                      advice("question:Q1@1", confidence="high"))
+        self.assertEqual((code, self.calls("advisor")), (0, 3), err)
+        record = self.panel_file()
+        self.assertEqual(record["trigger"]["confidence"], "low")
+        self.assertEqual(record["synthesis"]["advice"]["confidence"], "high")
+
+    def test_a_confident_single_advice_is_applied_without_the_panel(self):
+        self.configure(ENABLED + 'panel = ["grok/frontier/high", "claude-code/frontier/high"]\n')
+        code, err = self.question_run(advice("question:Q1@1"))
+        self.assertEqual((code, self.calls("advisor")), (0, 1), err)
+        self.assertEqual(self.messages(err, "ADVISOR_PANEL"), [])
+
+    def test_the_gates_read_the_panel_like_one_advice(self):
+        code, err = self.question_run(*[advice("question:Q1@1", category="security")] * 3)
+        self.assertEqual((code, self.calls("advisor")), (4, 3), err)
+        self.assertIn("category security is held by orch.advisor.human_gate",
+                      self.state(err)["questions"]["W1"]["Q1"]["advice"]["held"])
+
+    def test_the_lowest_confidence_of_the_members_decides_the_gate(self):
+        code, err = self.question_run(advice("question:Q1@1"), advice("question:Q1@1", confidence="low"),
+                                      advice("question:Q1@1"))
+        self.assertEqual(code, 4, err)
+        self.assertIn("confidence low is below", self.state(err)["questions"]["W1"]["Q1"]["advice"]["held"])
+
+    def test_the_panel_is_one_round_of_max_rounds(self):  # (k)
+        self.configure(ENABLED + "max_rounds = 1\n" + PANEL3)
+        second = dict(ASK, id="Q2", text="Rename the module too?")
+        self.script({"executor": [asking(dict(ASK)), asking(second)], "advisor": [advice("question:Q1@1")] * 3})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("advisor")), (4, 3), err)
+        self.assertEqual(len(self.messages(err, "ADVISOR_LIMIT")), 1)
+        self.assertEqual(len(self.messages(err, "ADVISOR_PANEL")), 1)  # no second panel
+        self.assertEqual(self.state(err)["questions"]["W1"]["Q2"]["status"], "open")
+
+    def test_the_owner_answers_a_held_panel_and_the_resume_asks_the_members_no_more(self):
+        self.script({"executor": [asking(dict(ASK)), executor_ok("W1")],
+                     "advisor": [advice("question:Q1@1", needs_owner=True)] * 3, "reviewer": [GREEN]})
+        _, _, err = self.run_items("W1")
+        run = self.run_dir(err).name
+        self.assertEqual(self.calls("advisor"), 3)
+        self.conduct("answer", "--run", run, "--item", "W1", "--question", "Q1", "--option", "rename", "--by", "owner")
+        self.reopen()
+        code, _, err2 = self.conduct("resume", "--run", run, "--retry", "W1", "--json-lines")
+        self.assertEqual((code, self.outcome(err2)), (0, ("finished", None)), err2)
+        self.assertEqual(self.calls("advisor"), 3)
+        (asked,) = [call for call in self.source()["calls"] if call["op"] == "decision"]  # the owner's answer, with the panel as evidence
+        self.assertEqual((asked["authority"], asked["resolution"]["value"]), ("owner", "rename"))
+        self.assertIn("plans/T/artifacts/W1/advice-1-panel.json", asked["evidence"])
+
+    def test_red_checks_go_to_the_panel_and_a_confirmed_advice_is_recorded_as_a_decision(self):
+        self.set_items({"W1": {"write_set": ["out/**"]}})
+        attempts = []
+
+        def red():
+            attempts.append(1)
+            return {"write": {"out/attempt.txt": f"attempt {len(attempts)}\n"}, "result": report("W1")}
+
+        self.script({"executor": [red(), red(), executor_ok("W1")], "advisor": [advice("checks:2", "keep")] * 3,
+                     "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertIn("(chosen by panel", self.prompt("executor", 3))
+        (asked,) = [call for call in self.source()["calls"] if call["op"] == "decision"]
+        self.assertEqual((asked["authority"], asked["question"]["id"], asked["resolution"]["value"]),
+                         ("panel", "advice-1", "keep"))
+        self.assertEqual(asked["evidence"], ["plans/T/artifacts/W1/advice-1-panel.json"])
+        self.assertEqual(self.state(err)["items"]["W1"]["advice_applied"][0]["by"], "panel")
+
+    def test_members_who_name_their_own_ways_agree_only_on_the_same_way(self):
+        # red checks fix no option ids: the same id "keep" with another text is another way, not a vote for the first
+        self.configure(ENABLED + 'panel = ["grok/frontier/high", "claude-code/frontier/high"]\npanel_on = ["always"]\n')
+        self.set_items({"W1": {"write_set": ["out/**"]}})
+        other = advice("checks:2", "keep")
+        other["result"]["options"][0] = dict(other["result"]["options"][0], text="Relax the check")
+        red = {"write": {"out/attempt.txt": "attempt\n"}, "result": report("W1")}
+        self.script({"executor": [red, dict(red, write={"out/attempt.txt": "attempt 2\n"})],
+                     "advisor": [advice("checks:2", "keep"), other], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.calls("advisor")), (4, 2), err)
+        self.assertEqual(self.panel_file()["synthesis"]["kind"], "split")
+        self.assertFalse([call for call in self.source()["calls"] if call["op"] == "decision"])
+        self.assertEqual(advice_stage.vote(advice("x")["result"]), "keep")  # a question with options votes by id alone
+
+
 class ContractAndConfigTests(unittest.TestCase):
     def test_the_recommendation_must_be_an_option_and_the_problem_the_one_asked(self):
         doc = advice("question:Q1@1")["result"]
@@ -472,7 +658,7 @@ class ContractAndConfigTests(unittest.TestCase):
         found = settings.defaults().advisor
         self.assertEqual(found, {"enabled": False, "max_rounds": 2,
                                  "human_gate": ["destructive", "public-api", "scope-expansion", "security"],
-                                 "min_confidence": "medium"})
+                                 "min_confidence": "medium", "panel": [], "panel_on": ["low_confidence"]})
 
     def test_questions_advisor_is_a_value_of_the_config(self):
         schema = json.loads((engine.ORCH_ROOT / "configs" / "config.schema.json").read_text())

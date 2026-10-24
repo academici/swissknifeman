@@ -22,7 +22,11 @@ and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a 
   its own (support work run from a file input); it names a phase or an item in ``refs``, and a note without one is refused;
 - ``research`` saves the research-result of a research stage as ``research/<item>-<n>.json`` in the folder of the plan and
   declares it with ``plan.py add-artifact … --role input`` (a repeat of the same result changes nothing); the file is a
-  record of the research, not plan state.
+  record of the research, not plan state;
+- ``decision`` records an answered question of an item (an owner's answer, an applied advice or panel recommendation)
+  as an accepted decision ``D#`` that applies to the item (``plan.py add-decision``) with an ``origin`` that names the
+  question (``question_key``, ``question_digest``); a repeat for the same ``question_key`` and item changes nothing, so a
+  later run of the item finds the decision in its brief and does not ask the question again.
 
 An orchestration overlay is a knowledge document with an id starting with ``orchestration-`` and a section
 ``orchestration`` that holds one JSON object ``{"scenario"?: name, "options"?: run-options}``; it applies to the item,
@@ -47,7 +51,7 @@ import partners
 POINT = "orch:work-source"
 RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
 DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision")
 OVERLAY_PREFIX = "orchestration-"
 OVERLAY_SECTION = "orchestration"
 _FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
@@ -729,6 +733,57 @@ def op_note(fields: dict) -> dict:
     return {"op": "note", "outcome": "recorded"}
 
 
+_ORIGIN_KIND = {"owner": "question", "advisor": "advice", "panel": "panel"}
+_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def decision_text(question: dict, value) -> str:
+    """The text of the decision an answer becomes: ``<id>: <label>`` for an option (orch reads the id back from it), a
+    string as it is, any other JSON value as JSON."""
+    option = next((row for row in question.get("options") or [] if row["id"] == value), None)
+    if option is not None:
+        return f"{option['id']}: {option['label']}" if option.get("label") else option["id"]
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+
+
+def op_decision(fields: dict) -> dict:
+    """An answered question as an accepted decision of the plan: ``plan.py add-decision`` with ``applies_to`` the item and
+    ``origin`` the question. The decisions that apply to the item are read first: one whose ``origin.question_key`` is
+    this question's (whatever its status: a decision the owner superseded stays superseded) makes the call a no-op."""
+    plan_ref, plans_root, ref, key = fields["collection"], fields.get("plans_root"), fields["ref"], fields["question_key"]
+    question, resolution, authority = fields["question"], fields["resolution"], fields["authority"]
+    try:
+        for row in plan_json(["--output", "json", "list", plan_ref, "decision", "--applies-to", ref], plans_root)["data"]:
+            origin = item_doc(plan_ref, row["ref"], plans_root).get("origin") or {}
+            if origin.get("question_key") == key and origin.get("item") == ref:
+                return {"op": "decision", "outcome": "no-op", "decision_id": row["ref"]}
+    except Blocked as blocked:
+        return {"op": "decision", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    text = decision_text(question, resolution["value"])
+    shown = " ".join(question["text"].split()) or question["id"]
+    evidence = [{"kind": "repo", "ref": path} for path in fields["evidence"]]
+    if authority == "owner":
+        evidence.append({"kind": "owner", "ref": resolution["by"], "note": "answered with orch conduct answer"})
+    data = {"status": "accepted", "question": " ".join(question["text"].split()) or question["id"],
+            "options": [{"id": _LETTERS[index], "text": f"{row['id']}: {row['label']}" if row.get("label") else row["id"]}
+                        for index, row in enumerate((question.get("options") or [])[:len(_LETTERS)])],
+            "decision": text, "rationale": fields["rationale"], "applies_to": [ref],
+            "answered_by": "owner" if authority == "owner" else "agent", "evidence": evidence,
+            "origin": {"kind": _ORIGIN_KIND[authority], "run": fields["run_id"], "item": ref, "question_id": question["id"],
+                       "question_key": key, "question_digest": fields["question_digest"],
+                       "revision": question["revision"]}}
+    if not data["options"]:
+        del data["options"]
+    actor = ["--actor", actor_text(fields["actor"])] if fields.get("actor") else []
+    done = plan_py(["add-decision", plan_ref, "--title", f"{ref} {question['id']}: {shown}"[:120], "--json",
+                    json.dumps(data, ensure_ascii=False), *actor], plans_root)
+    if done.returncode:
+        blocked = refusal_of(done.stderr or done.stdout, "DECISION_REFUSED")
+        return {"op": "decision", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    found = re.search(r"\bD[0-9]+\b", done.stdout or "")
+    return {"op": "decision", "outcome": "recorded", **({"decision_id": found.group(0)} if found else {})}
+
+
 # ------------------------------------------------------------------------------------------------ protocol
 
 
@@ -753,7 +808,8 @@ def invoke(request_id: str, request: dict) -> None:
                                           "message": f"expected point {POINT} with op {' | '.join(OPS)}"})
         return
     handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
-               "release": op_release, "note": op_note, "research": op_research}[fields["op"]]
+               "release": op_release, "note": op_note, "research": op_research,
+               "decision": op_decision}[fields["op"]]
     try:
         output = handler(fields)
     except Blocked as blocked:

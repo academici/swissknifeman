@@ -53,6 +53,8 @@ format as the other layers: `schema_version = 1` and an `[orch]` table.
 | `advisor.human_gate` | array of `security`, `destructive`, `public-api`, `scope-expansion`, `other` | the first four | defaults, machine, invocation, flags | base categories held for the owner; a project or environment attempt is `CONFIG_LAYER_FORBIDDEN` |
 | `advisor.human_gate_extra` | array of the same categories | empty | all, additive across history | additional categories held for the owner; effective gate = base gate ∪ every layer's extra categories, even after `[]` or `_unset` |
 | `advisor.min_confidence` | `high`, `medium`, `low` | `medium` | all, strictest across history | advice below the minimum is held; `high` > `medium` > `low`, and a lower value or `_unset` cannot weaken any earlier threshold (including the default) |
+| `advisor.panel` | array of `PROVIDER[/MODEL_CLASS[/EFFORT]]` | empty | all | routes of the advisor panel, 2 or 3 (fewer is off; a fourth is ignored); each member advises independently, see [The advisor](conductor.md#the-advisor-p104) |
+| `advisor.panel_on` | array of `low_confidence`, `always` | `["low_confidence"]` | all | when the panel advises: after a single advice of low confidence, or for every problem |
 
 `profiles.dirs` makes orch read policy files from the listed paths, so a project file, which lives in a repository
 that somebody else may control, cannot set it (`CONFIG_LAYER_FORBIDDEN`); neither can the environment. A leading `~`

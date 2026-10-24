@@ -363,13 +363,36 @@ def researcher(input_doc: dict, *, item: str, step: str, query: str, sources: li
     return _join(parts)
 
 
+def panel_options(positions) -> str:
+    """The "Panel options" block of the critic of an advisor panel: the positions the independent members took, without
+    their names or routes, each with the recommended option and the reasons both ways."""
+    lines = ["## Panel options", "",
+             "Independent advisors answered the problem above without seeing each other. Their positions follow, "
+             "anonymised. You are the critic: weigh them against the evidence, then recommend one option id of your own "
+             "and cite the evidence it rests on (repository paths or URLs) in `sources`. Agree with the majority only when "
+             "the evidence supports it; do not defer to numbers.", ""]
+    for number, position in enumerate(positions, 1):
+        lines.append(f"### Position {number}: recommends `{position['recommendation']}` ({position['confidence']} confidence)")
+        for option in position["options"]:
+            mark = " (recommended)" if option["id"] == position["recommendation"] else ""
+            lines.append(f"- `{option['id']}`{mark}: {option['text']}")
+            lines += [f"  - for: {reason}" for reason in option.get("pros") or []]
+            lines += [f"  - against: {reason}" for reason in option.get("cons") or []]
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
+
 def advisor(input_doc: dict, *, item: str, step: str, problem_ref: str, problem: str, evidence=(), sources=(),
-            command: str = "", roles_dir=None, stub=None, skills=(), repo_rules: str = "", skill_texts=None) -> list:
+            command: str = "", roles_dir=None, stub=None, skills=(), repo_rules: str = "", skill_texts=None,
+            panel=()) -> list:
     """The prompt of the advisor: the problem (``problem_ref`` and text), the local evidence as ``(kind, text)`` pairs
-    (the reports, the red checks, the diff or the findings) and, when sources are configured, the one command that asks one."""
+    (the reports, the red checks, the diff or the findings) and, when sources are configured, the one command that asks one.
+    ``panel`` (the critic of an advisor panel): the anonymised positions of the members, a "Panel options" block."""
     parts = [_head("advisor", input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub),
              [Block("instruction", CONDUCTOR, f"## Problem\n\n`problem_ref`: `{problem_ref}`\n\n" + problem.rstrip())],
              *[[Block(kind, CONDUCTOR, text)] for kind, text in evidence]]
+    if panel:
+        parts.append([Block("instruction", CONDUCTOR, panel_options(panel))])
     if sources:
         listed = "\n".join(f"- `{name}`" for name in sources)
         parts.append([Block("instruction", CONDUCTOR,

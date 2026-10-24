@@ -11,6 +11,7 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
+from orch.conductor.stages import decisions
 from orch.worksource_report import report_problems
 
 
@@ -118,6 +119,8 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         return f"{result['outcome']} gate {result['gate']}{note}"
 
     self._step(item, "register", lambda: self._register(item, args), role="registrar", route=registrar, verdict=said)
+    if status != "blocked":  # a decision changes the input of the piece: never while a question of it still waits
+        decisions.record_decisions(self, item)
     # A blocked piece is committed only under on_blocked = "report" and only when it changed nothing: then its
     # records (artifacts, the source's state) are all there is, and the next piece starts on a clean tree.
     records_only = status == "blocked" and item.options["on_blocked"] == "report" \

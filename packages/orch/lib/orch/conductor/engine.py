@@ -214,6 +214,7 @@ class Conductor:
     _prepare = work_source.prepare
     _refresh_input = work_source.refresh_input
     _research_save = work_source.research_save
+    _record_decision = work_source.decision
     _register = work_source.register
     _commit = work_source.commit
     _open_artifacts = work_source.open_artifacts
@@ -271,6 +272,11 @@ class Conductor:
             stage_bucket=self._stage_bucket, remember_stage=self._remember_stage,
             provider_disabled=self.provider_disabled, sandbox_args=self._sandbox_args, knows=self._knows,
             skills_excluded=self._skills_excluded, run_clock=self._run_clock)
+
+    @property
+    def panel_ports(self) -> advice.PanelPorts:
+        """The route lookups of the advisor panel, from the bindings of the application layer when they are asked for."""
+        return advice.PanelPorts(route=self._route, admit=self._admit)
 
     # ------------------------------------------------------------------ policies
 

@@ -46,7 +46,7 @@ _SHELL_PREFIX = re.compile(r"(?:^|\s)(?:\$\s*|python3?\s+(?:\S*/)?)$")
 _TOKEN = re.compile(r"[a-z][a-z0-9_]*", re.ASCII)  # a denied input of a role manifest is a bare token, not a sentence
 _UNIT_ID = re.compile(r"^U[0-9]+$", re.ASCII)
 _DECISION_KEYS = ("title", "status", "decision", "rationale")
-_FOREIGN_KEYS = ("ref", "loaded", *_DECISION_KEYS, "source", "reason")
+_FOREIGN_KEYS = ("ref", "loaded", *_DECISION_KEYS, "question_key", "question_digest", "source", "reason")
 _PACK_PROCESS_KEYS = ("batch", "orchestration", "ready_units", "policy")  # lifecycle and run policy: never the executor's
 _LESSON_KEYS = ("type", "summary", "ts", "item", "impact", "next")
 
@@ -171,8 +171,10 @@ def _decisions(pack: dict) -> list[dict]:
         if "loaded" in doc:  # reference to another plan, resolved by refs.resolve
             refs.append({key: copy.deepcopy(doc[key]) for key in _FOREIGN_KEYS if key in doc})  # exec/v1 is closed
         else:
+            origin = doc.get("origin") or {}  # a decision an orchestration run recorded names the question it answered
             refs.append({"ref": doc["id"], "loaded": True,
-                         **{key: doc[key] for key in _DECISION_KEYS if doc.get(key) is not None}})
+                         **{key: doc[key] for key in _DECISION_KEYS if doc.get(key) is not None},
+                         **{key: origin[key] for key in ("question_key", "question_digest") if origin.get(key)}})
     return refs
 
 

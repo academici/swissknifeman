@@ -433,7 +433,7 @@
     {
      "kind": "correction",
      "origin": "conductor",
-     "tokens": 478
+     "tokens": 473
     },
     {
      "kind": "progress",
@@ -449,7 +449,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 4655
+     "tokens": 4650
     },
     "retrieval": {
      "limit": 50000,

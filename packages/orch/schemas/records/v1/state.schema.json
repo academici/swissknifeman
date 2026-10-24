@@ -274,6 +274,40 @@
         "deferred_minors": {"description": "Minor findings deferred.", "type": "array"},
         "dynamic_review": {"description": "The risk of the piece turned its review on.", "type": "boolean"},
         "advice_of": {"description": "Advice taken by the piece, by problem.", "type": "object"},
+        "advice_applied": {
+          "description": "Advice the conductor applied on its own (the advisor or the panel, not held for the owner) to red checks or a rejected finding: one row per advice, recorded as a decision of the plan after register.",
+          "type": "array",
+          "items": {
+            "description": "One applied advice.",
+            "type": "object",
+            "required": ["number", "ref", "problem", "options", "recommendation", "confidence", "by", "file", "at"],
+            "additionalProperties": false,
+            "properties": {
+              "number": {"description": "Ordinal of the advice in the piece.", "type": "integer", "minimum": 1},
+              "ref": {"description": "Problem advised on (checks:<round> or findings:<review round>).", "type": "string", "minLength": 1},
+              "problem": {"description": "The problem as the advisor was asked.", "type": "string"},
+              "options": {
+                "description": "Options of the advice.",
+                "type": "array",
+                "items": {
+                  "description": "One option.",
+                  "type": "object",
+                  "required": ["id"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {"description": "Id of the option.", "type": "string", "minLength": 1},
+                    "label": {"description": "What the option does.", "type": "string"}
+                  }
+                }
+              },
+              "recommendation": {"description": "Id of the recommended option that was applied.", "type": "string", "minLength": 1},
+              "confidence": {"description": "Confidence of the advice.", "type": "string", "enum": ["low", "medium", "high"]},
+              "by": {"description": "Who advised.", "type": "string", "enum": ["advisor", "panel"]},
+              "file": {"description": "Advice file of the piece (repository path).", "type": "string", "minLength": 1},
+              "at": {"description": "UTC time the advice was applied.", "type": "string", "minLength": 1}
+            }
+          }
+        },
         "advice_fix": {"description": "Advice text of each check fix round.", "type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
         "combined": {"description": "A review correction that waits to be combined with the red checks.", "type": "object"},
         "combined_done": {"$ref": "#/$defs/round-list"},

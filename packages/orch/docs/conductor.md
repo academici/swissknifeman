@@ -625,6 +625,30 @@ nothing is ever answered on a timeout.
   `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
   `revision + 1` and the executor, which is not told that answer, asks it again. The executor of every later round gets the
   section `# Answers` (question, answer, who answered).
+- **Decisions (P7.6).** An answer is not lost with its run. After the piece is registered (never earlier: a decision with
+  `applies_to` the piece changes `input.decisions`, which is part of `input_part_digest`, and would make an answer that
+  still waits stale), the conductor records every `applied` question of kind `decision` or `clarification` whose
+  `resolution.by` is a person, `advisor` or `panel` (not `policy`, not an earlier decision), and every advice it applied on
+  its own to red checks or a rejected finding (`state.items[<item>].advice_applied`), as an accepted decision of the work
+  source: `orch.py source decision --run R --ref ITEM --file decisions/<question id>.json` (work-source/v1 operation
+  `decision`; the plan source adds a `D#` with `applies_to` the piece, `answered_by` `owner|agent` and an `origin`; the file
+  source appends to `decisions.json` of the artifact folder). The request is kept in `<run>/<item>/decisions/`, its receipt
+  in `receipts/decision-<question id>.json`; a repeat for the same `question_key` and piece is a no-op. A blocked piece records nothing
+  (its questions may still wait); approval and credential answers are never recorded. A source that has no such operation, or
+  refuses it, is the info `DECISION_NOT_RECORDED` (the request stays in the run): the piece and the run do not change.
+  `question_key` is `qk-` and the first 16 hex characters of `question_digest`, the SHA-256 of the canonical JSON
+  (`sort_keys`, `(",", ":")`, `ensure_ascii = False`) of `{item, kind, text, options, answer_schema}`: the text with its
+  whitespace collapsed (case and digits stay), the **full** definition of each option (by id, not only the id) and the
+  answer schema. Another number, option text or schema is another question.
+- **Reuse.** A later run of the piece finds the accepted decision in `input.decisions` (the planner bridge passes
+  `question_key` and `question_digest` from its `origin`). Before a blocking question of kind `decision` or `clarification` is
+  queued, a decision with the same `question_key` **and** `question_digest` whose value this question can take (the id of
+  one of its options, alone or before `: label`, or a text that passes `answer_schema`) answers it: `resolution.by =
+  decision:<D#>`, `QUESTION_REUSED`, and the round is asked again as `executor.<n>-q<k>` with `# Answers`, without a
+  stop. A decision that names the question but does not fit it is `QUESTION_REUSE_REFUSED` (`reason: key` the digest
+  matches another key, `digest` the key matches but the meaning is not proven, `value` the value is no answer of this
+  question) and the question goes the ordinary way. `approval` and `credential` are never reused. A reused answer that the
+  executor asks again goes to a person, like a default.
 
 ### Waiting for a decision
 
@@ -704,8 +728,37 @@ answer` and `resume --run R --retry ITEM` then apply the owner's choice the same
 triage carries the option the owner chose (`by owner`), and the closed rounds, checks and the advice are not repeated. An
 approval or a credential question is the owner's by its kind and is not asked of the advisor; the policy answers a question
 only once. A failed advisor (`ADVISOR_FAILED`), a spent `max_rounds` (`ADVISOR_LIMIT`) or `questions = advisor` without
-`enabled` (`ADVISOR_DISABLED`) leave the problem as it would be without one. Beacons: `QUESTION_ADVISED`. One opinion only:
-no panel of several models.
+`enabled` (`ADVISOR_DISABLED`) leave the problem as it would be without one. Beacons: `QUESTION_ADVISED`. The advice the
+conductor applied is recorded as a decision of the work source after register ([Questions](#questions-of-the-executor-d11)).
+
+**The panel (D10).** `[orch.advisor] panel = ["grok/frontier/high", "claude-code/frontier/high", ...]` (2 or 3 routes
+`PROVIDER[/MODEL_CLASS[/EFFORT]]`; fewer is off) replaces one opinion with the votes of independent advisors when
+`panel_on` fires: `low_confidence` (default: the single advice of a problem has confidence `low`) or `always` (the panel
+advises first). The panel is **one** round of `max_rounds` and at most `len(panel) + 1` calls (the member calls and one critic;
+the single advice that started a `low_confidence` panel is not counted), every call a step admitted by the token budget like
+any other (`advice-p<i>.<n>`, `advice-critic.<n>`).
+
+1. Each member gets the same prompt as a single advisor, on its own route, and never sees another answer.
+2. The conductor compares the recommended option ids: **agreement** (all equal) is applied; a **majority** (more than half)
+   gets one round of critique by the first member of the minority, who reads the anonymised positions (the block `Panel
+   options`) and must cite evidence in `sources`: when the critic recommends the option of the majority the majority stands,
+   otherwise (another option, no evidence, or a critic that failed) the owner decides; a **split** (two members who differ,
+   three different answers) is the owner's, with no critique.
+3. The result is one closed advice: the strictest category, the lowest confidence, the union of the sources and any
+   `needs_owner` among the members that stand behind the choice (all members for a split), the options of those first and the
+   rest after them, so the owner sees every way. It goes through the same gates as one advice (`human_gate`,
+   `min_confidence`, categories computed from the changed paths): a panel never lowers a gate.
+4. A member that cannot start (`codex` has no advisor launch entry; a missing CLI; a gated provider) is skipped with the info
+   `ADVISOR_PANEL_FAILED`; with fewer than two answers the single advisor decides (`ADVISOR_PANEL_FAILED` names how many
+   answered). A spent `max_rounds` queues the next problem; it does not start another panel.
+
+The record is `advice-<n>-panel.json` (`schemas/conductor/v1/advice-panel.schema.json`: `members[]` with route, file and
+advice, `synthesis {kind, chosen, advice, critic?}`, `trigger?`); `ADVISOR_PANEL` (info) says the kind. A question the panel
+answers has `resolution.by = panel` and `authority.mode = panel`, and its decision in the plan has `origin.kind = panel`.
+For a question with options the members vote by option id (the question fixes the ids). For checks, findings and a question
+without options each member names its own ways, so the same id may mean different things: members (and the critic) agree
+only on the same id with the same text (whitespace and case aside); anything else is a different recommendation. A panel
+record that fails its schema is not written: `ADVISOR_PANEL_FAILED` says why and the single advisor decides.
 
 ### Resume
 

@@ -410,6 +410,26 @@ def research_save(self, item: Item, number: int, found: dict) -> dict:
     return {"outcome": "kept", "path": self._relative(kept), "reason": why[:300]}
 
 
+def decision(self, item: Item, doc: dict) -> dict:
+    """``orch.py source decision`` of the request ``doc`` (``finish`` built it): ``{outcome, decision_id?}`` when the
+    source recorded the answered question (or already had it), else ``{outcome: "kept", reason}`` and the info
+    ``DECISION_NOT_RECORDED``: a source that does not serve the operation, or refuses it, loses the decision, never the
+    piece. The request stays in ``decisions/`` of the piece."""
+    request = write_json(item.directory / "decisions" / f"{safe(doc['question']['id'])}.json", doc)
+    code, answer, err = self._orch("source", "decision", "--run", item.orch_run, "--ref", item.ref, "--file", str(request),
+                                   "--actor", self.conductor.get("registrar") or "orch/conductor")
+    if code == 0 and isinstance(answer, dict) and answer.get("outcome") in ("recorded", "no-op"):
+        return {key: answer[key] for key in ("outcome", "decision_id") if key in answer}
+    if isinstance(answer, dict) and answer.get("outcome") in ("refused", "unsupported"):
+        why = f"{answer.get('reason_code') or answer['outcome']}: {answer.get('message', '')}".rstrip(": ")
+    else:
+        why = err or "the work source printed no answer"
+    self.progress.emit("info", item=item.ref, reason_code="DECISION_NOT_RECORDED",
+                       message=f"the work source did not record the answer to {doc['question']['id']} as a decision "
+                               f"({why}); it stays in {self._relative(request)}"[:300])
+    return {"outcome": "kept", "reason": why[:300]}
+
+
 def register(self, item: Item, args: list) -> dict:
     """``orch.py source register`` with the arguments ``finish`` built: ``{outcome, gate}``, or a ``Stop``."""
     code, answer, err = self._orch(*args)

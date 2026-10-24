@@ -287,7 +287,7 @@
     {
      "kind": "run_rules",
      "origin": "conductor",
-     "tokens": 187
+     "tokens": 183
     },
     {
      "kind": "context_map",
@@ -321,7 +321,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 234
+     "tokens": 230
     }
    },
    "excluded": [],

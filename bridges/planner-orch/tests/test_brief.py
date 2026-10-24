@@ -156,6 +156,20 @@ class MappingTests(BriefCase):
         self.assertEqual(entry["rationale"], "simple")
         self.assertIn("decision", entry)
 
+    def test_a_recorded_answer_carries_its_question_key_and_digest_into_the_brief(self):
+        origin = {"kind": "question", "run": "run-a", "item": "P1.1", "question_id": "Q1", "question_key": "qk-" + "a1" * 8,
+                  "question_digest": "a1" * 32, "revision": 1}
+        ops.add_decision(self.root, "P1.1 Q1: Keep?", data={
+            "status": "accepted", "question": "Keep?", "decision": "keep: keep it", "rationale": "Answered by owner",
+            "applies_to": ["P1.1"], "answered_by": "owner", "origin": origin})
+        ops.add_decision(self.root, "Plain", data={"status": "accepted", "question": "q", "decision": "d", "rationale": "r",
+                                                   "applies_to": ["P1.1"]})
+        doc = self.brief()
+        recorded, plain = doc["decisions"]
+        self.assertEqual((recorded["question_key"], recorded["question_digest"]), ("qk-" + "a1" * 8, "a1" * 32))
+        self.assertEqual(recorded["decision"], "keep: keep it")
+        self.assertNotIn("question_key", plain)  # a decision nobody recorded from a question stays as it was
+
     def test_provenance_context_refs_and_hints(self):
         ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
                                      "sections": [{"id": "a", "title": "A", "text": "t"}]})

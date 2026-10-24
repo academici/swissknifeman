@@ -921,10 +921,23 @@ def _source_decision(args, current, project) -> int:
     return 0 if answer["outcome"] in ("recorded", "no-op") else 1
 
 
+def _source_readiness(args, current, project) -> int:
+    """The readiness of every detailed phase of a plan and its next lane, read-only and without a run: ``ok`` (exit 0) or
+    ``refused`` (exit 1; ``READINESS_UNSUPPORTED`` for a file input or a source without the operation)."""
+    if args.input:
+        source = _source(current, project, args.config, {"source": {"kind": "file", "path": str(Path(args.input).resolve())}})
+        collection = str(Path(args.input).resolve())
+    else:
+        source, collection = _source(current, project, args.config), args.plan
+    answer = _call(source, "readiness", collection=collection, plans_root=args.plans_root)
+    _print(answer)
+    return 0 if answer["outcome"] == "ok" else 1
+
+
 def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
                "register": _source_register, "commit": _source_commit, "release": _source_release,
-               "research": _source_research, "decision": _source_decision}[args.action]
+               "research": _source_research, "decision": _source_decision, "readiness": _source_readiness}[args.action]
     try:
         context = project_mod.require(getattr(args, "project", None))  # the cycle writes the state of a project
         project = context.root
@@ -949,7 +962,7 @@ def _source_command(args: argparse.Namespace) -> int:
 
 
 def _source_parser(verbs) -> None:
-    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release, research, decision")
+    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release, research, decision, readiness")
     actions = command.add_subparsers(dest="action", required=True)
     claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
     where = claim.add_mutually_exclusive_group(required=True)
@@ -1014,6 +1027,13 @@ def _source_parser(verbs) -> None:
     decision.add_argument("--file", required=True, type=Path, metavar="FILE",
                           help="JSON: question, question_key, question_digest, resolution, authority, rationale, evidence")
     decision.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who records (default: the source decides)")
+    readiness = actions.add_parser("readiness", help="readiness of every detailed phase of a plan and its next lane "
+                                                     "(read-only, no run)")
+    where = readiness.add_mutually_exclusive_group(required=True)
+    where.add_argument("--plan", help="collection of the work source, such as a plan id or path")
+    where.add_argument("--input", type=Path, metavar="FILE",
+                       help="the built-in file source (always refused: a file input has no phases)")
+    readiness.add_argument("--plans-root", dest="plans_root", metavar="DIR")
 
 
 def _conduct_args(argv: list[str]) -> list[str] | None:

@@ -15,7 +15,8 @@ plugin source: a request orch builds wrongly never reaches it, and its answers a
   own source;
 - ``research`` records ``research-<n>.json`` next to the stage-report;
 - ``decision`` appends the decision to ``decisions.json`` next to the stage-report (a repeat of the same ``question_key``
-  changes nothing).
+  changes nothing);
+- ``readiness`` is refused (``READINESS_UNSUPPORTED``): a file input has no phases and no certificate of readiness.
 """
 from __future__ import annotations
 
@@ -118,6 +119,9 @@ class FileWorkSource:
 
     def decision(self, **fields: Any) -> dict:
         return self.call("decision", fields)
+
+    def readiness(self, **fields: Any) -> dict:
+        return self.call("readiness", fields)
 
     # ------------------------------------------------------------------ operations
 
@@ -309,3 +313,7 @@ class FileWorkSource:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(kept, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         return {"op": "decision", "outcome": "recorded", "decision_id": request["question_key"]}
+
+    def _readiness(self, request: dict) -> dict:
+        return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_UNSUPPORTED",
+                "message": "a file input has no phases; the readiness of a plan belongs to the source of that plan"}

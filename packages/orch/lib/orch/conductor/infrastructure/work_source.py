@@ -1,5 +1,5 @@
 """The work source as the conductor reaches it: the verbs of this package's own ``orch.py source`` (claim, brief,
-release, research, register, commit), never the plan itself, and the artifact folder of a piece. ``prepare`` is the
+release, research, register, commit, readiness), never the plan itself, and the artifact folder of a piece. ``prepare`` is the
 exception: it binds the launch-plan in this process so a public ``source prepare`` stays strict.
 
 The one place of the conductor that writes into the artifact folder (``artifacts_dir`` of the brief, or
@@ -12,6 +12,7 @@ import io
 import os
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+import re
 import shlex
 import sys
 from typing import Callable, Optional
@@ -37,6 +38,7 @@ from aicore.util.proc import run as run_with_timeout
 # evidence of its items with the plan at register.
 FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
 ORCH_TRANSPORT: Optional[Callable] = None
+_CODE_LINE = re.compile(r"^([A-Z][A-Z0-9_]{1,63}): ")
 
 
 def inprocess_transport(argv, cwd, env):
@@ -433,6 +435,32 @@ def decision(self, item: Item, doc: dict) -> dict:
                        message=f"the work source did not record the answer to {doc['question']['id']} as a decision "
                                f"({why}); it stays in {self._relative(request)}"[:300])
     return {"outcome": "kept", "reason": why[:300]}
+
+
+def source_readiness(self, plan: str, *, plans_root: Optional[str] = None) -> dict:
+    """``orch.py source readiness`` of the collection ``plan``: the work-source/v1 ``readiness`` answer, checked against
+    the contract. ``self`` is the conductor or any owner with ``_orch`` (:func:`run_orch` bound to it, as the conductor
+    binds it). Never raises for the source: a refusal of the source (``READINESS_UNSUPPORTED`` included), a source that
+    failed or printed no answer, and an answer outside the contract all come back as ``{outcome: refused, reason_code,
+    message}``, so the caller decides what an unknown readiness means."""
+    args = ["source", "readiness", "--plan", plan] + (["--plans-root", plans_root] if plans_root else [])
+    _, answer, err = self._orch(*args)  # the answer decides: a refused answer exits 1 with its document
+    if not isinstance(answer, dict):
+        line = (err or "the work source printed no answer").splitlines()[-1]
+        coded = _CODE_LINE.match(line)  # ``CODE: message`` of the source CLI (WORK_SOURCE_UNAVAILABLE, ...)
+        return {"op": "readiness", "outcome": "refused", "reason_code": coded.group(1) if coded else "WORK_SOURCE_FAILED",
+                "message": line[:300]}
+    found = source_problems(answer, "output")
+    if not found and answer.get("op") != "readiness":
+        found = [f"/op: answers {answer.get('op')!r} to 'readiness'"]
+    if not found and answer["outcome"] == "ok" and not ("phases" in answer and "next" in answer):
+        found = ["/: an ok answer needs phases and next"]
+    if not found and answer["outcome"] == "refused" and "reason_code" not in answer:
+        found = ["/: a refused answer needs reason_code"]
+    if found:
+        return {"op": "readiness", "outcome": "refused", "reason_code": "WORK_SOURCE_FAILED",
+                "message": f"the readiness answer is outside work-source/v1: {'; '.join(found[:3])}"[:300]}
+    return answer
 
 
 def register(self, item: Item, args: list) -> dict:

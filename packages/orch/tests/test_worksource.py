@@ -95,7 +95,131 @@ class ClientTests(SourceCase):
         with self.assertRaises(worksource.WorkSourceError) as caught:
             self.source().claim(plan="P", run_id="run-1", submission_id="not-a-submission", actor=ACTOR)
         self.assertEqual(caught.exception.code, "INPUT_INVALID")
-        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit, release, note, research, decision"])
+        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit, release, note, research, decision, readiness"])
+
+
+class ReadinessTests(SourceCase):
+    """The optional operation ``readiness``: the contract on both sides, a source without it, the file source, the CLI
+    verb and the conductor helper ``source_readiness``."""
+
+    LANE = {"kind": "run-items", "items": ["W1"], "phase": "P1", "message": None}
+
+    def test_readiness_is_an_operation_of_the_contract(self):
+        self.assertIn("readiness", worksource.OPS)
+        self.assertEqual(worksource.problems({"op": "readiness", "collection": "P"}, "input"), [])
+        self.assertTrue(worksource.problems({"op": "readiness", "collection": "P", "ref": "W1"}, "input"))
+        self.assertTrue(worksource.problems({"op": "readiness"}, "input"))
+        ok = {"op": "readiness", "outcome": "ok", "phases": [{"id": "P1", "status": "stale", "digest": "sha256:" + "a" * 64}],
+              "next": self.LANE}
+        self.assertEqual(worksource.problems(ok, "output"), [])
+        for spoiled in ({**ok, "phases": [{"id": "P1", "status": "approved", "digest": "sha256:" + "a" * 64}]},
+                        {**ok, "phases": [{"id": "P1", "status": "ready", "digest": "a" * 64}]},
+                        {**ok, "next": {"kind": "run-items", "items": ["W1"]}}, {**ok, "outcome": "unsupported"}):
+            self.assertTrue(worksource.problems(spoiled, "output"), spoiled)
+
+    def test_the_answer_of_the_source_is_returned(self):
+        answer = self.source().readiness(collection="P", plans_root="plans")
+        self.assertEqual((answer["outcome"], answer["next"]), ("ok", self.LANE))
+        (sent,) = [json.loads(line) for line in self.marks.read_text().splitlines()]
+        self.assertEqual(sent, {"op": "readiness", "collection": "P", "plans_root": "plans"})
+
+    def test_an_answer_outside_the_contract_is_a_failure_of_the_source(self):
+        self.mode("invalid")
+        with self.assertRaises(worksource.WorkSourceError) as caught:
+            self.source().readiness(collection="P")
+        self.assertEqual(caught.exception.code, "WORK_SOURCE_FAILED")
+        self.assertIn("/phases/0/status", caught.exception.message)
+
+    def test_a_source_without_the_operation_is_refused_unsupported(self):
+        self.mode("no-readiness")
+        answer = self.source().readiness(collection="P")
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "READINESS_UNSUPPORTED"))
+        self.assertIn("OP_UNSUPPORTED", answer["message"])
+        self.assertEqual(worksource.problems(answer, "output"), [])
+        self.mode("crash")  # a crash is not "unsupported"
+        with self.assertRaises(worksource.WorkSourceError) as caught:
+            self.source().readiness(collection="P")
+        self.assertEqual(caught.exception.code, "WORK_SOURCE_FAILED")
+
+    def test_the_file_source_refuses_readiness(self):
+        from orch.worksource_file import FileWorkSource
+        answer = FileWorkSource(INPUT, project=self.project).readiness(collection=str(INPUT))
+        self.assertEqual((answer["op"], answer["outcome"], answer["reason_code"]),
+                         ("readiness", "refused", "READINESS_UNSUPPORTED"))
+        code, out, err = self.cli("source", "readiness", "--input", INPUT)
+        self.assertEqual((code, err, json.loads(out)["reason_code"]), (1, "", "READINESS_UNSUPPORTED"))
+
+    def test_the_cli_prints_the_answer_and_writes_no_run(self):
+        code, out, err = self.cli("source", "readiness", "--plan", "P", "--plans-root", "plans")
+        self.assertEqual((code, err, json.loads(out)["outcome"]), (0, "", "ok"))
+        self.mode("no-readiness")
+        code, out, _ = self.cli("source", "readiness", "--plan", "P")
+        self.assertEqual((code, json.loads(out)["reason_code"]), (1, "READINESS_UNSUPPORTED"))
+        self.mode("invalid")
+        code, out, err = self.cli("source", "readiness", "--plan", "P")
+        self.assertEqual((code, out, err.split(":")[0]), (1, "", "WORK_SOURCE_FAILED"))
+        self.assertEqual(self.types(), [])  # read-only: no run, no event
+
+    def owner(self) -> SimpleNamespace:
+        from orch.conductor.infrastructure import work_source
+        owner = SimpleNamespace(project=self.project, project_resolution=None, config_file=None, env=None)
+        owner._orch = lambda *args: work_source.run_orch(owner, *args)
+        patcher = mock.patch.object(work_source, "ORCH_TRANSPORT", work_source.inprocess_transport)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return owner
+
+    def test_source_readiness_returns_the_checked_answer_and_never_raises(self):
+        from orch.conductor.infrastructure import work_source
+        owner = self.owner()
+        answer = work_source.source_readiness(owner, "P", plans_root="plans")
+        self.assertEqual((answer["outcome"], answer["phases"][0]["status"], answer["next"]), ("ok", "ready", self.LANE))
+        self.mode("no-readiness")
+        self.assertEqual(work_source.source_readiness(owner, "P")["reason_code"], "READINESS_UNSUPPORTED")
+        self.mode("invalid")
+        answer = work_source.source_readiness(owner, "P")
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "WORK_SOURCE_FAILED"))
+        self.assertIn("/phases/0/status", answer["message"])
+
+    def test_source_readiness_refuses_an_ok_without_phases_or_next_and_an_unavailable_source(self):
+        from orch.conductor.infrastructure import work_source
+        owner = self.owner()
+        os.environ["FAKE_WS_READINESS"] = json.dumps({"op": "readiness", "outcome": "ok", "phases": []})
+        answer = work_source.source_readiness(owner, "P")
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "WORK_SOURCE_FAILED"))
+        self.assertIn("needs phases and next", answer["message"])
+        del os.environ["FAKE_WS_READINESS"]
+        lost = SimpleNamespace(_orch=lambda *args: (3, None, "WORK_SOURCE_UNAVAILABLE: no work source"))
+        self.assertEqual(work_source.source_readiness(lost, "P"),
+                         {"op": "readiness", "outcome": "refused", "reason_code": "WORK_SOURCE_UNAVAILABLE",
+                          "message": "WORK_SOURCE_UNAVAILABLE: no work source"})
+        silent = SimpleNamespace(_orch=lambda *args: (1, None, ""))
+        self.assertEqual(work_source.source_readiness(silent, "P")["reason_code"], "WORK_SOURCE_FAILED")
+
+    def test_the_conductor_fake_source_answers_what_the_test_set(self):
+        import subprocess
+        import sys
+        plugin = ROOT / "tests" / "fixtures" / "conductor" / "source" / "plugin.py"
+        state_file = Path(self.tmp.name) / "cs-state.json"
+
+        def ask(state: dict) -> dict:
+            state_file.write_text(json.dumps(state), encoding="utf-8")
+            request = {"protocol": "1", "op": "invoke", "request_id": "r" * 32, "context": {"project_root": str(self.project)},
+                       "input": {"op": "readiness", "collection": "T"}}
+            done = subprocess.run([sys.executable, str(plugin)], input=json.dumps(request), capture_output=True, text=True,
+                                  env={**os.environ, "FAKE_CS_STATE": str(state_file),
+                                       "AICORE_ROOT": str(ROOT.parent / "aicore")}, check=True, timeout=60)
+            return json.loads(done.stdout)
+        items = {"order": ["T1", "T2"], "items": {"T1": {"status": "done"}, "T2": {"status": "todo"}}}
+        answer = ask(dict(items))["output"]
+        self.assertEqual(worksource.problems(answer, "output"), [])
+        self.assertEqual(answer["next"], {"kind": "run-items", "items": ["T2"], "phase": None, "message": None})
+        given = {"phases": [{"id": "P1", "status": "missing", "digest": "sha256:" + "b" * 64}],
+                 "next": {"kind": "audit-phase", "items": [], "phase": "P1", "message": "readiness missing"}}
+        answer = ask({**items, "readiness": given})["output"]
+        self.assertEqual((answer["phases"], answer["next"]), (given["phases"], given["next"]))
+        self.assertEqual(ask({**items, "no_readiness": True})["error"]["code"], "OP_UNSUPPORTED")
+        self.assertEqual(ask({**items, "refuse": ["readiness"]})["output"]["reason_code"], "READINESS_TEST_REFUSAL")
 
 
 class UnregisteredTests(SourceCase):

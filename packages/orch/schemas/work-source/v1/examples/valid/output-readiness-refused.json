@@ -1,0 +1,6 @@
+{
+  "op": "readiness",
+  "outcome": "refused",
+  "reason_code": "READINESS_UNSUPPORTED",
+  "message": "a file input has no phases; readiness belongs to the source of a plan"
+}

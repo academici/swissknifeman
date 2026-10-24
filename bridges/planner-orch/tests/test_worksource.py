@@ -1058,6 +1058,64 @@ class ReadyRuntimeTests(Case):
         self.runtime_cycle()
 
 
+class ReadinessOpTests(Case):
+    """``readiness``: phases from ``plan.py readiness status`` and the next lane read as ``claim`` reads it."""
+
+    def setUp(self):
+        super().setUp()
+        self.plan_root = self.project / "plans" / self.plan
+        self.readiness, self.store, self.ops = partners.planner_engine("plan.readiness", "plan.store", "plan.ops")
+
+    def ask(self, plan=None) -> dict:
+        return self.op(worksource.op_readiness, op="readiness", collection=plan or self.plan)
+
+    def certify(self) -> str:
+        self.ops.add_document(self.plan_root, {"id": "audit-p1", "title": "Audit", "sections": []})
+        self.readiness.record(self.plan_root, "P1", verdict="ready", audit="knowledge/audit-p1", actor=ACTOR)
+        return self.readiness.semantic_digest(self.store.load_plan(self.plan_root), "P1")
+
+    def test_missing_phase_and_the_first_lane_of_run_items(self):
+        answer = self.ask()
+        digest = self.readiness.semantic_digest(self.store.load_plan(self.plan_root), "P1")
+        self.assertEqual(answer, {"op": "readiness", "outcome": "ok",
+                                  "phases": [{"id": "P1", "status": "missing", "digest": digest}],
+                                  "next": {"kind": "run-items", "items": ["P1.1"], "phase": "P1", "message": None}})
+
+    def test_a_ready_phase_and_a_stale_one_after_a_change_of_its_item(self):
+        digest = self.certify()
+        self.assertEqual(self.ask()["phases"], [{"id": "P1", "status": "ready", "digest": digest}])
+        run(self.project, "set", self.plan, "P1.2", "--json", json.dumps({"why": "a changed reason"}))
+        (row,) = self.ask()["phases"]
+        self.assertEqual(row["status"], "stale")
+        self.assertNotEqual(row["digest"], digest)
+
+    def test_a_required_audit_is_the_next_step_with_its_message(self):
+        run(self.project, "set", self.plan, "plan", "--json", '{"settings":{"design_audit":"required"}}')
+        answer = self.ask()
+        self.assertEqual(answer["phases"][0]["status"], "missing")
+        self.assertEqual((answer["next"]["kind"], answer["next"]["items"], answer["next"]["phase"]),
+                         ("audit-phase", [], "P1"))
+        self.assertTrue(answer["next"]["message"])
+        self.certify()
+        self.assertEqual(self.ask()["next"]["kind"], "run-items")  # the certificate opens the lane
+
+    def test_an_item_in_progress_leaves_no_free_lane_and_claim_reads_the_same(self):
+        self.assertEqual(self.claim(items=["P1.1"])["status"], "claimed")
+        lane = self.ask()["next"]
+        self.assertNotEqual(lane["kind"], "run-items")
+        self.assertEqual(lane["items"], [])
+        self.assertTrue(lane["message"])
+        self.assertEqual(worksource._candidate(self.plan, "run-other", None), (None, lane["message"]))
+
+    def test_a_refusal_of_the_planner_is_refused_with_its_code(self):
+        answer = self.ask("NO-SUCH-PLAN")
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "PLAN_NOT_FOUND"), answer)
+        self.assertNotIn("phases", answer)
+        with mock.patch.object(worksource, "plan_json", return_value={"phases": [{"id": "P1"}]}):
+            answer = self.ask()
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "READINESS_UNREADABLE"))
+
+
 class ProtocolTests(Case):
     """describe and invoke through aicore.ext.plugins with the plugin registered in a temporary machine config."""
 
@@ -1084,6 +1142,14 @@ class ProtocolTests(Case):
         self.assertEqual(result.status, "ok", result.error)
         self.valid(result.output, "output")
         self.assertEqual((result.output["status"], result.output["ref"]), ("claimed", "P1.1"))
+
+    def test_invoke_answers_readiness(self):
+        registration = plugins.find_registration("planner-orch", self.project, env=self.env)
+        result = plugins.invoke_one(registration, "orch:work-source", {"op": "readiness", "collection": self.plan},
+                                    env=self.env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.valid(result.output, "output")
+        self.assertEqual((result.output["outcome"], result.output["next"]["items"]), ("ok", ["P1.1"]))
 
     def test_an_unknown_op_is_a_protocol_error(self):
         registration = plugins.find_registration("planner-orch", self.project, env=self.env)

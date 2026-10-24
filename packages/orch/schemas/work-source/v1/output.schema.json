@@ -11,7 +11,8 @@
     {"$ref": "#/$defs/release"},
     {"$ref": "#/$defs/note"},
     {"$ref": "#/$defs/research"},
-    {"$ref": "#/$defs/decision"}
+    {"$ref": "#/$defs/decision"},
+    {"$ref": "#/$defs/readiness"}
   ],
   "$defs": {
     "text": {
@@ -227,6 +228,45 @@
         "outcome": {"description": "recorded, no-op, refused or unsupported.", "type": "string", "enum": ["recorded", "no-op", "refused", "unsupported"]},
         "decision_id": {"description": "Id of the decision in the source, such as D12.", "$ref": "#/$defs/text"},
         "reason_code": {"description": "Why the decision was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "readiness": {
+      "description": "Readiness of the detailed groups of a collection and its next step: ok with phases and next, or refused with a reason code (READINESS_UNSUPPORTED: the source does not serve the operation).",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "readiness"},
+        "outcome": {"description": "ok or refused.", "type": "string", "enum": ["ok", "refused"]},
+        "phases": {
+          "description": "Every detailed group of the collection, in its order, with the state of its readiness certificate.",
+          "type": "array",
+          "items": {
+            "description": "One group.",
+            "type": "object",
+            "properties": {
+              "id": {"description": "Id of the group, such as P3.", "$ref": "#/$defs/text"},
+              "status": {"description": "missing (no certificate), ready, ready_with_advisories, not_ready or stale (the group or the policy changed since the certificate).", "type": "string", "enum": ["missing", "ready", "ready_with_advisories", "not_ready", "stale"]},
+              "digest": {"description": "Current semantic digest of the group.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+            },
+            "required": ["id", "status", "digest"],
+            "additionalProperties": false
+          }
+        },
+        "next": {
+          "description": "The first lane the source would give work for: run-items with its items, or another kind (waiting, audit-phase, design-phase, terminal, ...) with a message.",
+          "type": "object",
+          "properties": {
+            "kind": {"description": "Kind of the next step, such as run-items, waiting or audit-phase.", "$ref": "#/$defs/text"},
+            "items": {"description": "References of the pieces of a run-items lane, in order; empty for another kind.", "type": "array", "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}},
+            "phase": {"description": "Group of the step, when it has one.", "type": ["string", "null"]},
+            "message": {"description": "Why there is no lane to run, for a kind other than run-items.", "type": ["string", "null"]}
+          },
+          "required": ["kind", "items", "phase", "message"],
+          "additionalProperties": false
+        },
+        "reason_code": {"description": "Why the readiness was refused.", "$ref": "#/$defs/reasonCode"},
         "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
       },
       "required": ["op", "outcome"],

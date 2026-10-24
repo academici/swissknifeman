@@ -3,7 +3,8 @@
 State: ``order`` (references in plan order), ``items`` (per reference: ``status``, ``title``, ``scenario``,
 ``options`` layers, ``checks``, ``write_set``, ``route``, ``holder``), ``registered`` (attempt id -> status),
 ``commits`` and ``calls`` (every request, in order). ``refuse`` names operations to refuse once (``commit``,
-``register``, ``release``, ``decision``); ``no_decision`` makes the source a plugin without the ``decision`` operation.
+``register``, ``release``, ``decision``, ``readiness``); ``no_decision`` and ``no_readiness`` make the source a plugin
+without the ``decision`` or ``readiness`` operation. ``readiness`` (``phases``, ``next``) is what ``readiness`` answers.
 An accepted ``decision`` is kept in ``decisions`` and in the ``decisions`` of its item, which the next brief carries
 into the execution-input (like the planner bridge, ``question_key`` and ``question_digest`` included). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
 """
@@ -191,6 +192,19 @@ def research(state, given, project):
     return {"op": "research", "outcome": "recorded", "path": relative}
 
 
+def readiness(state, given):
+    """The readiness the test set: ``readiness`` of the state (``phases``, ``next``; default no phases and the first todo
+    item as a run-items lane), or a refusal once when ``refuse`` names it."""
+    if "readiness" in state.get("refuse", []):
+        state["refuse"].remove("readiness")
+        return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_TEST_REFUSAL", "message": "once"}
+    kept = state.get("readiness") or {}
+    todo = [name for name in state["order"] if state["items"][name]["status"] == "todo"]
+    lane = ({"kind": "run-items", "items": todo[:1], "phase": None, "message": None} if todo
+            else {"kind": "terminal", "items": [], "phase": None, "message": "no item is left"})
+    return {"op": "readiness", "outcome": "ok", "phases": kept.get("phases", []), "next": kept.get("next", lane)}
+
+
 def decision(state, given):
     """Records the answered question as an accepted decision of the item; a repeat of the same question_key is a no-op."""
     if "decision" in state.get("refuse", []):
@@ -232,10 +246,15 @@ elif request.get("op") == "invoke":
     handlers = {"claim": lambda: claim(state, given), "brief": lambda: brief(state, given, project),
                 "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project),
                 "release": lambda: release(state, given), "note": lambda: note(state, given),
-                "research": lambda: research(state, given, project), "decision": lambda: decision(state, given)}
+                "research": lambda: research(state, given, project), "decision": lambda: decision(state, given),
+                "readiness": lambda: readiness(state, given)}
     if given["op"] == "decision" and state.get("no_decision"):  # a source without the operation
         save(state)
         reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source records no decisions"})
+        sys.exit(0)
+    if given["op"] == "readiness" and state.get("no_readiness"):  # a source without the operation
+        save(state)
+        reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source tells no readiness"})
         sys.exit(0)
     answer = handlers[given["op"]]()
     save(state)

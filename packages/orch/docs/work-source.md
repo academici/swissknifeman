@@ -22,6 +22,17 @@ choose a branch by `op`.
 | `note` (optional) | `collection`, `plans_root?`, `text`, `refs` (a phase or an item of the collection), `run_id?`, `actor?` | `outcome` `recorded` \| `no-op` \| `refused`; `reason_code`, `message` when refused |
 | `research` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `number` (from 1), `result` (a `research-result`), `actor?` | `outcome` `recorded` \| `no-op` (the same result is already kept) \| `refused`; `path` (repository-relative) when kept; `reason_code`, `message` when refused |
 | `decision` (optional) | `collection`, `plans_root?`, `ref`, `run_id`, `attempt_id?`, `question` (`id`, `revision`, `kind` `clarification` \| `decision`, `text`, `options?`, `answer_schema?`), `question_key`, `question_digest`, `resolution` (`value`, `by`, `at?`), `authority` (`owner` \| `advisor` \| `panel`), `rationale`, `evidence` (repository paths), `actor?` | `outcome` `recorded` \| `no-op` (the question is already recorded) \| `refused` \| `unsupported` (the source does not serve the operation); `decision_id?`; `reason_code`, `message` when refused |
+| `readiness` (optional, read-only) | `collection`, `plans_root?` | `outcome` `ok` \| `refused`; when ok `phases` (every detailed phase: `id`, `status` `missing` \| `ready` \| `ready_with_advisories` \| `not_ready` \| `stale`, `digest` `sha256:<hex>`) and `next` (`kind`, `items`, `phase`, `message`); `reason_code`, `message` when refused (`READINESS_UNSUPPORTED`: the source does not serve the operation) |
+
+`readiness` tells autopilot whether a plan may run and what would run next, without claiming anything. `phases` are the
+readiness certificates of the plan as its source keeps them; `next` is the first lane the source would give work for:
+`run-items` with the `items` of the lane and its `phase` (`message` null), or another kind (`audit-phase`,
+`design-phase`, `waiting`, `archive`, `terminal`, …) with `items` empty and a `message` that says why nothing runs. The
+planner bridge reads the next lane with the same function `claim` uses, so the lane `readiness` names is the lane a
+claim would take. A plugin that answers the error `OP_UNSUPPORTED` (or `INPUT_INVALID`:
+a source older than the operation) is the refusal `READINESS_UNSUPPORTED` (`PluginWorkSource.readiness`); the file source
+refuses it the same way. The contract does not require `phases` and `next` of an `ok` answer; the conductor helper
+`source_readiness` does.
 
 `decision` records an answered question of a piece (an owner's answer, an advice or a panel recommendation the conductor
 applied) as an accepted decision that applies to the piece, so that a later run of the piece finds it ([Questions of
@@ -67,7 +78,7 @@ outside the contract is a failure of the source.
 ## Client
 
 `orch.worksource.PluginWorkSource(plugin_id, *, project=None, env=None, config_file=None)` implements the
-`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, `note(**fields)`, `research(**fields)`, `decision(**fields)`, each returning
+`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, `note(**fields)`, `research(**fields)`, `decision(**fields)`, `readiness(**fields)`, each returning
 the output document). Every call looks the registration up again, validates the request (`INPUT_INVALID`, nothing is sent),
 describes and invokes the plugin through `aicore.ext.plugins.invoke_one`, and validates the answer.
 
@@ -91,6 +102,7 @@ orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]]
 orch.py source release --run RUN [--reason TEXT] [--actor P/M[/E]]
 orch.py source research --run RUN --result FILE --number N [--actor P/M[/E]]
 orch.py source decision --run RUN --file FILE [--ref ITEM] [--actor P/M[/E]]
+orch.py source readiness (--plan P | --input FILE) [--plans-root DIR]
 ```
 
 - `claim` derives `submission_id` = `sub-` + the first 24 hex characters of the SHA-256 of the canonical JSON
@@ -108,6 +120,13 @@ orch.py source decision --run RUN --file FILE [--ref ITEM] [--actor P/M[/E]]
   after it. `--ref` must be the piece of the run (`INPUT_INVALID` otherwise). Exit 0 for `recorded` and `no-op`; a source that
   failed or answered outside the contract (a plugin without the operation) prints `{"op": "decision", "outcome":
   "unsupported", "message"}` and exits 1, a refusal exits 1, no source exits 3.
+- `readiness` needs no run and writes nothing (no run directory, no receipt, no event): it prints the answer of the source
+  of `--plan` (exit 0 for `ok`, 1 for `refused`, including `READINESS_UNSUPPORTED`); `--input` always prints the refusal of
+  the file source. A source that failed or answered outside the contract exits 1 with `WORK_SOURCE_FAILED` on stderr, no
+  source exits 3. The conductor helper `orch.conductor.infrastructure.work_source.source_readiness(owner, plan,
+  plans_root=None)` calls this verb through `owner._orch`, checks the answer against the contract and never raises:
+  a refusal, a failure, no source (`WORK_SOURCE_UNAVAILABLE`) or an answer outside the contract (an `ok` without `phases`
+  and `next` included: `WORK_SOURCE_FAILED`) all come back as `{op: readiness, outcome: refused, reason_code, message}`.
 - `brief` stores the brief through the source and records `input_ref` and `input_id` in `run.json`.
 - `prepare` reads the brief from the artifact store of the project, loads the run-policy pack of the run's scenario
   (`orch.py policy show`), prepares a dry run with `out = <run>/prepare` and the run's `submission_id`, and writes
@@ -141,7 +160,7 @@ input (the reference is its `input_id`; a different candidate is `INPUT_UNKNOWN`
 source); `register` refuses a report outside `register-report` with the codes of the planner bridge, applies the same
 evidence gate as the planner bridge (check-evidence with exit 0 for every acceptance check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (the idempotency receipt) into
 `.swissknifeman/orch-artifacts/<run_id>/<input_id>/` (local records, not committed); `commit` commits nothing unless `--commit`, then only the given paths with
-`adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input; `decision` appends the request to `decisions.json` there (a repeat of the same `question_key` changes nothing). For provenance
+`adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input; `decision` appends the request to `decisions.json` there (a repeat of the same `question_key` changes nothing); `readiness` is `refused` (`READINESS_UNSUPPORTED`): a file has no phases. For provenance
 `plan_support` and `phase_support` the `register` command forwards the note to the configured plugin source
 (the CLI prints the answer with `note: {outcome: recorded | unsupported | refused, message?}`; `receipts/register.json` keeps the pure answer of the source and the note goes to `receipts/note.json`). The `input_id` of a file input names the artifact folder, so it must be one path component (`INPUT_INVALID` otherwise); `commit` uses literal git pathspecs, and a commit refused by a hook leaves the index as it was. `run.json` of the cycle gets
 `source = {kind: file, path, commit}` and `plugin: file`; the later commands read it.

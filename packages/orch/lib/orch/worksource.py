@@ -21,7 +21,10 @@ from orch.settings import ORCH_ROOT
 
 POINT = "orch:work-source"
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "work-source" / "v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness")
+# Plugin error codes that mean "this source does not know the operation": a contract-valid request the plugin rejects
+# (OP_UNSUPPORTED, or INPUT_INVALID from a source that predates the operation).
+UNSUPPORTED_CODES = ("OP_UNSUPPORTED", "INPUT_INVALID")
 REPORT_KIND = "register-report"
 KINDS = ("input", "output", REPORT_KIND)
 _REGISTRY: list = []
@@ -43,7 +46,8 @@ class WorkSource(Protocol):
     source that does not serve it keeps the claim, and the caller treats the refusal as "not released". ``note`` is
     optional too: a source that does not serve it loses the note of support work, never the work. So is ``research``: the
     result of a research stage stays in the artifacts of the run. So is ``decision``: an answer that no source records
-    stays in the run, and the conductor says so (``DECISION_NOT_RECORDED``)."""
+    stays in the run, and the conductor says so (``DECISION_NOT_RECORDED``). So is ``readiness``: a source without it is
+    refused with ``READINESS_UNSUPPORTED``, and the caller (autopilot) knows nothing about the readiness of the plan."""
 
     def claim(self, **fields: Any) -> dict: ...
 
@@ -61,6 +65,11 @@ class WorkSource(Protocol):
 
     def decision(self, **fields: Any) -> dict:
         """Optional, like ``note``: record an answered question as an accepted decision of the piece."""
+        ...
+
+    def readiness(self, **fields: Any) -> dict:
+        """Optional and read-only: the readiness of every detailed phase of the collection and its next lane
+        (``{outcome: ok, phases, next}``), or ``{outcome: refused, reason_code}``."""
         ...
 
 
@@ -159,3 +168,14 @@ class PluginWorkSource:
 
     def decision(self, **fields: Any) -> dict:
         return self.call("decision", fields)
+
+    def readiness(self, **fields: Any) -> dict:
+        """A plugin that does not know the operation (``UNSUPPORTED_CODES``) is the refusal ``READINESS_UNSUPPORTED``;
+        any other failure of the plugin or its answer stays ``WORK_SOURCE_FAILED``."""
+        try:
+            return self.call("readiness", fields)
+        except WorkSourceError as error:
+            if error.code != "WORK_SOURCE_FAILED" or error.data.get("plugin_code") not in UNSUPPORTED_CODES:
+                raise
+            return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_UNSUPPORTED",
+                    "message": error.message[:300]}

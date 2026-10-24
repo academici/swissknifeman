@@ -26,7 +26,10 @@ and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a 
 - ``decision`` records an answered question of an item (an owner's answer, an applied advice or panel recommendation)
   as an accepted decision ``D#`` that applies to the item (``plan.py add-decision``) with an ``origin`` that names the
   question (``question_key``, ``question_digest``); a repeat for the same ``question_key`` and item changes nothing, so a
-  later run of the item finds the decision in its brief and does not ask the question again.
+  later run of the item finds the decision in its brief and does not ask the question again;
+- ``readiness`` (read-only) answers the readiness of every detailed phase (``plan.py readiness status <plan> --json``:
+  id, status, digest) and the next lane (``plan.py next <plan> --parallel 1 --json``, read as ``claim`` reads it:
+  ``run-items`` with its items, or another kind with a message); a refusal of the planner is ``refused`` with its code.
 
 An orchestration overlay is a knowledge document with an id starting with ``orchestration-`` and a section
 ``orchestration`` that holds one JSON object ``{"scenario"?: name, "options"?: run-options}``; it applies to the item,
@@ -53,7 +56,7 @@ import partners
 POINT = "orch:work-source"
 RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
 DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness")
 OVERLAY_PREFIX = "orchestration-"
 OVERLAY_SECTION = "orchestration"
 _FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
@@ -146,18 +149,31 @@ def _held_by(plan: str, run_id: str, plans_root) -> str | None:
     return None
 
 
+def next_lane(plan: str, plans_root) -> dict:
+    """The first lane of ``plan.py next <plan> --parallel 1 --json`` as ``{kind, items, phase, message}``: ``run-items``
+    with its items when one is ready, else the kind of the semantic next step with why nothing runs (a ``run-items`` step
+    without a free lane, such as an item already in progress, is ``waiting``). The one reading of ``next`` for ``claim``
+    and ``readiness``."""
+    ready = plan_json(["next", plan, "--parallel", "1", "--json"], plans_root)
+    for lane in ready.get("lanes", []):
+        if lane.get("kind") == "run-items" and lane.get("items"):
+            return {"kind": "run-items", "items": list(lane["items"]), "phase": lane.get("phase"), "message": None}
+    upcoming = ready.get("next") or {}
+    kind = upcoming.get("kind") if upcoming.get("kind") not in (None, "", "run-items") else "waiting"
+    return {"kind": kind, "items": [], "phase": upcoming.get("phase"),
+            "message": upcoming.get("reason") or upcoming.get("exact") or "no item is ready"}
+
+
 def _candidate(plan: str, run_id: str, plans_root) -> tuple:
     """``(ref, None)`` of the item to claim, or ``(None, message)`` when nothing is ready; ``_LANE`` keeps the whole lane."""
     held = _held_by(plan, run_id, plans_root)  # a repeated claim of the same run answers for its own item
     if held:
         return held, None
-    ready = plan_json(["next", plan, "--parallel", "1", "--json"], plans_root)
-    for lane in ready.get("lanes", []):
-        if lane.get("kind") == "run-items" and lane.get("items"):
-            _LANE[:] = list(lane["items"])
-            return lane["items"][0], None
-    upcoming = ready.get("next") or {}
-    return None, upcoming.get("reason") or upcoming.get("exact") or "no item is ready"
+    lane = next_lane(plan, plans_root)
+    if lane["kind"] == "run-items":
+        _LANE[:] = lane["items"]
+        return lane["items"][0], None
+    return None, lane["message"]
 
 
 def _overlay(document: dict) -> dict | None:
@@ -840,6 +856,22 @@ def op_decision(fields: dict) -> dict:
     return {"op": "decision", "outcome": "recorded", **({"decision_id": found.group(0)} if found else {})}
 
 
+def op_readiness(fields: dict) -> dict:
+    """The readiness of every detailed phase (``plan.py readiness status <plan> --json``: id, status, digest) and the next
+    lane (:func:`next_lane`, the reading of ``claim``). Read-only; a refusal of the planner is ``refused`` with its code."""
+    plan_ref, plans_root = fields["collection"], fields.get("plans_root")
+    try:
+        found = plan_json(["readiness", "status", plan_ref, "--json"], plans_root, code="READINESS_UNREADABLE")
+        phases = [{"id": row["id"], "status": row["status"], "digest": row["digest"]} for row in found["phases"]]
+        lane = next_lane(plan_ref, plans_root)
+    except Blocked as blocked:
+        return {"op": "readiness", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    except (KeyError, TypeError) as error:
+        return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_UNREADABLE",
+                "message": f"plan.py readiness status printed an unexpected document: {error!r}"}
+    return {"op": "readiness", "outcome": "ok", "phases": phases, "next": lane}
+
+
 # ------------------------------------------------------------------------------------------------ protocol
 
 
@@ -869,7 +901,7 @@ def invoke(request_id: str, request: dict) -> None:
         return
     handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
                "release": op_release, "note": op_note, "research": op_research,
-               "decision": op_decision}[fields["op"]]
+               "decision": op_decision, "readiness": op_readiness}[fields["op"]]
     try:
         output = handler(fields)
     except Blocked as blocked:

@@ -7,7 +7,7 @@
   "stages": 37
  },
  "largest_self_scc": 6,
- "measured_at": "69f7430e9372da51a3e366cdf90ae115858dffd8",
+ "measured_at": "602f9c74ee1b0dddae7130b097fdd7f38c5e376f",
  "oversized_modules": {
   "checks.py": 1105
  },
@@ -30,7 +30,7 @@
  "self_functions": {
   "application": 100,
   "domain": 0,
-  "infrastructure": 51,
+  "infrastructure": 52,
   "policies": 0,
   "stages": 109
  },

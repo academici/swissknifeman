@@ -1,8 +1,9 @@
 """Test plugin of orch:work-source (protocol 1): canned answers, the request echoed in the register receipt.
 
 ``FAKE_WS_MODE``: ``ok`` (default), ``blocked`` (a claim refused with ITEM_OWNED), ``invalid`` (answers outside the
-contract), ``refuse`` (a register refused by the evidence gate), ``crash`` (exit 3), ``no-decision`` (a source
-without the ``decision`` operation: OP_UNSUPPORTED). ``FAKE_WS_INPUT`` names the
+contract), ``refuse`` (a register refused by the evidence gate), ``crash`` (exit 3), ``no-decision`` and
+``no-readiness`` (a source without the ``decision`` or ``readiness`` operation: OP_UNSUPPORTED). ``FAKE_WS_READINESS``
+is the JSON answer of ``readiness`` (default: P1 ready, the lane [W1]). ``FAKE_WS_INPUT`` names the
 execution-input stored by ``brief``; every invoke input is appended to ``$FAKE_WS_MARKS`` (JSON lines) when set.
 """
 import json
@@ -61,6 +62,16 @@ def decision(given):
     return {"op": "decision", "outcome": "recorded", "decision_id": "D1"}
 
 
+def readiness(given):
+    if MODE == "invalid":
+        return {"op": "readiness", "outcome": "ok", "phases": [{"id": "P1", "status": "approved", "digest": "x"}]}
+    if os.environ.get("FAKE_WS_READINESS"):
+        return json.loads(os.environ["FAKE_WS_READINESS"])
+    return {"op": "readiness", "outcome": "ok",
+            "phases": [{"id": "P1", "status": "ready", "digest": "sha256:" + "0" * 64}],
+            "next": {"kind": "run-items", "items": ["W1"], "phase": "P1", "message": None}}
+
+
 manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
 request = json.load(sys.stdin)
 request_id = request.get("request_id", "0" * 32)
@@ -81,7 +92,11 @@ elif request.get("op") == "invoke":
     if MODE == "no-decision" and given["op"] == "decision":
         reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source records no decisions"})
         sys.exit(0)
-    answer = {"claim": claim, "register": register, "release": release, "decision": decision}.get(given["op"])
+    if MODE == "no-readiness" and given["op"] == "readiness":
+        reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source tells no readiness"})
+        sys.exit(0)
+    answer = {"claim": claim, "register": register, "release": release, "decision": decision,
+              "readiness": readiness}.get(given["op"])
     reply(request_id, output=answer(given) if answer else brief(given, project))
 else:
     reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "unknown op"})

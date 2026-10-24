@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:orch:work-source:input:v1",
   "title": "work-source input",
-  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, release it, add a note to the journal of its collection, save the research result of a piece of work, or record an accepted decision of a piece of work.",
+  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, release it, add a note to the journal of its collection, save the research result of a piece of work, record an accepted decision of a piece of work, or tell the readiness of the groups of a collection and its next step.",
   "oneOf": [
     {"$ref": "#/$defs/claim"},
     {"$ref": "#/$defs/brief"},
@@ -11,7 +11,8 @@
     {"$ref": "#/$defs/release"},
     {"$ref": "#/$defs/note"},
     {"$ref": "#/$defs/research"},
-    {"$ref": "#/$defs/decision"}
+    {"$ref": "#/$defs/decision"},
+    {"$ref": "#/$defs/readiness"}
   ],
   "$defs": {
     "text": {
@@ -262,6 +263,17 @@
         "actor": {"description": "Who records.", "$ref": "#/$defs/actor"}
       },
       "required": ["op", "collection", "ref", "run_id", "question", "question_key", "question_digest", "resolution", "authority", "rationale", "evidence"],
+      "additionalProperties": false
+    },
+    "readiness": {
+      "description": "Tell the readiness of every detailed group of a collection (a phase of a plan) and the next step the source would give work for, without changing anything. Optional: a source without it is refused with READINESS_UNSUPPORTED.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "readiness"},
+        "collection": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "collection"],
       "additionalProperties": false
     }
   }

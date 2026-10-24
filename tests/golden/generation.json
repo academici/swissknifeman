@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "3fb80a900cdc",
-  "reason": "merge stable/p7 into main after v0.34.0: plugin manifest version 0.34.0 with the P7/P8 planner commands",
+  "captured_from": "602f9c74ee1b",
+  "reason": "P8.7: schemas, source readiness",
   "generators": [
     {
       "id": "skiller-registry",
@@ -261,7 +261,7 @@
     "packages/orch/lib/orch/_types/conductor.py": "1f94251af3ec846b730a20d9181ad9c99a513f049756b8de18c023d43c1fa692",
     "packages/orch/lib/orch/_types/exec.py": "e57ca5117882291c217edba3f17b63f499e2ebdf9f5f8e848d9d163c3f0e36bf",
     "packages/orch/lib/orch/_types/records.py": "c271fa3831979d0a8c0d38635220aefe71c7935600989ad11bc508f90799f187",
-    "packages/orch/lib/orch/_types/work_source.py": "89927058c10e1bbcfb620720c7d2e2639762dfea2d0d5b4801ae832dd5f0f7f9",
+    "packages/orch/lib/orch/_types/work_source.py": "af85842fa1ebc84172ee9d9d4e24220cf43ff4df9519bb236c6d4d4cd94be225",
     "packages/planner/docs/reference/provider-commands.md": "ff29dea94c6ad4d4988f6ae5a0538606f7b92ab0d3b27e9dfbe03bb56e270688",
     "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",

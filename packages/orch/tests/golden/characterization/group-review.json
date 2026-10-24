@@ -37,6 +37,18 @@
  "events": [
   {
    "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1",
+     "W2"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
     "attempt_id": "att-run-<digest>-W1",
     "project_resolution": "git",
     "run_id": "run-<digest>",
@@ -447,6 +459,19 @@
     "work_id": "W2"
    },
    "type": "orch.agent.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1",
+     "W2"
+    ],
+    "launcher": "terminal",
+    "outcome": "finished",
+    "phase": "ended"
+   },
+   "type": "orch.conductor.lifecycle"
   }
  ],
  "manifests": {

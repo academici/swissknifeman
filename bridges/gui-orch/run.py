@@ -46,17 +46,18 @@ def build(argv):
             return None, "BAD_PLAN: --plan is not a plan reference"
         if not (count.isascii() and count.isdigit() and 1 <= int(count) <= 20):
             return None, "BAD_MAX_ITEMS: --max-items is an integer from 1 to 20"
-        return ["conduct", "run", "--plan", plan, "--ready", "--max-items", str(int(count)), *argv[5:]], None
+        return ["conduct", "run", "--plan", plan, "--ready", "--max-items", str(int(count)),
+                *(["--dry-run"] if argv[5:] else ["--detach"])], None
     if len(argv) == 3 and argv[0] == "resume" and argv[1] == "--run":
         if not RUN_ID.match(argv[2]):
             return None, "BAD_RUN: --run is not a conductor run id"
-        return ["conduct", "resume", "--run", argv[2]], None
+        return ["conduct", "resume", "--run", argv[2], "--detach"], None
     if len(argv) == 5 and argv[0] == "resume" and argv[1] == "--run" and argv[3] == "--retry":
         if not RUN_ID.match(argv[2]):
             return None, "BAD_RUN: --run is not a conductor run id"
         if not ITEM_REF.match(argv[4]):
             return None, "BAD_ITEM: --retry is not an item reference"
-        return ["conduct", "resume", "--run", argv[2], "--retry", argv[4]], None
+        return ["conduct", "resume", "--run", argv[2], "--retry", argv[4], "--detach"], None
     if len(argv) == 3 and argv[0] == "continue" and argv[1] == "--run":
         if not RUN_ID.match(argv[2]):
             return None, "BAD_RUN: --run is not a conductor run id"
@@ -90,6 +91,8 @@ def main(argv) -> int:
         code, _, message = problem.partition(": ")
         return fail(code, message)
     command = [umbrella(), "orch", *args]
+    if "--detach" in args:
+        os.environ["SKM_ORCH_LAUNCHER"] = "gui"
     sys.stdout.flush()
     os.execv(command[0], command)
     return 1  # not reached

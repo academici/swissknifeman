@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -21,7 +22,8 @@ from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, questions
 from orch.conductor import prompt_cli, records, runs, supervise_cli
 from orch.conductor.application import run_service
-from orch.conductor.infrastructure import launch_plan
+from orch.conductor.infrastructure import detach, launch_plan
+from orch.conductor.infrastructure.lease import launcher
 
 
 def _project(args):
@@ -285,6 +287,7 @@ def _status(args, project: Path) -> int:
     return 0
 
 
+@detach.refuse_errors
 def main(argv: list | None = None) -> int:
     parser = argparse.ArgumentParser(prog="swissknifeman orch conduct", description="Conduct pieces of work of a plan through "
                                      "the roles of their run-policy until green or an honest stop.")
@@ -324,6 +327,7 @@ def main(argv: list | None = None) -> int:
                      help="conduct from a snapshot of the committed orchestrator (a piece that rewrites orch itself must not "
                           "change the code that conducts it); the snapshot is removed when the run ends")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
+    run.add_argument("--run-id", help=argparse.SUPPRESS)
     run.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     run.add_argument("--adopt", action="store_true",
                      help="take over the changes in the tree as an earlier attempt of the first piece (they must lie in "
@@ -337,6 +341,8 @@ def main(argv: list | None = None) -> int:
                              "repeated (the source must have reopened them); finished steps are kept")
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     resume.add_argument("--frozen", action="store_true", help="as for run: a new snapshot of the committed orchestrator")
+    for sub in (run, resume):
+        sub.add_argument("--detach", action="store_true", help="start in a separate session; print JSON after startup is acknowledged")
     cont = verbs.add_parser("continue", help="go on with the pieces that wait for an answer (resume --retry of the pieces "
                                               "whose blocking questions are all answered; exit 4 when some still wait)")
     cont.add_argument("--run", required=True, metavar="RUN")
@@ -436,6 +442,13 @@ def main(argv: list | None = None) -> int:
                            help="remove the gate of PROVIDER, or every gate when no provider is given")
     supervise_cli.add_parsers(verbs)
     args = parser.parse_args(argv)
+    if getattr(args, "detach", False) and (getattr(args, "dry_run", False) or args.frozen):
+        parser.error("--detach is incompatible with --dry-run and --frozen")
+    if getattr(args, "run_id", None) is not None:
+        if os.environ.get("SKM_ORCH_DETACHED") != "1" or detach.RUN_ID.fullmatch(args.run_id) is None:
+            parser.error("--run-id is reserved for internal detached launches and must be a conductor run id")
+        if args.detach:
+            parser.error("--run-id cannot be combined with --detach")
     supervise_cli.check(parser, args)
     if args.verb == "run":
         if args.batch is True and not (args.items or args.ready or args.input):
@@ -467,6 +480,13 @@ def main(argv: list | None = None) -> int:
     if context is None:
         return 1
     project = context.root
+    if getattr(args, "run_id", None) and (engine.runs_root(project) / args.run_id).exists():
+        parser.error("--run-id already exists")
+    if getattr(args, "detach", False):
+        return detach.launch(list(sys.argv[1:] if argv is None else argv), project=project,
+                             run_id=engine.new_run_id() if args.verb == "run" else args.run,
+                             new_run=args.verb == "run",
+                             launcher=launcher() if launcher() in ("gui", "supervisor", "autopilot") else "detached")
     if getattr(args, "frozen", False) and args.verb in ("run", "resume", "continue") and not getattr(args, "dry_run", False):
         try:
             return frozen.relaunch(list(sys.argv[1:] if argv is None else argv), project)
@@ -499,9 +519,11 @@ def main(argv: list | None = None) -> int:
         current = settings_mod.load(project=project, config_file=args.config,
                                     flags=None if debug is None else {"debug": debug})
     except ConfigError as error:
+        detach.refuse("CONFIG_INVALID", str(error))
         print(f"CONFIG_INVALID: {error}", file=sys.stderr)
         return 1
     except settings_mod.SettingsError as error:
+        detach.refuse(error.code, str(error))
         print(f"{error.code}: {error}", file=sys.stderr)
         return 1
     if args.verb in ("supervise", "reap"):
@@ -517,7 +539,7 @@ def main(argv: list | None = None) -> int:
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
                                  batch=args.ready, max_items=args.max_items, options_file=args.options,
                                  adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario,
-                                 fence=args.fence, extra_paths=args.allow_path, grouped=args.batch)
+                                 fence=args.fence, extra_paths=args.allow_path, grouped=args.batch, run_id=args.run_id)
         if args.verb == "release":
             return conductor.release(args.run, None if args.all else args.item, args.reason)
         if args.verb == "settle" and args.group is not None:
@@ -530,5 +552,6 @@ def main(argv: list | None = None) -> int:
             return conductor.continue_run(args.run, items=args.item, partial=args.partial, raise_limits=args.raise_limit)
         return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit)
     except engine.Stop as stop:
+        detach.refuse(stop.code, stop.message)
         print(f"{stop.code}: {stop.message}", file=sys.stderr)
         return 1

@@ -23,6 +23,17 @@
  "events": [
   {
    "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "adhoc@<digest>"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
     "attempt_id": "att-run-<digest>-adhoc-9b97afced891",
     "project_resolution": "git",
     "run_id": "run-<digest>",
@@ -257,6 +268,18 @@
     "status": "completed"
    },
    "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "adhoc@<digest>"
+    ],
+    "launcher": "terminal",
+    "outcome": "finished",
+    "phase": "ended"
+   },
+   "type": "orch.conductor.lifecycle"
   }
  ],
  "manifests": {

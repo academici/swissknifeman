@@ -1,6 +1,6 @@
 # Events
 
-orch journals nineteen events of module `orch` through the `aicore` event journal. The data of each type is a closed
+orch journals twenty events of module `orch` through the `aicore` event journal. The data of each type is a closed
 JSON Schema under `schemas/event-data/v1/<type>.schema.json` (contract `urn:swissknifeman:orch:event-data`, `v1`,
 alpha). A consumer ignores fields it does not know; a new optional field is a minor change.
 
@@ -14,7 +14,7 @@ alpha). A consumer ignores fields it does not know; a new optional field is a mi
 | `orch.agent.finished` | as above | as `orch.agent.started` | the optional data of `started`, `tokens` (`input`, `cached`, `output`), `duration_ms` |
 | `orch.agent.failed` | as above | as `orch.agent.started`, `error` (`class`; `code`) | the optional data of `finished` |
 | `orch.agent.questioned` | `<run>/<item>` | `run_id`, `work_id`, `step`, `question_id`, `blocking` | `item`, `revision` |
-| `orch.run.warning` | `<run>/<item>` | `run_id`, `reason_code` (`RUN_SLOW`, `LIMIT_OVER`) | `work_id`, `item`, `step` |
+| `orch.run.warning` | `<run>/<item>` | `run_id`, `reason_code` (`RUN_SLOW`, `LIMIT_OVER`, `REVIEW_DEBT`, `STAGE_SLOW`, `STAGE_IDLE`, `CHECK_SLOW`, `CHECK_IDLE`, `DISK_LOW`, `STALL_SUSPECTED`) | `work_id`, `item`, `step` |
 | `orch.run.waiting` | `<run>/<item>` | `run_id`, `work_id`, `reason_code` (`QUESTION`) | `item`, `step`, `question_ids` |
 | `orch.work.blocked` | `<run>/<item>` | `run_id`, `work_id`, `code` (first escalation code of the report, `BLOCKED` without one) | `item`, `step` |
 | `orch.review.added` | `<run>/<item>` | `run_id`, `work_id`, `score`, `threshold`, `features` (`name`, `weight`) | `item` |
@@ -24,6 +24,7 @@ alpha). A consumer ignores fields it does not know; a new optional field is a mi
 | `orch.provider.quota-exhausted` | `<run>/<item>` | as `orch.provider.rate-limited` | as `orch.provider.rate-limited` |
 | `orch.provider.fallback` | `<run>/<item>` | `run_id`, `role`, `from`, `to` (routes: `provider`, `model_class`, `model`, `effort`), `reason_codes` | `work_id`, `item`, `step` |
 | `orch.input.rebuilt` | `<run>/<item>` | `run_id`, `work_id`, `digest` | `item`, `previous_digest` |
+| `orch.conductor.lifecycle` | conductor run id | `conductor_run_id`, `phase` (`started`, `resumed`, `ended`) | `outcome` (`finished`, `stopped`, `waiting`, `interrupted`, `crashed`), `reason_code`, `launcher`, `items` (up to 50 references) |
 | `orch.conductor.health` | run id | `conductor_run_id`, `health` (`running`, `waiting_provider`, `waiting_tool`, `waiting_owner`, `waiting_budget_reset`, `suspected_stall`, `hung`, `orphaned`, `stopped`, `finished`, `unknown`) | `previous`, `reason_code`, `action` (`notify`, `snapshot`, `stop`, `reap`, `resume`, `given_up`, `identity_mismatch`, `busy`), `silent_s`, `item`, `step` |
 
 The agent events are emitted by the conductor for every agent run (a role process, the report-fixer included):
@@ -63,3 +64,12 @@ starts a subscriber.
 
 The same script checks the emitters: every event type a module emits (a literal, a module constant or `gui.run.{verb}`
 in its sources) must be in the `provides.events` of that module and have a data schema.
+
+`orch.conductor.lifecycle` describes each conductor session: `run` publishes `started`, `resume` publishes `resumed`
+beside `run.resume` after ownership, state loading and startup validation, and the loop publishes `ended` beside `run.end`, including interruption
+and unexpected crashes. Waiting for an owner decision (exit 4) has outcome `waiting`. Launcher values are `terminal`,
+`detached`, `gui`, `supervisor`, `autopilot`. These events follow `[orch.events] enabled`; journal failures never
+change the run outcome. A warning event is published once per corresponding stage/check/disk/stall beacon line.
+
+Analyst subscribes explicitly to `orch.run.finished` and `orch.run.refused`; warning and conductor lifecycle events
+are valid envelopes that its ingest skips. Expanding the warning reason enum does not change its recorded outcomes.

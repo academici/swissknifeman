@@ -9,11 +9,11 @@ Models are used only for the narrow roles: context scout, executor, reviewer, tr
 ```text
 orch conduct [--config FILE] [--project DIR] run --plan P (--items REF… | --ready [--max-items N]) [--plans-root DIR]
            [--options FILE] [--batch | --no-batch]
-           [--fence project|plan] [--allow-path DIR ...] [--adopt] [--frozen] [--dry-run [--scenario S]]
+           [--fence project|plan] [--allow-path DIR ...] [--adopt] [--detach | --frozen] [--dry-run [--scenario S]]
            [--quiet | --json-lines] [--model-catalog FILE]
 orch conduct [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
            [--quiet | --json-lines] [--model-catalog FILE]
-orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--raise-limit KEY=N ...] [--frozen] [--quiet | --json-lines]
+orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--raise-limit KEY=N ...] [--detach | --frozen] [--quiet | --json-lines]
 orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
 orch conduct questions [--run RUN] [--json]
@@ -24,6 +24,8 @@ orch conduct status [--run RUN] [--json]
 orch conduct observe [--run RUN] [--follow]
 orch conduct gates [--json] [--clear [PROVIDER]]
 orch conduct supervise [--run RUN] [--once] [--interval S] [--recover notify|stop-only|resume] [--max-recoveries N] [--json] [--notify-send]
+orch conduct supervise --print-systemd-unit [--interval S]
+orch conduct supervise --check-systemd-unit [--interval S]
 orch conduct reap --run RUN
 ```
 
@@ -45,6 +47,29 @@ Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: m
 4 the run waits for a decision (`run.end` outcome `waiting`, status `waiting`: a piece waits for the answer to a question;
 `orch conduct answer`, then `orch conduct continue`; code 1 keeps its meaning for every other stop),
 130 interrupted (Ctrl-C, SIGTERM or SIGHUP: the role and check processes of the run are killed with their groups; `resume` continues).
+
+## Detached runs
+
+`run --detach` and `resume --run RUN --detach` start a conductor in a separate session with stdin closed and output
+appended to `<runs root>/detached/<run>.log` (private directory, mode `0700`). Closing the terminal or restarting the GUI
+leaves it running. `--detach` excludes `--dry-run` and `--frozen`; `--quiet` and `--json-lines` control the child log.
+The parent prints a `conductor/v1` `detach-result` document (`$schema`, `run_id`, `pid`, `log`, `detached: true`) and exits 0
+only after the child acknowledges startup. This confirms ownership and initialization; later run outcomes remain visible
+through `status` and the log. Pruning a run also removes its detached log.
+
+Each launch uses a fresh nonce and `<runs root>/detached/<run>.<nonce>.ack.json` (`records/v1` `detach-ack`). The child
+atomically writes `started` after acquiring the checkout lock and run lease and initializing state (new run: after the
+first save; resume: after retry/limit validation, recovery and the saved `run.resume` transition), or `refused` with the original reason code. The parent checks the schema, nonce,
+run id and child pid every 0.1 seconds for at most 20 seconds. An existing `run.json` never confirms startup.
+A refusal returns exit 1 with its code. A child that exits without acknowledging yields `DETACH_FAILED` and up to twenty
+sanitized log lines; a timeout names the pid and log and leaves the child alone. The hidden `--run-id` is restricted to
+internal launches (`SKM_ORCH_DETACHED=1`), a correctly formatted id and a run directory that does not exist.
+`spawn` also accepts a per-launch environment overlay for the nonce channel. Roles and checks receive neither that
+channel nor `SKM_ORCH_DETACHED` / `SKM_ORCH_LAUNCHER`; the owning conductor retains its launcher in leases and events.
+
+The lease and lifecycle events identify the launcher: `detached` from the terminal, `gui` from gui-orch,
+`supervisor` from automatic recovery, or `autopilot` for its future caller. The supervisor uses the same session/log
+launcher and returns immediately; its action records a spawn, while the child independently acquires ownership.
 
 ## Ownership of a run
 
@@ -207,7 +232,7 @@ run `interrupted`; the pass then stops there (the run is `stopped`, not orphaned
 still matches (pid, `start_ticks`, own group) and closes the agent records of dead or stopped roles as `ORPHANED` with the
 `orch.agent.failed` event. It writes no heartbeat, no state and no step. A lease a live conductor holds is `RUN_BUSY` (the pass
 records `busy` and goes on); the supervisor never takes the lease of a live run. `resume` then starts `orch conduct resume --run R`
-as a process of its own (new session, no terminal, `SKM_ORCH_LAUNCHER=supervisor`, output in `<run>/supervisor/resume-<n>.log`); it
+as a process of its own (new session, no terminal, `SKM_ORCH_LAUNCHER=supervisor`, output in `<runs root>/detached/<run>.log`); it
 takes the locks itself and continues from the receipts of the closed steps (I4), so a commit or a registration is never repeated.
 A run is **not** resumed when its last stop (`state.stop`, else `state.last_stop`, else the journal) is one of
 `STAGE_RECOVERY_UNKNOWN`, `TOKEN_BUDGET`, `STATE_CORRUPT`, `OPTIONS_INVALID`, `OPTIONS_UNTRUSTED`, `SANDBOX_UNAVAILABLE`,
@@ -233,8 +258,21 @@ stops or beacons:
 
 `--notify-send` (or `[orch.supervisor] notify_send`) also calls `notify-send "SKM run <id>: <health>"` for a notification, a stop and
 a given-up run; a missing command or a failure is ignored. A recovery that has started the resume is up to that process: the
-supervisor does not wait for it and does not write the state of the run. The detached start is the `Popen` of `resume_detached`
-until the detach helper of the next item replaces it.
+supervisor does not wait for it and does not write the state of the run. The detached start uses `infrastructure/detach.spawn`, shared with the CLI.
+
+### A systemd user timer
+
+`orch conduct supervise --print-systemd-unit [--interval S]` prints a oneshot service and timer with file headers
+under `~/.config/systemd/user/skm-supervise-<project-key>.{service,timer}`. The key is the first twelve hex digits of
+SHA-256 of the real project path. `ExecStart` uses the absolute `swissknifeman` found on PATH and runs
+`orch conduct --project <project> supervise --once`; the timer starts after 120 seconds and repeats every S seconds
+(default: the supervisor interval). Paths are escaped for systemd, including spaces and specifiers.
+`SUPERVISE_UNIT_UNAVAILABLE` (exit 1) means the executable is unavailable or verification could not start.
+
+`--check-systemd-unit` prints the same text and invokes `systemd-analyze --user verify` on both files in a temporary
+directory; its exit code is returned. Without that tool it prints `systemd-analyze not found: unit text printed only`
+and exits 0. Neither command installs units, enables timers or changes a running service. The owner installs the
+printed files and enables the timer when desired.
 
 ## A piece that rewrites the orchestrator: `--frozen`
 
@@ -515,6 +553,7 @@ The conductor stops only on:
 
 | Code | When |
 | --- | --- |
+| `DETACH_FAILED` | the detached child exited without acknowledging startup, or no matching acknowledgement arrived within 20 seconds; inspect the named log and status before retrying |
 | `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
 | `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
 | `CONDUCTOR_CRASHED` | an unexpected exception in the conductor loop; exit 1, stopped state and `run.end`; the redacted traceback is written to `<run>/crash.txt` when that write succeeds. If the artifact cannot be written, the stop still names `CONDUCTOR_CRASHED` and says `crash.txt unavailable` (it does not claim the file exists); fix the cause, then resume |

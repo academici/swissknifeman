@@ -87,6 +87,8 @@ def loop(self) -> int:
     self.progress.emit("run.end", outcome=outcome, reason_code=reason.code if reason else None,
                        duration_s=round(time.monotonic() - started, 1),
                        message=(reason.message + "; " if reason else "") + message)
+    ended = "interrupted" if code == 130 else "crashed" if reason and reason.code == "CONDUCTOR_CRASHED" else outcome
+    run_service.lifecycle(self, "ended", outcome=ended, reason_code=reason.code if reason else None)
     return code
 
 

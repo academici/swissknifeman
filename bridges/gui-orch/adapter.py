@@ -179,6 +179,11 @@ def _owner(value: Any) -> str:
 
 
 def view_status(outcome: Any, running: bool = False) -> str:
+    if isinstance(outcome, str):
+        if outcome in ("hung", "suspected_stall", "orphaned"):
+            return "warn"
+        if outcome.startswith("waiting_"):
+            return "info"
     if isinstance(outcome, str) and outcome in OUTCOME_STATUS:
         return OUTCOME_STATUS[outcome]
     return "warn" if outcome is None and running else "unknown"
@@ -228,10 +233,25 @@ def run(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
     found = _status(run_id, _need_root(root), timeout_s)
     current = _dict(found.get("current"))
     tokens = _dict(found.get("tokens"))
+    health = _dict(found.get("health"))
+    health_name = health.get("health") or (found.get("health") if isinstance(found.get("health"), str) else None)
+    lease = _dict(found.get("lease") or found.get("owner"))
+    lease = _dict(lease.get("owner")) or lease
+    beacon = _dict(found.get("beacon"))
+    if not beacon and _list(found.get("beacons")):
+        beacon = _dict(found["beacons"][-1])
     fields = [{"label": "Run", "type": "text", "value": safe_text(run_id, 64)},
-              {"label": "Status", "type": "status", "value": view_status(found.get("status"))},
+              {"label": "Status", "type": "status", "value": view_status(health_name or found.get("status"))},
               {"label": "State", "type": "text", "value": _text(found.get("status"), "unknown", 64)},
-              {"label": "Owner", "type": "text", "value": _owner(found.get("lease"))}]
+              {"label": "Owner", "type": "text", "value": _owner(found.get("lease"))},
+              {"label": "Health", "type": "text", "value": _text(health_name, "unknown", 64)},
+              {"label": "Launcher", "type": "text", "value": _text(lease.get("launcher"), "-", 64)}]
+    for key, label in (("silent_s", "Silent (s)"), ("heartbeat_age_s", "Heartbeat age (s)")):
+        value = health.get(key, found.get(key))
+        numeric = type(value) in (int, float) and value >= 0 and value != float("inf")
+        fields.append({"label": label, "type": "number" if numeric else "text", "value": int(value) if numeric else "-"})
+    fields.append({"label": "Last beacon", "type": "text", "value": safe_text(
+        f"{beacon.get('ts') or ''} {beacon.get('reason_code') or ''} {beacon.get('message') or ''}".strip()) or "-"})
     if found.get("status") == "orphaned":
         fields.append({"label": "Detail", "type": "text", "value": ORPHANED})
     if found.get("reason_code"):

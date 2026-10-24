@@ -7,7 +7,7 @@
   "stages": 36
  },
  "largest_self_scc": 6,
- "measured_at": "f1ffbf96a2b6e8b52483c88bd3a43e6444195b36",
+ "measured_at": "b5a9aac5732999ed772867a2e1e1fcbbd7691e81",
  "oversized_modules": {
   "checks.py": 1105
  },
@@ -28,7 +28,7 @@
  "private_facade_access": {},
  "private_facade_access_total": 0,
  "self_functions": {
-  "application": 96,
+  "application": 97,
   "domain": 0,
   "infrastructure": 51,
   "policies": 0,

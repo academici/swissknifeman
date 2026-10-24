@@ -10,12 +10,13 @@ from typing import Optional
 
 from aicore.stubs import StubError
 
-from orch import bindings, settings as settings_mod
+from orch import bindings, events, settings as settings_mod
 from orch.conductor import debug_mode, options as opts, progress, questions as questions_mod, review_batch, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock, sessions
+from orch.conductor.infrastructure import clock, detach, sessions
+from orch.conductor.infrastructure.lease import launcher
 from orch.conductor.infrastructure.files import RunStore, safe, write_json
 from orch.conductor.application.budget_service import effective_limit
 from orch.conductor.policies.budget import HARD_LIMITS
@@ -23,14 +24,17 @@ from orch.worksource import WorkSourceError
 from orch.worksource_file import read_input
 
 
+@detach.refuse_errors
 def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, batch: bool, max_items: int,
         options_file: Optional[Path] = None, adopt: bool = False, input_file: Optional[Path] = None,
         commit: bool = False, scenario: Optional[str] = None,
         fence: Optional[str] = None, extra_paths: Optional[list] = None,
-        grouped: Optional[bool] = None) -> int:
+        grouped: Optional[bool] = None, run_id: Optional[str] = None) -> int:
     """Conduct the pieces of a plan, or with ``input_file`` the one piece of an execution-input document (the built-in
     file source: no plan; ``scenario`` is then the scenario of the run, ``commit`` lets it commit its paths)."""
-    run_id = clock.new_run_id()
+    if run_id is not None and (detach.RUN_ID.fullmatch(run_id) is None or RunStore(self.project, run_id).directory.exists()):
+        raise Stop("RUN_INVALID", "the supplied run id must be a new cnd-<UTC stamp>-<hex> id")
+    run_id = run_id or clock.new_run_id()
     source = None
     if input_file is not None:
         try:
@@ -61,8 +65,10 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
         if options_file:
             self.store.keep_options(options_file)
         self._save()
+        detach.acknowledge(run_id)
         self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
                                                                      f"batch, at most {max_items or 'all'}"))
+        lifecycle(self, "started")
         debug_mode.announce(self.progress, self.directory, run_id, self.settings)
         announce_concurrent(self)
         return self._loop()
@@ -89,6 +95,7 @@ def announce_concurrent(self) -> None:
                                    + "; parallel runs share the machine and slow each other's checks")
 
 
+@detach.refuse_errors
 def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
     store = RunStore(self.project, run_id)
     with store.ownership("resume", checkout=True):
@@ -122,9 +129,20 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
             state["last_stop"] = {**earlier, "resume": state["resumes"]}
         self._save()
         self.progress.emit("run.resume", message=f"resume {state['resumes']}")
+        detach.acknowledge(run_id)
+        lifecycle(self, "resumed")
         debug_mode.announce(self.progress, self.directory, run_id, self.settings)
         announce_concurrent(self)
         return self._loop()
+
+
+def lifecycle(self, phase: str, *, outcome: Optional[str] = None, reason_code: Optional[str] = None) -> None:
+    """The conductor's lifecycle, distinct from the individual work runs it executes."""
+    data = {"conductor_run_id": self.run_id, "phase": phase, "launcher": launcher(),
+            "items": list(self.run_doc.get("items") or [])[:50]}
+    data.update({key: value for key, value in {"outcome": outcome, "reason_code": reason_code}.items() if value is not None})
+    events.emit("orch.conductor.lifecycle", data, subject=self.run_id, correlationid=self.run_id,
+                settings=self.settings, project=self.project, config_file=self.config_file)
 
 
 def limits_run(self, options_file: Optional[Path]) -> dict:

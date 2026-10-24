@@ -204,6 +204,7 @@ class TerminatedRun(unittest.TestCase):
             raise KeyboardInterrupt
 
         me = types.SimpleNamespace(_pieces=pieces, _disk_guard=lambda: None, state={"items": {}}, _segment=None,
+                                   run_id="cnd-unit", settings=types.SimpleNamespace(events_enabled=False), config_file=None,
                                    _active_s=lambda: 0.0, _save=lambda: None, directory=Path("."), project=Path("."),
                                    reports_dir=lambda: Path("."), progress=mock.Mock(), run_doc={}, _batch_held=lambda: False,
                                    store=types.SimpleNamespace(mutating=contextlib.nullcontext))
@@ -228,19 +229,20 @@ class DiskGuard(unittest.TestCase):
 
     def test_the_guard_stops_the_run_with_a_resumable_code_and_a_beacon(self):
         from orch.conductor.domain.stop import Stop
-        me = types.SimpleNamespace(project=Path("."), conductor={}, progress=mock.Mock())
+        me = types.SimpleNamespace(project=Path("."), conductor={}, progress=mock.Mock(), _beacon_event=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=0.2):
             with self.assertRaises(Stop) as stop:
                 step_stage.disk_guard(me)
         self.assertEqual(stop.exception.code, "DISK_LOW")
         self.assertEqual(me.progress.emit.call_args.kwargs["reason_code"], "DISK_LOW")
+        me._beacon_event.assert_called_once_with("orch.run.warning", None, {"reason_code": "DISK_LOW", "step": None})
 
     def test_the_limit_of_the_piece_wins_over_the_default_and_the_configuration(self):
         item = types.SimpleNamespace(ref="W1", options={"limits": {"disk_min_gb": 0}})
-        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock())
+        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock(), _beacon_event=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=0.2):
             step_stage.disk_guard(me, item)  # the piece switched it off: no stop
-        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock())
+        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock(), _beacon_event=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=50.0), self.assertRaises(Stop):
             step_stage.disk_guard(me)  # the configuration's limit applies without a piece
 

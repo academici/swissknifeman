@@ -7,7 +7,7 @@ from aicore.util import schema
 from orch.settings import ORCH_ROOT
 
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "conductor" / "v1"
-KINDS = ("advice", "advice-panel", "fix-brief", "progress-line", "prompt-manifest", "research-result", "review-findings", "review-receipt", "review-summary", "run-options", "scout-write-set", "stage-report",
+KINDS = ("advice", "advice-panel", "detach-result", "fix-brief", "progress-line", "prompt-manifest", "research-result", "review-findings", "review-receipt", "review-summary", "run-options", "scout-write-set", "stage-report",
          "supervise-result", "triage-result")
 _REGISTRY: list = []
 

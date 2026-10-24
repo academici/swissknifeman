@@ -128,8 +128,7 @@ def check_env(cwd: Path, environ=None, run_env=None, parallel: int = 1) -> dict:
     """The environment of a check command: the conductor's, without install roots that lie outside the project, and with
     unbuffered Python output (a Python test runner writing to the log file shows its progress, so the silence ceiling
     ``check_idle_timeout_s`` measures a hang, not a buffer). ``run_env`` adds the names of the run (``SKM_CHECK_*``).
-    ``SKM_TEST_JOBS`` is the share of the jobs budget of one of ``parallel`` checks that run together: the owner's value
-    (else the CPUs) divided between them, never more than the owner gave."""
+    ``SKM_TEST_JOBS`` shares the owner's jobs budget (else the CPUs) between ``parallel`` checks; internal launch variables are removed."""
     base = dict(os.environ if environ is None else environ)
     base.setdefault("PYTHONUNBUFFERED", "1")
     project = Path(cwd).resolve()
@@ -143,7 +142,8 @@ def check_env(cwd: Path, environ=None, run_env=None, parallel: int = 1) -> dict:
             base.pop(name)
     base.update(run_env or {})
     base["SKM_TEST_JOBS"] = str(max(1, jobs_budget(base) // max(1, parallel)))
-    return base
+    return {name: value for name, value in base.items() if name not in
+            ("SKM_ORCH_DETACHED", "SKM_ORCH_LAUNCHER", "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE")}
 
 
 # What a fingerprint leaves out of the environment: names that differ between two processes of one run.

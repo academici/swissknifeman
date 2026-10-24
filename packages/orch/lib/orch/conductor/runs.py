@@ -157,7 +157,7 @@ def status_details(directory: Path, found: dict) -> dict:
             elif key == "run_tokens_hard_max":
                 limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
     codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED",
-             "WRITE_PROTECTED_PATH"}
+             "WRITE_PROTECTED_PATH", "STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "CHECK_IDLE", "DISK_LOW", "STALL_SUSPECTED"}
     beacons = {}
     for line in progress.read_lines(directory):
         if line.get("event") == "info" and line.get("reason_code") in codes:
@@ -253,6 +253,9 @@ def _remove(path: Path) -> bool:
     if path.is_dir():
         shutil.rmtree(path)
         return True
+    if path.is_file():
+        path.unlink()
+        return True
     return False
 
 
@@ -282,6 +285,9 @@ def prune(project: Path, older_than_days: int, apply: bool = False, now: Optiona
             continue
         paths = [directory] + [project / base / run_id for base in (REPORTS, FALLBACK_ARTIFACTS)
                                if (project / base / run_id).exists() or (project / base / run_id).is_symlink()]
+        log = root / "detached" / f"{run_id}.log"
+        if log.exists() or log.is_symlink():
+            paths.append(log)
         local = project / FALLBACK_ARTIFACTS / run_id
         # the local records of a source without its own folder (the file source) are the only copy of its evidence
         evidence = sorted(str(path.relative_to(project)) for path in local.glob("*/evidence/*.json")) \

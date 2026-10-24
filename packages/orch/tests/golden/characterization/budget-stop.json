@@ -18,6 +18,17 @@
  "events": [
   {
    "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
     "attempt_id": "att-run-<digest>-W1",
     "project_resolution": "git",
     "run_id": "run-<digest>",
@@ -150,6 +161,19 @@
     "status": "completed"
    },
    "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "outcome": "stopped",
+    "phase": "ended",
+    "reason_code": "TOKEN_BUDGET"
+   },
+   "type": "orch.conductor.lifecycle"
   }
  ],
  "manifests": {

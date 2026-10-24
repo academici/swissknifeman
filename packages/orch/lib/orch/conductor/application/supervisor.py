@@ -37,7 +37,7 @@ from orch import events, settings as settings_mod
 from orch.conductor import agents, process, progress, questions, records, runs
 from orch.conductor.application import recovery, run_service
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock, heartbeat as heartbeat_mod
+from orch.conductor.infrastructure import clock, detach, heartbeat as heartbeat_mod
 from orch.conductor.infrastructure.files import RUN_FILE, STATE_FILE, RunStore, runs_root
 from orch.conductor.infrastructure.lease import RunLease
 
@@ -56,7 +56,6 @@ TAIL_LINES = 50
 PROCESS_LIMIT = 200
 REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$")
 CODE = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
-_CHILDREN: list = []  # the detached resumes this process started: polled so that none stays a zombie
 
 
 class SupervisorBusy(Exception):
@@ -358,24 +357,14 @@ def reap(project: Path, run_id: str, *, settings=None, config_file: Optional[Pat
 
 
 def resume_detached(project: Path, run_id: str, *, config_file: Optional[Path] = None) -> dict:
-    """Start ``orch conduct resume --run RUN`` as a process of its own (its own session, no terminal, its output in
-    ``<run>/supervisor/resume-<n>.log``, ``SKM_ORCH_LAUNCHER=supervisor``). The resume takes the locks itself and continues from
-    the receipts of the steps (I4). ``{pid, log}``."""
-    folder = runs_root(Path(project)) / run_id / DIRECTORY
-    folder.mkdir(parents=True, exist_ok=True, mode=0o700)
-    number = len(list(folder.glob("resume-*.log"))) + 1
-    log = folder / f"resume-{number}.log"
+    """Start a separate session via the shared launcher; the resume takes its own locks and continues receipts (I4)."""
     argv = [sys.executable, str(ORCH_SCRIPT), *(["--config", str(config_file)] if config_file else []), "--project", str(project),
             "conduct", "resume", "--run", run_id, "--quiet"]
-    with open(log, "ab") as out:
-        child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=out, stderr=out, start_new_session=True,
-                                 env={**os.environ, "SKM_ORCH_LAUNCHER": "supervisor"}, close_fds=True)
-    _CHILDREN.append(child)
-    return {"pid": child.pid, "log": str(log)}
+    return detach.spawn(argv, project=project, launcher="supervisor", log_dir=runs_root(Path(project)) / "detached")
 
 
 def _poll_children() -> None:
-    _CHILDREN[:] = [child for child in _CHILDREN if child.poll() is None]
+    detach.poll_children()
 
 
 # ---------------------------------------------------------------------------------------------------- one pass

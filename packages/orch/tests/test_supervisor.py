@@ -718,7 +718,7 @@ class CommandTests(SupervisorCase):
         self.assertIs(kwargs["stdin"], subprocess.DEVNULL)
         self.assertEqual("supervisor", kwargs["env"]["SKM_ORCH_LAUNCHER"])
         self.assertEqual(4321, started["pid"])
-        self.assertTrue(started["log"].endswith("supervisor/resume-1.log"))
+        self.assertTrue(started["log"].endswith("detached/cnd-one.log"))
 
 
 if __name__ == "__main__":

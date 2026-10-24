@@ -339,9 +339,11 @@ def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
 def check_tick(self, item: Item, number: int, check_id: str, elapsed: float, pid: int) -> None:
     self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_SLOW",
                        message=f"{check_id} running {human_duration(elapsed)}; {process.activity(pid, Path(os.devnull))}")
+    self._beacon_event("orch.run.warning", item, {"reason_code": "CHECK_SLOW", "step": f"checks.{number}"})
     low = disk.shortage(self.project, item.options["limits"].get("disk_min_gb", 0))
     if low:  # the check is not cut (a stop from this thread could not release it); the owner decides
         self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="DISK_LOW", message=low)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "DISK_LOW", "step": f"checks.{number}"})
     self._run_clock(item, stop=False)
 
 
@@ -360,6 +362,7 @@ def check_watch(owner, item: Item, number: int, marks: dict, check_id: str, quie
         marks[check_id] += warn
         owner.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_IDLE",
                             message=f"{check_id} no output for {human_duration(quiet)}; {process.activity(pid, Path(os.devnull))}")
+        owner._beacon_event("orch.run.warning", item, {"reason_code": "CHECK_IDLE", "step": f"checks.{number}"})
 
 
 def run_checks(self, item: Item, number: int, report: dict, computed=None) -> list:

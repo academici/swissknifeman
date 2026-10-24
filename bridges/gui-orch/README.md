@@ -53,8 +53,8 @@ Commands (argv, run by the GUI broker in the project root through `run.py`; no s
 
 | Command | `run.py` | Runs | Policy |
 | --- | --- | --- | --- |
-| `gui-orch.run-ready` | `run-ready --plan P --max-items N [--dry-run]` | `orch conduct run --plan P --ready --max-items N [--dry-run]` | risk high, always confirmed; effects `process.spawn`, `plan.write`, `project.write`; stream, cancel, dry-run |
-| `gui-orch.resume` | `resume --run R [--retry I]` | `orch conduct resume --run R [--retry I]` | risk medium, confirmed by risk |
+| `gui-orch.run-ready` | `run-ready --plan P --max-items N [--dry-run]` | `orch conduct run --plan P --ready --max-items N --detach` (dry-run: `--dry-run`, without detach) | risk high, always confirmed; effects `process.spawn`, `plan.write`, `project.write`; stream, dry-run; timeout 120 s; detached from GUI |
+| `gui-orch.resume` | `resume --run R [--retry I]` | `orch conduct resume --run R [--retry I] --detach` | risk medium, confirmed by risk |
 | `gui-orch.continue` | `continue --run R` | `orch conduct continue --run R` | risk medium, confirmed by risk; effects `process.spawn`, `plan.write`, `project.write`; stream, cancel; exit code 4 is a run that waits again, not a failure |
 | `gui-orch.answer` | `answer --run R --item I --question Q (--option ID \| --text T)` | `orch conduct answer --run R --item I --question Q (--option ID \| --text=T)` | risk medium, confirmed always; effects `process.spawn`, `project.write`; the text is one `--text=` element (a text that starts with `-` stays a value) |
 | `gui-orch.release` | `release --run R --item I` | `orch conduct release --run R --item I` | confirmed always |
@@ -77,3 +77,12 @@ bash scripts/test.sh
 The tests use a fake `swissknifeman` (`tests/fixtures/umbrella-*`, data in `tests/fixtures/fake.py`). The GUI host and
 the foundation are found by `SKM_GUI_ROOT` and `AICORE_ROOT`, else in the hub registry (`swissknifeman units list
 --json`).
+
+`run-ready` and `resume` set launcher `gui` and inject `--detach` after their existing argv checks. Users cannot pass
+that flag through the bridge. All six existing verbs remain available; dry-run stays synchronous. Detached commands
+return startup JSON within the 20-second acknowledgement deadline, have a 120-second broker timeout and do not offer
+cancel. Their conductors continue after the GUI closes. `continue` and `answer` retain their existing behavior.
+
+Run detail shows Health, Silent (s), Heartbeat age (s), Last beacon and Launcher from `orch conduct status --json`.
+Health `hung`, `suspected_stall` and `orphaned` maps to `warn`; `waiting_*` maps to `info`. Missing older metadata is
+shown as unknown or a dash. Run outcomes and the actions for resume/continue remain available.

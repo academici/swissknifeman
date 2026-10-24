@@ -25,7 +25,13 @@
       "enum": [
         "RUN_SLOW",
         "LIMIT_OVER",
-        "REVIEW_DEBT"
+        "REVIEW_DEBT",
+        "STAGE_SLOW",
+        "STAGE_IDLE",
+        "CHECK_SLOW",
+        "CHECK_IDLE",
+        "DISK_LOW",
+        "STALL_SUSPECTED"
       ],
       "description": "Beacon of the progress log."
     },

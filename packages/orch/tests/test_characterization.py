@@ -422,7 +422,8 @@ class EventSequenceTests(CharacterizationCase):
     """The ``orch.*`` events that stand next to a beacon (knowledge/p12-observability#types), in the order of a scenario.
     The run and agent events are left out: they are the subject of the contract tests of ``test_events``."""
 
-    SKIPPED = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused")
+    # This sequence covers work beacons; conductor sessions are asserted separately in test_detach.
+    SKIPPED = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused", "orch.conductor.lifecycle")
 
     def sequence(self) -> list:
         from aicore.ext import events as journal
@@ -590,6 +591,7 @@ T = "test_conductor.py"
 # snapshot) or ``test:<file>`` (the file of tests/ that names it). WORK_SOURCE_* stands for the whole family.
 COVERAGE = {
     # Stops
+    "DETACH_FAILED": "test:test_detach.py",
     "RUN_BUSY": "test:test_run_lease.py", "WORKTREE_BUSY": "test:test_run_lease.py",
     "QUESTIONS_LOCKED": "test:test_run_lease.py",
     "QUESTION_ANSWERED_NOT_RETRIED": "test:test_conductor_questions.py",

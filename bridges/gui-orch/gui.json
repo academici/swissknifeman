@@ -30,7 +30,7 @@
     {
       "concurrency_key": "gui-orch:run:{project_id}",
       "confirmation": "always",
-      "description": "Conduct the next ready pieces of a plan (orch conduct run --plan P --ready --max-items N). Starts agents that change the project and the plan.",
+      "description": "Conduct the next ready pieces of a plan (orch conduct run --plan P --ready --max-items N). Starts agents that change the project and the plan. Starts detached from the GUI; the run continues after the GUI closes.",
       "dry_run": {
         "argv_append": [
           "--dry-run"
@@ -75,16 +75,15 @@
       "scope": "project",
       "supports": [
         "stream",
-        "cancel",
         "dry-run"
       ],
-      "timeout_s": 86400,
+      "timeout_s": 120,
       "title": "Run ready pieces"
     },
     {
       "concurrency_key": "gui-orch:run:{project_id}",
       "confirmation": "risk-based",
-      "description": "Continue a stopped run; closed steps are not repeated. With a retry item it also takes that blocked piece back.",
+      "description": "Continue a stopped run; closed steps are not repeated. With a retry item it also takes that blocked piece back. Starts detached from the GUI; the run continues after the GUI closes.",
       "effects": [
         "process.spawn",
         "plan.write",
@@ -123,10 +122,9 @@
       "risk": "medium",
       "scope": "project",
       "supports": [
-        "stream",
-        "cancel"
+        "stream"
       ],
-      "timeout_s": 86400,
+      "timeout_s": 120,
       "title": "Resume run"
     },
     {

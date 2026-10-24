@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:detach-result:v1",
+  "run_id": "cnd-20261024T100000Z-abcdef",
+  "pid": 123,
+  "log": "/state/orch/conductor/detached/cnd-20261024T100000Z-abcdef.log",
+  "detached": false
+}

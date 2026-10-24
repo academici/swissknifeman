@@ -15,11 +15,10 @@ from orch.conductor.signals import StallWatch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import beacon_events, clock, detach, sessions
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.heartbeat import observe_tick
 from orch.conductor.infrastructure.launch_plan import claude_transcripts, strip_guard, transcript_folder_name  # noqa: F401 — re-export for callers
-from orch.conductor.infrastructure import sessions
 from orch.conductor.infrastructure.sessions import keep_session, resume_args  # noqa: F401 — re-export for callers
 from orch.conductor.infrastructure.usage import add_tokens  # noqa: F401 — re-export for callers
 from orch.conductor.progress import human_duration
@@ -189,7 +188,7 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
         run = process.run_role(self._role_argv(item, role, route, decision), prompt, transport=route["transport"], cwd=self.project,
-                               timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
+                               timeout_s=route["timeout_s"], raw_path=raw, env=detach.subprocess_env(self._role_env(item, role, route)),
                                idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
                                on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
                                agent_directory=handle["directory"])
@@ -261,9 +260,7 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
 
 
 def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
-    """The tick of a running role: a STAGE_SLOW beacon every ``stage_warn_s`` and a STAGE_IDLE one every
-    ``stage_idle_warn_s`` of silence, each saying what the role runs now, a STALL_SUSPECTED one for a repeated command or a
-    stream without tool steps, and a heartbeat of the run. Nothing is stopped."""
+    """Tick of a role: STAGE_SLOW/STAGE_IDLE at their warning intervals, STALL_SUSPECTED on stalls; heartbeat, never stop."""
     limits = item.options["limits"]
     route = item.routes.get(role) or {}
     stall = StallWatch(limits.get("stall_repeat_n", 0), limits.get("stall_window_s", 0),
@@ -278,10 +275,12 @@ def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
         for reason in observe_tick(self, stall, elapsed, info, item=item.ref, step=key, role=role):
             self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STALL_SUSPECTED", agent=agent,
                                message=f"{reason}; {process.activity(pid, raw)}")
+            beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STALL_SUSPECTED", "step": key})
         if warn and elapsed >= marks["slow"]:
             marks["slow"] += warn
             self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW", agent=agent,
                                message=f"running {human_duration(elapsed)}; {process.activity(pid, raw)}")
+            beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STAGE_SLOW", "step": key})
         if idle_warn:
             if idle < idle_warn:
                 marks["idle"] = idle_warn
@@ -290,6 +289,7 @@ def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
                 self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_IDLE", agent=agent,
                                    message=f"no output for {human_duration(idle)} (running {human_duration(elapsed)}); "
                                            f"{process.activity(pid, raw)}")
+                beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STAGE_IDLE", "step": key})
     return tick
 
 

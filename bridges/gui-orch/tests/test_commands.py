@@ -52,7 +52,7 @@ class TestDescriptors(CommandCase):
         ready, resume, release = (COMMANDS[f"gui-orch.{name}"] for name in ("run-ready", "resume", "release"))
         self.assertEqual(("high", "always"), (ready["risk"], ready["confirmation"]))
         self.assertEqual({"process.spawn", "plan.write", "project.write"}, set(ready["effects"]))
-        self.assertEqual({"stream", "cancel", "dry-run"}, set(ready["supports"]))
+        self.assertEqual({"stream", "dry-run"}, set(ready["supports"]))
         self.assertEqual(("medium", "risk-based"), (resume["risk"], resume["confirmation"]))
         self.assertEqual("always", release["confirmation"])
         for command in COMMANDS.values():
@@ -137,19 +137,19 @@ class TestRunPy(CommandCase):
     def test_run_ready_runs_orch_with_ready_and_a_count(self):
         result = self.run_py(["run-ready", "--plan", PLAN, "--max-items", "3"])
         self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual([["orch", "conduct", "run", "--plan", PLAN, "--ready", "--max-items", "3"]], self.logged())
+        self.assertEqual([["orch", "conduct", "run", "--plan", PLAN, "--ready", "--max-items", "3", "--detach"]], self.logged())
 
     def test_run_ready_dry_run_resume_release(self):
         self.assertEqual(0, self.run_py(["run-ready", "--plan", PLAN, "--max-items", "20", "--dry-run"]).returncode)
         self.assertEqual(0, self.run_py(["resume", "--run", RUN]).returncode)
         self.assertEqual(0, self.run_py(["release", "--run", RUN, "--item", "P2.1"]).returncode)
         self.assertEqual([["orch", "conduct", "run", "--plan", PLAN, "--ready", "--max-items", "20", "--dry-run"],
-                          ["orch", "conduct", "resume", "--run", RUN],
+                          ["orch", "conduct", "resume", "--run", RUN, "--detach"],
                           ["orch", "conduct", "release", "--run", RUN, "--item", "P2.1"]], self.logged())
 
     def test_resume_retry_continue_and_answer_run_orch_with_exact_arguments(self):
         for args, expected in (
-                (["resume", "--run", RUN, "--retry", "P2.1"], ["orch", "conduct", "resume", "--run", RUN, "--retry", "P2.1"]),
+                (["resume", "--run", RUN, "--retry", "P2.1"], ["orch", "conduct", "resume", "--run", RUN, "--retry", "P2.1", "--detach"]),
                 (["continue", "--run", RUN], ["orch", "conduct", "continue", "--run", RUN]),
                 (["answer", "--run", RUN, "--item", "P2.1", "--question", "Q1", "--option", "keep"],
                  ["orch", "conduct", "answer", "--run", RUN, "--item", "P2.1", "--question", "Q1", "--option", "keep"]),

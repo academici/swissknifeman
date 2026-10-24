@@ -107,11 +107,32 @@ class TestRuns(AdapterCase):
 
 
 class TestRun(AdapterCase):
+    def test_health_classes_have_warning_and_information_statuses(self):
+        adapter = importlib.import_module("adapter")
+        for health in ("hung", "suspected_stall", "orphaned"):
+            self.assertEqual(adapter.view_status(health), "warn")
+        for health in ("waiting_owner", "waiting_tool", "waiting_provider", "waiting_budget_reset"):
+            self.assertEqual(adapter.view_status(health), "info")
+
+    def test_hung_health_overrides_running_status(self):
+        adapter = importlib.import_module("adapter")
+        found = {"status": "running", "health": {"health": "hung", "silent_s": 420.5, "heartbeat_age_s": 300},
+                 "lease": {"launcher": "supervisor"}, "beacon": {"reason_code": "STALL_SUSPECTED"}}
+        with mock.patch.object(adapter, "_status", return_value=found):
+            out = adapter.run(str(self.project), 30, {}, {"run_id": RUN})
+        self.assertEqual([], contracts.validate(out, "view-data"))
+        fields = {row["label"]: row["value"] for row in out["fields"]}
+        self.assertEqual(("warn", "hung", 420, "supervisor"),
+                         (fields["Status"], fields["Health"], fields["Silent (s)"], fields["Launcher"]))
+        self.assertEqual([], floats(out))
+
     def test_detail_of_a_run(self):
         out = self.ok("gui-orch.run", params={"run_id": RUN})
         fields = {field["label"]: field["value"] for field in out["fields"]}
         self.assertEqual(("warn", "1200 in, 340 out"), (fields["Status"], fields["Tokens"]))
         self.assertEqual("running", fields["State"])
+        self.assertEqual(("running", 30, 2, "gui"), (fields["Health"], fields["Silent (s)"], fields["Heartbeat age (s)"], fields["Launcher"]))
+        self.assertIn("STAGE_IDLE", fields["Last beacon"])
         self.assertIn("pid 123 on test-host", fields["Owner"])
         self.assertIn("P2.2 executor.1 executor", fields["Now"])
         self.assertNotIn("actions", out)
@@ -154,7 +175,7 @@ class TestObservability(AdapterCase):
     def test_a_waiting_run_is_a_warning_with_the_waiting_pieces_and_offers_continue_not_resume(self):
         out = self.ok("gui-orch.run", params={"run_id": "cnd-waiting"})
         fields = {field["label"]: field["value"] for field in out["fields"]}
-        self.assertEqual(("warn", "waiting", "WAITING_DECISION"), (fields["Status"], fields["State"], fields["Reason code"]))
+        self.assertEqual(("info", "waiting", "WAITING_DECISION"), (fields["Status"], fields["State"], fields["Reason code"]))
         self.assertEqual([{"command": "gui-orch.continue", "input": {"run_id": "cnd-waiting"}}], out["actions"])
         (section,) = [part for part in out["sections"] if part["title"] == "Waiting for an answer"]
         self.assertIn("P2.3: Q1, esc-1 since 2026-10-23T12:00:00Z", section["markdown"])

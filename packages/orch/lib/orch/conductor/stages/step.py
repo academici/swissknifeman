@@ -57,6 +57,7 @@ def disk_guard(self, item: Optional[Item] = None, stage: Optional[str] = None) -
     found = disk.shortage(self.project, limits.get("disk_min_gb", 0))
     if found:
         self.progress.emit("info", item=item.ref if item else None, stage=stage, reason_code="DISK_LOW", message=found)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "DISK_LOW", "step": stage})
         raise Stop("DISK_LOW", f"{found}; free the space, then resume")
 
 

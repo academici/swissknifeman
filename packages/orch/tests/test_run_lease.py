@@ -462,7 +462,7 @@ c.resume(sys.argv[2])
             with mock.patch.object(process, "start_ticks", return_value=123), \
                     mock.patch.object(recovery.os, "getpgid", return_value=424242), \
                     mock.patch.object(recovery.os, "killpg") as kill, \
-                    mock.patch.object(recovery.time, "monotonic", side_effect=[0, 11, 11, 22]), \
+                    mock.patch.object(recovery, "time", mock.Mock(monotonic=mock.Mock(side_effect=[0, 11, 11, 22]))), \
                     mock.patch.object(process, "_group_alive", side_effect=[True, True, True, remains_alive, remains_alive]), \
                     mock.patch.object(conductor, "_loop", return_value=0) as loop:
                 if remains_alive:

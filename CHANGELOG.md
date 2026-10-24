@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- orch, gui-orch: detached run/resume with nonce-bound startup acknowledgement and private logs; GUI launches survive restart and show conductor health, silence, beacon and launcher. Added printable/verifiable systemd user supervisor units, conductor lifecycle events and warning events for stage/check/disk/stall beacons.
+- orch: detached resume reports invalid retries and limit overrides before acknowledging startup; roles and checks do not inherit the conductor's internal detach authority or launcher environment.
+
 ### Changed
 
 - orch, gui-orch: a run whose piece waits for the answer to a question now ends `waiting` (`run.end` outcome `waiting`, `state.status` `waiting`, Stop `WAITING_DECISION`, **exit code 4**) instead of `stopped` / `ITEM_BLOCKED` (exit 1), and with `on_blocked = report` instead of `finished` (exit 0) while a piece still waits. `conduct status --json` lists `waiting: [{item, question_ids, since}]`; `orch conduct continue --run R [--item I …] [--partial]` and `answer … --continue` go on with the answered pieces in one command (`QUESTIONS_OPEN`, exit 1, when a blocking question has no answer; `NOT_WAITING` for a piece that does not wait). The GUI can answer questions (`gui-orch.answer`), continue (`gui-orch.continue`) and `resume` with `--retry`, and shows a waiting run as such. A script that reads exit 1 as "the run stopped" must handle 4 first; a blocked piece without a question and a denied question stay `ITEM_BLOCKED`, exit 1.

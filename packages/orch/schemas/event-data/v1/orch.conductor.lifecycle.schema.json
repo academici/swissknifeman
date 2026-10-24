@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-conductor-lifecycle:v1",
+  "title": "orch.conductor.lifecycle",
+  "description": "The conductor session started, resumed or ended, independently of the individual work runs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "conductor_run_id",
+    "phase"
+  ],
+  "properties": {
+    "conductor_run_id": {
+      "description": "Conductor run id.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$"
+    },
+    "phase": {
+      "description": "Lifecycle phase.",
+      "type": "string",
+      "enum": [
+        "started",
+        "resumed",
+        "ended"
+      ]
+    },
+    "outcome": {
+      "description": "Conductor outcome at the end of the session.",
+      "type": "string",
+      "enum": [
+        "finished",
+        "stopped",
+        "waiting",
+        "interrupted",
+        "crashed"
+      ]
+    },
+    "reason_code": {
+      "description": "Reason for stopping or waiting.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+    },
+    "launcher": {
+      "description": "Owner of the launch.",
+      "type": "string",
+      "enum": [
+        "terminal",
+        "detached",
+        "gui",
+        "supervisor",
+        "autopilot"
+      ]
+    },
+    "items": {
+      "description": "Up to fifty references of work in this run.",
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "description": "Work reference.",
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$"
+      }
+    }
+  }
+}

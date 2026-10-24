@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "f76d555735a8",
-  "reason": "P7.6: schemas, source decision",
+  "captured_from": "e5c45acc5ab6",
+  "reason": "P8.1: schemas",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

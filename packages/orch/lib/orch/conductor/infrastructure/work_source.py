@@ -27,6 +27,7 @@ from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import safe, write_json
+from orch.conductor.infrastructure.heartbeat import declare
 from orch.settings import ORCH_ROOT
 from orch.port import PortError
 from orch.worksource import problems as source_problems
@@ -69,8 +70,11 @@ def inprocess_transport(argv, cwd, env):
         ORCH_TRANSPORT = previous_transport
 
 
+SOURCE_CALL_S = 600  # the longest a call of the work source may take
+
+
 def _subprocess_transport(argv, cwd, env):
-    done = run_with_timeout(argv, cwd=cwd, capture_output=True, text=True, env=env, timeout=600)
+    done = run_with_timeout(argv, cwd=cwd, capture_output=True, text=True, env=env, timeout=SOURCE_CALL_S)
     return done.returncode, done.stdout, done.stderr
 
 
@@ -198,7 +202,8 @@ def run_orch(self, *args: str) -> tuple:
         argv += ["--project-resolution", self.project_resolution]
     if self.config_file:
         argv += ["--config", str(self.config_file)]
-    code, out, err = (ORCH_TRANSPORT or _subprocess_transport)(argv + list(args), str(self.project), self.env)
+    with declare(self, "work_source", "WORK_SOURCE_CALL", SOURCE_CALL_S):  # a silent heartbeat is a wait, not a hang
+        code, out, err = (ORCH_TRANSPORT or _subprocess_transport)(argv + list(args), str(self.project), self.env)
     try:
         doc = json.loads(out) if out.strip() else None
     except ValueError:

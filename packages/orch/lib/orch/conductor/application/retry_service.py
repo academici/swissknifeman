@@ -13,8 +13,11 @@ from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import write_json
+from orch.conductor.infrastructure.heartbeat import declare, ticker
 from orch.conductor.policies.retry_policy import (CONDUCTOR_ON_ERROR, JITTER_BASE_S, JITTER_CAP_S, PROVIDER_STOP_CODES,
                                                   TRANSIENT_CLASSES, past_reset)
+
+WAIT_SLACK_S = 30  # a wait for the provider may overrun its end by this much before it counts as overdue
 
 
 def routed_blocks(self, role: str, route: dict, blocks: list) -> list:
@@ -186,4 +189,5 @@ def wait(self, item: Item, key: str, role: str, error: dict, seconds: int, cance
                        message=f"{role}: {error['class']}; waiting {seconds} s, until {reset}")
     self._provider_limit(item, key, role, (item.routes.get(role) or {}).get("provider"), error["class"],
                          "PROVIDER_WAIT", until=reset, wait_s=int(seconds))
-    self._pause(seconds, cancel)
+    with declare(self, "provider", "PROVIDER_WAIT", seconds + WAIT_SLACK_S):  # the pause beats the heartbeat itself
+        self._pause(seconds, cancel, tick=ticker(self))

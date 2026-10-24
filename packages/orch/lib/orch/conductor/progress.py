@@ -27,7 +27,7 @@ MODES = ("text", "json-lines", "quiet")
 # answer to "why is it taking so long" (``orch conduct status`` prints it)
 BEACONS = ("STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "BUDGET_OVER", "LIMIT_OVER", "PROVIDER_WAIT", "ROUTE_FALLBACK",
            "CAPACITY_GATED", "WORK_SOURCE_NO_NOTE", "RESULT_SILENT_DENIAL", "DISK_LOW",
-           "WRITE_PROTECTED_PATH")
+           "WRITE_PROTECTED_PATH", "CHECK_IDLE", "STALL_SUSPECTED")
 PROGRESS_FILE = "progress.jsonl"
 INVALID_FILE = "progress.invalid.jsonl"
 INVALID_CODE = "PROGRESS_LINE_INVALID"
@@ -83,7 +83,7 @@ class Progress:
     """Writes the progress lines of run ``run_id`` into ``directory/progress.jsonl`` and onto ``stream``."""
 
     def __init__(self, run_id: str, directory: Path, mode: str = "text", stream=None,
-                 clock: Optional[Callable[[], str]] = None):
+                 clock: Optional[Callable[[], str]] = None, observer: Optional[Callable[[dict], None]] = None):
         if mode not in MODES:
             raise ValueError(f"progress mode must be one of {', '.join(MODES)}")
         self.run_id = run_id
@@ -92,11 +92,19 @@ class Progress:
         self.mode = mode
         self.stream = stream
         self.clock = clock or utc_now
+        self.observer = observer  # called with each line after it is written (the heartbeat of the run)
         self._lock = threading.Lock()  # beacons of checks come from worker threads
 
     def emit(self, event: str, **fields) -> dict:
         with self._lock:
-            return self._emit(event, **fields)
+            line = self._emit(event, **fields)
+        if self.observer is not None:  # outside the lock: the observer may emit a line of its own
+            try:
+                self.observer(line)
+            except Exception:  # a failing observer never stops the run; the journal has the line
+                if os.environ.get("SKM_CONTRACTS_STRICT") == "1":
+                    raise
+        return line
 
     def _checked(self, line: dict) -> dict:
         """``line`` when it is a progress-line; otherwise it goes to the sidecar and an ``info`` line takes its place."""

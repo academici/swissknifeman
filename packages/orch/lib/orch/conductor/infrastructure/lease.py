@@ -13,9 +13,18 @@ from typing import Optional
 from aicore.util.lock import FileLock, probe_free  # FileLock is re-exported for the tests
 from aicore.util.proc import GIT_TIMEOUT, run as run_with_timeout
 
-from orch.conductor import records
+from orch.conductor import process, records
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
+
+
+LAUNCHERS = ("terminal", "detached", "gui", "supervisor", "autopilot")
+
+
+def launcher() -> str:
+    """What started this conductor: ``SKM_ORCH_LAUNCHER`` when it names one of ``LAUNCHERS``, else ``terminal``."""
+    found = os.environ.get("SKM_ORCH_LAUNCHER", "").strip()
+    return found if found in LAUNCHERS else "terminal"
 
 
 def _owner(path: Path) -> dict:
@@ -53,8 +62,11 @@ class RunLease:
         if not self.lock.acquire():
             raise self.busy()
         try:
+            # the identity of the owner is (pid, start_ticks, boot_id): a pid alone is never a reason to signal (I13)
             records.write(self.metadata, {"pid": os.getpid(), "host": socket.gethostname(),
-                                          "started_at": clock.utc_now(), "command": command}, "lease")
+                                          "started_at": clock.utc_now(), "command": command,
+                                          "start_ticks": process.start_ticks(os.getpid()), "boot_id": process.boot_id(),
+                                          "launcher": launcher()}, "lease")
         except BaseException:
             self.release()
             raise

@@ -52,10 +52,15 @@ have independent checkout locks. Ownership starts before reading `run.json` or `
 the first state save of a new run. A second conductor is refused with `WORKTREE_BUSY` or `RUN_BUSY`.
 `settle` and `release` take the run lease for their updates; a busy run keeps its state unchanged.
 
-`lease.json` shows the owner's pid, host, start time and command; the checkout's adjacent `.json` also names its run.
-These are display metadata: only the kernel lock proves ownership. Metadata is removed before unlocking. Lock
-files are never deleted, and their descriptors cannot survive exec into a role. Locks are local to one host;
-there is no heartbeat or cross-machine ownership protocol.
+`lease.json` shows the owner's pid, host, start time and command, and its identity: `start_ticks` (Linux
+`/proc/<pid>/stat` field 22, `null` without `/proc`), `boot_id` (`/proc/sys/kernel/random/boot_id`, `null` without it) and
+`launcher` (`terminal` by default, or `detached`, `gui`, `supervisor`, `autopilot` from the environment variable
+`SKM_ORCH_LAUNCHER`; any other value is `terminal`); the checkout's adjacent `.json` also names its run. A process is
+identified by `(pid, start_ticks, boot_id)`: a pid alone, which another process may have after a restart or a reuse, is never
+a reason to send a signal. These are display metadata: only the kernel lock proves ownership. Metadata is removed before
+unlocking. Lock files are never deleted, and their descriptors cannot survive exec into a role. Locks are local to one
+host; there is no cross-machine ownership protocol. A lease from before the identity fields reads as before. That the
+owner still moves is shown by the heartbeat (next section).
 
 If the conductor dies while the journal says `running`, `status`, `status --json` and `runs` report
 `orphaned` / `RUN_ORPHANED` when a separate lock probe succeeds. The probe writes nothing. Runs without the
@@ -74,6 +79,66 @@ probe opens `lease.lock` read-only, and where it cannot open it at all (a read-o
 orphaned: `status --json` says `lease: {"lock": "unavailable"}`.
 `prune --apply` skips busy leases with a reason, rereads eligibility under the lease, then renames an eligible old
 terminal or orphaned run to `<runs root>/.pruning-<id>` before removing it. The latest run is retained.
+
+## Heartbeat and health
+
+The lease proves who owns a run; `<run>/heartbeat.json` (`records/v1` `heartbeat`, replaced atomically, never locked) proves that
+the owner still makes progress. It holds the identity of the conductor (`pid`, `start_ticks`, `boot_id`, `host`), `run_id`, a
+`seq` that grows with every write and `at`, and, when known, the piece (`item`), the step (`step`) and the role, the last sign
+of progress (`last_progress_at`, `last_progress_kind`: `run_start`, `stage_start`, `stage_end`, `tool_use`, `tool_result`,
+`check_evidence`, `tree_change`, `answer`), the size of the stream and when it last grew (`stream_bytes`, `last_growth_at`), the
+CPU seconds of the process tree and when they last grew by a second (`tree_cpu_s`, `last_cpu_at`), the command the role repeats
+(`repeat`: `command`, `count`) and the blocking call in progress (`waiting`: `kind` one of `work_source`, `provider`, `git`,
+`question`, `budget`, `lock`, `subprocess`; `reason_code`; `since`; `deadline`, required for every kind but `question`).
+
+It is written only by the thread of control of the conductor: at every progress line, at every look at a running role or
+check (five seconds apart at most; a change of the kind of progress is written at once) and around a blocking call with a
+known limit (`waiting`: the call of the work source, up to 600 s; the wait for a provider limit, which also rewrites the
+heartbeat every 30 s). There is no timer thread: a stuck main loop must show as a stale heartbeat. A heartbeat that cannot be
+written (`OSError`) never stops the run: one `info` line `HEARTBEAT_NOT_WRITTEN` per run says so. `status` and `runs` only
+read it; a missing or broken file is a class of its own, never a failure.
+
+Signs of progress besides the size of the stream: the tool steps in it (`tool_use` and `tool_result` of claude-code and grok,
+`item.started` and `item.completed` of codex, read from the new bytes only) and the CPU of the process tree of the role or
+check (`/proc`, measured at most every 30 s and once more before an idle stop). A tree that spent a second of CPU since the
+measure before is at work: the idle timers (`stage_idle_timeout_s`, `check_idle_timeout_s`) and the idle beacons start again,
+so a long test run that writes nothing is not stopped, while a sleeping tree still is. Without `/proc` only the growth of the
+stream counts, as before.
+
+`STALL_SUSPECTED` and `CHECK_IDLE` are beacons: they stop nothing, only the explicit limits do. A role that runs the same tool
+command `limits.stall_repeat_n` times in a row (default 5) gets one `STALL_SUSPECTED` per command; a role whose stream keeps
+growing for `limits.stall_window_s` (default 1800) without a tool step gets one every window; a check without output and
+without CPU for `limits.check_idle_warn_s` (default 600) gets a `CHECK_IDLE` every such period. 0 switches each off.
+
+`orch conduct status --json` has the field `health` and the text status a line `health: <class> (silent <time>) — <reason>`;
+`orch conduct runs --json` has `health` (the class) in every row of a readable run. It is the pure function
+`orch.conductor.health.classify` (no IO, no clock of its own) over the journal, the state, the heartbeat and the lease probe;
+the first rule that fits decides:
+
+| # | Condition | Class | `reason_code` |
+| --- | --- | --- | --- |
+| 1 | the run finished | `finished` | |
+| 2 | stopped with `PROVIDER_QUOTA` and the journal gives a reset time in the future | `waiting_budget_reset` | `PROVIDER_QUOTA` |
+| 3 | the run ended `waiting`, or its state does (a piece waits for an answer) | `waiting_owner` | `WAITING_DECISION` |
+| 4 | stopped or interrupted | `stopped` | the stop code |
+| 5 | running, the run has a lease flag and nobody holds the lease | `orphaned` | `RUN_ORPHANED` |
+| 6 | running, the lease cannot be probed (read-only) | `unknown` | `LEASE_UNKNOWN` |
+| 7 | running, no heartbeat (a run from before heartbeats, or its first seconds) | `running` | `HEARTBEAT_MISSING` (in `detail`) |
+| 7 | running, a heartbeat that cannot be read | `unknown` | `HEARTBEAT_INVALID` |
+| 8 | pid, `start_ticks` or `boot_id` of the heartbeat differ from the lease owner's | `suspected_stall` | `HEARTBEAT_OWNER_MISMATCH` |
+| 9 | the heartbeat waits for a question | `waiting_owner` | `QUESTION_WAITING` |
+| 10 | a wait whose deadline has not passed (however old the heartbeat) | `waiting_provider` (kind `provider`) or `waiting_tool` | `PROVIDER_WAIT` or the reason of the wait |
+| 11 | a wait more than `hung_after_s` past its deadline | `hung` | `HEARTBEAT_STALE` |
+| 12 | a wait more than 60 s past its deadline | `suspected_stall` | `WAIT_DEADLINE_PASSED` |
+| 13 | a wait just past its deadline | `waiting_tool` | the reason of the wait |
+| 14 | no wait, the heartbeat older than `hung_after_s` | `hung` | `HEARTBEAT_STALE` |
+| 15 | a role runs, the last tool step is older than `stall_window_s`, and the CPU did not grow for that long or the command was repeated `stall_repeat_n` times | `suspected_stall` | `STALL_SUSPECTED` |
+| 16 | otherwise | `running` | |
+
+The thresholds are `hung_after_s` 300 and, for rule 15, `stall_window_s` and `stall_repeat_n` of the piece the run is on (its
+`options.json`, else the defaults). Only `hung` is a reason to act on a run (the supervisor, P8.2): a wait with a deadline in
+the future is protected, because the call of the work source may take ten minutes without a line. `suspected_stall` is for a
+person to look at. A run from before heartbeats, and a lease without the identity fields, are read as before.
 
 ## A piece that rewrites the orchestrator: `--frozen`
 
@@ -415,7 +480,10 @@ The informational limits report long or costly work through `info` lines with a 
 | `RUN_ORPHANED` | status/runs find a journal still running and a free lease for a run marked `lease: true` | the conductor no longer owns the run; resume stops unfinished role groups before continuing |
 | `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with a saved answer (open with a resolution, or legacy answered); other work may still proceed | `answers of ITEM wait: orch conduct resume --run RUN --retry ITEM`; also a Stop when no piece starts |
 | `STAGE_SLOW` | every `limits.stage_warn_s` (default 2700) of one role run | how long it runs, its last command and the processes of its session (a test run, a build) |
-| `STAGE_IDLE` | every `limits.stage_idle_warn_s` (default 600) without output | the same; `no child process` means the model call itself is silent |
+| `STAGE_IDLE` | every `limits.stage_idle_warn_s` (default 600) without output and without CPU of the process tree | the same; `no child process` means the model call itself is silent |
+| `STALL_SUSPECTED` | a role runs the same tool command `limits.stall_repeat_n` times in a row (default 5; once per command), or its stream keeps growing `limits.stall_window_s` (default 1800) without a tool step (again every window); 0 switches each off; nothing is stopped | `same command N times: <command>` or `stream grew without a tool step for N s`, then what the role runs now |
+| `CHECK_IDLE` | every `limits.check_idle_warn_s` (default 600; 0 off) while a check writes no output and its process tree spends no CPU; nothing is stopped (`check_idle_timeout_s` stops) | the check id and its processes |
+| `HEARTBEAT_NOT_WRITTEN` | `heartbeat.json` could not be written (once per run; the run goes on without it) | the error |
 | `CHECK_SLOW` | every `limits.check_warn_s` (default 900) of one check; the time a check spends stopped (`SIGSTOP`, state `T`) is not counted, for the beacon and for `check_timeout_s` | the check id and its processes, each with its age, `ps` state and CPU share (`S` at 0 % is asleep, for example on a stdin nobody writes; `R` or a share of the CPU is at work) |
 | `DISK_LOW` | a check runs and the free space went under `limits.disk_min_gb` (every `check_warn_s`; the check is not cut) | the file system and the free space |
 | `RUN_SLOW` | every `limits.run_warn_s` (default 7200; 0 off) of the **active** time of the run (segments of its processes: a resume a day later does not count the day) | active time, closed and left pieces, the current step; one plan note per threshold; never stops the run |
@@ -458,7 +526,8 @@ A person who runs the conductor sees them on stderr; an observer agent reads the
 the run is healthy (a long test run is) or needs a look. The executor and the bounded-implementer have no wall by default
 (`stage_timeout_s` sets one for every role); the auxiliary roles have `limits.role_timeout_s` and a check has
 `check_timeout_s` (7200). Silence stops work too: a role whose stream has not grown for `stage_idle_timeout_s` (5400) or a
-check whose log has not grown for `check_idle_timeout_s` (3600) is hung; 0 turns either off.
+check whose log has not grown for `check_idle_timeout_s` (3600) is hung, unless the CPU of its process tree grew meanwhile (see
+Heartbeat and health); 0 turns either off.
 
 ### Provider availability
 
@@ -984,7 +1053,7 @@ and `REVIEW_MODE_NONE_SKIPPED` names it.
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and granted to every writing role: `--rw` on its `ro-run.py` guard, for Claude Code also `--add-dir` and, under the provider sandbox, `sandbox.filesystem.allowWrite`, for Codex `--add-dir`); `outside_module`: `deviation` (default) or `block`, for paths of another module than the write set names (`OUTSIDE_MODULE` under `block`); `runtime_paths`: patterns of runtime artifacts that are set aside, never committed (see "The write set is a fence by module"). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
 | `checks` | `parallel` (1–8, default 2: command checks run together, sharing the jobs budget `SKM_TEST_JOBS`), `fail_fast` (default false: every item check runs, so one round collects every independent failure; true: after a red command check no other check starts, the ones running end and the rest are `skipped` with `skip_reason` `fail_fast`; `phase` checks run only when every item check is green, else `skipped` with `phase_after_red`; the item checks run cheapest first by their time in earlier rounds), `reuse` (default true: a command check with green evidence of this run for the same candidate, command, directory and fingerprint is not run again; its row is `reused`), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs the checks in plan order in every round, with no red-first staging; whether the later checks start after a red one is decided by `fail_fast` alone, independently of `red_first`), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed), `self_check` (default empty: a list of the project's cheap commands, e.g. the tests of the touched units and their dependents and lint, that an executor with `executor_runs_checks: false` runs once on its final tree before it reports and lists in `self_check` of its stage-report; the claim proves nothing, the conductor still runs every acceptance check) |
 | `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the diff of the paths changed since the previous review, see *Review of round 2 and later*; `full`: the whole diff every round), `final_correction` (default `true`: when no further round is allowed the findings are corrected without another review, noted in the plan and as `review_debt` of the piece with a `REVIEW_DEBT` beacon, instead of `REVIEW_LIMIT`; `review_rounds` is a wall, `ceiling_factor` does not extend it), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`rules` default, `model`: who chooses it) |
-| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); hard token limits `tokens_hard_max` (of the piece) and `run_tokens_hard_max` (of the run), 0 off (see Hard token limits and resume), with `unmetered` (`stop` default, or `charge`) and `unmetered_charge_tokens` (50000) for an attempt that reports no usage while one is in force; beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900); wall-clock ceilings: `role_timeout_s` (a map role → seconds for a streaming role: `context-scout` 900, `triager` 1800, `report-fixer` 600, `registrar` 600, `reviewer` 3600, `advisor` 1800, `researcher` 2700; the `executor` and the `bounded-implementer` have none; a layer names only the walls it changes, 0 removes one; the group review uses the `reviewer` wall), `stage_timeout_s` (0, off; when set it replaces the wall of every role), `check_timeout_s` (7200, 0 off); silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`), `triage_repro_timeout_s` (600, 0 none: the ceiling in seconds on the read-only rerun of the reproduction of a rejected Blocker or Major finding; past it the finding is confirmed again, `TRIAGE_REPRO_UNVERIFIED`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
+| `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); hard token limits `tokens_hard_max` (of the piece) and `run_tokens_hard_max` (of the run), 0 off (see Hard token limits and resume), with `unmetered` (`stop` default, or `charge`) and `unmetered_charge_tokens` (50000) for an attempt that reports no usage while one is in force; beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900), `check_idle_warn_s` (600), and the stall beacons `stall_repeat_n` (5: one `STALL_SUSPECTED` after this many identical tool commands in a row) and `stall_window_s` (1800: a stream that grows this long without a tool step), 0 switching each off; wall-clock ceilings: `role_timeout_s` (a map role → seconds for a streaming role: `context-scout` 900, `triager` 1800, `report-fixer` 600, `registrar` 600, `reviewer` 3600, `advisor` 1800, `researcher` 2700; the `executor` and the `bounded-implementer` have none; a layer names only the walls it changes, 0 removes one; the group review uses the `reviewer` wall), `stage_timeout_s` (0, off; when set it replaces the wall of every role), `check_timeout_s` (7200, 0 off); silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`), `triage_repro_timeout_s` (600, 0 none: the ceiling in seconds on the read-only rerun of the reproduction of a rejected Blocker or Major finding; past it the finding is confirmed again, `TRIAGE_REPRO_UNVERIFIED`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
 | `on_blocked` | `stop` or `report` |
@@ -1414,7 +1483,8 @@ step carries none. `skills_auto` and `skills_checked` hold the choice of each ro
 | `questions` | `<run>/<item>/questions.json` | the conductor and `orch conduct answer`, under `questions.lock` (taken before the run-store lock) | `QUESTIONS_INVALID` |
 | `item-options` | `<run>/<item>/options.json` | the options of the piece: `scenario`, `options` (a run-options document of `conductor/v1`: `skills` as `[{role, names}]`, a layer that gives the same options again), `sources`, `digest`, `claim_route` | `RECORD_INVALID` |
 | `item-routes` | `<run>/<item>/routes.json` | the route of each role, rewritten by a fallback, a retry or a reviewer upgrade | `RECORD_INVALID` |
-| `lease` | `<run>/lease.json`, `<runs root>/checkouts/<sha16>.json` | the owner of the run lease or the checkout lock (`pid`, `host`, `started_at`, `command`, `run`) | owner `unknown` |
+| `lease` | `<run>/lease.json`, `<runs root>/checkouts/<sha16>.json` | the owner of the run lease or the checkout lock (`pid`, `host`, `started_at`, `command`, `start_ticks`, `boot_id`, `launcher`, `run`) | owner `unknown` |
+| `heartbeat` | `<run>/heartbeat.json` | `Heartbeat.beat` of the conductor that owns the run (see Heartbeat and health); a write that fails is `HEARTBEAT_NOT_WRITTEN` | status: `unknown` / `HEARTBEAT_INVALID` |
 | `risk` | `<run>/<item>/risk.json` | `dynamic_review`: the risk score, its features and facts, the threshold and whether it added a review | `RECORD_INVALID` |
 | `review-strategy` | `<run>/review-strategy.json` | `review_plan.decide`: mode, groups, reviewer effort, reason, source; a resume whose state lost the plan takes this file | `RECORD_INVALID` |
 | `process` | `<run>/<item>/agents/<id>/process.json` | `process.run_role`: `pid`, `pgid`, `start_ticks`, `started_at`; read by cold recovery before any signal | `RECORD_INVALID` (the resume stops) |
@@ -1503,8 +1573,9 @@ counts the `run.resume` lines. A project without runs gives `{"runs": []}`; a ru
 `{"run_id": "cnd-...", "status": "unreadable", "owner": null}` and never an error. `--limit` is at least 1. Without `--json` one line
 per run is printed. Exit 0; the project is required as for every other `conduct` verb.
 
-`owner` is `{pid, host, started_at, command}` only while the run lease is held, otherwise `null`; stale metadata
-alone never implies ownership. `status --json` adds the same metadata as `lease`, plus `limits`, `beacons` and
+`owner` is `{pid, host, started_at, command}` (and `start_ticks`, `boot_id`, `launcher` of a lease that has them) only while
+the run lease is held, otherwise `null`; stale metadata alone never implies ownership. Every readable run also has `health`,
+the class of `health.classify` (see Heartbeat and health), which `status --json` gives as an object. `status --json` adds the same metadata as `lease`, plus `limits`, `beacons` and
 per-item `tokens`, `usage_incomplete`, `routes`. Existing journal fields retain their meaning. Missing item usage
 is `null`, routes are `{}`, and missing limits are `{}`. Routes expose only `provider`, `model`, `effort`, `class`.
 `limits.items` maps item refs to `tokens_max` and effective `tokens_hard_max`; `run_tokens_hard_max` retains

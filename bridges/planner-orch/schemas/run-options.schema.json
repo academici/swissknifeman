@@ -466,7 +466,7 @@
           "minimum": 0
         },
         "stage_idle_timeout_s": {
-          "description": "A streaming role is stopped (TIMEOUT, then the retry rule of the step) when its output has not grown for this many seconds: silence that long is a hang, not a long test run (stage_idle_warn_s beacons report shorter silences and what runs meanwhile); 0 never stops it; default 5400.",
+          "description": "A streaming role is stopped (TIMEOUT, then the retry rule of the step) when its output has not grown and the CPU of its process tree has not grown (by 1 s between two measures, taken every 30 s) for this many seconds: silence that long is a hang, not a long test run (stage_idle_warn_s beacons report shorter silences and what runs meanwhile); 0 never stops it; default 5400.",
           "type": "integer",
           "minimum": 0
         },
@@ -476,7 +476,7 @@
           "minimum": 0
         },
         "check_idle_timeout_s": {
-          "description": "An acceptance check is stopped (exit 124, red) when its log has not grown for this many seconds: a hung test runner, not a long one (the check runs with PYTHONUNBUFFERED=1, and the time a check spends stopped is not counted); 0 never stops it; default 3600.",
+          "description": "An acceptance check is stopped (exit 124, red) when its log has not grown and the CPU of its process tree has not grown for this many seconds: a hung test runner, not a long one (the check runs with PYTHONUNBUFFERED=1, and the time a check spends stopped is not counted); 0 never stops it; default 3600.",
           "type": "integer",
           "minimum": 0
         },
@@ -514,6 +514,21 @@
         },
         "check_warn_s": {
           "description": "A CHECK_SLOW beacon is printed every this many seconds of one running acceptance check; 0 switches it off; default 900.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "check_idle_warn_s": {
+          "description": "A CHECK_IDLE beacon is printed every this many seconds while one running acceptance check writes no output and spends no CPU in its process tree; nothing is stopped (`check_idle_timeout_s` stops); 0 switches it off; default 600.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stall_window_s": {
+          "description": "A STALL_SUSPECTED beacon is printed when the stream of a role keeps growing for this many seconds without a tool step (and again every such window); nothing is stopped; 0 switches it off; default 1800.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "stall_repeat_n": {
+          "description": "A STALL_SUSPECTED beacon is printed once when a role runs the same tool command this many times in a row; nothing is stopped; 0 switches it off; default 5.",
           "type": "integer",
           "minimum": 0
         },

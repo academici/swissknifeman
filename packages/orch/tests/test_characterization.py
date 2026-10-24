@@ -646,6 +646,8 @@ COVERAGE = {
     "CONCURRENT_RUN": f"test:{T}", "RESULT_INCOMPLETE": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
     "ANSWER_SCHEMA_IGNORED": "test:test_records_contract.py",
     "PROGRESS_LINE_INVALID": "test:test_progress_lines.py",
+    "CHECK_IDLE": "test:test_heartbeat_health.py", "STALL_SUSPECTED": "test:test_heartbeat_health.py",
+    "HEARTBEAT_NOT_WRITTEN": "test:test_heartbeat_health.py",
 }
 
 

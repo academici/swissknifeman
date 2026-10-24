@@ -11,11 +11,13 @@ from aicore.util.digest import sha256_hex
 
 from orch import events, settings as settings_mod
 from orch.conductor import agents, options as opts, process, prompts
+from orch.conductor.signals import StallWatch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import write_json
+from orch.conductor.infrastructure.heartbeat import observe_tick
 from orch.conductor.infrastructure.launch_plan import claude_transcripts, strip_guard, transcript_folder_name  # noqa: F401 — re-export for callers
 from orch.conductor.infrastructure import sessions
 from orch.conductor.infrastructure.sessions import keep_session, resume_args  # noqa: F401 — re-export for callers
@@ -260,15 +262,22 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
 
 def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
     """The tick of a running role: a STAGE_SLOW beacon every ``stage_warn_s`` and a STAGE_IDLE one every
-    ``stage_idle_warn_s`` of silence, each saying what the role runs now. Nothing is stopped."""
+    ``stage_idle_warn_s`` of silence, each saying what the role runs now, a STALL_SUSPECTED one for a repeated command or a
+    stream without tool steps, and a heartbeat of the run. Nothing is stopped."""
     limits = item.options["limits"]
+    route = item.routes.get(role) or {}
+    stall = StallWatch(limits.get("stall_repeat_n", 0), limits.get("stall_window_s", 0),
+                       steps=bool(process.markers_of(route.get("transport", ""), route.get("provider"))))
     warn, idle_warn = limits.get("stage_warn_s", 0), limits.get("stage_idle_warn_s", 0)
     marks = {"slow": warn, "idle": idle_warn}
     current = getattr(self._local, "agent", None)
     agent = current["id"] if current else None
 
-    def tick(elapsed: float, idle: float, pid: int) -> None:
+    def tick(elapsed: float, idle: float, pid: int, info: process.TickInfo) -> None:
         self.role_ports.run_clock(item)
+        for reason in observe_tick(self, stall, elapsed, info, item=item.ref, step=key, role=role):
+            self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STALL_SUSPECTED", agent=agent,
+                               message=f"{reason}; {process.activity(pid, raw)}")
         if warn and elapsed >= marks["slow"]:
             marks["slow"] += warn
             self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW", agent=agent,

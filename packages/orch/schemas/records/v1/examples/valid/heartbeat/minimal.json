@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:heartbeat:v1",
+  "run_id": "cnd-20261101T101010Z-abc123",
+  "pid": 4242,
+  "start_ticks": null,
+  "boot_id": null,
+  "host": "workstation",
+  "seq": 1,
+  "at": "2026-11-01T10:10:10Z"
+}

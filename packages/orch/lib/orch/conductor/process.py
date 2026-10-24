@@ -30,6 +30,8 @@ from aicore.provider import errors as provider_errors
 from aicore.util.redact import env_secrets, redact_text
 
 from orch.conductor import records
+from orch.conductor.signals import (CPU_PROGRESS_S, CPU_SAMPLE_S, PROGRESS_MARKERS, CpuWatch, StreamScan,  # noqa: F401 — re-exported
+                                    TickInfo, command_of, markers_of, tree_cpu_ticks)
 from orch.conductor.infrastructure.clock import utc_now
 
 STDERR_TAIL_CHARS = 4000
@@ -278,10 +280,7 @@ def _last_command(raw_path: Path, tail: int = 200_000) -> str:
         message = doc.get("message") if isinstance(doc, dict) else None
         for block in (message.get("content") if isinstance(message, dict) else None) or []:
             if isinstance(block, dict) and block.get("type") == "tool_use":
-                given = block.get("input") or {}
-                value = given.get("command") or given.get("file_path") or given.get("path") or given.get("pattern") \
-                    if isinstance(given, dict) else given
-                found = f"{block.get('name', 'tool')}: {' '.join(str(value or '').split())[:160]}"
+                found = command_of(block)
     return found
 
 
@@ -345,18 +344,18 @@ def _reap_group(pgid: int, grace_s: float = 5.0) -> bool:
 POLL_S = 5  # how often a running role is looked at
 RESULT_GRACE_S = 30  # how long a process may live on after its final ``result`` line (a provider CLI waits for its
 # background tasks, for example a monitor loop that never ends, even though the role has answered)
-_RESULT_LINE = (b'"type":"result"', b'"type": "result"')
-
-
 def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: int, idle_timeout_s: int,
           cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
-          result_grace_s: float = 0) -> Optional[str]:
+          result_grace_s: float = 0, transport: str = "jsonl", provider: Optional[str] = None) -> Optional[str]:
     """Feed ``prompt`` and wait for the child; ``None`` when it ended, else why it was stopped.
 
     ``timeout_s`` is a ceiling on the whole run, ``idle_timeout_s`` a limit on the silence of the output file; 0 switches
-    either off (the default of the conductor: a long role is reported by beacons, never stopped). ``on_tick(elapsed,
-    idle, pid)`` is called on every look at the child. With ``result_grace_s`` > 0 a child that is still alive that long
-    after its final ``result`` line is given up as ``lingering`` (the answer is complete). Every growth of the stream is stamped in ``<stream>.times``
+    either off (the default of the conductor: a long role is reported by beacons, never stopped). Silence ends when the
+    stream grows or when the CPU of the process tree grows by ``CPU_PROGRESS_S`` between two measures (measured every
+    ``CPU_SAMPLE_S`` and once more before the idle stop): a test run that writes nothing for an hour is at work, a sleeping
+    tree is not. ``on_tick(elapsed, idle, pid, info)`` is called on every look at the child, ``info`` a :class:`TickInfo`.
+    With ``result_grace_s`` > 0 a child that is still alive that long after its final ``result`` line is given up as
+    ``lingering`` (the answer is complete). Every growth of the stream is stamped in ``<stream>.times``
     (``seconds-since-start size`` per line): providers whose stream has no times of its own can be profiled with it.
     """
     writer = threading.Thread(target=_feed, args=(process, prompt.encode("utf-8")), daemon=True)
@@ -364,7 +363,7 @@ def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: 
     started = last_growth = time.monotonic()
     size = -1
     times = raw_path.with_name(raw_path.name + ".times")
-    seen, answered = 0, None
+    scan, cpu, answered = StreamScan(raw_path, markers_of(transport, provider)), CpuWatch(process.pid), None
     while True:
         try:
             process.wait(timeout=POLL_S)
@@ -378,11 +377,12 @@ def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: 
             current = raw_path.stat().st_size
         except OSError:
             current = size
+        kind, commands = None, []
         if current != size:
             size, last_growth = current, now
-            if result_grace_s > 0 and answered is None:
-                seen, found = _scan_result(raw_path, seen)
-                answered = now if found else None
+            found, kind, commands = scan.advance()
+            if found and result_grace_s > 0 and answered is None:
+                answered = now
             try:
                 with open(times, "a", encoding="utf-8") as handle:
                     handle.write(f"{now - started:.1f} {current}\n")
@@ -390,23 +390,18 @@ def _wait(process: subprocess.Popen, prompt: str, raw_path: Path, *, timeout_s: 
                 pass
         if answered is not None and now - answered >= result_grace_s:
             return "lingering"
+        if cpu.due(now) and cpu.sample(now):  # work that writes nothing is not silence
+            last_growth, kind = now, kind or "cpu"
         if on_tick is not None:
-            on_tick(now - started, now - last_growth, process.pid)
+            on_tick(now - started, now - last_growth, process.pid,
+                    TickInfo(kind, max(size, 0), cpu.seconds, tuple(commands)))
         if timeout_s > 0 and now - started > timeout_s:
             return f"no result within {timeout_s} s"
         if idle_timeout_s > 0 and now - last_growth > idle_timeout_s:
-            return f"no output for {idle_timeout_s} s"
-
-
-def _scan_result(raw_path: Path, offset: int) -> tuple:
-    """``(new offset, whether a final result line is in the stream)``, reading only what was added since ``offset``."""
-    try:
-        with open(raw_path, "rb") as handle:
-            handle.seek(offset)
-            data = handle.read()
-    except OSError:
-        return offset, False
-    return offset + len(data), any(marker in data for marker in _RESULT_LINE)
+            if cpu.sample(now):  # one more look before the stop: the tree may have worked since the last measure
+                last_growth = now
+            else:
+                return f"no output for {idle_timeout_s} s"
 
 
 def _feed(process: subprocess.Popen, data: bytes) -> None:
@@ -423,6 +418,14 @@ def start_ticks(pid: int) -> Optional[int]:
         fields = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()
         return int(fields[19])
     except (OSError, IndexError, ValueError):
+        return None
+
+
+def boot_id() -> Optional[str]:
+    """The id of this boot of the machine (``/proc/sys/kernel/random/boot_id``), ``None`` without ``/proc``."""
+    try:
+        return Path("/proc/sys/kernel/random/boot_id").read_text(encoding="utf-8").strip() or None
+    except OSError:
         return None
 
 
@@ -456,7 +459,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
                 records.write(Path(agent_directory) / "process.json", {"pid": process.pid, "pgid": process.pid,
                               "start_ticks": start_ticks(process.pid), "started_at": utc_now()}, "process")
             stopped = _wait(process, prompt, raw_path, timeout_s=timeout_s, idle_timeout_s=idle_timeout_s, cancel=cancel,
-                            on_tick=on_tick, result_grace_s=result_grace_s if transport != "text" else 0)
+                            on_tick=on_tick, result_grace_s=result_grace_s if transport != "text" else 0,
+                            transport=transport, provider=provider)
         except BaseException:
             _kill(process)
             raise

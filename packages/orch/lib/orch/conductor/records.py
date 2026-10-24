@@ -23,7 +23,7 @@ from orch.conductor.domain.stop import Stop
 # orch.settings imports the questions of the conductor, which write through this module: the root is computed here
 CONTRACT_DIR = Path(__file__).resolve().parents[3] / "schemas" / "records" / "v1"
 URN_PREFIX = "urn:swissknifeman:orch:records:"
-KINDS = ("agent-request", "agent-result", "agent-usage", "conformance-report", "item-options", "item-routes", "lease",
+KINDS = ("agent-request", "agent-result", "agent-usage", "conformance-report", "heartbeat", "item-options", "item-routes", "lease",
          "observer-report", "process", "prompt-diff", "provider-gates", "questions", "review-strategy", "review-verdict",
          "risk", "run", "state")
 # The five short kinds keep the tag they already publish, in the field ``schema``.

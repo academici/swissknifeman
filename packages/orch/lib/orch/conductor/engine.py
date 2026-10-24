@@ -34,6 +34,7 @@ from orch.conductor.domain.report import continued, evidence_paths, findings_pro
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import beacon_events, cli_probe, launch_plan, results, roles, sessions, tree, usage
 from orch.conductor.infrastructure import work_source
+from orch.conductor.infrastructure.heartbeat import Heartbeat
 from orch.conductor.infrastructure.clock import new_run_id, sleep, unit_random, utc_now, utc_stamp, wall
 from orch.conductor.infrastructure.files import (OPTIONS_COPY, REPORTS, RUN_FILE, STATE_FILE, RunStore, read_json,
                                                  runs_root, safe, write_json)
@@ -88,6 +89,7 @@ class Conductor:
         self.run_doc: dict = {}
         self.state: dict = {}
         self.progress: Optional[Progress] = None
+        self.heartbeat: Optional[Heartbeat] = None
         self.instructions: dict = {}  # the stubs snapshot of the run (``instructions.json``)
         self._instructions_lock = threading.Lock()
 
@@ -100,8 +102,14 @@ class Conductor:
         self.run_id, self.run_doc, self.state = run_id, run_doc, state
         self.store = store or RunStore(self.project, run_id)
         self.directory = self.store.directory
-        self.progress = Progress(run_id, self.directory, self.mode, self.stream, self.clock)
+        self.heartbeat = Heartbeat(self.directory, run_id, on_failure=self._heartbeat_failed)
+        self.progress = Progress(run_id, self.directory, self.mode, self.stream, self.clock, observer=self.heartbeat.observe)
         self.instructions = read_json(self.directory / stubs_mod.SNAPSHOT_FILE) or {}
+
+    def _heartbeat_failed(self, error: OSError) -> None:
+        """heartbeat.json could not be written: said once per run; the run goes on without it."""
+        self.progress.emit("info", reason_code="HEARTBEAT_NOT_WRITTEN",
+                           message=f"heartbeat.json was not written ({error}); the run goes on without it")
 
     def _stub(self, role: str, route: Optional[dict] = None) -> tuple:
         """``(origin, text)`` of the additional instructions of ``role`` from the snapshot of the run."""

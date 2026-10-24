@@ -333,7 +333,7 @@ def _status(args, project: Path) -> int:
                          ensure_ascii=False, indent=2))
         return 0
     print(f"run {run_id}: {found['status']}" + (f" ({found['reason_code']})" if found["reason_code"] else "")
-          + f", last line {found['last_ts']}")
+          + f", last line {found['last_ts']}" + runs.health_text(directory, found))
     if found["current"]:
         current = found["current"]
         print(f"  now: {current['item']} {current['stage']} {current.get('role') or ''} "

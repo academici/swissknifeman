@@ -7,6 +7,7 @@ Newest first, then by run id; an empty project gives an empty list; a run whose 
 """
 from __future__ import annotations
 
+import re
 import shutil
 import time
 from pathlib import Path
@@ -16,8 +17,9 @@ from aicore.ext.plugins import safe_text
 from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_text
 
-from orch.conductor import progress, records
-from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, runs_root, safe
+from orch.conductor import health as health_mod, options as opts, progress, records
+from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, STATE_FILE, runs_root, safe
+from orch.conductor.infrastructure import heartbeat as heartbeat_mod
 from orch.conductor.infrastructure.lease import RunLease
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS  # <run id>/<piece>: a source without its own folder
@@ -55,7 +57,9 @@ def live_owner(directory: Path):
     if not held:
         return None
     owner = RunLease.owner(directory)
-    return display({key: owner.get(key) for key in ("pid", "host", "started_at", "command")}, 64) if owner else None
+    shown = {key: owner.get(key) for key in ("pid", "host", "started_at", "command")}
+    shown.update({key: owner[key] for key in ("start_ticks", "boot_id", "launcher") if key in owner})  # the identity (I13)
+    return display(shown, 64) if owner else None
 
 
 def latest_run_id(project: Path) -> Optional[str]:
@@ -64,6 +68,59 @@ def latest_run_id(project: Path) -> Optional[str]:
                    key=lambda path: (path / progress.PROGRESS_FILE).stat().st_mtime
                    if (path / progress.PROGRESS_FILE).exists() else 0)
     return found[-1].name if found else None
+
+
+STAMP = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z")
+
+
+def reset_until(lines: list) -> Optional[float]:
+    """The epoch time the last provider wait or capacity gate of the journal ends (the last time in its message), or ``None``."""
+    found = None
+    for line in lines:
+        if line.get("event") == "info" and line.get("reason_code") in ("PROVIDER_WAIT", "CAPACITY_GATED"):
+            stamps = STAMP.findall(line.get("message") or "")
+            found = timefmt.epoch(stamps[-1]) if stamps else found
+    return found
+
+
+def thresholds_of(directory: Path, found: dict) -> health_mod.Thresholds:
+    """The health thresholds of the run: the stall limits of the piece it is on (its ``options.json``), else the defaults."""
+    ref = (found.get("current") or {}).get("item") or (found["items"][-1]["item"] if found.get("items") else None)
+    limits: dict = {}
+    if ref:
+        try:
+            limits = ((records.read(directory / safe(ref) / "options.json", "item-options") or {}).get("options") or {}).get("limits") or {}
+        except (OSError, Stop):
+            limits = {}
+    return health_mod.Thresholds(**{key: int(limits.get(key, opts.DEFAULT_LIMITS[key]))
+                                    for key in ("stall_window_s", "stall_repeat_n")})
+
+
+def health_of(directory: Path, found: dict, state: Optional[dict] = None, lines: Optional[list] = None,
+              now: Optional[float] = None) -> dict:
+    """``health.classify`` of a run from its files: reads the heartbeat, probes the lease, writes nothing. ``found`` is the
+    journal summary (``effective_status``); a document that cannot be read is a class of its own (``unknown``), never a failure."""
+    try:
+        doc = records.read(directory / RUN_FILE, "run") or {}
+    except (OSError, Stop):
+        doc = {}
+    flag = doc.get("lease") is True
+    held = RunLease.held(directory) if flag else None
+    lease = {"flag": flag, "held": held, "owner": RunLease.owner(directory) if held else None}
+    beat, problem = heartbeat_mod.read(directory)
+    summary = dict(found, reset_until=reset_until(lines if lines is not None else progress.read_lines(directory)))
+    if beat is None and problem != "HEARTBEAT_MISSING":
+        beat = {health_mod.INVALID: problem}
+    return health_mod.classify(summary, state or {}, beat, lease, time.time() if now is None else now,
+                               thresholds_of(directory, found))
+
+
+def health_text(directory: Path, found: dict) -> str:
+    """The ``health:`` line of the text status, with its line break."""
+    found_health = health_of(directory, found, found.get("state"))
+    silent = found_health["silent_s"]
+    return (f"\n  health: {found_health['health']}" + (f" (silent {progress.human_duration(silent)})" if silent is not None else "")
+            + (f" — {found_health['reason_code']}: {found_health['detail']}" if found_health["reason_code"] else ""))
 
 
 def status_details(directory: Path, found: dict) -> dict:
@@ -106,6 +163,7 @@ def status_details(directory: Path, found: dict) -> dict:
             beacons.pop(code, None)
             beacons[code] = line
     return {"lease": live_owner(directory), "limits": limits, "beacons": list(beacons.values()),
+            "health": health_of(directory, found, state),
             **({"catalog_digests": doc["catalog_digests"]} if isinstance(doc.get("catalog_digests"), dict) else {})}
 
 
@@ -136,7 +194,13 @@ def _row(directory: Path, *, owned: bool = False) -> dict:
     items = [row["item"] for row in found["items"]]
     if not items and isinstance(doc.get("items"), list):
         items = [item for item in doc["items"] if isinstance(item, str)]
-    return display({"run_id": run_id, "status": found["status"], "reason_code": found["reason_code"],
+    state = {}
+    if found["status"] == "stopped":  # only a stopped run needs its state (a quota reset)
+        try:
+            state = records.read(directory / STATE_FILE, "state") or {}
+        except (OSError, Stop):
+            state = {}
+    return display({"run_id": run_id, "health": None if owned else health_of(directory, found, state, lines)["health"], "status": found["status"], "reason_code": found["reason_code"],
             "created": lines[0]["ts"] if lines else None, "items": display(items, 64),
             "resumes": sum(1 for line in lines if line.get("event") == "run.resume"),
             "owner": None if owned else live_owner(directory)})

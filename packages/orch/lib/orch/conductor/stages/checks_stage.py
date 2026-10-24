@@ -263,6 +263,8 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
         previous = [dict(row) for row in self._earlier_rows(item, number)]
         red_first = list(self._red_before(item, number))
 
+    idle_marks: dict = {}
+
     def run(folder: str, on_changed) -> list:
         return checks_mod.run_checks(
             item.input_doc, project=self.project, evidence_dir=self._evidence_dir(item),
@@ -277,7 +279,8 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
             on_result=on_result, first=red_first, kinds=tuple(item.options["checks"]["kinds"]),
             cadence=tuple(item.options["checks"]["cadence"]), warn_s=item.options["limits"].get("check_warn_s", 0),
             on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid),
-            idle_s=item.options["limits"].get("check_idle_timeout_s", 0), on_changed=on_changed)
+            idle_s=item.options["limits"].get("check_idle_timeout_s", 0), on_changed=on_changed,
+            on_tick=lambda check_id, elapsed, quiet, pid: check_watch(self, item, number, idle_marks, check_id, quiet, pid))
 
     first, again = [], []
     try:
@@ -340,6 +343,23 @@ def check_tick(self, item: Item, number: int, check_id: str, elapsed: float, pid
     if low:  # the check is not cut (a stop from this thread could not release it); the owner decides
         self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="DISK_LOW", message=low)
     self._run_clock(item, stop=False)
+
+
+def check_watch(owner, item: Item, number: int, marks: dict, check_id: str, quiet: float, pid: int) -> None:
+    """A look at a running check (from the thread that waits for it): a sign of life in the heartbeat, and a ``CHECK_IDLE``
+    beacon every ``check_idle_warn_s`` of silence (no output and no CPU of the process tree). Nothing is stopped."""
+    found = getattr(owner, "heartbeat", None)
+    if found is not None:
+        found.beat(item=item.ref, step=f"checks.{number}")
+    warn = item.options["limits"].get("check_idle_warn_s", 0)
+    if not warn:
+        return
+    if quiet < warn:
+        marks[check_id] = warn
+    elif quiet >= marks.setdefault(check_id, warn):
+        marks[check_id] += warn
+        owner.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_IDLE",
+                            message=f"{check_id} no output for {human_duration(quiet)}; {process.activity(pid, Path(os.devnull))}")
 
 
 def run_checks(self, item: Item, number: int, report: dict, computed=None) -> list:

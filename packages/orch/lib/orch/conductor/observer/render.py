@@ -35,6 +35,21 @@ def markdown(report: dict) -> str:
             outcome += f" ({item['stop']['code']})"
         lines.append(f"| {item['item']} | {outcome} | {item['check_fixes']} | {item['corrections']} | "
                      f"{item['retries']} | {item['tokens'].get('input', 0)}/{item['tokens'].get('output', 0)} |")
+    found = (report.get("metrics") or {}).get("items") or []
+    if found:
+        lines += ["", "## Item metrics", "", "Always written, debug or not; active seconds by role group, rounds "
+                  "executor/review/checks, mends healed/repaired/unrepairable, tokens fresh in/cached/out.", "",
+                  "| Item | Wall s | Active s | Checks share | Rounds | Repeats after resume | Mends | Beacons | Tokens | "
+                  "Deviations | Findings confirmed/rejected | Health |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+        for row in found:
+            rounds, heal, tokens = row["rounds"], row["heal"], row["tokens"]
+            health = " → ".join([row["health_transitions"][0]["from"] or "-"] + [step["to"] for step in row["health_transitions"]]) \
+                if row["health_transitions"] else "-"
+            lines.append(f"| {row['item']} | {row['wall_s']} | {', '.join(f'{k} {v}' for k, v in row['active_s'].items()) or '-'} | {int(row['checks_share'] * 100)} % | "
+                         f"{rounds['executor']}/{rounds['review']}/{rounds['checks']} | {row['resume_repeats']} | "
+                         f"{heal['healed']}/{heal['repaired']}/{heal['unrepairable']} | {_counted(row['beacons'])} | "
+                         f"{tokens['input']}/{tokens['cached']}/{tokens['output']} | {row['deviations']} | "
+                         f"{row['findings']['confirmed']}/{row['findings']['rejected']} | {health} |")
     retried = [item for item in report["items"] if item.get("attempts")]
     if retried:
         lines += ["", "## Retried pieces", "", "| Item | Earlier attempts | Reviews in all attempts |", "| --- | --- | --- |"]

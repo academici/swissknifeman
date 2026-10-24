@@ -47,6 +47,8 @@ Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: m
 4 the run waits for a decision (`run.end` outcome `waiting`, status `waiting`: a piece waits for the answer to a question;
 `orch conduct answer`, then `orch conduct continue`; code 1 keeps its meaning for every other stop),
 130 interrupted (Ctrl-C, SIGTERM or SIGHUP: the role and check processes of the run are killed with their groups; `resume` continues).
+A conductor that inherits an ignored SIGINT (started in the background of a shell) still takes SIGINT as an interrupt while its
+loop runs, so `autopilot stop` and the supervisor reach it; a SIGINT handler the caller installed is kept.
 
 ## Detached runs
 
@@ -1915,6 +1917,22 @@ run that is running, and a run whose `run.json` cannot be read are never listed.
 source names itself, and the aicore event journal (its compaction changes delivery offsets and is the owner's decision). The
 fallback artifacts are committed records: after `--apply` the removal shows in `git status` and is committed by the owner.
 
+**Compressing raw streams.** `orch conduct prune --compress-older-than DAYS [--dry-run] [--apply] [--json]` (instead of
+`--older-than`; the two exclude each other) keeps the runs and packs only their raw role streams: every
+`*.jsonl`, `*.txt`, `*.stderr` and `*.times` file in a `streams` folder below the run (the pieces, their earlier attempts
+under `attempts/<n>/streams/`, the run's own `streams/` of group reviews and batch reviews) becomes `<name>.gz`. The runs are
+those `--older-than` would remove (a status of `runs.PRUNABLE`, older than `DAYS`, never the latest run); the journal,
+`state.json`, the agent records, the prompts and the check logs stay as they are, so `status`, `timeline`, `observe` and the
+observer metrics read the run as before. A dry run (the default) lists the files and their size. `--apply` takes the run lease
+first (a busy lease skips the run with the reason, as `prune` does), looks at the status and age again under it, writes each
+copy under a temporary name, reads it back and compares it with the original, renames it into place and only then removes
+the original; a copy that does not read back leaves the stream as it was (`reason: not packed …`). Links are neither
+followed nor packed. Rows: `{run_id, status, age_days, compressed, bytes_before, bytes_after}` (`reason` when skipped;
+`bytes_after` null for a dry run); `--json` prints them as a `compress-result` document (`schemas/conductor/v1`). The
+readers of streams take the packed file in place of a missing one through `process.open_stream(path)`
+(`<path>` else `<path>.gz`): the last command of a beacon, `scripts/step-profile.py` (with its `.times`), and
+`scripts/run-usage.py` reads only `progress.jsonl`, which is never packed. The observer reads no stream at all.
+
 ## Observer
 
 The observer only reads: the journal and state of the run and the `orch.*` and `planner.*` events of the
@@ -1959,16 +1977,42 @@ the full `test.sh` or `affected-tests.py --run`, or a full `test.sh` and its `-p
 the proposal names concrete new or failing diagnostics or a faster local variant, and the conductor keeps the named
 acceptance checks and the phase gates.
 
+### Observer — item metrics
+
+`metrics` of `observer.json` (and the table *Item metrics* of `observer.md`) holds the metrics of every piece, written at
+the end of every run with or without debug (`observer.item_metrics(run_dir)`, computed in `observer/metrics.py`). Sources:
+`progress.jsonl`, `state.json`, `agents/*/{request,result,usage}.json` and `supervisor.jsonl`; never a raw stream. One row
+per piece (state order):
+
+| Field | Meaning |
+| --- | --- |
+| `wall_s` | Seconds the piece was on: from its first to its last journal line within each conductor process, summed over the resumes (the time between a stop and a resume is not the piece's). |
+| `active_s` | `duration_s` of its `stage.end` lines by role group: `executor` (`executor.*`, corrections and follow-ups), `checks` (`checks.*`), `review`, `triage`, `scout`, `advice`, `registrar`, and `conductor` for the other deterministic steps (brief, prepare, register, commit). |
+| `checks_share` | `active_s.checks / wall_s` (0 without wall time); a checks round is one step, so parallel checks are not counted twice. |
+| `rounds` | Ended steps: `executor`, `review`, `checks`. |
+| `resume_repeats` | Steps started again after a resume that an earlier conductor process of the run had started. |
+| `heal` | `healed` (`RESULT_HEALED`), `repaired` (`RESULT_REPAIRED`), `unrepairable` (`REPAIR_FAILED`). |
+| `beacons` | Info lines of the piece by reason code. |
+| `tokens` | `input` (fresh), `cached` and `output` tokens of its agent runs (`usage.json`). |
+| `deviations` | Deviations recorded for the piece (`deviation_ids` of the state). |
+| `findings` | Triage `confirmed` and `rejected`, review findings `by_severity` of the current steps. |
+| `health_transitions` | Changes of the health class in `supervisor.jsonl` (`{at, from, to, reason_code, action}`) while the run was on the piece: the piece of the last journal line at or before the action, unless that line ended it. |
+
+`metrics.health_transitions` lists every transition of the run. The per-check table *Checks by command* stays as it was.
+The field is additive in `records/v1 observer-report`; a report written before it reads as before.
+
 ### Debug mode
 
 `[orch] debug` (default `false`) is set per machine (`~/.config/swissknifeman/config.toml`), per project
 (`<project>/.swissknifeman/config.toml`, wins over the machine) or for one run with `run`/`resume --debug` or
 `--no-debug` (wins over both; `SKM_ORCH_DEBUG` and `--config` sit in between). With it on, the run prints the beacon
 `DEBUG_MODE` after `run.start` and after every resume: the layer that switched it on, the observer protocol
-(`dev-skills/orch-debug/SKILL.md`) and the folder `<run>/debug/` with `journal.md`, `metrics.md` and `findings.md`
-skeletons (created once; a resume keeps what the observer wrote). `run.json` records `debug`. The roles, their
-prompts and the decisions of the conductor do not change: the mode tells the agent who watches the run to work as a
-team-lead observer and where to keep its record.
+(`dev-skills/orch-debug/SKILL.md`), the observer report with the per-item metrics (`.swissknifeman/orch/reports/<run>/
+observer.md`, `orch conduct observe --run <run>`) and `<run>/debug/journal.md` for the notes of the observer. The
+announcement writes no file: the metrics are the observer's (written with or without debug), and `<run>/debug/journal.md`
+is created by the agent of the orch-debug protocol only when it has something to record (a resume never touches it).
+`run.json` records `debug`. The roles, their prompts, the decisions of the conductor and the lifecycle facts it records do
+not change: the mode tells the agent who watches the run to work as a team-lead observer and where to keep its record.
 
 ## Configuration
 

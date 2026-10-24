@@ -290,6 +290,151 @@ def item_totals(state: dict) -> dict:
             "scout_hits": scout_hits, "scout_runs": scout_runs, "items": items}
 
 
+STEP_GROUPS = {"checks": "checks", "executor": "executor", "review": "review", "triage": "triage", "scout": "scout",
+               "advice": "advice"}
+ROLE_GROUPS = {"executor": "executor", "reviewer": "review", "triager": "triage", "context-scout": "scout", "scout": "scout",
+               "advisor": "advice", "registrar": "registrar", "deterministic": "conductor"}
+HEAL_CODES = {"RESULT_HEALED": "healed", "RESULT_REPAIRED": "repaired", "REPAIR_FAILED": "unrepairable"}
+ROUND_GROUPS = ("executor", "review", "checks")
+
+
+def step_group(stage: str, role) -> str:
+    """The role group a step's time counts to: by the step key (``checks.2``, ``executor.1-q1``, ``triage.1-a``, ``scout``,
+    ``advice.3``), else by the role (``registrar``); other deterministic steps of the conductor are ``conductor``."""
+    head = str(stage or "").split(".", 1)[0].split("-", 1)[0]
+    return STEP_GROUPS.get(head) or ROLE_GROUPS.get(role or "deterministic") or str(role)
+
+
+def health_transitions(actions: list) -> list:
+    """``[{at, from, to, reason_code, action}]``: the changes of the health class between consecutive ``supervisor.jsonl``
+    actions (the first action is a change from ``null``)."""
+    found, previous = [], None
+    for action in actions:
+        if action.get("health") != previous:
+            found.append({"at": action.get("at"), "from": previous, "to": action.get("health"),
+                          "reason_code": action.get("reason_code"), "action": action.get("action")})
+            previous = action.get("health")
+    return found
+
+
+def _sessions(lines: list) -> list:
+    """The journal cut at every ``run.resume``: the lines a conductor process wrote, in order."""
+    sessions: list = [[]]
+    for line in lines:
+        if line.get("event") == "run.resume" and sessions[-1]:
+            sessions.append([])
+        sessions[-1].append(line)
+    return sessions
+
+
+def _owner_at(lines: list, at: str):
+    """The piece the run was on at ``at``: the piece of the last journal line at or before it, unless that line ended it."""
+    try:
+        moment = seconds_of(at)
+    except ValueError:
+        return None
+    owner = None
+    for line in lines:
+        try:
+            if seconds_of(line["ts"]) > moment:
+                break
+        except (KeyError, ValueError):
+            continue
+        if line.get("event") in ("run.start", "run.resume", "run.end"):
+            owner = None
+        elif line.get("item"):
+            owner = None if line.get("event") == "item.end" else line["item"]
+    return owner
+
+
+def _findings(item: dict) -> dict:
+    severities: Counter = Counter()
+    confirmed = rejected = 0
+    for key, step in (item.get("steps") or {}).items():
+        if not isinstance(step, dict) or step.get("status") != "done":
+            continue
+        result = step.get("result") or {}
+        if key.startswith("review."):
+            severities.update(finding["severity"] for finding in (result.get("findings") or {}).get("findings", [])
+                              if isinstance(finding, dict) and finding.get("severity"))
+        elif key.startswith("triage."):
+            confirmed += len((result.get("triage") or {}).get("confirmed", []))
+            rejected += len((result.get("triage") or {}).get("rejected", []))
+    return {"confirmed": confirmed, "rejected": rejected, "by_severity": dict(sorted(severities.items()))}
+
+
+def item_metrics(lines: list, state: dict, agents: dict, actions: list) -> dict:
+    """The metrics of every piece of the run, written with or without debug (knowledge p8-metrics-retention): ``{items:
+    [row], health_transitions}``. A row: ``wall_s`` (the time the piece was on in each conductor process, summed over
+    the resumes), ``active_s`` by role group (executor, checks, review, triage, scout, advice, registrar, conductor) from
+    the ``duration_s`` of its ``stage.end`` lines, ``checks_share`` (checks time over wall time), ``rounds`` (``stage.end``
+    of executor, review and checks steps), ``resume_repeats`` (steps started again after a resume that an earlier process
+    had started), ``heal`` (``RESULT_HEALED``/``RESULT_REPAIRED``/``REPAIR_FAILED``), ``beacons`` by reason code,
+    ``tokens`` (fresh input, cached input and output of its agent runs), ``deviations`` (recorded deviation ids),
+    ``findings`` (triage confirmed/rejected, review findings by severity) and the ``health_transitions`` of
+    ``supervisor.jsonl`` while the run was on the piece. Sources: the progress lines, the state, ``agents`` (``{ref:
+    agent rows}``) and ``actions`` (the ``supervisor.jsonl`` documents); never a raw stream."""
+    refs = [ref for ref, item in (state.get("items") or {}).items() if isinstance(item, dict)]
+    refs += sorted({line["item"] for line in lines if line.get("item") and line["item"] not in refs})
+    rows = {ref: {"item": ref, "wall_s": 0.0, "active_s": Counter(), "checks_share": 0.0,
+                  "rounds": dict.fromkeys(ROUND_GROUPS, 0), "resume_repeats": 0,
+                  "heal": dict.fromkeys(HEAL_CODES.values(), 0), "beacons": Counter(),
+                  "tokens": {"input": 0, "cached": 0, "output": 0}, "deviations": 0,
+                  "findings": {"confirmed": 0, "rejected": 0, "by_severity": {}}, "health_transitions": []}
+            for ref in refs}
+    started_before: set = set()
+    for session in _sessions(lines):
+        span: dict = {}
+        started: set = set()
+        for line in session:
+            ref = line.get("item")
+            if ref not in rows:
+                continue
+            row, event = rows[ref], line.get("event")
+            try:
+                moment = seconds_of(line["ts"])
+            except (KeyError, ValueError):
+                moment = None
+            if moment is not None:
+                first, last = span.get(ref, (moment, moment))
+                span[ref] = (min(first, moment), max(last, moment))
+            if event == "stage.start":
+                key = (ref, line.get("stage"))
+                row["resume_repeats"] += 1 if key in started_before else 0
+                started.add(key)
+            elif event == "stage.end":
+                group = step_group(line.get("stage"), line.get("role"))
+                row["active_s"][group] += line.get("duration_s") or 0
+                if group in row["rounds"]:
+                    row["rounds"][group] += 1
+            elif event == "info" and line.get("reason_code"):
+                row["beacons"][line["reason_code"]] += 1
+                if line["reason_code"] in HEAL_CODES:
+                    row["heal"][HEAL_CODES[line["reason_code"]]] += 1
+        for ref, (first, last) in span.items():
+            rows[ref]["wall_s"] += last - first
+        started_before |= started
+    transitions = health_transitions(actions)
+    for transition in transitions:
+        owner = _owner_at(lines, transition["at"]) if isinstance(transition.get("at"), str) else None
+        if owner in rows:
+            rows[owner]["health_transitions"].append(transition)
+    for ref, row in rows.items():
+        item = (state.get("items") or {}).get(ref)
+        item = item if isinstance(item, dict) else {}
+        for agent in agents.get(ref, []):
+            for key in row["tokens"]:
+                row["tokens"][key] += int((agent.get("tokens") or {}).get(key, 0))
+        deviations = item.get("deviation_ids")
+        row["deviations"] = len(deviations) if isinstance(deviations, (list, dict)) else 0
+        row["findings"] = _findings(item)
+        row["wall_s"] = round(row["wall_s"], 1)
+        row["active_s"] = {group: round(float(value), 1) for group, value in sorted(row["active_s"].items())}
+        row["checks_share"] = round(row["active_s"].get("checks", 0) / row["wall_s"], 2) if row["wall_s"] else 0.0
+        row["beacons"] = dict(sorted(row["beacons"].items()))
+    return {"items": list(rows.values()), "health_transitions": transitions}
+
+
 def group_review_totals(group_reviews: dict, severities: Counter) -> list:
     """The numbers of the group reviews of the run: their findings are added to ``severities``; the result lists the groups
     whose review is incomplete (the role failed, a count is missing or the format is unknown)."""

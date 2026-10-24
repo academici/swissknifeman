@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:orch:records:observer-report:v1",
   "title": "observer.json of a run",
-  "description": "The observer report of a conductor run (.swissknifeman/orch/reports/<run>/observer.json, observer.py build/write_report): repeats and resumes, red checks, checks by command, review findings, idle time, tokens and time by role and agent, prompt blocks and budgets, open questions, events and proposals. Keeps its published tag schema orch-conductor-observer/v1 (no $schema); gui-orch reads it through the CLI.",
+  "description": "The observer report of a conductor run (.swissknifeman/orch/reports/<run>/observer.json, observer.py build/write_report): repeats and resumes, red checks, checks by command, review findings, idle time, tokens and time by role and agent, prompt blocks and budgets, open questions, the metrics of every piece, events and proposals. Keeps its published tag schema orch-conductor-observer/v1 (no $schema); gui-orch reads it through the CLI.",
   "type": "object",
   "additionalProperties": false,
   "required": ["run", "beacons", "red_checks", "items", "proposals"],
@@ -126,6 +126,16 @@
       }
     },
     "items": {"description": "The pieces of the run.", "type": "array", "items": {"$ref": "#/$defs/item"}},
+    "metrics": {
+      "description": "Metrics of every piece, written with or without debug, from the journal, the state, the agent records and supervisor.jsonl (never a raw stream); absent in reports written before P8.6.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "health_transitions"],
+      "properties": {
+        "items": {"description": "One row per piece, in state order.", "type": "array", "items": {"$ref": "#/$defs/item-metrics"}},
+        "health_transitions": {"description": "Changes of the health class between consecutive supervisor actions of the run.", "type": "array", "items": {"$ref": "#/$defs/health-transition"}}
+      }
+    },
     "events": {"$ref": "#/$defs/counts"},
     "event_problems": {"description": "What of the event journal could not be read.", "type": "array", "items": {"description": "A problem.", "type": "string"}},
     "discarded_lines": {"description": "Lines of progress.jsonl the observer left out because they were not progress-line documents, plus the lines quarantined in progress.invalid.jsonl when they were written; absent when there are none.", "type": "integer", "minimum": 0},
@@ -271,6 +281,74 @@
         "tokens": {"description": "Tokens of the piece (state.items.<ref>.tokens).", "type": "object"},
         "attempts": {"description": "Earlier attempts of a retried piece.", "type": "array", "items": {"$ref": "#/$defs/attempt"}},
         "reviews": {"description": "Review rounds in all attempts.", "type": "integer", "minimum": 0}
+      }
+    },
+    "item-metrics": {
+      "description": "The metrics of one piece.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "wall_s", "active_s", "checks_share", "rounds", "resume_repeats", "heal", "beacons", "tokens", "deviations", "findings", "health_transitions"],
+      "properties": {
+        "item": {"description": "Reference.", "type": "string"},
+        "wall_s": {"description": "Seconds the piece was on, from its first to its last journal line in each conductor process, summed over the resumes.", "type": "number", "minimum": 0},
+        "active_s": {
+          "description": "Seconds of its steps (stage.end duration_s) by role group: executor, checks, review, triage, scout, advice, registrar, conductor.",
+          "type": "object",
+          "patternProperties": {"^.+$": {"description": "Seconds.", "type": "number", "minimum": 0}},
+          "additionalProperties": false
+        },
+        "checks_share": {"description": "active_s.checks over wall_s, 0 without wall time.", "type": "number", "minimum": 0},
+        "rounds": {
+          "description": "Ended steps by group.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["executor", "review", "checks"],
+          "properties": {
+            "executor": {"description": "Executor rounds (corrections and follow-ups included).", "type": "integer", "minimum": 0},
+            "review": {"description": "Review rounds.", "type": "integer", "minimum": 0},
+            "checks": {"description": "Check rounds.", "type": "integer", "minimum": 0}
+          }
+        },
+        "resume_repeats": {"description": "Steps started again after a resume that an earlier conductor process had started.", "type": "integer", "minimum": 0},
+        "heal": {
+          "description": "Mended role results.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["healed", "repaired", "unrepairable"],
+          "properties": {
+            "healed": {"description": "RESULT_HEALED.", "type": "integer", "minimum": 0},
+            "repaired": {"description": "RESULT_REPAIRED.", "type": "integer", "minimum": 0},
+            "unrepairable": {"description": "REPAIR_FAILED.", "type": "integer", "minimum": 0}
+          }
+        },
+        "beacons": {"$ref": "#/$defs/counts"},
+        "tokens": {"$ref": "#/$defs/tokens"},
+        "deviations": {"description": "Deviations recorded for the piece (state deviation_ids).", "type": "integer", "minimum": 0},
+        "findings": {
+          "description": "Review findings of the current steps.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["confirmed", "rejected", "by_severity"],
+          "properties": {
+            "confirmed": {"description": "Confirmed by triage.", "type": "integer", "minimum": 0},
+            "rejected": {"description": "Rejected by triage.", "type": "integer", "minimum": 0},
+            "by_severity": {"$ref": "#/$defs/counts"}
+          }
+        },
+        "health_transitions": {"description": "The run's health transitions while it was on the piece.", "type": "array", "items": {"$ref": "#/$defs/health-transition"}}
+      }
+    },
+    "health-transition": {
+      "description": "One change of the health class (supervisor.jsonl).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "from", "to"],
+      "properties": {
+        "at": {"description": "UTC time of the supervisor action.", "type": ["string", "null"]},
+        "from": {"description": "Health class before, null for the first action.", "type": ["string", "null"]},
+        "to": {"description": "Health class after.", "type": ["string", "null"]},
+        "reason_code": {"description": "Reason code of the class, null when it has none.", "type": ["string", "null"]},
+        "action": {"description": "What the supervisor did.", "type": ["string", "null"]}
       }
     },
     "attempt": {

@@ -1,6 +1,7 @@
 """What the observer reads: the progress journal (whole, or new lines only through ``ProgressCursor``), the state of the
-run, the prompt manifests, the agent runs, the inputs and options of the pieces, and the event journal of the project.
-This is the only module of the package that opens a file; it never writes one."""
+run, the prompt manifests, the agent runs, the inputs and options of the pieces, the actions of the supervisor
+(``supervisor.jsonl``) and the event journal of the project. Never the raw streams of the roles. This is the only module
+of the package that opens a file; it never writes one."""
 from __future__ import annotations
 
 import json
@@ -14,6 +15,7 @@ from orch.conductor.infrastructure.files import OPTIONS_COPY, STATE_FILE, safe
 
 EVENT_TYPES = ("orch.*", "planner.*")
 HEAD_BYTES = 64  # the start of the journal that tells a replaced file from the one the cursor has been reading
+SUPERVISOR_FILE = "supervisor.jsonl"  # application.supervisor.ACTIONS_FILE, read here without importing the writer
 
 
 class ProgressCursor:
@@ -146,6 +148,24 @@ def agent_runs(directory: Path) -> list:
                   file=sys.stderr)
             listed = []
         found += [{"item": folder.name, **row} for row in listed]
+    return found
+
+
+def supervisor_actions(directory: Path) -> list:
+    """The ``supervisor-action`` documents of ``<run>/supervisor.jsonl`` in order; a line that is not one is skipped, and a
+    run the supervisor never acted on has none."""
+    try:
+        text = (Path(directory) / SUPERVISOR_FILE).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    found = []
+    for raw in text.splitlines():
+        try:
+            doc = json.loads(raw)
+        except ValueError:
+            continue
+        if isinstance(doc, dict) and not records.problems(doc, "supervisor-action"):
+            found.append(doc)
     return found
 
 

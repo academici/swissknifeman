@@ -60,6 +60,14 @@ class it saw before, `action` what it did. `status` and `runs` emit nothing.
 - `data` passes `aicore.util.redact.redact_document` first: the values of environment variables named like api key, token, secret or password and the explicit token formats become `‹redacted›`. The same masking covers the progress lines, the `detail` of a failed role (the stderr tail) and the observer report; the raw streams under `streams/` stay as the role printed them and live in the ignored runtime folder (`orch doctor` warns when `.swissknifeman/state/` is not ignored).
 - `data` never carries a secret: aicore refuses a `Secret` value (`EVENT_SECRET`) and the event is not journaled.
 
+## Retention of the event journal
+
+orch writes events into the aicore journal of the project (`events.jsonl`) and never rotates, compacts or removes it:
+compaction changes the delivery offsets of the subscribers, and the journal is owned by aicore. Decision (PLAN9 P8.6):
+the retention of the event journal is a task of aicore, recorded for the roadmap (P10.2); its trigger is an
+`events.jsonl` larger than 50 MB. Until then `orch conduct prune` leaves the journal alone; what orch can shrink itself
+are the raw role streams of old runs (`conduct prune --compress-older-than DAYS`, `docs/conductor.md`).
+
 ## Producer fixtures
 
 `tests/fixtures/events/<type>/valid-*.json` and `invalid-*.json` hold full `event/v1` envelopes.

@@ -2,15 +2,18 @@
 from __future__ import annotations
 
 import contextlib
+import gzip
 import io
 import json
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
 
-from orch.conductor import cli, observer, runs
+from orch.conductor import cli, contract, observer, process, runs
 from orch.conductor.infrastructure.files import RUN_FILE, runs_root
 from orch.conductor.infrastructure.lease import RunLease
 
@@ -364,6 +367,158 @@ class ConductPruneTests(ConductRunsTests):
         self.assertEqual([True], [row["removed"] for row in json.loads(out)["runs"]])
         self.assertFalse((runs_root(self.project) / "cnd-old").exists())
         for bad in (("--older-than", "0"), ("--older-than", "5", "--apply", "--dry-run")):
+            with self.assertRaises(SystemExit):
+                self.conduct("prune", *bad)
+
+
+ORCH = Path(__file__).resolve().parents[1]
+CLAUDE_STREAM = "".join(json.dumps(event) + "\n" for event in (
+    {"type": "assistant", "timestamp": "2026-09-01T09:00:01Z", "message": {"content": [
+        {"type": "tool_use", "id": "t1", "name": "Bash", "input": {"command": "python3 -m unittest tests.test_x"}}]}},
+    {"type": "user", "timestamp": "2026-09-01T09:00:31Z", "message": {"content": [{"type": "tool_result", "tool_use_id": "t1"}]}},
+    {"type": "assistant", "timestamp": "2026-09-01T09:01:00Z", "message": {"content": [{"type": "text", "text": "done"}]}}))
+GROK_STREAM = "".join(json.dumps(event) + "\n" for event in (  # no times of its own: the .times file times it
+    {"type": "assistant", "message": {"content": [{"type": "tool_use", "id": "t1", "name": "Read", "input": {"file_path": "a.py"}}]}},
+    {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "t1"}]}}))
+
+
+class ConductCompressTests(ConductPruneTests):
+    STREAMS = ("W1/streams/executor.1.jsonl", "W1/streams/executor.1.stderr", "W1/streams/executor.1.jsonl.times",
+               "W1/streams/review.1.jsonl", "W1/streams/review.1.jsonl.times", "W1/streams/scout.txt",
+               "W1/attempts/1/streams/executor.1.jsonl", "streams/group-review-1.jsonl")
+    KEPT = ("progress.jsonl", RUN_FILE, "W1/prompts/executor.1.md", "W1/streams/notes.md")
+
+    def streamed(self, run_id: str, day: str, outcome: str = "done") -> Path:
+        directory = self.ended(run_id, day, outcome)
+        contents = {"W1/streams/executor.1.jsonl": CLAUDE_STREAM, "W1/streams/review.1.jsonl": GROK_STREAM,
+                    "W1/streams/review.1.jsonl.times": f"1.5 {len(GROK_STREAM.splitlines(True)[0].encode())}\n"
+                                                       f"31.5 {len(GROK_STREAM.encode())}\n"}
+        for name in self.STREAMS + self.KEPT[2:]:
+            path = directory / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(contents.get(name, f"{name}\n" * 50), encoding="utf-8")
+        return directory
+
+    def files(self, root: Path) -> dict:
+        """Every file below ``root`` and its bytes, but the lock file the lease leaves (as ``prune`` does)."""
+        return {str(path.relative_to(root)): path.read_bytes() for path in sorted(root.rglob("*"))
+                if path.is_file() and path.name != "lease.lock"}
+
+    def latest(self) -> Path:
+        latest = self.streamed("cnd-z-latest", "2026-08-02")
+        os.utime(latest / "progress.jsonl", (self.NOW * 2, self.NOW * 2))  # the last journal to change
+        return latest
+
+    def test_a_dry_run_lists_the_streams_and_changes_nothing(self):
+        old = self.streamed("cnd-old", "2026-09-01")
+        self.latest()
+        before = self.files(self.project)
+        rows = runs.compress(self.project, 30, now=self.NOW)
+        self.assertEqual(before, self.files(self.project))
+        self.assertEqual(["cnd-old"], [row["run_id"] for row in rows])
+        self.assertEqual(sorted(str((old / name).relative_to(self.project)) for name in self.STREAMS), rows[0]["compressed"])
+        self.assertEqual(sum((old / name).stat().st_size for name in self.STREAMS), rows[0]["bytes_before"])
+        self.assertIsNone(rows[0]["bytes_after"])
+        self.assertIn("would be packed", runs.compress_text(rows, False))
+
+    def test_apply_packs_the_streams_of_an_old_terminal_run_only(self):
+        old = self.streamed("cnd-old", "2026-09-01")
+        recent = self.streamed("cnd-new", "2026-10-13")
+        running = self.streamed("cnd-running", "2026-08-01")
+        (running / "progress.jsonl").write_text(line("2026-08-01T09:00:00Z", "run.start") + "\n", encoding="utf-8")
+        latest = self.latest()
+        link = old / "W1" / "streams" / "linked.jsonl"
+        link.symlink_to(recent / "W1" / "streams" / "executor.1.jsonl")
+        untouched = {path: self.files(path) for path in (recent, running, latest)}
+        plain = {name: (old / name).read_bytes() for name in self.STREAMS}
+        kept = {name: (old / name).read_bytes() for name in self.KEPT}
+        rows = runs.compress(self.project, 30, apply=True, now=self.NOW)
+        self.assertEqual(["cnd-old"], [row["run_id"] for row in rows])
+        self.assertNotIn("reason", rows[0])
+        for name, data in plain.items():
+            self.assertFalse((old / name).exists(), name)
+            with gzip.open(old / f"{name}.gz", "rb") as handle:
+                self.assertEqual(data, handle.read(), name)
+        self.assertEqual({name: data for name, data in kept.items()}, {name: (old / name).read_bytes() for name in self.KEPT})
+        self.assertTrue(link.is_symlink())
+        self.assertEqual([], list(old.rglob("*.partial")))
+        self.assertEqual(sum(len(data) for data in plain.values()), rows[0]["bytes_before"])
+        self.assertEqual(sum((old / f"{name}.gz").stat().st_size for name in self.STREAMS), rows[0]["bytes_after"])
+        self.assertLess(rows[0]["bytes_after"], rows[0]["bytes_before"])
+        self.assertEqual(untouched, {path: self.files(path) for path in (recent, running, latest)})
+        self.assertEqual([], runs.compress(self.project, 30, apply=True, now=self.NOW))  # nothing left to pack
+
+    def test_a_busy_lease_skips_the_run_with_its_reason(self):
+        old = self.streamed("cnd-old", "2026-09-01")
+        self.latest()
+        before = self.files(old)
+        with RunLease(old).acquire("resume"):
+            rows = runs.compress(self.project, 30, apply=True, now=self.NOW)
+        self.assertIn("RUN_BUSY", rows[0]["reason"])
+        self.assertEqual([], rows[0]["compressed"])
+        self.assertIn("skipped", runs.compress_text(rows, True))
+        self.assertEqual(before, self.files(old))
+
+    def test_a_copy_that_does_not_read_back_keeps_the_stream(self):
+        old = self.streamed("cnd-old", "2026-09-01")
+        self.latest()
+        before = self.files(old)
+        with mock.patch.object(runs, "_same", return_value=False):
+            rows = runs.compress(self.project, 30, apply=True, now=self.NOW)
+        self.assertIn("not packed", rows[0]["reason"])
+        self.assertEqual([], rows[0]["compressed"])
+        self.assertEqual(rows[0]["bytes_before"], rows[0]["bytes_after"])
+        self.assertEqual(before, self.files(old))  # no .gz, no partial file, every stream as it was
+
+    def test_the_readers_of_streams_read_the_packed_files(self):
+        old = self.streamed("cnd-old", "2026-09-01")
+        self.latest()
+        runs.compress(self.project, 30, apply=True, now=self.NOW)
+        stream = old / "W1" / "streams" / "executor.1.jsonl"
+        self.assertFalse(stream.exists())
+        self.assertEqual("Bash: python3 -m unittest tests.test_x", process._last_command(stream))
+        with process.open_stream(stream, "r") as handle:
+            self.assertEqual(CLAUDE_STREAM, handle.read())
+        with self.assertRaises(FileNotFoundError):
+            process.open_stream(old / "W1" / "streams" / "missing.jsonl")
+
+        def script(name: str, *argv: str) -> str:
+            done = subprocess.run([sys.executable, str(ORCH / "scripts" / name), *argv], capture_output=True, text=True,
+                                  cwd=self.project, check=False, timeout=60)
+            self.assertEqual(0, done.returncode, done.stderr)
+            return done.stdout
+
+        profile = script("step-profile.py", str(stream))
+        self.assertIn("Bash: python3 -m unittest tests.test_x", profile)
+        self.assertIn("Прогоны тестов/проверок: 1", profile)
+        timed = script("step-profile.py", str(old / "W1" / "streams" / "review.1.jsonl"))  # stream and .times packed
+        self.assertIn("Read: a.py", timed)
+        self.assertNotIn("нет меток времени", timed)
+        with open(old / "progress.jsonl", "a", encoding="utf-8") as handle:  # the journal is never packed
+            handle.write(line("2026-09-01T10:30:00Z", "stage.end", run="cnd-old", item="W1", stage="executor.1",
+                              role="executor", duration_s=90, tokens={"input": 1200, "cached": 300, "output": 45},
+                              verdict="done") + "\n")
+        usage = script("run-usage.py", "--root", str(runs_root(self.project)), "cnd-old")
+        self.assertIn("| W1 | executor.1 | executor  | 1.5 мин | 1,200 | 300 | 45 | done |", usage)
+
+    def test_the_cli_compresses_dry_run_unless_apply_and_checks_its_flags(self):
+        old = self.streamed("cnd-old", "2026-09-01")
+        self.latest()
+        code, out, _ = self.conduct("prune", "--compress-older-than", "30")
+        self.assertEqual(0, code)
+        self.assertIn("would be packed", out)
+        self.assertIn("--apply", out)
+        self.assertTrue((old / "W1" / "streams" / "executor.1.jsonl").is_file())
+        code, out, _ = self.conduct("prune", "--compress-older-than", "30", "--apply", "--json")
+        self.assertEqual(0, code)
+        doc = json.loads(out)
+        self.assertEqual([], contract.problems(doc, "compress-result"))
+        self.assertTrue(doc["apply"])
+        self.assertEqual(len(self.STREAMS), len(doc["runs"][0]["compressed"]))
+        self.assertTrue((old / "W1" / "streams" / "executor.1.jsonl.gz").is_file())
+        self.assertTrue((old / RUN_FILE).is_file())  # packing removes no run
+        for bad in (("--compress-older-than", "0"), ("--compress-older-than", "5", "--older-than", "5"),
+                    ("--compress-older-than", "5", "--apply", "--dry-run"), ()):
             with self.assertRaises(SystemExit):
                 self.conduct("prune", *bad)
 

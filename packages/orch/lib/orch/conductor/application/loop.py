@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import signal
-import threading
 import time
 import traceback
 from typing import Optional
@@ -23,15 +22,10 @@ from orch.conductor.domain.report import finding_key
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
+from orch.conductor.infrastructure.interrupts import interruptible, terminated  # noqa: F401 — terminated: loop.terminated
 from orch.conductor.application import review_followup, review_plan, run_service
 
 ROLE_ALIASES_ENGINE = {"scout": "context-scout"}  # the stage role names of the options that name a launch role
-
-
-def terminated(_signum, _frame) -> None:
-    """SIGTERM/SIGHUP end the run like Ctrl-C: the role and check processes of the run are killed by the code that waits
-    for them (a plain SIGTERM would leave the executor ``claude -p`` and its test workers running)."""
-    raise KeyboardInterrupt
 
 
 def loop(self) -> int:
@@ -39,8 +33,7 @@ def loop(self) -> int:
     self._segment = clock.mono()
     self.state.pop("ended", None)
     code, reason, outcome = 0, None, "finished"
-    previous = {number: signal.signal(number, terminated) for number in (signal.SIGTERM, signal.SIGHUP)} \
-        if threading.current_thread() is threading.main_thread() else {}
+    previous = interruptible()
     try:
         self._disk_guard()
         self._pieces()

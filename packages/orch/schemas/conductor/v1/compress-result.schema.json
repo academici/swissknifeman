@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:compress-result:v1",
+  "title": "compress-result",
+  "description": "Output of `orch conduct prune --compress-older-than DAYS --json`: the runs whose raw streams (<run>/**/streams/*.jsonl|.txt|.stderr|.times) were packed into .gz, or would be without --apply.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "apply",
+    "runs"
+  ],
+  "properties": {
+    "$schema": {
+      "description": "Document contract.",
+      "const": "urn:swissknifeman:orch:conductor:compress-result:v1"
+    },
+    "apply": {
+      "description": "True when the streams were packed, false for a dry run.",
+      "type": "boolean"
+    },
+    "runs": {
+      "description": "One row per run old enough whose streams are not packed yet, in run id order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/run"
+      }
+    }
+  },
+  "$defs": {
+    "run": {
+      "description": "The streams of one run.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "status",
+        "age_days",
+        "compressed",
+        "bytes_before",
+        "bytes_after"
+      ],
+      "properties": {
+        "run_id": {
+          "description": "Conductor run id.",
+          "type": "string",
+          "pattern": "^cnd-[A-Za-z0-9-]+$"
+        },
+        "status": {
+          "description": "Status of the run (one that prune may remove).",
+          "enum": ["done", "done_with_deviations", "finished", "blocked", "stopped", "orphaned"]
+        },
+        "age_days": {
+          "description": "Days since the last journal line of the run.",
+          "type": "number",
+          "minimum": 0
+        },
+        "compressed": {
+          "description": "Paths relative to the project: the .gz files written (apply) or the stream files that would be packed (dry run).",
+          "type": "array",
+          "items": {
+            "description": "A path.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "bytes_before": {
+          "description": "Size of the stream files before packing.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes_after": {
+          "description": "Size of the packed files plus the files left as they were; null for a dry run or a skipped run.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "reason": {
+          "description": "Why the run, or a file of it, was left as it was (a busy lease, no longer eligible, a file that could not be packed).",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

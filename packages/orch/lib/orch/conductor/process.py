@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import lru_cache
+import gzip
 import json
 import math
 import os
@@ -323,16 +324,35 @@ def activity(pid: Optional[int], raw_path: Path, idle: Optional[float] = None, i
     return "; ".join(parts) or "nothing observed"
 
 
+def open_stream(path: Path, mode: str = "rb"):
+    """Open the raw stream file ``path`` (``.jsonl``, ``.txt``, ``.stderr``, ``.times``) for reading or, when it is not
+    there, the ``<path>.gz`` that ``conduct prune --compress-older-than`` left in its place: ``rb`` (the default) gives
+    bytes, ``r`` UTF-8 text with what does not decode replaced. ``FileNotFoundError`` when neither is there."""
+    path = Path(path)
+    binary = "b" in mode
+    try:
+        return open(path, "rb") if binary else open(path, encoding="utf-8", errors="replace")
+    except FileNotFoundError:
+        packed = path.with_name(path.name + ".gz")
+        if not packed.is_file():
+            raise
+        return gzip.open(packed, "rb") if binary else gzip.open(packed, "rt", encoding="utf-8", errors="replace")
+
+
 def _last_command(raw_path: Path, tail: int = 200_000) -> str:
     """The input of the last tool call in the stream (a command, a file), shortened."""
     try:
-        with open(raw_path, "rb") as handle:
-            handle.seek(0, os.SEEK_END)
-            size = handle.tell()
-            handle.seek(max(0, size - tail))
-            data = handle.read().decode("utf-8", errors="replace")
-    except OSError:
+        with open_stream(raw_path) as handle:
+            if isinstance(handle, gzip.GzipFile):  # no seek from the end in a gzip file
+                blob = handle.read()[-tail:]
+            else:
+                handle.seek(0, os.SEEK_END)
+                size = handle.tell()
+                handle.seek(max(0, size - tail))
+                blob = handle.read()
+    except (OSError, EOFError):
         return ""
+    data = blob.decode("utf-8", errors="replace") if isinstance(blob, bytes) else blob
     found = ""
     for raw in data.splitlines():
         try:

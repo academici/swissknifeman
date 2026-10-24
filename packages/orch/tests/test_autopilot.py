@@ -26,6 +26,7 @@ from orch import settings
 from orch.conductor import cli, contract, process, progress, questions, records
 from orch.conductor.application import autopilot, autopilot_status
 from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure import detach
 from orch.conductor.infrastructure.files import RunStore, runs_root
 from orch.conductor.infrastructure.lease import RunLease
 from orch.conductor.policies import autopilot as rules
@@ -139,7 +140,8 @@ class Case(unittest.TestCase):
         patcher = mock.patch.dict(os.environ, env)
         patcher.start()
         self.addCleanup(patcher.stop)
-        for name in ("SKM_ORCH_DETACHED", "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE", autopilot.CRASH_ENV):
+        for name in ("SKM_ORCH_DETACHED", "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE", autopilot.CRASH_ENV,
+                     detach.STATE_ENV, detach.LAUNCH_ENV, detach.GATE_ENV):
             os.environ.pop(name, None)
         self.root = runs_root(self.project)
         self.clock = Clock()
@@ -923,6 +925,212 @@ class CorrectionTests(Case):
                    "stop": {"code": "WAITING_DECISION", "message": "q1"}}
         code, _, state = self.start(self.controller(outcomes=[waiting]))
         self.assertEqual(("AUTOPILOT_OWNER_NEEDED", ("plans/T",)), (state["stop"]["code"], self.folders_seen))
+
+
+class Crash(BaseException):
+    """The controller dies (a SIGKILL in the middle of a step)."""
+
+
+class Crashing(Launcher):
+    def start(self, current: dict) -> dict:
+        raise Crash()
+
+
+class LateAck(Launcher):
+    """``wait_ack`` ran out of time; the child acknowledged right after (``acked``) and exited before the controller looked."""
+
+    acked = True
+
+    def acknowledged(self, current: dict, child: dict) -> dict:
+        current.pop("_outcome", None)
+        raise Stop("DETACH_FAILED", "no acknowledgement within 20 s")
+
+    def alive(self, child: dict) -> bool:
+        return False
+
+    def ack_of(self, current: dict):
+        return super().ack_of(current) if self.acked else None
+
+
+class FenceTests(Case):
+    """P8.8, the controller side of the startup fence (``autopilot_fence``) on a controlled clock: the intent is cancelled
+    only under ``autopilot-launch.lock`` and never while a child holds it; a cancelled launch id is refused by a late child;
+    an existing run keeps its id and state and gets a new launch id; a held run or a partial new run is never replaced."""
+
+    RUN = "cnd-20261101T095900Z-aaaaaa"
+    OLD = "0123456789abcdef"
+
+    def prior(self, kind: str = "run", since: float = NOW - 3600, retry=None) -> dict:
+        intent = {"run_id": self.RUN, "launch_id": self.OLD, "state": "launching", "kind": kind,
+                  "since": timefmt.utc_stamp(since), **({"items": ["W1"]} if kind == "run" else {}),
+                  **({"retry": retry} if retry else {})}
+        records.write(self.root / autopilot.STATE_DOC, {
+            "$schema": records.TAGS["autopilot-state"][1], "plan": "T", "project": str(self.project), "pid": 1,
+            "started_at": timefmt.utc_stamp(NOW), "updated_at": timefmt.utc_stamp(NOW),
+            "deadline_at": timefmt.utc_stamp(NOW + 3600), "mode": "running",
+            "limits": {"max_runs": 20, "max_wall_s": 3600, "run_tokens_hard_max": 0, "max_no_progress_runs": 2,
+                       "max_auto_decisions": 10, "quota_wait_max_s": 21600},
+            "counters": dict.fromkeys(autopilot.COUNTERS, 0), "current": intent, "waiting_runs": [],
+            "history": [{"run_id": self.RUN, "started_at": intent["since"], "ended_at": None, "exit": None,
+                         "status": "running", "reason_code": None, "items_closed": [], "kind": kind}],
+            "last_blockers": [], "stop": None}, "autopilot-state")
+        return intent
+
+    def late_child(self, launch_id: str = OLD) -> None:
+        """The fence of a child of ``launch_id`` that reaches it only now."""
+        env = {detach.STATE_ENV: str(self.root / autopilot.STATE_DOC), detach.LAUNCH_ENV: launch_id}
+        with mock.patch.dict(os.environ, env), self.assertRaises(Stop) as refused:
+            with detach.startup_fence(self.project, self.RUN):
+                self.fail("a cancelled launch passed the fence")
+        self.assertEqual(detach.CANCELLED, refused.exception.code)
+
+    def waiting_run(self) -> None:
+        self.write_run(self.RUN, {"kind": "run", "items": ["W1"]}, {"status": "waiting", "waiting": {"W1": ["q1"]}})
+        self.answer(self.RUN, "W1", "q1")
+
+    def test_v_a_new_run_never_started_is_cancelled_once_and_its_late_child_refused(self):
+        self.prior()
+        code, _, state = self.start(self.controller(ready(kind="terminal")))
+        self.assertEqual((0, "AUTOPILOT_NO_WORK", None), (code, state["stop"]["code"], state["current"]))
+        self.assertEqual([(self.RUN, "never_started")], [(row["run_id"], row["status"]) for row in state["history"]])
+        self.assertEqual([], self.launcher.started)
+        self.late_child()
+        self.assertFalse((self.root / self.RUN).exists())
+        lock = FileLock(self.root / detach.LAUNCH_LOCK)
+        self.assertTrue(lock.acquire(), "the launch lock is free")
+        lock.release()
+
+    def test_v_an_intent_is_not_cancelled_while_its_child_holds_the_launch_lock_and_its_ack_adopts_it(self):
+        self.prior()
+        held = detach.launch_lock(self.root, 0)
+        self.addCleanup(held.release)
+        looks = []
+
+        def child_inside_its_fence(clock):
+            current = self.state()["current"]
+            looks.append((current["launch_id"], current["state"]))
+            if clock.sleeps == 3:  # the child created its run and acknowledged under the lock, then lets it go
+                self.write_run(self.RUN, {"kind": "run", "items": ["W1"]}, {"status": "finished", "closed": ["W1"]})
+                self.launcher.started.append({"launch_id": self.OLD})
+                held.release()
+        self.clock.hooks = [child_inside_its_fence]
+        with mock.patch.object(detach, "LAUNCH_LOCK_WAIT_S", 0):
+            code, _, state = self.start(self.controller(ready(kind="terminal")))
+        self.assertEqual((0, "AUTOPILOT_NO_WORK"), (code, state["stop"]["code"]))
+        self.assertEqual([(self.OLD, "launching")] * 3, looks[:3], "no cancel while the launch lock is held")
+        self.assertEqual([(self.RUN, "finished", ["W1"])], [(row["run_id"], row["status"], row["items_closed"])
+                                                           for row in state["history"]])
+        self.assertEqual(1, len(self.launcher.started), "no second child")
+
+    def test_v2_an_existing_run_keeps_its_id_and_state_and_gets_a_new_launch_id(self):
+        self.waiting_run()
+        self.prior(kind="continue", retry=["W1"])
+        code, _, state = self.start(self.controller(ready(kind="terminal"), outcomes=[{"status": "finished", "closed": ["W1"]}]))
+        self.assertEqual((0, "AUTOPILOT_NO_WORK"), (code, state["stop"]["code"]))
+        [again] = self.launcher.started
+        self.assertEqual(("resume", self.RUN, ["W1"]), (again["kind"], again["run_id"], again["retry"]),
+                         "a continue that may have begun goes on as resume --retry of its saved pieces (F3)")
+        self.assertNotEqual(self.OLD, again["launch_id"])
+        self.assertEqual("conduct resume --run {} --retry W1 --json-lines".format(self.RUN),
+                         " ".join(autopilot.ProcessLauncher(self.project, "T").argv(again)[-7:]))
+        self.assertEqual([(self.RUN, "finished", ["W1"])], [(row["run_id"], row["status"], row["items_closed"])
+                                                           for row in state["history"]], "one entry, never never_started")
+        self.assertEqual(1, state["counters"]["runs"])
+        self.late_child()
+
+    def test_v2_an_existing_run_held_without_the_ack_of_this_launch_stops_with_no_second_child(self):
+        self.waiting_run()
+        self.prior(kind="resume")
+        lease = RunLease(self.root / self.RUN).acquire("resume")
+        self.addCleanup(lease.release)
+        code, _, state = self.start(self.controller(ready(kind="terminal")))
+        self.assertEqual((1, "AUTOPILOT_CHECKOUT_LOST"), (code, state["stop"]["code"]))
+        self.assertEqual((self.OLD, "launching"), (state["current"]["launch_id"], state["current"]["state"]))
+        self.assertEqual([], self.launcher.started)
+        self.assertEqual(["running"], [row["status"] for row in state["history"]])
+
+    def test_v2_an_existing_run_folder_is_no_start_of_this_launch_and_is_cancelled_only_after_the_grace(self):
+        self.waiting_run()
+        intent = self.prior(kind="continue", since=NOW - autopilot.LAUNCH_GRACE_S + 1, retry=["W1"])
+        controller = self.controller(ready(kind="terminal"))
+        controller.doc = self.state()
+        self.assertEqual("launching", controller._look(dict(intent)))
+        self.assertEqual((self.OLD, "launching"), (self.state()["current"]["launch_id"], self.state()["current"]["state"]))
+        self.clock.t += 2
+        self.assertEqual("relaunch", controller._look(dict(intent)))
+        again = self.state()["current"]  # cancelled and replaced by the next attempt in one save (F2)
+        self.assertEqual((self.RUN, "resume", ["W1"], "launching"), (again["run_id"], again["kind"], again["retry"], again["state"]))
+        self.assertNotEqual(self.OLD, again["launch_id"])
+        self.assertEqual([("running", "resume")], [(row["status"], row["kind"]) for row in self.state()["history"]],
+                         "no never_started")
+        self.assertEqual("waiting", records.read(self.root / self.RUN / "state.json", "state")["status"])
+
+    def test_f2_a_crash_after_the_cancel_keeps_the_next_attempt_and_a_restart_goes_on_with_it(self):
+        for kind, retry in (("continue", ["W1"]), ("resume", None)):
+            with self.subTest(kind):
+                if not (self.root / self.RUN).exists():
+                    self.waiting_run()
+                self.prior(kind=kind, retry=retry)
+                crashing = self.controller(ready(kind="waiting"))
+                crashing.launcher = Crashing(self)
+                with self.assertRaises(Crash), contextlib.redirect_stderr(io.StringIO()):
+                    crashing.start()
+                saved = self.state()["current"]
+                self.assertEqual((self.RUN, "launching", "resume" if retry else kind),
+                                 (saved["run_id"], saved["state"], saved["kind"]))
+                self.clock.t += 2 * autopilot.LAUNCH_GRACE_S
+                code, err, state = self.start(self.controller(ready(kind="waiting"),
+                                                              outcomes=[{"status": "finished", "closed": ["W1"]}]))
+                self.assertEqual(0, self.launcher.readiness_at[0], "the attempt comes before readiness (no NEXT_WAITING)")
+                [again] = self.launcher.started
+                self.assertEqual((self.RUN, saved["kind"]), (again["run_id"], again["kind"]))
+                self.assertNotIn(again["launch_id"], (self.OLD, saved["launch_id"]))
+                self.assertEqual([self.RUN], [row["run_id"] for row in state["history"]])
+                self.assertNotIn("never_started", [row["status"] for row in state["history"]])
+
+    def test_f2_max_runs_keeps_the_next_attempt_current_for_the_next_start(self):
+        self.waiting_run()
+        self.prior(kind="resume")
+        doc = self.state()
+        doc["counters"]["runs"] = 1
+        records.write(self.root / autopilot.STATE_DOC, doc, "autopilot-state")
+        code, _, state = self.start(self.controller(ready(kind="terminal"), flags={"max_runs": 1}))
+        self.assertEqual((0, "AUTOPILOT_MAX_RUNS", []), (code, state["stop"]["code"], self.launcher.started))
+        self.assertEqual((self.RUN, "resume", "launching"), (state["current"]["run_id"], state["current"]["kind"],
+                                                             state["current"]["state"]))
+        self.clock.t += 2 * autopilot.LAUNCH_GRACE_S
+        code, _, state = self.start(self.controller(ready(kind="terminal"), outcomes=[{"status": "finished", "closed": ["W1"]}]))
+        self.assertEqual((0, "AUTOPILOT_NO_WORK"), (code, state["stop"]["code"]))
+        self.assertEqual([(self.RUN, "resume")], [(row["run_id"], row["kind"]) for row in self.launcher.started])
+        self.assertEqual([(self.RUN, "finished")], [(row["run_id"], row["status"]) for row in state["history"]])
+
+    def test_f1_an_ack_written_after_the_wait_ran_out_adopts_the_run_once(self):
+        controller = self.controller(lambda: ready(kind="terminal") if self.launcher.started else ready())
+        controller.launcher = self.launcher = LateAck(self, [{"status": "finished", "closed": ["W1"]}])
+        code, err, state = self.start(controller)
+        self.assertEqual((0, "AUTOPILOT_NO_WORK"), (code, state["stop"]["code"]), err)
+        [run] = self.launcher.started
+        self.assertEqual([(run["run_id"], "finished", ["W1"])], [(row["run_id"], row["status"], row["items_closed"])
+                                                                for row in state["history"]])
+        self.assertEqual(1, state["counters"]["items_closed"])
+
+    def test_f1_without_an_ack_or_a_run_the_dead_child_never_started(self):
+        controller = self.controller(ready())
+        controller.launcher = self.launcher = LateAck(self, [{"refuse": ("UNUSED", "the child wrote nothing")}])
+        self.launcher.acked = False
+        code, _, state = self.start(controller)
+        self.assertEqual((1, "AUTOPILOT_RUN_STOPPED"), (code, state["stop"]["code"]))
+        self.assertEqual([("never_started", "DETACH_FAILED")], [(row["status"], row["reason_code"]) for row in state["history"]])
+
+    def test_a_partial_new_run_is_kept_and_stops_the_session(self):
+        self.prior()
+        (self.root / self.RUN).mkdir(parents=True)
+        code, _, state = self.start(self.controller(ready(kind="terminal")))
+        self.assertEqual((1, "AUTOPILOT_STATE_INVALID"), (code, state["stop"]["code"]))
+        self.assertEqual(self.RUN, state["current"]["run_id"])
+        self.assertTrue((self.root / self.RUN).is_dir())
+        self.assertEqual([], self.launcher.started)
+
 
 class VerbTests(Case):
     def test_status_dead_running_and_none(self):

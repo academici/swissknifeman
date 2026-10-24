@@ -10,7 +10,8 @@ child before the child exists. Requests (``pause``, ``resume``, ``drain``, ``sto
 
 Recovery uses only the supervisor library (``stop_conductor``, ``reap``) and an ordinary ``conduct resume``; a child starts
 only through ``detach.spawn`` and takes the checkout lock and the run lease itself, so a second conductor on the checkout is
-refused (``RUN_BUSY``/``WORKTREE_BUSY`` -> ``AUTOPILOT_CHECKOUT_LOST``).
+refused (``RUN_BUSY``/``WORKTREE_BUSY`` -> ``AUTOPILOT_CHECKOUT_LOST``). Before them the child passes the startup fence
+(``autopilot_fence``): a launch intent the controller cancelled never starts (``AUTOPILOT_LAUNCH_CANCELLED``).
 """
 from __future__ import annotations
 
@@ -29,6 +30,7 @@ from aicore.util.lock import FileLock
 from orch import events
 from orch.conductor import options as opts, process, progress, records, runs
 from orch.conductor.application import autopilot_status as files, run_service, supervisor
+from orch.conductor.application.autopilot_fence import LaunchFence, retry_targets
 from orch.conductor.application.autopilot_status import (DETACHED, IDENTITY, LOCK_FILE, OPTIONS_DOC, REQUEST_DOC, STATE_DOC,
                                                          answered_run, child_problem, escalations, source_readiness,
                                                          plan_folders, still_waiting, tracked_changes)
@@ -39,7 +41,7 @@ from orch.conductor.infrastructure.lease import RunLease
 from orch.conductor.policies import autopilot as rules
 
 LAUNCH_GRACE_S = 30  # a launch without an acknowledgement, a lease or a run folder after this long never started
-SETTLED = ("ended", "orphaned", "gone")  # no conductor of the current run is alive
+SETTLED = ("ended", "orphaned", "gone", "relaunch")  # no conductor of the current run is alive
 HISTORY_MAX = 50
 CRASH_ENV = "SKM_AUTOPILOT_CRASH_AT"  # fault injection of the tests: after_spawn
 ORCH_SCRIPT = Path(__file__).resolve().parents[4] / "scripts" / "orch.py"
@@ -76,12 +78,13 @@ class ProcessLauncher:
         if current["kind"] == "run":
             return argv + ["--plan", self.plan, "--items", *current["items"], "--options", str(self.root / OPTIONS_DOC),
                            "--json-lines", "--run-id", current["run_id"]]
-        retry = current.get("retry") or []
+        retry = current.get("retry") if current["kind"] == "resume" else None  # of a continue: its saved pieces only
         return argv + ["--run", current["run_id"], *(["--retry", *retry] if retry else []), "--json-lines"]
 
-    def start(self, current: dict) -> dict:
-        env = {"SKM_ORCH_DETACH_ACK": str(self.ack_path(current)), "SKM_ORCH_DETACH_NONCE": current["launch_id"]}
-        return detach.spawn(self.argv(current), project=self.project, launcher="autopilot", log_dir=self.root / DETACHED, env=env)
+    def start(self, current: dict) -> dict:  # the child checks the intent under the launch lock (detach.startup_fence)
+        env = {detach.STATE_ENV: str(self.root / STATE_DOC), detach.LAUNCH_ENV: current["launch_id"]}
+        return detach.spawn(self.argv(current), project=self.project, launcher="autopilot", log_dir=self.root / DETACHED,
+                            env=env, ack_nonce=current["launch_id"])
 
     def acknowledged(self, current: dict, child: dict) -> dict:
         return detach.wait_ack(self.ack_path(current), current["launch_id"], current["run_id"], child)
@@ -91,7 +94,8 @@ class ProcessLauncher:
             found = records.read(self.ack_path(current), "detach-ack")
         except Stop:
             return None
-        return found if found and found["nonce"] == current["launch_id"] and found["status"] == "started" else None
+        mine = (current["launch_id"], current["run_id"], "started")
+        return found if found and (found["nonce"], found["run_id"], found["status"]) == mine else None
 
     def alive(self, child: dict) -> bool:
         detach.poll_children()
@@ -110,7 +114,7 @@ class ProcessLauncher:
         return None
 
 
-class Controller:
+class Controller(LaunchFence):
     """One session of the autopilot of ``plan`` in ``project``. ``launcher``, ``readiness``, ``dirty``, ``recover`` and
     ``clock`` are the seams the tests replace (no child conductor, controlled time)."""
 
@@ -261,7 +265,7 @@ class Controller:
         if choice["action"] == "continue":
             self.doc["waiting_runs"] = [row for row in self.doc["waiting_runs"] if row["run_id"] != answered]
             self.doc["counters"]["runs"] += 1
-            return self._launch("continue", choice["run_id"])
+            return self._launch("continue", choice["run_id"], retry=retry_targets(self.root, choice["run_id"]))
         if choice["action"] == "run":
             self._write_options()
             self.doc["counters"]["runs"] += 1
@@ -324,33 +328,44 @@ class Controller:
         current: dict = {"run_id": run_id, "launch_id": secrets.token_hex(8), "state": "launching", "kind": kind,
                          "since": clock_mod.utc_stamp(self.clock.now()), "boot_id": process.boot_id()}
         current.update({key: list(value) for key, value in (("items", items), ("retry", retry)) if value})
-        self.doc["current"] = current
-        self._history(run_id, kind=kind, status="running", ended_at=None)
-        self._save()  # the intent is on disk before the child exists
+        stopped = self._write_intent(current)  # under the launch lock (autopilot_fence)
+        return stopped if stopped is not None else self._start(current)
+
+    def _start(self, current: dict) -> Optional[int]:
+        """Start the child of the saved intent ``current`` and wait for its acknowledgement (never for the run)."""
+        kind, run_id = current["kind"], current["run_id"]
         try:
             child = self.launcher.start(current)
         except (OSError, Stop) as error:
             return self._refused(current, Stop(getattr(error, "code", "DETACH_FAILED"), getattr(error, "message", str(error))))
-        if os.environ.get(CRASH_ENV) == "after_spawn":
+        if os.environ.get(CRASH_ENV) in ("after_spawn", f"after_spawn:{kind}"):
             os._exit(9)
         try:
             self.launcher.acknowledged(current, child)
         except Stop as refusal:
-            if refusal.code == "DETACH_FAILED" and self.launcher.alive(child):
-                current.update(pid=child["pid"], start_ticks=child["start_ticks"], log=child["log"])
+            if refusal.code != "DETACH_FAILED":  # a refused acknowledgement: the child took nothing
+                return self._refused(current, refusal)
+            current.update(pid=child["pid"], start_ticks=child["start_ticks"], log=child["log"])
+            # no acknowledgement in time, or the child exited: decided under the launch lock (an ack written meanwhile adopts)
+            look = self._intent(current, self.root / run_id, self.launcher.alive(child))
+            if look in ("lost", "invalid"):
+                return self._intent_end(current, look)
+            if look in ("gone", "relaunch"):  # classified; the next attempt of an existing run stays current
+                return self._refused(current, refusal)
+            if look == "launching":
                 self._save()  # still launching: the next look adopts the run or gives the launch up
                 self.say(f"{kind} {run_id}: {refusal.message}")
-                return None
-            return self._refused(current, refusal)
+            return None
         current.update(state="running", pid=child["pid"], start_ticks=child["start_ticks"], log=child["log"])
         self._save()
-        self.say(f"{kind} {run_id} started (pid {child['pid']})" + (f": {', '.join(items)}" if items else ""))
+        self.say(f"{kind} {run_id} started (pid {child['pid']})" + (f": {', '.join(current['items'])}" if current.get("items") else ""))
         return None
 
     def _refused(self, current: dict, refusal: Stop) -> Optional[int]:
         """The child refused to start (or could not be started): classified like a run that stopped with that code."""
         run_id = current["run_id"]
-        self.doc["current"] = None
+        if self.doc["current"] is current:  # the next attempt of an existing run that the fence saved instead stays
+            self.doc["current"] = None
         if current["kind"] == "run":
             self._history(run_id, status="never_started", reason_code=refusal.code,
                           ended_at=clock_mod.utc_stamp(self.clock.now()))
@@ -367,24 +382,15 @@ class Controller:
                 "recoveries": self.doc["recoveries"].get(run_id, 0), "waiting_runs": len(self.doc["waiting_runs"])}
 
     def _look(self, current: dict) -> str:
-        """``launching``, ``running``, ``hung``, ``orphaned``, ``ended`` or ``gone`` (a new run that never started)."""
+        """``launching``, ``running``, ``hung``, ``orphaned``, ``ended``, ``gone`` (a new run that never started) or, of a
+        launch intent, ``cancelled``, ``lost`` or ``invalid`` (``_intent``)."""
         directory = self.root / current["run_id"]
         young = self.clock.now() - files.epoch(current["since"]) <= LAUNCH_GRACE_S
-        exists = (directory / RUN_FILE).is_file()
         if current["state"] == "launching":
-            ack = self.launcher.ack_of(current)
-            held = RunLease.held(directory) is True if exists else False
-            if ack or held:  # the child made it: adopt it with its whole identity (unknown parts stay unknown)
-                owner = RunLease.owner(directory) if held else {}
-                found = ({"pid": ack.get("pid"), "start_ticks": ack.get("start_ticks"), "boot_id": current.get("boot_id")}
-                         if ack else {key: owner.get(key) for key in IDENTITY})
-                current.update(state="running", **{key: value for key, value in found.items() if value is not None})
-                self._save()
-                self.say(f"adopted {current['kind']} {current['run_id']}")
-            elif not exists:
-                return "launching" if young else "gone"
-            elif current["kind"] != "run" and young:
-                return "launching"  # the record of an existing run proves nothing about this launch yet
+            found = self._intent(current, directory, young)
+            if found:
+                return found
+        exists = (directory / RUN_FILE).is_file()
         if not exists:
             return "gone"
         lines = progress.read_lines(directory)
@@ -406,6 +412,8 @@ class Controller:
         if look in ("launching", "running"):
             self._wait()
             return None
+        if look in ("lost", "invalid", "relaunch"):
+            return self._intent_end(current, look)
         if look == "gone":
             self._history(current["run_id"], status="never_started", ended_at=clock_mod.utc_stamp(self.clock.now()))
             self.doc["current"] = None
@@ -465,7 +473,8 @@ class Controller:
                                     f"could not be stopped: {note}; "
                                     "it stays the current run of the session (orch conduct autopilot status)")
             message += note
-            self.doc["current"] = None
+            if self.doc["current"] is current:  # else the next attempt the fence saved instead of a cancelled launch
+                self.doc["current"] = None
         return self._finish(code, message)
 
     def _stop_child(self, current: dict) -> tuple:
@@ -497,6 +506,8 @@ class Controller:
         if look == "gone":
             self._history(run_id, status="never_started", ended_at=clock_mod.utc_stamp(self.clock.now()))
             return True, f"; run {run_id} never started"
+        if look == "relaunch":
+            return True, f"; run {run_id} keeps its {self.doc['current']['kind']} as current for the next start"
         view, exit_code = self.view(run_id)
         self._record_end(run_id, view, exit_code)
         return True, f"; run {run_id} {how} (orch conduct resume --run {run_id})"

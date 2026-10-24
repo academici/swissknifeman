@@ -35,44 +35,45 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
     if run_id is not None and (detach.RUN_ID.fullmatch(run_id) is None or RunStore(self.project, run_id).directory.exists()):
         raise Stop("RUN_INVALID", "the supplied run id must be a new cnd-<UTC stamp>-<hex> id")
     run_id = run_id or clock.new_run_id()
-    source = None
-    if input_file is not None:
-        try:
-            found = read_input(input_file)
-        except WorkSourceError as error:
-            raise Stop(error.code, error.message) from None
-        plan, plans_root, items, batch = str(Path(input_file).resolve()), None, [found["input_id"]], False
-        source = {"kind": "file", "path": plan, "commit": bool(commit)}
-    instructions = snapshot_stubs(self)
-    run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
-               "source": source, "scenario": scenario,
-               "max_items": max_items, "options_file": str(options_file) if options_file else None,
-               "adopt": bool(adopt), "grouped": grouped, "fence": fence,
-               "extra_paths": [str(path) for path in extra_paths or []] or None,
-               "config_file": str(self.config_file) if self.config_file else None, "created": clock.utc_now(),
-               "project": str(self.project), "project_resolution": self.project_resolution,
-               "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
-               "config_layers": settings_mod.config_layers(self.settings),
-               "instructions_digest": instructions["digest"], "debug": bool(getattr(self.settings, "debug", False)),
-               "limits_run": limits_run(self, options_file), **catalog_record(self)}
-    store = RunStore(self.project, run_id)
-    with store.ownership("run", checkout=True, create=True):
-        run_doc["lease"] = True
-        self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}}, store)
-        self.store.create(run_doc)
-        write_json(self.directory / stubs_mod.SNAPSHOT_FILE, instructions)
-        self.instructions = instructions
-        if options_file:
-            self.store.keep_options(options_file)
-        self._save()
-        detach.acknowledge(run_id)
-        self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
-                                                                     f"batch, at most {max_items or 'all'}"))
-        lifecycle(self, "started")
-        debug_mode.announce(self.progress, self.directory, run_id, self.settings)
-        announce_concurrent(self)
-        clear_sandbox_stubs(self)
-        return self._loop()
+    with detach.startup_fence(self.project, run_id):  # before the run folder, the locks and any claim
+        source = None
+        if input_file is not None:
+            try:
+                found = read_input(input_file)
+            except WorkSourceError as error:
+                raise Stop(error.code, error.message) from None
+            plan, plans_root, items, batch = str(Path(input_file).resolve()), None, [found["input_id"]], False
+            source = {"kind": "file", "path": plan, "commit": bool(commit)}
+        instructions = snapshot_stubs(self)
+        run_doc = {"run_id": run_id, "plan": plan, "plans_root": plans_root, "items": list(items), "batch": batch,
+                   "source": source, "scenario": scenario,
+                   "max_items": max_items, "options_file": str(options_file) if options_file else None,
+                   "adopt": bool(adopt), "grouped": grouped, "fence": fence,
+                   "extra_paths": [str(path) for path in extra_paths or []] or None,
+                   "config_file": str(self.config_file) if self.config_file else None, "created": clock.utc_now(),
+                   "project": str(self.project), "project_resolution": self.project_resolution,
+                   "working_directory": os.getcwd(), "config_digest": settings_mod.config_digest(self.settings),
+                   "config_layers": settings_mod.config_layers(self.settings),
+                   "instructions_digest": instructions["digest"], "debug": bool(getattr(self.settings, "debug", False)),
+                   "limits_run": limits_run(self, options_file), **catalog_record(self)}
+        store = RunStore(self.project, run_id)
+        with store.ownership("run", checkout=True, create=True):
+            run_doc["lease"] = True
+            self._open(run_id, run_doc, {"status": "running", "items": {}, "claims": {}, "tokens": {"input": 0, "output": 0}}, store)
+            self.store.create(run_doc)
+            write_json(self.directory / stubs_mod.SNAPSHOT_FILE, instructions)
+            self.instructions = instructions
+            if options_file:
+                self.store.keep_options(options_file)
+            self._save()
+            detach.acknowledge(run_id)
+            self.progress.emit("run.start", message=(f"input {plan}; " if source else f"plan {plan}; ") + (f"items {', '.join(items)}" if items else
+                                                                         f"batch, at most {max_items or 'all'}"))
+            lifecycle(self, "started")
+            debug_mode.announce(self.progress, self.directory, run_id, self.settings)
+            announce_concurrent(self)
+            clear_sandbox_stubs(self)
+            return self._loop()
 
 
 def concurrent_runs(self) -> list:
@@ -112,7 +113,7 @@ def announce_concurrent(self) -> None:
 @detach.refuse_errors
 def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
     store = RunStore(self.project, run_id)
-    with store.ownership("resume", checkout=True):
+    with detach.startup_fence(self.project, run_id), store.ownership("resume", checkout=True):
         run_doc, state = store.load()
         if run_doc.get("config_file") and not self.config_file:
             self.config_file = Path(run_doc["config_file"])
@@ -468,28 +469,30 @@ def unanswered(folder: Path, waiting: dict) -> list:
 def continue_run(self, run_id: str, items=None, partial: bool = False, raise_limits=()) -> int:
     """Go on with the pieces of ``run_id`` that wait for an answer (``resume --retry`` of those whose blocking questions are
     all answered). Without ``items`` every waiting piece is taken. A piece with an unanswered blocking question starts
-    nothing: ``QUESTIONS_OPEN`` lists them as ``item:question``, unless ``partial`` continues the ready ones only."""
-    store = RunStore(self.project, run_id)
-    _, state = store.load()
-    waiting = {row["item"]: row for row in waiting_pieces(state)}
-    chosen = list(dict.fromkeys(items)) if items else list(waiting)
-    if not chosen:
-        raise Stop("NOT_WAITING", f"run {run_id} has no piece that waits for an answer")
-    wrong = [ref for ref in chosen if ref not in waiting]
-    if wrong:
-        raise Stop("NOT_WAITING", f"{', '.join(wrong)} does not wait for an answer in run {run_id} "
-                                  f"(waiting: {', '.join(waiting) or 'none'})")
-    ready, open_rows = [], []
-    for ref in chosen:
-        missing = unanswered(store.directory / safe(ref), waiting[ref])
-        if missing:
-            open_rows += [f"{ref}:{name}" for name in missing]
-        else:
-            ready.append(ref)
-    if open_rows and (not partial or not ready):
-        raise Stop("QUESTIONS_OPEN", f"no answer yet to {', '.join(open_rows)}: answer with orch conduct answer"
-                                     + ("" if partial else "; --partial continues the pieces that are ready"))
-    return self.resume(run_id, retry=ready, raise_limits=raise_limits)
+    nothing: ``QUESTIONS_OPEN`` lists them as ``item:question``, unless ``partial`` continues the ready ones only. A child of
+    the autopilot passes the startup fence before it reads the run (the fence of ``resume`` is then the same one)."""
+    with detach.startup_fence(self.project, run_id):
+        store = RunStore(self.project, run_id)
+        _, state = store.load()
+        waiting = {row["item"]: row for row in waiting_pieces(state)}
+        chosen = list(dict.fromkeys(items)) if items else list(waiting)
+        if not chosen:
+            raise Stop("NOT_WAITING", f"run {run_id} has no piece that waits for an answer")
+        wrong = [ref for ref in chosen if ref not in waiting]
+        if wrong:
+            raise Stop("NOT_WAITING", f"{', '.join(wrong)} does not wait for an answer in run {run_id} "
+                                      f"(waiting: {', '.join(waiting) or 'none'})")
+        ready, open_rows = [], []
+        for ref in chosen:
+            missing = unanswered(store.directory / safe(ref), waiting[ref])
+            if missing:
+                open_rows += [f"{ref}:{name}" for name in missing]
+            else:
+                ready.append(ref)
+        if open_rows and (not partial or not ready):
+            raise Stop("QUESTIONS_OPEN", f"no answer yet to {', '.join(open_rows)}: answer with orch conduct answer"
+                                         + ("" if partial else "; --partial continues the pieces that are ready"))
+        return self.resume(run_id, retry=ready, raise_limits=raise_limits)
 
 
 def state_claims(state: Mapping) -> list:

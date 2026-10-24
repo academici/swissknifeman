@@ -142,8 +142,8 @@ def check_env(cwd: Path, environ=None, run_env=None, parallel: int = 1) -> dict:
             base.pop(name)
     base.update(run_env or {})
     base["SKM_TEST_JOBS"] = str(max(1, jobs_budget(base) // max(1, parallel)))
-    return {name: value for name, value in base.items() if name not in
-            ("SKM_ORCH_DETACHED", "SKM_ORCH_LAUNCHER", "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE")}
+    return {name: value for name, value in base.items() if name not in ("SKM_ORCH_DETACHED", "SKM_ORCH_LAUNCHER",
+            "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE", "SKM_ORCH_AUTOPILOT_STATE", "SKM_ORCH_AUTOPILOT_LAUNCH_ID", "SKM_ORCH_FENCE_GATE")}
 
 
 # What a fingerprint leaves out of the environment: names that differ between two processes of one run.

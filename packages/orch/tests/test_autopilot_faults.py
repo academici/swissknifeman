@@ -7,6 +7,7 @@ polls until a deadline. The machine layer of a temporary home allows and enables
 """
 from __future__ import annotations
 
+import errno
 import json
 import os
 from pathlib import Path
@@ -17,9 +18,12 @@ import time
 import unittest
 
 from aicore.ext import events as journal
+from aicore.util import timefmt
+from aicore.util.lock import probe_free
 
 from orch.conductor import contract, process, progress, records
 from orch.conductor.application import autopilot
+from orch.conductor.infrastructure import detach
 from orch.conductor.infrastructure.files import STATE_FILE, runs_root
 from orch.conductor.infrastructure.lease import RunLease
 from tests.test_conductor import check, quota_failure, report
@@ -466,6 +470,205 @@ class StoppedChildTests(AutopilotCase):
         eventually(self, lambda: not alive(first["pid"]), "the stopped conductor is gone")
         eventually(self, lambda: not alive(role), "its role is reaped")
         self.assertFalse(RunLease.held(runs_root(self.project) / first["run_id"]))
+
+
+class FenceCase(AutopilotCase):
+    """(v), (v2) of P8.8: the startup fence. A controller dies right after it spawned child A (``after_spawn:<kind>``); A waits at
+    a FIFO either before its fence (``before``) or inside it, holding the launch lock (``locked``). The intent is aged on disk
+    instead of a real wait of LAUNCH_GRACE_S, then a new controller decides under the launch lock."""
+
+    items = ("W1",)
+    block_calls = 0
+
+    def fifo(self) -> Path:
+        path = self.gate.parent / "fence.fifo"
+        os.mkfifo(path)
+        self.addCleanup(self.release_child, path, 0.5)
+        return path
+
+    def release_child(self, fifo: Path, seconds: float = DEADLINE_S) -> None:
+        """Open the writer end: it succeeds only while the child waits at the reader end, and lets it go on."""
+        end = time.monotonic() + seconds
+        while True:
+            try:
+                os.close(os.open(fifo, os.O_WRONLY | os.O_NONBLOCK))
+                return
+            except OSError as error:
+                if error.errno != errno.ENXIO or time.monotonic() >= end:
+                    if seconds < DEADLINE_S:
+                        return  # cleanup: nobody waits any more
+                    raise AssertionError(f"no child waits at {fifo}: {error}\n{self.log()}") from None
+            time.sleep(0.05)
+
+    def crashed_launch(self, kind: str, point: str) -> tuple:
+        fifo = self.fifo()
+        controller = self.start_autopilot(env={autopilot.CRASH_ENV: f"after_spawn:{kind}", detach.GATE_ENV: f"{point}:{fifo}"})
+        self.assertEqual(9, controller.wait(timeout=DEADLINE_S), self.log())
+        intent = self.state()["current"]
+        self.assertEqual((kind, "launching"), (intent["kind"], intent["state"]))
+        return fifo, intent
+
+    def age(self) -> None:
+        """The controlled clock of the intent: written more than LAUNCH_GRACE_S ago (the dead controller writes nothing)."""
+        doc = self.state()
+        doc["current"]["since"] = timefmt.utc_stamp(time.time() - autopilot.LAUNCH_GRACE_S - 30)
+        records.write(runs_root(self.project) / autopilot.STATE_DOC, doc, "autopilot-state")
+
+    def ack(self, intent: dict):
+        path = runs_root(self.project) / autopilot.DETACHED / f"{intent['run_id']}.{intent['launch_id']}.ack.json"
+        return records.read(path, "detach-ack")
+
+    def acks(self, run_id: str) -> list:
+        return [records.read(path, "detach-ack") for path in (runs_root(self.project) / autopilot.DETACHED).glob(f"{run_id}.*.ack.json")]
+
+    def refused(self, intent: dict) -> dict:
+        found = self.until(lambda: self.ack(intent), f"child of launch {intent['launch_id']} answered")
+        self.assertEqual(("refused", "AUTOPILOT_LAUNCH_CANCELLED"), (found["status"], found["code"]), found)
+        eventually(self, lambda: not alive(found["pid"]), "the refused child exited")
+        return found
+
+    def holds_launch_lock(self) -> None:
+        self.until(lambda: probe_free(runs_root(self.project) / detach.LAUNCH_LOCK) is False, "the child holds the launch lock")
+
+    def took_session(self, controller: subprocess.Popen) -> None:
+        self.until(lambda: (self.state_or_none() or {}).get("pid") == controller.pid, "the new controller took the session")
+
+    def executor_calls(self) -> int:
+        return int((self.gate / "calls").read_text()) if (self.gate / "calls").exists() else 0
+
+    def rows(self, state: dict) -> list:
+        return [(row["run_id"], row["status"]) for row in state["history"]]
+
+
+class FenceRunTests(FenceCase):
+    """(v) a new run: A cancelled before its fence never starts, even while B holds the checkout; A inside its fence is
+    adopted and no B is started."""
+
+    block_calls = 1  # the executor of the only run that starts waits at its gate
+
+    def test_v_a_launch_cancelled_before_its_fence_is_refused_while_b_runs(self):
+        fifo, first = self.crashed_launch("run", "before")
+        self.age()
+        second = self.start_autopilot()
+        other = self.until(lambda: ((self.state_or_none() or {}).get("current") or {}).get("run_id") not in (None, first["run_id"])
+                           and self.state()["current"], "B is the current run")
+        self.role_pid(1)
+        b = self.current()
+        self.assertEqual(other["run_id"], b["run_id"])
+        self.assertEqual([(first["run_id"], "never_started")], self.rows(self.state())[:1])
+        self.release_child(fifo)  # A reaches its fence while B holds the checkout lock and its run lease
+        refused = self.refused(first)
+        self.assertFalse((runs_root(self.project) / first["run_id"]).exists(), "A created no run")
+        self.assertEqual(b["pid"], RunLease.owner(runs_root(self.project) / b["run_id"])["pid"], "B alone holds its run")
+        self.assertNotEqual(b["pid"], refused["pid"])
+        self.go()
+        state = self.finish(second, 0)
+        self.assertEqual("AUTOPILOT_NO_WORK", state["stop"]["code"], self.log())
+        self.assertEqual([(first["run_id"], "never_started"), (b["run_id"], "finished")], self.rows(state))
+        self.assertEqual(([b["run_id"]], 1), (self.run_dirs(), self.executor_calls()), "one run, one executor: B's")
+        self.assertEqual("done", self.source()["items"]["W1"]["status"])
+
+    def test_v_a_child_inside_its_fence_is_adopted_and_no_b_starts(self):
+        fifo, first = self.crashed_launch("run", "locked")
+        self.holds_launch_lock()
+        self.age()
+        second = self.start_autopilot()
+        self.took_session(second)
+        self.stays(lambda: (self.state()["current"] or {}).get("launch_id") == first["launch_id"] and not self.run_dirs(),
+                   1.0, "the intent stays while A holds the launch lock, and no B starts")
+        self.release_child(fifo)
+        adopted = self.current()
+        self.assertEqual((first["run_id"], first["launch_id"]), (adopted["run_id"], adopted["launch_id"]))
+        self.role_pid(1)
+        self.assertEqual(adopted["pid"], RunLease.owner(runs_root(self.project) / first["run_id"])["pid"])
+        self.go()
+        state = self.finish(second, 0)
+        self.assertEqual("AUTOPILOT_NO_WORK", state["stop"]["code"], self.log())
+        self.assertEqual([(first["run_id"], "finished")], self.rows(state))
+        self.assertEqual(([first["run_id"]], 1), (self.run_dirs(), self.executor_calls()))
+
+
+class FenceContinueTests(FenceCase):
+    """(v2) the same two races for ``conduct continue`` of an existing waiting run: its folder is no start of the launch; the
+    cancelled launch id takes no lease and starts no executor, the run keeps its id and state and is continued once."""
+
+    def waiting(self) -> str:
+        self.script_file.write_text(json.dumps({"executor": [asks("W1"), made("W1")]}), encoding="utf-8")
+        first = self.start_autopilot()
+        run_id = self.until(lambda: ((self.state_or_none() or {}).get("waiting_runs") or [{}])[0].get("run_id"),
+                            "a run waits for an answer")
+        self.request("stop")
+        self.assertEqual("AUTOPILOT_STOPPED", self.finish(first, 0)["stop"]["code"])
+        done = self.orch("conduct", "answer", "--run", run_id, "--item", "W1", "--question", "Q1", "--option", "rename",
+                         "--by", "owner")
+        self.assertEqual(0, done.returncode, done.stderr)
+        self.earlier = {ack["nonce"] for ack in self.acks(run_id)}  # the launch of the run that asked
+        return run_id
+
+    def new_acks(self, run_id: str) -> list:
+        return [ack for ack in self.acks(run_id) if ack["nonce"] not in self.earlier]
+
+    def test_v2_a_cancelled_continue_never_starts_and_a_new_launch_continues_the_run_once(self):
+        run_id = self.waiting()
+        fifo, first = self.crashed_launch("continue", "before")
+        self.assertEqual(run_id, first["run_id"])
+        self.age()
+        state = self.finish(self.start_autopilot(), 0)
+        self.assertEqual("AUTOPILOT_NO_WORK", state["stop"]["code"], self.log())
+        started = [ack for ack in self.new_acks(run_id) if ack["status"] == "started"]
+        self.assertEqual(1, len(started))
+        self.assertNotEqual(first["launch_id"], started[0]["nonce"], "the new attempt has a new launch id")
+        entry = [row for row in state["history"] if row["run_id"] == run_id]
+        self.assertEqual([("resume", "finished", ["W1"])], [(row["kind"], row["status"], row["items_closed"]) for row in entry],
+                         "the next attempt of the continue is resume --retry of its saved pieces")
+        kept = (runs_root(self.project) / run_id / STATE_FILE).read_text(encoding="utf-8")
+        self.release_child(fifo)
+        self.refused(first)
+        self.assertEqual(kept, (runs_root(self.project) / run_id / STATE_FILE).read_text(encoding="utf-8"))
+        self.assertFalse(RunLease.held(runs_root(self.project) / run_id))
+        self.assertEqual(2, self.executor_calls(), "the question and the one continue")
+
+    def test_v2_a_continue_that_took_its_pieces_back_and_died_before_its_ack_is_gone_on_with(self):
+        """(review F3) A passes its fence, takes W1 back (no longer waiting), writes run.resume and dies right before its
+        acknowledgement: the new controller does not continue again (NOT_WAITING) but resumes the same run with --retry W1."""
+        run_id = self.waiting()
+        directory = runs_root(self.project) / run_id
+        fifo, first = self.crashed_launch("continue", "ack")
+        self.assertEqual(["W1"], first["retry"], "the pieces are saved in the intent before the child changes them")
+        owner = self.until(lambda: RunLease.held(directory) and RunLease.owner(directory).get("pid"), "A holds the run")
+        self.until(lambda: any(line.get("event") == "run.resume" for line in progress.read_lines(directory)), "A resumed the run")
+        self.assertNotIn("waiting", records.read(directory / STATE_FILE, "state")["items"]["W1"])
+        os.kill(owner, signal.SIGKILL)  # at its acknowledgement: it holds the launch lock and the run
+        eventually(self, lambda: not alive(owner), "A is gone")
+        self.until(lambda: not RunLease.held(directory) and probe_free(runs_root(self.project) / detach.LAUNCH_LOCK),
+                   "A's locks are free")
+        self.assertIsNone(self.ack(first))
+        self.age()
+        state = self.finish(self.start_autopilot(), 0)
+        self.assertEqual("AUTOPILOT_NO_WORK", state["stop"]["code"], self.log())
+        self.assertNotIn("NOT_WAITING", self.log())
+        self.assertEqual([(run_id, "resume", "finished", ["W1"])],
+                         [(row["run_id"], row["kind"], row["status"], row["items_closed"]) for row in state["history"]])
+        started = [ack for ack in self.new_acks(run_id) if ack["status"] == "started"]
+        self.assertEqual(1, len(started))
+        self.assertNotEqual(first["launch_id"], started[0]["nonce"])
+        self.assertEqual(2, self.executor_calls(), "the question and the one resumed executor")
+
+    def test_v2_an_acknowledged_continue_inside_the_fence_is_adopted_without_a_second_continue(self):
+        run_id = self.waiting()
+        fifo, first = self.crashed_launch("continue", "locked")
+        self.holds_launch_lock()
+        self.age()
+        second = self.start_autopilot()
+        self.took_session(second)
+        self.stays(lambda: (self.state()["current"] or {}).get("launch_id") == first["launch_id"] and not self.new_acks(run_id),
+                   1.0, "nothing is decided while A holds the launch lock")
+        self.release_child(fifo)
+        state = self.finish(second, 0)
+        self.assertEqual("AUTOPILOT_NO_WORK", state["stop"]["code"], self.log())
+        self.assertEqual([(first["launch_id"], "started")], [(ack["nonce"], ack["status"]) for ack in self.new_acks(run_id)])
+        self.assertEqual([(run_id, "finished")], self.rows(state))
+        self.assertEqual(2, self.executor_calls(), "no second continue")
 
 
 if __name__ == "__main__":

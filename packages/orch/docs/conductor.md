@@ -64,8 +64,10 @@ run id and child pid every 0.1 seconds for at most 20 seconds. An existing `run.
 A refusal returns exit 1 with its code. A child that exits without acknowledging yields `DETACH_FAILED` and up to twenty
 sanitized log lines; a timeout names the pid and log and leaves the child alone. The hidden `--run-id` is restricted to
 internal launches (`SKM_ORCH_DETACHED=1`), a correctly formatted id and a run directory that does not exist.
-`spawn` also accepts a per-launch environment overlay for the nonce channel. Roles and checks receive neither that
-channel nor `SKM_ORCH_DETACHED` / `SKM_ORCH_LAUNCHER`; the owning conductor retains its launcher in leases and events.
+`spawn` sets up the acknowledgement channel itself: it takes an optional `ack_nonce` (16 hex digits; generated when not given,
+as for `--detach`; the autopilot gives its launch id), returns `{pid, start_ticks, log, ack, nonce}`, and accepts a per-launch
+environment overlay. Roles and checks receive neither that channel nor `SKM_ORCH_DETACHED` / `SKM_ORCH_LAUNCHER` nor the
+startup fence variables of the autopilot (below); the owning conductor retains its launcher in leases and events.
 
 The lease and lifecycle events identify the launcher: `detached` from the terminal, `gui` from gui-orch,
 `supervisor` from automatic recovery, or `autopilot` for its future caller. The supervisor uses the same session/log
@@ -342,11 +344,46 @@ with `AUTOPILOT_BUSY` and touches nothing). Then, at every step:
 `limits.run_tokens_hard_max` with `--run-tokens-hard-max` (the run cap of the trusted invocation layer). Every child starts
 through `detach.spawn` (launcher `autopilot`) with a run id chosen before (`--run-id`) and a fresh `launch_id` (16 hex) as the
 nonce of its detach acknowledgement: **before** the child exists, `autopilot.json` holds the launch intent `current = {run_id,
-launch_id, state: launching, kind, since}`; after the acknowledgement `state: running` with `pid` and `start_ticks`. A
-controller started after a crash adopts the run of an intent whose child acknowledged or holds the run lease; a new run that
-has no folder, lease or acknowledgement 30 s after the intent never started (`history` status `never_started`). The child takes
-the checkout lock and the run lease itself: while another conductor holds them it refuses (`RUN_BUSY`, `WORKTREE_BUSY`) and the
-session stops with `AUTOPILOT_CHECKOUT_LOST`, never with a second conductor on the checkout.
+launch_id, state: launching, kind, since}`; after the acknowledgement `state: running` with `pid` and `start_ticks`. The child
+takes the checkout lock and the run lease itself: while another conductor holds them it refuses (`RUN_BUSY`, `WORKTREE_BUSY`) and
+the session stops with `AUTOPILOT_CHECKOUT_LOST`, never with a second conductor on the checkout.
+
+**Startup fence.** The controller holds `autopilot.lock` for its whole session. The short transitions of a launch intent take a
+second lock, `<runs root>/autopilot-launch.lock`, which is never held while a child or an acknowledgement is awaited. Order of
+locks: `autopilot-launch.lock`, then the checkout lock, then the run lease. The controller writes the intent under the launch
+lock before the spawn. Every child gets `SKM_ORCH_AUTOPILOT_STATE=<runs root>/autopilot.json`,
+`SKM_ORCH_AUTOPILOT_LAUNCH_ID=<launch_id>`, `SKM_ORCH_DETACH_NONCE=<launch_id>` and the acknowledgement path
+`<runs root>/detached/<run_id>.<launch_id>.ack.json` (`run`, `continue` and `resume` alike). Before the checkout lock, the run
+lease, the run folder, any claim and any role, `run`, `continue` and `resume` of such a child take the launch lock (waiting up to
+30 s), read `autopilot.json` (records/v1) and require `current` to be `launching` with their `run_id` and `launch_id`. Otherwise
+the child acknowledges `refused` with `AUTOPILOT_LAUNCH_CANCELLED` and exits 1, having taken no lease and created, claimed and
+started nothing. When the intent matches, the child keeps the launch lock while it takes the checkout lock and the run lease,
+creates or loads the run and writes its `started` acknowledgement; only then does it let the launch lock go, keeping the run
+until its end. `continue` passes the fence once (its `resume` does not take it again). The variables are dropped before roles
+and checks.
+
+A controller decides about an intent that is still `launching` (after a crash of the one that wrote it, or a child that did not
+acknowledge within 20 s or exited first: an acknowledgement written after the wait ran out still adopts the child) only under the
+launch lock, so it sees either the acknowledgement of the launch or a child that has not passed its fence yet:
+
+- a `started` acknowledgement of this run and launch id adopts the child (`state: running` with its identity);
+- a new run (`run`) whose folder exists without one is adopted when `run.json` and `state.json` are valid, and is otherwise a
+  partial record: `AUTOPILOT_STATE_INVALID`, the folder and `current` are kept, nothing replaces them;
+- for `continue` and `resume` the folder of the existing run proves nothing about this launch (P8.3): only the acknowledgement does;
+- younger than 30 s (and the child, when known, still alive): wait. Else a new run with no folder is cancelled (`current`
+  cleared, `history` `never_started` once) and the next lane may start. An existing run whose lease is held without the
+  acknowledgement of this launch stops the session with `AUTOPILOT_CHECKOUT_LOST`, no second child. An existing run whose lease
+  is free keeps its id and resumable state: in the same save that cancels the intent, `current` becomes the intent of its next
+  attempt with a new launch id (no `never_started`), so a crash, a `stop` or `max_runs` before that attempt is spawned leaves it
+  `current` and the next start goes on with it before asking readiness. A `continue` saves the waiting pieces it takes back in
+  its intent (`retry`) before its child exists; its next attempt is `resume --retry <pieces>`, because a child may have taken them
+  back and died before its acknowledgement (taking a piece back again is idempotent, so no `NOT_WAITING`). The attempt is counted
+  in `runs`; at `max_runs` the session stops `AUTOPILOT_MAX_RUNS` with the attempt kept. A child that exited without an
+  acknowledgement is classified like a run that stopped `DETACH_FAILED`, its next attempt kept `current`.
+
+A child of a cancelled launch id that reaches its fence later is always refused. A timeout or a missing folder alone never
+proves that a child died: the lock and the launch id close the window between the check of the intent and the lease.
+`AUTOPILOT_LAUNCH_CANCELLED` is a refusal of the child's startup, not a stop code of the controller.
 
 **How a run ended.** Exit 0: no piece taken is `AUTOPILOT_NO_WORK`; closed pieces go on (the streak of runs without a closed
 piece is reset; `max_no_progress_runs` of them in a row is `AUTOPILOT_NO_PROGRESS`). Exit 4 (a piece waits for an answer): with
@@ -410,7 +447,7 @@ stopped begins anew at the next `start` (new deadline and counters; the waiting 
 `deadline_at`, `mode`, `limits`, `counters` (`runs`, `items_closed`, `no_progress_streak`, `auto_decisions`, `recoveries`,
 `quota_waits`), `recoveries` per run, `current`, `quota_wait`, `waiting_runs`, the last 50 runs in `history` (one entry per run),
 `last_blockers`, `stop`), `autopilot.request.json` (records/v1 `autopilot-request`: `action`, `at`, `by`), `autopilot.lock`,
-`autopilot-options.json` and the logs and acknowledgements of the children in `detached/`.
+`autopilot-launch.lock`, `autopilot-options.json` and the logs and acknowledgements of the children in `detached/`.
 
 ## A piece that rewrites the orchestrator: `--frozen`
 
@@ -692,6 +729,7 @@ The conductor stops only on:
 | Code | When |
 | --- | --- |
 | `DETACH_FAILED` | the detached child exited without acknowledging startup, or no matching acknowledgement arrived within 20 seconds; inspect the named log and status before retrying |
+| `AUTOPILOT_LAUNCH_CANCELLED` | a child of the autopilot found at its startup fence that the launch intent of `autopilot.json` no longer names its run and launch id (the controller cancelled or replaced it), or that `autopilot-launch.lock` stayed busy for 30 s; it took no lock or lease, created no run, claimed and started nothing, and acknowledged `refused` (exit 1). Nothing to do: the autopilot already went on |
 | `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
 | `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
 | `CONDUCTOR_CRASHED` | an unexpected exception in the conductor loop; exit 1, stopped state and `run.end`; the redacted traceback is written to `<run>/crash.txt` when that write succeeds. If the artifact cannot be written, the stop still names `CONDUCTOR_CRASHED` and says `crash.txt unavailable` (it does not claim the file exists); fix the cause, then resume |

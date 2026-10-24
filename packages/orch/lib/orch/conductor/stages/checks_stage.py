@@ -142,6 +142,10 @@ def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text:
     state, earlier = item.state, None
     while not all(row["green"] for row in rows):
         red = [row for row in rows if not row["green"] and not row.get("skipped")]
+        pending = [row["id"] for row in red if "verdict" in row and row["verdict"] is None]
+        if red and len(pending) == len(red):  # a manual verdict is not reported yet: no correction can change it
+            return rows, self._blocked(report, "MANUAL_PENDING", f"no verdict reported yet for manual procedure check(s) "
+                                       f"{', '.join(pending)}: the executor reports it, then the checks run again"), round_no
         signature = self._red_signature(rows)
         progress = earlier is not None and (signature[0] != earlier[0] or signature[1] < earlier[1])
         earlier = signature

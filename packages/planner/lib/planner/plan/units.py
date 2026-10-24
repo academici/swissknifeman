@@ -340,6 +340,10 @@ def _transition(plan, item_id: str, unit_id: str, status: str, allowed: tuple[st
                              if e and e.get("type") == "delegate" and e.get("item") == item_id
                              and (e.get("data") or {}).get("unit") == unit_id
                              and (e.get("data") or {}).get("status") == "reworked")
+            limit = settings.for_plan(p).get("policy.review_rounds_max")
+            if round_no > limit:  # a rework loop is bounded like review rounds: the owner decides after the limit
+                raise PlanError("REWORK_LIMIT", f"{item_id}/{unit_id} was already reworked {limit} time(s) "
+                                                f"(policy.review_rounds_max): reject it or split it, do not rework again")
         acting = outcome["agent"] if status == "returned" else executor
         attribution = {}
         if executed_by is not None:

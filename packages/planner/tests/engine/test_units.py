@@ -200,6 +200,16 @@ class TransitionTests(UnitCase):
         units.return_unit(self.root, "P1.1", "U1", notes="ok")
         units.accept(self.root, "P1.1", "U1")
 
+    def test_rework_stops_at_the_review_rounds_limit(self):
+        self.returned()
+        units.rework(self.root, "P1.1", "U1", notes="round one")
+        units.return_unit(self.root, "P1.1", "U1", notes="fixed")
+        units.rework(self.root, "P1.1", "U1", notes="round two")
+        units.return_unit(self.root, "P1.1", "U1", notes="fixed again")
+        self.refused("REWORK_LIMIT", units.rework, "P1.1", "U1", notes="round three")
+        self.assertEqual(self.unit()["status"], "returned")
+        units.accept(self.root, "P1.1", "U1")
+
     def test_reject_needs_notes_and_works_from_dispatched_or_returned(self):
         units.dispatch(self.root, "P1.1", "U1", HAIKU)
         self.refused("NOTES_REQUIRED", units.reject, "P1.1", "U1", notes=" ")

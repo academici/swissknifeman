@@ -34,10 +34,16 @@ def concrete(value):
     """A golden snapshot with its placeholders (``<time>``, ``<digest>``, ``<run>``, the folders) made concrete, as the
     normalizer of test_characterization wrote them."""
     if isinstance(value, dict):
-        return {key: concrete(item) for key, item in value.items()}
+        found = {key: concrete(item) for key, item in value.items()}
+        for key in ("base", "head"):
+            if value.get(key) == "<digest>":
+                found[key] = DIGEST[:40]
+        return found
     if isinstance(value, list):
         return [concrete(item) for item in value]
     if isinstance(value, str):
+        if value.startswith(("100644 ", "100755 ", "120000 ")) and value.endswith("<digest>"):
+            return value.replace("<digest>", DIGEST[:40])
         for mark, real in (("<time>", TIME), ("<digest>", DIGEST), ("<run>", "cnd-20260101T000000Z-abcdef"),
                            ("<project>", "/project"), ("<home>", "/home/owner"), ("<tmp>", "/tmp")):
             value = value.replace(mark, real)
@@ -50,11 +56,12 @@ def golden_state(path: Path) -> dict:
 
 
 class SchemaTests(unittest.TestCase):
-    def test_the_registry_holds_the_seventeen_kinds_each_with_its_one_carrier(self):
+    def test_the_registry_holds_the_twenty_two_kinds_each_with_its_one_carrier(self):
         self.assertEqual(records.registry().kinds, records.KINDS)
         self.assertEqual(set(records.KINDS) - set(records.SHORT_TAGS),
-                         {"agent-request", "agent-result", "agent-usage", "item-options", "item-routes", "lease", "process",
-                          "questions", "review-strategy", "risk", "run", "state"})
+                         {"agent-request", "agent-result", "agent-usage", "detach-ack", "heartbeat", "item-options", "item-routes", "lease",
+                          "process", "questions", "review-strategy", "risk", "run", "state", "supervisor-action",
+                          "supervisor-snapshot", "supervisor-state"})
         self.assertEqual(set(records.SHORT_TAGS), {"conformance-report", "observer-report", "prompt-diff",
                                                    "provider-gates", "review-verdict"})
         for kind in records.KINDS:
@@ -422,7 +429,7 @@ class InvalidQuestionsTests(ConductorCase):
     def blocked(self, **question) -> Path:
         self.script({"executor": [asking(dict(ASK, **question)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         return self.run_dir(err)
 
     def test_a_broken_questions_file_is_questions_invalid_and_keeps_its_bytes(self):

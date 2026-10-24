@@ -1,7 +1,8 @@
 """Test plugin of orch:work-source (protocol 1): canned answers, the request echoed in the register receipt.
 
 ``FAKE_WS_MODE``: ``ok`` (default), ``blocked`` (a claim refused with ITEM_OWNED), ``invalid`` (answers outside the
-contract), ``refuse`` (a register refused by the evidence gate), ``crash`` (exit 3). ``FAKE_WS_INPUT`` names the
+contract), ``refuse`` (a register refused by the evidence gate), ``crash`` (exit 3), ``no-decision`` (a source
+without the ``decision`` operation: OP_UNSUPPORTED). ``FAKE_WS_INPUT`` names the
 execution-input stored by ``brief``; every invoke input is appended to ``$FAKE_WS_MARKS`` (JSON lines) when set.
 """
 import json
@@ -56,6 +57,10 @@ def release(given):
     return {"op": "release", "outcome": "released", "message": given.get("reason")}
 
 
+def decision(given):
+    return {"op": "decision", "outcome": "recorded", "decision_id": "D1"}
+
+
 manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
 request = json.load(sys.stdin)
 request_id = request.get("request_id", "0" * 32)
@@ -73,7 +78,10 @@ elif request.get("op") == "invoke":
         with open(os.environ["FAKE_WS_MARKS"], "a", encoding="utf-8") as handle:
             handle.write(json.dumps(given, sort_keys=True) + "\n")
     project = request["context"]["project_root"]
-    answer = {"claim": claim, "register": register, "release": release}.get(given["op"])
+    if MODE == "no-decision" and given["op"] == "decision":
+        reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source records no decisions"})
+        sys.exit(0)
+    answer = {"claim": claim, "register": register, "release": release, "decision": decision}.get(given["op"])
     reply(request_id, output=answer(given) if answer else brief(given, project))
 else:
     reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "unknown op"})

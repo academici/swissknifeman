@@ -10,18 +10,29 @@ from typing import Optional
 from aicore.util.digest import sha256_hex
 
 from orch.contracts import required_digest
-from orch.conductor import checks as checks_mod, options as opts, prompts, questions as questions_mod, scope as scopes
+from orch.conductor import checks as checks_mod, contract, self_check as self_check_mod, options as opts, prompts, questions as questions_mod, records, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
-from orch.conductor.domain.report import evidence_paths, report_problems
+from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evidence_paths, is_coded, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock, work_source
-from orch.conductor.infrastructure.files import REPORTS, safe, write_json
-from orch.conductor.stages import advice
+from orch.conductor.infrastructure import clock, sessions, work_source
+from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write_json
+from orch.conductor.stages import advice, decisions
 
 
 def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
     """One executor round. A blocking question is queued, denied or, with a default, answered by policy once and the
     round is asked again (``executor.<n>-q<k>``); the answers of earlier questions reach every round."""
+    # A combined correction may have consumed its transient state before an interruption. Its durable brief still
+    # owns the assignment of this executor round, including on resume after that interruption.
+    path = item.directory / "fix-briefs" / f"executor.{number}.json"
+    if path.is_file():
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        problems = contract.problems(doc, "fix-brief")
+        if problems:
+            raise ValueError("invalid fix-brief: " + "; ".join(problems))
+        text = prompts.review_correction(doc)
+        if text not in correction:
+            correction = "\n\n".join(part for part in (correction, text) if part)
     again = 0
     while True:
         key = f"executor.{number}" + (f"-q{again}" if again else "")
@@ -48,6 +59,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         corrected = "\n\n".join(text for text in (correction, note) if text)
         answers = questions_mod.answers_text(self._questions(item))
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
+                                  correction_origin=correction_origin(self, item, key),
                                   rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                   self_check=item.options["checks"].get("self_check") or (),
@@ -64,14 +76,12 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   file_tools=self._file_tools_rule(item),
                                   containers=not self._codex_sandboxed(route),
                                   protected=self._write_protected(item),
+                                  generated=self._write_generated(item), generator=self.conductor.get("generate") or (),
                                   staged=self._relative(work_source.protected_dir(item)))
         resumed = self._resumed_prompt(item, key, correction, note, fix, answers)
         report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems, resumed=resumed)
-        if self._shared_session(item, "executor", item.routes["executor"]) \
-                and (answers or "executor_session_answers" in self.state):  # the session has now seen every answer the prompt carried
-            with self.store.mutating():
-                self.state["executor_session_answers"] = [answer_key(row) for row in answers]
-                self._save()
+        if self._shared_session(item, "executor", item.routes["executor"]):  # the session has now seen every answer the prompt carried
+            self._note_answers(item, [answer_key(row) for row in answers])
         write_json(item.directory / "reports" / f"{key}.json", report)
         return {"report": report, "changed": self._changed_now(item), **meta}
 
@@ -152,7 +162,7 @@ def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: 
     with the paths the earlier round of the piece changed. ``None`` when the round asks nothing the session lacks (the
     first round of a piece, a repeat of it): it is sent the whole prompt, as before. Whether the delta really goes is
     decided per attempt (``_delta_mode``)."""
-    seen = set(self.state.get("executor_session_answers") or [])
+    seen = self._answers_seen(item)
     fresh = [row for row in answers if answer_key(row) not in seen]
     if not (correction or note or fix or fresh):
         return None
@@ -160,6 +170,7 @@ def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: 
     earlier = [step["result"].get("changed") or [] for name, step in steps.items()
                if name.startswith("executor.") and name != key and isinstance(step.get("result"), dict)]
     return prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
+                                    correction_origin=correction_origin(self, item, key) if correction else "conductor",
                                     fix=fix, changed_paths=earlier[-1] if earlier else [],
                                     targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                     self_check=item.options["checks"].get("self_check") or ())
@@ -172,7 +183,7 @@ def batch_note(self, item: Item) -> str:
     mode = self._session_mode(item)
     if len(refs) < 2 or mode not in ("shared", "handoff") \
             or not self._shared_session(item, "executor", item.routes["executor"]):
-        return ""
+        return followup_handoff(self, item)
     claims = {value["ref"]: value for value in (self.state.get("claims") or {}).values()}
     rows, done_refs = [], []
     for ref in refs:
@@ -183,8 +194,8 @@ def batch_note(self, item: Item) -> str:
                                                      else "next" if done is None else done)
         title = (claims.get(ref) or {}).get("title")
         rows.append(f"- `{ref}`{' — ' + title if title else ''} ({mark})")
+    resumed = (sessions.decide(self, item, "", "executor", item.routes["executor"]) or {}).get("action") == "resume"
     if mode == "handoff":
-        resumed = self.state.get("executor_session_item") == item.ref and bool(self.state.get("executor_session"))
         lines = ["## Run batch", "", "All pieces of this run are in progress; each piece has a session of its own, in order:",
                  *rows, "",
                  (f"You are resuming the session of {item.ref}; the instructions below are for its next round." if resumed
@@ -195,7 +206,6 @@ def batch_note(self, item: Item) -> str:
         if not resumed:
             lines += [block for ref in done_refs for block in ("", handoff_of(self, ref))]
         return "\n".join(lines)
-    resumed = bool(self.state.get("executor_session"))
     lines = ["## Run batch", "", "All pieces of this run are in progress and one session carries them in order:", *rows, "",
              (f"You are resuming that session: the pieces before {item.ref} are done and committed, what you learned stays "
               "valid (re-read only what this piece needs), and the instructions below are for this piece."
@@ -205,18 +215,39 @@ def batch_note(self, item: Item) -> str:
     return "\n".join(lines)
 
 
+def followup_handoff(self, item: Item) -> str:
+    """The handoff of every piece of the group a review follow-up corrects, from the state of the run that made them, for
+    a follow-up that starts a fresh session whatever the reason (a session that does not match, ``per-item``, a provider
+    that cannot resume, a group that kept no session): it must know what the pieces did. The state of that run is read as
+    any record is (``STATE_INVALID`` / ``STATE_CORRUPT`` for a damaged one)."""
+    ref = sessions.followup_ref(item) or {}
+    decision = sessions.decide(self, item, "", "executor", item.routes["executor"]) or {}
+    if not ref.get("run") or decision.get("action") != "fresh":
+        return ""
+    directory = self.directory.parent / safe(str(ref["run"]))
+    earlier = records.read(directory / STATE_FILE, "state")
+    if earlier is None:
+        return ""
+    refs = [str(name) for name in ref.get("items") or [ref.get("item")] if name]
+    blocks = [handoff_of(self, name, state=earlier, directory=directory) for name in refs]
+    return "\n\n".join(["## Pieces under review", "",
+                         "You start in a fresh session; the session that made these pieces cannot be continued. "
+                         "Their handoff follows: read the code they committed only where the findings need it.", "", *blocks])
+
+
 HANDOFF_ISSUES = 8  # the open issues of an earlier piece named in a handoff
 HANDOFF_TEXT = 400  # characters of the summary and of each issue
 HANDOFF_PATHS = 25  # changed paths named
 
 
-def handoff_of(self, ref: str) -> str:
+def handoff_of(self, ref: str, state: Optional[dict] = None, directory=None) -> str:
     """What a later piece of the run must know of the done piece ``ref``: its commit, summary, open issues and changed
-    paths, from the report it registered (``register-report.json``), each part bounded."""
-    state = self.state["items"].get(ref) or {}
-    sha = ((done_steps(state.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+    paths, from the report it registered (``register-report.json``), each part bounded. ``state`` and ``directory`` are
+    those of another run (the run a review follow-up corrects); the default is this one."""
+    piece = ((self.state if state is None else state).get("items") or {}).get(ref) or {}
+    sha = ((done_steps(piece.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
     try:
-        report = json.loads((self.directory / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
+        report = json.loads(((directory or self.directory) / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         report = {}
     lines = [f"### Handoff of `{ref}`" + (f" (commit {sha[:12]})" if sha else "")]
@@ -263,7 +294,7 @@ def autofix(self, item: Item, report: dict, round_no: int, scout_text: str) -> t
     if not found:
         return report, round_no
     replayed = round_no in state["autofix_at"]
-    done_before = len([number for number in state["autofix_at"] if number != round_no]) + len(state["corrections_at"])
+    done_before = len([number for number in state["autofix_at"] if number != round_no]) + self._piece_count(state, "corrections_at")
     why = None if replayed else self._allowance(item, "corrections", done_before, False)
     if why:
         self.progress.emit("info", item=item.ref, reason_code="DEVIATION_AUTOFIX_SKIPPED",
@@ -281,53 +312,40 @@ def autofix(self, item: Item, report: dict, round_no: int, scout_text: str) -> t
     return self._execute(item, round_no, scout_text, prompts.DEVIATION_FIX, prompts.fix_deviation(found)), round_no
 
 
-COMPLETION = ("done", "done_with_deviations", "done_pending_checks")
-
-
-def self_check_gap(item: Item, report: dict) -> list:
-    """What a completion report leaves out of the run's ``checks.self_check``: the commands it does not list, and the
-    red ones it lists without a deviation that names the failure. Empty when there is nothing to ask again."""
-    commands = list(item.options["checks"].get("self_check") or [])
-    if not commands or item.options["checks"]["executor_runs_checks"] or report.get("status") not in COMPLETION:
-        return []
-    claims = {str(row["cmd"]).strip(): row["exit"] for row in report.get("self_check") or [] if isinstance(row, dict)}
-    honest = any(issue.get("kind") == "deviation" for issue in report.get("open_issues") or [])
-    found = {command: claimed(command, claims) for command in commands}
-    return [command for command in commands if found[command] is None or (found[command] != 0 and not honest)]
-
-
-def claimed(command: str, claims: dict):
-    """The exit a report gives for ``command``: its own row, or a row that is the command followed only by a note in
-    parentheses (``ruff check . (run as /snap/bin/ruff)``); None when the report does not show it."""
-    if command in claims:
-        return claims[command]
-    for text, code in claims.items():
-        rest = text[len(command):].strip() if text.startswith(command + " ") else ""
-        if rest.startswith("(") and rest.endswith(")"):
-            return code
-    return None
+self_check_gap = self_check_mod.gap  # the name the conductor and its tests have used
 
 
 def self_check_return(self, item: Item, report: dict, round_no: int, scout_text: str) -> tuple:
     """``(report, round_no)``: a completion report without the self-check goes back to the executor once per piece,
-    before any acceptance check runs (``RESULT_INCOMPLETE``); the session resumes with the delta prompt where it can.
-    The admission is saved before the round starts, so a resume replays it instead of granting another one. The claim
-    proves nothing: the conductor's acceptance decides as always; this only keeps unchecked work from reaching it."""
+    before any acceptance check runs (``RESULT_INCOMPLETE``), but only for a command that is red: one an acceptance check
+    runs is left to it, the conductor runs the others itself (``SELF_CHECK_COVERED`` when none is red). The admission is
+    saved before the round starts, so a resume replays it; the conductor's acceptance decides as always."""
     gap = self_check_gap(item, report)
-    if not gap:
+    returned = item.state.get("self_check_returned") or []
+    if not gap or (returned and round_no not in returned):  # once per piece: the second report goes to the checks as it is
         return report, round_no
-    with self.store.mutating():
-        returned = item.state.setdefault("self_check_returned", [])
-        if returned and round_no not in returned:  # once per piece: the second report goes to the checks as it is
+    red = {}
+    if round_no not in returned:
+        left = [command for command in gap
+                if not self_check_mod.covered_by_checks(item.input_doc, item.options["checks"], command)]
+        ran = self_check_mod.run(self.project, item.directory / "self-check" / str(round_no), left,
+                                 item.options["limits"].get("check_timeout_s", 0)) if left else {}
+        red = {command: tail for command, (code, tail) in ran.items() if code != 0}
+        if not red:
+            self.progress.emit("info", item=item.ref, stage=f"executor.{round_no}", reason_code="SELF_CHECK_COVERED",
+                               message=f"the report does not show the self-check {', '.join(gap)}; the acceptance checks "
+                                       f"run {', '.join(c for c in gap if c not in ran) or 'none'}, the conductor ran "
+                                       f"{', '.join(ran) or 'none'} green: no executor round")
             return report, round_no
-        if round_no not in returned:
-            returned.append(round_no)
+        gap = list(red)
+        with self.store.mutating():
+            item.state.setdefault("self_check_returned", []).append(round_no)
             self._save()
     self.progress.emit("info", item=item.ref, stage=f"executor.{round_no}", reason_code="RESULT_INCOMPLETE",
                        message="the report does not show the self-check " + ", ".join(gap)
                                + "; the work goes back to the executor once before the acceptance checks")
     round_no += 1
-    return self._execute(item, round_no, scout_text, prompts.self_check_missing(gap)), round_no
+    return self._execute(item, round_no, scout_text, prompts.self_check_missing(gap, red)), round_no
 
 
 def deviation_data(item: Item, issue: dict) -> dict:
@@ -386,18 +404,46 @@ def save_questions(self, item: Item) -> None:
     self._save()
 
 
+def classified(self, item: Item, key: str, report: dict) -> tuple:
+    """``(report, asked)`` for a blocked report that asks no question but names an ``escalation_class``. ``decision``:
+    the escalation becomes the blocking question ``esc-<n>`` (kind decision, no options), asked once per round, and then
+    follows the flow of every question (policy, advisor, owner). The other classes stay blocks of their own: the text
+    of the escalation takes their code (``ENVIRONMENT_BLOCKED``, ``PRE_EXISTING_RED``, ``SCOPE_EXPANSION``,
+    ``AUTHORITY_REQUIRED``), which no advisor reads."""
+    issues = report.get("open_issues") or []
+    first = next((issue for issue in issues if issue.get("kind") == "escalation" and issue.get("escalation_class")), None)
+    if first is None:
+        return report, []
+    if first["escalation_class"] == "decision":
+        store = self._questions(item)
+        known = next((name for name, entry in store.items() if name.startswith("esc-") and entry["status"] == "open"
+                      and entry["binding"].get("step") == key), None)  # the same round again (a retry without an answer)
+        name = known or f"esc-{sum(1 for entry in store if entry.startswith('esc-')) + 1}"
+        return report, [{"id": name, "revision": 1, "kind": "decision", "text": " ".join(first["text"].split()),
+                         "blocking": True}]
+    if is_coded(first["text"]):
+        return report, []  # the executor's own CODE: stays
+    text = f"{ESCALATION_CODES[first['escalation_class']]}: {first['text']}"
+    if first["escalation_class"] == "environment":
+        text += f" ({ENVIRONMENT_HINT})"
+    changed = [dict(issue, text=text) if issue is first else issue for issue in issues]
+    return dict(report, open_issues=changed), []
+
+
 def questioned(self, item: Item, key: str, report: dict) -> tuple:
     """``(report, rerun)``: the questions of a round recorded with their binding; a blocking one that waits turns the
     report into a blocked one (``QUESTION`` or, under ``questions = deny``, ``QUESTION_DENIED``); ``rerun`` when
     ``questions = defaults`` answered all of them from their defaults."""
     asked = report.get("questions") or []
+    if not asked and report["status"] == "blocked":
+        report, asked = classified(self, item, key, report)
     if not asked:
         return report, False
     store = self._questions(item)
     binding = {"run": self.run_id, "item": item.ref, "step": key, "input_digest": item.input_doc.get("digest"),
                "input_part_digest": answer_digest(item.input_doc)}
     new = questions_mod.record(store, asked, binding, clock.utc_now())
-    waiting = questions_mod.blocking_open(store, asked)
+    waiting = decisions.reuse_decisions(self, item, key, questions_mod.blocking_open(store, asked))
     for entry in new:  # a round walked again by a resume adds nothing
         self._beacon_event("orch.agent.questioned", item, {
             "step": key, "question_id": entry["id"], "revision": entry["revision"], "blocking": bool(entry["blocking"])})
@@ -436,7 +482,7 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
         return self._blocked(report, "QUESTION_DENIED", said), False
     self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_QUEUED",
-                       message=f"{said[:240]}; answer with orch conduct answer, then resume --retry {item.ref}")
+                       message=f"{said[:240]}; answer with orch conduct answer, then orch conduct continue --run {self.run_id}")
     blocked = report
     for entry in waiting:
         blocked = self._blocked(blocked, "QUESTION", f"{entry['id']} {entry['text']}{self._advice_note(entry)}")
@@ -524,3 +570,9 @@ def adopted(self, item: Item) -> list:
         raise Stop("WORKTREE_DIRTY", f"run --adopt takes only changes inside the write set of {item.ref}; outside it: "
                                      + ", ".join(stray[:10]))
     return adopted
+
+
+def correction_origin(self, item: Item, key: str) -> str:
+    """Review handoffs name their persisted brief in both full and resumed manifests."""
+    path = item.directory / "fix-briefs" / (key.split("-q", 1)[0] + ".json")
+    return self._relative(path) if path.is_file() else "conductor"

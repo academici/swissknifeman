@@ -20,9 +20,13 @@ and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a 
   (``--owner-session <run_id>``) and reopened, which clears the executor session (a run that does not hold the item is a no-op);
 - ``note`` adds a note to the plan's journal (``plan.py log <plan> <phase|item> --type note``) for work that has no item of
   its own (support work run from a file input); it names a phase or an item in ``refs``, and a note without one is refused;
-- ``research`` saves the research-result of a research stage as ``research/<item>-<n>.json`` in the folder of the plan and
+- ``research`` saves the research-result of a research stage as ``inputs/research/<item>-<n>.json`` in the folder of the plan and
   declares it with ``plan.py add-artifact … --role input`` (a repeat of the same result changes nothing); the file is a
-  record of the research, not plan state.
+  record of the research, not plan state;
+- ``decision`` records an answered question of an item (an owner's answer, an applied advice or panel recommendation)
+  as an accepted decision ``D#`` that applies to the item (``plan.py add-decision``) with an ``origin`` that names the
+  question (``question_key``, ``question_digest``); a repeat for the same ``question_key`` and item changes nothing, so a
+  later run of the item finds the decision in its brief and does not ask the question again.
 
 An orchestration overlay is a knowledge document with an id starting with ``orchestration-`` and a section
 ``orchestration`` that holds one JSON object ``{"scenario"?: name, "options"?: run-options}``; it applies to the item,
@@ -34,7 +38,9 @@ protocol error. The plan is written only through ``plan.py``. stdlib and aicore 
 """
 from __future__ import annotations
 
+import copy
 import json
+from hashlib import sha256
 import os
 from pathlib import Path
 import re
@@ -47,7 +53,7 @@ import partners
 POINT = "orch:work-source"
 RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
 DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision")
 OVERLAY_PREFIX = "orchestration-"
 OVERLAY_SECTION = "orchestration"
 _FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
@@ -314,7 +320,11 @@ def op_claim(fields: dict) -> dict:
                        "--no-scout", "--strict-route", "--json", *(["--in-progress-deps"] if fields.get("batch") else [])],
                       plans_root, code="START_REFUSED")
     except Blocked as blocked:
-        answer.update(status="blocked", reason_code=blocked.code, message=blocked.message)
+        if blocked.code.startswith("READINESS_"):
+            answer.update(status="blocked", reason_code="CLAIM_BLOCKED",
+                          message=f"{blocked.code}: {blocked.message}")
+        else:
+            answer.update(status="blocked", reason_code=blocked.code, message=blocked.message)
         return {key: value for key, value in answer.items() if value is not None}
     answer.update(status="claimed", attempt_id=attempt_id, session=run_id)
     return {key: value for key, value in answer.items() if value is not None}
@@ -327,23 +337,66 @@ def artifact_id(ref: str, digest: str) -> str:
     return "brief-" + ref.replace(".", "-").replace("/", "-") + "-" + digest[:12]
 
 
+_VOLATILE_READ_FIELDS = ("content", "sha256")
+
+
+def _read_paths(reads) -> list:
+    """The reads of a brief without their snapshot: which files, sections and why, not what they hold now."""
+    if not isinstance(reads, list):
+        return reads
+    return [{key: value for key, value in read.items() if key not in _VOLATILE_READ_FIELDS}
+            if isinstance(read, dict) else read for read in reads]
+
+
 def _worker_view(doc: dict) -> dict:
     """What the worker reads: the brief without its digests. ``provenance.source_digest`` hashes the whole context
-    pack, which changes when the brief itself is declared as an input of the item, so it does not decide a repeat."""
-    view = {key: value for key, value in doc.items() if key != "digest"}
+    pack, which changes when the brief itself is declared as an input of the item, so it does not decide a repeat.
+    Workspace briefs embed that pack: ignore its self-brief declarations and their bookkeeping timestamp too,
+    while preserving research and authored artifacts as worker inputs. The reads keep which files and why, not their
+    content and sha256: those follow the executor's own edits of the files it reads."""
+    view = {key: copy.deepcopy(value) for key, value in doc.items() if key != "digest"}
     view["input_id"] = str(view.get("input_id", "")).rsplit("@", 1)[0]
     view["provenance"] = {key: value for key, value in (doc.get("provenance") or {}).items() if key != "source_digest"}
+    if "reads" in view:
+        view["reads"] = _read_paths(view["reads"])
+    for entry in view.get("context_refs", []):
+        if entry.get("kind") != "pack" or not isinstance(entry.get("content"), dict):
+            continue
+        if "reads" in entry["content"]:
+            entry["content"]["reads"] = _read_paths(entry["content"]["reads"])
+        item = entry["content"].get("item")
+        if not isinstance(item, dict):
+            continue
+        item.pop("updated_at", None)
+        if isinstance(item.get("artifacts"), list):
+            item["artifacts"] = [a for a in item["artifacts"] if not (
+                isinstance(a, dict) and a.get("role") == "input" and isinstance(a.get("path"), str)
+                and re.fullmatch(r"@plan/inputs/[0-9a-f]{64}", a["path"]))]
+            if not item["artifacts"]:
+                item.pop("artifacts")
     return view
 
 
-def _declared_path(plan, path: Path, project) -> str:
+def _declared_path(plan, path: Path, project, *, runtime_input: bool = False) -> str:
     """The path an artifact is declared by: repository-relative, or ``@plan/`` when a workspace plan keeps the file
     outside the checkout (the plan folder, or the project's state folder of the workspace). A file outside both is
-    copied into the plan folder, so the declaration never points outside what the plan can resolve."""
+    copied into the plan folder, so the declaration never points outside what the plan can resolve.
+    Generated inputs always use ``@plan/inputs/`` in either layout, the readiness digest's runtime exclusion."""
     resolved = path.resolve()
+    root = plan.root.resolve()
+    if runtime_input:
+        inputs = root / "inputs"
+        target = resolved if resolved.is_relative_to(inputs) else inputs / resolved.name
+        if not target.resolve().is_relative_to(inputs) or inputs.is_symlink():
+            raise Blocked("ARTIFACT_REFUSED", "runtime inputs must stay inside the plan's inputs folder")
+        if target != resolved:
+            body = resolved.read_bytes()
+            if not target.is_file() or target.read_bytes() != body:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(body)
+        return "@plan/" + target.relative_to(root).as_posix()
     if resolved.is_relative_to(Path(project).resolve()):
         return resolved.relative_to(Path(project).resolve()).as_posix()
-    root = plan.root.resolve()
     if resolved.is_relative_to(root):
         return "@plan/" + resolved.relative_to(root).as_posix()
     target = root / "inputs" / resolved.name
@@ -360,11 +413,20 @@ def _previous_brief(plan, item_id: str, unit: str | None, project: Path, blobs):
     for entry in reversed(item.get("artifacts") or []):
         if not isinstance(entry, dict) or entry.get("role") != "input" or not isinstance(entry.get("path"), str):
             continue
-        path = (Path(project) / entry["path"]).resolve()
-        if path.parent != store:
-            continue
         try:
-            doc = json.loads(blobs.read_bytes("sha256:" + path.name, project=project))
+            if entry["path"].startswith("@plan/inputs/"):
+                path = (plan.root / entry["path"].removeprefix("@plan/")).resolve()
+                if not path.is_relative_to(plan.root.resolve() / "inputs"):
+                    continue
+                body = path.read_bytes()
+                if sha256(body).hexdigest() != path.name:
+                    continue
+            else:  # legacy declarations in the repository's blob store remain readable
+                path = (Path(project) / entry["path"]).resolve()
+                if path.parent != store:
+                    continue
+                body = blobs.read_bytes("sha256:" + path.name, project=project)
+            doc = json.loads(body)
         except (OSError, ValueError):
             continue
         provenance = doc.get("provenance") if isinstance(doc, dict) else None
@@ -414,7 +476,7 @@ def op_brief(fields: dict) -> dict:
     reused =blobs.blob_path(sha256_tagged(canonical_json_bytes(doc)), project=project).is_file()
     stored = blobs.put_json(doc, sensitivity="normal", name=f"brief-{ref}", project=project)
     path = blobs.blob_path(stored, project=project)
-    relative = _declared_path(plan, path, project)
+    relative = _declared_path(plan, path, project, runtime_input=True)
     # The brief is an input of the item; a planner artifact id names an output, so the input is declared by path
     # (content-addressed, unique per digest) and the id is returned to orch only.
     plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "input"], plans_root,
@@ -462,7 +524,7 @@ _CHECK_ID = re.compile(r"^V[0-9]+$")
 
 def _kept_evidence(fields: dict) -> dict:
     """``{V#: @plan/path}``: the evidence of an item of a plan that lives in a workspace, copied into
-    ``<plan>/artifacts/<item>/<run>/evidence/`` and declared as outputs of the item, so that it lasts with the plan
+    ``<plan>/artifacts/<item>/<run>/evidence/`` and retained in lifecycle-owned check results, so it lasts with the plan
     (the conductor keeps its own copy only as local records). ``{}`` for a plan inside the repository (its artifact
     folder is committed with the item) and whenever registration would refuse what is kept: a run that does not own the
     item, a result that is not ``done``, or a proof that is not green leave the plan untouched, and the local paths reach
@@ -524,8 +586,6 @@ def _kept_evidence(fields: dict) -> dict:
             with os.fdopen(handle, "wb") as out:
                 out.write(body)
         relative = _declared_path(plan, target, project)
-        plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "output"],
-                  plans_root, code="ARTIFACT_REFUSED")
         kept[check_id] = relative
     return kept
 
@@ -548,6 +608,8 @@ def op_register(fields: dict) -> dict:
                 "--owner-session", run_id, "--gate", "evidence"]
         for check_id, path in sorted(fields.get("evidence", {}).items()):
             argv += ["--evidence", f"{check_id}={path}"]
+        if fields.get("review_receipt"):
+            argv += ["--review-receipt", fields["review_receipt"]]
         if fields.get("plans_root"):
             argv += ["--plans-root", str(fields["plans_root"])]
         done = partners.run_bounded(argv, timeout=900, capture_output=True, text=True, encoding="utf-8", check=False)
@@ -681,7 +743,7 @@ _RESEARCH_ITEM = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 def op_research(fields: dict) -> dict:
-    """The research-result of a piece of work in ``research/<item>-<n>.json`` of the plan, declared as an input of the item."""
+    """The research-result in ``inputs/research/<item>-<n>.json``, declared as a runtime input of the item."""
     import brief  # the planner engine is located and imported only when a result is saved
     plan_ref, plans_root, number = fields["plan"], fields.get("plans_root"), fields["number"]
     item = fields["ref"].split("/", 1)[0]
@@ -695,8 +757,8 @@ def op_research(fields: dict) -> dict:
     if item not in plan.items:
         return {"op": "research", "outcome": "refused", "reason_code": "ITEM_UNKNOWN",
                 "message": f"plan {plan_ref} has no item {item}"}
-    target = plan.root / "research" / f"{item}-{number}.json"
-    relative = _declared_path(plan, target, plan.repo_root)
+    target = plan.root / "inputs" / "research" / f"{item}-{number}.json"
+    relative = _declared_path(plan, target, plan.repo_root, runtime_input=True)
     body = json.dumps(fields["result"], ensure_ascii=False, indent=2) + "\n"
     same = target.is_file() and target.read_text(encoding="utf-8") == body
     if not same:
@@ -727,6 +789,57 @@ def op_note(fields: dict) -> dict:
     return {"op": "note", "outcome": "recorded"}
 
 
+_ORIGIN_KIND = {"owner": "question", "advisor": "advice", "panel": "panel"}
+_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def decision_text(question: dict, value) -> str:
+    """The text of the decision an answer becomes: ``<id>: <label>`` for an option (orch reads the id back from it), a
+    string as it is, any other JSON value as JSON."""
+    option = next((row for row in question.get("options") or [] if row["id"] == value), None)
+    if option is not None:
+        return f"{option['id']}: {option['label']}" if option.get("label") else option["id"]
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+
+
+def op_decision(fields: dict) -> dict:
+    """An answered question as an accepted decision of the plan: ``plan.py add-decision`` with ``applies_to`` the item and
+    ``origin`` the question. The decisions that apply to the item are read first: one whose ``origin.question_key`` is
+    this question's (whatever its status: a decision the owner superseded stays superseded) makes the call a no-op."""
+    plan_ref, plans_root, ref, key = fields["collection"], fields.get("plans_root"), fields["ref"], fields["question_key"]
+    question, resolution, authority = fields["question"], fields["resolution"], fields["authority"]
+    try:
+        for row in plan_json(["--output", "json", "list", plan_ref, "decision", "--applies-to", ref], plans_root)["data"]:
+            origin = item_doc(plan_ref, row["ref"], plans_root).get("origin") or {}
+            if origin.get("question_key") == key and origin.get("item") == ref:
+                return {"op": "decision", "outcome": "no-op", "decision_id": row["ref"]}
+    except Blocked as blocked:
+        return {"op": "decision", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    text = decision_text(question, resolution["value"])
+    shown = " ".join(question["text"].split()) or question["id"]
+    evidence = [{"kind": "repo", "ref": path} for path in fields["evidence"]]
+    if authority == "owner":
+        evidence.append({"kind": "owner", "ref": resolution["by"], "note": "answered with orch conduct answer"})
+    data = {"status": "accepted", "question": " ".join(question["text"].split()) or question["id"],
+            "options": [{"id": _LETTERS[index], "text": f"{row['id']}: {row['label']}" if row.get("label") else row["id"]}
+                        for index, row in enumerate((question.get("options") or [])[:len(_LETTERS)])],
+            "decision": text, "rationale": fields["rationale"], "applies_to": [ref],
+            "answered_by": "owner" if authority == "owner" else "agent", "evidence": evidence,
+            "origin": {"kind": _ORIGIN_KIND[authority], "run": fields["run_id"], "item": ref, "question_id": question["id"],
+                       "question_key": key, "question_digest": fields["question_digest"],
+                       "revision": question["revision"]}}
+    if not data["options"]:
+        del data["options"]
+    actor = ["--actor", actor_text(fields["actor"])] if fields.get("actor") else []
+    done = plan_py(["add-decision", plan_ref, "--title", f"{ref} {question['id']}: {shown}"[:120], "--json",
+                    json.dumps(data, ensure_ascii=False), *actor], plans_root)
+    if done.returncode:
+        blocked = refusal_of(done.stderr or done.stdout, "DECISION_REFUSED")
+        return {"op": "decision", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    found = re.search(r"\bD[0-9]+\b", done.stdout or "")
+    return {"op": "decision", "outcome": "recorded", **({"decision_id": found.group(0)} if found else {})}
+
+
 # ------------------------------------------------------------------------------------------------ protocol
 
 
@@ -746,12 +859,17 @@ def describe(request_id: str) -> None:
 
 def invoke(request_id: str, request: dict) -> None:
     fields = request.get("input")
+    if request.get("point") == "planner:check":
+        import preflight
+        reply(request_id, output=preflight.run(fields))
+        return
     if request.get("point") != POINT or not isinstance(fields, dict) or fields.get("op") not in OPS:
         reply(request_id, "error", error={"code": "INPUT_INVALID",
                                           "message": f"expected point {POINT} with op {' | '.join(OPS)}"})
         return
     handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
-               "release": op_release, "note": op_note, "research": op_research}[fields["op"]]
+               "release": op_release, "note": op_note, "research": op_research,
+               "decision": op_decision}[fields["op"]]
     try:
         output = handler(fields)
     except Blocked as blocked:

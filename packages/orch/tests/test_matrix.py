@@ -18,7 +18,7 @@ SEEDS = {
     ("native", "model_set", "grok"): "supported",
     ("native", "model_observe", "grok"): "unknown",
     ("native", "effort_set", "grok"): "supported",
-    ("native", "resume", "grok"): "unknown",
+    ("native", "resume", "grok"): "adapted",
     ("native", "usage", "grok"): "supported",
     ("native", "tool_restrictions", "grok"): "supported",
     ("native", "skill_delivery", "grok"): "unknown",

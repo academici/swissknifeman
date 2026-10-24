@@ -33,6 +33,12 @@ class SelfCheckGapTests(unittest.TestCase):
         deviation = {"kind": "deviation", "text": "ruff cannot start in the sandbox"}
         self.assertEqual(gap(rows, [deviation]), [])
 
+    def test_a_deviation_that_names_a_missing_command_accounts_for_it(self):
+        rows = [{"cmd": "ruff check .", "exit": 0}]
+        deviation = {"kind": "deviation", "text": "python3 scripts/affected-tests.py --run cannot write /tmp here"}
+        self.assertEqual(gap(rows, [deviation]), [])
+        self.assertEqual(gap([], [deviation]), ["ruff check ."])
+
 
 if __name__ == "__main__":
     unittest.main()

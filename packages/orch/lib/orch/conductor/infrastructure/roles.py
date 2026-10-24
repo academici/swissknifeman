@@ -11,17 +11,21 @@ from aicore.util.digest import sha256_hex
 
 from orch import events, settings as settings_mod
 from orch.conductor import agents, options as opts, process, prompts
+from orch.conductor.signals import StallWatch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import beacon_events, clock, detach, launch_plan, sessions
 from orch.conductor.infrastructure.files import write_json
+from orch.conductor.infrastructure.heartbeat import observe_tick
 from orch.conductor.infrastructure.launch_plan import claude_transcripts, strip_guard, transcript_folder_name  # noqa: F401 — re-export for callers
 from orch.conductor.infrastructure.sessions import keep_session, resume_args  # noqa: F401 — re-export for callers
 from orch.conductor.infrastructure.usage import add_tokens  # noqa: F401 — re-export for callers
 from orch.conductor.progress import human_duration
 
-DENIAL_NOTE_ROLES = ("executor", "bounded-implementer")  # roles whose report notes the tools denied without a prompt
+# roles whose result notes the tools denied without a prompt: a writer's stage report (open_issues), the reviewer's
+# findings (residual_risk, read by the triager)
+DENIAL_NOTE_ROLES = ("executor", "bounded-implementer", "reviewer")
 
 
 class RolePorts(NamedTuple):
@@ -45,9 +49,11 @@ class RolePorts(NamedTuple):
 
 
 def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file: Path, attempt: int,
-                causation: Optional[str] = None, prompt_sha256: Optional[str] = None) -> dict:
+                causation: Optional[str] = None, prompt_sha256: Optional[str] = None,
+                session: Optional[dict] = None) -> dict:
     """A new agent run (``agents``): its folder and ``request.json``. It becomes the agent of this thread, so that the
-    usage of the process is counted to it and a role started inside it (the report-fixer) names it as its parent."""
+    usage of the process is counted to it and a role started inside it (the report-fixer) names it as its parent.
+    ``session`` (``data.session`` of ``orch.agent.started``) says whether the executor attempt resumes a session and why."""
     number = self.store.next_agent(self.state)
     parent = getattr(self._local, "agent", None)
     handle = agents.start(item.directory, agents.agent_id(self.run_id, number), role=role, route=actor(route),
@@ -61,7 +67,7 @@ def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file:
                             "prompt_sha256": prompt_sha256,
                             "config_digest": settings_mod.config_digest(self.settings),
                             "options_digest": opts.digest(item.options) if item.options else None}
-    handle["event_started"] = self._agent_event("orch.agent.started", handle)
+    handle["event_started"] = self._agent_event("orch.agent.started", handle, {"session": session} if session else None)
     return handle
 
 
@@ -126,11 +132,11 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
     # The route the role starts on (a provider gated since the routes were chosen moves to its fallback) and the prompt
     # rebuilt for it come first: orch.agent.started names the route and the digest of the prompt really sent.
     route = self.role_ports.start_route(item, key, role, item.routes[role], cancel)
-    delta, digest, _resuming = self._delta_mode(item, role, route, blocks, resumed)
+    delta, digest, _resuming, decision = self._delta_mode(item, key, role, route, blocks, resumed)
     _first, prompt = self.role_ports.prompt_for_route(item, key, role, route, blocks, prompt, prompt,
                                                       resumed=resumed if delta else None, digest=digest)
     handle = self._agent_start(item, key, role, route, prompt_file, attempt, causation,
-                               prompt_sha256=sha256_hex(prompt.encode("utf-8")))
+                               prompt_sha256=sha256_hex(prompt.encode("utf-8")), session=sessions.event_data(decision))
     try:
         doc, meta = self._role_body(item, key, role, prompt, kind, extra, cancel, handle, blocks, resumed)
     except Stop as stop:
@@ -144,12 +150,26 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
 
 
 def denied(denials: list) -> str:
-    """``Bash×2, Grep``: the tools of the refused calls with their counts, most refused first."""
+    """``Bash×2 (python3, cat+heredoc), Read (lib/x.py)``: the tools of the refused calls with their counts, most refused
+    first, and the safe hints of the calls (what was run or read) when the stream gave them."""
     counts: dict = {}
+    hints: dict = {}
     for entry in denials:
         counts[entry["tool_name"]] = counts.get(entry["tool_name"], 0) + 1
-    return ", ".join(name if number == 1 else f"{name}×{number}"
-                     for name, number in sorted(counts.items(), key=lambda row: (-row[1], row[0])))
+        hint = entry.get("hint")
+        if hint and hint not in hints.setdefault(entry["tool_name"], []):
+            hints[entry["tool_name"]].append(hint)
+
+    def shown(name: str, number: int) -> str:
+        said = name if number == 1 else f"{name}×{number}"
+        return f"{said} ({', '.join(hints[name][:3])})" if hints.get(name) else said
+    return ", ".join(shown(name, number) for name, number in sorted(counts.items(), key=lambda row: (-row[1], row[0])))
+
+
+def expected_denial(role: str, denials: list) -> bool:
+    """A role whose manifest gives it a read-only shell is meant to be refused what is not a plain read: when every
+    refused call is Bash, the denial is the design working, not a role that could not do its job."""
+    return launch_plan.shell(role) == "read_only" and all(entry["tool_name"] == "Bash" for entry in denials)
 
 
 def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
@@ -176,19 +196,20 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
     route = self.role_ports.start_route(item, key, role, route, cancel)
     while True:
         self.role_ports.admit_budget(item, "attempt")  # before every provider call: a repeat, a fallback, a wait (I10)
-        delta, digest, resuming = self._delta_mode(item, role, route, blocks, resumed)
+        delta, digest, resuming, decision = self._delta_mode(item, key, role, route, blocks, resumed)
+        self._announce_session(item, key, role, route, decision)
         first_prompt, prompt = self.role_ports.prompt_for_route(item, key, role, route, blocks, first_prompt, prompt,
                                                                 resumed=resumed if delta else None, digest=digest)
         attempt += 1
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
-        run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
-                               timeout_s=route["timeout_s"], raw_path=raw, env=self._role_env(item, role, route),
+        run = process.run_role(self._role_argv(item, role, route, decision), prompt, transport=route["transport"], cwd=self.project,
+                               timeout_s=route["timeout_s"], raw_path=raw, env=detach.subprocess_env(self._role_env(item, role, route)),
                                idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
                                on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
                                agent_directory=handle["directory"])
         self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
-        self._keep_session(item, role, route, run, task_digest=digest, delta=delta)
+        self._keep_session(item, role, route, run, task_digest=digest, delta=delta, decision=decision)
         if resuming and (run.error or not run.session):  # the next attempt starts a fresh session with the whole prompt
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),
                                reason_code="SESSION_RESUME_FAILED",
@@ -201,7 +222,8 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
             trail["denials"] += run.denials
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),
                                reason_code="RESULT_SILENT_DENIAL", agent=handle["id"],
-                               message=f"{self._denied(run.denials)} denied without a prompt")
+                               message=f"{self._denied(run.denials)} denied without a prompt"
+                                       + ("; expected for a read-only shell" if expected_denial(role, run.denials) else ""))
         if run.lingered:
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),
                                reason_code="ROLE_LINGERED",
@@ -236,6 +258,14 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
                     {"text": f"tools denied without a prompt: {self._denied(trail['denials'])}"[:900], "kind": "note",
                      "impact": "the role could not use them",
                      "next": "widen allowedTools in the launch catalog or change the plan"}])
+            if trail["denials"] and kind == "review-findings" and role in DENIAL_NOTE_ROLES:
+                # the triager reads the whole findings document: it learns that what the reviewer meant to run was not run
+                note = (f"not verified by running: {self._denied(trail['denials'])} denied without a prompt; "
+                        "reproductions the reviewer meant to run are static, reproduce them before judging")[:900]
+                findings: dict = dict(doc or {})
+                risk = str(findings.get("residual_risk") or "")
+                findings["residual_risk"] = "; ".join(part for part in (risk, note) if part)
+                doc = findings
             return (doc if kind else run.text), meta
         item.state["retries_used"] = item.state.get("retries_used", 0) + 1  # the total of the piece, for the report
         by_stage = item.state.setdefault("retries_by_stage", {})
@@ -255,20 +285,27 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
 
 
 def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
-    """The tick of a running role: a STAGE_SLOW beacon every ``stage_warn_s`` and a STAGE_IDLE one every
-    ``stage_idle_warn_s`` of silence, each saying what the role runs now. Nothing is stopped."""
+    """Tick of a role: STAGE_SLOW/STAGE_IDLE at their warning intervals, STALL_SUSPECTED on stalls; heartbeat, never stop."""
     limits = item.options["limits"]
+    route = item.routes.get(role) or {}
+    stall = StallWatch(limits.get("stall_repeat_n", 0), limits.get("stall_window_s", 0),
+                       steps=bool(process.markers_of(route.get("transport", ""), route.get("provider"))))
     warn, idle_warn = limits.get("stage_warn_s", 0), limits.get("stage_idle_warn_s", 0)
     marks = {"slow": warn, "idle": idle_warn}
     current = getattr(self._local, "agent", None)
     agent = current["id"] if current else None
 
-    def tick(elapsed: float, idle: float, pid: int) -> None:
+    def tick(elapsed: float, idle: float, pid: int, info: process.TickInfo) -> None:
         self.role_ports.run_clock(item)
+        for reason in observe_tick(self, stall, elapsed, info, item=item.ref, step=key, role=role):
+            self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STALL_SUSPECTED", agent=agent,
+                               message=f"{reason}; {process.activity(pid, raw, idle, info)}")
+            beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STALL_SUSPECTED", "step": key})
         if warn and elapsed >= marks["slow"]:
             marks["slow"] += warn
             self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW", agent=agent,
-                               message=f"running {human_duration(elapsed)}; {process.activity(pid, raw)}")
+                               message=f"running {human_duration(elapsed)}; {process.activity(pid, raw, idle, info)}")
+            beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STAGE_SLOW", "step": key})
         if idle_warn:
             if idle < idle_warn:
                 marks["idle"] = idle_warn
@@ -276,7 +313,8 @@ def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
                 marks["idle"] += idle_warn
                 self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_IDLE", agent=agent,
                                    message=f"no output for {human_duration(idle)} (running {human_duration(elapsed)}); "
-                                           f"{process.activity(pid, raw)}")
+                                           f"{process.activity(pid, raw, None, info)}")
+                beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STAGE_IDLE", "step": key})
     return tick
 
 

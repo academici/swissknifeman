@@ -2,6 +2,7 @@
 record after it and the stage event. Every stage runs its work through ``step``; a closed step is replayed, not run."""
 from __future__ import annotations
 
+from pathlib import Path
 import time
 from typing import Any, Callable, Optional
 
@@ -29,7 +30,7 @@ def run_clock(self, item: Item, stop: bool = True) -> None:
     if not (warn or cap):
         return
     active = self._active_s()
-    text = None
+    text, stage = None, self._stage_key()
     with self.store.mutating():  # a check thread and the main loop both get here (I2)
         if warn and int(active // warn) > self.state.get("run_warned", 0):
             self.state["run_warned"] = int(active // warn)
@@ -38,14 +39,31 @@ def run_clock(self, item: Item, stop: bool = True) -> None:
             asked = len(self.run_doc.get("items") or [])
             text = (f"run active {human_duration(active)}; {closed} piece(s) closed"
                     + (f", {max(asked - closed, 0)} left" if asked else "")
-                    + f"; now {item.ref} {self._stage_key() or '-'}")
+                    + f"; now {item.ref} {stage or '-'}")
             self._plan_note(item, text)
     if text is not None:  # progress and the bus after the lock
-        self.progress.emit("info", item=item.ref, reason_code="RUN_SLOW", message=text)
-        self._beacon_event("orch.run.warning", item, {"reason_code": "RUN_SLOW", "step": self._stage_key()})
+        fresh = stream_age(item, stage)
+        self.progress.emit("info", item=item.ref, reason_code="RUN_SLOW",
+                           message=text + (f"; its stream grew {int(fresh)}s ago" if fresh is not None else ""))
+        self._beacon_event("orch.run.warning", item, {"reason_code": "RUN_SLOW", "step": stage})
     if stop and cap and active >= cap:
         raise Stop("RUN_TIMEOUT", f"the run was active {human_duration(active)}, past limits.run_timeout_s {cap}; "
                                   "raise it or set 0, then resume")
+
+
+def stream_age(item: Item, stage: Optional[str]) -> Optional[float]:
+    """Seconds since the newest stream of ``stage`` (``executor.1``, ``executor.1-fix1``, ...) last grew; ``None``
+    when the stage has none yet (a deterministic stage, or a role not started). RUN_SLOW says only how long the run is
+    active, so the age tells a slow role that streams from a silent one (the P7.2 false alarm)."""
+    directory = getattr(item, "directory", None)
+    if not stage or directory is None:
+        return None
+    try:
+        times = [path.stat().st_mtime for path in (Path(directory) / "streams").glob(f"{stage}*")
+                 if path.suffix in (".jsonl", ".txt")]
+    except OSError:
+        return None
+    return max(0.0, time.time() - max(times)) if times else None
 
 
 def disk_guard(self, item: Optional[Item] = None, stage: Optional[str] = None) -> None:
@@ -57,6 +75,7 @@ def disk_guard(self, item: Optional[Item] = None, stage: Optional[str] = None) -
     found = disk.shortage(self.project, limits.get("disk_min_gb", 0))
     if found:
         self.progress.emit("info", item=item.ref if item else None, stage=stage, reason_code="DISK_LOW", message=found)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "DISK_LOW", "step": stage})
         raise Stop("DISK_LOW", f"{found}; free the space, then resume")
 
 

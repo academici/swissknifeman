@@ -10,11 +10,15 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 import copy
+import hashlib
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 import re
 import shutil
+import stat
+import subprocess
 from typing import Any, Iterable, Iterator, Mapping
 
 from planner import COMMAND_NAMESPACE
@@ -251,6 +255,11 @@ def next(plan: store.Plan, *, granted: set[str] | None = None) -> Next:  # noqa:
             return Next("waiting", unmet[0], phase=phase_id)
         if phase.get("design") != "detailed":
             return Next("design-phase", phase=phase_id, command=f"{COMMAND_NAMESPACE}:plan-design {plan_id} {phase_id}")
+        from . import readiness
+        readiness_row = readiness.gate(plan, phase_id)
+        if readiness_row:
+            return Next("audit-phase", readiness_row["status"], phase=phase_id,
+                        command=f"{COMMAND_NAMESPACE}:plan-audit {plan_id} {phase_id}")
         for batch in batches_of(plan, phase_id):
             members = batch_members(plan, phase_id, batch)
             if all(status_of(plan, i) in TERMINAL for i in members):
@@ -536,6 +545,103 @@ def load_evidence(p: store.Plan, item_ref: str, evidence: Mapping[str, str], kno
     return {check_id: _load_evidence(p, item_ref, check_id, path) for check_id, path in evidence.items()}
 
 
+def _receipt_git(root: Path, *args: str) -> str:
+    done = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60, check=True)
+    return done.stdout
+
+
+def _path_fingerprint(root: Path, path: str) -> str:
+    """Same Git mode/blob algorithm as the producer; keep this engine stdlib-only."""
+    target = root / path
+    try:
+        mode = target.lstat().st_mode
+    except FileNotFoundError:
+        return "absent"
+    if stat.S_ISLNK(mode):
+        blob = subprocess.run(["git", "hash-object", "--stdin"], cwd=root,
+                              input=os.fsencode(os.readlink(target)), capture_output=True, check=True, timeout=60)
+        return "120000 " + blob.stdout.decode("ascii").strip()
+    if stat.S_ISREG(mode):
+        return ("100755 " if mode & 0o111 else "100644 ") + _receipt_git(
+            root, "hash-object", "--no-filters", "--", path).strip()
+    return "other"
+
+
+def _load_review_receipt(p: store.Plan, item_ref: str, path: str, attempt_id: str | None,
+                         status: str = "done") -> dict:
+    """Validate the field contract, item/attempt binding and content freshness before any lifecycle write."""
+    from . import context, schema
+
+    def invalid(field: str, why: str) -> PlanError:
+        return PlanError("REVIEW_RECEIPT_INVALID", f"{item_ref} receipt {path}: {field} {why}")
+
+    target = context._resolve(p, path) if isinstance(path, str) and path else None
+    if target is None or not target.is_file():
+        raise invalid("file", "must exist inside the repository or the plan directory")
+    try:
+        doc = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise invalid("file", f"is not readable JSON ({error})") from None
+    issues = schema.validate(doc, "review-receipt")
+    if issues:
+        raise invalid("document", "; ".join(f"{issue.path}: {issue.message}" for issue in issues[:5]))
+    subject = f"{p.plan.get('short_id') or p.plan['id']}.{item_ref}"
+    if doc["subject"] != subject:
+        raise PlanError("REVIEW_RECEIPT_SUBJECT", f"{path} proves {doc['subject']!r}, not {subject!r}")
+    if attempt_id is not None and "attempt_id" in doc and doc["attempt_id"] != attempt_id:
+        raise PlanError("REVIEW_RECEIPT_ATTEMPT", f"{item_ref}: receipt attempt {doc['attempt_id']!r} is not {attempt_id!r}")
+    root = p.repo_root
+
+    def safe(name):
+        return (isinstance(name, str) and bool(name) and not name.startswith(("/", "~"))
+                and not any(part in ("", ".", "..") for part in re.split(r"[\\/]", name))
+                and (root / name).parent.resolve().is_relative_to(root.resolve()))
+
+    paths = doc["candidate"]["paths"]
+    outside = doc.get("outside", {})
+    corrected = doc.get("corrected_after") or {}
+    for name in [*paths, *outside, *corrected.get("paths", [])]:
+        if not safe(name):
+            raise invalid("path", f"{name!r} must be a repository-relative file path")
+    payload = "\n".join(f"{name}\t{paths[name]}" for name in sorted(paths))
+    if doc["candidate"]["digest"] != "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest():
+        raise invalid("candidate.digest", "does not match candidate.paths")
+    excluded = [".swissknifeman"]
+    if p.root.resolve().is_relative_to(root.resolve()):
+        excluded.append(p.root.resolve().relative_to(root.resolve()).as_posix())
+
+    def product(name):
+        return name and not any(name == folder or name.startswith(folder + "/") for folder in excluded)
+
+    try:
+        changed = {name for name, value in paths.items()
+                   if value == "other" or _path_fingerprint(root, name) != value}
+        names = set(_receipt_git(root, "diff", "--name-only", "-z", doc["base"], "--").split("\0"))
+        names |= set(_receipt_git(root, "ls-files", "--others", "--exclude-standard", "-z").split("\0"))
+        extra = {name for name in names if product(name) and name not in paths}
+        for name in extra | set(outside):
+            if not safe(name):
+                raise invalid("path", f"{name!r} must be inside the repository")
+            if name not in outside or outside[name] == "other" or _path_fingerprint(root, name) != outside[name]:
+                changed.add(name)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise invalid("git", f"cannot verify reviewed contents ({error})") from None
+    allowed = set(corrected.get("paths", []))
+    allowed.update(found["location"].split(":", 1)[0] for found in doc["findings"]
+                   if found["status"] == "confirmed" and safe(found["location"].split(":", 1)[0]))
+    if changed - allowed:
+        raise PlanError("REVIEW_RECEIPT_STALE", f"{item_ref} changed after the review: "
+                        f"{', '.join(sorted(changed - allowed)[:10])}; run the review again")
+    blockers = max(doc["open"]["blocker"], sum(found["severity"] == "Blocker" and found["status"] in ("open", "confirmed")
+                                             for found in doc["findings"]))
+    if status in ("done", "done_with_deviations") and blockers:
+        raise PlanError("REVIEW_RECEIPT_OPEN_BLOCKER", f"{item_ref}: the review receipt has {blockers} open Blocker finding(s)")
+    reviewer = doc["reviewer"]
+    return {"receipt": path, "verdict": doc["verdict"], "round": doc["round"],
+            "freshness": "findings_only" if changed else "fresh",
+            "reviewer": "/".join(reviewer[k] for k in ("provider", "model", "effort") if reviewer.get(k))}
+
+
 def _need_phase(p: store.Plan, phase_id: str) -> dict:
     if phase_id not in p.phases:
         raise PlanError("REF_UNKNOWN", f"unknown phase {phase_id!r}")
@@ -699,6 +805,8 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         if errors:
             shown = "; ".join(f"{i.where}: {i.message}" for i in errors[:3])
             raise PlanError("PLAN_INVALID", f"{len(errors)} error(s) block {phase_id}: {shown}", errors)
+        from . import readiness
+        readiness.require(p, phase_id)
         for item_id in requested:
             if status_of(p, item_id) not in ("todo", "in_progress"):
                 raise PlanError("ITEM_NOT_STARTABLE", f"{item_id} is {status_of(p, item_id)}; use reopen to redo it")
@@ -875,7 +983,8 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
            deviations: Iterable[str] = (), pending: Iterable[str] = (), escalation: str | None = None,
            commits: Iterable[str] = (), decision: str | None = None, actor: Mapping | None = None,
            executed_by: Mapping | None = None, attempt_id: str | None = None,
-           evidence: Mapping[str, str] | None = None, owner_session: str | None = None) -> FinishResult:
+           evidence: Mapping[str, str] | None = None, owner_session: str | None = None,
+           review_receipt: str | None = None) -> FinishResult:
     """Record the outcome of ``item_id``; closes the phase, and the plan, when it was the last open piece.
 
     ``actor`` is the registrar; ``executed_by`` (route-checked) replaces ``result.executor``. A repeat of the
@@ -993,8 +1102,17 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
             _route_verdict(p, [item_id], executed_by)
             validate_route(item.get("route") or {}, executed_by, item_id)
 
+        review = _load_review_receipt(p, item_id, review_receipt, attempt_id, status) if review_receipt else None
+        if status in ("done", "done_with_deviations") and review is None \
+                and (p.plan.get("settings") or {}).get("review_receipt") == "required" \
+                and (item.get("review") or {}).get("mode") == "requested":
+            raise PlanError("REVIEW_RECEIPT_MISSING", f"{item_id} requests a review (review.mode requested) and plan "
+                            "settings.review_receipt is required; finish with --review-receipt PATH")
+
         now = store.now()
         result = {key: prior[key] for key in ("started_at", "executor") if key in prior}
+        if review is not None:
+            result["review"] = review
         if executed_by is not None:
             result["executor"] = executed_by
         executor = result.get("executor")

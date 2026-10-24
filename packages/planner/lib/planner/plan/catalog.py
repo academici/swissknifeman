@@ -16,7 +16,7 @@ VERB_DATA = {
     "batches": None, "check": None, "render": None, "next": None, "start": None, "context": None,
     "bridge": None, "finish": None, "unit": None, "stats": None, "log": None, "decide": None,
     "supersede": None, "grant": None, "design-done": None, "reopen": None, "reconcile": None, "archive": None, "commit": None, "commits": "read-commits", "followups": "read-followups",
-    "plans": "read-plans", "config": None, "overlays": None,
+    "plans": "read-plans", "config": None, "overlays": None, "readiness": None,
 }
 
 # Mode describes the default invocation's writes; mixed verbs are conservative (unit is write; bridge verbs may write).
@@ -30,7 +30,7 @@ VERB_MODES = {
     "decide": "write", "supersede": "write", "grant": "write", "design-done": "write", "reopen": "write",
     "reconcile": "write",
     "archive": "write", "commit": "write", "commits": "read", "followups": "read", "plans": "read", "config": "read",
-    "overlays": "read",
+    "overlays": "read", "readiness": "write",
 }
 
 # Maintained refusal registry. Tests compare it with PlanError literals across lib/planner/plan.
@@ -39,6 +39,7 @@ ACCEPT_REQUIRED ACTOR_REQUIRED AGENT_REQUIRED AICORE_REQUIRED ALREADY_ARCHIVED A
 ATTEMPT_ID_INVALID BRIDGE_INVALID BRIDGE_UNKNOWN BRIDGE_VERB_UNKNOWN BY_INVALID CHECKOUT_BINDING_MISMATCH CHECKS_MISSING CHECKS_RED CHECK_UNKNOWN CONFIG_INVALID CONTENT_INVALID
 DECISION_NOT_ACCEPTED DECISION_NOT_OPEN DECISION_REQUIRED DECISION_SELF_SUPERSEDE DECISION_SUPERSEDED
 DEPENDENCY_NOT_READY DEPTH_INVALID DESIGN_INCOMPLETE DEVIATION_REQUIRED DIRECTION_INVALID
+REVIEW_RECEIPT_MISSING REVIEW_RECEIPT_INVALID REVIEW_RECEIPT_SUBJECT REVIEW_RECEIPT_ATTEMPT REVIEW_RECEIPT_STALE REVIEW_RECEIPT_OPEN_BLOCKER
 ESCALATION_REQUIRED EVIDENCE_CONFLICT EXTENSION_UNAVAILABLE EVIDENCE_INVALID EVIDENCE_REQUIRED EVIDENCE_SUBJECT EXTERNAL_GATE
 FIELD_NOT_ARRAY FIELD_OWNED FIELD_UNKNOWN GATE_INVALID GATE_NOT_GRANTED GATE_UNKNOWN HUMAN_VIEW
 GIT_UNAVAILABLE GIT_BUSY GIT_CONFLICT GIT_FAILED OUTSIDE_SCOPE NOTHING_TO_COMMIT
@@ -52,6 +53,7 @@ REF_INVALID REF_QUALIFIED REF_UNKNOWN REPO_UNKNOWN ROUTE_MISMATCH ROUTE_MODEL_UN
 ROUTING_UNAVAILABLE SCHEMA_INVALID SECTION_UNKNOWN SINCE_INVALID STATUS_INVALID UNITS_OPEN
 UNIT_DEPENDENCY UNIT_INVALID UNIT_SELF UNIT_STATE IO_ERROR USAGE VERB_FAILED
 WORKSPACE_LAYOUT_INVALID WORKSPACE_PROJECT_MISSING
+READINESS_REQUIRED READINESS_STALE READINESS_NOT_READY READINESS_STRUCTURAL_ERRORS READINESS_BLOCKING_FINDINGS
 """.split())
 
 # Refusals any verb can end with: CLI input and output, schema checks, and the configuration every command reads.
@@ -98,10 +100,13 @@ VERB_ERRORS = {
     "next": _PLAN | {"LIMIT_INVALID"},
     "start": _PLAN | _WRITE | _ROUTE | {"REF_UNKNOWN", "ACTOR_REQUIRED", "ITEMS_REQUIRED", "ITEMS_DUPLICATE",
         "ITEMS_SPAN_PHASES", "ITEM_NOT_STARTABLE", "ITEM_OWNED", "PHASE_NOT_DETAILED", "DEPENDENCY_NOT_READY", "READ_MISSING",
-        "HUMAN_VIEW", "EXTERNAL_GATE", "GATE_UNKNOWN", "GATE_NOT_GRANTED", "GATE_INVALID", "NOTE_REQUIRED", "PLAN_INVALID"},
+        "HUMAN_VIEW", "EXTERNAL_GATE", "GATE_UNKNOWN", "GATE_NOT_GRANTED", "GATE_INVALID", "NOTE_REQUIRED", "PLAN_INVALID",
+        "READINESS_REQUIRED", "READINESS_STALE", "READINESS_NOT_READY"},
     "context": _PLAN | _TARGET | {"LOG_INVALID", "HUMAN_VIEW"},
     "bridge": {"BRIDGE_INVALID", "BRIDGE_UNKNOWN", "BRIDGE_VERB_UNKNOWN"},
-    "finish": _PLAN | _WRITE | _ROUTE | _EVIDENCE | {"REF_UNKNOWN", "STATUS_INVALID", "NOT_STARTED",
+    "finish": _PLAN | _WRITE | _ROUTE | _EVIDENCE | {
+        "REVIEW_RECEIPT_MISSING", "REVIEW_RECEIPT_INVALID", "REVIEW_RECEIPT_SUBJECT", "REVIEW_RECEIPT_ATTEMPT",
+        "REVIEW_RECEIPT_STALE", "REVIEW_RECEIPT_OPEN_BLOCKER", "REF_UNKNOWN", "STATUS_INVALID", "NOT_STARTED",
         "CHECKS_MISSING", "CHECKS_RED", "DEVIATION_REQUIRED", "ESCALATION_REQUIRED", "DECISION_REQUIRED", "UNITS_OPEN",
         "ITEM_OWNED"},
     "unit": _PLAN | _WRITE | _ROUTE | _EVIDENCE | {"REF_UNKNOWN", "FIELD_OWNED", "UNIT_INVALID", "AGENT_REQUIRED",
@@ -114,6 +119,8 @@ VERB_ERRORS = {
     "supersede": _PLAN | _WRITE | {"REF_UNKNOWN", "DECISION_NOT_ACCEPTED", "DECISION_SELF_SUPERSEDE", "DECISION_SUPERSEDED"},
     "grant": _PLAN | _WRITE | {"GATE_INVALID", "GATE_UNKNOWN", "NOTE_REQUIRED"},
     "design-done": _PLAN | _WRITE | {"REF_UNKNOWN", "DESIGN_INCOMPLETE"},
+    "readiness": _PLAN | _WRITE | {"REF_UNKNOWN", "PHASE_NOT_DETAILED", "READINESS_STRUCTURAL_ERRORS",
+                                  "READINESS_BLOCKING_FINDINGS"},
     "reopen": _PLAN | _WRITE | {"REF_UNKNOWN", "NOT_TERMINAL", "REASON_REQUIRED"},
     "reconcile": _PLAN | _WRITE,
     "archive": _PLAN | _WRITE | {"ALREADY_ARCHIVED", "ARCHIVE_EXISTS", "PLAN_NOT_DONE", "REASON_REQUIRED"},
@@ -125,6 +132,11 @@ VERB_ERRORS = {
     "commit": _PLAN | {"REF_INVALID", "REF_UNKNOWN", "PATH_INVALID", "PLAN_LOCKED", "CONTENT_INVALID",
                        "GIT_UNAVAILABLE", "GIT_BUSY", "GIT_CONFLICT", "GIT_FAILED", "OUTSIDE_SCOPE", "NOTHING_TO_COMMIT"},
 }
+
+SUBVERB_DATA = {"readiness": {"record": None, "status": "read-readiness"}}
+SUBVERB_MODES = {"readiness": {"record": "write", "status": "read"}}
+SUBVERB_ERRORS = {"readiness": {"record": VERB_ERRORS["readiness"],
+                                "status": _PLAN | {"REF_UNKNOWN", "PHASE_NOT_DETAILED"}}}
 
 
 def _arguments(parser: argparse.ArgumentParser, scope: str) -> list[dict]:
@@ -168,5 +180,15 @@ def verbs(parser: argparse.ArgumentParser) -> dict:
         if kind is not None:
             schema.load_registry().for_kind(kind)
             row["data_kind"] = kind
+        if name in SUBVERB_MODES:
+            children = next(a.choices for a in command._actions if isinstance(a, argparse._SubParsersAction))
+            row["subcommands"] = []
+            for action, child in children.items():
+                entry = {"name": action, "summary": child.description, "mode": SUBVERB_MODES[name][action],
+                         "args": _arguments(child, "verb"),
+                         "errors": sorted(SUBVERB_ERRORS[name][action] | SHARED_ERRORS)}
+                if SUBVERB_DATA[name][action]:
+                    entry["data_kind"] = SUBVERB_DATA[name][action]
+                row["subcommands"].append(entry)
         rows.append(row)
     return {"verbs": rows}

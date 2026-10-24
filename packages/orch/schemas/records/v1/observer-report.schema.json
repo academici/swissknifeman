@@ -105,6 +105,16 @@
       "patternProperties": {"^.+$": {"description": "Seconds.", "type": "number"}},
       "additionalProperties": false
     },
+    "sessions": {
+      "description": "Executor attempts that resumed a session (by reuse: correction, retry, question, next_piece, followup) and those that started a fresh one (by reason: first_round, per_item_mode, provider_unsupported, provider_error, no_session_id, fingerprint_changed:<field>, idle_expired, followup_mismatch), from SESSION_RESUMED and SESSION_FRESH.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resumed", "fresh"],
+      "properties": {
+        "resumed": {"$ref": "#/$defs/counts"},
+        "fresh": {"$ref": "#/$defs/counts"}
+      }
+    },
     "scout_cache": {
       "description": "Runs and cache hits of the scout.",
       "type": "object",

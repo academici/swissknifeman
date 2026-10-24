@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:supervisor-action:v1",
+  "title": "A line of supervisor.jsonl",
+  "description": "One action of the supervisor (orch conduct supervise|reap) on a run, appended to <run>/supervisor.jsonl with fsync before the next step: what it saw (health, reason_code), what it did (action) and why. The same action is an info line SUPERVISOR_* of progress.jsonl and an orch.conductor.health event.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "at", "run_id", "health", "action", "detail"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:supervisor-action:v1"},
+    "at": {"description": "UTC time of the action.", "type": "string"},
+    "run_id": {"description": "The run acted on.", "type": "string", "minLength": 1},
+    "health": {
+      "description": "The class of health.classify the supervisor acted on.",
+      "enum": ["running", "waiting_provider", "waiting_tool", "waiting_owner", "waiting_budget_reset", "suspected_stall", "hung", "orphaned", "stopped", "finished", "unknown"]
+    },
+    "reason_code": {"description": "Reason code of the class (HEARTBEAT_STALE, RUN_ORPHANED, ...), null when it has none.", "type": ["string", "null"]},
+    "action": {
+      "description": "notify: only said; snapshot: the evidence was written before a signal; stop: the hung conductor was stopped; reap: orphaned role groups were stopped and their agent records closed; resume: a detached `conduct resume` was started; given_up: the breaker is open, the run is left to the owner; identity_mismatch: the lease owner is not the process with that pid, nothing was signalled; busy: a live owner holds the run, nothing was done.",
+      "enum": ["notify", "snapshot", "stop", "reap", "resume", "given_up", "identity_mismatch", "busy"]
+    },
+    "detail": {"description": "What happened, in one line (redacted).", "type": "string"},
+    "pid": {"description": "Process id the action concerns (the conductor stopped, the resume started).", "type": "integer", "minimum": 1},
+    "signal": {"description": "The last signal sent to pid.", "enum": ["SIGINT", "SIGTERM", "SIGKILL"]}
+  },
+  "$defs": {}
+}

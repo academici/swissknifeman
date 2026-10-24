@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "items": {
+    "W1": {
+      "steps": {},
+      "deferred_findings": [
+        {
+          "key": "fk-643d24ee49c5400c",
+          "round": 0,
+          "id": "F1"
+        }
+      ]
+    }
+  }
+}

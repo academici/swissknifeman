@@ -3,7 +3,8 @@
 ``compare`` walks two versions of a schema in parallel and reports every change by the rules in ``RULES``:
 a change is *breaking* when a document valid by the old schema may be invalid by the new one. The rules are
 conservative: a change whose compatibility cannot be proven (a different ``pattern``, a different ``oneOf``)
-counts as breaking. Annotations (``title``, ``description``, ``default``, ``x-skm-*``) are not compared.
+counts as breaking. A ``oneOf`` branch that only widened is reported by its own changes when it provably shares no
+document with any other branch (types, a property one closed branch forbids, a ``const``/``enum`` discriminator). Annotations (``title``, ``description``, ``default``, ``x-skm-*``) are not compared.
 
 ``main`` is the ``aicore schema compat`` command: it compares the contracts of the working tree with the same
 contracts at a git reference, inside one major version, and grades each breaking change by the ``stability`` of
@@ -257,19 +258,77 @@ class _Comparer:
                       f"oneOf has {len(old_branches or ())} branches, now {len(new_branches or ())}")
             return
         outer = self.changes
+        found: Dict[int, List[Change]] = {}
         for index, (before, after) in enumerate(zip(old_branches, new_branches)):
             self.changes = []
             self._walk(before, old_base, after, new_base, f"{path}/oneOf/{index}")
             inner, self.changes = self.changes, outer
             if inner:
-                rules = ", ".join(sorted({change.rule for change in inner}))
-                self._add(f"{path}/oneOf/{index}", "oneof-changed", f"oneOf branch {index} changed ({rules})")
+                found[index] = inner
+        # a branch whose $ref and siblings could not be merged is not read as one body: nothing is proven about it
+        expanded = [(body, owner) if not conflicts else None
+                    for body, owner, _, _, conflicts in (_expand(self.new, branch, new_base) for branch in new_branches)]
+        for index, inner in found.items():
+            # A branch that only widened keeps every document it accepted; a document of another branch cannot
+            # start matching it too when the two branches provably share no document, so exactly one still matches.
+            if not any(change.breaking for change in inner) and all(
+                    _disjoint(self.new, expanded[index], expanded[other])
+                    for other in range(len(new_branches)) if other != index):
+                self.changes.extend(inner)
+                continue
+            rules = ", ".join(sorted({change.rule for change in inner}))
+            self._add(f"{path}/oneOf/{index}", "oneof-changed", f"oneOf branch {index} changed ({rules})")
 
 
 _ANNOTATIONS = frozenset({"title", "description", "default", "examples", "$comment", "deprecated", "$id", "$schema",
                           "$defs", "$anchor"})
 _LOWER_BOUNDS = frozenset({"minLength", "minItems", "minimum"})
 _UPPER_BOUNDS = frozenset({"maximum", "maxLength", "maxItems"})
+
+
+def _disjoint(registry: Registry, first: Optional[Tuple[dict, str]], second: Optional[Tuple[dict, str]]) -> bool:
+    """Whether no document is valid by both expanded schemas ``(body, owner)``; ``False`` when it is not proven.
+
+    ``None`` is a branch whose ``$ref`` and sibling keywords conflict (see :func:`_expand`): nothing is proven. Proven by
+    types that do not meet, by a property that one object requires and the other, closed, does not allow, or by a
+    property both objects require whose ``const``/``enum`` values do not meet.
+    """
+    if first is None or second is None:
+        return False
+    (a, a_base), (b, b_base) = first, second
+    if "type" in a and "type" in b and not _merge_types(a["type"], b["type"]):
+        return True
+    for this, other in ((a, b), (b, a)):
+        if _types(this) == {"object"} and any(_forbids(other, name) for name in this.get("required", ())):
+            return True
+        # A required phase document cannot overlap the context pack's maxProperties: 0 sentinel.
+        # Count distinct names: duplicate required entries must not manufacture a proof of disjointness.
+        if (_types(this) == {"object"} and isinstance(other.get("maxProperties"), int)
+                and len(set(this.get("required", ()))) > other["maxProperties"]):
+            return True
+    if _types(a) != {"object"} or _types(b) != {"object"}:
+        return False
+    for name in set(a.get("required", ())) & set(b.get("required", ())):
+        if name not in a.get("properties", {}) or name not in b.get("properties", {}):
+            continue
+        a_values = _values(_expand(registry, a["properties"][name], a_base)[0])
+        b_values = _values(_expand(registry, b["properties"][name], b_base)[0])
+        if a_values is not None and b_values is not None and not any(_contains(b_values, v) for v in a_values):
+            return True
+    return False
+
+
+def _forbids(node: dict, name: str) -> bool:
+    """Whether the object schema ``node`` refuses a property ``name`` (closed, not declared, no pattern meets it)."""
+    return (node.get("additionalProperties") is False and name not in node.get("properties", {})
+            and not any(_compile(pattern).search(name) for pattern in node.get("patternProperties", {})))
+
+
+def _values(node: dict) -> Optional[List[Any]]:
+    """The only values ``node`` allows (``const``, else ``enum``), or ``None`` when it does not list them."""
+    if "const" in node:
+        return [node["const"]]
+    return list(node["enum"]) if isinstance(node.get("enum"), list) else None
 
 
 def _is_annotation(keyword: str) -> bool:

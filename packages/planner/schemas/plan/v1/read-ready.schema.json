@@ -267,7 +267,8 @@
             "design-phase",
             "waiting",
             "archive",
-            "terminal"
+            "terminal",
+            "audit-phase"
           ]
         },
         "exact": {

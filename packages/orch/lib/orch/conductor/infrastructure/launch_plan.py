@@ -34,12 +34,21 @@ def writes(role: str) -> bool:
     return (manifest.get("tools") or {}).get("filesystem") == "write"
 
 
-def role_argv(self, item: Item, role: str, route: dict) -> list:
+def shell(role: str) -> str:
+    """``tools.shell`` of the role manifest (``none``, ``read_only``, ``full``); ``full`` for a role without one."""
+    try:
+        manifest = json.loads((ORCH_ROOT / "roles" / f"{role}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "full"
+    return (manifest.get("tools") or {}).get("shell") or "full"
+
+
+def role_argv(self, item: Item, role: str, route: dict, decision: Optional[dict] = None) -> list:
     isolated = role in item.options["instructions"]["isolate_roles"]
     extra = ISOLATION_ARGS.get(route.get("provider", "")) if isolated else None
     if extra and not self.role_ports.knows(route["argv"], extra):
         extra = None
-    resume = sessions.resume_args(self, item, role, route)
+    resume = sessions.resume_args(self, item, role, route, decision)  # the decision of the attempt, as it announced it
     argv = [arg.replace("{session}", resume[0]) for arg in route["resume_argv"]] \
         if resume and route.get("resume_argv") else list(route["argv"])  # a catalog entry that names its own resume command
     if sessions.shared_session(self, item, role, route):  # a session that is not saved cannot be resumed by the next executor

@@ -6,7 +6,7 @@ import sys
 import unittest
 
 from orch.conductor import agents, contract, observer
-from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
+from tests.test_conductor import FINDING, FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
 
 
 class AgentRunTests(ConductorCase):
@@ -123,24 +123,35 @@ class SilentDenialTests(ConductorCase):
         self.assertEqual(code, 0, err)
         beacons = [line for line in self.lines(err) if line.get("reason_code") == "RESULT_SILENT_DENIAL"]
         self.assertEqual([(line["stage"], line["role"]) for line in beacons], [("executor.1", "executor")])
-        self.assertIn("Bash×2, WebFetch", beacons[0]["message"])
+        self.assertIn("Bash×2 (make), WebFetch", beacons[0]["message"])
+        self.assertNotIn("expected", beacons[0]["message"])  # the executor has a full shell: a real loss
         self.assertNotIn("secret", json.dumps(beacons))
         notes = [issue for issue in self.source()["items"]["W1"]["report"]["open_issues"]
                  if issue["text"].startswith("tools denied without a prompt")]
         self.assertEqual(len(notes), 1)
-        self.assertEqual(notes[0]["text"], "tools denied without a prompt: Bash×2, WebFetch")
+        self.assertEqual(notes[0]["text"], "tools denied without a prompt: Bash×2 (make), WebFetch")
         self.assertEqual((notes[0]["kind"], notes[0]["impact"]), ("note", "the role could not use them"))
         self.assertIn("allowedTools", notes[0]["next"])
         self.assertNotIn("secret", json.dumps(self.source()))
 
-    def test_a_reviewer_denial_is_a_beacon_only(self):
+    def test_a_reviewer_denial_is_an_expected_beacon_and_a_note_for_the_triager(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [dict(GREEN, permission_denials=self.DENIED[:1])]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         beacons = [line for line in self.lines(err) if line.get("reason_code") == "RESULT_SILENT_DENIAL"]
         self.assertEqual([line["role"] for line in beacons], ["reviewer"])
+        self.assertIn("Bash (make) denied without a prompt; expected for a read-only shell", beacons[0]["message"])
         issues = self.source()["items"]["W1"]["report"]["open_issues"]
         self.assertFalse([issue for issue in issues if "denied" in issue["text"]])
+
+    def test_the_triager_reads_what_the_reviewer_could_not_run(self):
+        repro = {"cmd": "cat out/W1.txt", "exit": 0, "observed": "ok"}
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
+                     "reviewer": [dict(FINDING, permission_denials=self.DENIED[:1]), GREEN], "triager": [triage]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertIn("not verified by running: Bash (make) denied without a prompt", self.prompt("triager", 1))
 
     def test_no_denials_no_beacon_no_note(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})

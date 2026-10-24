@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:supervise-result:v1",
+  "busy": true,
+  "recover": "notify",
+  "actions": []
+}

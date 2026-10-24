@@ -15,12 +15,15 @@ from aicore.util.redact import env_secrets, redact_document
 
 from orch import policies as run_policies
 from orch.conductor import checks as checks_mod, observer, options as opts, prompts, questions as questions_mod
-from orch.conductor import records, scope as scopes
+from orch.conductor import contract, records, scope as scopes
+from orch.conductor.domain.fix_brief import correction_inputs
+from orch.conductor.stages.review import review_correction, review_shape_evidence
 from orch.conductor.domain.item import Item
+from orch.conductor.domain.report import finding_key
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
-from orch.conductor.application import run_service
+from orch.conductor.application import review_followup, review_plan, run_service
 
 ROLE_ALIASES_ENGINE = {"scout": "context-scout"}  # the stage role names of the options that name a launch role
 
@@ -41,8 +44,12 @@ def loop(self) -> int:
     try:
         self._disk_guard()
         self._pieces()
+        waiting = run_service.waiting_pieces(self.state)  # on_blocked = report: the others went on, these still wait
+        if waiting:
+            raise Stop("WAITING_DECISION", run_service.waiting_message(self.run_id, waiting))
+        review_plan.review_left(self)
     except Stop as stop:
-        code, reason, outcome = 1, stop, "stopped"
+        code, reason, outcome = (4, stop, "waiting") if stop.code == "WAITING_DECISION" else (1, stop, "stopped")
     except KeyboardInterrupt:
         code, reason, outcome = 130, Stop("INTERRUPTED", "interrupted; resume continues"), "stopped"
     except Exception as error:  # noqa: BLE001 — unexpected failures must close the run too
@@ -70,6 +77,7 @@ def loop(self) -> int:
         if reason is not None:
             self.state["stop"] = {"code": reason.code, "message": reason.message}
         self._save()
+    review_plan.note_unreviewed(self)
     held = run_service.held_pieces(self.state) if reason is not None and self._batch_held() else []
     if held:  # a stopped batch keeps its claims (resume continues them); say how to give them back instead
         self.progress.emit("info", reason_code="BATCH_HELD", message=run_service.held_hint(self.run_id, held))
@@ -81,6 +89,8 @@ def loop(self) -> int:
     self.progress.emit("run.end", outcome=outcome, reason_code=reason.code if reason else None,
                        duration_s=round(time.monotonic() - started, 1),
                        message=(reason.message + "; " if reason else "") + message)
+    ended = "interrupted" if code == 130 else "crashed" if reason and reason.code == "CONDUCTOR_CRASHED" else outcome
+    run_service.lifecycle(self, "ended", outcome=ended, reason_code=reason.code if reason else None)
     return code
 
 
@@ -162,6 +172,9 @@ def pieces(self) -> None:
             self._group_review_due(answer["ref"])
         if outcome == "blocked" and (self._on_blocked() == "stop"
                                      or self.state["items"][answer["ref"]].get("partial")):
+            waiting = run_service.waiting_pieces({"items": {answer["ref"]: self.state["items"][answer["ref"]]}})
+            if waiting:  # a question waits for its answer: not a failure, the run waits for a decision (exit 4)
+                raise Stop("WAITING_DECISION", run_service.waiting_message(self.run_id, waiting))
             why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""
             raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
     if pending_retries and not started:
@@ -246,6 +259,12 @@ def require_clean_tree(self) -> None:
     takes the changes of an earlier attempt of the first piece instead). With ``[orch.conductor] foreign_untracked =
     "keep"`` untracked files that are already there (a tree shared with another session) do not stop the run: they are
     fingerprinted in ``state.foreign`` and are never the work of a piece while their content stays the same."""
+    source = self.run_doc.get("source") or {}
+    if source.get("kind") == "file":
+        from orch.worksource_file import read_input
+        doc = read_input(source["path"])
+        if doc.get("provenance", {}).get("kind") == "review":
+            return  # the dirty candidate is the subject, never adopted as executor work
     dirty = self._dirty_paths()
     if dirty and (self.conductor.get("foreign_untracked") or "refuse") == "keep":
         untracked = set(checks_mod.untracked(self.project))
@@ -347,6 +366,8 @@ def conduct(self, item: Item) -> str:
         item.state["source_paths"] = sorted(set(self._dirty_paths()) - set(item.state.get("adopted") or []))
         self._save()
     self._resolve(item)
+    if item.input_doc.get("provenance", {}).get("kind") == "review":
+        return review_only(self, item)
     self._admit_budget(item)
     self._sync_questions(item)
     self._routes(item, persist=False)
@@ -372,7 +393,8 @@ def conduct(self, item: Item) -> str:
     state.setdefault("check_fixes_at", [])   # rounds that got a correction: a resume walks the closed rounds again,
     state.setdefault("corrections_at", [])   # so a counter that only counts up would count them twice
     state.setdefault("autofix_at", [])       # rounds whose deviation got its fix round (a correction of the budget)
-    overlap = self._review_enabled(item) and item.options["checks"]["overlap_review"]
+    overlap = (self._review_enabled(item) and item.options["checks"]["overlap_review"]
+               and not item.input_doc.get("provenance", {}).get("fix_briefs"))
     report, round_no = self._autofix(item, report, 1, scout_text)
     if report["status"] == "blocked":
         return self._finish(item, report, None)
@@ -383,30 +405,45 @@ def conduct(self, item: Item) -> str:
     rows, report, round_no = self._green(item, rows, report, round_no, scout_text, 1 if overlap else None)
     if report["status"] == "blocked":
         return self._finish(item, report, rows)
+    rows, report, round_no = review_followup.correct(self, item, report, rows, round_no, scout_text)
+    if report["status"] == "blocked":
+        return self._finish(item, report, rows)
     self._dynamic_review(item, report)
     self._review_requested_off(item)
     if self._reviewing(item):
         review_round, earlier = 1, None
         while True:
+            while self._review_changed(item, review_round):
+                used = review_round
+                review_round += 1
+                if state["steps"].get(f"review.{review_round}", {}).get("status") == "done":
+                    continue  # resume reuses a later review only after comparing its own binding
+                state["review_rounds_used"] = max(state.get("review_rounds_used", 0), used)
+                self._save()
+                why = self._allowance(item, "review_rounds", used, False)
+                if why:
+                    return self._finish(item, self._blocked(report, "REVIEW_LIMIT",
+                        f"the candidate changed after review {used}; another review is required: {why}"), rows)
             findings = self._review(item, review_round, rows)
-            if not findings["findings"]:
+            if not findings["findings"] and not state.get("deferred_findings"):
                 break
-            triage = self._triage(item, review_round, findings)
-            triage, held = self._retriage(item, review_round, findings, triage)
+            triage = (self._triage(item, review_round, findings) if findings["findings"]
+                      else {"confirmed": [], "rejected": []})
+            triage, held = (self._retriage(item, review_round, findings, triage) if findings["findings"]
+                            else (triage, None))
             if held:
                 return self._finish(item, self._blocked(report, "QUESTION", held), rows)
-            if not triage["confirmed"]:
-                break
+            findings, triage, sources = correction_inputs(item.state, review_round, findings, triage)
             major, minor = self._split_confirmed(item, findings, triage)
             self._defer_minor(item, findings, minor)
             if not major:  # only findings below the floor: noted in the plan for the phase cleanup, no correction, no new audit
                 break
-            # progress: fewer findings to correct than the round before; other findings in other places are not
-            # (a reviewer that finds something new every round would otherwise keep the loop going)
+            # Stable conductor keys distinguish exact repeats from a changed set of confirmed obligations.
             state["review_rounds_used"] = review_round
             state.setdefault("findings_at", {})[str(review_round)] = len(triage["confirmed"])
-            places = sorted(self._place(findings, entry["finding"]) for entry in major)
-            progress = earlier is not None and len(places) < len(earlier)
+            places = {finding_key(found) for found in findings["findings"]
+                      if found["id"] in {entry["finding"] for entry in major}}
+            progress = earlier is not None and places != earlier
             earlier = places
             replayed = review_round in state["corrections_at"]
             rounds_why = self._allowance(item, "review_rounds", review_round, progress, emit=not replayed)
@@ -419,6 +456,7 @@ def conduct(self, item: Item) -> str:
             rounds_why = batch_rounds or batch_findings or rounds_why
             if review_round in state.get("combined_done", []):  # corrected together with the red checks
                 if rounds_why:
+                    self._corrected_receipt(item, review_round)
                     self._plan_note(item, f"findings of review round {review_round} were corrected together with the "
                                           "red checks; the correction was not reviewed again")
                     self._review_debt(item, review_round, [entry["finding"] for entry in major])
@@ -428,7 +466,7 @@ def conduct(self, item: Item) -> str:
             triage = dict(triage, confirmed=major)
             # correct, but audit no more; a spent run-wide budget (``*_batch``) stays the explicit limit it is
             final = bool(rounds_why) and not rounds_why.startswith("batch:") and item.options["review"]["final_correction"]
-            done_before = len([number for number in state["corrections_at"] if number != review_round])
+            done_before = self._piece_count(state, "corrections_at") - int(replayed)
             if final:  # bounded by the review wall: the per-piece corrections target does not refuse it, a run-wide one does
                 fixes_why = None if replayed else self._batch_allowance(item, "corrections", done_before, progress,
                                                                         emit=not replayed)
@@ -453,10 +491,14 @@ def conduct(self, item: Item) -> str:
                                     f"round(s) and {done_before} correction(s): {rounds_why or fixes_why}"), rows)
             if not replayed:
                 state["corrections_at"].append(review_round)
-            state["corrections_used"] = len(state["corrections_at"])
+            state["corrections_used"] = self._piece_count(state, "corrections_at")
             round_no += 1
             before = self._product_snapshot(self.project) if final and not replayed else None
-            report = self._execute(item, round_no, scout_text, prompts.review_correction(findings, triage))
+            correction = review_correction(self, item, round_no, review_round, findings, triage, sources)
+            delivered = json.loads((item.directory / "fix-briefs" / f"executor.{round_no}.json").read_text())
+            ids = {entry["id"] for entry in delivered["findings"]}
+            major = [entry for entry in major if entry["finding"] in ids]
+            report = self._execute(item, round_no, scout_text, correction)
             if report["status"] == "blocked":
                 return self._finish(item, report, rows)
             if before is not None and before == self._product_snapshot(self.project):
@@ -474,6 +516,7 @@ def conduct(self, item: Item) -> str:
             if report["status"] == "blocked":
                 return self._finish(item, report, rows)
             if final:
+                self._corrected_receipt(item, review_round)
                 ids = ", ".join(entry["finding"] for entry in major)
                 self._plan_note(item, f"findings {ids} of review round {review_round} were corrected after the last "
                                       "review round the limit allows; the correction was not reviewed again")
@@ -481,6 +524,35 @@ def conduct(self, item: Item) -> str:
                 break
             review_round += 1
     return self._finish(item, report, rows)
+
+
+def review_only(self, item: Item) -> str:
+    """A read-only file input runs review and triage once, registers their receipt, and never executes or commits."""
+    item.policy = dict(item.policy, git_action="none")
+    self._admit_budget(item)
+    self._routes(item)
+    findings = self._review(item, 1, [])
+    self._triage(item, 1, findings)
+    if self._review_changed(item, 1):
+        raise Stop("REVIEW_LIMIT", "the candidate changed during the review-only run; start a fresh review")
+    receipt_path = work_source.artifact_path(item, "review-receipt.json")
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    problems = contract.problems(receipt, "review-receipt")
+    if problems:
+        raise ValueError("invalid review receipt: " + "; ".join(problems))
+    rows = review_shape_evidence(self, item)
+    report = {"status": "done", "summary": f"Review {receipt['verdict']}; receipt: {self._relative(receipt_path)}",
+              "changed_paths": [], "checks_run": [], "evidence": [self._relative(receipt_path)], "open_issues": []}
+    status = self._finish(item, report, rows)
+    summary = {"run": self.run_id, "receipt": self._relative(receipt_path), "verdict": receipt["verdict"],
+                      "open": receipt["open"], "findings": [
+                          {key: row[key] for key in ("key", "id", "severity", "location")}
+                          for row in receipt["findings"]]}
+    problems = contract.problems(summary, "review-summary")
+    if problems:
+        raise ValueError("invalid review summary: " + "; ".join(problems))
+    print(json.dumps(summary, ensure_ascii=False))
+    return status
 
 
 def resolve(self, item: Item, persist: bool = True) -> None:

@@ -44,6 +44,17 @@
  "events": [
   {
    "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
     "attempt_id": "att-run-<digest>-W1",
     "project_resolution": "git",
     "run_id": "run-<digest>",
@@ -135,6 +146,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
     "step": "executor.1",
     "work_id": "PLAN9.W1@<digest>"
    },
@@ -298,6 +313,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "correction",
+     "resumed": true
+    },
     "step": "executor.2",
     "work_id": "PLAN9.W1@<digest>"
    },
@@ -437,6 +456,18 @@
     "status": "completed"
    },
    "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "outcome": "finished",
+    "phase": "ended"
+   },
+   "type": "orch.conductor.lifecycle"
   }
  ],
  "manifests": {
@@ -445,7 +476,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2306
+     "tokens": 2683
     },
     {
      "kind": "input",
@@ -481,7 +512,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3798
+     "tokens": 3807
     },
     "retrieval": {
      "limit": 50000,
@@ -490,6 +521,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 197
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 368
     }
    },
    "excluded": [],
@@ -510,8 +545,8 @@
     },
     {
      "kind": "correction",
-     "origin": "conductor",
-     "tokens": 192
+     "origin": ".swissknifeman/state/orch/conductor/<run>/W1/fix-briefs/executor.2.json",
+     "tokens": 244
     },
     {
      "kind": "changed",
@@ -532,7 +567,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 1123
+     "tokens": 1175
     },
     "retrieval": {
      "limit": 50000,
@@ -541,6 +576,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 152
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 0
     }
    },
    "excluded": [],
@@ -557,7 +596,7 @@
     {
      "kind": "role_text",
      "origin": "roles/reviewer.md",
-     "tokens": 508
+     "tokens": 652
     },
     {
      "kind": "input",
@@ -593,7 +632,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 1229
+     "tokens": 916
     },
     "retrieval": {
      "limit": 50000,
@@ -602,6 +641,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 457
     }
    },
    "excluded": [],
@@ -618,7 +661,7 @@
     {
      "kind": "role_text",
      "origin": "roles/reviewer.md",
-     "tokens": 508
+     "tokens": 652
     },
     {
      "kind": "input",
@@ -664,7 +707,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 1497
+     "tokens": 916
     },
     "retrieval": {
      "limit": 50000,
@@ -673,6 +716,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 725
     }
    },
    "excluded": [],
@@ -705,7 +752,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 999
+     "tokens": 641
     },
     "retrieval": {
      "limit": 50000,
@@ -714,6 +761,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 358
     }
    },
    "excluded": [],
@@ -761,7 +812,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 1316
+     "tokens": 816
     },
     "retrieval": {
      "limit": 50000,
@@ -770,6 +821,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 500
     }
    },
    "excluded": [],
@@ -835,16 +890,17 @@
    "verdict": "mapped"
   },
   {
-   "event": "info",
-   "item": "W1",
-   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
-   "reason_code": "RESULT_HEALED",
-   "role": "context-scout",
-   "stage": "scout"
-  },
-  {
    "event": "stage.start",
    "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.1"
@@ -921,6 +977,15 @@
   {
    "event": "stage.start",
    "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.2"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "session executor-session-1 resumed; reuse=correction",
+   "reason_code": "SESSION_RESUMED",
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.2"
@@ -1113,10 +1178,31 @@
     "title": "Work W1"
    }
   },
-  "executor_session": "executor-session-2",
-  "executor_session_item": "W1",
-  "executor_session_route": "claude-code/sonnet/high",
-  "executor_session_task_digest": "<digest>",
+  "executor_sessions": {
+   "W1": {
+    "created_at": "<time>",
+    "fingerprint": {
+     "attempt_id": "att-run-<digest>-W1",
+     "authority_digest": "",
+     "base": "<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "item": "W1",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "W1",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 2,
+    "route": "claude-code/sonnet/high",
+    "session": "executor-session-2",
+    "task_digest": "<digest>"
+   }
+  },
   "items": {
    "W1": {
     "adopted": [],
@@ -1127,6 +1213,7 @@
      1
     ],
     "corrections_used": 1,
+    "deferred_findings": [],
     "executor_started": true,
     "expected": null,
     "findings_at": {
@@ -1145,6 +1232,7 @@
      }
     },
     "review_rounds_used": 1,
+    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {
@@ -1379,7 +1467,18 @@
       "result": {
        "agent": "agent-<run>-3",
        "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/W1.txt": "100644 <digest>"
+        }
+       },
        "exit": 0,
+       "finding_keys": {
+        "F1": "fk-fa5a8a7f127f2d58"
+       },
        "findings": {
         "findings": [
          {
@@ -1394,6 +1493,7 @@
         "verdict": "ATTENTION"
        },
        "model": "fake-model",
+       "outside": {},
        "session": "reviewer-session-1",
        "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.1.jsonl",
        "usage": {
@@ -1417,12 +1517,22 @@
       "result": {
        "agent": "agent-<run>-6",
        "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/W1.txt": "100644 <digest>"
+        }
+       },
        "exit": 0,
+       "finding_keys": {},
        "findings": {
         "findings": [],
         "verdict": "GREEN"
        },
        "model": "fake-model",
+       "outside": {},
        "session": "reviewer-session-2",
        "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.2.jsonl",
        "usage": {

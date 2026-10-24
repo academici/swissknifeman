@@ -80,7 +80,9 @@ def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dic
     unavailable = {}
     # Before any role of the piece: a required stage this conductor does not run stops a real run here
     # (the first call is persist=False, still before prepare). A dry-run only reports it.
-    unavailable.update(policy_stage_unavailable(self, item, preview=preview))
+    review_only = item.input_doc.get("provenance", {}).get("kind") == "review"
+    if not review_only:
+        unavailable.update(policy_stage_unavailable(self, item, preview=preview))
     roles = ["executor"]
     if self._scout_stage(item) is not None:
         roles.insert(0, "context-scout")
@@ -92,6 +94,8 @@ def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dic
         roles.append("registrar")
     if self._advisor_on():
         roles.append("advisor")
+    if review_only:
+        roles = ["reviewer", self._triage_role(item)]
     for role in roles:
         try:
             item.routes[role] = self._selected(item, role, persist)
@@ -217,7 +221,8 @@ def refuse_acp(self, item: Item) -> None:
 def preflight(self, item: Item) -> None:
     """Every required role can start before any work is done: an acp route or a missing CLI stops the run now with a
     plain message, not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
-    policy_stage_unavailable(self, item, preview=False)
+    if item.input_doc.get("provenance", {}).get("kind") != "review":
+        policy_stage_unavailable(self, item, preview=False)
     self._refuse_acp(item)
     required = {role: route for role, route in item.routes.items() if role not in OPTIONAL_ROLES}
     codex = [(role, route) for role, route in required.items() if self._codex_sandboxed(route)]

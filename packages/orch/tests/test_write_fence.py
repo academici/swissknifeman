@@ -9,7 +9,7 @@ from unittest import mock
 
 from orch.conductor import checks, options, scope
 
-from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
+from tests.test_conductor import GREEN, ConductorCase, report
 
 
 def module_check(ref: str, path: str, cmd: str = "") -> dict:

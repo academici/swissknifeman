@@ -15,10 +15,15 @@ import time
 from typing import Optional
 
 from orch import adhoc, launch
+from orch.contracts import canonical_digest
 from orch.conductor import options as opts, process, records, review_batch
 from orch.conductor.application import budget_service as token_budget
 from orch.conductor.domain.item import Item
+from orch.conductor.domain import fix_brief
+from orch.conductor.domain.report import finding_key
+from orch.conductor import contract
 from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure import sessions
 from orch.conductor.infrastructure.clock import utc_now
 from orch.conductor.infrastructure.files import read_json, safe, write_json
 from orch.conductor.policies import review_strategy as strategy
@@ -176,6 +181,27 @@ def group_review_due(self, ref: str) -> None:
         return
 
 
+
+def review_left(self) -> None:
+    """At the end of a run that went through all its pieces: a group whose pieces all ended, some done and some blocked
+    (``on_blocked: report``), is reviewed over its done pieces; else nobody would read them."""
+    plan = self.state.get("review_strategy") or {}
+    items = self.state.get("items") or {}
+    for number, done, open_ in strategy.unreviewed_groups(self.state):
+        if all((items.get(ref) or {}).get("outcome") == "blocked" for ref in open_):
+            group_review(self, number, done, plan["reviewer"]["effort"])
+
+
+def note_unreviewed(self) -> None:
+    """``GROUP_REVIEW_PENDING`` for each group with done pieces and no review when the run ends: a stopped run reviews it
+    on the resume that ends the group; a piece closed outside the run leaves the done ones to a review of their own."""
+    for number, done, open_ in strategy.unreviewed_groups(self.state):
+        self.progress.emit("info", reason_code="GROUP_REVIEW_PENDING",
+                           message=f"group {number}: {', '.join(done)} done and not reviewed"
+                                   + (f"; the review waits for {', '.join(open_)} (resume --run {self.run_id} --retry "
+                                      f"{open_[0]}); a piece closed outside the run leaves them to a review of their own"
+                                      if open_ else ""))
+
 def failed_group(number: int, group: list, kept: dict) -> Stop:
     """``GROUP_REVIEW_FAILED``: the group review failed and a piece of the group has ``review_mode: requested``, which no
     other review covers. The first failure is repeated once on resume; after that the stop stays until a review reads."""
@@ -321,8 +347,7 @@ def group_review(self, number: int, group: list, effort: str) -> None:
     if run.error:
         self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED", message=f"group {number}: {run.error}: {run.detail}")
     elif read["format"] == "malformed":  # never reported as a clean review: the reply is not in the asked format
-        self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED", message=f"group {number}: the reply has no readable "
-                           f"'## Findings' section (neither [Severity] lines nor 'none'); read {kept['file']}")
+        self.progress.emit("info", reason_code="GROUP_REVIEW_FAILED", message=f"group {number}: malformed review-findings JSON; read {kept['file']}")
     else:
         self.progress.emit("info", reason_code="GROUP_REVIEW",
                            message=f"group {number}: {found['Blocker']} Blocker, {found['Major']} Major, {found['Minor']} Minor "
@@ -355,17 +380,68 @@ def piece_checks(self, refs: list) -> list:
     return found
 
 
-def followup_input(self, number: int, refs: list, read: dict, effort: Optional[str] = None) -> Optional[str]:
+def session_ref(self, refs: list) -> dict:
+    """``provenance.session_ref`` of a follow-up: where the reviewed group comes from (the run and every piece, so that a
+    follow-up that starts fresh can be told what they did) and, when the last piece of the group kept a session with a
+    fingerprint, that session with the digest of the identity a follow-up shares with it (``sessions.identity_digest``).
+    A provider that cannot resume, a failed session or a slot migrated from an older state leave the origin alone."""
+    slots = self.state.get("executor_sessions") or {}
+    last = refs[-1]
+    found = {"run": self.run_id, "item": last, "items": list(refs)}
+    slot = slots.get(last) or slots.get(sessions.SHARED_KEY) or {}
+    if slot.get("session") and slot.get("fingerprint") and slot.get("provider"):
+        found.update(session=slot["session"], provider=slot["provider"],
+                     fingerprint_digest=sessions.identity_digest(slot["fingerprint"]))
+    return found
+
+
+def followup_input(self, number: int, refs: list, read: dict, effort: Optional[str] = None,
+                   name: Optional[str] = None) -> Optional[str]:
     """The Blocker and Major findings of a group review as a ready execution-input (``provenance: review_followup``): one
     command corrects them in a commit of their own, with the file source (``run --input FILE --commit``). The route minimum
     is the effort of the executor of the run (``high`` when it has none): a run configured for a lighter executor must be
     able to start its own follow-up (``ROUTE_UNDERSHOOT`` otherwise)."""
+    stem = name or f"group-review-{number}"  # the files of the review: a run's group review, or batch-review.py's
     paths = review_batch.followup_paths(read["findings"])
     loud = [row for row in read["findings"] if row["severity"] in ("Blocker", "Major")]
     if not paths or not loud:
         return None
-    goal = ("Correct these confirmed review findings of the pieces " + ", ".join(refs) + ", each in the file it names; change "
-            "nothing else:\n" + "\n".join(f"- [{row['severity']}] {row['text']}" for row in loud))
+    # The group reviewer reports scenarios, not executed triage evidence. Do not invent an exit or a verified fix.
+    confirmed = [{"finding": row["id"], "reproduction": {
+        "cmd": row.get("reproduction") or "Reproduce the reported failure scenario",
+        "observed": row["failure_scenario"]},
+        "fix": "Reproduce this scenario, correct its cause inside the named scope, and add a regression check."}
+        for row in loud]
+    brief = fix_brief.build({"findings": loud}, {"confirmed": confirmed},
+                            {row["id"]: finding_key(row) for row in loud}, {}, {
+        "review": {"run": self.run_id, "item": ", ".join(refs), "round": number, "receipt": ""},
+        "base": checks_base(self, refs), "findings": self._relative(self.directory / f"{stem}.md"),
+        "scope_constraints": ["Change only the files named by these findings"], "required_checks": []})
+    issues = contract.problems(brief, "fix-brief")
+    if issues:
+        raise ValueError("invalid group fix-brief: " + "; ".join(issues))
+    write_json(self.directory / f"{stem}.fix-brief.json", brief)
+    backlog = []
+    remaining = loud
+    pending = brief
+    while pending["deferred"]["count"]:
+        delivered = {row["id"] for row in pending["findings"]}
+        remaining = [row for row in remaining if row["id"] not in delivered]
+        pending = fix_brief.build({"findings": remaining}, {"confirmed": confirmed},
+                                  {row["id"]: finding_key(row) for row in remaining}, brief["limits"], {
+                                      "review": brief["review"], "base": brief["base"],
+                                      "findings": brief["deferred"]["ref"],
+                                      "scope_constraints": brief["scope_constraints"], "required_checks": []})
+        issues = contract.problems(pending, "fix-brief")
+        if issues or not pending["findings"]:
+            raise ValueError("invalid follow-up fix-brief: " + "; ".join(issues or ["no finding fits the limits"]))
+        path = self.directory / f"{stem}.fix-brief.{len(backlog) + 2}.json"
+        write_json(path, pending)
+        backlog.append({"path": self._relative(path), "digest": canonical_digest(pending)})
+    goal = ("Correct the review findings of pieces " + ", ".join(refs) + ". "
+            "The reproduction below is reported by the reviewer and must be verified before correction.\n"
+            + fix_brief.render(brief))
+    reference = session_ref(self, refs)
     commands = piece_checks(self, refs)
     # the reviewed pieces' own command checks decide when they exist: a procedure check (a verdict the executor must report)
     # cost a round and a full checks pass whenever the executor forgot it; only a follow-up without commands keeps one
@@ -375,10 +451,21 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
         doc = adhoc.build_adhoc_input(goal, paths, checks=checks, procedures=procedures,
                                       why=f"group review {number} of this run",
                                       route={"class": "implementation", "effort": effort or "high"},
-                                      provenance=adhoc.support_provenance("review_followup"))
+            provenance={**adhoc.support_provenance("review_followup"), **({"fix_briefs": backlog} if backlog else {}),
+                        **({"session_ref": reference} if reference else {})})
     except adhoc.AdhocError as error:
         self.progress.emit("info", reason_code="GROUP_REVIEW_FOLLOWUP_FAILED", message=f"group {number}: {error}"[:200])
         return None
-    target = self.directory / f"group-review-{number}.followup.json"
+    target = self.directory / f"{stem}.followup.json"
     write_json(target, doc)
     return self._relative(target)
+
+
+def checks_base(self, refs: list) -> str:
+    """The first piece's recorded base, when present, for the follow-up brief."""
+    for ref in refs:
+        step = ((self.state.get("items", {}).get(ref, {}).get("steps") or {}).get("brief") or {})
+        base = (step.get("result") or {}).get("base")
+        if base:
+            return base
+    return ""

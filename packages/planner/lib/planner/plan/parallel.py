@@ -256,6 +256,12 @@ def _collect_phase(plan, plan_id, phase_id, phase, granted, running_here, candid
     if all(lifecycle.status_of(plan, i) in TERMINAL for i in members):
         waiting.append({"phase": phase_id, "item": None, "reason": f"{phase_id} closure: plan.py reconcile {plan_id}"})
         return
+    from . import readiness
+    readiness_row = readiness.gate(plan, phase_id)
+    if readiness_row:
+        waiting.append({"phase": phase_id, "item": None,
+                        "reason": f"readiness {readiness_row['status']}: planner:plan-audit {plan_id} {phase_id}"})
+        return
     strategy = {**_orchestration(plan.plan), **_orchestration(phase)}.get("strategy", "dag")
     if strategy == "sequential" and running_here:
         waiting.append({"phase": phase_id, "item": None, "reason": f"{phase_id} is sequential; running {running_here[0]}"})

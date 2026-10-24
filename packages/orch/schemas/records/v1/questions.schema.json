@@ -21,7 +21,7 @@
       "additionalProperties": false,
       "properties": {
         "value": {"$ref": "#/$defs/value"},
-        "by": {"description": "Who answered: a user name, policy or the advisor.", "type": "string", "minLength": 1},
+        "by": {"description": "Who answered: a user name, policy, the advisor, the panel or decision:<D#> (an accepted decision of the plan).", "type": "string", "minLength": 1},
         "at": {"description": "UTC time of the answer.", "type": "string", "minLength": 1},
         "authority": {"description": "Authority snapshot of a policy or advisor answer.", "type": "object"}
       }
@@ -75,6 +75,8 @@
         "applied_at": {"description": "UTC time the answer was handed to the executor.", "type": "string"},
         "resolution": {"$ref": "#/$defs/resolution"},
         "stale_resolution": {"$ref": "#/$defs/resolution"},
+        "question_key": {"description": "qk- and 16 hex characters of the digest of the meaning of the question (item, kind, text, options, answer schema); set when an accepted decision answered it.", "type": "string", "pattern": "^qk-[0-9a-f]{16}$"},
+        "question_digest": {"description": "SHA-256 hex digest of the canonical meaning of the question.", "type": "string", "pattern": "^[0-9a-f]{64}$"},
         "auto_answered": {"description": "The policy or the advisor answered it.", "type": "boolean"},
         "advice": {"description": "Summary of the advice behind the question or its answer (file, recommendation, confidence, held).", "type": "object"}
       }

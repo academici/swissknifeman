@@ -27,9 +27,19 @@ def work_base() -> Path:
             raise unittest.SkipTest(f"{base} lies under the writable root {root} of ro-run")
     try:
         base.mkdir(parents=True, exist_ok=True)
+        os.rmdir(tempfile.mkdtemp(dir=base))  # it exists but an outer sandbox may keep it read-only
     except OSError as error:
         raise unittest.SkipTest(f"no folder for test checkouts: {error}") from error
     return base
+
+
+def setUpModule() -> None:
+    """ro-run grants the default writable roots (``/tmp`` first); under an outer sandbox that mounts /tmp read-only (the
+    Claude executor's) the grants cannot be shown, so the module is skipped there, loudly, instead of failing."""
+    try:
+        os.rmdir(tempfile.mkdtemp(dir="/tmp"))
+    except OSError as error:
+        raise unittest.SkipTest(f"/tmp is not writable here (an outer sandbox): {error}") from error
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:

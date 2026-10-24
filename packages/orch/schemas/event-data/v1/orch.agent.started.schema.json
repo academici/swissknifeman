@@ -80,6 +80,26 @@
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$",
       "description": "Digest of the merged run options of the piece."
+    },
+    "session": {
+      "type": "object",
+      "properties": {
+        "resumed": {
+          "type": "boolean",
+          "description": "Whether the executor attempt continues a provider session."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why: the reuse of a resumed session (correction, retry, question, next_piece, followup) or the reason a fresh one starts (first_round, per_item_mode, provider_unsupported, provider_error, no_session_id, fingerprint_changed:<field>, idle_expired, followup_mismatch)."
+        }
+      },
+      "required": [
+        "resumed",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "The session decision of an executor attempt."
     }
   },
   "required": [

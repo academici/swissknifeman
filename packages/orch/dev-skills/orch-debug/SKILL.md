@@ -49,6 +49,15 @@ conductor's"; copy the finished journal and findings into the plan or `docs/` af
   long time, or a loop of the same command, is not. Never kill a working role and never reset a working result to get
   a "clean" run. A blocked piece with good work continues with `resume --retry` after the plan is fixed, a dirty tree
   with an earlier attempt with `run --adopt`, a piece finished by hand with `settle`.
+- **Exit 4 is not a failure.** `conduct run|resume|continue` exits 4 (`run.end` outcome `waiting`, stop
+  `WAITING_DECISION`, `status --json` status `waiting` with a `waiting: [{item, question_ids, since}]` list) when a
+  piece waits for the answer to a question; exit 1 stays "stopped or refused". A script that treats every non-zero
+  exit as a stop must branch on 4 first: the action is `orch conduct answer --run R --item I --question Q --option ID`
+  (the owner answers `approval` and `credential` questions, and what the human gate holds), then
+  `orch conduct continue --run R` (or `answer … --continue`); `QUESTIONS_OPEN` (exit 1) means a blocking question has
+  no answer yet, `--partial` continues only the answered pieces. An escalation with `ENVIRONMENT_BLOCKED`,
+  `PRE_EXISTING_RED`, `SCOPE_EXPANSION` or `AUTHORITY_REQUIRED` is a block (exit 1, `ITEM_BLOCKED`), never a question:
+  read its hint (`orch.py doctor`, the sandbox settings, `--allow-path`) instead of asking the advisor.
 - **One run = one roadmap batch.** Start the pieces of a roadmap row together (`run --items A B C D`, never one run per item): by default (`--batch`, `session.executor: handoff`) all pieces go in progress together, each piece gets a fresh executor session that its correction rounds resume, and its prompt names the whole batch and carries the handoff of the done pieces (commit, summary, open issues, changed paths); `shared` keeps ONE session across the pieces at the price of re-reading the whole transcript of the earlier pieces on every turn; checks, review, register and commit stay per piece. One common review per batch after the last piece: `packages/orch/scripts/batch-review.py RUN` (grok, `--effort medium` when the diff is small); fix Major+ in a separate commit. `--no-batch` is for a deliberate separate-session start; `--ready` (not `--batch`) selects the next ready pieces. When a piece closes: measure, log, fix the mechanism in a separate worktree and merge between pieces; the run itself goes on.
 - **The main tree is the conductor's.** While a run is active change no file in it, not even a journal. Develop fixes in a
   separate git worktree, merge between items. Commit only with explicit paths (`git commit -- <paths>`); never sweep the

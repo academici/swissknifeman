@@ -10,7 +10,8 @@
     {"$ref": "#/$defs/commit"},
     {"$ref": "#/$defs/release"},
     {"$ref": "#/$defs/note"},
-    {"$ref": "#/$defs/research"}
+    {"$ref": "#/$defs/research"},
+    {"$ref": "#/$defs/decision"}
   ],
   "$defs": {
     "text": {
@@ -213,6 +214,19 @@
         "outcome": {"description": "recorded, no-op or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
         "path": {"description": "Repository-relative path of the saved result.", "$ref": "#/$defs/text"},
         "reason_code": {"description": "Why the result was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "decision": {
+      "description": "Outcome of recording a decision: recorded, no-op (the decision of this question is already there), refused or unsupported (the source does not serve the operation).",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "decision"},
+        "outcome": {"description": "recorded, no-op, refused or unsupported.", "type": "string", "enum": ["recorded", "no-op", "refused", "unsupported"]},
+        "decision_id": {"description": "Id of the decision in the source, such as D12.", "$ref": "#/$defs/text"},
+        "reason_code": {"description": "Why the decision was refused.", "$ref": "#/$defs/reasonCode"},
         "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
       },
       "required": ["op", "outcome"],

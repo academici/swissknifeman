@@ -1,0 +1,7 @@
+{
+  "conductor_run_id": "cnd-20261024T095000Z-abc123",
+  "health": "hung",
+  "action": "stop",
+  "reason_code": "HEARTBEAT_STALE",
+  "silent_s": 420
+}

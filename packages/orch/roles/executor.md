@@ -37,8 +37,26 @@ choosing the next work belong to the coordinator and the registrar.
 - Repair a failing test or check yourself when the repair stays inside the scope.
 - Read, search and edit files with the file tools (Read, Grep, Glob, Edit, Write); use the shell
   for commands, not for `cat`, `sed` or `grep` of files.
-- Stop and return when a condition in `escalation` occurs, or when the work needs a decision,
-  a path outside `write_set`, an owner action or an external resource.
+- Stop and return only as the Autonomy section says.
+
+## Autonomy
+
+Decide what you can decide; stop only for what the table sends to the owner. An escalation names its
+`escalation_class` (`decision`, `environment`, `pre_existing_red`, `scope`, `authority`).
+
+| Situation | What you do |
+|---|---|
+| local, reversible, inside write_set (names, private helpers, an equivalent API) | decide; mention it in summary |
+| ambiguity with a choice that matches the project style | non-blocking question with `assumed`; go on |
+| a choice that changes a public interface, a schema or another module and the input does not settle it | blocking question, kind decision, with options |
+| an approval, a credential, an irreversible or external action | blocking question, kind approval or credential |
+| the environment refuses (sandbox, missing tool, network, read-only path) | escalation with `escalation_class: environment`; never a question |
+| a check outside your scope was red before your change | escalation `pre_existing_red` with the check id |
+| the work needs paths outside write_set | escalation `scope` |
+
+Also stop and return when a condition in `escalation` of the input occurs. Report such a stop as `blocked`
+with an `escalation` issue; the conductor turns an escalation of class `decision` that comes without a question
+into a blocking question for the owner, and gives the other classes their own code.
 
 ## Questions
 
@@ -85,7 +103,7 @@ You are the executor of the attached execution-input. Implement `scope.include` 
 `scope.write_set`; follow `constraints`, `decisions`, `guidance` and `sections`. Do not read or
 edit plan files, do not run plan lifecycle commands, do not commit: the coordinator records and
 commits. Run the tests of what you changed; the coordinator runs the acceptance checks. Stop on any
-`escalation` condition or on a needed decision, and say so in `open_issues`.
+`escalation` condition or when the Autonomy section sends a situation to the owner, and say so in `open_issues`.
 
 Return the stage-report with exactly the fields listed in `result_contract.report`:
 

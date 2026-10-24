@@ -1,0 +1,154 @@
+{
+  "$id": "urn:swissknifeman:orch:conductor:advice-panel:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Record of one advisor panel (orch.advisor.panel) on a problem: the independent advice of each member that answered, and the synthesis the conductor reads: agreement, a majority confirmed or not by one critic, or a split. The synthesis carries the closed advice the gates read.",
+  "properties": {
+    "members": {
+      "description": "The members that answered, in panel order; at least two.",
+      "items": {
+        "additionalProperties": false,
+        "description": "One member and its independent advice.",
+        "properties": {
+          "advice": {
+            "$ref": "urn:swissknifeman:orch:conductor:advice:v1",
+            "description": "The advice of the member."
+          },
+          "file": {
+            "description": "Repository path of the advice file of the member.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "member": {
+            "description": "Place of the member in orch.advisor.panel, from 1.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "route": {
+            "description": "Route the member ran on.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "member",
+          "route",
+          "file",
+          "advice"
+        ],
+        "type": "object"
+      },
+      "minItems": 2,
+      "type": "array"
+    },
+    "problem_ref": {
+      "description": "The problem advised on, as the prompt named it.",
+      "minLength": 1,
+      "type": "string"
+    },
+    "synthesis": {
+      "additionalProperties": false,
+      "description": "What the panel stands for.",
+      "properties": {
+        "advice": {
+          "$ref": "urn:swissknifeman:orch:conductor:advice:v1",
+          "description": "The one closed advice the conductor reads (human gate, minimum confidence, code categories)."
+        },
+        "chosen": {
+          "description": "Id of the recommended option.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "critic": {
+          "additionalProperties": false,
+          "description": "The one round of critique of a majority: a member of the minority read the anonymised positions.",
+          "properties": {
+            "agrees": {
+              "description": "Whether the critic recommended the option of the majority and cited evidence; otherwise the owner decides.",
+              "type": "boolean"
+            },
+            "file": {
+              "description": "Repository path of the advice file of the critic.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "member": {
+              "description": "Place of the critic in orch.advisor.panel, from 1.",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "recommendation": {
+              "description": "Option the critic recommended; null when the critic gave no advice.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sources": {
+              "description": "Evidence the critic cited.",
+              "items": {
+                "description": "URL or repository path.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "member",
+            "recommendation",
+            "agrees"
+          ],
+          "type": "object"
+        },
+        "kind": {
+          "description": "agreement (all recommend one option), majority (more than half) or split.",
+          "enum": [
+            "agreement",
+            "majority",
+            "split"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "chosen",
+        "advice"
+      ],
+      "type": "object"
+    },
+    "trigger": {
+      "additionalProperties": false,
+      "description": "The single advice whose low confidence started the panel (trigger low_confidence).",
+      "properties": {
+        "confidence": {
+          "description": "Its confidence.",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "file": {
+          "description": "Repository path of that advice file.",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "confidence"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "problem_ref",
+    "members",
+    "synthesis"
+  ],
+  "title": "advice panel",
+  "type": "object"
+}

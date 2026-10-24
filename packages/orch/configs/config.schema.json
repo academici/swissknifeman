@@ -518,6 +518,51 @@
             "invocation",
             "flags"
           ]
+        },
+        "generate": {
+          "type": "array",
+          "description": "Command that regenerates the generated files of the project (generated_paths) from their sources, run in the checkout of the run before the checks of every round; a first argument with a slash and no leading one is a path of that checkout, so the run uses its own generator. Its changes belong to the piece. A non-zero exit stops the run with GENERATE_FAILED. Empty: nothing is regenerated and generated_paths keep the write protection of the provider. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One argument."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        },
+        "generate_check": {
+          "type": "array",
+          "description": "Command that verifies the generated files against their sources after generate (exit 0: fresh); a non-zero exit stops the run with GENERATE_FAILED. Empty: no verification. Resolved like generate. Machine-wide, like generate.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One argument."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        },
+        "generated_paths": {
+          "type": "array",
+          "description": "Glob patterns of the files generate writes (for example .claude/skills/**). With generate set, a write-set path under them is not a write-protected path of the executor: the executor changes the source and the conductor regenerates the file; a regenerated file of another module is no OUTSIDE_MODULE stop. Machine-wide, like generate.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A glob pattern relative to the project root."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
         }
       }
     },
@@ -692,6 +737,27 @@
           ],
           "default": "medium",
           "description": "Minimum confidence for automatic advice. The strictest value across all layers wins (high > medium > low); lower values and _unset cannot weaken it."
+        },
+        "panel": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*(/(economy|implementation|frontier)(/(low|medium|high|xhigh))?)?$",
+            "description": "Route of one panel member: PROVIDER[/MODEL_CLASS[/EFFORT]], such as grok/frontier/high."
+          },
+          "default": [],
+          "description": "Routes of an advisor panel (2 or 3; fewer is off, members past the third are ignored), each PROVIDER[/MODEL_CLASS[/EFFORT]]. When a trigger of panel_on fires, each member advises independently, without seeing the others: agreement is applied, a majority gets one round of critique by a member of the minority, a split goes to the owner. At most len(panel)+1 calls per problem, each admitted by the token budget; the result is read by the same gates as one advice (human_gate, min_confidence, code categories). A member that cannot start (codex has no advisor launch entry) is skipped with ADVISOR_PANEL_FAILED; fewer than two answers is the single advisor."
+        },
+        "panel_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["low_confidence", "always"],
+            "description": "One trigger."
+          },
+          "default": ["low_confidence"],
+          "description": "When the panel advises: low_confidence (the single advice of a problem has low confidence) or always (every problem goes to the panel first)."
         }
       }
     },
@@ -717,6 +783,57 @@
             "enum": ["machine", "project"]
           },
           "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        }
+      }
+    },
+    "supervisor": {
+      "type": "object",
+      "description": "The supervisor (`orch conduct supervise|reap`): what it does about a conductor run that hangs or died. Observation is the default; stopping and resuming are the authority of the machine, so a project file cannot set recover, max_recoveries or window_s, and an invocation (a --config file or a flag) can only lower recover and max_recoveries.",
+      "additionalProperties": false,
+      "properties": {
+        "recover": {
+          "type": "string",
+          "description": "What the supervisor does about a run in trouble: notify (only say so), stop-only (also stop a hung conductor and reap the role processes of a dead one) or resume (also resume a dead run, within the breaker). The effective value is the lowest of the machine value and the invocation values (notify < stop-only < resume).",
+          "default": "notify",
+          "enum": ["notify", "stop-only", "resume"],
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "interval_s": {
+          "type": "integer",
+          "description": "Seconds between two passes of `orch conduct supervise` without --once.",
+          "default": 60,
+          "minimum": 1
+        },
+        "hung_after_s": {
+          "type": "integer",
+          "description": "Age of the heartbeat from which a conductor that waits for nothing counts as hung (a wait with a deadline that has not passed is never hung).",
+          "default": 300,
+          "minimum": 1
+        },
+        "grace_s": {
+          "type": "integer",
+          "description": "Seconds a hung conductor gets to free its run lease after SIGINT, and again after SIGTERM, before SIGKILL.",
+          "default": 60,
+          "minimum": 1
+        },
+        "max_recoveries": {
+          "type": "integer",
+          "description": "Resumes the supervisor may start for one run within window_s; past it the supervisor gives the run up until the owner resumes it by hand. An invocation can only lower it.",
+          "default": 2,
+          "minimum": 0,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "window_s": {
+          "type": "integer",
+          "description": "Length of the window of the breaker in seconds.",
+          "default": 3600,
+          "minimum": 1,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "notify_send": {
+          "type": "boolean",
+          "description": "Also call `notify-send` for a notification, a stop and a given-up run (errors are ignored).",
+          "default": false
         }
       }
     }

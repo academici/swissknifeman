@@ -137,7 +137,7 @@ class V0ResumeTests(ConductorCase):
     def test_a_v0_run_with_an_answer_resumes_to_the_end_and_writes_v1(self):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         directory = self.run_dir(err)
         self.downgrade(directory)
         questions.answer_file(directory / "W1", "Q1", option="rename", by="owner", now="2026-10-22T00:00:00Z")

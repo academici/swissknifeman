@@ -26,7 +26,7 @@ _PLAN_TITLE_PREFIX = re.compile(r"^Plan №[1-9][0-9]* —")
 OWNED_FIELDS = {
     "plan": frozenset({"$schema", "id", "short_id", "created", "updated_at", "status"}),
     "brief": frozenset({"$schema"}),
-    "phase": frozenset({"$schema", "id", "design", "closed"}),
+    "phase": frozenset({"$schema", "id", "design", "closed", "readiness"}),
     "item": frozenset({"$schema", "id", "status", "result", "updated_at"}),
     "unit": frozenset({"$schema", "id", "item", "status", "outcome", "updated_at"}),
     "decision": frozenset({"$schema", "id"}),

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:supervisor-state:v1",
+  "title": "supervisor-state.json of a project",
+  "description": "The memory of the supervisor of a project (<runs root>/supervisor-state.json), replaced atomically under supervisor.lock: per run the recoveries it started (the breaker), whether it gave the run up and the last thing it saw. A run it gave up stays untouched until the owner resumes it by hand.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "runs"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:supervisor-state:v1"},
+    "runs": {
+      "description": "The runs the supervisor has acted on, by run id.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"$ref": "#/$defs/run"}},
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "run": {
+      "description": "What the supervisor remembers of one run.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recoveries"],
+      "properties": {
+        "recoveries": {"description": "UTC times of the resumes the supervisor started; the breaker counts those within window_s.", "type": "array", "items": {"description": "UTC time.", "type": "string"}},
+        "given_up": {"description": "UTC time the breaker opened (max_recoveries within window_s), null while it is closed.", "type": ["string", "null"]},
+        "resumes_at_give_up": {"description": "Number of run.resume lines of the journal when the breaker opened; a later one is a resume by hand and closes the breaker.", "type": ["integer", "null"], "minimum": 0},
+        "last": {
+          "description": "The last class seen and the action taken on it (null: none); an action is not repeated while the class stays.",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["health", "at"],
+          "properties": {
+            "health": {"description": "Class of health.", "type": "string"},
+            "action": {"description": "Action taken, null when nothing was.", "type": ["string", "null"]},
+            "at": {"description": "UTC time.", "type": "string"},
+            "resumes": {"description": "Number of run.resume lines of the journal at that time; an action is not repeated for the same class until a resume changes it.", "type": "integer", "minimum": 0}
+          }
+        }
+      }
+    }
+  }
+}

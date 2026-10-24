@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:supervisor-action:v1",
+  "at": "2026-10-24T10:00:00Z",
+  "run_id": "cnd-1",
+  "health": "suspected_stall",
+  "reason_code": null,
+  "action": "notify",
+  "detail": "no tool step for 2100 s"
+}

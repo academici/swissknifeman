@@ -106,13 +106,24 @@ def projections(run: Path, fake: Path, project: Path, paths: dict) -> dict:
                       "events": [{"type": event.type, "data": event_data(event.data)} for event in events]}, paths)
 
 
+def tmp_writable() -> bool:
+    """Whether a folder can be made in /tmp (not under a sandbox that mounts it read-only)."""
+    try:
+        os.rmdir(tempfile.mkdtemp(dir="/tmp"))
+    except OSError:
+        return False
+    return True
+
+
 class CharacterizationCase(ConductorCase):
     """Runs a scenario and keeps the normalized journal and state under its name."""
 
     def setUp(self):
         # Parallel unittest workers nest TMPDIR under their own home. Absolute paths enter prompt text and its
         # token estimates, so keep fixture paths the same length as the direct recapture command's paths.
-        with mock.patch.object(tempfile, "tempdir", "/tmp"):
+        # An outer sandbox (the Claude executor's) keeps /tmp read-only: the fixtures then stay under its TMPDIR, whose
+        # longer paths the snapshots tolerate (prompt paths are normalised; a recapture there matched the old snapshots).
+        with mock.patch.object(tempfile, "tempdir", "/tmp" if tmp_writable() else tempfile.gettempdir()):
             super().setUp()
         self.slept = []
         for name, value in (("sleep", self.slept.append), ("unit_random", lambda: 0.5)):
@@ -169,6 +180,8 @@ def repro(cmd="cat out/W1.txt", observed="ok") -> dict:
 
 class ProjectionTests(unittest.TestCase):
     def test_fixture_paths_do_not_grow_under_a_parallel_worker_tmpdir(self):
+        if not tmp_writable():
+            self.skipTest("/tmp is read-only here (an outer sandbox): the fixtures stay under TMPDIR")
         with tempfile.TemporaryDirectory(prefix="characterization-parent-") as directory:
             with mock.patch.object(tempfile, "tempdir", directory):
                 case = CharacterizationCase()
@@ -281,7 +294,7 @@ class ScenarioTests(CharacterizationCase):
     def test_question_answer_resume(self):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         run = self.run_dir(err).name
         code, out, _ = self.conduct("answer", "--run", run, "--item", "W1", "--question", "Q1", "--option", "rename",
                                     "--by", "owner")
@@ -289,7 +302,14 @@ class ScenarioTests(CharacterizationCase):
         doc = self.source()
         doc["items"]["W1"]["status"] = "todo"
         self.state_file.write_text(json.dumps(doc), encoding="utf-8")
-        code, _, err2 = self.conduct("resume", "--run", run, "--retry", "W1", "--json-lines")
+        # The reason of a resumed session compares two second-granular stamps (``retry`` when the piece was taken back
+        # after the session was last used): a run this fast would record either. The session was used a day ago.
+        state_path = self.run_dir(err) / engine.STATE_FILE
+        kept = json.loads(state_path.read_text(encoding="utf-8"))
+        for slot in kept["executor_sessions"].values():
+            slot["last_used_at"] = "2020-01-01T00:00:00Z"
+        state_path.write_text(json.dumps(kept), encoding="utf-8")
+        code, _, err2 = self.conduct("continue", "--run", run, "--json-lines")
         self.assertEqual((code, self.outcome(err2)), (0, ("finished", None)), err2)
         self.snapshot("question-answer-resume", err)
 
@@ -399,7 +419,7 @@ class ScenarioTests(CharacterizationCase):
         options = self.project.parent / "group-options.json"
         options.write_text(json.dumps({"review": {"strategy": "groups"}}), encoding="utf-8")
         self.script({"executor": [executor_ok("W1"), executor_ok("W2")],
-                     "reviewer": [{"text": "## Findings\nnone\n## Checked and fine\n- outputs\n"}]})
+                     "reviewer": [GREEN]})
         # Group review persists its wall time in both state and a message; fix only that module's timer.
         with mock.patch("orch.conductor.application.review_plan.time") as timer:
             timer.monotonic.return_value = 0.0
@@ -415,7 +435,8 @@ class EventSequenceTests(CharacterizationCase):
     """The ``orch.*`` events that stand next to a beacon (knowledge/p12-observability#types), in the order of a scenario.
     The run and agent events are left out: they are the subject of the contract tests of ``test_events``."""
 
-    SKIPPED = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused")
+    # This sequence covers work beacons; conductor sessions are asserted separately in test_detach.
+    SKIPPED = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished", "orch.run.refused", "orch.conductor.lifecycle")
 
     def sequence(self) -> list:
         from aicore.ext import events as journal
@@ -456,7 +477,7 @@ class EventSequenceTests(CharacterizationCase):
     def test_question_blocks_the_piece(self):
         self.script({"executor": [asking(dict(ASK))], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         self.assertEqual(self.sequence(), ["orch.agent.questioned", "orch.run.waiting", "orch.work.blocked"])
 
     def test_dynamic_review(self):
@@ -583,12 +604,15 @@ T = "test_conductor.py"
 # snapshot) or ``test:<file>`` (the file of tests/ that names it). WORK_SOURCE_* stands for the whole family.
 COVERAGE = {
     # Stops
+    "DETACH_FAILED": "test:test_detach.py",
     "RUN_BUSY": "test:test_run_lease.py", "WORKTREE_BUSY": "test:test_run_lease.py",
     "QUESTIONS_LOCKED": "test:test_run_lease.py",
     "QUESTION_ANSWERED_NOT_RETRIED": "test:test_conductor_questions.py",
     "CONDUCTOR_CRASHED": "test:test_observer.py",
     "STAGE_RECOVERY_UNKNOWN": "test:test_resume_reconcile.py",
-    "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": "snapshot:question-answer-resume",
+    "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": f"test:{T}",
+    "WAITING_DECISION": "snapshot:question-answer-resume", "QUESTIONS_OPEN": "test:test_waiting_decision.py",
+    "NOT_WAITING": "test:test_waiting_decision.py",
     "ROUTE_UNDERSHOOT": f"test:{T}", "SANDBOX_UNAVAILABLE": f"test:{T}",
     "PROVIDER_UNAVAILABLE": "snapshot:resume-after-stop", "TRANSPORT_UNSUPPORTED": f"test:{T}",
     "LAUNCH_UNKNOWN": "test:test_launch.py", "ROLE_FAILED": f"test:{T}", "ROLE_OUTPUT_EMPTY": f"test:{C}",
@@ -616,13 +640,14 @@ COVERAGE = {
     # Beacons
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
-    "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": "snapshot:green",
+    "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": f"test:{T}",
     "RESULT_REPAIRED": "snapshot:report-fixer-repair", "REPAIR_FAILED": f"test:{C}", "REPAIR_SEMANTIC_DRIFT": "test:test_repair_semantics.py",
     "INPUT_REBUILT": "snapshot:input-rebuilt",
     "PROVIDER_WAIT": "snapshot:quota-wait", "ROUTE_FALLBACK": "snapshot:route-fallback",
     "ROUTE_UPGRADED": "test:test_conductor_focus.py", "CAPACITY_GATED": f"test:{T}",
     "RESULT_SILENT_DENIAL": "test:test_conductor_agents.py", "GATE_NOT_WRITTEN": f"test:{C}", "DISK_LOW": "test:test_polish.py",
     "WRITE_PROTECTED_PATH": "test:test_protected_writes.py",
+    "GENERATED": "test:test_protected_writes.py", "GENERATE_FAILED": "test:test_protected_writes.py",
     "SESSION_ROUTE_CHANGED": "test:test_polish.py", "DEPENDENCY_BLOCKED": "test:test_conductor_session.py",
     "ROLE_LINGERED": f"test:{C}", "ISOLATION_PARTIAL": f"test:{T}", "CHECK_CHANGED_TREE": "test:test_conductor_checks.py",
     "STUBS_CHANGED": "test:test_conductor_stubs.py",
@@ -630,13 +655,16 @@ COVERAGE = {
     "TRIAGE_REPRO_TRIVIAL": "test:test_triage_repro.py", "TRIAGE_REPRO_MISMATCH": "test:test_triage_repro.py",
     "TRIAGE_REPRO_UNVERIFIED": "test:test_triage_repro.py", "REVIEW_MODE_NONE_SKIPPED": "test:test_conductor_review_plan.py",
     "GROUP_REVIEW_RESOLVED": "test:test_conductor_review_plan.py",
+    "GROUP_REVIEW_PENDING": "test:test_conductor_review_plan.py",
     "RUNTIME_ARTIFACT_RELOCATED": "test:test_write_fence.py",
     "QUESTION_OWNER_ONLY": "test:test_conductor_questions.py",
     "ADVICE_HELD": "test:test_conductor_advisor.py",
     "POLICY_STAGE_SKIPPED": "test:test_policy_stages.py",
-    "CONCURRENT_RUN": f"test:{T}", "RESULT_INCOMPLETE": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
+    "CONCURRENT_RUN": f"test:{T}", "SANDBOX_STUBS_REMOVED": "test:test_sandbox_stubs.py", "RESULT_INCOMPLETE": f"test:{T}", "SELF_CHECK_COVERED": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
     "ANSWER_SCHEMA_IGNORED": "test:test_records_contract.py",
     "PROGRESS_LINE_INVALID": "test:test_progress_lines.py",
+    "CHECK_IDLE": "test:test_heartbeat_health.py", "STALL_SUSPECTED": "test:test_heartbeat_health.py",
+    "HEARTBEAT_NOT_WRITTEN": "test:test_heartbeat_health.py",
 }
 
 

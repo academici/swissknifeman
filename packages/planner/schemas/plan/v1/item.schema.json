@@ -574,6 +574,52 @@
             "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/path"
           },
           "description": "Evidence."
+        },
+        "review": {
+          "type": "object",
+          "description": "Validated receipt and content freshness at finish.",
+          "additionalProperties": false,
+          "properties": {
+            "receipt": {
+              "type": "string",
+              "description": "Receipt path.",
+              "minLength": 1
+            },
+            "verdict": {
+              "type": "string",
+              "description": "Review verdict.",
+              "enum": [
+                "GREEN",
+                "ATTENTION",
+                "RED"
+              ]
+            },
+            "round": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Last completed review round."
+            },
+            "freshness": {
+              "type": "string",
+              "description": "Content classification.",
+              "enum": [
+                "fresh",
+                "findings_only"
+              ]
+            },
+            "reviewer": {
+              "type": "string",
+              "description": "Reviewer provider/model/effort.",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "receipt",
+            "verdict",
+            "round",
+            "freshness",
+            "reviewer"
+          ]
         }
       },
       "required": [],

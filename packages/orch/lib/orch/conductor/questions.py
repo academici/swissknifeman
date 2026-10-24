@@ -10,7 +10,8 @@ timeout does: the conductor never answers on a timeout.
 
 Entry of a question: ``id, revision, kind, text, [options, answer_schema, default], blocking, [assumed, risk], status,
 binding{run,item,step,input_digest,[input_part_digest]}, asked_at, [resolution{value,by,at}, answer_schema_ignored]``
-(records/v1 questions). An answer is checked against ``answer_schema`` when that schema loads in the closed profile; else
+(records/v1 questions); an entry answered by an accepted decision also has ``question_key`` and ``question_digest``
+(:func:`question_key`: the meaning of a question, never only its id). An answer is checked against ``answer_schema`` when that schema loads in the closed profile; else
 it is taken and ``answer_schema_ignored`` says why.
 ``status`` is ``open`` (waits for an answer),
 ``answered`` (the resolution is not given to the executor yet), ``applied`` (the executor got it), ``assumed`` (not
@@ -25,6 +26,7 @@ import sys
 from typing import Optional
 
 from aicore.util import schema, timefmt
+from aicore.util.digest import sha256_hex
 from aicore.util.redact import redact_text
 
 from orch._types.records import Questions
@@ -60,6 +62,86 @@ def _epoch(text: str) -> float:
     if value is None:
         raise ValueError(f"not a timestamp: {text!r}")
     return int(value)
+
+
+REUSABLE_KINDS = ("decision", "clarification")  # approval and credential are the owner's every time
+
+
+def _meaning(item_ref: str, entry: dict) -> dict:
+    """What a question means, apart from its id and revision: the piece, the kind, the text (whitespace collapsed; case
+    and digits stay), the full definition of each option (by id) and the answer schema."""
+    options = sorted(({key: value for key, value in option.items()} for option in entry.get("options") or []),
+                     key=lambda option: option["id"])
+    return {"item": item_ref, "kind": entry["kind"], "text": " ".join(str(entry["text"]).split()), "options": options,
+            "answer_schema": entry.get("answer_schema")}
+
+
+def question_digest(item_ref: str, entry: dict) -> str:
+    """Full sha256 of the canonical JSON of the meaning of a question."""
+    return sha256_hex(json.dumps(_meaning(item_ref, entry), sort_keys=True, separators=(",", ":"),
+                                 ensure_ascii=False).encode("utf-8"))
+
+
+def question_key(item_ref: str, entry: dict) -> str:
+    """``qk-`` and the first 16 hex characters of :func:`question_digest`: the same question of the same piece, asked
+    again, has the same key; a changed number, option or schema is another question."""
+    return "qk-" + question_digest(item_ref, entry)[:16]
+
+
+def decision_text(entry: dict) -> str:
+    """The text of the decision a resolution becomes in the plan: ``<id>: <label>`` for an option, the string itself, else
+    the JSON of the value."""
+    value = entry["resolution"]["value"]
+    option = next((row for row in entry.get("options") or [] if row["id"] == value), None)
+    if option is not None:
+        return f"{option['id']}: {option['label']}" if option.get("label") else option["id"]
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+
+
+def reusable_value(entry: dict, decision: str) -> tuple:
+    """``(True, value)`` when the text of an accepted decision is an answer the question can take: the id of one of its
+    options (alone or before ``: label``), or a text that passes ``answer_schema``; else ``(False, None)``."""
+    options = [row["id"] for row in entry.get("options") or []]
+    for name in sorted(options, key=len, reverse=True):
+        if decision == name or decision.startswith(f"{name}: "):
+            return True, name
+    if options and entry["kind"] != "clarification":
+        return False, None
+    answer_schema = entry.get("answer_schema")
+    if not answer_schema:
+        return bool(decision.strip()), decision
+    if _answer_schema_problem(answer_schema):
+        return False, None
+    try:
+        probe = {"answer_schema": answer_schema}
+        value = _checked_answer(probe, entry["id"], decision, text=True)
+    except QuestionError:
+        return False, None
+    return True, value
+
+
+def reusable(item_ref: str, entry: dict, decisions: list) -> tuple:
+    """``(decision, value, None)`` for the accepted decision that answers ``entry`` again, else ``(None, None, reason)``:
+    ``reason`` is ``None`` when no decision names this question, else ``key`` (the same meaning under another key),
+    ``digest`` (the key matches, the meaning is not proven) or ``value`` (the answer does not fit this question)."""
+    if entry["kind"] not in REUSABLE_KINDS:
+        return None, None, None
+    key, digest = question_key(item_ref, entry), question_digest(item_ref, entry)
+    refused = None
+    for decision in decisions:
+        if decision.get("status") != "accepted" or not isinstance(decision.get("decision"), str):
+            continue
+        if decision.get("question_digest") == digest and decision.get("question_key") != key:
+            refused = refused or "key"
+        elif decision.get("question_key") == key:
+            if decision.get("question_digest") != digest:
+                refused = refused or "digest"
+                continue
+            fits, value = reusable_value(entry, decision["decision"])
+            if fits:
+                return decision, value, None
+            refused = refused or "value"
+    return None, None, refused
 
 
 def record(store: dict, asked: list, binding: dict, now: str) -> list:

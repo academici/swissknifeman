@@ -1,0 +1,19 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:heartbeat:v1",
+  "run_id": "cnd-20261101T101010Z-abc123",
+  "pid": 4242,
+  "start_ticks": 123456,
+  "boot_id": "3f0c9a52-6b1e-4c1d-9a55-0d7a3c1b9e10",
+  "host": "workstation",
+  "seq": 18,
+  "at": "2026-11-01T10:14:00Z",
+  "item": null,
+  "step": null,
+  "role": null,
+  "waiting": {
+    "kind": "work_source",
+    "reason_code": "WORK_SOURCE_CALL",
+    "since": "2026-11-01T10:14:00Z",
+    "deadline": "2026-11-01T10:24:00Z"
+  }
+}

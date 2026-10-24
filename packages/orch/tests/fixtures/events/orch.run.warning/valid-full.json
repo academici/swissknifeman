@@ -2,7 +2,7 @@
   "correlationid": "cnd-1",
   "data": {
     "item": "P1.1",
-    "reason_code": "LIMIT_OVER",
+    "reason_code": "STAGE_IDLE",
     "run_id": "cnd-1",
     "step": "executor.1",
     "work_id": "P1.1@abc"

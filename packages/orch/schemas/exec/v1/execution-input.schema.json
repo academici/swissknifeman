@@ -128,6 +128,16 @@
             "target": {
               "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
               "description": "Review target."
+            },
+            "plan": {
+              "description": "Optional reviewed plan identity.",
+              "type": "string",
+              "minLength": 1
+            },
+            "item": {
+              "description": "Optional reviewed plan identity.",
+              "type": "string",
+              "minLength": 1
             }
           },
           "required": [
@@ -204,6 +214,64 @@
             "finding": {
               "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
               "description": "Finding the work answers."
+            },
+            "fix_briefs": {
+              "description": "Ordered backlog of bounded group-review correction assignments after the initial goal.",
+              "type": "array",
+              "items": {
+                "description": "A schema-validated fix-brief bound to this input by its canonical digest.",
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "description": "Fix-brief artifact path, relative to the project or absolute.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "digest": {
+                    "description": "Canonical SHA-256 of the referenced fix-brief.",
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": ["path", "digest"],
+                "additionalProperties": false
+              }
+            },
+            "session_ref": {
+              "description": "Where the reviewed group comes from (run, last piece, every piece) and, when the last piece kept a resumable session, that session: the follow-up run resumes it when the provider and the identity still match, and otherwise starts fresh with the handoff of every piece of the group.",
+              "type": "object",
+              "properties": {
+                "run": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Conductor run that made the reviewed pieces."
+                },
+                "item": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Last piece of the group, whose session this is."
+                },
+                "session": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Provider session id; absent when the group kept none to resume."
+                },
+                "provider": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Provider that built the session."
+                },
+                "fingerprint_digest": {
+                  "description": "Canonical digest of the fingerprint of the session without piece, attempt and base revision (the identity a follow-up shares with it).",
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "items": {
+                  "description": "Every piece of the reviewed group, for the handoff of a follow-up that starts fresh.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text"
+                  }
+                }
+              },
+              "required": ["run", "item", "items"],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -299,7 +367,11 @@
     },
     "review_mode": {
       "type": "string",
-      "enum": ["none", "self", "requested"],
+      "enum": [
+        "none",
+        "self",
+        "requested"
+      ],
       "description": "Review the plan asks for this work: none (no review, no risk-score review either), self or requested."
     },
     "review_route": {
@@ -437,6 +509,16 @@
           "rationale": {
             "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
             "description": "Decision rationale."
+          },
+          "question_key": {
+            "type": "string",
+            "pattern": "^qk-[0-9a-f]{16}$",
+            "description": "Key of the question this decision answered when an orchestration run recorded it: the conductor answers the same question of the same piece again by it."
+          },
+          "question_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the canonical meaning of that question; a decision is reused only when it matches the question asked now."
           },
           "source": {
             "type": "object",

@@ -3,7 +3,9 @@
 State: ``order`` (references in plan order), ``items`` (per reference: ``status``, ``title``, ``scenario``,
 ``options`` layers, ``checks``, ``write_set``, ``route``, ``holder``), ``registered`` (attempt id -> status),
 ``commits`` and ``calls`` (every request, in order). ``refuse`` names operations to refuse once (``commit``,
-``register``, ``release``). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
+``register``, ``release``, ``decision``); ``no_decision`` makes the source a plugin without the ``decision`` operation.
+An accepted ``decision`` is kept in ``decisions`` and in the ``decisions`` of its item, which the next brief carries
+into the execution-input (like the planner bridge, ``question_key`` and ``question_digest`` included). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
 """
 import json
 import os
@@ -86,6 +88,8 @@ def brief(state, given, project):
             doc[key] = item[key]
     if "research" in item:  # the research need of the plan item, as the planner bridge carries it
         doc["research"] = item["research"]
+    if item.get("decisions"):  # the accepted decisions of the item, as the planner bridge carries them
+        doc["decisions"] = item["decisions"]
     doc.pop("digest", None)
     doc["input_id"] = f"PLAN9.{given['ref']}"
     digest = sha256_hex(canonical_json_bytes(doc))
@@ -187,6 +191,31 @@ def research(state, given, project):
     return {"op": "research", "outcome": "recorded", "path": relative}
 
 
+def decision(state, given):
+    """Records the answered question as an accepted decision of the item; a repeat of the same question_key is a no-op."""
+    if "decision" in state.get("refuse", []):
+        state["refuse"].remove("decision")
+        return {"op": "decision", "outcome": "refused", "reason_code": "DECISION_TEST_REFUSAL", "message": "once"}
+    item = state["items"][given["ref"]]
+    for known in item.get("decisions", []):
+        if known.get("question_key") == given["question_key"]:
+            return {"op": "decision", "outcome": "no-op", "decision_id": known["ref"]}
+    options = {row["id"]: row for row in given["question"].get("options", [])}
+    value = given["resolution"]["value"]
+    if value in options:
+        text = f"{value}: {options[value]['label']}" if options[value].get("label") else value
+    else:
+        text = value if isinstance(value, str) else json.dumps(value)
+    number = len(state.setdefault("decisions", [])) + 1
+    entry = {"ref": f"D{number}", "loaded": True, "title": f"{given['ref']} {given['question']['id']}", "status": "accepted",
+             "decision": text, "rationale": given["rationale"], "question_key": given["question_key"],
+             "question_digest": given["question_digest"]}
+    item.setdefault("decisions", []).append(entry)
+    state["decisions"].append({**entry, "authority": given["authority"], "ref_item": given["ref"],
+                               "evidence": given["evidence"], "resolution": given["resolution"]})
+    return {"op": "decision", "outcome": "recorded", "decision_id": entry["ref"]}
+
+
 manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
 request = json.load(sys.stdin)
 request_id = request.get("request_id", "0" * 32)
@@ -203,7 +232,11 @@ elif request.get("op") == "invoke":
     handlers = {"claim": lambda: claim(state, given), "brief": lambda: brief(state, given, project),
                 "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project),
                 "release": lambda: release(state, given), "note": lambda: note(state, given),
-                "research": lambda: research(state, given, project)}
+                "research": lambda: research(state, given, project), "decision": lambda: decision(state, given)}
+    if given["op"] == "decision" and state.get("no_decision"):  # a source without the operation
+        save(state)
+        reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source records no decisions"})
+        sys.exit(0)
     answer = handlers[given["op"]]()
     save(state)
     reply(request_id, output=answer)

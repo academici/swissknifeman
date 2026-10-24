@@ -251,6 +251,10 @@
         "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
       },
       "description": "Sections."
+    },
+    "readiness": {
+      "$ref": "urn:swissknifeman:task:plan:phase:v1#/$defs/readiness",
+      "description": "Lifecycle-owned readiness certificate; only readiness record writes it."
     }
   },
   "required": [
@@ -262,5 +266,176 @@
     "items",
     "batches"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "readiness": {
+      "type": "object",
+      "description": "Lifecycle-owned phase readiness certificate; only readiness record writes it.",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Recorded readiness verdict.",
+          "enum": [
+            "ready",
+            "ready_with_advisories",
+            "not_ready"
+          ]
+        },
+        "digest": {
+          "type": "string",
+          "description": "Semantic digest.",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "policy_digest": {
+          "type": "string",
+          "description": "Settings and validator digest.",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "validator_version": {
+          "type": "string",
+          "description": "Planner version used for validation.",
+          "minLength": 1
+        },
+        "checked_at": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+          "description": "Audit timestamp."
+        },
+        "structural": {
+          "type": "object",
+          "description": "Phase and plan structural check counts.",
+          "properties": {
+            "errors": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Errors count."
+            },
+            "warnings": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Warnings count."
+            },
+            "external": {
+              "type": "object",
+              "description": "Check counts.",
+              "properties": {
+                "errors": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Errors count."
+                },
+                "warnings": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Warnings count."
+                }
+              },
+              "required": [
+                "errors",
+                "warnings"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "errors",
+            "warnings",
+            "external"
+          ],
+          "additionalProperties": false
+        },
+        "audit": {
+          "type": "object",
+          "description": "Audit evidence.",
+          "properties": {
+            "ref": {
+              "type": "string",
+              "description": "Existing knowledge document.",
+              "pattern": "^knowledge/[a-z0-9][a-z0-9-]*$"
+            },
+            "verdict": {
+              "type": "string",
+              "description": "Human audit verdict.",
+              "enum": [
+                "GREEN",
+                "ATTENTION",
+                "RED"
+              ]
+            }
+          },
+          "required": [
+            "ref",
+            "verdict"
+          ],
+          "additionalProperties": false
+        },
+        "findings": {
+          "type": "array",
+          "description": "Executability and execution economy findings.",
+          "items": {
+            "type": "object",
+            "description": "One audit finding.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Finding id.",
+                "minLength": 1
+              },
+              "severity": {
+                "type": "string",
+                "description": "Severity.",
+                "enum": [
+                  "blocker",
+                  "major",
+                  "minor"
+                ]
+              },
+              "blocking": {
+                "type": "boolean",
+                "description": "Whether this finding blocks execution."
+              },
+              "ref": {
+                "type": "string",
+                "description": "Owning plan reference.",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "description": "Finding with evidence and impact.",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "severity",
+              "blocking",
+              "ref",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "actor": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+          "description": "Observed reviewer route."
+        },
+        "independent": {
+          "type": "boolean",
+          "description": "Reviewer provider differs from plan authoring provider; informational."
+        }
+      },
+      "required": [
+        "status",
+        "digest",
+        "policy_digest",
+        "validator_version",
+        "checked_at",
+        "structural",
+        "audit",
+        "findings",
+        "actor",
+        "independent"
+      ],
+      "additionalProperties": false
+    }
+  }
 }

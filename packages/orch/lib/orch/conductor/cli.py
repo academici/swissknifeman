@@ -1,27 +1,29 @@
-"""Command line of the conductor: ``swissknifeman orch conduct run|resume|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates|supervise|reap``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
-message`` on stderr), 2 usage, 130 interrupted (resume continues).
+message`` on stderr), 2 usage, 4 the run waits for a decision (a piece waits for the answer to a question: ``answer``,
+then ``continue``), 130 interrupted (resume continues).
 """
 from __future__ import annotations
 
 import argparse
 import getpass
 import json
+import os
 from pathlib import Path
 import re
 import sys
 import time
-from typing import Optional
 
 from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, prompts, questions
-from orch.conductor import records, runs
+from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, questions
+from orch.conductor import prompt_cli, records, runs, supervise_cli
 from orch.conductor.application import run_service
-from orch.conductor.infrastructure import launch_plan
+from orch.conductor.infrastructure import detach, launch_plan
+from orch.conductor.infrastructure.lease import launcher
 
 
 def _project(args):
@@ -140,7 +142,7 @@ def _questions(args, project: Path) -> int:
             return 1 if invalid else 0
         for row in rows:
             print(f"{row['item']} {row['id']} (revision {row['revision']}, {row['kind']}): {row['text']} — "
-                  + ("answered, waits for resume; " if row["answered"] else "") + f"{row['age_s']} s"
+                  + ("answered, continue; " if row["answered"] else "") + f"{row['age_s']} s"
                   + (" OVERDUE" if row["overdue"] else ""))
         if not rows and not invalid:
             print("no open questions")
@@ -158,84 +160,7 @@ def _questions(args, project: Path) -> int:
     print(json.dumps({"run": run_id, "item": args.item, "question": entry["id"], "revision": entry["revision"],
                       "resolution": entry["resolution"],
                       **({"answer_schema_ignored": ignored} if ignored else {}),
-                      "next": f"orch conduct resume --run {run_id} --retry {args.item}"}, ensure_ascii=False))
-    return 0
-
-
-STEP_PATTERN = r"[a-z][a-z0-9-]*(\.[0-9]+(-q[0-9]+)?)?"
-
-
-class _PromptError(Exception):
-    def __init__(self, code: str, message: str):
-        super().__init__(f"{code}: {message}")
-        self.code, self.message = code, message
-
-
-def _manifest(project: Path, run: Optional[str], item: str, step: str, missing: str = "MANIFEST_UNKNOWN") -> tuple:
-    """``(run_id, manifest)`` of ``prompts/<step>.manifest.json`` of ``item`` in ``run`` (default: the latest run), the
-    paths checked to stay inside the run; ``_PromptError`` otherwise (``missing`` names a manifest that is not there)."""
-    if re.fullmatch(STEP_PATTERN, step) is None:
-        raise _PromptError("PROMPT_PATH_INVALID", "step must be a role step such as executor.1")
-    run_id = run or _latest(project)
-    if run_id and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id) is None:
-        raise _PromptError("PROMPT_PATH_INVALID", "invalid run id")
-    directory = engine.runs_root(project) / (run_id or "-")
-    if not run_id or not (directory / engine.RUN_FILE).is_file():
-        raise _PromptError("RUN_UNKNOWN", f"no conductor run {run or ''} in {engine.runs_root(project)}")
-    item_dir = directory / engine.safe(item)
-    file = item_dir / "prompts" / f"{step}.manifest.json"
-    try:
-        item_dir.resolve().relative_to(directory.resolve())
-        file.resolve().relative_to(item_dir.resolve())
-    except (ValueError, OSError, RuntimeError):
-        raise _PromptError("PROMPT_PATH_INVALID", "manifest must resolve inside the item directory") from None
-    doc = engine.read_json(file) if file.is_file() else None
-    if not isinstance(doc, dict):
-        raise _PromptError(missing, f"no prompt manifest for {item} {step} in run {run_id} ({file})")
-    return run_id, doc
-
-
-def _baseline(step: str) -> Optional[str]:
-    """The previous attempt of the same step (``executor.2`` -> ``executor.1``), None for a first one."""
-    found = re.fullmatch(r"([a-z][a-z0-9-]*)\.([0-9]+)(-q[0-9]+)?", step)
-    if found is None or int(found.group(2)) <= 1:
-        return None
-    return f"{found.group(1)}.{int(found.group(2)) - 1}{found.group(3) or ''}"
-
-
-def _prompt(args, project: Path) -> int:
-    """``prompt explain``: the blocks of the prompt a role step was given (``prompts/<step>.manifest.json``), their
-    origin, size and digest, and what was left out. ``prompt diff``: what changed in it against the previous attempt of
-    the step or a named ``RUN:ITEM:STEP``."""
-    try:
-        if args.prompt_verb == "diff":
-            return _prompt_diff(args, project)
-        _run_id, doc = _manifest(project, args.run, args.item, args.step)
-    except (_PromptError, engine.Stop) as error:
-        print(f"{error.code}: {error.message}", file=sys.stderr)
-        return 1
-    print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.explain_table(doc))
-    return 0
-
-
-def _prompt_diff(args, project: Path) -> int:
-    run_id, target = _manifest(project, args.run, args.item, args.step, missing="PROMPT_MANIFEST_MISSING")
-    if args.against:
-        parts = args.against.split(":")
-        if len(parts) != 3 or not all(parts):
-            raise _PromptError("PROMPT_PATH_INVALID", "--against takes RUN:ITEM:STEP")
-        against = (parts[0], parts[1], parts[2])
-    else:
-        previous = _baseline(args.step)
-        if previous is None:
-            raise _PromptError("PROMPT_BASELINE_MISSING", f"{args.step} is the first attempt of its step: name the prompt "
-                                                          "to compare with --against RUN:ITEM:STEP")
-        against = (run_id, args.item, previous)
-    _base_run, base = _manifest(project, *against, missing="PROMPT_MANIFEST_MISSING")
-    doc = records.check(dict(prompts.diff_manifests(base, target), run=run_id, item=args.item,
-                             against={"run": against[0], "item": against[1], "step": against[2]}),
-                        "prompt-diff", "prompt diff", hint=records.WRITER_HINT)
-    print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.diff_table(doc))
+                      "next": f"orch conduct continue --run {run_id} --item {args.item}"}, ensure_ascii=False))
     return 0
 
 
@@ -270,49 +195,6 @@ def _timeline(args, project: Path) -> int:
     if not rows:
         print("no steps in the journal")
     return 0
-
-
-def _status_details(directory: Path, found: dict) -> dict:
-    """Add read-only observability to the journal summary without rebuilding routes or options."""
-    state = found["state"]
-    doc = records.read(directory / engine.RUN_FILE, "run") or {}
-    raises = state.get("limit_raises") or []
-    limits = {}
-    if doc.get("limits_run") or raises:
-        limits = {"items": {}, **(doc.get("limits_run") or {}), "limit_raises": raises}
-    for row in found["items"]:
-        ref = row["item"]
-        item_state = (state.get("items") or {}).get(ref) or {}
-        folder = directory / engine.safe(ref)
-        recorded = records.read(folder / "routes.json", "item-routes") or {}
-        row.update(tokens=item_state.get("tokens"), usage_incomplete=item_state.get("usage_incomplete"),
-                   routes={role: runs.public_route(route) for role, route in recorded.items()
-                           if isinstance(route, dict)})
-        options = records.read(folder / "options.json", "item-options") or {}
-        item_limits = (options.get("options") or {}).get("limits") or {}
-        if item_limits:
-            limits.setdefault("items", {})[ref] = {key: item_limits.get(key, 0)
-                                                   for key in ("tokens_max", "tokens_hard_max")}
-    if limits:
-        limits.setdefault("limit_raises", raises)
-        for change in raises:
-            key = change["key"]
-            if key == "tokens_hard_max":
-                for ref, entry in limits.get("items", {}).items():
-                    if change.get("item") in (None, ref):  # a raise names its piece; an old record holds for all
-                        entry[key] = change["to"]
-            elif key == "run_tokens_hard_max":
-                limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
-    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED",
-             "WRITE_PROTECTED_PATH"}
-    beacons = {}
-    for line in progress.read_lines(directory):
-        if line.get("event") == "info" and line.get("reason_code") in codes:
-            code = line["reason_code"]
-            beacons.pop(code, None)
-            beacons[code] = line
-    return {"lease": runs.live_owner(directory), "limits": limits, "beacons": list(beacons.values()),
-            **({"catalog_digests": doc["catalog_digests"]} if isinstance(doc.get("catalog_digests"), dict) else {})}
 
 
 def _gates(args) -> int:
@@ -363,8 +245,10 @@ def _status(args, project: Path) -> int:
     doc = records.read(directory / engine.RUN_FILE, "run") or {}
     batch = doc.get("grouped") is not False and len(doc.get("items") or []) > 1
     held = run_service.held_pieces(found["state"]) if batch and found["status"] in ("stopped", "orphaned") else []
+    waiting = run_service.waiting_pieces(found["state"])
     if args.json:
-        details = _status_details(directory, found)
+        details = runs.status_details(directory, found)
+        details["waiting"] = waiting
         if held:
             details["held"] = {"items": held, "hint": run_service.held_hint(run_id, held)}
         print(json.dumps(runs.display({key: value for key, value in found.items() if key != "state"} |
@@ -373,7 +257,7 @@ def _status(args, project: Path) -> int:
                          ensure_ascii=False, indent=2))
         return 0
     print(f"run {run_id}: {found['status']}" + (f" ({found['reason_code']})" if found["reason_code"] else "")
-          + f", last line {found['last_ts']}")
+          + f", last line {found['last_ts']}" + runs.health_text(directory, found))
     if found["current"]:
         current = found["current"]
         print(f"  now: {current['item']} {current['stage']} {current.get('role') or ''} "
@@ -388,6 +272,11 @@ def _status(args, project: Path) -> int:
               + f"; {row['stages']} step(s), last {last.get('stage', '-')} {last.get('verdict') or ''}".rstrip())
         if row.get("escalation") and row["outcome"] == "blocked":
             print(f"    escalation: {row['escalation']}")
+    for row in waiting:
+        print(f"  waiting: {row['item']} for {', '.join(row['question_ids'])} since {row['since']}")
+    if waiting:
+        print(f"  answer with orch conduct answer --run {run_id} --item ITEM --question ID --option ID, "
+              f"then orch conduct continue --run {run_id}")
     if held:
         print("  " + run_service.held_hint(run_id, held))
     tokens = found["state"].get("tokens") or {}
@@ -398,6 +287,7 @@ def _status(args, project: Path) -> int:
     return 0
 
 
+@detach.refuse_errors
 def main(argv: list | None = None) -> int:
     parser = argparse.ArgumentParser(prog="swissknifeman orch conduct", description="Conduct pieces of work of a plan through "
                                      "the roles of their run-policy until green or an honest stop.")
@@ -437,6 +327,7 @@ def main(argv: list | None = None) -> int:
                      help="conduct from a snapshot of the committed orchestrator (a piece that rewrites orch itself must not "
                           "change the code that conducts it); the snapshot is removed when the run ends")
     run.add_argument("--dry-run", action="store_true", help="print what would run; claims nothing, writes nothing")
+    run.add_argument("--run-id", help=argparse.SUPPRESS)
     run.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     run.add_argument("--adopt", action="store_true",
                      help="take over the changes in the tree as an earlier attempt of the first piece (they must lie in "
@@ -451,6 +342,19 @@ def main(argv: list | None = None) -> int:
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     resume.add_argument("--frozen", action="store_true", help="as for run: a new snapshot of the committed orchestrator")
     for sub in (run, resume):
+        sub.add_argument("--detach", action="store_true", help="start in a separate session; print JSON after startup is acknowledged")
+    cont = verbs.add_parser("continue", help="go on with the pieces that wait for an answer (resume --retry of the pieces "
+                                              "whose blocking questions are all answered; exit 4 when some still wait)")
+    cont.add_argument("--run", required=True, metavar="RUN")
+    cont.add_argument("--item", action="append", default=None, metavar="ITEM",
+                      help="only this waiting piece (repeatable; default: every waiting piece)")
+    cont.add_argument("--partial", action="store_true",
+                      help="continue the pieces that are ready and leave those with an unanswered question waiting "
+                           "(default: QUESTIONS_OPEN when any is not ready)")
+    cont.add_argument("--raise-limit", action="append", default=[], metavar="KEY=N", help="as for resume")
+    cont.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
+    cont.add_argument("--frozen", action="store_true", help="as for resume")
+    for sub in (run, resume, cont):
         sub.add_argument("--debug", action=argparse.BooleanOptionalAction, default=None,
                          help="debug mode for this run: DEBUG_MODE beacon with the observer protocol and a journal in "
                               "<run>/debug/ (default: `[orch] debug` of the project, else of the machine, else off)")
@@ -502,6 +406,12 @@ def main(argv: list | None = None) -> int:
     chosen.add_argument("--option", metavar="ID", help="one of the options of the question")
     chosen.add_argument("--text", help="a free answer (for a question without options, or a clarification)")
     answer.add_argument("--by", metavar="WHO", help="who answers (default: the user of the shell)")
+    answer.add_argument("--continue", dest="cont", action="store_true",
+                        help="then continue this piece in the same command (as `continue --item ITEM`)")
+    quiet = answer.add_mutually_exclusive_group()
+    quiet.add_argument("--quiet", action="store_true", help="with --continue: no progress lines on stderr")
+    quiet.add_argument("--json-lines", dest="json_lines", action="store_true",
+                       help="with --continue: progress lines as JSON")
     listed = verbs.add_parser("questions", help="open questions of a run and their age (default: the latest run)")
     listed.add_argument("--run", metavar="RUN")
     listed.add_argument("--json", action="store_true")
@@ -530,7 +440,16 @@ def main(argv: list | None = None) -> int:
     gate_list.add_argument("--json", action="store_true")
     gate_list.add_argument("--clear", nargs="?", const="", default=None, metavar="PROVIDER",
                            help="remove the gate of PROVIDER, or every gate when no provider is given")
+    supervise_cli.add_parsers(verbs)
     args = parser.parse_args(argv)
+    if getattr(args, "detach", False) and (getattr(args, "dry_run", False) or args.frozen):
+        parser.error("--detach is incompatible with --dry-run and --frozen")
+    if getattr(args, "run_id", None) is not None:
+        if os.environ.get("SKM_ORCH_DETACHED") != "1" or detach.RUN_ID.fullmatch(args.run_id) is None:
+            parser.error("--run-id is reserved for internal detached launches and must be a conductor run id")
+        if args.detach:
+            parser.error("--run-id cannot be combined with --detach")
+    supervise_cli.check(parser, args)
     if args.verb == "run":
         if args.batch is True and not (args.items or args.ready or args.input):
             args.ready = True  # `--batch` used to select the next ready pieces
@@ -561,7 +480,14 @@ def main(argv: list | None = None) -> int:
     if context is None:
         return 1
     project = context.root
-    if getattr(args, "frozen", False) and args.verb in ("run", "resume") and not getattr(args, "dry_run", False):
+    if getattr(args, "run_id", None) and (engine.runs_root(project) / args.run_id).exists():
+        parser.error("--run-id already exists")
+    if getattr(args, "detach", False):
+        return detach.launch(list(sys.argv[1:] if argv is None else argv), project=project,
+                             run_id=engine.new_run_id() if args.verb == "run" else args.run,
+                             new_run=args.verb == "run",
+                             launcher=launcher() if launcher() in ("gui", "supervisor", "autopilot") else "detached")
+    if getattr(args, "frozen", False) and args.verb in ("run", "resume", "continue") and not getattr(args, "dry_run", False):
         try:
             return frozen.relaunch(list(sys.argv[1:] if argv is None else argv), project)
         except frozen.FrozenError as error:
@@ -576,9 +502,11 @@ def main(argv: list | None = None) -> int:
         print(json.dumps({"runs": rows}, ensure_ascii=False, indent=2) if args.json else runs.prune_text(rows, args.apply))
         return 0
     if args.verb in ("answer", "questions"):
-        return _questions(args, project)
+        code = _questions(args, project)
+        if args.verb == "questions" or code != 0 or not args.cont:
+            return code  # `answer --continue` goes on below, as `continue --item ITEM` of the same run
     if args.verb == "prompt":
-        return _prompt(args, project)
+        return prompt_cli.prompt(args, project)
     if args.verb in ("timeline", "status", "observe"):
         try:  # read-only: a record that does not match records/v1 is a stop with its code, not a traceback
             return _timeline(args, project) if args.verb == "timeline" else _status(args, project)
@@ -591,11 +519,15 @@ def main(argv: list | None = None) -> int:
         current = settings_mod.load(project=project, config_file=args.config,
                                     flags=None if debug is None else {"debug": debug})
     except ConfigError as error:
+        detach.refuse("CONFIG_INVALID", str(error))
         print(f"CONFIG_INVALID: {error}", file=sys.stderr)
         return 1
     except settings_mod.SettingsError as error:
+        detach.refuse(error.code, str(error))
         print(f"{error.code}: {error}", file=sys.stderr)
         return 1
+    if args.verb in ("supervise", "reap"):
+        return supervise_cli.run(args, project, current)
     conductor = engine.Conductor(project=project, settings=current, config_file=args.config, mode=_mode(args),
                                  model_catalog=getattr(args, "model_catalog", None),
                                  project_resolution=context.resolution)
@@ -607,14 +539,19 @@ def main(argv: list | None = None) -> int:
             return conductor.run(plan=args.plan, plans_root=args.plans_root, items=args.items or [],
                                  batch=args.ready, max_items=args.max_items, options_file=args.options,
                                  adopt=args.adopt, input_file=args.input, commit=args.commit, scenario=args.scenario,
-                                 fence=args.fence, extra_paths=args.allow_path, grouped=args.batch)
+                                 fence=args.fence, extra_paths=args.allow_path, grouped=args.batch, run_id=args.run_id)
         if args.verb == "release":
             return conductor.release(args.run, None if args.all else args.item, args.reason)
         if args.verb == "settle" and args.group is not None:
             return conductor.settle_group(args.run, args.group, args.followup_run, args.reason)
         if args.verb == "settle":
             return conductor.settle(args.run, args.item, args.outcome, args.reason)
+        if args.verb == "answer":
+            return conductor.continue_run(args.run, items=[args.item])
+        if args.verb == "continue":
+            return conductor.continue_run(args.run, items=args.item, partial=args.partial, raise_limits=args.raise_limit)
         return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit)
     except engine.Stop as stop:
+        detach.refuse(stop.code, stop.message)
         print(f"{stop.code}: {stop.message}", file=sys.stderr)
         return 1

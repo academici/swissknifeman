@@ -1,0 +1,8 @@
+{
+  "ts": "2026-10-23T21:00:00Z",
+  "run": "cnd-20261023T201500Z-a1b2c3",
+  "event": "run.end",
+  "outcome": "waiting",
+  "reason_code": "WAITING_DECISION",
+  "message": "W1 waits for an answer to Q1; answer: orch conduct answer --run cnd-20261023T201500Z-a1b2c3 --item W1 --question Q1 --option ID; then: orch conduct continue --run cnd-20261023T201500Z-a1b2c3"
+}

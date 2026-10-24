@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import os
 from pathlib import Path
 import re
+import subprocess
 import threading
 from typing import Optional
 
@@ -172,12 +173,20 @@ def green(self, item: Item, rows: list, report: dict, round_no: int, scout_text:
             elif kept_advice:
                 text = kept_advice
             if combined:  # the finished review's confirmed findings are corrected in this one round, and only in it
-                text += "\n\n" + combined["text"]
+                from orch.conductor.domain.fix_brief import correction_inputs
+                from orch.conductor.stages.review import review_correction
+                review_step = done_steps(state["steps"])[f"review.{combined['review']}"]["result"]["findings"]
+                triage_step = (done_steps(state["steps"]).get(f"triage.{combined['review']}-a")
+                               or done_steps(state["steps"])[f"triage.{combined['review']}"])["result"]["triage"]
+                findings, triage, sources = correction_inputs(item.state, combined["review"], review_step, triage_step)
+                major, _minor = self._split_confirmed(item, findings, triage)
+                text += "\n\n" + review_correction(self, item, round_no, combined["review"], findings,
+                                                   dict(triage, confirmed=major), sources)
                 if combined["review"] not in state.setdefault("combined_done", []):
                     state["combined_done"].append(combined["review"])
                 if combined["review"] not in state["corrections_at"]:
                     state["corrections_at"].append(combined["review"])
-                state["corrections_used"] = len(state["corrections_at"])
+                state["corrections_used"] = self._piece_count(state, "corrections_at")
                 state.pop("combined")
                 self._save()
         already = f"checks.{round_no}" in done_steps(item.state.get("steps") or {})
@@ -255,6 +264,8 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
         previous = [dict(row) for row in self._earlier_rows(item, number)]
         red_first = list(self._red_before(item, number))
 
+    idle_marks: dict = {}
+
     def run(folder: str, on_changed) -> list:
         return checks_mod.run_checks(
             item.input_doc, project=self.project, evidence_dir=self._evidence_dir(item),
@@ -269,8 +280,10 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
             on_result=on_result, first=red_first, kinds=tuple(item.options["checks"]["kinds"]),
             cadence=tuple(item.options["checks"]["cadence"]), warn_s=item.options["limits"].get("check_warn_s", 0),
             on_slow=lambda check_id, elapsed, pid: self._check_tick(item, number, check_id, elapsed, pid),
-            idle_s=item.options["limits"].get("check_idle_timeout_s", 0), on_changed=on_changed)
+            idle_s=item.options["limits"].get("check_idle_timeout_s", 0), on_changed=on_changed,
+            on_tick=lambda check_id, elapsed, quiet, pid: check_watch(self, item, number, idle_marks, check_id, quiet, pid))
 
+    regenerate(self, item, number)
     first, again = [], []
     try:
         rows = run(str(number), first.extend)
@@ -290,6 +303,64 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
             raise Stop("CHECKS_MUTATED", "the checks change the tree on every run: " + ", ".join(sorted(set(repeated))[:20])
                        + "; make the check idempotent")
     return rows
+
+
+GENERATE_TIMEOUT_S = 600  # a generator that runs longer is no cheap regeneration: the run stops with GENERATE_FAILED
+
+
+def _argv(project: Path, command) -> list:
+    """``command`` with a first argument that is a path of the checkout (a slash, no leading one) made absolute there:
+    the run regenerates with the generator of its own tree, not with one installed elsewhere."""
+    argv = [str(part) for part in command]
+    if argv and "/" in argv[0] and not argv[0].startswith(("/", "~")):
+        argv[0] = str(project / argv[0])
+    return argv
+
+
+def _run_generator(self, item: Item, number: int, name: str, command) -> None:
+    """One generator command in the checkout; its output goes to ``checks/<n>/<name>.log``, a non-zero exit (or no exit
+    within ``GENERATE_TIMEOUT_S``) stops the run with ``GENERATE_FAILED``: a stale generated file is never committed."""
+    log = item.directory / "checks" / str(number) / f"{name}.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    shown = " ".join(str(part) for part in command)
+    try:
+        done = subprocess.run(_argv(self.project, command), cwd=self.project, capture_output=True, text=True,
+                              timeout=GENERATE_TIMEOUT_S, check=False)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        log.write_text(str(error) + "\n", encoding="utf-8")
+        raise Stop("GENERATE_FAILED", f"{name} `{shown}` did not finish: {error}"[:300]) from None
+    log.write_text(done.stdout + done.stderr, encoding="utf-8")
+    if done.returncode:
+        last = ((done.stderr or done.stdout).strip().splitlines() or ["no output"])[-1]
+        raise Stop("GENERATE_FAILED", f"{name} `{shown}` exited {done.returncode}: {last}"[:300]
+                   + f"; log {self._relative(log)}")
+
+
+def regenerate(self, item: Item, number: int) -> list:
+    """``[orch.conductor] generate`` before the checks of round ``number``: the generated files (``generated_paths``)
+    follow the sources the executor changed, so the provider's refusal to write them costs no round and no owner. The
+    files it changes belong to the candidate like those of a check (``keep_check_changes``, beacon ``GENERATED``);
+    ``generate_check`` then proves them fresh. A tree without changes regenerates nothing."""
+    command = self.conductor.get("generate") or []
+    if not command:
+        return []
+    before = checks_mod.dirty_files(self.project)
+    if not before:
+        return []
+    _run_generator(self, item, number, "generate", command)
+    if self.conductor.get("generate_check"):
+        _run_generator(self, item, number, "generate-check", self.conductor["generate_check"])
+    after = checks_mod.dirty_files(self.project)
+    fresh = checks_mod.changed_files(before, after)
+    globs = self._generated_globs()
+    changed = sorted(set(fresh) | {path for path in after if scopes.under(path, globs)})
+    product = keep_check_changes(self, item, number, changed) if changed else []
+    fresh = [path for path in product if path in fresh]
+    if fresh:
+        self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="GENERATED",
+                           message=f"generate changed {len(fresh)} file(s): {', '.join(fresh[:5])}"
+                                   f"{' …' if len(fresh) > 5 else ''}; they belong to this piece")
+    return product
 
 
 def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
@@ -319,6 +390,7 @@ def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
     write_set = (item.input_doc.get("scope") or {}).get("write_set")
     stranger = scopes.foreign(scopes.outside(product, write_set), write_set,
                               self._scope_option(item, "extra_paths", []), self.project)
+    stranger = [path for path in stranger if not scopes.under(path, self._generated_globs())]  # regenerated, not authored
     if stranger and item.options["scope"].get("outside_module", "deviation") == "block":
         raise Stop("OUTSIDE_MODULE", "the checks changed files of other modules: " + ", ".join(stranger[:20])
                    + "; add them to the item's task_files or make the check write them elsewhere")
@@ -328,10 +400,30 @@ def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
 def check_tick(self, item: Item, number: int, check_id: str, elapsed: float, pid: int) -> None:
     self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_SLOW",
                        message=f"{check_id} running {human_duration(elapsed)}; {process.activity(pid, Path(os.devnull))}")
+    self._beacon_event("orch.run.warning", item, {"reason_code": "CHECK_SLOW", "step": f"checks.{number}"})
     low = disk.shortage(self.project, item.options["limits"].get("disk_min_gb", 0))
     if low:  # the check is not cut (a stop from this thread could not release it); the owner decides
         self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="DISK_LOW", message=low)
+        self._beacon_event("orch.run.warning", item, {"reason_code": "DISK_LOW", "step": f"checks.{number}"})
     self._run_clock(item, stop=False)
+
+
+def check_watch(owner, item: Item, number: int, marks: dict, check_id: str, quiet: float, pid: int) -> None:
+    """A look at a running check (from the thread that waits for it): a sign of life in the heartbeat, and a ``CHECK_IDLE``
+    beacon every ``check_idle_warn_s`` of silence (no output and no CPU of the process tree). Nothing is stopped."""
+    found = getattr(owner, "heartbeat", None)
+    if found is not None:
+        found.beat(item=item.ref, step=f"checks.{number}")
+    warn = item.options["limits"].get("check_idle_warn_s", 0)
+    if not warn:
+        return
+    if quiet < warn:
+        marks[check_id] = warn
+    elif quiet >= marks.setdefault(check_id, warn):
+        marks[check_id] += warn
+        owner.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="CHECK_IDLE",
+                            message=f"{check_id} no output for {human_duration(quiet)}; {process.activity(pid, Path(os.devnull))}")
+        owner._beacon_event("orch.run.warning", item, {"reason_code": "CHECK_IDLE", "step": f"checks.{number}"})
 
 
 def run_checks(self, item: Item, number: int, report: dict, computed=None) -> list:
@@ -398,7 +490,6 @@ def carry_review(self, item: Item, review_no: int) -> None:
         major, minor = self._split_confirmed(item, findings, triage)
         self._defer_minor(item, findings, minor)
         if major:
-            item.state["combined"] = {"review": review_no,
-                                      "text": prompts.review_correction(findings, dict(triage, confirmed=major))}
+            item.state["combined"] = {"review": review_no}
     self.progress.emit("info", item=item.ref, message=f"the checks are red but review {review_no} is done: its "
                                                       f"{len(major)} finding(s) to correct go into the same correction")

@@ -23,12 +23,20 @@ def past_reset(error: dict) -> bool:
     return error.get("class") == "quota" and error.get("retry_after_s") == 0
 
 
-def pause(seconds: float, cancel=None) -> None:
-    """Sleep ``seconds``, looking at ``cancel`` every second."""
-    remaining = float(seconds)
+PAUSE_TICK_S = 30  # how often a long pause says it is alive (``tick``)
+
+
+def pause(seconds: float, cancel=None, tick=None) -> None:
+    """Sleep ``seconds``, looking at ``cancel`` every second and calling ``tick`` (the heartbeat of the run) every
+    ``PAUSE_TICK_S`` seconds."""
+    remaining, since = float(seconds), 0.0
     while remaining > 0:
         if cancel is not None and cancel.is_set():
             raise Stop("REVIEW_CANCELLED", "cancelled while waiting for the provider: the checks are red")
         step = min(1.0, remaining)
         clock.sleep(step)
         remaining -= step
+        since += step
+        if tick is not None and since >= PAUSE_TICK_S:
+            since = 0.0
+            tick()

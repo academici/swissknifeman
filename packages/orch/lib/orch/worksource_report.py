@@ -81,5 +81,5 @@ def refusal_code(body, found: list[str]) -> str:
     places = [_ISSUE_AT.match(line) for line in found]
     if not found or not isinstance(issues, list) or not all(places):
         return "REGISTER_REPORT_INVALID"
-    first = min(int(place.group(1)) for place in places)
+    first = min(int(place.group(1)) for place in places if place)
     return "REGISTER_UNCLASSIFIED" if _unclassified(issues[first]) else "REGISTER_REPORT_INVALID"

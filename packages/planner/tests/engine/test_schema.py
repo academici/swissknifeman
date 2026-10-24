@@ -44,6 +44,24 @@ class FixtureTests(unittest.TestCase):
             plan["settings"]["commit"] = invalid
             self.assertTrue(schema.validate(plan, "plan"), invalid)
 
+    def test_decision_origin_is_optional_and_closed(self):  # PLAN9 P7.6: the question a run answered
+        decision = load(SCHEMA_DIR / "examples/valid/decision-origin.json")
+        self.assertEqual(schema.validate(decision, "decision"), [])
+        plain = copy.deepcopy(decision)
+        del plain["origin"]
+        self.assertEqual(schema.validate(plain, "decision"), [])
+        for change in ({"kind": "council"}, {"question_key": "qk-1"}, {"question_digest": "abc"}, {"revision": 0},
+                       {"extra": True}):
+            broken = copy.deepcopy(decision)
+            broken["origin"].update(change)
+            with self.subTest(change):
+                self.assertTrue(schema.validate(broken, "decision"), change)
+        for missing in ("kind", "run", "item", "question_id", "question_key"):
+            broken = copy.deepcopy(decision)
+            del broken["origin"][missing]
+            with self.subTest(missing):
+                self.assertTrue(schema.validate(broken, "decision"), missing)
+
     def test_valid_fixtures_have_no_issues(self):
         files = sorted((FIXTURES / "valid").glob("*.json"))
         self.assertGreaterEqual(len(files), 10)

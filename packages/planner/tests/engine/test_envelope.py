@@ -78,6 +78,7 @@ class VerbCoverageTests(EnvelopeCase):
             ("commit", ["commit", plan, "P1.1", "--role", "executor", "--dry-run"], 1),  # outside Git
             ("check", ["check", plan], 0),
             ("next", ["next", plan], 0),
+            ("readiness", ["readiness", "status", plan, "P1", "--json"], 0),
             ("stats", ["stats", plan], 0),
             ("render", ["render", plan], 0),
             ("export", ["export", plan], 0),

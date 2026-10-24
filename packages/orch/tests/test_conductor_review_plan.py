@@ -9,8 +9,16 @@ import unittest
 
 from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
 
-CLEAN = {"text": "## Findings\nnone\n## Checked and fine\n- a\n"}
-REVIEW = "## Findings\n[Major] out/W3.txt:1 - a defect\nScenario: x -> y\nFix: z\n## Checked and fine\n- a\n"
+def json_review(severity=None, path="out/W3.txt:1"):
+    doc = {"verdict": "GREEN" if severity is None else "RED" if severity == "Blocker" else "ATTENTION",
+           "findings": [] if severity is None else [{"id": "F1", "severity": severity, "confidence": "high",
+                "location": path, "failure_scenario": "x -> y: a defect", "basis": "correctness", "reproduction": "run x"}],
+           "questions": [], "residual_risk": ""}
+    return "```json review-findings\n" + json.dumps(doc) + "\n```\n"
+
+
+CLEAN = {"text": json_review()}
+REVIEW = json_review("Major")
 
 
 def answer(mode, groups, effort="medium"):
@@ -63,11 +71,38 @@ class ReviewPlanTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 0))
         self.assertNotIn("group_reviews", self.state(err))
+        pending = [line["message"] for line in self.lines(err) if line.get("reason_code") == "GROUP_REVIEW_PENDING"]
+        self.assertEqual(pending, ["group 1: W1, W2 done and not reviewed"], err)
         code, _, resumed = self.conduct("resume", "--run", self.run_dir(err).name,
                                        "--raise-limit", "run_tokens_hard_max=1000", "--json-lines")
         self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 1))
         self.assertIn("1", self.state(resumed)["group_reviews"])
+
+    def blocked_second(self, on_blocked: str):
+        blocked = report("W2", "blocked", changed_paths=[], checks_run=[],
+                         open_issues=[{"text": "needs the owner's API key", "kind": "escalation"}])
+        self.set_items({ref: {} for ref in ("W1", "W2")})
+        self.script({"executor": [executor_ok("W1"), {"result": blocked}], "reviewer": [{"text": REVIEW}]})
+        path = self.project.parent / "group-options.json"
+        path.write_text(json.dumps({"review": {"strategy": "single"}, "on_blocked": on_blocked}))
+        return self.run_items("W1", "W2", extra=("--options", path))
+
+    def test_a_run_stopped_on_a_blocked_piece_says_the_done_ones_wait_for_their_group_review(self):
+        code, _, err = self.blocked_second("stop")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual(self.calls("reviewer"), 0)
+        pending = [line["message"] for line in self.lines(err) if line.get("reason_code") == "GROUP_REVIEW_PENDING"]
+        self.assertEqual(len(pending), 1, err)
+        self.assertIn("group 1: W1 done and not reviewed; the review waits for W2", pending[0])
+        observer = json.loads(next(self.project.rglob(f"reports/{self.run_dir(err).name}/observer.json")).read_text())
+        self.assertEqual(observer["incomplete_group_reviews"], ["1 not run (W1 unreviewed)"])
+
+    def test_a_finished_run_reviews_the_done_pieces_of_a_group_whose_others_are_blocked(self):
+        code, _, err = self.blocked_second("report")
+        self.assertEqual(self.calls("reviewer"), 1, err)
+        self.assertEqual(self.state(err)["group_reviews"]["1"]["refs"], ["W1"])
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "GROUP_REVIEW_PENDING"])
 
     def run_model(self, *items):
         """A run whose strategist is the model (``review.strategist: model``): the default is the rules."""
@@ -126,7 +161,9 @@ class ReviewPlanTests(ConductorCase):
         doc = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(doc["provenance"]["kind"], "review_followup")
         self.assertEqual(doc["scope"]["include"], ["out/W3.txt"])
-        self.assertIn("[Major] out/W3.txt:1 - a defect", doc["goal"])
+        self.assertIn("(Major, out/W3.txt:1)", doc["goal"])
+        for expected in ("x -> y", "run x", "fix:", "reported, not run"):
+            self.assertIn(expected, doc["goal"])
         message = self.events(err, "GROUP_REVIEW")[0]["message"]
         self.assertIn("orch conduct run --input", message)
 
@@ -213,7 +250,8 @@ class ReviewPlanTests(ConductorCase):
         import tempfile
         from types import SimpleNamespace
         from orch.conductor.application import review_plan
-        read = {"findings": [{"severity": "Major", "location": "a.py:1", "text": "a.py:1 - a defect"}]}
+        from orch.conductor.review_batch import verdict
+        read = verdict(json_review("Major", "a.py:1"))
         checks = {"W1": [{"id": "V1", "cmd": "bash t.sh", "kind": "acceptance"},
                          {"id": "V2", "cmd": "python3 -m unittest x", "cwd": "pkg dir", "kind": "acceptance"},
                          {"id": "V50", "cmd": "broad --tier all", "cadence": "phase", "kind": "acceptance"},
@@ -223,7 +261,7 @@ class ReviewPlanTests(ConductorCase):
             for ref, rows in checks.items():
                 (Path(folder) / ref).mkdir()
                 (Path(folder) / ref / "input.json").write_text(json.dumps({"acceptance": {"checks": rows}}), encoding="utf-8")
-            owner = SimpleNamespace(directory=Path(folder), progress=SimpleNamespace(emit=lambda *a, **k: None),
+            owner = SimpleNamespace(directory=Path(folder), run_id="R", state={}, progress=SimpleNamespace(emit=lambda *a, **k: None),
                                     _relative=lambda path: str(path))
             doc = json.loads(Path(review_plan.followup_input(owner, 1, ["W1", "W2"], read, "high")).read_text(encoding="utf-8"))
         commands = [row.get("cmd") for row in doc["acceptance"]["checks"] if row.get("cmd")]
@@ -234,10 +272,11 @@ class ReviewPlanTests(ConductorCase):
         import tempfile
         from types import SimpleNamespace
         from orch.conductor.application import review_plan
-        read = {"findings": [{"severity": "Major", "location": "a.py:1", "text": "a.py:1 - a defect"}]}
+        from orch.conductor.review_batch import verdict
+        read = verdict(json_review("Major", "a.py:1"))
         for effort, expected in (("medium", "medium"), (None, "high")):
             with tempfile.TemporaryDirectory() as folder:
-                owner = SimpleNamespace(directory=Path(folder), progress=SimpleNamespace(emit=lambda *a, **k: None),
+                owner = SimpleNamespace(directory=Path(folder), run_id="R", state={}, progress=SimpleNamespace(emit=lambda *a, **k: None),
                                         _relative=lambda path: str(path))
                 target = review_plan.followup_input(owner, 1, ["W1"], read, effort)
                 doc = json.loads(Path(target).read_text(encoding="utf-8"))
@@ -326,8 +365,132 @@ class ReviewPlanTests(ConductorCase):
         self.assertEqual(self.calls("reviewer"), 1)
 
 
-BLOCKER = {"text": "## Findings\n[Blocker] out/W2.txt:1 - a defect\nScenario: x -> y\nFix: z\n## Checked and fine\n- a\n"}
+BLOCKER = {"text": json_review("Blocker", "out/W2.txt:1")}
 UNREADABLE = {"text": "Looks fine to me."}
+
+
+class ReviewFollowupBacklogTests(ConductorCase):
+    def followup(self, count=15):
+        from types import SimpleNamespace
+        from unittest import mock
+        from orch.conductor.application import review_plan
+        rows = [{"id": f"F{number}", "severity": "Major", "confidence": "high", "location": "out/W1.txt:1",
+                 "failure_scenario": f"Unique defect letter {chr(64 + number)}", "basis": "correctness",
+                 "reproduction": f"reproduce {chr(64 + number)}"} for number in range(1, count + 1)]
+        owner = SimpleNamespace(directory=self.project / ".swissknifeman/state/group", run_id="R", state={},
+                                _relative=lambda path: str(path.relative_to(self.project)),
+                                progress=SimpleNamespace(emit=lambda *a, **kw: None))
+        with mock.patch.object(review_plan, "piece_checks", return_value=["test -f out/W1.txt"]):
+            path = self.project / review_plan.followup_input(owner, 1, ["W1"], {"findings": rows}, "high")
+        return path, json.loads(path.read_text()), rows
+
+    def run_followup(self, path, corrections=1, blocked=False):
+        options = self.project.parent / "followup-options.json"
+        options.write_text(json.dumps({"limits": {"corrections": corrections}}))
+        fix = {"write": {"out/W1.txt": "corrected\n"}, "result": report("W1")}
+        self.script({"executor": [executor_ok("W1"),
+                                  {"result": report("W1", "blocked", open_issues=[{"text": "interrupted", "kind": "escalation"}])}
+                                  if blocked else fix, fix], "reviewer": [GREEN]})
+        return self.conduct("run", "--input", path, "--json-lines", "--scenario", "full", "--options", options)
+
+    def test_fifteen_majors_all_reach_bounded_correction_assignments(self):
+        from orch.contracts import canonical_digest, validate
+        from orch.conductor.domain import fix_brief
+        path, doc, rows = self.followup()
+        self.assertFalse([issue for issue in validate(doc, "execution-input") if issue.level == "error"])
+        self.assertEqual(len(doc["provenance"]["fix_briefs"]), 1)
+        pending = doc["provenance"]["fix_briefs"][0]
+        later = json.loads((self.project / pending["path"]).read_text())
+        self.assertEqual(pending["digest"], canonical_digest(later))
+        self.assertEqual(len(later["findings"]), 3)
+        for row in later["findings"]:
+            self.assertNotIn(row["problem"], doc["goal"])
+        code, _, err = self.run_followup(path)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.calls("executor"), 2)
+        state = next(iter(self.state(err)["items"].values()))
+        self.assertEqual((state["outcome"], state["followup_corrections"], state["corrections_used"]), ("done", [2], 1))
+        for row in rows:
+            self.assertTrue(any(row["failure_scenario"] in self.prompt("executor", number) for number in (1, 2)), row)
+        self.assertIn(fix_brief.render(later), self.prompt("executor", 2))
+        files = list(self.run_dir(err).glob("*/fix-briefs/executor.*.json"))
+        self.assertEqual(len(files), 1)
+        for file in files:
+            brief = json.loads(file.read_text())
+            self.assertLessEqual(len(brief["findings"]), 12)
+            self.assertLessEqual(len(fix_brief.render(brief)), 24000)
+
+    def test_unassigned_majors_block_completion_and_are_explicit_debt(self):
+        path, doc, _ = self.followup(27)
+        code, _, err = self.run_followup(path)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual(self.calls("executor"), 2)
+        state = next(iter(self.state(err)["items"].values()))
+        self.assertEqual((state["outcome"], state["followup_corrections"]), ("blocked", [2]))
+        self.assertIn("Unresolved group review findings", json.dumps(state["plan_notes"]))
+        final = json.loads((self.project / doc["provenance"]["fix_briefs"][-1]["path"]).read_text())
+        notes = json.dumps(state["plan_notes"])
+        artifact = self.project / state["steps"]["brief"]["result"]["artifacts_dir"] / "stage-report.json"
+        issues = json.dumps(json.loads(artifact.read_text())["open_issues"])
+        for row in final["findings"]:
+            for field in ("id", "key", "location"):
+                self.assertIn(row[field], notes)
+                self.assertIn(row[field], issues)
+        self.assertIn(doc["provenance"]["fix_briefs"][-1]["path"], notes)
+
+    def test_saved_assignment_resumes_without_spending_the_allowance_twice(self):
+        from types import SimpleNamespace
+        from orch.conductor import records
+        from orch.conductor.application import review_followup
+        from orch.conductor.domain.stop import Stop
+        path, _, _ = self.followup()
+        code, _, err = self.run_followup(path, blocked=True)
+        self.assertEqual(code, 1, err)
+        state_file = self.run_dir(err) / "state.json"
+        state = records.read(state_file, "state")
+        ref, item = next(iter(state["items"].items()))
+        self.assertEqual(item["followup_corrections"], [2])
+        legacy = json.loads(json.dumps(state))
+        legacy["items"][ref].pop("followup_corrections")
+        old_path = self.project.parent / "legacy-state.json"
+        records.write(old_path, legacy, "state")
+        old_item = records.read(old_path, "state")["items"][ref]
+        self.assertNotIn("followup_corrections", old_item)
+        old_report = report("W1")
+        old = SimpleNamespace(input_doc={"provenance": {"kind": "review_followup"}}, state=old_item)
+        self.assertEqual(([], old_report, 1), review_followup.correct(None, old, old_report, [], 1, ""))
+        invalid = json.loads(json.dumps(state))
+        invalid["items"][ref]["followup_corrections"] = [1]
+        with self.assertRaises(Stop):
+            records.write(self.project.parent / "invalid-state.json", invalid, "state")
+        records.write(state_file, state, "state")
+        code, _, resumed = self.conduct("resume", "--run", self.run_dir(err).name, "--retry", ref, "--json-lines")
+        self.assertEqual(code, 0, resumed)
+        saved = next(iter(self.state(resumed)["items"].values()))
+        self.assertEqual((saved["followup_corrections"], saved["corrections_used"], saved["outcome"]), ([2], 1, "done"))
+        self.assertEqual(self.calls("executor"), 3)
+
+    def test_backlog_rejects_changed_or_invalid_evidence(self):
+        from types import SimpleNamespace
+        from orch.conductor.application import review_followup
+        from orch.conductor.domain.stop import Stop
+        _, doc, _ = self.followup()
+        entry = doc["provenance"]["fix_briefs"][0]
+        path = self.project / entry["path"]
+        original = json.loads(path.read_text())
+        for changed in (dict(original, base="changed"), dict(original, unexpected=True)):
+            path.write_text(json.dumps(changed))
+            with self.assertRaises(Stop) as caught:
+                review_followup.load(SimpleNamespace(project=self.project), entry)
+            self.assertEqual(caught.exception.code, "RECORD_INVALID")
+
+
+    def test_backlog_assignments_share_piece_and_batch_correction_counts(self):
+        from orch.conductor.policies import allowance
+        state = {"corrections_at": [1], "followup_corrections": [2, 3]}
+        items = {"W1": state, "W2": {"followup_corrections": [2]}}
+        self.assertEqual(allowance.piece_count(state, "corrections_at"), 3)
+        self.assertEqual(allowance.batch_used(items, "W2", "corrections", 1), 4)
 
 
 class GroupBlockerTests(ConductorCase):
@@ -395,6 +558,26 @@ class GroupBlockerTests(ConductorCase):
         code, resumed = self.resume()
         self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
         self.assertEqual(json.loads((self.run_dir(self.err) / "state.json").read_text(encoding="utf-8"))["group_reviews"]["1"]["attempts"], 1)
+
+    def test_settle_refuses_a_followup_with_unassigned_group_majors(self):
+        rows = [{"id": f"F{number}", "severity": "Blocker" if number == 1 else "Major", "confidence": "high",
+                 "location": "out/W2.txt:1", "failure_scenario": f"Unique group defect {chr(64 + number)}",
+                 "basis": "correctness"} for number in range(1, 17)]
+        review = {"verdict": "RED", "findings": rows, "questions": [], "residual_risk": ""}
+        self.stopped(reviewer=[{"text": "```json review-findings\n" + json.dumps(review) + "\n```"}])
+        options = self.project.parent / "no-corrections.json"
+        options.write_text(json.dumps({"limits": {"corrections": 0}}))
+        before = self.git("rev-parse", "HEAD").strip()
+        code, _, err = self.conduct("run", "--input", self.followup_path(), "--json-lines", "--scenario", "full",
+                                    "--commit", "--options", options)
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual(self.git("rev-parse", "HEAD").strip(), before)
+        self.assertIn("Unresolved group review findings", json.dumps(self.state(err)))
+        original = self.state_bytes()
+        code, _, settled = self.settle(self.run_dir(err).name)
+        self.assertEqual(code, 1, settled)
+        self.assertIn("GROUP_FOLLOWUP_NOT_DONE", settled)
+        self.assertEqual(self.state_bytes(), original)
 
     def test_a_run_of_another_input_does_not_settle_the_group(self):  # (g3)
         self.stopped()

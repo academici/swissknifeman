@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import sys
 
@@ -67,11 +68,12 @@ def _input_adhoc(args: argparse.Namespace) -> int:
         if args.provenance:
             provenance = adhoc.support_provenance(args.provenance, plan=args.plan, phase=args.phase, item=args.item,
                                                   finding=args.finding, event=args.event, question=args.question)
-        elif any((args.plan, args.phase, args.item, args.finding, args.event, args.question)):
+        elif any((args.phase, args.finding, args.event, args.question)) or (not args.review and (args.plan or args.item)):
             raise adhoc.AdhocError("USAGE", "--plan, --phase, --item, --finding, --event and --question need --provenance")
         doc = adhoc.build_adhoc_input(args.goal, args.include or [], args.exclude or [], args.check or [],
                                       args.procedure or [], args.read or [], route=route, review=args.review,
-                                      why=args.why, expect=args.expect, provenance=provenance)
+                                      why=args.why, expect=args.expect, provenance=provenance,
+                                      plan=args.plan if args.review else None, item=args.item if args.review else None)
     except adhoc.AdhocError as error:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 2 if error.code == "USAGE" else 1
@@ -789,7 +791,8 @@ def _source_register(args, current, project) -> int:
     answer = _source_effect(_source(current, project, args.config, doc), directory, "register", plan=doc["plan"],
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
                    attempt_id=doc["attempt_id"], status=args.status, report=report, evidence=evidence,
-                   registrar=args.actor, executed_by=args.executed_by or args.actor)
+                   registrar=args.actor, executed_by=args.executed_by or args.actor,
+                   **({"review_receipt": str(args.review_receipt)} if getattr(args, "review_receipt", None) else {}))
     if answer["outcome"] == "recorded":
         note = _support_note(args, current, project, doc, report)
         if note:
@@ -821,8 +824,9 @@ def _source_commit(args, current, project) -> int:
     return 1 if answer["outcome"] == "refused" else 0
 
 
-def _source_effect(source, directory, kind: str, **fields) -> dict:
+def _source_effect(source, directory, kind: str, *, stem: str | None = None, **fields) -> dict:
     """Persist intent before the effect; bind legacy answers to that exact request before publishing the receipt.
+    ``stem`` names the receipt files (``receipts/<stem>.json``) when one operation has several, such as ``decision``.
 
     Replacing the request clears any previous answer digest. A crash cannot pair an old receipt with a new intent.
     The receipt itself remains the unmodified work-source/v1 answer.
@@ -849,15 +853,16 @@ def _source_effect(source, directory, kind: str, **fields) -> dict:
                 source_sha = receipt["sha"]
             if source_sha:
                 request["source_sha"] = source_sha
-    journal.write_doc(directory, f"receipts/{kind}-request.json", request)
+    stem = stem or kind
+    journal.write_doc(directory, f"receipts/{stem}-request.json", request)
     answer = _call(source, kind, **fields)
     if kind == "commit" and answer.get("outcome") in ("committed", "no-op") \
             and answer.get("attempt") in (None, fields["attempt_id"]) \
             and answer.get("repo") != "workspace" and answer.get("sha"):
         request["source_sha"] = answer["sha"]
     request["receipt_digest"] = sha256_hex(canonical_json_bytes(answer))
-    journal.write_doc(directory, f"receipts/{kind}-request.json", request)
-    journal.write_doc(directory, f"receipts/{kind}.json", answer)
+    journal.write_doc(directory, f"receipts/{stem}-request.json", request)
+    journal.write_doc(directory, f"receipts/{stem}.json", answer)
     return answer
 
 
@@ -887,10 +892,39 @@ def _source_research(args, current, project) -> int:
     return 1 if answer["outcome"] == "refused" else 0
 
 
+def _source_decision(args, current, project) -> int:
+    """Record an answered question of the run as a decision where the source keeps decisions (a plan: D# of the plan with
+    the origin of the question). The file holds the question, its key, the resolution, the authority, the rationale and the
+    evidence; the run supplies the collection, the piece and the attempt. A source without the operation answers
+    ``unsupported`` (exit 1): the answer stays in the run. A repeat is a no-op."""
+    directory, doc = _run(args.run, project)
+    if args.ref and args.ref != doc["ref"]:
+        raise SourceRefusal("INPUT_INVALID", f"run {doc['run_id']} holds {doc['ref']}, not {args.ref}")
+    try:
+        body = json.loads(Path(args.file).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise SourceRefusal("INPUT_INVALID", f"cannot read the decision {args.file}: {error}") from None
+    if not isinstance(body, dict) or not isinstance(body.get("question"), dict) or not isinstance(body["question"].get("id"), str):
+        raise SourceRefusal("INPUT_INVALID", f"the decision {args.file} is not an object with a question")
+    receipt = "decision-" + re.sub(r"[^A-Za-z0-9._-]+", "-", body["question"]["id"]).strip("-")
+    try:
+        answer = _source_effect(_source(current, project, args.config, doc), directory, "decision", stem=receipt,
+                                collection=doc["plan"], plans_root=doc.get("plans_root"), ref=doc["ref"],
+                                run_id=doc["run_id"], attempt_id=doc["attempt_id"],
+                                **({"actor": args.actor} if args.actor else {}), **body)
+    except SourceRefusal as refusal:
+        if refusal.code != "WORK_SOURCE_FAILED":  # no source, or a request outside the contract: a refusal of the verb
+            raise
+        answer = {"op": "decision", "outcome": "unsupported", "message": refusal.message[:300]}
+        journal.write_doc(directory, f"receipts/{receipt}.json", answer)
+    _print(answer)
+    return 0 if answer["outcome"] in ("recorded", "no-op") else 1
+
+
 def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
                "register": _source_register, "commit": _source_commit, "release": _source_release,
-               "research": _source_research}[args.action]
+               "research": _source_research, "decision": _source_decision}[args.action]
     try:
         context = project_mod.require(getattr(args, "project", None))  # the cycle writes the state of a project
         project = context.root
@@ -915,7 +949,7 @@ def _source_command(args: argparse.Namespace) -> int:
 
 
 def _source_parser(verbs) -> None:
-    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release, research")
+    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release, research, decision")
     actions = command.add_subparsers(dest="action", required=True)
     claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
     where = claim.add_mutually_exclusive_group(required=True)
@@ -951,6 +985,7 @@ def _source_parser(verbs) -> None:
     register = actions.add_parser("register", help="register the outcome of a run (fencing and evidence gate)")
     register.add_argument("--run", required=True, metavar="RUN")
     register.add_argument("--report", required=True, type=Path, help="stage-report JSON file")
+    register.add_argument("--review-receipt", type=Path, metavar="PATH", help="review-receipt/v1 file of this attempt")
     register.add_argument("--status", required=True, choices=sorted(STAGE_STATUS))
     register.add_argument("--evidence", action="append", default=[], type=_evidence, metavar="V#=PATH",
                           help="check-evidence file of an acceptance check (repeatable)")
@@ -972,6 +1007,13 @@ def _source_parser(verbs) -> None:
     research.add_argument("--result", required=True, type=Path, help="research-result JSON file")
     research.add_argument("--number", required=True, type=int, metavar="N", help="ordinal of the research of the piece, from 1")
     research.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who saves (default: the source decides)")
+    decision = actions.add_parser("decision", help="record an answered question of a run as a decision where the source "
+                                                   "keeps decisions (a plan: D# with the origin of the question)")
+    decision.add_argument("--run", required=True, metavar="RUN")
+    decision.add_argument("--ref", metavar="ITEM", help="the piece of the run (checked against the run; default: the run's)")
+    decision.add_argument("--file", required=True, type=Path, metavar="FILE",
+                          help="JSON: question, question_key, question_digest, resolution, authority, rationale, evidence")
+    decision.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who records (default: the source decides)")
 
 
 def _conduct_args(argv: list[str]) -> list[str] | None:

@@ -12,6 +12,9 @@
     "host": {"description": "Host name of the owner.", "type": "string"},
     "started_at": {"description": "UTC time the lock was taken.", "type": "string"},
     "command": {"description": "Conductor command that holds it (run, resume, ...).", "type": "string"},
+    "start_ticks": {"description": "Start time of the owner in clock ticks since boot (/proc/<pid>/stat), null when it could not be read. With pid and boot_id it identifies the process: a pid alone never justifies a signal.", "type": ["integer", "null"]},
+    "boot_id": {"description": "/proc/sys/kernel/random/boot_id of the machine the owner runs on, null without /proc.", "type": ["string", "null"]},
+    "launcher": {"description": "What started the owner (env SKM_ORCH_LAUNCHER, default terminal).", "type": "string", "enum": ["terminal", "detached", "gui", "supervisor", "autopilot"]},
     "run": {"description": "Run that drives the checkout (checkout lock only).", "type": "string"}
   },
   "$defs": {}

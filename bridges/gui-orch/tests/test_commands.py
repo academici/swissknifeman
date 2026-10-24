@@ -52,7 +52,7 @@ class TestDescriptors(CommandCase):
         ready, resume, release = (COMMANDS[f"gui-orch.{name}"] for name in ("run-ready", "resume", "release"))
         self.assertEqual(("high", "always"), (ready["risk"], ready["confirmation"]))
         self.assertEqual({"process.spawn", "plan.write", "project.write"}, set(ready["effects"]))
-        self.assertEqual({"stream", "cancel", "dry-run"}, set(ready["supports"]))
+        self.assertEqual({"stream", "dry-run"}, set(ready["supports"]))
         self.assertEqual(("medium", "risk-based"), (resume["risk"], resume["confirmation"]))
         self.assertEqual("always", release["confirmation"])
         for command in COMMANDS.values():
@@ -75,6 +75,23 @@ class TestDescriptors(CommandCase):
         self.assertEqual(["release", "--run", RUN, "--item", "P2.1"],
                           self.host_argv("gui-orch.release", {"run_id": RUN, "item": "P2.1"}))
 
+    def test_answer_continue_and_resume_retry_argv_are_exact(self):
+        self.assertEqual(["resume", "--run", RUN, "--retry", "P2.1"],
+                         self.host_argv("gui-orch.resume", {"run_id": RUN, "retry": "P2.1"}))
+        self.assertEqual(["continue", "--run", RUN], self.host_argv("gui-orch.continue", {"run_id": RUN}))
+        self.assertEqual(["answer", "--run", RUN, "--item", "P2.1", "--question", "Q1", "--option", "keep"],
+                         self.host_argv("gui-orch.answer", {"run_id": RUN, "item": "P2.1", "question": "Q1", "option": "keep"}))
+        self.assertEqual(["answer", "--run", RUN, "--item", "P2.1", "--question", "esc-1", "--text", "rename it"],
+                         self.host_argv("gui-orch.answer", {"run_id": RUN, "item": "P2.1", "question": "esc-1",
+                                                            "text": "rename it"}))
+
+    def test_answer_is_always_confirmed_and_continue_goes_on_like_resume(self):
+        answer, goon = COMMANDS["gui-orch.answer"], COMMANDS["gui-orch.continue"]
+        self.assertEqual(("medium", "always"), (answer["risk"], answer["confirmation"]))
+        self.assertEqual({"process.spawn", "project.write"}, set(answer["effects"]))
+        self.assertEqual({"stream", "cancel"}, set(goon["supports"]))
+        self.assertEqual({"process.spawn", "plan.write", "project.write"}, set(goon["effects"]))
+
     def test_gates_clear_is_an_always_confirmed_typed_argv_command(self):
         command = COMMANDS["gui-orch.gates-clear"]
         self.assertEqual("always", command["confirmation"])
@@ -94,7 +111,14 @@ class TestDescriptors(CommandCase):
                  ("gui-orch.run-ready", {"plan": f"{PLAN} --items P1.1", "max_items": 2}),
                  ("gui-orch.resume", {"run_id": "../x"}), ("gui-orch.resume", {"run_id": "cnd-a b"}),
                  ("gui-orch.resume", {"run_id": "--run"}), ("gui-orch.release", {"run_id": RUN, "item": "-x"}),
-                 ("gui-orch.release", {"run_id": RUN, "item": "P1.1 P1.2"}), ("gui-orch.release", {"run_id": RUN})]
+                 ("gui-orch.release", {"run_id": RUN, "item": "P1.1 P1.2"}), ("gui-orch.release", {"run_id": RUN}),
+                 ("gui-orch.resume", {"run_id": RUN, "retry": "P1.1 P1.2"}), ("gui-orch.resume", {"run_id": RUN, "retry": "-x"}),
+                 ("gui-orch.continue", {"run_id": "../x"}), ("gui-orch.continue", {}),
+                 ("gui-orch.answer", {"run_id": RUN, "item": "P1.1", "question": "Q1 --option x", "option": "a"}),
+                 ("gui-orch.answer", {"run_id": RUN, "item": "P1.1", "question": "Q1", "option": "--run"}),
+                 ("gui-orch.answer", {"run_id": RUN, "item": "P1.1", "option": "a"}),
+                 ("gui-orch.answer", {"run_id": RUN, "item": "-x", "question": "Q1", "option": "a"}),
+                 ("gui-orch.answer", {"run_id": RUN, "item": "P1.1", "question": "Q1", "text": "line\nbreak"})]
         for command_id, values in cases:
             with self.subTest(command=command_id, values=values), self.assertRaises(errors_mod.GuiError):
                 self.build(command_id, values)
@@ -113,15 +137,28 @@ class TestRunPy(CommandCase):
     def test_run_ready_runs_orch_with_ready_and_a_count(self):
         result = self.run_py(["run-ready", "--plan", PLAN, "--max-items", "3"])
         self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual([["orch", "conduct", "run", "--plan", PLAN, "--ready", "--max-items", "3"]], self.logged())
+        self.assertEqual([["orch", "conduct", "run", "--plan", PLAN, "--ready", "--max-items", "3", "--detach"]], self.logged())
 
     def test_run_ready_dry_run_resume_release(self):
         self.assertEqual(0, self.run_py(["run-ready", "--plan", PLAN, "--max-items", "20", "--dry-run"]).returncode)
         self.assertEqual(0, self.run_py(["resume", "--run", RUN]).returncode)
         self.assertEqual(0, self.run_py(["release", "--run", RUN, "--item", "P2.1"]).returncode)
         self.assertEqual([["orch", "conduct", "run", "--plan", PLAN, "--ready", "--max-items", "20", "--dry-run"],
-                          ["orch", "conduct", "resume", "--run", RUN],
+                          ["orch", "conduct", "resume", "--run", RUN, "--detach"],
                           ["orch", "conduct", "release", "--run", RUN, "--item", "P2.1"]], self.logged())
+
+    def test_resume_retry_continue_and_answer_run_orch_with_exact_arguments(self):
+        for args, expected in (
+                (["resume", "--run", RUN, "--retry", "P2.1"], ["orch", "conduct", "resume", "--run", RUN, "--retry", "P2.1", "--detach"]),
+                (["continue", "--run", RUN], ["orch", "conduct", "continue", "--run", RUN]),
+                (["answer", "--run", RUN, "--item", "P2.1", "--question", "Q1", "--option", "keep"],
+                 ["orch", "conduct", "answer", "--run", RUN, "--item", "P2.1", "--question", "Q1", "--option", "keep"]),
+                # a text that looks like a flag stays one value of --text for the option parser of orch
+                (["answer", "--run", RUN, "--item", "P2.1", "--question", "esc-1", "--text", "--run x"],
+                 ["orch", "conduct", "answer", "--run", RUN, "--item", "P2.1", "--question", "esc-1", "--text=--run x"])):
+            with self.subTest(args=args):
+                self.assertEqual(0, self.run_py(args).returncode)
+                self.assertEqual(expected, self.logged()[-1])
 
     def test_anything_else_exits_2_without_running_orch(self):
         for args in ([], ["gates-clear"], ["gates-clear", "--provider", "unknown"], ["gates-clear", "--provider", ""],
@@ -130,7 +167,17 @@ class TestRunPy(CommandCase):
                      ["run-ready", "--plan", PLAN, "--max-items", "99"], ["run-ready", "--plan", PLAN, "--max-items", "3x"],
                      ["run-ready", "--plan", PLAN, "--max-items", "3", "--items", "P1.1"],
                      ["run-ready", "--max-items", "3", "--plan", PLAN], ["run-ready", "--plan", "P1.1", "--max-items", "2"],
-                     ["resume"], ["resume", "--run", "../x"], ["resume", "--run", RUN, "--retry", "P1.1"],
+                     ["resume"], ["resume", "--run", "../x"], ["resume", "--run", RUN, "--retry", "-x"],
+                     ["resume", "--run", RUN, "--retry", "P1.1", "P1.2"], ["resume", "--run", RUN, "--raise-limit", "x=1"],
+                     ["continue"], ["continue", "--run", "../x"], ["continue", "--run", RUN, "--partial"],
+                     ["continue", "--run", RUN, "--item", "P1.1"],
+                     ["answer", "--run", RUN, "--item", "P1.1", "--question", "Q1"],
+                     ["answer", "--run", RUN, "--item", "P1.1", "--question", "Q1", "--option", "a", "--continue"],
+                     ["answer", "--run", RUN, "--item", "P1.1", "--question", "Q1", "--by", "x", "--option", "a"],
+                     ["answer", "--run", RUN, "--item", "P1.1", "--question", "Q 1", "--option", "a"],
+                     ["answer", "--run", RUN, "--item", "P1.1", "--question", "Q1", "--option", "-a"],
+                     ["answer", "--run", RUN, "--item", "P1.1", "--question", "Q1", "--text", ""],
+                     ["answer", "--run", RUN, "--item", "P1.1", "--question", "Q1", "--text", "a\nb"],
                      ["release", "--run", RUN], ["release", "--run", RUN, "--all"], ["release", "--run", RUN, "--item", "-x"],
                      ["release", "--run", RUN, "--item", "P1.1", "--reason", "x"]):
             with self.subTest(args=args):

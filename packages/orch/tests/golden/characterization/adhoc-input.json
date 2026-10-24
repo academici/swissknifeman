@@ -23,6 +23,17 @@
  "events": [
   {
    "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "adhoc@<digest>"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
     "attempt_id": "att-run-<digest>-adhoc-9b97afced891",
     "project_resolution": "git",
     "run_id": "run-<digest>",
@@ -114,6 +125,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
     "step": "executor.1",
     "work_id": "adhoc@<digest>"
    },
@@ -253,6 +268,18 @@
     "status": "completed"
    },
    "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "adhoc@<digest>"
+    ],
+    "launcher": "terminal",
+    "outcome": "finished",
+    "phase": "ended"
+   },
+   "type": "orch.conductor.lifecycle"
   }
  ],
  "manifests": {
@@ -261,7 +288,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2306
+     "tokens": 2683
     },
     {
      "kind": "input",
@@ -297,7 +324,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3541
+     "tokens": 3812
     },
     "retrieval": {
      "limit": 50000,
@@ -306,6 +333,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 197
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 106
     }
    },
    "excluded": [],
@@ -322,7 +353,7 @@
     {
      "kind": "role_text",
      "origin": "roles/reviewer.md",
-     "tokens": 508
+     "tokens": 652
     },
     {
      "kind": "input",
@@ -358,7 +389,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 990
+     "tokens": 920
     },
     "retrieval": {
      "limit": 50000,
@@ -367,6 +398,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 214
     }
    },
    "excluded": [],
@@ -399,7 +434,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 743
+     "tokens": 646
     },
     "retrieval": {
      "limit": 50000,
@@ -408,6 +443,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 97
     }
    },
    "excluded": [],
@@ -473,16 +512,17 @@
    "verdict": "mapped"
   },
   {
-   "event": "info",
-   "item": "adhoc@<digest>",
-   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
-   "reason_code": "RESULT_HEALED",
-   "role": "context-scout",
-   "stage": "scout"
-  },
-  {
    "event": "stage.start",
    "item": "adhoc@<digest>",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "adhoc@<digest>",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.1"
@@ -675,10 +715,31 @@
     "title": "Make out/adhoc.txt"
    }
   },
-  "executor_session": "executor-session-1",
-  "executor_session_item": "adhoc@<digest>",
-  "executor_session_route": "claude-code/sonnet/high",
-  "executor_session_task_digest": "<digest>",
+  "executor_sessions": {
+   "adhoc@9b97afced891": {
+    "created_at": "<time>",
+    "fingerprint": {
+     "attempt_id": "att-run-<digest>-adhoc-9b97afced891",
+     "authority_digest": "",
+     "base": "<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "item": "adhoc@<digest>",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "adhoc@<digest>",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 1,
+    "route": "claude-code/sonnet/high",
+    "session": "executor-session-1",
+    "task_digest": "<digest>"
+   }
+  },
   "items": {
    "adhoc@9b97afced891": {
     "adopted": [],
@@ -698,6 +759,7 @@
       "out/adhoc.txt": "<digest>"
      }
     },
+    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {
@@ -841,12 +903,22 @@
       "result": {
        "agent": "agent-<run>-3",
        "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/adhoc.txt": "100644 <digest>"
+        }
+       },
        "exit": 0,
+       "finding_keys": {},
        "findings": {
         "findings": [],
         "verdict": "GREEN"
        },
        "model": "fake-model",
+       "outside": {},
        "session": "reviewer-session-1",
        "stream": ".swissknifeman/state/orch/conductor/<run>/adhoc-9b97afced891/streams/review.1.jsonl",
        "usage": {

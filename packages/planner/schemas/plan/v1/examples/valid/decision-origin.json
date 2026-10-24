@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:decision:v1",
+  "id": "D2",
+  "title": "P1.2 Q1: Keep the old flag name?",
+  "date": "2026-01-02",
+  "status": "accepted",
+  "question": "Keep the old flag name?",
+  "options": [
+    {
+      "id": "A",
+      "text": "keep: no break"
+    },
+    {
+      "id": "B",
+      "text": "rename: one name"
+    }
+  ],
+  "decision": "keep: no break",
+  "rationale": "Answered by owner: keep: no break",
+  "applies_to": [
+    "P1.2"
+  ],
+  "answered_by": "owner",
+  "evidence": [
+    {
+      "kind": "repo",
+      "ref": "artifacts/run/P1.2/questions.json"
+    }
+  ],
+  "origin": {
+    "kind": "question",
+    "run": "cnd-1",
+    "item": "P1.2",
+    "question_id": "Q1",
+    "question_key": "qk-f13b1c3d08b245ec",
+    "question_digest": "f13b1c3d08b245ec267529b7e18c9f0061131a7c7fa62b3aafc618d695dfdf7e",
+    "revision": 1
+  },
+  "actor": {
+    "provider": "claude-code",
+    "model": "claude-opus-5-5"
+  }
+}

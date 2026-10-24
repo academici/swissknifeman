@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:lease:v1",
+  "command": "run",
+  "host": "workstation",
+  "pid": 4242,
+  "started_at": "2026-10-22T12:00:00Z",
+  "start_ticks": 123456,
+  "boot_id": "3f0c9a52-6b1e-4c1d-9a55-0d7a3c1b9e10",
+  "launcher": "terminal"
+}

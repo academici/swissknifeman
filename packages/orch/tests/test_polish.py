@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 from pathlib import Path
 import signal
@@ -203,6 +204,7 @@ class TerminatedRun(unittest.TestCase):
             raise KeyboardInterrupt
 
         me = types.SimpleNamespace(_pieces=pieces, _disk_guard=lambda: None, state={"items": {}}, _segment=None,
+                                   run_id="cnd-unit", settings=types.SimpleNamespace(events_enabled=False), config_file=None,
                                    _active_s=lambda: 0.0, _save=lambda: None, directory=Path("."), project=Path("."),
                                    reports_dir=lambda: Path("."), progress=mock.Mock(), run_doc={}, _batch_held=lambda: False,
                                    store=types.SimpleNamespace(mutating=contextlib.nullcontext))
@@ -227,26 +229,34 @@ class DiskGuard(unittest.TestCase):
 
     def test_the_guard_stops_the_run_with_a_resumable_code_and_a_beacon(self):
         from orch.conductor.domain.stop import Stop
-        me = types.SimpleNamespace(project=Path("."), conductor={}, progress=mock.Mock())
+        me = types.SimpleNamespace(project=Path("."), conductor={}, progress=mock.Mock(), _beacon_event=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=0.2):
             with self.assertRaises(Stop) as stop:
                 step_stage.disk_guard(me)
         self.assertEqual(stop.exception.code, "DISK_LOW")
         self.assertEqual(me.progress.emit.call_args.kwargs["reason_code"], "DISK_LOW")
+        me._beacon_event.assert_called_once_with("orch.run.warning", None, {"reason_code": "DISK_LOW", "step": None})
 
     def test_the_limit_of_the_piece_wins_over_the_default_and_the_configuration(self):
         item = types.SimpleNamespace(ref="W1", options={"limits": {"disk_min_gb": 0}})
-        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock())
+        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock(), _beacon_event=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=0.2):
             step_stage.disk_guard(me, item)  # the piece switched it off: no stop
-        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock())
+        me = types.SimpleNamespace(project=Path("."), conductor={"limits": {"disk_min_gb": 99}}, progress=mock.Mock(), _beacon_event=mock.Mock())
         with mock.patch.object(disk, "free_gb", return_value=50.0), self.assertRaises(Stop):
             step_stage.disk_guard(me)  # the configuration's limit applies without a piece
 
 
-CLEAN = "## Findings\nnone\n## Checked and fine\n- the claim path\n"
-DRESSED = ("Here is my review.\n\n## Findings\n1. **[Major]** `lib/a.py:12` - wrong state on resume\n   Scenario: x -> y\n"
-           "- [Minor] lib/b.py:3 - a nit\n- `[Blocker]` lib/c.py:7 - unsafe path\n\n## Checked and fine\n- [Major] in a bullet here\n")
+def batch_reply(rows=()):
+    findings = [{"id": f"F{index}", "severity": severity, "confidence": "high", "location": location,
+                 "failure_scenario": "concrete input produces wrong state", "basis": "correctness"}
+                for index, (severity, location) in enumerate(rows, 1)]
+    return "```json review-findings\n" + json.dumps({"verdict": "RED" if findings else "GREEN",
+                                                       "findings": findings}) + "\n```"
+
+
+CLEAN = batch_reply()
+FINDINGS_JSON = batch_reply([("Major", "lib/a.py:12"), ("Minor", "lib/b.py:3"), ("Blocker", "lib/c.py:7")])
 
 
 class ReviewVerdict(unittest.TestCase):
@@ -254,35 +264,45 @@ class ReviewVerdict(unittest.TestCase):
         read = review_batch.verdict(CLEAN)
         self.assertEqual((read["format"], read["counts"]), ("none", {"Blocker": 0, "Major": 0, "Minor": 0}))
 
-    def test_findings_dressed_as_list_items_numbers_bold_or_code_are_counted(self):
-        read = review_batch.verdict(DRESSED)
+    def test_closed_json_findings_supply_counts_and_locations(self):
+        read = review_batch.verdict(FINDINGS_JSON)
         self.assertEqual(read["format"], "findings")
-        self.assertEqual(read["counts"], {"Blocker": 1, "Major": 1, "Minor": 1})  # the line under "Checked and fine" is not one
+        self.assertEqual(read["counts"], {"Blocker": 1, "Major": 1, "Minor": 1})
         self.assertEqual([row["location"] for row in read["findings"]], ["lib/a.py:12", "lib/b.py:3", "lib/c.py:7"])
 
     def test_a_reply_in_another_format_is_malformed_and_never_clean(self):
-        for text in ("The change looks fine to me.", "", "## Review\nAll good", "## Findings\nIt seems OK, nothing serious.\n"):
+        for text in ("The change looks fine to me.", "", "## Review\nAll good", "## Findings\nnone\n",
+                     "## Findings\n[Major] a.py:1 - a defect\n"):
             self.assertEqual(review_batch.verdict(text)["format"], "malformed", text)
 
     def test_the_paths_to_correct_come_from_blocker_and_major_findings_only(self):
-        read = review_batch.verdict(DRESSED)
+        read = review_batch.verdict(FINDINGS_JSON)
         self.assertEqual(review_batch.followup_paths(read["findings"]), ["lib/a.py", "lib/c.py"])
-        hostile = review_batch.verdict("## Findings\n[Major] ../../etc/passwd:1 - x\n[Major] /abs/p.py:1 - y\n")
+        hostile = review_batch.verdict(batch_reply([("Major", "../../etc/passwd:1"), ("Major", "/abs/p.py:1")]))
         self.assertEqual(review_batch.followup_paths(hostile["findings"]), [])
 
-    def test_counts_keeps_its_old_meaning(self):
-        self.assertEqual(review_batch.counts("## Findings\n[Major] a.py:1 - d\n")["Major"], 1)
+    def test_counts_comes_from_json(self):
+        self.assertEqual(review_batch.counts(batch_reply([("Major", "a.py:1")]))["Major"], 1)
 
 
 class SessionRoute(unittest.TestCase):
-    def me(self, state: dict):
-        return types.SimpleNamespace(state=state, _shared_session=lambda item, role, route: True, progress=mock.Mock(),
+    def me(self, slots: dict):
+        """A conductor stub whose slots of the shared executor session (key ``*``) are ``slots``; the slot has no
+        fingerprint, as one migrated from an older state, so the route is the only thing that differs."""
+        base = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(base, True))
+        return types.SimpleNamespace(state={"executor_sessions": slots} if slots else {}, project=base, directory=base,
+                                     _shared_session=lambda item, role, route: True, progress=mock.Mock(),
                                      _session_mode=lambda item: "shared",  # a later piece resumes only a shared session
                                      store=types.SimpleNamespace(mutating=contextlib.nullcontext))
 
+    @staticmethod
+    def item(ref: str):
+        return types.SimpleNamespace(ref=ref, options={}, state={}, claim={}, input_doc={})
+
     def test_a_piece_on_another_model_resumes_the_session_and_says_so_once(self):
-        item = types.SimpleNamespace(ref="W2")
-        me = self.me({"executor_session": "s1", "executor_session_route": "claude-code/claude-haiku-5-5/low"})
+        item = self.item("W2")
+        me = self.me({"*": {"session": "s1", "route": "claude-code/claude-haiku-5-5/low", "provider": "claude-code"}})
         route = {"provider": "claude-code", "model": "claude-opus-5-5", "effort": "high"}
         self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
         self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
@@ -290,21 +310,24 @@ class SessionRoute(unittest.TestCase):
         self.assertEqual(emitted, ["SESSION_ROUTE_CHANGED"])
 
     def test_the_same_route_says_nothing_and_no_session_gives_no_resume(self):
-        item = types.SimpleNamespace(ref="W2")
+        item = self.item("W2")
         route = {"provider": "claude-code", "model": "m", "effort": "high"}
-        me = self.me({"executor_session": "s1", "executor_session_route": "claude-code/m/high"})
+        me = self.me({"*": {"session": "s1", "route": "claude-code/m/high", "provider": "claude-code"}})
         self.assertEqual(roles.resume_args(me, item, "executor", route), ["--resume", "s1"])
         me.progress.emit.assert_not_called()
         self.assertEqual(roles.resume_args(self.me({}), item, "executor", route), [])
 
-    def test_keep_session_records_the_route_and_forgets_it_with_a_failed_session(self):
-        item, route = types.SimpleNamespace(ref="W1"), {"provider": "claude-code", "model": "m", "effort": "low"}
+    def test_keep_session_records_the_route_and_drops_the_id_of_a_failed_session(self):
+        item, route = self.item("W1"), {"provider": "claude-code", "model": "m", "effort": "low"}
         me = self.me({})
         me._save = lambda: None
         roles.keep_session(me, item, "executor", route, types.SimpleNamespace(error=None, session="s9"))
-        self.assertEqual((me.state["executor_session"], me.state["executor_session_route"]), ("s9", "claude-code/m/low"))
+        slot = me.state["executor_sessions"]["*"]
+        self.assertEqual((slot["session"], slot["route"], slot["rounds"]), ("s9", "claude-code/m/low", 1))
         roles.keep_session(me, item, "executor", route, types.SimpleNamespace(error="ROLE_FAILED", session=None))
-        self.assertNotIn("executor_session_route", me.state)
+        slot = me.state["executor_sessions"]["*"]
+        self.assertNotIn("session", slot)  # nothing left to resume: the next attempt starts fresh, and says why
+        self.assertEqual(slot["error"], "ROLE_FAILED")
 
 
 class FrozenMode(unittest.TestCase):

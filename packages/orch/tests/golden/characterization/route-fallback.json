@@ -28,6 +28,17 @@
  "events": [
   {
    "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
     "attempt_id": "att-run-<digest>-W1",
     "project_resolution": "git",
     "run_id": "run-<digest>",
@@ -119,6 +130,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
     "step": "executor.1",
     "work_id": "PLAN9.W1@<digest>"
    },
@@ -286,6 +301,18 @@
     "status": "completed"
    },
    "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "outcome": "finished",
+    "phase": "ended"
+   },
+   "type": "orch.conductor.lifecycle"
   }
  ],
  "manifests": {
@@ -294,7 +321,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2306
+     "tokens": 2683
     },
     {
      "kind": "input",
@@ -330,7 +357,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3798
+     "tokens": 3807
     },
     "retrieval": {
      "limit": 50000,
@@ -339,6 +366,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 197
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 368
     }
    },
    "excluded": [],
@@ -355,7 +386,7 @@
     {
      "kind": "role_text",
      "origin": "roles/reviewer.md",
-     "tokens": 508
+     "tokens": 652
     },
     {
      "kind": "input",
@@ -391,7 +422,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 1229
+     "tokens": 916
     },
     "retrieval": {
      "limit": 50000,
@@ -400,6 +431,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 457
     }
    },
    "excluded": [],
@@ -432,7 +467,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 999
+     "tokens": 641
     },
     "retrieval": {
      "limit": 50000,
@@ -441,6 +476,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 358
     }
    },
    "excluded": [],
@@ -506,16 +545,17 @@
    "verdict": "mapped"
   },
   {
-   "event": "info",
-   "item": "W1",
-   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
-   "reason_code": "RESULT_HEALED",
-   "role": "context-scout",
-   "stage": "scout"
-  },
-  {
    "event": "stage.start",
    "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.1"
@@ -533,6 +573,15 @@
    "item": "W1",
    "message": "executor: claude-code/sonnet/high -> codex/gpt-6-sol/high (quota; ACTION_DEFAULT, WAIT_TOO_LONG, FALLBACK_ROUTE)",
    "reason_code": "ROUTE_FALLBACK",
+   "role": "executor",
+   "route": "codex/gpt-6-sol/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "a fresh session starts; reason=provider_unsupported",
+   "reason_code": "SESSION_FRESH",
    "role": "executor",
    "route": "codex/gpt-6-sol/high",
    "stage": "executor.1"
@@ -723,6 +772,30 @@
     "ref": "W1",
     "submission": "sub-<run>-item-W1",
     "title": "Work W1"
+   }
+  },
+  "executor_sessions": {
+   "W1": {
+    "created_at": "<time>",
+    "error": "ROLE_FAILED",
+    "fingerprint": {
+     "attempt_id": "att-run-<digest>-W1",
+     "authority_digest": "",
+     "base": "<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "item": "W1",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "W1",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 0,
+    "route": "claude-code/sonnet/high"
    }
   },
   "items": {
@@ -932,12 +1005,22 @@
       "result": {
        "agent": "agent-<run>-3",
        "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/W1.txt": "100644 <digest>"
+        }
+       },
        "exit": 0,
+       "finding_keys": {},
        "findings": {
         "findings": [],
         "verdict": "GREEN"
        },
        "model": "fake-model",
+       "outside": {},
        "session": "reviewer-session-1",
        "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.1.jsonl",
        "usage": {

@@ -58,8 +58,8 @@ class ConductRunsTests(unittest.TestCase):
                               line("2026-10-17T09:10:00Z", "run.resume")])
         rows = runs.listing(self.project)
         self.assertEqual(["cnd-new", "cnd-old"], [row["run_id"] for row in rows])
-        self.assertEqual({"run_id": "cnd-old", "status": "finished", "reason_code": None, "created": "2026-10-16T10:00:00Z",
-                          "items": ["P1.1"], "resumes": 0, "owner": None}, rows[1])
+        self.assertEqual({"run_id": "cnd-old", "health": "finished", "status": "finished", "reason_code": None,
+                          "created": "2026-10-16T10:00:00Z", "items": ["P1.1"], "resumes": 0, "owner": None}, rows[1])
         self.assertEqual(("running", None, 1, ["P2.1"]), (rows[0]["status"], rows[0]["reason_code"], rows[0]["resumes"],
                                                           rows[0]["items"]))
         self.assertEqual([rows[0]], runs.listing(self.project, 1))

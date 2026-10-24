@@ -34,7 +34,8 @@
         "assumption",
         "note",
         "scout",
-        "delegate"
+        "delegate",
+        "readiness_recorded"
       ]
     },
     "item": {

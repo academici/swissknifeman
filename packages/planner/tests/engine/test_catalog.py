@@ -22,6 +22,15 @@ def choices(parser):
 
 
 class ParserCatalogTests(unittest.TestCase):
+    def test_readiness_subcommands_publish_precise_modes_and_contracts(self):
+        rows = {v["name"]: v for v in catalog.verbs(cli.build_parser())["verbs"]}
+        children = {r["name"]: r for r in rows["readiness"]["subcommands"]}
+        self.assertEqual(children["record"]["mode"], "write")
+        self.assertEqual(children["status"]["mode"], "read")
+        self.assertEqual(children["status"]["data_kind"], "read-readiness")
+        self.assertTrue({"READINESS_STRUCTURAL_ERRORS", "READINESS_BLOCKING_FINDINGS", "PHASE_NOT_DETAILED",
+                         "REF_UNKNOWN"} <= set(children["record"]["errors"]))
+
     def test_catalog_contains_every_parser_verb_and_matches_descriptions(self):
         parser = cli.build_parser()
         result = catalog.verbs(parser)
@@ -120,7 +129,7 @@ class ParserCatalogTests(unittest.TestCase):
 class ErrorRegistryTests(unittest.TestCase):
     def test_start_gate_refusals_are_published_for_each_affected_verb(self):
         expected = {
-            "start": {"PLAN_INVALID", "ROUTE_MODEL_UNKNOWN"},
+            "start": {"PLAN_INVALID", "ROUTE_MODEL_UNKNOWN", "READINESS_REQUIRED", "READINESS_STALE", "READINESS_NOT_READY"},
             "add-item": {"PHASE_DETAILED", "PLAN_INVALID"},
             "batches": {"PLAN_INVALID"},
             "finish": {"ROUTE_MODEL_UNKNOWN"},

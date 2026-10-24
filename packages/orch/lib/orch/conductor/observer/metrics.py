@@ -245,6 +245,21 @@ def journal_totals(lines: list, outcomes: dict) -> dict:
             "idle": {"total": idle_total, "max": idle_max, "where": idle_where}}
 
 
+SESSION_REASON = re.compile(r"(?:reuse|reason)=(\S+)")
+
+
+def session_totals(lines: list) -> dict:
+    """``{resumed: {reuse: n}, fresh: {reason: n}}``: the executor attempts that resumed a session and those that started a
+    fresh one, from the ``SESSION_RESUMED`` / ``SESSION_FRESH`` lines of the journal."""
+    found: dict = {"resumed": Counter(), "fresh": Counter()}
+    for line in lines:
+        if line.get("event") != "info" or line.get("reason_code") not in ("SESSION_RESUMED", "SESSION_FRESH"):
+            continue
+        named = SESSION_REASON.search(line.get("message") or "")
+        found["resumed" if line["reason_code"] == "SESSION_RESUMED" else "fresh"][named[1] if named else "unknown"] += 1
+    return {name: dict(sorted(counts.items())) for name, counts in found.items()}
+
+
 def item_totals(state: dict) -> dict:
     """Review findings by severity, triage and scout counts and one row per piece, from the state."""
     severities: Counter = Counter()

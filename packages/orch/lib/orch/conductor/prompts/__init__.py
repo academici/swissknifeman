@@ -41,4 +41,4 @@ from orch.conductor.prompts.manifest import diff_manifests, diff_table, explain_
 from orch.conductor.prompts.roles import (  # noqa: F401
     CHANGED_PATHS, _FILE_TOOLS_RULE, _PRE_FINAL, _RUN_CHECKS, _conductor_checks, _corrected_scope, _diff_title, _expected,
     _fence_rule, _focus, _head, _outside_scope, _research, _self_check, advisor, closer, executor, executor_resumed,
-    protected_rule, report_fixer, researcher, reviewer, scout, triager)
+    generated_rule, protected_rule, report_fixer, researcher, reviewer, scout, triager)

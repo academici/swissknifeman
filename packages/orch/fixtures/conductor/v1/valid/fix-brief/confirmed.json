@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:fix-brief:v1",
+  "review": {
+    "run": "R",
+    "item": "W1",
+    "round": 1,
+    "receipt": "artifacts/review-receipt.json"
+  },
+  "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "findings": [
+    {
+      "key": "fk-643d24ee49c5400c",
+      "id": "F1",
+      "severity": "Major",
+      "location": "src/a.py:1",
+      "path": "src/a.py",
+      "problem": "empty input crashes",
+      "fix": "handle empty input",
+      "clipped": [],
+      "reproduction": {
+        "cmd": "python3 repro.py",
+        "exit": 1,
+        "observed": "crash"
+      }
+    }
+  ],
+  "deferred": {
+    "count": 0,
+    "by_severity": {},
+    "ref": "artifacts/review-verdict.json"
+  },
+  "scope_constraints": [
+    "Change only paths inside scope.write_set"
+  ],
+  "required_checks": [
+    "V1"
+  ],
+  "limits": {
+    "max_findings": 12,
+    "max_chars": 24000
+  }
+}

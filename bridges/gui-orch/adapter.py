@@ -34,7 +34,7 @@ PROVIDERS = ("claude-code", "codex", "grok")
 ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor")
 STATUSES = ("ok", "warn", "fail", "skip", "unknown")
 OUTCOME_STATUS = {"done": "ok", "finished": "ok", "done_with_deviations": "warn", "blocked": "fail", "failed": "fail",
-                  "orphaned": "warn", "stopped": "warn", "running": "warn"}
+                  "orphaned": "warn", "stopped": "warn", "running": "warn", "waiting": "warn"}
 ORPHANED = "RUN_ORPHANED: no live conductor holds the run; resume continues it"
 REPORT_LIMIT = 200_000
 SANDBOX_NOTE = ("The provider sandbox restricts the commands of orch roles; GUI plugin processes are not sandboxed "
@@ -179,6 +179,11 @@ def _owner(value: Any) -> str:
 
 
 def view_status(outcome: Any, running: bool = False) -> str:
+    if isinstance(outcome, str):
+        if outcome in ("hung", "suspected_stall", "orphaned"):
+            return "warn"
+        if outcome.startswith("waiting_"):
+            return "info"
     if isinstance(outcome, str) and outcome in OUTCOME_STATUS:
         return OUTCOME_STATUS[outcome]
     return "warn" if outcome is None and running else "unknown"
@@ -228,10 +233,25 @@ def run(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
     found = _status(run_id, _need_root(root), timeout_s)
     current = _dict(found.get("current"))
     tokens = _dict(found.get("tokens"))
+    health = _dict(found.get("health"))
+    health_name = health.get("health") or (found.get("health") if isinstance(found.get("health"), str) else None)
+    lease = _dict(found.get("lease") or found.get("owner"))
+    lease = _dict(lease.get("owner")) or lease
+    beacon = _dict(found.get("beacon"))
+    if not beacon and _list(found.get("beacons")):
+        beacon = _dict(found["beacons"][-1])
     fields = [{"label": "Run", "type": "text", "value": safe_text(run_id, 64)},
-              {"label": "Status", "type": "status", "value": view_status(found.get("status"))},
+              {"label": "Status", "type": "status", "value": view_status(health_name or found.get("status"))},
               {"label": "State", "type": "text", "value": _text(found.get("status"), "unknown", 64)},
-              {"label": "Owner", "type": "text", "value": _owner(found.get("lease"))}]
+              {"label": "Owner", "type": "text", "value": _owner(found.get("lease"))},
+              {"label": "Health", "type": "text", "value": _text(health_name, "unknown", 64)},
+              {"label": "Launcher", "type": "text", "value": _text(lease.get("launcher"), "-", 64)}]
+    for key, label in (("silent_s", "Silent (s)"), ("heartbeat_age_s", "Heartbeat age (s)")):
+        value = health.get(key, found.get(key))
+        numeric = type(value) in (int, float) and value >= 0 and value != float("inf")
+        fields.append({"label": label, "type": "number" if numeric else "text", "value": int(value) if numeric else "-"})
+    fields.append({"label": "Last beacon", "type": "text", "value": safe_text(
+        f"{beacon.get('ts') or ''} {beacon.get('reason_code') or ''} {beacon.get('message') or ''}".strip()) or "-"})
     if found.get("status") == "orphaned":
         fields.append({"label": "Detail", "type": "text", "value": ORPHANED})
     if found.get("reason_code"):
@@ -262,6 +282,13 @@ def run(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
     detail: Dict[str, Any] = {"$schema": VIEW, "view": "resource-detail", "title": safe_text(f"Run {run_id}", 64), "fields": fields}
     if found.get("status") in ("orphaned", "stopped", "blocked"):
         detail["actions"] = [{"command": f"{OWNER}.resume", "input": {"run_id": safe_text(run_id, 64)}}]
+    elif found.get("status") == "waiting":  # not a failure: the answers come first, then this one command goes on
+        detail["actions"] = [{"command": f"{OWNER}.continue", "input": {"run_id": safe_text(run_id, 64)}}]
+        waiting = [row for row in _list(found.get("waiting")) if isinstance(row, dict) and row.get("item")]
+        if waiting:
+            sections.append({"title": "Waiting for an answer", "markdown": "\n".join(
+                f"- {md_text(row['item'], 64)}: {md_text(', '.join(str(name) for name in _list(row.get('question_ids'))), 200)}"
+                f" since {md_text(row.get('since') or '-', 64)}" for row in waiting)})
     if sections:
         detail["sections"] = sections
     return detail
@@ -477,7 +504,7 @@ def questions(root: Optional[str], timeout_s: float, context: Dict[str, Any], pa
             item = safe_text(entry.get("item"), 64) or "-"
             rows.append({"id": f"{item}:{safe_text(entry['id'], 64)}", "cells": {
                 "item": item, "question": _text(entry.get("text"), "-"), "kind": _text(entry.get("kind"), "-", 64),
-                "state": "answered, waits for resume" if entry.get("answered") else "open",
+                "state": "answered — continue" if entry.get("answered") else "open",
                 "age_s": _int(entry.get("age_s")), "overdue": "yes" if entry.get("overdue") else "no"}})
     columns = [{"id": "item", "title": "Item", "type": "text"}, {"id": "question", "title": "Question", "type": "text"},
                {"id": "kind", "title": "Kind", "type": "text"}, {"id": "state", "title": "State", "type": "text"},

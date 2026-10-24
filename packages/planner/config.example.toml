@@ -25,7 +25,7 @@ schema_version = 1
 # timeout_seconds = 30
 
 [planner.new_plan]
-# settings.design_audit of a new plan. One of: "none", "required".
+# settings.design_audit of a new plan; required gates execution on a current phase readiness certificate. One of: "none", "required".
 # design_audit = "none"
 
 # settings.scout of a new plan. One of: "off", "auto".

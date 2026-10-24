@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:detach-result:v1",
+  "title": "detach-result",
+  "description": "Successful detached startup: the child acknowledged ownership and state initialization; the run may still fail later.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "run_id",
+    "pid",
+    "log",
+    "detached"
+  ],
+  "properties": {
+    "$schema": {
+      "description": "Document contract.",
+      "const": "urn:swissknifeman:orch:conductor:detach-result:v1"
+    },
+    "run_id": {
+      "description": "Conductor run id.",
+      "type": "string",
+      "pattern": "^cnd-[A-Za-z0-9-]+$"
+    },
+    "pid": {
+      "description": "Child process id.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "log": {
+      "description": "Absolute path of the detached log.",
+      "type": "string",
+      "minLength": 1
+    },
+    "detached": {
+      "description": "Separate session launch.",
+      "const": true
+    }
+  },
+  "$defs": {}
+}

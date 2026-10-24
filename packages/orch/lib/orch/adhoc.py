@@ -16,7 +16,7 @@ _CHECK_ID = re.compile(r"^V[0-9]+$")
 SUPPORT_PROVENANCE = {
     "plan_support": (("plan", "phase"), ("plan",)),
     "phase_support": (("plan", "phase"), ("plan", "phase")),
-    "review_followup": (("plan", "item", "finding"), ()),
+    "review_followup": (("plan", "item", "finding", "session_ref"), ()),
     "deviation_fix": (("plan", "item", "event"), ("plan", "item")),
     "research": (("plan", "question"), ()),
     "advisor": (("plan", "item", "question"), ()),
@@ -69,7 +69,8 @@ def build_adhoc_input(goal: str | None, include: Iterable[str], exclude: Iterabl
                       checks: Iterable[str] = (), procedures: Iterable[str] = (),
                       reads: Iterable[str] = (), route: dict | None = None,
                       review: str | None = None, why: str | None = None,
-                      expect: str | None = None, created_by: str = "owner", provenance: dict | None = None) -> dict:
+                      expect: str | None = None, created_by: str = "owner", provenance: dict | None = None,
+                      plan: str | None = None, item: str | None = None) -> dict:
     """Execution-input for ad-hoc work or, with ``review='BASE..HEAD'``, a read-only review.
 
     ``checks`` are ``'V1=CMD'`` (expected ``expect``, default ``exit 0``), ``procedures`` are
@@ -82,6 +83,8 @@ def build_adhoc_input(goal: str | None, include: Iterable[str], exclude: Iterabl
     parsed += [(*_pair(item, "--procedure"), "procedure") for item in procedures]
     if provenance is not None and review is not None:
         raise _usage("--provenance and --review exclude each other")
+    if (plan or item) and review is None:
+        raise _usage("review plan/item identity needs --review")
     if review is not None:
         base, head = _split_review(review)
         target = f"diff {base}..{head}"
@@ -89,6 +92,7 @@ def build_adhoc_input(goal: str | None, include: Iterable[str], exclude: Iterabl
         include = include or [target]
         parsed = parsed or [("V1", REVIEW_PROCEDURE, "procedure")]
         provenance = {"kind": "review", "base": base, "head": head, "target": target}
+        provenance.update({key: value for key, value in (("plan", plan), ("item", item)) if value})
     else:
         if not goal or not goal.strip():
             raise _usage("a goal is required")

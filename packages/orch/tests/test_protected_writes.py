@@ -1,12 +1,17 @@
 """Write-protected paths: the policy that names them, the executor rule and the escalation the journal keeps."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+import sys
 import unittest
 from unittest import mock
 
 from orch.conductor import engine, progress, prompts
 from orch.conductor.policies import protected_writes
-from tests.test_conductor import ConductorCase, report
+from orch.conductor.prompts import blocks
+from orch.conductor.stages import context
+from tests.test_conductor import GREEN, ConductorCase, report
 
 QUIET = ["claude", "-p", "--permission-prompts", "none"]
 
@@ -31,6 +36,22 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(protected_writes.protected("claude-code", QUIET, None), [])
 
 
+    def test_a_generated_path_the_conductor_regenerates_is_not_protected(self):
+        patterns = [".claude/skills/orch-debug/SKILL.md", ".claude/settings.json", "packages/x/dev-skills/a/SKILL.md"]
+        self.assertEqual(protected_writes.protected("claude-code", QUIET, patterns, [".claude/skills/**"]),
+                         [".claude/settings.json"])
+
+    def test_generated_paths_count_only_with_a_generator(self):
+        item = mock.Mock(input_doc={"scope": {"write_set": [".claude/skills/a/SKILL.md", "src/a.md"]}},
+                         routes={"executor": {"provider": "claude-code", "argv": QUIET}})
+        without = mock.Mock(conductor={"generated_paths": [".claude/skills/**"]})
+        self.assertEqual(context.write_generated(without, item), [])
+        self.assertEqual(context.write_protected(without, item), [".claude/skills/a/SKILL.md"])
+        configured = mock.Mock(conductor={"generate": ["gen"], "generated_paths": [".claude/skills/**"]})
+        self.assertEqual(context.write_generated(configured, item), [".claude/skills/a/SKILL.md"])
+        self.assertEqual(context.write_protected(configured, item), [])
+
+
 class RuleTests(unittest.TestCase):
     def test_the_rule_names_the_paths_the_staging_folder_and_the_code(self):
         text = prompts.protected_rule(["pyrightconfig.json"], ".swissknifeman/orch-artifacts/r/W1/protected")
@@ -38,6 +59,20 @@ class RuleTests(unittest.TestCase):
         self.assertIn("`.swissknifeman/orch-artifacts/r/W1/protected/<the same path>`", text)
         self.assertIn("WRITE_PROTECTED_PATH: <path> -> <staged path>", text)
         self.assertIn("do not write them through Bash", text)
+
+
+    def test_the_generated_rule_names_the_paths_and_the_generator(self):
+        text = prompts.generated_rule([".claude/skills/a/SKILL.md"], ["tools/gen/bin/gen", "all"])
+        self.assertIn("## Generated paths", text)
+        self.assertIn("`.claude/skills/a/SKILL.md`", text)
+        self.assertIn("`tools/gen/bin/gen all`", text)
+        self.assertIn("change their sources", text)
+        fixture = Path(__file__).resolve().parents[1] / "fixtures/exec/v1/valid/execution-input/plan-bound.json"
+        doc = json.loads(fixture.read_text(encoding="utf-8"))
+        prompt = blocks.render(prompts.executor(doc, item="W1", step="executor.1",
+                                                generated=[".claude/skills/a/SKILL.md"], generator=["gen"]))
+        self.assertIn("## Generated paths", prompt)
+        self.assertNotIn("## Protected paths", prompt)
 
 
 class JournalTests(unittest.TestCase):
@@ -77,6 +112,43 @@ class ConductTests(ConductorCase):
         self.assertEqual(code, 0)
         self.assertIn("W1: blocked (WRITE_PROTECTED_PATH)", out)
         self.assertIn("    escalation: WRITE_PROTECTED_PATH: pyrightconfig.json", out)
+
+
+
+GENERATOR = ("import pathlib, sys; source = pathlib.Path('src/skill.md'); target = pathlib.Path('.claude/skills/x/SKILL.md');"
+             " target.parent.mkdir(parents=True, exist_ok=True);"
+             " target.write_text('generated from ' + source.read_text()) if source.exists() else None")
+STALE = "import sys; sys.exit(1)"
+
+
+class GenerateTests(ConductorCase):
+    def configure(self, check=None):
+        lines = ["[orch.conductor]", f"generate = {json.dumps([sys.executable, '-c', GENERATOR])}",
+                 'generated_paths = [".claude/skills/**"]']
+        if check:
+            lines.append(f"generate_check = {json.dumps([sys.executable, '-c', check])}")
+        self.write_config(extra="\n".join(lines) + "\n")
+        self.set_items({"W1": {"write_set": ["src/skill.md", ".claude/skills/x/SKILL.md"]}})
+        self.script({"executor": [{"write": {"src/skill.md": "canon\n", "out/W1.txt": "ok\n"}, "result": report("W1")}],
+                     "reviewer": [GREEN]})
+
+    def test_the_conductor_regenerates_the_projection_and_the_commit_takes_it(self):
+        self.configure()
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        said = [line for line in self.lines(err) if line.get("reason_code") == "GENERATED"]
+        self.assertEqual(len(said), 1, err)
+        self.assertIn(".claude/skills/x/SKILL.md", said[0]["message"])
+        self.assertIn(".claude/skills/x/SKILL.md", self.source()["commits"][0]["paths"])
+        self.assertEqual(self.git("show", "HEAD:.claude/skills/x/SKILL.md"), "generated from canon\n")
+        self.assertNotIn("WRITE_PROTECTED_PATH", err)
+
+    def test_a_stale_projection_stops_the_run_before_the_checks(self):
+        self.configure(check=STALE)
+        code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "GENERATE_FAILED")), err)
+        self.assertIn("generate-check", err)
+        self.assertEqual(self.source()["commits"], [])
 
 
 if __name__ == "__main__":

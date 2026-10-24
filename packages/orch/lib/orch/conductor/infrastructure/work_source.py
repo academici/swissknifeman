@@ -27,6 +27,7 @@ from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import safe, write_json
+from orch.conductor.infrastructure.heartbeat import declare
 from orch.settings import ORCH_ROOT
 from orch.port import PortError
 from orch.worksource import problems as source_problems
@@ -69,8 +70,11 @@ def inprocess_transport(argv, cwd, env):
         ORCH_TRANSPORT = previous_transport
 
 
+SOURCE_CALL_S = 600  # the longest a call of the work source may take
+
+
 def _subprocess_transport(argv, cwd, env):
-    done = run_with_timeout(argv, cwd=cwd, capture_output=True, text=True, env=env, timeout=600)
+    done = run_with_timeout(argv, cwd=cwd, capture_output=True, text=True, env=env, timeout=SOURCE_CALL_S)
     return done.returncode, done.stdout, done.stderr
 
 
@@ -198,7 +202,8 @@ def run_orch(self, *args: str) -> tuple:
         argv += ["--project-resolution", self.project_resolution]
     if self.config_file:
         argv += ["--config", str(self.config_file)]
-    code, out, err = (ORCH_TRANSPORT or _subprocess_transport)(argv + list(args), str(self.project), self.env)
+    with declare(self, "work_source", "WORK_SOURCE_CALL", SOURCE_CALL_S):  # a silent heartbeat is a wait, not a hang
+        code, out, err = (ORCH_TRANSPORT or _subprocess_transport)(argv + list(args), str(self.project), self.env)
     try:
         doc = json.loads(out) if out.strip() else None
     except ValueError:
@@ -410,6 +415,26 @@ def research_save(self, item: Item, number: int, found: dict) -> dict:
     return {"outcome": "kept", "path": self._relative(kept), "reason": why[:300]}
 
 
+def decision(self, item: Item, doc: dict) -> dict:
+    """``orch.py source decision`` of the request ``doc`` (``finish`` built it): ``{outcome, decision_id?}`` when the
+    source recorded the answered question (or already had it), else ``{outcome: "kept", reason}`` and the info
+    ``DECISION_NOT_RECORDED``: a source that does not serve the operation, or refuses it, loses the decision, never the
+    piece. The request stays in ``decisions/`` of the piece."""
+    request = write_json(item.directory / "decisions" / f"{safe(doc['question']['id'])}.json", doc)
+    code, answer, err = self._orch("source", "decision", "--run", item.orch_run, "--ref", item.ref, "--file", str(request),
+                                   "--actor", self.conductor.get("registrar") or "orch/conductor")
+    if code == 0 and isinstance(answer, dict) and answer.get("outcome") in ("recorded", "no-op"):
+        return {key: answer[key] for key in ("outcome", "decision_id") if key in answer}
+    if isinstance(answer, dict) and answer.get("outcome") in ("refused", "unsupported"):
+        why = f"{answer.get('reason_code') or answer['outcome']}: {answer.get('message', '')}".rstrip(": ")
+    else:
+        why = err or "the work source printed no answer"
+    self.progress.emit("info", item=item.ref, reason_code="DECISION_NOT_RECORDED",
+                       message=f"the work source did not record the answer to {doc['question']['id']} as a decision "
+                               f"({why}); it stays in {self._relative(request)}"[:300])
+    return {"outcome": "kept", "reason": why[:300]}
+
+
 def register(self, item: Item, args: list) -> dict:
     """``orch.py source register`` with the arguments ``finish`` built: ``{outcome, gate}``, or a ``Stop``."""
     code, answer, err = self._orch(*args)
@@ -460,6 +485,11 @@ def write_artifact(self, item: Item, name: str, doc) -> Path:
     return write_json(item.artifacts / name, doc)
 
 
+def artifact_path(item: Item, name: str) -> Path:
+    """The source-owned location of an item artifact, without assuming a plan's folder layout."""
+    return item.artifacts / name
+
+
 def stray_dir(item: Item) -> Path:
     """Where the runtime artifacts an executor left in the tree are set aside: ``<artifacts>/stray/<original path>``."""
     return (item.artifacts or item.directory) / "stray"
@@ -484,12 +514,21 @@ def evidence_dir(item: Item) -> Path:
     return item.artifacts / "evidence"
 
 
-def register_args(item: Item, report_path: Path, status: str, actor: str, executed_by: str, evidence: dict) -> list:
+def review_receipt(item: Item) -> Optional[Path]:
+    """The completed review receipt, when the piece has one."""
+    path = item.artifacts / "review-receipt.json"
+    return path if path.is_file() else None
+
+
+def register_args(item: Item, report_path: Path, status: str, actor: str, executed_by: str, evidence: dict,
+                  review_receipt: Optional[str] = None) -> list:
     """The arguments of ``orch.py source register`` for the result of the piece."""
     args = ["source", "register", "--run", item.orch_run, "--report", str(report_path), "--status", status,
             "--actor", actor, "--executed-by", executed_by]
     for check_id, path in sorted(evidence.items()):
         args += ["--evidence", f"{check_id}={path}"]
+    if review_receipt:
+        args += ["--review-receipt", review_receipt]
     return args
 
 

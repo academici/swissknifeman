@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "items": {
+    "W1": {
+      "steps": {},
+      "followup_corrections": [2],
+      "corrections_used": 1
+    }
+  }
+}

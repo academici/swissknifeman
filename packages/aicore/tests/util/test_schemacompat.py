@@ -52,6 +52,7 @@ def obj(properties=None, required=None, **extra):
 
 STR = {"type": "string"}
 INT = {"type": "integer"}
+BOOL = {"type": "boolean"}
 
 
 def directed(old_body, new_body, direction):
@@ -229,6 +230,52 @@ class TestRules(unittest.TestCase):
         self.assertIn("type-changed", found[0].message)
         self.assertEqual([], rules(old, old))
         self.assertEqual(["oneof-changed"], rules({}, {"oneOf": [STR]}))
+
+    def test_oneof_branch_that_widened_and_shares_no_document_reports_its_own_changes(self):
+        # branch 0 is closed and lacks "loaded", which branch 1 requires: no document matches both
+        old = {"oneOf": [obj({"id": STR}, ["id"]), obj({"ref": STR, "loaded": BOOL}, ["ref", "loaded"])]}
+        new = {"oneOf": [obj({"id": STR, "origin": STR}, ["id"]), old["oneOf"][1]]}
+        found = changes(old, new)
+        self.assertEqual([("/oneOf/0/properties/origin", "property-added", False)],
+                         [(c.path, c.rule, c.breaking) for c in found])
+
+    def test_oneof_branch_that_widened_but_may_overlap_stays_oneof_changed(self):
+        # branch 1 is open: {"id": "x", "origin": "y"} matched branch 1 only and now matches both
+        old = {"oneOf": [obj({"id": STR}, ["id"]), {"type": "object", "properties": {"id": STR}, "required": ["id"]}]}
+        new = {"oneOf": [obj({"id": STR, "origin": STR}, ["id"]), old["oneOf"][1]]}
+        self.assertEqual([("/oneOf/0", "oneof-changed")], [(c.path, c.rule) for c in changes(old, new)])
+
+    def test_required_fields_prove_disjointness_from_bounded_empty_object(self):
+        phase = obj({"id": STR}, ["id"])
+        old = {"oneOf": [phase, {"type": "object", "maxProperties": 0}]}
+        new = {"oneOf": [obj({"id": STR, "readiness": STR}, ["id"]), old["oneOf"][1]]}
+        self.assertEqual(["property-added"], rules(old, new))
+        # At the boundary the formerly unique {id, readiness} may now match both branches.
+        for limit in (1, 2):
+            before = {"oneOf": [phase, {"type": "object", "maxProperties": limit}]}
+            after = {"oneOf": [new["oneOf"][0], before["oneOf"][1]]}
+            self.assertEqual(["oneof-changed"], rules(before, after))
+
+    def test_oneof_discriminator_and_types_prove_branches_apart(self):
+        kind = {"kind": {"const": "a"}, "x": STR}
+        old = {"oneOf": [{"type": "object", "properties": kind, "required": ["kind"]},
+                         {"type": "object", "properties": {"kind": {"enum": ["b", "c"]}}, "required": ["kind"]}]}
+        new = {"oneOf": [{"type": "object", "properties": dict(kind, x={"type": ["string", "null"]}),
+                          "required": ["kind"]}, old["oneOf"][1]]}
+        self.assertEqual(["type-widened"], rules(old, new))
+        self.assertEqual(["bound-relaxed"], rules({"oneOf": [{"type": "string", "maxLength": 3}, INT]},
+                                                  {"oneOf": [{"type": "string"}, INT]}))
+        self.assertEqual(["oneof-changed"], rules({"oneOf": [{"type": "number", "maximum": 3}, INT]},
+                                                  {"oneOf": [{"type": "number"}, INT]}))
+
+    def test_oneof_branch_with_a_ref_sibling_conflict_proves_nothing(self):
+        # branch 1 is a closed target {id, x} with sibling properties {note}: the merged body would seem to forbid "id",
+        # yet {"id": "v"} matched branch 0 only and, once the target stops requiring x, matches both
+        body = {"oneOf": [obj({"id": STR}, ["id"]), {"$ref": f"{URN}target:v1", "properties": {"note": STR}}]}
+        old, old_id = registry(doc(body), doc(obj({"id": STR, "x": STR}, ["id", "x"]), "target"))
+        new, new_id = registry(doc(body), doc(obj({"id": STR, "x": STR}, ["id"]), "target"))
+        found = compare(old, old_id, new, new_id)
+        self.assertIn(("/oneOf/1", "oneof-changed"), [(c.path, c.rule) for c in found])
 
     def test_nested_changes_are_found_at_depth(self):
         old = obj({"a": obj({"b": {"type": "array", "items": obj({"c": STR}, ["c"])}})})

@@ -58,11 +58,11 @@ class CapabilitySeedTests(unittest.TestCase):
                 with self.subTest(seed=path.name):
                     self.assertIn(doc["extensions"]["cao_provider"], {"claude_code", "codex", "grok_cli"})
 
-    def test_native_grok_records_the_flags_and_stream_probe_without_claiming_resume(self):
+    def test_native_grok_records_the_flags_and_stream_probe_and_the_resume_the_catalog_builds(self):
         doc = json.loads((ORCH / "bindings/capabilities/native--grok.json").read_text(encoding="utf-8"))
         self.assertEqual(doc["transport"], "jsonl")
         self.assertEqual(doc["terminal_signal"], "result line of streaming-messages-json")
-        self.assertEqual(doc["resume"], "unknown")
+        self.assertEqual(doc["resume"], "adapted")  # grok --resume <id> through resume_argv of the launch catalog (D24)
         self.assertEqual(doc["restrictions"], {"tools_native": "supported", "sandbox_os": "supported", "prompt_only": False})
         self.assertIn({"kind": "probe", "ref": "grok 1.0.50 --help and stream fixture",
                        "note": "2026-10-19; flags and stream shape, not an end-to-end run"}, doc["evidence"])

@@ -7,17 +7,19 @@ Newest first, then by run id; an empty project gives an empty list; a run whose 
 """
 from __future__ import annotations
 
+import re
 import shutil
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from aicore.ext.plugins import safe_text
 from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_text
 
-from orch.conductor import progress, records
-from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, runs_root
+from orch.conductor import health as health_mod, options as opts, progress, records
+from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, STATE_FILE, runs_root, safe
+from orch.conductor.infrastructure import heartbeat as heartbeat_mod
 from orch.conductor.infrastructure.lease import RunLease
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS  # <run id>/<piece>: a source without its own folder
@@ -25,7 +27,7 @@ from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS  # <run
 PRUNABLE = {"done", "done_with_deviations", "finished", "blocked", "stopped", "orphaned"}
 
 
-def display(value, limit: int = 500):
+def display(value, limit: int = 500) -> Any:
     """Redact before shortening display data, including keys in diagnostic objects."""
     if isinstance(value, str):
         return safe_text(redact_text(value, secrets=env_secrets()), limit)
@@ -55,7 +57,9 @@ def live_owner(directory: Path):
     if not held:
         return None
     owner = RunLease.owner(directory)
-    return display({key: owner.get(key) for key in ("pid", "host", "started_at", "command")}, 64) if owner else None
+    shown = {key: owner.get(key) for key in ("pid", "host", "started_at", "command")}
+    shown.update({key: owner[key] for key in ("start_ticks", "boot_id", "launcher") if key in owner})  # the identity (I13)
+    return display(shown, 64) if owner else None
 
 
 def latest_run_id(project: Path) -> Optional[str]:
@@ -64,6 +68,105 @@ def latest_run_id(project: Path) -> Optional[str]:
                    key=lambda path: (path / progress.PROGRESS_FILE).stat().st_mtime
                    if (path / progress.PROGRESS_FILE).exists() else 0)
     return found[-1].name if found else None
+
+
+STAMP = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z")
+
+
+def reset_until(lines: list) -> Optional[float]:
+    """The epoch time the last provider wait or capacity gate of the journal ends (the last time in its message), or ``None``."""
+    found = None
+    for line in lines:
+        if line.get("event") == "info" and line.get("reason_code") in ("PROVIDER_WAIT", "CAPACITY_GATED"):
+            stamps = STAMP.findall(line.get("message") or "")
+            found = timefmt.epoch(stamps[-1]) if stamps else found
+    return found
+
+
+def thresholds_of(directory: Path, found: dict, hung_after_s: Optional[int] = None) -> health_mod.Thresholds:
+    """The health thresholds of the run: the stall limits of the piece it is on (its ``options.json``), else the defaults;
+    ``hung_after_s`` (``[orch.supervisor]``, given by the supervisor) replaces the default age of a heartbeat."""
+    ref = (found.get("current") or {}).get("item") or (found["items"][-1]["item"] if found.get("items") else None)
+    limits: dict = {}
+    if ref:
+        try:
+            limits = ((records.read(directory / safe(ref) / "options.json", "item-options") or {}).get("options") or {}).get("limits") or {}
+        except (OSError, Stop):
+            limits = {}
+    return health_mod.Thresholds(**{key: int(limits.get(key, opts.DEFAULT_LIMITS[key]))
+                                    for key in ("stall_window_s", "stall_repeat_n")},
+                                 **({"hung_after_s": int(hung_after_s)} if hung_after_s else {}))
+
+
+def health_of(directory: Path, found: dict, state: Optional[dict] = None, lines: Optional[list] = None,
+              now: Optional[float] = None, hung_after_s: Optional[int] = None) -> dict:
+    """``health.classify`` of a run from its files: reads the heartbeat, probes the lease, writes nothing. ``found`` is the
+    journal summary (``effective_status``); a document that cannot be read is a class of its own (``unknown``), never a failure."""
+    try:
+        doc = records.read(directory / RUN_FILE, "run") or {}
+    except (OSError, Stop):
+        doc = {}
+    flag = doc.get("lease") is True
+    held = RunLease.held(directory) if flag else None
+    lease = {"flag": flag, "held": held, "owner": RunLease.owner(directory) if held else None}
+    beat, problem = heartbeat_mod.read(directory)
+    summary = dict(found, reset_until=reset_until(lines if lines is not None else progress.read_lines(directory)))
+    if beat is None and problem != "HEARTBEAT_MISSING":
+        beat = {health_mod.INVALID: problem}
+    return health_mod.classify(summary, state or {}, beat, lease, time.time() if now is None else now,
+                               thresholds_of(directory, found, hung_after_s))
+
+
+def health_text(directory: Path, found: dict) -> str:
+    """The ``health:`` line of the text status, with its line break."""
+    found_health = health_of(directory, found, found.get("state"))
+    silent = found_health["silent_s"]
+    return (f"\n  health: {found_health['health']}" + (f" (silent {progress.human_duration(silent)})" if silent is not None else "")
+            + (f" — {found_health['reason_code']}: {found_health['detail']}" if found_health["reason_code"] else ""))
+
+
+def status_details(directory: Path, found: dict) -> dict:
+    """Add read-only observability to the journal summary without rebuilding routes or options."""
+    state = found["state"]
+    doc = records.read(directory / RUN_FILE, "run") or {}
+    raises = state.get("limit_raises") or []
+    limits = {}
+    if doc.get("limits_run") or raises:
+        limits = {"items": {}, **(doc.get("limits_run") or {}), "limit_raises": raises}
+    for row in found["items"]:
+        ref = row["item"]
+        item_state = (state.get("items") or {}).get(ref) or {}
+        folder = directory / safe(ref)
+        recorded = records.read(folder / "routes.json", "item-routes") or {}
+        row.update(tokens=item_state.get("tokens"), usage_incomplete=item_state.get("usage_incomplete"),
+                   routes={role: public_route(route) for role, route in recorded.items()
+                           if isinstance(route, dict)})
+        options = records.read(folder / "options.json", "item-options") or {}
+        item_limits = (options.get("options") or {}).get("limits") or {}
+        if item_limits:
+            limits.setdefault("items", {})[ref] = {key: item_limits.get(key, 0)
+                                                   for key in ("tokens_max", "tokens_hard_max")}
+    if limits:
+        limits.setdefault("limit_raises", raises)
+        for change in raises:
+            key = change["key"]
+            if key == "tokens_hard_max":
+                for ref, entry in limits.get("items", {}).items():
+                    if change.get("item") in (None, ref):  # a raise names its piece; an old record holds for all
+                        entry[key] = change["to"]
+            elif key == "run_tokens_hard_max":
+                limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
+    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED",
+             "WRITE_PROTECTED_PATH", "STAGE_SLOW", "STAGE_IDLE", "CHECK_SLOW", "CHECK_IDLE", "DISK_LOW", "STALL_SUSPECTED"}
+    beacons = {}
+    for line in progress.read_lines(directory):
+        if line.get("event") == "info" and line.get("reason_code") in codes:
+            code = line["reason_code"]
+            beacons.pop(code, None)
+            beacons[code] = line
+    return {"lease": live_owner(directory), "limits": limits, "beacons": list(beacons.values()),
+            "health": health_of(directory, found, state),
+            **({"catalog_digests": doc["catalog_digests"]} if isinstance(doc.get("catalog_digests"), dict) else {})}
 
 
 def effective_status(directory: Path, summary: dict, doc=None, *, owned: bool = False) -> dict:
@@ -93,7 +196,13 @@ def _row(directory: Path, *, owned: bool = False) -> dict:
     items = [row["item"] for row in found["items"]]
     if not items and isinstance(doc.get("items"), list):
         items = [item for item in doc["items"] if isinstance(item, str)]
-    return display({"run_id": run_id, "status": found["status"], "reason_code": found["reason_code"],
+    state = {}
+    if found["status"] == "stopped":  # only a stopped run needs its state (a quota reset)
+        try:
+            state = records.read(directory / STATE_FILE, "state") or {}
+        except (OSError, Stop):
+            state = {}
+    return display({"run_id": run_id, "health": None if owned else health_of(directory, found, state, lines)["health"], "status": found["status"], "reason_code": found["reason_code"],
             "created": lines[0]["ts"] if lines else None, "items": display(items, 64),
             "resumes": sum(1 for line in lines if line.get("event") == "run.resume"),
             "owner": None if owned else live_owner(directory)})
@@ -144,6 +253,9 @@ def _remove(path: Path) -> bool:
     if path.is_dir():
         shutil.rmtree(path)
         return True
+    if path.is_file():
+        path.unlink()
+        return True
     return False
 
 
@@ -173,6 +285,9 @@ def prune(project: Path, older_than_days: int, apply: bool = False, now: Optiona
             continue
         paths = [directory] + [project / base / run_id for base in (REPORTS, FALLBACK_ARTIFACTS)
                                if (project / base / run_id).exists() or (project / base / run_id).is_symlink()]
+        log = root / "detached" / f"{run_id}.log"
+        if log.exists() or log.is_symlink():
+            paths.append(log)
         local = project / FALLBACK_ARTIFACTS / run_id
         # the local records of a source without its own folder (the file source) are the only copy of its evidence
         evidence = sorted(str(path.relative_to(project)) for path in local.glob("*/evidence/*.json")) \

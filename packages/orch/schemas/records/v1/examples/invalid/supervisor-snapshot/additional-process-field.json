@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:supervisor-snapshot:v1",
+  "at": "2026-10-24T10:00:00Z",
+  "run_id": "cnd-1",
+  "health": {"health": "hung"},
+  "status": {},
+  "processes": [{"pid": 4242, "ppid": 1, "pgid": 4242, "stat": "T", "cpu_s": 1.5, "args": "x", "env": {"A": "b"}}]
+}

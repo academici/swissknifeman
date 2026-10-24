@@ -16,14 +16,15 @@ RUNS = [
     {"run_id": "cnd-bad", "status": "unreadable"},
     {"run_id": "cnd-orphaned", "status": "orphaned", "reason_code": "RUN_ORPHANED", "owner": None},
 ]
-OWNER = {"pid": 123, "host": "test-host", "started_at": "2026-10-17T09:00:00Z", "command": "run"}
+OWNER = {"pid": 123, "host": "test-host", "started_at": "2026-10-17T09:00:00Z", "command": "run", "launcher": "gui"}
 RUNS[0]["owner"] = OWNER
 USED = {"provider": "codex", "model": "recorded-model", "effort": "high", "class": "implementation",
         "argv": ["PRIVATE_ARGV"], "env": {"TOKEN": "PRIVATE_ENV"}}
 STATUS = {
     "status": "running", "reason_code": None, "run": "cnd-new", "lines": 12, "last_ts": "2026-10-17T09:05:00Z",
     "current": {"item": "P2.2", "stage": "executor.1", "role": "executor", "route": "claude-code", "since": "2026-10-17T09:04:00Z"},
-    "beacon": None,
+    "beacon": {"ts": "2026-10-17T09:04:30Z", "reason_code": "STAGE_IDLE", "message": "silent role"},
+    "health": {"health": "running", "silent_s": 30, "heartbeat_age_s": 2},
     "items": [
         {"item": "P2.1", "stages": 4, "outcome": "done", "reason_code": None, "last": {"stage": "close", "verdict": "pass", "ts": "t"}},
         {"item": "P2.2", "stages": 1, "outcome": None, "last": {"stage": "scout", "verdict": None, "ts": "t"}},
@@ -66,7 +67,7 @@ REPORT = "# Observer report\n\nRun cnd-new.\n\n- <script>alert(1)</script>\n"
 def main(scenario):
     home = os.environ.get("HOME", "/")
     with open(os.path.join(home, "umbrella.log"), "a", encoding="utf-8") as log:
-        log.write(json.dumps({"argv": sys.argv[1:], "cwd": os.getcwd()}) + "\n")
+        log.write(json.dumps({"argv": sys.argv[1:], "cwd": os.getcwd(), "launcher": os.environ.get("SKM_ORCH_LAUNCHER")}) + "\n")
     args = sys.argv[1:]
     if args == ["units", "list", "--json"]:
         print(json.dumps({"units": [{"id": "aicore", "root": os.environ["FAKE_AICORE_ROOT"]}]}))
@@ -100,7 +101,7 @@ def main(scenario):
                          {"gates": [{"provider": "codex", "until": "2026-10-20T20:00:00Z", "class": "quota",
                                      "code": "PROVIDER_QUOTA", "set_by": "cnd-new"}]}))
         return 0
-    if verb in ("run", "resume", "release"):
+    if verb in ("run", "resume", "continue", "answer", "release"):
         print(json.dumps({"ok": True, "verb": verb}))
         return 0
     if verb == "runs":
@@ -109,13 +110,16 @@ def main(scenario):
             rows = rows[:int(tail[tail.index("--limit") + 1])]
         print(json.dumps({"runs": rows}))
         return 0
-    if scenario in ("empty", "missing") or (run and run not in ("cnd-new", "cnd-old", "cnd-orphaned", "cnd-stopped")):
+    if scenario in ("empty", "missing") or (run and run not in ("cnd-new", "cnd-old", "cnd-orphaned", "cnd-stopped", "cnd-waiting")):
         sys.stderr.write(f"RUN_UNKNOWN: no conductor run {run or ''} in /x\n")
         return 1
     if verb == "status":
         doc = dict(STATUS)
         if run in ("cnd-orphaned", "cnd-stopped"):
-            doc.update(status=run[4:], lease=None, reason_code="RUN_ORPHANED" if run == "cnd-orphaned" else None)
+            doc.update(status=run[4:], lease=None, health={"health": run[4:]}, reason_code="RUN_ORPHANED" if run == "cnd-orphaned" else None)
+        if run == "cnd-waiting":
+            doc.update(status="waiting", lease=None, health={"health": "waiting_owner", "silent_s": 45, "heartbeat_age_s": 10}, reason_code="WAITING_DECISION",
+                       waiting=[{"item": "P2.3", "question_ids": ["Q1", "esc-1"], "since": "2026-10-23T12:00:00Z"}])
         print(json.dumps(doc))
         return 0
     if verb == "prompt" and tail[:1] == ["explain"]:

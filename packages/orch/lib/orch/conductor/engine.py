@@ -34,6 +34,7 @@ from orch.conductor.domain.report import continued, evidence_paths, findings_pro
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import beacon_events, cli_probe, launch_plan, results, roles, sessions, tree, usage
 from orch.conductor.infrastructure import work_source
+from orch.conductor.infrastructure.heartbeat import Heartbeat
 from orch.conductor.infrastructure.clock import new_run_id, sleep, unit_random, utc_now, utc_stamp, wall
 from orch.conductor.infrastructure.files import (OPTIONS_COPY, REPORTS, RUN_FILE, STATE_FILE, RunStore, read_json,
                                                  runs_root, safe, write_json)
@@ -56,7 +57,7 @@ __all__ = ["BATCH_FIELDS", "BATCH_LIMITS", "CLASS_RANK", "Conductor", "EFFORT_RA
            "continued", "evidence_paths", "findings_problems", "new_run_id", "process", "read_json", "report_problems",
            "runs_root", "safe", "sandbox", "sleep", "unit_random", "utc_now", "utc_stamp", "wall", "write_json"]
 
-STATUS_EXIT = {"finished": 0, "stopped": 1}
+STATUS_EXIT = {"finished": 0, "stopped": 1, "waiting": 4}
 
 
 class Conductor:
@@ -88,6 +89,7 @@ class Conductor:
         self.run_doc: dict = {}
         self.state: dict = {}
         self.progress: Optional[Progress] = None
+        self.heartbeat: Optional[Heartbeat] = None
         self.instructions: dict = {}  # the stubs snapshot of the run (``instructions.json``)
         self._instructions_lock = threading.Lock()
 
@@ -100,8 +102,14 @@ class Conductor:
         self.run_id, self.run_doc, self.state = run_id, run_doc, state
         self.store = store or RunStore(self.project, run_id)
         self.directory = self.store.directory
-        self.progress = Progress(run_id, self.directory, self.mode, self.stream, self.clock)
+        self.heartbeat = Heartbeat(self.directory, run_id, on_failure=self._heartbeat_failed)
+        self.progress = Progress(run_id, self.directory, self.mode, self.stream, self.clock, observer=self.heartbeat.observe)
         self.instructions = read_json(self.directory / stubs_mod.SNAPSHOT_FILE) or {}
+
+    def _heartbeat_failed(self, error: OSError) -> None:
+        """heartbeat.json could not be written: said once per run; the run goes on without it."""
+        self.progress.emit("info", reason_code="HEARTBEAT_NOT_WRITTEN",
+                           message=f"heartbeat.json was not written ({error}); the run goes on without it")
 
     def _stub(self, role: str, route: Optional[dict] = None) -> tuple:
         """``(origin, text)`` of the additional instructions of ``role`` from the snapshot of the run."""
@@ -138,6 +146,7 @@ class Conductor:
 
     run = run_service.run
     resume = run_service.resume
+    continue_run = run_service.continue_run
     _retry = run_service.retry
     _work_began = staticmethod(run_service.work_began)
     _batch_held = run_service.batch_held
@@ -213,6 +222,7 @@ class Conductor:
     _prepare = work_source.prepare
     _refresh_input = work_source.refresh_input
     _research_save = work_source.research_save
+    _record_decision = work_source.decision
     _register = work_source.register
     _commit = work_source.commit
     _open_artifacts = work_source.open_artifacts
@@ -252,6 +262,10 @@ class Conductor:
     _resume_args = sessions.resume_args
     _keep_session = sessions.keep_session
     _delta_mode = sessions.delta_mode
+    _announce_session = sessions.announce_session
+    _session_slot = sessions.slot_of
+    _answers_seen = sessions.answers_seen
+    _note_answers = sessions.note_answers
     _role_env = launch_plan.role_env
 
     @property
@@ -266,6 +280,11 @@ class Conductor:
             stage_bucket=self._stage_bucket, remember_stage=self._remember_stage,
             provider_disabled=self.provider_disabled, sandbox_args=self._sandbox_args, knows=self._knows,
             skills_excluded=self._skills_excluded, run_clock=self._run_clock)
+
+    @property
+    def panel_ports(self) -> advice.PanelPorts:
+        """The route lookups of the advisor panel, from the bindings of the application layer when they are asked for."""
+        return advice.PanelPorts(route=self._route, admit=self._admit)
 
     # ------------------------------------------------------------------ policies
 
@@ -382,6 +401,8 @@ class Conductor:
     _route_tools = staticmethod(context.route_tools)
     _file_tools_rule = context.file_tools_rule
     _write_protected = context.write_protected
+    _write_generated = context.write_generated
+    _generated_globs = context.generated_globs
     _skill_set = context.skill_set
     _skills_excluded = context.skills_excluded
     _skill_texts = context.skill_texts
@@ -427,7 +448,9 @@ class Conductor:
     _review_focus = review_stage.review_focus
     _upgrade_reviewer = review_stage.upgrade_reviewer
     _review = review_stage.review
+    _review_changed = review_stage.review_changed
     _verdict_file = review_stage.verdict_file
+    _corrected_receipt = review_stage.corrected_receipt
 
     _triage_role = triage_stage.role
     _triage = triage_stage.triage

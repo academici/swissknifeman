@@ -69,6 +69,8 @@ GOLDEN = ["python3", "scripts/golden.py", "check"]
 # a change below these prefixes (or of a unit manifest, a SKILL.md, a command catalog) can move a generated surface
 GOLDEN_PREFIXES = ("bootstrap/", ".claude/", ".agents/", ".cursor/", "configs/", "golden/", "tests/golden/")
 GOLDEN_NAMES = ("SKILL.md", "unit.json", "command-routing.json", "launch-catalog.json")
+# pyright over every packages/*/lib against configs/typecheck-baseline.json: a library change can only lower a count
+TYPECHECK = ["bash", "scripts/typecheck.sh", "--baseline"]
 
 
 def units() -> dict:
@@ -212,7 +214,16 @@ def commands(all_units: dict, folders: list, hub: bool, tier: str, paths: list =
     # only at the end of a phase.
     if folders and GOLDEN not in checks:
         checks.append(list(GOLDEN))
+    # The typecheck gate used to run only in CI, so every item stayed green while the counts grew: a library change
+    # brings it with the unit (one pyright pass over all libraries, under a minute).
+    if tier == "all" or any(_typed_library(path) for path in paths):
+        checks.append(list(TYPECHECK))
     return [("hub", [argv]) for i, argv in enumerate(checks) if argv not in checks[:i]] + plan
+
+
+def _typed_library(path: str) -> bool:
+    parts = Path(path).parts
+    return len(parts) > 3 and parts[0] == "packages" and parts[2] == "lib" and path.endswith(".py")
 
 
 def obligations(all_units: dict, folders: list, paths: list, foundation: str, tier: str) -> tuple:

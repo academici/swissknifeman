@@ -37,10 +37,12 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "run_warn_s": 7200, "run_timeout_s": 0, "review_rounds_batch": 0, "corrections_batch": 0,
                   "findings_batch": 0, "question_warn_s": 1800, "skill_tokens_max": 5000,
                   "prompt_core_tokens": 12000, "prompt_supporting_tokens": 30000, "prompt_retrieval_tokens": 50000,
-                  "disk_min_gb": 5, "triage_repro_timeout_s": 600}
+                  "disk_min_gb": 5, "triage_repro_timeout_s": 600, "stall_window_s": 1800, "stall_repeat_n": 5,
+                  "check_idle_warn_s": 600}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": True,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
-                  "strategy": "auto", "strategist": "rules"}
+                  "strategy": "auto", "strategist": "rules",
+                  "fix_brief": {"max_findings": 12, "max_chars": 24000}}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
@@ -61,7 +63,7 @@ DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "deviation", "fence":
 # a later piece does not re-read the whole transcript of the earlier ones on every turn. ``shared``: one session for all
 # pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
 SESSION_MODES = ("handoff", "shared", "per-item")
-DEFAULT_SESSION = {"executor": "handoff"}
+DEFAULT_SESSION = {"executor": "handoff", "max_idle_s": 0}  # max_idle_s 0: a session never expires by idleness
 # ``self_check``: the project's cheap commands the executor runs once on its final tree before it reports (the tests of the
 # units it touched and their dependents, lint); empty keeps the old "single test files" rule. They are not acceptance:
 # the conductor still runs every acceptance check itself, and the executor's claims about them prove nothing.
@@ -170,6 +172,8 @@ def merge(base: dict, layer: dict) -> dict:
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
             if key == "limits" and "role_timeout_s" in value:  # by role: a layer names the walls it changes
                 out[key]["role_timeout_s"] = {**(base.get(key, {}).get("role_timeout_s") or {}), **value["role_timeout_s"]}
+            if key == "review" and "fix_brief" in value:
+                out[key]["fix_brief"] = {**(base.get(key, {}).get("fix_brief") or {}), **value["fix_brief"]}
         elif key == "skills":
             out[key] = {**out.get(key, {}), **{entry["role"]: list(entry["names"]) for entry in value}}
         else:

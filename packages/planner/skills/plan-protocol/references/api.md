@@ -113,6 +113,27 @@ with `plan.py --output json <verb> ...`.
 Read data is complete: there is no content truncation or read quota. An explicit field, section,
 filter, depth or limit narrows the requested result.
 
+## Review receipts at finish
+
+`plan.py finish PLAN ITEM --status done --review-receipt PATH` consumes the field contract available through
+`plan.py schema review-receipt`. Paths resolve inside the repository or via `@plan/`. The producer's `$schema` marker
+may be any non-empty string. The subject must match `<short_id>.<item>`; a receipt attempt must match `--attempt-id`
+when both are provided. Structure, binding, freshness and blockers are checked before any plan write.
+
+Set `plan.settings.review_receipt` to `required` to require a receipt for done/done_with_deviations items with
+`review.mode: requested`; absent or `optional` preserves existing finish behavior. Successful finish adds
+`result.review = {receipt, verdict, round, freshness, reviewer}`. Freshness is `fresh` or `findings_only`, based on
+path contents, executable modes and symlink target blobs. Only current confirmed finding locations and
+`corrected_after.paths` permit changes after review. Unchanged paths in receipt `outside` are preserved; new or
+changed outside paths fail. The plan directory and `.swissknifeman/` are excluded.
+Historical `corrected` findings do not authorize changes after a later review.
+
+Errors: `REVIEW_RECEIPT_MISSING`, `REVIEW_RECEIPT_INVALID`, `REVIEW_RECEIPT_SUBJECT`, `REVIEW_RECEIPT_ATTEMPT`,
+`REVIEW_RECEIPT_STALE`, `REVIEW_RECEIPT_OPEN_BLOCKER`. An unavailable base revision is invalid, never fresh.
+The bridge `register-review PLAN ITEM --receipt FILE --actor P/M[/E]` saves the full receipt in a review knowledge
+document and adds a note; an identical repeat is a no-op. Legacy `--findings` also accepts finding `id` and
+`reproduction`.
+
 ## References and queries
 
 Pass a plan id, `PLAN<N>` or plan directory as `PLAN`. Document references are `plan`, `brief`,
@@ -149,6 +170,15 @@ Unknown sections/fields return `SECTION_UNKNOWN`/`FIELD_UNKNOWN`. Graph options 
 `DEPTH_INVALID`, `DIRECTION_INVALID` or `KIND_UNKNOWN`. Artifact path escape, plan human views and
 invalid inline content return `PATH_INVALID`, `HUMAN_VIEW` and `CONTENT_INVALID` respectively.
 Use the catalog for the complete per-verb refusal sets.
+
+`list ... decision` returns only `{ref,title,status}`; a decision's optional `origin` is read with `get`.
+`origin` (`kind` question|advice|panel, `run`, `item`, `question_id`, `question_key`, optional
+`question_digest` and `revision`; closed) is written by an orchestration run when an answered question
+becomes an accepted decision that applies to the item (`add-decision --json '{"status":"accepted",...,"origin":{...}}'`
+through the work-source operation `decision`). `question_key` is `qk-` and 16 hex characters of the digest of the
+meaning of the question (piece, kind, text, options, answer schema); `question_digest` is the full SHA-256. A later
+run of the item finds the decision in its brief by that key, so the same question is not asked again. The planner
+does not interpret `origin`.
 
 These read queries take no plan lock and write no files. `show PLAN REF` remains a document-only
 compatibility view, while `show` without a reference remains the overview. Existing `context`

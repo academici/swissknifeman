@@ -1,0 +1,14 @@
+{
+  "status": "blocked",
+  "summary": "Stopped: the sandbox refuses the write.",
+  "changed_paths": [],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "text": "The directory out/ is read-only in this sandbox.",
+      "kind": "escalation",
+      "escalation_class": "sandbox"
+    }
+  ]
+}

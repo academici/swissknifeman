@@ -1,0 +1,21 @@
+{
+  "correlationid": "cnd-20261024T100000Z-abcdef",
+  "data": {
+    "conductor_run_id": "cnd-20261024T100000Z-abcdef",
+    "phase": "ended",
+    "outcome": "waiting",
+    "reason_code": "WAITING_DECISION",
+    "launcher": "detached",
+    "items": [
+      "P8.3"
+    ]
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-conductor-lifecycle:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "cnd-20261024T100000Z-abcdef",
+  "time": "2026-10-24T10:00:00.000Z",
+  "type": "orch.conductor.lifecycle"
+}

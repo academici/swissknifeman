@@ -21,7 +21,7 @@ from orch.settings import ORCH_ROOT
 
 POINT = "orch:work-source"
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "work-source" / "v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision")
 REPORT_KIND = "register-report"
 KINDS = ("input", "output", REPORT_KIND)
 _REGISTRY: list = []
@@ -42,7 +42,8 @@ class WorkSource(Protocol):
     """A work source: the operations of ``work-source/v1``, each returning its output document. ``release`` is optional: a
     source that does not serve it keeps the claim, and the caller treats the refusal as "not released". ``note`` is
     optional too: a source that does not serve it loses the note of support work, never the work. So is ``research``: the
-    result of a research stage stays in the artifacts of the run."""
+    result of a research stage stays in the artifacts of the run. So is ``decision``: an answer that no source records
+    stays in the run, and the conductor says so (``DECISION_NOT_RECORDED``)."""
 
     def claim(self, **fields: Any) -> dict: ...
 
@@ -57,6 +58,10 @@ class WorkSource(Protocol):
     def note(self, **fields: Any) -> dict: ...
 
     def research(self, **fields: Any) -> dict: ...
+
+    def decision(self, **fields: Any) -> dict:
+        """Optional, like ``note``: record an answered question as an accepted decision of the piece."""
+        ...
 
 
 def _registry():
@@ -151,3 +156,6 @@ class PluginWorkSource:
 
     def research(self, **fields: Any) -> dict:
         return self.call("research", fields)
+
+    def decision(self, **fields: Any) -> dict:
+        return self.call("decision", fields)

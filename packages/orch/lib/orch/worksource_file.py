@@ -13,7 +13,9 @@ plugin source: a request orch builds wrongly never reaches it, and its answers a
   with the message ``adhoc(<input_id>): <title>``;
 - ``release`` is a no-op (a file input keeps no claim) and ``note`` is refused: the journal of a plan belongs to the plan's
   own source;
-- ``research`` records ``research-<n>.json`` next to the stage-report.
+- ``research`` records ``research-<n>.json`` next to the stage-report;
+- ``decision`` appends the decision to ``decisions.json`` next to the stage-report (a repeat of the same ``question_key``
+  changes nothing).
 """
 from __future__ import annotations
 
@@ -28,6 +30,7 @@ from aicore.state import blobs
 from aicore.util.digest import canonical_json_bytes, sha256_tagged
 
 from orch import contracts
+from orch.conductor import contract as conductor_contract
 from orch.worksource import WorkSourceError, problems
 from orch.worksource_report import refusal_code, report_problems
 from aicore.util.proc import run as run_with_timeout
@@ -113,6 +116,9 @@ class FileWorkSource:
     def research(self, **fields: Any) -> dict:
         return self.call("research", fields)
 
+    def decision(self, **fields: Any) -> dict:
+        return self.call("decision", fields)
+
     # ------------------------------------------------------------------ operations
 
     def _artifacts(self, run_id: str, doc: Mapping[str, Any]) -> Path:
@@ -190,6 +196,17 @@ class FileWorkSource:
         else:
             verdict = "pass"
         gate = {"verdict": verdict, "checks": checks}
+        review = None
+        if request.get("review_receipt"):
+            source = self.project / request["review_receipt"]
+            try:
+                review = json.loads(source.read_text(encoding="utf-8"))
+                errors = conductor_contract.problems(review, "review-receipt")
+            except (OSError, ValueError) as error:
+                errors = [str(error)]
+            if errors:
+                return {"op": "register", "outcome": "refused", "gate": gate,
+                        "reason_code": "REGISTER_REPORT_INVALID", "message": "invalid review receipt: " + "; ".join(errors[:3])}
         folder = self.project / self._artifacts(request["run_id"], doc)
         receipt_path = folder / RECEIPT
         receipt = {"attempt_id": request["attempt_id"], "status": status}
@@ -216,6 +233,8 @@ class FileWorkSource:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(source.read_bytes())
                 copied.append(check_id)
+        if review is not None:
+            (folder / "review-receipt.json").write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         return {"op": "register", "outcome": "recorded", "gate": gate,
                 "receipt": {"artifacts": folder.relative_to(self.project).as_posix(), "evidence_copied": copied}}
@@ -270,3 +289,23 @@ class FileWorkSource:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(body, encoding="utf-8")
         return {"op": "research", "outcome": "recorded", "path": relative}
+
+    def _decision(self, request: dict) -> dict:
+        """Answered questions of the piece are kept as a list in ``decisions.json`` of its artifact folder; the same
+        ``question_key`` is recorded once."""
+        doc = read_input(self.path)
+        target = self.project / self._artifacts(request["run_id"], doc) / "decisions.json"
+        try:
+            kept = json.loads(target.read_text(encoding="utf-8")) if target.is_file() else []
+        except ValueError:
+            kept = None
+        if not isinstance(kept, list):
+            return {"op": "decision", "outcome": "refused", "reason_code": "DECISIONS_UNREADABLE",
+                    "message": f"{target.relative_to(self.project).as_posix()} is not a JSON list"}
+        for entry in kept:
+            if isinstance(entry, dict) and entry.get("question_key") == request["question_key"]:
+                return {"op": "decision", "outcome": "no-op", "decision_id": request["question_key"]}
+        kept.append({key: value for key, value in request.items() if key != "op"})
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(kept, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return {"op": "decision", "outcome": "recorded", "decision_id": request["question_key"]}

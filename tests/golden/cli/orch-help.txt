@@ -22,7 +22,7 @@ positional arguments:
     conformance         engine conformance scenarios; covered ones run,
                         declared ones are listed
     source              cycle of a work source: claim, brief, prepare,
-                        register, commit, release, research
+                        register, commit, release, research, decision
     research            research sources of [orch.research]: list them, ask
                         one
     stubs               additional instructions of the roles: publish the

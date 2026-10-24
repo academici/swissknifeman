@@ -100,6 +100,47 @@ class LifeCase(unittest.TestCase):
         return self.finish("P1.2")
 
 
+class ReadinessGateTests(LifeCase):
+    def setUp(self):
+        super().setUp()
+        ops.patch(self.root, "plan", {"settings": {"design_audit": "required"}})
+        ops.add_document(self.root, {"id": "audit-p1-test", "title": "Audit", "sections": []})
+
+    def certificate(self, verdict="ready"):
+        from planner.plan import readiness
+        return readiness.record(self.root, "P1", verdict=verdict, audit="knowledge/audit-p1-test", actor=OPUS)
+
+    def test_required_next_and_start_missing_ready_stale_not_ready(self):
+        from planner.plan import parallel, schema
+        action = lifecycle.next(self.load())
+        self.assertEqual((action.kind, action.phase, action.reason), ("audit-phase", "P1", "missing"))
+        lanes = parallel.ready_set(self.load(), 2).as_dict()
+        self.assertEqual(schema.validate(lanes, "read-ready"), [])
+        self.assertFalse(any(l["kind"] == "run-items" for l in lanes["lanes"]))
+        self.refused("READINESS_REQUIRED", lifecycle.start, ["P1.1"], OPUS)
+        self.certificate("not_ready")
+        self.refused("READINESS_NOT_READY", lifecycle.start, ["P1.1"], OPUS)
+        self.certificate()
+        self.assertEqual(lifecycle.next(self.load()).kind, "run-items")
+        ops.patch(self.root, "P1.1", {"summary": "new scope"})
+        exc = self.refused("READINESS_STALE", lifecycle.start, ["P1.1"], OPUS)
+        self.assertIn("digest", str(exc))
+        self.certificate("ready_with_advisories")
+        self.start("P1.1", scout=False)
+
+    def test_existing_check_and_design_gates_precede_readiness(self):
+        self.refused("PHASE_NOT_DETAILED", lifecycle.start, ["P2.1"], OPUS)
+        demo.rewrite(self.root, "phases/P1/P1.1.json", lambda d: d.update(validation=[]))
+        self.refused("PLAN_INVALID", lifecycle.start, ["P1.1"], OPUS)
+
+    def test_none_keeps_next_bytes_and_start_behavior(self):
+        ops.patch(self.root, "plan", {"settings": {"design_audit": "none"}})
+        before = json.dumps(lifecycle.next(self.load()).as_dict(), sort_keys=True)
+        self.certificate("not_ready")
+        self.assertEqual(before, json.dumps(lifecycle.next(self.load()).as_dict(), sort_keys=True))
+        self.start("P1.1", scout=False)
+
+
 class RoutePoolTests(unittest.TestCase):
     def test_pool_classes_by_id_and_pattern(self):
         self.assertEqual(lifecycle.admitted_class("claude-code", "claude-opus-5-5"), "frontier")

@@ -30,7 +30,7 @@
     {
       "concurrency_key": "gui-orch:run:{project_id}",
       "confirmation": "always",
-      "description": "Conduct the next ready pieces of a plan (orch conduct run --plan P --ready --max-items N). Starts agents that change the project and the plan.",
+      "description": "Conduct the next ready pieces of a plan (orch conduct run --plan P --ready --max-items N). Starts agents that change the project and the plan. Starts detached from the GUI; the run continues after the GUI closes.",
       "dry_run": {
         "argv_append": [
           "--dry-run"
@@ -75,16 +75,15 @@
       "scope": "project",
       "supports": [
         "stream",
-        "cancel",
         "dry-run"
       ],
-      "timeout_s": 86400,
+      "timeout_s": 120,
       "title": "Run ready pieces"
     },
     {
       "concurrency_key": "gui-orch:run:{project_id}",
       "confirmation": "risk-based",
-      "description": "Continue a stopped run; closed steps are not repeated.",
+      "description": "Continue a stopped run; closed steps are not repeated. With a retry item it also takes that blocked piece back. Starts detached from the GUI; the run continues after the GUI closes.",
       "effects": [
         "process.spawn",
         "plan.write",
@@ -110,6 +109,119 @@
           "required": true,
           "title": "Run",
           "type": "string"
+        },
+        {
+          "flag": "--retry",
+          "name": "retry",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": false,
+          "title": "Blocked item to take back",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "project",
+      "supports": [
+        "stream"
+      ],
+      "timeout_s": 120,
+      "title": "Resume run"
+    },
+    {
+      "confirmation": "always",
+      "description": "Answer a question of the executor of a waiting piece (orch conduct answer): one of its options, or a free text; the run is not touched.",
+      "effects": [
+        "process.spawn",
+        "project.write"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "answer"
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-orch.answer",
+      "input": [
+        {
+          "flag": "--run",
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        },
+        {
+          "flag": "--item",
+          "name": "item",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": true,
+          "title": "Item",
+          "type": "string"
+        },
+        {
+          "flag": "--question",
+          "name": "question",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": true,
+          "title": "Question",
+          "type": "string"
+        },
+        {
+          "flag": "--option",
+          "name": "option",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": false,
+          "title": "Option",
+          "type": "string"
+        },
+        {
+          "flag": "--text",
+          "name": "text",
+          "pattern": "^[^\\u0000-\\u001f]{1,2000}$",
+          "required": false,
+          "title": "Free answer",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "project",
+      "timeout_s": 60,
+      "title": "Answer question"
+    },
+    {
+      "concurrency_key": "gui-orch:run:{project_id}",
+      "confirmation": "risk-based",
+      "description": "Go on with the pieces of a run that wait for an answer (orch conduct continue); a piece whose question is not answered is refused.",
+      "effects": [
+        "process.spawn",
+        "plan.write",
+        "project.write"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "continue"
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-orch.continue",
+      "input": [
+        {
+          "flag": "--run",
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
         }
       ],
       "risk": "medium",
@@ -119,7 +231,7 @@
         "cancel"
       ],
       "timeout_s": 86400,
-      "title": "Resume run"
+      "title": "Continue waiting pieces"
     },
     {
       "concurrency_key": "gui-orch:run:{project_id}",
@@ -378,6 +490,7 @@
     {
       "actions": [
         "gui-orch.resume",
+        "gui-orch.continue",
         "gui-orch.release"
       ],
       "id": "gui-orch.run",
@@ -404,6 +517,9 @@
       "view": "markdown"
     },
     {
+      "actions": [
+        "gui-orch.answer"
+      ],
       "id": "gui-orch.questions",
       "nav": {
         "order": 31,

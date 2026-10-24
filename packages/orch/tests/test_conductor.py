@@ -516,6 +516,9 @@ class CorrectionTests(ConductorCase):
         self.assertEqual([item["verdict"] for item in verdict["rounds"]], ["ATTENTION", "GREEN"])
         self.assertEqual(verdict["rounds"][0]["triage"]["confirmed"], ["F1"])
         self.assertIn("triage_reproduction", verdict["rounds"][0]["findings"][0])
+        self.assertRegex(verdict["rounds"][0]["findings"][0]["key"], r"^fk-[0-9a-f]{16}$")
+        self.assertIn("base", verdict["rounds"][0])
+        self.assertIn("candidate_digest", verdict["rounds"][0])
         self.assertEqual((self.project / "out/W1.txt").read_text(), "done\n")
 
     def test_the_last_round_corrects_without_another_review_when_final_correction_is_on(self):
@@ -1082,17 +1085,18 @@ class ScopeTests(ConductorCase):
         self.assertIn("expected by the scout: docs/extra.md", deviation["text"])
         self.assertNotIn("lib/other.py", deviation["text"].split("expected by the scout:", 1)[1])
 
-    def ignored_hint(self, answer):
+    def ignored_hint(self, answer, said=1):
         self.script({"context-scout": [{"text": answer}], "executor": [executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual(code, 0, err)
         self.assertNotIn("## Expected paths", self.prompt("executor", 1))
         beacons = [line for line in self.lines(err) if line.get("reason_code") == "RESULT_HEALED"
                    and "write-set" in line["message"]]
-        self.assertEqual(len(beacons), 1, err)
+        self.assertEqual(len(beacons), said, err)
 
-    def test_a_scout_without_a_hint_block_is_said_and_runs_on(self):
-        self.ignored_hint("out/W1.txt — the output\nUnknowns:\n- none\n")
+    def test_a_scout_without_a_hint_block_runs_on_silently(self):
+        # the block is optional for the scout ("leave it out rather than guess"): no block is no repair to report
+        self.ignored_hint("out/W1.txt — the output\nUnknowns:\n- none\n", said=0)
 
     def test_a_skipped_scout_leaves_no_stale_hint(self):
         conductor = engine.Conductor.__new__(engine.Conductor)
@@ -1423,6 +1427,28 @@ class SelfCheckReturnTests(ConductorCase):
                 code, _, err = self.run_items("W1")
                 self.assertEqual(self.keys(err), ["executor.1", "checks.1"], err)
                 self.assertNotIn("self_check_returned", self.state(err)["items"]["W1"])
+
+    def test_a_missing_command_the_checks_run_or_the_conductor_runs_green_takes_no_round(self):
+        # ``test -f out/W1.txt`` is the item's acceptance check V1 (with an assignment ahead); ``true`` the conductor runs
+        for command in ("X=1 test -f out/W1.txt", "true"):
+            with self.subTest(command=command):
+                self.set_items({"W1": {"options": [{"source": "item:W1",
+                                                    "options": {"checks": {"self_check": [command]}}}]}})
+                self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+                code, _, err = self.run_items("W1")
+                self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+                self.assertEqual(self.keys(err), ["executor.1", "checks.1"], err)
+                self.assertNotIn("self_check_returned", self.state(err)["items"]["W1"])
+                covered = [line for line in self.lines(err) if line.get("reason_code") == "SELF_CHECK_COVERED"]
+                self.assertEqual(len(covered), 1, err)
+                self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "RESULT_INCOMPLETE"])
+
+    def test_a_red_command_the_conductor_ran_goes_back_with_its_tail(self):
+        self.script({"executor": [executor_ok("W1"), self.checked()], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertIn(f"The conductor ran `{self.SELF}` on your tree; it is red", self.prompt("executor", 2))
+        self.assertTrue((self.run_dir(err) / "W1" / "self-check" / "1" / "1.log").is_file())
 
     def test_without_a_self_check_nothing_is_asked_again(self):
         self.set_items({"W1": {}})

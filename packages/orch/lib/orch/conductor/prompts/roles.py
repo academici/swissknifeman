@@ -125,6 +125,16 @@ def protected_rule(paths, staged: str) -> str:
             "When the tree already holds the content the task needs, leave the file alone and do not escalate it.")
 
 
+def generated_rule(paths, command) -> str:
+    """The rule for write-set ``paths`` the conductor regenerates with ``command`` after the round: the executor changes
+    their sources, never the generated files themselves."""
+    named = ", ".join(f"`{path}`" for path in paths)
+    return (f"## Generated paths\n\n{named} are generated files: the conductor regenerates them with "
+            f"`{' '.join(command)}` after your round and before the checks, and their changes belong to this piece. Do "
+            "not write them, by any tool, and do not stage or escalate them: change their sources (the canonical file "
+            "each one names) and the conductor brings them up to date.")
+
+
 def _fence_rule(fence: str, extra_paths) -> str:
     """The write fence of the run (``scope.fence``, ``scope.extra_paths``): it overrides the "stay inside the write set /
     block on a path outside it" lines of the role text, which describe the plan fence."""
@@ -169,7 +179,8 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              role: str = "executor", roles_dir=None, stub=None, skills=(), targeted_tests: bool = True, repo_rules: str = "",
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
-             file_tools: bool = False, containers: bool = True, self_check=(), protected=(), staged: str = "") -> list:
+             file_tools: bool = False, containers: bool = True, self_check=(), protected=(), staged: str = "",
+             generated=(), generator=(), correction_origin: str = CONDUCTOR) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
@@ -180,6 +191,8 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append([Block("run_rules", CONDUCTOR, _FILE_TOOLS_RULE)])
     if protected:
         parts.append([Block("run_rules", CONDUCTOR, protected_rule(protected, staged))])
+    if generated:
+        parts.append([Block("run_rules", CONDUCTOR, generated_rule(generated, generator))])
     if batch:
         parts.append([Block("run_rules", CONDUCTOR, batch, id=BATCH_ID)])
     if scout_text:
@@ -206,14 +219,14 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR, _correction(correction, targeted_tests, self_check))])
+        parts.append([Block("correction", correction_origin, _correction(correction, targeted_tests, self_check))])
     parts.append([_progress(item, step)])
     parts.append([Block("result_contract", CONDUCTOR, "## Result\n\n" + _STAGE_REPORT)])
     return _join(parts)
 
 
 def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), interrupted: str = "", fix: str = "",
-                     changed_paths=(), targeted_tests: bool = True, self_check=()) -> list:
+                     changed_paths=(), targeted_tests: bool = True, self_check=(), correction_origin: str = CONDUCTOR) -> list:
     """The delta prompt of a round in a resumed executor session: the session holds the task, the rules and the result
     contract of the latest full prompt of the piece, so it gets only what this round asks: the correction (``fix`` is the
     deviation to fix), the answers it has not seen, the note of an interrupted round, the paths changed so far and the
@@ -228,7 +241,7 @@ def executor_resumed(*, item: str, step: str, correction: str = "", answers=(), 
     if fix:
         parts.append([Block("correction", CONDUCTOR, fix)])
     if correction:
-        parts.append([Block("correction", CONDUCTOR,
+        parts.append([Block("correction", correction_origin,
                             _correction(correction, targeted_tests, self_check if targeted_tests else ()))])
     if interrupted:
         parts.append([Block("interrupted", CONDUCTOR, "## Interrupted round\n\n" + interrupted.strip())])
@@ -362,13 +375,36 @@ def researcher(input_doc: dict, *, item: str, step: str, query: str, sources: li
     return _join(parts)
 
 
+def panel_options(positions) -> str:
+    """The "Panel options" block of the critic of an advisor panel: the positions the independent members took, without
+    their names or routes, each with the recommended option and the reasons both ways."""
+    lines = ["## Panel options", "",
+             "Independent advisors answered the problem above without seeing each other. Their positions follow, "
+             "anonymised. You are the critic: weigh them against the evidence, then recommend one option id of your own "
+             "and cite the evidence it rests on (repository paths or URLs) in `sources`. Agree with the majority only when "
+             "the evidence supports it; do not defer to numbers.", ""]
+    for number, position in enumerate(positions, 1):
+        lines.append(f"### Position {number}: recommends `{position['recommendation']}` ({position['confidence']} confidence)")
+        for option in position["options"]:
+            mark = " (recommended)" if option["id"] == position["recommendation"] else ""
+            lines.append(f"- `{option['id']}`{mark}: {option['text']}")
+            lines += [f"  - for: {reason}" for reason in option.get("pros") or []]
+            lines += [f"  - against: {reason}" for reason in option.get("cons") or []]
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
+
 def advisor(input_doc: dict, *, item: str, step: str, problem_ref: str, problem: str, evidence=(), sources=(),
-            command: str = "", roles_dir=None, stub=None, skills=(), repo_rules: str = "", skill_texts=None) -> list:
+            command: str = "", roles_dir=None, stub=None, skills=(), repo_rules: str = "", skill_texts=None,
+            panel=()) -> list:
     """The prompt of the advisor: the problem (``problem_ref`` and text), the local evidence as ``(kind, text)`` pairs
-    (the reports, the red checks, the diff or the findings) and, when sources are configured, the one command that asks one."""
+    (the reports, the red checks, the diff or the findings) and, when sources are configured, the one command that asks one.
+    ``panel`` (the critic of an advisor panel): the anonymised positions of the members, a "Panel options" block."""
     parts = [_head("advisor", input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub),
              [Block("instruction", CONDUCTOR, f"## Problem\n\n`problem_ref`: `{problem_ref}`\n\n" + problem.rstrip())],
              *[[Block(kind, CONDUCTOR, text)] for kind, text in evidence]]
+    if panel:
+        parts.append([Block("instruction", CONDUCTOR, panel_options(panel))])
     if sources:
         listed = "\n".join(f"- `{name}`" for name in sources)
         parts.append([Block("instruction", CONDUCTOR,

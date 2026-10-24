@@ -131,10 +131,27 @@ def file_tools_rule(self, item: Item) -> bool:
 
 def write_protected(self, item: Item) -> list:
     """The write-set patterns of the piece that the provider of its executor route refuses to write without a prompt
-    (``policies.protected_writes``); the executor prompt names them and where their content goes instead."""
+    (``policies.protected_writes``); the executor prompt names them and where their content goes instead. Files the
+    conductor regenerates (:func:`write_generated`) are not among them."""
     route = item.routes.get("executor") or {}
     return protected_writes.protected(route.get("provider", ""), route.get("argv"),
-                                      (item.input_doc.get("scope") or {}).get("write_set"))
+                                      (item.input_doc.get("scope") or {}).get("write_set"), generated_globs(self))
+
+
+def generated_globs(self) -> list:
+    """``[orch.conductor] generated_paths`` when ``generate`` names the command that regenerates them, else none: a
+    generated file nobody regenerates keeps the write protection of the provider."""
+    if not self.conductor.get("generate"):
+        return []
+    return [glob for glob in self.conductor.get("generated_paths") or [] if isinstance(glob, str) and glob]
+
+
+def write_generated(self, item: Item) -> list:
+    """The write-set patterns of the piece that name generated files: the executor prompt tells it to change their
+    sources instead, the checks stage regenerates them (``checks_stage.regenerate``)."""
+    globs = generated_globs(self)
+    return sorted({pattern for pattern in (item.input_doc.get("scope") or {}).get("write_set") or []
+                   if isinstance(pattern, str) and protected_writes.regenerated(pattern, globs)})
 
 
 def skill_set(self, item: Item, role: str) -> dict:

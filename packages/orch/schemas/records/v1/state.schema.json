@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:state:v1"},
-    "status": {"description": "running while the conductor drives the run; the outcome of the run (finished, stopped, ...) after it.", "type": "string", "minLength": 1},
+    "status": {"description": "running while the conductor drives the run; the outcome of the run (finished, stopped, waiting for an answer, ...) after it.", "type": "string", "minLength": 1},
     "items": {
       "description": "State of each piece by its reference.",
       "type": "object",
@@ -36,12 +36,18 @@
       },
       "additionalProperties": false
     },
-    "executor_session": {"description": "Session of the shared executor.", "type": ["string", "null"]},
-    "executor_session_item": {"description": "Piece that built the shared executor session.", "type": ["string", "null"]},
-    "executor_session_route": {"description": "Route label that built the shared executor session.", "type": ["string", "null"]},
+    "executor_sessions": {
+      "description": "Executor session of each piece by reference (the key * for session.executor shared): the provider session, the identity it was built under and its use. Replaces the deprecated executor_session* keys.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"$ref": "#/$defs/executor-session"}},
+      "additionalProperties": false
+    },
+    "executor_session": {"description": "Deprecated: session of the shared executor; moved into executor_sessions when the run is resumed (SESSION_STATE_MIGRATED).", "type": ["string", "null"]},
+    "executor_session_item": {"description": "Deprecated: piece that built the shared executor session; see executor_sessions.", "type": ["string", "null"]},
+    "executor_session_route": {"description": "Deprecated: route label that built the shared executor session; see executor_sessions.", "type": ["string", "null"]},
     "executor_session_route_said": {"description": "Route label already announced by SESSION_ROUTE_CHANGED.", "type": ["string", "null"]},
-    "executor_session_task_digest": {"description": "Digest of the full task prompt the shared session holds (P2.4).", "type": ["string", "null"]},
-    "executor_session_answers": {"description": "Answer keys the shared session has already seen (P2.4).", "type": "array", "items": {"type": "string"}},
+    "executor_session_task_digest": {"description": "Deprecated: digest of the full task prompt the shared session holds; see executor_sessions.", "type": ["string", "null"]},
+    "executor_session_answers": {"description": "Deprecated: answer keys the shared session has already seen; see executor_sessions.", "type": "array", "items": {"type": "string"}},
     "review_strategy": {"description": "Review strategy decided for the batch (mode, groups, source, ...).", "type": ["object", "null"]},
     "group_reviews": {
       "description": "Group reviews by number.",
@@ -62,6 +68,43 @@
     "policy_stage_skipped": {"description": "POLICY_STAGE_SKIPPED was announced once for the run (P3.10).", "type": "boolean"}
   },
   "$defs": {
+    "executor-session": {
+      "description": "The executor session of a piece (or of the run): what the provider returned, the identity it was built under (p7-design) and its use. A slot without session and with error (or neither) records why the next attempt starts fresh.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "session": {"description": "Provider session id to resume; absent after a failed attempt or one that returned none.", "type": "string", "minLength": 1},
+        "provider": {"description": "Provider that built the session.", "type": "string"},
+        "route": {"description": "Route label (provider/model/effort) that last used the session.", "type": "string"},
+        "fingerprint": {"$ref": "#/$defs/session-fingerprint"},
+        "fingerprint_digest": {"description": "Canonical digest of the fingerprint; empty for a slot migrated from an older state.", "type": "string"},
+        "created_at": {"description": "UTC time the slot was created.", "type": "string"},
+        "last_used_at": {"description": "UTC time of the last attempt that used it (session.max_idle_s counts from here).", "type": "string"},
+        "rounds": {"description": "Attempts that ended with this session.", "type": "integer", "minimum": 0},
+        "last_item": {"description": "Piece whose attempt used the session last.", "type": "string"},
+        "task_digest": {"description": "Digest of the full task prompt the session holds; the delta prompt is sent only when it matches.", "type": "string"},
+        "answers": {"description": "Answer keys the session has already seen.", "type": "array", "items": {"type": "string"}},
+        "error": {"description": "Error code of the attempt that lost the session (provider_error).", "type": "string"},
+        "migrated": {"description": "The slot was moved from the deprecated executor_session keys and has no fingerprint yet.", "type": "boolean"}
+      }
+    },
+    "session-fingerprint": {
+      "description": "Identity of an executor session: another value of any field but the model and effort starts a fresh session. Empty authority_digest and isolation_home until the authority envelope and the isolation profiles exist.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {"type": "string"},
+        "project": {"description": "Real path of the project.", "type": "string"},
+        "worktree": {"description": "Real path of the git top level of the project.", "type": "string"},
+        "role": {"type": "string"},
+        "item": {"description": "Piece (absent for a shared session).", "type": "string"},
+        "attempt_id": {"description": "Attempt of the claim (absent for a shared session).", "type": "string"},
+        "instructions_digest": {"description": "Digest of the instructions snapshot of the run.", "type": "string"},
+        "authority_digest": {"type": "string"},
+        "isolation_home": {"type": "string"},
+        "base": {"description": "Revision of the first brief of the piece (absent for a shared session).", "type": "string"}
+      }
+    },
     "usage": {
       "description": "Token usage bucket.",
       "type": "object",
@@ -89,6 +132,37 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "deferred_findings": {
+          "description": "Confirmed findings awaiting delivery in a later correction. Evidence lives in the recorded review and triage steps.",
+          "type": "array",
+          "items": {
+            "description": "Source of one deferred finding.",
+            "type": "object",
+            "properties": {
+              "key": {
+                "description": "Stable finding key.",
+                "type": "string",
+                "pattern": "^fk-[a-f0-9]{16}$"
+              },
+              "round": {
+                "description": "Review round containing full evidence.",
+                "type": "integer",
+                "minimum": 1
+              },
+              "id": {
+                "description": "Original review finding id.",
+                "type": "string",
+                "pattern": "^F[0-9]+$"
+              }
+            },
+            "required": [
+              "key",
+              "round",
+              "id"
+            ],
+            "additionalProperties": false
+          }
+        },
         "steps": {
           "description": "Steps of the current attempt by step key.",
           "type": "object",
@@ -129,6 +203,17 @@
         "stop": {"$ref": "#/$defs/stop"},
         "partial": {"description": "The blocked piece left changes in the tree.", "type": "boolean"},
         "retried": {"description": "UTC time of the last retry.", "type": "string"},
+        "waiting": {
+          "description": "The piece is blocked on questions that wait for an answer: their ids and since when (UTC). Removed by a retry.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["question_ids", "since"],
+          "properties": {
+            "question_ids": {"description": "Ids of the blocking questions that wait.", "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+            "since": {"description": "UTC time the piece began to wait.", "type": "string", "minLength": 1}
+          }
+        },
+        "session_base": {"description": "Revision of the first brief of the piece: the base of the fingerprint of its executor session.", "type": "string"},
         "released": {"description": "Releases of the claim.", "type": "array", "items": {"type": "object"}},
         "tokens": {"$ref": "#/$defs/usage"},
         "stage_usage": {
@@ -167,6 +252,12 @@
         "check_fixes_used": {"description": "Check fix rounds used.", "type": "integer", "minimum": 0},
         "corrections_at": {"$ref": "#/$defs/round-list"},
         "corrections_used": {"description": "Correction rounds used.", "type": "integer", "minimum": 0},
+        "followup_corrections": {
+          "description": "Executor rounds assigned to the ordered fix-brief backlog of a group-review follow-up. Saved before execution for replay and correction budget accounting.",
+          "type": "array",
+          "items": {"description": "Executor round owning the corresponding queued fix-brief.", "type": "integer", "minimum": 2},
+          "uniqueItems": true
+        },
         "correction_baselines": {"description": "Tree marks taken before corrections, by round.", "type": "object"},
         "findings_at": {"description": "Findings counted by review round.", "type": ["object", "array"]},
         "review_rounds_used": {"description": "Review rounds used.", "type": "integer", "minimum": 0},
@@ -183,6 +274,40 @@
         "deferred_minors": {"description": "Minor findings deferred.", "type": "array"},
         "dynamic_review": {"description": "The risk of the piece turned its review on.", "type": "boolean"},
         "advice_of": {"description": "Advice taken by the piece, by problem.", "type": "object"},
+        "advice_applied": {
+          "description": "Advice the conductor applied on its own (the advisor or the panel, not held for the owner) to red checks or a rejected finding: one row per advice, recorded as a decision of the plan after register.",
+          "type": "array",
+          "items": {
+            "description": "One applied advice.",
+            "type": "object",
+            "required": ["number", "ref", "problem", "options", "recommendation", "confidence", "by", "file", "at"],
+            "additionalProperties": false,
+            "properties": {
+              "number": {"description": "Ordinal of the advice in the piece.", "type": "integer", "minimum": 1},
+              "ref": {"description": "Problem advised on (checks:<round> or findings:<review round>).", "type": "string", "minLength": 1},
+              "problem": {"description": "The problem as the advisor was asked.", "type": "string"},
+              "options": {
+                "description": "Options of the advice.",
+                "type": "array",
+                "items": {
+                  "description": "One option.",
+                  "type": "object",
+                  "required": ["id"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {"description": "Id of the option.", "type": "string", "minLength": 1},
+                    "label": {"description": "What the option does.", "type": "string"}
+                  }
+                }
+              },
+              "recommendation": {"description": "Id of the recommended option that was applied.", "type": "string", "minLength": 1},
+              "confidence": {"description": "Confidence of the advice.", "type": "string", "enum": ["low", "medium", "high"]},
+              "by": {"description": "Who advised.", "type": "string", "enum": ["advisor", "panel"]},
+              "file": {"description": "Advice file of the piece (repository path).", "type": "string", "minLength": 1},
+              "at": {"description": "UTC time the advice was applied.", "type": "string", "minLength": 1}
+            }
+          }
+        },
         "advice_fix": {"description": "Advice text of each check fix round.", "type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
         "combined": {"description": "A review correction that waits to be combined with the red checks.", "type": "object"},
         "combined_done": {"$ref": "#/$defs/round-list"},
@@ -366,7 +491,7 @@
     "result-research-save": {"description": "Result of saving research.", "type": "object", "required": ["outcome"], "properties": {"outcome": {"description": "recorded, no-op, ...", "type": "string"}}},
     "result-executor": {"description": "Result of an executor round: the stage-report is read on replay.", "type": "object", "required": ["report"], "properties": {"report": {"description": "The stage-report of the round.", "type": "object"}}},
     "result-checks": {"description": "Result of a round of checks: one row per check.", "type": "array", "items": {"$ref": "#/$defs/check-row"}},
-    "result-review": {"description": "Result of a review round: verdict_file and the correction rounds read findings.verdict and findings.findings.", "type": "object", "required": ["findings"], "properties": {"findings": {"$ref": "urn:swissknifeman:orch:conductor:review-findings:v1"}}},
+    "result-review": {"description": "Result of a review round: verdict_file and the correction rounds read findings.verdict and findings.findings.", "type": "object", "required": ["findings"], "properties": {"findings": {"$ref": "urn:swissknifeman:orch:conductor:review-findings:v1"}, "base": {"type": "string", "description": "Git revision.", "pattern": "^[0-9a-f]{7,40}$"}, "candidate": {"type": "object", "description": "Contents at review time.", "additionalProperties": false, "properties": {"head": {"type": "string", "description": "Git revision.", "pattern": "^[0-9a-f]{7,40}$"}, "digest": {"type": "string", "description": "SHA-256 of sorted path-tab-fingerprint lines joined with newline.", "pattern": "^sha256:[0-9a-f]{64}$"}, "paths": {"type": "object", "description": "Repository-relative paths to Git fingerprints.", "patternProperties": {"^.+$": {"type": "string", "description": "Git mode and blob, absent, or unsupported type.", "pattern": "^(absent|other|(100644|100755|120000) [0-9a-f]{40})$"}}, "additionalProperties": false}}, "required": ["head", "digest", "paths"]}, "outside": {"type": "object", "description": "Repository-relative paths to Git fingerprints.", "patternProperties": {"^.+$": {"type": "string", "description": "Git mode and blob, absent, or unsupported type.", "pattern": "^(absent|other|(100644|100755|120000) [0-9a-f]{40})$"}}, "additionalProperties": false}, "finding_keys": {"type": "object", "description": "Conductor-assigned identity by round-local finding id.", "patternProperties": {"^F[0-9]+$": {"type": "string", "description": "Conductor finding identity; exact repeats only.", "pattern": "^fk-[0-9a-f]{16}$"}}, "additionalProperties": false}}},
     "result-triage": {"description": "Result of a triage round: verdict_file and the corrections read the confirmed and rejected findings.", "type": "object", "required": ["triage"], "properties": {"triage": {"$ref": "urn:swissknifeman:orch:conductor:triage-result:v1"}}},
     "result-advice": {"description": "Result of an advice round.", "type": "object", "required": ["advice"], "properties": {"advice": {"description": "The advice document.", "type": "object"}}},
     "result-close": {"description": "Result of the closer.", "type": "object", "required": ["by"], "properties": {"by": {"description": "closer or conductor.", "type": "string"}}},

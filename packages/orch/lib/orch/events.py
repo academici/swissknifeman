@@ -18,7 +18,7 @@ EVENT_TYPES = ("orch.run.started", "orch.run.stage.finished", "orch.run.finished
                "orch.agent.started", "orch.agent.finished", "orch.agent.failed", "orch.agent.questioned",
                "orch.run.warning", "orch.run.waiting", "orch.work.blocked", "orch.review.added",
                "orch.deviation.recorded", "orch.deviation.resolved", "orch.provider.rate-limited",
-               "orch.provider.quota-exhausted", "orch.provider.fallback", "orch.input.rebuilt")
+               "orch.provider.quota-exhausted", "orch.provider.fallback", "orch.input.rebuilt", "orch.conductor.health", "orch.conductor.lifecycle")
 
 
 def data_schema(event_type: str) -> str:

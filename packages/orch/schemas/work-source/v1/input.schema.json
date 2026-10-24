@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:swissknifeman:orch:work-source:input:v1",
   "title": "work-source input",
-  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, release it, add a note to the journal of its collection, or save the research result of a piece of work.",
+  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, release it, add a note to the journal of its collection, save the research result of a piece of work, or record an accepted decision of a piece of work.",
   "oneOf": [
     {"$ref": "#/$defs/claim"},
     {"$ref": "#/$defs/brief"},
@@ -10,7 +10,8 @@
     {"$ref": "#/$defs/commit"},
     {"$ref": "#/$defs/release"},
     {"$ref": "#/$defs/note"},
-    {"$ref": "#/$defs/research"}
+    {"$ref": "#/$defs/research"},
+    {"$ref": "#/$defs/decision"}
   ],
   "$defs": {
     "text": {
@@ -121,7 +122,12 @@
           "additionalProperties": false
         },
         "registrar": {"description": "Who registers the outcome.", "$ref": "#/$defs/actor"},
-        "executed_by": {"description": "Who did the work.", "$ref": "#/$defs/actor"}
+        "executed_by": {"description": "Who did the work.", "$ref": "#/$defs/actor"},
+        "review_receipt": {
+          "type": "string",
+          "description": "Path of the review-receipt/v1 file.",
+          "minLength": 1
+        }
       },
       "required": ["op", "plan", "ref", "run_id", "attempt_id", "status", "report", "evidence", "registrar", "executed_by"],
       "additionalProperties": false
@@ -194,6 +200,68 @@
         "actor": {"description": "Who saves the result.", "$ref": "#/$defs/actor"}
       },
       "required": ["op", "plan", "ref", "run_id", "number", "result"],
+      "additionalProperties": false
+    },
+    "decision": {
+      "description": "Record the answer to a question of a piece of work (an owner's answer, an applied advice or panel recommendation) as an accepted decision of the collection that applies to the piece. A repeat for the same question_key and piece is a no-op. Optional: a source without it answers that the operation is unsupported and the work goes on.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "decision"},
+        "collection": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work the decision applies to.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that recorded the decision.", "$ref": "#/$defs/runId"},
+        "attempt_id": {"description": "Attempt of the piece the question was asked in.", "$ref": "#/$defs/attemptId"},
+        "question": {
+          "description": "The question that was answered.",
+          "type": "object",
+          "properties": {
+            "id": {"description": "Id of the question in the piece.", "$ref": "#/$defs/text"},
+            "revision": {"description": "Revision of the question.", "type": "integer", "minimum": 1},
+            "kind": {"description": "What the question asked for.", "type": "string", "enum": ["clarification", "decision"]},
+            "text": {"description": "The question.", "type": "string"},
+            "options": {
+              "description": "Answers to choose from.",
+              "type": "array",
+              "items": {
+                "description": "One option.",
+                "type": "object",
+                "properties": {
+                  "id": {"description": "Id of the option.", "$ref": "#/$defs/text"},
+                  "label": {"description": "What the option means.", "type": "string"}
+                },
+                "required": ["id"],
+                "additionalProperties": false
+              }
+            },
+            "answer_schema": {"description": "JSON Schema of a free answer.", "type": "object"}
+          },
+          "required": ["id", "revision", "kind", "text"],
+          "additionalProperties": false
+        },
+        "question_key": {"description": "qk- and 16 hex characters of the digest of the meaning of the question: the same question asked again has the same key.", "type": "string", "pattern": "^qk-[0-9a-f]{16}$"},
+        "question_digest": {"description": "SHA-256 hex digest of the canonical meaning of the question.", "type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "resolution": {
+          "description": "The answer.",
+          "type": "object",
+          "properties": {
+            "value": {"description": "The answer: an option id, a text or a JSON value.", "type": ["string", "number", "boolean", "object", "array", "null"]},
+            "by": {"description": "Who answered: a user name, advisor or panel.", "$ref": "#/$defs/text"},
+            "at": {"description": "UTC time of the answer.", "$ref": "#/$defs/text"}
+          },
+          "required": ["value", "by"],
+          "additionalProperties": false
+        },
+        "authority": {"description": "Who decided: the owner, the advisor or the panel of advisors.", "type": "string", "enum": ["owner", "advisor", "panel"]},
+        "rationale": {"description": "Why: the text of the answer or the recommendation of the advice.", "$ref": "#/$defs/text"},
+        "evidence": {
+          "description": "Repository paths that show the answer: the questions file, the advice file.",
+          "type": "array",
+          "items": {"description": "Repository path.", "$ref": "#/$defs/text"}
+        },
+        "actor": {"description": "Who records.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "collection", "ref", "run_id", "question", "question_key", "question_digest", "resolution", "authority", "rationale", "evidence"],
       "additionalProperties": false
     }
   }

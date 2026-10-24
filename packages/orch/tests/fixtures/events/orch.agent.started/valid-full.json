@@ -15,6 +15,10 @@
       "provider": "claude-code"
     },
     "run_id": "cnd-1",
+    "session": {
+      "reason": "correction",
+      "resumed": true
+    },
     "step": "execute.1",
     "work_id": "P1.1@abc"
   },

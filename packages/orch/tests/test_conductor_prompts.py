@@ -185,6 +185,15 @@ class BlockTests(unittest.TestCase):
         kinds = [item.kind for item in blocks]
         self.assertLess(kinds.index("research"), kinds.index("progress"))
 
+    def test_full_and_resumed_review_corrections_name_the_fix_brief_origin(self):
+        origin = "run/W1/fix-briefs/executor.2.json"
+        full = prompts.executor(fixture("adhoc"), item="W1", step="executor.2", correction="fix the defect",
+                                correction_origin=origin)
+        resumed = prompts.executor_resumed(item="W1", step="executor.2", correction="fix the defect",
+                                           correction_origin=origin)
+        for blocks in (full, resumed):
+            self.assertEqual([origin], [row.origin for row in blocks if row.kind == "correction"])
+
     def test_no_research_no_block(self):
         for research in (None, {}):
             blocks = prompts.executor(fixture("adhoc"), item="W1", step="executor.1", research=research)
@@ -247,18 +256,20 @@ class BudgetTests(unittest.TestCase):
     def test_every_kind_has_one_class_and_the_listed_ones_are_where_the_design_puts_them(self):
         for kind in prompts.KINDS:
             with self.subTest(kind=kind):
-                self.assertIn(prompts.budget_class(kind), ("core", "supporting", "retrieval"))
-        for kind in ("role_text", "input", "verification", "result_contract", "answers", "correction"):
+                self.assertIn(prompts.budget_class(kind), ("core", "task", "supporting", "retrieval"))
+        for kind in ("role_text", "verification", "result_contract", "answers", "correction", "progress", "instruction"):
             self.assertEqual(prompts.budget_class(kind), "core", kind)
+        for kind in ("input", "candidate", "review_scope", "diff", "findings"):
+            self.assertEqual(prompts.budget_class(kind), "task", kind)
         for kind in ("repository_rules", "skill", "skill_names", "context_map", "expected_paths", "focus", "run_rules"):
             self.assertEqual(prompts.budget_class(kind), "supporting", kind)
 
     def test_the_manifest_adds_up_the_tokens_of_each_class(self):
         blocks = cases()["executor-full"]
         doc = prompts.manifest(blocks, step="executor.1", role="executor", route={}, limits=self.LIMITS)
-        self.assertEqual(sorted(doc["budgets"]), ["core", "retrieval", "supporting"])
+        self.assertEqual(sorted(doc["budgets"]), ["core", "retrieval", "supporting", "task"])
         for name, row in doc["budgets"].items():
-            self.assertEqual(row["limit"], self.LIMITS[name])
+            self.assertEqual(row["limit"], self.LIMITS.get(name, 0))
             self.assertEqual(row["tokens"], sum(item["tokens"] for item in doc["blocks"]
                                                 if prompts.budget_class(item["kind"]) == name), name)
         self.assertEqual(doc["budgets"]["retrieval"]["tokens"], 0)
@@ -275,16 +286,16 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual(prompts.render(blocks), before)
 
     def test_a_class_past_its_limit_names_its_heaviest_block(self):
-        blocks = [prompts.Block("role_text", "roles/x.md", "word " * 100 + "\n\n"), prompts.Block("input", "input.json", "word " * 400 + "\n\n"),
-                  prompts.Block("skill", "skill:big", "word " * 300, id="big")]
+        blocks = [prompts.Block("role_text", "roles/x.md", "word " * 100 + "\n\n"), prompts.Block("correction", "conductor", "word " * 400 + "\n\n"),
+                  prompts.Block("skill", "skill:big", "word " * 300, id="big"), prompts.Block("input", "input.json", "word " * 900)]
         over = prompts.over_budget(blocks, {"core": 100, "supporting": 100, "retrieval": 0})
         self.assertEqual([(name, block.kind, block.origin) for name, block, _tokens, _limit in over],
-                         [("core", "input", "input.json"), ("supporting", "skill", "skill:big")])
+                         [("core", "correction", "conductor"), ("supporting", "skill", "skill:big")])
         name, block, tokens, limit = over[0]
         self.assertEqual((tokens, limit), (estimate_tokens(blocks[0].text) + estimate_tokens(blocks[1].text), 100))
 
     def test_a_limit_of_zero_is_off_and_a_class_at_its_limit_is_not_over(self):
-        blocks = [prompts.Block("input", "input.json", "word " * 400)]
+        blocks = [prompts.Block("role_text", "roles/x.md", "word " * 400)]
         self.assertEqual(prompts.over_budget(blocks, {"core": 0}), [])
         self.assertEqual(prompts.over_budget(blocks, {"core": estimate_tokens(blocks[0].text)}), [])
 
@@ -446,7 +457,7 @@ class RunManifestTests(ConductorCase):
         folder = self.prompts_dir(self.finished())
         doc = json.loads((folder / "executor.1.manifest.json").read_text(encoding="utf-8"))
         self.assertEqual({name: row["limit"] for name, row in doc["budgets"].items()},
-                         {"core": 12000, "supporting": 30000, "retrieval": 50000})
+                         {"core": 12000, "task": 0, "supporting": 30000, "retrieval": 50000})
         self.assertEqual(sum(row["tokens"] for row in doc["budgets"].values()), sum(row["tokens"] for row in doc["blocks"]))
         self.assertEqual(contract.problems(doc, "prompt-manifest"), [])
 
@@ -467,6 +478,14 @@ class RunManifestTests(ConductorCase):
         self.assertEqual(text, self.prompt("executor", 1))
         self.assertIn("## Result", text)  # the last block, the result contract, is whole
         self.assertEqual(sum(row["tokens"] for row in doc["blocks"]) - doc["estimated_tokens"] <= len(doc["blocks"]), True)
+
+    def test_the_task_material_is_measured_without_a_limit(self):
+        # the execution input and the diff are the piece itself: past the core limit they are no beacon (P7/P8 noise)
+        self.assertEqual([prompts.budget_class(kind) for kind in ("input", "diff", "candidate", "findings", "review_scope")],
+                         ["task"] * 5)
+        blocks = [prompts.Block("input", "input.json", "x" * 400_000), prompts.Block("role_text", "roles/r.md", "r")]
+        self.assertEqual(prompts.over_budget(blocks, {"core": 12000, "supporting": 30000, "retrieval": 50000}), [])
+        self.assertGreater(prompts.budgets(blocks, {"core": 12000})["task"]["tokens"], 12000)
 
     def test_a_limit_of_zero_gives_no_beacon(self):
         self.limit(prompt_core_tokens=0, prompt_supporting_tokens=0, prompt_retrieval_tokens=0)

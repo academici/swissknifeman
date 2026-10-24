@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:fix-brief:v1",
+  "title": "fix-brief",
+  "description": "Bounded review correction handoff. Never contains raw reviewer streams.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Contract identifier.",
+      "const": "urn:swissknifeman:orch:conductor:fix-brief:v1"
+    },
+    "review": {
+      "description": "Source review.",
+      "type": "object",
+      "properties": {
+        "run": {
+          "description": "Text.",
+          "type": "string"
+        },
+        "item": {
+          "description": "Text.",
+          "type": "string"
+        },
+        "round": {
+          "description": "Review round.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "receipt": {
+          "description": "Text.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run",
+        "item",
+        "round",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "base": {
+      "description": "Reviewed base revision.",
+      "type": "string"
+    },
+    "findings": {
+      "description": "Delivered findings.",
+      "type": "array",
+      "items": {
+        "description": "One delivered finding.",
+        "type": "object",
+        "properties": {
+          "key": {
+            "description": "Conductor finding key.",
+            "type": "string",
+            "pattern": "^fk-[a-f0-9]{16}$"
+          },
+          "id": {
+            "description": "Review finding id.",
+            "type": "string",
+            "pattern": "^F[0-9]+$"
+          },
+          "severity": {
+            "description": "Severity.",
+            "type": "string",
+            "enum": [
+              "Blocker",
+              "Major",
+              "Minor",
+              "Nit"
+            ]
+          },
+          "location": {
+            "description": "Source location.",
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "description": "Repository path.",
+            "type": "string",
+            "minLength": 1
+          },
+          "problem": {
+            "description": "Failure scenario.",
+            "type": "string",
+            "minLength": 1
+          },
+          "reproduction": {
+            "description": "Reproduction evidence; absent exit means reported steps, never an executed command.",
+            "type": "object",
+            "properties": {
+              "cmd": {
+                "description": "Command or steps.",
+                "type": "string",
+                "minLength": 1
+              },
+              "exit": {
+                "description": "Observed command exit.",
+                "type": "integer"
+              },
+              "observed": {
+                "description": "Observed result.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "cmd",
+              "observed"
+            ],
+            "additionalProperties": false
+          },
+          "fix": {
+            "description": "Correction to make.",
+            "type": "string",
+            "minLength": 1
+          },
+          "clipped": {
+            "description": "Fields clipped with full artifact references.",
+            "type": "array",
+            "items": {
+              "description": "Field.",
+              "type": "string",
+              "enum": [
+                "problem",
+                "fix",
+                "cmd",
+                "observed"
+              ]
+            }
+          }
+        },
+        "required": [
+          "key",
+          "id",
+          "severity",
+          "location",
+          "path",
+          "problem",
+          "fix",
+          "clipped"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "deferred": {
+      "description": "Findings retained in full at ref.",
+      "type": "object",
+      "properties": {
+        "count": {
+          "description": "Deferred count.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "by_severity": {
+          "description": "Counts per omitted severity.",
+          "type": "object",
+          "properties": {
+            "Blocker": {
+              "description": "Count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "Major": {
+              "description": "Count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "Minor": {
+              "description": "Count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "Nit": {
+              "description": "Count.",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "ref": {
+          "description": "Full findings artifact.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "count",
+        "by_severity",
+        "ref"
+      ],
+      "additionalProperties": false
+    },
+    "scope_constraints": {
+      "description": "Scope obligations.",
+      "type": "array",
+      "items": {
+        "description": "Text.",
+        "type": "string"
+      }
+    },
+    "required_checks": {
+      "description": "Acceptance check ids.",
+      "type": "array",
+      "items": {
+        "description": "Text.",
+        "type": "string"
+      }
+    },
+    "limits": {
+      "description": "Delivery limits; Blockers may exceed both.",
+      "type": "object",
+      "properties": {
+        "max_findings": {
+          "description": "Positive delivery limit.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_chars": {
+          "description": "Positive delivery limit.",
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "max_findings",
+        "max_chars"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "$schema",
+    "review",
+    "base",
+    "findings",
+    "deferred",
+    "scope_constraints",
+    "required_checks",
+    "limits"
+  ],
+  "additionalProperties": false
+}

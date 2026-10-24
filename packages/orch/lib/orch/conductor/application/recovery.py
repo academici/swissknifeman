@@ -73,13 +73,15 @@ def reconcile_interrupted(run) -> None:
             run.progress.emit("info", item=ref, stage=key, reason_code="STAGE_INTERRUPTED", message=message)
 
 
-def kill_orphaned_roles(run) -> None:
-    """Called under checkout and run ownership, before retry or any new role can start.
+def kill_orphaned_roles(run) -> dict:
+    """Called under checkout and run ownership, before retry or any new role can start. Returns ``{"killed": n, "closed": m}``:
+    the role groups it stopped and the agent records it closed as orphaned (the supervisor's ``reap`` reports them).
 
     Missing steps count as unfinished too: older journals wrote only completed steps.
     A pid alone is never authority to signal a process group. ``process.json`` and ``request.json`` are checked records
     (``process``, ``agent-request``): one that does not match stops the resume (``RECORD_INVALID``) before any signal.
     """
+    found = {"killed": 0, "closed": 0}
     for path in sorted(run.directory.glob("*/agents/*/process.json")):
         request = records.read(path.with_name("request.json"), "agent-request") or {}
         item = next((ref for ref in run.state.get("items", {}) if safe(ref) == path.parents[2].name), None)
@@ -92,17 +94,17 @@ def kill_orphaned_roles(run) -> None:
         if type(pid) is not int or pid <= 1 or pgid != pid or type(ticks) is not int:
             continue
         if process.start_ticks(pid) != ticks:
-            _close_orphan(run, path.parent, request, item)
+            found["closed"] += _close_orphan(run, path.parent, request, item)
             continue
         try:
             if os.getpgid(pid) != pgid or pgid == os.getpgrp():
                 continue
             if not process._group_alive(pgid):
-                _close_orphan(run, path.parent, request, item)
+                found["closed"] += _close_orphan(run, path.parent, request, item)
                 continue
             os.killpg(pgid, signal.SIGTERM)
         except ProcessLookupError:
-            _close_orphan(run, path.parent, request, item)
+            found["closed"] += _close_orphan(run, path.parent, request, item)
             continue
         except PermissionError as error:
             raise Stop("ROLE_FAILED", f"cannot stop orphaned role group {pgid}: {error}") from None
@@ -114,7 +116,7 @@ def kill_orphaned_roles(run) -> None:
             if current is not None and current != ticks:
                 # The pid was reused after SIGTERM. Close the original record first and do not signal whoever
                 # owns the pid now. A later recovery sees the closed result and does not emit a second failure.
-                _close_orphan(run, path.parent, request, item)
+                found["closed"] += _close_orphan(run, path.parent, request, item)
                 raise Stop("ROLE_FAILED", f"orphaned role pid {pid} changed identity during recovery")
             try:
                 os.killpg(pgid, signal.SIGKILL)
@@ -129,12 +131,15 @@ def kill_orphaned_roles(run) -> None:
                 raise Stop("ROLE_FAILED", f"orphaned role group {pgid} is still alive; no new role was started")
         run.progress.emit("info", item=item, stage=step, reason_code="ROLE_ORPHAN_KILLED",
                           message=f"stopped orphaned role group {pgid}")
-        _close_orphan(run, path.parent, request, item)
+        found["killed"] += 1
+        found["closed"] += _close_orphan(run, path.parent, request, item)
+    return found
 
 
-def _close_orphan(run, directory, request, item) -> None:
+def _close_orphan(run, directory, request, item) -> int:
+    """Close the agent record as orphaned and say so once; 1 when it was closed now, 0 when it already had a result."""
     if not agents.orphan(directory):
-        return
+        return 0
     ref = item or directory.parents[1].name
     run_id = run.state.get("items", {}).get(ref, {}).get("orch_run") or run.run_id
     agent = request.get("agent_run_id") or directory.name
@@ -146,3 +151,4 @@ def _close_orphan(run, directory, request, item) -> None:
         data["attempt"] = request["attempt"]
     events.emit("orch.agent.failed", data, subject=f"{run_id}/{ref}/{agent}", correlationid=run_id,
                 settings=run.settings, project=run.project, config_file=run.config_file)
+    return 1

@@ -18,6 +18,17 @@
  "events": [
   {
    "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
     "attempt_id": "att-run-<digest>-W1",
     "project_resolution": "git",
     "run_id": "run-<digest>",
@@ -109,6 +120,10 @@
      "provider": "claude-code"
     },
     "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
     "step": "executor.1",
     "work_id": "PLAN9.W1@<digest>"
    },
@@ -146,6 +161,19 @@
     "status": "completed"
    },
    "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "outcome": "stopped",
+    "phase": "ended",
+    "reason_code": "TOKEN_BUDGET"
+   },
+   "type": "orch.conductor.lifecycle"
   }
  ],
  "manifests": {
@@ -154,7 +182,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2306
+     "tokens": 2683
     },
     {
      "kind": "input",
@@ -190,7 +218,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3798
+     "tokens": 3807
     },
     "retrieval": {
      "limit": 50000,
@@ -199,6 +227,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 197
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 368
     }
    },
    "excluded": [],
@@ -231,7 +263,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 999
+     "tokens": 641
     },
     "retrieval": {
      "limit": 50000,
@@ -240,6 +272,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 358
     }
    },
    "excluded": [],
@@ -305,16 +341,17 @@
    "verdict": "mapped"
   },
   {
-   "event": "info",
-   "item": "W1",
-   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
-   "reason_code": "RESULT_HEALED",
-   "role": "context-scout",
-   "stage": "scout"
-  },
-  {
    "event": "stage.start",
    "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.1"
@@ -448,10 +485,31 @@
     "title": "Work W1"
    }
   },
-  "executor_session": "executor-session-1",
-  "executor_session_item": "W1",
-  "executor_session_route": "claude-code/sonnet/high",
-  "executor_session_task_digest": "<digest>",
+  "executor_sessions": {
+   "W1": {
+    "created_at": "<time>",
+    "fingerprint": {
+     "attempt_id": "att-run-<digest>-W1",
+     "authority_digest": "",
+     "base": "<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "item": "W1",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "W1",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 1,
+    "route": "claude-code/sonnet/high",
+    "session": "executor-session-1",
+    "task_digest": "<digest>"
+   }
+  },
   "items": {
    "W1": {
     "adopted": [],
@@ -460,6 +518,7 @@
     "orch_run": "run-<digest>",
     "outcome": "stopped",
     "retries_used": 0,
+    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {

@@ -1,5 +1,4 @@
 """Deterministic acceptance checks of a candidate and their check-evidence files.
-
 Every ``acceptance`` and ``impact`` command check of the execution-input runs as written (``bash -c``, in its
 ``cwd`` below the project) with the output kept in the ignored runtime folder. Each check gets an ``exec/v1``
 check-evidence document in the item's artifact folder (committed), produced by the engine and bound to the candidate
@@ -28,6 +27,8 @@ from aicore.util import timefmt
 from aicore.util.io import durable_replace
 
 from orch import contracts
+from orch.conductor.signals import CpuWatch, file_size as _size, process_stopped as stopped
+from orch.conductor.infrastructure.review_tree import candidate as candidate, path_fingerprint as path_fingerprint, review_outside as review_outside
 from aicore.util.proc import run as run_with_timeout
 
 ORCH_ROOT = Path(__file__).resolve().parents[3]  # not orch.settings: that module imports this one
@@ -43,7 +44,7 @@ def git(project: Path, *args: str) -> str:
     done = run_with_timeout(["git", *args], cwd=str(project), capture_output=True, text=True, timeout=60)
     if done.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)}: {done.stderr.strip() or done.returncode}")
-    return done.stdout
+    return str(done.stdout)  # text=True: a str
 
 
 def head(project: Path) -> str:
@@ -127,8 +128,7 @@ def check_env(cwd: Path, environ=None, run_env=None, parallel: int = 1) -> dict:
     """The environment of a check command: the conductor's, without install roots that lie outside the project, and with
     unbuffered Python output (a Python test runner writing to the log file shows its progress, so the silence ceiling
     ``check_idle_timeout_s`` measures a hang, not a buffer). ``run_env`` adds the names of the run (``SKM_CHECK_*``).
-    ``SKM_TEST_JOBS`` is the share of the jobs budget of one of ``parallel`` checks that run together: the owner's value
-    (else the CPUs) divided between them, never more than the owner gave."""
+    ``SKM_TEST_JOBS`` shares the owner's jobs budget (else the CPUs) between ``parallel`` checks; internal launch variables are removed."""
     base = dict(os.environ if environ is None else environ)
     base.setdefault("PYTHONUNBUFFERED", "1")
     project = Path(cwd).resolve()
@@ -142,7 +142,8 @@ def check_env(cwd: Path, environ=None, run_env=None, parallel: int = 1) -> dict:
             base.pop(name)
     base.update(run_env or {})
     base["SKM_TEST_JOBS"] = str(max(1, jobs_budget(base) // max(1, parallel)))
-    return base
+    return {name: value for name, value in base.items() if name not in
+            ("SKM_ORCH_DETACHED", "SKM_ORCH_LAUNCHER", "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE")}
 
 
 # What a fingerprint leaves out of the environment: names that differ between two processes of one run.
@@ -664,15 +665,16 @@ def fingerprint(check: dict, *, cwd: Path, project: Path, candidate: dict, subje
 
 
 def _run_command(argv: list, *, cwd: Path, out, timeout_s: int, warn_s: int, on_slow=None, idle_s: int = 0,
-                 env: Optional[dict] = None) -> int:
-    """Exit code of ``argv``; 124 after ``timeout_s`` or ``idle_s`` seconds without output (0: no ceiling).
-    ``on_slow(elapsed, pid)`` every ``warn_s``."""
+                 env: Optional[dict] = None, on_tick=None) -> int:
+    """Exit code of ``argv``; 124 after ``timeout_s`` or ``idle_s`` seconds without output or CPU (0: no ceiling).
+    ``on_slow(elapsed, pid)`` every ``warn_s``, ``on_tick(elapsed, quiet, pid)`` at every look."""
     # stdin is /dev/null: a check never gets the input of the conductor (a pipe that stays open), so a command that reads it
     # (`docker buildx bake --file -`, `cat`, a prompt) ends at once instead of waiting for ever.
     process = subprocess.Popen(argv, cwd=str(cwd), stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT,
                                start_new_session=True, env=check_env(cwd) if env is None else env)
     try:
-        return _wait_command(process, out=out, timeout_s=timeout_s, warn_s=warn_s, on_slow=on_slow, idle_s=idle_s)
+        return _wait_command(process, out=out, timeout_s=timeout_s, warn_s=warn_s, on_slow=on_slow, idle_s=idle_s,
+                             on_tick=on_tick)
     except BaseException:  # an interrupted run must not leave the check (a test run with workers) running
         _kill_group(process)
         raise
@@ -728,27 +730,12 @@ def _kill_group(process) -> None:
         process.wait()
 
 
-def stopped(pid: int) -> bool:
-    """Whether the process is stopped (SIGSTOP, as an observer does to a check while the disk is freed): its state ``T``."""
-    try:
-        with open(f"/proc/{pid}/stat", encoding="utf-8", errors="replace") as handle:
-            return handle.read().rsplit(")", 1)[1].split()[0] in ("T", "t")
-    except (OSError, IndexError):
-        return False
-
-
-def _size(out) -> int:
-    try:
-        return os.fstat(out.fileno()).st_size
-    except (OSError, ValueError, AttributeError):
-        return -1
-
-
-def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow, idle_s: int = 0) -> int:
+def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow, idle_s: int = 0, on_tick=None) -> int:
     """Wait for a check. The time a stopped check spends stopped is not counted: neither the ``CHECK_SLOW`` beacon nor the
-    ceilings ``check_timeout_s`` and ``check_idle_timeout_s`` (silence of the log) run while somebody holds it."""
+    ceilings ``check_timeout_s`` and ``check_idle_timeout_s`` (silence of the log) run while somebody holds it. Silence ends
+    with the growth of the log and with the CPU of the process tree (``CpuWatch``): a quiet test run is at work."""
     began, next_warn, paused, last = time.monotonic(), warn_s, 0.0, time.monotonic()
-    size, quiet = _size(out), 0.0  # seconds of silence, without the stopped time
+    size, quiet, cpu = _size(out), 0.0, CpuWatch(process.pid)  # seconds of silence, without the stopped time
     while True:
         try:
             return process.wait(timeout=POLL_S)
@@ -761,12 +748,18 @@ def _wait_command(process, *, out, timeout_s: int, warn_s: int, on_slow, idle_s:
         current = _size(out)
         quiet = 0.0 if current != size else quiet + (0.0 if held else now - last)
         size, last = current, now
+        quiet = 0.0 if not held and cpu.due(now) and cpu.sample(now) else quiet
         elapsed = now - began - paused
+        if on_tick is not None:
+            on_tick(elapsed, quiet, process.pid)
         if timeout_s and elapsed > timeout_s:
             _kill_group(process)
             out.write(f"\n[orch] check timed out after {timeout_s} s\n".encode("utf-8"))
             return 124
         if idle_s and quiet > idle_s:
+            if cpu.sample(now):  # one more look before the stop: the tree may have worked since the last measure
+                quiet = 0.0
+                continue
             _kill_group(process)
             out.write(f"\n[orch] check stopped: no output for {idle_s} s\n".encode("utf-8"))
             return 124
@@ -779,7 +772,7 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
                parallel: int = 1, on_result=None, first=(), kinds=RUN_KINDS, cadence=("item", "phase"),
                warn_s: int = 0, on_slow=None, idle_s: int = 0, on_changed=None, previous=(), fail_fast: bool = True,
-               reuse: bool = True, run_env: dict | None = None, run_id: str = "", on_budget=None) -> list:
+               reuse: bool = True, run_env: dict | None = None, run_id: str = "", on_budget=None, on_tick=None) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
@@ -789,8 +782,9 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
     runs ``acceptance`` only; the ``impact`` checks wait for the full pass). ``cadence`` limits it to the checks of
     these cadences (a check without one is ``item``; ``phase`` checks run in the closing piece of a phase).
     ``timeout_s`` 0 sets no ceiling on a check; ``idle_s`` stops a check whose log has not grown that long (a hang, not a
-    long run); ``on_slow(check_id, elapsed, pid)`` is called every ``warn_s`` seconds of a running check, so a long run is
-    reported, not cut. ``on_changed(paths)`` is called once when the checks changed files of the project (their own
+    long run: no output and no CPU of its process tree); ``on_slow(check_id, elapsed, pid)`` is called every ``warn_s``
+    seconds of a running check, so a long run is reported, not cut; ``on_tick(check_id, elapsed, quiet, pid)`` at every look.
+    ``on_changed(paths)`` is called once when the checks changed files of the project (their own
     evidence and logs aside): the evidence proves the candidate as it was before them.
 
     The order is ``schedule``: the checks that were red (``first``) ahead, then the cheapest by the ``seconds`` of the
@@ -868,7 +862,9 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                 code = _run_command(["bash", "-c", check["cmd"]], cwd=cwd, out=out, timeout_s=timeout_s, warn_s=warn_s,
                                     idle_s=idle_s, env=check_env(cwd, run_env=run_env, parallel=batch["parallel"]),
                                     on_slow=None if on_slow is None else
-                                    (lambda elapsed, pid, check_id=check_id: on_slow(check_id, elapsed, pid)))
+                                    (lambda elapsed, pid, check_id=check_id, slow=on_slow: slow(check_id, elapsed, pid)),
+                                    on_tick=None if on_tick is None else
+                                    (lambda *tick, check_id=check_id, tick_of=on_tick: tick_of(check_id, *tick)))
             tail = log.read_text(encoding="utf-8", errors="replace").splitlines()[-TAIL_LINES:]
             row.update(cmd=check["cmd"], exit=code, log=str(log), tail="\n".join(tail),
                        seconds=round(time.monotonic() - begin, 1), green=code == 0)

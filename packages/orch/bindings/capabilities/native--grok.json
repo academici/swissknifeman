@@ -21,7 +21,7 @@
   "stream": "supported",
   "attach": "unsupported",
   "cancel": "supported",
-  "resume": "unknown",
+  "resume": "adapted",
   "usage": "supported",
   "restrictions": {
     "tools_native": "supported",
@@ -43,6 +43,11 @@
     {
       "kind": "doc",
       "ref": "https://docs.x.ai/build/features/skills-plugins-marketplaces"
+    },
+    {
+      "kind": "doc",
+      "ref": "https://docs.x.ai/build/cli/reference",
+      "note": "resume by explicit id: grok --resume <id>, which the launch catalog builds as resume_argv"
     },
     {
       "kind": "perplexity",

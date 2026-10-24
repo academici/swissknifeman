@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from typing import Optional
 
 from orch.conductor.domain.item import done_steps
 
@@ -101,6 +102,25 @@ def findings_problems(findings: dict) -> list:
     if findings["verdict"] != "GREEN" and not findings["findings"]:
         issues.append(f"/verdict: {findings['verdict']} without findings")
     return issues
+
+
+ESCALATION_CODES = {"environment": "ENVIRONMENT_BLOCKED", "pre_existing_red": "PRE_EXISTING_RED",
+                    "scope": "SCOPE_EXPANSION", "authority": "AUTHORITY_REQUIRED"}  # ``decision`` is a question, not a code
+ENVIRONMENT_HINT = ("run orch.py doctor, check the sandbox settings, and grant a path outside the project with "
+                    "--allow-path")
+_CODED = re.compile(r"^[A-Z][A-Z0-9_]*:")
+
+
+def is_coded(text: str) -> bool:
+    return bool(_CODED.match(text or ""))
+
+
+def escalation_code(issue: dict) -> Optional[str]:
+    """The code of an escalation issue: the ``CODE:`` its text starts with, else the code of its ``escalation_class``."""
+    if issue.get("kind") != "escalation":
+        return None
+    text = issue.get("text") or ""
+    return text.split(":", 1)[0] if is_coded(text) else ESCALATION_CODES.get(issue.get("escalation_class"))
 
 
 def blocked(report: dict, code: str, text: str) -> dict:

@@ -100,7 +100,7 @@ def main(scenario):
                          {"gates": [{"provider": "codex", "until": "2026-10-20T20:00:00Z", "class": "quota",
                                      "code": "PROVIDER_QUOTA", "set_by": "cnd-new"}]}))
         return 0
-    if verb in ("run", "resume", "release"):
+    if verb in ("run", "resume", "continue", "answer", "release"):
         print(json.dumps({"ok": True, "verb": verb}))
         return 0
     if verb == "runs":
@@ -109,13 +109,16 @@ def main(scenario):
             rows = rows[:int(tail[tail.index("--limit") + 1])]
         print(json.dumps({"runs": rows}))
         return 0
-    if scenario in ("empty", "missing") or (run and run not in ("cnd-new", "cnd-old", "cnd-orphaned", "cnd-stopped")):
+    if scenario in ("empty", "missing") or (run and run not in ("cnd-new", "cnd-old", "cnd-orphaned", "cnd-stopped", "cnd-waiting")):
         sys.stderr.write(f"RUN_UNKNOWN: no conductor run {run or ''} in /x\n")
         return 1
     if verb == "status":
         doc = dict(STATUS)
         if run in ("cnd-orphaned", "cnd-stopped"):
             doc.update(status=run[4:], lease=None, reason_code="RUN_ORPHANED" if run == "cnd-orphaned" else None)
+        if run == "cnd-waiting":
+            doc.update(status="waiting", lease=None, reason_code="WAITING_DECISION",
+                       waiting=[{"item": "P2.3", "question_ids": ["Q1", "esc-1"], "since": "2026-10-23T12:00:00Z"}])
         print(json.dumps(doc))
         return 0
     if verb == "prompt" and tail[:1] == ["explain"]:

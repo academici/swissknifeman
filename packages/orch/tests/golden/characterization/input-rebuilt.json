@@ -347,7 +347,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2306
+     "tokens": 2683
     },
     {
      "kind": "input",
@@ -383,7 +383,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3798
+     "tokens": 4175
     },
     "retrieval": {
      "limit": 50000,
@@ -408,7 +408,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2306
+     "tokens": 2683
     },
     {
      "kind": "input",
@@ -433,7 +433,7 @@
     {
      "kind": "correction",
      "origin": "conductor",
-     "tokens": 473
+     "tokens": 478
     },
     {
      "kind": "progress",
@@ -449,7 +449,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 4273
+     "tokens": 4655
     },
     "retrieval": {
      "limit": 50000,

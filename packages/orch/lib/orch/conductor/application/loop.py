@@ -44,8 +44,11 @@ def loop(self) -> int:
     try:
         self._disk_guard()
         self._pieces()
+        waiting = run_service.waiting_pieces(self.state)  # on_blocked = report: the others went on, these still wait
+        if waiting:
+            raise Stop("WAITING_DECISION", run_service.waiting_message(self.run_id, waiting))
     except Stop as stop:
-        code, reason, outcome = 1, stop, "stopped"
+        code, reason, outcome = (4, stop, "waiting") if stop.code == "WAITING_DECISION" else (1, stop, "stopped")
     except KeyboardInterrupt:
         code, reason, outcome = 130, Stop("INTERRUPTED", "interrupted; resume continues"), "stopped"
     except Exception as error:  # noqa: BLE001 — unexpected failures must close the run too
@@ -165,6 +168,9 @@ def pieces(self) -> None:
             self._group_review_due(answer["ref"])
         if outcome == "blocked" and (self._on_blocked() == "stop"
                                      or self.state["items"][answer["ref"]].get("partial")):
+            waiting = run_service.waiting_pieces({"items": {answer["ref"]: self.state["items"][answer["ref"]]}})
+            if waiting:  # a question waits for its answer: not a failure, the run waits for a decision (exit 4)
+                raise Stop("WAITING_DECISION", run_service.waiting_message(self.run_id, waiting))
             why = "; it left changes in the tree" if self._on_blocked() != "stop" else ""
             raise Stop("ITEM_BLOCKED", f"{answer['ref']} is blocked{why}; see its escalation")
     if pending_retries and not started:

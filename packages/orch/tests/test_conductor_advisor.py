@@ -95,7 +95,7 @@ class QuestionTriggerTests(AdvisorCase):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")],
                      "advisor": [advice("question:Q1@1", needs_owner=True, confidence="low")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         (text,) = [text for text in self.escalations() if text.startswith("QUESTION: Q1")]
         self.assertIn("advisor, plans/T/artifacts/W1/advice-1.json: recommends keep, low confidence", text)
         self.assertIn("for the owner: advisor: the advisor says only the owner can decide", text)
@@ -122,7 +122,7 @@ class QuestionTriggerTests(AdvisorCase):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")],
                      "advisor": [advice("question:Q1@1", category="public-api")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         (text,) = [text for text in self.escalations() if text.startswith("QUESTION: Q1")]
         self.assertIn("category public-api is held by orch.advisor.human_gate", text)
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
@@ -139,21 +139,21 @@ class QuestionTriggerTests(AdvisorCase):
         weird["result"]["options"].append({"id": "other", "text": "Something else", "pros": [], "cons": []})
         self.script({"executor": [asking(dict(ASK))], "advisor": [weird]})
         code, _, err = self.run_items("W1")
-        self.assertEqual(code, 1, err)
+        self.assertEqual(code, 4, err)
         (text,) = [text for text in self.escalations() if text.startswith("QUESTION: Q1")]
         self.assertIn("is not one of the options of the question", text)
 
     def test_an_approval_is_the_owners_and_is_not_asked_of_the_advisor(self):
         self.script({"executor": [asking(dict(ASK, id="Q2", kind="approval", options=[{"id": "yes", "label": "yes"}]))]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("advisor")), (1, 0), err)
+        self.assertEqual((code, self.calls("advisor")), (4, 0), err)
         self.assertIn("QUESTION: Q2 Keep the old flag name?", self.escalations())
 
     def test_advisor_mode_without_enabled_queues_the_question(self):
         self.configure('[orch.conductor]\nquestions = "advisor"\n')
         self.script({"executor": [asking(dict(ASK))]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("advisor")), (1, 0), err)
+        self.assertEqual((code, self.calls("advisor")), (4, 0), err)
         self.assertEqual(len(self.messages(err, "ADVISOR_DISABLED")), 1)
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
 
@@ -161,14 +161,14 @@ class QuestionTriggerTests(AdvisorCase):
         self.configure("[orch.advisor]\nenabled = true\n")
         self.script({"executor": [asking(dict(ASK))]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("advisor")), (1, 0), err)
+        self.assertEqual((code, self.calls("advisor")), (4, 0), err)
 
     def test_max_rounds_ends_the_advice_and_the_next_question_is_queued(self):
         self.configure(ENABLED + "max_rounds = 1\n")
         second = dict(ASK, id="Q2", text="Rename the module too?")
         self.script({"executor": [asking(dict(ASK)), asking(second)], "advisor": [advice("question:Q1@1")]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("advisor")), (1, 1), err)
+        self.assertEqual((code, self.calls("advisor")), (4, 1), err)
         self.assertEqual(len(self.messages(err, "ADVISOR_LIMIT")), 1)
         self.assertIn("QUESTION: Q2 Rename the module too?", self.escalations())
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["resolution"]["by"], "advisor")
@@ -176,7 +176,7 @@ class QuestionTriggerTests(AdvisorCase):
     def test_the_advisor_that_fails_leaves_the_question_queued(self):
         self.script({"executor": [asking(dict(ASK))], "advisor": [{"text": "no block here"}] * 5})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         self.assertEqual(len(self.messages(err, "ADVISOR_FAILED")), 1)
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
 
@@ -195,7 +195,7 @@ class GateTriggerTests(AdvisorCase):
             asked["write"] = write
         self.script({"executor": [asked], "advisor": [recommendation]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("executor"), self.calls("advisor")), (1, 1, 1), err)
+        self.assertEqual((code, self.calls("executor"), self.calls("advisor")), (4, 1, 1), err)
         entry = self.state(err)["questions"]["W1"]["Q1"]
         self.assertEqual(entry["status"], "open")
         self.assertNotIn("resolution", entry)
@@ -335,7 +335,7 @@ class RedChecksTriggerTests(AdvisorCase):
         self.script({"executor": [self.red(), self.red(), executor_ok("W1")],
                      "advisor": [advice("checks:2", needs_owner=True, category="scope-expansion")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         (text,) = [text for text in self.escalations() if text.startswith("QUESTION: orch-advice-1")]
         self.assertIn("recommends keep", text)
         self.assertEqual(self.calls("executor"), 2)
@@ -421,7 +421,7 @@ class RejectedFindingTriggerTests(AdvisorCase):
         self.script({"executor": [executor_ok("W1")], "reviewer": [FINDING], "triager": [self.rejecting()],
                      "advisor": [advice("findings:1", needs_owner=True, category="destructive")]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         self.assertTrue([text for text in self.escalations() if text.startswith("QUESTION: orch-advice-1")])
         self.assertEqual(self.calls("triager"), 1)
 
@@ -430,7 +430,7 @@ class RejectedFindingTriggerTests(AdvisorCase):
                      "reviewer": [FINDING, GREEN], "triager": [self.rejecting(), self.confirming()],
                      "advisor": [advice("findings:1", needs_owner=True)]})
         code, _, err = self.run_items("W1")
-        self.assertEqual(code, 1, err)
+        self.assertEqual(code, 4, err)
         run = self.run_dir(err).name
         self.conduct("answer", "--run", run, "--item", "W1", "--question", "orch-advice-1", "--option", "rename", "--by", "owner")
         self.reopen()

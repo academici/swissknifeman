@@ -2,7 +2,7 @@
 
 Bridge between the GUI host (`gui`) and the orchestrator (`orch`): the conductor runs of a project, one run with its
 items, recorded routes, prompt metadata, budgets, provider gates, the observer report, open questions and the provider
-sandbox as GUI views, and four conductor commands. It
+sandbox as GUI views, and the conductor commands below. It
 is a hub unit (`unit.json`, kind `bridge`) that contributes `gui.json` (`contribution/v1`) and answers through the aicore
 plugin protocol (`extension.json`, points `gui:query` and `gui:command`).
 
@@ -39,7 +39,7 @@ Legacy manifest exclusions have `id`/`reason`; their kind is `skill`, and the id
 
 `orphaned` maps to `warn`, with `RUN_ORPHANED: no live conductor holds the run; resume continues it`.
 Run detail shows both the raw state and its valid view status, and a live owner (pid, host, start, command).
-Resume is offered for orphaned, stopped and blocked runs. Budget metrics always have ids and numeric values;
+Resume is offered for orphaned, stopped and blocked runs; a run that waits for an answer (`waiting`, shown as `warn`, with the waiting pieces and their questions) offers `continue`, not resume. A question that has an answer but is not continued yet is `answered — continue`. Budget metrics always have ids and numeric values;
 `no limit` belongs in the label. Incomplete usage warns that totals may be understated and limits cannot see missing usage.
 
 All diagnostic values pass through `aicore.util.redact.redact_text` before control/ANSI removal and shortening
@@ -54,13 +54,15 @@ Commands (argv, run by the GUI broker in the project root through `run.py`; no s
 | Command | `run.py` | Runs | Policy |
 | --- | --- | --- | --- |
 | `gui-orch.run-ready` | `run-ready --plan P --max-items N [--dry-run]` | `orch conduct run --plan P --ready --max-items N [--dry-run]` | risk high, always confirmed; effects `process.spawn`, `plan.write`, `project.write`; stream, cancel, dry-run |
-| `gui-orch.resume` | `resume --run R` | `orch conduct resume --run R` | risk medium, confirmed by risk |
+| `gui-orch.resume` | `resume --run R [--retry I]` | `orch conduct resume --run R [--retry I]` | risk medium, confirmed by risk |
+| `gui-orch.continue` | `continue --run R` | `orch conduct continue --run R` | risk medium, confirmed by risk; effects `process.spawn`, `plan.write`, `project.write`; stream, cancel; exit code 4 is a run that waits again, not a failure |
+| `gui-orch.answer` | `answer --run R --item I --question Q (--option ID \| --text T)` | `orch conduct answer --run R --item I --question Q (--option ID \| --text=T)` | risk medium, confirmed always; effects `process.spawn`, `project.write`; the text is one `--text=` element (a text that starts with `-` stays a value) |
 | `gui-orch.release` | `release --run R --item I` | `orch conduct release --run R --item I` | confirmed always |
 | `gui-orch.gates-clear` | `gates-clear --provider P` | `orch conduct gates --clear P` | confirmed always; provider enum `claude-code`, `codex`, `grok`; argv only |
 
 One input value is one argv element (I4). The pieces of a plan are chosen by `--ready` and a count `1..20`, never by a
 list in one string; `--dry-run` is a literal of the descriptor (`dry_run.argv_append`). `run.py` accepts exactly these
-four forms and exits 2 for anything else without running orch. Gate clearing never goes through the query handler.
+forms and exits 2 for anything else without running orch. Gate clearing never goes through the query handler.
 
 Failures: `ORCH_UNAVAILABLE` (no hub command line), `ORCH_CLI_FAILED` (exit other than 0, not JSON, a timeout, or a report
 path outside the reports folder), `ORCH_RUN_NOT_FOUND` (`RUN_UNKNOWN` of the CLI), `ORCH_CONTEXT_MISSING` (no project or

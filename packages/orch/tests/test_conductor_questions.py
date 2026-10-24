@@ -110,7 +110,7 @@ class QuestionTests(ConductorCase):
     def blocked_run(self, **question) -> tuple:
         self.script({"executor": [asking(dict(ASK, **question)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         return err, self.run_dir(err)
 
     def reopen(self) -> None:
@@ -175,7 +175,7 @@ class QuestionTests(ConductorCase):
         stale = [line for line in self.lines(err2) if line.get("reason_code") == "QUESTION_STALE"]
         self.assertEqual(len(stale), 1, err2)
         self.assertIn("revision 2", stale[0]["message"])
-        self.assertEqual(code, 1)  # the executor asked again: blocked again
+        self.assertEqual(code, 4)  # the executor asked again: blocked again
         entry = self.state(err2)["questions"]["W1"]["Q1"]
         self.assertEqual((entry["status"], entry["revision"]), ("open", 2))
         self.assertNotIn("resolution", entry)
@@ -250,13 +250,13 @@ class QuestionTests(ConductorCase):
         self.set_items({"W1": {}, "W2": {}})
         self.script({"executor": [asking(dict(ASK)), executor_ok("W2")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1", "W2", extra=("--no-batch",))
-        self.assertEqual(code, 1, err)
+        self.assertEqual(code, 4, err)
         directory = self.run_dir(err)
         self.git("add", "-A")
         self.git("commit", "-q", "-m", "keep blocked fixture records before other work")
         questions.answer_file(directory / "W1", "Q1", option="rename", by="owner", now="2026-10-22T00:00:00Z")
         code, _, resumed = self.conduct("resume", "--run", directory.name, "--json-lines")
-        self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
+        self.assertEqual((code, self.outcome(resumed)), (4, ("waiting", "WAITING_DECISION")), resumed)
         self.assertTrue(any(line.get("reason_code") == "QUESTION_ANSWERED_NOT_RETRIED" for line in self.lines(resumed)))
         self.assertEqual(self.source()["items"]["W2"]["status"], "done")
 
@@ -371,7 +371,7 @@ class QuestionTests(ConductorCase):
                     self.write_config(extra=f'[orch.conductor]\nquestions = "{mode}"\n')
                     self.script({"executor": [asking(dict(ASK, kind=kind, default="keep"))]})
                     code, _, err = self.run_items("W1")
-                    self.assertEqual(code, 1, err)
+                    self.assertEqual(code, 4, err)
                     entry = self.state(err)["questions"]["W1"]["Q1"]
                     self.assertEqual(entry["status"], "open")
                     self.assertNotIn("resolution", entry)
@@ -404,7 +404,7 @@ class QuestionTests(ConductorCase):
         again = asking(dict(ASK, default="keep"))
         self.script({"executor": [again, again, executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         self.assertEqual(self.calls("executor"), 2)  # not a third time
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")  # it waits for a person now
 
@@ -413,7 +413,7 @@ class QuestionTests(ConductorCase):
         again = asking(dict(ASK, default="keep"))
         self.script({"executor": [again, again, executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("executor")), (1, 2), err)
+        self.assertEqual((code, self.calls("executor")), (4, 2), err)
         entry = self.state(err)["questions"]["W1"]["Q1"]
         self.assertEqual((entry["status"], entry["stale_resolution"]["by"]), ("open", "policy"))
         run = self.run_dir(err).name
@@ -425,7 +425,7 @@ class QuestionTests(ConductorCase):
         second = asking(dict(ASK, id="Q2", text="Which name?"))
         self.script({"executor": [asking(dict(ASK, default="keep")), second, executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("executor")), (1, 2), err)
+        self.assertEqual((code, self.calls("executor")), (4, 2), err)
         run = self.run_dir(err).name
         self.conduct("answer", "--run", run, "--item", "W1", "--question", "Q2", "--option", "rename")
         self.reopen()
@@ -450,7 +450,7 @@ class QuestionTests(ConductorCase):
         self.write_config(extra='[orch.conductor]\nquestions = "defaults"')
         self.script({"executor": [asking(dict(ASK))]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.calls("executor")), (1, 1), err)
+        self.assertEqual((code, self.calls("executor")), (4, 1), err)
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
 
     def test_a_question_that_does_not_block_is_an_assumption_and_the_work_goes_on(self):

@@ -29,7 +29,9 @@ ISSUE_KINDS = ("pending", "deviation", "blocker", "difficulty", "assumption", "n
 DEVIATION_CLASSES = ("write_set", "spec_mismatch", "test_env", "docs", "dependency", "environment", "other")
 DEVIATION_OUTCOMES = ("accepted", "follow_up", "owner_decision")
 ISSUE_SEVERITIES = ("low", "medium", "high", "critical")
-ISSUE_FIELDS = ("text", "kind", "impact", "next", "class", "severity", "outcome", "auto_fixable", "evidence")
+ESCALATION_CLASSES = ("decision", "environment", "pre_existing_red", "scope", "authority")
+ISSUE_FIELDS = ("text", "kind", "impact", "next", "class", "severity", "outcome", "auto_fixable", "evidence",
+                "escalation_class")
 NO_IMPACT = "not stated by the executor"
 STATUSES = tuple(STATUS_RANK)
 VERDICTS = tuple(VERDICT_RANK)
@@ -111,7 +113,8 @@ def _deviation_fields(issue: dict, notes: list) -> None:
     (the conductor never accepts a deviation on the executor's silence), and an impact that says nobody stated it.
     """
     folded = []
-    for key, allowed in (("class", DEVIATION_CLASSES), ("severity", ISSUE_SEVERITIES), ("outcome", DEVIATION_OUTCOMES)):
+    for key, allowed in (("class", DEVIATION_CLASSES), ("severity", ISSUE_SEVERITIES), ("outcome", DEVIATION_OUTCOMES),
+                         ("escalation_class", ESCALATION_CLASSES)):
         if key not in issue:
             continue
         word = _word(issue[key], allowed)

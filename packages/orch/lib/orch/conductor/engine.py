@@ -56,7 +56,7 @@ __all__ = ["BATCH_FIELDS", "BATCH_LIMITS", "CLASS_RANK", "Conductor", "EFFORT_RA
            "continued", "evidence_paths", "findings_problems", "new_run_id", "process", "read_json", "report_problems",
            "runs_root", "safe", "sandbox", "sleep", "unit_random", "utc_now", "utc_stamp", "wall", "write_json"]
 
-STATUS_EXIT = {"finished": 0, "stopped": 1}
+STATUS_EXIT = {"finished": 0, "stopped": 1, "waiting": 4}
 
 
 class Conductor:
@@ -138,6 +138,7 @@ class Conductor:
 
     run = run_service.run
     resume = run_service.resume
+    continue_run = run_service.continue_run
     _retry = run_service.retry
     _work_began = staticmethod(run_service.work_began)
     _batch_held = run_service.batch_held

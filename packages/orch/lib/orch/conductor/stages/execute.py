@@ -12,7 +12,7 @@ from aicore.util.digest import sha256_hex
 from orch.contracts import required_digest
 from orch.conductor import checks as checks_mod, contract, options as opts, prompts, questions as questions_mod, records, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
-from orch.conductor.domain.report import evidence_paths, report_problems
+from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evidence_paths, is_coded, report_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, sessions, work_source
 from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write_json
@@ -415,11 +415,39 @@ def save_questions(self, item: Item) -> None:
     self._save()
 
 
+def classified(self, item: Item, key: str, report: dict) -> tuple:
+    """``(report, asked)`` for a blocked report that asks no question but names an ``escalation_class``. ``decision``:
+    the escalation becomes the blocking question ``esc-<n>`` (kind decision, no options), asked once per round, and then
+    follows the flow of every question (policy, advisor, owner). The other classes stay blocks of their own: the text
+    of the escalation takes their code (``ENVIRONMENT_BLOCKED``, ``PRE_EXISTING_RED``, ``SCOPE_EXPANSION``,
+    ``AUTHORITY_REQUIRED``), which no advisor reads."""
+    issues = report.get("open_issues") or []
+    first = next((issue for issue in issues if issue.get("kind") == "escalation" and issue.get("escalation_class")), None)
+    if first is None:
+        return report, []
+    if first["escalation_class"] == "decision":
+        store = self._questions(item)
+        known = next((name for name, entry in store.items() if name.startswith("esc-") and entry["status"] == "open"
+                      and entry["binding"].get("step") == key), None)  # the same round again (a retry without an answer)
+        name = known or f"esc-{sum(1 for entry in store if entry.startswith('esc-')) + 1}"
+        return report, [{"id": name, "revision": 1, "kind": "decision", "text": " ".join(first["text"].split()),
+                         "blocking": True}]
+    if is_coded(first["text"]):
+        return report, []  # the executor's own CODE: stays
+    text = f"{ESCALATION_CODES[first['escalation_class']]}: {first['text']}"
+    if first["escalation_class"] == "environment":
+        text += f" ({ENVIRONMENT_HINT})"
+    changed = [dict(issue, text=text) if issue is first else issue for issue in issues]
+    return dict(report, open_issues=changed), []
+
+
 def questioned(self, item: Item, key: str, report: dict) -> tuple:
     """``(report, rerun)``: the questions of a round recorded with their binding; a blocking one that waits turns the
     report into a blocked one (``QUESTION`` or, under ``questions = deny``, ``QUESTION_DENIED``); ``rerun`` when
     ``questions = defaults`` answered all of them from their defaults."""
     asked = report.get("questions") or []
+    if not asked and report["status"] == "blocked":
+        report, asked = classified(self, item, key, report)
     if not asked:
         return report, False
     store = self._questions(item)
@@ -465,7 +493,7 @@ def questioned(self, item: Item, key: str, report: dict) -> tuple:
         self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_DENIED", message=said[:300])
         return self._blocked(report, "QUESTION_DENIED", said), False
     self.progress.emit("info", item=item.ref, stage=key, reason_code="QUESTION_QUEUED",
-                       message=f"{said[:240]}; answer with orch conduct answer, then resume --retry {item.ref}")
+                       message=f"{said[:240]}; answer with orch conduct answer, then orch conduct continue --run {self.run_id}")
     blocked = report
     for entry in waiting:
         blocked = self._blocked(blocked, "QUESTION", f"{entry['id']} {entry['text']}{self._advice_note(entry)}")

@@ -1,0 +1,23 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:questions:v1",
+  "item": "W1",
+  "questions": [
+    {
+      "asked_at": "2026-10-23T12:00:00Z",
+      "binding": {
+        "input_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+        "input_part_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+        "item": "W1",
+        "run": "cnd-20261023T120000Z-a1b2c3",
+        "step": "executor.1"
+      },
+      "blocking": true,
+      "id": "esc-1",
+      "kind": "decision",
+      "revision": 1,
+      "status": "open",
+      "text": "the flag name is public; keep it or rename it?"
+    }
+  ],
+  "run": "cnd-20261023T120000Z-a1b2c3"
+}

@@ -2,15 +2,14 @@
 commit through the work source."""
 from __future__ import annotations
 
-import re
-
 from typing import Optional
 
 from orch.conductor import checks as checks_mod, questions as questions_mod
 from orch.conductor.domain.item import Item, done_steps
+from orch.conductor.domain.report import escalation_code
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
-from orch.conductor.infrastructure import work_source
+from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
 from orch.worksource_report import report_problems
 
@@ -76,13 +75,23 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
             self._deviation_recorded(item, issue)
     if status == "blocked":
         escalations = [issue["text"] for issue in report.get("open_issues", []) if issue["kind"] == "escalation"]
-        codes = [text.split(":", 1)[0] for text in escalations if re.match(r"^[A-Z][A-Z0-9_]*:", text)]
+        codes = [code for code in (escalation_code(issue) for issue in report.get("open_issues", [])) if code]
         self._beacon_event("orch.work.blocked", item, {"code": codes[0] if codes else "BLOCKED"})
+        waiting = waiting_questions(self, item, escalations)
+        before = item.state.get("waiting") or {}
+        if waiting:
+            item.state["waiting"] = {"question_ids": waiting, "since": (before.get("since") if before.get("question_ids")
+                                                                         == waiting else None) or clock.utc_now()}
+        else:
+            item.state.pop("waiting", None)
         item.escalation = {"code": codes[0] if codes else "BLOCKED",  # the item.end line and status show it
                            "text": " ".join((escalations[0] if escalations else report.get("summary") or "").split())[:300]}
     # the self-check claim stays with the stage-report of the run; the planner's register-report does not carry it
     body = {key: value for key, value in report.items()
             if key not in ("status", "questions", "review_recommendation", "self_check")}
+    # the class of an escalation is the conductor's routing, not part of the register-report of the work source
+    body["open_issues"] = [{key: value for key, value in issue.items() if key != "escalation_class"}
+                           for issue in body.get("open_issues", [])]
     if status != "blocked":
         body["open_issues"] = [issue for issue in body["open_issues"] if issue["kind"] != "escalation"]
     else:  # a blocked registration takes no deviation issue (the register verb pairs it with done_with_deviations)
@@ -121,6 +130,15 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
                    verdict=lambda result: " ".join(part for part in (result["outcome"], result.get("sha"),
                                                                      result.get("message")) if part))
     return status
+
+
+def waiting_questions(self, item: Item, escalations: list) -> list:
+    """The ids of the blocking questions of the piece that still wait for an answer and that its escalations name
+    (``QUESTION: <id> <text>``, also the advice questions ``orch-advice-<n>``). A denied question (``questions = deny``)
+    is a refusal, not a wait."""
+    return [name for name, entry in self._questions(item).items()
+            if entry["status"] == "open" and entry.get("blocking")
+            and any(text.startswith(f"QUESTION: {name} ") for text in escalations)]
 
 
 def commit_paths(self, item: Item, report: dict) -> list:

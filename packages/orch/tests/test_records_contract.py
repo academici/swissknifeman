@@ -428,7 +428,7 @@ class InvalidQuestionsTests(ConductorCase):
     def blocked(self, **question) -> Path:
         self.script({"executor": [asking(dict(ASK, **question)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         return self.run_dir(err)
 
     def test_a_broken_questions_file_is_questions_invalid_and_keeps_its_bytes(self):

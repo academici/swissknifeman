@@ -1,7 +1,8 @@
-"""Command line of the conductor: ``swissknifeman orch conduct run|resume|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
-message`` on stderr), 2 usage, 130 interrupted (resume continues).
+message`` on stderr), 2 usage, 4 the run waits for a decision (a piece waits for the answer to a question: ``answer``,
+then ``continue``), 130 interrupted (resume continues).
 """
 from __future__ import annotations
 
@@ -140,7 +141,7 @@ def _questions(args, project: Path) -> int:
             return 1 if invalid else 0
         for row in rows:
             print(f"{row['item']} {row['id']} (revision {row['revision']}, {row['kind']}): {row['text']} — "
-                  + ("answered, waits for resume; " if row["answered"] else "") + f"{row['age_s']} s"
+                  + ("answered, continue; " if row["answered"] else "") + f"{row['age_s']} s"
                   + (" OVERDUE" if row["overdue"] else ""))
         if not rows and not invalid:
             print("no open questions")
@@ -158,7 +159,7 @@ def _questions(args, project: Path) -> int:
     print(json.dumps({"run": run_id, "item": args.item, "question": entry["id"], "revision": entry["revision"],
                       "resolution": entry["resolution"],
                       **({"answer_schema_ignored": ignored} if ignored else {}),
-                      "next": f"orch conduct resume --run {run_id} --retry {args.item}"}, ensure_ascii=False))
+                      "next": f"orch conduct continue --run {run_id} --item {args.item}"}, ensure_ascii=False))
     return 0
 
 
@@ -272,49 +273,6 @@ def _timeline(args, project: Path) -> int:
     return 0
 
 
-def _status_details(directory: Path, found: dict) -> dict:
-    """Add read-only observability to the journal summary without rebuilding routes or options."""
-    state = found["state"]
-    doc = records.read(directory / engine.RUN_FILE, "run") or {}
-    raises = state.get("limit_raises") or []
-    limits = {}
-    if doc.get("limits_run") or raises:
-        limits = {"items": {}, **(doc.get("limits_run") or {}), "limit_raises": raises}
-    for row in found["items"]:
-        ref = row["item"]
-        item_state = (state.get("items") or {}).get(ref) or {}
-        folder = directory / engine.safe(ref)
-        recorded = records.read(folder / "routes.json", "item-routes") or {}
-        row.update(tokens=item_state.get("tokens"), usage_incomplete=item_state.get("usage_incomplete"),
-                   routes={role: runs.public_route(route) for role, route in recorded.items()
-                           if isinstance(route, dict)})
-        options = records.read(folder / "options.json", "item-options") or {}
-        item_limits = (options.get("options") or {}).get("limits") or {}
-        if item_limits:
-            limits.setdefault("items", {})[ref] = {key: item_limits.get(key, 0)
-                                                   for key in ("tokens_max", "tokens_hard_max")}
-    if limits:
-        limits.setdefault("limit_raises", raises)
-        for change in raises:
-            key = change["key"]
-            if key == "tokens_hard_max":
-                for ref, entry in limits.get("items", {}).items():
-                    if change.get("item") in (None, ref):  # a raise names its piece; an old record holds for all
-                        entry[key] = change["to"]
-            elif key == "run_tokens_hard_max":
-                limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
-    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED",
-             "WRITE_PROTECTED_PATH"}
-    beacons = {}
-    for line in progress.read_lines(directory):
-        if line.get("event") == "info" and line.get("reason_code") in codes:
-            code = line["reason_code"]
-            beacons.pop(code, None)
-            beacons[code] = line
-    return {"lease": runs.live_owner(directory), "limits": limits, "beacons": list(beacons.values()),
-            **({"catalog_digests": doc["catalog_digests"]} if isinstance(doc.get("catalog_digests"), dict) else {})}
-
-
 def _gates(args) -> int:
     """List or clear the machine gates of providers; the gates do not depend on a project."""
     try:
@@ -363,8 +321,10 @@ def _status(args, project: Path) -> int:
     doc = records.read(directory / engine.RUN_FILE, "run") or {}
     batch = doc.get("grouped") is not False and len(doc.get("items") or []) > 1
     held = run_service.held_pieces(found["state"]) if batch and found["status"] in ("stopped", "orphaned") else []
+    waiting = run_service.waiting_pieces(found["state"])
     if args.json:
-        details = _status_details(directory, found)
+        details = runs.status_details(directory, found)
+        details["waiting"] = waiting
         if held:
             details["held"] = {"items": held, "hint": run_service.held_hint(run_id, held)}
         print(json.dumps(runs.display({key: value for key, value in found.items() if key != "state"} |
@@ -388,6 +348,11 @@ def _status(args, project: Path) -> int:
               + f"; {row['stages']} step(s), last {last.get('stage', '-')} {last.get('verdict') or ''}".rstrip())
         if row.get("escalation") and row["outcome"] == "blocked":
             print(f"    escalation: {row['escalation']}")
+    for row in waiting:
+        print(f"  waiting: {row['item']} for {', '.join(row['question_ids'])} since {row['since']}")
+    if waiting:
+        print(f"  answer with orch conduct answer --run {run_id} --item ITEM --question ID --option ID, "
+              f"then orch conduct continue --run {run_id}")
     if held:
         print("  " + run_service.held_hint(run_id, held))
     tokens = found["state"].get("tokens") or {}
@@ -450,7 +415,18 @@ def main(argv: list | None = None) -> int:
                              "repeated (the source must have reopened them); finished steps are kept")
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     resume.add_argument("--frozen", action="store_true", help="as for run: a new snapshot of the committed orchestrator")
-    for sub in (run, resume):
+    cont = verbs.add_parser("continue", help="go on with the pieces that wait for an answer (resume --retry of the pieces "
+                                              "whose blocking questions are all answered; exit 4 when some still wait)")
+    cont.add_argument("--run", required=True, metavar="RUN")
+    cont.add_argument("--item", action="append", default=None, metavar="ITEM",
+                      help="only this waiting piece (repeatable; default: every waiting piece)")
+    cont.add_argument("--partial", action="store_true",
+                      help="continue the pieces that are ready and leave those with an unanswered question waiting "
+                           "(default: QUESTIONS_OPEN when any is not ready)")
+    cont.add_argument("--raise-limit", action="append", default=[], metavar="KEY=N", help="as for resume")
+    cont.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
+    cont.add_argument("--frozen", action="store_true", help="as for resume")
+    for sub in (run, resume, cont):
         sub.add_argument("--debug", action=argparse.BooleanOptionalAction, default=None,
                          help="debug mode for this run: DEBUG_MODE beacon with the observer protocol and a journal in "
                               "<run>/debug/ (default: `[orch] debug` of the project, else of the machine, else off)")
@@ -502,6 +478,12 @@ def main(argv: list | None = None) -> int:
     chosen.add_argument("--option", metavar="ID", help="one of the options of the question")
     chosen.add_argument("--text", help="a free answer (for a question without options, or a clarification)")
     answer.add_argument("--by", metavar="WHO", help="who answers (default: the user of the shell)")
+    answer.add_argument("--continue", dest="cont", action="store_true",
+                        help="then continue this piece in the same command (as `continue --item ITEM`)")
+    quiet = answer.add_mutually_exclusive_group()
+    quiet.add_argument("--quiet", action="store_true", help="with --continue: no progress lines on stderr")
+    quiet.add_argument("--json-lines", dest="json_lines", action="store_true",
+                       help="with --continue: progress lines as JSON")
     listed = verbs.add_parser("questions", help="open questions of a run and their age (default: the latest run)")
     listed.add_argument("--run", metavar="RUN")
     listed.add_argument("--json", action="store_true")
@@ -561,7 +543,7 @@ def main(argv: list | None = None) -> int:
     if context is None:
         return 1
     project = context.root
-    if getattr(args, "frozen", False) and args.verb in ("run", "resume") and not getattr(args, "dry_run", False):
+    if getattr(args, "frozen", False) and args.verb in ("run", "resume", "continue") and not getattr(args, "dry_run", False):
         try:
             return frozen.relaunch(list(sys.argv[1:] if argv is None else argv), project)
         except frozen.FrozenError as error:
@@ -576,7 +558,9 @@ def main(argv: list | None = None) -> int:
         print(json.dumps({"runs": rows}, ensure_ascii=False, indent=2) if args.json else runs.prune_text(rows, args.apply))
         return 0
     if args.verb in ("answer", "questions"):
-        return _questions(args, project)
+        code = _questions(args, project)
+        if args.verb == "questions" or code != 0 or not args.cont:
+            return code  # `answer --continue` goes on below, as `continue --item ITEM` of the same run
     if args.verb == "prompt":
         return _prompt(args, project)
     if args.verb in ("timeline", "status", "observe"):
@@ -614,6 +598,10 @@ def main(argv: list | None = None) -> int:
             return conductor.settle_group(args.run, args.group, args.followup_run, args.reason)
         if args.verb == "settle":
             return conductor.settle(args.run, args.item, args.outcome, args.reason)
+        if args.verb == "answer":
+            return conductor.continue_run(args.run, items=[args.item])
+        if args.verb == "continue":
+            return conductor.continue_run(args.run, items=args.item, partial=args.partial, raise_limits=args.raise_limit)
         return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit)
     except engine.Stop as stop:
         print(f"{stop.code}: {stop.message}", file=sys.stderr)

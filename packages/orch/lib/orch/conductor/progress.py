@@ -187,7 +187,9 @@ def read_lines(directory: Path) -> list:
 
 
 def summarize(lines: list) -> dict:
-    """State of a run from its journal: status, the stage running now, and per item its last stage and outcome."""
+    """State of a run from its journal: status, the stage running now, and per item its last stage and outcome. The
+    status is ``running`` or the ``outcome`` of ``run.end``: ``finished``, ``stopped`` or ``waiting`` (a piece waits for the
+    answer to a question; exit code 4), ``unknown`` without a start."""
     items: dict = {}
     status, reason, current, beacon = "unknown", None, None, None
     for line in lines:

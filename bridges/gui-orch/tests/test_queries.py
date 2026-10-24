@@ -151,6 +151,15 @@ class TestObservability(AdapterCase):
             if state == "orphaned":
                 self.assertEqual("RUN_ORPHANED: no live conductor holds the run; resume continues it", fields["Detail"])
 
+    def test_a_waiting_run_is_a_warning_with_the_waiting_pieces_and_offers_continue_not_resume(self):
+        out = self.ok("gui-orch.run", params={"run_id": "cnd-waiting"})
+        fields = {field["label"]: field["value"] for field in out["fields"]}
+        self.assertEqual(("warn", "waiting", "WAITING_DECISION"), (fields["Status"], fields["State"], fields["Reason code"]))
+        self.assertEqual([{"command": "gui-orch.continue", "input": {"run_id": "cnd-waiting"}}], out["actions"])
+        (section,) = [part for part in out["sections"] if part["title"] == "Waiting for an answer"]
+        self.assertIn("P2.3: Q1, esc-1 since 2026-10-23T12:00:00Z", section["markdown"])
+        self.assertEqual("warn", importlib.import_module("adapter").view_status("waiting"))
+
     def test_routes_keep_used_and_available_now_separate_and_whitelisted(self):
         out = self.ok("gui-orch.routes", params={"run_id": RUN, "item": "P2.1"})
         self.assertEqual("ok", out["rows"][0]["status"])
@@ -336,7 +345,7 @@ class TestQuestionsAndSandbox(AdapterCase):
         first, second = out["rows"][0]["cells"], out["rows"][1]["cells"]
         self.assertEqual(("open", "yes", 120), (first["state"], first["overdue"], first["age_s"]))
         self.assertNotIn("\x1b", first["question"])
-        self.assertEqual("answered, waits for resume", second["state"])
+        self.assertEqual("answered — continue", second["state"])
         self.assertEqual(["orch", "conduct", "questions", "--json"], self.calls()[0]["argv"])
         self.ok("gui-orch.questions", params={"run_id": RUN})
         self.assertEqual(["orch", "conduct", "questions", "--json", "--run", RUN], self.calls()[1]["argv"])

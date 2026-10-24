@@ -226,6 +226,17 @@
           "description": "True when the deviation can be repaired without a decision.",
           "type": "boolean"
         },
+        "escalation_class": {
+          "description": "Class of an escalation (kind escalation): decision goes to the question flow, environment, pre_existing_red, scope and authority are blocks with their own code.",
+          "type": "string",
+          "enum": [
+            "decision",
+            "environment",
+            "pre_existing_red",
+            "scope",
+            "authority"
+          ]
+        },
         "evidence": {
           "description": "Where it shows: path:line or a check id V<n>.",
           "type": "array",

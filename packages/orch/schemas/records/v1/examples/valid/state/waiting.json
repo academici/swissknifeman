@@ -1,0 +1,31 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {
+    "item-W1": {
+      "orch_run": "run-3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+      "ref": "W1"
+    }
+  },
+  "items": {
+    "W1": {
+      "steps": {},
+      "outcome": "blocked",
+      "waiting": {
+        "question_ids": [
+          "Q1",
+          "esc-1"
+        ],
+        "since": "2026-10-23T12:00:00Z"
+      }
+    }
+  },
+  "status": "waiting",
+  "stop": {
+    "code": "WAITING_DECISION",
+    "message": "W1 waits for an answer to Q1, esc-1"
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

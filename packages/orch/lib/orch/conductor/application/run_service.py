@@ -1,4 +1,5 @@
-"""The verbs of a conductor run: ``run``, ``resume`` (with ``--retry`` of a blocked piece), ``release`` and ``settle``."""
+"""The verbs of a conductor run: ``run``, ``resume`` (with ``--retry`` of a blocked piece), ``continue`` (the pieces that
+wait for an answer), ``release`` and ``settle``."""
 from __future__ import annotations
 
 import json
@@ -10,7 +11,7 @@ from typing import Optional
 from aicore.stubs import StubError
 
 from orch import bindings, settings as settings_mod
-from orch.conductor import debug_mode, options as opts, progress, review_batch, stubs as stubs_mod
+from orch.conductor import debug_mode, options as opts, progress, questions as questions_mod, review_batch, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
@@ -276,7 +277,7 @@ def retry(self, ref: str) -> None:
     archive_attempt(self, ref, item, dropped)  # the repeated steps write the same files again: the first attempt is kept aside
     for key in dropped:
         steps.pop(key)
-    for key in ("outcome", "stop", "partial", "skills_auto", "skills_checked"):  # the skills are chosen again from the amended write set
+    for key in ("outcome", "stop", "partial", "waiting", "skills_auto", "skills_checked"):  # the skills are chosen again from the amended write set
         item.pop(key, None)
     item["retried"] = clock.utc_now()
     self._save()
@@ -401,6 +402,62 @@ def held_hint(run_id: str, refs: list) -> str:
     return f"held: {', '.join(refs)} — release with: orch conduct release --run {run_id} --all"
 
 
+def waiting_pieces(state: dict) -> list:
+    """``[{item, question_ids, since}]`` of the blocked pieces that wait for an answer, in the order of the claims."""
+    items = state.get("items") or {}
+    refs = list(dict.fromkeys([*state_claims(state), *items]))
+    return [{"item": ref, **items[ref]["waiting"]} for ref in refs
+            if ref in items and items[ref].get("outcome") == "blocked" and items[ref].get("waiting")]
+
+
+def waiting_message(run_id: str, rows: list) -> str:
+    """The text of ``WAITING_DECISION``: who waits for what, and the two commands that go on."""
+    first = rows[0]
+    head = (f"{first['item']} waits for an answer to {', '.join(first['question_ids'])}" if len(rows) == 1 else
+            ", ".join(f"{row['item']} ({', '.join(row['question_ids'])})" for row in rows) + " wait for answers")
+    return (f"{head}; answer: orch conduct answer --run {run_id} --item {first['item']} --question "
+            f"{first['question_ids'][0]} --option ID; then: orch conduct continue --run {run_id}")
+
+
+def unanswered(folder: Path, waiting: dict) -> list:
+    """The questions a waiting piece still needs an answer to: those it waits for and any other blocking open one. An
+    answer written by ``orch conduct answer`` (status ``open`` with a resolution), ``answered`` or ``applied`` counts."""
+    doc = questions_mod.read(folder) or {}
+    entries = {entry["id"]: entry for entry in doc.get("questions", [])}
+    names = list(dict.fromkeys([*waiting["question_ids"], *(name for name, entry in entries.items()
+                                                           if entry.get("blocking") and entry["status"] == "open")]))
+    return [name for name in names if name not in entries or not (
+        entries[name]["status"] in ("answered", "applied")
+        or (entries[name]["status"] == "open" and entries[name].get("resolution")))]
+
+
+def continue_run(self, run_id: str, items=None, partial: bool = False, raise_limits=()) -> int:
+    """Go on with the pieces of ``run_id`` that wait for an answer (``resume --retry`` of those whose blocking questions are
+    all answered). Without ``items`` every waiting piece is taken. A piece with an unanswered blocking question starts
+    nothing: ``QUESTIONS_OPEN`` lists them as ``item:question``, unless ``partial`` continues the ready ones only."""
+    store = RunStore(self.project, run_id)
+    _, state = store.load()
+    waiting = {row["item"]: row for row in waiting_pieces(state)}
+    chosen = list(dict.fromkeys(items)) if items else list(waiting)
+    if not chosen:
+        raise Stop("NOT_WAITING", f"run {run_id} has no piece that waits for an answer")
+    wrong = [ref for ref in chosen if ref not in waiting]
+    if wrong:
+        raise Stop("NOT_WAITING", f"{', '.join(wrong)} does not wait for an answer in run {run_id} "
+                                  f"(waiting: {', '.join(waiting) or 'none'})")
+    ready, open_rows = [], []
+    for ref in chosen:
+        missing = unanswered(store.directory / safe(ref), waiting[ref])
+        if missing:
+            open_rows += [f"{ref}:{name}" for name in missing]
+        else:
+            ready.append(ref)
+    if open_rows and (not partial or not ready):
+        raise Stop("QUESTIONS_OPEN", f"no answer yet to {', '.join(open_rows)}: answer with orch conduct answer"
+                                     + ("" if partial else "; --partial continues the pieces that are ready"))
+    return self.resume(run_id, retry=ready, raise_limits=raise_limits)
+
+
 def state_claims(state: dict) -> list:
     """The references of the pieces a run claimed, in the order of its claims."""
     return [claim["ref"] for claim in (state.get("claims") or {}).values() if claim.get("ref")]
@@ -425,6 +482,7 @@ def _settle_owned(self, store: RunStore, run_id: str, ref: str, outcome: str, re
     item["outcome"] = outcome
     item.pop("stop", None)
     item.pop("partial", None)
+    item.pop("waiting", None)
     item.setdefault("settled", []).append({"from": before, "to": outcome, "reason": reason, "at": clock.utc_now()})
     self._save()
     self.progress.emit("info", item=ref, reason_code="SETTLED", outcome=outcome, message=f"outcome {before or '-'} → {outcome} by hand: {reason}")

@@ -40,6 +40,8 @@ row with `id`, `seconds`, `green`, `skipped`, `skip_reason`, `reused` (plus `exe
 For an agent that picks its own pieces (ask the source for ready lanes → `run --items` → `status`/`observe` → `resume`/`settle`) see [agent-mode.md](agent-mode.md).
 
 Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: message` on stderr), 2 usage,
+4 the run waits for a decision (`run.end` outcome `waiting`, status `waiting`: a piece waits for the answer to a question;
+`orch conduct answer`, then `orch conduct continue`; code 1 keeps its meaning for every other stop),
 130 interrupted (Ctrl-C, SIGTERM or SIGHUP: the role and check processes of the run are killed with their groups; `resume` continues).
 
 ## Ownership of a run
@@ -363,7 +365,10 @@ The conductor stops only on:
 | `TOKEN_BUDGET` | accounted fresh tokens reached `tokens_hard_max` of the piece or `run_tokens_hard_max` of the run, or the step reached the run policy's `budgets.stage_tokens_max`; checked before **every** model call (a repeat, a repair, a fallback route, a group review), so no new call starts; done steps stay saved; resume with `--raise-limit KEY=N` (`stage_tokens_max` is raised in the policy) |
 | `TOKEN_BUDGET_UNMETERED` | a model attempt reported no usage while `tokens_hard_max` or `run_tokens_hard_max` is in force and `limits.unmetered` is `stop` (the default): unknown usage is not zero, so no further call starts; set `limits.unmetered` to `charge` in the `--options` file of the run (or the configuration) and resume: each attempt without usage then costs `limits.unmetered_charge_tokens` |
 | `BRIEF_TOO_LARGE` | the execution-input of the piece (the embedded context pack and the files it reads included) is larger than `budgets.brief_max_bytes` of the run policy (the `full` pack: 1048576); checked once the options are resolved, before the first role, and again when the input is rebuilt; split the item or raise the budget in the policy |
-| `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree) |
+| `ITEM_BLOCKED` | a piece is blocked and `on_blocked` is `stop` (or it left changes in the tree); a piece that waits for the answer to a question ends as `WAITING_DECISION` instead |
+| `WAITING_DECISION` | a piece is blocked on a blocking question that waits for an answer (`state.items[<item>].waiting = {question_ids, since}`); not a failure: the run ends with outcome `waiting`, status `waiting` and exit code **4**, and holds no process (D11). Under `on_blocked: report` the other pieces go on first, and the run ends with `waiting` when some piece still waits and no other stop happened. `conduct status --json` lists `waiting: [{item, question_ids, since}]`; answer with `orch conduct answer`, then `orch conduct continue --run RUN` |
+| `QUESTIONS_OPEN` | `continue` found a piece that waits with a blocking question that is not answered yet; exit 1, nothing is started; the message lists `item:question`; `--partial` continues the pieces that are ready |
+| `NOT_WAITING` | `continue` was given a piece that does not wait for an answer in this run, or the run has none; exit 1 |
 | `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with an answer awaiting consumption and no piece starts in this pass; exit 1; use `orch conduct resume --run RUN --retry ITEM` |
 | `OUTSIDE_MODULE` | the executor (an escalation of the blocked piece, `ITEM_BLOCKED`) or the checks (the run stops) changed files of another module than the write set names, `CHANGELOG.md`, `docs/**` and the granted `extra_paths` aside; only under `scope.outside_module: block` (the default `deviation` reports them as a deviation); add the paths to the item's `task_files`, or set them aside and retry |
 | `OUTSIDE_RUNTIME_ARTIFACT` | the executor (blocked piece) or the checks (the run stops) changed a **tracked** file under `scope.runtime_paths` (`.swissknifeman/orch-artifacts/**`, `tests/evidence/**`, …): runtime artifacts are history, not product; restore the file from git |
@@ -591,7 +596,8 @@ nothing is ever answered on a timeout.
 - `blocking: false`: an `assumption` issue "question Q: text — assumed: V" goes into the registered report; the work goes on.
 - `blocking: true` needs a `blocked` report (an `escalation` issue; a report that says otherwise is repaired or repeated).
   `[orch.conductor] questions` decides (default `queue`):
-  `queue`: the piece is `blocked` with the escalation `QUESTION: <id> <text>` and the run stops with `ITEM_BLOCKED`;
+  `queue`: the piece is `blocked` with the escalation `QUESTION: <id> <text>` and waits (`state.items[<item>].waiting`):
+  the run stops with `WAITING_DECISION` (exit 4), see [Waiting for a decision](#waiting-for-a-decision);
   `deny`: blocked at once with `QUESTION_DENIED: <id> <text>`, nobody is expected to answer;
   `defaults`: a question with a `default` is answered by it **once**, by `policy`, and the round is asked again as
   `executor.<n>-q<k>`; a question without one, or one the executor asks again, is queued;
@@ -619,6 +625,38 @@ nothing is ever answered on a timeout.
   `QUESTION_STALE`: the answer is kept as `stale_resolution`, the question gets
   `revision + 1` and the executor, which is not told that answer, asks it again. The executor of every later round gets the
   section `# Answers` (question, answer, who answered).
+
+### Waiting for a decision
+
+A blocking question never keeps a process, and a run that waits is not a failed run. When a piece is blocked on questions
+that are `open` (a question of the executor under `queue`, `advisor` or `defaults` without a default, an `esc-<n>`
+question, an advice question `orch-advice-<n>`), its state gets `waiting = {question_ids, since}` (records/v1 state) and:
+
+- `on_blocked: stop` (the default): the run stops with `WAITING_DECISION`, `run.end` outcome `waiting`, `state.status`
+  `waiting`, exit code 4.
+- `on_blocked: report`: the independent pieces go on; at the end, when some piece still waits and nothing else stopped the
+  run, the outcome is `waiting` and the exit code 4 (a stop such as `DEPENDENCY_BLOCKED` keeps its own code 1).
+- `conduct status --json` has `status: "waiting"` and `waiting: [{item, question_ids, since}]`; `conduct runs` shows
+  `waiting`; `prune` leaves a waiting run alone.
+- A denied question (`questions = deny`, `QUESTION_DENIED`) and any block without a question stay `ITEM_BLOCKED`, exit 1.
+
+`orch conduct continue --run R [--item I …] [--partial]` goes on with the waiting pieces: for each one it checks that every
+blocking question is answered (`orch conduct answer`; status `open` with a resolution, `answered` or `applied`), then does
+what `resume --retry` of those pieces does. A piece with an unanswered blocking question starts nothing and the command
+stops with `QUESTIONS_OPEN` (exit 1, the list `item:question`); with `--partial` only the ready pieces continue and the
+others stay waiting (the run then ends `waiting` again). `NOT_WAITING` for a piece that does not wait.
+`orch conduct answer … --continue` is `answer` followed by `continue --item ITEM` in one process. The source must have
+reopened the piece, as for `resume --retry`.
+
+**Classes of an escalation.** An `escalation` issue of a blocked report may name `escalation_class` (stage-report):
+`decision` without a question in the report becomes the blocking question `esc-<n>` (kind `decision`, the text of the
+escalation, no options) and takes the normal question flow, every gate of it included (`human_gate`, only the owner answers
+approval and credential, the advisor and `defaults` follow their rules); `environment`, `pre_existing_red`, `scope` and
+`authority` never become questions and never reach the advisor: the escalation text takes the code `ENVIRONMENT_BLOCKED`
+(with the hint to run `orch.py doctor`, check the sandbox settings and grant a path with `--allow-path`),
+`PRE_EXISTING_RED`, `SCOPE_EXPANSION` or `AUTHORITY_REQUIRED`, which is the `code` of `orch.work.blocked` and the reason of
+`item.end`. A `CODE:` the executor wrote itself stays. The class is the conductor's routing and is not part of the report
+registered with the source. The role text (`roles/executor.md`, section Autonomy) tells the executor when to use which.
 
 ### The advisor (P10.4)
 
@@ -671,6 +709,7 @@ no panel of several models.
 
 ### Resume
 
+`orch conduct continue --run RUN` is the one command for pieces that wait for an answer ([Waiting for a decision](#waiting-for-a-decision)).
 Without `--retry`, a blocked piece's saved answer stays pending. The conductor emits
 `QUESTION_ANSWERED_NOT_RETRIED` with the retry command; if no piece starts during that pass it stops with the same
 code and exit 1. If other work starts, the message is only a beacon. `orch conduct answer` leaves the question

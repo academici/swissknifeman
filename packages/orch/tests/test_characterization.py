@@ -281,7 +281,7 @@ class ScenarioTests(CharacterizationCase):
     def test_question_answer_resume(self):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         run = self.run_dir(err).name
         code, out, _ = self.conduct("answer", "--run", run, "--item", "W1", "--question", "Q1", "--option", "rename",
                                     "--by", "owner")
@@ -289,7 +289,14 @@ class ScenarioTests(CharacterizationCase):
         doc = self.source()
         doc["items"]["W1"]["status"] = "todo"
         self.state_file.write_text(json.dumps(doc), encoding="utf-8")
-        code, _, err2 = self.conduct("resume", "--run", run, "--retry", "W1", "--json-lines")
+        # The reason of a resumed session compares two second-granular stamps (``retry`` when the piece was taken back
+        # after the session was last used): a run this fast would record either. The session was used a day ago.
+        state_path = self.run_dir(err) / engine.STATE_FILE
+        kept = json.loads(state_path.read_text(encoding="utf-8"))
+        for slot in kept["executor_sessions"].values():
+            slot["last_used_at"] = "2020-01-01T00:00:00Z"
+        state_path.write_text(json.dumps(kept), encoding="utf-8")
+        code, _, err2 = self.conduct("continue", "--run", run, "--json-lines")
         self.assertEqual((code, self.outcome(err2)), (0, ("finished", None)), err2)
         self.snapshot("question-answer-resume", err)
 
@@ -456,7 +463,7 @@ class EventSequenceTests(CharacterizationCase):
     def test_question_blocks_the_piece(self):
         self.script({"executor": [asking(dict(ASK))], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         self.assertEqual(self.sequence(), ["orch.agent.questioned", "orch.run.waiting", "orch.work.blocked"])
 
     def test_dynamic_review(self):
@@ -588,7 +595,9 @@ COVERAGE = {
     "QUESTION_ANSWERED_NOT_RETRIED": "test:test_conductor_questions.py",
     "CONDUCTOR_CRASHED": "test:test_observer.py",
     "STAGE_RECOVERY_UNKNOWN": "test:test_resume_reconcile.py",
-    "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": "snapshot:question-answer-resume",
+    "REVIEW_LIMIT": f"test:{T}", "RUN_TIMEOUT": f"test:{T}", "ITEM_BLOCKED": f"test:{T}",
+    "WAITING_DECISION": "snapshot:question-answer-resume", "QUESTIONS_OPEN": "test:test_waiting_decision.py",
+    "NOT_WAITING": "test:test_waiting_decision.py",
     "ROUTE_UNDERSHOOT": f"test:{T}", "SANDBOX_UNAVAILABLE": f"test:{T}",
     "PROVIDER_UNAVAILABLE": "snapshot:resume-after-stop", "TRANSPORT_UNSUPPORTED": f"test:{T}",
     "LAUNCH_UNKNOWN": "test:test_launch.py", "ROLE_FAILED": f"test:{T}", "ROLE_OUTPUT_EMPTY": f"test:{C}",

@@ -281,7 +281,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2306
+     "tokens": 2683
     },
     {
      "kind": "input",
@@ -317,7 +317,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3804
+     "tokens": 4181
     },
     "retrieval": {
      "limit": 50000,

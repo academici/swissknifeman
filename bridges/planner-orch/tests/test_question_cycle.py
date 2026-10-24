@@ -95,9 +95,9 @@ class QuestionCycleTests(unittest.TestCase):
                 "reviewer": [{"result": {"verdict": "GREEN", "findings": []}}]}))
 
             first = bridge_fixture.conductor_cli(project, "run", "--plan", collection, "--items", "P1.1", "--json-lines", env=env)
-            self.assertEqual(first.returncode, 1, first.stderr)
+            self.assertEqual(first.returncode, 4, first.stderr)  # the run waits for the answer (PLAN9 P7.5)
             rows = [json.loads(line) for line in first.stderr.splitlines() if line.startswith("{")]
-            self.assertEqual(rows[-1].get("reason_code"), "ITEM_BLOCKED", first.stderr)
+            self.assertEqual((rows[-1].get("outcome"), rows[-1].get("reason_code")), ("waiting", "WAITING_DECISION"), first.stderr)
             run = rows[0]["run"]
             # Discover the runtime location without importing the partner's path implementation.
             candidates = list(base.rglob(f"{run}/P1.1/input.json"))

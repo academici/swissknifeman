@@ -620,7 +620,7 @@
   {
    "event": "info",
    "item": "W1",
-   "message": "Q1 Keep the old flag name?; answer with orch conduct answer, then resume --retry W1",
+   "message": "Q1 Keep the old flag name?; answer with orch conduct answer, then orch conduct continue --run <run>",
    "reason_code": "QUESTION_QUEUED",
    "stage": "executor.1"
   },
@@ -648,9 +648,9 @@
   },
   {
    "event": "run.end",
-   "message": "W1 is blocked; see its escalation; observer report <project>/.swissknifeman/orch/reports/<run>/observer.md",
-   "outcome": "stopped",
-   "reason_code": "ITEM_BLOCKED"
+   "message": "W1 waits for an answer to Q1; answer: orch conduct answer --run <run> --item W1 --question Q1 --option ID; then: orch conduct continue --run <run>; observer report <project>/.swissknifeman/orch/reports/<run>/observer.md",
+   "outcome": "waiting",
+   "reason_code": "WAITING_DECISION"
   },
   {
    "event": "info",
@@ -1233,8 +1233,8 @@
    }
   },
   "last_stop": {
-   "code": "ITEM_BLOCKED",
-   "message": "W1 is blocked; see its escalation",
+   "code": "WAITING_DECISION",
+   "message": "W1 waits for an answer to Q1; answer: orch conduct answer --run <run> --item W1 --question Q1 --option ID; then: orch conduct continue --run <run>",
    "resume": 1
   },
   "on_blocked": "stop",

@@ -536,7 +536,7 @@ class SessionRunTests(ConductorCase):
     def test_a_state_of_the_single_slot_is_migrated_once_and_resumed_as_before(self):
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
-        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)
         directory = self.run_dir(err)
         path = directory / "state.json"
         state = json.loads(path.read_text(encoding="utf-8"))

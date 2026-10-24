@@ -17,7 +17,7 @@ from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_text
 
 from orch.conductor import progress, records
-from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, runs_root
+from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, runs_root, safe
 from orch.conductor.infrastructure.lease import RunLease
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS  # <run id>/<piece>: a source without its own folder
@@ -64,6 +64,49 @@ def latest_run_id(project: Path) -> Optional[str]:
                    key=lambda path: (path / progress.PROGRESS_FILE).stat().st_mtime
                    if (path / progress.PROGRESS_FILE).exists() else 0)
     return found[-1].name if found else None
+
+
+def status_details(directory: Path, found: dict) -> dict:
+    """Add read-only observability to the journal summary without rebuilding routes or options."""
+    state = found["state"]
+    doc = records.read(directory / RUN_FILE, "run") or {}
+    raises = state.get("limit_raises") or []
+    limits = {}
+    if doc.get("limits_run") or raises:
+        limits = {"items": {}, **(doc.get("limits_run") or {}), "limit_raises": raises}
+    for row in found["items"]:
+        ref = row["item"]
+        item_state = (state.get("items") or {}).get(ref) or {}
+        folder = directory / safe(ref)
+        recorded = records.read(folder / "routes.json", "item-routes") or {}
+        row.update(tokens=item_state.get("tokens"), usage_incomplete=item_state.get("usage_incomplete"),
+                   routes={role: public_route(route) for role, route in recorded.items()
+                           if isinstance(route, dict)})
+        options = records.read(folder / "options.json", "item-options") or {}
+        item_limits = (options.get("options") or {}).get("limits") or {}
+        if item_limits:
+            limits.setdefault("items", {})[ref] = {key: item_limits.get(key, 0)
+                                                   for key in ("tokens_max", "tokens_hard_max")}
+    if limits:
+        limits.setdefault("limit_raises", raises)
+        for change in raises:
+            key = change["key"]
+            if key == "tokens_hard_max":
+                for ref, entry in limits.get("items", {}).items():
+                    if change.get("item") in (None, ref):  # a raise names its piece; an old record holds for all
+                        entry[key] = change["to"]
+            elif key == "run_tokens_hard_max":
+                limits[key] = {**limits.get(key, {}), "value": change["to"], "source": "invocation:--raise-limit"}
+    codes = {"BUDGET_OVER", "BUDGET_UNMETERED", "STAGE_INTERRUPTED", "ROLE_ORPHAN_KILLED", "LIMIT_RAISED", "CATALOG_CHANGED",
+             "WRITE_PROTECTED_PATH"}
+    beacons = {}
+    for line in progress.read_lines(directory):
+        if line.get("event") == "info" and line.get("reason_code") in codes:
+            code = line["reason_code"]
+            beacons.pop(code, None)
+            beacons[code] = line
+    return {"lease": live_owner(directory), "limits": limits, "beacons": list(beacons.values()),
+            **({"catalog_digests": doc["catalog_digests"]} if isinstance(doc.get("catalog_digests"), dict) else {})}
 
 
 def effective_status(directory: Path, summary: dict, doc=None, *, owned: bool = False) -> dict:

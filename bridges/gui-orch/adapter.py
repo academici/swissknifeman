@@ -34,7 +34,7 @@ PROVIDERS = ("claude-code", "codex", "grok")
 ROLES = ("context-scout", "executor", "reviewer", "triager", "registrar", "report-fixer", "researcher", "advisor")
 STATUSES = ("ok", "warn", "fail", "skip", "unknown")
 OUTCOME_STATUS = {"done": "ok", "finished": "ok", "done_with_deviations": "warn", "blocked": "fail", "failed": "fail",
-                  "orphaned": "warn", "stopped": "warn", "running": "warn"}
+                  "orphaned": "warn", "stopped": "warn", "running": "warn", "waiting": "warn"}
 ORPHANED = "RUN_ORPHANED: no live conductor holds the run; resume continues it"
 REPORT_LIMIT = 200_000
 SANDBOX_NOTE = ("The provider sandbox restricts the commands of orch roles; GUI plugin processes are not sandboxed "
@@ -262,6 +262,13 @@ def run(root: Optional[str], timeout_s: float, context: Dict[str, Any], params: 
     detail: Dict[str, Any] = {"$schema": VIEW, "view": "resource-detail", "title": safe_text(f"Run {run_id}", 64), "fields": fields}
     if found.get("status") in ("orphaned", "stopped", "blocked"):
         detail["actions"] = [{"command": f"{OWNER}.resume", "input": {"run_id": safe_text(run_id, 64)}}]
+    elif found.get("status") == "waiting":  # not a failure: the answers come first, then this one command goes on
+        detail["actions"] = [{"command": f"{OWNER}.continue", "input": {"run_id": safe_text(run_id, 64)}}]
+        waiting = [row for row in _list(found.get("waiting")) if isinstance(row, dict) and row.get("item")]
+        if waiting:
+            sections.append({"title": "Waiting for an answer", "markdown": "\n".join(
+                f"- {md_text(row['item'], 64)}: {md_text(', '.join(str(name) for name in _list(row.get('question_ids'))), 200)}"
+                f" since {md_text(row.get('since') or '-', 64)}" for row in waiting)})
     if sections:
         detail["sections"] = sections
     return detail
@@ -477,7 +484,7 @@ def questions(root: Optional[str], timeout_s: float, context: Dict[str, Any], pa
             item = safe_text(entry.get("item"), 64) or "-"
             rows.append({"id": f"{item}:{safe_text(entry['id'], 64)}", "cells": {
                 "item": item, "question": _text(entry.get("text"), "-"), "kind": _text(entry.get("kind"), "-", 64),
-                "state": "answered, waits for resume" if entry.get("answered") else "open",
+                "state": "answered — continue" if entry.get("answered") else "open",
                 "age_s": _int(entry.get("age_s")), "overdue": "yes" if entry.get("overdue") else "no"}})
     columns = [{"id": "item", "title": "Item", "type": "text"}, {"id": "question", "title": "Question", "type": "text"},
                {"id": "kind", "title": "Kind", "type": "text"}, {"id": "state", "title": "State", "type": "text"},

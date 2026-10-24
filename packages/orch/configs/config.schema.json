@@ -836,6 +836,71 @@
           "default": false
         }
       }
+    },
+    "autopilot": {
+      "type": "object",
+      "description": "The autopilot (`orch conduct autopilot`): a deterministic controller that starts conductor runs one lane after another until a stop code. Only the machine allows it at all; a project enables it and can only tighten the rest: require_readiness is on when any layer turns it on, and every limit is the lowest of the machine value and the values of the other layers and the flags of start.",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "description": "Whether this machine lets the autopilot run at all. Only the machine layer sets it; a project file that sets it is refused and the autopilot stops with AUTOPILOT_NOT_ALLOWED.",
+          "default": false,
+          "x-skm-layers": ["defaults", "machine"]
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the autopilot is enabled for this project (set by the project, or by the machine for every project).",
+          "default": false
+        },
+        "require_readiness": {
+          "type": "boolean",
+          "description": "Start a lane only when the work source says the phase of the lane is ready (op readiness). On when the machine or any other layer turns it on: a project can only switch it on.",
+          "default": true
+        },
+        "max_runs": {
+          "type": "integer",
+          "description": "Conductor runs (new lanes and continues) one autopilot session may start; then AUTOPILOT_MAX_RUNS.",
+          "default": 20,
+          "minimum": 1
+        },
+        "max_wall_s": {
+          "type": "integer",
+          "description": "Wall-clock seconds of one autopilot session; the deadline is kept in autopilot.json and a restart does not move it (AUTOPILOT_MAX_WALL).",
+          "default": 43200,
+          "minimum": 1
+        },
+        "max_no_progress_runs": {
+          "type": "integer",
+          "description": "Runs in a row that close no piece before AUTOPILOT_NO_PROGRESS.",
+          "default": 2,
+          "minimum": 1
+        },
+        "max_auto_decisions": {
+          "type": "integer",
+          "description": "Questions answered by the advisor or panel (QUESTION_ADVISED lines) one session may accept before AUTOPILOT_DECISIONS_EXCEEDED.",
+          "default": 10,
+          "minimum": 0
+        },
+        "quota_wait_max_s": {
+          "type": "integer",
+          "description": "Longest wait for a provider quota reset before the stopped run is resumed; a later reset is AUTOPILOT_QUOTA.",
+          "default": 21600,
+          "minimum": 0
+        },
+        "poll_s": {
+          "type": "integer",
+          "description": "Seconds between two looks at the current run, the request file and the deadline.",
+          "default": 30,
+          "minimum": 1
+        },
+        "max_recoveries": {
+          "type": "integer",
+          "description": "Resumes the autopilot may start for one run after a crash, a hang or a one-time failure; then AUTOPILOT_RECOVERY_EXHAUSTED.",
+          "default": 1,
+          "minimum": 0
+        }
+      }
     }
   }
 }

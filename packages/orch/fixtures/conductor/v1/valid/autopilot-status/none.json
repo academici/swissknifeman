@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:autopilot-status:v1",
+  "status": "none",
+  "alive": false,
+  "state": null,
+  "request": null
+}

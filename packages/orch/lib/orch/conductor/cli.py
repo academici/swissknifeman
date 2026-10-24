@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates|supervise|reap``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates|supervise|reap|autopilot``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 4 the run waits for a decision (a piece waits for the answer to a question: ``answer``,
@@ -20,7 +20,7 @@ from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, questions
-from orch.conductor import prompt_cli, records, runs, supervise_cli
+from orch.conductor import autopilot_cli, prompt_cli, records, runs, supervise_cli
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import detach, launch_plan
 from orch.conductor.infrastructure.lease import launcher
@@ -441,6 +441,7 @@ def main(argv: list | None = None) -> int:
     gate_list.add_argument("--clear", nargs="?", const="", default=None, metavar="PROVIDER",
                            help="remove the gate of PROVIDER, or every gate when no provider is given")
     supervise_cli.add_parsers(verbs)
+    autopilot_cli.add_parsers(verbs)
     args = parser.parse_args(argv)
     if getattr(args, "detach", False) and (getattr(args, "dry_run", False) or args.frozen):
         parser.error("--detach is incompatible with --dry-run and --frozen")
@@ -450,6 +451,7 @@ def main(argv: list | None = None) -> int:
         if args.detach:
             parser.error("--run-id cannot be combined with --detach")
     supervise_cli.check(parser, args)
+    autopilot_cli.check(parser, args)
     if args.verb == "run":
         if args.batch is True and not (args.items or args.ready or args.input):
             args.ready = True  # `--batch` used to select the next ready pieces
@@ -482,6 +484,8 @@ def main(argv: list | None = None) -> int:
     project = context.root
     if getattr(args, "run_id", None) and (engine.runs_root(project) / args.run_id).exists():
         parser.error("--run-id already exists")
+    if args.verb == "autopilot":
+        return autopilot_cli.run(args, project, list(sys.argv[1:] if argv is None else argv))
     if getattr(args, "detach", False):
         return detach.launch(list(sys.argv[1:] if argv is None else argv), project=project,
                              run_id=engine.new_run_id() if args.verb == "run" else args.run,

@@ -25,6 +25,7 @@ alpha). A consumer ignores fields it does not know; a new optional field is a mi
 | `orch.provider.fallback` | `<run>/<item>` | `run_id`, `role`, `from`, `to` (routes: `provider`, `model_class`, `model`, `effort`), `reason_codes` | `work_id`, `item`, `step` |
 | `orch.input.rebuilt` | `<run>/<item>` | `run_id`, `work_id`, `digest` | `item`, `previous_digest` |
 | `orch.conductor.lifecycle` | conductor run id | `conductor_run_id`, `phase` (`started`, `resumed`, `ended`) | `outcome` (`finished`, `stopped`, `waiting`, `interrupted`, `crashed`), `reason_code`, `launcher`, `items` (up to 50 references) |
+| `orch.autopilot.stopped` | plan | `plan`, `code` (`AUTOPILOT_*`), `runs`, `items_closed` | `message` |
 | `orch.conductor.health` | run id | `conductor_run_id`, `health` (`running`, `waiting_provider`, `waiting_tool`, `waiting_owner`, `waiting_budget_reset`, `suspected_stall`, `hung`, `orphaned`, `stopped`, `finished`, `unknown`) | `previous`, `reason_code`, `action` (`notify`, `snapshot`, `stop`, `reap`, `resume`, `given_up`, `identity_mismatch`, `busy`), `silent_s`, `item`, `step` |
 
 The agent events are emitted by the conductor for every agent run (a role process, the report-fixer included):
@@ -38,6 +39,10 @@ The types `rate-limited` and `quota-exhausted` are written with a hyphen because
 underscore. A wait for a transient failure that is not a limit gives no provider event. `deviation.recorded` is emitted
 when a correction round for an `auto_fixable` deviation starts, or when the final report is written; `deviation.resolved`
 when the fixed deviation is carried as accepted.
+
+`orch.autopilot.stopped` (subject: the plan; data `plan`, `code` (an `AUTOPILOT_*` stop code), `runs`, `items_closed`, and
+`message`) is emitted once by `orch conduct autopilot start` when its session ends, whatever the code (see *Autopilot* in
+`docs/conductor.md`); the same stop is in `autopilot.json` and on stderr.
 
 `orch.conductor.health` is emitted by the supervisor (`orch conduct supervise`, `orch conduct reap`; see *Supervisor* in
 `docs/conductor.md`) for every action it records in `<run>/supervisor.jsonl`, not by the conductor itself: `previous` is the

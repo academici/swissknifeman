@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:autopilot-request:v1",
+  "action": "drain",
+  "at": "2026-10-24T11:00:00Z"
+}

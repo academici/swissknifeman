@@ -4,7 +4,8 @@ State: ``order`` (references in plan order), ``items`` (per reference: ``status`
 ``options`` layers, ``checks``, ``write_set``, ``route``, ``holder``), ``registered`` (attempt id -> status),
 ``commits`` and ``calls`` (every request, in order). ``refuse`` names operations to refuse once (``commit``,
 ``register``, ``release``, ``decision``, ``readiness``); ``no_decision`` and ``no_readiness`` make the source a plugin
-without the ``decision`` or ``readiness`` operation. ``readiness`` (``phases``, ``next``) is what ``readiness`` answers.
+without the ``decision`` or ``readiness`` operation. ``readiness`` (``phases``, ``next``, ``phase``) is what ``readiness``
+answers; ``reopen_blocked`` gives a piece registered blocked back as ``todo`` at once.
 An accepted ``decision`` is kept in ``decisions`` and in the ``decisions`` of its item, which the next brief carries
 into the execution-input (like the planner bridge, ``question_key`` and ``question_digest`` included). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
 """
@@ -138,6 +139,8 @@ def register(state, given, project):
             for key in given.get("evidence", {})} if state.get("workspace_plan") else {}
     state["registered"][attempt] = given["status"]
     item["status"] = given["status"]
+    if given["status"] == "blocked" and state.get("reopen_blocked"):  # the owner reopened the piece at once
+        item["status"], item["holder"] = "todo", None
     if kept:
         item["evidence_kept"] = kept
     item["report"] = given["report"]
@@ -194,13 +197,14 @@ def research(state, given, project):
 
 def readiness(state, given):
     """The readiness the test set: ``readiness`` of the state (``phases``, ``next``; default no phases and the first todo
-    item as a run-items lane), or a refusal once when ``refuse`` names it."""
+    item as a run-items lane of the phase ``readiness.phase``, null when unset), or a refusal once when ``refuse`` names
+    it."""
     if "readiness" in state.get("refuse", []):
         state["refuse"].remove("readiness")
         return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_TEST_REFUSAL", "message": "once"}
     kept = state.get("readiness") or {}
     todo = [name for name in state["order"] if state["items"][name]["status"] == "todo"]
-    lane = ({"kind": "run-items", "items": todo[:1], "phase": None, "message": None} if todo
+    lane = ({"kind": "run-items", "items": todo[:1], "phase": kept.get("phase"), "message": None} if todo
             else {"kind": "terminal", "items": [], "phase": None, "message": "no item is left"})
     return {"op": "readiness", "outcome": "ok", "phases": kept.get("phases", []), "next": kept.get("next", lane)}
 

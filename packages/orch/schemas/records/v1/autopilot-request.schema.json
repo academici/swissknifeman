@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:autopilot-request:v1",
+  "title": "autopilot.request.json of a project",
+  "description": "A request to the running autopilot controller (<runs root>/autopilot.request.json), written atomically by `orch conduct autopilot pause|resume|drain|stop`; the controller reads and removes it at every step of its loop and at every poll.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "action", "at", "by"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:autopilot-request:v1"},
+    "action": {"$ref": "#/$defs/action"},
+    "at": {"description": "UTC time of the request.", "type": "string", "minLength": 1},
+    "by": {"description": "Who asked (the user of the shell).", "type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "action": {"description": "pause (take no new work), resume (take work again), drain (finish the current run, then stop) or stop (interrupt the current run, then stop).", "enum": ["pause", "resume", "drain", "stop"]}
+  }
+}

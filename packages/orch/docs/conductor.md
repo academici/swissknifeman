@@ -274,6 +274,144 @@ directory; its exit code is returned. Without that tool it prints `systemd-analy
 and exits 0. Neither command installs units, enables timers or changes a running service. The owner installs the
 printed files and enables the timer when desired.
 
+## Autopilot
+
+The autopilot (`orch conduct autopilot`, the controller `application/autopilot.py`, its rules `policies/autopilot.py`) works
+through a plan lane after lane without the owner and without a model: it asks the work source which lane comes next, checks
+that exactly the phase of that lane is ready, starts one conductor run for the lane, waits for it and decides from how it
+ended whether to go on, to continue, to resume or to stop. A `conduct run --ready` takes one lane and exits; the autopilot
+starts a run per lane. It never calls a model and never reads the streams of the roles: a semantic question is answered
+inside the run (questions, advisor, panel), a decision the run leaves to the owner is a stop with one action in its message.
+
+```text
+orch conduct autopilot start --plan P [--max-runs N] [--max-wall-s S] [--run-tokens-hard-max T] [--detach] [--json-lines]
+orch conduct autopilot status [--json]
+orch conduct autopilot pause | resume | drain | stop
+orch conduct autopilot explain [--plan P] [--json]
+```
+
+`start` runs the controller in the foreground until a stop code (`--detach`: in a session of its own, printing a
+`detach-result` once the controller holds its lock; progress lines go to `<runs root>/detached/<label>.log`). `status` shows
+the session (`--json`: a `conductor/v1` `autopilot-status` with `status` `none`, `running`, `paused`, `draining`, `stopped`
+or `dead`: a session that did not stop and whose controller no longer holds the lock). `pause` takes no new work after the
+current run, `resume` takes work again, `drain` lets the current run end and stops, `stop` interrupts the current run: they
+write `<runs root>/autopilot.request.json`, which the controller reads and removes at its next look; without a live controller
+they refuse with `AUTOPILOT_NOT_RUNNING` (exit 1). `explain` prints the effective policy with the layer of each value, the
+readiness answer of the source and the next action a controller would take now (`--json`: `autopilot-explain`); it starts and
+writes nothing.
+
+**Policy.** `[orch.autopilot]` (see [configuration](configuration.md)): `allowed` (default `false`) is set by the machine
+only: a project file that sets it is refused by the configuration (`CONFIG_LAYER_FORBIDDEN`), the project layer is then left
+out and the session stops with `AUTOPILOT_NOT_ALLOWED` unless the machine allows it. `enabled` (default `false`) is the
+project's switch (the machine may set it for every project). `require_readiness` (default `true`) is on when the machine or
+any other layer turns it on. `max_runs` (20), `max_wall_s` (43200), `max_no_progress_runs` (2), `max_auto_decisions` (10),
+`quota_wait_max_s` (21600) and `max_recoveries` (1, per run) are the lowest of the machine value and the values of the other
+layers and the flags of `start`: a project or a flag can only narrow. `poll_s` (30) is the pause between two looks. Machine
+policy of an owner who lets the autopilot run:
+
+```toml
+[orch.autopilot]
+allowed = true
+```
+
+and in the project `.swissknifeman/config.toml`: `[orch.autopilot] enabled = true`.
+
+**The loop.** One controller per checkout holds `<runs root>/autopilot.lock` (taken without waiting; a second `start` stops
+with `AUTOPILOT_BUSY` and touches nothing). Then, at every step:
+
+1. A request is applied; a stop request or a passed deadline interrupts the current child (below).
+2. A current run is watched every `poll_s` with `health.classify`: `hung` is stopped by its identity and `orphaned` reaped
+   (the supervisor library: `stop_conductor`, `reap`), then resumed by an ordinary `conduct resume` while the resumes of that
+   run stay below `max_recoveries` (else `AUTOPILOT_RECOVERY_EXHAUSTED`). A hung child is stopped only when its whole saved
+   identity `(pid, start_ticks, boot_id)` is confirmed; otherwise nothing is signalled or reaped, `current` stays and the
+   session stops with `AUTOPILOT_CHECKOUT_LOST`. An ended run is classified (below).
+3. A draining session stops (`AUTOPILOT_DRAINED`) and a paused one waits, before any next child: a run that waits for a
+   provider quota reset is resumed after it only while the session runs; `max_runs` started runs stop (`AUTOPILOT_MAX_RUNS`).
+4. First the runs that wait for answers: when every blocking question of the waiting pieces of one of them is answered
+   (`answered`, `applied` or `open` with a resolution, as `orch conduct answer` writes it), `conduct continue --run R` is
+   started, and readiness is not asked.
+5. Else `orch.py source readiness` (the work-source op `readiness`) gives the phases and the next step. A `run-items` lane
+   with `require_readiness` needs its own phase `ready` or `ready_with_advisories` (other phases, finished or unrelated, do not
+   matter); then `conduct run --plan P --items <lane> --options <runs root>/autopilot-options.json --json-lines` starts. While
+   runs wait for answers and nothing else can start, the controller waits; a plan with no work left (`terminal`, `archive`) is
+   `AUTOPILOT_NO_WORK`, any other next step `AUTOPILOT_NOT_READY` with `NEXT_<KIND>`, a lane whose phase is not ready
+   `AUTOPILOT_NOT_READY` with `READINESS_<STATUS>`, and a source without the op `AUTOPILOT_NOT_READY` with
+   `READINESS_UNSUPPORTED`.
+
+`autopilot-options.json` is `{"scope": {"outside": "block"}}` (a path outside the write set blocks the piece, D14), plus
+`limits.run_tokens_hard_max` with `--run-tokens-hard-max` (the run cap of the trusted invocation layer). Every child starts
+through `detach.spawn` (launcher `autopilot`) with a run id chosen before (`--run-id`) and a fresh `launch_id` (16 hex) as the
+nonce of its detach acknowledgement: **before** the child exists, `autopilot.json` holds the launch intent `current = {run_id,
+launch_id, state: launching, kind, since}`; after the acknowledgement `state: running` with `pid` and `start_ticks`. A
+controller started after a crash adopts the run of an intent whose child acknowledged or holds the run lease; a new run that
+has no folder, lease or acknowledgement 30 s after the intent never started (`history` status `never_started`). The child takes
+the checkout lock and the run lease itself: while another conductor holds them it refuses (`RUN_BUSY`, `WORKTREE_BUSY`) and the
+session stops with `AUTOPILOT_CHECKOUT_LOST`, never with a second conductor on the checkout.
+
+**How a run ended.** Exit 0: no piece taken is `AUTOPILOT_NO_WORK`; closed pieces go on (the streak of runs without a closed
+piece is reset; `max_no_progress_runs` of them in a row is `AUTOPILOT_NO_PROGRESS`). Exit 4 (a piece waits for an answer): with
+tracked changes in the checkout (`git status --porcelain --untracked-files=no`, outside `.swissknifeman/` and the folder of the plan, compared by whole folders;
+the plan folder is only the one the work source named for the run, `<folder>/artifacts/<piece>` of its briefs inside the
+checkout: a plan kept in a workspace, or an unknown one, leaves nothing else out, so `plans/<plan>/x` is then a change too) the owner
+is needed (`AUTOPILOT_OWNER_NEEDED`; nothing is reset, stashed or checked out), else the run joins `waiting_runs` and independent
+lanes go on (three waiting runs at once need the owner). Exit 1, by the stop code of the run: `PROVIDER_QUOTA` with a reset
+within `quota_wait_max_s` waits, then resumes (else `AUTOPILOT_QUOTA`); `TOKEN_BUDGET*` is `AUTOPILOT_BUDGET`; the one-time
+failures `TIMEOUT`, `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID`, `MODEL_UNAVAILABLE`, `GROUP_REVIEW_FAILED`,
+`QUESTIONS_LOCKED` and `CONDUCTOR_CRASHED` are resumed, and `QUESTION_ANSWERED_NOT_RETRIED` resumed with `--retry` of the named
+pieces, within `max_recoveries` of the run; `ITEM_BLOCKED` whose escalations are all `WRITE_PROTECTED_PATH: <path> -> <staged
+path>` needs the owner to place the files (the pairs are in the message); `ITEM_BLOCKED`, `CHECKS_RED` and `REVIEW_LIMIT` go on
+once and stop the second time in a row for the same piece and code (`AUTOPILOT_REPEATED_BLOCKER`; with tracked changes at once
+`AUTOPILOT_OWNER_NEEDED`); `RUN_BUSY`/`WORKTREE_BUSY` is `AUTOPILOT_CHECKOUT_LOST`; `STATE_CORRUPT`, `STATE_INVALID`,
+`RUN_INVALID` is `AUTOPILOT_STATE_INVALID`; any other code `AUTOPILOT_RUN_STOPPED`. Exit 130 that no stop request caused is
+`AUTOPILOT_INTERRUPTED`. Before all of these, a group review with Blocker or Major findings whose follow-up is not settled
+(`state.group_reviews[*].followup`) needs the owner with the follow-up command, and `QUESTION_ADVISED` lines of the session's runs
+(questions answered by the advisor or panel) reaching `max_auto_decisions` stop with `AUTOPILOT_DECISIONS_EXCEEDED`. The info
+beacons of a run (`STAGE_SLOW`, `STAGE_IDLE`, `RUN_SLOW`, `RESULT_*`, `GENERATED`, ...) are not outcomes.
+
+**Deadline and stop.** `deadline_at = started_at + max_wall_s` is written at the first start of a session and a restart after a
+crash keeps it; it is checked at every look (a running child, a pause, a quota wait, a wait for answers). When it passes, and on
+a `stop` request, the current child gets SIGINT (`os.kill` of its pid only, while the `(pid, start_ticks, boot_id)` saved in `current` at the
+launch or the adoption all match `/proc`, the boot of the machine and the owner of a held lease; an unknown or different
+identity gets no signal, neither here nor through the supervisor library), the controller waits `[orch.supervisor] grace_s` for it to end `INTERRUPTED` (resumable with
+`orch conduct resume --run R`); a child that does not end is stopped by the supervisor library (`stop_conductor`: SIGINT,
+SIGTERM, SIGKILL to the identified pid; then `reap` of its role groups). Only when no conductor of the run is alive does the
+session stop with `AUTOPILOT_MAX_WALL` or `AUTOPILOT_STOPPED`; a child that cannot be stopped stays `current` and the session
+stops with `AUTOPILOT_CHECKOUT_LOST` (exit 1). A start after the deadline of an unfinished session stops at once. A session that
+stopped begins anew at the next `start` (new deadline and counters; the waiting runs and the history stay).
+
+**Stop codes.** Each stop is written to `autopilot.json` (`stop`), sent as the event `orch.autopilot.stopped` (`plan`, `code`,
+`runs`, `items_closed`, `message`) and printed as `CODE: message` on stderr. `AUTOPILOT_BUSY` and an unreadable `autopilot.json`
+(`AUTOPILOT_STATE_INVALID`, the file is kept as evidence) leave the file alone. These are not stops or beacons of a run:
+
+| Code | Exit | Meaning |
+| --- | --- | --- |
+| `AUTOPILOT_NO_WORK` | 0 | the plan has no work left, or a run took no piece |
+| `AUTOPILOT_DRAINED` | 0 | `drain`: the current run ended and none was started |
+| `AUTOPILOT_STOPPED` | 0 | `stop`: the current run was interrupted (resumable) |
+| `AUTOPILOT_MAX_RUNS` | 0 | `max_runs` runs were started |
+| `AUTOPILOT_MAX_WALL` | 0 | the deadline passed; the current run was interrupted (resumable) |
+| `AUTOPILOT_NOT_ALLOWED` | 1 | the machine does not allow the autopilot (`allowed`) |
+| `AUTOPILOT_DISABLED` | 1 | the project does not enable it (`enabled`) |
+| `AUTOPILOT_BUSY` | 1 | another controller holds `autopilot.lock` |
+| `AUTOPILOT_NOT_READY` | 1 | the next step is not a ready lane (`NEXT_<KIND>`, `READINESS_<STATUS>`, `READINESS_UNSUPPORTED`) |
+| `AUTOPILOT_OWNER_NEEDED` | 1 | an answer with changes in the tree, protected files to place, group review findings, three waiting runs |
+| `AUTOPILOT_BUDGET` | 1 | a run stopped on a token limit |
+| `AUTOPILOT_QUOTA` | 1 | a provider quota resets later than `quota_wait_max_s` (or when nobody knows) |
+| `AUTOPILOT_REPEATED_BLOCKER` | 1 | the same piece blocked by the same code twice in a row |
+| `AUTOPILOT_NO_PROGRESS` | 1 | `max_no_progress_runs` runs in a row closed no piece |
+| `AUTOPILOT_DECISIONS_EXCEEDED` | 1 | `max_auto_decisions` questions were answered by the advisor or panel |
+| `AUTOPILOT_RECOVERY_EXHAUSTED` | 1 | a run crashed, hung or failed once more than `max_recoveries` allows |
+| `AUTOPILOT_CHECKOUT_LOST` | 1 | another conductor holds the run or the checkout, or a child could not be stopped by its identity (it stays `current`) |
+| `AUTOPILOT_STATE_INVALID` | 1 | a record of the current run or `autopilot.json` cannot be read or breaks its schema (`current` and the records are kept) |
+| `AUTOPILOT_RUN_STOPPED` | 1 | a run stopped with a code the autopilot does not handle (named in the message) |
+| `AUTOPILOT_INTERRUPTED` | 1 | a run ended 130 without a stop request, or the controller itself was interrupted |
+
+**Files.** In `<runs root>`: `autopilot.json` (records/v1 `autopilot-state`: plan, controller identity, `started_at`,
+`deadline_at`, `mode`, `limits`, `counters` (`runs`, `items_closed`, `no_progress_streak`, `auto_decisions`, `recoveries`,
+`quota_waits`), `recoveries` per run, `current`, `quota_wait`, `waiting_runs`, the last 50 runs in `history` (one entry per run),
+`last_blockers`, `stop`), `autopilot.request.json` (records/v1 `autopilot-request`: `action`, `at`, `by`), `autopilot.lock`,
+`autopilot-options.json` and the logs and acknowledgements of the children in `detached/`.
+
 ## A piece that rewrites the orchestrator: `--frozen`
 
 A piece that refactors `orch` changes the code of the process that conducts it. `run --frozen` (and `resume --frozen`) takes a snapshot of

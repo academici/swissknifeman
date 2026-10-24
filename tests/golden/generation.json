@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "69f7430e9372",
-  "reason": "P8.4: readiness CLI and audit command",
+  "captured_from": "da7307a71861",
+  "reason": "prompt-manifest gains the task budget class (P7/P8 mechanism fixes)",
   "generators": [
     {
       "id": "skiller-registry",
@@ -258,7 +258,7 @@
     "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
-    "packages/orch/lib/orch/_types/conductor.py": "40abefe51c640c39d34ac12eebd4b5b09f24ef85428a278adbada79ca6bf0739",
+    "packages/orch/lib/orch/_types/conductor.py": "1f94251af3ec846b730a20d9181ad9c99a513f049756b8de18c023d43c1fa692",
     "packages/orch/lib/orch/_types/exec.py": "e57ca5117882291c217edba3f17b63f499e2ebdf9f5f8e848d9d163c3f0e36bf",
     "packages/orch/lib/orch/_types/records.py": "c271fa3831979d0a8c0d38635220aefe71c7935600989ad11bc508f90799f187",
     "packages/orch/lib/orch/_types/work_source.py": "89927058c10e1bbcfb620720c7d2e2639762dfea2d0d5b4801ae832dd5f0f7f9",

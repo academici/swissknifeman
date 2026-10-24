@@ -6,12 +6,12 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional, cast
 
 from aicore.stubs import StubError
 
 from orch import bindings, events, settings as settings_mod
-from orch.conductor import debug_mode, options as opts, progress, questions as questions_mod, review_batch, stubs as stubs_mod
+from orch.conductor import debug_mode, options as opts, progress, questions as questions_mod, review_batch, scope, stubs as stubs_mod
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
@@ -71,6 +71,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
         lifecycle(self, "started")
         debug_mode.announce(self.progress, self.directory, run_id, self.settings)
         announce_concurrent(self)
+        clear_sandbox_stubs(self)
         return self._loop()
 
 
@@ -83,6 +84,19 @@ def concurrent_runs(self) -> list:
             continue
         found.append(f"{folder.name} (pid {RunLease.owner(folder).get('pid') or 'unknown'})")
     return found
+
+
+def clear_sandbox_stubs(self) -> None:
+    """``SANDBOX_STUBS_REMOVED``: placeholders a killed sandboxed command left under ``.claude/`` (see
+    :data:`scope.SANDBOX_STUB_PATHS`) are removed when the run starts or resumes and no other run of the project is live
+    (no role of this run is running yet)."""
+    if concurrent_runs(self):
+        return
+    removed = scope.remove_stubs(self.project, scope.leftover_stubs(self.project, clock.wall()))
+    if removed:
+        self.progress.emit("info", reason_code="SANDBOX_STUBS_REMOVED",
+                           message="removed the empty read-only placeholders a sandboxed command left behind: "
+                                   + ", ".join(removed))
 
 
 def announce_concurrent(self) -> None:
@@ -108,7 +122,8 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
             self._kill_orphaned_roles()
         stubs_changed(self, run_doc)
         catalogs_changed(self, run_doc)
-        if sessions.migrate_state(state, clock.utc_now()):  # a state of the single session slot of an older conductor
+        # a state of the single session slot of an older conductor (the State TypedDict is edited in place)
+        if sessions.migrate_state(cast(dict, state), clock.utc_now()):
             self._save()
             self.progress.emit("info", reason_code="SESSION_STATE_MIGRATED",
                                message="the executor session of an older state moved into the session slots; it resumes as before")
@@ -133,6 +148,7 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
         lifecycle(self, "resumed")
         debug_mode.announce(self.progress, self.directory, run_id, self.settings)
         announce_concurrent(self)
+        clear_sandbox_stubs(self)
         return self._loop()
 
 
@@ -420,7 +436,7 @@ def held_hint(run_id: str, refs: list) -> str:
     return f"held: {', '.join(refs)} — release with: orch conduct release --run {run_id} --all"
 
 
-def waiting_pieces(state: dict) -> list:
+def waiting_pieces(state: Mapping) -> list:
     """``[{item, question_ids, since}]`` of the blocked pieces that wait for an answer, in the order of the claims."""
     items = state.get("items") or {}
     refs = list(dict.fromkeys([*state_claims(state), *items]))
@@ -476,7 +492,7 @@ def continue_run(self, run_id: str, items=None, partial: bool = False, raise_lim
     return self.resume(run_id, retry=ready, raise_limits=raise_limits)
 
 
-def state_claims(state: dict) -> list:
+def state_claims(state: Mapping) -> list:
     """The references of the pieces a run claimed, in the order of its claims."""
     return [claim["ref"] for claim in (state.get("claims") or {}).values() if claim.get("ref")]
 

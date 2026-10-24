@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import os
 from pathlib import Path
 import re
+import subprocess
 import threading
 from typing import Optional
 
@@ -282,6 +283,7 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
             idle_s=item.options["limits"].get("check_idle_timeout_s", 0), on_changed=on_changed,
             on_tick=lambda check_id, elapsed, quiet, pid: check_watch(self, item, number, idle_marks, check_id, quiet, pid))
 
+    regenerate(self, item, number)
     first, again = [], []
     try:
         rows = run(str(number), first.extend)
@@ -301,6 +303,64 @@ def compute_checks(self, item: Item, number: int, report: dict, on_result=None) 
             raise Stop("CHECKS_MUTATED", "the checks change the tree on every run: " + ", ".join(sorted(set(repeated))[:20])
                        + "; make the check idempotent")
     return rows
+
+
+GENERATE_TIMEOUT_S = 600  # a generator that runs longer is no cheap regeneration: the run stops with GENERATE_FAILED
+
+
+def _argv(project: Path, command) -> list:
+    """``command`` with a first argument that is a path of the checkout (a slash, no leading one) made absolute there:
+    the run regenerates with the generator of its own tree, not with one installed elsewhere."""
+    argv = [str(part) for part in command]
+    if argv and "/" in argv[0] and not argv[0].startswith(("/", "~")):
+        argv[0] = str(project / argv[0])
+    return argv
+
+
+def _run_generator(self, item: Item, number: int, name: str, command) -> None:
+    """One generator command in the checkout; its output goes to ``checks/<n>/<name>.log``, a non-zero exit (or no exit
+    within ``GENERATE_TIMEOUT_S``) stops the run with ``GENERATE_FAILED``: a stale generated file is never committed."""
+    log = item.directory / "checks" / str(number) / f"{name}.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    shown = " ".join(str(part) for part in command)
+    try:
+        done = subprocess.run(_argv(self.project, command), cwd=self.project, capture_output=True, text=True,
+                              timeout=GENERATE_TIMEOUT_S, check=False)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        log.write_text(str(error) + "\n", encoding="utf-8")
+        raise Stop("GENERATE_FAILED", f"{name} `{shown}` did not finish: {error}"[:300]) from None
+    log.write_text(done.stdout + done.stderr, encoding="utf-8")
+    if done.returncode:
+        last = ((done.stderr or done.stdout).strip().splitlines() or ["no output"])[-1]
+        raise Stop("GENERATE_FAILED", f"{name} `{shown}` exited {done.returncode}: {last}"[:300]
+                   + f"; log {self._relative(log)}")
+
+
+def regenerate(self, item: Item, number: int) -> list:
+    """``[orch.conductor] generate`` before the checks of round ``number``: the generated files (``generated_paths``)
+    follow the sources the executor changed, so the provider's refusal to write them costs no round and no owner. The
+    files it changes belong to the candidate like those of a check (``keep_check_changes``, beacon ``GENERATED``);
+    ``generate_check`` then proves them fresh. A tree without changes regenerates nothing."""
+    command = self.conductor.get("generate") or []
+    if not command:
+        return []
+    before = checks_mod.dirty_files(self.project)
+    if not before:
+        return []
+    _run_generator(self, item, number, "generate", command)
+    if self.conductor.get("generate_check"):
+        _run_generator(self, item, number, "generate-check", self.conductor["generate_check"])
+    after = checks_mod.dirty_files(self.project)
+    fresh = checks_mod.changed_files(before, after)
+    globs = self._generated_globs()
+    changed = sorted(set(fresh) | {path for path in after if scopes.under(path, globs)})
+    product = keep_check_changes(self, item, number, changed) if changed else []
+    fresh = [path for path in product if path in fresh]
+    if fresh:
+        self.progress.emit("info", item=item.ref, stage=f"checks.{number}", reason_code="GENERATED",
+                           message=f"generate changed {len(fresh)} file(s): {', '.join(fresh[:5])}"
+                                   f"{' …' if len(fresh) > 5 else ''}; they belong to this piece")
+    return product
 
 
 def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
@@ -330,6 +390,7 @@ def keep_check_changes(self, item: Item, number: int, paths: list) -> list:
     write_set = (item.input_doc.get("scope") or {}).get("write_set")
     stranger = scopes.foreign(scopes.outside(product, write_set), write_set,
                               self._scope_option(item, "extra_paths", []), self.project)
+    stranger = [path for path in stranger if not scopes.under(path, self._generated_globs())]  # regenerated, not authored
     if stranger and item.options["scope"].get("outside_module", "deviation") == "block":
         raise Stop("OUTSIDE_MODULE", "the checks changed files of other modules: " + ", ".join(stranger[:20])
                    + "; add them to the item's task_files or make the check write them elsewhere")

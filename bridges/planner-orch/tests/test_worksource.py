@@ -547,6 +547,26 @@ class BriefTests(Case):
         self.assertEqual(stop.exception.code, "ARTIFACT_REFUSED")
         self.assertEqual(list(outside.iterdir()), [])
 
+    def test_the_worker_view_ignores_the_conductor_notes_and_read_snapshots_but_not_the_task(self):
+        doc = {"digest": "d1", "input_id": "PLAN.P1.1@d1", "goal": "g",
+               "reads": [{"path": "a.py", "sha256": "s1", "content": "old", "required": True}],
+               "context_refs": [{"kind": "pack", "content": {
+                   "item": {"id": "P1.1", "artifacts": [], "updated_at": "t1", "rules": ["r"]},
+                   "reads": [{"path": "a.py", "sha256": "s1", "content": "old"}]}}]}
+        noted = json.loads(json.dumps(doc))
+        noted.update(digest="d2", input_id="PLAN.P1.1@d2")
+        noted["reads"][0].update(sha256="s2", content="edited by the executor")
+        pack = noted["context_refs"][0]["content"]
+        pack["item"].update(artifacts=[{"path": "@plan/inputs/" + "a" * 64, "role": "input"}], updated_at="t2")
+        pack["reads"][0].update(sha256="s2", content="edited by the executor")
+        self.assertEqual(worksource._worker_view(doc), worksource._worker_view(noted))
+        amended = json.loads(json.dumps(noted))
+        amended["context_refs"][0]["content"]["item"]["rules"] = ["r", "a new rule"]
+        self.assertNotEqual(worksource._worker_view(doc), worksource._worker_view(amended))
+        wider = json.loads(json.dumps(noted))
+        wider["reads"].append({"path": "b.py", "sha256": "s3", "content": "new"})
+        self.assertNotEqual(worksource._worker_view(doc), worksource._worker_view(wider))
+
     def test_brief_names_the_artifact_folder_of_the_item(self):
         self.claim()
         self.assertEqual(self.brief()["artifacts_dir"], f"plans/{self.plan}/artifacts/P1.1")

@@ -78,6 +78,12 @@ class AffectedTestsTests(unittest.TestCase):
         both = [" ".join(item["argv"]) for item in plan("packages/orch/lib/orch/cli.py", "bootstrap/skills/x/SKILL.md")["commands"]]
         self.assertEqual(both.count("python3 scripts/golden.py check"), 1)
 
+    def test_a_library_change_brings_the_typecheck_gate(self):
+        gate = "bash scripts/typecheck.sh --baseline"
+        self.assertIn(gate, [" ".join(item["argv"]) for item in plan("packages/orch/lib/orch/cli.py")["commands"]])
+        self.assertNotIn(gate, [" ".join(item["argv"]) for item in plan("packages/orch/tests/test_cli.py")["commands"]])
+        self.assertNotIn(gate, [" ".join(item["argv"]) for item in plan("docs/develop.md")["commands"]])
+
     def test_a_hub_path_runs_only_the_cheap_hub_checks(self):
         result = plan("docs/develop.md")
         self.assertEqual(result["units"], [])
@@ -186,6 +192,7 @@ class RunnerFixture(unittest.TestCase):
         self.addCleanup(self.env.stop)
         self.module.HUB_CHECKS = [["bash", "-c", 'echo hub >> "$LOG"']]
         self.module.GOLDEN = ["bash", "-c", 'echo golden >> "$LOG"']
+        self.module.TYPECHECK = ["bash", "-c", 'echo typecheck >> "$LOG"']
         for name in ("a", "b"):
             self.unit(name)
 
@@ -283,7 +290,7 @@ class RunnerTests(RunnerFixture):
             code, out, _ = self.run_runner("--tier", "all")
             self.assertEqual(code, 0)
             self.assertIn("[cached] packages/a:", out)
-            self.assertEqual(self.lines(), ["hub", "golden"])
+            self.assertEqual(self.lines(), ["hub", "golden", "typecheck"])
             (self.root / "packages/a/change.py").write_text("changed")
             code, out, _ = self.run_runner("--tier", "all")
             self.assertEqual(code, 0)

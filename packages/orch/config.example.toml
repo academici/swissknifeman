@@ -96,6 +96,18 @@ schema_version = 1
 # Allowed in layers: defaults, machine, invocation, flags.
 # skills_bridge = []
 
+# Command that regenerates the generated files of the project (generated_paths) from their sources, run in the checkout of the run before the checks of every round; a first argument with a slash and no leading one is a path of that checkout, so the run uses its own generator. Its changes belong to the piece. A non-zero exit stops the run with GENERATE_FAILED. Empty: nothing is regenerated and generated_paths keep the write protection of the provider. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# generate = []
+
+# Command that verifies the generated files against their sources after generate (exit 0: fresh); a non-zero exit stops the run with GENERATE_FAILED. Empty: no verification. Resolved like generate. Machine-wide, like generate. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# generate_check = []
+
+# Glob patterns of the files generate writes (for example .claude/skills/**). With generate set, a write-set path under them is not a write-protected path of the executor: the executor changes the source and the conductor regenerates the file; a regenerated file of another module is no OUTSIDE_MODULE stop. Machine-wide, like generate. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# generated_paths = []
+
 [orch.conductor.limits]
 # Fresh tokens of a piece of work past which a BUDGET_OVER beacon is printed (nothing is stopped); 0 means none. Integer >= 0.
 # tokens_max = 0

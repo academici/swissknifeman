@@ -71,11 +71,38 @@ class ReviewPlanTests(ConductorCase):
         self.assertEqual((code, self.outcome(err)), (1, ("stopped", "TOKEN_BUDGET")), err)
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 0))
         self.assertNotIn("group_reviews", self.state(err))
+        pending = [line["message"] for line in self.lines(err) if line.get("reason_code") == "GROUP_REVIEW_PENDING"]
+        self.assertEqual(pending, ["group 1: W1, W2 done and not reviewed"], err)
         code, _, resumed = self.conduct("resume", "--run", self.run_dir(err).name,
                                        "--raise-limit", "run_tokens_hard_max=1000", "--json-lines")
         self.assertEqual((code, self.outcome(resumed)), (0, ("finished", None)), resumed)
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 1))
         self.assertIn("1", self.state(resumed)["group_reviews"])
+
+    def blocked_second(self, on_blocked: str):
+        blocked = report("W2", "blocked", changed_paths=[], checks_run=[],
+                         open_issues=[{"text": "needs the owner's API key", "kind": "escalation"}])
+        self.set_items({ref: {} for ref in ("W1", "W2")})
+        self.script({"executor": [executor_ok("W1"), {"result": blocked}], "reviewer": [{"text": REVIEW}]})
+        path = self.project.parent / "group-options.json"
+        path.write_text(json.dumps({"review": {"strategy": "single"}, "on_blocked": on_blocked}))
+        return self.run_items("W1", "W2", extra=("--options", path))
+
+    def test_a_run_stopped_on_a_blocked_piece_says_the_done_ones_wait_for_their_group_review(self):
+        code, _, err = self.blocked_second("stop")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "ITEM_BLOCKED")), err)
+        self.assertEqual(self.calls("reviewer"), 0)
+        pending = [line["message"] for line in self.lines(err) if line.get("reason_code") == "GROUP_REVIEW_PENDING"]
+        self.assertEqual(len(pending), 1, err)
+        self.assertIn("group 1: W1 done and not reviewed; the review waits for W2", pending[0])
+        observer = json.loads(next(self.project.rglob(f"reports/{self.run_dir(err).name}/observer.json")).read_text())
+        self.assertEqual(observer["incomplete_group_reviews"], ["1 not run (W1 unreviewed)"])
+
+    def test_a_finished_run_reviews_the_done_pieces_of_a_group_whose_others_are_blocked(self):
+        code, _, err = self.blocked_second("report")
+        self.assertEqual(self.calls("reviewer"), 1, err)
+        self.assertEqual(self.state(err)["group_reviews"]["1"]["refs"], ["W1"])
+        self.assertFalse([line for line in self.lines(err) if line.get("reason_code") == "GROUP_REVIEW_PENDING"])
 
     def run_model(self, *items):
         """A run whose strategist is the model (``review.strategist: model``): the default is the rules."""

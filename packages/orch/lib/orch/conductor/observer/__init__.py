@@ -28,6 +28,7 @@ from orch.conductor.observer.metrics import IDLE_S, TOP_BLOCKS, checks_by_comman
 from orch.conductor.observer.metrics import seconds_of as _seconds
 from orch.conductor.observer.proposals import proposals
 from orch.conductor.observer.reader import EVENT_TYPES
+from orch.conductor.policies import review_strategy as strategy
 from orch.conductor.observer.render import markdown
 
 __all__ = ["EVENT_TYPES", "IDLE_S", "TOP_BLOCKS", "build", "follow", "markdown", "proposals", "prompt_blocks",
@@ -69,6 +70,8 @@ def build(directory: Path, project: Path) -> dict:
     codes = Counter(line.get("reason_code") for line in lines if line.get("event") == "info" and line.get("reason_code"))
     if codes.get("GROUP_REVIEW_FAILED") and not incomplete_groups:
         incomplete_groups.append("GROUP_REVIEW_FAILED")
+    incomplete_groups += [f"{number} not run ({', '.join(done)} unreviewed)"
+                          for number, done, _open in strategy.unreviewed_groups(state)]
     wall = (_seconds(lines[-1]["ts"]) - _seconds(lines[0]["ts"])) if len(lines) > 1 else 0.0
     report = {
         "schema": "orch-conductor-observer/v1", "run": run_id, "started": started,

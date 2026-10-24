@@ -24,6 +24,20 @@ def per_piece_off(review_strategy_state: dict | None) -> bool:
     return (review_strategy_state or {}).get("mode") in PER_PIECE_OFF
 
 
+
+def unreviewed_groups(state: dict) -> list:
+    """``[(number, done, open)]``: the groups of a ``groups``/``single`` strategy (``state.review_strategy``) with done
+    pieces and no group review yet. Their pieces are reviewed by nobody else, so a run that ends with one says so."""
+    plan = state.get("review_strategy") or {}
+    if plan.get("mode") not in ("groups", "single"):
+        return []
+    kept, items, found = state.get("group_reviews") or {}, state.get("items") or {}, []
+    for number, group in enumerate(plan.get("groups") or [], 1):
+        done = [ref for ref in group if (items.get(ref) or {}).get("outcome") in ("done", "done_with_deviations")]
+        if done and str(number) not in kept:
+            found.append((number, done, [ref for ref in group if ref not in done]))
+    return found
+
 def facts(ref: str, title: str, brief: dict) -> dict:
     """What the strategist is told about one piece, from its execution-input."""
     scope = brief.get("scope") or {}

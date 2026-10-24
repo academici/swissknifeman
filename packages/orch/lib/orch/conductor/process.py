@@ -19,6 +19,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import subprocess
@@ -98,14 +99,15 @@ def parse_stream(transport: str, data: str) -> dict:
     or on a codex ``turn.failed``; codex ``error`` events are notifications, not a failure. ``signals`` holds only the
     normalized failure signals the stream gives (see ``aicore.provider.errors.SIGNAL_TYPES``). ``denials`` are the tool
     calls Claude refused without asking (``--permission-prompts none``): the ``permission_denied`` system messages and
-    ``result.permission_denials``, once per ``tool_use_id``; only the tool name is kept, ``tool_input`` may hold secrets.
+    ``result.permission_denials``, once per ``tool_use_id``; only the tool name and a safe hint (:func:`denial_hint`) are
+    kept, ``tool_input`` may hold secrets.
     """
     if transport == "text":
         return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
                 "usage_complete": None, "is_error": False, "signals": {}, "denials": []}
     found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False,
              "usage_complete": False, "signals": {}, "denials": []}
-    denied: dict = {}  # tool_use_id -> tool name, in order of first sight
+    denied: dict = {}  # tool_use_id -> (tool name, hint), in order of first sight
     signals, retry_status, retries, last = found["signals"], None, 0, {}  # last: the final terminal event only
     messages, answers, complete = [], [], True  # answers: texts of the results that did not fail
     for raw in data.splitlines():
@@ -179,7 +181,7 @@ def parse_stream(transport: str, data: str) -> dict:
             usage = _usage(doc.get("usage"))
             found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
             found["usage_complete"] = bool(usage["input"] or usage["output"])
-    found["denials"] = [{"tool_name": name} for name in denied.values()]
+    found["denials"] = [{"tool_name": name, **({"hint": hint} if hint else {})} for name, hint in denied.values()]
     if not found["text"] and messages:
         found["text"] = messages[-1]
     signals.update(last)
@@ -192,11 +194,33 @@ def parse_stream(transport: str, data: str) -> dict:
     return found
 
 
+def denial_hint(tool: str, tool_input: object) -> str:
+    """A safe word for a refused call: the program of a Bash command (past ``cd <dir> &&``; ``+heredoc`` when it writes
+    one) or the path of a file tool, shortened. Never the whole input: it may hold secrets."""
+    if not isinstance(tool_input, dict):
+        return ""
+    if tool == "Bash" and isinstance(tool_input.get("command"), str):
+        command = tool_input["command"].strip()
+        segments = [part.strip() for part in re.split(r"&&|;|\n", command) if part.strip()]
+        head = next((part for part in segments if not part.startswith("cd ")), segments[0] if segments else "")
+        words = head.split()
+        while words and "=" in words[0] and not words[0].startswith(("=", "-")):
+            words = words[1:]  # VAR=value prefixes
+        word = Path(words[0]).name if words else ""
+        return (word[:40] + ("+heredoc" if "<<" in command else "")) if word else ""
+    for key in ("file_path", "path", "notebook_path"):
+        if isinstance(tool_input.get(key), str) and tool_input[key]:
+            return tool_input[key][-120:]
+    return ""
+
+
 def _deny(denied: dict, doc: object) -> None:
     """Note one refused tool call; the system message and the final result name the same call by ``tool_use_id``."""
     if isinstance(doc, dict) and isinstance(doc.get("tool_name"), str) and doc["tool_name"]:
-        denied.setdefault(doc.get("tool_use_id") if isinstance(doc.get("tool_use_id"), str) else f"#{len(denied)}",
-                          doc["tool_name"])
+        key = doc.get("tool_use_id") if isinstance(doc.get("tool_use_id"), str) else f"#{len(denied)}"
+        hint = denial_hint(doc["tool_name"], doc.get("tool_input"))
+        if key not in denied or (hint and not denied[key][1]):
+            denied[key] = (doc["tool_name"], hint)
 
 
 def _is_int(value: object) -> bool:
@@ -224,10 +248,39 @@ def partial_usage(data: str) -> dict:
     return total
 
 
-def activity(pid: Optional[int], raw_path: Path) -> str:
-    """What a running role does now, for a beacon: its last command (from the stream) and the processes of its
-    session other than the provider CLI, the longest-running first."""
+# Processes of the provider's own plumbing, not work of the role: the Claude sandbox proxies (socat over the
+# claude-http socket and its TCP listeners), bubblewrap, the codex code-mode host. They live as long as the role, sit at
+# 0 % CPU and would fill a listing sorted by age, so a healthy model call looked like a hang (P7/P8 STAGE_SLOW).
+INFRA_PROCESS_MARKERS = ("claude-http-", "TCP6-LISTEN:", "TCP-LISTEN:", "codex-code-mode-host")
+INFRA_PROCESS_HEADS = ("bwrap", "socat")
+
+
+def infra_process(args: str) -> bool:
+    """True for a process of the provider's sandbox or host plumbing (see :data:`INFRA_PROCESS_MARKERS`)."""
+    head = Path(args.split(None, 1)[0]).name if args.strip() else ""
+    return any(marker in args for marker in INFRA_PROCESS_MARKERS) or (
+        head in INFRA_PROCESS_HEADS and ("claude" in args or "LISTEN" in args or head == "bwrap"))
+
+
+def freshness(idle: Optional[float], info: Optional[TickInfo] = None) -> str:
+    """``stream grew 42s ago, 1.2 MB, tree CPU 311s``: how fresh the output of a role is, for a beacon."""
+    parts = [] if idle is None else [f"stream grew {int(idle)}s ago"]
+    if info is not None:
+        size = info.stream_bytes
+        parts.append(f"{size / 1_000_000:.1f} MB" if size >= 1_000_000 else f"{size // 1000} KB")
+        if info.tree_cpu_s is not None:
+            parts.append(f"tree CPU {int(info.tree_cpu_s)}s")
+    return ", ".join(parts)
+
+
+def activity(pid: Optional[int], raw_path: Path, idle: Optional[float] = None, info: Optional[TickInfo] = None) -> str:
+    """What a running role does now, for a beacon: how fresh its stream is (when the tick knows it), its last command
+    (from the stream) and the processes of its tree other than the provider CLI and its sandbox plumbing, the busiest
+    first and then the newest."""
     parts = []
+    fresh = freshness(idle, info)
+    if fresh:
+        parts.append(fresh)
     last = _last_command(raw_path)
     if last:
         parts.append(f"last command: {last}")
@@ -252,10 +305,19 @@ def activity(pid: Optional[int], raw_path: Path) -> str:
                     grew = True
         rows = [table[number][1:] for number in below if number != pid and number in table]
         rows = [row for row in rows if not row[1].startswith(("ps ", "/bin/sh -c ps"))]
-        if rows:
+        work = [row for row in rows if not infra_process(row[1])]
+        if work:
+            def busy(row: tuple) -> tuple:
+                try:
+                    cpu = float(row[3])
+                except ValueError:
+                    cpu = 0.0
+                return (-cpu, row[0])
             shown = ", ".join(f"{args[:120]} ({seconds}s, {stat} {cpu}% cpu)"
-                              for seconds, args, stat, cpu in sorted(rows, reverse=True)[:3])
+                              for seconds, args, stat, cpu in sorted(work, key=busy)[:3])
             parts.append(f"running: {shown}")
+        elif rows:
+            parts.append("only the provider's sandbox processes: the model call is in progress")
         else:
             parts.append("no child process: the model call itself is silent")
     return "; ".join(parts) or "nothing observed"

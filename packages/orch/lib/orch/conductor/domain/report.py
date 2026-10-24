@@ -36,13 +36,16 @@ def json_block(text: str, tag: str):
     return doc, None
 
 
+NO_WRITE_SET = "no fenced `write-set` block in the answer"
+
+
 def write_set_block(text: str):
     """``(document, error, shown)``: the JSON object of the last fenced ``write-set`` block of a scout answer (the
     ``json write-set`` form is the same block), and the answer without its ``write-set`` blocks. No fallback to
     another ``json`` block: a hint is only what the scout tagged as one."""
     found = [match for match in _FENCE_BLOCK.finditer(text or "") if match["tag"] == "write-set"]
     if not found:
-        return None, "no fenced `write-set` block in the answer", text
+        return None, NO_WRITE_SET, text
     shown = text
     for match in reversed(found):
         shown = shown[:match.start()] + shown[match.end():]
@@ -120,7 +123,7 @@ def escalation_code(issue: dict) -> Optional[str]:
     if issue.get("kind") != "escalation":
         return None
     text = issue.get("text") or ""
-    return text.split(":", 1)[0] if is_coded(text) else ESCALATION_CODES.get(issue.get("escalation_class"))
+    return text.split(":", 1)[0] if is_coded(text) else ESCALATION_CODES.get(str(issue.get("escalation_class") or ""))
 
 
 def blocked(report: dict, code: str, text: str) -> dict:

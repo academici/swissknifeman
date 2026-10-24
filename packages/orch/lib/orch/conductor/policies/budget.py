@@ -120,22 +120,25 @@ def admission(*, scope: str, item_ref: str, run_id: str, item_tokens: dict, run_
                     "raise stage_tokens_max in the policy")
     return None
 
-# Budget classes of the blocks (knowledge/p9-prompt#budgets). Only the measure and a beacon: nothing is cut. The kinds the
-# design does not list belong to the frame or the task material of their role (progress, candidate, review_scope, diff,
-# findings, instruction), so they count as core; ``retrieval`` is what the sources answered (``research``).
+# Budget classes of the blocks (knowledge/p9-prompt#budgets). Only the measure and a beacon: nothing is cut. ``core`` is
+# the frame the conductor writes for every role (role text, contract, checks, corrections, progress); ``task`` is the
+# material of the piece itself (the execution input, the candidate and its diff, the findings to judge): its size is the
+# plan's and the change's, so it is measured with no limit (18-37 K of input put every role past a core limit of 12 K
+# and drowned the other beacons in P7/P8, while nothing could be cut); ``retrieval`` is what the sources answered.
 BUDGET_CLASSES = {
-    "core": ("role_text", "input", "verification", "result_contract", "answers", "correction", "progress", "candidate",
-             "review_scope", "diff", "findings", "instruction"),
+    "core": ("role_text", "verification", "result_contract", "answers", "correction", "progress", "instruction"),
+    "task": ("input", "candidate", "review_scope", "diff", "findings"),
     "supporting": ("repository_rules", "skill", "skill_names", "context_map", "expected_paths", "focus", "run_rules",
                    "stub"),
     "retrieval": ("research",),
 }
 BUDGET_LIMITS = {"core": "prompt_core_tokens", "supporting": "prompt_supporting_tokens",
-                 "retrieval": "prompt_retrieval_tokens"}  # the ``limits`` keys of the run options
+                 "retrieval": "prompt_retrieval_tokens"}  # the ``limits`` keys of the run options; ``task`` has none
 
 
 def budget_class(kind: str) -> str:
-    """``core``, ``supporting`` or ``retrieval``: the budget class of a block kind (a kind nobody listed is supporting)."""
+    """``core``, ``task``, ``supporting`` or ``retrieval``: the budget class of a block kind (a kind nobody listed is
+    supporting)."""
     return next((name for name, kinds in BUDGET_CLASSES.items() if kind in kinds), "supporting")
 
 

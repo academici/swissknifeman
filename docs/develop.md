@@ -486,7 +486,9 @@ The JSON Schema is the one source of truth; the Python types of a document are g
 over every `packages/*/lib` in `basic` mode with `pyrightconfig.json` and compares the number of errors of each package
 with `configs/typecheck-baseline.json` (`{"pyright", "mode", "errors": {<package>: N}}`). A pyright of another version on
 `PATH` is not used: the order is `PATH` at the pinned version, `uvx pyright==VERSION`, `pipx run pyright==VERSION`, else exit 2
-`TYPECHECK_TOOL_MISSING` (`ci-matrix.py` reports that as `skip` off CI and as a failure on CI).
+`TYPECHECK_TOOL_MISSING` (`ci-matrix.py` reports that as `skip` off CI and as a failure on CI). `affected-tests.py` runs the
+gate with every change of a `packages/*/lib/**.py` and on tier all, so the acceptance checks of a conductor item see a count
+grow (before, only CI ran it and items stayed green while orch went 153 -> 178).
 
 | Output | Meaning |
 | --- | --- |

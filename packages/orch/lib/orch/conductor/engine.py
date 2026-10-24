@@ -401,6 +401,8 @@ class Conductor:
     _route_tools = staticmethod(context.route_tools)
     _file_tools_rule = context.file_tools_rule
     _write_protected = context.write_protected
+    _write_generated = context.write_generated
+    _generated_globs = context.generated_globs
     _skill_set = context.skill_set
     _skills_excluded = context.skills_excluded
     _skill_texts = context.skill_texts

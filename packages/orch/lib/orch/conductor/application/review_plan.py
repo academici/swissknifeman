@@ -181,6 +181,27 @@ def group_review_due(self, ref: str) -> None:
         return
 
 
+
+def review_left(self) -> None:
+    """At the end of a run that went through all its pieces: a group whose pieces all ended, some done and some blocked
+    (``on_blocked: report``), is reviewed over its done pieces; else nobody would read them."""
+    plan = self.state.get("review_strategy") or {}
+    items = self.state.get("items") or {}
+    for number, done, open_ in strategy.unreviewed_groups(self.state):
+        if all((items.get(ref) or {}).get("outcome") == "blocked" for ref in open_):
+            group_review(self, number, done, plan["reviewer"]["effort"])
+
+
+def note_unreviewed(self) -> None:
+    """``GROUP_REVIEW_PENDING`` for each group with done pieces and no review when the run ends: a stopped run reviews it
+    on the resume that ends the group; a piece closed outside the run leaves the done ones to a review of their own."""
+    for number, done, open_ in strategy.unreviewed_groups(self.state):
+        self.progress.emit("info", reason_code="GROUP_REVIEW_PENDING",
+                           message=f"group {number}: {', '.join(done)} done and not reviewed"
+                                   + (f"; the review waits for {', '.join(open_)} (resume --run {self.run_id} --retry "
+                                      f"{open_[0]}); a piece closed outside the run leaves them to a review of their own"
+                                      if open_ else ""))
+
 def failed_group(number: int, group: list, kept: dict) -> Stop:
     """``GROUP_REVIEW_FAILED``: the group review failed and a piece of the group has ``review_mode: requested``, which no
     other review covers. The first failure is repeated once on resume; after that the stop stays until a review reads."""

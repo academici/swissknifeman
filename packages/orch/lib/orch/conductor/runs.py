@@ -11,7 +11,7 @@ import re
 import shutil
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from aicore.ext.plugins import safe_text
 from aicore.util import timefmt
@@ -27,7 +27,7 @@ from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS  # <run
 PRUNABLE = {"done", "done_with_deviations", "finished", "blocked", "stopped", "orphaned"}
 
 
-def display(value, limit: int = 500):
+def display(value, limit: int = 500) -> Any:
     """Redact before shortening display data, including keys in diagnostic objects."""
     if isinstance(value, str):
         return safe_text(redact_text(value, secrets=env_secrets()), limit)

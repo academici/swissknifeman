@@ -337,17 +337,33 @@ def artifact_id(ref: str, digest: str) -> str:
     return "brief-" + ref.replace(".", "-").replace("/", "-") + "-" + digest[:12]
 
 
+_VOLATILE_READ_FIELDS = ("content", "sha256")
+
+
+def _read_paths(reads) -> list:
+    """The reads of a brief without their snapshot: which files, sections and why, not what they hold now."""
+    if not isinstance(reads, list):
+        return reads
+    return [{key: value for key, value in read.items() if key not in _VOLATILE_READ_FIELDS}
+            if isinstance(read, dict) else read for read in reads]
+
+
 def _worker_view(doc: dict) -> dict:
     """What the worker reads: the brief without its digests. ``provenance.source_digest`` hashes the whole context
     pack, which changes when the brief itself is declared as an input of the item, so it does not decide a repeat.
     Workspace briefs embed that pack: ignore its self-brief declarations and their bookkeeping timestamp too,
-    while preserving research and authored artifacts as worker inputs."""
+    while preserving research and authored artifacts as worker inputs. The reads keep which files and why, not their
+    content and sha256: those follow the executor's own edits of the files it reads."""
     view = {key: copy.deepcopy(value) for key, value in doc.items() if key != "digest"}
     view["input_id"] = str(view.get("input_id", "")).rsplit("@", 1)[0]
     view["provenance"] = {key: value for key, value in (doc.get("provenance") or {}).items() if key != "source_digest"}
+    if "reads" in view:
+        view["reads"] = _read_paths(view["reads"])
     for entry in view.get("context_refs", []):
         if entry.get("kind") != "pack" or not isinstance(entry.get("content"), dict):
             continue
+        if "reads" in entry["content"]:
+            entry["content"]["reads"] = _read_paths(entry["content"]["reads"])
         item = entry["content"].get("item")
         if not isinstance(item, dict):
             continue

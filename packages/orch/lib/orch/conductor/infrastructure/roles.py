@@ -15,7 +15,7 @@ from orch.conductor.signals import StallWatch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import beacon_events, clock, detach, sessions
+from orch.conductor.infrastructure import beacon_events, clock, detach, launch_plan, sessions
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.heartbeat import observe_tick
 from orch.conductor.infrastructure.launch_plan import claude_transcripts, strip_guard, transcript_folder_name  # noqa: F401 — re-export for callers
@@ -23,7 +23,9 @@ from orch.conductor.infrastructure.sessions import keep_session, resume_args  # 
 from orch.conductor.infrastructure.usage import add_tokens  # noqa: F401 — re-export for callers
 from orch.conductor.progress import human_duration
 
-DENIAL_NOTE_ROLES = ("executor", "bounded-implementer")  # roles whose report notes the tools denied without a prompt
+# roles whose result notes the tools denied without a prompt: a writer's stage report (open_issues), the reviewer's
+# findings (residual_risk, read by the triager)
+DENIAL_NOTE_ROLES = ("executor", "bounded-implementer", "reviewer")
 
 
 class RolePorts(NamedTuple):
@@ -148,12 +150,26 @@ def run_role(self, item: Item, key: str, role: str, blocks: list, kind: Optional
 
 
 def denied(denials: list) -> str:
-    """``Bash×2, Grep``: the tools of the refused calls with their counts, most refused first."""
+    """``Bash×2 (python3, cat+heredoc), Read (lib/x.py)``: the tools of the refused calls with their counts, most refused
+    first, and the safe hints of the calls (what was run or read) when the stream gave them."""
     counts: dict = {}
+    hints: dict = {}
     for entry in denials:
         counts[entry["tool_name"]] = counts.get(entry["tool_name"], 0) + 1
-    return ", ".join(name if number == 1 else f"{name}×{number}"
-                     for name, number in sorted(counts.items(), key=lambda row: (-row[1], row[0])))
+        hint = entry.get("hint")
+        if hint and hint not in hints.setdefault(entry["tool_name"], []):
+            hints[entry["tool_name"]].append(hint)
+
+    def shown(name: str, number: int) -> str:
+        said = name if number == 1 else f"{name}×{number}"
+        return f"{said} ({', '.join(hints[name][:3])})" if hints.get(name) else said
+    return ", ".join(shown(name, number) for name, number in sorted(counts.items(), key=lambda row: (-row[1], row[0])))
+
+
+def expected_denial(role: str, denials: list) -> bool:
+    """A role whose manifest gives it a read-only shell is meant to be refused what is not a plain read: when every
+    refused call is Bash, the denial is the design working, not a role that could not do its job."""
+    return launch_plan.shell(role) == "read_only" and all(entry["tool_name"] == "Bash" for entry in denials)
 
 
 def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional[str],
@@ -206,7 +222,8 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
             trail["denials"] += run.denials
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),
                                reason_code="RESULT_SILENT_DENIAL", agent=handle["id"],
-                               message=f"{self._denied(run.denials)} denied without a prompt")
+                               message=f"{self._denied(run.denials)} denied without a prompt"
+                                       + ("; expected for a read-only shell" if expected_denial(role, run.denials) else ""))
         if run.lingered:
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),
                                reason_code="ROLE_LINGERED",
@@ -241,6 +258,14 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
                     {"text": f"tools denied without a prompt: {self._denied(trail['denials'])}"[:900], "kind": "note",
                      "impact": "the role could not use them",
                      "next": "widen allowedTools in the launch catalog or change the plan"}])
+            if trail["denials"] and kind == "review-findings" and role in DENIAL_NOTE_ROLES:
+                # the triager reads the whole findings document: it learns that what the reviewer meant to run was not run
+                note = (f"not verified by running: {self._denied(trail['denials'])} denied without a prompt; "
+                        "reproductions the reviewer meant to run are static, reproduce them before judging")[:900]
+                findings: dict = dict(doc or {})
+                risk = str(findings.get("residual_risk") or "")
+                findings["residual_risk"] = "; ".join(part for part in (risk, note) if part)
+                doc = findings
             return (doc if kind else run.text), meta
         item.state["retries_used"] = item.state.get("retries_used", 0) + 1  # the total of the piece, for the report
         by_stage = item.state.setdefault("retries_by_stage", {})
@@ -274,12 +299,12 @@ def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
         self.role_ports.run_clock(item)
         for reason in observe_tick(self, stall, elapsed, info, item=item.ref, step=key, role=role):
             self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STALL_SUSPECTED", agent=agent,
-                               message=f"{reason}; {process.activity(pid, raw)}")
+                               message=f"{reason}; {process.activity(pid, raw, idle, info)}")
             beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STALL_SUSPECTED", "step": key})
         if warn and elapsed >= marks["slow"]:
             marks["slow"] += warn
             self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_SLOW", agent=agent,
-                               message=f"running {human_duration(elapsed)}; {process.activity(pid, raw)}")
+                               message=f"running {human_duration(elapsed)}; {process.activity(pid, raw, idle, info)}")
             beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STAGE_SLOW", "step": key})
         if idle_warn:
             if idle < idle_warn:
@@ -288,7 +313,7 @@ def beacons(self, item: Item, key: str, role: str, raw: Path) -> Callable:
                 marks["idle"] += idle_warn
                 self.progress.emit("info", item=item.ref, stage=key, role=role, reason_code="STAGE_IDLE", agent=agent,
                                    message=f"no output for {human_duration(idle)} (running {human_duration(elapsed)}); "
-                                           f"{process.activity(pid, raw)}")
+                                           f"{process.activity(pid, raw, None, info)}")
                 beacon_events.beacon_event(self, "orch.run.warning", item, {"reason_code": "STAGE_IDLE", "step": key})
     return tick
 

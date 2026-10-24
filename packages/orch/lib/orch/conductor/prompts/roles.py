@@ -125,6 +125,16 @@ def protected_rule(paths, staged: str) -> str:
             "When the tree already holds the content the task needs, leave the file alone and do not escalate it.")
 
 
+def generated_rule(paths, command) -> str:
+    """The rule for write-set ``paths`` the conductor regenerates with ``command`` after the round: the executor changes
+    their sources, never the generated files themselves."""
+    named = ", ".join(f"`{path}`" for path in paths)
+    return (f"## Generated paths\n\n{named} are generated files: the conductor regenerates them with "
+            f"`{' '.join(command)}` after your round and before the checks, and their changes belong to this piece. Do "
+            "not write them, by any tool, and do not stage or escalate them: change their sources (the canonical file "
+            "each one names) and the conductor brings them up to date.")
+
+
 def _fence_rule(fence: str, extra_paths) -> str:
     """The write fence of the run (``scope.fence``, ``scope.extra_paths``): it overrides the "stay inside the write set /
     block on a path outside it" lines of the role text, which describe the plan fence."""
@@ -170,7 +180,7 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
              file_tools: bool = False, containers: bool = True, self_check=(), protected=(), staged: str = "",
-             correction_origin: str = CONDUCTOR) -> list:
+             generated=(), generator=(), correction_origin: str = CONDUCTOR) -> list:
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
@@ -181,6 +191,8 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
         parts.append([Block("run_rules", CONDUCTOR, _FILE_TOOLS_RULE)])
     if protected:
         parts.append([Block("run_rules", CONDUCTOR, protected_rule(protected, staged))])
+    if generated:
+        parts.append([Block("run_rules", CONDUCTOR, generated_rule(generated, generator))])
     if batch:
         parts.append([Block("run_rules", CONDUCTOR, batch, id=BATCH_ID)])
     if scout_text:

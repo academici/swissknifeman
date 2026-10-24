@@ -138,7 +138,7 @@ def _record(project: Path, directory: Path, policy: Policy, *, health: str, reas
         progress.Progress(run_id, directory, "quiet").emit("info", reason_code=code, message=f"{health}: {detail}")
     beat, _ = heartbeat_mod.read(directory)
     beat = beat or {}
-    data = {"conductor_run_id": run_id, "health": health, "action": action}
+    data: dict = {"conductor_run_id": run_id, "health": health, "action": action}
     if previous:
         data["previous"] = previous
     if reason_code and CODE.match(reason_code):
@@ -304,7 +304,7 @@ def stop_conductor(run_dir: Path, policy: Policy, *, before_signal: Optional[Cal
     owner = RunLease.owner(directory)
     why = identity_problem(owner)
     pid = owner.get("pid") if type(owner.get("pid")) is int else None
-    if why:
+    if why or pid is None:  # no usable pid is a problem identity_problem names
         return {"outcome": "identity_mismatch", "detail": f"no signal sent: {why}", **({"pid": pid} if pid else {})}
     if before_signal is not None:
         before_signal()
@@ -554,7 +554,7 @@ def supervise_once(project: Path, policy: Policy, *, run: Optional[str] = None, 
 
 
 def supervise(project: Path, policy: Policy, *, run: Optional[str] = None, stop: Callable[[], bool],
-              wait: Callable[[float], None], report: Callable[[list], None]) -> None:
+              wait: Callable[[float], object], report: Callable[[list], None]) -> None:
     """The loop of ``supervise`` without ``--once``: one pass every ``interval_s`` until ``stop()`` is true; the project's
     ``supervisor.lock`` is held for the whole loop. ``SupervisorBusy`` when another supervisor holds it."""
     lock = _lock(runs_root(Path(project)))

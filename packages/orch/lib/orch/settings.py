@@ -102,6 +102,9 @@ def _conductor(resolved: ResolvedConfig) -> dict:
                  "diff_lines": resolved.get("conductor.risk.diff_lines"),
                  "critical": resolved.get("conductor.risk.critical")},
         "skills_bridge": list(resolved.get("conductor.skills_bridge") or []),
+        "generate": list(resolved.get("conductor.generate") or []),
+        "generate_check": list(resolved.get("conductor.generate_check") or []),
+        "generated_paths": list(resolved.get("conductor.generated_paths") or []),
         "argv": {role: list(argv) for role, argv in (resolved.get("conductor.argv") or {}).items()},
     }
 
@@ -133,7 +136,7 @@ def _launch(resolved: ResolvedConfig) -> dict:
 def _access(resolved: ResolvedConfig) -> str:
     """``launch.access``: project and environment settings can only tighten the trusted access floor."""
     found = resolved.explain("launch.access")[0]
-    history = list(reversed(found.overridden))
+    history: list = list(reversed(found.overridden))  # the overridden settings, then the winner
     if found.layer == "defaults":
         # After _unset the default is reported as the winner, while the reset stays in overridden.
         history.insert(0, found)
@@ -164,7 +167,7 @@ def _layered(resolved: ResolvedConfig, key: str, lowest) -> object:
     """Effective value of an authority key: the machine value (defaults when the machine sets none), lowered by every
     invocation value (``--config`` file, flag) with ``lowest`` (``min`` or the order of the policy)."""
     found = resolved.explain(key)[0]
-    history = list(reversed(found.overridden))
+    history: list = list(reversed(found.overridden))  # the overridden settings, then the winner
     if found.layer == "defaults":
         history.insert(0, found)  # after _unset the default is reported as the winner, the reset stays in overridden
     else:

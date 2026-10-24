@@ -44,7 +44,7 @@ def git(project: Path, *args: str) -> str:
     done = run_with_timeout(["git", *args], cwd=str(project), capture_output=True, text=True, timeout=60)
     if done.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)}: {done.stderr.strip() or done.returncode}")
-    return done.stdout
+    return str(done.stdout)  # text=True: a str
 
 
 def head(project: Path) -> str:
@@ -862,9 +862,9 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                 code = _run_command(["bash", "-c", check["cmd"]], cwd=cwd, out=out, timeout_s=timeout_s, warn_s=warn_s,
                                     idle_s=idle_s, env=check_env(cwd, run_env=run_env, parallel=batch["parallel"]),
                                     on_slow=None if on_slow is None else
-                                    (lambda elapsed, pid, check_id=check_id: on_slow(check_id, elapsed, pid)),
+                                    (lambda elapsed, pid, check_id=check_id, slow=on_slow: slow(check_id, elapsed, pid)),
                                     on_tick=None if on_tick is None else
-                                    (lambda *tick, check_id=check_id: on_tick(check_id, *tick)))
+                                    (lambda *tick, check_id=check_id, tick_of=on_tick: tick_of(check_id, *tick)))
             tail = log.read_text(encoding="utf-8", errors="replace").splitlines()[-TAIL_LINES:]
             row.update(cmd=check["cmd"], exit=code, log=str(log), tail="\n".join(tail),
                        seconds=round(time.monotonic() - begin, 1), green=code == 0)

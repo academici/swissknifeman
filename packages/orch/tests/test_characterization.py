@@ -106,13 +106,24 @@ def projections(run: Path, fake: Path, project: Path, paths: dict) -> dict:
                       "events": [{"type": event.type, "data": event_data(event.data)} for event in events]}, paths)
 
 
+def tmp_writable() -> bool:
+    """Whether a folder can be made in /tmp (not under a sandbox that mounts it read-only)."""
+    try:
+        os.rmdir(tempfile.mkdtemp(dir="/tmp"))
+    except OSError:
+        return False
+    return True
+
+
 class CharacterizationCase(ConductorCase):
     """Runs a scenario and keeps the normalized journal and state under its name."""
 
     def setUp(self):
         # Parallel unittest workers nest TMPDIR under their own home. Absolute paths enter prompt text and its
         # token estimates, so keep fixture paths the same length as the direct recapture command's paths.
-        with mock.patch.object(tempfile, "tempdir", "/tmp"):
+        # An outer sandbox (the Claude executor's) keeps /tmp read-only: the fixtures then stay under its TMPDIR, whose
+        # longer paths the snapshots tolerate (prompt paths are normalised; a recapture there matched the old snapshots).
+        with mock.patch.object(tempfile, "tempdir", "/tmp" if tmp_writable() else tempfile.gettempdir()):
             super().setUp()
         self.slept = []
         for name, value in (("sleep", self.slept.append), ("unit_random", lambda: 0.5)):
@@ -169,6 +180,8 @@ def repro(cmd="cat out/W1.txt", observed="ok") -> dict:
 
 class ProjectionTests(unittest.TestCase):
     def test_fixture_paths_do_not_grow_under_a_parallel_worker_tmpdir(self):
+        if not tmp_writable():
+            self.skipTest("/tmp is read-only here (an outer sandbox): the fixtures stay under TMPDIR")
         with tempfile.TemporaryDirectory(prefix="characterization-parent-") as directory:
             with mock.patch.object(tempfile, "tempdir", directory):
                 case = CharacterizationCase()
@@ -627,13 +640,14 @@ COVERAGE = {
     # Beacons
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
-    "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": "snapshot:green",
+    "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": f"test:{T}",
     "RESULT_REPAIRED": "snapshot:report-fixer-repair", "REPAIR_FAILED": f"test:{C}", "REPAIR_SEMANTIC_DRIFT": "test:test_repair_semantics.py",
     "INPUT_REBUILT": "snapshot:input-rebuilt",
     "PROVIDER_WAIT": "snapshot:quota-wait", "ROUTE_FALLBACK": "snapshot:route-fallback",
     "ROUTE_UPGRADED": "test:test_conductor_focus.py", "CAPACITY_GATED": f"test:{T}",
     "RESULT_SILENT_DENIAL": "test:test_conductor_agents.py", "GATE_NOT_WRITTEN": f"test:{C}", "DISK_LOW": "test:test_polish.py",
     "WRITE_PROTECTED_PATH": "test:test_protected_writes.py",
+    "GENERATED": "test:test_protected_writes.py", "GENERATE_FAILED": "test:test_protected_writes.py",
     "SESSION_ROUTE_CHANGED": "test:test_polish.py", "DEPENDENCY_BLOCKED": "test:test_conductor_session.py",
     "ROLE_LINGERED": f"test:{C}", "ISOLATION_PARTIAL": f"test:{T}", "CHECK_CHANGED_TREE": "test:test_conductor_checks.py",
     "STUBS_CHANGED": "test:test_conductor_stubs.py",
@@ -641,11 +655,12 @@ COVERAGE = {
     "TRIAGE_REPRO_TRIVIAL": "test:test_triage_repro.py", "TRIAGE_REPRO_MISMATCH": "test:test_triage_repro.py",
     "TRIAGE_REPRO_UNVERIFIED": "test:test_triage_repro.py", "REVIEW_MODE_NONE_SKIPPED": "test:test_conductor_review_plan.py",
     "GROUP_REVIEW_RESOLVED": "test:test_conductor_review_plan.py",
+    "GROUP_REVIEW_PENDING": "test:test_conductor_review_plan.py",
     "RUNTIME_ARTIFACT_RELOCATED": "test:test_write_fence.py",
     "QUESTION_OWNER_ONLY": "test:test_conductor_questions.py",
     "ADVICE_HELD": "test:test_conductor_advisor.py",
     "POLICY_STAGE_SKIPPED": "test:test_policy_stages.py",
-    "CONCURRENT_RUN": f"test:{T}", "RESULT_INCOMPLETE": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
+    "CONCURRENT_RUN": f"test:{T}", "SANDBOX_STUBS_REMOVED": "test:test_sandbox_stubs.py", "RESULT_INCOMPLETE": f"test:{T}", "SELF_CHECK_COVERED": f"test:{T}", "REVIEW_DEBT": f"test:{T}",
     "ANSWER_SCHEMA_IGNORED": "test:test_records_contract.py",
     "PROGRESS_LINE_INVALID": "test:test_progress_lines.py",
     "CHECK_IDLE": "test:test_heartbeat_health.py", "STALL_SUSPECTED": "test:test_heartbeat_health.py",

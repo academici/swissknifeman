@@ -34,6 +34,15 @@ def writes(role: str) -> bool:
     return (manifest.get("tools") or {}).get("filesystem") == "write"
 
 
+def shell(role: str) -> str:
+    """``tools.shell`` of the role manifest (``none``, ``read_only``, ``full``); ``full`` for a role without one."""
+    try:
+        manifest = json.loads((ORCH_ROOT / "roles" / f"{role}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "full"
+    return (manifest.get("tools") or {}).get("shell") or "full"
+
+
 def role_argv(self, item: Item, role: str, route: dict, decision: Optional[dict] = None) -> list:
     isolated = role in item.options["instructions"]["isolate_roles"]
     extra = ISOLATION_ARGS.get(route.get("provider", "")) if isolated else None

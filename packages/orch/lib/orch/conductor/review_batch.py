@@ -62,6 +62,7 @@ def diff_of(project: Path, shas: list, include: list, exclude: list) -> str:
     for sha in shas:
         shown = run_with_timeout(["git", "diff", f"{sha}~1", sha, "--", *include], cwd=project, capture_output=True,
                                text=True, check=True, timeout=60).stdout
+        shown = str(shown)  # text=True: a str
         for block in shown.split("\ndiff --git ")[0:]:
             head = block.splitlines()[0] if block else ""
             if any(mark in head for mark in exclude):
@@ -85,12 +86,12 @@ def verdict(text: str) -> dict:
     """Parse the same closed review-findings contract as an item review. Invalid output fails closed."""
     doc, error = json_block(text, "review-findings")
     counts = {"Blocker": 0, "Major": 0, "Minor": 0}
-    if not error:
+    if not error and doc is not None:
         doc, _notes = heal("review-findings", doc)
         error = contract.problems(doc, "review-findings")
         if not error:
             error = findings_problems(doc)
-    if error:
+    if error or doc is None:
         return {"format": "malformed", "counts": counts, "findings": []}
     for row in doc["findings"]:
         if row["severity"] in counts:

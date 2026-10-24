@@ -23,7 +23,7 @@ from orch.conductor.domain.report import finding_key
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, work_source
 from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
-from orch.conductor.application import review_followup, run_service
+from orch.conductor.application import review_followup, review_plan, run_service
 
 ROLE_ALIASES_ENGINE = {"scout": "context-scout"}  # the stage role names of the options that name a launch role
 
@@ -47,6 +47,7 @@ def loop(self) -> int:
         waiting = run_service.waiting_pieces(self.state)  # on_blocked = report: the others went on, these still wait
         if waiting:
             raise Stop("WAITING_DECISION", run_service.waiting_message(self.run_id, waiting))
+        review_plan.review_left(self)
     except Stop as stop:
         code, reason, outcome = (4, stop, "waiting") if stop.code == "WAITING_DECISION" else (1, stop, "stopped")
     except KeyboardInterrupt:
@@ -76,6 +77,7 @@ def loop(self) -> int:
         if reason is not None:
             self.state["stop"] = {"code": reason.code, "message": reason.message}
         self._save()
+    review_plan.note_unreviewed(self)
     held = run_service.held_pieces(self.state) if reason is not None and self._batch_held() else []
     if held:  # a stopped batch keeps its claims (resume continues them); say how to give them back instead
         self.progress.emit("info", reason_code="BATCH_HELD", message=run_service.held_hint(self.run_id, held))

@@ -165,10 +165,20 @@ class FailureSignalTests(unittest.TestCase):
              "permission_denials": [{"tool_name": "Grep", "tool_use_id": "toolu_1", "tool_input": {"pattern": "SECRET"}},
                                     {"tool_name": "Bash", "tool_use_id": "toolu_2", "tool_input": {"command": "rm x"}}]}))
         parsed = process.parse_stream("jsonl", stream)
-        self.assertEqual(parsed["denials"], [{"tool_name": "Grep"}, {"tool_name": "Bash"}])
+        self.assertEqual(parsed["denials"], [{"tool_name": "Grep"}, {"tool_name": "Bash", "hint": "rm"}])
         self.assertNotIn("SECRET", json.dumps(parsed["denials"]))
         self.assertEqual(process.parse_stream("text", "x")["denials"], [])
         self.assertEqual(process.parse_stream("jsonl", '{"type":"result","result":"ok","usage":{}}')["denials"], [])
+
+    def test_a_denial_hint_names_the_program_or_the_path_never_the_whole_input(self):
+        hint = process.denial_hint
+        self.assertEqual(hint("Bash", {"command": "cd packages/orch && PYTHONPATH=lib python3 -c 'print(TOKEN)'"}), "python3")
+        self.assertEqual(hint("Bash", {"command": "mkdir -p $TMPDIR/rv && cat > $TMPDIR/rv/r.py <<EOF\nx\nEOF"}),
+                         "mkdir+heredoc")
+        self.assertEqual(hint("Bash", {"command": "for f in a b; do grep x $f | md5sum; done"}), "for")
+        self.assertEqual(hint("Read", {"file_path": "/home/u/projects/packages/aicore/lib/aicore/config/model.py"}),
+                         "/home/u/projects/packages/aicore/lib/aicore/config/model.py")
+        self.assertEqual((hint("Bash", {}), hint("Grep", {"pattern": "SECRET"}), hint("Bash", None)), ("", "", ""))
 
     def test_a_run_reports_its_denials(self):
         run = self.run_fake({"result": {"verdict": "GREEN", "findings": []},
@@ -351,6 +361,50 @@ class ActivityAndUsageTests(unittest.TestCase):
             text = process.activity(child.pid, Path(tmp) / "none")
         subprocess.run(["pkill", "-fx", "sleep 31"], check=False)
         self.assertIn("sleep 31", text)
+
+    def test_sandbox_plumbing_is_not_shown_as_work(self):
+        for args in ("socat UNIX-LISTEN:/tmp/claude-http-5785.sock,fork,reuseaddr TCP:localhost:38495",
+                     "socat TCP6-LISTEN:3128,ipv6only=0,fork UNIX-CONNECT:/tmp/claude-http-5785.sock",
+                     "/home/u/.codex/packages/standalone/releases/0.163.0/bin/codex-code-mode-host",
+                     "bwrap --ro-bind / / -- bash -c true"):
+            with self.subTest(args=args):
+                self.assertTrue(process.infra_process(args))
+        for args in ("python3 scripts/affected-tests.py --run", "socat - TCP:example.org:80", "sleep 30"):
+            with self.subTest(args=args):
+                self.assertFalse(process.infra_process(args))
+
+    def test_only_sandbox_children_mean_the_model_call_is_in_progress(self):
+        import subprocess
+        import time
+        child = subprocess.Popen(["bash", "-c", "exec -a 'socat UNIX-LISTEN:/tmp/claude-http-t.sock,fork' sleep 30 & wait"],
+                                 start_new_session=True)
+        self.addCleanup(child.wait)
+        self.addCleanup(child.kill)
+        time.sleep(0.4)
+        with tempfile.TemporaryDirectory() as tmp:
+            text = process.activity(child.pid, Path(tmp) / "none", idle=42.7,
+                                    info=process.TickInfo(stream_bytes=1_250_000, tree_cpu_s=311.4))
+        import os
+        import signal
+        os.killpg(child.pid, signal.SIGKILL)
+        self.assertNotIn("claude-http", text)
+        self.assertIn("only the provider's sandbox processes: the model call is in progress", text)
+        self.assertTrue(text.startswith("stream grew 42s ago, 1.2 MB, tree CPU 311s"), text)
+
+    def test_run_slow_reads_the_age_of_the_current_stage_stream(self):
+        import os
+        import time
+        from types import SimpleNamespace
+        from orch.conductor.stages import step
+        with tempfile.TemporaryDirectory() as tmp:
+            item = SimpleNamespace(directory=Path(tmp))
+            self.assertIsNone(step.stream_age(item, "executor.1"))  # no stream yet
+            (Path(tmp) / "streams").mkdir()
+            raw = Path(tmp) / "streams" / "executor.1.jsonl"
+            raw.write_text("{}\n", encoding="utf-8")
+            os.utime(raw, (time.time() - 120, time.time() - 120))
+            self.assertAlmostEqual(step.stream_age(item, "executor.1"), 120, delta=5)
+            self.assertIsNone(step.stream_age(item, None))
 
     def test_a_role_without_children_is_said_to_wait_on_its_model(self):
         with tempfile.TemporaryDirectory() as tmp:

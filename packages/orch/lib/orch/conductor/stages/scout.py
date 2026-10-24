@@ -9,7 +9,7 @@ from aicore.util.io import durable_replace
 from orch import render
 from orch.conductor import contract, gates, process, prompts
 from orch.conductor.domain.item import Item
-from orch.conductor.domain.report import write_set_block
+from orch.conductor.domain.report import NO_WRITE_SET, write_set_block
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import runs_root, safe
@@ -113,14 +113,16 @@ def cached(path) -> Optional[str]:
 
 def hint(self, item: Item, text: str) -> str:
     """The scout's ``write-set`` block taken out of its answer into ``state.expected`` (a hint for the executor and
-    for the deviation label); a missing or invalid block is ignored and said. Returns the answer without the block."""
+    for the deviation label); an invalid block is ignored and said, a missing one is ignored silently (the role makes
+    the block optional: "leave it out rather than guess"). Returns the answer without the block."""
     doc, error, shown = write_set_block(text)
+    missing = error == NO_WRITE_SET
     if doc is not None:
         problems = contract.problems(doc, "scout-write-set")
         if problems:
             doc, error = None, "; ".join(problems[:3])
     item.state["expected"] = doc
-    if doc is None:
+    if doc is None and not missing:
         self.progress.emit("info", item=item.ref, stage="scout", role="context-scout", reason_code="RESULT_HEALED",
                            message=f"context-scout write-set hint ignored: {error}"[:300])
     return shown

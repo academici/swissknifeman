@@ -344,7 +344,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 4175
+     "tokens": 3807
     },
     "retrieval": {
      "limit": 50000,
@@ -353,6 +353,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 197
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 368
     }
    },
    "excluded": [],
@@ -369,7 +373,7 @@
     {
      "kind": "role_text",
      "origin": "roles/reviewer.md",
-     "tokens": 508
+     "tokens": 652
     },
     {
      "kind": "input",
@@ -405,7 +409,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 1229
+     "tokens": 916
     },
     "retrieval": {
      "limit": 50000,
@@ -414,6 +418,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 457
     }
    },
    "excluded": [],
@@ -446,7 +454,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 999
+     "tokens": 641
     },
     "retrieval": {
      "limit": 50000,
@@ -455,6 +463,10 @@
     "supporting": {
      "limit": 30000,
      "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 358
     }
    },
    "excluded": [],
@@ -518,14 +530,6 @@
    "route": "claude-code/haiku/low",
    "stage": "scout",
    "verdict": "mapped"
-  },
-  {
-   "event": "info",
-   "item": "W1",
-   "message": "context-scout write-set hint ignored: no fenced `write-set` block in the answer",
-   "reason_code": "RESULT_HEALED",
-   "role": "context-scout",
-   "stage": "scout"
   },
   {
    "event": "stage.start",

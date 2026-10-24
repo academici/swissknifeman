@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "69f7430e9372",
-  "reason": "P8.4: readiness CLI and audit command",
+  "captured_from": "da7307a71861",
+  "reason": "prompt-manifest gains the task budget class (P7/P8 mechanism fixes)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

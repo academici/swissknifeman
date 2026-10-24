@@ -157,7 +157,8 @@ def review_focus(self, item: Item) -> tuple:
 def upgrade_reviewer(self, item: Item) -> None:
     """P9.4: the class an executor round suggested (``review_recommendation.suggested_model_class``) is taken for the
     reviewer when it is above the class of its route and the higher route is admitted (startable here, not gated, the
-    sandbox rule); a suggestion at or below the route changes nothing, the class is never lowered. The upgrade is kept
+    sandbox rule); a suggestion at or below the route, or a higher class that resolves to the same provider/model/effort,
+    changes nothing (no beacon, no routes.json rewrite), the class is never lowered. The upgrade is kept
     in ``route_overrides``, so a resume starts from it, and announced once (``ROUTE_UPGRADED``)."""
     wanted = max((advice["suggested_model_class"] for advice in self._executor_advice(item)
                   if advice.get("suggested_model_class") in CLASS_RANK), key=CLASS_RANK.get, default=None)
@@ -176,6 +177,10 @@ def upgrade_reviewer(self, item: Item) -> None:
         self._save()
         self.progress.emit("info", item=item.ref, role="reviewer", route=self.label(route),
                            message=f"reviewer: the suggested class {wanted} is not taken ({problem})")
+        return
+    if route.get("model") and self.label(higher) == self.label(route):  # the same resolved model: nothing to upgrade
+        item.state["reviewer_upgrade_refused"] = wanted
+        self._save()
         return
     item.routes["reviewer"] = higher
     item.state.setdefault("route_overrides", {})["reviewer"] = {

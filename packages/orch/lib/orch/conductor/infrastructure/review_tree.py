@@ -14,7 +14,7 @@ def _git(root: Path, *args: str) -> str:
     done = run_with_timeout(["git", *args], cwd=str(root), capture_output=True, text=True, timeout=60)
     if done.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)}: {done.stderr.strip() or done.returncode}")
-    return done.stdout
+    return str(done.stdout)  # text=True: a str
 
 
 def path_fingerprint(root: Path, path: str) -> str:

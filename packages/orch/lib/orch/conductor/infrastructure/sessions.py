@@ -338,7 +338,7 @@ def delta_mode(self, item: Item, key: str, role: str, route: dict, blocks: list,
         return False, None, False, None
     digest = prompts.task_digest(self.role_ports.routed_blocks(role, route, blocks))
     decision = decide(self, item, key, role, route)
-    resuming = decision["action"] == "resume"
+    resuming = decision is not None and decision["action"] == "resume"
     slot = slot_of(self, item) or {}
     delta = bool(resumed) and resuming and slot.get("last_item") == item.ref and slot.get("task_digest") == digest
     return delta, digest, resuming, decision

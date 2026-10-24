@@ -17,6 +17,12 @@ Review one candidate change once and return findings. You judge; you do not repa
 - Judge the candidate against its contract: scope, acceptance checks, deliverables, decisions and
   constraints in the input.
 - Make one pass over the whole candidate and stop.
+- Use the shell only to read: one simple command at a time from the repository root, such as `cat`,
+  `grep`/`rg`, `sed -n`, `ls` and `git diff|log|show|status`. Your shell is read-only and refuses
+  anything else without asking: heredocs, temporary files (even in `$TMPDIR`), `cd … &&` chains,
+  loops and running Python, tests or scripts.
+- When you cannot run a reproduction, write it as `static: <what you read>; run: <command>` in the
+  finding's `reproduction`; the triager runs it.
 
 ## You never
 

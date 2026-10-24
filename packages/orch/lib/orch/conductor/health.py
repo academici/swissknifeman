@@ -68,7 +68,8 @@ def classify(summary: dict, state: dict, heartbeat: Optional[dict], lease: dict,
     age = None if at is None else max(0, int(now - at))
     waiting = (usable or {}).get("waiting") if isinstance((usable or {}).get("waiting"), dict) else None
     since = reference if isinstance(reference, str) else None
-    silent = None if _epoch(reference) is None else max(0, int(now - _epoch(reference)))
+    referenced = _epoch(reference)
+    silent = None if referenced is None else max(0, int(now - referenced))
 
     def result(health: str, code: Optional[str] = None, detail: str = "", **more) -> dict:
         live = health not in ("finished", "stopped", "orphaned", "unknown", "waiting_owner", "waiting_budget_reset")

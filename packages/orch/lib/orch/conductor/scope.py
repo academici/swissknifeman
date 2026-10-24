@@ -30,6 +30,43 @@ def sandbox_stub(project: Path, path: str) -> bool:
     return stat.S_ISREG(mode.st_mode) and mode.st_size == 0 and not mode.st_mode & 0o222
 
 
+# The paths of a project the Claude Code sandbox protects from the shell (its own configuration, fixed in the CLI, not
+# chosen by --setting-sources): for one that does not exist it creates an empty read-only placeholder on the host while
+# a command runs and removes it after; a command killed in between leaves it behind (seen 2026-10-24), and then an
+# interactive Claude reads an empty settings.json and no tool can write it.
+SANDBOX_STUB_PATHS = (".claude/settings.json", ".claude/settings.local.json", ".claude/commands", ".claude/agents",
+                      ".claude/hooks", ".claude/skills", ".claude/workflows", ".claude/routines",
+                      ".claude/scheduled_tasks.json", ".claude/loop.md", ".claude/launch.json", ".mcp.json")
+STUB_MIN_AGE_S = 3600  # younger placeholders may belong to a sandboxed command still running (a session of the owner)
+
+
+def leftover_stubs(project: Path, now: float, min_age_s: float = STUB_MIN_AGE_S) -> list:
+    """The placeholders of :data:`SANDBOX_STUB_PATHS` a sandbox left behind: empty read-only regular files, not tracked
+    by git, older than ``min_age_s``. Anything else at those paths (a real file, a tracked one) is never listed."""
+    found = []
+    for path in SANDBOX_STUB_PATHS:
+        try:
+            age = now - (project / path).lstat().st_mtime
+        except OSError:
+            continue
+        if sandbox_stub(project, path) and age >= min_age_s:
+            found.append(path)
+    return sorted(set(found) - set(tracked(project, found))) if found else []
+
+
+def remove_stubs(project: Path, paths) -> list:
+    """Remove the placeholders ``paths`` (as :func:`leftover_stubs` gave them, checked again); the removed ones."""
+    removed = []
+    for path in paths:
+        if path in SANDBOX_STUB_PATHS and sandbox_stub(project, path):
+            try:
+                (project / path).unlink()
+            except OSError:
+                continue
+            removed.append(path)
+    return removed
+
+
 def dirty(project: Path) -> list:
     """Every changed, added, deleted or untracked path of the working tree (both names of a rename); ignored paths
     and the placeholders of a sandbox (:func:`sandbox_stub`, untracked only) are not listed."""

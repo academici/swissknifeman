@@ -10,7 +10,7 @@ from typing import Optional
 from aicore.util.digest import sha256_hex
 
 from orch.contracts import required_digest
-from orch.conductor import checks as checks_mod, contract, options as opts, prompts, questions as questions_mod, records, scope as scopes
+from orch.conductor import checks as checks_mod, contract, self_check as self_check_mod, options as opts, prompts, questions as questions_mod, records, scope as scopes
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evidence_paths, is_coded, report_problems
 from orch.conductor.domain.stop import Stop
@@ -76,6 +76,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   file_tools=self._file_tools_rule(item),
                                   containers=not self._codex_sandboxed(route),
                                   protected=self._write_protected(item),
+                                  generated=self._write_generated(item), generator=self.conductor.get("generate") or (),
                                   staged=self._relative(work_source.protected_dir(item)))
         resumed = self._resumed_prompt(item, key, correction, note, fix, answers)
         report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems, resumed=resumed)
@@ -193,7 +194,7 @@ def batch_note(self, item: Item) -> str:
                                                      else "next" if done is None else done)
         title = (claims.get(ref) or {}).get("title")
         rows.append(f"- `{ref}`{' — ' + title if title else ''} ({mark})")
-    resumed = sessions.decide(self, item, "", "executor", item.routes["executor"])["action"] == "resume"
+    resumed = (sessions.decide(self, item, "", "executor", item.routes["executor"]) or {}).get("action") == "resume"
     if mode == "handoff":
         lines = ["## Run batch", "", "All pieces of this run are in progress; each piece has a session of its own, in order:",
                  *rows, "",
@@ -220,7 +221,8 @@ def followup_handoff(self, item: Item) -> str:
     that cannot resume, a group that kept no session): it must know what the pieces did. The state of that run is read as
     any record is (``STATE_INVALID`` / ``STATE_CORRUPT`` for a damaged one)."""
     ref = sessions.followup_ref(item) or {}
-    if not ref.get("run") or sessions.decide(self, item, "", "executor", item.routes["executor"])["action"] != "fresh":
+    decision = sessions.decide(self, item, "", "executor", item.routes["executor"]) or {}
+    if not ref.get("run") or decision.get("action") != "fresh":
         return ""
     directory = self.directory.parent / safe(str(ref["run"]))
     earlier = records.read(directory / STATE_FILE, "state")
@@ -310,53 +312,40 @@ def autofix(self, item: Item, report: dict, round_no: int, scout_text: str) -> t
     return self._execute(item, round_no, scout_text, prompts.DEVIATION_FIX, prompts.fix_deviation(found)), round_no
 
 
-COMPLETION = ("done", "done_with_deviations", "done_pending_checks")
-
-
-def self_check_gap(item: Item, report: dict) -> list:
-    """What a completion report leaves out of the run's ``checks.self_check``: the commands it does not list, and the
-    red ones it lists without a deviation that names the failure. Empty when there is nothing to ask again."""
-    commands = list(item.options["checks"].get("self_check") or [])
-    if not commands or item.options["checks"]["executor_runs_checks"] or report.get("status") not in COMPLETION:
-        return []
-    claims = {str(row["cmd"]).strip(): row["exit"] for row in report.get("self_check") or [] if isinstance(row, dict)}
-    honest = any(issue.get("kind") == "deviation" for issue in report.get("open_issues") or [])
-    found = {command: claimed(command, claims) for command in commands}
-    return [command for command in commands if found[command] is None or (found[command] != 0 and not honest)]
-
-
-def claimed(command: str, claims: dict):
-    """The exit a report gives for ``command``: its own row, or a row that is the command followed only by a note in
-    parentheses (``ruff check . (run as /snap/bin/ruff)``); None when the report does not show it."""
-    if command in claims:
-        return claims[command]
-    for text, code in claims.items():
-        rest = text[len(command):].strip() if text.startswith(command + " ") else ""
-        if rest.startswith("(") and rest.endswith(")"):
-            return code
-    return None
+self_check_gap = self_check_mod.gap  # the name the conductor and its tests have used
 
 
 def self_check_return(self, item: Item, report: dict, round_no: int, scout_text: str) -> tuple:
     """``(report, round_no)``: a completion report without the self-check goes back to the executor once per piece,
-    before any acceptance check runs (``RESULT_INCOMPLETE``); the session resumes with the delta prompt where it can.
-    The admission is saved before the round starts, so a resume replays it instead of granting another one. The claim
-    proves nothing: the conductor's acceptance decides as always; this only keeps unchecked work from reaching it."""
+    before any acceptance check runs (``RESULT_INCOMPLETE``), but only for a command that is red: one an acceptance check
+    runs is left to it, the conductor runs the others itself (``SELF_CHECK_COVERED`` when none is red). The admission is
+    saved before the round starts, so a resume replays it; the conductor's acceptance decides as always."""
     gap = self_check_gap(item, report)
-    if not gap:
+    returned = item.state.get("self_check_returned") or []
+    if not gap or (returned and round_no not in returned):  # once per piece: the second report goes to the checks as it is
         return report, round_no
-    with self.store.mutating():
-        returned = item.state.setdefault("self_check_returned", [])
-        if returned and round_no not in returned:  # once per piece: the second report goes to the checks as it is
+    red = {}
+    if round_no not in returned:
+        left = [command for command in gap
+                if not self_check_mod.covered_by_checks(item.input_doc, item.options["checks"], command)]
+        ran = self_check_mod.run(self.project, item.directory / "self-check" / str(round_no), left,
+                                 item.options["limits"].get("check_timeout_s", 0)) if left else {}
+        red = {command: tail for command, (code, tail) in ran.items() if code != 0}
+        if not red:
+            self.progress.emit("info", item=item.ref, stage=f"executor.{round_no}", reason_code="SELF_CHECK_COVERED",
+                               message=f"the report does not show the self-check {', '.join(gap)}; the acceptance checks "
+                                       f"run {', '.join(c for c in gap if c not in ran) or 'none'}, the conductor ran "
+                                       f"{', '.join(ran) or 'none'} green: no executor round")
             return report, round_no
-        if round_no not in returned:
-            returned.append(round_no)
+        gap = list(red)
+        with self.store.mutating():
+            item.state.setdefault("self_check_returned", []).append(round_no)
             self._save()
     self.progress.emit("info", item=item.ref, stage=f"executor.{round_no}", reason_code="RESULT_INCOMPLETE",
                        message="the report does not show the self-check " + ", ".join(gap)
                                + "; the work goes back to the executor once before the acceptance checks")
     round_no += 1
-    return self._execute(item, round_no, scout_text, prompts.self_check_missing(gap)), round_no
+    return self._execute(item, round_no, scout_text, prompts.self_check_missing(gap, red)), round_no
 
 
 def deviation_data(item: Item, issue: dict) -> dict:

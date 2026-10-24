@@ -60,6 +60,17 @@ class FocusRunTests(ConductorCase):
     def beacons(self, err: str, code: str) -> list:
         return [line for line in self.lines(err) if line.get("reason_code") == code]
 
+    def distinct_frontier(self):
+        """The fixture grok has one model for every class; an upgrade needs a frontier model of its own."""
+        real = engine.Conductor._route
+
+        def route(conductor, item, role, override=None):
+            resolved = real(conductor, item, role, override)
+            if role == "reviewer" and resolved.get("model_class") == "frontier" and resolved.get("provider") == "grok":
+                resolved = {**resolved, "model": "grok-frontier"}
+            return resolved
+        return mock.patch.object(engine.Conductor, "_route", route)
+
     def finished(self, *rounds) -> str:
         self.script({"executor": list(rounds) or [advised()], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
@@ -85,7 +96,8 @@ class FocusRunTests(ConductorCase):
         self.assertEqual(self.beacons(err, "ROUTE_UPGRADED"), [])
 
     def test_suggested_frontier_takes_the_reviewer_to_frontier_with_a_beacon(self):
-        err = self.finished()
+        with self.distinct_frontier():
+            err = self.finished()
         self.assertEqual(self.routes(err)["reviewer"]["model_class"], "frontier")
         self.assertEqual(self.manifest(err)["route"]["provider"], self.routes(err)["reviewer"]["provider"])
         found = self.beacons(err, "ROUTE_UPGRADED")
@@ -117,6 +129,12 @@ class FocusRunTests(ConductorCase):
         self.assertEqual(self.routes(err)["reviewer"]["model_class"], "frontier")
         self.assertEqual(self.beacons(err, "ROUTE_UPGRADED"), [])
 
+    def test_a_higher_class_on_the_same_model_is_no_upgrade(self):
+        err = self.finished()  # the fixture grok resolves both classes to one model: nothing changes, no beacon
+        self.assertEqual(self.routes(err)["reviewer"]["model_class"], "implementation")
+        self.assertEqual(self.beacons(err, "ROUTE_UPGRADED"), [])
+        self.assertNotIn("route_overrides", self.state(err)["items"]["W1"])
+
     def test_a_higher_route_that_is_not_admitted_is_not_taken(self):
         real = engine.Conductor.route_problem
 
@@ -141,7 +159,8 @@ class FocusRunTests(ConductorCase):
         triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": repro, "fix": "write done"}], "rejected": []}}
         self.script({"executor": [advised(), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")}],
                      "reviewer": [FINDING, GREEN], "triager": [triage]})
-        code, _, err = self.run_items("W1")
+        with self.distinct_frontier():
+            code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("reviewer")), (0, 2), err)
         self.assertEqual(len(self.beacons(err, "ROUTE_UPGRADED")), 1, err)
         self.assertEqual(self.routes(err)["reviewer"]["model_class"], "frontier")

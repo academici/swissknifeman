@@ -11,13 +11,17 @@ from orch.conductor.prompts.blocks import _fence
 from orch.conductor.domain.fix_brief import render
 
 
-def self_check_missing(commands) -> str:
-    """The correction of a completion report that does not show the self-check (``RESULT_INCOMPLETE``)."""
-    return ("Your report does not show the self-check, or shows a red one without a deviation that names the failure: "
+def self_check_missing(commands, red=None) -> str:
+    """The correction of a completion report that does not show the self-check (``RESULT_INCOMPLETE``); ``red`` maps a
+    command the conductor ran itself to the tail of its red log."""
+    text = ("Your report does not show the self-check, or shows a red one without a deviation that names the failure: "
             + ", ".join(f"`{command}`" for command in commands)
             + ". Run each of them on your final tree, fix what goes red inside the scope, and report again with "
               "`self_check` filled. A failure you cannot fix inside the scope is a deviation with the failing test and its "
               "error, not a silent omission.")
+    for command, tail in (red or {}).items():
+        text += f"\n\nThe conductor ran `{command}` on your tree; it is red:\n" + _fence(tail or "(no output)")
+    return text
 
 
 def _self_check_again(commands) -> str:

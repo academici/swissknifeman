@@ -248,3 +248,28 @@ schema_version = 1
 # Layers read: a machine that runs repositories it does not trust leaves `project` out, so their stubs never reach a model. Array of strings.
 # Allowed in layers: defaults, machine, invocation, flags.
 # layers = ["machine", "project"]
+
+[orch.supervisor]
+# What the supervisor does about a run in trouble: notify (only say so), stop-only (also stop a hung conductor and reap the role processes of a dead one) or resume (also resume a dead run, within the breaker). The effective value is the lowest of the machine value and the invocation values (notify < stop-only < resume). One of: "notify", "stop-only", "resume".
+# Allowed in layers: defaults, machine, invocation, flags.
+# recover = "notify"
+
+# Seconds between two passes of `orch conduct supervise` without --once. Integer >= 1.
+# interval_s = 60
+
+# Age of the heartbeat from which a conductor that waits for nothing counts as hung (a wait with a deadline that has not passed is never hung). Integer >= 1.
+# hung_after_s = 300
+
+# Seconds a hung conductor gets to free its run lease after SIGINT, and again after SIGTERM, before SIGKILL. Integer >= 1.
+# grace_s = 60
+
+# Resumes the supervisor may start for one run within window_s; past it the supervisor gives the run up until the owner resumes it by hand. An invocation can only lower it. Integer >= 0.
+# Allowed in layers: defaults, machine, invocation, flags.
+# max_recoveries = 2
+
+# Length of the window of the breaker in seconds. Integer >= 1.
+# Allowed in layers: defaults, machine, invocation, flags.
+# window_s = 3600
+
+# Also call `notify-send` for a notification, a stop and a given-up run (errors are ignored). Boolean.
+# notify_send = false

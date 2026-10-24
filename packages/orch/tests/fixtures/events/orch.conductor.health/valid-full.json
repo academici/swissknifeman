@@ -1,0 +1,21 @@
+{
+  "correlationid": "cnd-1",
+  "data": {
+    "action": "stop",
+    "conductor_run_id": "cnd-20261024T095000Z-abc123",
+    "health": "hung",
+    "item": "P8.2",
+    "previous": "running",
+    "reason_code": "HEARTBEAT_STALE",
+    "silent_s": 420,
+    "step": "executor.1"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-conductor-health:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "cnd-1",
+  "time": "2026-10-15T10:00:00.000Z",
+  "type": "orch.conductor.health"
+}

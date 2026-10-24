@@ -23,6 +23,8 @@ orch conduct timeline [--run RUN] [--item REF] [--json]
 orch conduct status [--run RUN] [--json]
 orch conduct observe [--run RUN] [--follow]
 orch conduct gates [--json] [--clear [PROVIDER]]
+orch conduct supervise [--run RUN] [--once] [--interval S] [--recover notify|stop-only|resume] [--max-recoveries N] [--json] [--notify-send]
+orch conduct reap --run RUN
 ```
 
 `prompt diff` compares two prompt manifests (`prompt explain`): the step against its previous attempt (`executor.2`
@@ -136,9 +138,103 @@ the first rule that fits decides:
 | 16 | otherwise | `running` | |
 
 The thresholds are `hung_after_s` 300 and, for rule 15, `stall_window_s` and `stall_repeat_n` of the piece the run is on (its
-`options.json`, else the defaults). Only `hung` is a reason to act on a run (the supervisor, P8.2): a wait with a deadline in
+`options.json`, else the defaults). Only `hung` is a reason to stop a conductor (the supervisor, next section): a wait with a deadline in
 the future is protected, because the call of the work source may take ten minutes without a line. `suspected_stall` is for a
 person to look at. A run from before heartbeats, and a lease without the identity fields, are read as before.
+
+## Supervisor
+
+The heartbeat tells that a conductor stopped moving, the lease that it is gone; the supervisor (`orch conduct supervise`, the library
+`application/supervisor.py`) acts on the classes of *Heartbeat and health*, within a policy. `reap` is its one safe step on its own.
+
+```text
+orch conduct supervise [--run RUN] [--once] [--interval S] [--recover notify|stop-only|resume] [--max-recoveries N] [--json] [--notify-send]
+orch conduct reap --run RUN
+```
+
+`supervise` looks at every run of the project once (`--once`) or every `--interval` seconds (default `[orch.supervisor] interval_s`,
+60) until SIGINT or SIGTERM; `--run` limits it to one run. `--json` prints each pass as a `conductor/v1` `supervise-result`
+(`busy`, `recover`, `actions`). One supervisor serves a project: `<runs root>/supervisor.lock` is taken without waiting, and a
+second supervisor prints `{"busy": true}` (text: `busy: another supervisor holds this project`), does nothing and exits 0.
+`reap --run R` stops the role processes an orphaned run left and closes their agent records; exit 0, or 1 with `RUN_BUSY` /
+`WORKTREE_BUSY` while a conductor holds the run or the checkout, `RUN_UNKNOWN` for a run that is not there.
+
+**Policy.** `[orch.supervisor] recover` is `notify` (default: say so and do nothing else), `stop-only` (also stop a hung
+conductor and reap the processes of a dead one) or `resume` (also resume a dead run). The order is `notify` < `stop-only` <
+`resume`, and the effective value is the lowest of the machine value (the default when the machine sets none) and the
+invocation values (`--config` file, `--recover`): a flag can only weaken what the machine allows. `max_recoveries` follows the
+same rule (`--max-recoveries` can only lower it). A project file cannot set `recover`, `max_recoveries` or `window_s`
+(`CONFIG_LAYER_FORBIDDEN`): what a machine does on its own is the owner's decision. `interval_s`, `hung_after_s` (age of
+the heartbeat of a conductor that waits for nothing, default 300), `grace_s` (default 60) and `notify_send` are set in every layer.
+Machine policy for a supervisor that recovers:
+
+```toml
+[orch.supervisor]
+recover = "resume"
+max_recoveries = 2
+window_s = 3600
+```
+
+**Classes and actions.** A pass classifies each run that is not finished (`runs.health_of`, with `hung_after_s`) and acts as follows;
+a bounded wait with a deadline in the future (`waiting_provider`, `waiting_tool`) is never touched, however old the heartbeat is.
+
+| Class | `notify` | `stop-only` | `resume` |
+| --- | --- | --- | --- |
+| `running`, `waiting_provider`, `waiting_tool`, `waiting_budget_reset`, `stopped`, `finished`, `unknown` | nothing | nothing | nothing |
+| `waiting_owner` | a notification when a question waits past `limits.question_warn_s` | same | same |
+| `suspected_stall` | a notification, never a signal | same | same |
+| `hung` | a notification | `snapshot`, `stop`, and when the lease is free: `reap` | `snapshot`, `stop`, `reap`, `resume` |
+| `orphaned` | a notification | `reap` | `reap`, `resume` |
+
+Each action is a line of `<run>/supervisor.jsonl` (`records/v1` `supervisor-action`: `at`, `run_id`, `health`, `reason_code`, `action`,
+`detail`, and `pid` and `signal` for a stop), written and flushed before the next step. The `action` is one of `notify`, `snapshot`,
+`stop`, `reap`, `resume`, `given_up`, `identity_mismatch` and `busy`. The same trouble is said once: while the class and the
+count of resumes stay the same, a notification, a refused identity, a `busy` or an empty `reap` is not repeated.
+
+**Stopping a hung conductor.** Before any signal the supervisor writes `<run>/supervisor/snapshot-<UTC>.json` (`records/v1`
+`supervisor-snapshot`: the health, what `status --json` prints, `heartbeat.json`, `lease.json`, the last 50 lines of the journal and the
+processes of the conductor tree and of the role groups of `process.json`: `pid`, `ppid`, `pgid`, `stat`, `cpu_s`, `args` up to 200
+characters; everything passes the redaction of the status display). It then sends SIGINT and waits up to `grace_s` for the run lease to
+be freed, then SIGTERM and `grace_s`, then SIGKILL. A signal goes to the one pid the lease names (`os.kill`, never a group: a
+conductor started from a terminal shares its process group with the shell), and only while `(pid, start_ticks, boot_id)` of
+`lease.json` still match `/proc` and the boot of the machine, `pid` is not the supervisor's own and the lease is held. Any other
+case is `identity_mismatch` and **nothing is sent**; an older lease without `start_ticks` or `boot_id` is such a case. The role
+groups, which live in sessions of their own, are not signalled here: `reap` stops them. A conductor that handles SIGINT ends the
+run `interrupted`; the pass then stops there (the run is `stopped`, not orphaned), and the owner resumes it.
+
+**Reap and resume.** `reap` takes the checkout lock and the run lease without waiting, like a resume, and runs the recovery of
+`resume` that is already there: `recovery.kill_orphaned_roles` stops each role group of an unfinished step whose `process.json`
+still matches (pid, `start_ticks`, own group) and closes the agent records of dead or stopped roles as `ORPHANED` with the
+`orch.agent.failed` event. It writes no heartbeat, no state and no step. A lease a live conductor holds is `RUN_BUSY` (the pass
+records `busy` and goes on); the supervisor never takes the lease of a live run. `resume` then starts `orch conduct resume --run R`
+as a process of its own (new session, no terminal, `SKM_ORCH_LAUNCHER=supervisor`, output in `<run>/supervisor/resume-<n>.log`); it
+takes the locks itself and continues from the receipts of the closed steps (I4), so a commit or a registration is never repeated.
+A run is **not** resumed when its last stop (`state.stop`, else `state.last_stop`, else the journal) is one of
+`STAGE_RECOVERY_UNKNOWN`, `TOKEN_BUDGET`, `STATE_CORRUPT`, `OPTIONS_INVALID`, `OPTIONS_UNTRUSTED`, `SANDBOX_UNAVAILABLE`,
+`PROVIDER_AUTH` and `PROVIDER_AUTHZ`: the pass reaps and says why (`notify`).
+
+**The breaker.** `<runs root>/supervisor-state.json` (`records/v1` `supervisor-state`, replaced atomically under `supervisor.lock`)
+keeps per run the times of the resumes the supervisor started (`recoveries`), when it gave up (`given_up`) and the last class and action. When
+`max_recoveries` resumes lie within `window_s`, the next recovery is `given_up`: the run is reaped, not resumed, and not touched again
+until the owner resumes it by hand (a `run.resume` in the journal that the supervisor did not start closes the breaker and forgets
+the recoveries). A damaged `supervisor-state.json` stops the pass with `STATE_CORRUPT` and nothing is done: the breaker must not forget.
+
+**Records and events.** Besides `supervisor.jsonl`, every action except `snapshot` and `busy` is an `info` line of the journal, and
+every action is an `orch.conductor.health` event (see [events](events.md); `[orch.events] enabled` gates it). These codes are not
+stops or beacons:
+
+| Code | Action | Meaning |
+| --- | --- | --- |
+| `SUPERVISOR_NOTIFIED` | `notify`, `identity_mismatch` | the supervisor saw trouble it does not act on, or refused to signal a process that is not the lease owner |
+| `SUPERVISOR_STOPPED` | `stop` | the hung conductor freed the lease after the signal named in the line |
+| `SUPERVISOR_REAPED` | `reap` | orphaned role groups were stopped and their agent records closed |
+| `SUPERVISOR_RESUMED` | `resume` | a detached `conduct resume` was started (pid and log in the line) |
+| `SUPERVISOR_GAVE_UP` | `given_up` | the breaker opened; resume by hand |
+
+`--notify-send` (or `[orch.supervisor] notify_send`) also calls `notify-send "SKM run <id>: <health>"` for a notification, a stop and
+a given-up run; a missing command or a failure is ignored. A recovery that has started the resume is up to that process: the
+supervisor does not wait for it and does not write the state of the run. The detached start is the `Popen` of `resume_detached`
+until the detach helper of the next item replaces it.
 
 ## A piece that rewrites the orchestrator: `--frozen`
 
@@ -1485,6 +1581,9 @@ step carries none. `skills_auto` and `skills_checked` hold the choice of each ro
 | `item-routes` | `<run>/<item>/routes.json` | the route of each role, rewritten by a fallback, a retry or a reviewer upgrade | `RECORD_INVALID` |
 | `lease` | `<run>/lease.json`, `<runs root>/checkouts/<sha16>.json` | the owner of the run lease or the checkout lock (`pid`, `host`, `started_at`, `command`, `start_ticks`, `boot_id`, `launcher`, `run`) | owner `unknown` |
 | `heartbeat` | `<run>/heartbeat.json` | `Heartbeat.beat` of the conductor that owns the run (see Heartbeat and health); a write that fails is `HEARTBEAT_NOT_WRITTEN` | status: `unknown` / `HEARTBEAT_INVALID` |
+| `supervisor-action` | `<run>/supervisor.jsonl` | one line per action of the supervisor (see *Supervisor*), appended and flushed | the pass fails (`RECORD_INVALID`) |
+| `supervisor-snapshot` | `<run>/supervisor/snapshot-<UTC>.json` | `supervisor.snapshot`, before a signal to a hung conductor | `RECORD_INVALID` |
+| `supervisor-state` | `<runs root>/supervisor-state.json` | the breaker of the supervisor, under `supervisor.lock` | `STATE_CORRUPT`, `RECORD_INVALID` (the pass stops) |
 | `risk` | `<run>/<item>/risk.json` | `dynamic_review`: the risk score, its features and facts, the threshold and whether it added a review | `RECORD_INVALID` |
 | `review-strategy` | `<run>/review-strategy.json` | `review_plan.decide`: mode, groups, reviewer effort, reason, source; a resume whose state lost the plan takes this file | `RECORD_INVALID` |
 | `process` | `<run>/<item>/agents/<id>/process.json` | `process.run_role`: `pid`, `pgid`, `start_ticks`, `started_at`; read by cold recovery before any signal | `RECORD_INVALID` (the resume stops) |

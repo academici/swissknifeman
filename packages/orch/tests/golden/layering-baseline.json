@@ -7,10 +7,9 @@
   "stages": 36
  },
  "largest_self_scc": 6,
- "measured_at": "e5c45acc5ab62f3fe07dd25c721188b250000d17",
+ "measured_at": "f1ffbf96a2b6e8b52483c88bd3a43e6444195b36",
  "oversized_modules": {
-  "checks.py": 1105,
-  "cli.py": 608
+  "checks.py": 1105
  },
  "port_calls": {
   "infrastructure.role_ports.admit_budget": 2,

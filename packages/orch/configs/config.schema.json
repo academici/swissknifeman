@@ -740,6 +740,57 @@
           "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
         }
       }
+    },
+    "supervisor": {
+      "type": "object",
+      "description": "The supervisor (`orch conduct supervise|reap`): what it does about a conductor run that hangs or died. Observation is the default; stopping and resuming are the authority of the machine, so a project file cannot set recover, max_recoveries or window_s, and an invocation (a --config file or a flag) can only lower recover and max_recoveries.",
+      "additionalProperties": false,
+      "properties": {
+        "recover": {
+          "type": "string",
+          "description": "What the supervisor does about a run in trouble: notify (only say so), stop-only (also stop a hung conductor and reap the role processes of a dead one) or resume (also resume a dead run, within the breaker). The effective value is the lowest of the machine value and the invocation values (notify < stop-only < resume).",
+          "default": "notify",
+          "enum": ["notify", "stop-only", "resume"],
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "interval_s": {
+          "type": "integer",
+          "description": "Seconds between two passes of `orch conduct supervise` without --once.",
+          "default": 60,
+          "minimum": 1
+        },
+        "hung_after_s": {
+          "type": "integer",
+          "description": "Age of the heartbeat from which a conductor that waits for nothing counts as hung (a wait with a deadline that has not passed is never hung).",
+          "default": 300,
+          "minimum": 1
+        },
+        "grace_s": {
+          "type": "integer",
+          "description": "Seconds a hung conductor gets to free its run lease after SIGINT, and again after SIGTERM, before SIGKILL.",
+          "default": 60,
+          "minimum": 1
+        },
+        "max_recoveries": {
+          "type": "integer",
+          "description": "Resumes the supervisor may start for one run within window_s; past it the supervisor gives the run up until the owner resumes it by hand. An invocation can only lower it.",
+          "default": 2,
+          "minimum": 0,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "window_s": {
+          "type": "integer",
+          "description": "Length of the window of the breaker in seconds.",
+          "default": 3600,
+          "minimum": 1,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "notify_send": {
+          "type": "boolean",
+          "description": "Also call `notify-send` for a notification, a stop and a given-up run (errors are ignored).",
+          "default": false
+        }
+      }
     }
   }
 }

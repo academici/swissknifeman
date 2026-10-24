@@ -83,8 +83,9 @@ def reset_until(lines: list) -> Optional[float]:
     return found
 
 
-def thresholds_of(directory: Path, found: dict) -> health_mod.Thresholds:
-    """The health thresholds of the run: the stall limits of the piece it is on (its ``options.json``), else the defaults."""
+def thresholds_of(directory: Path, found: dict, hung_after_s: Optional[int] = None) -> health_mod.Thresholds:
+    """The health thresholds of the run: the stall limits of the piece it is on (its ``options.json``), else the defaults;
+    ``hung_after_s`` (``[orch.supervisor]``, given by the supervisor) replaces the default age of a heartbeat."""
     ref = (found.get("current") or {}).get("item") or (found["items"][-1]["item"] if found.get("items") else None)
     limits: dict = {}
     if ref:
@@ -93,11 +94,12 @@ def thresholds_of(directory: Path, found: dict) -> health_mod.Thresholds:
         except (OSError, Stop):
             limits = {}
     return health_mod.Thresholds(**{key: int(limits.get(key, opts.DEFAULT_LIMITS[key]))
-                                    for key in ("stall_window_s", "stall_repeat_n")})
+                                    for key in ("stall_window_s", "stall_repeat_n")},
+                                 **({"hung_after_s": int(hung_after_s)} if hung_after_s else {}))
 
 
 def health_of(directory: Path, found: dict, state: Optional[dict] = None, lines: Optional[list] = None,
-              now: Optional[float] = None) -> dict:
+              now: Optional[float] = None, hung_after_s: Optional[int] = None) -> dict:
     """``health.classify`` of a run from its files: reads the heartbeat, probes the lease, writes nothing. ``found`` is the
     journal summary (``effective_status``); a document that cannot be read is a class of its own (``unknown``), never a failure."""
     try:
@@ -112,7 +114,7 @@ def health_of(directory: Path, found: dict, state: Optional[dict] = None, lines:
     if beat is None and problem != "HEARTBEAT_MISSING":
         beat = {health_mod.INVALID: problem}
     return health_mod.classify(summary, state or {}, beat, lease, time.time() if now is None else now,
-                               thresholds_of(directory, found))
+                               thresholds_of(directory, found, hung_after_s))
 
 
 def health_text(directory: Path, found: dict) -> str:

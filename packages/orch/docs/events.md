@@ -1,6 +1,6 @@
 # Events
 
-orch journals seventeen events of module `orch` through the `aicore` event journal. The data of each type is a closed
+orch journals nineteen events of module `orch` through the `aicore` event journal. The data of each type is a closed
 JSON Schema under `schemas/event-data/v1/<type>.schema.json` (contract `urn:swissknifeman:orch:event-data`, `v1`,
 alpha). A consumer ignores fields it does not know; a new optional field is a minor change.
 
@@ -24,6 +24,7 @@ alpha). A consumer ignores fields it does not know; a new optional field is a mi
 | `orch.provider.quota-exhausted` | `<run>/<item>` | as `orch.provider.rate-limited` | as `orch.provider.rate-limited` |
 | `orch.provider.fallback` | `<run>/<item>` | `run_id`, `role`, `from`, `to` (routes: `provider`, `model_class`, `model`, `effort`), `reason_codes` | `work_id`, `item`, `step` |
 | `orch.input.rebuilt` | `<run>/<item>` | `run_id`, `work_id`, `digest` | `item`, `previous_digest` |
+| `orch.conductor.health` | run id | `conductor_run_id`, `health` (`running`, `waiting_provider`, `waiting_tool`, `waiting_owner`, `waiting_budget_reset`, `suspected_stall`, `hung`, `orphaned`, `stopped`, `finished`, `unknown`) | `previous`, `reason_code`, `action` (`notify`, `snapshot`, `stop`, `reap`, `resume`, `given_up`, `identity_mismatch`, `busy`), `silent_s`, `item`, `step` |
 
 The agent events are emitted by the conductor for every agent run (a role process, the report-fixer included):
 `correlationid` is the run id, `causationid` of `finished`/`failed` is the id of the `started` event of the same agent run.
@@ -36,6 +37,10 @@ The types `rate-limited` and `quota-exhausted` are written with a hyphen because
 underscore. A wait for a transient failure that is not a limit gives no provider event. `deviation.recorded` is emitted
 when a correction round for an `auto_fixable` deviation starts, or when the final report is written; `deviation.resolved`
 when the fixed deviation is carried as accepted.
+
+`orch.conductor.health` is emitted by the supervisor (`orch conduct supervise`, `orch conduct reap`; see *Supervisor* in
+`docs/conductor.md`) for every action it records in `<run>/supervisor.jsonl`, not by the conductor itself: `previous` is the
+class it saw before, `action` what it did. `status` and `runs` emit nothing.
 
 ## Emission rules
 

@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates|supervise|reap``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 4 the run waits for a decision (a piece waits for the answer to a question: ``answer``,
@@ -13,14 +13,13 @@ from pathlib import Path
 import re
 import sys
 import time
-from typing import Optional
 
 from aicore.config import ConfigError
 from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
-from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, prompts, questions
-from orch.conductor import records, runs
+from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, questions
+from orch.conductor import prompt_cli, records, runs, supervise_cli
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import launch_plan
 
@@ -160,83 +159,6 @@ def _questions(args, project: Path) -> int:
                       "resolution": entry["resolution"],
                       **({"answer_schema_ignored": ignored} if ignored else {}),
                       "next": f"orch conduct continue --run {run_id} --item {args.item}"}, ensure_ascii=False))
-    return 0
-
-
-STEP_PATTERN = r"[a-z][a-z0-9-]*(\.[0-9]+(-q[0-9]+)?)?"
-
-
-class _PromptError(Exception):
-    def __init__(self, code: str, message: str):
-        super().__init__(f"{code}: {message}")
-        self.code, self.message = code, message
-
-
-def _manifest(project: Path, run: Optional[str], item: str, step: str, missing: str = "MANIFEST_UNKNOWN") -> tuple:
-    """``(run_id, manifest)`` of ``prompts/<step>.manifest.json`` of ``item`` in ``run`` (default: the latest run), the
-    paths checked to stay inside the run; ``_PromptError`` otherwise (``missing`` names a manifest that is not there)."""
-    if re.fullmatch(STEP_PATTERN, step) is None:
-        raise _PromptError("PROMPT_PATH_INVALID", "step must be a role step such as executor.1")
-    run_id = run or _latest(project)
-    if run_id and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", run_id) is None:
-        raise _PromptError("PROMPT_PATH_INVALID", "invalid run id")
-    directory = engine.runs_root(project) / (run_id or "-")
-    if not run_id or not (directory / engine.RUN_FILE).is_file():
-        raise _PromptError("RUN_UNKNOWN", f"no conductor run {run or ''} in {engine.runs_root(project)}")
-    item_dir = directory / engine.safe(item)
-    file = item_dir / "prompts" / f"{step}.manifest.json"
-    try:
-        item_dir.resolve().relative_to(directory.resolve())
-        file.resolve().relative_to(item_dir.resolve())
-    except (ValueError, OSError, RuntimeError):
-        raise _PromptError("PROMPT_PATH_INVALID", "manifest must resolve inside the item directory") from None
-    doc = engine.read_json(file) if file.is_file() else None
-    if not isinstance(doc, dict):
-        raise _PromptError(missing, f"no prompt manifest for {item} {step} in run {run_id} ({file})")
-    return run_id, doc
-
-
-def _baseline(step: str) -> Optional[str]:
-    """The previous attempt of the same step (``executor.2`` -> ``executor.1``), None for a first one."""
-    found = re.fullmatch(r"([a-z][a-z0-9-]*)\.([0-9]+)(-q[0-9]+)?", step)
-    if found is None or int(found.group(2)) <= 1:
-        return None
-    return f"{found.group(1)}.{int(found.group(2)) - 1}{found.group(3) or ''}"
-
-
-def _prompt(args, project: Path) -> int:
-    """``prompt explain``: the blocks of the prompt a role step was given (``prompts/<step>.manifest.json``), their
-    origin, size and digest, and what was left out. ``prompt diff``: what changed in it against the previous attempt of
-    the step or a named ``RUN:ITEM:STEP``."""
-    try:
-        if args.prompt_verb == "diff":
-            return _prompt_diff(args, project)
-        _run_id, doc = _manifest(project, args.run, args.item, args.step)
-    except (_PromptError, engine.Stop) as error:
-        print(f"{error.code}: {error.message}", file=sys.stderr)
-        return 1
-    print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.explain_table(doc))
-    return 0
-
-
-def _prompt_diff(args, project: Path) -> int:
-    run_id, target = _manifest(project, args.run, args.item, args.step, missing="PROMPT_MANIFEST_MISSING")
-    if args.against:
-        parts = args.against.split(":")
-        if len(parts) != 3 or not all(parts):
-            raise _PromptError("PROMPT_PATH_INVALID", "--against takes RUN:ITEM:STEP")
-        against = (parts[0], parts[1], parts[2])
-    else:
-        previous = _baseline(args.step)
-        if previous is None:
-            raise _PromptError("PROMPT_BASELINE_MISSING", f"{args.step} is the first attempt of its step: name the prompt "
-                                                          "to compare with --against RUN:ITEM:STEP")
-        against = (run_id, args.item, previous)
-    _base_run, base = _manifest(project, *against, missing="PROMPT_MANIFEST_MISSING")
-    doc = records.check(dict(prompts.diff_manifests(base, target), run=run_id, item=args.item,
-                             against={"run": against[0], "item": against[1], "step": against[2]}),
-                        "prompt-diff", "prompt diff", hint=records.WRITER_HINT)
-    print(json.dumps(doc, ensure_ascii=False, indent=2) if args.json else prompts.diff_table(doc))
     return 0
 
 
@@ -512,7 +434,9 @@ def main(argv: list | None = None) -> int:
     gate_list.add_argument("--json", action="store_true")
     gate_list.add_argument("--clear", nargs="?", const="", default=None, metavar="PROVIDER",
                            help="remove the gate of PROVIDER, or every gate when no provider is given")
+    supervise_cli.add_parsers(verbs)
     args = parser.parse_args(argv)
+    supervise_cli.check(parser, args)
     if args.verb == "run":
         if args.batch is True and not (args.items or args.ready or args.input):
             args.ready = True  # `--batch` used to select the next ready pieces
@@ -562,7 +486,7 @@ def main(argv: list | None = None) -> int:
         if args.verb == "questions" or code != 0 or not args.cont:
             return code  # `answer --continue` goes on below, as `continue --item ITEM` of the same run
     if args.verb == "prompt":
-        return _prompt(args, project)
+        return prompt_cli.prompt(args, project)
     if args.verb in ("timeline", "status", "observe"):
         try:  # read-only: a record that does not match records/v1 is a stop with its code, not a traceback
             return _timeline(args, project) if args.verb == "timeline" else _status(args, project)
@@ -580,6 +504,8 @@ def main(argv: list | None = None) -> int:
     except settings_mod.SettingsError as error:
         print(f"{error.code}: {error}", file=sys.stderr)
         return 1
+    if args.verb in ("supervise", "reap"):
+        return supervise_cli.run(args, project, current)
     conductor = engine.Conductor(project=project, settings=current, config_file=args.config, mode=_mode(args),
                                  model_catalog=getattr(args, "model_catalog", None),
                                  project_resolution=context.resolution)

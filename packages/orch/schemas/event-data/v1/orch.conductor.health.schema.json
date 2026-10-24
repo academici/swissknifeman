@@ -1,0 +1,54 @@
+{
+  "$id": "urn:swissknifeman:orch:event-data:orch-conductor-health:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The supervisor saw the health of a conductor run and acted on it, or said it would not.",
+  "properties": {
+    "action": {
+      "description": "What the supervisor did.",
+      "enum": ["notify", "snapshot", "stop", "reap", "resume", "given_up", "identity_mismatch", "busy"],
+      "type": "string"
+    },
+    "conductor_run_id": {
+      "description": "Id of the conductor run.",
+      "pattern": "^cnd-[0-9A-Za-z-]+$",
+      "type": "string"
+    },
+    "health": {
+      "description": "Class of health of the run.",
+      "enum": ["running", "waiting_provider", "waiting_tool", "waiting_owner", "waiting_budget_reset", "suspected_stall", "hung", "orphaned", "stopped", "finished", "unknown"],
+      "type": "string"
+    },
+    "item": {
+      "description": "Reference of the piece of work the run was on.",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "type": "string"
+    },
+    "previous": {
+      "description": "Class of health the supervisor saw before.",
+      "enum": ["running", "waiting_provider", "waiting_tool", "waiting_owner", "waiting_budget_reset", "suspected_stall", "hung", "orphaned", "stopped", "finished", "unknown"],
+      "type": "string"
+    },
+    "reason_code": {
+      "description": "Reason code of the class.",
+      "pattern": "^[A-Z][A-Z0-9_]{1,63}$",
+      "type": "string"
+    },
+    "silent_s": {
+      "description": "Seconds without a sign of progress.",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "step": {
+      "description": "Step the run was on.",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "conductor_run_id",
+    "health"
+  ],
+  "title": "orch.conductor.health",
+  "type": "object"
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:supervisor-action:v1",
+  "at": "2026-10-24T10:00:00Z",
+  "run_id": "cnd-1",
+  "health": "hung",
+  "reason_code": null,
+  "action": "stop",
+  "detail": "x",
+  "pid": 4242,
+  "signal": "SIGSTOP"
+}

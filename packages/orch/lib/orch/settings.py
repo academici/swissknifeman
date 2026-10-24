@@ -54,6 +54,7 @@ class Settings:
     advisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.advisor]``: ``enabled``, ``max_rounds``, ``human_gate``, ``panel``, ``panel_on``
     stubs: Mapping[str, object] = field(default_factory=dict)  # ``[orch.stubs]``: ``enabled``, ``layers``
     launch: Mapping[str, object] = field(default_factory=dict)  # ``[orch.launch]``: ``catalog`` (a file), ``access`` and ``entries``
+    supervisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.supervisor]``: ``recover`` (already the lowest of the layers), ``max_recoveries``, ...
     debug: bool = False  # ``[orch] debug`` / ``--debug``: the observer protocol and journal of a run (conductor.debug_mode)
 
     def explain_text(self, key: str | None = None) -> str:
@@ -146,6 +147,45 @@ def _access(resolved: ResolvedConfig) -> str:
     return access
 
 
+RECOVER_ORDER = ("notify", "stop-only", "resume")  # from the weakest policy to the strongest
+
+
+def effective_recover(machine: str, *invocation: str | None) -> str:
+    """The lowest policy of the machine value and the invocation values (a flag, a ``--config`` file): an invocation can
+    only weaken what the machine allows, never widen it (I8)."""
+    values = [machine, *(value for value in invocation if value is not None)]
+    for value in values:
+        if value not in RECOVER_ORDER:
+            raise SettingsError("RECOVER_UNKNOWN", f"supervisor recover must be one of {', '.join(RECOVER_ORDER)}, not {value!r}")
+    return min(values, key=RECOVER_ORDER.index)
+
+
+def _layered(resolved: ResolvedConfig, key: str, lowest) -> object:
+    """Effective value of an authority key: the machine value (defaults when the machine sets none), lowered by every
+    invocation value (``--config`` file, flag) with ``lowest`` (``min`` or the order of the policy)."""
+    found = resolved.explain(key)[0]
+    history = list(reversed(found.overridden))
+    if found.layer == "defaults":
+        history.insert(0, found)  # after _unset the default is reported as the winner, the reset stays in overridden
+    else:
+        history.append(found)
+    machine, lowered = found.default, []
+    for setting in history:
+        value = found.default if setting.source == "_unset" else setting.value
+        if setting.layer in ("defaults", "machine"):
+            machine = value
+        elif setting.layer in ("invocation", "flags"):
+            lowered.append(value)
+    return lowest(machine, *lowered)
+
+
+def _supervisor(resolved: ResolvedConfig) -> dict:
+    """``[orch.supervisor]`` as plain data: ``recover`` and ``max_recoveries`` are the lowest of the machine and invocation values."""
+    return {"recover": _layered(resolved, "supervisor.recover", effective_recover),
+            "max_recoveries": _layered(resolved, "supervisor.max_recoveries", lambda *values: min(values)),
+            **{key: resolved.get(f"supervisor.{key}") for key in ("interval_s", "hung_after_s", "grace_s", "window_s", "notify_send")}}
+
+
 def _research(resolved: ResolvedConfig) -> dict:
     """``[orch.research]`` as plain data: the policy and the sources by id (every field of an entry, defaults filled in)."""
     return {"policy": resolved.get("research.policy"),
@@ -196,6 +236,7 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         advisor=_advisor(resolved),
         stubs={"enabled": bool(resolved.get("stubs.enabled")), "layers": list(resolved.get("stubs.layers") or [])},
         launch=_launch(resolved),
+        supervisor=_supervisor(resolved),
         debug=bool(resolved.get("debug")),
     )
 

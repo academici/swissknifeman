@@ -25,7 +25,7 @@ CONTRACT_DIR = Path(__file__).resolve().parents[3] / "schemas" / "records" / "v1
 URN_PREFIX = "urn:swissknifeman:orch:records:"
 KINDS = ("agent-request", "agent-result", "agent-usage", "conformance-report", "heartbeat", "item-options", "item-routes", "lease",
          "observer-report", "process", "prompt-diff", "provider-gates", "questions", "review-strategy", "review-verdict",
-         "risk", "run", "state")
+         "risk", "run", "state", "supervisor-action", "supervisor-snapshot", "supervisor-state")
 # The five short kinds keep the tag they already publish, in the field ``schema``.
 SHORT_TAGS = {
     "review-verdict": "orch-conductor-review-verdict/v1",

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:supervisor-snapshot:v1",
+  "title": "snapshot of a run before the supervisor signals its conductor",
+  "description": "Evidence written to <run>/supervisor/snapshot-<UTC>.json before any signal: the class of health, what `status --json` prints, the heartbeat and lease documents, the last 50 lines of the journal and the processes of the conductor and of the role groups. Redacted like the status display.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "at", "run_id", "health", "status", "processes"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:supervisor-snapshot:v1"},
+    "at": {"description": "UTC time of the snapshot.", "type": "string"},
+    "run_id": {"description": "The run.", "type": "string", "minLength": 1},
+    "health": {"description": "The result of health.classify at that time.", "type": "object"},
+    "status": {"description": "The document `orch conduct status --json` prints.", "type": "object"},
+    "heartbeat": {"description": "heartbeat.json as it was, null when there was none.", "type": ["object", "null"]},
+    "lease": {"description": "lease.json as it was, null when there was none.", "type": ["object", "null"]},
+    "progress_tail": {"description": "The last 50 lines of progress.jsonl.", "type": "array", "items": {"description": "A progress line.", "type": "object"}},
+    "processes": {
+      "description": "The conductor with its descendants and every process of the role groups of process.json.",
+      "type": "array",
+      "items": {
+        "description": "One process.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pid", "ppid", "pgid", "stat", "cpu_s", "args"],
+        "properties": {
+          "pid": {"description": "Process id.", "type": "integer", "minimum": 1},
+          "ppid": {"description": "Parent process id.", "type": "integer", "minimum": 0},
+          "pgid": {"description": "Process group id.", "type": "integer", "minimum": 0},
+          "stat": {"description": "State letter of /proc/<pid>/stat.", "type": "string"},
+          "cpu_s": {"description": "CPU seconds used so far (user + system).", "type": "number", "minimum": 0},
+          "args": {"description": "Command line, at most 200 characters, redacted.", "type": "string", "maxLength": 200}
+        }
+      }
+    }
+  },
+  "$defs": {}
+}

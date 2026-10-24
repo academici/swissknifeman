@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:supervisor-state:v1",
+  "runs": {
+    "cnd-1": {
+      "recoveries": ["2026-10-24T10:00:00Z", "2026-10-24T10:20:00Z"],
+      "given_up": "2026-10-24T10:40:00Z",
+      "resumes_at_give_up": 2,
+      "last": {"health": "orphaned", "action": "given_up", "at": "2026-10-24T10:40:00Z", "resumes": 2}
+    }
+  }
+}

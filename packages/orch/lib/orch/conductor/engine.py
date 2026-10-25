@@ -454,6 +454,7 @@ class Conductor:
     _upgrade_reviewer = review_stage.upgrade_reviewer
     _review = review_stage.review
     _review_changed = review_stage.review_changed
+    _review_base = review_stage.review_base
     _verdict_file = review_stage.verdict_file
     _corrected_receipt = review_stage.corrected_receipt
 
@@ -480,4 +481,6 @@ class Conductor:
     _close = close.close
     _closer_named = staticmethod(close.closer_named)
     _finish = finish.finish
+    _stage_commit = finish.stage_commit
+    _splitting = finish.splitting
     _settle_pending = finish.settle_pending

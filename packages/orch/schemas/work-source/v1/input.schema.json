@@ -148,7 +148,21 @@
           "type": "array",
           "items": {"description": "Repository-relative path.", "$ref": "#/$defs/text"}
         },
-        "actor": {"description": "Who commits.", "$ref": "#/$defs/actor"}
+        "actor": {"description": "Who commits.", "$ref": "#/$defs/actor"},
+        "role": {
+          "description": "Role of the commit in a split run (`commit.mode: implementation-and-fixes`): `executor` for the implementation and the final commit, `fix` for a correction round of the review. Absent: the source's own (`executor`).",
+          "enum": ["executor", "fix"]
+        },
+        "stage": {
+          "description": "Stage of a split run: `implementation` and `correction.<n>` commit exactly `paths` (the product paths of the stage; the plan files and the other paths of the piece stay for later), `final` is the commit of the rest. Absent: the single commit of `final-only`.",
+          "type": "string",
+          "pattern": "^(implementation|correction\\.[0-9]+|final)$"
+        },
+        "trailers": {
+          "description": "Trailer lines (`Key: value`) the commit message carries, such as Plan-Run, Plan-Attempt, Plan-Stage, Plan-Review, Plan-Findings.",
+          "type": "array",
+          "items": {"description": "One trailer line.", "type": "string", "pattern": "^[A-Za-z0-9-]+: [^\\r\\n\\u0000]+$"}
+        }
       },
       "required": ["op", "plan", "ref", "run_id", "attempt_id", "paths"],
       "additionalProperties": false

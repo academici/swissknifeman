@@ -74,6 +74,19 @@
       "required": [],
       "additionalProperties": false
     },
+    "commit": {
+      "description": "How the commits of a piece are made when the run-policy commits (`git_action: commit`).",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "`final-only` (default): one commit after the registration. `implementation-and-fixes`: a checkpoint commit of the implementation (role executor, stage `implementation`) after the first green checks and before the first review, one fix commit (role fix, stage `correction.<n>`) per green correction round of the review, then the final commit (stage `final`) of what is left: the records of the piece and the plan files. The review reads the piece from the parent of its first commit. Commits carry the trailers Plan-Run, Plan-Attempt and Plan-Stage (a fix commit also Plan-Review and Plan-Findings).",
+          "type": "string",
+          "enum": ["final-only", "implementation-and-fixes"]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
     "session": {
       "description": "How the sessions of the executor are shared inside one run of several pieces (roles of a provider whose capability record allows resume).",
       "type": "object",

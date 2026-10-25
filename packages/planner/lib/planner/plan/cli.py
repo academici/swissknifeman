@@ -667,9 +667,12 @@ def cmd_add_document(args) -> int:
 # ---------------------------------------------------------------- parser
 
 def cmd_commit(args) -> int:
+    if args.paths_only and not args.path:
+        raise PlanError("USAGE", "--paths-only needs at least one --path")
     result = gitops.commit(_plan_dir(args), args.ref, role=args.role, paths=args.path,
                            leave_outside=args.leave_outside, dry_run=args.dry_run, commit_type=args.type,
-                           scope=args.scope, summary=args.summary, trailers=args.trailer, actor=args.actor)
+                           scope=args.scope, summary=args.summary, trailers=args.trailer, actor=args.actor,
+                           paths_only=args.paths_only)
     if args.json or args.output == "json":
         _print_json(result)
     else:
@@ -889,6 +892,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--trailer", action="append", default=[], metavar="KEY: VALUE")
     p.add_argument("--path", action="append", default=[], metavar="PATH", help="explicit extra ownership path")
     p.add_argument("--leave-outside", action="store_true", help="leave foreign dirty paths untouched")
+    p.add_argument("--paths-only", action="store_true",
+                   help="commit exactly the --path files (each covered by the task_files of the item): no other task "
+                        "files, no plan files, no workspace commit")
     p.add_argument("--dry-run", action="store_true", help="show selection and message without writing")
     actor_arg(p)
     p.add_argument("--json", action="store_true")

@@ -192,6 +192,25 @@ def upgrade_reviewer(self, item: Item) -> None:
                                f"({route['model_class']} -> {wanted}; the executor suggested it)")
 
 
+def review_base(self, item: Item) -> str:
+    """The revision a review of the piece compares the tree with: HEAD, or in a split run (``state.commits``, the checkpoint
+    commit before the review) the parent of the first commit of the piece. HEAD would make the diff of the review empty
+    once the implementation is committed."""
+    commits = item.state.get("commits") or []
+    return commits[0]["parent"] if commits else checks_mod.head(self.project)
+
+
+def fix_commit_paths(self, item: Item) -> set:
+    """The paths the fix commits of a split run changed: a correction that is committed before the next review leaves no
+    dirty path for the audit of the corrected scope to see."""
+    found = set()
+    for row in item.state.get("commits") or []:
+        if row["stage"] != "implementation":
+            found.update(filter(None, checks_mod.git(self.project, "diff", "--name-only", "-z", row["parent"],
+                                                     row["sha"]).split("\0")))
+    return found
+
+
 def review(self, item: Item, number: int, rows: list, pending: bool = False, cancel=None) -> dict:
     self._upgrade_reviewer(item)
     route = item.routes["reviewer"]
@@ -202,7 +221,7 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
         provenance = item.input_doc.get("provenance", {})
         review_only = provenance.get("kind") == "review"
         base = (checks_mod.git(self.project, "rev-parse", "--verify", provenance["base"] + "^{commit}").strip()
-                if review_only else checks_mod.head(self.project))
+                if review_only else self._review_base(item))
         paths = self._changed(item)
         if review_only:
             paths = scopes.own(list(filter(None, checks_mod.git(self.project, "diff", "--name-only", "-z", base).split("\0")))
@@ -226,7 +245,8 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
                     + checks_mod.git(self.project, "diff", base, candidate["head"]))
             scope = "full"
         elif audit and isinstance(before, dict):  # round 1 and audit_scope full see the whole diff, and so does a run without marks
-            paths = sorted(set(checks_mod.changed_files(before, tree)) | set(self._finding_paths(corrected)))
+            paths = sorted(set(checks_mod.changed_files(before, tree)) | set(self._finding_paths(corrected))
+                           | fix_commit_paths(self, item))  # what the fix commits took is clean in the tree
             diff, scope = checks_mod.diff(self.project, base, paths=paths), "changed"
         else:
             diff, scope = checks_mod.diff(self.project, base), "full"

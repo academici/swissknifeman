@@ -87,14 +87,14 @@
     {
       "artifact_id": "planner.cursor.plan.run.skill",
       "path": "packages/planner/adapters/cursor/skills/planner-plan-run/SKILL.md",
-      "rendered_hash": "sha256:37ab78f5ba6e993084290f6c40edf6cad22a67c8249efbe431cfc2dec25495b4",
-      "source_hash": "sha256:3dcc950c61f43f5cf700f5f342f60f4f2e5b76f58624d5d2fffb3b925e53fce6"
+      "rendered_hash": "sha256:eced2ff339ed24168dc4759339b87dcad8d7dbd0a05d8421f41c5efb87382082",
+      "source_hash": "sha256:e31c793889cdbdbb9d24c088c9f24cc5a41684c50887c1fba936351250f11181"
     },
     {
       "artifact_id": "planner.cursor.plan.run.runtime",
       "path": "packages/planner/adapters/cursor/skills/planner-plan-run/command.md",
-      "rendered_hash": "sha256:e823a28b30b99bb0475fbb6f88943a410b3a2bd1a338dcce6473141a981da55a",
-      "source_hash": "sha256:627a7a6730a49afe48a08a41aa96c336875565aa08a0949bbc9d2a4e03b53977"
+      "rendered_hash": "sha256:61fdf26c010487c27639031069070f6d4ea7c1f61460555ee5cc09bdad301bad",
+      "source_hash": "sha256:224ad0d3a69c6a4aaec187a02f7018a6e313e46803149763bc64027ebf1bc0d1"
     },
     {
       "artifact_id": "planner.cursor.research.skill",

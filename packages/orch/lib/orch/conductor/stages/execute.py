@@ -11,7 +11,7 @@ from aicore.util.digest import sha256_hex
 
 from orch.contracts import required_digest
 from orch.conductor import checks as checks_mod, contract, self_check as self_check_mod, options as opts, prompts, questions as questions_mod, records, scope as scopes
-from orch.conductor.domain.item import Item, done_steps
+from orch.conductor.domain.item import Item, done_steps, piece_commits
 from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evidence_paths, is_coded, report_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, sessions, work_source
@@ -249,12 +249,13 @@ def handoff_of(self, ref: str, state: Optional[dict] = None, directory=None) -> 
     paths, from the report it registered (``register-report.json``), each part bounded. ``state`` and ``directory`` are
     those of another run (the run a review follow-up corrects); the default is this one."""
     piece = ((self.state if state is None else state).get("items") or {}).get(ref) or {}
-    sha = ((done_steps(piece.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+    shas = piece_commits(piece)
     try:
         report = json.loads(((directory or self.directory) / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         report = {}
-    lines = [f"### Handoff of `{ref}`" + (f" (commit {sha[:12]})" if sha else "")]
+    lines = [f"### Handoff of `{ref}`" + (f" (commit{'s' if len(shas) > 1 else ''} {', '.join(sha[:12] for sha in shas)})"
+                                         if shas else "")]
     if report.get("summary"):
         lines += ["", str(report["summary"])[:HANDOFF_TEXT]]
     issues = [row for row in report.get("open_issues") or [] if isinstance(row, dict) and row.get("text")]

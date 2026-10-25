@@ -1,0 +1,9 @@
+{
+  "op": "commit",
+  "plan": "PLAN1",
+  "ref": "P1.1",
+  "run_id": "run-a",
+  "attempt_id": "att-run-a-P1.1",
+  "paths": [],
+  "stage": "checkpoint"
+}

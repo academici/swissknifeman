@@ -533,6 +533,7 @@ steps before reconciliation. The rule uses the key's prefix before the first dot
 | `research-save.N` | repeat the idempotent save for that research number |
 | `close`, `register` | recover a successful registration receipt of this attempt; otherwise repeat the idempotent call |
 | `commit` | recover a successful commit receipt of this attempt only when its workspace part is complete; otherwise repeat commit |
+| `checkpoint`, `fix-commit.N` | the stage commits of a split run (see Split commits): recover the receipt `commit-<stage>.json`; without one, the newest commit that carries this attempt's `Plan-Run`, `Plan-Attempt` and `Plan-Stage` trailers closes the step (the stage is never committed twice, I4); otherwise repeat the commit |
 | any other key | stop with `STAGE_RECOVERY_UNKNOWN`; settle the item, or use `--retry` if it is blocked |
 
 Each decision emits `info` with `reason_code: STAGE_INTERRUPTED`, the item and stage,
@@ -551,7 +552,7 @@ after `done` remains `ATTEMPT_CONFLICT`.
 Malformed fields used by the recovered result also require a repeat; recovery checks them against the live
 work-source response contract before recording `done`.
 
-Before a closing source call, `register-request.json` or `commit-request.json` durably records `attempt_id`,
+Before a closing source call, `register-request.json` or `commit-request.json` (`commit-<stage>-request.json` for a stage of a split run) durably records `attempt_id`,
 the request parameters and their canonical JSON SHA-256 digest. After the call, the request also records the
 SHA-256 of the unmodified response before the receipt is published. Recovery requires both digests and the
 request's run, reference and attempt to match, including responses with an explicit `attempt`. The request's
@@ -1405,6 +1406,7 @@ and `REVIEW_MODE_NONE_SKIPPED` names it.
 | `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); hard token limits `tokens_hard_max` (of the piece) and `run_tokens_hard_max` (of the run), 0 off (see Hard token limits and resume), with `unmetered` (`stop` default, or `charge`) and `unmetered_charge_tokens` (50000) for an attempt that reports no usage while one is in force; beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900), `check_idle_warn_s` (600), and the stall beacons `stall_repeat_n` (5: one `STALL_SUSPECTED` after this many identical tool commands in a row) and `stall_window_s` (1800: a stream that grows this long without a tool step), 0 switching each off; wall-clock ceilings: `role_timeout_s` (a map role → seconds for a streaming role: `context-scout` 900, `triager` 1800, `report-fixer` 600, `registrar` 600, `reviewer` 3600, `advisor` 1800, `researcher` 2700; the `executor` and the `bounded-implementer` have none; a layer names only the walls it changes, 0 removes one; the group review uses the `reviewer` wall), `stage_timeout_s` (0, off; when set it replaces the wall of every role), `check_timeout_s` (7200, 0 off); silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`), `triage_repro_timeout_s` (600, 0 none: the ceiling in seconds on the read-only rerun of the reproduction of a rejected Blocker or Major finding; past it the finding is confirmed again, `TRIAGE_REPRO_UNVERIFIED`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
+| `commit` | `mode`: `final-only` (default: one commit after the registration) or `implementation-and-fixes` (see Split commits) |
 | `on_blocked` | `stop` or `report` |
 
 `limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
@@ -1800,6 +1802,34 @@ disabling or raising it is `OPTIONS_UNTRUSTED`. Byte caps apply independently of
 origin, tokens, the start of the digest) and what was left out; the default run is the latest. `MANIFEST_UNKNOWN` (exit 1)
 means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer lists the five heaviest blocks by role.
 
+### Split commits: `commit.mode`
+
+`commit.mode` of the run options (`final-only` by default) chooses how the commits of a piece come about, when the run policy
+commits (`git_action: commit`):
+
+| Mode | Commits of a piece |
+| --- | --- |
+| `final-only` | one commit after the registration, as before: same message, same receipts (`receipts/commit.json`, `commit-request.json`) |
+| `implementation-and-fixes` | the **checkpoint** (stage `implementation`, role `executor`) once the checks of the first round are green and before the first review; one **fix** commit (stage `correction.<n>`, role `fix`) per green correction of review round `n`; the **final** commit (stage `final`, role `executor`) of what is left: the records of the piece, the plan files and any path no stage took |
+
+A stage commit takes the product paths of the piece that the tree still shows as changed (what the executor rounds and the
+checks changed, without the runtime artifacts set aside, without the artifact folder and without anyone else's dirty
+paths): the work source commits exactly those paths (the planner bridge asks its commit for `--paths-only`; a path
+the task files of the item do not cover waits for the final commit). A stage that changed no product path commits nothing.
+Each commit carries the trailers `Plan-Run` (the work-source run), `Plan-Attempt` and `Plan-Stage`; a fix commit also
+`Plan-Review: <conductor run>/<item>/review.<n>` and `Plan-Findings: <finding keys>`. The checkpoint is not acceptance:
+the review receipt and `finish` decide whether the piece is done. A split run never overlaps the review with the checks (`checks.overlap_review` is ignored): the first review starts after the checkpoint.
+
+`state.items.<ref>.commits` lists `{stage, sha, parent}` of the stage commits. **The review of the piece starts from the
+`parent` of its first commit**, not from HEAD (which would show an empty diff once the implementation is committed); the
+audit of a later round also reads the paths of the fix commits. The group review and the handoff to a later piece read all
+the commits of a piece: the diff is the range from the parent of the first to the last commit.
+
+Receipts are kept per stage: `receipts/commit-<stage>.json` and `commit-<stage>-request.json` (`commit-implementation`,
+`commit-correction.2`); the final commit keeps the names `commit.json` and `commit-request.json`. The steps are `checkpoint`
+and `fix-commit.<n>`. If the conductor dies between the commit of a stage and its receipt, a resume finds the commit by its
+`Plan-Run`/`Plan-Attempt`/`Plan-Stage` trailers in the newest commit and closes the step with it instead of committing again. This also holds for a stage whose source call died without an answer (the step is `stopped`, `COMMIT_REFUSED`), and a resume copies every closed stage step into `state.commits` before the loop starts. The final commit of a workspace plan is never closed by the trailer alone (its workspace part is repeated).
+
 ## Files: what is committed
 
 | Path | Git | Content |
@@ -1810,7 +1840,7 @@ means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-receipt.json` (last review, subject/attempt, content fingerprints and finding keys), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
 | `.swissknifeman/orch/reports/<run>/` | ignored | `observer.json`, `observer.md` (written when the run ends, after its last commit) |
 | `.swissknifeman/orch-artifacts/<run>/<item>/` | ignored | local records: the artifact folder of a source without `artifacts_dir` (a workspace plan, the file source); never in a commit of the piece. The planner bridge copies the evidence of a workspace plan item into `<plan>/artifacts/<item>/<run>/evidence/` at register and the item refers to it there; files tracked before the folder was ignored stay in the index |
-| the plan (JSON) | committed | through the work source's own commit |
+| the plan (JSON) | committed | through the work source's own commit (the final commit; with `commit.mode: implementation-and-fixes` the stage commits before it hold product files only) |
 
 ### Run records
 

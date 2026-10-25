@@ -270,6 +270,68 @@ class ResumeReceiptTests(ConductorCase):
         self.assertEqual("commit", self.git("cat-file", "-t", result["sha"]).strip())
         self.assertEqual(workspace_sha, journal.read_doc(self.receipts, "receipts/commit.json")["sha"])
 
+    def test_a_stage_commit_has_its_own_receipt_and_the_final_one_keeps_the_old_names(self):
+        self.assertEqual([cli.commit_stem(stage) for stage in (None, "final", "implementation", "correction.2")],
+                         ["commit", "commit", "commit-implementation", "commit-correction.2"])
+        run, item = self.start("checkpoint")
+        answer = {"op": "commit", "outcome": "committed", "sha": "a" * 40, "attempt": item.claim["attempt_id"]}
+        cli._source_effect(SimpleNamespace(commit=lambda **fields: answer), self.receipts, "commit",
+                           stem=cli.commit_stem("implementation"), run_id=item.orch_run, ref=item.ref,
+                           attempt_id=item.claim["attempt_id"], stage="implementation")
+        self.assertEqual(["commit-implementation-request.json", "commit-implementation.json"],
+                         sorted(path.name for path in (self.receipts / "receipts").glob("commit*")))
+        run._reconcile_interrupted()
+        self.assertEqual("closed from receipt", self.message(run))
+        self.assertEqual({"outcome": "committed", "sha": "a" * 40}, item.state["steps"]["checkpoint"]["result"])
+        # the receipt of the final commit is a different file: a stage receipt never closes it
+        run, final = self.start("commit")
+        run._reconcile_interrupted()
+        self.assertEqual("repeated: receipt missing", self.message(run))
+
+    def test_a_stage_receipt_does_not_wait_for_a_workspace_part_the_stage_never_commits(self):
+        run, item = self.start("fix-commit.1")
+        answer = {"op": "commit", "outcome": "committed", "sha": "c" * 40, "attempt": item.claim["attempt_id"]}
+        cli._source_effect(SimpleNamespace(commit=lambda **fields: answer), self.receipts, "commit",
+                           stem=cli.commit_stem("correction.1"), run_id=item.orch_run, ref=item.ref,
+                           attempt_id=item.claim["attempt_id"], stage="correction.1")
+        receipt = work_source.read_receipt(item, "fix-commit.1", project=self.project)
+        with_workspace = dict(receipt, _workspace_required=True)
+        self.assertEqual((True, "closed from receipt"), work_source.receipt_closes("fix-commit.1", with_workspace, item))
+        self.assertEqual((False, "repeated: workspace part incomplete"),
+                         work_source.receipt_closes("commit", dict(with_workspace), item))
+
+    def test_the_source_trailer_does_not_close_the_final_commit_of_a_workspace_plan(self):
+        """The final commit of a workspace plan has a second part (the plan files in the workspace repository); the trailer of
+        the source commit proves only the first, so the step is repeated and finishes the workspace part."""
+        from orch.conductor.infrastructure import commit_stages
+        run, item = self.start("commit")
+        trailers = commit_stages.stage_trailers(item, "final")
+        self.git("add", "product.txt")
+        self.git("commit", "-q", "-m", "feat: final\n\n" + "\n".join(trailers))
+        fields = dict(run_id=item.orch_run, ref=item.ref, attempt_id=item.claim["attempt_id"], stage="final",
+                      paths=["product.txt"])
+
+        def died(**request):
+            raise RuntimeError("the source died after its commit, before the answer")
+
+        with self.assertRaises(RuntimeError):
+            cli._source_effect(SimpleNamespace(commit=died), self.receipts, "commit", **fields)
+        read = journal.read_doc
+
+        def plugin_run(directory, name):
+            return {"source": {"kind": "plugin"}} if name == "run.json" else read(directory, name)
+
+        marker = {"plans_store": "workspace"}
+        with mock.patch.object(commit_stages, "read_marker", return_value=marker), \
+                mock.patch.object(commit_stages.journal, "read_doc", side_effect=plugin_run):
+            run._reconcile_interrupted()
+        self.assertEqual("repeated: receipt missing", self.message(run))  # not closed by the trailer
+        self.assertNotIn("commit", item.state["steps"])
+        run._start_step(item, "commit")  # the same crash on a plan in its checkout: the trailer proves the whole commit
+        run._reconcile_interrupted()
+        self.assertEqual("closed from the Plan-Stage trailer of the commit", self.message(run))
+        self.assertEqual("done", item.state["steps"]["commit"]["status"])
+
     def test_workspace_only_commit_never_exposes_workspace_sha_as_product_sha(self):
         run, item = self.start("commit")
         answer = {"op": "commit", "outcome": "committed", "sha": "b" * 40, "repo": "workspace",

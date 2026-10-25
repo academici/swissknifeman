@@ -487,7 +487,8 @@ class ConductorFinishTests(unittest.TestCase):
         item = SimpleNamespace(ref="W1", directory=Path(tmp.name), state={"steps": {}, "autofixed": []})
         written = []
         owner = SimpleNamespace(
-            _settle_pending=lambda report, rows: report, _changed=lambda item: [], _outside=lambda item: [],
+            _correction_settle=lambda item, report: report, _settle_pending=lambda report, rows: report,
+            _changed=lambda item: [], _outside=lambda item: [],
             _autofix_issues=lambda item, report: [], _notes=lambda item: [], _questions=lambda item: {},
             _write_artifact=lambda item, name, doc: written.append(name), _deviation_recorded=lambda item, issue: None,
             _beacon_event=lambda *args: None,

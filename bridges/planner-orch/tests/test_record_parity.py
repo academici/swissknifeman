@@ -75,8 +75,8 @@ OBLIGATIONS = [
     ("W7", REGISTER_PY, '"return"'),
     ("W7", REGISTER_PY, '"--changed"'),
     ("W7", EXECUTOR, "`changed_paths`"),
-    # W8: one scoped commit per item by the coordinator.
-    ("W8", PLAN_RUN, "One scoped commit"),
+    # W8: scoped commits of an item by the coordinator (plan-run: the implementation before the review, then the final one).
+    ("W8", PLAN_RUN, "The final commit"),
     ("W8", EXECUTOR, "`result_contract.commit_owner` is the coordinator"),
     # W9: the scout run logs one event (code).
     ("W9", SCOUT, 'store.new_event("scout"'),

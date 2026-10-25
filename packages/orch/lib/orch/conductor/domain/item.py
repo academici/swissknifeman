@@ -11,6 +11,16 @@ def done_steps(steps: dict) -> dict:
     return {key: step for key, step in steps.items() if step.get("status") == "done"}
 
 
+def piece_commits(piece: dict) -> list:
+    """Every commit of a piece in order: the stage commits of a split run (``commits`` of its state: the implementation
+    and the fix commits), then its final commit; one sha for a piece of ``final-only``."""
+    shas = [row["sha"] for row in piece.get("commits") or [] if row.get("sha")]
+    final = ((done_steps(piece.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+    if final and final not in shas:
+        shas.append(final)
+    return shas
+
+
 @dataclass
 class Item:
     """What the conductor knows about the piece of work it runs now."""

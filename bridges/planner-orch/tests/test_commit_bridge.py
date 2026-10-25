@@ -71,6 +71,79 @@ class CommitBridge(unittest.TestCase):
             self.assertIn(line, message)
         self.assertEqual(self.git("status", "--porcelain").strip(), "")
 
+    def op(self, **fields):
+        import worksource
+        with mock.patch.dict(os.environ, self.env, clear=True):
+            return worksource.op_commit({"plan": str(self.plan), "ref": "P1.2", **fields})
+
+    def plan_item(self):
+        item = self.plan / "phases/P1/P1.2.json"
+        document = json.loads(item.read_text(encoding="utf-8"))
+        document["title"] = "Bookkeeping of the item"
+        item.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def argv_of(self, **fields):
+        import worksource
+        calls = []
+
+        def plan_py(argv, plans_root=None):
+            calls.append(argv)
+            return subprocess.CompletedProcess(argv, 1, "", "NOTHING_TO_COMMIT: no changed paths are allowed")
+
+        with mock.patch.object(worksource, "plan_py", plan_py):
+            worksource.op_commit({"plan": str(self.plan), "ref": "P1.2", **fields})
+        return calls[0]
+
+    def test_h_a_fix_stage_passes_the_role_the_trailers_and_the_paths_only_flag_on(self):
+        argv = self.argv_of(paths=["lib/pkg/config.py"], role="fix", stage="correction.2",
+                            trailers=["Plan-Run: run-a", "Plan-Stage: correction.2", "Plan-Findings: fk-0123456789abcdef"])
+        self.assertEqual(argv[:5], ["commit", str(self.plan), "P1.2", "--role", "fix"])
+        self.assertEqual([argv[i + 1] for i, word in enumerate(argv) if word == "--trailer"],
+                         ["Plan-Run: run-a", "Plan-Stage: correction.2", "Plan-Findings: fk-0123456789abcdef"])
+        self.assertEqual(([argv[i + 1] for i, word in enumerate(argv) if word == "--path"], "--paths-only" in argv),
+                         (["lib/pkg/config.py"], True))
+
+    def test_m_only_a_stage_before_the_final_one_is_paths_only(self):
+        paths = ["lib/pkg/config.py"]
+        implementation = self.argv_of(paths=paths, role="executor", stage="implementation")
+        final = self.argv_of(paths=paths, role="executor", stage="final", trailers=["Plan-Stage: final"])
+        legacy = self.argv_of(paths=paths)
+        self.assertEqual(("--paths-only" in implementation, "--paths-only" in final, "--paths-only" in legacy),
+                         (True, False, False))
+        self.assertEqual(legacy[3:5], ["--role", "executor"])  # the call of final-only is as it was
+        self.assertNotIn("--trailer", legacy)
+
+    def test_m_a_stage_commits_its_paths_and_leaves_the_plan_files_for_the_final_commit(self):
+        (self.tmp / "lib/pkg/config.py").write_text("DEFAULT = 2\n", encoding="utf-8")
+        (self.tmp / "lib/pkg/neighbour.py").write_text("x = 1\n", encoding="utf-8")  # dirty, not the stage's
+        self.plan_item()
+        answer = self.op(paths=["lib/pkg/config.py"], role="executor", stage="implementation",
+                         trailers=["Plan-Stage: implementation"])
+        self.assertEqual(answer["outcome"], "committed", answer)
+        names = self.git("diff-tree", "--no-commit-id", "--name-only", "-r", "-z", "HEAD").rstrip("\0").split("\0")
+        self.assertEqual(names, ["lib/pkg/config.py"])
+        self.assertIn("Plan-Stage: implementation", self.git("log", "-1", "--format=%B"))
+        left = self.git("-c", "core.quotepath=false", "status", "--porcelain")
+        self.assertIn("phases/P1/P1.2.json", left)
+        self.assertIn("lib/pkg/neighbour.py", left)
+        final = self.op(paths=["lib/pkg/config.py"], role="executor", stage="final", trailers=["Plan-Stage: final"])
+        self.assertEqual(final["outcome"], "committed", final)
+        names = self.git("-c", "core.quotepath=false", "diff-tree", "--no-commit-id", "--name-only", "-r", "-z",
+                         "HEAD").rstrip("\0").split("\0")
+        self.assertTrue(any(name.endswith("phases/P1/P1.2.json") for name in names), names)
+
+    def test_m_a_path_the_task_files_do_not_cover_waits_for_the_final_commit(self):
+        (self.tmp / "lib/pkg/config.py").write_text("DEFAULT = 2\n", encoding="utf-8")
+        (self.tmp / "lib/pkg/extra.py").write_text("x = 1\n", encoding="utf-8")
+        answer = self.op(paths=["lib/pkg/config.py", "lib/pkg/extra.py"], role="fix", stage="correction.1")
+        self.assertEqual(answer["outcome"], "committed", answer)
+        self.assertIn("not covered by the task files, left for the final commit: lib/pkg/extra.py", answer["message"])
+        names = self.git("diff-tree", "--no-commit-id", "--name-only", "-r", "-z", "HEAD").rstrip("\0").split("\0")
+        self.assertEqual(names, ["lib/pkg/config.py"])
+        only = self.op(paths=["lib/pkg/extra.py"], role="fix", stage="correction.2")
+        self.assertEqual(only["outcome"], "no-op", only)
+        self.assertIn("lib/pkg/extra.py", only["message"])
+
     @unittest.skipUnless(ORCH, "orch not found")
     def test_fragment_passes_orch_stage_result_validation(self):
         (self.tmp / "lib/pkg/config.py").write_text("DEFAULT = 3\n", encoding="utf-8")

@@ -17,7 +17,7 @@ choose a branch by `op`.
 | `claim` | `plan`, `plans_root?`, `items?` (candidate refs in order), `batch?`, `scenario?` (the invocation's `--scenario`: wins over the scenario the source resolves), `run_id`, `submission_id`, `actor` (`provider`, `model`, `effort?`), `orch_config?` (the invocation configuration of the orch command, for the source's own calls to orch) | `status` `claimed` \| `none` \| `blocked`; `ref`, `title`, `scenario`, `scenario_source`, `route` (`class`, `effort`, and `correction?` — the minimum of a bounded correction of review findings, `{class, effort, provider?, model?}`), `depends_on?` (the pieces it depends on: the conductor holds it when one of them ended blocked in the run), `attempt_id`, `session` when claimed; `reason_code`, `message` when blocked |
 | `brief` | `plan`, `plans_root?`, `ref`, `unit?`, `run_id` | `input_ref` (`artifact-ref/v1`), `input_id`, `digest`, `reused`, `artifact_id` |
 | `register` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `status` (`done` \| `done_with_deviations` \| `blocked`), `report`, `evidence` (`{"V<n>": path}`), `registrar`, `executed_by`, `review_receipt?` | `outcome` `recorded` \| `no-op` \| `refused`; `gate` (`verdict` `pass` \| `missing` \| `red` \| `stale` \| `none`, `checks` `{"V<n>": exit or null}`); `receipt?`; `reason_code`, `message` when refused |
-| `commit` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `paths` (extra owned paths, such as the artifact folder), `actor?` | `outcome` `committed` \| `no-op` \| `refused`; `sha` when committed; `reason_code`, `message` when refused |
+| `commit` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `paths` (extra owned paths, such as the artifact folder), `actor?`, `role?` (`executor` \| `fix`), `stage?` (`implementation` \| `correction.<n>` \| `final`), `trailers?` (`Key: value` lines of the message) | `outcome` `committed` \| `no-op` \| `refused`; `sha` when committed; `reason_code`, `message` when refused |
 | `release` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `reason?`, `actor?` | `outcome` `released` \| `no-op` (the run does not hold the piece) \| `refused`; `reason_code`, `message` when refused |
 | `note` (optional) | `collection`, `plans_root?`, `text`, `refs` (a phase or an item of the collection), `run_id?`, `actor?` | `outcome` `recorded` \| `no-op` \| `refused`; `reason_code`, `message` when refused |
 | `research` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `number` (from 1), `result` (a `research-result`), `actor?` | `outcome` `recorded` \| `no-op` (the same result is already kept) \| `refused`; `path` (repository-relative) when kept; `reason_code`, `message` when refused |
@@ -98,7 +98,7 @@ orch.py source claim (--plan P | --input FILE [--commit]) [--plans-root DIR] [--
 orch.py source brief --run RUN
 orch.py source prepare --run RUN --provider P [--binding B] [--model-catalog FILE]
 orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]… [--review-receipt PATH] --actor P/M[/E] [--executed-by P/M[/E]]
-orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]]
+orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]] [--role executor|fix] [--stage STAGE] [--trailer "Key: value"]…
 orch.py source release --run RUN [--reason TEXT] [--actor P/M[/E]]
 orch.py source research --run RUN --result FILE --number N [--actor P/M[/E]]
 orch.py source decision --run RUN --file FILE [--ref ITEM] [--actor P/M[/E]]
@@ -135,7 +135,13 @@ orch.py source readiness (--plan P | --input FILE) [--plans-root DIR]
   `orch.run.stage.finished` (stage `primary`) and `orch.run.finished` when something was recorded, or
   `orch.run.refused` (step `register`). A repeat that the source records as `no-op` emits nothing.
 - `commit` asks the source for one commit of the registered work and writes `receipts/commit.json`; nothing left
-  to commit is `no-op`, a refusal exits 1.
+  to commit is `no-op`, a refusal exits 1. A split run (`commit.mode: implementation-and-fixes`, see the conductor
+  documentation) calls it once per stage: `--stage implementation` and `--stage correction.<n>` (with `--role executor`
+  or `fix`) commit exactly the given paths, `--stage final` the rest; each stage keeps its own receipt,
+  `receipts/commit-<stage>.json` and `commit-<stage>-request.json` (`final` and no stage keep `commit.json`). The
+  `--trailer` lines go into the commit message; the planner bridge passes them to its commit as `--trailer` and a
+  stage before the final one as `--paths-only`, the file source appends them to its message (a commit of a
+  `review_followup` input also gets `Plan`, `Plan-Review`, `Plan-Findings` and `Plan-Items` from its provenance).
 - `release` gives a claim back to the source and writes `receipts/release.json`: the piece goes back to the state
   before the claim, so that a later run can claim it (`ITEM_OWNED` no longer holds). The op is optional: a source that
   does not serve it answers `INPUT_INVALID`/`WORK_SOURCE_FAILED`, which the conductor reports as `CLAIM_KEPT` and goes on.

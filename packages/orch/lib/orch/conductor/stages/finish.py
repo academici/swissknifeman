@@ -9,7 +9,7 @@ from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import escalation_code
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
-from orch.conductor.infrastructure import clock, work_source
+from orch.conductor.infrastructure import clock, commit_stages, work_source
 from orch.conductor.infrastructure.work_source import FALLBACK_ARTIFACTS
 from orch.conductor.stages import decisions
 from orch.worksource_report import report_problems
@@ -133,10 +133,73 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         item.state["partial"] = bool(report.get("changed_paths"))
     if not review_only and (status != "blocked" or records_only) and item.policy.get("git_action") == "commit":
         paths = commit_paths(self, item, report)
-        self._step(item, "commit", lambda: self._commit(item, paths),
-                   verdict=lambda result: " ".join(part for part in (result["outcome"], result.get("sha"),
-                                                                     result.get("message")) if part))
+        split = {"role": "executor", "stage": "final", "trailers": commit_stages.stage_trailers(item, "final")} \
+            if splitting(self, item) else {}  # the commit of what the stages left: records, plan files, other paths
+        self._step(item, "commit", lambda: self._commit(item, paths, **split), verdict=commit_verdict)
     return status
+
+
+def commit_verdict(result: dict) -> str:
+    return " ".join(part for part in (result["outcome"], result.get("sha"), result.get("message")) if part)
+
+
+def splitting(self, item: Item) -> bool:
+    """The piece is committed in stages: ``commit.mode`` is ``implementation-and-fixes``, the run commits and the input is
+    not a read-only review. ``final-only`` (the default) keeps the one commit after the registration."""
+    return (item.options.get("commit", {}).get("mode") == "implementation-and-fixes"
+            and item.policy.get("git_action") == "commit"
+            and item.input_doc.get("provenance", {}).get("kind") != "review")
+
+
+def stage_paths(self, item: Item) -> list:
+    """The product paths a stage commit takes: what the executor rounds (and the checks) changed and the tree still holds
+    as a change. Never the records of the piece (they wait for the final commit, I11), the local artifact folder or the
+    runtime artifacts set aside."""
+    local = FALLBACK_ARTIFACTS.as_posix() + "/"
+    stray = (self._relative(work_source.stray_dir(item)) + "/") if item.artifacts else None
+    dirty = set(self._dirty_paths())
+    return sorted(path for path in self._changed(item)
+                  if path in dirty and not path.startswith(local) and not (stray and path.startswith(stray)))
+
+
+def stage_commit(self, item: Item, stage: str, review_round: Optional[int] = None, findings=()) -> None:
+    """The commit of a stage of a split run: ``implementation`` (the checkpoint after the first green checks, before the
+    review, role ``executor``) or ``correction.<n>`` (a green correction round of review round ``n``, role ``fix``, with
+    the review and the finding keys it answers). Nothing happens in ``final-only``, and a stage that changed no product path
+    commits nothing. The step is closed by its own receipt (``receipts/commit-<stage>.json``); the commit is recorded in
+    ``state.commits`` with its parent, which is where the review of the piece starts."""
+    if not splitting(self, item):
+        return
+    key = commit_stages.stage_step(stage)
+    closed = done_steps(item.state.get("steps") or {}).get(key)
+    if closed:  # a resume: the state may have been lost between the step and the record
+        record_commit(self, item, stage, closed["result"])
+        return
+    paths = stage_paths(self, item)
+    if not paths:
+        return
+    review = f"{self.run_id}/{item.ref}/review.{review_round}" if review_round else None
+    trailers = commit_stages.stage_trailers(item, stage, review=review, findings=sorted(findings))
+    role = "executor" if stage == "implementation" else "fix"
+    result = self._step(item, key, lambda: self._commit(item, paths, role=role, stage=stage, trailers=trailers),
+                        verdict=commit_verdict)
+    record_commit(self, item, stage, result)
+
+
+def record_commit(self, item: Item, stage: str, result: dict) -> None:
+    """``state.commits`` of the piece gets ``{stage, sha, parent}``, once per stage and commit. A no-op commit has no sha
+    and a sha git does not know has no parent: neither is recorded, and the review then starts from HEAD as before."""
+    try:
+        sha = checks_mod.git(self.project, "rev-parse", "--verify", f"{result.get('sha')}^{{commit}}").strip()
+        parent = checks_mod.git(self.project, "rev-parse", "--verify", f"{sha}^").strip()
+    except RuntimeError:
+        return
+    commits = item.state.setdefault("commits", [])
+    if any(row["stage"] == stage and row["sha"] == sha for row in commits):
+        return
+    with self.store.mutating():
+        commits.append({"stage": stage, "sha": sha, "parent": parent})
+        self._save()
 
 
 def waiting_questions(self, item: Item, escalations: list) -> list:

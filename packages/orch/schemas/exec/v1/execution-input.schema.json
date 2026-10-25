@@ -215,6 +215,22 @@
               "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
               "description": "Finding the work answers."
             },
+            "items": {
+              "description": "Every piece of the reviewed group; the commit of the follow-up names them (Plan-Items).",
+              "type": "array",
+              "items": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                "description": "A piece of the reviewed group."
+              }
+            },
+            "findings": {
+              "description": "Conductor keys of the findings the work answers; the commit of the follow-up names them (Plan-Findings).",
+              "type": "array",
+              "items": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                "description": "Conductor key of a finding."
+              }
+            },
             "fix_briefs": {
               "description": "Ordered backlog of bounded group-review correction assignments after the initial goal.",
               "type": "array",

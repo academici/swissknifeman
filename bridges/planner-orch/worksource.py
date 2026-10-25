@@ -666,6 +666,13 @@ _FOREIGN = re.compile(r"OUTSIDE_SCOPE: foreign dirty paths: (.*?); use --leave-o
 
 
 _PLAN_FILE = re.compile(r"(^|/)plans/.+/(phases/[^/]+/[^/]+(\.json|/.*)|log\.jsonl|plan\.json)$")
+_OUTSIDE_PRODUCT = re.compile(r"PATH_OUTSIDE_SCOPE: paths outside the product paths of the item: (.*?); --paths-only")
+
+
+def _outside_product(text: str) -> list:
+    """The paths a ``--paths-only`` refusal (``PATH_OUTSIDE_SCOPE``) names as not covered by the task files of the item."""
+    found = _OUTSIDE_PRODUCT.search(text or "")
+    return re.findall(r"'([^']+)'", found.group(1)) if found else []
 
 
 def _foreign_paths(text: str) -> list:
@@ -688,13 +695,35 @@ def op_commit(fields: dict) -> dict:
 
 
 def _commit(fields: dict) -> dict:
-    """One scoped commit of the registered item through ``plan.py commit``; nothing left to commit is a no-op."""
-    argv = ["commit", fields["plan"], fields["ref"], "--role", "executor"]
-    for path in fields.get("paths") or []:
-        argv += ["--path", path]
-    if fields.get("actor"):
-        argv += ["--actor", actor_text(fields["actor"])]
-    done = plan_py([*argv, "--json"], fields.get("plans_root"))
+    """One scoped commit of the registered item through ``plan.py commit``; nothing left to commit is a no-op.
+
+    A split run names a ``stage``: ``implementation`` and ``correction.<n>`` commit exactly the product paths of the stage
+    (``--paths-only``: no other task file, no plan file, no workspace commit; a path the task files do not cover stays for
+    the final commit), ``final`` (and no stage) is the commit of the plan files and the rest. ``role`` (``executor``,
+    ``fix``) and ``trailers`` go to the commit as given."""
+    stage = fields.get("stage")
+    paths = list(fields.get("paths") or [])
+    staged = stage not in (None, "final")
+    deferred = []  # product paths the task files of the item do not cover: the final commit takes them
+    while True:
+        argv = ["commit", fields["plan"], fields["ref"], "--role", fields.get("role") or "executor"]
+        for path in paths:
+            argv += ["--path", path]
+        for trailer in fields.get("trailers") or []:
+            argv += ["--trailer", trailer]
+        if staged:
+            argv.append("--paths-only")
+        if fields.get("actor"):
+            argv += ["--actor", actor_text(fields["actor"])]
+        done = plan_py([*argv, "--json"], fields.get("plans_root"))
+        outside = _outside_product(done.stderr or done.stdout) if staged and done.returncode else []
+        if not outside or not set(outside) <= set(paths):
+            break
+        deferred += outside
+        paths = [path for path in paths if path not in outside]
+        if not paths:
+            return {"op": "commit", "outcome": "no-op", "message": "the task files cover none of the paths of the stage: "
+                    + ", ".join(deferred)[:900]}
     left = []
     foreign = _foreign_paths(done.stderr or done.stdout) if done.returncode else []
     if foreign and (fields.get("paths") or _only_plan_dirt(done.stderr or done.stdout)):
@@ -725,6 +754,8 @@ def _commit(fields: dict) -> dict:
         answer.update(repo=result.get("repo", "source"), workspace_sha=result.get("workspace_sha"),
                       workspace_commit=split)
     notes = []
+    if deferred:
+        notes.append("not covered by the task files, left for the final commit: " + ", ".join(deferred))
     if left:
         notes.append("left outside, not the work of this piece: " + ", ".join(left))
     if split.get("error"):  # the product commit stands; the plan files wait for the next commit or `workspace sync`

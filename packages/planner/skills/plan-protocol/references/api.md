@@ -263,3 +263,13 @@ are computed rather than persisted. The other graph kinds (`parent`, `consumes`,
 `supersedes`) remain visible through `links`; their owning authoring/lifecycle verbs change them.
 Invalid source/target combinations return `LINK_INVALID`; schema and proposed-graph failures
 return `SCHEMA_INVALID` and `PLAN_INVALID`. See `schema --verbs` for the full error sets.
+
+## Stage commits
+
+`commit <item> --role executor|fix --path P… --paths-only` commits exactly the given paths and nothing else: every
+`--path` must be covered by the item's product templates (`task_files`, or the `files` of a unit), otherwise the verb
+refuses with `PATH_OUTSIDE_SCOPE` and commits nothing. The plan files (`plan.json`, `phases/`, `log.jsonl`,
+`artifacts/`), the other `task_files` of the item and the workspace repository are left alone, and other dirty paths are not
+an error. At least one `--path` is required (`USAGE`). Use it for the implementation and correction commits of a split run
+(`--role executor` before review, `--role fix` per correction); the last call without the flag takes the remaining plan files.
+The paths are literal names (`src/a[1].py` is that file, never a pattern); the product templates only decide which paths are allowed. Without `--paths-only` the verb behaves as before.

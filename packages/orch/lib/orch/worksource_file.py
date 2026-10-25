@@ -71,6 +71,22 @@ def read_input(path: str | Path) -> dict:
     return doc
 
 
+def trailer_lines(doc: dict, requested) -> list:
+    """The trailers of the commit message: those the caller asked for (the run, the attempt and the stage of a split run),
+    then the ones the provenance of a review follow-up gives (``Plan``, ``Plan-Review`` the run whose group review it
+    answers, ``Plan-Findings`` the finding keys, ``Plan-Items`` the pieces); a key asked for is not repeated."""
+    lines = list(requested)
+    provenance = doc.get("provenance") or {}
+    if provenance.get("kind") == "review_followup":
+        wanted = [("Plan", provenance.get("plan")), ("Plan-Review", (provenance.get("session_ref") or {}).get("run")),
+                  ("Plan-Findings", ",".join(map(str, provenance.get("findings") or []))),
+                  ("Plan-Items", ",".join(map(str, provenance.get("items") or [])))]
+        known = {line.split(":", 1)[0].lower() for line in lines}
+        lines += [f"{key}: {' '.join(str(value).split())}" for key, value in wanted
+                  if value and key.lower() not in known]
+    return lines
+
+
 class FileWorkSource:
     """The work source of the document ``path``; ``commit`` says whether ``commit`` really commits."""
 
@@ -263,7 +279,11 @@ class FileWorkSource:
                     "message": (added.stderr or added.stdout).strip() or "git add failed"}
         if self._git("diff", "--cached", "--quiet", "--", *paths).returncode == 0:
             return {"op": "commit", "outcome": "no-op", "message": "nothing left to commit"}
-        done = self._git("commit", "-q", "-m", f"adhoc({doc['input_id']}): {title_of(doc)}", "--", *paths)
+        message = f"adhoc({doc['input_id']}): {title_of(doc)}"
+        lines = trailer_lines(doc, request.get("trailers") or [])
+        if lines:
+            message += "\n\n" + "\n".join(lines)
+        done = self._git("commit", "-q", "-m", message, "--", *paths)
         if done.returncode:
             fresh = [path for path in self._git("diff", "--cached", "--name-only", "-z", "--", *paths).stdout.split("\0")
                      if path and path not in staged]

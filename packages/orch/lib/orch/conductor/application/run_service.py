@@ -556,8 +556,9 @@ def _settle_group_owned(self, store: RunStore, run_id: str, number: int, followu
                                               f"{', '.join(str(o) for o in outcomes) or '-'}, "
                                               f"{'committed' if shas else 'no commit'}): it must be finished, done and committed")
     self._open(run_id, run_doc, state, store)
-    kept["resolved"] = {"followup_run": followup_run, "commit": shas[0], "reason": reason, "at": clock.utc_now()}
+    commit = review_batch.last_sha(shas[0])
+    kept["resolved"] = {"followup_run": followup_run, "commit": commit, "reason": reason, "at": clock.utc_now()}
     self._save()
     self.progress.emit("info", reason_code="GROUP_REVIEW_RESOLVED",
-                       message=f"group {number}: settled by the follow-up run {followup_run} (commit {shas[0][:12]}): {reason}")
+                       message=f"group {number}: settled by the follow-up run {followup_run} (commit {commit[:12]}): {reason}")
     return 0

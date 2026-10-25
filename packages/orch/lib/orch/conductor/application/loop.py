@@ -48,8 +48,7 @@ def loop(self) -> int:
     except Exception as error:  # noqa: BLE001 — unexpected failures must close the run too
         secrets = env_secrets()
         crash = redact_document(traceback.format_exc(), secrets=secrets)
-        # The artifact is best-effort. Failing to write it must not drop the original redacted stop, and the
-        # message must not claim crash.txt exists. The state save and run.end below still run when they can.
+        # best-effort: a failed write must not drop the original redacted stop; the state save and run.end still run
         try:
             (self.directory / "crash.txt").write_text(crash, encoding="utf-8")
             written = True
@@ -97,9 +96,8 @@ def pieces(self) -> None:
     started = 0
     pending_retries = []
     claimed, first_adopted, held = {}, [], []
-    # Ready mode used to return on max_items and on an empty claim, so a held dependency did not become
-    # DEPENDENCY_BLOCKED. Explicit items still fall out of the loop when the list is exhausted, and that is the
-    # only path that stops for a held piece. Pending answers are finalized on every exit (P3.7).
+    # Ready mode used to return on max_items and on an empty claim, so a held dependency did not become DEPENDENCY_BLOCKED.
+    # Explicit items fall out of the loop when the list is exhausted: the only path that stops for a held piece (P3.7).
     exhausted = False
     if keys is None and doc.get("grouped") is not False:  # the batch a source names is a batch like --items
         expanded = self._expand_ready()
@@ -387,7 +385,7 @@ def conduct(self, item: Item) -> str:
     state.setdefault("corrections_at", [])   # so a counter that only counts up would count them twice
     state.setdefault("autofix_at", [])       # rounds whose deviation got its fix round (a correction of the budget)
     overlap = (self._review_enabled(item) and item.options["checks"]["overlap_review"]
-               and not item.input_doc.get("provenance", {}).get("fix_briefs"))
+               and not item.input_doc.get("provenance", {}).get("fix_briefs") and not self._splitting(item))  # split: no overlap
     report, round_no = self._autofix(item, report, 1, scout_text)
     if report["status"] == "blocked":
         return self._finish(item, report, None)
@@ -403,6 +401,7 @@ def conduct(self, item: Item) -> str:
         return self._finish(item, report, rows)
     self._dynamic_review(item, report)
     self._review_requested_off(item)
+    self._stage_commit(item, "implementation")  # commit.mode implementation-and-fixes: the checkpoint before the first review
     if self._reviewing(item):
         review_round, earlier = 1, None
         while True:
@@ -442,14 +441,14 @@ def conduct(self, item: Item) -> str:
             earlier = places
             replayed = review_round in state["corrections_at"]
             rounds_why = self._allowance(item, "review_rounds", review_round, progress, emit=not replayed)
-            # a spent run-wide budget (``*_batch``) is its own limit and wins over the per-piece wall, which refuses
-            # before ``allowance`` reaches the batch rule
+            # a spent run-wide budget (``*_batch``) is its own limit and wins over the per-piece wall that refuses first
             batch_rounds = (self._batch_allowance(item, "review_rounds", review_round, progress, emit=False)
                             if rounds_why else None)
             batch_findings = self._batch_allowance(item, "findings", self._piece_count(state, "findings_at"),
                                                    progress, emit=not replayed)
             rounds_why = batch_rounds or batch_findings or rounds_why
             if review_round in state.get("combined_done", []):  # corrected together with the red checks
+                self._stage_commit(item, f"correction.{review_round}", review_round, places)
                 if rounds_why:
                     self._corrected_receipt(item, review_round)
                     self._plan_note(item, f"findings of review round {review_round} were corrected together with the "
@@ -488,7 +487,6 @@ def conduct(self, item: Item) -> str:
                 state["corrections_at"].append(review_round)
             state["corrections_used"] = self._piece_count(state, "corrections_at")
             round_no += 1
-            before = self._product_snapshot(self.project) if final and not replayed else None
             correction = review_correction(self, item, round_no, review_round, findings, triage, sources)
             delivered = json.loads((item.directory / "fix-briefs" / f"executor.{round_no}.json").read_text())
             ids = {entry["id"] for entry in delivered["findings"]}
@@ -496,6 +494,7 @@ def conduct(self, item: Item) -> str:
             role = self._correction_role(item, any(self._severity_of(findings, entry["finding"]) == "blocker"
                                                    for entry in major))
             self._correction_baseline_files(item, round_no)
+            before = self._product_snapshot(self.project) if final and not replayed else None  # after the records it writes
             report = self._execute(item, round_no, scout_text, correction, role=role)
             if report["status"] == "blocked":
                 return self._finish(item, report, rows)
@@ -516,6 +515,7 @@ def conduct(self, item: Item) -> str:
                                                  review_round + 1 if overlap and not final else None)
             if report["status"] == "blocked":
                 return self._finish(item, report, rows)
+            self._stage_commit(item, f"correction.{review_round}", review_round, places)  # the green correction, before the next review
             if final:
                 self._corrected_receipt(item, review_round)
                 ids = ", ".join(entry["finding"] for entry in major)

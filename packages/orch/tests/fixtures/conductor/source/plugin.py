@@ -150,16 +150,24 @@ def register(state, given, project):
 
 
 def commit(state, given, project):
+    """A commit with a ``stage`` (a split run) takes exactly the ``paths`` it is given and carries the ``trailers``; one without
+    a stage takes everything that is dirty, as the first conductor tests expect."""
     if "commit" in state.get("refuse", []):
         state["refuse"].remove("commit")
         return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_TEST_REFUSAL", "message": "once"}
     git = ["git", "-C", project]
-    subprocess.run(git + ["add", "-A"], check=True, capture_output=True)
-    if subprocess.run(git + ["diff", "--cached", "--quiet"]).returncode == 0:
+    staged = given.get("stage") is not None
+    only = ["--", *given["paths"]] if staged else []
+    if staged and not given["paths"]:
+        return {"op": "commit", "outcome": "no-op", "message": "no paths to commit"}
+    subprocess.run(git + ["add", *(only or ["-A"])], check=True, capture_output=True)
+    if subprocess.run(git + ["diff", "--cached", "--quiet", *only]).returncode == 0:
         return {"op": "commit", "outcome": "no-op", "message": "nothing to commit"}
-    subprocess.run(git + ["commit", "-q", "-m", f"feat: {given['ref']}"], check=True, capture_output=True)
+    message = f"feat: {given['ref']}" + ("\n\n" + "\n".join(given["trailers"]) if given.get("trailers") else "")
+    subprocess.run(git + ["commit", "-q", "-m", message, *only], check=True, capture_output=True)
     sha = subprocess.run(git + ["rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
-    state["commits"].append({"ref": given["ref"], "sha": sha, "paths": given["paths"]})
+    state["commits"].append({"ref": given["ref"], "sha": sha, "paths": given["paths"],
+                             **{key: given[key] for key in ("role", "stage", "trailers") if key in given}})
     return {"op": "commit", "outcome": "committed", "sha": sha}
 
 

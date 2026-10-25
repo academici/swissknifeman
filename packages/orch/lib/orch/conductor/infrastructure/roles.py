@@ -15,7 +15,7 @@ from orch.conductor.signals import StallWatch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import beacon_events, clock, detach, launch_plan, sessions
+from orch.conductor.infrastructure import beacon_events, clock, detach, launch_plan, results, sessions
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.heartbeat import observe_tick
 from orch.conductor.infrastructure.launch_plan import claude_transcripts, strip_guard, transcript_folder_name  # noqa: F401 — re-export for callers
@@ -43,7 +43,8 @@ class RolePorts(NamedTuple):
     remember_stage: Optional[Callable] = None  # application.budget_service.remember_stage
     provider_disabled: Optional[Callable] = None  # application.route_service.provider_disabled
     sandbox_args: Optional[Callable] = None  # application.route_service.sandbox_args
-    knows: Optional[Callable] = None  # infrastructure.cli_probe.run_knows
+    knows: Optional[Callable] = None  # application.route_service.knows (ISOLATION_PARTIAL once per run)
+    note_isolation: Optional[Callable] = None  # application.route_service.note_plan
     skills_excluded: Optional[Callable] = None  # stages.context.skills_excluded
     run_clock: Optional[Callable] = None  # the step-boundary run clock (stages.step.run_clock)
 
@@ -95,7 +96,7 @@ def agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool 
     trail = handle["trail"]
     agents.finish(handle, exit_code=handle["last_exit"], error=None if succeeded else trail.get("error") or error,
                   decisions=trail.get("decisions") or [], duration_s=time.monotonic() - handle["began"],
-                  stream=handle["stream"], lingered=handle["lingered"])
+                  stream=handle["stream"], lingered=handle["lingered"], isolation=handle.get("isolation"))
     failure = None if succeeded else trail.get("error") or error
     tokens = {key: value for key, value in handle["usage"].items() if value}
     extra = {"tokens": handle["usage"] if tokens else None, "duration_ms": round((time.monotonic() - handle["began"]) * 1000)}
@@ -203,12 +204,14 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         attempt += 1
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
+        # role_argv refuses a role that instructions.isolation = require does not admit (ISOLATION_UNAVAILABLE)
         run = process.run_role(self._role_argv(item, role, route, decision), prompt, transport=route["transport"], cwd=self.project,
                                timeout_s=route["timeout_s"], raw_path=raw, env=detach.subprocess_env(self._role_env(item, role, route)),
                                idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
                                on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
                                agent_directory=handle["directory"])
         self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
+        results.observe_isolation(self, item, key, role, route, run.init, handle)
         self._keep_session(item, role, route, run, task_digest=digest, delta=delta, decision=decision)
         if resuming and (run.error or not run.session):  # the next attempt starts a fresh session with the whole prompt
             self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),

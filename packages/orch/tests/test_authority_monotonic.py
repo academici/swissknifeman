@@ -15,6 +15,7 @@ from tests.test_settings import SettingsCase
 # Explicit expectations, deliberately not generated from the implementation's floor values.
 OPTION_CASES = {
     "instructions.sandbox": ("require", "off"),
+    "instructions.isolation": ("require", "prefer"),
     "instructions.sandbox_domains": (["trusted.example"], ["untrusted.example"]),
     "instructions.isolate_roles": (["executor", "reviewer"], ["executor"]),
     "scope.fence": ("plan", "project"),

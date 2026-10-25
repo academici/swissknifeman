@@ -65,7 +65,8 @@
     "foreign": {"description": "Fingerprint of the changed paths outside the run taken at its start.", "type": "object"},
     "batch": {"description": "Batch counters of the run (review_rounds, corrections, findings).", "type": "object", "patternProperties": {"^.+$": {"type": "integer"}}, "additionalProperties": false},
     "usage_unmetered": {"description": "Pieces with a role run whose usage is unknown.", "type": "array", "items": {"type": "string"}},
-    "policy_stage_skipped": {"description": "POLICY_STAGE_SKIPPED was announced once for the run (P3.10).", "type": "boolean"}
+    "policy_stage_skipped": {"description": "POLICY_STAGE_SKIPPED was announced once for the run (P3.10).", "type": "boolean"},
+    "isolation_noted": {"description": "What the isolation of the run said once (P6.1): provider:reason of every ISOLATION_PARTIAL, and provider:ISOLATION_DRIFT of a provider whose init event showed a drift (its isolation is lowered for the run).", "type": "array", "uniqueItems": true, "items": {"description": "provider:reason.", "type": "string", "pattern": "^[a-z-][a-z0-9-]*:.+$"}}
   },
   "$defs": {
     "executor-session": {

@@ -37,6 +37,7 @@ from orch.conductor.signals import (CPU_PROGRESS_S, CPU_SAMPLE_S, PROGRESS_MARKE
 from orch.conductor.infrastructure.clock import utc_now
 
 STDERR_TAIL_CHARS = 4000
+INIT_FIELDS = ("tools", "mcp_servers", "skills", "plugins", "slash_commands")  # what an init event says was loaded
 
 
 @dataclass
@@ -58,6 +59,7 @@ class RoleRun:
     denials: list = field(default_factory=list)  # ``[{tool_name}]``: tool calls refused without a prompt (never their input)
     reset_at: Optional[int] = None  # unix time the provider itself gave for the end of a limit (claude ``resetsAt``), as seen
     usage_complete: Optional[bool] = None  # text or not started: None; jsonl: terminal usage with fresh tokens
+    init: Optional[dict] = None  # the names of the first init event (``INIT_FIELDS``), None when the stream has none
 
 
 def available(argv: list) -> bool:
@@ -101,7 +103,8 @@ def parse_stream(transport: str, data: str) -> dict:
     normalized failure signals the stream gives (see ``aicore.provider.errors.SIGNAL_TYPES``). ``denials`` are the tool
     calls Claude refused without asking (``--permission-prompts none``): the ``permission_denied`` system messages and
     ``result.permission_denials``, once per ``tool_use_id``; only the tool name and a safe hint (:func:`denial_hint`) are
-    kept, ``tool_input`` may hold secrets.
+    kept, ``tool_input`` may hold secrets. ``init`` (only when the stream has one) holds the names of :data:`INIT_FIELDS`
+    of the first ``system/init`` event (claude-code, grok); an entry that is an object gives its ``name``.
     """
     if transport == "text":
         return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
@@ -122,6 +125,7 @@ def parse_stream(transport: str, data: str) -> dict:
         if kind == "system" and doc.get("subtype") == "init":
             found["session"] = doc.get("session_id") or found["session"]
             found["model"] = doc.get("model") or found["model"]
+            found.setdefault("init", {name: _names(doc.get(name)) for name in INIT_FIELDS})
         elif kind == "system" and doc.get("subtype") == "permission_denied":
             _deny(denied, doc)
         elif kind == "result":
@@ -222,6 +226,12 @@ def _deny(denied: dict, doc: object) -> None:
         hint = denial_hint(doc["tool_name"], doc.get("tool_input"))
         if key not in denied or (hint and not denied[key][1]):
             denied[key] = (doc["tool_name"], hint)
+
+
+def _names(value: object) -> list:
+    """The sorted names of a list of an init event; an entry that is an object gives its ``name``."""
+    entries = value if isinstance(value, list) else []
+    return sorted(str(entry.get("name", "")) if isinstance(entry, dict) else str(entry) for entry in entries)
 
 
 def _is_int(value: object) -> bool:
@@ -567,7 +577,7 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
                   usage=usage, duration_s=duration, raw=str(raw_path), lingered=lingered,
                   usage_complete=parsed["usage_complete"],
                   api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"],
-                  reset_at=parsed["signals"].get("limit_resets_at"))
+                  reset_at=parsed["signals"].get("limit_resets_at"), init=parsed.get("init"))
     if lingered:
         run.exit = 0
     if (process.returncode != 0 and not lingered) or parsed["is_error"]:

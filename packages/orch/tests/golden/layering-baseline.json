@@ -1,13 +1,13 @@
 {
  "$schema": "urn:swissknifeman:orch:layering-baseline:v1",
- "bindings": 231,
+ "bindings": 233,
  "facade_calls": {
-  "application": 46,
-  "infrastructure": 22,
+  "application": 47,
+  "infrastructure": 24,
   "stages": 41
  },
  "largest_self_scc": 6,
- "measured_at": "6629b71096a11e060908cefb4a691129c55beb26",
+ "measured_at": "638d63aa2d3f46c072de6eb7d1c027c8a35fd8f0",
  "oversized_modules": {
   "checks.py": 1105
  },
@@ -15,6 +15,7 @@
   "infrastructure.role_ports.admit_budget": 2,
   "infrastructure.role_ports.budget": 1,
   "infrastructure.role_ports.knows": 1,
+  "infrastructure.role_ports.note_isolation": 1,
   "infrastructure.role_ports.prompt_for_route": 2,
   "infrastructure.role_ports.provider_disabled": 1,
   "infrastructure.role_ports.provider_failure": 1,
@@ -28,9 +29,9 @@
  "private_facade_access": {},
  "private_facade_access_total": 0,
  "self_functions": {
-  "application": 103,
+  "application": 106,
   "domain": 0,
-  "infrastructure": 52,
+  "infrastructure": 55,
   "policies": 0,
   "stages": 118
  },

@@ -18,6 +18,7 @@ from orch.conductor import prompts, stubs as stubs_mod
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.route import label
 from orch.conductor.infrastructure import clock
+from orch.conductor.policies import isolation as isolation_rules
 
 # The keys of the single session slot of a run before the slots (``executor_sessions``): a state that still has them is
 # migrated into a slot when the run is resumed (``migrate_state``). They stay optional (deprecated) in the state schema.
@@ -84,10 +85,16 @@ def slot_of(self, item: Item) -> Optional[dict]:
 
 
 def identity_inputs(self, item: Item, route: dict) -> dict:
-    """``{authority_digest, isolation_home}`` of the fingerprint: the digest of the authority envelope of the role and the
-    home directory of the provider's isolation profile. Both are empty until the profiles exist (authority envelope,
-    isolation home); the fingerprint and the decision do not change when they are filled in."""
-    return {"authority_digest": "", "isolation_home": ""}
+    """``{authority_digest, isolation_home}`` of the fingerprint: the digest of the authority envelope of the role (empty
+    until the envelope exists) and the home directory of the provider's isolation profile for an isolated executor
+    (``CODEX_HOME`` under the run folder for Codex: a session kept in another home cannot be continued; ``""`` for a
+    provider that keeps its own home, or an executor that is not isolated)."""
+    instructions = (getattr(item, "options", None) or {}).get("instructions") or {}
+    home = ""
+    if "executor" in (instructions.get("isolate_roles") or ()) and instructions.get("isolation", "prefer") != "off":
+        profile = isolation_rules.load_profiles(isolation_rules.PROFILES_PATH).get(route.get("provider") or "")
+        home = isolation_rules.home_dir({"home": (profile or {}).get("home")}, self.directory)
+    return {"authority_digest": "", "isolation_home": home}
 
 
 @lru_cache(maxsize=32)

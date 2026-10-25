@@ -639,7 +639,10 @@ COVERAGE = {
     "RUN_INVALID": "test:test_records_migration.py", "STATE_INVALID": "test:test_records_migration.py",
     "QUESTIONS_INVALID": "test:test_records_contract.py", "RECORD_INVALID": "test:test_records_contract.py",
     "BRIEF_INVALID": "test:test_worksource.py", "REGISTER_REPORT_INVALID": "test:test_worksource.py",
+    "ISOLATION_UNAVAILABLE": "test:test_isolation_profiles.py",
+    "ISOLATION_PROFILES_INVALID": "test:test_isolation_profiles.py",
     # Beacons
+    "ISOLATION_DRIFT": "test:test_isolation_profiles.py",
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
     "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": f"test:{T}",

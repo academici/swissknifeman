@@ -31,9 +31,34 @@
     "decisions": {"description": "Decisions of retry.decide after failures at the provider, in order.", "type": "array", "items": {"$ref": "#/$defs/decision"}},
     "duration_s": {"description": "Wall time of the agent run.", "type": "number", "minimum": 0},
     "stream": {"description": "Stream of the last attempt, relative to the project; null when none.", "type": ["string", "null"]},
-    "lingered": {"description": "The process lingered after its result and was stopped.", "type": "boolean"}
+    "lingered": {"description": "The process lingered after its result and was stopped.", "type": "boolean"},
+    "isolation": {
+      "description": "The isolation the stream of an isolated role showed (P6.1); absent when the stream had no init event.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed"],
+      "properties": {
+        "observed": {
+          "description": "The names of the first init event of the stream of the last attempt.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tools": {"$ref": "#/$defs/names"},
+            "mcp_servers": {"$ref": "#/$defs/names"},
+            "skills": {"$ref": "#/$defs/names"},
+            "plugins": {"$ref": "#/$defs/names"},
+            "slash_commands": {"$ref": "#/$defs/names"}
+          }
+        }
+      }
+    }
   },
   "$defs": {
+    "names": {
+      "description": "Names the init event listed.",
+      "type": "array",
+      "items": {"description": "A name.", "type": "string"}
+    },
     "error": {
       "description": "An error/v1 document when the failure was classified, else {code, message} of the stop.",
       "type": "object"

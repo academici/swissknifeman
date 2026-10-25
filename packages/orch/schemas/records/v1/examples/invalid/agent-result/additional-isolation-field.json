@@ -1,0 +1,14 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "exit": 0,
+  "decisions": [],
+  "duration_s": 93.4,
+  "stream": null,
+  "lingered": false,
+  "isolation": {
+    "observed": {
+      "mcp_servers": ["kb-server"],
+      "agents": ["helper"]
+    }
+  }
+}

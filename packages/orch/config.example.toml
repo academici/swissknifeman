@@ -67,6 +67,13 @@ schema_version = 1
 # Allowed in layers: defaults, machine, invocation, flags.
 # argv = <array>
 
+[orch.isolation]
+
+[orch.isolation.codex]
+# How auth.json of the original CODEX_HOME (else ~/.codex) gets into it: link (default) is a symbolic link, so a refreshed token is written to the original; copy is a copy, only for a machine whose codex refuses the link (a copy rotates the refresh token and can log the interactive codex out). Machine-wide: a project file cannot set it. One of: "link", "copy".
+# Allowed in layers: defaults, machine, invocation, flags.
+# auth = "link"
+
 [orch.conductor]
 # Provider of every role whose stage names none. String.
 # provider = "claude-code"

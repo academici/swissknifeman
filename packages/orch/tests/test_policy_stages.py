@@ -307,12 +307,13 @@ class PureRuleTests(unittest.TestCase):
         from orch.conductor.infrastructure import cli_probe
         bare = engine.Conductor.__new__(engine.Conductor)  # no __init__: a facade without progress (pitfall 4)
         help_text = mock.Mock(stdout="usage: claude --listed")
-        with mock.patch.dict(cli_probe._KNOWN, clear=True), \
+        with mock.patch.dict(cli_probe._KNOWN, clear=True), mock.patch.dict(cli_probe._HELP, clear=True), \
+                mock.patch.dict(cli_probe._VERSION, clear=True), \
                 mock.patch.object(cli_probe.subprocess, "run", return_value=help_text) as ran:
             self.assertTrue(bare._knows(["/opt/claude", "-p"], ["--listed"]))
             noted = engine.Conductor.__new__(engine.Conductor)
             noted.progress = mock.Mock()
-            for _ in range(2):  # the probe and the line are once per process
+            for _ in range(2):  # the probe is once per process (--version, --help); the line once per run
                 self.assertFalse(noted._knows(["/opt/claude", "-p"], ["--missing"]))
         self.assertEqual(ran.call_count, 2)
         noted.progress.emit.assert_called_once_with(

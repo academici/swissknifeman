@@ -170,6 +170,27 @@
         }
       }
     },
+    "isolation": {
+      "type": "object",
+      "description": "How the isolation profiles (configs/isolation-profiles.json) build the home of an isolated role on this machine.",
+      "additionalProperties": false,
+      "properties": {
+        "codex": {
+          "type": "object",
+          "description": "The CODEX_HOME of an isolated Codex role (<run dir>/isolation/codex-home).",
+          "additionalProperties": false,
+          "properties": {
+            "auth": {
+              "type": "string",
+              "description": "How auth.json of the original CODEX_HOME (else ~/.codex) gets into it: link (default) is a symbolic link, so a refreshed token is written to the original; copy is a copy, only for a machine whose codex refuses the link (a copy rotates the refresh token and can log the interactive codex out). Machine-wide: a project file cannot set it.",
+              "default": "link",
+              "enum": ["link", "copy"],
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            }
+          }
+        }
+      }
+    },
     "conductor": {
       "type": "object",
       "description": "The conductor (orch conduct): the global layer of the run options and how roles start.",

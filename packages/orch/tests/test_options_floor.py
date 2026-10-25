@@ -61,6 +61,17 @@ class FloorTests(unittest.TestCase):
     def test_off_is_refused_against_the_default_prefer(self):
         self.assertIn("defaults", self.refused(source({"instructions": {"sandbox": "off"}})))
 
+    def test_the_isolation_mode_is_an_ordered_floor_key(self):
+        self.assertEqual(options.FLOOR_ORDER[("instructions", "isolation")], ("off", "prefer", "require"))
+        self.assertEqual(options.DEFAULTS["instructions"]["isolation"], "prefer")
+        self.assertIn("instructions.isolation off is weaker than prefer of defaults",
+                      self.refused(source({"instructions": {"isolation": "off"}})))
+        self.assertIn("instructions.isolation prefer is weaker than require of invocation:--options",
+                      self.refused(trusted({"instructions": {"isolation": "require"}}),
+                                   source({"instructions": {"isolation": "prefer"}})))
+        self.assertEqual(run(source({"instructions": {"isolation": "require"}}))["instructions"]["isolation"], "require")
+        self.assertEqual(run(trusted({"instructions": {"isolation": "off"}}))["instructions"]["isolation"], "off")
+
     def test_a_source_layer_cannot_add_domains_or_extra_paths_or_drop_isolated_roles(self):
         self.refused(source({"instructions": {"sandbox_domains": ["evil.example"]}}))
         self.refused(source({"scope": {"extra_paths": ["/srv/work"]}}))

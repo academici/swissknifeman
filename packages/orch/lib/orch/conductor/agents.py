@@ -57,12 +57,15 @@ def add_usage(handle: dict, usage: dict) -> None:
 
 
 def finish(handle: dict, *, exit_code: Optional[int], error: Optional[dict], decisions: list, duration_s: float,
-           stream: Optional[str], lingered: bool) -> None:
-    """Write ``result.json`` and ``usage.json``."""
+           stream: Optional[str], lingered: bool, isolation: Optional[dict] = None) -> None:
+    """Write ``result.json`` and ``usage.json``; ``isolation`` (``{observed}``: the names the init event of an isolated
+    role showed) only when there is one."""
     result = {"exit": exit_code, "decisions": decisions, "duration_s": round(duration_s, 1), "stream": stream,
               "lingered": bool(lingered)}
     if error:
         result["error"] = error
+    if isolation:
+        result["isolation"] = isolation
     _write(handle["directory"] / "result.json", result, "agent-result")
     _write(handle["directory"] / "usage.json", {**handle["usage"], "usage_complete": handle.get("usage_complete")},
            "agent-usage")

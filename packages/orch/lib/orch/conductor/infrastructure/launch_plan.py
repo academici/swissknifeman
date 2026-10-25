@@ -1,28 +1,31 @@
 """The launch plan of a role process: its command line and environment from the route, the options of the piece and
-the decisions of the sandbox and the isolation (the project instructions kept out, the Landlock guard, the paths
-granted beside the project, the transcripts of a resumable session)."""
+the decisions of the sandbox and the isolation (the profile of the provider: the arguments, the environment and the
+home directories that keep its own settings out, ``policies/isolation.py``; the Landlock guard, the paths granted
+beside the project, the transcripts of a resumable session)."""
 from __future__ import annotations
 
 import json
 import os
 from pathlib import Path
+import shutil
+import stat
 from typing import Optional
+
+from aicore.config import ConfigError
+from aicore.state import locations
 
 from orch.conductor import options as opts
 from orch.conductor.domain.item import Item
-from orch.conductor.infrastructure import sessions
+from orch.conductor.domain.stop import Stop
+from orch.conductor.infrastructure import cli_probe, sessions
+from orch.conductor.policies import isolation as isolation_rules
 from orch.settings import ORCH_ROOT
 
-# The environment that keeps a provider's project instructions (the repository CLAUDE.md, the project memory) out of
-# a role process. Claude Code reads both by itself; grok was probed and does not read the repository CLAUDE.md; codex
-# would need its own CODEX_HOME (not used by a run so far).
-ISOLATION_ENV = {"claude-code": {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}}
-
-# Arguments that start a role with no customizations at all: no CLAUDE.md, project memory, plugins, MCP servers, user
-# skills or hooks (a measured start-up context of 6 K instead of 16 K tokens, and none of the developer-session rules).
-ISOLATION_ARGS = {"claude-code": ["--safe-mode"]}
-
 TRANSCRIPT_NAME_MAX = 200  # Claude Code shortens a longer folder name and appends a hash it does not publish
+# The XDG defaults under HOME: a variable the conductor does not set keeps its place under the original HOME when an
+# isolated launch moves HOME (``home.keep_env``: caches are data, not instructions).
+XDG_DEFAULTS = {"XDG_CACHE_HOME": ".cache", "XDG_CONFIG_HOME": ".config", "XDG_DATA_HOME": ".local/share",
+                "XDG_STATE_HOME": ".local/state"}
 
 
 def writes(role: str) -> bool:
@@ -43,11 +46,102 @@ def shell(role: str) -> str:
     return (manifest.get("tools") or {}).get("shell") or "full"
 
 
-def role_argv(self, item: Item, role: str, route: dict, decision: Optional[dict] = None) -> list:
-    isolated = role in item.options["instructions"]["isolate_roles"]
-    extra = ISOLATION_ARGS.get(route.get("provider", "")) if isolated else None
-    if extra and not self.role_ports.knows(route["argv"], extra):
-        extra = None
+def isolation_plan(self, item: Item, role: str, route: dict) -> dict:
+    """:func:`policies.isolation.plan` of ``role`` on ``route``: the profile of its provider, the flags its CLI lists
+    (``role_ports.knows``, which says a missing one once per run), its version, the live probes of this machine for that
+    version, a drift an earlier role of the run showed, and ``[orch.isolation.<provider>] auth``. A route whose command
+    is not a provider CLI the conductor can name (a wrapper, a stand-in) gets the flags as asked, unconfirmed."""
+    instructions = (item.options or {}).get("instructions") or {}
+    isolated, mode = role in (instructions.get("isolate_roles") or ()), instructions.get("isolation", "prefer")
+    provider = route.get("provider") or ""
+    if not isolated or mode == "off":
+        return isolation_rules.plan(role, route, isolated=isolated, mode=mode, profile=None)
+    profile = isolation_rules.load_profiles(isolation_rules.PROFILES_PATH).get(provider)
+    probe = {}
+    if profile is not None:
+        argv, helper, flags = route.get("argv") or [], profile["probe"]["help"], profile["probe"]["flags"]
+        every = not flags or self.role_ports.knows(argv, flags, help_argv=helper)
+        noted = (getattr(self, "state", None) or {}).get("isolation_noted") or []
+        probe = {"listed": {flag: every or cli_probe.knows(argv, [flag], help_argv=helper) for flag in flags},
+                 "failed": not every and cli_probe.failed(argv, help_argv=helper),
+                 "confirmed": isolation_rules.confirmed(probes(self), provider, cli_probe.version(argv)),
+                 "drift": f"{provider}:ISOLATION_DRIFT" in noted, "unprobed": cli_probe.command(argv) is None}
+    return isolation_rules.plan(role, route, isolated=True, mode=mode, profile=profile, probe=probe,
+                                auth=auth_mode(self, provider))
+
+
+def probes(self) -> list:
+    """The live isolation probes of this machine (``<state>/orch/isolation-probes.json``); a missing, unreadable or
+    invalid file confirms nothing (the guarantee stays as the profile declares it)."""
+    path = locations.state_dir("orch", env=getattr(self, "env", None)) / isolation_rules.PROBES_FILE
+    try:
+        if not stat.S_ISREG(os.lstat(path).st_mode):
+            return []
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return [] if isolation_rules.probes_problems(doc) else doc["probes"]
+
+
+def auth_mode(self, provider: str) -> Optional[str]:
+    """``[orch.isolation.<provider>] auth`` (``link`` or ``copy``), ``None`` without settings."""
+    resolved = getattr(getattr(self, "settings", None), "resolved", None)
+    try:
+        table = resolved.get("isolation") if resolved is not None else None
+    except ConfigError:
+        return None
+    return ((table or {}).get(provider) or {}).get("auth")
+
+
+def prepare_home(run_dir: Path, provider: str, home: dict, original_env: dict) -> dict:
+    """The environment of an isolated home (``home`` of the profile of ``provider``): each variable of ``home.vars``
+    gets its folder under ``<run dir>/isolation/`` (0700, empty but for auth), the auth files of the original provider
+    home (the first variable in ``original_env``, the environment of the conductor before any change, else
+    ``<original HOME>/<home.origin>``) are linked into the new one (``mode`` ``copy``: copied), and ``home.keep_env``
+    keeps its values. The auth files are never read here."""
+    root = Path(run_dir) / "isolation"
+    root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(root, 0o700)
+    original_home = original_env.get("HOME") or os.path.expanduser("~")
+    first = next(iter(home["vars"]))
+    origin = Path(original_env.get(first) or Path(original_home) / home["origin"])
+    found = {}
+    for variable, name in home["vars"].items():
+        folder = root / name
+        folder.mkdir(mode=0o700, exist_ok=True)
+        os.chmod(folder, 0o700)
+        found[variable] = str(folder)
+    for name in home["auth"]:
+        source, placed = origin / name, Path(found[first]) / name
+        if os.path.islink(placed) and os.readlink(placed) == str(source) and home["mode"] == "link":
+            continue
+        if os.path.lexists(placed):
+            placed.unlink()
+        if home["mode"] == "copy":
+            if source.is_file():
+                shutil.copyfile(source, placed)
+                os.chmod(placed, 0o600)
+        else:
+            os.symlink(source, placed)
+    for variable in home["keep_env"]:
+        value = original_env.get(variable) or (str(Path(original_home) / XDG_DEFAULTS[variable])
+                                               if variable in XDG_DEFAULTS else None)
+        if value:
+            found[variable] = value
+    return found
+
+
+def role_argv(self, item: Item, role: str, route: dict, decision: Optional[dict] = None, *, admit: bool = True) -> list:
+    """The command line of a role process. Every launch builds it here, so this is where ``instructions.isolation =
+    require`` refuses a role that would start without the full isolation of its profile (``ISOLATION_UNAVAILABLE``: a
+    drift of an earlier role since the preflight, a report-fixer or a batch role the preflight does not see); ``admit``
+    False only builds it (the dry run)."""
+    isolation = isolation_plan(self, item, role, route)
+    refused = isolation_rules.problem(isolation) if admit else None
+    if refused:
+        raise Stop("ISOLATION_UNAVAILABLE", refused.split(": ", 1)[1])
+    self.role_ports.note_isolation(item, isolation)
+    extra = isolation["args"]
     resume = sessions.resume_args(self, item, role, route, decision)  # the decision of the attempt, as it announced it
     argv = [arg.replace("{session}", resume[0]) for arg in route["resume_argv"]] \
         if resume and route.get("resume_argv") else list(route["argv"])  # a catalog entry that names its own resume command
@@ -132,10 +226,14 @@ def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
     """The environment of a role process. A role named in ``instructions.isolate_roles`` starts without the project
     instructions: they carry the rules of a developer's own session ("quality over speed", "fix every defect even
     beyond the scope"), which contradict the role's own scope rules; every role gets exactly the instructions of its
-    own prompt."""
-    extra = ISOLATION_ENV.get(route.get("provider", "")) if role in item.options["instructions"]["isolate_roles"] else None
-    if not extra:
+    own prompt. The environment and the home directories come from the isolation profile of the provider
+    (:func:`isolation_plan`): a Codex role gets its own CODEX_HOME and HOME under the run folder (:func:`prepare_home`)."""
+    isolation = isolation_plan(self, item, role, route)
+    if not isolation["env"] and not isolation["home"]:
         return self.env
-    base = dict(os.environ if self.env is None else self.env)
-    base.update(extra)
+    original = dict(os.environ if self.env is None else self.env)  # the environment of the conductor, before any change
+    base = {**original, **isolation["env"]}
+    run_dir = getattr(self, "directory", Path())
+    if isolation["home"] and run_dir != Path():  # a run that is not opened (the dry run) makes no folders
+        base.update(prepare_home(run_dir, isolation["provider"], isolation["home"], original))
     return base

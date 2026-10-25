@@ -4,6 +4,7 @@ The rules are ``policies/routing.py`` and ``policies/sandbox.py``; this module p
 ``process.available``, ``gates.blocked``), keeps the routes of the piece and says what moved."""
 from __future__ import annotations
 
+import contextlib
 from typing import Optional
 
 from aicore.provider.models import admitted_class
@@ -12,8 +13,8 @@ from orch import bindings, catalog as catalogs, launch, sandbox
 from orch.conductor import gates, options as opts, process, records
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock
-from orch.conductor.policies import routing as route_rules, sandbox as sandbox_rules
+from orch.conductor.infrastructure import cli_probe, clock
+from orch.conductor.policies import isolation as isolation_rules, routing as route_rules, sandbox as sandbox_rules
 from orch.conductor.policies.routing import OPTIONAL_ROLES
 
 
@@ -272,6 +273,13 @@ def preflight(self, item: Item) -> None:
                    if self._claude_bash(route) and not self._knows(route["argv"], ["--settings"])]
     if blocked:
         raise Stop("SANDBOX_UNAVAILABLE", "; ".join(blocked))
+    # the profiles are read (ISOLATION_PROFILES_INVALID) and, under require, every isolated role must be isolated fully
+    plans = [self._isolation_plan(item, role, route) for role, route in required.items()
+             if role in item.options["instructions"]["isolate_roles"]
+             and item.options["instructions"].get("isolation", "prefer") != "off"]
+    refused = [text.split(": ", 1)[1] for text in map(isolation_rules.problem, plans) if text]
+    if refused:
+        raise Stop("ISOLATION_UNAVAILABLE", " | ".join(refused))
     off = [f"{role}: {self.provider_disabled(route['provider'])}" for role, route in required.items()
            if self.provider_disabled(route["provider"])]
     if off:
@@ -398,14 +406,53 @@ def sandbox_args(self, item: Item, role: str, route: dict) -> list:
         return []
     probed = sandbox.probe()
     if not probed["available"]:
-        if mode == "prefer" and not self._sandbox_noted and self.progress is not None:
-            self._sandbox_noted = True
-            self.progress.emit("info", reason_code="ISOLATION_PARTIAL",
-                               message=f"sandbox unavailable: {probed['reason']}; the commands of claude-code roles "
-                                       "run under the filesystem guard only")
+        if mode == "prefer":
+            note_isolation(self, route["provider"], "sandbox",
+                           f"sandbox unavailable: {probed['reason']}; the commands of claude-code roles run under the "
+                           "filesystem guard only")
         return []
     if not self._knows(route["argv"], ["--settings"]):
         return []
     return sandbox_rules.sandbox_args(item.options, role, route,
                                       extra_paths=self._scope_option(item, "extra_paths", []),
                                       network=self.declared_network(role))
+
+
+def note_isolation(self, provider: str, reason: str, message: str) -> None:
+    """``ISOLATION_PARTIAL`` (info) once per run, provider and reason: the keys said are ``state.isolation_noted``
+    (``provider:reason``), saved with the run, so a later piece or a resume does not say it again."""
+    state = getattr(self, "state", None)
+    noted = state.setdefault("isolation_noted", []) if isinstance(state, dict) \
+        else self.__dict__.setdefault("_isolation_noted", [])  # a facade without a run
+    key = f"{provider}:{reason}"
+    store = getattr(self, "store", None)
+    with store.mutating() if store is not None else contextlib.nullcontext():
+        if key in noted:
+            return
+        noted.append(key)
+        if store is not None and getattr(self, "run_id", "") not in ("", "cnd-dry-run"):
+            self._save()
+    if getattr(self, "progress", None) is not None:
+        self.progress.emit("info", reason_code="ISOLATION_PARTIAL", message=message)
+
+
+def knows(self, argv: list, flags: list, *, help_argv: Optional[list] = None) -> bool:
+    """:func:`infrastructure.cli_probe.knows` for the run: a flag the CLI does not list is said once per run, provider
+    and flags (``ISOLATION_PARTIAL``); the cache of the probe never decides whether it is said."""
+    if cli_probe.knows(argv, flags, help_argv=help_argv):
+        return True
+    missing = [flag for flag in flags if not cli_probe.knows(argv, [flag], help_argv=help_argv)] or list(flags)
+    cli = cli_probe.command(argv) or (argv[0] if argv else "-")
+    asked = " ".join([cli, *(help_argv[1:] if help_argv else ["--help"])])
+    why = f"{asked} could not be read" if cli_probe.failed(argv, help_argv=help_argv) \
+        else f"{cli} does not list {' '.join(missing)}"
+    note_isolation(self, cli_probe.provider(argv) or "-", " ".join(missing),
+                   f"{why}; roles are isolated by the environment only")
+    return False
+
+
+def note_plan(self, item: Item, isolation: dict) -> None:
+    """What a ``prefer`` isolation plan leaves out (:func:`policies.isolation.partial_notes`), once per run, provider and
+    reason."""
+    for reason, message in isolation_rules.partial_notes(isolation):
+        note_isolation(self, isolation["provider"], reason, f"{isolation['role']}/{message}")

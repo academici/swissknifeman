@@ -2,14 +2,16 @@
  "argv": [
   {
    "argv": [
-    "--safe-mode"
+    "--safe-mode",
+    "--strict-mcp-config"
    ],
    "n": 1,
    "role": "context-scout"
   },
   {
    "argv": [
-    "--safe-mode"
+    "--safe-mode",
+    "--strict-mcp-config"
    ],
    "n": 1,
    "role": "executor"
@@ -332,6 +334,11 @@
    "stage": "scout"
   },
   {
+   "event": "info",
+   "message": "context-scout/claude-code: partial isolation (the command of the route is not a provider CLI the profile can probe)",
+   "reason_code": "ISOLATION_PARTIAL"
+  },
+  {
    "agent": "agent-<run>-1",
    "event": "stage.end",
    "item": "W1",
@@ -507,6 +514,9 @@
     "task_digest": "<digest>"
    }
   },
+  "isolation_noted": [
+   "claude-code:PROBE_UNAVAILABLE"
+  ],
   "items": {
    "W1": {
     "adopted": [],

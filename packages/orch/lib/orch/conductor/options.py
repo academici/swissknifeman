@@ -46,7 +46,7 @@ DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_cor
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],
                         "module_rules": ["module-folders", "module-boundaries", "engineering-invariants"],
-                        "sandbox": "prefer", "sandbox_domains": [], "file_tools_rule": True}
+                        "sandbox": "prefer", "sandbox_domains": [], "file_tools_rule": True, "isolation": "prefer"}
 # ``fence``: ``project`` (default) lets the executor change any file of the project and report the paths outside the plan's
 # write set as deviations; ``plan`` keeps the write set a fence (a path outside it blocks the piece). ``extra_paths``:
 # directories outside the project the executor may also change (the filesystem guard gets them as ``--rw``, a sandboxed
@@ -100,6 +100,7 @@ _ACTOR = re.compile(r"^(?P<provider>[a-z][a-z0-9-]*)/(?P<model>[A-Za-z0-9][A-Za-
 # isolation of a run, never loosen it. Trust is a mark the conductor sets, never read from the layer's own ``source``.
 # Ordered keys: a work-source layer may only move them to the right.
 FLOOR_ORDER = {("instructions", "sandbox"): ("off", "prefer", "require"),
+               ("instructions", "isolation"): ("off", "prefer", "require"),
                ("scope", "fence"): ("project", "plan"),
                ("scope", "outside"): ("deviation", "block"),
                ("scope", "outside_module"): ("deviation", "block")}

@@ -63,7 +63,7 @@ class DecisionTests(unittest.TestCase):
                                          "item", "project", "provider", "role", "worktree"])
         self.assertEqual((found["provider"], found["role"], found["item"], found["attempt_id"]),
                          ("claude-code", "executor", "W1", "att-1"))
-        self.assertEqual((found["authority_digest"], found["isolation_home"]), ("", ""))  # until the profiles exist
+        self.assertEqual((found["authority_digest"], found["isolation_home"]), ("", ""))  # not isolated; no envelope yet
         shared = sessions.fingerprint(owner, piece(mode="shared"), CLAUDE)
         self.assertEqual(sorted(set(found) - set(shared)), ["attempt_id", "base", "item"])
 
@@ -89,6 +89,24 @@ class DecisionTests(unittest.TestCase):
             changed = dict(sessions.identity_inputs(owner, item, CLAUDE), **{field: "sha256:" + "b" * 64})
             with self.subTest(field), mock.patch.object(sessions, "identity_inputs", return_value=changed):
                 self.assertEqual(self.decide(owner, item), ("fresh", f"fingerprint_changed:{field}"))
+
+    def test_the_isolation_home_of_a_codex_executor_enters_the_fingerprint(self):
+        """P6.1: an isolated Codex executor keeps its sessions in the CODEX_HOME of the run; a session kept in another
+        home cannot be continued (SESSION_FRESH fingerprint_changed:isolation_home)."""
+        codex = {"provider": "codex", "model": "m", "effort": "high",
+                 "resume_argv": ["codex", "exec", "resume", "{session}", "-"]}
+        owner = self.owner({})
+        item = piece()
+        item.options["instructions"] = {"isolate_roles": ["executor"], "isolation": "prefer"}
+        self.assertEqual(sessions.identity_inputs(owner, item, codex)["isolation_home"],
+                         str(owner.directory / "isolation" / "codex-home"))
+        self.assertEqual(sessions.identity_inputs(owner, item, CLAUDE)["isolation_home"], "")
+        owner.state["executor_sessions"] = {"W1": self.slot(owner, item, codex)}
+        self.assertEqual(self.decide(owner, item, codex), ("resume", "s1"))
+        owner.directory = owner.directory / "other-run"
+        self.assertEqual(self.decide(owner, item, codex), ("fresh", "fingerprint_changed:isolation_home"))
+        item.options["instructions"]["isolation"] = "off"
+        self.assertEqual(sessions.identity_inputs(owner, item, codex)["isolation_home"], "")
 
     def test_a_changed_instructions_digest_is_never_a_resume(self):
         owner = self.owner({})

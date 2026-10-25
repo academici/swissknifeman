@@ -28,7 +28,7 @@ from orch import launch
 from orch.conductor import checks as checks_mod, cli, engine, gates, options as opts, process, progress, records
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import clock, roles, work_source
-from orch.conductor.policies import sandbox as sandbox_policy
+from orch.conductor.policies import isolation as isolation_rules, sandbox as sandbox_policy
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "conductor"
@@ -366,20 +366,6 @@ class CorrectionTests(ConductorCase):
         verdicts = {line["stage"]: line.get("verdict") for line in self.lines(err) if line["event"] == "stage.end"}
         self.assertEqual((verdicts["checks.1"], verdicts["checks.2"]), ("red V1", "green"))
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
-
-    def test_project_instructions_can_be_kept_away_from_a_claude_code_role(self):
-        eng = engine.Conductor.__new__(engine.Conductor)
-        eng.env = {"PATH": "/bin"}
-        item = type("I", (), {"options": {"instructions": {"isolate_roles": ["executor", "registrar"]}}})()
-        env = eng._role_env(item, "executor", {"provider": "claude-code"})
-        self.assertEqual((env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"], env["CLAUDE_CODE_DISABLE_AUTO_MEMORY"]), ("1", "1"))
-        self.assertEqual(env["PATH"], "/bin")
-        self.assertEqual(eng._role_env(item, "reviewer", {"provider": "claude-code"}), {"PATH": "/bin"})
-        self.assertEqual(eng._role_env(item, "executor", {"provider": "grok"}), {"PATH": "/bin"})
-        self.assertEqual(eng._role_argv(item, "executor", {"provider": "claude-code", "argv": ["claude", "-p"]}),
-                         ["claude", "-p", "--safe-mode"])
-        self.assertEqual(eng._role_argv(item, "reviewer", {"provider": "claude-code", "argv": ["claude", "-p"]}), ["claude", "-p"])
-        self.assertEqual(eng._role_argv(item, "executor", {"provider": "grok", "argv": ["grok"]}), ["grok"])
 
     def test_a_rejected_major_finding_is_kept_as_a_plan_note(self):
         eng = engine.Conductor.__new__(engine.Conductor)
@@ -1857,8 +1843,9 @@ class SandboxTests(ConductorCase):
 
     @staticmethod
     def extra(preview: dict, role: str) -> list:
-        """The arguments the conductor adds to a role beside ``--safe-mode``."""
-        return [arg for arg in preview["isolation_args"][role] if arg != "--safe-mode"]
+        """The arguments the conductor adds to a role beside those of the Claude Code isolation profile."""
+        profile = isolation_rules.load_profiles()["claude-code"]["args"]
+        return [arg for arg in preview["isolation_args"][role] if arg not in profile]
 
     def preview(self, probe: dict, **instructions) -> dict:
         with mock.patch("orch.sandbox.probe", return_value=probe):
@@ -1923,15 +1910,18 @@ class SandboxTests(ConductorCase):
         warnings = self.preview(self.DOWN, sandbox="require")["warnings"]
         self.assertTrue(any("SANDBOX_UNAVAILABLE" in warning for warning in warnings), warnings)
 
-    def test_prefer_goes_on_and_says_so_once(self):
+    def test_prefer_goes_on_and_says_so_once_per_run(self):
         self.stand_in()
-        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
-        with mock.patch("orch.sandbox.probe", return_value=self.DOWN):
-            code, _, err = self.run_items("W1", extra=("--options", self.options()))
-        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
-        partial = [line for line in self.lines(err) if line.get("reason_code") == "ISOLATION_PARTIAL"
-                   and "sandbox unavailable" in line["message"]]
-        self.assertEqual(len(partial), 1, err)
+        self.set_items({"W1": {}, "W2": {}})
+        self.script({"executor": [executor_ok("W1"), executor_ok("W2")], "reviewer": [GREEN]})
+        for ref in ("W1", "W2"):  # two runs of one process: each says it once (state.isolation_noted, not the process)
+            with mock.patch("orch.sandbox.probe", return_value=self.DOWN):
+                code, _, err = self.run_items(ref, extra=("--options", self.options()))
+            self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+            partial = [line for line in self.lines(err) if line.get("reason_code") == "ISOLATION_PARTIAL"
+                       and "sandbox unavailable" in line["message"]]
+            self.assertEqual(len(partial), 1, err)
+            self.assertIn("claude-code:sandbox", self.state(err)["isolation_noted"])
 
     def test_require_stops_before_any_work(self):
         self.stand_in()

@@ -562,6 +562,14 @@
       "released": false
     },
     {
+      "path": "packages/orch/configs/isolation-profiles.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/conductor/policies/isolation.py"
+      ],
+      "released": false
+    },
+    {
       "path": "packages/orch/configs/config.schema.json",
       "owner": "orch",
       "consumers": [

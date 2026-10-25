@@ -331,7 +331,10 @@ class CodexResumeTests(ConductorCase):
         bin_dir = self.project.parent / "bin"
         bin_dir.mkdir()
         shim = bin_dir / "codex"
-        shim.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{FIXTURES / "fake_role.py"}" executor "$@"\n', encoding="utf-8")
+        # the probes of the isolation profile (``--version``, ``exec --help``) are answered, not played as a role
+        shim.write_text('#!/bin/sh\ncase "$*" in --version) echo "codex-cli 0.0.0"; exit 0;; '
+                        '*--help) echo "--ignore-user-config"; exit 0;; esac\n'
+                        f'exec "{sys.executable}" "{FIXTURES / "fake_role.py"}" executor "$@"\n', encoding="utf-8")
         shim.chmod(0o755)
         patcher = mock.patch.dict("os.environ", {"PATH": f"{bin_dir}:{__import__('os').environ['PATH']}"})
         patcher.start()
@@ -353,11 +356,12 @@ class CodexResumeTests(ConductorCase):
         self.script({"executor": [self.RED, dict(executor_ok("W1"), codex=True)], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1", extra=self.options)
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        isolated = ["--ignore-user-config", "-c", "project_doc_max_bytes=0"]  # the codex isolation profile (P6.1)
         self.assertEqual(self.argv(1), ["-a", "never", "exec", "--json", "--sandbox", "danger-full-access",
-                                        "--model", "gpt-6.1-sol", "-c", 'model_reasoning_effort="high"', "-"])
+                                        "--model", "gpt-6.1-sol", "-c", 'model_reasoning_effort="high"', "-", *isolated])
         self.assertEqual(self.argv(2), ["-a", "never", "exec", "resume", "executor-session-1", "--json",
                                         "-c", 'sandbox_mode="danger-full-access"', "--model", "gpt-6.1-sol",
-                                        "-c", 'model_reasoning_effort="high"', "-"])
+                                        "-c", 'model_reasoning_effort="high"', "-", *isolated])
         self.assertNotIn("--sandbox", self.argv(2))
         second = self.prompt("executor", 2)
         self.assertIn("You continue piece W1 in the same session", second)  # the delta prompt on the thread

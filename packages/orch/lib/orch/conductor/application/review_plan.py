@@ -23,7 +23,7 @@ from orch.conductor.domain import fix_brief
 from orch.conductor.domain.report import finding_key
 from orch.conductor import contract
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import sessions
+from orch.conductor.infrastructure import results, sessions
 from orch.conductor.infrastructure.clock import utc_now
 from orch.conductor.infrastructure.files import read_json, safe, write_json
 from orch.conductor.policies import review_strategy as strategy
@@ -83,6 +83,7 @@ def _run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, 
                                timeout_s=timeout_s, raw_path=raw, env=self._role_env(item, role, route),
                                provider=route["provider"], agent_directory=handle["directory"])
         self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
+        results.observe_isolation(self, item, key, role, route, run.init, handle)  # ISOLATION_DRIFT, result.json
         handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
     except BaseException as error:
         self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})

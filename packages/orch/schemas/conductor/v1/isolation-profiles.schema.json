@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:isolation-profiles:v1",
+  "title": "isolation-profiles",
+  "description": "How a role named in instructions.isolate_roles is kept away from the provider's own settings (packages/orch/configs/isolation-profiles.json, read by policies/isolation.py): per provider the arguments, the environment and the home directories of an isolated launch, the flags the CLI must list, what its init event must not show and what each surface does. Data, not a branch by provider name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "profiles_version", "providers"],
+  "properties": {
+    "$schema": {"description": "Document contract.", "const": "urn:swissknifeman:orch:conductor:isolation-profiles:v1"},
+    "profiles_version": {"description": "Version of the profiles (semver).", "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "providers": {
+      "description": "Profile by provider id (claude-code, codex, grok).",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {"^[a-z][a-z0-9-]*$": {"$ref": "#/$defs/profile"}}
+    }
+  },
+  "$defs": {
+    "words": {
+      "description": "A list of command-line words.",
+      "type": "array",
+      "items": {"description": "One word.", "type": "string", "minLength": 1}
+    },
+    "profile": {
+      "description": "The isolation of one provider.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["guarantee", "args", "env", "probe", "home", "observe", "surfaces"],
+      "properties": {
+        "guarantee": {
+          "description": "What the profile promises without a live probe: full (every required surface off), partial (some surface on, observed, unknown or a canary not yet confirmed) or none. It must agree with surfaces; a live probe of the CLI version can raise partial to full.",
+          "enum": ["full", "partial", "none"]
+        },
+        "args": {"$ref": "#/$defs/words", "description": "Arguments added to the command line of an isolated role."},
+        "env": {
+          "description": "Variables set in the environment of an isolated role.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {"^[A-Z_][A-Z0-9_]*$": {"description": "Its value.", "type": "string"}}
+        },
+        "probe": {
+          "description": "How the flags of the profile are found in the CLI.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["help", "flags"],
+          "properties": {
+            "help": {"$ref": "#/$defs/words", "description": "The help command (its first word is replaced by the CLI of the route), e.g. codex exec --help.", "minItems": 1},
+            "flags": {"$ref": "#/$defs/words", "description": "Flags of args the help must list; a flag it does not list is left out and the guarantee falls to partial."},
+            "render": {"$ref": "#/$defs/words", "description": "A local render of the model-visible input (codex debug prompt-input), used by the live probe."}
+          }
+        },
+        "home": {
+          "description": "Home directories of the launch under <run dir>/isolation/, or null when the provider keeps its own.",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["vars", "keep_env", "auth", "mode", "origin"],
+          "properties": {
+            "vars": {
+              "description": "Variable -> folder name under <run dir>/isolation/ (0700, empty but for auth). The first variable is the home of the provider: auth goes there and it enters the session fingerprint.",
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": false,
+              "patternProperties": {"^[A-Z_][A-Z0-9_]*$": {"description": "A folder name.", "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"}}
+            },
+            "keep_env": {
+              "description": "Variables kept from the environment of the conductor (an XDG variable it does not set gets its default under the original HOME).",
+              "type": "array",
+              "items": {"description": "A variable name.", "type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$"}
+            },
+            "auth": {
+              "description": "Files of the original provider home placed in the new one (never read by orch).",
+              "type": "array",
+              "items": {"description": "A file name.", "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"}
+            },
+            "mode": {"description": "link (a symbolic link: a refreshed token is written to the original) or copy (machine key [orch.isolation.<provider>] auth only).", "enum": ["link", "copy"]},
+            "origin": {"description": "The original provider home under the original HOME when the conductor's environment does not set the first variable (.codex).", "type": "string", "pattern": "^[A-Za-z0-9._-][A-Za-z0-9._/-]*$"}
+          }
+        },
+        "observe": {
+          "description": "What the first init event of the stream of an isolated role must not show, or null when the stream has none.",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["event", "empty", "allowed_skills"],
+          "properties": {
+            "event": {"description": "The init event (type/subtype).", "type": "string", "minLength": 1},
+            "empty": {
+              "description": "Fields of the init event that must be empty; a name there is ISOLATION_DRIFT.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {"description": "A field.", "enum": ["tools", "mcp_servers", "skills", "plugins", "slash_commands"]}
+            },
+            "allowed_skills": {"description": "Which skills a role may load: those of its prompt only, or none.", "enum": ["prompt-only", "none"]}
+          }
+        },
+        "surfaces": {
+          "description": "What each surface does under the profile, for explain and the docs; the required ones decide the guarantee.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository_instructions", "memory", "plugins", "hooks", "mcp", "user_skills", "project_permissions"],
+          "properties": {
+            "repository_instructions": {"$ref": "#/$defs/surface", "description": "CLAUDE.md / AGENTS.md of the repository."},
+            "memory": {"$ref": "#/$defs/surface", "description": "Project and user memory."},
+            "plugins": {"$ref": "#/$defs/surface", "description": "Plugins."},
+            "hooks": {"$ref": "#/$defs/surface", "description": "Hooks."},
+            "mcp": {"$ref": "#/$defs/surface", "description": "MCP servers."},
+            "user_skills": {"$ref": "#/$defs/surface", "description": "Personal skills of the user."},
+            "project_permissions": {"$ref": "#/$defs/surface", "description": "Permission rules of the project (not an instruction surface)."}
+          }
+        }
+      }
+    },
+    "surface": {
+      "description": "on (loaded), off (not loaded), canary (believed off, confirmed only by a live probe), observed (seen in the init event), unknown, n/a.",
+      "enum": ["on", "off", "canary", "observed", "unknown", "n/a"]
+    }
+  }
+}

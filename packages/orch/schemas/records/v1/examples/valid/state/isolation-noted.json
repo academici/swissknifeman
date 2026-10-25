@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {},
+  "items": {},
+  "status": "running",
+  "tokens": {
+    "input": 0,
+    "output": 0
+  },
+  "isolation_noted": ["grok:SURFACES_UNCONFIRMED", "claude-code:--safe-mode", "grok:ISOLATION_DRIFT"]
+}

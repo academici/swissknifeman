@@ -1,6 +1,8 @@
-"""The result of a role: its closed block taken from the answer and mended by rule, and the repair of a block outside
-its contract by the report-fixer role from the role's own answer."""
+"""The result of a role: its closed block taken from the answer and mended by rule, the repair of a block outside
+its contract by the report-fixer role from the role's own answer, and the isolation the stream of the role showed."""
 from __future__ import annotations
+
+from typing import Optional
 
 from aicore.util.digest import sha256_hex
 
@@ -9,6 +11,32 @@ from orch.conductor.domain.item import Item
 from orch.conductor.domain import semantics
 from orch.conductor.domain.report import json_block
 from orch.conductor.domain.route import label
+from orch.conductor.policies import isolation as isolation_rules
+
+
+def observe_isolation(self, item: Item, key: str, role: str, route: dict, init: Optional[dict], handle: dict) -> None:
+    """What the first init event of the stream of an isolated role showed (``result.json`` ``isolation.observed``). A
+    field its profile keeps empty (``observe.empty``) that is not is ``ISOLATION_DRIFT`` (info, the call goes on), and
+    the provider is lowered for the run (``state.isolation_noted`` ``<provider>:ISOLATION_DRIFT``): under ``require`` its
+    next role is refused (``ISOLATION_UNAVAILABLE``)."""
+    instructions = (item.options or {}).get("instructions") or {}
+    if init is None or role not in (instructions.get("isolate_roles") or ()) \
+            or instructions.get("isolation", "prefer") == "off":
+        return
+    provider = route.get("provider") or ""
+    handle["isolation"] = {"observed": init}
+    found = isolation_rules.drift(isolation_rules.load_profiles(isolation_rules.PROFILES_PATH).get(provider), init)
+    if not found:
+        return
+    mark = f"{provider}:ISOLATION_DRIFT"
+    with self.store.mutating():
+        noted = self.state.setdefault("isolation_noted", [])
+        if mark not in noted:
+            noted.append(mark)
+            self._save()
+    for field, names in found:
+        self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route), reason_code="ISOLATION_DRIFT",
+                           message=f"{role}/{provider} loaded {field} [{', '.join(names)}] although isolated")
 
 
 def closed(text: str, kind: str, extra) -> tuple:
@@ -55,6 +83,7 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
                                    cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,
                                    env=self._role_env(item, "report-fixer", route), agent_directory=handle["directory"])
             self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
+            observe_isolation(self, item, key, "report-fixer", route, run.init, handle)
             handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
         except BaseException as error:
             self._agent_end(handle, {"code": type(error).__name__, "message": str(error)[:300] or type(error).__name__})

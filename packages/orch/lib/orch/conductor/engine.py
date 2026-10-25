@@ -32,7 +32,7 @@ from orch.conductor.domain import report as report_rules, route as route_rules
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.report import continued, evidence_paths, findings_problems, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import beacon_events, cli_probe, launch_plan, results, roles, sessions, tree, usage
+from orch.conductor.infrastructure import beacon_events, launch_plan, results, roles, sessions, tree, usage
 from orch.conductor.infrastructure import work_source
 from orch.conductor.infrastructure.heartbeat import Heartbeat
 from orch.conductor.infrastructure.clock import new_run_id, sleep, unit_random, utc_now, utc_stamp, wall
@@ -94,7 +94,6 @@ class Conductor:
         self._instructions_lock = threading.Lock()
 
     _current_step: Optional[str] = None  # the step that runs now, for the RUN_SLOW beacon
-    _sandbox_noted = False  # ISOLATION_PARTIAL of a sandbox that cannot start is said once per run
 
     # ------------------------------------------------------------------ run files
 
@@ -279,7 +278,7 @@ class Conductor:
             unmetered=self._unmetered, admit_budget=self._admit_budget, stage_key=self._stage_key,
             stage_bucket=self._stage_bucket, remember_stage=self._remember_stage,
             provider_disabled=self.provider_disabled, sandbox_args=self._sandbox_args, knows=self._knows,
-            skills_excluded=self._skills_excluded, run_clock=self._run_clock)
+            note_isolation=self._note_isolation, skills_excluded=self._skills_excluded, run_clock=self._run_clock)
 
     @property
     def panel_ports(self) -> advice.PanelPorts:
@@ -318,7 +317,9 @@ class Conductor:
     _claude_bash = staticmethod(sandbox_policy.claude_bash)
     declared_network = staticmethod(sandbox_policy.declared_network)
     _sandbox_args = route_service.sandbox_args
-    _knows = cli_probe.run_knows
+    _knows = route_service.knows
+    _note_isolation = route_service.note_plan
+    _isolation_plan = launch_plan.isolation_plan
 
     _start_route = retry_service.start_route
     _prompt_for_route = retry_service.prompt_for_route
@@ -367,7 +368,8 @@ class Conductor:
         return self._reviewer_selector(item)
 
     def role_argv(self, item: Item, role: str, route: dict) -> list:
-        return self._role_argv(item, role, route)
+        """The command line of a role as the dry run shows it: built, not refused (a launch refuses it)."""
+        return self._role_argv(item, role, route, admit=False)
 
     def sandbox_mode(self, item: Item) -> str:
         return self._sandbox_mode(item)

@@ -10,7 +10,8 @@ source id to name in ``sources_used``), ``exit`` and ``usage``. Failure shapes: 
 the result, for example ``api_retry`` system events and ``rate_limit_event``; each is a document or a string), ``stderr`` (text on
 stderr), ``is_error`` (the result is an error; its text is the answer text), ``api_error_status`` (put into the result),
 ``permission_denials`` (put into the result), ``codex`` (print the event stream of codex instead of claude's) and ``codex_failed`` (a message: codex ``turn.failed``
-instead of ``turn.completed``).
+instead of ``turn.completed``). ``init`` adds fields to the ``system/init`` event (``mcp_servers``, ``skills``: what the
+CLI says it loaded).
 Every call is counted and its prompt kept in ``$FAKE_ROLE_STATE/<role>-<n>.md``. The context-scout answers in plain
 text (the text transport); the other roles print stream-json like claude-code.
 """
@@ -77,7 +78,7 @@ else:
         print(json.dumps({"type": "thread.started", "thread_id": session}))
     else:
         print(json.dumps({"type": "system", "subtype": "init", "session_id": session,
-                          "model": answer.get("model", "fake-model")}))
+                          "model": answer.get("model", "fake-model"), **(answer.get("init") or {})}))
     for line in answer.get("stream") or []:
         if isinstance(line, dict):  # "@+N" in resetsAt: N seconds from the moment the role prints it (a slow machine cannot outrun it)
             info = line.get("rate_limit_info")

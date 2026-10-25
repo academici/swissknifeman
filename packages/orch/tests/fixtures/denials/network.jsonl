@@ -1,0 +1,3 @@
+{"type": "system", "subtype": "init", "model": "synthetic"}
+{"type": "tool_result", "is_error": true, "content": "allowed_domains cannot widen network access in this session"}
+{"type": "result", "is_error": false, "result": "done", "usage": {"input_tokens": 1, "output_tokens": 1}}

@@ -162,7 +162,7 @@ class MatrixTests(unittest.TestCase):
         first = self.envelope()
         self.assertEqual(contract.problems(first, "authority-envelope"), [])
         self.assertEqual(first["digest"], authority.digest(first))
-        self.assertEqual([root["path"] for root in first["write_roots"]], [".", "~/extra-out"])
+        self.assertEqual([root["path"] for root in first["write_roots"][:5]], ["/tmp", "/var/tmp", "/dev", ".", "~/extra-out"])
         other = self.matrix.base / "other-home"
         other.mkdir()
         with mock.patch.dict(os.environ, {"HOME": str(other)}):
@@ -194,8 +194,8 @@ class MatrixTests(unittest.TestCase):
                          opened)
 
     def test_d_an_isolated_claude_executor_gets_the_sandbox_and_the_deny_rules_in_one_settings_object(self):
-        owner, item = self.matrix.owner("open"), self.matrix.item()
-        route = self.matrix.route(launch.load_catalog(), "executor", "claude-code", "open")
+        owner, item = self.matrix.owner("confined"), self.matrix.item()
+        route = self.matrix.route(launch.load_catalog(), "executor", "claude-code", "confined")
         with mock.patch.object(engine.sandbox, "probe", return_value=UP):
             argv = owner.role_argv(item, "executor", route)
         settings = json.loads(argv[argv.index("--settings") + 1])
@@ -233,7 +233,7 @@ class MatrixTests(unittest.TestCase):
     def test_i_the_prompt_block_says_what_the_envelope_says(self):
         codex = self.envelope("executor", "codex")
         claude = self.envelope("executor", "claude-code")
-        for doc, docker in ((codex, "you may use containers"), (claude, "not available here")):
+        for doc, docker in ((codex, "you may use containers"), (claude, "you may use containers")):
             with self.subTest(guard=doc["guard"]):
                 text = authority.prompt_block(doc)
                 self.assertIn(docker, text)
@@ -271,7 +271,7 @@ class MatrixTests(unittest.TestCase):
                 expected = [path.replace(project, ".").replace(home, "~") for path in writable]
                 found[flags] = self.guard_envelope(route)
                 self.assertEqual([root["path"] for root in found[flags]["write_roots"]], expected)
-        self.assertEqual([root["path"] for root in found[()]["write_roots"]], ["/tmp", "/var/tmp", "/dev", "~/.grok", "."])
+        self.assertEqual([root["path"] for root in found[()]["write_roots"]], ["/tmp", "/var/tmp", "/dev", "."])
         self.assertNotEqual(found[()]["digest"], found[("--no-default-rw",)]["digest"])
 
     def test_f3_a_resume_command_that_grants_more_is_refused_before_the_record_and_the_process(self):
@@ -449,6 +449,10 @@ class AuthorityRunCase(ConductorCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
+    def write_config(self, argv=None, extra=""):
+        # These regressions exercise the confined Claude path; open is covered by test_authority_policy.
+        super().write_config(argv, extra=extra + '\n[orch.launch]\naccess = "confined"\n')
+
     def stand_in(self, *roles_with_shell) -> None:
         argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in RUN_ROLES + ("report-fixer",)}
         for role in roles_with_shell:
@@ -513,7 +517,7 @@ class RunTests(AuthorityRunCase):
         self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
         changed = self.said(err, "AUTHORITY_CHANGED")
         self.assertEqual(len(changed), 1, err)
-        self.assertRegex(changed[0]["message"], r"^W1 executor: authority [0-9a-f]{12} -> [0-9a-f]{12} \(access\)$")
+        self.assertRegex(changed[0]["message"], r"^W1 executor: authority [0-9a-f]{12} -> [0-9a-f]{12} \(access, .+guard.+\)$")
         first, second = self.envelopes(self.agent_dirs(err, "executor")[0])
         self.assertEqual((first["access"], second["access"]), ("open", "confined"))
 

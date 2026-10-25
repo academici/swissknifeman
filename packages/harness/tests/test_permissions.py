@@ -1,4 +1,5 @@
 """Internal documentation."""
+import fnmatch
 import contextlib
 import io
 import json
@@ -70,6 +71,21 @@ class PermissionsCase(unittest.TestCase):
         self.assertTrue(ret)
         data = json.loads(settings_path.read_text())
         self.assertEqual(sorted(data["enabledMcpjsonServers"]), ["github", "perplexity-web"])
+
+
+class GlobalConfigRulesTests(unittest.TestCase):
+    def test_global_config_reads_are_allowed_and_mutations_are_denied(self):
+        path = Path(__file__).resolve().parents[1] / "configs/claude-code/settings.global.json"
+        rules = json.loads(path.read_text())["permissions"]
+        def matches(command, patterns):
+            return any(fnmatch.fnmatchcase(command, rule[5:-1]) for rule in patterns if rule.startswith("Bash("))
+        for args in ("--get user.name", "--get-all user.name", "--get-regexp user.*", "--list"):
+            command = "git config --global " + args
+            self.assertFalse(matches(command, rules["deny"]), command)
+            self.assertTrue(matches(command, rules["allow"]), command)
+        for args in ("--add user.name X", "--unset user.name", "--unset-all user.name", "--replace-all user.name X",
+                     "--edit", "user.name X"):
+            self.assertTrue(matches("git config --global " + args, rules["deny"]), args)
 
 
 if __name__ == "__main__":

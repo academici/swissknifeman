@@ -6,6 +6,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
@@ -83,12 +84,13 @@ class ExtraPathGrantTests(unittest.TestCase):
     def block(self, role: str, paths: list) -> dict:
         eng = engine.Conductor.__new__(engine.Conductor)
         eng.progress = None
+        eng.settings = SimpleNamespace(launch={"access":"confined"})
         item = type("I", (), {"options": {"instructions": {"sandbox": "prefer", "sandbox_domains": ["pypi.org"]},
                                           "scope": {"extra_paths": paths}}})()
         up = {"available": True, "reason": None, "checked": []}
         with mock.patch("orch.sandbox.probe", return_value=up), mock.patch.object(engine.Conductor, "_knows", return_value=True):
             args = eng._sandbox_args(item, role, self.ROUTE)
-        return json.loads(args[args.index("--settings") + 1])["sandbox"]
+        return json.loads(args[args.index("--settings") + 1])["sandbox"] if args else None
 
     def test_the_writers_get_the_grant(self):
         for role in ("executor", "bounded-implementer"):
@@ -101,7 +103,7 @@ class ExtraPathGrantTests(unittest.TestCase):
 
     def test_no_extra_path_or_no_writer_gives_no_filesystem_key(self):
         self.assertNotIn("filesystem", self.block("executor", []))
-        self.assertNotIn("filesystem", self.block("reviewer", ["/data/a"]))
+        self.assertIsNone(self.block("reviewer", ["/data/a"]))
 
 
 class OtherPlatformTests(unittest.TestCase):

@@ -32,6 +32,18 @@
     "duration_s": {"description": "Wall time of the agent run.", "type": "number", "minimum": 0},
     "stream": {"description": "Stream of the last attempt, relative to the project; null when none.", "type": ["string", "null"]},
     "lingered": {"description": "The process lingered after its result and was stopped.", "type": "boolean"},
+    "env_denials": {
+      "description": "Environment refusals by category, accumulated across attempts; no error text.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9_-]*$": {
+          "description": "Number of failed tool results.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "authority": {
       "description": "The authority envelope of each process the agent run started (P6.2: authority/a<attempt>.json of the agent folder), in the order of the attempts; absent when no process started.",
       "type": "array",

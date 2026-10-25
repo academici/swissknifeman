@@ -31,7 +31,7 @@ from typing import Callable, Mapping, Optional
 from aicore.provider import errors as provider_errors
 from aicore.util.redact import env_secrets, redact_text
 
-from orch.conductor import records
+from orch.conductor import denials, records
 from orch.conductor.signals import (CPU_PROGRESS_S, CPU_SAMPLE_S, PROGRESS_MARKERS, CpuWatch, StreamScan,  # noqa: F401 — re-exported
                                     TickInfo, command_of, markers_of, tree_cpu_ticks)
 from orch.conductor.infrastructure.clock import utc_now
@@ -57,6 +57,7 @@ class RoleRun:
     error_doc: Optional[dict] = None  # error/v1 of a failed role the rules of aicore recognize (``provider`` known)
     api_retries: int = 0  # how many times the provider CLI itself repeated the request (claude ``api_retry`` events)
     denials: list = field(default_factory=list)  # ``[{tool_name}]``: tool calls refused without a prompt (never their input)
+    env_denials: dict = field(default_factory=dict)  # environment error categories only, never the tool output
     reset_at: Optional[int] = None  # unix time the provider itself gave for the end of a limit (claude ``resetsAt``), as seen
     usage_complete: Optional[bool] = None  # text or not started: None; jsonl: terminal usage with fresh tokens
     init: Optional[dict] = None  # the names of the first init event (``INIT_FIELDS``), None when the stream has none
@@ -95,7 +96,7 @@ def _usage(found: object) -> dict:
             "cached": count("cache_read_input_tokens"), "output": count("output_tokens")}
 
 
-def parse_stream(transport: str, data: str) -> dict:
+def parse_stream(transport: str, data: str, *, guard: str = "") -> dict:
     """``{text, session, model, usage, usage_complete, is_error, signals, denials}`` of a captured stdout.
 
     ``is_error`` rests on ``result.is_error`` whatever its ``subtype`` (``success`` can come with ``is_error: true``)
@@ -108,12 +109,13 @@ def parse_stream(transport: str, data: str) -> dict:
     """
     if transport == "text":
         return {"text": data.strip(), "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0},
-                "usage_complete": None, "is_error": False, "signals": {}, "denials": []}
+                "usage_complete": None, "is_error": False, "signals": {}, "denials": [], "env_denials": {}}
     found = {"text": "", "session": None, "model": None, "usage": {"input": 0, "cached": 0, "output": 0}, "is_error": False,
              "usage_complete": False, "signals": {}, "denials": []}
     denied: dict = {}  # tool_use_id -> (tool name, hint), in order of first sight
     signals, retry_status, retries, last = found["signals"], None, 0, {}  # last: the final terminal event only
     messages, answers, complete = [], [], True  # answers: texts of the results that did not fail
+    events = [{"type": "orch.guard", "guard": guard}]
     for raw in data.splitlines():
         try:
             doc = json.loads(raw)
@@ -121,6 +123,8 @@ def parse_stream(transport: str, data: str) -> dict:
             continue
         if not isinstance(doc, dict):
             continue
+        if doc.get("type") != "orch.guard":  # the provider cannot claim the guard its command ran under
+            events.append(doc)
         kind = doc.get("type")
         if kind == "system" and doc.get("subtype") == "init":
             found["session"] = doc.get("session_id") or found["session"]
@@ -187,6 +191,7 @@ def parse_stream(transport: str, data: str) -> dict:
             found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
             found["usage_complete"] = bool(usage["input"] or usage["output"])
     found["denials"] = [{"tool_name": name, **({"hint": hint} if hint else {})} for name, hint in denied.values()]
+    found["env_denials"] = denials.classify(transport, events)
     if not found["text"] and messages:
         found["text"] = messages[-1]
     signals.update(last)
@@ -525,7 +530,7 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
              env: Optional[Mapping[str, str]] = None, idle_timeout_s: int = 0,
              cancel: Optional[threading.Event] = None, on_tick: Optional[Callable] = None,
              result_grace_s: float = RESULT_GRACE_S, provider: Optional[str] = None,
-             agent_directory: Optional[Path] = None) -> RoleRun:
+             agent_directory: Optional[Path] = None, guard: str = "") -> RoleRun:
     """Run ``argv`` with ``prompt`` on stdin; never raises for a failure of the child.
 
     ``provider`` (an aicore provider id such as ``claude-code``) lets a failed run be classified into ``error_doc``;
@@ -564,19 +569,19 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
         elif stopped:
             _kill(process)
             data = raw_path.read_text(encoding="utf-8", errors="replace")
-            parsed = parse_stream(transport, data)
+            parsed = parse_stream(transport, data, guard=guard)
             usage = partial_usage(data) if transport == "jsonl" else parsed["usage"]
             return RoleRun(exit=process.returncode, error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
                            duration_s=time.monotonic() - started, raw=str(raw_path),
-                           usage=usage, usage_complete=parsed["usage_complete"])
+                           usage=usage, usage_complete=parsed["usage_complete"], env_denials=parsed["env_denials"])
     duration = time.monotonic() - started
     data = raw_path.read_text(encoding="utf-8", errors="replace")
-    parsed = parse_stream(transport, data)
+    parsed = parse_stream(transport, data, guard=guard)
     usage = partial_usage(data) if transport == "jsonl" and not parsed["usage_complete"] else parsed["usage"]
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
                   usage=usage, duration_s=duration, raw=str(raw_path), lingered=lingered,
                   usage_complete=parsed["usage_complete"],
-                  api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"],
+                  api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"], env_denials=parsed["env_denials"],
                   reset_at=parsed["signals"].get("limit_resets_at"), init=parsed.get("init"))
     if lingered:
         run.exit = 0

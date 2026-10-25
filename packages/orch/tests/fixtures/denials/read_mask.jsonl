@@ -1,0 +1,3 @@
+{"type": "system", "subtype": "init", "model": "synthetic"}
+{"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "is_error": true, "content": "error: unsupported file type 'skills.json'\nfatal: cannot hash skills.json"}]}}
+{"type": "result", "is_error": false, "result": "done", "usage": {"input_tokens": 1, "output_tokens": 1}}

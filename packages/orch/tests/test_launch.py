@@ -51,14 +51,14 @@ class LaunchCatalogTests(unittest.TestCase):
         argv = launch.build_argv(self.catalog, "executor", "claude-code", model="sonnet", effort="xhigh", cwd="/w")
         self.assertEqual(argv[argv.index("--effort") + 1], "xhigh")
 
-    def test_grok_writers_use_jsonl_under_landlock_with_only_the_checkout_grant(self):
+    def test_grok_writers_use_jsonl_with_explicit_checkout_and_home_grants(self):
         for role, model_class, effort, timeout in (("executor", "implementation", "high", 3600),
                                                   ("bounded-implementer", "economy", "medium", 1800)):
             with self.subTest(role=role):
                 argv = launch.build_argv(self.catalog, role, "grok", model="m-1", cwd="/w")
                 entry = launch.entry(self.catalog, role, "grok")
                 self.assertEqual(argv[:argv.index("--")],
-                                 ["python3", str(ROOT / "scripts/ro-run.py"), "--rw", "/w"])
+                                 ["python3", str(ROOT / "scripts/ro-run.py"), "--rw", "/w", "--rw", "~/.grok"])
                 for flag, value in (("--cwd", "/w"), ("--prompt-file", "/dev/stdin"), ("--model", "m-1"),
                                     ("--effort", effort), ("--permission-mode", "bypassPermissions"),
                                     ("--output-format", "streaming-messages-json")):
@@ -80,7 +80,7 @@ class LaunchCatalogTests(unittest.TestCase):
         argv = launch.build_argv(self.catalog, "reviewer", "grok", model="m-1", effort="xhigh", cwd="/w")
         split = argv.index("--")
         self.assertEqual(argv[:split], ["python3", str(launch.ORCH_ROOT / "scripts" / "ro-run.py"),
-                                       "--protect", "/w", "--rw", "/w/vendor"])
+                                       "--protect", "/w", "--rw", "/w/vendor", "--rw", "~/.grok"])
         self.assertTrue((launch.ORCH_ROOT / "scripts" / "ro-run.py").is_file())
         grok = argv[split + 1:]
         self.assertEqual(grok[:3], ["grok", "--cwd", "/w"])
@@ -92,7 +92,8 @@ class LaunchCatalogTests(unittest.TestCase):
 
     def test_grok_report_fixer_has_protection_and_cannot_call_shell(self):
         argv = launch.build_argv(self.catalog, "report-fixer", "grok", model="m-1", cwd="/w")
-        self.assertEqual(argv[:argv.index("--")], ["python3", str(ROOT / "scripts/ro-run.py"), "--protect", "/w"])
+        self.assertEqual(argv[:argv.index("--")], ["python3", str(ROOT / "scripts/ro-run.py"), "--protect", "/w",
+                                                   "--rw", "~/.grok"])
         self.assertEqual(set(argv[argv.index("--disallowed-tools") + 1].split(",")),
                          set(READ_ONLY_DENY.split(",")) | {"run_terminal_command"})
         self.assertEqual(argv[argv.index("--output-format") + 1], "streaming-messages-json")
@@ -108,6 +109,7 @@ class LaunchCatalogTests(unittest.TestCase):
                 guard = ["python3", str(ROOT / "scripts/ro-run.py"), "--protect", "/w"]
                 if role == "triager":
                     guard += ["--rw", "/w/vendor"]
+                guard += ["--rw", "~/.grok"]
                 self.assertEqual(argv[:argv.index("--")], guard)
                 self.assertEqual((entry["model_class"], entry["effort"], entry["timeout_s"], entry["model_set"]),
                                  (model_class, effort, timeout, "supported"))
@@ -115,7 +117,7 @@ class LaunchCatalogTests(unittest.TestCase):
                 self.assertEqual(denied, READ_ONLY_DENY)
                 self.assertNotIn("run_terminal_command", denied.split(","))
                 self.assertNotIn("web_search", denied.split(","))
-                self.assertEqual("--disable-web-search" in argv, role == "scout")
+                self.assertEqual("--disable-web-search" in argv, role in ("scout", "triager"))
 
     def test_claude_code_roles_list_their_tools(self):
         # --tools cuts the start-up context of an isolated role from ≈14 K to ≈7 K tokens (measured, P12 prep);

@@ -145,6 +145,9 @@ def route_problem(self, route: dict) -> str | None:
         return disabled
     if route["transport"] == "acp":
         return "TRANSPORT_UNSUPPORTED: the conductor does not drive acp roles"
+    refused = route_rules.registrar_problem(route, project=str(getattr(self, "project", "")), access=self._launch_access())
+    if refused:
+        return refused
     if self._codex_sandboxed(route) and not sandbox.probe()["available"]:
         return f"SANDBOX_UNAVAILABLE: {sandbox.probe()['reason']}"
     if not process.available(route["argv"]):
@@ -396,11 +399,12 @@ def route_minimum(self, item: Item, route: Optional[dict] = None) -> None:
 def claude_sandbox_problem(self, item: Item, route: dict) -> Optional[str]:
     """:func:`policies.sandbox.claude_sandbox_problem` over the sandbox probe of this machine and the flags the CLI
     lists, probed here only for a Claude Code shell under ``require`` (the CLI only when the sandbox starts)."""
-    if not sandbox_rules.claude_confinement_required(item.options, route):
+    if not sandbox_rules.claude_confinement_required(item.options, route, access=self._launch_access()):
         return None
     probed = sandbox.probe()
     listed = self._knows(route["argv"], ["--settings"]) if probed["available"] else None
-    return sandbox_rules.claude_sandbox_problem(item.options, route, probe=probed, settings_listed=listed)
+    return sandbox_rules.claude_sandbox_problem(item.options, route, probe=probed, settings_listed=listed,
+                                                access=self._launch_access())
 
 
 def sandbox_facts(self, item: Item, role: str, route: dict, quiet: bool = False) -> dict:
@@ -412,7 +416,8 @@ def sandbox_facts(self, item: Item, role: str, route: dict, quiet: bool = False)
     resolve) has the default mode ``prefer``."""
     mode = self._sandbox_mode(item) if "instructions" in (item.options or {}) else "prefer"
     found = {"mode": mode, "available": None, "reason": None, "settings_listed": None}
-    if mode == "off" or not route.get("argv") or not self._claude_bash(route):
+    if mode == "off" or not route.get("argv") or not self._claude_bash(route) \
+            or not sandbox_rules.filesystem(role) == "write" or self._launch_access() == "open":
         return found
     probed = sandbox.probe()
     found.update(available=bool(probed["available"]), reason=probed["reason"])
@@ -441,7 +446,7 @@ def sandbox_args(self, item: Item, role: str, route: dict) -> list:
         return []
     return sandbox_rules.sandbox_args(item.options, role, route,
                                       extra_paths=self._scope_option(item, "extra_paths", []),
-                                      network=self.declared_network(role))
+                                      network=self.declared_network(role), access=self._launch_access())
 
 
 def note_isolation(self, provider: str, reason: str, message: str) -> None:

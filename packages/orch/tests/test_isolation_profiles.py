@@ -336,7 +336,8 @@ class LaunchPathTests(unittest.TestCase):
             launch_plan.role_argv(owner, self.item("executor"), "executor", wrapper)
         self.assertEqual(stop.exception.code, "ISOLATION_UNAVAILABLE")
         self.assertIn("the command of the route is not a provider CLI the profile can probe", stop.exception.message)
-        self.assertEqual(launch_plan.role_argv(owner, self.item("executor", mode="prefer"), "executor", wrapper)[2:4],
+        self.assertEqual(launch_plan.strip_guard(launch_plan.role_argv(
+            owner, self.item("executor", mode="prefer"), "executor", wrapper))[2:4],
                          ["--safe-mode", "--strict-mcp-config"])
         said = [call.kwargs["message"] for call in owner.progress.emit.call_args_list
                 if call.kwargs.get("reason_code") == "ISOLATION_PARTIAL"]
@@ -358,7 +359,7 @@ class IsolationRunCase(ConductorCase):
             self.addCleanup(patcher.stop)
         self.bin = self.project.parent / "bin"
         self.bin.mkdir()
-        self.cli_log, self.cli_env = self.project.parent / "cli.log", self.project.parent / "cli-env.jsonl"
+        self.cli_log, self.cli_env = self.fake / "cli.log", self.fake / "cli-env.jsonl"
         for name in ("claude", "codex"):
             fake = self.bin / name
             fake.write_text(FAKE_CLI.format(python=sys.executable, fake_role=str(FIXTURES / "fake_role.py")),
@@ -401,7 +402,7 @@ class ClaudeRunTests(IsolationRunCase):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1", extra=self.options(instructions={"isolate_roles": ["executor"]}))
         self.assertEqual(code, 0, err)
-        self.assertEqual(self.argv("executor")[-2:], ["--safe-mode", "--strict-mcp-config"])
+        self.assertEqual(self.argv("executor")[:2], ["--safe-mode", "--strict-mcp-config"])
         self.assertNotIn("--safe-mode", self.argv("context-scout"))
         envs = [json.loads(line) for line in self.cli_env.read_text(encoding="utf-8").splitlines()]
         self.assertEqual(sorted(env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"] or "-" for env in envs), ["-", "1"])
@@ -662,7 +663,9 @@ class LaunchPlanTests(unittest.TestCase):
         environment; grok gets no arguments but its plan says partial."""
         eng = engine.Conductor.__new__(engine.Conductor)
         eng.env = {"PATH": "/bin"}
-        item = type("I", (), {"options": {"instructions": {"isolate_roles": ["executor", "registrar"]}}})()
+        eng.project = Path("/project")
+        item = type("I", (), {"options": {"instructions": {"isolate_roles": ["executor", "registrar"]},
+                                          "session":{"executor":"per-item"}}})()
         env = eng._role_env(item, "executor", {"provider": "claude-code"})
         self.assertEqual((env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"], env["CLAUDE_CODE_DISABLE_AUTO_MEMORY"]), ("1", "1"))
         self.assertEqual(env["PATH"], "/bin")
@@ -672,10 +675,12 @@ class LaunchPlanTests(unittest.TestCase):
                   ("grok", "--version"): "grok 1.0.50", ("grok", "--help"): "--rules"}
         with mock.patch.dict(cli_probe._KNOWN, clear=True), mock.patch.dict(cli_probe._HELP, clear=True), \
                 mock.patch.dict(cli_probe._VERSION, clear=True), \
-                mock.patch.object(cli_probe, "_run", side_effect=lambda args: listed[tuple(args)]):
+                mock.patch.object(cli_probe, "_run", side_effect=lambda args: listed[tuple(args)]), \
+                mock.patch.object(launch_plan, "landlock_abi", return_value=3):
             claude = {"provider": "claude-code", "argv": ["claude", "-p"]}
-            self.assertEqual(eng._role_argv(item, "executor", claude), ["claude", "-p", "--safe-mode", "--strict-mcp-config"])
-            self.assertEqual(eng._role_argv(item, "reviewer", claude), ["claude", "-p"])
+            self.assertEqual(launch_plan.strip_guard(eng._role_argv(item, "executor", claude)),
+                             ["claude", "-p", "--safe-mode", "--strict-mcp-config"])
+            self.assertEqual(launch_plan.strip_guard(eng._role_argv(item, "reviewer", claude)), ["claude", "-p"])
             grok = {"provider": "grok", "argv": ["grok"]}
             self.assertEqual(eng._role_argv(item, "executor", grok), ["grok"])
             self.assertEqual(launch_plan.isolation_plan(eng, item, "executor", grok)["guarantee"], "partial")

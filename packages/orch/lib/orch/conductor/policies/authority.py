@@ -26,7 +26,10 @@ GUARDS = ("landlock-rw", "landlock-protect", "claude-sandbox", "codex-sandbox", 
 # carried the ask and deny rules of git push, reset --hard and clean are no longer loaded, so these come with the launch
 # (the meaning of the shared Claude Code settings presets of a project, without depending on any of them).
 ORCH_PERMISSION_RULES = {"deny": ["Bash(git push*)", "Bash(git reset --hard*)", "Bash(git clean*)",
-                                  "Bash(git config --global*)", "Bash(sudo *)", "Read(.env)", "Read(.env.*)",
+                                  "Bash(git config --global --add *)", "Bash(git config --global --unset*)",
+                                  "Bash(git config --global --replace-all *)", "Bash(git config --global --edit*)",
+                                  "Bash(git config --global *.* *)", "Bash(sudo *)", "Read(.env)", "Read(.env.*)",
+                                  "Bash(cat .env)", "Bash(cat .env.*)",
                                   "Read(**/*.pem)", "Read(**/*.key)", "Read(~/.ssh/**)", "Read(~/.aws/**)"],
                          "ask": []}
 NO_RULES = {"deny": [], "ask": []}
@@ -35,7 +38,7 @@ PROMPT_ROLES = ("executor", "bounded-implementer")  # the writers whose prompt c
 PROMPT_LINES = 12
 # What scripts/ro-run.py leaves writable besides its --rw grants unless --no-default-rw (its DEFAULT_WRITABLE; a test
 # keeps the two equal): the guard grants them to every launch it confines.
-GUARD_DEFAULT_WRITABLE = ("/tmp", "/var/tmp", "/dev", "~/.grok")
+GUARD_DEFAULT_WRITABLE = ("/tmp", "/var/tmp", "/dev")
 CODEX_CONFINED = ("read-only", "workspace-write")
 
 
@@ -46,11 +49,11 @@ def guard_prefix(argv: list) -> Optional[list]:
     return argv[:argv.index("--")]
 
 
-def sandbox_applies(route: dict, sandbox: dict) -> bool:
+def sandbox_applies(route: dict, sandbox: dict, *, access: str = "confined", writes: bool = True) -> bool:
     """The Claude Code sandbox confines the commands of the role: a Claude Code role with Bash, ``instructions.sandbox``
     not ``off``, a sandbox that starts and a CLI that lists ``--settings`` (``sandbox`` holds what the caller probed:
     ``mode``, ``available``, ``settings_listed``)."""
-    return sandbox.get("mode") != "off" and bool(route.get("argv")) and sandbox_rules.claude_bash(route) \
+    return access != "open" and writes and sandbox.get("mode") != "off" and bool(route.get("argv")) and sandbox_rules.claude_bash(route) \
         and bool(sandbox.get("available")) and bool(sandbox.get("settings_listed"))
 
 
@@ -96,7 +99,8 @@ def _root(path: str, project: str, home: str) -> str:
 
 def compute(role: str, route: dict, *, access: str, sandbox: dict, isolation: dict, declared_network: str,
             sandbox_domains: list, extra_paths: list, transcripts: Optional[str], project: str, home: str,
-            writes: bool, listed: Optional[dict] = None) -> dict:
+            writes: bool, listed: Optional[dict] = None, tmpdir: Optional[str] = None,
+            protection: Optional[dict] = None) -> dict:
     """The ``authority-envelope`` of a launch of ``role`` on ``route``. ``access`` is ``[orch.launch] access``,
     ``sandbox`` the probed facts of the Claude sandbox (:func:`sandbox_applies`), ``isolation`` the plan of
     ``policies/isolation.plan``, ``declared_network`` ``tools.network`` of the role manifest, ``sandbox_domains`` and
@@ -113,15 +117,21 @@ def compute(role: str, route: dict, *, access: str, sandbox: dict, isolation: di
     no_shell = provider == "claude-code" and "--tools" in argv[:-1] and not shell
     degraded: list = []
     # (1) the guard: the provider sandbox replaces the Landlock guard it cannot start under
-    if sandbox_applies(route, sandbox):
+    protected = provider == "claude-code" and not writes
+    applies = sandbox_applies(route, sandbox, access=access, writes=writes)
+    if protected:
+        guard = "landlock-protect"
+    elif applies:
         guard = "claude-sandbox"
     elif prefix is not None:
         guard = "landlock-rw" if "--rw" in prefix and "--protect" not in prefix else "landlock-protect"
+    elif provider == "claude-code" and writes:
+        guard = "landlock-rw"
     elif provider == "codex" and codex_mode(argv) in CODEX_CONFINED:
         guard = "codex-sandbox"
     else:
         guard = "none"
-    if shell and sandbox.get("mode") != "off" and guard != "claude-sandbox":
+    if shell and writes and access != "open" and sandbox.get("mode") != "off" and guard != "claude-sandbox":
         if not sandbox.get("available"):
             degraded.append({"code": "SANDBOX_UNAVAILABLE",
                              "detail": f"the sandbox cannot start ({sandbox.get('reason') or 'unknown'})"})
@@ -129,7 +139,19 @@ def compute(role: str, route: dict, *, access: str, sandbox: dict, isolation: di
             degraded.append({"code": "SETTINGS_UNSUPPORTED", "detail": "the claude CLI does not list --settings"})
     # (2) where writes may land; the paths of scope.extra_paths and the transcripts are granted by the launch
     roots = []
-    if prefix is not None and guard != "claude-sandbox":
+    if protected:
+        if not (protection or {}).get("no_default_rw"):
+            roots += [{"path": path, "why": "guard"} for path in GUARD_DEFAULT_WRITABLE]
+        else:
+            roots.append({"path": "/dev", "why": "guard"})
+        if tmpdir:
+            roots.append({"path": tilde(tmpdir, home), "why": "tmpdir"})
+        if (protection or {}).get("vendor"):
+            roots.append({"path": "./vendor", "why": "guard"})
+    elif guard == "landlock-rw" and prefix is None:
+        roots += [{"path": path, "why": "guard"} for path in GUARD_DEFAULT_WRITABLE]
+        roots.append({"path": ".", "why": "checkout"})
+    elif prefix is not None and guard != "claude-sandbox":
         # in the order of the guard: its default writable roots (unless --no-default-rw), then its --rw grants
         if "--no-default-rw" not in prefix:
             roots += [{"path": path, "why": "guard"} for path in GUARD_DEFAULT_WRITABLE]
@@ -146,6 +168,8 @@ def compute(role: str, route: dict, *, access: str, sandbox: dict, isolation: di
         roots += [{"path": tilde(_expand(path, home), home), "why": "extra_paths"} for path in extra_paths]
     if transcripts:
         roots.append({"path": tilde(transcripts, home), "why": "transcripts"})
+    if tmpdir and not protected:
+        roots.append({"path": tilde(tmpdir, home), "why": "tmpdir"})
     # (3) the setting sources: an isolated Claude Code role loads only the settings of the user, not those of the project
     named = _value(argv, "--setting-sources")
     setting_sources = named.split(",") if named else None
@@ -223,7 +247,7 @@ def settings(doc: dict) -> Optional[dict]:
     found: dict = {}
     if doc["guard"] == "claude-sandbox":
         block: dict = dict(SANDBOX_BLOCK)
-        granted = extra_roots(doc, "extra_paths")
+        granted = extra_roots(doc, "extra_paths") + extra_roots(doc, "tmpdir")
         if granted:
             block["filesystem"] = {"allowWrite": granted}
         if doc["network"]["enforced_by"] == "claude-sandbox":
@@ -253,12 +277,14 @@ def prompt_block(doc: dict) -> str:
     may write, the network, Docker, what git forbids and what to do when a check needs what it does not have. The
     paths of ``scope.extra_paths`` (named by the write fence of the prompt) and the transcripts folder are said, not
     listed: they are absolute paths of this machine."""
-    roots = [root["path"] for root in doc["write_roots"] if root["why"] not in ("extra_paths", "transcripts")]
+    roots = [root["path"] for root in doc["write_roots"] if root["why"] not in ("extra_paths", "transcripts", "tmpdir")]
     named = [f"`{path}`" for path in roots]
     if any(root["why"] == "extra_paths" for root in doc["write_roots"]):
         named.append("the extra paths of the write fence")
     if any(root["why"] == "transcripts" for root in doc["write_roots"]):
         named.append("the transcripts folder of your session")
+    # Every launched agent receives private scratch, even when a preview has no agent directory yet.
+    named.append("your TMPDIR")
     where = "anywhere this user can" if "/" in roots else ", ".join(named) or "nowhere"
     network = doc["network"]
     reach = {"none": "none", "open": "open",

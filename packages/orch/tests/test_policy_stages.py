@@ -289,16 +289,16 @@ class PureRuleTests(unittest.TestCase):
         prefer = {"instructions": {"sandbox": "prefer"}}
         require = {"instructions": {"sandbox": "require"}}
         self.assertFalse(sandbox_rules.claude_confinement_required(prefer, bash))
-        self.assertTrue(sandbox_rules.claude_confinement_required(require, bash))
+        self.assertTrue(sandbox_rules.claude_confinement_required(require, bash, access="confined"))
         self.assertIsNone(sandbox_rules.claude_sandbox_problem(prefer, bash, probe=None, settings_listed=None))
         down = sandbox_rules.claude_sandbox_problem(require, bash, probe={"available": False, "reason": "no bwrap"},
-                                                    settings_listed=None)
+                                                    settings_listed=None, access="confined")
         self.assertEqual(down, "SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start "
                                "(no bwrap)")
         self.assertIn("does not list --settings", sandbox_rules.claude_sandbox_problem(
-            require, bash, probe={"available": True, "reason": None}, settings_listed=False))
+            require, bash, probe={"available": True, "reason": None}, settings_listed=False, access="confined"))
         self.assertIsNone(sandbox_rules.claude_sandbox_problem(require, bash, probe={"available": True, "reason": None},
-                                                               settings_listed=True))
+                                                               settings_listed=True, access="confined"))
         self.assertEqual(sandbox_rules.sandbox_args({"instructions": {"sandbox": "off"}}, "executor", bash,
                                                     extra_paths=[], network="none"), [])
 
@@ -356,6 +356,7 @@ class FactsBeforeRulesTests(unittest.TestCase):
         from orch.conductor import engine
         owner = engine.Conductor.__new__(engine.Conductor)  # no __init__ and no settings: the tolerant reads hold
         owner.settings, owner.conductor, owner.project, owner.progress = None, {}, Path.cwd(), mock.Mock()
+        owner._launch_access = lambda: "confined"
         return owner
 
     def item(self, sandbox: str = "require", stages=None):

@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.7.0",
+  "catalog_version": "1.8.0",
   "defaults": {
     "transport": "jsonl",
     "model_set": "supported"
@@ -14,6 +14,8 @@
     "claude.no-edit": ["--disallowedTools", "Edit,Write,NotebookEdit"],
     "ro-run.rw": ["python3", "{orch}/scripts/ro-run.py", "--rw", "{cwd}", "--"],
     "ro-run.protect": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--"],
+    "ro-run.grok-rw": ["python3", "{orch}/scripts/ro-run.py", "--rw", "{cwd}", "--rw", "~/.grok", "--"],
+    "ro-run.grok-protect": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "~/.grok", "--"],
     "codex.exec": ["codex", "-a", "never", "exec"],
     "codex.model": ["--model", "{model}", "-c", "model_reasoning_effort=\"{effort}\""],
     "grok.run": ["grok", "--cwd", "{cwd}", "--prompt-file", "/dev/stdin", "--model", "{model}", "--effort", "{effort}", "--permission-mode", "bypassPermissions"],
@@ -34,7 +36,7 @@
           "argv": ["@codex.exec", "--sandbox", "read-only", "@codex.model", "--ephemeral", "-"]
         },
         "grok": {
-          "argv": ["@ro-run.protect", "@grok.run", "@grok.read-only", "--disable-web-search", "--output-format", "plain"]
+          "argv": ["@ro-run.grok-protect", "@grok.run", "@grok.read-only", "--disable-web-search", "--output-format", "plain"]
         }
       }
     },
@@ -51,8 +53,8 @@
           "resume_argv": ["@codex.exec", "resume", "{session}", "--json", "-c", "sandbox_mode=\"{write_sandbox}\"", "@codex.model", "-"]
         },
         "grok": {
-          "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"],
-          "resume_argv": ["@ro-run.rw", "@grok.run", "--resume", "{session}", "@grok.stream"]
+          "argv": ["@ro-run.grok-rw", "@grok.run", "@grok.stream"],
+          "resume_argv": ["@ro-run.grok-rw", "@grok.run", "--resume", "{session}", "@grok.stream"]
         }
       }
     },
@@ -68,7 +70,7 @@
           "argv": ["@codex.exec", "--json", "--sandbox", "{write_sandbox}", "@codex.model", "-"]
         },
         "grok": {
-          "argv": ["@ro-run.rw", "@grok.run", "@grok.stream"]
+          "argv": ["@ro-run.grok-rw", "@grok.run", "@grok.stream"]
         }
       }
     },
@@ -78,14 +80,14 @@
       "timeout_s": 1800,
       "providers": {
         "claude-code": {
-          "argv": ["@claude.stream", "@claude.model", "@claude.read-tools", "@claude.no-edit", "@claude.quiet"]
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--", "@claude.stream", "@claude.model", "@claude.read-tools", "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "@claude.no-edit", "@claude.quiet"]
         },
         "codex": {
           "argv": ["@codex.exec", "--json", "--sandbox", "read-only", "@codex.model", "-"]
         },
         "grok": {
           "timeout_s": 3600,
-          "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--", "@grok.run", "@grok.read-only", "@grok.stream"]
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--rw", "~/.grok", "--", "@grok.run", "@grok.read-only", "--disable-web-search", "@grok.stream"]
         }
       }
     },
@@ -95,13 +97,13 @@
       "timeout_s": 1800,
       "providers": {
         "claude-code": {
-          "argv": ["python3", "{orch}/scripts/ro-run.py", "--", "@claude.stream", "@claude.model", "@claude.read-tools", "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "@claude.no-edit", "@claude.quiet"]
+          "argv": ["@ro-run.protect", "@claude.stream", "@claude.model", "@claude.read-tools", "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "@claude.no-edit", "@claude.quiet"]
         },
         "codex": {
           "argv": ["@codex.exec", "--json", "--sandbox", "read-only", "@codex.model", "-"]
         },
         "grok": {
-          "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--", "@grok.run", "@grok.read-only", "@grok.stream"]
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--rw", "~/.grok", "--", "@grok.run", "@grok.read-only", "--disable-web-search", "@grok.stream"]
         }
       }
     },
@@ -130,7 +132,7 @@
           "argv": ["@codex.exec", "--json", "--sandbox", "read-only", "@codex.model", "--ephemeral", "-"]
         },
         "grok": {
-          "argv": ["@ro-run.protect", "@grok.run", "--disallowed-tools", "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video", "@grok.stream"]
+          "argv": ["@ro-run.grok-protect", "@grok.run", "--disallowed-tools", "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video", "--disable-web-search", "@grok.stream"]
         }
       }
     },
@@ -143,7 +145,7 @@
           "argv": ["@claude.stream", "@claude.model", "@claude.read-tools", "@claude.research-query", "@claude.quiet"]
         },
         "grok": {
-          "argv": ["@ro-run.protect", "@grok.run", "@grok.read-only", "@grok.stream"]
+          "argv": ["@ro-run.grok-protect", "@grok.run", "@grok.read-only", "@grok.stream"]
         }
       }
     },
@@ -156,7 +158,7 @@
           "argv": ["@claude.stream", "@claude.model", "@claude.read-tools", "@claude.research-query", "@claude.quiet"]
         },
         "grok": {
-          "argv": ["@ro-run.protect", "@grok.run", "@grok.read-only", "@grok.stream"]
+          "argv": ["@ro-run.grok-protect", "@grok.run", "@grok.read-only", "@grok.stream"]
         }
       }
     }

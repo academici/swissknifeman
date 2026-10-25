@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "a9756c007948",
-  "reason": "P6.2: orch.py roles matrix",
+  "captured_from": "61a43db37efd",
+  "reason": "P6.3: schemas",
   "generators": [
     {
       "id": "skiller-registry",
@@ -258,9 +258,9 @@
     "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
-    "packages/orch/lib/orch/_types/conductor.py": "d28b839ad14fe04b53e4c6603f3b03b9f394fbab44466fa2d53b005ef394a41e",
+    "packages/orch/lib/orch/_types/conductor.py": "04c7e8c3febbd502b039267e0d0bdba72c19aff2c9162716253ec6e5b5316cf7",
     "packages/orch/lib/orch/_types/exec.py": "9b2763bd1058b8e3b6085ae4d370342478d659e327d783b52b05fe59311e2e11",
-    "packages/orch/lib/orch/_types/records.py": "e458cd81725f44a9e19f8fd26de644726b311bbbaa388b69392a4448bda8f4a9",
+    "packages/orch/lib/orch/_types/records.py": "2831079cd6954512badc3fd26668a9098f5f8d409f816604326f59ab65fdbcbf",
     "packages/orch/lib/orch/_types/work_source.py": "b8a46a247d4aaea211a5694171279a8cbfa9699fb00fe7e1ee30e84b8f6515cc",
     "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",
     "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",

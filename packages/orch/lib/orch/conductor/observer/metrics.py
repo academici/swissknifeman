@@ -1,6 +1,7 @@
 """The numbers of an observer report, computed from what ``reader`` read: no file is opened here."""
 from __future__ import annotations
 
+
 from collections import Counter, defaultdict
 import re
 
@@ -448,3 +449,16 @@ def group_review_totals(group_reviews: dict, severities: Counter) -> list:
             continue
         severities.update({key: counts[key] for key in ("Blocker", "Major", "Minor") if counts[key]})
     return incomplete
+
+
+def refusals_by_source(agents: list) -> dict:
+    """Environment refusals summed once from checked agent results, by category and role."""
+    kinds, roles = {}, {}
+    for agent in agents:
+        role = agent.get("role") or "unknown"
+        for kind, count in (agent.get("env_denials") or {}).items():
+            kinds[kind] = kinds.get(kind, 0) + count
+            by_kind = roles.setdefault(role, {})
+            by_kind[kind] = by_kind.get(kind, 0) + count
+    return {"by_kind": dict(sorted(kinds.items())),
+            "by_role": {role: dict(sorted(counts.items())) for role, counts in sorted(roles.items())}}

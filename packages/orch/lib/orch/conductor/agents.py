@@ -115,6 +115,8 @@ def finish(handle: dict, *, exit_code: Optional[int], error: Optional[dict], dec
         result["isolation"] = isolation
     if handle.get("authority"):
         result["authority"] = [dict(entry) for entry in handle["authority"]]
+    if handle.get("env_denials"):
+        result["env_denials"] = dict(handle["env_denials"])
     _write(handle["directory"] / "result.json", result, "agent-result")
     _write(handle["directory"] / "usage.json", {**handle["usage"], "usage_complete": handle.get("usage_complete")},
            "agent-usage")
@@ -149,7 +151,8 @@ def read(item_directory: Path) -> list:
         status = "running" if result is None else "failed" if result.get("error") or result.get("exit") else "ok"
         rows.append({"agent_run_id": request.get("agent_run_id"), "role": request.get("role"),
                      "step": request.get("step"), "status": status,
-                     "tokens": {key: int(usage.get(key, 0)) for key in USAGE_KEYS}})
+                      "tokens": {key: int(usage.get(key, 0)) for key in USAGE_KEYS},
+                      **({"env_denials": result["env_denials"]} if result and result.get("env_denials") else {})})
     return rows
 
 

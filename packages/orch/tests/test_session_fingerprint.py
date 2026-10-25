@@ -533,7 +533,7 @@ class SessionRunTests(ConductorCase):
         marker = self.project.parent / "sandbox-gone"
         argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
         argv["executor"] += ["--tools", "Bash,Read,Edit"]  # a Claude Code shell: the sandbox confines it when it starts
-        self.write_config(argv, extra=HANDOFF_CONFIG)
+        self.write_config(argv, extra=HANDOFF_CONFIG + '\n[orch.launch]\naccess = "confined"\n')
         self.script({"executor": [dict(self.RED, write={str(marker): "x"}), executor_ok("W1")], "reviewer": [GREEN]})
         up, down = {"available": True, "reason": None, "checked": []}, {"available": False, "reason": "gone", "checked": []}
         with mock.patch.object(engine.sandbox, "probe", side_effect=lambda: down if marker.exists() else up):
@@ -546,7 +546,9 @@ class SessionRunTests(ConductorCase):
         self.assertEqual(len(changed), 1, err)
         self.assertIn("guard", changed[0]["message"])
         slot = self.state(err)["executor_sessions"]["W1"]
-        self.assertEqual(slot["fingerprint"]["authority_digest"], self.state(err)["items"]["W1"]["authority"]["executor"])
+        self.assertRegex(slot["fingerprint"]["authority_digest"], r"^sha256:[0-9a-f]{64}$")
+        self.assertNotEqual(slot["fingerprint"]["authority_digest"],
+                            self.state(err)["items"]["W1"]["authority"]["executor"])  # excludes only ephemeral TMPDIR
 
     def test_changed_instructions_between_rounds_start_a_fresh_session(self):
         marker = self.project.parent / "instructions-changed"

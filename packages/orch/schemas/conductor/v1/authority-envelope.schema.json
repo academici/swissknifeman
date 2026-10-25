@@ -26,7 +26,7 @@
         "required": ["path", "why"],
         "properties": {
           "path": {"description": "The folder: '.' (the checkout), './<rel>' under it, '~/...' under the HOME of the machine, '/' for an unconfined launch, else absolute.", "type": "string", "minLength": 1, "pattern": "^(\\.|\\./.+|~|~/.*|/.*)$"},
-          "why": {"description": "checkout, guard (another folder of the guard), extra_paths (scope.extra_paths), transcripts (the session of a guarded Claude Code executor) or unconfined.", "enum": ["checkout", "guard", "extra_paths", "transcripts", "unconfined"]}
+          "why": {"description": "checkout, guard (another folder of the guard), extra_paths (scope.extra_paths), transcripts (the session of a guarded Claude Code executor) tmpdir (the private scratch directory of this agent) or unconfined.", "enum": ["checkout", "guard", "extra_paths", "transcripts", "unconfined", "tmpdir"]}
         }
       }
     },

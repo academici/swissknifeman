@@ -6,8 +6,10 @@
     "--strict-mcp-config",
     "--setting-sources",
     "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-1/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "context-scout"
@@ -18,8 +20,10 @@
     "--strict-mcp-config",
     "--setting-sources",
     "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-2/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "executor"
@@ -623,7 +627,7 @@
   {
    "event": "info",
    "item": "W1",
-   "message": "W1 executor: authority ce4ee841b469 -> 7bf8c1a8a751 (degraded, git, isolation, permission_rules, provider, setting_sources)",
+   "message": "W1 executor: authority <digest> -> <digest> (degraded, git, guard, isolation, permission_rules, provider, setting_sources, write_roots)",
    "reason_code": "AUTHORITY_CHANGED",
    "role": "executor",
    "route": "codex/gpt-6-sol/high"

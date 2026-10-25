@@ -143,10 +143,12 @@ The wrapper applies Linux Landlock before `exec` (no root or user namespaces); e
 grant `--rw {cwd}`. The reviewer and triager use `--protect {cwd} --rw {cwd}/vendor` for test caches; the scout,
 researcher, advisor and report-fixer use `--protect {cwd}` without a checkout grant. Protected roles disallow editing, subagent creation, scheduled writes, workflows
 and image/video generation; the report-fixer also disallows shell commands. The filesystem stays readable, with
-default writes to `/tmp`, `/var/tmp`, `/dev` and `~/.grok`.
+default writes to `/tmp`, `/var/tmp` and `/dev`. Only Grok entries explicitly grant `--rw ~/.grok`;
+`~` in `--rw` and `--protect` is expanded by ro-run. Claude reviewer/triager also use `--protect` with working Bash.
 
 `--protect` requires Landlock ABI >= 3 (including TRUNCATE) and fails closed with exit 3 for a protected checkout
 inside a default writable root (`RO_RUN_PROTECT_OVERLAP`), a symlink or escaping in-checkout `--rw` grant
-(`RO_RUN_RW_ESCAPE`), or an older ABI (`LANDLOCK_ABI_TOO_OLD`). A checkout in `/tmp` therefore cannot serve these
-protected roles. Without `--protect`, the existing writable rules are preserved. Conductor preflight checks both
+(`RO_RUN_RW_ESCAPE`), or an older ABI (`LANDLOCK_ABI_TOO_OLD`). For a Claude checkout under `/tmp` or `/var/tmp`, the conductor removes default grants with
+`--no-default-rw` and grants only `/dev`, the agent TMPDIR and an existing vendor directory. It refuses an unavailable
+guard before launching the provider (`PROTECT_UNAVAILABLE`), with no writable fallback. Without `--protect`, the existing writable rules are preserved. Conductor preflight checks both
 the wrapper command and the provider after `--`, caching command availability for its process.

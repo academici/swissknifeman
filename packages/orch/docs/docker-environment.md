@@ -11,15 +11,14 @@ start a container that mounts `/`. Everything the conductor runs in containers (
 work) then has that authority. A rootless daemon runs as an ordinary user: root inside a container is only that user outside,
 so a container cannot touch the system.
 
-**The executor and Docker.** By default (`[orch.launch] access = "open"`) a Codex executor runs without the provider sandbox
-(`--sandbox danger-full-access`, as Claude Code and Grok executors already can), so it uses Docker itself, runs the
-container-based tests of what it changed and iterates on red ones in its own session. The conductor still runs every
-acceptance check after its report. With a rootless daemon that access is the access of your user, not root of the host. To
-keep the Codex executor inside the workspace (and out of Docker), set `access` to `confined`: for the machine
-`aicore config set --machine orch.launch.access confined`, for one project `aicore config set --project orch.launch.access
-confined` (`aicore config explain orch launch.access` shows the value and its layer); then the executor
-cannot reach any Docker socket, the prompt tells it so, and the container checks run only in the conductor's checks stage
-after its report (the `done_pending_checks` status).
+**The executor and Docker.** With `[orch.launch] access = "open"` (default), Claude writers run under Landlock without
+bubblewrap and Codex writers use `danger-full-access`: both can reach network and Docker. With `access = "confined"`,
+Claude writers use the provider sandbox (or a loudly degraded Landlock guard when `sandbox=prefer` cannot start it),
+and Codex writers use `workspace-write`. These provider sandboxes block Docker. Grok keeps Landlock in both access
+modes, with network and Docker open. The authority envelope records what each launch actually receives; its Docker
+value drives the executor prompt. When Docker is blocked, container checks run in the conductor's checks stage.
+The conductor runs acceptance after every report. Set machine or project `orch.launch.access` with `aicore config`;
+project layers can only tighten the machine setting.
 
 ## Check it
 
@@ -204,4 +203,5 @@ A profile that lets a sandboxed executor reach Docker and nothing else was tried
   `EDUFY_TOOLS_UID=0`). That was a workaround in one environment, not a general rule.
 
 So the choice stays between `open` (the executor works with Docker as your user; rootless keeps that off root) and
-`confined` (no Docker for the executor; the conductor runs the container checks after its report).
+`confined` (Claude/Codex provider sandboxes block Docker; the conductor runs container checks after the report).
+Grok retains open shell networking and Docker access in both modes, as recorded by its authority envelope.

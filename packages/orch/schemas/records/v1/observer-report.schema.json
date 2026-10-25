@@ -10,6 +10,48 @@
     "schema": {"description": "Published tag of the document.", "const": "orch-conductor-observer/v1"},
     "run": {"description": "Run id.", "type": "string", "minLength": 1},
     "started": {"description": "UTC time of the first journal line, null without a journal.", "type": ["string", "null"]},
+    "refusals_by_source": {
+      "description": "Environment refusals from checked agent results, summed by kind and role.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "by_kind",
+        "by_role"
+      ],
+      "properties": {
+        "by_kind": {
+          "description": "Environment refusals by category, accumulated across attempts; no error text.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9_-]*$": {
+              "description": "Number of failed tool results.",
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "by_role": {
+          "description": "Counts for each role.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9_-]*$": {
+              "description": "Environment refusals by category, accumulated across attempts; no error text.",
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9_-]*$": {
+                  "description": "Number of failed tool results.",
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "beacons": {"$ref": "#/$defs/counts"},
     "long_run": {
       "description": "Where the time of a slow run went (only with RUN_SLOW), else null.",
@@ -222,6 +264,18 @@
         "role": {"description": "Role.", "type": ["string", "null"]},
         "step": {"description": "Step.", "type": ["string", "null"]},
         "status": {"description": "running, failed or ok.", "type": "string", "enum": ["running", "failed", "ok"]},
+        "env_denials": {
+          "description": "Environment refusals by category, accumulated across attempts; no error text.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9_-]*$": {
+              "description": "Number of failed tool results.",
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
         "tokens": {"$ref": "#/$defs/tokens"}
       }
     },

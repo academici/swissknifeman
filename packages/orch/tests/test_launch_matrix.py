@@ -72,7 +72,8 @@ class LaunchMatrixTests(unittest.TestCase):
         self.assertEqual(argv[:2], ["python3", "{orch}/scripts/ro-run.py"])
         guard = argv[:argv.index("--")]
         self.assertEqual(flag_values(guard, "--protect"), ["{cwd}"])
-        self.assertTrue(set(flag_values(guard, "--rw")) <= {"{cwd}/vendor"}, guard)
+        self.assertTrue(set(flag_values(guard, "--rw")) <= {"{cwd}/vendor", "~/.grok"}, guard)
+        self.assertIn("~/.grok", flag_values(guard, "--rw"))
         self.assertTrue(READ_ONLY_DENY <= set(flag_values(argv, "--disallowed-tools")[0].split(",")))
 
     def test_3_read_only_launches_cannot_write_the_checkout(self):
@@ -90,6 +91,8 @@ class LaunchMatrixTests(unittest.TestCase):
                     self.assertEqual(flag_values(launch.build_argv(self.catalog, role, provider, model="m", effort="high",
                                                                    access="confined"), "--sandbox"), ["workspace-write"])
                 elif provider == "claude-code":
+                    if role in ("reviewer", "triager"):
+                        self.assertEqual(flag_values(argv[:argv.index("--")], "--protect"), ["{cwd}"])
                     tools = flag_values(argv, "--tools")
                     denied = flag_values(argv, "--disallowedTools")
                     self.assertTrue((tools and not {"Edit", "Write", "NotebookEdit"} & set(tools[0].split(",")))
@@ -110,7 +113,8 @@ class LaunchMatrixTests(unittest.TestCase):
                     self.assertEqual(flag_values(argv, "--sandbox"), ["read-only"])
                 else:
                     self.assert_grok_read_only(argv)
-                    self.assertEqual(flag_values(argv[:argv.index("--")], "--rw"), [])
+                    self.assertEqual(flag_values(argv[:argv.index("--")], "--rw"), ["~/.grok"])
+                    self.assertIn("--disable-web-search", argv)
                     self.assertIn("run_terminal_command", flag_values(argv, "--disallowed-tools")[0].split(","))
 
     def test_5_writers_never_use_acp_and_scout_always_returns_text(self):

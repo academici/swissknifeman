@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import json
 import os
+import ctypes
+import platform
 from pathlib import Path
 import shutil
 import stat
@@ -20,6 +22,7 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import cli_probe, sessions
 from orch import launch
 from orch.conductor.policies import authority as authority_rules, isolation as isolation_rules, sandbox as sandbox_rules
+from orch.conductor.policies import routing as routing_rules
 from orch.settings import ORCH_ROOT
 
 TRANSCRIPT_NAME_MAX = 200  # Claude Code shortens a longer folder name and appends a hash it does not publish
@@ -150,12 +153,20 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
     found = self.role_ports.launch_facts(item, role, route, quiet=quiet)
     facts = found["sandbox"]
     argv = route.get("argv") or []
+    refused = routing_rules.registrar_problem({**route, "role": role}, project=str(getattr(self, "project", "")),
+                                              access=found["access"])
+    if admit and refused:
+        raise Stop("LAUNCH_REFUSED", refused.split(": ", 1)[1])
+    protected = route.get("provider") == "claude-code" and not writes(role)
+    protection = protection_facts(self.project) if protected else None
+    if protection is not None and admit and not protection["available"]:
+        raise Stop("PROTECT_UNAVAILABLE", f"{role}/{route['provider']}: the checkout cannot be made read-only "
+                   f"({protection['reason']}); move the checkout out of /tmp or /var/tmp, or use a kernel with Landlock ABI >= 3")
     transcripts = None
-    if role == "executor" and authority_rules.guard_prefix(argv) is not None \
-            and not authority_rules.sandbox_applies(route, facts) and "claude" in argv[argv.index("--") + 1:][:1] \
-            and self._shared_session(item, role, {"provider": "claude-code"}):
+    if role == "executor" and route.get("provider") == "claude-code" \
+            and sessions.shared_session(self, item, role, route, quiet=quiet):
         # else the guard stops the CLI from saving the session it must resume
-        transcripts = transcripts_folder(self) if quiet else self._claude_transcripts()
+        transcripts = transcripts_folder(self.project, Path.home(), persist=not quiet and admit)
     listed = None
     if route.get("provider") == "claude-code" and isolation["isolated"]:
         listed = {flag:cli_probe.knows(argv, [flag]) for flag in ("--setting-sources", "--settings")}
@@ -165,7 +176,7 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         sandbox_domains=((item.options or {}).get("instructions") or {}).get("sandbox_domains") or [],
         extra_paths=list(self._scope_option(item, "extra_paths", [])), transcripts=transcripts,
         project=str(getattr(self, "project", None) or ""), home=os.path.expanduser("~"), writes=writes(role),
-        listed=listed)
+        listed=listed, tmpdir=agent_tmpdir(self), protection=protection)
     refused = authority_rules.setting_sources_problem(doc, isolation) if admit else None
     if refused:
         raise Stop("ISOLATION_UNAVAILABLE", refused.split(": ", 1)[1])
@@ -184,7 +195,8 @@ def role_argv(self, item: Item, role: str, route: dict, decision: Optional[dict]
         refused = resume_problem(self, item, role, route, resume, envelope) if admit else None
         if refused:
             raise Stop("AUTHORITY_RESUME_MISMATCH", refused)
-    return argv_from(envelope, route, resume, shared=sessions.shared_session(self, item, role, route))
+    return argv_from(envelope, route, resume, shared=sessions.shared_session(self, item, role, route),
+                     project=str(getattr(self, "project", "")) or None)
 
 
 def resume_command(route: dict, resume: list) -> Optional[list]:
@@ -211,17 +223,43 @@ def resume_problem(self, item: Item, role: str, route: dict, resume: list, envel
             "started: make resume_argv grant what argv grants")
 
 
-def argv_from(envelope: dict, route: dict, resume: list, *, shared: bool) -> list:
+def argv_from(envelope: dict, route: dict, resume: list, *, shared: bool, project: Optional[str] = None) -> list:
     """The command line of ``route`` under ``envelope``: the catalog argv (or its resume command), the guard the provider
     sandbox replaces dropped, the ``--rw`` grants of the guard, the ``--add-dir`` grants, the isolation arguments, the
     setting sources, the resume arguments and one ``--settings`` object (the sandbox block and the permissions of orch)."""
     argv = resume_command(route, resume) or list(route["argv"])  # a catalog entry that names its own resume command
+    rebuilt = False
     if shared:  # a session that is not saved cannot be resumed by the next executor
         argv = [arg for arg in argv if arg != "--no-session-persistence"]
     if envelope["guard"] == "claude-sandbox":  # bubblewrap cannot start under the Landlock guard: it replaces the guard
         argv = strip_guard(argv)
+    elif route.get("provider") == "claude-code" and envelope["guard"] in ("landlock-rw", "landlock-protect") \
+            and (authority_rules.guard_prefix(argv) is None or
+                 envelope["guard"] == "landlock-protect" and envelope["role"] not in opts.WRITING_ROLES):
+        # Rebuild the guard from its recorded roots, including routes that supply no guard of their own.
+        argv = strip_guard(argv)
+        if not project:
+            raise ValueError("a guarded Claude launch needs its checkout path")
+        defaults = [{"path": path, "why": "guard"} for path in authority_rules.GUARD_DEFAULT_WRITABLE]
+        has_defaults = all(root in envelope["write_roots"] for root in defaults)
+        head = ["python3", str(ORCH_ROOT / "scripts" / "ro-run.py")]
+        if not has_defaults:
+            head += ["--no-default-rw"]
+        if envelope["guard"] == "landlock-protect":
+            head += ["--protect", project]
+        for root in envelope["write_roots"]:
+            if has_defaults and root in defaults:
+                continue
+            path = root["path"]
+            path = project + path[1:] if path == "." or path.startswith("./") else os.path.expanduser(path)
+            head += ["--rw", path]
+        argv = head + ["--"] + argv
+        rebuilt = True
     granted = authority_rules.extra_roots(envelope, "extra_paths")
-    guarded = granted + authority_rules.extra_roots(envelope, "transcripts")
+    scratch = authority_rules.extra_roots(envelope, "tmpdir")
+    guarded = granted + authority_rules.extra_roots(envelope, "transcripts") + scratch
+    if rebuilt:
+        guarded = []  # the guard above already contains every root of the envelope
     if guarded and authority_rules.guard_prefix(argv) is not None:
         at = argv.index("--")
         argv = argv[:at] + [part for path in guarded for part in ("--rw", path)] + argv[at:]
@@ -236,7 +274,7 @@ def argv_from(envelope: dict, route: dict, resume: list, *, shared: bool) -> lis
             sources = ["--setting-sources", "user"]
     # a Claude Code role reaches a directory outside the project with its file tools only when it is added; the shell
     # of a sandboxed one is granted the same paths in the sandbox block
-    added = [part for path in granted for part in ("--add-dir", path)] if route.get("provider") == "claude-code" else []
+    added = [part for path in granted + scratch for part in ("--add-dir", path)] if route.get("provider") == "claude-code" else []
     found = authority_rules.settings(envelope) if route.get("provider") == "claude-code" else None
     tail = ["--settings", json.dumps(found, sort_keys=True)] if found else []
     return argv + list(envelope["isolation"]["args"]) + sources + ([] if route.get("resume_argv") else resume) \
@@ -325,7 +363,9 @@ def extra_write_dirs(self, item: Item, role: str, argv: list) -> list:
         return argv
     if role == "executor" and self._shared_session(item, role, {"provider": "claude-code"}) \
             and "claude" in argv[argv.index("--") + 1:][:1]:
-        paths.append(self._claude_transcripts())  # else the guard stops the CLI from saving the session it must resume
+        folder = self._claude_transcripts()
+        if folder:
+            paths.append(folder)
     if not paths:
         return argv
     at = argv.index("--")
@@ -338,21 +378,58 @@ def transcript_folder_name(project) -> str:
     return "".join(char if char.isascii() and char.isalnum() else "-" * (2 if ord(char) > 0xFFFF else 1) for char in str(project))
 
 
-def transcripts_folder(self) -> str:
-    """The folder where Claude Code keeps the transcripts of this project: ``~/.claude/projects/<path with every
-    character outside [A-Za-z0-9] as -``. It is the one place besides the project that a resumable session needs. A
-    path whose folder name would pass ``TRANSCRIPT_NAME_MAX`` gets a name with a hash suffix that is not known here: the
-    whole ``~/.claude/projects`` is then writable for the executor (the transcripts of the other projects too)."""
-    root = Path.home() / ".claude" / "projects"
-    name = transcript_folder_name(self.project)
-    return str(root if len(name) > TRANSCRIPT_NAME_MAX else root / name)
+def transcripts_folder(project, home: Path, persist: bool = False) -> Optional[str]:
+    """The single transcript directory of a project, never the parent holding other projects.
 
-
-def claude_transcripts(self) -> str:
-    """:func:`transcripts_folder`, created when it is missing (the guard grants a folder that exists)."""
-    folder = Path(transcripts_folder(self))
-    folder.mkdir(parents=True, exist_ok=True)
+    Claude hashes long names. Only one existing directory with the known prefix identifies its folder.
+    A preview (persist=False) never creates directories.
+    """
+    root = Path(home) / ".claude" / "projects"
+    name = transcript_folder_name(project)
+    folder = root / name
+    if len(name) > TRANSCRIPT_NAME_MAX:
+        try:
+            matches = [entry for entry in root.iterdir() if entry.is_dir() and not entry.is_symlink()
+                       and entry.name.startswith(name[:TRANSCRIPT_NAME_MAX])]
+        except OSError:
+            return None
+        if len(matches) != 1:
+            return None
+        folder = matches[0]
+    if folder.is_symlink():
+        return None
+    if persist:
+        folder.mkdir(parents=True, exist_ok=True)
     return str(folder)
+
+
+def claude_transcripts(self) -> Optional[str]:
+    """:func:`transcripts_folder`, created when it is missing (the guard grants a folder that exists)."""
+    return transcripts_folder(self.project, Path.home(), persist=True)
+
+
+def agent_tmpdir(self) -> Optional[str]:
+    """The scratch folder of the active agent of this thread (no agent in a preview)."""
+    handle = getattr(getattr(self, "_local", None), "agent", None)
+    return str(Path(handle["directory"]) / "tmp") if isinstance(handle, dict) else None
+
+
+def landlock_abi() -> int:
+    """Query the kernel without installing a ruleset or starting a process."""
+    if platform.system() != "Linux":
+        return -1
+    return ctypes.CDLL(None, use_errno=True).syscall(444, None, 0, 1)
+
+
+def protection_facts(project) -> dict:
+    """Probe availability of checkout protection; --no-default-rw handles checkouts beneath temporary roots."""
+    real = os.path.realpath(project)
+    abi = landlock_abi()
+    script = ORCH_ROOT / "scripts" / "ro-run.py"
+    reason = "ro-run is unavailable" if not script.is_file() else f"Landlock ABI {abi}" if abi < 3 else None
+    return {"available": reason is None, "reason": reason,
+            "no_default_rw": any(os.path.commonpath((real, root)) == root for root in ("/tmp", "/var/tmp", "/dev")),
+            "vendor": (Path(project) / "vendor").is_dir()}
 
 
 def scope_option(item: Item, key: str, default):
@@ -366,10 +443,13 @@ def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
     own prompt. The environment and the home directories come from the isolation profile of the provider
     (:func:`isolation_plan`): a Codex role gets its own CODEX_HOME and HOME under the run folder (:func:`prepare_home`)."""
     isolation = isolation_plan(self, item, role, route)
-    if not isolation["env"] and not isolation["home"]:
+    scratch = agent_tmpdir(self)
+    if not isolation["env"] and not isolation["home"] and not scratch:
         return self.env
     original = dict(os.environ if self.env is None else self.env)  # the environment of the conductor, before any change
     base = {**original, **isolation["env"]}
+    if scratch:
+        base["TMPDIR"] = scratch
     run_dir = getattr(self, "directory", Path())
     if isolation["home"] and run_dir != Path():  # a run that is not opened (the dry run) makes no folders
         base.update(prepare_home(run_dir, isolation["provider"], isolation["home"], original))

@@ -6,8 +6,10 @@
     "--strict-mcp-config",
     "--setting-sources",
     "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-1/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "context-scout"
@@ -18,8 +20,10 @@
     "--strict-mcp-config",
     "--setting-sources",
     "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-2/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "executor"
@@ -32,8 +36,10 @@
     "user",
     "--resume",
     "executor-session-1",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-3/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 2,
    "role": "executor"
@@ -387,7 +393,7 @@
     {
      "kind": "authority",
      "origin": "conductor",
-     "tokens": 120
+     "tokens": 141
     },
     {
      "kind": "run_rules",
@@ -426,7 +432,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 317
+     "tokens": 338
     },
     "task": {
      "limit": 0,
@@ -718,6 +724,14 @@
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.2"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "W1 executor: authority <digest> -> <digest> (write_roots)",
+   "reason_code": "AUTHORITY_CHANGED",
+   "role": "executor",
+   "route": "claude-code/sonnet/high"
   },
   {
    "agent": "agent-<run>-3",
@@ -1048,7 +1062,7 @@
         "id": "V1",
         "kind": "acceptance",
         "log": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/checks/2/V1.log",
-        "reuse_miss": "reuse miss: prior-not-green, candidate.dirty_digest, fingerprint=<digest>",
+        "reuse_miss": "reuse miss: prior-not-green, candidate.dirty_digest, inputs-unknown",
         "seconds": 0.0,
         "tail": ""
        }

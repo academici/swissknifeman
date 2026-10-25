@@ -1,0 +1,11 @@
+{
+  "exit": 0,
+  "decisions": [],
+  "duration_s": 0,
+  "stream": null,
+  "lingered": false,
+  "env_denials": {
+    "network": 2,
+    "erofs": 1
+  }
+}

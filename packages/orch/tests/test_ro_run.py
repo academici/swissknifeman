@@ -82,6 +82,20 @@ class ProtectValidationTests(unittest.TestCase):
                     self.assertIn(reported_root, roots)
                     self.assertEqual(os.path.commonpath((directory, reported_root)), reported_root)
 
+    def test_no_default_rw_can_protect_a_checkout_in_tmp(self):
+        writable, command, protected = self.module._parse([
+            "--no-default-rw", "--protect", "/tmp/x", "--rw", "/dev", "--", "true"])
+        self.assertEqual((writable, command, protected), (["/dev"], ["true"], ["/tmp/x"]))
+        self.refusal(["--protect", "/tmp/x"], "RO_RUN_PROTECT_OVERLAP")
+
+    def test_explicit_tildes_are_expanded_and_grok_is_not_a_default_grant(self):
+        with mock.patch.dict(os.environ, {"HOME":"/home/synthetic"}):
+            writable, _, protected = self.module._parse([
+                "--no-default-rw", "--protect", "~/checkout", "--rw", "~/.grok", "--", "true"])
+        self.assertEqual(writable, ["/home/synthetic/.grok"])
+        self.assertEqual(protected, ["/home/synthetic/checkout"])
+        self.assertNotIn("~/.grok", self.module.DEFAULT_WRITABLE)
+
     def test_rw_equal_to_or_above_the_protected_directory_is_refused(self):
         directory = work_base() / "protect-unit-dir"  # not created: the validation reads paths only
         # Isolate explicit grants from default-root overlap when a standalone checkout lives under /tmp.

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from functools import lru_cache
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 from typing import Optional
@@ -19,6 +20,7 @@ from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.route import label
 from orch.conductor.infrastructure import clock
 from orch.conductor.policies import isolation as isolation_rules
+from orch.conductor.policies import authority as authority_rules
 
 # The keys of the single session slot of a run before the slots (``executor_sessions``): a state that still has them is
 # migrated into a slot when the run is resumed (``migrate_state``). They stay optional (deprecated) in the state schema.
@@ -68,11 +70,24 @@ def resumable(route: dict) -> bool:
     return resume_capability(route.get("provider") or "") in RESUMABLE and resume_buildable(route)
 
 
-def shared_session(self, item: Item, role: str, route: dict) -> bool:
+def shared_session(self, item: Item, role: str, route: dict, *, quiet: bool = False) -> bool:
     """The executor of this run keeps a provider session (``session.executor``): across its pieces (``shared``) or across
     the correction rounds of one piece (``handoff``). Whether the provider can continue one is its capability record
     (``resume`` supported or adapted), not its name, and whether the route has a command that does it."""
-    return role == "executor" and resumable(route) and self._session_mode(item) in ("shared", "handoff")
+    if role != "executor" or not resumable(route) or self._session_mode(item) not in ("shared", "handoff"):
+        return False
+    if route.get("provider") == "claude-code":
+        from orch.conductor.infrastructure.launch_plan import transcripts_folder
+        if transcripts_folder(self.project, Path.home(), persist=False) is None:
+            key = (item.ref, str(self.project))
+            noted = self.__dict__.setdefault("_unpersistable_sessions", set())
+            if not quiet and key not in noted and getattr(self, "progress", None) is not None:
+                noted.add(key)
+                self.progress.emit("info", item=item.ref, role=role, reason_code="SESSION_NOT_PERSISTABLE",
+                                   message=f"{item.ref}: the transcript folder of {self.project} is not known; "
+                                           "the executor runs without a resumable session")
+            return False
+    return True
 
 
 def slot_key(self, item: Item) -> str:
@@ -97,8 +112,13 @@ def identity_inputs(self, item: Item, route: dict) -> dict:
         profile = isolation_rules.load_profiles(isolation_rules.PROFILES_PATH).get(route.get("provider") or "")
         home = isolation_rules.home_dir({"home": (profile or {}).get("home")}, self.directory)
     compute = getattr(self, "_authority", None)
-    authority = compute(item, "executor", route, admit=False, quiet=True)["digest"] \
-        if compute is not None and route.get("argv") and "instructions" in options else ""
+    authority = ""
+    if compute is not None and route.get("argv") and "instructions" in options:
+        doc = compute(item, "executor", route, admit=False, quiet=True)
+        # Scratch is private to a launch, not a reusable capability of the conversation. The recorded envelope
+        # hashes its exact path; the session identity compares the same authority without that ephemeral grant.
+        authority = authority_rules.digest({**doc, "write_roots": [root for root in doc["write_roots"]
+                                                                  if root["why"] != "tmpdir"]})
     return {"authority_digest": authority, "isolation_home": home}
 
 
@@ -182,6 +202,8 @@ def session_decision(self, item: Item, route: dict, fp: dict) -> tuple:
         return "fresh", "per_item_mode"
     if not resumable(route):
         return "fresh", "provider_unsupported"
+    if not shared_session(self, item, "executor", route):
+        return "fresh", "not_persistable"
     slot = slot_of(self, item)
     if slot is None:
         ref = followup_ref(item)

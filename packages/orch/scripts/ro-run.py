@@ -7,7 +7,7 @@ inherits it; a process can never lift it.
 
 Usage: ro-run.py [--rw DIR]... [--protect DIR]... [--no-default-rw] -- COMMAND [ARGS...]
 
-Writable by default: /tmp, /var/tmp, /dev and ~/.grok (the reviewer CLI keeps its session there). A missing
+Writable by default: /tmp, /var/tmp and /dev. A missing
 directory is skipped. Exit 3 with LANDLOCK_UNAVAILABLE when the kernel offers no Landlock.
 --protect requires ABI 3 (TRUNCATE) and refuses default writable overlap or escaping --rw paths.
 """
@@ -30,7 +30,7 @@ WRITE_FILE, REMOVE_DIR, REMOVE_FILE = 1 << 1, 1 << 4, 1 << 5
 MAKE_ANY = sum(1 << bit for bit in range(6, 13))  # char, dir, regular, socket, fifo, block, symlink
 REFER, TRUNCATE = 1 << 13, 1 << 14  # Landlock ABI 2 and 3
 
-DEFAULT_WRITABLE = ("/tmp", "/var/tmp", "/dev", "~/.grok")
+DEFAULT_WRITABLE = ("/tmp", "/var/tmp", "/dev")
 
 
 def _die(code: str, message: str, status: int = 1) -> None:
@@ -42,9 +42,9 @@ def _inside(path: str, root: str) -> bool:
     return os.path.commonpath((path, root)) == root
 
 
-def _protect(writable: list[str], protected: list[str], explicit: list[str]) -> list[str]:
+def _protect(writable: list[str], protected: list[str], explicit: list[str], defaults: list[str]) -> list[str]:
     """Validate grants before resolving them, so symlinks cannot widen a protected checkout."""
-    roots = [os.path.realpath(os.path.expanduser(path)) for path in DEFAULT_WRITABLE]
+    roots = [os.path.realpath(path) for path in defaults]
     for directory in protected:
         resolved = os.path.realpath(directory)
         for root in roots:
@@ -73,24 +73,25 @@ def _parse(argv: list[str]) -> tuple[list[str], list[str], list[str]]:
     options, command = argv[:split], argv[split + 1:]
     if not command:
         _die("USAGE", "a command is required after --", 2)
-    writable = [] if "--no-default-rw" in options else [os.path.expanduser(path) for path in DEFAULT_WRITABLE]
+    defaults = [] if "--no-default-rw" in options else [os.path.expanduser(path) for path in DEFAULT_WRITABLE]
+    writable = list(defaults)
     protected, explicit = [], []
     index = 0
     while index < len(options):
         option = options[index]
         if option == "--rw" and index + 1 < len(options):
-            writable.append(options[index + 1])
-            explicit.append(options[index + 1])
+            writable.append(os.path.expanduser(options[index + 1]))
+            explicit.append(os.path.expanduser(options[index + 1]))
             index += 2
         elif option == "--protect" and index + 1 < len(options):
-            protected.append(options[index + 1])
+            protected.append(os.path.expanduser(options[index + 1]))
             index += 2
         elif option == "--no-default-rw":
             index += 1
         else:
             _die("USAGE", f"unknown option {option!r}", 2)
     if protected:
-        writable = _protect(writable, protected, explicit)
+        writable = _protect(writable, protected, explicit, defaults)
     return writable, command, [os.path.realpath(path) for path in protected]
 
 

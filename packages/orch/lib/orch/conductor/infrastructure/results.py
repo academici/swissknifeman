@@ -14,6 +14,37 @@ from orch.conductor.domain.route import label
 from orch.conductor.policies import isolation as isolation_rules
 
 
+def observe_denials(handle: dict, counts: dict) -> None:
+    """Accumulate categories across attempts; agent_end emits one beacon for the completed step."""
+    if counts:
+        total = handle.setdefault("env_denials", {})
+        for kind, number in counts.items():
+            total[kind] = total.get(kind, 0) + number
+
+
+def denial_beacons(handle: dict) -> list:
+    """Emit once per role/step, including multiple report-fixer agents nested in the same step.
+
+    Each agent keeps only its own persisted counts. Nested agents defer their beacon to the enclosing step,
+    which combines the counts without duplicating them in the observer's agent results.
+    """
+    rows = handle.setdefault("step_env_denials", {})
+    if handle.get("env_denials"):
+        key = (handle["role"], handle["step"])
+        counts = rows.setdefault(key, {})
+        for kind, number in handle["env_denials"].items():
+            counts[kind] = counts.get(kind, 0) + number
+    parent = handle.get("previous")
+    if parent is not None:
+        pending = parent.setdefault("step_env_denials", {})
+        for key, counts in rows.items():
+            total = pending.setdefault(key, {})
+            for kind, number in counts.items():
+                total[kind] = total.get(kind, 0) + number
+        return []
+    return [(role, step, counts) for (role, step), counts in sorted(rows.items())]
+
+
 def observe_isolation(self, item: Item, key: str, role: str, route: dict, init: Optional[dict], handle: dict) -> None:
     """What the first init event of the stream of an isolated role showed (``result.json`` ``isolation.observed``). A
     field its profile keeps empty (``observe.empty``) that is not is ``ISOLATION_DRIFT`` (info, the call goes on), and

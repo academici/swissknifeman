@@ -58,6 +58,19 @@ def launch_access(launch_settings) -> str:
     return (found or {}).get("access") or "open" if isinstance(found, dict) else "open"
 
 
+def registrar_problem(route: dict, *, project: str, access: str) -> Optional[str]:
+    """Refuse a registrar whose guard cannot write the external plan workspace, before starting its CLI."""
+    if route.get("role") != "registrar":
+        return None
+    provider = route.get("provider")
+    guard = "landlock-protect" if provider == "claude-code" else "codex-sandbox" \
+        if provider == "codex" and access == "confined" else None
+    if guard is None:
+        return None
+    return (f"LAUNCH_REFUSED: registrar/{provider}: writes the plan workspace outside {project}; "
+            f"{guard} confines writes to the checkout")
+
+
 def entry(launch_catalog: dict, role: str, provider: str) -> dict:
     try:
         return launch.entry(launch_catalog, LAUNCH_ROLE.get(role, role), provider)

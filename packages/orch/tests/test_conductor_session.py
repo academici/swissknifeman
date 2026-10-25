@@ -2,6 +2,7 @@
 correction round, resumes the session of the previous executor (``--resume``), and the first prompt names the pieces
 of the run; ``per-item`` (``--no-batch``) starts a fresh session each time."""
 from __future__ import annotations
+import types
 
 import json
 from pathlib import Path
@@ -688,6 +689,8 @@ class ExtraPathGrantTests(unittest.TestCase):
 
     def argv(self, role: str, provider: str, paths: list, probe: dict) -> list:
         eng = engine.Conductor.__new__(engine.Conductor)
+        eng.project = Path("/p")
+        eng.settings = types.SimpleNamespace(launch={"access":"confined"})
         eng.progress = None
         item = type("I", (), {"ref": "W1", "options": {
             "instructions": {"isolate_roles": [], "sandbox": "prefer", "sandbox_domains": []},

@@ -63,6 +63,7 @@ def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file:
                           step=key, attempt=attempt, prompt=self._relative(prompt_file),
                           parent=parent["id"] if parent else None, started_at=clock.utc_now(), causation=causation)
     handle.update(began=time.monotonic(), previous=parent, last_exit=None, stream=None, lingered=False, trail={})
+    (handle["directory"] / "tmp").mkdir(mode=0o700, exist_ok=True)
     self._local.agent = handle
     handle["event_base"] = {"run_id": item.orch_run, "work_id": item.input_doc.get("input_id") or item.ref,
                             "item": item.ref, "agent_run_id": handle["id"], "role": role, "step": key,
@@ -93,10 +94,13 @@ def launch(self, item: Item, handle: dict, role: str, route: dict, prompt: str, 
     agents.write_authority(handle, attempt, envelope)
     note_authority(self, item, role, route, envelope)
     env = self._role_env(item, role, route)
-    return process.run_role(self._role_argv(item, role, route, decision, envelope=envelope, resume=resume), prompt,
+    run = process.run_role(self._role_argv(item, role, route, decision, envelope=envelope, resume=resume), prompt,
                             transport=route["transport"], cwd=self.project, timeout_s=timeout_s, raw_path=raw,
                             env=detach.subprocess_env(env) if clean_env else env, agent_directory=handle["directory"],
+                             guard=envelope["guard"],
                             **run_kwargs)
+    results.observe_denials(handle, run.env_denials)
+    return run
 
 
 def note_authority(self, item: Item, role: str, route: dict, envelope: dict) -> None:
@@ -154,6 +158,11 @@ def agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool 
     agents.finish(handle, exit_code=handle["last_exit"], error=None if succeeded else trail.get("error") or error,
                   decisions=trail.get("decisions") or [], duration_s=time.monotonic() - handle["began"],
                   stream=handle["stream"], lingered=handle["lingered"], isolation=handle.get("isolation"))
+    for role, step, counts in results.denial_beacons(handle):
+        self.progress.emit("info", item=handle.get("event_base", {}).get("item"), role=role,
+                           stage=step, reason_code="RESULT_ENV_DENIAL",
+                           message=f"{role} {step}: " + ", ".join(
+                               f"{kind}×{number}" for kind, number in sorted(counts.items())))
     failure = None if succeeded else trail.get("error") or error
     tokens = {key: value for key, value in handle["usage"].items() if value}
     extra = {"tokens": handle["usage"] if tokens else None, "duration_ms": round((time.monotonic() - handle["began"]) * 1000),

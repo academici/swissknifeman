@@ -5,8 +5,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--model",
@@ -23,7 +31,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -31,8 +39,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--model",
@@ -49,7 +65,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -57,8 +73,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--model",
@@ -75,7 +99,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -83,8 +107,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--model",
@@ -101,7 +133,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -211,6 +243,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -241,6 +275,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -271,6 +307,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -301,6 +339,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -325,6 +365,49 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
+      "guard": "landlock-rw",
+      "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--rw",
+        "<project>",
+        "--rw",
+        "<home>/extra-out",
+        "--rw",
+        "<home>/.claude/projects/<project-folder>",
+        "--",
+        "claude",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "m",
+        "--effort",
+        "high",
+        "--tools",
+        "Bash,Read,Edit,Write,Grep,Glob",
+        "--permission-mode",
+        "acceptEdits",
+        "--allowedTools",
+        "Bash",
+        "--setting-sources",
+        "user",
+        "--permission-prompts",
+        "none",
+        "--safe-mode",
+        "--strict-mcp-config",
+        "--add-dir",
+        "<home>/extra-out",
+        "--settings",
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+      ]
+    },
+    {
+      "role": "executor",
+      "provider": "claude-code",
+      "sandbox": "up",
+      "access": "confined",
       "guard": "claude-sandbox",
       "argv": [
         "claude",
@@ -351,41 +434,7 @@
         "--add-dir",
         "<home>/extra-out",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"filesystem\": {\"allowWrite\": [\"<home>/extra-out\"]}, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
-      ]
-    },
-    {
-      "role": "executor",
-      "provider": "claude-code",
-      "sandbox": "up",
-      "access": "confined",
-      "guard": "claude-sandbox",
-      "argv": [
-        "claude",
-        "-p",
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--model",
-        "m",
-        "--effort",
-        "high",
-        "--tools",
-        "Bash,Read,Edit,Write,Grep,Glob",
-        "--permission-mode",
-        "acceptEdits",
-        "--allowedTools",
-        "Bash",
-        "--setting-sources",
-        "user",
-        "--permission-prompts",
-        "none",
-        "--safe-mode",
-        "--strict-mcp-config",
-        "--add-dir",
-        "<home>/extra-out",
-        "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"filesystem\": {\"allowWrite\": [\"<home>/extra-out\"]}, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"filesystem\": {\"allowWrite\": [\"<home>/extra-out\"]}, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
       ]
     },
     {
@@ -428,7 +477,7 @@
         "--add-dir",
         "<home>/extra-out",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -471,7 +520,7 @@
         "--add-dir",
         "<home>/extra-out",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -590,6 +639,8 @@
         "--rw",
         "<project>",
         "--rw",
+        "~/.grok",
+        "--rw",
         "<home>/extra-out",
         "--",
         "grok",
@@ -618,6 +669,8 @@
         "<orch>/scripts/ro-run.py",
         "--rw",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--rw",
         "<home>/extra-out",
         "--",
@@ -648,6 +701,8 @@
         "--rw",
         "<project>",
         "--rw",
+        "~/.grok",
+        "--rw",
         "<home>/extra-out",
         "--",
         "grok",
@@ -676,6 +731,8 @@
         "<orch>/scripts/ro-run.py",
         "--rw",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--rw",
         "<home>/extra-out",
         "--",
@@ -699,6 +756,48 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
+      "guard": "landlock-rw",
+      "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--rw",
+        "<project>",
+        "--rw",
+        "<home>/extra-out",
+        "--",
+        "claude",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--model",
+        "m",
+        "--effort",
+        "medium",
+        "--tools",
+        "Bash,Read,Edit,Write,Grep,Glob",
+        "--permission-mode",
+        "acceptEdits",
+        "--allowedTools",
+        "Bash",
+        "--setting-sources",
+        "user",
+        "--permission-prompts",
+        "none",
+        "--no-session-persistence",
+        "--safe-mode",
+        "--strict-mcp-config",
+        "--add-dir",
+        "<home>/extra-out",
+        "--settings",
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+      ]
+    },
+    {
+      "role": "bounded-implementer",
+      "provider": "claude-code",
+      "sandbox": "up",
+      "access": "confined",
       "guard": "claude-sandbox",
       "argv": [
         "claude",
@@ -726,42 +825,7 @@
         "--add-dir",
         "<home>/extra-out",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"filesystem\": {\"allowWrite\": [\"<home>/extra-out\"]}, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
-      ]
-    },
-    {
-      "role": "bounded-implementer",
-      "provider": "claude-code",
-      "sandbox": "up",
-      "access": "confined",
-      "guard": "claude-sandbox",
-      "argv": [
-        "claude",
-        "-p",
-        "--output-format",
-        "stream-json",
-        "--verbose",
-        "--model",
-        "m",
-        "--effort",
-        "medium",
-        "--tools",
-        "Bash,Read,Edit,Write,Grep,Glob",
-        "--permission-mode",
-        "acceptEdits",
-        "--allowedTools",
-        "Bash",
-        "--setting-sources",
-        "user",
-        "--permission-prompts",
-        "none",
-        "--no-session-persistence",
-        "--safe-mode",
-        "--strict-mcp-config",
-        "--add-dir",
-        "<home>/extra-out",
-        "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"filesystem\": {\"allowWrite\": [\"<home>/extra-out\"]}, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"filesystem\": {\"allowWrite\": [\"<home>/extra-out\"]}, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
       ]
     },
     {
@@ -803,7 +867,7 @@
         "--add-dir",
         "<home>/extra-out",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -845,7 +909,7 @@
         "--add-dir",
         "<home>/extra-out",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -964,6 +1028,8 @@
         "--rw",
         "<project>",
         "--rw",
+        "~/.grok",
+        "--rw",
         "<home>/extra-out",
         "--",
         "grok",
@@ -993,6 +1059,8 @@
         "--rw",
         "<project>",
         "--rw",
+        "~/.grok",
+        "--rw",
         "<home>/extra-out",
         "--",
         "grok",
@@ -1022,6 +1090,8 @@
         "--rw",
         "<project>",
         "--rw",
+        "~/.grok",
+        "--rw",
         "<home>/extra-out",
         "--",
         "grok",
@@ -1051,6 +1121,8 @@
         "--rw",
         "<project>",
         "--rw",
+        "~/.grok",
+        "--rw",
         "<home>/extra-out",
         "--",
         "grok",
@@ -1073,8 +1145,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1086,6 +1166,10 @@
         "high",
         "--tools",
         "Bash,Read,Grep,Glob",
+        "--permission-mode",
+        "acceptEdits",
+        "--allowedTools",
+        "Bash",
         "--disallowedTools",
         "Edit,Write,NotebookEdit",
         "--permission-prompts",
@@ -1096,7 +1180,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1104,8 +1188,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "confined",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1117,6 +1209,10 @@
         "high",
         "--tools",
         "Bash,Read,Grep,Glob",
+        "--permission-mode",
+        "acceptEdits",
+        "--allowedTools",
+        "Bash",
         "--disallowedTools",
         "Edit,Write,NotebookEdit",
         "--permission-prompts",
@@ -1127,7 +1223,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1135,8 +1231,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1148,6 +1252,10 @@
         "high",
         "--tools",
         "Bash,Read,Grep,Glob",
+        "--permission-mode",
+        "acceptEdits",
+        "--allowedTools",
+        "Bash",
         "--disallowedTools",
         "Edit,Write,NotebookEdit",
         "--permission-prompts",
@@ -1158,7 +1266,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1166,8 +1274,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1179,6 +1295,10 @@
         "high",
         "--tools",
         "Bash,Read,Grep,Glob",
+        "--permission-mode",
+        "acceptEdits",
+        "--allowedTools",
+        "Bash",
         "--disallowedTools",
         "Edit,Write,NotebookEdit",
         "--permission-prompts",
@@ -1189,7 +1309,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1301,6 +1421,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1315,6 +1437,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1332,6 +1455,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1346,6 +1471,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1363,6 +1489,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1377,6 +1505,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1394,6 +1523,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1408,6 +1539,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1417,8 +1549,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1444,7 +1584,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1452,8 +1592,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "confined",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1479,7 +1627,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1491,6 +1639,11 @@
       "argv": [
         "python3",
         "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
         "--",
         "claude",
         "-p",
@@ -1517,7 +1670,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1529,6 +1682,11 @@
       "argv": [
         "python3",
         "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
         "--",
         "claude",
         "-p",
@@ -1555,7 +1713,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1667,6 +1825,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1681,6 +1841,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1698,6 +1859,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1712,6 +1875,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1729,6 +1893,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1743,6 +1909,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1760,6 +1927,8 @@
         "<project>",
         "--rw",
         "<project>/vendor",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -1774,6 +1943,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -1783,8 +1953,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1806,7 +1984,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1814,8 +1992,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "confined",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1837,7 +2023,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true, \"network\": {\"allowedDomains\": [], \"strictAllowlist\": true}}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1845,8 +2031,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1868,7 +2062,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -1876,8 +2070,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -1899,7 +2101,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2003,8 +2205,13 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-rw",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--rw",
+        "<project>",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2024,7 +2231,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2032,8 +2239,13 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-rw",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--rw",
+        "<project>",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2053,7 +2265,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2061,8 +2273,13 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-rw",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--rw",
+        "<project>",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2082,7 +2299,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2090,8 +2307,13 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-rw",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--rw",
+        "<project>",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2111,7 +2333,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2225,6 +2447,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2239,6 +2463,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -2254,6 +2479,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2268,6 +2495,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -2283,6 +2511,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2297,6 +2527,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -2312,6 +2543,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2326,6 +2559,7 @@
         "bypassPermissions",
         "--disallowed-tools",
         "search_replace,write,run_terminal_command,spawn_subagent,scheduler_create,scheduler_delete,workflow,image_gen,image_edit,image_to_video,reference_to_video",
+        "--disable-web-search",
         "--output-format",
         "streaming-messages-json"
       ]
@@ -2335,8 +2569,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2359,7 +2601,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2367,8 +2609,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "confined",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2391,7 +2641,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2399,8 +2649,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2423,7 +2681,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2431,8 +2689,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2455,7 +2721,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2469,6 +2735,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2498,6 +2766,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2527,6 +2797,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2556,6 +2828,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2579,8 +2853,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "open",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2603,7 +2885,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2611,8 +2893,16 @@
       "provider": "claude-code",
       "sandbox": "up",
       "access": "confined",
-      "guard": "claude-sandbox",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2635,7 +2925,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}, \"sandbox\": {\"allowUnsandboxedCommands\": false, \"enabled\": true, \"failIfUnavailable\": true}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2643,8 +2933,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "open",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2667,7 +2965,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2675,8 +2973,16 @@
       "provider": "claude-code",
       "sandbox": "down",
       "access": "confined",
-      "guard": "none",
+      "guard": "landlock-protect",
       "argv": [
+        "python3",
+        "<orch>/scripts/ro-run.py",
+        "--no-default-rw",
+        "--protect",
+        "<project>",
+        "--rw",
+        "/dev",
+        "--",
         "claude",
         "-p",
         "--output-format",
@@ -2699,7 +3005,7 @@
         "--setting-sources",
         "user",
         "--settings",
-        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+        "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
       ]
     },
     {
@@ -2713,6 +3019,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2742,6 +3050,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2771,6 +3081,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",
@@ -2800,6 +3112,8 @@
         "<orch>/scripts/ro-run.py",
         "--protect",
         "<project>",
+        "--rw",
+        "~/.grok",
         "--",
         "grok",
         "--cwd",

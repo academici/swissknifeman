@@ -37,6 +37,9 @@ class LaunchBridge(unittest.TestCase):
                 # planner's legacy scout list predates it, so the pair is the only allowed difference.
                 if provider == "claude-code":
                     expected[-1:-1] = ["--permission-prompts", "none"]
+                if provider == "grok":
+                    # P6.3 removes the implicit Grok home grant from every ro-run command.
+                    expected[expected.index("--"):expected.index("--")] = ["--rw", "~/.grok"]
                 self.assertEqual(out["argv"], expected)
                 self.assertEqual(out["model"], entry["model"])
                 self.assertEqual(out["timeout_s"], entry["timeout_s"])
@@ -64,7 +67,7 @@ class LaunchBridge(unittest.TestCase):
                 self.assertEqual(out["transport"], "jsonl")
                 argv = out["argv"]
                 self.assertTrue(argv[1].endswith("/scripts/ro-run.py"))
-                self.assertEqual(argv[2:5], ["--rw", "/work", "--"])
+                self.assertEqual(argv[2:7], ["--rw", "/work", "--rw", "~/.grok", "--"])
                 self.assertEqual(argv[argv.index("--model") + 1], out["model"])
                 pinned = launch(role, "grok", "--model", "grok-x")
                 self.assertEqual(pinned.returncode, 0, pinned.stderr)
@@ -78,7 +81,7 @@ class LaunchBridge(unittest.TestCase):
         self.assertEqual((out["model"], out["transport"]), ("grok-4.7", "jsonl"))
         self.assertEqual(argv[argv.index("--model") + 1], "grok-4.7")
         self.assertEqual(argv[argv.index("--effort") + 1], "high")
-        self.assertEqual(argv[argv.index("--") - 2:argv.index("--")], ["--rw", "/work/vendor"])
+        self.assertEqual(argv[argv.index("--") - 4:argv.index("--")], ["--rw", "/work/vendor", "--rw", "~/.grok"])
         self.assertTrue(argv[1].endswith("/scripts/ro-run.py"))
         self.assertEqual(argv[2:4], ["--protect", "/work"])
 
@@ -116,7 +119,8 @@ class LaunchBridge(unittest.TestCase):
         out = json.loads(done.stdout)
         self.assertEqual((out["transport"], out["timeout_s"], out["model_class"]), ("text", 300, "economy"))
         argv = out["argv"]
-        self.assertEqual(argv[:argv.index("--")], ["python3", str(ORCH / "scripts/ro-run.py"), "--protect", "/work"])
+        self.assertEqual(argv[:argv.index("--")], ["python3", str(ORCH / "scripts/ro-run.py"), "--protect", "/work",
+                                                   "--rw", "~/.grok"])
         self.assertEqual(argv[argv.index("--output-format") + 1], "plain")
         self.assertEqual(argv[argv.index("--model") + 1], out["model"])
         self.assertIn("--disable-web-search", argv)

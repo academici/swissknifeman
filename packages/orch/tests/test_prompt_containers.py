@@ -37,10 +37,10 @@ class ContainersTests(unittest.TestCase):
 class EnvelopeTests(ConductorCase):
     UP = {"available": True, "reason": None, "checked": []}
 
-    def run_with(self, *extra, provider: str = "") -> str:
+    def run_with(self, *extra, provider: str = "", access: str = "open") -> str:
         argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
         argv["executor"] += list(extra)
-        self.write_config(argv)
+        self.write_config(argv, extra=f'[orch.launch]\naccess = "{access}"\n')
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         options = ()
         if provider:
@@ -53,7 +53,7 @@ class EnvelopeTests(ConductorCase):
         return self.prompt("executor", 1)
 
     def test_a_claude_executor_its_sandbox_confines_is_told_not_to_use_docker(self):
-        text = self.run_with("--tools", "Bash,Read,Edit")
+        text = self.run_with("--tools", "Bash,Read,Edit", access="confined")
         self.assertIn("do not start containers or call docker or compose", text)
         self.assertIn("Docker: not available here", text)
 

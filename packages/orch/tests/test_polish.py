@@ -530,10 +530,11 @@ class TranscriptFolder(unittest.TestCase):
         self.addCleanup(lambda: __import__("shutil").rmtree(home, True))
         return types.SimpleNamespace(project=Path(project)), Path(home)
 
-    def test_a_long_path_opens_the_parent_folder_because_the_hash_is_unknown(self):
+    def test_a_long_path_never_opens_the_parent_folder_when_the_hash_is_unknown(self):
         me, home = self.make("/" + "d" * 250)
         with mock.patch.object(Path, "home", return_value=home):
-            self.assertEqual(roles.claude_transcripts(me), str(home / ".claude" / "projects"))
+            self.assertIsNone(roles.claude_transcripts(me))
+            self.assertFalse((home / ".claude").exists())
 
     def test_a_short_path_gets_its_own_folder(self):
         me, home = self.make("/work/proj")

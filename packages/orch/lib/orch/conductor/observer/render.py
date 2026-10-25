@@ -68,6 +68,11 @@ def markdown(report: dict) -> str:
         lines += [f"| `{row['cmd']}` | {', '.join(row['ids'])} | {', '.join(row['contexts'])} | {row['runs']} | "
                   f"{row['executed']} | {row['seconds']} | {row['red']} | {row['skipped']} | {row['reused']} | "
                   f"{row['retried']} |" for row in report["checks_by_command"]]
+    refusals = report.get("refusals_by_source") or {}
+    if refusals.get("by_kind"):
+        lines += ["", "## Refusals by source", "", "Total: " + _counted(refusals["by_kind"]), "",
+                  "| Role | Refusals |", "| --- | --- |"]
+        lines += [f"| {role} | {_counted(counts)} |" for role, counts in refusals["by_role"].items()]
     if report.get("tokens_by_agent"):
         lines += ["", "## Agent runs", "", "| Agent | Item | Role | Step | Status | Tokens in/out |",
                   "| --- | --- | --- | --- | --- | --- |"]

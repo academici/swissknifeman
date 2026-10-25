@@ -12,20 +12,21 @@ from orch.conductor.domain.item import Item
 from orch.settings import ORCH_ROOT
 
 
-def claude_confinement_required(item_options: dict, route: dict) -> bool:
+def claude_confinement_required(item_options: dict, route: dict, *, access: str = "open") -> bool:
     """``instructions.sandbox`` is ``require`` and ``route`` is a Claude Code role with Bash: only then does
     :func:`claude_sandbox_problem` need the sandbox probe and the flags of the CLI."""
-    return mode_of(item_options) == "require" and claude_bash(route)
+    return mode_of(item_options) == "require" and claude_bash(route) and access == "confined" \
+        and filesystem(route.get("role") or "executor") == "write"
 
 
 def claude_sandbox_problem(item_options: dict, route: dict, *, probe: Optional[dict],
-                           settings_listed: Optional[bool]) -> Optional[str]:
+                           settings_listed: Optional[bool], access: str = "open") -> Optional[str]:
     """``SANDBOX_UNAVAILABLE: ...`` when ``instructions.sandbox`` is ``require`` and a Claude Code role with Bash on
     ``route`` could not be confined (the sandbox cannot start, or the CLI does not list ``--settings``): the rule of
     the preflight, applied to a route that was not in it. ``probe`` is the result of the sandbox probe and
     ``settings_listed`` whether the CLI lists ``--settings`` (asked only when the sandbox starts); the caller probes
     when :func:`claude_confinement_required`."""
-    if not claude_confinement_required(item_options, route):
+    if not claude_confinement_required(item_options, route, access=access):
         return None
     if not probe["available"]:
         return f"SANDBOX_UNAVAILABLE: instructions.sandbox is require, and the sandbox cannot start ({probe['reason']})"
@@ -65,12 +66,22 @@ def declared_network(role: str) -> str:
     return (manifest.get("tools") or {}).get("network", "none")
 
 
-def sandbox_args(item_options: dict, role: str, route: dict, *, extra_paths: list, network: str) -> list:
+def filesystem(role: str) -> str:
+    """The filesystem authority of a role; an unknown role may write."""
+    try:
+        manifest = json.loads((ORCH_ROOT / "roles" / f"{role}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "write"
+    return (manifest.get("tools") or {}).get("filesystem", "write")
+
+
+def sandbox_args(item_options: dict, role: str, route: dict, *, extra_paths: list, network: str,
+                 access: str = "open") -> list:
     """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash on a machine where the sandbox
     starts and whose CLI lists ``--settings`` (the caller probed both; the provider merges the block with the user's
     settings), with a write grant for ``extra_paths`` (``scope.extra_paths``) when the role writes and a domain
     allowlist unless the role's ``network`` is ``allowed``."""
-    if mode_of(item_options) == "off" or not claude_bash(route):
+    if mode_of(item_options) == "off" or not claude_bash(route) or filesystem(role) == "read" or access == "open":
         return []
     block = {"enabled": True, "allowUnsandboxedCommands": False, "failIfUnavailable": True}
     if role in opts.WRITING_ROLES:

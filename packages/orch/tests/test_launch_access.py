@@ -71,7 +71,8 @@ class EnvelopeTests(unittest.TestCase):
     def test_the_access_changes_nothing_else_of_any_launch(self):
         keys = ("guard", "network", "enforced_by", "docker", "setting_sources", "guarantee")
         for row in self.rows:
-            if row["access"] != "open" or (row["role"], row["provider"]) in WRITERS:
+            if row["access"] != "open" or (row["role"], row["provider"]) in WRITERS \
+                    or row["provider"] == "claude-code" and row["role"] in ("executor", "bounded-implementer"):
                 continue
             with self.subTest(role=row["role"], provider=row["provider"]):
                 other = self.row(row["role"], row["provider"], "confined")

@@ -66,9 +66,10 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     for role, route in item.routes.items():
         authority[role] = conductor.authority(item, role, route)
         built = conductor.role_argv(item, role, route)
-        guarded = any(arg.endswith("ro-run.py") for arg in built[:2])
-        base = route["argv"] if guarded else launch_plan.strip_guard(route["argv"])
-        isolation[role] = built[len(base):]
+        base = launch_plan.strip_guard(route["argv"])
+        if "--no-session-persistence" not in built:
+            base = [arg for arg in base if arg != "--no-session-persistence"]
+        isolation[role] = launch_plan.strip_guard(built)[len(base):]
     probed = sandbox.probe()
     network, warnings = {}, []
     for role, route in item.routes.items():
@@ -77,7 +78,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
             warnings.append(f"{role}: network is declared none, but nothing enforces it "
                             f"({route['provider']} has no sandbox for its commands here)")
     if conductor.sandbox_mode(item) == "require" and not probed["available"] \
-            and any(conductor.claude_bash(route) for route in item.routes.values()):
+            and any(conductor.claude_bash(route) and launch_plan.writes(role) and authority[role]["access"] == "confined"
+                    for role, route in item.routes.items()):
         warnings.append(f"instructions.sandbox is require and the sandbox cannot start ({probed['reason']}): "
                         "a run stops with SANDBOX_UNAVAILABLE")
     claim_actor, gap = _claim_actor_of(conductor, item.routes.get("executor"))

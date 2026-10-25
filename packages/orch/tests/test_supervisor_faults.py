@@ -126,10 +126,12 @@ class FaultCase(unittest.TestCase):
         self.logs = base / "logs"
         for folder in (self.home, self.project, self.gate, self.logs):
             folder.mkdir()
+        self.fake = self.project / "vendor" / "fake"
+        self.fake.mkdir(parents=True)
         self.git("init", "-q", "-b", "main")
         for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"), ("commit.gpgsign", "false")):
             self.git("config", key, value)
-        (self.project / ".gitignore").write_text(".swissknifeman/state/\n", encoding="utf-8")
+        (self.project / ".gitignore").write_text(".swissknifeman/state/\nvendor/\n", encoding="utf-8")
         (self.project / "README.md").write_text("test\n", encoding="utf-8")
         self.git("add", "-A")
         self.git("commit", "-q", "-m", "base")

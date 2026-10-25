@@ -77,10 +77,14 @@ class ConductorCase(unittest.TestCase):
         base = Path(tmp.name)
         self.home, self.project, self.fake = base / "home", base / "project", base / "fake"
         self.project.mkdir()
+        # Read-only fake roles keep counters and captured prompts in the same explicit vendor scratch grant
+        # as the shipped reviewer. They must not need a writable checkout or a broad /tmp grant to run.
+        self.fake = self.project / "vendor" / "fake"
+        self.fake.mkdir(parents=True)
         self.git("init", "-q", "-b", "main")
         for key, value in (("user.name", "Test"), ("user.email", "test@example.invalid"), ("commit.gpgsign", "false")):
             self.git("config", key, value)
-        (self.project / ".gitignore").write_text(".swissknifeman/state/\n", encoding="utf-8")
+        (self.project / ".gitignore").write_text(".swissknifeman/state/\nvendor/\n", encoding="utf-8")
         (self.project / "README.md").write_text("test\n", encoding="utf-8")
         self.git("add", "-A")
         self.git("commit", "-q", "-m", "base")
@@ -1775,7 +1779,7 @@ class ClosingTests(ConductorCase):
     """A layer of the options that names the registrar adds the closing stage: a model records the result."""
 
     scenario = "full"
-    NAMED = [{"source": "phase:P1", "options": {"stages": [{"role": "registrar", "model_class": "economy"}]}}]
+    NAMED = [{"source": "phase:P1", "options": {"stages": [{"role": "registrar", "provider": "codex", "model_class": "economy"}]}}]
 
     def setUp(self):
         super().setUp()
@@ -1795,7 +1799,7 @@ class ClosingTests(ConductorCase):
         self.assertNotIn("Plan-bound", prompt)  # the closer never sees the task
         steps = self.steps(err)
         self.assertEqual(steps["close"]["result"]["by"], "closer")
-        self.assertEqual(steps["close"]["route"].split("/")[0], "claude-code")
+        self.assertEqual(steps["close"]["route"].split("/")[0], "codex")
         self.assertEqual(steps["register"]["result"]["outcome"], "no-op")
         self.assertIn("recorded by the closer", steps["register"]["verdict"])
         self.assertEqual(self.source()["items"]["W1"]["status"], "done")
@@ -1834,7 +1838,7 @@ class SandboxTests(ConductorCase):
         """An executor that looks like Claude Code with a shell (``--tools`` names Bash), run by the fake role."""
         argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
         argv["executor"] += ["--tools", "Bash,Read,Edit", *extra.get("executor", [])]
-        self.write_config(argv)
+        self.write_config(argv, extra='[orch.launch]\naccess = "confined"\n')
 
     def options(self, **instructions) -> Path:
         path = self.project.parent / "options.json"
@@ -1901,7 +1905,7 @@ class SandboxTests(ConductorCase):
         argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
         argv["executor"] = [sys.executable, "ro-run.py", "--rw", str(self.project), "--", *argv["executor"],
                             "--tools", "Bash,Read,Edit"]
-        self.write_config(argv)
+        self.write_config(argv, extra='[orch.launch]\naccess = "confined"\n')
         preview = self.preview(self.UP)
         self.assertEqual(self.extra(preview, "executor")[0], "--settings")
         preview = self.preview(self.DOWN)
@@ -2297,6 +2301,7 @@ class ProviderErrorTests(ConductorCase):
     def test_a_fallback_must_pass_the_sandbox_rule_the_preflight_applies(self):
         eng = engine.Conductor.__new__(engine.Conductor)
         eng.settings = None  # no aicore configuration: every provider is routable
+        eng._launch_access = lambda: "confined"
         item = engine.Item(ref="W1", orch_run="-", state={}, directory=Path(), claim={},
                            options={"instructions": {"sandbox": "require"}})
         route = {"role": "executor", "provider": "claude-code", "model_class": "implementation", "transport": "jsonl",
@@ -2838,10 +2843,12 @@ class RouteExplainTests(ConductorCase):
 
     def test_the_sandbox_rule_of_the_preflight_is_applied_to_the_selected_route(self):
         self.set_items({"W1": {"options": [{"source": "plan", "options": {"instructions": {"sandbox": "require"}}}]}})
-        self.write_config(argv={role: ["claude", "-p", "--tools", "Bash,Read"] for role in ROLES})
-        code, out, err = self.run_items("W1")
+        self.write_config(argv={role: [sys.executable, str(FIXTURES / "fake_role.py"), role,
+                                      "--tools", "Bash,Read"] for role in ROLES},
+                          extra='[orch.launch]\naccess = "confined"\n')
         with mock.patch.object(engine.sandbox, "probe", return_value={"available": False, "reason": "no bwrap"}), \
                 mock.patch.object(engine.process, "available", return_value=True):
+            self.run_items("W1")  # record the refused route with fake CLIs; no real provider may start
             found = self.explain("--role", "executor", "--plan", "T", "--item", "W1")
         self.assertEqual(found["stop"]["code"], "SANDBOX_UNAVAILABLE")
 

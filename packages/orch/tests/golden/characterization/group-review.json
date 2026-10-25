@@ -6,8 +6,10 @@
     "--strict-mcp-config",
     "--setting-sources",
     "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-1/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "context-scout"
@@ -18,8 +20,10 @@
     "--strict-mcp-config",
     "--setting-sources",
     "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W2/agents/agent-<run>-3/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 2,
    "role": "context-scout"
@@ -30,8 +34,10 @@
     "--strict-mcp-config",
     "--setting-sources",
     "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-2/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "executor"
@@ -44,8 +50,10 @@
     "user",
     "--resume",
     "executor-session-1",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W2/agents/agent-<run>-4/tmp",
     "--settings",
-    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 2,
    "role": "executor"
@@ -512,7 +520,7 @@
     {
      "kind": "authority",
      "origin": "conductor",
-     "tokens": 120
+     "tokens": 141
     },
     {
      "kind": "run_rules",
@@ -557,7 +565,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 416
+     "tokens": 437
     },
     "task": {
      "limit": 0,
@@ -633,7 +641,7 @@
     {
      "kind": "authority",
      "origin": "conductor",
-     "tokens": 120
+     "tokens": 141
     },
     {
      "kind": "run_rules",
@@ -678,7 +686,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 421
+     "tokens": 442
     },
     "task": {
      "limit": 0,

@@ -50,6 +50,7 @@ DIGEST = re.compile(r"(?<![0-9a-f])[0-9a-f]{24,64}(?![0-9a-f])")  # git commits,
 WAITING = re.compile(r"waiting \d+ s")  # the reset of a fake quota is "now + 3 s": the wait is rounded by the clock
 SHORT_DIGEST = re.compile(r"(?<=@)[0-9a-f]{12}\b")  # the digest suffix of an input id
 SHORT_FINGERPRINT = re.compile(r"(?<=fingerprint=)[0-9a-f]{12}\b")  # reuse_miss names the environment hash
+SHORT_AUTHORITY = re.compile(r"\bauthority [0-9a-f]{12} -> [0-9a-f]{12}(?= \()")
 
 
 def normalize(value, paths: dict):
@@ -65,6 +66,7 @@ def normalize(value, paths: dict):
             value = value.replace(text, paths[text])
         value = TIME.sub("<time>", value)
         value = WAITING.sub("waiting <n> s", RUN_ID.sub("<run>", value))
+        value = SHORT_AUTHORITY.sub("authority <digest> -> <digest>", value)
         return SHORT_FINGERPRINT.sub("<digest>", SHORT_DIGEST.sub("<digest>", DIGEST.sub("<digest>", value)))
     return value
 
@@ -146,6 +148,8 @@ class CharacterizationCase(ConductorCase):
         run = self.run_dir(err)
         paths = {run.name: "<run>", str(self.project.parent): "<tmp>", str(self.project): "<project>",
                  str(self.home): "<home>"}
+        from orch.conductor.infrastructure.launch_plan import transcript_folder_name
+        paths[transcript_folder_name(self.project)] = "<project-folder>"
         resolved = {str(Path(key).resolve()): value for key, value in paths.items() if key.startswith("/")}
         paths.update(resolved)
         journal = [normalize(line, paths) for line in json.loads("[" + ",".join(
@@ -179,6 +183,11 @@ def repro(cmd="cat out/W1.txt", observed="ok") -> dict:
 
 
 class ProjectionTests(unittest.TestCase):
+    def test_authority_transition_normalizes_hashes_but_keeps_changed_fields(self):
+        message = "W1 executor: authority abc123def456 -> fed987cba654 (write_roots); evidence abc123def456"
+        self.assertEqual(normalize(message, {}),
+                         "W1 executor: authority <digest> -> <digest> (write_roots); evidence abc123def456")
+
     def test_fixture_paths_do_not_grow_under_a_parallel_worker_tmpdir(self):
         if not tmp_writable():
             self.skipTest("/tmp is read-only here (an outer sandbox): the fixtures stay under TMPDIR")
@@ -645,6 +654,9 @@ COVERAGE = {
     "AUTHORITY_RESUME_MISMATCH": "test:test_authority_envelope.py",
     # Beacons
     "ISOLATION_DRIFT": "test:test_isolation_profiles.py",
+    "PROTECT_UNAVAILABLE": "test:test_authority_policy.py",
+    "SESSION_NOT_PERSISTABLE": "test:test_authority_policy.py",
+    "RESULT_ENV_DENIAL": "test:test_authority_policy.py",
     "AUTHORITY_CHANGED": "test:test_authority_envelope.py",
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",

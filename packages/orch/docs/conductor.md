@@ -759,6 +759,7 @@ The conductor stops only on:
 | `GROUP_UNKNOWN`, `GROUP_FOLLOWUP_MISMATCH`, `GROUP_FOLLOWUP_NOT_DONE` | refusals of `settle --group`, exit 1, the state of the run is not changed: the run has no such blocked group; the follow-up run did not run `group-review-<n>.followup.json` of this run (or does not exist); it is not finished with its one piece done and committed |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `CURRENT_INPUT_RECEIPT_UNSUPPORTED` | a stage sets `require_current_input_receipt: true` and no binding implements a verified pre-dispatch current-request input receipt: refused in preparation and preflight before any role is spawned (see *Current request input receipts*) |
+| `PROTECT_UNAVAILABLE` | a read-only Claude role cannot protect the checkout (ro-run missing or Landlock ABI < 3); stops before the provider starts, with no writable fallback |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
 | `ISOLATION_UNAVAILABLE` | `instructions.isolation` is `require` and a required role of `isolate_roles` would start without the full isolation of its provider's profile (see Isolation profiles): a flag the CLI does not list, a surface not confirmed off for this CLI version (codex before a live probe, grok always), or an init event of an earlier role of the provider that showed what the profile keeps out (`ISOLATION_DRIFT`), or a route whose command is not a provider CLI the conductor can probe (a wrapper), or a Claude Code CLI that does not list `--setting-sources` and `--settings` (the project permissions would reach the role: `<role>/claude-code: the project permissions reach the role …`). Checked in the preflight before any work, and again when the command line of every role process is built (the roles of a piece, the report-fixer, the group reviewer and the review strategist). `ISOLATION_UNAVAILABLE: <role>/<provider>: <guarantee> isolation (<missing flags or surfaces>); set instructions.isolation = prefer in a trusted layer or remove the role from isolate_roles` |
 | `ISOLATION_PROFILES_INVALID` | `configs/isolation-profiles.json` cannot be read, is outside conductor/v1 `isolation-profiles` or declares a guarantee its surfaces contradict: `ISOLATION_PROFILES_INVALID: <path>: <first schema problem>`, before any role |
@@ -832,6 +833,8 @@ The informational limits report long or costly work through `info` lines with a 
 | `ROUTE_UPGRADED` | the reviewer route went up to the `suggested_model_class` of an executor `review_recommendation` (above the class of its route, admitted: startable here, not gated) | role, old route → new route, `<class> -> <class>`; a suggestion at or below the route, or a higher route that is not admitted, gives no beacon |
 | `SESSION_ROUTE_CHANGED` | a piece resumes the shared executor session under another model or effort than the one that built it (the session continues, the provider cache of the old model is lost) | the old and the new route |
 | `CAPACITY_GATED` | the provider of a role is gated when the routes of a piece are chosen | the gate (until, class, who set it) |
+| `SESSION_NOT_PERSISTABLE` | the transcript folder of a Claude executor is unknown (no unique long-name prefix match) | `<item>: the transcript folder of <project> is not known; the executor runs without a resumable session`; never grants the whole `~/.claude/projects` |
+| `RESULT_ENV_DENIAL` | failed tool results match an environment refusal | one info beacon per agent step: `<role> <step>: <kind>×<n>[, …]`; categories and counts only in agent `result.json` `env_denials`, observer `refusals_by_source.by_kind` and `.by_role`; permission denials retain their separate beacon |
 | `RESULT_SILENT_DENIAL` | a Claude role had tool calls refused without a prompt (`--permission-prompts none`) | the tools and how many calls (`Bash×2, WebFetch`), never their input; for the executor and the bounded-implementer the report also gets a `note` issue "tools denied without a prompt: …" with the way out (widen `allowedTools` in the launch catalog, or change the plan) |
 | `WRITE_PROTECTED_PATH` | before the scout, the write set of the piece names paths the provider of the executor refuses to write in a session without prompts (`policies/protected_writes.py`; for `claude-code`, measured on 2.1.309: `pyrightconfig.json`, `.mcp.json`, `.env`, `.envrc`, `.npmrc`, `.pre-commit-config.yaml`, `.gitmodules`, `.claude.json`, shell rc files and everything under `.claude/`, `.vscode/`, `.idea/`, `.husky/`, `.devcontainer/`, `.git/`, at any depth); a path under `[orch.conductor] generated_paths` is not one when `generate` is set | the paths; the executor prompt gets a `Protected paths` rule: the content goes to `<artifacts of the piece>/protected/<path>`, the round ends `blocked` with an escalation `WRITE_PROTECTED_PATH: <path> -> <staged path>`, the owner places the file and retries the piece (`resume --retry`); a file the tree already holds as needed is left alone |
 | `GATE_NOT_WRITTEN` | an exhausted quota could not be recorded as a gate (the run goes on) | why |
@@ -1955,19 +1958,32 @@ for.
   --unshare-net --dev /dev --proc /proc true` (10 s, cached for the process; it changes nothing). On Ubuntu 24.04 and later
   `kernel.apparmor_restrict_unprivileged_userns = 1` stops it without an AppArmor profile for bwrap
   (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`); the profile is a change of the machine, made by its owner.
-- `instructions.sandbox`: `prefer` (default) adds the block `"sandbox": {"enabled": true, "allowUnsandboxedCommands":
-  false, "failIfUnavailable": true, "network": {"strictAllowlist": true, "allowedDomains": <sandbox_domains>}}` to the
-  `--settings` object of every Claude Code role whose `--tools` include Bash (the provider merges it with the user's
-  settings). A role whose manifest declares `network: allowed` gets no `strictAllowlist` and no `allowedDomains`. When the
-  sandbox cannot start, `prefer` goes on without the block and says `ISOLATION_PARTIAL` once; `require` stops with
-  `SANDBOX_UNAVAILABLE` before any work; `off` adds no block.
+- `instructions.sandbox`: for Claude writers at `access=confined`, `prefer` (default) adds the sandbox block
+  (`enabled`, `allowUnsandboxedCommands: false`, `failIfUnavailable: true`) and the network allowlist from
+  `sandbox_domains`. If unavailable, `prefer` reports the degradation and retains Landlock; `require` stops with
+  `SANDBOX_UNAVAILABLE`; `off` adds no sandbox. Open writers and read-only Claude roles never get this block.
+- **Read-only Claude roles.** Roles with `tools.filesystem: read` always use `ro-run --protect {cwd}` (Landlock ABI >= 3),
+  independently of the provider sandbox. Reviewer and triager have working Bash (`acceptEdits`, `allowedTools Bash`)
+  while the checkout stays read-only; an existing `vendor` directory is writable for test caches. A checkout under
+  `/tmp` or `/var/tmp` uses `--no-default-rw --protect {cwd} --rw /dev --rw <agent TMPDIR>` and the optional vendor grant;
+  other temporary directories stay read-only. Missing protection is `PROTECT_UNAVAILABLE` before launch, never a
+  writable fallback. Network is open and reported as `NETWORK_UNENFORCED` when the manifest declares none.
+- **Registrar.** Claude registrar is refused with `LAUNCH_REFUSED` in both access modes: its protect guard cannot write
+  the plan workspace outside the checkout. A confined Codex registrar is refused for the same reason. Open Codex and
+  the default `orch/conductor` registrar remain available.
+- **Scratch and transcripts.** Every agent gets `<agent directory>/tmp` as `TMPDIR`, recorded in `write_roots` and granted
+  with Landlock `--rw` / Claude `--add-dir` (and sandbox `allowWrite` when confined). Claude shared/handoff sessions get
+  only their own transcript directory. For a project name longer than 200 characters, exactly one existing directory
+  matching its 200-character prefix is required; otherwise `SESSION_NOT_PERSISTABLE` keeps `--no-session-persistence`
+  and disables resume. Previews create no transcript directories. The session authority comparison excludes only the
+  ephemeral agent TMPDIR grant; each recorded launch envelope still hashes its exact scratch path.
 - **Setting sources.** An isolated Claude Code role (`instructions.isolate_roles`, isolation not `off`) starts with
   `--setting-sources user` (the catalog value `user,project` of the writers is replaced): the project's
   `.claude/settings*.json` no longer reach it, so their context-economy Read denies cannot become sandbox masks of
   `skills.json`, lock files or `node_modules`. The ask and deny rules of git push, reset --hard and clean those files carried
   come with the launch instead: the same `--settings` object holds `"permissions": {"deny": ORCH_PERMISSION_RULES}`
-  (`Bash(git push*)`, `Bash(git reset --hard*)`, `Bash(git clean*)`, `Bash(git config --global*)`, `Bash(sudo *)`,
-  `Read(.env)`, `Read(.env.*)`, `Read(**/*.pem)`, `Read(**/*.key)`, `Read(~/.ssh/**)`, `Read(~/.aws/**)`;
+  (`Bash(git push*)`, `Bash(git reset --hard*)`, `Bash(git clean*)`, write forms of `git config --global` (reads `--get*`/`--list` remain available), `Bash(sudo *)`,
+  `Bash(cat .env)`, `Bash(cat .env.*)`, `Read(.env)`, `Read(.env.*)`, `Read(**/*.pem)`, `Read(**/*.key)`, `Read(~/.ssh/**)`, `Read(~/.aws/**)`;
   `policies/authority.py`), never one without the other. A CLI that does not list both `--setting-sources` and
   `--settings` keeps the catalog argv (degraded `SETTING_SOURCES_UNSUPPORTED` in the envelope); under
   `instructions.isolation = require` that is `ISOLATION_UNAVAILABLE`. Deny rules of the user's own settings still apply
@@ -1981,13 +1997,13 @@ for.
   `allowUnsandboxedCommands: false`, `failIfUnavailable` and the network allowlist stay as they are); a Codex role gets `--add-dir P`
   right after `exec`. Every path passed `OPTIONS_UNSAFE_PATH` first; no role but a writer gets one, and without extra paths the
   command line does not change.
-- **Access.** `[orch.launch] access` (default `open`) decides the sandbox of the Codex roles that write (executor,
-  bounded-implementer, registrar): `open` runs them with `--sandbox danger-full-access` (no provider sandbox: they reach Docker
-  and everything else the user reaches, and the sandbox probe is not needed for them), `confined` with `--sandbox
-  workspace-write`. The catalog states it as `{write_sandbox}`; read-only roles keep `read-only` in both modes. Claude Code and
-  Grok roles are the same in both modes (their write guard `ro-run.py --rw {cwd}` confines writes to the project and does not
-  keep them from Docker). Project and environment layers can only tighten the setting: a project `_unset` or an
-  environment `open` cannot remove earlier confinement. The machine, invocation and flags may reopen it explicitly.
+- **Access.** `[orch.launch] access` defaults to `open`. Claude writers use Landlock with checkout, extra-path,
+  transcript and scratch grants, with no provider sandbox or OS read masks: network and Docker are open. Confined
+  Claude writers use the provider sandbox described above. Open Codex writers use `danger-full-access`; confined ones
+  use `workspace-write`, without network or Docker. Grok retains its Landlock filesystem guard in both modes, with
+  network and Docker open; `--disable-web-search` disables web search for reviewer, triager, report-fixer and scout,
+  but does not confine shell networking. Only Grok routes receive an explicit `--rw ~/.grok` grant.
+  Project and environment layers may only tighten access; machine, invocation and flags may reopen it explicitly.
 - A Codex route with `--sandbox read-only|workspace-write` is unavailable while the sandbox cannot start: `--dry-run` shows
   `available: false` and `SANDBOX_UNAVAILABLE: <reason>` in `unavailable`, a run stops with `SANDBOX_UNAVAILABLE`. Its argv is
   not rewritten.
@@ -1995,7 +2011,9 @@ for.
   of `claude-sandbox`, `codex-sandbox`, `claude-tools` (a Claude role without Bash has no command to confine) or `null`, and
   `warnings` for every role that declares `network: none` while nothing enforces it (the grok `reviewer`; every Claude role
   when the sandbox is off or cannot start), and `authority: {role: envelope}` (below). `routes[*].argv` stays the base route
-  template; `isolation_args` is what the launch adds to it (the `--rw` grants of the guard are inside the prefix).
+  template; `isolation_args` holds the added provider arguments; the authority envelope names the effective guard
+  and every writable root, including the grants inside its prefix. Matrix registrar rows describe the guard that causes their refusal; they do not admit
+  an otherwise unavailable registrar route.
 
 ### The authority envelope
 
@@ -2003,8 +2021,8 @@ The authority of each launch is one document, conductor/v1 `authority-envelope`,
 (`policies/authority.compute`: it reads no provider file, creates nothing and starts no process; the probes are its
 arguments): `role`, `provider`, `access`, `guard` (`landlock-rw`, `landlock-protect`, `claude-sandbox`, `codex-sandbox`,
 `none`), `write_roots` (`{path, why}`: `.` the checkout, `./<rel>` under it, `~/…` under HOME, `/` unconfined; `why`
-`checkout`, `guard`, `extra_paths`, `transcripts`, `unconfined`; a Landlock guard grants its default writable `/tmp`,
-`/var/tmp`, `/dev` and `~/.grok` unless `--no-default-rw`, then its `--rw` folders), `read_masks`, `setting_sources`,
+`checkout`, `guard`, `extra_paths`, `transcripts`, `tmpdir`, `unconfined`; a Landlock guard grants its default writable `/tmp`,
+`/var/tmp` and `/dev` unless `--no-default-rw`, then its `--rw` folders), `read_masks`, `setting_sources`,
 `permission_mode`, `permission_rules`, `network` (`declared`, `effective` none/allowlist/open, `enforced_by`,
 `allowed_domains`), `docker` (open/blocked), `git` (`commit: work-source`; `push`/`reset_hard`/`clean` are `denied` only by
 a command deny layer — the permission rules of orch — or for a role without a shell, else `unenforced`: a filesystem guard
@@ -2028,52 +2046,52 @@ it). The table below is generated by it; a test keeps them equal:
 <!-- authority-matrix:begin -->
 | role | provider | access | guard | network | enforced by | docker | setting sources | isolation |
 |---|---|---|---|---|---|---|---|---|
-| context-scout | claude-code | open | none | none | claude-tools | blocked | user | full |
-| context-scout | claude-code | confined | none | none | claude-tools | blocked | user | full |
+| context-scout | claude-code | open | landlock-protect | none | claude-tools | blocked | user | full |
+| context-scout | claude-code | confined | landlock-protect | none | claude-tools | blocked | user | full |
 | context-scout | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | context-scout | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | context-scout | grok | open | landlock-protect | open | - | open | all | partial |
 | context-scout | grok | confined | landlock-protect | open | - | open | all | partial |
-| executor | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| executor | claude-code | open | landlock-rw | open | - | open | user | full |
 | executor | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
 | executor | codex | open | none | open | - | open | all | partial |
 | executor | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | executor | grok | open | landlock-rw | open | - | open | all | partial |
 | executor | grok | confined | landlock-rw | open | - | open | all | partial |
-| bounded-implementer | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| bounded-implementer | claude-code | open | landlock-rw | open | - | open | user | full |
 | bounded-implementer | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
 | bounded-implementer | codex | open | none | open | - | open | all | partial |
 | bounded-implementer | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | bounded-implementer | grok | open | landlock-rw | open | - | open | all | partial |
 | bounded-implementer | grok | confined | landlock-rw | open | - | open | all | partial |
-| reviewer | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
-| reviewer | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| reviewer | claude-code | open | landlock-protect | open | - | open | user | full |
+| reviewer | claude-code | confined | landlock-protect | open | - | open | user | full |
 | reviewer | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | reviewer | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | reviewer | grok | open | landlock-protect | open | - | open | all | partial |
 | reviewer | grok | confined | landlock-protect | open | - | open | all | partial |
-| triager | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
-| triager | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| triager | claude-code | open | landlock-protect | open | - | open | user | full |
+| triager | claude-code | confined | landlock-protect | open | - | open | user | full |
 | triager | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | triager | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | triager | grok | open | landlock-protect | open | - | open | all | partial |
 | triager | grok | confined | landlock-protect | open | - | open | all | partial |
-| registrar | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
-| registrar | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| registrar | claude-code | open | landlock-protect | open | - | open | user | full |
+| registrar | claude-code | confined | landlock-protect | open | - | open | user | full |
 | registrar | codex | open | none | open | - | open | all | partial |
 | registrar | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
-| report-fixer | claude-code | open | none | none | claude-tools | blocked | user | full |
-| report-fixer | claude-code | confined | none | none | claude-tools | blocked | user | full |
+| report-fixer | claude-code | open | landlock-rw | none | claude-tools | blocked | user | full |
+| report-fixer | claude-code | confined | landlock-rw | none | claude-tools | blocked | user | full |
 | report-fixer | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | report-fixer | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
 | report-fixer | grok | open | landlock-protect | open | - | open | all | partial |
 | report-fixer | grok | confined | landlock-protect | open | - | open | all | partial |
-| researcher | claude-code | open | claude-sandbox | open | - | blocked | user | full |
-| researcher | claude-code | confined | claude-sandbox | open | - | blocked | user | full |
+| researcher | claude-code | open | landlock-protect | open | - | open | user | full |
+| researcher | claude-code | confined | landlock-protect | open | - | open | user | full |
 | researcher | grok | open | landlock-protect | open | - | open | all | partial |
 | researcher | grok | confined | landlock-protect | open | - | open | all | partial |
-| advisor | claude-code | open | claude-sandbox | open | - | blocked | user | full |
-| advisor | claude-code | confined | claude-sandbox | open | - | blocked | user | full |
+| advisor | claude-code | open | landlock-protect | open | - | open | user | full |
+| advisor | claude-code | confined | landlock-protect | open | - | open | user | full |
 | advisor | grok | open | landlock-protect | open | - | open | all | partial |
 | advisor | grok | confined | landlock-protect | open | - | open | all | partial |
 <!-- authority-matrix:end -->

@@ -117,6 +117,7 @@ def build(directory: Path, project: Path) -> dict:
         "idle": {"total_s": round(idle["total"], 1), "max_s": round(idle["max"], 1), "max_between": idle["where"]},
         "tokens_by_role": {role: value for role, value in sorted(tokens.items())},
         "tokens_by_agent": by_agent,
+        "refusals_by_source": metrics.refusals_by_source(by_agent),
         "prompt_blocks_by_role": prompt_blocks(directory),
         "prompt_budgets_by_role": prompt_budgets(directory),
         "open_questions": questions_mod.listing(directory, time.time()),

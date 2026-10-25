@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "1603bfd8c988",
-  "reason": "merge stable/p7 into main: union of planner error codes (REWORK_LIMIT, CONTINUATION_INVALID, PATH_OUTSIDE_SCOPE)",
+  "captured_from": "f7344e4c6af2",
+  "reason": "merge Agelto early-refusal guard (require_current_input_receipt): regenerated orch conductor/exec types",
   "generators": [
     {
       "id": "skiller-registry",
@@ -258,8 +258,8 @@
     "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
-    "packages/orch/lib/orch/_types/conductor.py": "84d246223b4b1a3422b1092cbe74ba416a162e843e847870067ef390afbcd42d",
-    "packages/orch/lib/orch/_types/exec.py": "ac34fe204175d0f594ac07db34a25a9e01213f4dba62ee785b03946f719ca4ac",
+    "packages/orch/lib/orch/_types/conductor.py": "755933fc9d8fce564901dc6a426560675b0509cb46417621aa09191e7363cde7",
+    "packages/orch/lib/orch/_types/exec.py": "9b2763bd1058b8e3b6085ae4d370342478d659e327d783b52b05fe59311e2e11",
     "packages/orch/lib/orch/_types/records.py": "b745c2f905a81e2ad38ec1ad7e9124fbefd1727d2a87486e6f87204ca5565a6d",
     "packages/orch/lib/orch/_types/work_source.py": "b8a46a247d4aaea211a5694171279a8cbfa9699fb00fe7e1ee30e84b8f6515cc",
     "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",

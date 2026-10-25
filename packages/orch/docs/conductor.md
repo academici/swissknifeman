@@ -758,6 +758,7 @@ The conductor stops only on:
 | `GROUP_REVIEW_FAILED` | the group review failed (the role failed or its reply has malformed `review-findings` JSON) and a piece of the group has `review_mode: requested`, which no other review covers; a resume repeats the review once (two attempts in all); a group without a requested piece only gets the beacon |
 | `GROUP_UNKNOWN`, `GROUP_FOLLOWUP_MISMATCH`, `GROUP_FOLLOWUP_NOT_DONE` | refusals of `settle --group`, exit 1, the state of the run is not changed: the run has no such blocked group; the follow-up run did not run `group-review-<n>.followup.json` of this run (or does not exist); it is not finished with its one piece done and committed |
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
+| `CURRENT_INPUT_RECEIPT_UNSUPPORTED` | a stage sets `require_current_input_receipt: true` and no binding implements a verified pre-dispatch current-request input receipt: refused in preparation and preflight before any role is spawned (see *Current request input receipts*) |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
 | `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` stops with `TRANSPORT_UNSUPPORTED`. Wrapped commands check the provider after `--` as well as the launcher |
 | `LAUNCH_REFUSED` | the role/provider pair is explicitly refused in the launch catalog; the message is `<role>/<provider>: <reason>`. Required roles stop before work; optional scout/report-fixer roles are skipped |
@@ -1394,7 +1395,7 @@ and `REVIEW_MODE_NONE_SKIPPED` names it.
 
 | Key | Meaning |
 | --- | --- |
-| `stages` | `[{role, provider?, model_class?, model?, effort?}]`, roles `context-scout`, `executor`, `bounded-implementer`, `reviewer`, `triager`, `registrar` (naming it turns the closing stage on) |
+| `stages` | `[{role, provider?, model_class?, model?, effort?, require_current_input_receipt?}]`, roles `context-scout`, `executor`, `bounded-implementer`, `reviewer`, `triager`, `registrar` (naming it turns the closing stage on). `require_current_input_receipt: true` requires current-request input evidence before dependent tool dispatch; see Current request input receipts. |
 | `reviewer` | `PROVIDER/MODEL[/CONTEXT][/EFFORT]` |
 | `rules` | short rules for the executor |
 | `skills` | `[{role, names}]`; `names: ["auto"]` asks the skills bridge (`[orch.conductor] skills_bridge`, a command run as a process with `--select --role R --provider P --project DIR --paths <write set files>`) for the skills of the role from the write set of the piece: the answer (`skills[].name`, `path`, `reason`) is kept in the state of the piece, an isolated role gets the text of the `SKILL.md` at the path the bridge names, beacon `SKILLS_SELECTED`; no bridge stops the piece `SKILLS_BRIDGE_UNAVAILABLE`, a failing one `SKILLS_SELECT_FAILED`; `auto` is not listed with other names |
@@ -1408,6 +1409,33 @@ and `REVIEW_MODE_NONE_SKIPPED` names it.
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
 | `commit` | `mode`: `final-only` (default: one commit after the registration) or `implementation-and-fixes` (see Split commits) |
 | `on_blocked` | `stop` or `report` |
+
+### Current request input receipts
+
+`stages[].require_current_input_receipt: true` is an explicit requirement in both `exec/v1` run-policy stages and
+`conductor/v1` run-options. It is omitted by default. A work-source layer may add the requirement but cannot disable one
+already set by a lower layer. Existing runs without it keep their current behavior.
+
+The optional capability-record field `current_input_receipt` describes pre-dispatch acquisition separately from
+`usage`, which describes completed accounting. A missing field means unknown. Native Grok records unknown; its
+`usage: supported` and terminal streaming fixture do not prove a current input receipt. No current binding implements
+a verified acquisition at the native tool-dispatch boundary. Even a manually declared `supported` record cannot create it.
+
+Preparation and conductor preflight refuse a required receipt with `CURRENT_INPUT_RECEIPT_UNSUPPORTED` before any role
+is spawned; dry-run reports the same unavailable requirement. The reason includes binding/provider and record
+support/source/evidence. This is missing telemetry capability, not a sandbox permission or login diagnosis.
+
+This boundary provides an **early unsupported result**, not a live receipt implementation or a capacity pass. A future
+provider/transport integration must expose an immutable current API request receipt atomically before dependent tools:
+actual input with explicit cache semantics (or a documented strict upper bound), request/session/model/build/effort/config
+correlation, and mandatory delivery/trim/compaction evidence. The consumer owns its reserve policy. The native CLI
+dispatches its own tools; parsing captured stdout after completion cannot provide this ordering guarantee.
+
+Offline socket-barrier regressions call the actual preflight helper while terminal completion is blocked, with empty
+live usage, then after terminal usage and a delayed summary. They prove continued refusal and zero role spawns for a
+required capability. They do not prove positive receipt acquisition. Supporting a real provider additionally requires
+causal positive admission and wrong/stale request, identity/config, partial publication, delivery/trim/compaction and
+reserve-boundary negatives through that actual acquisition path. Completed replay is not a substitute.
 
 `limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
 `limits.skill_tokens_max` (default 5000; 0 off) is the largest text of one skill that an isolated role gets in its prompt (see Skill checks).

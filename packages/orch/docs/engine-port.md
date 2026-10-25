@@ -60,6 +60,7 @@ from another directory the same plan names the same files with other relative pa
 
 | Reason code | Requirement |
 | --- | --- |
+| `CURRENT_INPUT_RECEIPT_UNSUPPORTED` | the stage sets `require_current_input_receipt: true`; no binding implements a verified current-request input receipt, whatever the record declares (checked before `CAP_RECORD_MISSING`) |
 | `CAP_RECORD_MISSING` | no capability record for `(binding, provider)` |
 | `CAPABILITY_STALE` | the record is past `fresh_until` and `capabilities.stale` is `refuse` (a warning otherwise) |
 | `MODEL_SET_UNKNOWN`, `MODEL_SET_UNSUPPORTED` | the binding cannot guarantee or select a model |

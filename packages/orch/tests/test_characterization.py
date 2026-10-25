@@ -614,6 +614,7 @@ COVERAGE = {
     "WAITING_DECISION": "snapshot:question-answer-resume", "QUESTIONS_OPEN": "test:test_waiting_decision.py",
     "NOT_WAITING": "test:test_waiting_decision.py",
     "ROUTE_UNDERSHOOT": f"test:{T}", "SANDBOX_UNAVAILABLE": f"test:{T}",
+    "CURRENT_INPUT_RECEIPT_UNSUPPORTED": "test:test_current_input_receipt.py",
     "PROVIDER_UNAVAILABLE": "snapshot:resume-after-stop", "TRANSPORT_UNSUPPORTED": f"test:{T}",
     "LAUNCH_UNKNOWN": "test:test_launch.py", "ROLE_FAILED": f"test:{T}", "ROLE_OUTPUT_EMPTY": f"test:{C}",
     "LAUNCH_REFUSED": f"test:{T}",

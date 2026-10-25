@@ -5,6 +5,10 @@
   "type": "object",
   "description": "Engine-neutral capability-record contract.",
   "properties": {
+    "current_input_receipt": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/support",
+      "description": "Pre-dispatch current API request input receipt acquisition, distinct from completed usage accounting. Missing means unknown. A declared support level alone does not prove an implemented acquisition path or current request admission."
+    },
     "$schema": {
       "const": "urn:swissknifeman:orch:exec:capability-record:v1",
       "description": "Schema identifier."

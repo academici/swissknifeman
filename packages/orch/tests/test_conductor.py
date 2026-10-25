@@ -1965,6 +1965,7 @@ class SandboxTests(ConductorCase):
         self.assertEqual(self.calls("executor"), 0)
 
     def test_require_without_a_shell_role_does_not_need_the_sandbox(self):
+        self.write_config(extra="[orch.advisor]\nenabled = false\n")  # the advisor is on by default with Bash on claude-code
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})  # no --tools: nothing to confine
         with mock.patch("orch.sandbox.probe", return_value=self.DOWN):
             code, _, err = self.run_items("W1", extra=("--options", self.options(sandbox="require")))

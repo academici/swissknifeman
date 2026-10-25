@@ -226,9 +226,22 @@ The responses report `changed: false` for a no-op.
 
 `start <plan> <items…> --actor … [--session S|auto] [--take-over]` resumes an `in_progress` item only from
 the session that owns it: when `result.executor` and the new actor both carry a `session` and they differ
-(or the providers differ), `start` is refused with `ITEM_OWNED` and writes nothing. `--take-over` replaces
+(or the providers differ), `start` is refused with `ITEM_OWNED` (`<item> is held by session S (provider/model)
+since T; continue it from that session, or hand the attempt over with plan.py start … --take-over --actor …`:
+ownership is per session, not per model) and writes nothing. `--take-over` replaces
 the executor, keeps `result.started_at` and records `data.take_over.previous` (the former executor) in the
-`start` event. Calls without a session keep the earlier behaviour. `finish` checks ownership only with `--owner-session S`:
+`start` event.
+`start <plan> <item> --continue correction --receipt PATH [--findings fk-…,fk-…]` continues one `in_progress`
+item to correct recorded review findings. The receipt (`review-receipt/v1`, checked as for `finish`
+but without the freshness requirement: the correction changes the candidate) must hold confirmed or open findings
+with an open Blocker or Major (or the named `--findings` keys, which must be confirmed or open findings of it), else
+`CONTINUATION_INVALID`; so is `--continue` on an item that is not in progress. The actor is checked against the optional
+`route.correction` (`{class, effort, provider?, model?}`), else against `route` — no `route.correction`, no relaxation;
+a `start` without `--continue`, and the start of a `todo` item, are checked against `route` as always, and a plain resume
+below `route` adds the hint to use `--continue correction`. The start event (`data.continuation`) and
+`result.continuation` (`{kind, attempt_id?, previous_executor?, executor, receipt, findings}`) record it;
+`finish --executed-by` of that same executor is checked against `route.correction` too. `--continue` does not
+replace `--take-over`: another session still needs it. Calls without a session keep the earlier behaviour. `finish` checks ownership only with `--owner-session S`:
 an item whose `result.executor.session` is not `S` is refused with `ITEM_OWNED` under the plan lock (a repeat of
 the recorded `--attempt-id` stays a no-op).
 `orchestration.scenario` (plan, phase or item; `^[a-z][a-z0-9-]*$`) names the execution scenario; the context

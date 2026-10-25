@@ -41,7 +41,7 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "check_idle_warn_s": 600}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": True,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
-                  "strategy": "auto", "strategist": "rules",
+                  "strategy": "auto", "strategist": "rules", "correction_route": "executor",
                   "fix_brief": {"max_findings": 12, "max_chars": 24000}}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],

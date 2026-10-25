@@ -632,6 +632,7 @@ COVERAGE = {
     "TOKEN_BUDGET": "snapshot:budget-stop", "TOKEN_BUDGET_UNMETERED": "test:test_budget_hard.py",
     "BRIEF_TOO_LARGE": "test:test_budget_hard.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
+    "CORRECTION_SCOPE_GREW": "test:test_correction_route.py",
     "OUTSIDE_MODULE": "test:test_write_fence.py", "OUTSIDE_RUNTIME_ARTIFACT": "test:test_write_fence.py",
     "CHECKS_MUTATED": "test:test_write_fence.py",
     "RUN_INVALID": "test:test_records_migration.py", "STATE_INVALID": "test:test_records_migration.py",

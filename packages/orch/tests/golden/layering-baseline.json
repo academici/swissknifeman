@@ -1,13 +1,13 @@
 {
  "$schema": "urn:swissknifeman:orch:layering-baseline:v1",
- "bindings": 223,
+ "bindings": 228,
  "facade_calls": {
-  "application": 45,
+  "application": 46,
   "infrastructure": 22,
-  "stages": 37
+  "stages": 40
  },
  "largest_self_scc": 6,
- "measured_at": "602f9c74ee1b0dddae7130b097fdd7f38c5e376f",
+ "measured_at": "5cf24faffb56b5a81187e16e080903bc165d32a5",
  "oversized_modules": {
   "checks.py": 1105
  },
@@ -28,11 +28,11 @@
  "private_facade_access": {},
  "private_facade_access_total": 0,
  "self_functions": {
-  "application": 100,
+  "application": 103,
   "domain": 0,
   "infrastructure": 52,
   "policies": 0,
-  "stages": 109
+  "stages": 112
  },
  "staticmethod_bindings": 45,
  "targets": {

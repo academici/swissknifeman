@@ -296,7 +296,14 @@ not merge them; the bridge hands the plan, phase and item layers to the engine, 
 merges them over its configuration and the run-policy profile, the most specific layer winning.
 
 The owner of an attempt is `result.executor.session`. `start` of an item that is in progress under another session
-fails with `ITEM_OWNED`; `start --take-over` hands the attempt over and the `start` event records the previous executor.
+fails with `ITEM_OWNED` (the message names the session and the hand-over command: ownership is per session, not per
+model); `start --take-over` hands the attempt over and the `start` event records the previous executor.
+An optional `route.correction` (`class`, `effort`, optional `provider`/`model`) is the minimum for a bounded
+correction of recorded review findings: `start --continue correction --receipt PATH [--findings KEYS]` admits the actor
+of an in-progress item against it (without it, against `route`), records `result.continuation` and the `data.continuation`
+of the `start` event, and `finish --executed-by` of that executor is checked the same way. It never relaxes the minimum
+of a new item or of a start without `--continue`; refusals are `CONTINUATION_INVALID` (no in-progress item, no open
+findings, keys not from the receipt) or the `REVIEW_RECEIPT_*` codes of the receipt.
 `finish` does not check ownership, so an execution engine can register the result of its own executor; with
 `--owner-session S` it refuses `ITEM_OWNED` under the plan lock when the item is held by another session (fencing of
 a registration that lost its item; a repeat of the recorded attempt stays a no-op). When either side

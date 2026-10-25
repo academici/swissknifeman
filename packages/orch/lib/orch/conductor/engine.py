@@ -45,7 +45,7 @@ from orch.conductor.policies.allowance import BATCH_FIELDS, BATCH_LIMITS
 from orch.conductor.policies.routing import CLASS_RANK, EFFORT_RANK, LAUNCH_ROLE
 from orch.conductor import stubs as stubs_mod
 from orch.conductor.progress import Progress
-from orch.conductor.stages import advice, checks_stage, close, context, execute, finish
+from orch.conductor.stages import advice, checks_stage, close, context, correction, execute, finish
 from orch.conductor.stages import research as research_stage, review as review_stage, scout as scout_stage
 from orch.conductor.stages import step as step_stage, triage as triage_stage
 from orch.settings import ORCH_ROOT
@@ -307,6 +307,8 @@ class Conductor:
     _route = route_service.route
     _route_minimum = route_service.route_minimum
     _reviewer_selector = route_service.reviewer_selector
+    _bounded_corrections = route_service.bounded_corrections
+    _correction_role = route_service.correction_role
     label = staticmethod(route_rules.label)
     _actor = staticmethod(route_rules.actor)
 
@@ -420,6 +422,9 @@ class Conductor:
     _questioned = execute.questioned
     _sync_questions = execute.sync_questions
     _changed_now = execute.changed_now
+    _correction_baseline_files = correction.baseline_files
+    _correction_scope = correction.scope
+    _correction_settle = correction.settle
     _not_the_role = execute.not_the_role
     _changed = execute.changed
     _outside = execute.outside

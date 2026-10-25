@@ -337,16 +337,18 @@ def admitted_class(provider: str, model: str, routing_path: str | Path | None = 
     return CLASS_ORDER[max(ranks)] if ranks else None
 
 
-def _route_verdict(plan: store.Plan, items: list[str], actor: dict, *, strict_route: bool = False) -> str:
+def _route_verdict(plan: store.Plan, items: list[str], actor: dict, *, strict_route: bool = False,
+                   routes: Mapping[str, Mapping] | None = None) -> str:
     """``ok`` or an unknown-model warning; strict/configured admission refuses unknown models.
 
-    ``ROUTE_UNDERSHOOT`` refuses a class or effort below the items' requirements.
+    ``ROUTE_UNDERSHOOT`` refuses a class or effort below the items' requirements; ``routes`` replaces the route
+    of an item (a correction continuation is checked against ``route.correction``).
     """
     admitted = admitted_class(actor["provider"], actor["model"])
     if admitted is None and settings.refuse_unknown_model(plan, strict_route=strict_route):
         raise PlanError("ROUTE_MODEL_UNKNOWN", f"{actor['provider']}/{actor['model']} is not in the model pool")
     for item_id in items:
-        need = plan.items[item_id].get("route") or {}
+        need = (routes or {}).get(item_id) or plan.items[item_id].get("route") or {}
         if admitted is not None and _rank(CLASS_ORDER, admitted) < _rank(CLASS_ORDER, need.get("class")):
             raise PlanError("ROUTE_UNDERSHOOT", f"{item_id} needs class {need.get('class')}; "
                                                 f"{actor['provider']}/{actor['model']} is admitted as {admitted}")
@@ -570,6 +572,15 @@ def _path_fingerprint(root: Path, path: str) -> str:
 def _load_review_receipt(p: store.Plan, item_ref: str, path: str, attempt_id: str | None,
                          status: str = "done") -> dict:
     """Validate the field contract, item/attempt binding and content freshness before any lifecycle write."""
+    return _read_review_receipt(p, item_ref, path, attempt_id, status)[1]
+
+
+def _read_review_receipt(p: store.Plan, item_ref: str, path: str, attempt_id: str | None,
+                         status: str = "done", *, require_fresh: bool = True) -> tuple[dict, dict]:
+    """``(receipt document, result.review)``; ``require_fresh=False`` accepts a stale candidate (``freshness: stale``).
+
+    A correction continuation reads the receipt of a candidate that the correction itself is about to change.
+    """
     from . import context, schema
 
     def invalid(field: str, why: str) -> PlanError:
@@ -629,7 +640,8 @@ def _load_review_receipt(p: store.Plan, item_ref: str, path: str, attempt_id: st
     allowed = set(corrected.get("paths", []))
     allowed.update(found["location"].split(":", 1)[0] for found in doc["findings"]
                    if found["status"] == "confirmed" and safe(found["location"].split(":", 1)[0]))
-    if changed - allowed:
+    stale = bool(changed - allowed)
+    if stale and require_fresh:
         raise PlanError("REVIEW_RECEIPT_STALE", f"{item_ref} changed after the review: "
                         f"{', '.join(sorted(changed - allowed)[:10])}; run the review again")
     blockers = max(doc["open"]["blocker"], sum(found["severity"] == "Blocker" and found["status"] in ("open", "confirmed")
@@ -637,9 +649,9 @@ def _load_review_receipt(p: store.Plan, item_ref: str, path: str, attempt_id: st
     if status in ("done", "done_with_deviations") and blockers:
         raise PlanError("REVIEW_RECEIPT_OPEN_BLOCKER", f"{item_ref}: the review receipt has {blockers} open Blocker finding(s)")
     reviewer = doc["reviewer"]
-    return {"receipt": path, "verdict": doc["verdict"], "round": doc["round"],
-            "freshness": "findings_only" if changed else "fresh",
-            "reviewer": "/".join(reviewer[k] for k in ("provider", "model", "effort") if reviewer.get(k))}
+    return doc, {"receipt": path, "verdict": doc["verdict"], "round": doc["round"],
+                 "freshness": "stale" if stale else "findings_only" if changed else "fresh",
+                 "reviewer": "/".join(reviewer[k] for k in ("provider", "model", "effort") if reviewer.get(k))}
 
 
 def _need_phase(p: store.Plan, phase_id: str) -> dict:
@@ -726,6 +738,55 @@ def _owner_conflict(doc: Mapping, actor: Mapping) -> dict | None:
     return None
 
 
+def _correction_route(doc: Mapping) -> dict:
+    """The route a bounded correction is checked against: ``route.correction`` when set, else the item's ``route``."""
+    route = doc.get("route") or {}
+    return dict(route.get("correction") or {k: v for k, v in route.items() if k != "correction"})
+
+
+def _continuation(p: store.Plan, item_id: str, actor: Mapping, kind: str | None, receipt: str | None,
+                  findings: Iterable[str]) -> dict | None:
+    """The ``result.continuation`` record of ``start --continue correction``, or None without ``--continue``.
+
+    The item must be in progress, and the receipt must still carry confirmed/open findings (all Blocker/Major ones,
+    or the keys named in ``findings``). The receipt may be stale: the correction changes the candidate.
+    """
+    findings = list(findings)
+    if kind is None:
+        if receipt is not None or findings:
+            raise PlanError("CONTINUATION_INVALID", "--receipt and --findings belong to start --continue correction")
+        return None
+    if kind != "correction":
+        raise PlanError("CONTINUATION_INVALID", f"unknown continuation kind {kind!r}; the only kind is correction")
+    doc = p.items[item_id]
+    if status_of(p, item_id) != "in_progress":
+        raise PlanError("CONTINUATION_INVALID", f"{item_id} is {status_of(p, item_id)}; only an in-progress item "
+                                                "can be continued (a new item starts without --continue)")
+    if not receipt:
+        raise PlanError("CONTINUATION_INVALID", "--continue correction needs --receipt PATH of the review whose "
+                                                "findings the correction answers")
+    found, review = _read_review_receipt(p, item_id, receipt, None, "correction", require_fresh=False)
+    open_keys = [f["key"] for f in found["findings"] if f["status"] in ("confirmed", "open")]
+    heavy = found["open"]["blocker"] + found["open"]["major"]
+    if findings:
+        unknown = sorted(set(findings) - set(open_keys))
+        if unknown:
+            raise PlanError("CONTINUATION_INVALID", f"{', '.join(unknown)} is not a confirmed or open finding of {receipt}")
+        chosen = list(dict.fromkeys(findings))
+    elif heavy > 0 and open_keys:
+        chosen = open_keys
+    else:
+        raise PlanError("CONTINUATION_INVALID", f"{receipt} has no open Blocker or Major finding to correct "
+                                                "(name confirmed ones with --findings)")
+    prior = (doc.get("result") or {}).get("executor") if isinstance(doc.get("result"), dict) else None
+    record = {"kind": "correction", "executor": dict(actor), "receipt": review["receipt"], "findings": chosen}
+    if found.get("attempt_id"):
+        record["attempt_id"] = found["attempt_id"]
+    if isinstance(prior, dict) and prior:
+        record["previous_executor"] = dict(prior)
+    return record
+
+
 def batch_context(plan: store.Plan, phase_id: str, item_id: str) -> dict | None:
     """``{id, items, mode, note, run_with}`` of the batch that holds ``item_id``, or None."""
     for batch in batches_of(plan, phase_id):
@@ -761,7 +822,8 @@ def batch_split_warnings(p: store.Plan, phase_id: str, requested: Iterable[str])
 
 def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] = (),
           scout: bool | None = None, registrar: Mapping | None = None, take_over: bool = False,
-          in_progress_deps: bool = False, strict_route: bool = False) -> StartResult:
+          in_progress_deps: bool = False, strict_route: bool = False, continue_kind: str | None = None,
+          receipt: str | None = None, findings: Iterable[str] = ()) -> StartResult:
     """Move ``items`` (one detailed phase) to ``in_progress``; an ``in_progress`` item is resumed.
 
     ``actor`` is the executor (route-checked, stored as ``result.executor``); ``registrar`` is who called and
@@ -770,6 +832,10 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
     One session owns the attempt of an ``in_progress`` item: another session starting it is refused with
     ``ITEM_OWNED`` unless ``take_over`` hands the attempt over (the ``start`` event then records the previous
     executor in ``data.take_over``). ``finish`` does not check ownership.
+
+    ``continue_kind="correction"`` (one in-progress item, ``receipt`` of its review, optional ``findings`` keys)
+    continues the item to correct recorded review findings: the actor is checked against ``route.correction``
+    (else ``route``) and ``result.continuation`` is recorded. It does not replace ``take_over``.
 
     ``scout`` asks the provider's weak model for a context map after the start (D3); ``None`` follows
     ``plan.settings.scout``. A scout failure never fails the start.
@@ -814,9 +880,14 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         for item_id, owner in owners.items():
             if owner and not take_over:
                 since = (p.items[item_id].get("result") or {}).get("started_at")
-                raise PlanError("ITEM_OWNED", f"{item_id} is in progress by {owner.get('provider')}/{owner.get('model')} "
-                                              f"session {owner['session']} since {since}; resume it from that session "
-                                              f"or start --take-over")
+                raise PlanError("ITEM_OWNED", f"{item_id} is held by session {owner['session']} "
+                                              f"({owner.get('provider')}/{owner.get('model')}) since {since}; continue it "
+                                              f"from that session, or hand the attempt over with `plan.py start "
+                                              f"{p.root.name} {item_id} --take-over --actor …` "
+                                              f"(ownership is per session, not per model)")
+        if continue_kind is not None and len(requested) != 1:
+            raise PlanError("CONTINUATION_INVALID", "--continue names exactly one item")
+        continuation = _continuation(p, requested[0], actor, continue_kind, receipt, findings) if requested else None
         for dep in _phase_deps(p, phase_id):
             if not p.phases[dep].get("closed"):
                 raise PlanError("DEPENDENCY_NOT_READY", f"phase {phase_id} waits for phase {dep}")
@@ -840,10 +911,20 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
                 if (p.items[item_id].get("authority") or {}).get("kind") == "external_gate":
                     raise PlanError("EXTERNAL_GATE", f"{item_id} needs {wait}; reconcile the external evidence first")
                 raise PlanError("GATE_NOT_GRANTED", f"{item_id} needs {wait} (plan.py grant, or start --grant)")
-        verdict = _route_verdict(p, requested, actor, strict_route=strict_route)
+        routes = {requested[0]: _correction_route(p.items[requested[0]])} if continuation else None
+        try:
+            verdict = _route_verdict(p, requested, actor, strict_route=strict_route, routes=routes)
+            for item_id in requested:
+                validate_route((routes or {}).get(item_id) or p.items[item_id].get("route") or {}, actor, item_id)
+        except PlanError as error:
+            hinted = [i for i in requested if status_of(p, i) == "in_progress"
+                      and (p.items[i].get("route") or {}).get("correction")]
+            if error.code == "ROUTE_UNDERSHOOT" and not continuation and hinted:
+                raise PlanError(error.code, f"{error.message} (a bounded correction of recorded review findings may "
+                                            "continue on route.correction: start --continue correction --receipt PATH)",
+                                error.issues) from None
+            raise
         split_warnings = batch_split_warnings(p, phase_id, requested)
-        for item_id in requested:
-            validate_route(p.items[item_id].get("route") or {}, actor, item_id)
         from . import context  # context imports this module for scheduling
 
         # An item already in progress passed this check at its first start; its own work may have moved a read.
@@ -871,12 +952,18 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
             result = dict(prior) if doc.get("status") == "in_progress" else {}
             result.setdefault("started_at", now)
             result["executor"] = actor
+            kept: dict = result
+            kept.pop("continuation", None)  # a start admitted against ``route`` ends an earlier continuation
+            if continuation:
+                kept["continuation"] = continuation
             doc["status"], doc["result"] = "in_progress", result
             changes.append(("item", item_id, doc))
             batch_id = next_batch_id(p, phase_id, item_id)
             data = {"requested": requested, "route": verdict}
             if batch_id:
                 data["batch"] = batch_id
+            if continuation:
+                data["continuation"] = continuation
             if owners[item_id]:
                 data["take_over"] = {"previous": owners[item_id]}
             event = store.new_event(
@@ -1099,8 +1186,12 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
                                                      f"evidence: {', '.join(unproven)} (--evidence V1=PATH)")
 
         if executed_by is not None:
-            _route_verdict(p, [item_id], executed_by)
-            validate_route(item.get("route") or {}, executed_by, item_id)
+            continued = (prior or {}).get("continuation")
+            continued = continued if isinstance(continued, dict) else None
+            correcting = continued is not None and same_actor(executed_by, continued.get("executor"))
+            need = _correction_route(item) if correcting else item.get("route") or {}
+            _route_verdict(p, [item_id], executed_by, routes={item_id: need} if correcting else None)
+            validate_route(need, executed_by, item_id)
 
         review = _load_review_receipt(p, item_id, review_receipt, attempt_id, status) if review_receipt else None
         if status in ("done", "done_with_deviations") and review is None \
@@ -1110,7 +1201,7 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
                             "settings.review_receipt is required; finish with --review-receipt PATH")
 
         now = store.now()
-        result = {key: prior[key] for key in ("started_at", "executor") if key in prior}
+        result = {key: (prior or {})[key] for key in ("started_at", "executor", "continuation") if key in (prior or {})}
         if review is not None:
             result["review"] = review
         if executed_by is not None:

@@ -9,7 +9,7 @@ from typing import Optional
 from aicore.provider.config import routing_available
 
 from orch import catalog as catalogs, launch
-from orch.conductor import options as opts
+from orch.conductor import options as opts, scope as scopes
 from orch.conductor.domain.route import actor, label  # noqa: F401 — re-export
 from orch.conductor.domain.stop import Stop
 from orch.settings import ORCH_ROOT
@@ -17,7 +17,8 @@ from orch.settings import ORCH_ROOT
 CLASS_RANK = {"economy": 0, "implementation": 1, "frontier": 2}
 EFFORT_RANK = {"low": 0, "medium": 1, "high": 2, "xhigh": 3, "max": 4, "ultra": 5}
 LAUNCH_ROLE = {"context-scout": "scout"}
-OPTIONAL_ROLES = {"context-scout", "report-fixer"}  # skipped, not refused, when they cannot start
+# skipped, not refused, when they cannot start (the bounded-implementer: its corrections then stay with the executor)
+OPTIONAL_ROLES = {"context-scout", "report-fixer", "bounded-implementer"}
 # Roles the conductor actually runs. A policy stage whose role is outside this set is not silently dropped:
 # required + on_unavailable refuse stops the run; anything else is skipped once (POLICY_STAGE_SKIPPED).
 CONDUCTOR_ROLES = ("deterministic", "scout", "context-scout", "executor", "reviewer", "triager", "registrar",
@@ -201,6 +202,51 @@ def reviewer_selector(item_options: dict, item_sources: dict, input_doc: dict) -
         return selector, None, source
     found, model_class = planned_reviewer(selector, planned)
     return found, model_class, PLAN_REVIEW_SOURCE
+
+
+def lowered_class(model_class: str, known: Optional[str]) -> str:
+    """``model_class``, the label the layers or the launch catalog give a route, or the class the model catalog knows for
+    the model the route names (``aicore.provider.models.admitted_class``) when that is lower: a label above the
+    known class of a named model is not taken."""
+    if known and CLASS_RANK.get(known, -1) < CLASS_RANK.get(model_class, -1):
+        return known
+    return model_class
+
+
+def correction_minimum(claim_route: Optional[dict], input_minimum: Optional[dict] = None) -> dict:
+    """The minimum a bounded correction route meets: the claim's ``route.correction`` when the plan names one, else the
+    whole ordinary minimum of the work (no ``route.correction``, no relaxation): the claim's ``route`` completed by the
+    execution-input ``route.minimum``, which also carries the provider and model the plan pins."""
+    route = claim_route or {}
+    if route.get("correction"):
+        return dict(route["correction"])
+    return {**{key: value for key, value in route.items() if key != "correction"}, **(input_minimum or {})}
+
+
+def correction_refusal(minimum: dict, route: dict, item_ref: str) -> Optional[str]:
+    """Why the bounded-implementer ``route`` may not correct piece ``item_ref``, as ``CODE: text``; ``None`` when it may:
+    not below the class or effort of ``minimum`` and on the provider and model it pins."""
+    try:
+        route_minimum(minimum, route, item_ref)
+    except Stop as stop:
+        return f"{stop.code}: {stop.message.replace('the executor', 'the bounded-implementer', 1)}"
+    for field in ("provider", "model"):
+        if minimum.get(field) and minimum[field] != route.get(field):
+            return f"ROUTE_MISMATCH: {item_ref} pins {field} {minimum[field]!r} for a correction"
+    return None
+
+
+def grown_paths(changed, allowed_findings, write_set) -> list:
+    """The paths a correction round changed beyond what it was handed: not a path of the findings of its fix-brief
+    (``allowed_findings``), not a test inside ``write_set`` (``*/tests/*``, ``test_*.py``), not ``CHANGELOG.md`` and not
+    documentation (``docs/**``, ``packages/*/docs/**``)."""
+    def allowed(path: str) -> bool:
+        name = path.rsplit("/", 1)[-1]
+        test = ("/tests/" in f"/{path}" or (name.startswith("test_") and name.endswith(".py"))) \
+            and not scopes.outside([path], write_set)
+        docs = path == "CHANGELOG.md" or scopes.under(path, ["docs/**", "packages/*/docs/**", "bridges/*/docs/**"])
+        return path in allowed_findings or test or docs
+    return sorted(path for path in changed if not allowed(path))
 
 
 def route_minimum(minimum: dict, route: dict, item_ref: str) -> None:

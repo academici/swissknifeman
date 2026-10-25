@@ -68,6 +68,26 @@
               "description": "Requested reasoning effort.",
               "type": "string",
               "enum": ["low", "medium", "high", "xhigh", "max", "ultra"]
+            },
+            "correction": {
+              "description": "Minimum route of a bounded correction of recorded review findings, when the work names one (route.correction); the conductor uses it for the bounded-implementer, else the route above. Optional.",
+              "type": "object",
+              "properties": {
+                "class": {
+                  "description": "Minimum semantic model class of a correction.",
+                  "type": "string",
+                  "enum": ["economy", "implementation", "frontier"]
+                },
+                "effort": {
+                  "description": "Requested reasoning effort of a correction.",
+                  "type": "string",
+                  "enum": ["low", "medium", "high", "xhigh", "max", "ultra"]
+                },
+                "provider": {"description": "Explicit provider, when selected.", "$ref": "#/$defs/text"},
+                "model": {"description": "Explicit model, when selected.", "$ref": "#/$defs/text"}
+              },
+              "required": ["class", "effort"],
+              "additionalProperties": false
             }
           },
           "required": ["class", "effort"],

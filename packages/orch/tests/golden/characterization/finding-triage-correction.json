@@ -1209,6 +1209,18 @@
     "autofix_at": [],
     "check_fixes_at": [],
     "check_fixes_used": 0,
+    "correction_baselines": {
+     "files-2": {
+      "files": {
+       "out/W1.txt": "<digest>",
+       "plans/T/artifacts/W1/evidence/V1.json": "<digest>",
+       "plans/T/artifacts/W1/review-receipt.json": "<digest>",
+       "plans/T/artifacts/W1/review-verdict.json": "<digest>"
+      },
+      "grew": [],
+      "said": false
+     }
+    },
     "corrections_at": [
      1
     ],

@@ -216,6 +216,11 @@
           "description": "On the last review round the limit allows, confirmed findings at the floor are still corrected, but no further review follows (a note in the plan, review_debt in the piece state and a REVIEW_DEBT beacon say so) instead of blocking with REVIEW_LIMIT. A spent run-wide `review_rounds_batch` stays a limit. Default true; false blocks with REVIEW_LIMIT.",
           "type": "boolean"
         },
+        "correction_route": {
+          "description": "Which role runs the correction rounds of confirmed review findings. `executor` (default) the executor route; `bounded-implementer` the bounded-implementer route (a session of its own) for a correction without a Blocker finding, when the route meets the claim's route.correction (else its route); otherwise the executor with a CORRECTION_ROUTE_REFUSED beacon. A correction that changes paths beyond the findings, the tests, CHANGELOG.md and docs is CORRECTION_SCOPE_GREW (a deviation on the executor route, a block on the bounded route).",
+          "type": "string",
+          "enum": ["executor", "bounded-implementer"]
+        },
         "pre_final": {
           "description": "A review round after a correction is a pre-final audit that looks only for findings of correct_min_severity or higher. Default true.",
           "type": "boolean"

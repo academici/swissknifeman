@@ -212,6 +212,17 @@ class ClaimTests(Case):
         self.assertEqual(answer["route"], {"class": "implementation", "effort": "high"})
         self.assertEqual(self.item("P1.1")["result"]["executor"]["session"], "run-a")
 
+    def test_claim_answer_carries_the_route_correction_and_nothing_else_of_the_route(self):
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps({"route": {
+            "correction": {"class": "economy", "effort": "medium", "provider": "claude-code"},
+            "settings": {"native": True}}}))
+        answer = self.claim(items=["P1.1"])  # the answer is valid by the work-source output contract
+        self.assertEqual(answer["route"], {"class": "implementation", "effort": "high", "correction": {
+            "class": "economy", "effort": "medium", "provider": "claude-code"}})
+
+    def test_claim_without_route_correction_adds_none(self):
+        self.assertNotIn("correction", self.claim(items=["P1.1"])["route"])
+
     def test_repeated_claim_of_the_same_run_gives_the_same_answer(self):
         first = self.claim()
         self.assertEqual(self.claim(), first)  # the next ready item is not taken: the run resumes its own
@@ -597,6 +608,66 @@ class BriefTests(Case):
         self.assertIn("/verify", caught.exception.message)
         self.assertEqual(sorted(store.glob("*")) if store.is_dir() else [], before)
         self.assertEqual(self.item("P1.1").get("artifacts", []), [])
+
+
+class ClassAuthorityTests(unittest.TestCase):
+    """The planner (stdlib, ``command-routing.json``) and orch (aicore model catalog) grade a model alike (P7.3)."""
+
+    MODELS = [("claude-code", "haiku"), ("claude-code", "claude-haiku-4-5-20251001"), ("claude-code", "sonnet"),
+              ("claude-code", "claude-sonnet-5-5"), ("claude-code", "claude-opus-5-5"),
+              ("codex", "gpt-5.6-luna"), ("codex", "gpt-6-sol"), ("codex", "gpt-6-astra"), ("codex", "gpt-6.1-sol"),
+              ("grok", "grok-4.5"), ("grok", "grok-4.6"), ("grok", "grok-4.7"),
+              ("claude-code", "mystery-model"), ("codex", "gpt-9"), ("nope", "haiku")]
+
+    def test_planner_and_orch_agree_on_the_class_of_a_model(self):
+        from aicore.provider import models
+        lifecycle = partners.planner_engine("plan.lifecycle")
+        catalog = models.load_model_catalog()
+        for provider, model in self.MODELS:
+            with self.subTest(provider=provider, model=model):
+                self.assertEqual(models.admitted_class(catalog, provider, model),
+                                 lifecycle.admitted_class(provider, model))
+        self.assertEqual([models.admitted_class(catalog, "claude-code", model) for model in ("haiku", "sonnet", "claude-opus-5-5")],
+                         ["economy", "implementation", "frontier"])
+
+
+class RouteCorrectionFlowTests(Case):
+    """An item with ``route.correction`` goes claim -> brief -> validate -> register like any other (P7.3)."""
+
+    def test_claim_brief_validate_and_register_of_an_item_with_a_correction_route(self):
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps({"route": {
+            "correction": {"class": "economy", "effort": "medium"}, "settings": {"native": True}}}))
+        claimed = self.claim(items=["P1.1"])
+        self.assertEqual(claimed["route"]["correction"], {"class": "economy", "effort": "medium"})
+        brief = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
+        doc = json.loads(blobs.read_bytes(brief["input_ref"], project=self.project))
+        self.assertEqual(doc["route"], {"minimum": {"class": "implementation", "effort": "high"}})
+        path = Path(self.tmp.name) / "input.json"
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        code, out = partners.orch_validate("execution-input", path)
+        self.assertEqual(code, 0, out)
+        answer = self.register(evidence={"V1": self.evidence()})  # the fake executor's work is done
+        self.assertEqual(answer["outcome"], "recorded", answer)
+        self.assertEqual(self.item("P1.1")["status"], "done")
+        self.assertEqual(self.item("P1.1")["route"]["correction"], {"class": "economy", "effort": "medium"})
+
+
+class CorrectionGrowthRegisterTests(Case):
+    """The report the conductor writes for an executor correction that grew (P7.3) passes the registration status rule."""
+
+    DEVIATION = {"text": "CORRECTION_SCOPE_GREW: correction round 2 changed paths beyond its findings, the tests, "
+                         "CHANGELOG.md and docs: lib/b.py", "kind": "deviation", "class": "other", "outcome": "accepted",
+                 "impact": "the next review round reads these paths", "next": "none", "evidence": ["lib/b.py"]}
+
+    def test_the_deviation_goes_with_done_with_deviations_only(self):
+        self.claim()
+        report = {"summary": "did it", "open_issues": [self.DEVIATION]}
+        refused = self.register(report=report, evidence={"V1": self.evidence()})
+        self.assertEqual((refused["outcome"], refused["reason_code"]), ("refused", "REGISTER_STATUS_MISMATCH"), refused)
+        self.assertEqual(self.item("P1.1")["status"], "in_progress")
+        recorded = self.register(status="done_with_deviations", report=report, evidence={"V1": self.evidence()})
+        self.assertEqual(recorded["outcome"], "recorded", recorded)
+        self.assertEqual(self.item("P1.1")["status"], "done_with_deviations")
 
 
 class RegisterTests(Case):

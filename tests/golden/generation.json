@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "331baab150b4",
-  "reason": "P8.6: skiller-registry",
+  "captured_from": "5cf24faffb56",
+  "reason": "P7.3: schemas",
   "generators": [
     {
       "id": "skiller-registry",
@@ -258,14 +258,14 @@
     "docs/provider-support.md": "c62a1b455bb9dd7efcb9df9bb8f73b646f392893d5a68e3e49d57eecf228c1a8",
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
-    "packages/orch/lib/orch/_types/conductor.py": "53ea09c7df89f95139b13e1b856406b6da03fa3117e7e2aa21f5e5e773bd48dd",
+    "packages/orch/lib/orch/_types/conductor.py": "220ea5e287fdd7cc4e9951e5aea8562e19eab6244d50b3d255e3892ae77e23b2",
     "packages/orch/lib/orch/_types/exec.py": "e57ca5117882291c217edba3f17b63f499e2ebdf9f5f8e848d9d163c3f0e36bf",
     "packages/orch/lib/orch/_types/records.py": "ddb4af19636c05bd71fc29e9097ef0bd8bb028c641a9aa987a36e2b0f8864e9f",
-    "packages/orch/lib/orch/_types/work_source.py": "af85842fa1ebc84172ee9d9d4e24220cf43ff4df9519bb236c6d4d4cd94be225",
+    "packages/orch/lib/orch/_types/work_source.py": "86551eace1f3a4515314aeca796ca402bfdd571dab3cf5810160ffcc9ddb36b7",
     "packages/planner/docs/reference/provider-commands.md": "ff29dea94c6ad4d4988f6ae5a0538606f7b92ab0d3b27e9dfbe03bb56e270688",
     "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
-    "packages/planner/lib/planner/plan/_types.py": "b59de7bd898cc164c27edf58894c7256159420249df7d039ec3e4e150be83d6c",
+    "packages/planner/lib/planner/plan/_types.py": "5ecd2cefa574edb61401b87be33a07172c303a3ff10a3d5d8acd1d17f3a3bb2f",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "1ea50aa97adbde27580b0c04913c0ed7afd0dba929a8188d3939abba3cac3b6d",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/dev.md": "00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/fix.md": "6e7574d4d67fa5861ca5051f9a97e21c3972d89aac82bd757a7c85cb429dbd5a",

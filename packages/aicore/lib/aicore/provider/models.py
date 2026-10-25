@@ -8,13 +8,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
+import re
 from types import MappingProxyType
-from typing import Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional, cast
 
 from ..util import schema
 from .data import config_path
 
 CATALOG_FILE = "model-catalog.json"
+_CLASSES = ("economy", "implementation", "frontier")  # ascending
 _SCHEMA_DIR = Path(__file__).resolve().parents[3] / "schemas" / "model-catalog" / "v1"
 
 
@@ -97,6 +99,25 @@ def inventory(catalog: ModelCatalog, provider_id: str) -> Optional[dict]:
     """A plain copy of the provider's model inventory, or ``None`` for an unknown provider."""
     item = catalog.provider(provider_id)
     return None if item is None else item.inventory_dict()
+
+
+def admitted_class(catalog: ModelCatalog, provider_id: str, model: str) -> Optional[str]:
+    """The highest model class (economy < implementation < frontier) the inventory grants ``provider_id``/``model``.
+
+    Lookup is by entry id (or alias), then by pattern (``re.fullmatch``); ``status: retired`` entries are skipped.
+    ``None`` for an unknown provider or model, or when the matching entries name no class. The planner keeps its own
+    stdlib copy of this algorithm (``planner.plan.lifecycle.admitted_class``); a test holds the two together.
+    """
+    item = catalog.provider(provider_id)
+    if item is None or not isinstance(model, str) or not model:
+        return None
+    entries = cast("Iterable[Mapping[str, Any]]", item.model_inventory.get("entries") or ())
+    live = [entry for entry in entries if entry.get("status") != "retired"]
+    matched = [entry for entry in live if model == entry.get("id") or model in entry.get("aliases", ())]
+    if not matched:
+        matched = [entry for entry in live if any(re.fullmatch(pattern, model) for pattern in entry.get("patterns", ()))]
+    ranks = [_CLASSES.index(role) for entry in matched for role in entry.get("roles", ()) if role in _CLASSES]
+    return _CLASSES[max(ranks)] if ranks else None
 
 
 def _first(catalog: ModelCatalog, provider_id: str, field: str, key: str) -> Optional[str]:

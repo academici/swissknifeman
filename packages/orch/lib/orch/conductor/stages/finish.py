@@ -41,6 +41,7 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         self._plan_note(item, "Confirmed findings remain deferred after the correction allowance: "
                         + ", ".join(row["key"] for row in deferred)
                         + f"; full evidence: {self._relative(work_source.artifact_path(item, 'review-verdict.json'))}")
+    report = self._correction_settle(item, report)  # the scope check of a correction round the conductor lost
     report = self._settle_pending(report, rows)
     changed = self._changed(item)
     if changed or any("changed" in (step.get("result") or {}) for key, step in done_steps(item.state.get("steps", {})).items()
@@ -61,6 +62,9 @@ def finish(self, item: Item, report: dict, rows: Optional[list]) -> str:
         report = dict(report, open_issues=list(report.get("open_issues", [])) + fixed)
         if report["status"] == "done" and any(issue["kind"] == "deviation" for issue in fixed):
             report["status"] = "done_with_deviations"
+    if report["status"] == "done" and any(issue["kind"] == "deviation" and issue["text"].startswith("CORRECTION_SCOPE_GREW")
+                                          for issue in report.get("open_issues", [])):
+        report = dict(report, status="done_with_deviations")  # the register verb pairs a deviation with this status
     notes = self._notes(item)
     if notes:
         report = dict(report, open_issues=list(report.get("open_issues", [])) + notes)

@@ -314,6 +314,10 @@ def op_claim(fields: dict) -> dict:
             answer["depends_on"] = [dep for dep in doc["depends_on"] if isinstance(dep, str)]
         if isinstance(doc.get("route"), dict):
             answer["route"] = {key: doc["route"][key] for key in ("class", "effort") if key in doc["route"]}
+            if isinstance(doc["route"].get("correction"), dict):  # the minimum of a bounded correction (P7.3)
+                answer["route"]["correction"] = {key: doc["route"]["correction"][key]
+                                                 for key in ("class", "effort", "provider", "model")
+                                                 if key in doc["route"]["correction"]}
         context = plan_json(["context", plan, ref, "--stdout"], plans_root)
         answer["scenario"], answer["scenario_source"], layers = orchestration_of(context, ref)
         if fields.get("scenario"):  # the invocation (`--scenario`) wins over the plan's own scenario

@@ -406,6 +406,8 @@ def conduct(self, item: Item) -> str:
     if self._reviewing(item):
         review_round, earlier = 1, None
         while True:
+            if (report := self._correction_settle(item, report))["status"] == "blocked":  # a round saved before its check
+                return self._finish(item, report, rows)
             while self._review_changed(item, review_round):
                 used = review_round
                 review_round += 1
@@ -491,7 +493,13 @@ def conduct(self, item: Item) -> str:
             delivered = json.loads((item.directory / "fix-briefs" / f"executor.{round_no}.json").read_text())
             ids = {entry["id"] for entry in delivered["findings"]}
             major = [entry for entry in major if entry["finding"] in ids]
-            report = self._execute(item, round_no, scout_text, correction)
+            role = self._correction_role(item, any(self._severity_of(findings, entry["finding"]) == "blocker"
+                                                   for entry in major))
+            self._correction_baseline_files(item, round_no)
+            report = self._execute(item, round_no, scout_text, correction, role=role)
+            if report["status"] == "blocked":
+                return self._finish(item, report, rows)
+            report = self._correction_scope(item, round_no, report, delivered, role)
             if report["status"] == "blocked":
                 return self._finish(item, report, rows)
             if before is not None and before == self._product_snapshot(self.project):

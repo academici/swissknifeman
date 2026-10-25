@@ -45,6 +45,18 @@ class PreflightTests(test_worksource.Case):
         self.assertTrue(all(i["path"] == "phases/P1/P1.1.json" for i in result["issues"]))
         self.assertEqual(self.tree(), before)
 
+    def test_a_catalog_bump_from_an_old_version_is_a_stale_plan(self):
+        path = self.root / "phases/P1/P1.1.json"
+        doc = json.loads(path.read_text())
+        doc["title"] = "Launch catalog 1.5.0 → 1.6.0"
+        path.write_text(json.dumps(doc))
+        with mock.patch.object(preflight, "catalog_version", return_value="1.7.0"):
+            result = preflight.run(self.input)
+        self.assertEqual(plugins.output_problems(result), [])
+        self.assertIn("PLAN_CATALOG_STALE", {i["code"] for i in result["issues"]})
+        with mock.patch.object(preflight, "catalog_version", return_value="1.5.0"):
+            self.assertNotIn("PLAN_CATALOG_STALE", {i["code"] for i in preflight.run(self.input)["issues"]})
+
     def test_bounds_and_archived_skip(self):
         p = preflight.brief.store.load_plan(self.root)
         template = p.items["P1.1"]

@@ -281,11 +281,12 @@ def retry(self, ref: str) -> None:
     """Take a blocked piece back into the run: the input is built again from the (amended) plan, and the steps from the executor round that reported ``blocked`` on
     (and the closing steps after it) are repeated; the earlier rounds are kept and the work in the tree is not thrown away."""
     item = self.state["items"].get(ref)
-    if item and item.get("retried") and item.get("outcome") in (None, "stopped"):
+    again = bool(item) and reblocked(item)
+    if item and item.get("retried") and item.get("outcome") in (None, "stopped") and not again:
         # the first resume already took the piece back and stopped again: the same command again is not an error
         self.progress.emit("info", item=ref, message="retry: already taken back by an earlier resume; the run goes on from there")
         return
-    if not item or item.get("outcome") != "blocked":
+    if not item or (item.get("outcome") != "blocked" and not again):
         raise Stop("RETRY_NOT_BLOCKED", f"{ref} is not a blocked piece of this run")
     steps = item.get("steps", {})
     completed = done_steps(steps)
@@ -318,6 +319,20 @@ def retry(self, ref: str) -> None:
     self._save()
     self.progress.emit("info", item=ref, message=f"retry: the steps from {blocked} on are repeated" if blocked
                        else "retry: the answer to the advice is applied; the closed rounds are kept")
+
+
+def reblocked(item: Mapping) -> bool:
+    """A piece taken back by a retry whose later executor round reported ``blocked`` again (a new question, a new
+    escalation). When the closing step after that round stopped the run (a refused registration, an interrupt), the
+    outcome is ``stopped``, yet the piece is blocked by that round: a retry goes on from it, it is not taken back already."""
+    since = item.get("retried")
+    if not since:
+        return False
+    steps = item.get("steps", {})
+    completed = done_steps(steps)
+    return any(key.startswith("executor.") and key not in continued(completed) and steps[key].get("ended", "") > since
+               and ((steps[key].get("result") or {}).get("report") or {}).get("status") == "blocked"
+               for key in completed)
 
 
 ATTEMPT_DIRS = ("streams", "reports", "prompts", "checks")

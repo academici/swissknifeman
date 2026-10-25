@@ -520,11 +520,15 @@ def _plan_text(argv: list, plans_root=None, *, code: str = "PLAN_UNREADABLE") ->
     return done.stdout
 
 
-def _supersede_blocked_attempt(fields: dict) -> None:
+def _supersede_blocked_attempt(fields: dict, again: bool = False) -> None:
     """A piece the run retries after it was blocked is registered under the same attempt id (``att-<run>-<item>``): the
     planner answers ``ATTEMPT_CONFLICT`` to a done outcome for an attempt it holds as blocked. The retry of the run is a new
-    try of the same attempt, so the blocked record is reopened first (the plan keeps the history in its log)."""
-    if fields["status"] == "blocked":
+    try of the same attempt, so the blocked record is reopened first (the plan keeps the history in its log).
+
+    A blocked outcome is superseded only ``again``: after the planner refused it with ``ATTEMPT_CONFLICT`` (the retried
+    piece blocked once more, with another escalation), never before, so a repeat of the same block after a lost answer
+    stays the no-op of ``finish``."""
+    if fields["status"] == "blocked" and not again:
         return
     doc = item_doc(fields["plan"], fields["ref"], fields.get("plans_root"))
     result = doc.get("result") or {}
@@ -611,9 +615,18 @@ def _kept_evidence(fields: dict) -> dict:
 
 
 def op_register(fields: dict) -> dict:
+    answer = _register(fields)
+    if (fields["status"] == "blocked" and answer.get("outcome") == "refused"
+            and "ATTEMPT_CONFLICT" in (answer.get("reason_code"), str(answer.get("message", "")).split(":", 1)[0])):
+        # the run retried the piece and it blocked again: the new block replaces the one this attempt registered
+        answer = _register(fields, again=True)
+    return answer
+
+
+def _register(fields: dict, again: bool = False) -> dict:
     run_id = fields["run_id"]
     try:
-        _supersede_blocked_attempt(fields)
+        _supersede_blocked_attempt(fields, again=again)
         kept = _kept_evidence(fields)
     except Blocked as blocked:
         return {"op": "register", "gate": {"verdict": "none", "checks": {}}, "outcome": "refused",

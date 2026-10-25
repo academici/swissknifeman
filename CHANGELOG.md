@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- orch, planner-orch: a retried piece that blocks again with a new escalation is registered again (`ATTEMPT_CONFLICT` no longer stops the run); `retry` takes back a piece stopped by that refusal.
+- orch: `[orch.conductor] questions` now defaults to `advisor` and `[orch.advisor] enabled` to `true` (the human gate for security, destructive, public-api and scope-expansion is unchanged); set `queue` / `false` to send every blocking question to the owner.
+- orch: `conduct answer` without `--by` records `cli:<user>` when stdin is not a terminal, so an agent's answer is not logged as the owner's.
+- planner-orch: `planner check` reports `PLAN_CATALOG_STALE` for an item that bumps the launch catalog from a version other than the current one.
 - orch: `session.executor` now defaults to `shared`: a batch (`--items A B C`, `--batch`) runs all its pieces in one executor session (Claude Code `--resume`); `handoff` (a fresh session per piece with the handoff of the earlier ones) and `per-item` stay available through `[orch.conductor] session_executor`, the plan or `--options`.
 - orch: opt-in stage `require_current_input_receipt` distinguishes pre-dispatch current-request input evidence from completed usage. Current bindings report `CURRENT_INPUT_RECEIPT_UNSUPPORTED` before any provider role starts; a support declaration or late terminal summary cannot supply the missing acquisition. Defaults are unchanged; this adds an early refusal, not a live receipt producer.
 - planner: the rework rounds of a unit are bounded by `policy.review_rounds_max`; the round after the limit is refused with `REWORK_LIMIT` (reject or split the unit), so rework and review cannot loop without end.

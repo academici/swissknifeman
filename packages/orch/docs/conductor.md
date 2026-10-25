@@ -15,7 +15,7 @@ orch conduct [--config FILE] [--project DIR] run --input FILE [--commit] [--scen
            [--quiet | --json-lines] [--model-catalog FILE]
 orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--raise-limit KEY=N ...] [--detach | --frozen] [--quiet | --json-lines]
 orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
-orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]
+orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]  (without `--by`: the shell user at a terminal, `cli:USER` without one — an agent's answer is never recorded as the owner's)
 orch conduct questions [--run RUN] [--json]
 orch conduct prompt explain [--run RUN] --item REF --step STEP [--json]
 orch conduct prompt diff [--run RUN] --item REF --step STEP [--against RUN:ITEM:STEP] [--json]
@@ -293,6 +293,8 @@ orch conduct autopilot status [--json]
 orch conduct autopilot pause | resume | drain | stop
 orch conduct autopilot explain [--plan P] [--json]
 ```
+
+A monitor of an agent that drives the autopilot (a tool with a timeout of its own) expires while the run goes on: an expired monitor says nothing about the run, so the check text is "finished, waiting or stopped: report; otherwise re-arm" and `orch conduct status --run RUN` is read again by hand.
 
 `start` runs the controller in the foreground until a stop code (`--detach`: in a session of its own, printing a
 `detach-result` once the controller holds its lock; progress lines go to `<runs root>/detached/<label>.log`). `status` shows
@@ -1076,7 +1078,7 @@ registered with the source. The role text (`roles/executor.md`, section Autonomy
 
 The role `advisor` (`roles/advisor.md|json`; class `frontier`; filesystem read, shell read-only, network allowed, no write
 authority; launch entry `claude-code` with `--tools Bash,Read,Grep,Glob` and the one allowed command
-`python3 *orch.py research query *`) gives one opinion on one problem. It is off by default: `[orch.advisor] enabled = false`.
+`python3 *orch.py research query *`) gives one opinion on one problem. It is on by default (`[orch.advisor] enabled = true`, with `[orch.conductor] questions = "advisor"`); `enabled = false` or `questions = "queue"` sends every blocking question to the owner's queue. The human gate below still holds security, destructive, public-api and scope-expansion advice for the owner.
 With `enabled = true` the conductor asks it, deterministically and at most `max_rounds` times per piece (default 2, all
 triggers together; past it the problem goes on as it would without an advisor):
 

@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-from orch import catalog as catalogs, launch, sandbox
-from orch.conductor import gates, process, records
+from orch import bindings, catalog as catalogs, launch, sandbox
+from orch.conductor import gates, options as opts, process, records
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
@@ -115,6 +115,11 @@ def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dic
             unavailable["report-fixer"] = f"{stop.code}: {stop.message}"
     if "executor" in item.routes:
         self._route_minimum(item)
+    receipt_problems = current_input_receipt_unavailable(item)
+    if receipt_problems and not preview:
+        raise Stop("CURRENT_INPUT_RECEIPT_UNSUPPORTED", "; ".join(receipt_problems.values()))
+    unavailable.update({role: f"CURRENT_INPUT_RECEIPT_UNSUPPORTED: {message}"
+                        for role, message in receipt_problems.items()})
     if persist:
         self._preflight(item)
         records.write(item.directory / "routes.json", item.routes, "item-routes")
@@ -218,9 +223,24 @@ def refuse_acp(self, item: Item) -> None:
     route_rules.refuse_acp(item.routes)
 
 
+def current_input_receipt_unavailable(item: Item) -> dict:
+    """Mandatory receipt requirements, separate from executable availability and completed usage support."""
+    required = {role: route for role, route in item.routes.items()
+                if opts.stage_route(item.options, role).get("require_current_input_receipt")}
+    if not required:
+        return {}
+    capabilities = bindings.load_capabilities()
+    return {role: bindings.current_input_receipt_problem("native", route["provider"],
+                                                        capabilities.get(("native", route["provider"])))
+            for role, route in required.items()}
+
+
 def preflight(self, item: Item) -> None:
     """Every required role can start before any work is done: an acp route or a missing CLI stops the run now with a
     plain message, not after an hour of executor work (an optional scout or report-fixer is only skipped)."""
+    receipt_problems = current_input_receipt_unavailable(item)
+    if receipt_problems:
+        raise Stop("CURRENT_INPUT_RECEIPT_UNSUPPORTED", "; ".join(receipt_problems.values()))
     if item.input_doc.get("provenance", {}).get("kind") != "review":
         policy_stage_unavailable(self, item, preview=False)
     self._refuse_acp(item)

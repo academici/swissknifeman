@@ -198,7 +198,8 @@ def policy_layer(policy: dict) -> dict:
     for stage in policy.get("stages", []):
         role = ROLE_ALIASES.get(stage.get("role"), stage.get("role"))
         if role in MODEL_ROLES:
-            stages.append({"role": role, **{key: stage[key] for key in ("provider", "model_class", "effort")
+            stages.append({"role": role, **{key: stage[key] for key in ("provider", "model_class", "effort",
+                                                                      "require_current_input_receipt")
                                             if key in stage}})
     review = policy.get("review") or {}
     triage = review.get("triage")
@@ -295,6 +296,12 @@ def floor_problems(current: dict, layer: dict, sources: dict) -> list:
             old, new = current[group][key], layer[group][key]
             if new == 0 or (old > 0 and new > old):
                 issues.append(f"{group}.{key} {new} loosens the ceiling {old} of {below(group, key)}")
+    for stage in layer.get("stages", []):
+        role = str(ROLE_ALIASES.get(stage["role"], stage["role"]))
+        if stage.get("require_current_input_receipt") is False \
+                and stage_route(current, role).get("require_current_input_receipt") is True:
+            issues.append(f"stages.{role}.require_current_input_receipt disables the requirement of "
+                          f"{sources.get(f'stages.{role}', 'defaults')}")
     return issues
 
 

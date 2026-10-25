@@ -52,6 +52,25 @@ def load_capabilities(directory: str | Path | None = None) -> dict[tuple[str, st
     return records
 
 
+def current_input_receipt_problem(binding: str, provider: str, cap: Mapping | None) -> str:
+    """Why a required pre-tool input receipt cannot be acquired by the current bindings.
+
+    ``usage`` describes completed accounting, not current-request admission. No binding currently implements a
+    verified receipt producer at the provider's tool-dispatch boundary. A capability declaration, even ``supported``,
+    cannot create that producer. Keep the refusal until a real acquisition path and its causal tests are supplied.
+    """
+    record = cap or {}
+    support = record.get("current_input_receipt", "unknown")
+    source = record.get("source", record.get("status", "unknown"))
+    evidence = "; ".join(str(row["ref"]) for row in record.get("evidence", [])
+                         if isinstance(row, Mapping) and row.get("ref")) or "none"
+    return (f"{binding}/{provider}: required current_input_receipt has no implemented, verified acquisition before "
+            f"dependent tool dispatch (record support={support}, source={source}, evidence={evidence}). "
+            "Completed/terminal usage is not a current API request input receipt. Required provider/transport "
+            "integration must establish current input/cache semantics, request/session/model/build/effort/config "
+            "correlation and mandatory delivery/trim/compaction evidence before dispatch.")
+
+
 def _relative(path: Path, start: Path | None = None) -> str:
     """Repository-relative POSIX form that the launch-plan ``path`` type accepts (no leading slash)."""
     return Path(os.path.relpath(path, start or Path.cwd())).as_posix()
@@ -96,6 +115,9 @@ def _stage_requirements(binding: str, policy: dict, stage: dict, manifest: dict,
                         provider: str, primary_provider: str | None, *, refuse_stale: bool = False,
                         now: str | None = None) -> None:
     """Raise ``Unmet`` for the first requirement of step 5 that fails."""
+    if stage.get("require_current_input_receipt"):
+        raise Unmet("current_input_receipt", current_input_receipt_problem(binding, provider, cap),
+                    "CURRENT_INPUT_RECEIPT_UNSUPPORTED")
     if cap is None:
         raise Unmet("model.set", f"no capability record for ({binding}, {provider}); treated as unknown",
                     "CAP_RECORD_MISSING")

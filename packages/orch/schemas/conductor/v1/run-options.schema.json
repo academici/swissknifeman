@@ -293,6 +293,10 @@
       "description": "Route of one role.",
       "type": "object",
       "properties": {
+        "require_current_input_receipt": {
+          "type": "boolean",
+          "description": "Require a verified current API request input receipt before dependent tool dispatch. Omitted/false preserves existing behavior. Completed usage does not satisfy this requirement; current bindings refuse it before provider spawn."
+        },
         "role": {
           "description": "Role id.",
           "type": "string",

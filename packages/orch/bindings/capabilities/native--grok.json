@@ -60,6 +60,12 @@
     {
       "kind": "perplexity",
       "ref": "docs/research/perplexity/Q15.md"
+    },
+    {
+      "kind": "code",
+      "ref": "docs/conductor.md#current-request-input-receipts",
+      "note": "Completed usage is supported. No verified pre-dispatch current-input acquisition is implemented by this native binding; a required receipt is refused before provider spawn."
     }
-  ]
+  ],
+  "current_input_receipt": "unknown"
 }

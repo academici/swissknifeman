@@ -36,6 +36,10 @@
         "type": "object",
         "description": "Pipeline stage.",
         "properties": {
+          "require_current_input_receipt": {
+            "type": "boolean",
+            "description": "Require a verified current API request input receipt before dependent tool dispatch. Omitted/false preserves existing behavior. Completed usage does not satisfy this requirement; current bindings refuse it before provider spawn."
+          },
           "id": {
             "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
             "description": "Stage identifier."
